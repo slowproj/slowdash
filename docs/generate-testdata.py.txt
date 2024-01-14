@@ -110,7 +110,7 @@ class Graph:
 
 
 
-##### SQLite Data Store (copy from Bakah) #####
+##### SQLite Data Store (copy from SlowPy) #####
 
 
 class DataStore_SQLite:

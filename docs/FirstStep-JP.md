@@ -131,28 +131,27 @@ JSROOT や Bokeh との違い：
 
 
 ### ダウンロード
-まだソフトウェアの名前が決まっていないので，GitHub リポジトリを作れてないです．同じ理由で，Docker コンテナもないです．
-どこかでソースのパッケージを入手して，展開してください．
+GitHub からダウンロードできます． サブモジュールを使っているので，`--recurse-submodules` オプションをつけてください．
 ```console
-$ tar xvzf SlowDash-XXX.tgz
+$ git clone https://github.com/slowprojects/slowdash.git --recurse-submodules
 ```
-これで，`SlowDash-XXX` というディレクトリが作成されます．インストールおよび次の Quick Tour では，全てのファイルは SlowDash のディレクトリ以下に作られるので，この過程でユーザのシステムが汚されることはありません．また，このディレクトリを削除すれば，全てをなかったことにできます．
+これで，`slowdash` というディレクトリが作成されます．インストールおよび次の Quick Tour では，全てのファイルは slowdash のディレクトリ以下に作られるので，この過程でユーザのシステムが汚されることはありません．また，このディレクトリを削除すれば，全てをなかったことにできます．
 
 ### ドキュメント
-公式ドキュメントは，展開したディレクトリの `doc` 以下にあります．`index.html` をブラウザで開いてください．
+公式ドキュメントは，展開したディレクトリの `docs` 以下にあります．`index.html` をブラウザで開いてください．
 ```console
-$ firefox SlowDash-XXX/doc/index.html
+$ firefox slowdash/docs/index.html
 ```
  （macOS 等では，`firefox` コマンドを直接実行するのではなく，`open` コマンドを介するようです．）
 
-日本語の隠しドキュメントは `FirstStep-JP.html` です．今読んでいるものですが，`doc` から読むと内部リンクが切れていません．
+日本語の隠しドキュメントは `FirstStep-JP.html` です．今読んでいるものですが，`docs` から読むと内部リンクが切れていません．
 ```console
-$ firefox SlowDash-XXX/doc/FirstStep-JP.html
+$ firefox slowdash/docs/FirstStep-JP.html
 ```
 
 ### インストール
 ```console
-$ cd SlowDash-XXX/system
+$ cd slowdash/system
 $ make
 ```
 `make` を使っているけれど，基本的にはファイルをコピーしているだけで，一瞬で終わります．
@@ -168,7 +167,7 @@ $ source PATH/TO/SLOWDASH/bin/slowdash-bashrc
 上記の行を `.bashrc` などに書いておくと毎回やる必要がなくて便利かもしれません．
 
 インストールが成功したかは，`slowdash` コマンドを実行してチェックできます．
-(`slowdash` コマンドは `SlowDash/bin` の下にあります）
+(`slowdash` コマンドは `slowdash/bin` の下にあります）
 ```console
 $ slowdash
 Usage: 

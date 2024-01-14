@@ -41,7 +41,7 @@ See [Data Binding section](DataBinding.html) for details.
 ## Installing
 This process will not create any files other than the git-cloned directory. Installation can be removed completely by deleting this directory.
 ```console
-$ git clone ...
+$ git clone https://github.com/slowprojects/slowdash.git --recurse-submodules
 $ cd SlowDash/system
 $ make
 ```

@@ -256,17 +256,17 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </tbody>
 </table>
 <h3 id="ダウンロード">ダウンロード</h3>
-<p>まだソフトウェアの名前が決まっていないので，GitHub リポジトリを作れてないです．同じ理由で，Docker コンテナもないです． どこかでソースのパッケージを入手して，展開してください．</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">$ tar xvzf SlowDash-XXX.tgz</span></a></code></pre></div>
-<p>これで，<code>SlowDash-XXX</code> というディレクトリが作成されます．インストールおよび次の Quick Tour では，全てのファイルは SlowDash のディレクトリ以下に作られるので，この過程でユーザのシステムが汚されることはありません．また，このディレクトリを削除すれば，全てをなかったことにできます．</p>
+<p>GitHub からダウンロードできます． サブモジュールを使っているので，<code>--recurse-submodules</code> オプションをつけてください．</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">$ git clone https://github.com/slowprojects/slowdash.git --recurse-submodules</span></a></code></pre></div>
+<p>これで，<code>slowdash</code> というディレクトリが作成されます．インストールおよび次の Quick Tour では，全てのファイルは slowdash のディレクトリ以下に作られるので，この過程でユーザのシステムが汚されることはありません．また，このディレクトリを削除すれば，全てをなかったことにできます．</p>
 <h3 id="ドキュメント">ドキュメント</h3>
-<p>公式ドキュメントは，展開したディレクトリの <code>doc</code> 以下にあります．<code>index.html</code> をブラウザで開いてください．</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">$ firefox SlowDash-XXX/doc/index.html</span></a></code></pre></div>
+<p>公式ドキュメントは，展開したディレクトリの <code>docs</code> 以下にあります．<code>index.html</code> をブラウザで開いてください．</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">$ firefox slowdash/docs/index.html</span></a></code></pre></div>
 <p>（macOS 等では，<code>firefox</code> コマンドを直接実行するのではなく，<code>open</code> コマンドを介するようです．）</p>
-<p>日本語の隠しドキュメントは <code>FirstStep-JP.html</code> です．今読んでいるものですが，<code>doc</code> から読むと内部リンクが切れていません．</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">$ firefox SlowDash-XXX/doc/FirstStep-JP.html</span></a></code></pre></div>
+<p>日本語の隠しドキュメントは <code>FirstStep-JP.html</code> です．今読んでいるものですが，<code>docs</code> から読むと内部リンクが切れていません．</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">$ firefox slowdash/docs/FirstStep-JP.html</span></a></code></pre></div>
 <h3 id="インストール-1">インストール</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">$ cd SlowDash-XXX/system</span></a>
+<div class="sourceCode" id="cb4"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">$ cd slowdash/system</span></a>
 <a class="sourceLine" id="cb4-2" title="2"><span class="kw">$ make</span></a></code></pre></div>
 <p><code>make</code> を使っているけれど，基本的にはファイルをコピーしているだけで，一瞬で終わります．</p>
 <p>必ずしも必要ではないけれど，PATH を通しておくとこの後の作業が少し楽になります．</p>
@@ -274,7 +274,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>あるいは，これを行う bash 用スクリプトが <code>slowdash/bin</code> の下にあります</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">$ source PATH/TO/SLOWDASH/bin/slowdash-bashrc</span></a></code></pre></div>
 <p>上記の行を <code>.bashrc</code> などに書いておくと毎回やる必要がなくて便利かもしれません．</p>
-<p>インストールが成功したかは，<code>slowdash</code> コマンドを実行してチェックできます． (<code>slowdash</code> コマンドは <code>SlowDash/bin</code> の下にあります）</p>
+<p>インストールが成功したかは，<code>slowdash</code> コマンドを実行してチェックできます． (<code>slowdash</code> コマンドは <code>slowdash/bin</code> の下にあります）</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">$ slowdash</span></a>
 <a class="sourceLine" id="cb7-2" title="2">Usage: </a>
 <a class="sourceLine" id="cb7-3" title="3">  Web-Server Mode:    slowdash.py [Options] --port=PORT</a>
