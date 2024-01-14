@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>SlowDash Documents</title>
+    <link rel="icon" href="SlowDash.png">
+    <style type="text/css">
+      html {
+        height: calc(100% - 5px);
+      }
+      body {
+        font-family: sans-serif;
+        font-size:large;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #header {
+        background: #460084;
+        color: white;
+      }
+      #header a {
+        color: white;
+        text-decoration: none;
+      }
+      #header a:visited {
+        color: white;
+      }
+      #list {
+        background: #f8f8f8;
+        color: black;
+      }
+      #list li {
+        margin-bottom: 0.5em;
+        list-style-type: none;
+      }
+      #list a {
+        color: blue;
+      }
+      #list a:visited {
+        color: blue;
+      }
+    </style>
+  </head>
+  <body>
+    
+    <div style="display:flex;justify-content:flex-start;flex-grow;height:100%">
+      <div style="display:flex;flex-direction:column;height:100%">
+        <div id="header" style="padding:5px 10px 5px 0;margin:0;white-space:nowrap;display:flex;align-items:center">
+          <img src="SlowDash.png" style="height:50px">
+          <span style="font-size:x-large"><a href="Top.html">SlowDash</a></span>
+        </div>
+        <div style="display:flex">
+          <div style="font-size:70%;margin-left:auto;margin-right:0.5em">Version 2311 "Nisqually"</div>
+        </div>
+        <div id="list" style="padding:10px;padding-right:20px;padding-top:5ex;height:100%">
+          <b>Getting Started</b>
+          <ul>
+            <li> <a href="Installation.html">Installation</a>
+            <li> <a href="QuickTour.html">Quick Tour</a>
+          </ul>
+          <b>Basics</b>
+          <ul>
+            <li> <a href="ProjectSetup.html">Project Setup</a>
+            <li> <a href="DataBinding.html">Data Binding</a>
+            <li> <a href="Panels.html">UI Panels</a>
+            <li> <a href="AutoCruise.html">Auto-Cruise</a>
+          </ul>
+          <b>Advanced</b>
+          <ul>
+            <li> <a href="DataTransform.html">Data Transform</a>
+            <li> <a href="UserModule.html">User Module</a>
+            <li> <a href="DataSourcePlugin.html">Data Source Plugin</a>
+          </ul>
+          <b>Technical Reference</b>
+          <ul>
+            <li> <a href="DataModel.html">Data Model</a>
+            <li> <a href="WebQuery.html">Web Query</a>
+          </ul>
+        </div>
+      </div>  
+      
+      <div id="content" style="flex-grow:1;width:100%">
+        <div style="display:flex;flex-direction:column;height:100%">
+          <div style="height:1em;padding:10px;margin:0;text-align:right">
+          <a href="Top.html" style="text-decoration:none">&#x1f1fa;&#x1f1f8;</a>
+          <a href="index-jp.html" style="text-decoration:none">&#x1f1ef;&#x1f1f5;</a>
+          </div>
+          <iframe style="width:100%;height:calc(100% - 1ex);border:none" src="Top.html"></iframe>
+        </div>
+      </div>
+    </div>
+    
+    
+    <script type="text/javascript">
+        window.addEventListener('DOMContentLoaded', e => {
+            let iframe = document.querySelector('#content iframe');
+            for (let a of document.querySelectorAll('a')) {
+                a.addEventListener('click', e => {
+                    e.preventDefault();
+                    iframe.src = a.getAttribute('href');
+                });
+            }
+        });
+    </script>
+  </body>
+</html>
+
+        

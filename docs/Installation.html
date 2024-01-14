@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Installation</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style type="text/css">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+<header>
+<div class="title">Installation</div><p>
+<div class="toc">
+<span class="toc-title">Contents</span>
+<nav id="TOC">
+<ul>
+<li><a href="#standard-installation">Standard Installation</a><ul>
+<li><a href="#prerequisite">Prerequisite</a></li>
+<li><a href="#installing">Installing</a></li>
+<li><a href="#updating">Updating</a></li>
+</ul></li>
+<li><a href="#docker-container">Docker Container</a></li>
+</ul>
+</nav>
+</div>
+</header>
+
+<h1 id="standard-installation">Standard Installation</h1>
+<h2 id="prerequisite">Prerequisite</h2>
+<h3 id="base-system">Base System</h3>
+<ul>
+<li>UNIX-like OS
+<ul>
+<li>Linux most tested</li>
+<li>macOS and Windows (WSL) seem ok
+<p></li>
+</ul></li>
+<li>Python 3
+<ul>
+<li>Version &gt;= 3.7</li>
+<li>with NumPy and pyyaml
+<p></li>
+</ul></li>
+<li>Web Browser
+<ul>
+<li>Firefox most tested, Chrome &amp; Edge ok, Safari &amp; Opera never tested.</li>
+<li>Also works on mobile devices</li>
+</ul></li>
+</ul>
+<h3 id="data-backend">Data Backend</h3>
+<p>Install standard Python modules for the data storage system being used.</p>
+<p>Currently supported data backend systems are:</p>
+<table>
+<thead>
+<tr class="header">
+<th>DBMS</th>
+<th>Python Module</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>PostgreSQL</td>
+<td>psycopg2</td>
+</tr>
+<tr class="even">
+<td>MySQL</td>
+<td>mysqlclient</td>
+</tr>
+<tr class="odd">
+<td>SQLite</td>
+<td>(none)</td>
+</tr>
+<tr class="even">
+<td>Other SQL DBs (generic)</td>
+<td>sqlalchemy</td>
+</tr>
+<tr class="odd">
+<td>InfluxDB</td>
+<td>influxdb-client</td>
+</tr>
+<tr class="even">
+<td>Redis</td>
+<td>redis</td>
+</tr>
+<tr class="odd">
+<td>CouchDB</td>
+<td>couchdb</td>
+</tr>
+<tr class="even">
+<td>MongoDB</td>
+<td>pymongo</td>
+</tr>
+<tr class="odd">
+<td>System Resource (*)</td>
+<td>psutil</td>
+</tr>
+</tbody>
+</table>
+<p>*) “System Resource” is a a pseudo-database, responding to queries for CPU, memory and disk usage etc.</p>
+<p>See <a href="DataBinding.html">Data Binding section</a> for details.</p>
+<h2 id="installing">Installing</h2>
+<p>This process will not create any files other than the git-cloned directory. Installation can be removed completely by deleting this directory.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">$ git clone ...</span></a>
+<a class="sourceLine" id="cb1-2" title="2"><span class="kw">$ cd SlowDash/system</span></a>
+<a class="sourceLine" id="cb1-3" title="3"><span class="kw">$ make</span></a></code></pre></div>
+<p>It might be convenient to include the <code>slowdash</code> executable into the <code>PATH</code>,</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" title="1"><span class="bu">export</span> <span class="va">PATH=</span><span class="st">&quot;</span><span class="va">${PATH}</span><span class="st">:PATH/TO/SlowDash/bin&quot;</span></a></code></pre></div>
+<p>or <code>source</code> a script to do it:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" title="1"><span class="bu">source</span> PATH/TO/SlowDash/bin/slowdash-bashrc</a></code></pre></div>
+<p>Test the installation by running the command:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">$ slowdash</span></a>
+<a class="sourceLine" id="cb4-2" title="2">Usage: </a>
+<a class="sourceLine" id="cb4-3" title="3">  Web-Server Mode:    slowdash.py [Options] --port=PORT</a>
+<a class="sourceLine" id="cb4-4" title="4">  Command-line Mode:  slowdash.py [Options] Command</a>
+<a class="sourceLine" id="cb4-5" title="5"></a>
+<a class="sourceLine" id="cb4-6" title="6">Options:</a>
+<a class="sourceLine" id="cb4-7" title="7">  -h, --help            show this help message and exit</a>
+<a class="sourceLine" id="cb4-8" title="8">  -p PORT, --port=PORT  port number for web connection; command-line mode</a>
+<a class="sourceLine" id="cb4-9" title="9">                        without this option</a>
+<a class="sourceLine" id="cb4-10" title="10">  --project-dir=PROJECT_DIR</a>
+<a class="sourceLine" id="cb4-11" title="11">                        project directory (default: current dir if not</a>
+<a class="sourceLine" id="cb4-12" title="12">                        specified by SLOWDASH_PROJECT environmental variable)</a></code></pre></div>
+<p>Test the browser connection using an arbitrary port. As we have not yet defined a project, a warning message will be shown, but we proceed for now.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">$ slowdash --port=18881</span></a>
+<a class="sourceLine" id="cb5-2" title="2">23-05-15 20:12:35 WARNING: unable to find Slowdash Project Dir: specify it with the --project-dir option, set the SLOWDASH_PROJECT environmental variable, or run the slowdash commands at a project directory</a>
+<a class="sourceLine" id="cb5-3" title="3">listening at port 18881</a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">$ firefox http://localhost:18881</span></a></code></pre></div>
+<p>On success, the error messages below will be shown:</p>
+<p><img src="fig/QuickTour-Welcome.png" style="width:40%"></p>
+<p>Type <code>Ctrl-c</code> to stop slowdash.</p>
+<h2 id="updating">Updating</h2>
+<p>If slowdash is already running, stop it before updating it.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">$ cd PATH/TO/SlowDash</span></a>
+<a class="sourceLine" id="cb7-2" title="2"><span class="kw">$ git pull</span></a></code></pre></div>
+<p><code>make</code> is not necessary for updating.</p>
+<h1 id="docker-container">Docker Container</h1>
+<p>[TODO]</p>
+
+
+</body>
+</html>

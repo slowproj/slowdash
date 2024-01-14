@@ -1,0 +1,247 @@
+<!DOCTYPE HTML>
+<!-- Created by Sanshiro Enomoto on 29 June 2021 -->
+
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>SlowDash</title>
+  <link rel="icon" href="favicon.png">
+  <link rel="stylesheet" type="text/css" href="jagaimo/jagaimo.css">
+  <link rel="stylesheet" type="text/css" href="slowdash.css">
+  <link rel="stylesheet" type="text/css" id="sd-theme-css">
+</head>
+
+<body>
+  <div id="sd-header"></div>
+  <div id="sd-layout">Loading Configuration...</div>
+
+  <script type="module">
+    import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
+    import { JGPullDownWidget, JGDialogWidget } from './jagaimo/jagawidgets.mjs';
+    import { Layout } from './layout.mjs';
+    import { boot, Frame, TimePullDown } from './controlframe.mjs';
+
+    window.addEventListener('DOMContentLoaded', function() {
+        let defaults = {
+            control: {
+                range: {length: 3600, to: 0},
+                reload: 60
+            },
+        };
+
+        function optparse(options) {
+            if (! options.config) {
+                window.location.href = './';
+            }
+            let args = {
+                control: {
+                    range: {}
+                },
+            };
+            if (options.time) {
+                let to = (new JGDateTime(options.time)).asInt();
+                if (to > 0) {
+                    args.control.range.to = to;
+                }
+            }
+            if (options.length && parseFloat(options.length) > 60) {
+                args.control.range.length = parseFloat(options.length);
+            }
+            if (options.reload) {
+                if (parseFloat(options.reload) > 10) {
+                    args.control.reload = Math.max(30, parseFloat(options.reload));
+                }
+                else {
+                    args.control.reload = parseFloat(0);
+                }
+            }
+
+            return args;
+        }
+
+        boot(defaults, optparse, start);
+    });
+
+
+    function start(config) {
+        config = {
+            _project: config._project,
+            meta: config.meta,
+            control: config.control,
+            layout: {
+                focus_highlight: false,
+            },
+            panels: [{
+                type: 'canvas',
+                view_box: config.view_box || config.viewBox,
+                items: config.items,
+                forms: config.forms,
+            }]
+        };
+        config.control.immutable = true;
+    
+        if (config.meta?.name) {
+            document.title = 'SlowDash: ' + config.meta.name;
+        }
+        else {
+            document.title = 'SlowDash';
+        }
+        
+        let title = config._project.project?.title || config._project.project?.name || "SlowDash";
+        if (config.meta?.title) {
+            title += " - " + config.meta.title;
+        }
+        let style = config._project.style ?? {};
+
+        let layout = new Layout($('#sd-layout'), style);
+        let frame = new Frame($('#sd-header'), {
+            title: title,
+            style: style,
+            reloadInterval: config.control.reload,
+            reload: (on_complete) => { return update(layout, config, on_complete); }
+        });
+        
+        let timeSelect = $('<select>');
+        frame.prependSelect(timeSelect);
+        let timePullDown = new TimePullDown(timeSelect, {
+            select: (selectedDataTime) => {
+                config.control.range.to = selectedDataTime;
+                frame.update();
+            },
+        });
+        if (config.control.range.to > 0) {
+            timePullDown.set(config.control.range.to);
+        }
+        
+        let modeSelect = $('<select>');
+        frame.appendSelect(modeSelect);
+        let modePulldown = new JGPullDownWidget(modeSelect, {
+            items: [ 'Normal Mode', 'Stand-by Mode' ],
+            initial: 0,
+            select: (event, value, obj) => {
+                frame.update();
+            }
+        });
+
+        let configUrlDiv = $('<div>').appendTo($('body'));
+        let configUrlDialog = new JGDialogWidget(configUrlDiv, {
+            title: 'Snapshot Link',
+            buttons: { 'Close': e=> {}, }
+        });
+
+        let configUrlButton = $('<button>').html("&#x1f4cd;").bind('click', e=>{
+            openConfigUrlDialog(configUrlDialog, config);
+        });
+        configUrlButton.attr('title', 'Create Snapshot Link');
+        frame.appendButton(configUrlButton);
+        
+        let homeButton = $('<button>').html("&#x1f3e0;").bind('click', e=>{
+            window.open('./');
+        });
+        homeButton.attr('title', 'Home');
+        frame.appendButton(homeButton);
+        homeButton.css('margin-left', '1em'); // this must be after append()
+
+        let docButton = $('<button>').html("&#x2753;").bind('click', e=>{
+            window.open('./doc/index.html');
+        });
+        docButton.attr('title', 'Documents');
+        frame.appendButton(docButton);
+        
+        layout.configure(config, {
+            changeDisplayTimeRange: range => {
+                frame.suspend(30);
+            }
+        });
+        $(window).bind('resize', ()=>{
+            if (window.innerWidth > 0) {
+                layout.configure();
+            }
+        });
+        frame.start();
+    }
+
+
+    function update(layout, config, on_complete) {
+        let length = config.control?.range?.length ?? 0;
+        if (! (length > 0)) {
+            length = 3600;
+        }
+        let to = config.control?.range?.to ?? 0;
+        if (! (to > 0)) {
+            to =  $.time();
+        }
+        let from = to - length;
+        layout.load({from:from, to:to}, function(status) {
+            if (status.code == 200) {
+                on_complete();
+            }
+            else {
+                let message = 'Error on ';
+                message += (new JGDateTime()).asString('%a, %b %d %H:%M');
+                message += " [ ";
+                if (status.code >= 0) {
+                    message += "Status" + status.code + ", ";
+                }
+                message += status.text + " ]";
+                on_complete(message);
+            }
+        });
+    }
+
+
+    function openConfigUrlDialog(dialog, config) {
+        let time = config.control.range.to;
+        if (time <= 0) {
+            time = (new JGDateTime()).asString('%Y-%m-%dT%H:%M:%S%:z');
+        }
+        else {
+            time = (new JGDateTime(time)).asString('%Y-%m-%dT%H:%M:%S%:z');
+        }
+
+        let url = window.location.origin + window.location.pathname;
+        let search = window.location.search.split('?')[1];
+        let options = [];
+        if (search) {
+            for(let kv of search.split('&')) {
+                const [key, value] = kv.split('=');
+                if (key != 'to' && key != 'time' && key != 'reload') {
+                    options.push(`${key}=${value}`);
+                }
+            }
+        }
+        options.push(`time=${time}`);
+        options.push(`reload=0`);
+        url += '?' + options.join('&');
+        
+        let div = dialog.content();
+        div.html(`
+            <input style="width:32em"></input>
+            <input type="button" value="Copy">
+            <input type="button" value="Open">
+        `);
+        let input = div.find('input').at(0);
+        let button1 = div.find('input').at(1);
+        let button2 = div.find('input').at(2);
+        input.val(url);
+        button1.bind('click', e=>{
+            if (true) {
+                // document.execCommand() is depreciated
+                input.get().select();
+                document.execCommand("copy");
+            }
+            else {
+                // this works only with HTTPS
+                navigator.clipboard.writeText(input.val());
+            }
+            dialog.close();
+        });
+        button2.bind('click', e=>{
+            window.open(input.val());
+            dialog.close();
+        });
+        
+        dialog.open();
+    }
+  </script>
+</body>

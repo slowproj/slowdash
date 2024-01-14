@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Web Query</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style type="text/css">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+<header>
+<div class="title">Web Query</div><p>
+<div class="toc">
+<span class="toc-title">Contents</span>
+<nav id="TOC">
+<ul>
+<li><a href="#url-parameters">URL Parameters</a><ul>
+<li><a href="#slowplot">SlowPlot</a></li>
+<li><a href="#slowdash">SlowDash</a></li>
+<li><a href="#slowcruise">SlowCruise</a></li>
+</ul></li>
+<li><a href="#web-api">Web API</a><ul>
+<li><a href="#ping">Ping</a></li>
+<li><a href="#echo-request">Echo Request</a></li>
+<li><a href="#getting-project-configuration">Getting Project Configuration</a></li>
+<li><a href="#channel-list-query">Channel List Query</a></li>
+<li><a href="#data-query">Data Query</a></li>
+<li><a href="#fetching-blob-data-content">Fetching Blob Data Content</a></li>
+<li><a href="#fetching-files-under-user-project-configuration">Fetching Files under User Project Configuration</a></li>
+<li><a href="#uploading-user-configuration-files">Uploading User Configuration Files</a></li>
+<li><a href="#sending-commands-to-user-modules">Sending Commands to User Modules</a></li>
+</ul></li>
+</ul>
+</nav>
+</div>
+</header>
+
+<h1 id="url-parameters">URL Parameters</h1>
+<h2 id="slowplot">SlowPlot</h2>
+<h3 id="url">URL</h3>
+<h4 id="case-1-start-from-blank">Case 1: Start from blank</h4>
+<pre class="http"><code>http://ADDRESS:PORT/slowplot.html?OPTIONS</code></pre>
+<h4 id="case-2-making-a-plot-of-a-specified-channels">Case 2: Making a plot of (a) specified channel(s)</h4>
+<pre><code>http://ADDRESS:PORT/slowplot.html?channel=CHANNELS&amp;OPTIONS</code></pre>
+<ul>
+<li>CHANNELS is a list of channels separated by <code>,</code> without spaces.</li>
+<li>To make multiple plots, separate the channels by <code>;</code>.</li>
+<li>Plots can have type specifier, separated by <code>/</code>. Default is “timeseries”.</li>
+<li>Example: <code>channel=ch0,ch1;log/table</code>.</li>
+</ul>
+<h4 id="case-3-using-saved-configuration-file">Case 3: Using saved configuration file</h4>
+<pre><code>http://ADDRESS:PORT/slowplot.html?config=CONFIG_FILE&amp;OPTIONS</code></pre>
+<h3 id="mandatory-options">Mandatory Options</h3>
+<ul>
+<li>For Case 2: <code>channel=CAHNNEL_LIST</code></li>
+<li>For Case 3: <code>config=CONFIG_FILE</code></li>
+</ul>
+<h3 id="optional-options">Optional Options</h3>
+<ul>
+<li><code>to=TIME</code> (in UNIX time or ISO format, default: current time)</li>
+<li><code>length=LENGTH</code> (default: 900)</li>
+<li><code>reload=RELOAD</code> (default: 300)</li>
+<li><code>grid=GRID</code> (default: 2x1)</li>
+</ul>
+<h2 id="slowdash">SlowDash</h2>
+<h3 id="url-1">URL</h3>
+<pre><code>http://ADDRESS:PORT/slowdash.html?config=CONFIG_FILE&amp;OPTIONS</code></pre>
+<h3 id="mandatory-options-1">Mandatory Options</h3>
+<ul>
+<li><code>config=CONFIG_FILE</code></li>
+</ul>
+<h3 id="optional-options-1">Optional Options</h3>
+<ul>
+<li><code>time=TIME</code> (in UNIX time or ISO format, default: current time)</li>
+<li><code>length=LENGTH</code> (default: 3600)</li>
+<li><code>reload=RELOAD</code> (default: 300)</li>
+</ul>
+<h2 id="slowcruise">SlowCruise</h2>
+<h3 id="url-2">URL</h3>
+<pre><code>http://ADDRESS:PORT/slowcruise.html?config=CONFIG_FILE&amp;OPTIONS</code></pre>
+<h3 id="mandatory-options-2">Mandatory Options</h3>
+<ul>
+<li><code>config=CONFIG_FILE</code></li>
+</ul>
+<h3 id="optional-options-2">Optional Options</h3>
+<ul>
+<li><code>interval=INTERVAL</code> (default: 60)</li>
+</ul>
+<h1 id="web-api">Web API</h1>
+<h2 id="ping">Ping</h2>
+<h3 id="request">Request</h3>
+<pre><code>GET http://ADDRESS:PORT/api/ping</code></pre>
+<h3 id="reply">Reply</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb7-1" title="1"><span class="er">&quot;pong&quot;</span></a></code></pre></div>
+<h2 id="echo-request">Echo Request</h2>
+<h3 id="request-1">Request</h3>
+<pre><code>GET http://ADDRESS:PORT/api/echo/PATH?OPTIONS</code></pre>
+<h3 id="reply-1">Reply</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb9-1" title="1"><span class="fu">{</span></a>
+<a class="sourceLine" id="cb9-2" title="2">    <span class="dt">&quot;URL&quot;</span><span class="fu">:</span> <span class="st">&quot;echo/PATH?OPTIONS&quot;</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb9-3" title="3">    <span class="dt">&quot;Path&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">PATH_ELEMENTS</span> <span class="ot">]</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb9-4" title="4">    <span class="dt">&quot;Opts&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="er">OPTION_ELEMENTS</span> <span class="fu">}</span></a>
+<a class="sourceLine" id="cb9-5" title="5"><span class="fu">}</span></a></code></pre></div>
+<h2 id="getting-project-configuration">Getting Project Configuration</h2>
+<h3 id="request-2">Request</h3>
+<pre><code>GET http://ADDRESS:PORT/api/config</code></pre>
+<h3 id="reply-example-atds-project">Reply Example (ATDS Project)</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb11-1" title="1"><span class="fu">{</span></a>
+<a class="sourceLine" id="cb11-2" title="2">    <span class="dt">&quot;project&quot;</span><span class="fu">:</span> <span class="fu">{</span></a>
+<a class="sourceLine" id="cb11-3" title="3">        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;ATDS&quot;</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-4" title="4">        <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;Atomic Tritium Demonstrator at UW (ATDS)&quot;</span></a>
+<a class="sourceLine" id="cb11-5" title="5">    <span class="fu">},</span></a>
+<a class="sourceLine" id="cb11-6" title="6">    <span class="dt">&quot;style&quot;</span><span class="fu">:</span> <span class="fu">{</span></a>
+<a class="sourceLine" id="cb11-7" title="7">        <span class="dt">&quot;theme&quot;</span><span class="fu">:</span> <span class="st">&quot;light&quot;</span></a>
+<a class="sourceLine" id="cb11-8" title="8">    <span class="fu">},</span></a>
+<a class="sourceLine" id="cb11-9" title="9">    <span class="dt">&quot;contents&quot;</span><span class="fu">:</span> <span class="fu">{</span></a>
+<a class="sourceLine" id="cb11-10" title="10">        <span class="dt">&quot;slowdash&quot;</span><span class="fu">:</span> <span class="ot">[</span></a>
+<a class="sourceLine" id="cb11-11" title="11">            <span class="fu">{</span></a>
+<a class="sourceLine" id="cb11-12" title="12">                <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;ATDS&quot;</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-13" title="13">                <span class="dt">&quot;mtime&quot;</span><span class="fu">:</span> <span class="fl">1677724206.5829866</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-14" title="14">                <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;&quot;</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-15" title="15">                <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;Atomic Tritium Demonstrator at UW Top Level&quot;</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-16" title="16">                <span class="dt">&quot;config_file&quot;</span><span class="fu">:</span> <span class="st">&quot;slowdash-ATDS.json&quot;</span></a>
+<a class="sourceLine" id="cb11-17" title="17">            <span class="fu">}</span></a>
+<a class="sourceLine" id="cb11-18" title="18">        <span class="ot">]</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-19" title="19">        <span class="dt">&quot;slowplot&quot;</span><span class="fu">:</span> <span class="ot">[</span></a>
+<a class="sourceLine" id="cb11-20" title="20">            <span class="fu">{</span></a>
+<a class="sourceLine" id="cb11-21" title="21">                <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;RTD_ACC&quot;</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-22" title="22">                <span class="dt">&quot;mtime&quot;</span><span class="fu">:</span> <span class="fl">1678019620.6981564</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-23" title="23">                <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;Accomodator RTDs&quot;</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-24" title="24">                <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;Accomodator RTDs&quot;</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-25" title="25">                <span class="dt">&quot;config_file&quot;</span><span class="fu">:</span> <span class="st">&quot;slowplot-RTD_ACC.json&quot;</span></a>
+<a class="sourceLine" id="cb11-26" title="26">            <span class="fu">}</span><span class="ot">,</span></a>
+<a class="sourceLine" id="cb11-27" title="27">            <span class="fu">{</span></a>
+<a class="sourceLine" id="cb11-28" title="28">                <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;ATDS&quot;</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-29" title="29">                <span class="dt">&quot;mtime&quot;</span><span class="fu">:</span> <span class="fl">1677726950.1148098</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-30" title="30">                <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;ATDS Overview&quot;</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-31" title="31">                <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;ATDS Standard Plots&quot;</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-32" title="32">                <span class="dt">&quot;config_file&quot;</span><span class="fu">:</span> <span class="st">&quot;slowplot-ATDS.json&quot;</span></a>
+<a class="sourceLine" id="cb11-33" title="33">            <span class="fu">}</span></a>
+<a class="sourceLine" id="cb11-34" title="34">        <span class="ot">]</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-35" title="35">        <span class="dt">&quot;slowcruise&quot;</span><span class="fu">:</span> <span class="ot">[</span></a>
+<a class="sourceLine" id="cb11-36" title="36">            <span class="fu">{</span></a>
+<a class="sourceLine" id="cb11-37" title="37">                <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;AllPlots&quot;</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-38" title="38">                <span class="dt">&quot;mtime&quot;</span><span class="fu">:</span> <span class="fl">1678019441.923559</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-39" title="39">                <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;ATDS All Plots&quot;</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-40" title="40">                <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;Loop over all Dashboards and Plots&quot;</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-41" title="41">                <span class="dt">&quot;config_file&quot;</span><span class="fu">:</span> <span class="st">&quot;slowcruise-AllPlots.yaml&quot;</span></a>
+<a class="sourceLine" id="cb11-42" title="42">            <span class="fu">}</span></a>
+<a class="sourceLine" id="cb11-43" title="43">        <span class="ot">]</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-44" title="44">        <span class="dt">&quot;alarms&quot;</span><span class="fu">:</span> <span class="ot">[</span></a>
+<a class="sourceLine" id="cb11-45" title="45">            <span class="fu">{</span></a>
+<a class="sourceLine" id="cb11-46" title="46">                <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;normal&quot;</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-47" title="47">                <span class="dt">&quot;mtime&quot;</span><span class="fu">:</span> <span class="fl">1630663955.5648437</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-48" title="48">                <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;&quot;</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-49" title="49">                <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;&quot;</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb11-50" title="50">                <span class="dt">&quot;config_file&quot;</span><span class="fu">:</span> <span class="st">&quot;alarms-normal.yaml&quot;</span></a>
+<a class="sourceLine" id="cb11-51" title="51">            <span class="fu">}</span></a>
+<a class="sourceLine" id="cb11-52" title="52">        <span class="ot">]</span></a>
+<a class="sourceLine" id="cb11-53" title="53">    <span class="fu">}</span></a>
+<a class="sourceLine" id="cb11-54" title="54"><span class="fu">}</span></a></code></pre></div>
+<h2 id="channel-list-query">Channel List Query</h2>
+<h3 id="request-3">Request</h3>
+<pre><code>GET http://ADDRESS:PORT/api/channels</code></pre>
+<h3 id="reply-2">Reply</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb13-1" title="1"><span class="ot">[</span></a>
+<a class="sourceLine" id="cb13-2" title="2">    <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="er">CH0_NAME</span><span class="fu">,</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="er">CH0_TYPE</span> <span class="fu">}</span><span class="ot">,</span></a>
+<a class="sourceLine" id="cb13-3" title="3">    <span class="er">...</span></a>
+<a class="sourceLine" id="cb13-4" title="4"><span class="ot">]</span></a></code></pre></div>
+<h2 id="data-query">Data Query</h2>
+<h3 id="request-4">Request</h3>
+<pre><code>GET http://ADDRESS:PORT/api/data/CHANNEL_LIST?OPTIONS</code></pre>
+<p>channel list is:</p>
+<pre><code>CH0,CH1,CH2...</code></pre>
+<p>options are:</p>
+<pre><code>length=LENGTH [default 3600]
+to=TO [default 0 (now)]
+resample=RESAMPLE [default 0 (auto)]
+reducer=REDUCER [default &quot;last&quot;]</code></pre>
+<p>For details see the <a href="DataModel.html">Data Model section</a>.</p>
+<h2 id="fetching-blob-data-content">Fetching Blob Data Content</h2>
+<h3 id="request-5">Request</h3>
+<pre><code>GET http://ADDRESS:PORT/api/blob/CHANNEL/ID</code></pre>
+<h2 id="fetching-files-under-user-project-configuration">Fetching Files under User Project Configuration</h2>
+<h3 id="request-6">Request</h3>
+<pre><code>GET http://ADDRESS:PORT/api/config/file/FILENAME</code></pre>
+<ul>
+<li>The FILENAME must:
+<ul>
+<li>start with an alphabet or <code>_</code></li>
+<li>consist of only alphabets, digits, <code>_</code>, <code>-</code>, <code>.</code>, <code>,</code>, <code>:</code>, <code>[</code> and <code>]</code></li>
+<li>end with one of: <code>.json</code>, <code>.yaml</code>, <code>.html</code>, <code>.png</code>, <code>.jpg</code>, <code>.jpeg</code>, <code>.svg</code></li>
+</ul></li>
+</ul>
+<h2 id="uploading-user-configuration-files">Uploading User Configuration Files</h2>
+<h3 id="request-7">Request</h3>
+<pre><code>POST http://ADDRESS:PORT/api/config/file/NAME?OPTIONS
+[ with JSON text as contents ]</code></pre>
+<ul>
+<li>The NAME must:
+<ul>
+<li>consist of only alphabets, digits, <code>.</code>, <code>_</code> and <code>-</code>.</li>
+<li>start with <code>slowdash-</code>, <code>slowplot-</code>, or <code>slowcruise-</code>.</li>
+<li>end with <code>.json</code> or <code>.yaml</code>.</li>
+</ul></li>
+<li>Files are stored under the <code>config</code> sub-directory of the user project directory.</li>
+</ul>
+<h3 id="response">Response</h3>
+<ul>
+<li>If the file writing is not permitted by the file system,
+<ul>
+<li>returns the HTTP response code 403 (Forbidden).</li>
+</ul></li>
+<li>If the file already exists, and OPTION does not include <code>overwrite=yes</code>,
+<ul>
+<li>returns the HTTP response code 202 (Accepted) without overwriting.</li>
+</ul></li>
+<li>Otherwise, the file will be created or overwritten, and
+<ul>
+<li>if writing is successful, returns HTTP response 201 (Created).</li>
+<li>otherwise returns HTTP response 500 (Internal Server Error).</li>
+</ul></li>
+</ul>
+<h3 id="javascript-snippet">JavaScript Snippet</h3>
+<div class="sourceCode" id="cb20"><pre class="sourceCode javascript"><code class="sourceCode javascript"><a class="sourceLine" id="cb20-1" title="1"><span class="at">fetch</span>(url<span class="op">,</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb20-2" title="2">    <span class="dt">method</span><span class="op">:</span> <span class="st">&#39;POST&#39;</span><span class="op">,</span></a>
+<a class="sourceLine" id="cb20-3" title="3">    <span class="dt">headers</span><span class="op">:</span> <span class="op">{</span> <span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/json; charset=utf-8&#39;</span> <span class="op">},</span></a>
+<a class="sourceLine" id="cb20-4" title="4">    <span class="dt">body</span><span class="op">:</span> <span class="va">JSON</span>.<span class="at">stringify</span>(doc<span class="op">,</span> <span class="kw">null</span><span class="op">,</span> <span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb20-5" title="5"><span class="op">}</span>)</a>
+<a class="sourceLine" id="cb20-6" title="6">.<span class="at">then</span>(response <span class="kw">=&gt;</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb20-7" title="7">    <span class="cf">if</span> (<span class="va">response</span>.<span class="at">status</span> <span class="op">==</span> <span class="dv">202</span>) <span class="op">{</span></a>
+<a class="sourceLine" id="cb20-8" title="8">       <span class="co">// file already exists. retry with overwrite=yes to overwrite</span></a>
+<a class="sourceLine" id="cb20-9" title="9">       <span class="cf">return</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb20-10" title="10">    <span class="op">}</span></a>
+<a class="sourceLine" id="cb20-11" title="11">    <span class="cf">if</span> (<span class="op">!</span> <span class="va">response</span>.<span class="at">ok</span>) <span class="op">{</span></a>
+<a class="sourceLine" id="cb20-12" title="12">        <span class="cf">throw</span> <span class="kw">new</span> <span class="at">Error</span>(<span class="va">response</span>.<span class="at">status</span> <span class="op">+</span> <span class="st">&quot; &quot;</span> <span class="op">+</span> <span class="va">response</span>.<span class="at">statusText</span>)<span class="op">;</span></a>
+<a class="sourceLine" id="cb20-13" title="13">    <span class="op">}</span></a>
+<a class="sourceLine" id="cb20-14" title="14">    <span class="co">//// success ////</span></a>
+<a class="sourceLine" id="cb20-15" title="15">    ....</a>
+<a class="sourceLine" id="cb20-16" title="16"><span class="op">}</span>)</a>
+<a class="sourceLine" id="cb20-17" title="17">.<span class="at">catch</span>(e <span class="kw">=&gt;</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb20-18" title="18">    <span class="co">//// error  ////</span></a>
+<a class="sourceLine" id="cb20-19" title="19">    ....</a>
+<a class="sourceLine" id="cb20-20" title="20"><span class="op">}</span>)<span class="op">;</span></a></code></pre></div>
+<h2 id="sending-commands-to-user-modules">Sending Commands to User Modules</h2>
+<h3 id="request-8">Request</h3>
+<pre><code>POST http://ADDRESS:PORT/api/control
+[ with JSON text as contents ]</code></pre>
+<h3 id="response-1">Response</h3>
+<ul>
+<li>If the command is not recognized, returns the HTTP response 400 (Bad Request).</li>
+<li>If the command is processed, returns the HTTP response 201, with contents of:
+<ul>
+<li>If the user module provides custom result JSON (typically with <code>{"status" xxx and "message": ...}</code>), it will be returned.</li>
+<li>Otherwise, returns <code>{"status": "ok"}</code> on success, or <code>{"status": "error"}</code> on error.</li>
+</ul></li>
+</ul>
+<h3 id="javascript-snippet-1">JavaScript Snippet</h3>
+<p>A typical JavaScript would look like:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode javascript"><code class="sourceCode javascript"><a class="sourceLine" id="cb22-1" title="1"><span class="at">fetch</span>(url<span class="op">,</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb22-2" title="2">    <span class="dt">method</span><span class="op">:</span> <span class="st">&#39;POST&#39;</span><span class="op">,</span></a>
+<a class="sourceLine" id="cb22-3" title="3">    <span class="dt">headers</span><span class="op">:</span> <span class="op">{</span> <span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/json; charset=utf-8&#39;</span> <span class="op">},</span></a>
+<a class="sourceLine" id="cb22-4" title="4">    <span class="dt">body</span><span class="op">:</span> <span class="va">JSON</span>.<span class="at">stringify</span>(doc<span class="op">,</span> <span class="kw">null</span><span class="op">,</span> <span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb22-5" title="5"><span class="op">}</span>)</a>
+<a class="sourceLine" id="cb22-6" title="6">.<span class="at">then</span>(response <span class="kw">=&gt;</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb22-7" title="7">    <span class="cf">if</span> (<span class="op">!</span> <span class="va">response</span>.<span class="at">ok</span>) <span class="op">{</span></a>
+<a class="sourceLine" id="cb22-8" title="8">        <span class="cf">throw</span> <span class="kw">new</span> <span class="at">Error</span>(<span class="va">response</span>.<span class="at">status</span> <span class="op">+</span> <span class="st">&quot; &quot;</span> <span class="op">+</span> <span class="va">response</span>.<span class="at">statusText</span>)<span class="op">;</span></a>
+<a class="sourceLine" id="cb22-9" title="9">    <span class="op">}</span></a>
+<a class="sourceLine" id="cb22-10" title="10">    <span class="cf">return</span> <span class="va">response</span>.<span class="at">json</span>()<span class="op">;</span></a>
+<a class="sourceLine" id="cb22-11" title="11"><span class="op">}</span>)</a>
+<a class="sourceLine" id="cb22-12" title="12">.<span class="at">then</span>(doc <span class="kw">=&gt;</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb22-13" title="13">    <span class="cf">if</span> ((<span class="va">doc</span>.<span class="at">status</span> <span class="op">??</span> <span class="st">&#39;&#39;</span>).<span class="at">toUpperCase</span>() <span class="op">==</span> <span class="st">&#39;ERROR&#39;</span>) <span class="op">{</span></a>
+<a class="sourceLine" id="cb22-14" title="14">        <span class="cf">throw</span> <span class="kw">new</span> <span class="at">Error</span>(<span class="va">doc</span>.<span class="at">message</span> <span class="op">??</span> <span class="st">&#39;&#39;</span>)<span class="op">;</span></a>
+<a class="sourceLine" id="cb22-15" title="15">    }</a>
+<a class="sourceLine" id="cb22-16" title="16">    <span class="co">//// success ////</span></a>
+<a class="sourceLine" id="cb22-17" title="17">    ....</a>
+<a class="sourceLine" id="cb22-18" title="18">})</a>
+<a class="sourceLine" id="cb22-19" title="19">.<span class="at">catch</span>(e <span class="kw">=&gt;</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb22-20" title="20">    <span class="co">//// error ////</span></a>
+<a class="sourceLine" id="cb22-21" title="21">    ....</a>
+<a class="sourceLine" id="cb22-22" title="22"><span class="op">}</span>)<span class="op">;</span></a></code></pre></div>
+
+
+</body>
+</html>

@@ -1,0 +1,100 @@
+---
+title: Installation
+---
+
+# Standard Installation
+## Prerequisite
+### Base System
+- UNIX-like OS
+  - Linux most tested
+  - macOS and Windows (WSL) seem ok
+<p>
+- Python 3
+  - Version >= 3.7
+  - with NumPy and pyyaml
+<p>
+- Web Browser
+  - Firefox most tested, Chrome &amp; Edge ok, Safari &amp; Opera never tested.
+  - Also works on mobile devices 
+
+### Data Backend
+Install standard Python modules for the data storage system being used.
+
+Currently supported data backend systems are:
+
+|DBMS              |Python Module|
+|------------------|-------------|
+| PostgreSQL       | psycopg2    |
+| MySQL            | mysqlclient |
+| SQLite           | (none)      |
+| Other SQL DBs (generic) | sqlalchemy  |
+| InfluxDB         | influxdb-client  |
+| Redis            | redis  |
+| CouchDB            | couchdb  |
+| MongoDB            | pymongo  |
+| System Resource (*) | psutil      |
+*) "System Resource" is a a pseudo-database, responding to queries for CPU, memory and disk usage etc.
+
+See [Data Binding section](DataBinding.html) for details.
+
+
+## Installing
+This process will not create any files other than the git-cloned directory. Installation can be removed completely by deleting this directory.
+```console
+$ git clone ...
+$ cd SlowDash/system
+$ make
+```
+
+It might be convenient to include the `slowdash` executable into the `PATH`,
+```bash
+export PATH="${PATH}:PATH/TO/SlowDash/bin"
+```
+or `source` a script to do it:
+```bash
+source PATH/TO/SlowDash/bin/slowdash-bashrc
+```
+
+
+Test the installation by running the command:
+```console
+$ slowdash
+Usage: 
+  Web-Server Mode:    slowdash.py [Options] --port=PORT
+  Command-line Mode:  slowdash.py [Options] Command
+
+Options:
+  -h, --help            show this help message and exit
+  -p PORT, --port=PORT  port number for web connection; command-line mode
+                        without this option
+  --project-dir=PROJECT_DIR
+                        project directory (default: current dir if not
+                        specified by SLOWDASH_PROJECT environmental variable)
+```
+
+Test the browser connection using an arbitrary port. As we have not yet defined a project, a warning message will be shown, but we proceed for now.
+```console
+$ slowdash --port=18881
+23-05-15 20:12:35 WARNING: unable to find Slowdash Project Dir: specify it with the --project-dir option, set the SLOWDASH_PROJECT environmental variable, or run the slowdash commands at a project directory
+listening at port 18881
+```
+```console
+$ firefox http://localhost:18881
+```
+On success, the error messages below will be shown:
+
+<img src="fig/QuickTour-Welcome.png" style="width:40%">
+
+Type `Ctrl-c` to stop slowdash.
+
+
+## Updating
+If slowdash is already running, stop it before updating it.
+```console
+$ cd PATH/TO/SlowDash
+$ git pull
+```
+`make` is not necessary for updating.
+
+# Docker Container
+[TODO]

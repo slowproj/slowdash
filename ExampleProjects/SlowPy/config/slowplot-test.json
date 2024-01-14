@@ -1,0 +1,54 @@
+{
+    "control": {
+        "range": { "length": 300, "to": null },
+        "reload": 0,
+        "grid": { "rows": 2, "columns": 2 }
+    },
+    "panels": [
+        {
+            "type": "plot",
+            "plots": [
+                { "type": "histogram", "channel": "test_histogram_01", "color": "#009090", "opacity": 0.2, "label": "", "format": "%.5g" }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": true, "xmin": -20, "xmax": 20, "ymin": 0, "ymax": 200 },
+            "legend": { "style": "transparent" }
+        },
+        {
+            "type": "plot",
+            "plots": [
+                { "type": "graph", "channel": "test_graph_01", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 4, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" }
+            ],
+            "axes": { "xfixed": true, "yfixed": false, "xlog": false, "ylog": false, "xmin": -1, "xmax": 16, "ymin": -5, "ymax": 7 },
+            "legend": { "style": "transparent" }
+        },
+        {
+            "type": "timeaxis",
+            "plots": [
+                { "type": "timeseries", "channel": "ch00", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" },
+                { "type": "timeseries", "channel": "ch01", "color": "#dd8000", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "ymin": -9, "ymax": 9 },
+            "legend": { "style": "transparent" }
+        },
+        {
+            "type": "timeaxis",
+            "plots": [
+                { "type": "timeseries", "channel": "ch02", "color": "#4169e1", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0.1, "fill_baseline": "1e-100" }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "ymin": -9, "ymax": 9 },
+            "legend": { "style": "transparent" }
+        },
+        { "type": "table", "channel": "obj_raw", "reversed": false, "title": "Raw Object Data" },
+        { "type": "table", "channel": "objts_raw", "reversed": false, "title": "Raw Object-TimeSeries Data" },
+        {
+            "type": "plot",
+            "plots": [
+                { "type": "histogram", "channel": "test_histogram_01", "color": "#009090", "opacity": 0.2, "label": "", "format": "%.5g" }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false },
+            "legend": { "style": "side" }
+        },
+        { "type": "table", "channel": "hist_raw", "reversed": false }
+    ],
+    "meta": { "name": "test", "title": "", "description": "" }
+}

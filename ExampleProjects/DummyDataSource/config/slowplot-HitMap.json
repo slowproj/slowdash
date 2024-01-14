@@ -1,0 +1,29 @@
+{
+    "control": {
+        "range": { "length": 900 },
+        "reload": 300,
+        "grid": { "rows": 2, "columns": 2 }
+    },
+    "panels": [
+        {
+            "type": "map",
+            "map": "ID",
+            "channel": "hitmap",
+            "axes": { "ylog": false, "yfixed": false, "ymin": 0, "ymax": 1, "ytitle": "", "title": "" },
+            "colorCoding": "Viridis",
+            "emptyColor": "#ff0000",
+            "legend": { "style": "none" }
+        },
+        {
+            "type": "map",
+            "map": "OD",
+            "channel": "hitmap",
+            "axes": { "ylog": false, "yfixed": false, "ymin": 0, "ymax": 1, "ytitle": "", "title": "" },
+            "colorCoding": "Viridis",
+            "emptyColor": "#ff0000",
+            "legend": { "style": "none" }
+        },
+        { "type": "html", "file": "PowerControl", "title": "" }
+    ],
+    "meta": { "name": "HitMap", "title": "Hit-Rate Map", "description": "" }
+}

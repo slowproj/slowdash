@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <style type="text/css">
+      html,body {
+        height: calc(100% - 10px);
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: sans-serif;
+        font-size:large;
+        background: #ffffff;
+      }
+      .head {
+        font-size: xx-large;
+        font-weight: bold;
+        padding: 20px;      
+      }
+      .subhead {
+        font-size: x-large;
+        font-weight: bold;
+        padding: 20px;      
+      }
+      .head:nth-child(n+2) {
+        margin-top:50px;
+      }
+      .cell {
+        width: calc(33.3% - 50px);
+        margin: 5px;
+        padding: 20px;
+        background: #f0f0f0;
+        border-radius: 10px;
+      }
+      .cell img {
+        box-shadow: 0px 0px 15px -5px rgba(0, 0, 0, 0.7);
+        align-self: flex-start;
+        width:100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="head">Originally for Slow-controls Dashboard. Now it can do much more.</div>
+    <div style="display:flex;flex-wrap:wrap; margin:10px 50px 0px 50px">
+      <div class="cell">
+        <img src="fig/Gallery-ATDS-Dashboard.png">
+        <br><b>Dashboard (Canvas):</b> current status is summarized with color, digits and history plots, on user base image. Control boxes can be added. Configuration by a user YAML file.
+      </div>
+      <div class="cell">
+        <img src="fig/Gallery-SlowPlot-Dark.png">
+        <br><b>Plot Panels, in Dark Theme:</b> plots for time-series data stored on user database (SQL, InfluxDB, MongoDB, ...) can be quickly visualized with mouse clicks.
+      </div>
+      <div class="cell">
+        <img src="fig/Gallery-RGA.png">
+        <br><b>RGA Control System:</b> Server-side user Python module is used to propagate Slow-Dash user operations to the RGA device. Spectrum data is stored in CouchDB.
+      </div>
+      <div class="cell">
+        <img src="fig/Gallery-HitMap.png">
+        <br><b>Map View</b> is a visualization of a graph object in a schematic way. Data element shapes are described by a user CSV file of x,y,r (simple) or a user SVG file with mapping keys in SVG elements (fully flexible).
+      </div>
+      <div class="cell">
+        <img src="fig/Gallery-WFDAQ.png">
+        <br><b>Waveform Digitizer DAQ: </b> Server-side user Python module connects SlowDash to a DAQ system, for run controls, configuration and status monitoring, with real-time visualization of streaming data (histograms etc) through Redis.
+      </div>
+      <div class="cell">
+        <img src="fig/Gallery-RPiCam.png">
+        <br><b>Camera control and image store: </b> Small user Python module takes pictures regularly and stores them onto CouchDB. Time-series of photos can be browsed as a blob data.
+      </div>
+    </div>
+
+    <div class="head">Connects to Various User Data Storage Systems</div>
+    <img src="fig/Top-DataSources.png" style="margin-left:10ex;width:calc(60% - 10ex)"></div>
+
+    <div class="head">Creates Various Types of Plots</div>
+    <img src="fig/Top-PlotTypes.png" style="margin-left:10ex;width:calc(90% - 10ex)"></div>
+
+    <div class="head">Displays Status and Sends Control Commands</div>
+    <img src="fig/Top-Canvas.png" style="margin-left:10ex;width:calc(70% - 10ex)"></div>
+
+    <div class="head">Can Handle Various Data Types</div>
+    <img src="fig/Top-DataTypes.png" style="margin-left:10ex;width:calc(70% - 10ex)"></div>
+
+    <div class="head">End-Users can make plots and share</div>
+
+    <script type="text/javascript">
+      window.addEventListener('DOMContentLoaded', e => {
+          for (let cell of document.querySelectorAll('.cell')) {
+            const img = cell.querySelector('img');
+            if (img) {
+              cell.addEventListener('click', e => {
+                window.open(img.getAttribute('src'));
+              });
+            }
+          }
+      });
+  </script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE HTML>
+<!-- Created by Sanshiro Enomoto on 26 November 2021 -->
+
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>SlowEdit</title>
+  <link rel="icon" href="favicon.png">
+  <link rel="stylesheet" type="text/css" href="jagaimo/jagaimo.css">
+  <link rel="stylesheet" type="text/css" href="slowdash.css">
+  <link rel="stylesheet" type="text/css" id="sd-theme-css">
+  <script src="extern/ace-builds/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+</head>
+
+
+<body>
+  <div id="sd-header"></div>
+  <div id="editor" style="font-size:130%"></div>
+
+  <script type="module">
+    import { JG as $ } from './jagaimo/jagaimo.mjs';
+    import { boot, Frame, upload } from './controlframe.mjs';
+
+
+    window.addEventListener('DOMContentLoaded', function() {
+        let defaults = {};
+        function optparse(options) {
+            let args = {
+                filename: options.filename ?? '',
+                status: options.status ?? null,
+                mode: options.mode ?? null,
+                theme: options.theme ?? 'github_dark',
+            };
+            return args;
+        }
+        boot(defaults, optparse, start);
+    });
+
+
+    function layout() {
+        let editorDiv = $('#editor');
+        const editorHeight = document.documentElement.clientHeight - editorDiv.pageY();
+        editorDiv.css({ 
+            position: 'relative',
+            width: '100%',
+            height: editorHeight + 'px',
+            margin: 0,
+            padding: 0,
+        });
+    }
+    $(window).bind('resize', layout);
+
+
+    function start(config) {
+        const title = config._project.project?.title || config._project.project?.name || "SlowEdit";
+        const style = config._project.style ?? {};
+        document.title = 'SlowEdit: ' + config.filename;
+
+        let frame = new Frame($('#sd-header'), {
+            title: title,
+            initialStatus: config.filename + (config.status ? ': ' + config.status : ''),
+            style: style,
+            reloadIntervalSelection: null,
+        });
+
+        layout();
+        let editor = ace.edit("editor", {
+            showPrintMargin: false,
+            //showInvisibles: true,
+        });
+        let savePopup = $('<dialog>').addClass('sd-pad').appendTo($('body'));
+        let saveButton = $('<button>').html("&#x1f4be;").bind('click', e=>{
+            upload(savePopup, 'config/file/' + config.filename, editor.getValue(), {
+                contentType: 'text/plain; charset=utf-8',
+                overwritable: true,
+                quietOnSuccess: true,
+                on_success: () => {
+                    updateStatus();
+                    saveButton.enabled(false);
+                    editor.focus();
+                }
+            });
+        });
+        saveButton.attr('title', 'Save');
+        frame.appendButton(saveButton);
+        saveButton.enabled(false);
+        editor.commands.addCommand({
+            name: 'save',
+            bindKey: {win: "Ctrl-S", "mac": "Cmd-S"},
+            exec: (editor) => {
+                saveButton.click();
+            }
+        })
+        
+        let initializeEditor = async () => {
+            if (! config.filename) {
+                return;
+            }
+            let response = await fetch('./api/config/file/' + config.filename + '?content=raw');
+            if (response.status != 200) {
+                frame.setStatus(config.filename + ": " + response.statusText);
+                return;
+            }
+            const content = await response.text();
+
+            editor.setTheme('ace/theme/' + config.theme);
+            if (! config.mode) {
+                const dot = config.filename.lastIndexOf('.');
+                if (dot > 1) {
+                    const ext = config.filename.slice(dot+1).toLowerCase();
+                    if (['json', 'yaml', 'html'].includes(ext)) {
+                        config.mode = ext;
+                    }
+                }
+            }
+            if (config.mode) {
+                editor.session.setMode('ace/mode/' + config.mode);
+            }
+            editor.setValue(content);
+
+            const meta = await updateStatus();
+            if (meta.error) {
+                editor.gotoLine(meta.error_line);
+            }
+            else {
+                editor.gotoLine(0);
+            }
+
+            editor.session.on('change', e => {
+                if (! saveButton.enabled()) {
+                    frame.setStatus(config.filename + ' (<i>modified</i>)<span style="color:gray">' + config.status + '</span>');
+                    saveButton.enabled(true);
+                }
+            });
+            editor.focus();
+        };
+
+        let updateStatus = async () => {
+            let response = await fetch('./api/config/file/' + config.filename + '?content=meta');
+            const meta = await response.json();
+
+            if (meta.error) {
+                config.status = ': ' + meta.error;
+            }
+            else {
+                config.status = '';
+            }
+            frame.setStatus(config.filename + config.status);
+            
+            return meta;
+        };
+        
+        initializeEditor();
+
+    }
+
+  </script>    
+</body>
+</html>

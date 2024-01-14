@@ -1,0 +1,7 @@
+slowdash_project:
+  name: WorldClock
+  module:
+    file: worldclock.py
+    parameters:
+        timeoffset: -9
+    data_suffix: worldclock

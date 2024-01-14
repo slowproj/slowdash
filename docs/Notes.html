@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Technical Notes</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style type="text/css">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+<header>
+<div class="title">Technical Notes</div><p>
+<div class="toc">
+<span class="toc-title">Contents</span>
+<nav id="TOC">
+<ul>
+<li><a href="#database-systems">Database Systems</a><ul>
+<li><a href="#influxdb">InfluxDB</a></li>
+<li><a href="#redis">Redis</a></li>
+<li><a href="#couch-db">Couch DB</a></li>
+</ul></li>
+</ul>
+</nav>
+</div>
+</header>
+
+<h1 id="database-systems">Database Systems</h1>
+<h2 id="influxdb">InfluxDB</h2>
+<h3 id="setup">Setup</h3>
+<h4 id="db-system">DB System</h4>
+<h5 id="arch-nov-2022">Arch, Nov 2022</h5>
+<div class="sourceCode" id="cb1"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">$ sudo pacman -S influxdb</span></a></code></pre></div>
+<h5 id="ubuntu-20.04-may-26-2022">Ubuntu 20.04, May 26 2022</h5>
+<p><a href="https://portal.influxdata.com/downloads/">https://portal.influxdata.com/downloads/</a></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">$ wget -qO- https://repos.influxdata.com/influxdb.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/influxdb.gpg &gt; /dev/null</span></a>
+<a class="sourceLine" id="cb2-2" title="2"><span class="kw">$ export DISTRIB_ID=$(lsb_release -si); export DISTRIB_CODENAME=$(lsb_release -sc)</span></a>
+<a class="sourceLine" id="cb2-3" title="3"><span class="kw">$ echo &quot;deb [signed-by=/etc/apt/trusted.gpg.d/influxdb.gpg] https://repos.influxdata.com/${DISTRIB_ID,,} ${DISTRIB_CODENAME} stable&quot; | sudo tee /etc/apt/sources.list.d/influxdb.list &gt; /dev/null</span></a>
+<a class="sourceLine" id="cb2-4" title="4"><span class="kw">$ sudo apt-get update &amp;&amp; sudo apt-get install influxdb2</span></a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">$ sudo systemctl enable influxdb</span></a></code></pre></div>
+<h4 id="python-module">Python Module</h4>
+<div class="sourceCode" id="cb4"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">$ pip3 install influxdb-client</span></a></code></pre></div>
+<h4 id="web-interface">Web Interface</h4>
+<pre><code>http://localhost:8086</code></pre>
+<ul>
+<li>Initial Settings:
+<ul>
+<li>Create a user with an organization (initial login screen)</li>
+</ul></li>
+<li>Data Store Settings:
+<ul>
+<li>Create a bucket (<code>Load Data</code> -&gt; <code>Buckets</code>)</li>
+<li>Create an API token to access the bucket (<code>Load Data</code> -&gt; <code>API Tokens</code>)</li>
+</ul></li>
+</ul>
+<h3 id="writing">Writing</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb6-1" title="1"><span class="im">from</span> influxdb_client <span class="im">import</span> InfluxDBClient, Point, WritePrecision</a>
+<a class="sourceLine" id="cb6-2" title="2"><span class="im">from</span> influxdb_client.client.write_api <span class="im">import</span> SYNCHRONOUS, WritePrecision</a>
+<a class="sourceLine" id="cb6-3" title="3"></a>
+<a class="sourceLine" id="cb6-4" title="4"><span class="kw">class</span> DataStore_InfluxDB:</a>
+<a class="sourceLine" id="cb6-5" title="5">    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, url, token, org, bucket):</a>
+<a class="sourceLine" id="cb6-6" title="6">        <span class="va">self</span>.org <span class="op">=</span> org</a>
+<a class="sourceLine" id="cb6-7" title="7">        <span class="va">self</span>.bucket <span class="op">=</span> bucket</a>
+<a class="sourceLine" id="cb6-8" title="8">        <span class="va">self</span>.client <span class="op">=</span> InfluxDBClient(url<span class="op">=</span>url, token<span class="op">=</span>token, org<span class="op">=</span><span class="va">self</span>.org)</a>
+<a class="sourceLine" id="cb6-9" title="9">        <span class="va">self</span>.write_api <span class="op">=</span> <span class="va">self</span>.client.write_api(write_options<span class="op">=</span>SYNCHRONOUS)</a>
+<a class="sourceLine" id="cb6-10" title="10"></a>
+<a class="sourceLine" id="cb6-11" title="11">    <span class="kw">def</span> <span class="fu">__del__</span>(<span class="va">self</span>):</a>
+<a class="sourceLine" id="cb6-12" title="12">        <span class="va">self</span>.client.close()</a>
+<a class="sourceLine" id="cb6-13" title="13">        </a>
+<a class="sourceLine" id="cb6-14" title="14">    <span class="kw">def</span> write(<span class="va">self</span>, measurement, record, timestamp<span class="op">=</span><span class="va">None</span>):</a>
+<a class="sourceLine" id="cb6-15" title="15">        <span class="cf">for</span> key, value <span class="kw">in</span> record.items():</a>
+<a class="sourceLine" id="cb6-16" title="16">            point <span class="op">=</span> Point(measurement).tag(<span class="st">&quot;channel&quot;</span>, key).field(<span class="st">&quot;raw_value&quot;</span>, <span class="bu">float</span>(value))</a>
+<a class="sourceLine" id="cb6-17" title="17">            <span class="cf">if</span> timestamp <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</a>
+<a class="sourceLine" id="cb6-18" title="18">                point.time(timestamp, WritePrecision.S)</a>
+<a class="sourceLine" id="cb6-19" title="19">            <span class="va">self</span>.write_api.write(<span class="va">self</span>.bucket, <span class="va">self</span>.org, point)</a></code></pre></div>
+<h3 id="reading">Reading</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb7-1" title="1"><span class="im">from</span> influxdb_client <span class="im">import</span> InfluxDBClient, Point, WritePrecision</a>
+<a class="sourceLine" id="cb7-2" title="2"><span class="im">from</span> influxdb_client.client.write_api <span class="im">import</span> SYNCHRONOUS</a>
+<a class="sourceLine" id="cb7-3" title="3"></a>
+<a class="sourceLine" id="cb7-4" title="4">token, org, backet <span class="op">=</span> ...</a>
+<a class="sourceLine" id="cb7-5" title="5">idb <span class="op">=</span> InfluxDBClient(url<span class="op">=</span><span class="st">&quot;http://localhost:8086&quot;</span>, token<span class="op">=</span>token, org<span class="op">=</span>org)</a>
+<a class="sourceLine" id="cb7-6" title="6">api <span class="op">=</span> idb.query_api()</a>
+<a class="sourceLine" id="cb7-7" title="7"></a>
+<a class="sourceLine" id="cb7-8" title="8">query <span class="op">=</span> <span class="st">&#39;&#39;&#39;</span></a>
+<a class="sourceLine" id="cb7-9" title="9"><span class="st">    import &quot;influxdata/influxdb/schema&quot;</span></a>
+<a class="sourceLine" id="cb7-10" title="10"><span class="st">    schema.measurementTagKeys(bucket: &quot;Magnetometer&quot;, measurement: &quot;LabJack&quot;)</span></a>
+<a class="sourceLine" id="cb7-11" title="11"><span class="st">&#39;&#39;&#39;</span></a>
+<a class="sourceLine" id="cb7-12" title="12">tables <span class="op">=</span> api.query(query, org<span class="op">=</span>org)</a>
+<a class="sourceLine" id="cb7-13" title="13"><span class="cf">for</span> table <span class="kw">in</span> tables:</a>
+<a class="sourceLine" id="cb7-14" title="14">    <span class="bu">print</span>([record.get_value() <span class="cf">for</span> record <span class="kw">in</span> table])</a>
+<a class="sourceLine" id="cb7-15" title="15">                </a>
+<a class="sourceLine" id="cb7-16" title="16">query <span class="op">=</span> <span class="st">&#39;&#39;&#39;</span></a>
+<a class="sourceLine" id="cb7-17" title="17"><span class="st">    from(bucket: &quot;Magnetometer&quot;) </span></a>
+<a class="sourceLine" id="cb7-18" title="18"><span class="st">    |&gt; range(start: -3600s)</span></a>
+<a class="sourceLine" id="cb7-19" title="19"><span class="st">    |&gt; filter(fn: (r) =&gt; r._measurement == &quot;LabJack&quot;)</span></a>
+<a class="sourceLine" id="cb7-20" title="20"><span class="st">    |&gt; filter(fn: (r) =&gt; r._field == &quot;raw_value&quot;)</span></a>
+<a class="sourceLine" id="cb7-21" title="21"><span class="st">    |&gt; filter(fn: (r) =&gt; r.channel == &quot;AI0&quot;)</span></a>
+<a class="sourceLine" id="cb7-22" title="22"><span class="st">&#39;&#39;&#39;</span></a>
+<a class="sourceLine" id="cb7-23" title="23">tables <span class="op">=</span> api.query(query, org<span class="op">=</span>org)</a>
+<a class="sourceLine" id="cb7-24" title="24"><span class="cf">for</span> table <span class="kw">in</span> tables:</a>
+<a class="sourceLine" id="cb7-25" title="25">    <span class="cf">for</span> record <span class="kw">in</span> table.records:</a>
+<a class="sourceLine" id="cb7-26" title="26">        <span class="bu">print</span>(record.get_time().timestamp(), record.values[<span class="st">&#39;channel&#39;</span>], record.get_value())</a>
+<a class="sourceLine" id="cb7-27" title="27"></a>
+<a class="sourceLine" id="cb7-28" title="28">idb.close()</a></code></pre></div>
+<h2 id="redis">Redis</h2>
+<h3 id="setup-1">Setup</h3>
+<h4 id="db-system-1">DB System</h4>
+<h5 id="redis-stack-ubuntu-20.04-sep-2022">Redis-Stack, Ubuntu 20.04, Sep 2022</h5>
+<div class="sourceCode" id="cb8"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">$ curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg</span></a>
+<a class="sourceLine" id="cb8-2" title="2"><span class="kw">$ echo &quot;deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main&quot; | sudo tee /etc/apt/sources.list.d/redis.list</span></a>
+<a class="sourceLine" id="cb8-3" title="3"><span class="kw">$ sudo apt-get update</span></a>
+<a class="sourceLine" id="cb8-4" title="4"><span class="kw">$ sudo apt-get install redis-stack-server</span></a>
+<a class="sourceLine" id="cb8-5" title="5"><span class="kw">$ sudo systemctl start redis-stack-server</span></a></code></pre></div>
+<ul>
+<li>dump file (dump.rdb) will be located at <code>/var/lib/redis-stack</code>.</li>
+<li>run <code>redis-cli config get dir</code> to see this location</li>
+</ul>
+<h4 id="python-module-1">Python Module</h4>
+<div class="sourceCode" id="cb9"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb9-1" title="1"><span class="kw">$ sudo pip3 install redis</span></a></code></pre></div>
+<h3 id="writing-1">Writing</h3>
+<h4 id="simple-key-value">Simple Key-Value</h4>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb10-1" title="1"><span class="im">import</span> redis</a>
+<a class="sourceLine" id="cb10-2" title="2">r <span class="op">=</span> redis.Redis(<span class="st">&#39;localhost&#39;</span>, <span class="dv">6379</span>, <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb10-3" title="3">hist <span class="op">=</span> <span class="st">&#39;&#39;&#39;{</span></a>
+<a class="sourceLine" id="cb10-4" title="4"><span class="st">  &quot;bins&quot;: { &quot;min&quot;: 0, &quot;max&quot;: 100 },</span></a>
+<a class="sourceLine" id="cb10-5" title="5"><span class="st">  &quot;counts&quot;: [ 3, 5, 8, 14, 11, 3, 6, 4, 4, 1 ]</span></a>
+<a class="sourceLine" id="cb10-6" title="6"><span class="st">}&#39;&#39;&#39;</span></a>
+<a class="sourceLine" id="cb10-7" title="7">r.<span class="bu">set</span>(<span class="st">&#39;hist00&#39;</span>, hist)</a></code></pre></div>
+<h4 id="hash-in-key-value">Hash in Key-Value</h4>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb11-1" title="1">    name, record <span class="op">=</span> <span class="st">&quot;record0&quot;</span>, {<span class="st">&#39;key0&#39;</span>: value0, <span class="st">&#39;key1&#39;</span>, value1, ...}</a>
+<a class="sourceLine" id="cb11-2" title="2">    r.hset(name, mapping<span class="op">=</span>record)</a></code></pre></div>
+<h4 id="redis-json">Redis-JSON</h4>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb12-1" title="1">hist <span class="op">=</span> {</a>
+<a class="sourceLine" id="cb12-2" title="2">  <span class="st">&#39;bins&#39;</span>: { <span class="st">&#39;min&#39;</span>: <span class="dv">0</span>, <span class="st">&#39;max&#39;</span>: <span class="dv">100</span> },</a>
+<a class="sourceLine" id="cb12-3" title="3">  <span class="st">&#39;counts&#39;</span>: [ <span class="dv">3</span>, <span class="dv">5</span>, <span class="dv">8</span>, <span class="dv">14</span>, <span class="dv">11</span>, <span class="dv">3</span>, <span class="dv">6</span>, <span class="dv">4</span>, <span class="dv">4</span>, <span class="dv">1</span> ]</a>
+<a class="sourceLine" id="cb12-4" title="4">}</a>
+<a class="sourceLine" id="cb12-5" title="5">r.json().<span class="bu">set</span>(<span class="st">&#39;hist00&#39;</span>, <span class="st">&#39;$&#39;</span>, hist)</a></code></pre></div>
+<h4 id="redis-time-series">Redis Time-Series</h4>
+<div class="sourceCode" id="cb13"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb13-1" title="1"><span class="co"># creating: only once</span></a>
+<a class="sourceLine" id="cb13-2" title="2">r.ts().create(<span class="st">&#39;ts0&#39;</span>, retention_msecs<span class="op">=</span><span class="dv">1000</span><span class="op">*</span><span class="dv">86400</span>)</a>
+<a class="sourceLine" id="cb13-3" title="3"></a>
+<a class="sourceLine" id="cb13-4" title="4"><span class="cf">while</span> <span class="va">True</span>:</a>
+<a class="sourceLine" id="cb13-5" title="5">  timestamp, value <span class="op">=</span> ...</a>
+<a class="sourceLine" id="cb13-6" title="6">  r.ts().add(<span class="st">&#39;ts0&#39;</span>, <span class="bu">int</span>(<span class="dv">1000</span><span class="op">*</span>timestamp), value)</a></code></pre></div>
+<h3 id="reading-1">Reading</h3>
+<h4 id="ke-value-hash">Ke-Value Hash</h4>
+<div class="sourceCode" id="cb14"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb14-1" title="1"><span class="im">import</span> redis</a>
+<a class="sourceLine" id="cb14-2" title="2">host, port, db <span class="op">=</span> <span class="st">&#39;localhost&#39;</span>, <span class="dv">6379</span>, <span class="dv">3</span></a>
+<a class="sourceLine" id="cb14-3" title="3"><span class="cf">with</span> redis.Redis(host<span class="op">=</span>host, port<span class="op">=</span>port, db<span class="op">=</span>db, decode_responses<span class="op">=</span><span class="va">True</span>) <span class="im">as</span> r:</a>
+<a class="sourceLine" id="cb14-4" title="4">    <span class="cf">for</span> key <span class="kw">in</span> r.keys():</a>
+<a class="sourceLine" id="cb14-5" title="5">        <span class="cf">if</span> r.<span class="bu">type</span>(key) <span class="op">==</span> <span class="st">&#39;hash&#39;</span>:</a>
+<a class="sourceLine" id="cb14-6" title="6">            doc <span class="op">=</span> r.hgetall(key)  <span class="co"># return Python dict</span></a>
+<a class="sourceLine" id="cb14-7" title="7">            <span class="bu">print</span>(doc)</a></code></pre></div>
+<h4 id="time-series">Time-Series</h4>
+<div class="sourceCode" id="cb15"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb15-1" title="1"><span class="im">import</span> sys, time, json</a>
+<a class="sourceLine" id="cb15-2" title="2"><span class="im">import</span> redis</a>
+<a class="sourceLine" id="cb15-3" title="3"></a>
+<a class="sourceLine" id="cb15-4" title="4">host, port, db <span class="op">=</span> <span class="st">&#39;localhost&#39;</span>, <span class="dv">6379</span>, <span class="dv">3</span></a>
+<a class="sourceLine" id="cb15-5" title="5"></a>
+<a class="sourceLine" id="cb15-6" title="6">ts_list <span class="op">=</span> []</a>
+<a class="sourceLine" id="cb15-7" title="7"><span class="cf">with</span> redis.Redis(host<span class="op">=</span>host, port<span class="op">=</span>port, db<span class="op">=</span>db, decode_responses<span class="op">=</span><span class="va">True</span>) <span class="im">as</span> r:</a>
+<a class="sourceLine" id="cb15-8" title="8">    <span class="cf">for</span> key <span class="kw">in</span> r.keys():</a>
+<a class="sourceLine" id="cb15-9" title="9">        <span class="cf">if</span> r.<span class="bu">type</span>(key) <span class="op">==</span> <span class="st">&#39;TSDB-TYPE&#39;</span>:</a>
+<a class="sourceLine" id="cb15-10" title="10">            ts_list.append(key)</a>
+<a class="sourceLine" id="cb15-11" title="11">            <span class="bu">print</span>(key)</a>
+<a class="sourceLine" id="cb15-12" title="12"></a>
+<a class="sourceLine" id="cb15-13" title="13">to <span class="op">=</span> time.time()</a>
+<a class="sourceLine" id="cb15-14" title="14">length <span class="op">=</span> <span class="dv">100000</span></a>
+<a class="sourceLine" id="cb15-15" title="15"></a>
+<a class="sourceLine" id="cb15-16" title="16">record <span class="op">=</span> {}</a>
+<a class="sourceLine" id="cb15-17" title="17">start <span class="op">=</span> to <span class="op">-</span> length</a>
+<a class="sourceLine" id="cb15-18" title="18"><span class="cf">for</span> key <span class="kw">in</span> ts_list:</a>
+<a class="sourceLine" id="cb15-19" title="19">    ts <span class="op">=</span> redis.ts().<span class="bu">range</span>(key, <span class="bu">int</span>(<span class="dv">1000</span><span class="op">*</span>start), <span class="bu">int</span>(<span class="dv">1000</span><span class="op">*</span>to))</a>
+<a class="sourceLine" id="cb15-20" title="20">    n <span class="op">=</span> <span class="bu">len</span>(ts)</a>
+<a class="sourceLine" id="cb15-21" title="21">    <span class="cf">if</span> n <span class="op">==</span> <span class="dv">0</span>:</a>
+<a class="sourceLine" id="cb15-22" title="22">        <span class="cf">continue</span></a>
+<a class="sourceLine" id="cb15-23" title="23">    </a>
+<a class="sourceLine" id="cb15-24" title="24">    t, x <span class="op">=</span> [],[]</a>
+<a class="sourceLine" id="cb15-25" title="25">    <span class="cf">for</span> tk, xk <span class="kw">in</span> ts:</a>
+<a class="sourceLine" id="cb15-26" title="26">        t.append(<span class="bu">int</span>(<span class="dv">10</span><span class="op">*</span>(tk<span class="op">/</span><span class="dv">1000</span><span class="op">-</span>(to<span class="op">-</span>length)))<span class="op">/</span><span class="dv">10</span>)</a>
+<a class="sourceLine" id="cb15-27" title="27">        x.append(xk)</a>
+<a class="sourceLine" id="cb15-28" title="28">    record[key.decode()] <span class="op">=</span> {<span class="st">&#39;start&#39;</span>: start, <span class="st">&#39;length&#39;</span>: length, <span class="st">&#39;t&#39;</span>: t, <span class="st">&#39;x&#39;</span>: x}</a>
+<a class="sourceLine" id="cb15-29" title="29">        </a>
+<a class="sourceLine" id="cb15-30" title="30">json.dump(record, sys.stdout)</a>
+<a class="sourceLine" id="cb15-31" title="31">sys.stdout.write(<span class="st">&#39;</span><span class="ch">\n</span><span class="st">&#39;</span>)</a></code></pre></div>
+<h4 id="json">JSON</h4>
+<div class="sourceCode" id="cb16"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb16-1" title="1"><span class="im">import</span> redis</a>
+<a class="sourceLine" id="cb16-2" title="2"></a>
+<a class="sourceLine" id="cb16-3" title="3">host, port, db <span class="op">=</span> <span class="st">&#39;localhost&#39;</span>, <span class="dv">6379</span>, <span class="dv">3</span></a>
+<a class="sourceLine" id="cb16-4" title="4">redis <span class="op">=</span> redis.Redis(host<span class="op">=</span>host, port<span class="op">=</span>port, db<span class="op">=</span>db, decode_responses<span class="op">=</span><span class="va">True</span>)</a>
+<a class="sourceLine" id="cb16-5" title="5"></a>
+<a class="sourceLine" id="cb16-6" title="6">obj_list <span class="op">=</span> []</a>
+<a class="sourceLine" id="cb16-7" title="7"><span class="cf">for</span> key <span class="kw">in</span> redis.keys():</a>
+<a class="sourceLine" id="cb16-8" title="8">    <span class="cf">if</span> redis.<span class="bu">type</span>(key) <span class="op">==</span> <span class="st">&#39;ReJSON-RL&#39;</span>:</a>
+<a class="sourceLine" id="cb16-9" title="9">        obj_list.append(key)</a>
+<a class="sourceLine" id="cb16-10" title="10">        <span class="bu">print</span>(key)</a>
+<a class="sourceLine" id="cb16-11" title="11"></a>
+<a class="sourceLine" id="cb16-12" title="12"><span class="cf">for</span> key <span class="kw">in</span> obj_list:</a>
+<a class="sourceLine" id="cb16-13" title="13">    <span class="bu">print</span>(key)</a>
+<a class="sourceLine" id="cb16-14" title="14">    obj <span class="op">=</span> redis.json().get(key)</a>
+<a class="sourceLine" id="cb16-15" title="15">    <span class="bu">print</span>(obj)</a></code></pre></div>
+<h2 id="couch-db">Couch DB</h2>
+<h3 id="setup-2">Setup</h3>
+<h4 id="db-system-2">DB System</h4>
+<div class="sourceCode" id="cb17"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb17-1" title="1"><span class="kw">$ sudo apt update &amp;&amp; sudo apt install -y curl apt-transport-https gnupg</span></a>
+<a class="sourceLine" id="cb17-2" title="2"><span class="kw">$ curl https://couchdb.apache.org/repo/keys.asc | gpg --dearmor | sudo tee /usr/share/keyrings/couchdb-archive-keyring.gpg &gt;/dev/null 2&gt;&amp;1</span></a>
+<a class="sourceLine" id="cb17-3" title="3"><span class="kw">$ source /etc/os-release</span></a>
+<a class="sourceLine" id="cb17-4" title="4"><span class="kw">$ echo &quot;deb [signed-by=/usr/share/keyrings/couchdb-archive-keyring.gpg] https://apache.jfrog.io/artifactory/couchdb-deb/ ${VERSION_CODENAME} main&quot; | sudo tee /etc/apt/sources.list.d/couchdb.list &gt;/dev/null</span></a></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb18-1" title="1"><span class="kw">$ sudo apt update</span></a>
+<a class="sourceLine" id="cb18-2" title="2"><span class="kw">$ sudo apt install -y couchdb</span></a></code></pre></div>
+<h4 id="python-module-2">Python Module</h4>
+<div class="sourceCode" id="cb19"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb19-1" title="1">pip3 install couchdb</a></code></pre></div>
+<h3 id="web-interface-1">Web Interface</h3>
+<pre><code>http://localhost:5984/_utils/</code></pre>
+<h3 id="writing-2">Writing</h3>
+<ul>
+<li>Create a “Database” with the Web Interface</li>
+</ul>
+<h4 id="basic">Basic</h4>
+<div class="sourceCode" id="cb21"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb21-1" title="1">couchdb_server <span class="op">=</span> <span class="st">&#39;http://admin:admin@localhost:5984&#39;</span></a>
+<a class="sourceLine" id="cb21-2" title="2">db_name <span class="op">=</span> <span class="st">&#39;ripple&#39;</span></a>
+<a class="sourceLine" id="cb21-3" title="3"></a>
+<a class="sourceLine" id="cb21-4" title="4"><span class="im">import</span> couchdb, uuid</a>
+<a class="sourceLine" id="cb21-5" title="5">couch <span class="op">=</span> couchdb.Server(couchdb_server)</a>
+<a class="sourceLine" id="cb21-6" title="6">db <span class="op">=</span> couch[db_name]</a>
+<a class="sourceLine" id="cb21-7" title="7"></a>
+<a class="sourceLine" id="cb21-8" title="8">db.save({</a>
+<a class="sourceLine" id="cb21-9" title="9">    <span class="st">&quot;_id&quot;</span>: uuid.uuid4().<span class="bu">hex</span>,</a>
+<a class="sourceLine" id="cb21-10" title="10">    <span class="st">&quot;channel&quot;</span>: channel,</a>
+<a class="sourceLine" id="cb21-11" title="11">    <span class="st">&quot;timestamp&quot;</span>: timestamp,</a>
+<a class="sourceLine" id="cb21-12" title="12">    <span class="st">&quot;meta&quot;</span>: meta,</a>
+<a class="sourceLine" id="cb21-13" title="13">    <span class="st">&quot;graph&quot;</span>: graph</a>
+<a class="sourceLine" id="cb21-14" title="14">})</a></code></pre></div>
+<h4 id="attachment-blob">Attachment / Blob</h4>
+<div class="sourceCode" id="cb22"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb22-1" title="1">doc <span class="op">=</span> {</a>
+<a class="sourceLine" id="cb22-2" title="2">    <span class="st">&quot;_id&quot;</span>: uuid.uuid4().<span class="bu">hex</span></a>
+<a class="sourceLine" id="cb22-3" title="3">    <span class="st">&quot;timestamp&quot;</span>: time.time(),</a>
+<a class="sourceLine" id="cb22-4" title="4">    <span class="st">&quot;name&quot;</span>: file_name,</a>
+<a class="sourceLine" id="cb22-5" title="5">    <span class="st">&quot;parameters&quot;</span>: properties,</a>
+<a class="sourceLine" id="cb22-6" title="6">}</a>
+<a class="sourceLine" id="cb22-7" title="7">db.save(doc)</a>
+<a class="sourceLine" id="cb22-8" title="8">db.put_attachment(doc, blob_content, filename<span class="op">=</span>file_name, content_type<span class="op">=</span>mime_type)</a></code></pre></div>
+<h3 id="reading-2">Reading</h3>
+<h4 id="with-a-view">With a view</h4>
+<p>Create a view with the Web Interface:</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode javascript"><code class="sourceCode javascript"><a class="sourceLine" id="cb23-1" title="1"><span class="kw">function</span> (doc) <span class="op">{</span></a>
+<a class="sourceLine" id="cb23-2" title="2">    <span class="kw">const</span> record <span class="op">=</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb23-3" title="3">        <span class="st">&quot;Filament&quot;</span><span class="op">:</span> <span class="va">doc</span>.<span class="va">Config</span>.<span class="va">FilamentInfo</span>.<span class="at">SummaryState</span> <span class="op">==</span> <span class="st">&#39;ON&#39;</span> <span class="op">?</span> <span class="dv">1</span> : <span class="dv">0</span><span class="op">,</span></a>
+<a class="sourceLine" id="cb23-4" title="4">        <span class="st">&quot;Multiplier&quot;</span><span class="op">:</span> <span class="va">doc</span>.<span class="va">Config</span>.<span class="va">MultiplierInfo</span>.<span class="at">MultiplierOn</span> <span class="op">==</span> <span class="st">&#39;Yes&#39;</span> <span class="op">?</span> <span class="dv">1</span> : <span class="dv">0</span><span class="op">,</span></a>
+<a class="sourceLine" id="cb23-5" title="5">    <span class="op">};</span></a>
+<a class="sourceLine" id="cb23-6" title="6">    <span class="at">emit</span>(<span class="va">doc</span>.<span class="at">timestamp</span><span class="op">,</span> record)<span class="op">;</span></a>
+<a class="sourceLine" id="cb23-7" title="7"><span class="op">}</span></a></code></pre></div>
+<p>Hereafter <code>view_name</code> is <code>DESIGN_DOCUMENT_NAME/INDEX_NAME</code>.</p>
+<p>reading columns:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb24-1" title="1"><span class="kw">def</span> get_channels():</a>
+<a class="sourceLine" id="cb24-2" title="2">    channels <span class="op">=</span> []</a>
+<a class="sourceLine" id="cb24-3" title="3">    view <span class="op">=</span> <span class="va">self</span>.db.view(view_name)</a>
+<a class="sourceLine" id="cb24-4" title="4">    rows <span class="op">=</span> view[start_key:end_key].rows</a>
+<a class="sourceLine" id="cb24-5" title="5">    <span class="cf">for</span> key <span class="kw">in</span> rows[<span class="op">-</span><span class="dv">1</span>].value:</a>
+<a class="sourceLine" id="cb24-6" title="6">        channels.append({<span class="st">&#39;name&#39;</span>: key})</a>
+<a class="sourceLine" id="cb24-7" title="7">    <span class="cf">return</span> channels</a></code></pre></div>
+<p>reading values:</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb25-1" title="1"><span class="kw">def</span> get_series(channel, start, to):</a>
+<a class="sourceLine" id="cb25-2" title="2">    t, x <span class="op">=</span> [], []</a>
+<a class="sourceLine" id="cb25-3" title="3">    rows <span class="op">=</span> db.view(view_name)[start:to].rows</a>
+<a class="sourceLine" id="cb25-4" title="4">    <span class="cf">for</span> row <span class="kw">in</span> rows:</a>
+<a class="sourceLine" id="cb25-5" title="5">        timestamp <span class="op">=</span> row.key</a>
+<a class="sourceLine" id="cb25-6" title="6">        value <span class="op">=</span> row.value.get(channel, <span class="va">None</span>)</a>
+<a class="sourceLine" id="cb25-7" title="7">        <span class="cf">if</span> value <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</a>
+<a class="sourceLine" id="cb25-8" title="8">            t.append(timestamp)</a>
+<a class="sourceLine" id="cb25-9" title="9">            x.append(value)</a>
+<a class="sourceLine" id="cb25-10" title="10">    <span class="cf">return</span> t,x</a></code></pre></div>
+<h4 id="attachment-blob-1">Attachment / Blob</h4>
+<div class="sourceCode" id="cb26"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb26-1" title="1">        doc <span class="op">=</span> db.get(ID)</a>
+<a class="sourceLine" id="cb26-2" title="2">        <span class="cf">if</span> doc <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</a>
+<a class="sourceLine" id="cb26-3" title="3">            content_type <span class="op">=</span> doc.get(<span class="st">&#39;_attachments&#39;</span>, {}).get(FILENAME, {}).get(<span class="st">&#39;content_type&#39;</span>, <span class="va">None</span>)</a>
+<a class="sourceLine" id="cb26-4" title="4">            att <span class="op">=</span> db.get_attachment(doc, FILENAME, default<span class="op">=</span><span class="va">None</span>)</a>
+<a class="sourceLine" id="cb26-5" title="5">            <span class="cf">if</span> content_type <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span> <span class="kw">and</span> att <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</a>
+<a class="sourceLine" id="cb26-6" title="6">                output.write(att.read())</a>
+<a class="sourceLine" id="cb26-7" title="7">                att.close()</a></code></pre></div>
+<p>A blob time-series</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode javascript"><code class="sourceCode javascript"><a class="sourceLine" id="cb27-1" title="1"><span class="kw">function</span> (doc) <span class="op">{</span></a>
+<a class="sourceLine" id="cb27-2" title="2">    <span class="kw">const</span> record <span class="op">=</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb27-3" title="3">        <span class="st">&quot;PhotoImage&quot;</span><span class="op">:</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb27-4" title="4">            <span class="dt">mime</span><span class="op">:</span> <span class="va">doc</span>.<span class="at">_attachments</span>[<span class="va">doc</span>.<span class="at">name</span>].<span class="at">content_type</span><span class="op">,</span> </a>
+<a class="sourceLine" id="cb27-5" title="5">            <span class="dt">id</span><span class="op">:</span> <span class="va">doc</span>.<span class="at">_id</span> <span class="op">+</span> <span class="st">&#39;/&#39;</span> <span class="op">+</span> <span class="va">doc</span>.<span class="at">name</span><span class="op">,</span> </a>
+<a class="sourceLine" id="cb27-6" title="6">            <span class="dt">meta</span><span class="op">:</span> <span class="va">doc</span>.<span class="at">properties</span></a>
+<a class="sourceLine" id="cb27-7" title="7">        <span class="op">}</span></a>
+<a class="sourceLine" id="cb27-8" title="8">    <span class="op">}</span>)<span class="op">;</span></a>
+<a class="sourceLine" id="cb27-9" title="9">    <span class="at">emit</span>(<span class="va">doc</span>.<span class="at">timestamp</span><span class="op">,</span> record)<span class="op">;</span></a>
+<a class="sourceLine" id="cb27-10" title="10"><span class="op">}</span></a></code></pre></div>
+
+
+</body>
+</html>

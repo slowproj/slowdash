@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>User Module</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style type="text/css">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+<header>
+<div class="title">User Module</div><p>
+<div class="toc">
+<span class="toc-title">Contents</span>
+<nav id="TOC">
+<ul>
+<li><a href="#applications">Applications</a></li>
+<li><a href="#project-configuration-file">Project Configuration File</a></li>
+<li><a href="#user-module-structure">User Module structure</a></li>
+<li><a href="#example-user-data-source">Example User Data Source</a></li>
+<li><a href="#example-user-command-dispatcher">Example User Command Dispatcher</a></li>
+</ul>
+</nav>
+</div>
+</header>
+
+<h1 id="applications">Applications</h1>
+<p>In Slow-Dash projects, user Python module can be used for:</p>
+<ul>
+<li>sending data to the web interface (table, tree, etc)</li>
+<li>dispatching “command” from the web interface</li>
+</ul>
+<h1 id="project-configuration-file">Project Configuration File</h1>
+<div class="sourceCode" id="cb1"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb1-1" title="1"><span class="fu">slowdash_project:</span></a>
+<a class="sourceLine" id="cb1-2" title="2">  <span class="fu">name:</span><span class="at"> ...</span></a>
+<a class="sourceLine" id="cb1-3" title="3">  <span class="fu">module:</span></a>
+<a class="sourceLine" id="cb1-4" title="4">    <span class="fu">file:</span><span class="at"> FILE_PATH</span></a>
+<a class="sourceLine" id="cb1-5" title="5">    <span class="fu">parameters:</span></a>
+<a class="sourceLine" id="cb1-6" title="6">        <span class="fu">KEY1:</span><span class="at"> VALUE1</span></a>
+<a class="sourceLine" id="cb1-7" title="7">        ...</a>
+<a class="sourceLine" id="cb1-8" title="8">    <span class="fu">data_suffix:</span><span class="at"> SUFFIX</span></a>
+<a class="sourceLine" id="cb1-9" title="9">    <span class="fu">cgi_enabled:</span><span class="at"> </span><span class="ch">False</span></a></code></pre></div>
+<p>[TODO] implement SUFFIX</p>
+<p>By default, user modules are not enabled if the server program is launched by CGI. To enable this, set the <code>cgi_enabled</code> parameter <code>True</code>. Be careful for all the side effects, including performance overhead and security issues. As multiple user modules can be loaded in parallel, splitting functions to a CGI-enabled module and disabled one might be a good strategy.</p>
+<h3 id="example">Example</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb2-1" title="1"><span class="fu">slowdash_project:</span></a>
+<a class="sourceLine" id="cb2-2" title="2">  <span class="fu">name:</span><span class="at"> ...</span></a>
+<a class="sourceLine" id="cb2-3" title="3">  <span class="fu">module:</span></a>
+<a class="sourceLine" id="cb2-4" title="4">    <span class="fu">file:</span><span class="at"> ./mymodule.py</span></a></code></pre></div>
+<ul>
+<li><code>mymodule.py</code> at the user project directory will be loaded to slow-dash.</li>
+<li>Call-back functions in <code>mudule.py</code> will be called for various context.</li>
+</ul>
+<h1 id="user-module-structure">User Module structure</h1>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb3-1" title="1"><span class="co">### Called when this module is loaded. The params are the parameters in the configuration file.</span></a>
+<a class="sourceLine" id="cb3-2" title="2"><span class="kw">def</span> initialize(params):</a>
+<a class="sourceLine" id="cb3-3" title="3">    <span class="cf">pass</span></a>
+<a class="sourceLine" id="cb3-4" title="4"></a>
+<a class="sourceLine" id="cb3-5" title="5">    </a>
+<a class="sourceLine" id="cb3-6" title="6"><span class="co">### Called during termination of slow-dash.</span></a>
+<a class="sourceLine" id="cb3-7" title="7"><span class="kw">def</span> finalize():</a>
+<a class="sourceLine" id="cb3-8" title="8">    <span class="cf">pass</span></a>
+<a class="sourceLine" id="cb3-9" title="9"></a>
+<a class="sourceLine" id="cb3-10" title="10">    </a>
+<a class="sourceLine" id="cb3-11" title="11"><span class="co">### Called when web clients need a list of available channels.</span></a>
+<a class="sourceLine" id="cb3-12" title="12"><span class="co"># Return a list of channel struct, e.g.,  [ { &quot;name&quot;: NAME1, &quot;type&quot;: TYPE1 }, ... ]</span></a>
+<a class="sourceLine" id="cb3-13" title="13"><span class="kw">def</span> get_channels():</a>
+<a class="sourceLine" id="cb3-14" title="14">    <span class="cf">return</span> []</a>
+<a class="sourceLine" id="cb3-15" title="15"></a>
+<a class="sourceLine" id="cb3-16" title="16"></a>
+<a class="sourceLine" id="cb3-17" title="17"><span class="co">### Called when web clients request data.</span></a>
+<a class="sourceLine" id="cb3-18" title="18"><span class="co"># If the channel is not known, return None</span></a>
+<a class="sourceLine" id="cb3-19" title="19"><span class="co"># else return a JSON object of the data, in the format described in the Data Model document.</span></a>
+<a class="sourceLine" id="cb3-20" title="20"><span class="kw">def</span> get_data(channel):</a>
+<a class="sourceLine" id="cb3-21" title="21">    <span class="cf">return</span> <span class="va">None</span></a>
+<a class="sourceLine" id="cb3-22" title="22"></a>
+<a class="sourceLine" id="cb3-23" title="23"></a>
+<a class="sourceLine" id="cb3-24" title="24"><span class="co">### Called when web clients send a command.</span></a>
+<a class="sourceLine" id="cb3-25" title="25"><span class="co"># If command is not recognized, return None</span></a>
+<a class="sourceLine" id="cb3-26" title="26"><span class="co"># elif command is executed successfully, return True</span></a>
+<a class="sourceLine" id="cb3-27" title="27"><span class="co"># else return False or { &quot;status&quot;: &quot;error&quot;, &quot;message&quot;: ... }</span></a>
+<a class="sourceLine" id="cb3-28" title="28"><span class="kw">def</span> process_command(doc):</a>
+<a class="sourceLine" id="cb3-29" title="29">    <span class="cf">return</span> <span class="va">None</span></a></code></pre></div>
+<p>[TODO] implement the full data-source interface</p>
+<h1 id="example-user-data-source">Example User Data Source</h1>
+<h3 id="project-configuration-file-1">Project Configuration File</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb4-1" title="1"><span class="fu">slowdash_project:</span></a>
+<a class="sourceLine" id="cb4-2" title="2">  <span class="fu">name:</span><span class="at"> WorldClock</span></a>
+<a class="sourceLine" id="cb4-3" title="3">  <span class="fu">module:</span></a>
+<a class="sourceLine" id="cb4-4" title="4">    <span class="fu">file:</span><span class="at"> worldclock.py</span></a>
+<a class="sourceLine" id="cb4-5" title="5">    <span class="fu">parameters:</span></a>
+<a class="sourceLine" id="cb4-6" title="6">        <span class="fu">timeoffset:</span><span class="at"> </span><span class="dv">-9</span></a>
+<a class="sourceLine" id="cb4-7" title="7">    <span class="fu">data_suffix:</span><span class="at"> worldclock</span></a></code></pre></div>
+<h3 id="python-module">Python Module</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb5-1" title="1"><span class="co"># worldclock.py</span></a>
+<a class="sourceLine" id="cb5-2" title="2"></a>
+<a class="sourceLine" id="cb5-3" title="3"><span class="im">import</span> time, datetime</a>
+<a class="sourceLine" id="cb5-4" title="4">timeoffset <span class="op">=</span> <span class="dv">0</span></a>
+<a class="sourceLine" id="cb5-5" title="5"></a>
+<a class="sourceLine" id="cb5-6" title="6"><span class="kw">def</span> initialize(params):</a>
+<a class="sourceLine" id="cb5-7" title="7">    <span class="kw">global</span> timeoffset</a>
+<a class="sourceLine" id="cb5-8" title="8">    timeoffset <span class="op">=</span> params.get(<span class="st">&#39;timeoffset&#39;</span>, <span class="dv">0</span>)</a>
+<a class="sourceLine" id="cb5-9" title="9"></a>
+<a class="sourceLine" id="cb5-10" title="10">    </a>
+<a class="sourceLine" id="cb5-11" title="11"><span class="kw">def</span> get_channels():</a>
+<a class="sourceLine" id="cb5-12" title="12">    <span class="cf">return</span> [</a>
+<a class="sourceLine" id="cb5-13" title="13">        {<span class="st">&#39;name&#39;</span>: <span class="st">&#39;WorldClock&#39;</span>, <span class="st">&#39;type&#39;</span>: <span class="st">&#39;tree&#39;</span>},</a>
+<a class="sourceLine" id="cb5-14" title="14">    ]</a>
+<a class="sourceLine" id="cb5-15" title="15"></a>
+<a class="sourceLine" id="cb5-16" title="16"></a>
+<a class="sourceLine" id="cb5-17" title="17"><span class="kw">def</span> get_data(channel):</a>
+<a class="sourceLine" id="cb5-18" title="18">    <span class="cf">if</span> channel <span class="op">==</span> <span class="st">&#39;WorldClock&#39;</span>:</a>
+<a class="sourceLine" id="cb5-19" title="19">        t <span class="op">=</span> time.time()</a>
+<a class="sourceLine" id="cb5-20" title="20">        dt <span class="op">=</span> datetime.datetime.fromtimestamp(t)</a>
+<a class="sourceLine" id="cb5-21" title="21">        <span class="cf">return</span> { <span class="st">&#39;tree&#39;</span>: {</a>
+<a class="sourceLine" id="cb5-22" title="22">            <span class="st">&#39;UnixWorldClock&#39;</span>: t,</a>
+<a class="sourceLine" id="cb5-23" title="23">            <span class="st">&#39;UTC&#39;</span>: dt.astimezone(datetime.timezone.utc).isoformat(),</a>
+<a class="sourceLine" id="cb5-24" title="24">            <span class="st">&#39;Local&#39;</span>: dt.astimezone().isoformat(),</a>
+<a class="sourceLine" id="cb5-25" title="25">            <span class="st">&#39;</span><span class="sc">%+d</span><span class="st">h&#39;</span><span class="op">%</span>timeoffset: dt.astimezone(tz).isoformat()</a>
+<a class="sourceLine" id="cb5-26" title="26">        }}</a>
+<a class="sourceLine" id="cb5-27" title="27"></a>
+<a class="sourceLine" id="cb5-28" title="28">    <span class="cf">return</span> <span class="va">None</span></a>
+<a class="sourceLine" id="cb5-29" title="29"></a>
+<a class="sourceLine" id="cb5-30" title="30"></a>
+<a class="sourceLine" id="cb5-31" title="31"><span class="co"># for testing</span></a>
+<a class="sourceLine" id="cb5-32" title="32"><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</a>
+<a class="sourceLine" id="cb5-33" title="33">    <span class="bu">print</span>(get_data(get_channels()[<span class="dv">0</span>][<span class="st">&#39;name&#39;</span>]))</a></code></pre></div>
+<h3 id="testing-the-module">Testing the module</h3>
+<p>Running the <code>slowdash</code> command without a port number option shows the query result to screen. The query string is given as the first argument.</p>
+<p>Two queries are useful to test the module:</p>
+<ul>
+<li><code>channel</code>: query for a channel list</li>
+<li><code>data/CHANNEL</code>: query for data for the channel</li>
+</ul>
+<div class="sourceCode" id="cb6"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">$ slowdash channels</span></a>
+<a class="sourceLine" id="cb6-2" title="2">[{ &quot;name&quot;: &quot;WorldClock&quot;, &quot;type&quot;: &quot;tree&quot; }]</a>
+<a class="sourceLine" id="cb6-3" title="3"></a>
+<a class="sourceLine" id="cb6-4" title="4"><span class="kw">$ slowdash data/WorldClock</span></a>
+<a class="sourceLine" id="cb6-5" title="5">{ &quot;WorldClock&quot;: { &quot;start&quot;: 1678801863.0, &quot;length&quot;: 3600.0, &quot;t&quot;: 1678805463.0, &quot;x&quot;: { &quot;tree&quot;: {</a>
+<a class="sourceLine" id="cb6-6" title="6">    &quot;UnixTime&quot;: 1678805463.7652955,</a>
+<a class="sourceLine" id="cb6-7" title="7">    &quot;UTC&quot;: &quot;2023-03-14T14:51:03.765296+00:00&quot;,</a>
+<a class="sourceLine" id="cb6-8" title="8">    &quot;Local&quot;: &quot;2023-03-14T15:51:03.765296+01:00&quot;,</a>
+<a class="sourceLine" id="cb6-9" title="9">    &quot;-9h&quot;: &quot;2023-03-14T05:51:03.765296-09:00&quot;</a>
+<a class="sourceLine" id="cb6-10" title="10">}}}}</a></code></pre></div>
+<p>(the output above is reformatted for better readability)</p>
+<h3 id="using-it-from-web-browser">Using it from web browser</h3>
+<ul>
+<li>Start slow-dash at the project directory</li>
+<li>Add a new “Tree” panel, with channel “WorldClock”.</li>
+</ul>
+<p><img src="fig/UserModule-DataSource.png" style="width:70%;border:thin solid gray"></p>
+<h1 id="example-user-command-dispatcher">Example User Command Dispatcher</h1>
+<p>To the example user data source above, add the following function:</p>
+<h3 id="python-module-1">Python Module</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">def</span> process_command(doc):</a>
+<a class="sourceLine" id="cb7-2" title="2">    <span class="kw">global</span> timeoffset</a>
+<a class="sourceLine" id="cb7-3" title="3">    <span class="cf">try</span>:</a>
+<a class="sourceLine" id="cb7-4" title="4">        <span class="cf">if</span> doc.get(<span class="st">&#39;set_time_offset&#39;</span>, <span class="va">False</span>):</a>
+<a class="sourceLine" id="cb7-5" title="5">            timeoffset <span class="op">=</span> <span class="bu">int</span>(doc.get(<span class="st">&#39;time_offset&#39;</span>, <span class="va">None</span>))</a>
+<a class="sourceLine" id="cb7-6" title="6">            <span class="cf">return</span> <span class="va">True</span></a>
+<a class="sourceLine" id="cb7-7" title="7">    <span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</a>
+<a class="sourceLine" id="cb7-8" title="8">        <span class="cf">return</span> { <span class="st">&quot;status&quot;</span>: <span class="st">&quot;error&quot;</span>, <span class="st">&quot;message&quot;</span>: <span class="bu">str</span>(e) }</a>
+<a class="sourceLine" id="cb7-9" title="9"></a>
+<a class="sourceLine" id="cb7-10" title="10">    <span class="cf">return</span> <span class="va">False</span></a></code></pre></div>
+<p>Make a HTML form to send commands from Web browser:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode html"><code class="sourceCode html"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">&lt;form&gt;</span></a>
+<a class="sourceLine" id="cb8-2" title="2">  Time Offset (hours): <span class="kw">&lt;input</span><span class="ot"> type=</span><span class="st">&quot;number&quot;</span><span class="ot"> name=</span><span class="st">&quot;time_offset&quot;</span><span class="ot"> value=</span><span class="st">&quot;0&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb8-3" title="3">  <span class="kw">&lt;input</span><span class="ot"> type=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name=</span><span class="st">&quot;set_time_offset&quot;</span><span class="ot"> value=</span><span class="st">&quot;Set&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb8-4" title="4"><span class="kw">&lt;/form&gt;</span></a></code></pre></div>
+<p>Save the file at the <code>config</code> directory under the user project direcotry. Add a new HTML panel with HTML file <code>WorldClock</code>.</p>
+<p><img src="fig/UserModule-Dispatcher.png" style="width:70%;border:thin solid gray"></p>
+<p>When the <code>Set</code> button is clicked, the form data is sent to the user module as a JSON document. On the terminal screen where the slowdash command is running, you can see a message like:</p>
+<pre><code>POST: /slowdash.cgi/control
+23-03-14 16:37:46 INFO: DISPATCH: {&#39;set_time_offset&#39;: True, &#39;time_offset&#39;: &#39;3&#39;}</code></pre>
+<h3 id="tips">Tips</h3>
+<ul>
+<li>To print debug messages from user modules, use the logging module:</li>
+</ul>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb10-1" title="1"><span class="im">import</span> logging</a>
+<a class="sourceLine" id="cb10-2" title="2">logger <span class="op">=</span> logging.getLogger(name)</a>
+<a class="sourceLine" id="cb10-3" title="3">logger.addHandler(logging.StreamHandler(sys.stderr))</a>
+<a class="sourceLine" id="cb10-4" title="4">logger.setLevel(logging.INFO)</a>
+<a class="sourceLine" id="cb10-5" title="5"></a>
+<a class="sourceLine" id="cb10-6" title="6"><span class="kw">def</span> process_command(doc):</a>
+<a class="sourceLine" id="cb10-7" title="7">    logger.info(doc)</a>
+<a class="sourceLine" id="cb10-8" title="8">    ...</a></code></pre></div>
+<ul>
+<li>To perform user tasks in parallel, while accepting the commands from Slow-Dash, threading is often used.</li>
+</ul>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb11-1" title="1"><span class="im">import</span> threading</a>
+<a class="sourceLine" id="cb11-2" title="2">current_thread <span class="op">=</span> <span class="va">None</span></a>
+<a class="sourceLine" id="cb11-3" title="3">stop_requested <span class="op">=</span> <span class="va">False</span></a>
+<a class="sourceLine" id="cb11-4" title="4">    </a>
+<a class="sourceLine" id="cb11-5" title="5"><span class="kw">def</span> run():</a>
+<a class="sourceLine" id="cb11-6" title="6">    <span class="cf">while</span> <span class="kw">not</span> stop_requested:</a>
+<a class="sourceLine" id="cb11-7" title="7">        do_my_task()</a>
+<a class="sourceLine" id="cb11-8" title="8">    </a>
+<a class="sourceLine" id="cb11-9" title="9"><span class="kw">def</span> initialize(params):</a>
+<a class="sourceLine" id="cb11-10" title="10">    <span class="kw">global</span> current_thread</a>
+<a class="sourceLine" id="cb11-11" title="11">    current_thread <span class="op">=</span> threading.Thread(target<span class="op">=</span>run)</a>
+<a class="sourceLine" id="cb11-12" title="12">    current_thread.start()</a>
+<a class="sourceLine" id="cb11-13" title="13">    </a>
+<a class="sourceLine" id="cb11-14" title="14"><span class="kw">def</span> finalize():</a>
+<a class="sourceLine" id="cb11-15" title="15">    <span class="kw">global</span> current_thread, stop_requested</a>
+<a class="sourceLine" id="cb11-16" title="16">    <span class="cf">if</span> current_thread <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</a>
+<a class="sourceLine" id="cb11-17" title="17">        stop_requested <span class="op">=</span> <span class="va">True</span></a>
+<a class="sourceLine" id="cb11-18" title="18">        current_thread.join()</a></code></pre></div>
+<ul>
+<li>Consider making a class to handle user tasks, and using the user module interface functions for simply forwarding the messages.</li>
+</ul>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb12-1" title="1"><span class="kw">class</span> MyTask:</a>
+<a class="sourceLine" id="cb12-2" title="2">    ....</a>
+<a class="sourceLine" id="cb12-3" title="3"></a>
+<a class="sourceLine" id="cb12-4" title="4">my_task <span class="op">=</span> MyTask()</a>
+<a class="sourceLine" id="cb12-5" title="5"></a>
+<a class="sourceLine" id="cb12-6" title="6"><span class="kw">def</span> run():</a>
+<a class="sourceLine" id="cb12-7" title="7">    my_task.start()</a>
+<a class="sourceLine" id="cb12-8" title="8">    <span class="cf">while</span> <span class="kw">not</span> stop_requested:</a>
+<a class="sourceLine" id="cb12-9" title="9">        my_task.do_one()</a>
+<a class="sourceLine" id="cb12-10" title="10">    my_task.stop()</a>
+<a class="sourceLine" id="cb12-11" title="11">    </a>
+<a class="sourceLine" id="cb12-12" title="12"><span class="kw">def</span> process_command(doc):</a>
+<a class="sourceLine" id="cb12-13" title="13">    <span class="cf">return</span> my_task.process_command(doc)    </a></code></pre></div>
+<ul>
+<li>It is often convenient to have the user module executable standalone. To stop nicely, signal could be used:</li>
+</ul>
+<div class="sourceCode" id="cb13"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb13-1" title="1"><span class="kw">def</span> stop(signum, frame):</a>
+<a class="sourceLine" id="cb13-2" title="2">    finalize()</a>
+<a class="sourceLine" id="cb13-3" title="3">    </a>
+<a class="sourceLine" id="cb13-4" title="4"><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</a>
+<a class="sourceLine" id="cb13-5" title="5">    <span class="im">import</span> signal</a>
+<a class="sourceLine" id="cb13-6" title="6">    signal.signal(signal.SIGINT, stop)</a>
+<a class="sourceLine" id="cb13-7" title="7">    initialize({})</a></code></pre></div>
+
+
+</body>
+</html>

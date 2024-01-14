@@ -1,0 +1,479 @@
+<!DOCTYPE HTML>
+<!-- Created by Sanshiro Enomoto on 18 November 2021 -->
+
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>SlowPlot</title>
+  <link rel="icon" href="favicon.png">
+  <link rel="stylesheet" type="text/css" href="jagaimo/jagaimo.css">
+  <link rel="stylesheet" type="text/css" href="slowdash.css">
+  <link rel="stylesheet" type="text/css" id="sd-theme-css">
+</head>
+
+<body>
+  <div id="sd-header"></div>
+  <div id="sd-layout">Loading Configuration...</div>
+
+  <script type="module">
+    import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
+    import { JGDialogWidget } from './jagaimo/jagawidgets.mjs';
+    import { Layout } from './layout.mjs';
+    import { boot, Frame, TimeRangePullDown, GridPullDown, SaveConfigDialog, upload } from './controlframe.mjs';
+
+    window.addEventListener('DOMContentLoaded', function() {
+        let defaults = {
+            control: {
+                range: {length: 900},
+                reload: 300,
+                grid: { rows: 1, columns: 1 },
+                mode: 'normal',
+            },
+            style: {},
+            panels: []
+        };
+
+        function optparse(options) {
+            let args = {
+                control: {
+                    range: {},
+                    grid: {},
+                },
+            };
+            if (options.mode) {
+                args.control.mode = options.mode;
+            }
+            if (options.theme) {
+                args.style = { theme: options.theme };
+            }
+            if (options.time) {
+                let to = (new JGDateTime(options.time)).asInt();
+                if (to > 0) {
+                    args.control.range.to = to;
+                }
+            }
+            if (options.to) {
+                let to = (new JGDateTime(options.to)).asInt();
+                if (to > 0) {
+                    args.control.range.to = to;
+                }
+            }
+            if (options.length && parseFloat(options.length) > 10) {
+                args.control.range.length = parseFloat(options.length);
+            }
+            if (options.reload) {
+                if (parseFloat(options.reload) >= 1) {
+                    args.control.reload = Math.max(1, parseFloat(options.reload));
+                }
+                else {
+                    args.control.reload = parseFloat(0);
+                }
+            }
+            if (options.grid) {
+                let [rows, cols] = options.grid.split('x');
+                args.control.grid = { rows: rows, columns: cols };
+            }
+            if (options.channel) {
+                args.panels = [];
+                for (const item of options.channel.split(';')) {
+                    const [channels, type] = item.split('/');
+                    if ((type ?? 'timeseries') == 'timeseries') {
+                        let panel = { type: 'timeseries', plots: [] };
+                        for (const ch of channels.split(',')) {
+                            panel.plots.push({ type: 'timeseries', channel: ch });
+                        }
+                        args.panels.push(panel);
+                    }
+                    else if (['histogram', 'ts-histogram', 'histogram2d', 'graph'].includes(type)) {
+                        let panel = { type: 'plot', axes: {}, plots: [] };
+                        if (type == 'histogram2d') {
+                            panel['axes']['colorscale'] = 'Parula';
+                        }
+                        for (const ch of channels.split(',')) {
+                            panel.plots.push({ type: type, channel: ch });
+                        }
+                        args.panels.push(panel);
+                    }
+                    else if (['table', 'tree', 'blob'].includes(type)) {
+                        for (const ch of channels.split(',')) {
+                            args.panels.push({ type: type, channel: ch });
+                        }
+                    }
+                }
+            }
+            return args;
+        }
+        
+        boot(defaults, optparse, start);
+    });
+
+    function changeMode(mode) {
+        let url = window.location.href;
+        if (window.location.search.match(/(\?|&)?mode(=[a-zA-Z0-9]*)?/)) {
+            url = url.replace(/mode(=[a-zA-Z0-9]*)?/, 'mode=' + mode);
+        }
+        else {
+            url += ((url.indexOf('?') > 0) ? '&' : '?') + 'mode=' + mode;
+        }
+        window.location.href = url;
+    }
+
+    function start(config) {
+        if (config.meta?.name) {
+            document.title = 'SlowPlot: ' + config.meta.name;
+        }
+        else {
+            document.title = 'SlowPlot';
+        }
+
+        let title = config._project.project?.title || config._project.project?.name || "SlowDash";
+        if (config.meta?.title) {
+            title += " - " + config.meta.title;
+        }
+        let style = config._project.style ?? {};
+
+        let resetDelay = 0;
+        if ((config.control?.mode??'') == 'protected') {
+            resetDelay = 300;
+        }
+        else if ((config.control?.mode??'') == 'display') {
+            resetDelay = 1;
+        }
+        let layout = new Layout($('#sd-layout'), style);
+        let frame = new Frame($('#sd-header'), {
+            title: title,
+            style: style,
+            reloadInterval: config.control.reload,
+            reloadIntervalChange: (interval) => { config.control.reload = interval; },
+            reload: (on_complete) => { return update(layout, config, on_complete); },
+            resetDelay: resetDelay,
+        });
+        
+        let saveDiv = $('<div>').appendTo($('body'));
+        let savePopup = $('<dialog>').addClass('sd-pad').appendTo($('body'));
+        let saveDialog = new SaveConfigDialog(saveDiv, {
+            title: 'Save Workspace',
+            saveConfig: (name, doc) => {
+                let filename = 'config/file/slowplot-' + name + '.json';
+                if (doc.control?.range?.to) {
+                    delete doc.control.range.to;
+                }
+                upload(savePopup, filename, $.JSON_stringify(doc, {expandAll: false}), {
+                    contentType: 'application/json; charset=utf-8',
+                    on_success: ()=> {
+                        let url = window.location.origin + window.location.pathname;
+                        url += '?config=slowplot-' + name + '.json';
+                        window.location.href = url;
+                    }
+                });
+            }
+        });
+        
+        let configUrlDiv = $('<div>').appendTo($('body'));
+        let configUrlDialog = new JGDialogWidget(configUrlDiv, {
+            title: 'Snapshot Link',
+            buttons: { 'Close': e=> {}, }
+        });
+
+        let currentDisplayTimeRange = null;
+        let rangeSelect = $('<select>');
+        frame.prependSelect(rangeSelect);
+        let rangePullDown = new TimeRangePullDown(rangeSelect, {
+            custom_items: [ "Current Display Range" ],
+            select: (length, to) => {
+                config.control.range.length = Math.round(length);
+                config.control.range.to = (to === null) ? null : Math.round(to);
+                currentDisplayTimeRange = null;
+                frame.scheduleReset();
+                frame.update();
+            },
+            select_custom_item: key => {
+                if (currentDisplayTimeRange) {
+                    let [from, to] = [currentDisplayTimeRange.from, currentDisplayTimeRange.to];
+                    config.control.range.length = Math.round(to-from);
+                    config.control.range.to = Math.round(to);
+                    rangePullDown.set(config.control.range.length, config.control.range.to);
+                    frame.update();
+                }
+                else {
+                    rangePullDown.set(config.control.range.length, config.control.range.to);
+                }
+            }
+        });
+        if (config.control?.range?.length > 0) {
+            if (config.control?.range?.to > 0) {
+                rangePullDown.set(config.control.range.length, config.control.range.to);
+                currentDisplayTimeRange = {
+                    "to": config.control.range.to,
+                    "from": config.control.range.to - config.control.range.length
+                };
+            }
+            else {
+                rangePullDown.set(config.control.range.length, null);
+            }
+        }
+
+        if ((config.control?.mode??'') == 'protected') {
+            frame.appendSelect($('<span>').html("&#x1f512;"));
+        }
+        else {
+            let gridSelect = $('<select>');
+            frame.appendSelect(gridSelect);
+            let gridPulldown = new GridPullDown(gridSelect, {
+                select: (grid) => {
+                    let [rows, cols] = grid.split('x');
+                    layout.setGrid(rows, cols);
+                }
+            });
+            gridPulldown.set(config.control.grid.rows + 'x' + config.control.grid.columns);
+        }
+
+        if (false) {
+            let newButton = $('<button>').html("&#x1f4dd;").bind('click', e=>{
+                window.open('./slowplot.html?grid=2x1');
+            });
+            newButton.attr('title', 'New');
+            frame.appendButton(newButton);
+        }
+        
+        if (! (config.control?.immutable ?? false)) {
+            if ((config.control?.mode??'') == 'protected') {
+                let unlockButton = $('<button>').html("&#x1f511;").bind('click', e=>{
+                    changeMode('normal');
+                });
+                unlockButton.attr('title', 'Unlock layout modification');
+                frame.appendButton(unlockButton);
+            }
+            else {
+                let saveButton = $('<button>').html("&#x1f4be;").bind('click', e=>{
+                    saveDialog.open(config);
+                });
+                saveButton.attr('title', 'Save');
+                frame.appendButton(saveButton);
+            }
+        
+            let configUrlButton = $('<button>').html("&#x1f4cd;").bind('click', e=>{
+                openConfigUrlDialog(configUrlDialog, config, currentDisplayTimeRange);
+            });
+            configUrlButton.attr('title', 'Create Snapshot Link');
+            frame.appendButton(configUrlButton);
+        }
+        
+        let homeButton = $('<button>').html("&#x1f3e0;").bind('click', e=>{
+            window.open('./');
+        });
+        homeButton.attr('title', 'Home');
+        frame.appendButton(homeButton);
+        homeButton.css('margin-left', '1em'); // this must be after append()
+        
+        let docButton = $('<button>').html("&#x2753;").bind('click', e=>{
+            window.open('./doc/index.html');
+        });
+        docButton.attr('title', 'Documents');
+        frame.appendButton(docButton);
+        
+        if ((config.control?.mode??'') == 'display') {
+            frame.selectSpan.css('display', 'none');
+            frame.buttonDiv.css('display', 'none');
+            $('#sd-header').bind('click', e=>{
+                changeMode('normal');
+            });
+        }
+            
+        layout.configure(config, {
+            changeDisplayTimeRange: range => {
+                currentDisplayTimeRange = range;
+            },
+            forceUpdate: () => {
+                frame.update();
+            },
+            suspend: (duration=300) => {
+                frame.suspend(duration);
+                frame.scheduleReset();
+            },
+            popoutPanel: (index) => {
+                popoutPanel(config, index, currentDisplayTimeRange);
+            },
+        });
+        frame.start();
+        $(window).bind('resize', ()=>{
+            if (window.innerWidth > 0) {
+                layout.configure();
+            }
+        });
+    }
+
+
+    function update(layout, config, on_complete) {
+        let length = config.control?.range?.length ?? 0;
+        if (! (length > 0)) {
+            length = 3600;
+        }
+        let to = config.control?.range?.to ?? 0;
+        if (! (to > 0)) {
+            to =  $.time();
+        }
+        let from = to - length;
+        let resampling = null;
+        if (config.control?.range?.resamplingEnabled) {
+            resampling = (config.control?.range?.resamplingInterval ?? 0);
+        }
+        layout.load({from:from, to:to, resampling:resampling}, function(status) {
+            if (status.code == 200) {
+                on_complete();
+            }
+            else {
+                let message = 'Error on ';
+                message += (new JGDateTime()).asString('%a, %b %d %H:%M');
+                message += " [ ";
+                if (status.code >= 0) {
+                    message += "Status" + status.code + ", ";
+                }
+                message += status.text + " ]";
+                on_complete(message);
+            }
+        });
+    }
+
+
+    function popoutPanel(config, index, currentDisplayTimeRange) {
+        let popout_config = JSON.parse(JSON.stringify(config));
+        delete popout_config._project;
+        delete popout_config.meta;
+        popout_config.panels = [ JSON.parse(JSON.stringify( config.panels[index])) ];
+        popout_config.control.grid = { 'rows': 1, 'columns': 1 };
+        popout_config.control.reload = 0;
+        if (currentDisplayTimeRange !== null) {
+            const [from, to] = [currentDisplayTimeRange.from, currentDisplayTimeRange.to];
+            popout_config.control.range = {
+                "length": Math.round(to-from),
+                "to": Math.round(to)
+            };
+        }
+        else {
+            popout_config.control.range.to = $.time();
+        }
+
+        let url = window.location.origin + window.location.pathname;
+        url += '?configdata=' + btoa(JSON.stringify(popout_config));
+        window.open(url);
+    }
+
+    
+    function openConfigUrlDialog(dialog, config, currentDisplayTimeRange) {
+        const updated_config = JSON.parse(JSON.stringify(config));
+        if (currentDisplayTimeRange !== null) {
+            const [from, to] = [currentDisplayTimeRange.from, currentDisplayTimeRange.to];
+            updated_config.control.range = {
+                "length": Math.round(to-from),
+                "to": Math.round(to)
+            };
+        }
+        else {
+            updated_config.control.range.to = $.time();
+        }
+        updated_config.control.reload = 0;
+        
+        let time = updated_config.control.range.to;
+        if (time <= 0) {
+            time = (new JGDateTime()).asString('%Y-%m-%dT%H:%M:%S%:z');
+        }
+        else {
+            time = (new JGDateTime(time)).asString('%Y-%m-%dT%H:%M:%S%:z');
+        }
+
+        let search = window.location.search.split('?')[1];
+        let options = [];
+        let config_file = null;
+        if (search) {
+            for(let kv of search.split('&')) {
+                const [key, value] = kv.split('=');
+                if (key == 'config') {
+                    config_file = value;
+                }
+                if (key != 'to' && key != 'time' && key != 'grid' && key != 'reload') {
+                    options.push(`${key}=${value}`);
+                }
+            }
+        }
+        options.push(`to=${time}`);
+        options.push(`length=${updated_config.control.range.length}`);
+        options.push(`grid=${config.control.grid.rows}x${config.control.grid.columns}`);
+        options.push(`reload=0`);
+        const url_base = window.location.origin + window.location.pathname;
+        const url1 = url_base + '?' + options.join('&');
+        const url2 = url_base + '?configdata=' + btoa(JSON.stringify(updated_config));
+        
+        let div = dialog.content();
+        div.html(`
+            <div style="margin-top:1em;">
+               The URLs below are links to the layout presently shown, with the time range fixed.
+               <ul>
+                 <li>Data is not included in the link. Plots can change if the data content changes.
+                 <li>The upper one relies on the saved configuration file. If it is modified, the layout of the link will change.
+                 <li>The lower one includes the layout configuration, but mind the length of the URL.
+              </ul>
+            </div>
+            <div style="white-space:nowrap;margin:1em">
+              <b>Using the current layout configuration</b><br>
+              <input style="width:32em" readonly></input>
+              <input type="button" value="Copy">
+              <input type="button" value="Open">
+            </div>
+            <div style="white-space:nowrap;margin:1em">
+              <b>Self-contained, standalone (${url2.length} characters)</b><br>
+              <input style="width:32em" readonly></input>
+              <input type="button" value="Copy">
+              <input type="button" value="Open">
+            </div>
+            <div style="white-space:nowrap;margin:1em;font-size:small">
+            </div>
+        `);
+        let input1 = div.find('input').at(0).val(url1);
+        let button1a = div.find('input').at(1).bind('click', e=>{
+            if (true) {
+                // document.execCommand() is depreciated
+                input1.get().select();
+                document.execCommand("copy");
+            }
+            else {
+                // this works only with HTTPS
+                navigator.clipboard.writeText(input1.val());
+            }
+            dialog.close();
+        });
+        let button1b = div.find('input').at(2).bind('click', e=>{
+            window.open(input1.val());
+            dialog.close();
+        });
+        let input2 = div.find('input').at(3).val(url2);
+        let button2a = div.find('input').at(4).bind('click', e=>{
+            if (true) {
+                // document.execCommand() is depreciated
+                input2.get().select();
+                document.execCommand("copy");
+            }
+            else {
+                // this works only with HTTPS
+                navigator.clipboard.writeText(input2.val());
+            }
+                
+            dialog.close();
+        });
+        let button2b = div.find('input').at(5).bind('click', e=>{
+            window.open(input2.val());
+            dialog.close();
+        });
+
+        if (config_file === null) {
+            input1.val('').attr('placeholder', 'save the layout first');
+            input1.enabled(false);
+            button1a.enabled(false);
+            button1b.enabled(false);
+        }
+        
+        dialog.open();
+    }
+
+  </script>    
+</body>

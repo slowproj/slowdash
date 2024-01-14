@@ -1,0 +1,166 @@
+html {
+  font-family: sans-serif;
+}
+
+body {
+  margin-left: 10%;
+  margin-right: 10%;
+  background: #ffffff;
+}
+
+
+header {
+    #    display: flex;
+    margin-bottom: 3em;
+}
+.title {
+    margin-top: 0.2em;
+    width: 100%;
+    font-size: 2.5em;
+    font-weight: bold;
+    text-align: center;
+}
+.toc {
+    margin-left: -5%;
+    width: 25%;
+    padding: 15px;
+    background: #fcfcfc;
+    border: thin solid gray;
+    border-radius: 10px;
+}
+.toc-title {
+    font-size: large;
+    font-weight: bold;
+}
+.toc ul {
+    list-style-type: none;
+    margin: 0;
+    padding-left: 1em;
+}
+.toc li {
+    padding-top: 0.5em;
+}
+.toc a {
+    color: blue;
+}
+.toc a:visited {
+    color: blue;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.25;
+  margin-bottom: 16px;
+  margin-top: 24px;
+}
+h1 {
+  margin-left: -5%;
+  padding-left: 0.3em;
+  padding-bottom: 0.3em;
+  font-size: 2em;
+  border-left: 5px solid #d0d0d0;
+  border-bottom: 3px solid #d0d0d0;
+}
+h2 {
+  margin-left: -3%;
+  padding-bottom: 0.3em;
+  font-size: 1.7em;
+  border-bottom: 1px solid #d0d0d0;
+}
+h3 {
+  margin-left: -1%;
+  font-size: 1.5em;
+}
+h4 {
+  margin-left: -1%;
+  font-size: 1em;
+}
+h5 {
+  margin-left: 0;
+  border-left: thick solid darkgray;
+  padding-left: 0.5em;
+  font-size: 1.1em;
+  text-decoration: underline;
+  font-weight: normal;
+}
+h6 {
+  margin-left: 0;
+  font-size: 1em;
+  text-decoration: underline;
+  font-weight: normal;
+}
+
+code {
+  font-family: monospace, monospace;
+  background: #eeeeee;
+  color: #880000;
+  padding-left: 0.2em;
+  padding-right: 0.2em;
+}
+
+pre {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 0 0 1em 10px;
+  padding-top: 0.8em;
+  border-radius: 10px;
+  white-space: pre;
+  font-family: monospace, monospace;
+  background: #eeeeee;
+  border: thin solid #c0c0c0;
+}
+pre code {
+  color: black;
+}
+
+pre.sourceCode.console {
+    background: #505050;
+}
+pre.sourceCode.console code {
+    background: none;
+    color: white;
+}
+.sourceCode.console .kw {
+    font-weight: bold;
+    color: lightgreen;
+}
+.sourceCode.console .co {
+    color: #880000;
+}
+
+pre:not(.sourceCode) {
+    border-radius: 10px;
+    background: none;
+    border: thin solid black;
+}
+pre:not(.sourceCode) code {
+    background: none;
+    color: black;
+}
+
+.sourceCode.json .er {
+    color: #880000;
+}
+
+div.sourceCode,table,img {
+  margin-left: 1em;
+}
+th,td {
+    padding-left: 0.5em;
+    padding-right: 1em;
+    text-align: left;
+    white-space: nowrap;
+}
+th {
+    padding-left: 1em;
+    text-align: center;
+}
+tr.header {
+    background-color: #e0e0e0;
+}
+tr.odd {
+    background-color: #f8f8f8;
+}
+tr.even {
+    background-color: #f0f0f0;
+}

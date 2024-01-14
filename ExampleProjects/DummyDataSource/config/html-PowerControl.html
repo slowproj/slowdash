@@ -1,0 +1,35 @@
+<h3>Crate Power Control</h3>
+
+Temperature: 
+<a href="./slowplot.html?channel=ch1&length=3600&grid=2x1" target="_blank" style="color:blue">
+  <span sd-value="ch1->last()->format('%.1f degC')">---</span> / 
+  <span sd-value="ch1->last()->scale(1.8)->offset(32)->format('%.1f degF')">---</span>
+</a>
+
+<p>  
+
+<form>
+  <input type="hidden" name="form" value="power_control">
+  <div style="margin:10px;border:thin solid;padding:10px;width:30em">
+    <label><input type="checkbox" name="crate1">Crate 1</label><br>
+    <label><input type="checkbox" name="crate2">Crate 2</label><br>
+    <label><input type="checkbox" name="crate3">Crate 3</label><br>
+    <label><input type="Checkbox" name="crate4">Crate 4</label><br>
+    <label><input type="checkbox" name="crate5">Crate 5</label><br>
+    <label><input type="checkbox" name="crate6">Crate 6</label><br>
+  </div>
+
+  <p>
+  <select name="target">
+    <option value="DAQ">DAQ</option>
+    <option value="HV">HV</option>
+    <option value="DAQ_HV" selected>DAQ &amp; HV</option>
+  </select>
+  <select name="action">
+    <option value="turn_on">Turn On</option>
+    <option value="turn_off">Turn Off</option>
+  </select>
+  
+  <p>
+  <input type="submit" value="Apply" style="font-size:x-large">
+</form>

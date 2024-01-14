@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Data Transform</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+<header>
+<div class="title">Data Transform</div><p>
+<div class="toc">
+<span class="toc-title">Contents</span>
+<nav id="TOC">
+<ul>
+<li><a href="#status">Status</a></li>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#syntax">Syntax</a></li>
+<li><a href="#list-of-functors">List of Functors</a></li>
+</ul>
+</nav>
+</div>
+</header>
+
+<h1 id="status">Status</h1>
+<p>All the functions discussed in this document is under a design stage and not yet available.</p>
+<h1 id="overview">Overview</h1>
+<h3 id="applications">Applications</h3>
+<ul>
+<li>extract columns of a table for graph plotting</li>
+<li>data value transforms (offset, scale, etc.)</li>
+<li>data reduction (last, mean, …)</li>
+<li>extract a scalar value for HTML substitutions</li>
+<li>select columns of a table or branches of a tree for displaying</li>
+<li>create histogram of a table column</li>
+<li>calculate stats of a histogram</li>
+<li>decode bit flags</li>
+</ul>
+<h3 id="examples">Examples</h3>
+<pre><code># simple
+Temperature-&gt;last()-&gt;format(&#39;%.2f degC&#39;)
+Temperature-&gt;last()-&gt;scale(1.8)-&gt;offset(32)-&gt;format(&#39;%.2f degF&#39;)
+TableData -&gt; last() -&gt; get(&quot;NHits&quot;) -&gt; histogram(nbins=100,min=0,max=100)
+
+# [TODO] with target
+Table-&gt;format[column=&#39;Temperature&#39;](&#39;$.2f degC&#39;)
+
+# [TODO] using stack
+Temperature-&gt;dropBelow(0); Pressure-&gt;dropBelow(0); -&gt;zip()
+Voltages;Voltages[Main];Voltages[Offset];-&gt;sum();-&gt;addColumn()
+
+# [TODO] using register file
+Temperature-&gt;dropBelow(0)-&gt;T; Pressure-&gt;dropBelow(0)-&gt;P; (T,P)-&gt;zip()
+Voltages[Main]-&gt;Vm;Voltages[Offset]-&gt;Vo; (Vm,Vo)-&gt;sum();(Voltages,.)-&gt;addColumn()
+</code></pre>
+<h1 id="syntax">Syntax</h1>
+<pre><code>DATA[ADAPTER1] -&gt; FUNCTOR1(ARG1, ARG2, ...)[ADAPTER2] -&gt; FUNCTOR2(...) ...</code></pre>
+<ul>
+<li>Use a quotation when an identifier includes special character.</li>
+<li>Double quotations are replaced with single quotation on parsing (to be safe in JSON).</li>
+</ul>
+<h3 id="functor-chain-stack-and-register">Functor Chain, Stack and Register</h3>
+<p>For functors that takes multiple inputs, stack operators can be used:</p>
+<pre><code>CAHNNEL1 -&gt; FUNCTOR1(); CHANNEL2 -&gt; FUNCTOR2() -&gt;...; -&gt; FUNCTOR()</code></pre>
+<p>where <code>;</code> is an operator to push the data into stack.</p>
+<p>As an alternative method, output can be pushed back into the data set as a new channel:</p>
+<pre><code>CH_1 -&gt; FUNCTOR1()-&gt;CH_A; CH_2 -&gt; FUNCTOR2() -&gt; CH_B; CH_A -&gt; FUNCTOR()</code></pre>
+<h3 id="adapters">Adapters</h3>
+<ul>
+<li>Adapters takes a input data and outputs an array of copied values or array of references.</li>
+<li>The scalar functors and array functors need an adapter for their inputs.
+<p></li>
+<li><code>[/]</code>: applies to the entire time-series</li>
+<li><code>[/PATH]</code> or <code>[PATH]</code>: select a time-series field, table column, tree branch
+<p></li>
+<li><code>[PATH(PATH2=VALUE)]</code>: filter
+<p></li>
+<li><code>@</code>: in-place prefix</li>
+</ul>
+<h3 id="syntax-sugar">Syntax Sugar</h3>
+<ul>
+<li><code>CHANNEL[NAME]</code> will be converted to <code>CHANNEL-&gt;get(NAME)</code></li>
+</ul>
+<h1 id="list-of-functors">List of Functors</h1>
+<h3 id="scalar-functors">Scalar Functors</h3>
+<ul>
+<li>Scalar functors apply to <code>x[k]</code> for each <code>k</code>.</li>
+<li>Unless “in-place” designator is specified, a copy will be created.</li>
+<li>Default adapters are:
+<ul>
+<li>If <code>x[k]</code> is a histogram, it applies to <code>x[k].counts</code> by default.</li>
+<li>If <code>x[k]</code> is a graph, it applies to <code>x[k].y</code> by default.</li>
+<li>If <code>x[k]</code> is a table, a column must be specified using an adapter.</li>
+<li>If <code>x[k]</code> is a tree, a matching pattern must be specified using an adapter.
+<p></li>
+</ul></li>
+<li><code>scale():  Scalar&lt;Number&gt; -&gt; Scalar&lt;Number&gt;</code></li>
+<li><code>offset():  Scalar&lt;Number&gt; -&gt; Scalar&lt;Number&gt;</code></li>
+<li><code>format(fmt):  Scalar&lt;Number&gt; -&gt; Scalar&lt;String&gt;</code></li>
+<li><code>match(val):  Scalar&lt;String&gt; -&gt; Scalar&lt;Bool&gt;</code></li>
+<li><code>decode_bits(['aaa','bbb',...]): Scalar&lt;Number&gt; -&gt; Array&lt;String&gt;</code></li>
+<li><code>testbit():  Scalar&lt;Number&gt; -&gt; Scalar&lt;Bool&gt;</code></li>
+</ul>
+<h3 id="array-functors">Array Functors</h3>
+<ul>
+<li>Arrays are created by applying an adapter.</li>
+<li>To apply to <code>X[k]</code> for each <code>k</code> as an array, use a target of <code>[X]</code>.
+<p></li>
+<li><code>includes(value:String): Array&lt;String&gt; -&gt; Scaler&lt;Bool&gt;</code></li>
+<li><code>mean(): Array&lt;Number&gt; -&gt; Scaler&lt;Number&gt;</code> (also: <code>median()</code>, <code>first()</code>, <code>last()</code>, …)</li>
+<li><code>head(n): Array -&gt; Array</code> (also: <code>tail(n)</code>)</li>
+<li><code>accept_range(min, max) Array&lt;Number&gt; -&gt; Array&lt;Number&gt;</code></li>
+<li><code>rescale(percentile=100): Array&lt;Number&gt; -&gt; Array&lt;Number&gt;</code></li>
+<li><code>standardize(): Array&lt;Number&gt; -&gt; Array&lt;Number&gt;</code></li>
+<li><code>delta():  Array&lt;Number&gt; -&gt; Array&lt;Number&gt;</code></li>
+<li><code>sigma():  Array&lt;Number&gt; -&gt; Array&lt;Number&gt;</code></li>
+<li><code>histogram(nbins, min, max):  Array&lt;Number&gt; -&gt; Histogram</code></li>
+</ul>
+<h3 id="time-series-functors">Time-Series Functors</h3>
+<ul>
+<li><code>resample(): TimeSeries -&gt; TimeSeries</code></li>
+<li><code>align(): TimeSeries[] -&gt; TimeSeries</code></li>
+<li><code>integrate(): TimeSeries -&gt; TimeSeries</code></li>
+<li><code>differentiate(): TimeSeries -&gt; TimeSeries</code></li>
+</ul>
+<h3 id="histogram-functors">Histogram Functors</h3>
+<ul>
+<li><code>tabulate(columns=['bin_center', 'counts']):  Histogram -&gt; Table</code></li>
+<li><code>stat():  Histogram -&gt; Tree</code></li>
+<li><code>bins():  Histogram -&gt; Tree</code></li>
+</ul>
+<h3 id="graph-functors">Graph Functors</h3>
+<ul>
+<li><code>tabulate():  Graph -&gt; Table</code></li>
+</ul>
+<h3 id="table-functors">Table Functors</h3>
+<ul>
+<li><code>get(column):  Table -&gt;  Array</code></li>
+<li><code>select(columns, labels=[]):  Table -&gt; Table</code></li>
+<li><code>range(column, from, to):  Table -&gt; Table</code></li>
+<li><code>fold(tag_columns): Table -&gt; Tree</code></li>
+<li><code>graph(columns, labels=[]):  Table -&gt; Graph</code></li>
+</ul>
+<h3 id="tree-functors">Tree Functors</h3>
+<ul>
+<li><code>get(path):  Tree -&gt; Scalar</code></li>
+<li><code>branch(paths, labels=[]):  Tree -&gt; Tree</code></li>
+<li><code>rename({old:new, ...}): Tree -&gt; Tree</code></li>
+</ul>
+
+
+</body>
+</html>

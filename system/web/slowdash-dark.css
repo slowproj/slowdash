@@ -1,0 +1,115 @@
+
+body {
+    background-color: black;
+    color: #e8e8e8;
+}
+
+.sd-header {
+    background: #660000;
+    color: white;
+}
+
+.sd-panel {
+    background: black;
+}
+.sd-panel:hover {
+    border: thin solid gray;
+}
+
+.sd-plot {
+    background: #101010;
+    color: #a0a0a0;
+}
+
+.sd-pad {
+    background: #202020;
+    border-color: #404040;
+    color: white;
+}
+
+.sd-data-table tr:nth-child(even) {
+    background-color: #080808;
+}
+.sd-data-table tr:nth-child(odd) {
+    background-color: #101010;
+}
+.sd-data-table tr:first-child {
+    background-color: #303030;
+}
+.sd-data-tree-header th {
+    background-color: #303030;
+}
+
+
+button, select, input, textarea {
+    background: #606060;
+    color: white;
+}
+button {
+    margin-left: 3px;
+}
+select {
+    border: none;
+}
+
+
+
+.clickables-ul a,
+.clickable a {
+    color: white;
+}
+.clickables-ul a:hover,
+.clickable a:hover {
+    color: #6666ff;
+}
+svg .clickable:hover {
+    fill: #6666ff;
+}
+a {
+    color: #6666ff;
+}
+a:visited {
+    color: #6666ff;
+}
+a:hover {
+    color: #2222ff;
+}
+
+
+
+.jaga-dialog-title {
+    background: linear-gradient(#808080, #404040);
+}
+.jaga-dialog-button-pane {
+    display: flex;
+    justify-content: flex-end;
+}
+.jaga-dialog-button-pane button {
+    background: #606060;
+    color: white;
+    margin-left: 3px;
+}
+
+
+.jaga-tabLabelBox {
+    background: linear-gradient(#606060, #202020);
+}
+.jaga-tabLabel {
+    background: #303030;
+}
+.jaga-tabLabel.selected {
+    background: #808080;
+}
+.jaga-tabPage {
+    background: #404040;
+}
+
+
+.jaga-popup {
+    background-color: #202020;
+}
+
+.forcusible:hover {
+    background-color: #404040;
+}
+

@@ -1,0 +1,138 @@
+
+body {
+    font-family: sans-serif;
+    margin: 0;
+    overflow: hidden;
+    background-color: white;
+}
+
+a {
+    color: blue;
+}
+a:visited {
+    color: blue;
+}
+a:hover {
+    color: #8888ff;
+}
+
+input, button, select, option, textarea {
+    font-size: 100%;
+}
+
+summary {
+    cursor: pointer;
+}
+
+
+
+.sd-panel {
+    border-color: transparent;
+}
+
+.sd-pad {
+    background: lightgray;
+}
+
+.sd-header {
+    background: lightgray;
+}
+
+.sd-buttonchain button {
+    margin: 0;
+    padding: 0.2em;
+    height: 1.8em;
+    filter: grayscale(80%);
+    white-space: nowrap;
+}
+
+.sd-data-table th,td {
+    padding-left: 0.5em;
+    padding-right: 2em;
+    text-align: left;
+}
+.sd-data-table th {
+    white-space: nowrap;
+}
+.sd-data-table tr:nth-child(even) {
+    background-color: #f8f8f8;
+}
+.sd-data-table tr:nth-child(odd) {
+    background-color: #f0f0f0;
+}
+.sd-data-table tr:first-child {
+    background-color: #e0e0e0;
+}
+.sd-data-table td {
+    font-size: small;
+}
+.sd-data-tree-header th {
+    background-color: #e0e0e0;
+}
+
+
+.jaga-tabLabel {
+    background: darkgray;
+}
+
+.jaga-tabLabel.selected {
+    background: lightgray;
+}
+
+.jaga-tabPage {
+    background: lightgray;
+}
+
+.forcusible {
+    border: none;
+    z-index: 0;
+}
+
+.forcusible:hover {
+    cursor: pointer;
+    border: thin solid darkgray;
+    border-radius: 5px;
+    z-index: +1;
+}
+
+
+.clickables-ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.clickables-ul a,
+.clickable a {
+    color: black;
+    text-decoration: none;
+}
+
+.clickables-ul a:hover,
+.clickable a:hover {
+    cursor: pointer;
+    color: blue;
+    text-decoration: underline;
+}
+
+svg .clickable:hover {
+    cursor: pointer;
+    fill: blue;
+    text-decoration: underline;
+}
+
+svg .clickableShape:hover {
+    stroke-width: 2;
+}
+
+
+@media (max-width: 1500px) {
+    .jaga-popup {
+        font-size: 1vw;
+    }
+}
+@media (min-width: 1500px) {
+    .jaga-popup {
+        font-size: 1rem;
+    }
+}
