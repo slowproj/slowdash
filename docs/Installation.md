@@ -41,18 +41,18 @@ See [Data Binding section](DataBinding.html) for details.
 ## Installing
 This process will not create any files other than the git-cloned directory. Installation can be removed completely by deleting this directory.
 ```console
-$ git clone https://github.com/slowprojects/slowdash.git --recurse-submodules
-$ cd SlowDash/system
+$ git clone https://github.com/slowproj/slowdash.git --recurse-submodules
+$ cd slowdash/system
 $ make
 ```
 
 It might be convenient to include the `slowdash` executable into the `PATH`,
 ```bash
-export PATH="${PATH}:PATH/TO/SlowDash/bin"
+export PATH="${PATH}:PATH/TO/SLOWDASH/bin"
 ```
 or `source` a script to do it:
 ```bash
-source PATH/TO/SlowDash/bin/slowdash-bashrc
+source PATH/TO/SLOWDASH/bin/slowdash-bashrc
 ```
 
 

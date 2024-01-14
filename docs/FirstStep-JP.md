@@ -133,8 +133,10 @@ JSROOT や Bokeh との違い：
 ### ダウンロード
 GitHub からダウンロードできます． サブモジュールを使っているので，`--recurse-submodules` オプションをつけてください．
 ```console
-$ git clone https://github.com/slowprojects/slowdash.git --recurse-submodules
+$ git clone https://github.com/slowproj/slowdash.git --recurse-submodules
 ```
+(`git` コマンドが利用できない場合，[github のページ](https://github.com/slowproj/slowdash) からパッケージをダウンロードすることもできます．）
+
 これで，`slowdash` というディレクトリが作成されます．インストールおよび次の Quick Tour では，全てのファイルは slowdash のディレクトリ以下に作られるので，この過程でユーザのシステムが汚されることはありません．また，このディレクトリを削除すれば，全てをなかったことにできます．
 
 ### ドキュメント
@@ -142,7 +144,7 @@ $ git clone https://github.com/slowprojects/slowdash.git --recurse-submodules
 ```console
 $ firefox slowdash/docs/index.html
 ```
- （macOS 等では，`firefox` コマンドを直接実行するのではなく，`open` コマンドを介するようです．）
+（macOS 等では，`firefox` コマンドを直接実行するのではなく，`open` コマンドを介するようです．）
 
 日本語の隠しドキュメントは `FirstStep-JP.html` です．今読んでいるものですが，`docs` から読むと内部リンクが切れていません．
 ```console
