@@ -3,7 +3,7 @@ Web tool for control and monitoring of concurrent systems (slow-controls and dat
 
 ### Download
 ```
-git clone https://github.com/slowprojects/slowdash.git --recurse-submodules
+git clone https://github.com/slowproj/slowdash.git --recurse-submodules
 ```
 
 ### Documentation
