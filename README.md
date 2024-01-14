@@ -7,4 +7,4 @@ git clone https://github.com/slowprojects/slowdash.git --recurse-submodules
 ```
 
 ### Documentation
-see [Github Pages](https://slowprojects.github.io/slowdash/)
+see [Github Pages](https://slowproj.github.io/slowdash/)
