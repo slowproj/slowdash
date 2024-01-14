@@ -402,7 +402,7 @@ export class SlowpyPanel extends Panel {
               <div style="flex-grow:1;height:100%;min-width:70%">
                   <textarea spellcheck="false" autocomplete="off"></textarea>
                   <div style="font-size:80%;margin-top:0.5em">
-                      <b>Note</b> SlowDash must be installed to run this script. See <a href="./doc/index.html">documentation</a> for installation procedures.
+                      <b>Note</b> SlowDash must be installed to run this script. See <a href="./docs/index.html">documentation</a> for installation procedures.
                   </div>
               </div>
               <div style="display:flex;flex-direction:column;height:100%;width:100%;margin-left:3ex">
