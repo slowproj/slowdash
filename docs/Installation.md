@@ -92,10 +92,11 @@ Type `Ctrl-c` to stop slowdash.
 If slowdash is already running, stop it before updating it.
 ```console
 $ cd PATH/TO/SLOWDASH
-$ git pull
-$ git submodule update --recursive
+$ git pull --recurse-submodule
+$ cd system
+$ make
 ```
-`make` is not necessary for updating.
+Often `make` does not do anything, but it is safe to run it every time.
 
 # Docker Container
 [TODO]
