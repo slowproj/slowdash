@@ -29,6 +29,7 @@ class DataSource_CouchDB(DataSource):
                 tag_values = entry.get('tags', {}).get('list', [])
                 schema = Schema(schema_conf, tag_values)
                 schema.name = entry.get('name', None)
+                schema.suffix = entry.get('suffix', '')
                 schema_list.append(schema)
             return schema_list
 
@@ -179,9 +180,15 @@ class DataSource_CouchDB(DataSource):
         self.scan_channels()
             
         channels = []
-        for schemata in [ self.ts_schemata, self.objts_schemata, self.viewtable_schemata, self.viewtree_schemata, self.dbinfo_schemata ]:
+        for schemata in [
+                self.ts_schemata, self.objts_schemata,
+                self.viewtable_schemata, self.viewtree_schemata,
+                self.dbinfo_schemata
+        ]:
             for schema in schemata:
-                channels += schema.channel_table.values()
+                for ch in schema.channel_table.values():
+                    ch['name'] = ch['name'] + schema.suffix
+                    channels.append(ch)
 
         return channels
             
@@ -300,16 +307,25 @@ class DataSource_CouchDB(DataSource):
 
         result = {}
         def load_data(timestamp, channel, value):
-            if channel not in result:
-                result[channel] = {
+            channel_name = channel + schema.suffix
+            if channel_name not in result:
+                result[channel_name] = {
                     'start': start, 'length': int(length), 't': [], 'x': []
                 }
-            result[channel]['t'].append(int(10*(timestamp-start))/10)
-            result[channel]['x'].append(value)
+            result[channel_name]['t'].append(int(10*(timestamp-start))/10)
+            result[channel_name]['x'].append(value)
         
         start = to - length
         view_name = schema.table
-        target_channels = set(schema.channel_table.keys()) & set(channels)
+
+        target_channels = []
+        for name in channels:
+            if not name.replace('.', '').replace('_', '').replace('-', '').replace(':', '').isalnum():
+                logging.error('bad channel name: %s' % name)
+            else:
+                key = name[0:len(name)-len(schema.suffix)]
+                if key in schema.channel_table:
+                    target_channels.append(key)
         
         rows = self.db.view(view_name)[start:to].rows
         if lastonly:

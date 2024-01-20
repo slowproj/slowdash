@@ -1,5 +1,5 @@
 # SlowDash
-Web tool for control and monitoring of concurrent systems (slow-controls and data-acquisition), primarily designed for physics experiments
+SlowDash is a web tool for control and monitoring of concurrent systems (slow-controls and data-acquisition), originally designed for physics experiments.
 
 #### Project Goal
 - Grafana-like data browser for ROOT-like data objects (graphs, histograms, etc.)
@@ -10,6 +10,7 @@ Web tool for control and monitoring of concurrent systems (slow-controls and dat
 - Data browser mostly working
 - Controls partly implemented
 - Analysis part (scripting etc.) is experimental
+
 
 ## Screenshots
 ### Dashboard
