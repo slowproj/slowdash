@@ -428,11 +428,11 @@ export class BlobPanel extends Panel {
             if (data.x.length < 1) {
                 return;
             }
-            t = data.t[data.t.length-1];
+            t = data.start + data.t[data.t.length-1];
             x = data.x[data.x.length-1];
         }
         else {
-            t = data.t;
+            t = data.start + data.t;
             x = data.x;
         }
 

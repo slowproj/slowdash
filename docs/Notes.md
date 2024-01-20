@@ -226,7 +226,7 @@ for key in obj_list:
     print(obj)
 ```
 
-## Couch DB
+## CouchDB
 
 ### Setup
 #### DB System

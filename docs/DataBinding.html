@@ -125,6 +125,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="#time-series-of-blobs-4">Time-Series of Blobs</a></li>
 <li><a href="#view-rows-as-a-table">View-Rows as a Table</a></li>
 <li><a href="#view-row-as-a-tree">View-Row as a Tree</a></li>
+<li><a href="#database-information-as-a-tree">Database information as a Tree</a></li>
 </ul></li>
 <li><a href="#local-yaml-files">Local YAML Files</a></li>
 <li><a href="#local-csv-files">Local CSV Files</a></li>
@@ -1090,19 +1091,28 @@ Example of a Python script to write a “current” histogram:</li>
 <a class="sourceLine" id="cb40-6" title="6">      <span class="fu">view_tree:</span><span class="at"> </span></a>
 <a class="sourceLine" id="cb40-7" title="7">        <span class="fu">name:</span><span class="at"> DataRecord</span></a>
 <a class="sourceLine" id="cb40-8" title="8">        <span class="fu">schema:</span><span class="at"> MyDesignDoc/MyIndex = Field01, Field02, ..</span></a></code></pre></div>
+<h2 id="database-information-as-a-tree">Database information as a Tree</h2>
+<p>Current database information such as the file size can be obtained as a tree data object. Just make a <code>database_info</code> entry in the <code>data_source</code> definition with a name:</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb41-1" title="1"><span class="fu">slowdash_project:</span></a>
+<a class="sourceLine" id="cb41-2" title="2">  <span class="fu">data_source:</span></a>
+<a class="sourceLine" id="cb41-3" title="3">    <span class="fu">type:</span><span class="at"> CouchDB</span></a>
+<a class="sourceLine" id="cb41-4" title="4">    <span class="fu">parameters:</span></a>
+<a class="sourceLine" id="cb41-5" title="5">      <span class="fu">url:</span><span class="at"> couchdb://USER:PASS@localhost:5984/MyDB</span></a>
+<a class="sourceLine" id="cb41-6" title="6">      <span class="fu">database_info:</span><span class="at"> </span></a>
+<a class="sourceLine" id="cb41-7" title="7">        <span class="fu">name:</span><span class="at"> DBInfo</span></a></code></pre></div>
 <h1 id="local-yaml-files">Local YAML Files</h1>
 <ul>
 <li>One YAML file stores one Tree object</li>
 <li>[TODO] Multiple YAML files with time-stamps encoded in the file names</li>
 <li>[TODO] implement <code>valid_from</code>.</li>
 </ul>
-<div class="sourceCode" id="cb41"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb41-1" title="1"><span class="fu">slowdash_project:</span></a>
-<a class="sourceLine" id="cb41-2" title="2">  <span class="fu">data_source:</span></a>
-<a class="sourceLine" id="cb41-3" title="3">    <span class="fu">type:</span><span class="at"> YAML</span></a>
-<a class="sourceLine" id="cb41-4" title="4">    <span class="fu">parameters:</span></a>
-<a class="sourceLine" id="cb41-5" title="5">      <span class="fu">name:</span><span class="at"> RunConfig</span></a>
-<a class="sourceLine" id="cb41-6" title="6">      <span class="fu">file:</span><span class="at"> RunConfig.yaml</span></a>
-<a class="sourceLine" id="cb41-7" title="7">      <span class="fu">valid_from:</span><span class="at"> now</span></a></code></pre></div>
+<div class="sourceCode" id="cb42"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb42-1" title="1"><span class="fu">slowdash_project:</span></a>
+<a class="sourceLine" id="cb42-2" title="2">  <span class="fu">data_source:</span></a>
+<a class="sourceLine" id="cb42-3" title="3">    <span class="fu">type:</span><span class="at"> YAML</span></a>
+<a class="sourceLine" id="cb42-4" title="4">    <span class="fu">parameters:</span></a>
+<a class="sourceLine" id="cb42-5" title="5">      <span class="fu">name:</span><span class="at"> RunConfig</span></a>
+<a class="sourceLine" id="cb42-6" title="6">      <span class="fu">file:</span><span class="at"> RunConfig.yaml</span></a>
+<a class="sourceLine" id="cb42-7" title="7">      <span class="fu">valid_from:</span><span class="at"> now</span></a></code></pre></div>
 <h1 id="local-csv-files">Local CSV Files</h1>
 <p>[TODO]</p>
 <h1 id="local-root-files">Local ROOT Files</h1>

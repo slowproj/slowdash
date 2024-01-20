@@ -719,6 +719,18 @@ slowdash_project:
         schema: MyDesignDoc/MyIndex = Field01, Field02, ..
 ```
 
+## Database information as a Tree
+Current database information such as the file size can be obtained as a tree data object. Just make a `database_info` entry in the `data_source` definition with a name:
+```yaml
+slowdash_project:
+  data_source:
+    type: CouchDB
+    parameters:
+      url: couchdb://USER:PASS@localhost:5984/MyDB
+      database_info: 
+        name: DBInfo
+```
+
 # Local YAML Files
 - One YAML file stores one Tree object
 - [TODO] Multiple YAML files with time-stamps encoded in the file names

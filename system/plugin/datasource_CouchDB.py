@@ -36,6 +36,7 @@ class DataSource_CouchDB(DataSource):
         self.objts_schemata = load_schema(config, 'object_time_series')
         self.viewtable_schemata = load_schema(config, 'view_table')
         self.viewtree_schemata = load_schema(config, 'view_tree')
+        self.dbinfo_schemata = load_schema(config, 'database_info')
 
         self.channels_scaned = False
         self.server_connected = False
@@ -153,10 +154,10 @@ class DataSource_CouchDB(DataSource):
                     continue
                 try:
                     view = self.db.view(schema.table)
+                    if view.total_rows == 0:
+                        continue
                 except Exception as e:
                     logging.error('CouchDB: Unable to get view: "%s"' % schema.table)
-                    continue
-                if view.total_rows == 0:
                     continue
                 scan_fields(schema, view)
                 if schema.tag is not None:
@@ -165,7 +166,7 @@ class DataSource_CouchDB(DataSource):
                             schema.channel_table[ch] = { "name": ch }
                     scan_tags(schema, view)
 
-        for datatype, schemata in { 'table': self.viewtable_schemata, 'tree': self.viewtree_schemata }.items():
+        for datatype, schemata in { 'table': self.viewtable_schemata, 'tree': self.viewtree_schemata, 'tree': self.dbinfo_schemata }.items():
             for schema in schemata:
                 if schema.name is None:
                     schema.name = '%s_%s' % (datatype, schema.table.split('/')[-1])
@@ -178,7 +179,7 @@ class DataSource_CouchDB(DataSource):
         self.scan_channels()
             
         channels = []
-        for schemata in [ self.ts_schemata, self.objts_schemata, self.viewtable_schemata, self.viewtree_schemata ]:
+        for schemata in [ self.ts_schemata, self.objts_schemata, self.viewtable_schemata, self.viewtree_schemata, self.dbinfo_schemata ]:
             for schema in schemata:
                 channels += schema.channel_table.values()
 
@@ -265,6 +266,29 @@ class DataSource_CouchDB(DataSource):
             
             result[name] = {
                 'start': start, 'length': int(length), 't': timestamp, 'x': { 'tree': tree }
+            }
+            
+        # DB info as a tree
+        for schema in self.dbinfo_schemata:
+            name = schema.name
+            if name not in channels:
+                continue
+            if self.db is None:
+                continue
+
+            tree = {}
+            try:
+                info = self.db.info()
+                tree['Name'] = info.get('db_name', '')
+                tree['UpTime_days'] = '%.1f' % ((time.time() - int(info.get('instance_start_time', time.time())))/86400.0)
+                tree['DocumentCount'] = info.get('doc_count', -1)
+                tree['FileSize_GB'] = '%.3f' % (float(info.get('sizes', {}).get('file', -1))/1e9)
+                tree['ExternalSize_GB'] = '%.3f' % (float(info.get('sizes', {}).get('external', -1))/1e9)
+            except:
+                pass
+            
+            result[name] = {
+                'start': start, 'length': int(length), 't': to, 'x': { 'tree': tree }
             }
             
         return result
