@@ -287,10 +287,10 @@ class DataSource_CouchDB(DataSource):
             try:
                 info = self.db.info()
                 tree['Name'] = info.get('db_name', '')
-                tree['UpTime_days'] = '%.1f' % ((time.time() - int(info.get('instance_start_time', time.time())))/86400.0)
                 tree['DocumentCount'] = info.get('doc_count', -1)
                 tree['FileSize_GB'] = '%.3f' % (float(info.get('sizes', {}).get('file', -1))/1e9)
                 tree['ExternalSize_GB'] = '%.3f' % (float(info.get('sizes', {}).get('external', -1))/1e9)
+                tree['UpTime_days'] = '%.1f' % ((time.time() - int(info.get('instance_start_time', time.time())))/86400.0)
             except:
                 pass
             

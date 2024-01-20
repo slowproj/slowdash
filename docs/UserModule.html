@@ -88,6 +88,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="#user-module-structure">User Module structure</a></li>
 <li><a href="#example-user-data-source">Example User Data Source</a></li>
 <li><a href="#example-user-command-dispatcher">Example User Command Dispatcher</a></li>
+<li><a href="#user-module-threading">User Module Threading</a></li>
+<li><a href="#tips">Tips</a></li>
 </ul>
 </nav>
 </div>
@@ -123,33 +125,57 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h1 id="user-module-structure">User Module structure</h1>
 <div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb3-1" title="1"><span class="co">### Called when this module is loaded. The params are the parameters in the configuration file.</span></a>
 <a class="sourceLine" id="cb3-2" title="2"><span class="kw">def</span> initialize(params):</a>
-<a class="sourceLine" id="cb3-3" title="3">    <span class="cf">pass</span></a>
+<a class="sourceLine" id="cb3-3" title="3">    ...</a>
 <a class="sourceLine" id="cb3-4" title="4"></a>
 <a class="sourceLine" id="cb3-5" title="5">    </a>
 <a class="sourceLine" id="cb3-6" title="6"><span class="co">### Called during termination of slow-dash.</span></a>
 <a class="sourceLine" id="cb3-7" title="7"><span class="kw">def</span> finalize():</a>
-<a class="sourceLine" id="cb3-8" title="8">    <span class="cf">pass</span></a>
+<a class="sourceLine" id="cb3-8" title="8">    ...</a>
 <a class="sourceLine" id="cb3-9" title="9"></a>
 <a class="sourceLine" id="cb3-10" title="10">    </a>
 <a class="sourceLine" id="cb3-11" title="11"><span class="co">### Called when web clients need a list of available channels.</span></a>
 <a class="sourceLine" id="cb3-12" title="12"><span class="co"># Return a list of channel struct, e.g.,  [ { &quot;name&quot;: NAME1, &quot;type&quot;: TYPE1 }, ... ]</span></a>
 <a class="sourceLine" id="cb3-13" title="13"><span class="kw">def</span> get_channels():</a>
-<a class="sourceLine" id="cb3-14" title="14">    <span class="cf">return</span> []</a>
-<a class="sourceLine" id="cb3-15" title="15"></a>
+<a class="sourceLine" id="cb3-14" title="14">    ...</a>
+<a class="sourceLine" id="cb3-15" title="15">    <span class="cf">return</span> []</a>
 <a class="sourceLine" id="cb3-16" title="16"></a>
-<a class="sourceLine" id="cb3-17" title="17"><span class="co">### Called when web clients request data.</span></a>
-<a class="sourceLine" id="cb3-18" title="18"><span class="co"># If the channel is not known, return None</span></a>
-<a class="sourceLine" id="cb3-19" title="19"><span class="co"># else return a JSON object of the data, in the format described in the Data Model document.</span></a>
-<a class="sourceLine" id="cb3-20" title="20"><span class="kw">def</span> get_data(channel):</a>
-<a class="sourceLine" id="cb3-21" title="21">    <span class="cf">return</span> <span class="va">None</span></a>
-<a class="sourceLine" id="cb3-22" title="22"></a>
-<a class="sourceLine" id="cb3-23" title="23"></a>
-<a class="sourceLine" id="cb3-24" title="24"><span class="co">### Called when web clients send a command.</span></a>
-<a class="sourceLine" id="cb3-25" title="25"><span class="co"># If command is not recognized, return None</span></a>
-<a class="sourceLine" id="cb3-26" title="26"><span class="co"># elif command is executed successfully, return True</span></a>
-<a class="sourceLine" id="cb3-27" title="27"><span class="co"># else return False or { &quot;status&quot;: &quot;error&quot;, &quot;message&quot;: ... }</span></a>
-<a class="sourceLine" id="cb3-28" title="28"><span class="kw">def</span> process_command(doc):</a>
-<a class="sourceLine" id="cb3-29" title="29">    <span class="cf">return</span> <span class="va">None</span></a></code></pre></div>
+<a class="sourceLine" id="cb3-17" title="17"></a>
+<a class="sourceLine" id="cb3-18" title="18"><span class="co">### Called when web clients request data.</span></a>
+<a class="sourceLine" id="cb3-19" title="19"><span class="co"># If the channel is not known, return None</span></a>
+<a class="sourceLine" id="cb3-20" title="20"><span class="co"># else return a JSON object of the data, in the format described in the Data Model document.</span></a>
+<a class="sourceLine" id="cb3-21" title="21"><span class="kw">def</span> get_data(channel):</a>
+<a class="sourceLine" id="cb3-22" title="22">    ...</a>
+<a class="sourceLine" id="cb3-23" title="23">    <span class="cf">return</span> <span class="va">None</span></a>
+<a class="sourceLine" id="cb3-24" title="24"></a>
+<a class="sourceLine" id="cb3-25" title="25"></a>
+<a class="sourceLine" id="cb3-26" title="26"><span class="co">### Called when web clients send a command.</span></a>
+<a class="sourceLine" id="cb3-27" title="27"><span class="co"># If command is not recognized, return None</span></a>
+<a class="sourceLine" id="cb3-28" title="28"><span class="co"># elif command is executed successfully, return True</span></a>
+<a class="sourceLine" id="cb3-29" title="29"><span class="co"># else return False or { &quot;status&quot;: &quot;error&quot;, &quot;message&quot;: ... }</span></a>
+<a class="sourceLine" id="cb3-30" title="30"><span class="kw">def</span> process_command(doc):</a>
+<a class="sourceLine" id="cb3-31" title="31">    ...</a>
+<a class="sourceLine" id="cb3-32" title="32">    <span class="cf">return</span> <span class="va">None</span></a>
+<a class="sourceLine" id="cb3-33" title="33"></a>
+<a class="sourceLine" id="cb3-34" title="34"></a>
+<a class="sourceLine" id="cb3-35" title="35"><span class="co">### Called periodically while the system is running</span></a>
+<a class="sourceLine" id="cb3-36" title="36"><span class="co"># If this function is defined, a dedicated thread is created for that.</span></a>
+<a class="sourceLine" id="cb3-37" title="37"><span class="co"># Do not forget to insert a sleep otherwise the system load becomes unnecessarily large.</span></a>
+<a class="sourceLine" id="cb3-38" title="38"><span class="kw">def</span> loop():</a>
+<a class="sourceLine" id="cb3-39" title="39">    ...</a>
+<a class="sourceLine" id="cb3-40" title="40">    time.sleep(<span class="fl">0.1</span>)</a>
+<a class="sourceLine" id="cb3-41" title="41"></a>
+<a class="sourceLine" id="cb3-42" title="42"></a>
+<a class="sourceLine" id="cb3-43" title="43"><span class="co">### Instead of loop(), a lower level implementation with run() and halt() can also be used.</span></a>
+<a class="sourceLine" id="cb3-44" title="44"><span class="co"># run() is called as a thread after initialize(), and halt() is called before finalize().</span></a>
+<a class="sourceLine" id="cb3-45" title="45">is_stop_requested <span class="op">=</span> <span class="va">False</span></a>
+<a class="sourceLine" id="cb3-46" title="46"><span class="kw">def</span> run():</a>
+<a class="sourceLine" id="cb3-47" title="47">    <span class="kw">global</span> is_stop_requested</a>
+<a class="sourceLine" id="cb3-48" title="48">    <span class="cf">while</span> <span class="kw">not</span> is_stop_requested:</a>
+<a class="sourceLine" id="cb3-49" title="49">        ....</a>
+<a class="sourceLine" id="cb3-50" title="50">        time.sleep(<span class="fl">0.1</span>)</a>
+<a class="sourceLine" id="cb3-51" title="51"><span class="kw">def</span> halt():</a>
+<a class="sourceLine" id="cb3-52" title="52">    <span class="kw">global</span> is_stop_requested</a>
+<a class="sourceLine" id="cb3-53" title="53">    is_stop_requested <span class="op">=</span> <span class="va">True</span></a></code></pre></div>
 <p>[TODO] implement the full data-source interface</p>
 <h1 id="example-user-data-source">Example User Data Source</h1>
 <h3 id="project-configuration-file-1">Project Configuration File</h3>
@@ -241,65 +267,83 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>When the <code>Set</code> button is clicked, the form data is sent to the user module as a JSON document. On the terminal screen where the slowdash command is running, you can see a message like:</p>
 <pre><code>POST: /slowdash.cgi/control
 23-03-14 16:37:46 INFO: DISPATCH: {&#39;set_time_offset&#39;: True, &#39;time_offset&#39;: &#39;3&#39;}</code></pre>
-<h3 id="tips">Tips</h3>
-<ul>
-<li>To print debug messages from user modules, use the logging module:</li>
-</ul>
-<div class="sourceCode" id="cb10"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb10-1" title="1"><span class="im">import</span> logging</a>
-<a class="sourceLine" id="cb10-2" title="2">logger <span class="op">=</span> logging.getLogger(name)</a>
-<a class="sourceLine" id="cb10-3" title="3">logger.addHandler(logging.StreamHandler(sys.stderr))</a>
-<a class="sourceLine" id="cb10-4" title="4">logger.setLevel(logging.INFO)</a>
-<a class="sourceLine" id="cb10-5" title="5"></a>
-<a class="sourceLine" id="cb10-6" title="6"><span class="kw">def</span> process_command(doc):</a>
-<a class="sourceLine" id="cb10-7" title="7">    logger.info(doc)</a>
-<a class="sourceLine" id="cb10-8" title="8">    ...</a></code></pre></div>
-<ul>
-<li>To perform user tasks in parallel, while accepting the commands from Slow-Dash, threading is often used.</li>
-</ul>
-<div class="sourceCode" id="cb11"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb11-1" title="1"><span class="im">import</span> threading</a>
-<a class="sourceLine" id="cb11-2" title="2">current_thread <span class="op">=</span> <span class="va">None</span></a>
-<a class="sourceLine" id="cb11-3" title="3">stop_requested <span class="op">=</span> <span class="va">False</span></a>
-<a class="sourceLine" id="cb11-4" title="4">    </a>
-<a class="sourceLine" id="cb11-5" title="5"><span class="kw">def</span> run():</a>
-<a class="sourceLine" id="cb11-6" title="6">    <span class="cf">while</span> <span class="kw">not</span> stop_requested:</a>
-<a class="sourceLine" id="cb11-7" title="7">        do_my_task()</a>
-<a class="sourceLine" id="cb11-8" title="8">    </a>
-<a class="sourceLine" id="cb11-9" title="9"><span class="kw">def</span> initialize(params):</a>
-<a class="sourceLine" id="cb11-10" title="10">    <span class="kw">global</span> current_thread</a>
-<a class="sourceLine" id="cb11-11" title="11">    current_thread <span class="op">=</span> threading.Thread(target<span class="op">=</span>run)</a>
-<a class="sourceLine" id="cb11-12" title="12">    current_thread.start()</a>
-<a class="sourceLine" id="cb11-13" title="13">    </a>
-<a class="sourceLine" id="cb11-14" title="14"><span class="kw">def</span> finalize():</a>
-<a class="sourceLine" id="cb11-15" title="15">    <span class="kw">global</span> current_thread, stop_requested</a>
-<a class="sourceLine" id="cb11-16" title="16">    <span class="cf">if</span> current_thread <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</a>
-<a class="sourceLine" id="cb11-17" title="17">        stop_requested <span class="op">=</span> <span class="va">True</span></a>
-<a class="sourceLine" id="cb11-18" title="18">        current_thread.join()</a></code></pre></div>
-<ul>
-<li>Consider making a class to handle user tasks, and using the user module interface functions for simply forwarding the messages.</li>
-</ul>
-<div class="sourceCode" id="cb12"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb12-1" title="1"><span class="kw">class</span> MyTask:</a>
-<a class="sourceLine" id="cb12-2" title="2">    ....</a>
-<a class="sourceLine" id="cb12-3" title="3"></a>
-<a class="sourceLine" id="cb12-4" title="4">my_task <span class="op">=</span> MyTask()</a>
-<a class="sourceLine" id="cb12-5" title="5"></a>
-<a class="sourceLine" id="cb12-6" title="6"><span class="kw">def</span> run():</a>
-<a class="sourceLine" id="cb12-7" title="7">    my_task.start()</a>
-<a class="sourceLine" id="cb12-8" title="8">    <span class="cf">while</span> <span class="kw">not</span> stop_requested:</a>
-<a class="sourceLine" id="cb12-9" title="9">        my_task.do_one()</a>
-<a class="sourceLine" id="cb12-10" title="10">    my_task.stop()</a>
-<a class="sourceLine" id="cb12-11" title="11">    </a>
-<a class="sourceLine" id="cb12-12" title="12"><span class="kw">def</span> process_command(doc):</a>
-<a class="sourceLine" id="cb12-13" title="13">    <span class="cf">return</span> my_task.process_command(doc)    </a></code></pre></div>
-<ul>
-<li>It is often convenient to have the user module executable standalone. To stop nicely, signal could be used:</li>
-</ul>
-<div class="sourceCode" id="cb13"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb13-1" title="1"><span class="kw">def</span> stop(signum, frame):</a>
-<a class="sourceLine" id="cb13-2" title="2">    finalize()</a>
-<a class="sourceLine" id="cb13-3" title="3">    </a>
-<a class="sourceLine" id="cb13-4" title="4"><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</a>
-<a class="sourceLine" id="cb13-5" title="5">    <span class="im">import</span> signal</a>
-<a class="sourceLine" id="cb13-6" title="6">    signal.signal(signal.SIGINT, stop)</a>
-<a class="sourceLine" id="cb13-7" title="7">    initialize({})</a></code></pre></div>
+<h1 id="user-module-threading">User Module Threading</h1>
+<p>If the <code>loop()</code> function is defined in a user module, a dedicated thread is created and the function is called periodically:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb10-1" title="1"><span class="kw">def</span> loop():</a>
+<a class="sourceLine" id="cb10-2" title="2">    do_my_task()</a>
+<a class="sourceLine" id="cb10-3" title="3">    time.sleep(<span class="fl">0.1</span>)</a></code></pre></div>
+<p>Instead of using <code>loop()</code>, if the <code>run()</code> function is defined, a dedicated thread is created and the function will be started immediately after <code>initialize()</code>. When <code>run()</code> is used, a terminator function, <code>halt()</code> must be also defined in the user module to stop the thread. The <code>halt()</code> function is called just before <code>finalize()</code> is called. A typical construction of <code>run()</code> and <code>halt()</code> looks like:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb11-1" title="1">is_stop_requested <span class="op">=</span> <span class="va">False</span></a>
+<a class="sourceLine" id="cb11-2" title="2"></a>
+<a class="sourceLine" id="cb11-3" title="3"><span class="kw">def</span> run():</a>
+<a class="sourceLine" id="cb11-4" title="4">    <span class="kw">global</span> is_stop_requested</a>
+<a class="sourceLine" id="cb11-5" title="5">    <span class="cf">while</span> <span class="kw">not</span> is_stop_requested:</a>
+<a class="sourceLine" id="cb11-6" title="6">        do_my_task()</a>
+<a class="sourceLine" id="cb11-7" title="7">        time.sleep(<span class="fl">0.1</span>)</a>
+<a class="sourceLine" id="cb11-8" title="8"></a>
+<a class="sourceLine" id="cb11-9" title="9"><span class="kw">def</span> halt():</a>
+<a class="sourceLine" id="cb11-10" title="10">    <span class="kw">global</span> is_stop_requested</a>
+<a class="sourceLine" id="cb11-11" title="11">    is_stop_requested <span class="op">=</span> <span class="va">True</span>    </a></code></pre></div>
+<p>It is okay to implement threading within the user module. Just avoid using the reserved function names (<code>run()</code> etc.)</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb12-1" title="1"><span class="im">import</span> threading</a>
+<a class="sourceLine" id="cb12-2" title="2">current_thread <span class="op">=</span> <span class="va">None</span></a>
+<a class="sourceLine" id="cb12-3" title="3">is_stop_requested <span class="op">=</span> <span class="va">False</span></a>
+<a class="sourceLine" id="cb12-4" title="4"></a>
+<a class="sourceLine" id="cb12-5" title="5"><span class="kw">def</span> main():</a>
+<a class="sourceLine" id="cb12-6" title="6">    <span class="kw">global</span> is_stop_requested</a>
+<a class="sourceLine" id="cb12-7" title="7">    <span class="cf">while</span> <span class="kw">not</span> is_stop_requested:</a>
+<a class="sourceLine" id="cb12-8" title="8">        do_my_task()</a>
+<a class="sourceLine" id="cb12-9" title="9">        time.sleep(<span class="fl">0.1</span>)</a>
+<a class="sourceLine" id="cb12-10" title="10"></a>
+<a class="sourceLine" id="cb12-11" title="11"><span class="kw">def</span> initialize(params):</a>
+<a class="sourceLine" id="cb12-12" title="12">    <span class="kw">global</span> current_thread</a>
+<a class="sourceLine" id="cb12-13" title="13">    current_thread <span class="op">=</span> threading.Thread(target<span class="op">=</span>main)</a>
+<a class="sourceLine" id="cb12-14" title="14">    current_thread.start()</a>
+<a class="sourceLine" id="cb12-15" title="15">    </a>
+<a class="sourceLine" id="cb12-16" title="16"><span class="kw">def</span> finalize():</a>
+<a class="sourceLine" id="cb12-17" title="17">    <span class="kw">global</span> current_thread, is_stop_requested</a>
+<a class="sourceLine" id="cb12-18" title="18">    is_stop_requested <span class="op">=</span> <span class="va">True</span></a>
+<a class="sourceLine" id="cb12-19" title="19">    <span class="cf">if</span> current_thread <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</a>
+<a class="sourceLine" id="cb12-20" title="20">        current_thread.join()</a></code></pre></div>
+<h1 id="tips">Tips</h1>
+<h3 id="debug-log-messages">Debug / Log Messages</h3>
+<p>To print debug messages from user modules, use the logging module:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb13-1" title="1"><span class="im">import</span> logging</a>
+<a class="sourceLine" id="cb13-2" title="2">logger <span class="op">=</span> logging.getLogger(name)</a>
+<a class="sourceLine" id="cb13-3" title="3">logger.addHandler(logging.StreamHandler(sys.stderr))</a>
+<a class="sourceLine" id="cb13-4" title="4">logger.setLevel(logging.INFO)</a>
+<a class="sourceLine" id="cb13-5" title="5"></a>
+<a class="sourceLine" id="cb13-6" title="6"><span class="kw">def</span> process_command(doc):</a>
+<a class="sourceLine" id="cb13-7" title="7">    logger.info(doc)</a>
+<a class="sourceLine" id="cb13-8" title="8">    ...</a></code></pre></div>
+<h3 id="user-task-class">User Task Class</h3>
+<p>To avoid using a number of “global” variables, consider making a class to handle user tasks and using the user module interface functions for simply forwarding the messages.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb14-1" title="1"><span class="kw">class</span> MyTask:</a>
+<a class="sourceLine" id="cb14-2" title="2">    ....</a>
+<a class="sourceLine" id="cb14-3" title="3"></a>
+<a class="sourceLine" id="cb14-4" title="4">my_task <span class="op">=</span> MyTask()</a>
+<a class="sourceLine" id="cb14-5" title="5"></a>
+<a class="sourceLine" id="cb14-6" title="6"><span class="kw">def</span> loop():</a>
+<a class="sourceLine" id="cb14-7" title="7">    my_task.do()</a>
+<a class="sourceLine" id="cb14-8" title="8">    time.sleep(<span class="fl">0.1</span>)</a>
+<a class="sourceLine" id="cb14-9" title="9">    </a>
+<a class="sourceLine" id="cb14-10" title="10"><span class="kw">def</span> process_command(doc):</a>
+<a class="sourceLine" id="cb14-11" title="11">    <span class="cf">return</span> my_task.process_command(doc)    </a></code></pre></div>
+<h3 id="standalone-mode">Standalone Mode</h3>
+<p>It is often convenient to have the user module executable standalone. For single execution of a user task, just call <code>loop()</code> once:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb15-1" title="1"><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</a>
+<a class="sourceLine" id="cb15-2" title="2">    initialize({})</a>
+<a class="sourceLine" id="cb15-3" title="3">    loop()</a>
+<a class="sourceLine" id="cb15-4" title="4">    finalize()</a></code></pre></div>
+<p>For contineous execution, signal might be used to stop the loop:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb16-1" title="1"><span class="kw">def</span> stop(signum, frame):</a>
+<a class="sourceLine" id="cb16-2" title="2">    halt()</a>
+<a class="sourceLine" id="cb16-3" title="3">    </a>
+<a class="sourceLine" id="cb16-4" title="4"><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</a>
+<a class="sourceLine" id="cb16-5" title="5">    <span class="im">import</span> signal</a>
+<a class="sourceLine" id="cb16-6" title="6">    signal.signal(signal.SIGINT, stop)</a>
+<a class="sourceLine" id="cb16-7" title="7">    initialize({})</a>
+<a class="sourceLine" id="cb16-8" title="8">    run()</a></code></pre></div>
 
 
 </body>

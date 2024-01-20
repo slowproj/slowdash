@@ -40,17 +40,18 @@ slowdash_project:
 ```python
 ### Called when this module is loaded. The params are the parameters in the configuration file.
 def initialize(params):
-    pass
+    ...
 
     
 ### Called during termination of slow-dash.
 def finalize():
-    pass
+    ...
 
     
 ### Called when web clients need a list of available channels.
 # Return a list of channel struct, e.g.,  [ { "name": NAME1, "type": TYPE1 }, ... ]
 def get_channels():
+    ...
     return []
 
 
@@ -58,6 +59,7 @@ def get_channels():
 # If the channel is not known, return None
 # else return a JSON object of the data, in the format described in the Data Model document.
 def get_data(channel):
+    ...
     return None
 
 
@@ -66,7 +68,29 @@ def get_data(channel):
 # elif command is executed successfully, return True
 # else return False or { "status": "error", "message": ... }
 def process_command(doc):
+    ...
     return None
+
+
+### Called periodically while the system is running
+# If this function is defined, a dedicated thread is created for that.
+# Do not forget to insert a sleep otherwise the system load becomes unnecessarily large.
+def loop():
+    ...
+    time.sleep(0.1)
+
+
+### Instead of loop(), a lower level implementation with run() and halt() can also be used.
+# run() is called as a thread after initialize(), and halt() is called before finalize().
+is_stop_requested = False
+def run():
+    global is_stop_requested
+    while not is_stop_requested:
+        ....
+        time.sleep(0.1)
+def halt():
+    global is_stop_requested
+    is_stop_requested = True
 ```
 
 [TODO] implement the full data-source interface
@@ -188,9 +212,56 @@ POST: /slowdash.cgi/control
 23-03-14 16:37:46 INFO: DISPATCH: {'set_time_offset': True, 'time_offset': '3'}
 ```
 
-### Tips
+# User Module Threading
+If the `loop()` function is defined in a user module, a dedicated thread is created and the function is called periodically:
+```python
+def loop():
+    do_my_task()
+    time.sleep(0.1)
+```
 
-- To print debug messages from user modules, use the logging module:
+Instead of using `loop()`, if the `run()` function is defined, a dedicated thread is created and the function will be started immediately after `initialize()`. When `run()` is used, a terminator function, `halt()` must be also defined in the user module to stop the thread. The `halt()` function is called just before `finalize()` is called. A typical construction of `run()` and `halt()` looks like:
+```python
+is_stop_requested = False
+
+def run():
+    global is_stop_requested
+    while not is_stop_requested:
+        do_my_task()
+        time.sleep(0.1)
+
+def halt():
+    global is_stop_requested
+    is_stop_requested = True    
+```
+
+It is okay to implement threading within the user module. Just avoid using the reserved function names (`run()` etc.)
+```python
+import threading
+current_thread = None
+is_stop_requested = False
+
+def main():
+    global is_stop_requested
+    while not is_stop_requested:
+        do_my_task()
+        time.sleep(0.1)
+
+def initialize(params):
+    global current_thread
+    current_thread = threading.Thread(target=main)
+    current_thread.start()
+    
+def finalize():
+    global current_thread, is_stop_requested
+    is_stop_requested = True
+    if current_thread is not None:
+        current_thread.join()
+```
+
+# Tips
+### Debug / Log Messages 
+ To print debug messages from user modules, use the logging module:
 ```python
 import logging
 logger = logging.getLogger(name)
@@ -202,52 +273,39 @@ def process_command(doc):
     ...
 ```
 
-- To perform user tasks in parallel, while accepting the commands from Slow-Dash, threading is often used.
-```python
-import threading
-current_thread = None
-stop_requested = False
-    
-def run():
-    while not stop_requested:
-        do_my_task()
-    
-def initialize(params):
-    global current_thread
-    current_thread = threading.Thread(target=run)
-    current_thread.start()
-    
-def finalize():
-    global current_thread, stop_requested
-    if current_thread is not None:
-        stop_requested = True
-        current_thread.join()
-```    
-
-- Consider making a class to handle user tasks, and using the user module interface functions for simply forwarding the messages.
+### User Task Class
+To avoid using a number of "global" variables, consider making a class to handle user tasks and using the user module interface functions for simply forwarding the messages.
 ```python
 class MyTask:
     ....
 
 my_task = MyTask()
 
-def run():
-    my_task.start()
-    while not stop_requested:
-        my_task.do_one()
-    my_task.stop()
+def loop():
+    my_task.do()
+    time.sleep(0.1)
     
 def process_command(doc):
     return my_task.process_command(doc)    
 ```
 
-- It is often convenient to have the user module executable standalone. To stop nicely, signal could be used:
+### Standalone Mode
+It is often convenient to have the user module executable standalone. For single execution of a user task, just call `loop()` once:
+```python
+if __name__ == '__main__':
+    initialize({})
+    loop()
+    finalize()
+```
+
+For contineous execution, signal might be used to stop the loop:
 ```python
 def stop(signum, frame):
-    finalize()
+    halt()
     
 if __name__ == '__main__':
     import signal
     signal.signal(signal.SIGINT, stop)
     initialize({})
+    run()
 ```
