@@ -53,4 +53,6 @@ To stop, type `ctrl`-`c` in the slowdash console in Step 3.
 
 
 ## Documentation
-see [Github Pages](https://slowproj.github.io/slowdash/)
+See [Github Pages](https://slowproj.github.io/slowdash/).
+
+For status and updates, see [GitHub Wiki](https://github.com/slowproj/slowdash/wiki/Status-and-Updates).
