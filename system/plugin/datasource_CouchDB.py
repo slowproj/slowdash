@@ -275,7 +275,8 @@ class DataSource_CouchDB(DataSource):
                 'start': start, 'length': int(length), 't': timestamp, 'x': { 'tree': tree }
             }
             
-        # DB info as a tree
+        # DB info as a tree (CURRENT data, valid only for "now")
+        now = time.time()
         for schema in self.dbinfo_schemata:
             name = schema.name
             if name not in channels:
@@ -284,18 +285,18 @@ class DataSource_CouchDB(DataSource):
                 continue
 
             tree = {}
-            try:
-                info = self.db.info()
-                tree['Name'] = info.get('db_name', '')
-                tree['DocumentCount'] = info.get('doc_count', -1)
-                tree['FileSize_GB'] = '%.3f' % (float(info.get('sizes', {}).get('file', -1))/1e9)
-                tree['ExternalSize_GB'] = '%.3f' % (float(info.get('sizes', {}).get('external', -1))/1e9)
-                tree['UpTime_days'] = '%.1f' % ((time.time() - int(info.get('instance_start_time', time.time())))/86400.0)
-            except:
-                pass
+            if now >= start and now < to + 5:
+                try:
+                    info = self.db.info()
+                    tree['Name'] = info.get('db_name', '')
+                    tree['DocumentCount'] = info.get('doc_count', -1)
+                    tree['FileSize_GB'] = '%.3f' % (float(info.get('sizes', {}).get('file', -1))/1e9)
+                    tree['ExternalSize_GB'] = '%.3f' % (float(info.get('sizes', {}).get('external', -1))/1e9)
+                except:
+                    pass
             
             result[name] = {
-                'start': start, 'length': int(length), 't': to, 'x': { 'tree': tree }
+                'start': start, 'length': int(length), 't': now - start, 'x': { 'tree': tree }
             }
             
         return result

@@ -45,7 +45,7 @@ class DataSource_SystemResource(DataSource):
             
             result[ch] = {
                 'start': to-length, 'length': length,
-                't': now,
+                't': now - (to - length),
                 'x': {
                     'tree': {
                         'CPU': {
