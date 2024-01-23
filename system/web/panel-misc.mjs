@@ -38,17 +38,23 @@ export class WelcomePanel extends Panel {
             <p>
             <h3>Seeing this page unexpectedly?</h3>
             Check the project configuration:
-            <ul>
+            <ol>
                <li> A dedicated project directory must be created.
                <li> The <tt>SlowdashConfig.yaml</tt> file must exist at the project directory.
-               <li> The project directry must be specified to <tt>slowdash</tt> either by:
+               <li> The project directry must be specified to <tt>slowdash</tt>:
                <ul>
-                 <li> <tt>--project-dir=DIR</tt> option,
-                 <li> <tt>SLOWDASH_PROJECT</tt> environmental variable, or
-                 <li> running the <tt>slowdash</tt> command at the project directory.
-               </ul>
-            </ul>
-            Configuration can be tested by running the <tt>slowdash</tt> command locally without the <tt>--port</tt> option.
+                 <li> For standard installation (bare metal), do one of:
+                 <ul>
+                   <li> <tt>--project-dir=DIR</tt> option,
+                   <li> <tt>SLOWDASH_PROJECT</tt> environmental variable, or
+                   <li> running the <tt>slowdash</tt> command at the project directory.
+                 </ul>
+                 Configuration can be tested by running the <tt>slowdash</tt> command locally without the <tt>--port</tt> option.
+                 <li> For Docker installation,
+                 <ul>
+                   <li> mount the project directory to <tt>/project</tt> by <tt>-v PROJECTDIR:/project</tt>
+                 </ul>
+             </ol>
         `);
     }
 }
