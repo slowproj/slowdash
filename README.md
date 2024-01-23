@@ -14,10 +14,10 @@ SlowDash is a web tool for control and monitoring of concurrent systems (slow-co
 
 ## Screenshots
 ### Dashboard
-<img src="https://slowproj.github.io/slowdash/fig/Top-Canvas.png" width="70%">
+<img src="https://slowproj.github.io/slowdash/fig/Gallery-ATDS-Dashboard.png" width="70%">
 
 ### Interactive Plots
-<img src="https://slowproj.github.io/slowdash/fig/Top-PlotTypes.png" width="70%">
+<img src="https://slowproj.github.io/slowdash/fig/Gallery-PlotDemo.png" width="70%">
 
 ## Setup and Quick Look
 ##### Prerequisite for this trial
