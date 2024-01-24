@@ -6,6 +6,6 @@ setup(
     description="SlowDash Python Interface",
     author="Sanshiro Enomoto",
     packages=find_packages(),
-    license='GPL2'
+    license='Apache-2.0'
 )
 

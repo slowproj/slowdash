@@ -34,7 +34,7 @@ all:
 	@chmod 755 $(SLOWDASH_BIN)
 
 	@echo 'export PATH=$$PATH:$(SLOWDASH_DIR)/bin' >> $(SLOWDASH_ENV)
-	@echo 'export PYTHONPATH=$(SLOWDASH_DIR)/system/client:$$PYTHONPATH' >> $(SLOWDASH_ENV)
+	@echo 'export PYTHONPATH=$(SLOWDASH_DIR)/system/client/slowpy:$$PYTHONPATH' >> $(SLOWDASH_ENV)
 
 	@cat $(SLOWDASH_DIR)/ExampleProjects/QuickTour/generate-testdata.py > $(SLOWDASH_DIR)/docs/generate-testdata.py.txt
 	@ln -fs $(SLOWDASH_DIR)/docs $(SLOWDASH_DIR)/system/web
