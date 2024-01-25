@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  slowdash:
+    image: slowproj/slowdash:2401
+    volumes:
+      - .:/project
+    ports:
+      - "18881:18881"
