@@ -25,7 +25,7 @@ SlowDash is a web tool for control and monitoring of concurrent systems (slow-co
 
 #### Prerequisite for this trial
 - Git
-- Docker Compose
+- Docker & Docker Compose
 
 #### Step 1: Clone (for example projects)
 ```
@@ -38,6 +38,38 @@ none
 #### Step 3: Start an example project
 ```
 cd slowdash/ExampleProjects/DummyDataSource
+docker-compose up
+```
+
+#### Step 4: Take a look with a browser
+Open a web browser and connect to `http://localhost:18881`.
+To stop, type `ctrl`-`c` in the docker-composite window, or use `docker-composite stop` (or `down` to remove the container)
+</details>
+  
+### Docker on Windows, Raspberry-Pi, etc.
+<details>
+
+#### Prerequisite for this trial
+- Git
+- Docker & Docker Compose
+
+#### Step 1: Clone with submodules
+```
+git clone https://github.com/slowproj/slowdash.git --recurse-submodules
+```
+
+#### Step 2: Setup
+```
+cd slowdash
+docker build -t slowdash .
+```
+
+#### Step 3: Start an example project
+```
+cd slowdash/ExampleProjects/DummyDataSource
+```
+Edit `docker-compose.yaml` to change `image: slowproj/slowdash:2401` to `image: slowdash`
+```
 docker-compose up
 ```
 
