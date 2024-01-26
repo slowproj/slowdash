@@ -3,7 +3,7 @@
 	url = https://github.com/ajaxorg/ace-builds.git
 [submodule "system/web/jagaimo"]
 	path = system/web/jagaimo
-	url = git@github.com:SanshiroEnomoto/jagaimo.git
+	url = https://github.com/SanshiroEnomoto/jagaimo.git
 [submodule "system/web/autocruise"]
 	path = system/web/autocruise
-	url = git@github.com:SanshiroEnomoto/autocruise.git
+	url = https://github.com/SanshiroEnomoto/autocruise.git
