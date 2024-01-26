@@ -20,7 +20,7 @@ SlowDash is a web tool for control and monitoring of concurrent systems (slow-co
 <img src="https://slowproj.github.io/slowdash/fig/Gallery-PlotDemo.png" width="70%">
 
 ## Setup and Quick Look
-### Docker
+### Docker (amd64-linux)
 <details>
 
 #### Prerequisite for this trial
