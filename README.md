@@ -2,11 +2,11 @@
 SlowDash is a web tool for control and monitoring of concurrent systems (slow-controls and data-acquisition), originally designed for physics experiments.
 
 #### Project Goal
-- Grafana-like data browser for ROOT-like data objects (graphs, histograms, etc.)
+- Grafana-like data browser for time-series data and ROOT-like data objects (graphs, histograms, etc.)
 - LabVIEW-like visual control (graphical control panel)
 - Jupyter-like interactive scripting with Python
 
-#### Current Status
+#### Current Status: ~60% of the initial design implemented
 - Data browser mostly working
 - Controls partly implemented
 - Analysis part (scripting etc.) is experimental
@@ -20,7 +20,7 @@ SlowDash is a web tool for control and monitoring of concurrent systems (slow-co
 <img src="https://slowproj.github.io/slowdash/fig/Gallery-PlotDemo.png" width="70%">
 
 ## Setup and Quick Look
-### Docker
+### Docker (amd64-linux)
 <details>
 
 #### Prerequisite for this trial
@@ -84,8 +84,7 @@ To stop, type `ctrl`-`c` in the docker-composite window, or use `docker-composit
 #### Prerequisite for this trial
 - Git
 - Python3 (>=3.8) and packages:
-  - numpy
-  - psutil
+  - numpy, pyyaml, psutil
 
 The procedure below will create a new directory, `slowdash`. 
 Everything is fully contained under this directory, and nothing in your system (other than this directory) will be modified through this trial.
