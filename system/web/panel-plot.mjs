@@ -1237,19 +1237,16 @@ export class PlotPanel extends Panel {
         //download(svgUrl, name + '.svg');
         
         let canvas = document.createElement('canvas');
-        const scaling = /*/window.innerWidth / this.div.boundingClientWidth()/*/1/**/;
-        canvas.width = scaling*this.div.boundingClientWidth();
-        canvas.height = scaling*this.div.boundingClientHeight();
+        canvas.width = this.div.boundingClientWidth();
+        canvas.height = this.div.boundingClientHeight();
         let ctx = canvas.getContext('2d');
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         const legend = (new XMLSerializer()).serializeToString(this.legendDiv.get());
-        const legendWidth = this.legendDiv.boundingClientWidth();
-        const legendHeight = this.legendDiv.boundingClientHeight();
         const legendSvg = (`
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0,0,${legendWidth},${legendHeight}" width="${legendWidth}" height="${legendHeight}">
-            <foreignObject width="${legendWidth}" height="${legendHeight}">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0,0,${canvas.width},${canvas.height}" width="${canvas.width}" height="${canvas.height}">
+            <foreignObject width="${canvas.width}" height="${canvas.height}">
               ${legend}
             </foreignObject>
           </svg>
@@ -1262,11 +1259,11 @@ export class PlotPanel extends Panel {
         
         let img = new Image();
         img.onload = ()=>{
-            ctx.drawImage(img, 0, 0, scaling*svgWidth, scaling*svgHeight);
+            ctx.drawImage(img, 0, 0, svgWidth, svgHeight);
             let legendImg = new Image();
             legendImg.onload = ()=>{
                 if (withLegend) {
-                    ctx.drawImage(legendImg, scaling*svgWidth, 0, scaling*legendWidth, scaling*legendHeight);
+                    ctx.drawImage(legendImg, 0, 0, canvas.width, canvas.height);
                 }
 
                 try {
