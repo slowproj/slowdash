@@ -172,7 +172,7 @@ export class HtmlPanel extends Panel {
                 ));
             }
         }
-
+        
         this.contentDiv.find('input[type="submit" i]').bind('click', e=>{
             e.preventDefault();
             this.submit($(e.target).attr('name'), $(e.target).closest('form'));

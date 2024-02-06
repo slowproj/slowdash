@@ -137,13 +137,51 @@ class ReplaceFunctor extends ScalarFunctor {
 };
 
 
+class EqualFunctor extends ScalarFunctor {
+    constructor(args) {
+        super(args);
+        if (args.length > 0) {
+            this.rhs = args[0]
+        }
+        else {
+            this.rhs = null;
+        }
+    }
+    _applyToScalar(data) {
+        if ((data === null) || (data === undefined) || (this.rhs === null)) {
+            return null;
+        }
+        return data == this.rhs;
+    }
+};
+
+
+class GreaterThanFunctor extends ScalarFunctor {
+    constructor(args) {
+        super(args);
+        if (args.length > 0) {
+            this.rhs = args[0];
+        }
+        else {
+            this.rhs = null;
+        }
+    }
+    _applyToScalar(data) {
+        if ((data === null) || (data === undefined) || (this.rhs === null)) {
+            return null;
+        }
+        return data > this.rhs;
+    }
+};
+
+
 class InvertFunctor extends ScalarFunctor {
     constructor(args) {
         super(args);
     }
     _applyToScalar(data) {
         if ((data === null) || (data === undefined)) {
-            return data;
+            return null;
         }
         return ! Boolean(data);
     }
@@ -259,6 +297,8 @@ let FunctorCollection = {
     format: FormatFunctor,
     match: MatchFunctor,
     replace: ReplaceFunctor,
+    eq: EqualFunctor,
+    gt: GreaterThanFunctor,
     invert: InvertFunctor,
     'default': DefaultFunctor,
     // array functor //
