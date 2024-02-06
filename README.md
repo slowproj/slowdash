@@ -46,7 +46,7 @@ Open a web browser and connect to `http://localhost:18881`.
 To stop, type `ctrl`-`c` in the docker-composite window, or use `docker-composite stop` (or `down` to remove the container)
 </details>
   
-### Docker on Windows, Raspberry-Pi, etc.
+### Docker on Windows, Mac (Apple Silicon), Raspberry-Pi, etc.
 <details>
 
 #### Prerequisite for this trial
@@ -87,7 +87,7 @@ To stop, type `ctrl`-`c` in the docker-composite window, or use `docker-composit
   - numpy, pyyaml, psutil
 
 The procedure below will create a new directory, `slowdash`. 
-Everything is fully contained under this directory, and nothing in your system (other than this directory) will be modified through this trial.
+Everything is fully contained under this directory, and nothing in your system (other than this directory) will be modified throughout this trial.
 
 #### Step 1: Clone with submodules
 ```
