@@ -17,20 +17,26 @@ class DataStore_Redis(DataStore):
         self.retention_length = retention_length
         self.time_bin_width = time_bin_width
 
+        # retries up to 60 sec, for docker-compose etc.
         self.redis = None
-        try:
-            self.redis = redis.Redis(host=self.host, port=self.port, db=self.db, decode_responses=True)
-        except Exception as e:
-            logging.error(e)
-            return
+        self.ts_set = set()
+        for i in range(12):
+            try:
+                self.redis = redis.Redis(host=self.host, port=self.port, db=self.db, decode_responses=True)
+                for key in self.redis.keys():
+                    if self.redis.type(key) == 'TSDB-TYPE':
+                        self.ts_set.add(key)
+                break
+            except Exception as e:
+                logging.info(e)
+                logging.info('Redis not connected: retry in 5 sec')
+                time.sleep(5)
+        else:
+            self.redis = None
         
         if self.redis is None:
             logging.error('Redis not loaded: %s:%s/%s' % (self.host, self.port, self.db))
-
-        self.ts_set = set()
-        for key in self.redis.keys():
-            if self.redis.type(key) == 'TSDB-TYPE':
-                self.ts_set.add(key)
+            return
         
             
     def __del__(self):
