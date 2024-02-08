@@ -10,7 +10,7 @@ RUN groupadd -g $GID $GROUPNAME && useradd -s /bin/bash -u $UID -g $GID $USERNAM
 RUN apt-get update && apt-get install -y gosu
 
 # we install Python packages that might be used by user modules
-RUN pip install numpy scipy pandas matplotlib pillow pyyaml psutil psycopg2 mysqlclient influxdb-client redis pymongo couchdb
+RUN pip install numpy scipy pandas matplotlib pillow pyyaml psutil requests psycopg2 mysqlclient influxdb-client redis pymongo couchdb
 
 RUN cd /slowdash/system && make && ln -s /slowdash/bin/slowdash /bin
 RUN pip install /slowdash/system/client/slowpy

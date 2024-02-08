@@ -50,11 +50,16 @@ class DataSource_CouchDB(DataSource):
 
         if self.server_url is None or self.db_name is None:
             return
-            
-        try:
-            self.couch = couchdb.Server(self.server_url)
-            self.db = self.couch[self.db_name]
-        except Exception as e:
+
+        self.couch = couchdb.Server(self.server_url)
+        for i in range(12):
+            try:
+                self.db = self.couch[self.db_name]
+                break
+            except Exception as e:
+                logging.info('Unable to connect to CouchDB, retrying in 5 sec: ' % str(e))
+                time.sleep(5)
+        else:
             logging.error('Unable to connect to CouchDB: %s' % str(e))
             logging.error(traceback.format_exc())
             self.db = None
