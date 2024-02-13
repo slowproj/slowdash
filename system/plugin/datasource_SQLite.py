@@ -35,9 +35,9 @@ class DataSource_SQLite(DataSource_SQL):
             conn = sqlite3.connect('%s.db' % self.db_name)
         except Exception as e:
             logging.error('DB "%s" cannot be connnected: %s' % (db_name, str(e)))
-            return super().connect(self)
+            return super().connect()
         if conn is None:
-            return super().connect(self)
+            return super().connect()
         
         logging.debug('SQLite: DB connected: "%s.db"' % self.db_name)
         

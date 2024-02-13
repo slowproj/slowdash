@@ -69,9 +69,31 @@ class DataSource_SQL(DataSource):
 
     # override this in DB implementation class
     def connect(self):
-        if self.server is None:
-            conn = None
-            return SQLServer(conn)
+        if self.server is not None:
+            return self.server
+        return SQLServer(None)
+    
+
+    def connect_with_retry(self, repeat=12, interval=5):
+        if self.server is not None:
+            return self.server
+        
+        for i in range(repeat):
+            try:
+                server = self.connect()
+            except Exception as e:
+                logging.info('Unable to connect to SQLDB: %s' % str(e))
+                server = None
+            if server is None or server.conn is None:
+                logging.info('retrying in 5 sec...')
+                time.sleep(interval)
+            else:
+                return server
+        else:
+            logging.error('Unable to connect to SQLDB')
+            logging.error(traceback.format_exc())
+            return SQLServer(None)
+        
     
 
     def configure(self, project_config, config):
@@ -113,7 +135,9 @@ class DataSource_SQL(DataSource):
         self.channels_scanned = True
         
         if self.server is None:
-            self.server = self.connect()
+            self.server = self.connect_with_retry()
+        if self.server is None:
+            return
             
         for schema in self.ts_schemata + self.obj_schemata + self.objts_schemata:
             schema.initialize()
@@ -253,11 +277,13 @@ class DataSource_SQL(DataSource):
 
     
     def get_object(self, channels, length, to):
-        if self.server is None:
-            self.server = self.connect()
-        
         result = {}
 
+        if self.server is None:
+            self.server = self.connect_with_retry()
+        if self.server is None:
+            return result
+        
         ### Key-Value and Time-Series of Objects ###
         
         for schema in self.obj_schemata + self.objts_schemata:
@@ -318,7 +344,9 @@ class DataSource_SQL(DataSource):
         start = int(stop - float(length))
         
         if self.server is None:
-            self.server = self.connect()
+            self.server = self.connect_with_retry()
+        if self.server is None:
+            return result
 
         if schema.time is None and not schema.is_for_obj:
             return result
@@ -334,7 +362,7 @@ class DataSource_SQL(DataSource):
         if len(target_channels) == 0:
             return result
 
-        time_col, time_from, time_to = schema.get_query_times(start, stop)
+        time_col, time_from, time_to = schema.get_query_times(start, stop, self.time_sep)
         if time_from is None or time_to is None:
             return result
 

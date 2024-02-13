@@ -197,7 +197,7 @@ class Schema:
             self.default_field = self.fields[0]
 
                 
-    def get_query_times(self, start, stop):
+    def get_query_times(self, start, stop, time_sep='T'):
         if self.time == None:
             time_from = '%d' % start
             time_to = '%d' % stop
@@ -219,8 +219,8 @@ class Schema:
                     datetime_stop = datetime_stop.replace(tzinfo=None)
                 else:
                     return None, None, None
-            time_from = "'%s'" % datetime_start.isoformat(sep=self.time_sep)
-            time_to = "'%s'" % datetime_stop.isoformat(sep=self.time_sep)
+            time_from = "'%s'" % datetime_start.isoformat(sep=time_sep)
+            time_to = "'%s'" % datetime_stop.isoformat(sep=time_sep)
 
         if self.time is not None:
             time_col = self.time

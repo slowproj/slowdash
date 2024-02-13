@@ -59,7 +59,7 @@ class DataSource_SQLAlchemy(DataSource_SQL):
             conn = engine.connect()
         except Exception as e:
             logging.error(e)
-            return super().connect(self)
+            return super().connect()
 
         logging.info('SQLAlchemy: DB connected: "%s"' % self.url)
         

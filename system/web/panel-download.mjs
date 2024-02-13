@@ -550,7 +550,7 @@ export class SlowpyPanel extends Panel {
                 |
                 |df.plot(x='DateTime', y=${channels})
                 |
-                |plt.show()                                # this line is not necessary in IPytho (Jupyter etc.)`
+                |plt.show()                                # this line is not necessary in IPython (Jupyter etc.)`
             ).replace(/ *\|/g, '');
         }
         else {
