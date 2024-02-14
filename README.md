@@ -121,11 +121,11 @@ For status and updates, see [GitHub Wiki](https://github.com/slowproj/slowdash/w
 ## Docker Images
 [DockerHub](https://hub.docker.com/r/slowproj/slowdash)
 ```
-docker pull slowproj/slowdash:2401
+docker pull slowproj/slowdash:2402
 ```
 
 [GitHub Package](https://github.com/slowproj/slowdash/pkgs/container/slowdash)
 ```
-docker pull ghcr.io/slowproj/slowdash:2401
+docker pull ghcr.io/slowproj/slowdash:2402
 ```
 
