@@ -19,6 +19,9 @@ $ mkdir QuickTour
 $ cd QuickTour
 ```
 
+### Using Docker?
+The directory just created will be mapped into the container as a volume. You can work either inside the container (by `docker exec ...  /bin/bash` or outside, but working outside should be easier.
+
 # Test-Data Generation
 Download the test data generation script <a href="generate-testdata.py.txt" download="generate-testdata.py">generate-testdata.py</a>, or get it from `PATH/TO/SLOWDASH/ExampleProjects/QuickTour/generate-testdata.py`, and place it at the project directory.
 
@@ -83,6 +86,8 @@ Other forms of data tables also can be handled by Slow-Dash. See the [Data Bindi
 ## Project Configuration
 Project configuration file describes which database to read, which column is for the time-stamps and which column is for the data values, etc. Each Slow-Dash project has one project configuration file, named `SlowdashProject.yaml`, located at the project directory.
 
+### Writing a Configuration File
+
 Create `SlowdashProject.yaml` with the contents below:
 ```yaml
 slowdash_project:
@@ -103,6 +108,8 @@ To use the `datetime` column for the timestamps, the schema part of the configur
           schema: testdata[channel]@datetime(unspecified utc)=value
 ```
 The timestamp type is indicated after the time column name. Other common values of timestamp type are: `aware` (or `with time zone`) for time data with explicit time zone, and `naive` (or `without time zone` or `local`) for implied "local" time zone (often a bad idea). The `unspecified utc` is a special one that the time data does not have explicit time zone, which looks like "local", but the times are actually in UTC.
+
+### Testing the Configuration (Bare-Metal installation only)
 
 To test the configuration, run the `slowdash config` command at the project directory:
 ```console
@@ -152,6 +159,14 @@ $ slowdash "data/ch00?length=10"
 
 ## Running
 ### Step 1 
+#### Docker
+```console
+$ docker-compose up
+```
+This will start a SlowDash server and open a port at 18881. To stop it, type `ctrl`-`c` on the terminal, or run `docker-compose stop` (or `down`)
+if you started `docker-compose` with the `-d` option.
+
+#### Bare-Metal
 Launch the server, with an arbitrary port number. Leave this command running while testing.
 ```console
 $ slowdash --port=18881

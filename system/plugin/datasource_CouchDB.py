@@ -57,10 +57,10 @@ class DataSource_CouchDB(DataSource):
                 self.db = self.couch[self.db_name]
                 break
             except Exception as e:
-                logging.info('Unable to connect to CouchDB, retrying in 5 sec: ' % str(e))
+                logging.info('Unable to connect to CouchDB "%s", retrying in 5 sec: %s' % (self.db_name, str(e)))
                 time.sleep(5)
         else:
-            logging.error('Unable to connect to CouchDB: %s' % str(e))
+            logging.error('Unable to connect to CouchDB "%s"' % self.db_name)
             logging.error(traceback.format_exc())
             self.db = None
                 

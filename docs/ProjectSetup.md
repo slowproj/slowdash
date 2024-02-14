@@ -175,7 +175,28 @@ When the argument includes a special character of the shell (such as `?` and `&`
 
 <strong>WARNING</strong>: Slow-Dash is designed for internal use within a secured network and therefore no security protection is implemented. It is strongly recommended not to expose the system to the public internet. External access is assumed to be done through VPN or ssh tunnel.
 
-## Run as a User Process
+## Run in a Docker Container
+The SlowDash container image is configured to have a project directory at `/project` and open a port at `18881`. Map the volume and port accordingly:
+```console
+$ cd PATH/TO/SLOWDASH/PROJECT
+$ docker run -p 18881:18881 -v $(pwd):/project slowdash
+```
+
+Or with Docker Compose:
+```yaml
+version: '3'
+
+services:
+  slowdash:
+    image: slowproj/slowdash:2402
+    volumes:
+      - .:/project
+    ports:
+      - "18881:18881"
+```
+
+
+## Bare-Metal, Run as a User Process
 ```console
 $ slowdash --project-dir=PROJECT_DIR --port=18881
 ```
@@ -184,11 +205,8 @@ $ slowdash --project-dir=PROJECT_DIR --port=18881
   - `slowdash` command is launched at the project directory.
 <p>
 - The `slowdash` process must keep running while accepting the Web requests. For this, a terminal multiplexer, such as "tumx" or "GNU Screen" would be useful.
-  
-## Run in a Docker Container
-[TODO]
 
-## Launch from CGI
+## Bare Metal, Launch from CGI
 Slowdash can be executed as CGI of a web server such as Apache or Nginx. To setup this, run the script below at the project directory:
 
 ```console

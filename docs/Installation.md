@@ -2,7 +2,25 @@
 title: Installation
 ---
 
-# Standard Installation
+# Docker
+## Prerequisite
+- `git`
+- `docker` and `docker-compose`
+
+## Using Docker Images (amd64-linux)
+- DockerHub: [slowproj/slowdash:TAG](https://hub.docker.com/r/slowproj/slowdash/tags)
+- GitHub Container Registry: [ghcr.io/slowproj/slowdash:TAG](https://github.com/slowproj/slowdash/pkgs/container/slowdash)
+
+Choose a specific tag. The `:latest` tag is not made on purpose.
+
+## Building an Image
+```console
+$ git clone https://github.com/slowproj/slowdash.git
+$ cd slowdash
+$ docker build -t slowdash .
+```
+
+# Standard (Bare-Metal) Installation
 ## Prerequisite
 ### Base System
 - UNIX-like OS
@@ -33,7 +51,7 @@ Currently supported data backend systems are:
 | CouchDB            | couchdb  |
 | MongoDB            | pymongo  |
 | System Resource (*) | psutil      |
-*) "System Resource" is a a pseudo-database, responding to queries for CPU, memory and disk usage etc.
+*) "System Resource" is a pseudo-database, responding to queries for CPU, memory and disk usage etc.
 
 See [Data Binding section](DataBinding.html) for details.
 
@@ -97,6 +115,3 @@ $ cd system
 $ make
 ```
 Often `make` does not do anything, but it is safe to run it every time.
-
-# Docker Container
-[TODO]
