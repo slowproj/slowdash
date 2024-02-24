@@ -1,6 +1,8 @@
 FROM python:3.8
 
-COPY . /slowdash
+COPY system /slowdash/system
+COPY docs /slowdash/docs
+COPY ExampleProjects /slowdash/ExampleProjects
 
 ARG USERNAME=slowuser
 ARG GROUPNAME=slowuser

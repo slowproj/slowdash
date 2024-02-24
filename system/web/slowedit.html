@@ -84,14 +84,43 @@
         saveButton.attr('title', 'Save');
         frame.appendButton(saveButton);
         saveButton.enabled(false);
-        editor.commands.addCommand({
-            name: 'save',
-            bindKey: {win: "Ctrl-S", "mac": "Cmd-S"},
-            exec: (editor) => {
-                saveButton.click();
-            }
-        })
-        
+
+        let setKeymap = (map) => {
+            editor.setKeyboardHandler('ace/keyboard/' + map);
+            editor.commands.addCommand({
+                name: 'save',
+                bindKey: {win: "Ctrl-S", "mac": "Cmd-S"},
+                exec: (editor) => { saveButton.click(); }
+            });
+            editor.focus();
+            localStorage.setItem('EditorKeyBinding', map);
+        }
+        let keymapSelect = $('<select>').bind('change', e => { setKeymap($(e.target).val()); });
+        keymapSelect.append($('<option>').attr('value', 'vscode').text('VSCode'));
+        keymapSelect.append($('<option>').attr('value', 'vim').text('Vim'));
+        keymapSelect.append($('<option>').attr('value', 'emacs').text('Emacs'));
+        frame.appendSelect(keymapSelect);
+        const map = localStorage.getItem('EditorKeyBinding');
+        if (map ?? false) {
+            keymapSelect.val(map);
+            setKeymap(map);
+        }
+
+        let setWrapMode = (val) => {
+            editor.session.setUseWrapMode(val == 'on');
+            editor.focus();
+            localStorage.setItem('EditorWrapMode', val);
+        }
+        let wrapModeSelect = $('<select>').bind('change', e => { setWrapMode($(e.target).val()); });
+        wrapModeSelect.append($('<option>').attr('value', 'off').text('Warp: off'));
+        wrapModeSelect.append($('<option>').attr('value', 'on').text('Warp: on'));
+        frame.appendSelect(wrapModeSelect);
+        const wrapMode = localStorage.getItem('EditorWrapMode');
+        if (wrapMode ?? false) {
+            wrapModeSelect.val(wrapMode);
+            setWrapMode(wrapMode);
+        }
+            
         let initializeEditor = async () => {
             if (! config.filename) {
                 return;
@@ -125,7 +154,7 @@
             else {
                 editor.gotoLine(0);
             }
-
+            
             editor.session.on('change', e => {
                 if (! saveButton.enabled()) {
                     frame.setStatus(config.filename + ' (<i>modified</i>)<span style="color:gray">' + config.status + '</span>');
@@ -151,7 +180,6 @@
         };
         
         initializeEditor();
-
     }
 
   </script>    
