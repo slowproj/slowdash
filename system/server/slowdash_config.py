@@ -146,7 +146,7 @@ class Config:
                 auth_entries = auth_key
             for auth in auth_entries:
                 try:
-                    (user, key) = tuple(auth.split(':'))
+                    (user, key) = tuple(auth.split(':', 1))
                 except:
                     logging.error('Bad authentication entry: %s' % auth)
                     continue
@@ -154,9 +154,18 @@ class Config:
 
                 
     def process_substitution(self, project_doc):
-        if 'define' in project_doc:
-            self.variables.update(self.substitute(project_doc['define']))
-            del project_doc['define']
+        if 'environment' in project_doc:
+            envs = self.substitute(project_doc['environment'])
+            if type(envs) == list:
+                for entry in envs:
+                    items = entry.split('=', 1)
+                    if len(items) > 1:
+                        self.variables[items[0]] = items[1]
+            elif type(envs) == dict:
+                for k,v in envs.items():
+                    self.variables[k] = v
+                    
+            del project_doc['environment']
 
         return self.substitute(project_doc)
 
@@ -226,14 +235,22 @@ class Config:
 
     
     def substitute_variable(self, token):
-        tokens = token.split('|')
+        tokens = token.split('-', 1)
         name = tokens[0]
+        empty_is_null = name.endswith(':')
+        if empty_is_null:
+            name = name[0:-1]
         default = None if len(tokens) == 1 else tokens[1]
 
-        if name in self.variables:
-            return self.variables[name]
-        
-        value = os.environ.get(name, default)
+        value = self.variables.get(name, None)
+        if value is not None and (len(value) > 0 or not empty_is_null):
+            return value
+            
+        value = os.environ.get(name, None)
+        if value is not None and len(value) == 0 and empty_is_null:
+            value = None
+        if value is None:
+            value = default
         if value is None:
             logging.error('variable substitution error: %s' % name)
             return '${%s}' % name
