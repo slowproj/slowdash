@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 20 March 2022 #
 
-import sys, os, glob, math, re, json, datetime, time, logging, traceback
+import sys, os, glob, math, re, json, enum, datetime, time, logging, traceback
 import importlib.machinery
 import numpy as np
 
@@ -37,8 +37,7 @@ class Schema:
         # all elements are optional
         # quote with " or ' to use special characters
         
-        from enum import Enum
-        class State(Enum):
+        class State(enum.Enum):
             TABLE=1
             TAGFLAG=2
             AFTER_TAGFLAG=3

@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 19 Mar 2022 #
 
-import sys, os, logging, json, yaml
+import sys, os, subprocess, logging, enum, json, yaml
 
 slowdash_version = '0.0.1'
 
@@ -53,6 +53,7 @@ def find_project_dir():
     return project_dir
 
 
+
 class Config:
     def __init__(self, project_dir=None):
         self.auth_list = None
@@ -71,6 +72,9 @@ class Config:
         else:
             self.project_dir = find_project_dir()
         self.project = None
+
+        self.variables = {}
+        
         if self.sys_dir is None or self.project_dir is None:
             return
 
@@ -102,10 +106,11 @@ class Config:
             except Exception as e:
                 logging.error('Invalid Configuration File: %s' % str(e))
                 config = {}
-        self.project = config.get("slowdash_project", None)
-        if (self.project is None) or type(self.project) is not dict :
+        project_conf = config.get("slowdash_project", None)
+        if (project_conf is None) or type(project_conf) is not dict :
             logging.error('invalid Slowdash project file: %s' % project_file)
             return
+        self.project = self.process_substitution(project_conf)
 
         if 'name' not in self.project:
             name = os.path.basename(self.project_dir)
@@ -148,7 +153,105 @@ class Config:
                 self.auth_list[user] = key
 
                 
+    def process_substitution(self, project_doc):
+        if 'define' in project_doc:
+            self.variables.update(self.substitute(project_doc['define']))
+            del project_doc['define']
 
+        return self.substitute(project_doc)
+
+    
+    def substitute(self, doc):
+        if type(doc) == dict:
+            new_doc = {}
+            for k,v in doc.items():
+                new_doc[k] = self.substitute(v)
+            return new_doc
+        elif type(doc) == list:
+            new_doc = []
+            for v in doc:
+                new_doc.append(self.substitute(v))
+            return new_doc
+        elif type(doc) == str:
+            return self.substitute_string(doc)
+        else:
+            return doc
+
+        
+    def substitute_string(self, string):
+        # Syntax: ......${VARIABLE}...$(COMMAND)...
+        # "$$" for a single $
+        
+        new_string = ""
+        class State(enum.Enum):
+            PLAIN=1
+            DOLLAR=2
+            VARIABLE=3
+            COMMAND=4
+        state = State.PLAIN
+        token = ''
+        for ch in string:
+            if state == State.PLAIN:
+                if ch == '$':
+                    state = State.DOLLAR
+                else:
+                    new_string += ch
+            elif state == State.DOLLAR:
+                if ch == '{':
+                    state = State.VARIABLE
+                elif ch == '(':
+                    state = State.COMMAND
+                else:
+                    if ch == '$':
+                        new_string += '$'
+                    else:
+                        new_string += '$' + ch
+                    state = state.PLAIN
+            elif state == State.VARIABLE:
+                if ch == '}':
+                    new_string += self.substitute_variable(token)
+                    token = ''
+                    state = state.PLAIN
+                else:
+                    token += ch
+            elif state == State.COMMAND:
+                if ch == ')':
+                    new_string += self.substitute_command(token)
+                    token = ''
+                    state = state.PLAIN
+                else:
+                    token += ch
+
+        return new_string
+
+    
+    def substitute_variable(self, token):
+        tokens = token.split('|')
+        name = tokens[0]
+        default = None if len(tokens) == 1 else tokens[1]
+
+        if name in self.variables:
+            return self.variables[name]
+        
+        value = os.environ.get(name, default)
+        if value is None:
+            logging.error('variable substitution error: %s' % name)
+            return '${%s}' % name
+        return value
+
+        
+    def substitute_command(self, token):
+        try:
+            result = subprocess.check_output(token, shell=True).decode()
+            if len(result) > 0 and result[-1] == '\n':
+                return result[:-1]
+            else:
+                return result
+        except Exception as e:
+            logging.error('command execution error: %s: %s' % (token, str(e)))
+            return '$(%s)' % token
+    
+            
     def get(self):
         if self.project is None:
             return {}
