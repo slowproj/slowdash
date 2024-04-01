@@ -1,4 +1,4 @@
-FROM python:3.8
+FROM python:3.12
 
 COPY system /slowdash/system
 COPY docs /slowdash/docs

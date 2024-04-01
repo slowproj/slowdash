@@ -1,13 +1,7 @@
 slowdash_project:
-  name: DummyDataSource, at ${home2}
+  name: DummyDataSource
   title: Plot Demo with Dummy Data Source
 
-  environment:
-    - pwd=current directory is $(pwd).
-    - home=your home is ${HOME}.
-    - home2=your second home is ${HOME2:-nowhere}.
-    - home3=your third home is ${HOME3}.
-    
   style:
     theme: light
     title_color: darkgreen

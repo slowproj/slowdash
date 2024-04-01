@@ -2,7 +2,7 @@ version: '3'
 
 services:
   slowdash:
-    image: slowproj/slowdash:2401
+    image: slowdash:2402-python12
     volumes:
       - .:/project
     ports:
