@@ -228,7 +228,12 @@ export class CatalogPanel extends Panel {
                 href: `slowedit.html?filename=${entry.file}`,
                 target: '_blank',
                 style: 'text-decoration:none',
-            });
+            }).css('margin-left', '0.2em');
+            const download = $('<a>').html('&#x1f4e5;').attr({
+                href: `api/config/file/${entry.file}`,
+                download: entry.file,
+                style: 'text-decoration:none',
+            }).css('margin-left', '0.5em');
             let tr = $('<tr>').appendTo(table);
             let td =$('<td>');
             if (entry.error !== null) {
@@ -238,7 +243,7 @@ export class CatalogPanel extends Panel {
             if (parseFloat(entry.mtime) > 0) {
                 $('<td>').text((new JGDateTime(entry.mtime)).asString('%b %d, %Y')).appendTo(tr);
                 $('<td>').text(entry.description).appendTo(tr);
-                $('<td>').append(edit).appendTo(tr);
+                $('<td>').append(edit).append(download).appendTo(tr);
             }                    
             else {
                 $('<td>').text('').appendTo(tr);
