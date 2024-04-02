@@ -3,8 +3,9 @@
 // Created on 24 July 2022 //
 
 import { JG as $ } from './jagaimo/jagaimo.mjs';
-import { Panel } from './panel.mjs';
+import { JGIndicatorWidget } from './jagaimo/jagawidgets.mjs';
 import { upload } from './controlframe.mjs';
+import { Panel } from './panel.mjs';
 
 
 export class WelcomePanel extends Panel {
@@ -211,4 +212,135 @@ export class ConfigEditorPanel extends Panel {
                     });
             });
     }
+}
+
+
+
+export class FileManagerPanel extends Panel {
+    static describe() {
+        return { type: 'filemanager', label: '' };
+    }
+    
+    static buildConstructRows(table, on_done=config=>{}) {
+    }
+
+    
+    constructor(div, style) {
+        super(div, style);
+
+        const css = {
+            titleDiv: {
+                width:'calc(100% - 10px)',
+                'font-family': 'sans-serif',
+                'font-size': '20px',
+                'font-weight': 'normal',
+                'margin-bottom': '0',
+                'white-space': 'nowrap',
+                'overflow': 'hidden',
+            },
+            contentDiv: {
+                position: 'relative',
+                width:'calc(100% - 35px)',
+                height:'calc(100% - 35px)',
+                margin: '0px 10px 10px 10px',
+                padding:'5px',
+                overflow:'auto',
+            },
+            box: {
+                width: 'calc(100% - 16px)',
+                margin: '5px',
+                border: '2px solid gray',
+                color: 'gray',
+                'border-radius': '5px',
+                cursor: 'pointer',
+            },
+            box_ready: {
+                'border-color': 'gray',
+            },
+            box_active: {
+                'border-color': 'red',
+            },
+            dropzone: {
+                width: '100%',
+                height: '10rem',
+            },
+        };
+        
+        this.contentDiv = $('<div>').css(css.contentDiv).appendTo(div);
+        $('<div>').css(css.titleDiv).text('Uploading').appendTo(this.contentDiv);
+        let box = $('<div>').css(css.box).appendTo(this.contentDiv);
+        let dropzone = $('<div>').css(css.dropzone).appendTo(box);
+        let input = $('<input>').attr('type','file').css('display', 'none');
+        this.overwritable = $('<div>').appendTo(this.contentDiv).html('<label><input type="checkbox">No Overwriting Check</label>').find('input');
+        $('<span>').text('Drop a file here, or click this to select a file').appendTo(dropzone);
+        
+        $('<div>').css(css.titleDiv).css('margin-top', '1em').text('File List').appendTo(this.contentDiv);
+        
+        this.indicator = new JGIndicatorWidget($('<div>').appendTo(div));
+        this.savePopup = $('<dialog>').addClass('sd-pad').appendTo(div);
+
+        dropzone.bind('dragenter', e => {
+            e.preventDefault();
+            box.css(css.box_active);
+        });
+        dropzone.bind('dragover', e => {
+            e.preventDefault();
+            box.css(css.box_active);
+        });
+        dropzone.bind('dragleave', e => {
+            e.preventDefault();
+            box.css(css.box_ready);
+        });
+        dropzone.bind('drop', e => {
+            e.preventDefault();
+            box.css(css.box_ready);
+            this._upload(e.dataTransfer.files, e);
+        });
+        $('body').bind('dragover', e => { e.preventDefault();});
+        $('body').bind('drop', e => { e.preventDefault();});
+        dropzone.bind('click', e => {
+            input.click();
+        });
+        input.bind('change', e => {
+            this._upload(e.target.files ?? [], e);
+        });
+    }
+
+    
+    configure(config, callbacks={}) {
+        super.configure(config, callbacks);
+        this._update();
+    }
+
+
+    _upload(files, event=null) {
+        for (const file of files) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                upload(this.savePopup, 'config/file/' + file.name, reader.result, {
+                    contentType: 'text/plain; charset=utf-8',
+                    overwritable: this.overwritable.val(),
+                    quietOnSuccess: true,
+                    on_success: () => {
+                        this.indicator.close("File uploaded", "&#x2705;", 1000);
+                        this._update();
+                    },
+                    on_cancel: () => {
+                        this.indicator.close();
+                    },
+                    on_error: err => {
+                        this.indicator.close();
+                    }
+                });
+            }
+            
+            this.indicator.open("Uploading " + file.name, "&#x23f3;", event?.clientX ?? null, event?.clientY ?? null);
+            reader.readAsText(file);
+        }
+    }
+
+    
+    _update() {
+        console.log('update');
+    }    
 }

@@ -54,6 +54,7 @@ export class CatalogPanel extends Panel {
             overflow:'auto',
         });
         this.titleDiv_css = {
+            width:'calc(100% - 10px)',
             'font-family': 'sans-serif',
             'font-size': '20px',
             'font-weight': 'normal',
@@ -185,11 +186,20 @@ export class CatalogPanel extends Panel {
             'filter': 'grayscale(80%)',
             'cursor': 'pointer'
         });
+        let uploadButton = $('<span>').html('&#x1f4e5;').appendTo(headDiv).css({
+            'margin-left': '0.5em',
+            'margin-top': '0.2em',
+            'filter': 'grayscale(80%)',
+            'cursor': 'pointer'
+        });
         updateButton.bind('click', e=>{
             localStorage.setItem(this.cachePath + '-cachetime', 0);
             this.frameDiv.empty().text("loading catalog...");
             this._load();
             fetch('api/channels');  // update the channel list on the server (new scripts might need it)
+        });
+        uploadButton.bind('click', e=>{
+            window.open('./slowfile.html');
         });
         
         let contentDiv = $('<div>').appendTo(this.frameDiv).css(this.contentDiv_css);
@@ -227,13 +237,19 @@ export class CatalogPanel extends Panel {
             const edit = $('<a>').html('&#x1f4dd;').attr({
                 href: `slowedit.html?filename=${entry.file}`,
                 target: '_blank',
-                style: 'text-decoration:none',
-            }).css('margin-left', '0.2em');
+            }).css({
+                'margin-left': '0.2em',
+                'filter': 'grayscale(50%)',
+                'text-decoration': 'none',
+            });
             const download = $('<a>').html('&#x1f4e5;').attr({
                 href: `api/config/file/${entry.file}`,
                 download: entry.file,
-                style: 'text-decoration:none',
-            }).css('margin-left', '0.5em');
+            }).css({
+                'margin-left': '0.5em',
+                'filter': 'grayscale(50%)',
+                'text-decoration': 'none',
+            });
             let tr = $('<tr>').appendTo(table);
             let td =$('<td>');
             if (entry.error !== null) {
@@ -298,6 +314,7 @@ export class ChannelListPanel extends Panel {
             overflow:'auto',
         });
         this.titleDiv.css({
+            width:'calc(100% - 10px)',
             'font-family': 'sans-serif',
             'font-size': '20px',
             'font-weight': 'normal',

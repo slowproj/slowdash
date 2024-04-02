@@ -216,6 +216,7 @@ export function upload(dialog, filename, content, options) {
         overwritable: false,
         quietOnSuccess: false,
         on_success: () => {},
+        on_cancel: () => {},
         on_error: (e) => {},
     };
     let opts = $.extend({}, defaults, options);
@@ -244,6 +245,7 @@ export function upload(dialog, filename, content, options) {
                 });
                 dialog.find('button').at(1).click(e=>{
                     dialog.get().close();
+                    opts.on_cancel();
                 });
                 dialog.get().showModal();
                 return;
