@@ -2,7 +2,7 @@
 // Author: Sanshiro Enomoto <sanshiro@uw.edu> //
 // Created on 24 July 2022 //
 
-import { JG as $ } from './jagaimo/jagaimo.mjs';
+import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
 import { JGIndicatorWidget } from './jagaimo/jagawidgets.mjs';
 import { upload } from './controlframe.mjs';
 import { Panel } from './panel.mjs';
@@ -264,6 +264,13 @@ export class FileManagerPanel extends Panel {
                 width: '100%',
                 height: '10rem',
             },
+            filetable: {
+                width: '100%',
+                margin: 0,
+                padding: 0,
+                border: 'none',
+                'white-space': 'nowrap',
+            }
         };
         
         this.contentDiv = $('<div>').css(css.contentDiv).appendTo(div);
@@ -271,10 +278,11 @@ export class FileManagerPanel extends Panel {
         let box = $('<div>').css(css.box).appendTo(this.contentDiv);
         let dropzone = $('<div>').css(css.dropzone).appendTo(box);
         let input = $('<input>').attr('type','file').css('display', 'none');
-        this.overwritable = $('<div>').appendTo(this.contentDiv).html('<label><input type="checkbox">No Overwriting Check</label>').find('input');
+        this.overwritable = $('<div>').appendTo(this.contentDiv).html('<label><input type="checkbox">Overwrite without confirmation</label>').find('input');
         $('<span>').text('Drop a file here, or click this to select a file').appendTo(dropzone);
         
         $('<div>').css(css.titleDiv).css('margin-top', '1em').text('File List').appendTo(this.contentDiv);
+        this.fileTable = $('<table>').addClass('sd-data-table').appendTo(this.contentDiv).css(css.filetable);        
         
         this.indicator = new JGIndicatorWidget($('<div>').appendTo(div));
         this.savePopup = $('<dialog>').addClass('sd-pad').appendTo(div);
@@ -341,6 +349,74 @@ export class FileManagerPanel extends Panel {
 
     
     _update() {
-        console.log('update');
+        this.fileTable.empty();
+        let tr = $('<tr>').appendTo(this.fileTable);
+        $('<th>').text("Name").appendTo(tr);
+        $('<th>').text("Last Modified").appendTo(tr);
+        $('<th>').text("Size").appendTo(tr);
+        $('<th>').text("Owner").appendTo(tr);
+        $('<th>').text("Group").appendTo(tr);
+        $('<th>').text("Mode").appendTo(tr);
+        $('<th>').text("Edit").appendTo(tr);
+
+        const css_button = {
+            'margin-left': '0.7em',
+            'filter': 'grayscale(50%)',
+            'text-decoration': 'none',
+        };
+        
+        fetch('./api/config/filelist')
+            .then(response => {
+                if (! response.ok) {
+                    throw new Error(response.status + " " + response.statusText);
+                }
+                return response.json();
+            })
+            .catch(e => {
+                return null;
+            })
+            .then(filelist => {
+                for (const entry of filelist) {
+                    const ext = entry.name.split('.').pop();
+                    
+                    let edit;
+                    if (['json', 'yaml', 'html', 'csv', 'svg'].includes(ext)) {
+                        edit = $('<a>').html('&#x1f4dd;').attr({
+                            href: `slowedit.html?filename=${entry.name}`,
+                            target: '_blank',
+                        });
+                    }
+                    else {
+                        edit = $('<span>').html('&#x1fae3');
+                    }
+                    
+                    let download;
+                    if (['json', 'yaml', 'html', 'jpg', 'jpeg', 'png', 'svg', 'csv'].includes(ext)) {
+                        download = $('<a>').html('&#x1f4e5;').attr({
+                            href: `api/config/file/${entry.name}?content=raw`,
+                            download: entry.file,
+                        });
+                    }
+                    else {
+                        download = $('<span>').html('&#x1fae3');
+                    }
+                    
+                    const del = $('<span>').html('&#x1f5d1');
+                    
+                    edit.css(css_button);
+                    download.css(css_button);
+                    del.css(css_button);
+
+                    let tr = $('<tr>');
+                    $('<td>').appendTo(tr).text(entry.name);
+                    $('<td>').appendTo(tr).text((new JGDateTime(entry.mtime)).asString('%b %d, %Y'));
+                    $('<td>').appendTo(tr).text(Number(entry.size).toLocaleString('en-US')).css('text-align', 'right');
+                    $('<td>').appendTo(tr).text(entry.owner);
+                    $('<td>').appendTo(tr).text(entry.group);
+                    $('<td>').appendTo(tr).text(entry.mode).css('font-family', 'monospace');
+                    $('<td>').appendTo(tr).append(edit).append(download).append(del);
+                    this.fileTable.append(tr);
+                }
+            });
     }    
 }

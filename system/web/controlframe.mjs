@@ -189,7 +189,7 @@ function setupDataList() {
             }
         });
 
-    fetch('./api/config/filelist')
+    fetch('./api/config/list')
         .then(response => {
             if (response.ok) return response.json();
         })

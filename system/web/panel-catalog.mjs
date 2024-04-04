@@ -140,7 +140,7 @@ export class CatalogPanel extends Panel {
             }
         }
 
-        fetch('./api/config/filelist')
+        fetch('./api/config/list')
             .then(response => {
                 if (! response.ok) {
                     throw new Error(response.status + " " + response.statusText);
@@ -180,13 +180,13 @@ export class CatalogPanel extends Panel {
         
         let headDiv = $('<div>').appendTo(this.frameDiv).css(this.titleDiv_css).css('display','flex');
         $('<span>').appendTo(headDiv).text(title);
-        let updateButton = $('<span>').html('&#x1f504;').appendTo(headDiv).css({
+        let updateButton = $('<span>').attr('title', 'update').html('&#x1f504;').appendTo(headDiv).css({
             'margin-left': 'auto',
             'margin-top': '0.2em',
             'filter': 'grayscale(80%)',
             'cursor': 'pointer'
         });
-        let uploadButton = $('<span>').html('&#x1f4e5;').appendTo(headDiv).css({
+        let uploadButton = $('<span>').attr('title', 'upload').html('&#x1f4e4;').appendTo(headDiv).css({
             'margin-left': '0.5em',
             'margin-top': '0.2em',
             'filter': 'grayscale(80%)',
@@ -199,7 +199,7 @@ export class CatalogPanel extends Panel {
             fetch('api/channels');  // update the channel list on the server (new scripts might need it)
         });
         uploadButton.bind('click', e=>{
-            window.open('./slowfile.html');
+            window.location = './slowfile.html';
         });
         
         let contentDiv = $('<div>').appendTo(this.frameDiv).css(this.contentDiv_css);

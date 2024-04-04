@@ -49,10 +49,14 @@ summary {
 .sd-data-table th,td {
     padding-left: 0.5em;
     padding-right: 2em;
-    text-align: left;
 }
 .sd-data-table th {
     white-space: nowrap;
+    text-align: center;
+}
+.sd-data-table td {
+    font-size: small;
+    text-align: left;
 }
 .sd-data-table tr:nth-child(even) {
     background-color: #f8f8f8;
@@ -62,9 +66,6 @@ summary {
 }
 .sd-data-table tr:first-child {
     background-color: #e0e0e0;
-}
-.sd-data-table td {
-    font-size: small;
 }
 .sd-data-tree-header th {
     background-color: #e0e0e0;

@@ -2,7 +2,7 @@
 # Created by Sanshiro Enomoto on 3 Sep 2021 #
 
 
-import sys, os, io, time, glob, json, yaml, logging
+import sys, os, stat, pwd, grp, io, time, glob, json, yaml, logging
 import datasource, usermodule
 from slowdash_config import Config
 
@@ -100,11 +100,11 @@ class App:
                     'style': self.config.project.get('style', None),
                 }
                 
-                if (len(params) == 2) and (params[1] == 'filelist'):
+                if (len(params) == 2) and (params[1] == 'list'):
                     contents = { 'slowdash': [], 'slowplot': [] }
                     filelist = []
                     for filepath in glob.glob(os.path.join(self.project_dir, 'config', '*-*.*')):
-                        filelist.append([filepath, os.path.getmtime(filepath)])
+                        filelist.append([filepath, int(os.path.getmtime(filepath))])
                     filelist = sorted(filelist, key=lambda entry: entry[1], reverse=True)
                     for filepath, mtime in filelist:
                         rootname, ext = os.path.splitext(os.path.basename(filepath))
@@ -134,8 +134,24 @@ class App:
                         })
                     doc['contents'] = contents
 
+                elif (len(params) == 2) and (params[1] == 'filelist'):
+                    doc, filelist = [], []
+                    for filepath in glob.glob(os.path.join(self.project_dir, 'config', '*')):
+                        filelist.append([filepath, int(os.path.getmtime(filepath))])
+                    filelist = sorted(filelist, key=lambda entry: entry[0], reverse=False)
+                    for filepath, mtime in filelist:
+                        filestat = os.lstat(filepath)
+                        doc.append({
+                            'name': os.path.basename(filepath),
+                            'size': os.path.getsize(filepath),
+                            'mode': stat.filemode(filestat.st_mode),
+                            'owner': pwd.getpwuid(filestat.st_uid)[0],
+                            'group': grp.getgrgid(filestat.st_gid)[0],
+                            'mtime': mtime
+                        })
+                    
                 output.write(json.dumps(doc, indent=4).encode())
-                return content_type            
+                return content_type
                     
             elif (len(params) == 3) and (params[1] == 'file'):
                 filepath = os.path.join(self.project_dir, 'config', params[2])
@@ -178,7 +194,7 @@ class App:
                             content_type = 'application/json'
                             output.write(json.dumps(doc, indent=4).encode())
                             
-                elif ext in [ '.png', '.jpg', '.jpeg', '.svg', '.html']:
+                elif ext in [ '.png', '.jpg', '.jpeg', '.svg', '.html', '.csv' ]:
                     if ext == '.svg':
                         content_type = 'image/svg+xml'
                     elif ext == '.png':
@@ -187,6 +203,8 @@ class App:
                         content_type = 'image/jpeg'
                     elif ext == '.html':
                         content_type = 'text/html'
+                    elif ext == '.csv':
+                        content_type = 'text/csv'
                     content_file = io.FileIO(filepath, 'r')
                     output.write(content_file.readall())
                     

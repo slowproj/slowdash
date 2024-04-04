@@ -192,7 +192,19 @@ For details see the [Data Model section](DataModel.html).
 GET http://ADDRESS:PORT/api/blob/CHANNEL/ID
 ```
 
-## Fetching Files under User Project Configuration
+## Listing User Configuration Entries
+### Request
+```
+GET http://ADDRESS:PORT/api/config/list
+```
+
+## Listing User Configuration Files
+### Request
+```
+GET http://ADDRESS:PORT/api/config/filelist
+```
+
+## Fetching User Configuration Files
 ### Request
 ```
 GET http://ADDRESS:PORT/api/config/file/FILENAME
@@ -201,7 +213,7 @@ GET http://ADDRESS:PORT/api/config/file/FILENAME
 - The FILENAME must:
   - start with an alphabet or `_`
   - consist of only alphabets, digits, `_`, `-`, `.`, `,`, `:`, `[` and `]`
-  - end with one of: `.json`, `.yaml`, `.html`, `.png`, `.jpg`, `.jpeg`, `.svg`
+  - end with one of: `.json`, `.yaml`, `.html`, `.png`, `.jpg`, `.jpeg`, `.svg`, `.csv`
 
 
 ## Uploading User Configuration Files

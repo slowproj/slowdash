@@ -291,7 +291,7 @@ export class TreePanel extends Panel {
             let tr = $('<tr>').appendTo(table);
             for (let [key, value] of Object.entries(tree)) {
                 let tr = $('<tr>').appendTo(table);
-                tr.append($('<th>').text(key));
+                tr.append($('<th>').text(key).css('text-align', 'left'));
                 tr.append($('<td>').text(value??''));
             }
         }
@@ -304,7 +304,7 @@ export class TreePanel extends Panel {
                 tr.append($('<th>').attr('colspan', 2).css('text-align', 'center').text(section));
                 for (let [key, value] of Object.entries(subtree)) {
                     let tr = $('<tr>').appendTo(table);
-                    tr.append($('<th>').text(key));
+                    tr.append($('<th>').text(key).css('text-align', 'left'));
                     tr.append($('<td>').text(value??''));
                 }
             }

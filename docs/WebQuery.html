@@ -95,7 +95,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="#channel-list-query">Channel List Query</a></li>
 <li><a href="#data-query">Data Query</a></li>
 <li><a href="#fetching-blob-data-content">Fetching Blob Data Content</a></li>
-<li><a href="#fetching-files-under-user-project-configuration">Fetching Files under User Project Configuration</a></li>
+<li><a href="#listing-user-configuration-entries">Listing User Configuration Entries</a></li>
+<li><a href="#listing-user-configuration-files">Listing User Configuration Files</a></li>
+<li><a href="#fetching-user-configuration-files">Fetching User Configuration Files</a></li>
 <li><a href="#uploading-user-configuration-files">Uploading User Configuration Files</a></li>
 <li><a href="#sending-commands-to-user-modules">Sending Commands to User Modules</a></li>
 </ul></li>
@@ -250,8 +252,14 @@ reducer=REDUCER [default &quot;last&quot;]</code></pre>
 <h2 id="fetching-blob-data-content">Fetching Blob Data Content</h2>
 <h3 id="request-5">Request</h3>
 <pre><code>GET http://ADDRESS:PORT/api/blob/CHANNEL/ID</code></pre>
-<h2 id="fetching-files-under-user-project-configuration">Fetching Files under User Project Configuration</h2>
+<h2 id="listing-user-configuration-entries">Listing User Configuration Entries</h2>
 <h3 id="request-6">Request</h3>
+<pre><code>GET http://ADDRESS:PORT/api/config/list</code></pre>
+<h2 id="listing-user-configuration-files">Listing User Configuration Files</h2>
+<h3 id="request-7">Request</h3>
+<pre><code>GET http://ADDRESS:PORT/api/config/filelist</code></pre>
+<h2 id="fetching-user-configuration-files">Fetching User Configuration Files</h2>
+<h3 id="request-8">Request</h3>
 <pre><code>GET http://ADDRESS:PORT/api/config/file/FILENAME</code></pre>
 <ul>
 <li>The FILENAME must:
@@ -262,7 +270,7 @@ reducer=REDUCER [default &quot;last&quot;]</code></pre>
 </ul></li>
 </ul>
 <h2 id="uploading-user-configuration-files">Uploading User Configuration Files</h2>
-<h3 id="request-7">Request</h3>
+<h3 id="request-9">Request</h3>
 <pre><code>POST http://ADDRESS:PORT/api/config/file/NAME?OPTIONS
 [ with JSON text as contents ]</code></pre>
 <ul>
@@ -291,28 +299,28 @@ reducer=REDUCER [default &quot;last&quot;]</code></pre>
 </ul></li>
 </ul>
 <h3 id="javascript-snippet">JavaScript Snippet</h3>
-<div class="sourceCode" id="cb20"><pre class="sourceCode javascript"><code class="sourceCode javascript"><a class="sourceLine" id="cb20-1" title="1"><span class="at">fetch</span>(url<span class="op">,</span> <span class="op">{</span></a>
-<a class="sourceLine" id="cb20-2" title="2">    <span class="dt">method</span><span class="op">:</span> <span class="st">&#39;POST&#39;</span><span class="op">,</span></a>
-<a class="sourceLine" id="cb20-3" title="3">    <span class="dt">headers</span><span class="op">:</span> <span class="op">{</span> <span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/json; charset=utf-8&#39;</span> <span class="op">},</span></a>
-<a class="sourceLine" id="cb20-4" title="4">    <span class="dt">body</span><span class="op">:</span> <span class="va">JSON</span>.<span class="at">stringify</span>(doc<span class="op">,</span> <span class="kw">null</span><span class="op">,</span> <span class="dv">2</span>)</a>
-<a class="sourceLine" id="cb20-5" title="5"><span class="op">}</span>)</a>
-<a class="sourceLine" id="cb20-6" title="6">.<span class="at">then</span>(response <span class="kw">=&gt;</span> <span class="op">{</span></a>
-<a class="sourceLine" id="cb20-7" title="7">    <span class="cf">if</span> (<span class="va">response</span>.<span class="at">status</span> <span class="op">==</span> <span class="dv">202</span>) <span class="op">{</span></a>
-<a class="sourceLine" id="cb20-8" title="8">       <span class="co">// file already exists. retry with overwrite=yes to overwrite</span></a>
-<a class="sourceLine" id="cb20-9" title="9">       <span class="cf">return</span><span class="op">;</span></a>
-<a class="sourceLine" id="cb20-10" title="10">    <span class="op">}</span></a>
-<a class="sourceLine" id="cb20-11" title="11">    <span class="cf">if</span> (<span class="op">!</span> <span class="va">response</span>.<span class="at">ok</span>) <span class="op">{</span></a>
-<a class="sourceLine" id="cb20-12" title="12">        <span class="cf">throw</span> <span class="kw">new</span> <span class="at">Error</span>(<span class="va">response</span>.<span class="at">status</span> <span class="op">+</span> <span class="st">&quot; &quot;</span> <span class="op">+</span> <span class="va">response</span>.<span class="at">statusText</span>)<span class="op">;</span></a>
-<a class="sourceLine" id="cb20-13" title="13">    <span class="op">}</span></a>
-<a class="sourceLine" id="cb20-14" title="14">    <span class="co">//// success ////</span></a>
-<a class="sourceLine" id="cb20-15" title="15">    ....</a>
-<a class="sourceLine" id="cb20-16" title="16"><span class="op">}</span>)</a>
-<a class="sourceLine" id="cb20-17" title="17">.<span class="at">catch</span>(e <span class="kw">=&gt;</span> <span class="op">{</span></a>
-<a class="sourceLine" id="cb20-18" title="18">    <span class="co">//// error  ////</span></a>
-<a class="sourceLine" id="cb20-19" title="19">    ....</a>
-<a class="sourceLine" id="cb20-20" title="20"><span class="op">}</span>)<span class="op">;</span></a></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode javascript"><code class="sourceCode javascript"><a class="sourceLine" id="cb22-1" title="1"><span class="at">fetch</span>(url<span class="op">,</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb22-2" title="2">    <span class="dt">method</span><span class="op">:</span> <span class="st">&#39;POST&#39;</span><span class="op">,</span></a>
+<a class="sourceLine" id="cb22-3" title="3">    <span class="dt">headers</span><span class="op">:</span> <span class="op">{</span> <span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/json; charset=utf-8&#39;</span> <span class="op">},</span></a>
+<a class="sourceLine" id="cb22-4" title="4">    <span class="dt">body</span><span class="op">:</span> <span class="va">JSON</span>.<span class="at">stringify</span>(doc<span class="op">,</span> <span class="kw">null</span><span class="op">,</span> <span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb22-5" title="5"><span class="op">}</span>)</a>
+<a class="sourceLine" id="cb22-6" title="6">.<span class="at">then</span>(response <span class="kw">=&gt;</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb22-7" title="7">    <span class="cf">if</span> (<span class="va">response</span>.<span class="at">status</span> <span class="op">==</span> <span class="dv">202</span>) <span class="op">{</span></a>
+<a class="sourceLine" id="cb22-8" title="8">       <span class="co">// file already exists. retry with overwrite=yes to overwrite</span></a>
+<a class="sourceLine" id="cb22-9" title="9">       <span class="cf">return</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb22-10" title="10">    <span class="op">}</span></a>
+<a class="sourceLine" id="cb22-11" title="11">    <span class="cf">if</span> (<span class="op">!</span> <span class="va">response</span>.<span class="at">ok</span>) <span class="op">{</span></a>
+<a class="sourceLine" id="cb22-12" title="12">        <span class="cf">throw</span> <span class="kw">new</span> <span class="at">Error</span>(<span class="va">response</span>.<span class="at">status</span> <span class="op">+</span> <span class="st">&quot; &quot;</span> <span class="op">+</span> <span class="va">response</span>.<span class="at">statusText</span>)<span class="op">;</span></a>
+<a class="sourceLine" id="cb22-13" title="13">    <span class="op">}</span></a>
+<a class="sourceLine" id="cb22-14" title="14">    <span class="co">//// success ////</span></a>
+<a class="sourceLine" id="cb22-15" title="15">    ....</a>
+<a class="sourceLine" id="cb22-16" title="16"><span class="op">}</span>)</a>
+<a class="sourceLine" id="cb22-17" title="17">.<span class="at">catch</span>(e <span class="kw">=&gt;</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb22-18" title="18">    <span class="co">//// error  ////</span></a>
+<a class="sourceLine" id="cb22-19" title="19">    ....</a>
+<a class="sourceLine" id="cb22-20" title="20"><span class="op">}</span>)<span class="op">;</span></a></code></pre></div>
 <h2 id="sending-commands-to-user-modules">Sending Commands to User Modules</h2>
-<h3 id="request-8">Request</h3>
+<h3 id="request-10">Request</h3>
 <pre><code>POST http://ADDRESS:PORT/api/control
 [ with JSON text as contents ]</code></pre>
 <h3 id="response-1">Response</h3>
@@ -326,28 +334,28 @@ reducer=REDUCER [default &quot;last&quot;]</code></pre>
 </ul>
 <h3 id="javascript-snippet-1">JavaScript Snippet</h3>
 <p>A typical JavaScript would look like:</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode javascript"><code class="sourceCode javascript"><a class="sourceLine" id="cb22-1" title="1"><span class="at">fetch</span>(url<span class="op">,</span> <span class="op">{</span></a>
-<a class="sourceLine" id="cb22-2" title="2">    <span class="dt">method</span><span class="op">:</span> <span class="st">&#39;POST&#39;</span><span class="op">,</span></a>
-<a class="sourceLine" id="cb22-3" title="3">    <span class="dt">headers</span><span class="op">:</span> <span class="op">{</span> <span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/json; charset=utf-8&#39;</span> <span class="op">},</span></a>
-<a class="sourceLine" id="cb22-4" title="4">    <span class="dt">body</span><span class="op">:</span> <span class="va">JSON</span>.<span class="at">stringify</span>(doc<span class="op">,</span> <span class="kw">null</span><span class="op">,</span> <span class="dv">2</span>)</a>
-<a class="sourceLine" id="cb22-5" title="5"><span class="op">}</span>)</a>
-<a class="sourceLine" id="cb22-6" title="6">.<span class="at">then</span>(response <span class="kw">=&gt;</span> <span class="op">{</span></a>
-<a class="sourceLine" id="cb22-7" title="7">    <span class="cf">if</span> (<span class="op">!</span> <span class="va">response</span>.<span class="at">ok</span>) <span class="op">{</span></a>
-<a class="sourceLine" id="cb22-8" title="8">        <span class="cf">throw</span> <span class="kw">new</span> <span class="at">Error</span>(<span class="va">response</span>.<span class="at">status</span> <span class="op">+</span> <span class="st">&quot; &quot;</span> <span class="op">+</span> <span class="va">response</span>.<span class="at">statusText</span>)<span class="op">;</span></a>
-<a class="sourceLine" id="cb22-9" title="9">    <span class="op">}</span></a>
-<a class="sourceLine" id="cb22-10" title="10">    <span class="cf">return</span> <span class="va">response</span>.<span class="at">json</span>()<span class="op">;</span></a>
-<a class="sourceLine" id="cb22-11" title="11"><span class="op">}</span>)</a>
-<a class="sourceLine" id="cb22-12" title="12">.<span class="at">then</span>(doc <span class="kw">=&gt;</span> <span class="op">{</span></a>
-<a class="sourceLine" id="cb22-13" title="13">    <span class="cf">if</span> ((<span class="va">doc</span>.<span class="at">status</span> <span class="op">??</span> <span class="st">&#39;&#39;</span>).<span class="at">toUpperCase</span>() <span class="op">==</span> <span class="st">&#39;ERROR&#39;</span>) <span class="op">{</span></a>
-<a class="sourceLine" id="cb22-14" title="14">        <span class="cf">throw</span> <span class="kw">new</span> <span class="at">Error</span>(<span class="va">doc</span>.<span class="at">message</span> <span class="op">??</span> <span class="st">&#39;&#39;</span>)<span class="op">;</span></a>
-<a class="sourceLine" id="cb22-15" title="15">    }</a>
-<a class="sourceLine" id="cb22-16" title="16">    <span class="co">//// success ////</span></a>
-<a class="sourceLine" id="cb22-17" title="17">    ....</a>
-<a class="sourceLine" id="cb22-18" title="18">})</a>
-<a class="sourceLine" id="cb22-19" title="19">.<span class="at">catch</span>(e <span class="kw">=&gt;</span> <span class="op">{</span></a>
-<a class="sourceLine" id="cb22-20" title="20">    <span class="co">//// error ////</span></a>
-<a class="sourceLine" id="cb22-21" title="21">    ....</a>
-<a class="sourceLine" id="cb22-22" title="22"><span class="op">}</span>)<span class="op">;</span></a></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode javascript"><code class="sourceCode javascript"><a class="sourceLine" id="cb24-1" title="1"><span class="at">fetch</span>(url<span class="op">,</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb24-2" title="2">    <span class="dt">method</span><span class="op">:</span> <span class="st">&#39;POST&#39;</span><span class="op">,</span></a>
+<a class="sourceLine" id="cb24-3" title="3">    <span class="dt">headers</span><span class="op">:</span> <span class="op">{</span> <span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/json; charset=utf-8&#39;</span> <span class="op">},</span></a>
+<a class="sourceLine" id="cb24-4" title="4">    <span class="dt">body</span><span class="op">:</span> <span class="va">JSON</span>.<span class="at">stringify</span>(doc<span class="op">,</span> <span class="kw">null</span><span class="op">,</span> <span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb24-5" title="5"><span class="op">}</span>)</a>
+<a class="sourceLine" id="cb24-6" title="6">.<span class="at">then</span>(response <span class="kw">=&gt;</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb24-7" title="7">    <span class="cf">if</span> (<span class="op">!</span> <span class="va">response</span>.<span class="at">ok</span>) <span class="op">{</span></a>
+<a class="sourceLine" id="cb24-8" title="8">        <span class="cf">throw</span> <span class="kw">new</span> <span class="at">Error</span>(<span class="va">response</span>.<span class="at">status</span> <span class="op">+</span> <span class="st">&quot; &quot;</span> <span class="op">+</span> <span class="va">response</span>.<span class="at">statusText</span>)<span class="op">;</span></a>
+<a class="sourceLine" id="cb24-9" title="9">    <span class="op">}</span></a>
+<a class="sourceLine" id="cb24-10" title="10">    <span class="cf">return</span> <span class="va">response</span>.<span class="at">json</span>()<span class="op">;</span></a>
+<a class="sourceLine" id="cb24-11" title="11"><span class="op">}</span>)</a>
+<a class="sourceLine" id="cb24-12" title="12">.<span class="at">then</span>(doc <span class="kw">=&gt;</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb24-13" title="13">    <span class="cf">if</span> ((<span class="va">doc</span>.<span class="at">status</span> <span class="op">??</span> <span class="st">&#39;&#39;</span>).<span class="at">toUpperCase</span>() <span class="op">==</span> <span class="st">&#39;ERROR&#39;</span>) <span class="op">{</span></a>
+<a class="sourceLine" id="cb24-14" title="14">        <span class="cf">throw</span> <span class="kw">new</span> <span class="at">Error</span>(<span class="va">doc</span>.<span class="at">message</span> <span class="op">??</span> <span class="st">&#39;&#39;</span>)<span class="op">;</span></a>
+<a class="sourceLine" id="cb24-15" title="15">    }</a>
+<a class="sourceLine" id="cb24-16" title="16">    <span class="co">//// success ////</span></a>
+<a class="sourceLine" id="cb24-17" title="17">    ....</a>
+<a class="sourceLine" id="cb24-18" title="18">})</a>
+<a class="sourceLine" id="cb24-19" title="19">.<span class="at">catch</span>(e <span class="kw">=&gt;</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb24-20" title="20">    <span class="co">//// error ////</span></a>
+<a class="sourceLine" id="cb24-21" title="21">    ....</a>
+<a class="sourceLine" id="cb24-22" title="22"><span class="op">}</span>)<span class="op">;</span></a></code></pre></div>
 
 
 </body>
