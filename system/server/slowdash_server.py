@@ -75,7 +75,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
                          
     def do_POST(self):
-        sys.stderr.write('POST: %s' % self.path)
+        sys.stderr.write('POST: %s\n' % self.path)
         
         if not self.check_auth():
             self.send_response(401)
@@ -127,9 +127,44 @@ class RequestHandler(BaseHTTPRequestHandler):
             result.write_to(self.wfile).destroy()
             self.wfile.flush()
         except Exception as e:
-            logging.warn("slowdash_server: do_GET(): %s" % str(e))
+            logging.warn("slowdash_server: do_POST(): %s" % str(e))
 
     
+    def do_DELETE(self):
+        sys.stderr.write('DELETE: %s\n' % self.path)
+        
+        if not self.check_auth():
+            self.send_response(401)
+            self.send_header('WWW-Authenticate', 'Basic realm="SlowDash"')
+            self.end_headers()
+            return
+        
+        url = urlparse(self.path)
+        path_split = url.path.split('/')
+        while path_split.count(''):
+            path_split.remove('')
+        if path_split.count('..'):
+            self.send_error(403)
+            return
+        if (len(path_split) < 2) or (path_split[0] != self.cgi_name and path_split[0] != 'api'):
+            self.send_error(403)
+            return
+        url_recon = '/'.join(path_split[1:])
+        if len(url.query) > 0:
+            url_recon = '%s?%s' % (url_recon, url.query)
+        
+        result = self.webui.process_delete_request(url_recon)
+        if (result is None):
+            self.send_error(500)
+            return
+        if result.response >= 400:
+            self.send_error(result.response)
+            return
+        
+        self.send_response(result.response)
+        self.end_headers()
+
+            
     def check_auth(self):
         if self.webui.auth_list is None:
             return True

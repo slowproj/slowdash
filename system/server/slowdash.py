@@ -421,6 +421,11 @@ class App:
         return 201
 
     
+    def delete(self, path_list):
+        print(path_list)
+        return 200
+        
+
     
 from urllib.parse import urlparse, parse_qsl
 import io
@@ -458,20 +463,24 @@ class Reply:
             content_readable.close()
             
 
+            
 class WebUI:
     def __init__(self, project_dir=None, is_cgi=False):
         self.app = App(project_dir, is_cgi)
         self.auth_list = self.app.config.auth_list
+
         
     def close(self):
         del self.app
         self.app = None
+
         
     def check_sanity(self, string):
         string = string.replace('_', '').replace('-', '').replace('.', '').replace(',', '')
         string = string.replace(':', '').replace('[', '').replace(']', '')
         return string.isalnum()
-        
+
+    
     def process_get_request(self, url):
         if self.app is None:
             return Reply(404)
@@ -546,6 +555,29 @@ class WebUI:
             else:
                 logging.error('API error: %s' % url)
                 return Reply(500)
+
+            
+    def process_delete_request(self, url):
+        if self.app is None:
+            return Reply(404)
+        u = urlparse(url)
+        path_list = u.path.split('/')
+        while path_list.count(''):
+            path_list.remove('')
+        for element in path_list:
+            if (len(element) == 0) or not element[0].isalpha():
+                logging.error('bad file name (invalid first char): %s' % url)
+                return Reply(400)
+            if not element.replace('_', '').replace('-', '').replace('.', '').isalnum():
+                logging.error('bad file name (invalid char): %s' % url)
+                return Reply(400)
+        
+        result = self.app.delete(path_list)
+        if type(result) is int:
+            return Reply(result)
+        else:
+            logging.error('API error: %s' % url)
+            return Reply(500)
             
             
 

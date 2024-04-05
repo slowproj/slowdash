@@ -43,7 +43,7 @@ docker-compose up
 
 #### Step 4: Take a look with a browser
 Open a web browser and connect to `http://localhost:18881`.
-To stop, type `ctrl`-`c` in the docker-composite window, or use `docker-composite stop` (or `down` to remove the container)
+To stop, type `ctrl`-`c` in the docker-compose window, or use `docker-compose stop` (or `down` to remove the container)
 </details>
   
 ### Docker on Windows, Mac (Apple Silicon), Raspberry-Pi, etc.
@@ -75,7 +75,7 @@ docker-compose up
 
 #### Step 4: Take a look with a browser
 Open a web browser and connect to `http://localhost:18881`.
-To stop, type `ctrl`-`c` in the docker-composite window, or use `docker-composite stop` (or `down` to remove the container)
+To stop, type `ctrl`-`c` in the docker-compose window, or use `docker-compose stop` (or `down` to remove the container)
 </details>
   
 ### Bare-Metal

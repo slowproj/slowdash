@@ -266,7 +266,7 @@ export class FileManagerPanel extends Panel {
             },
             filetable: {
                 width: '100%',
-                margin: 0,
+                margin: '5px',
                 padding: 0,
                 border: 'none',
                 'white-space': 'nowrap',
@@ -274,10 +274,16 @@ export class FileManagerPanel extends Panel {
         };
         
         this.contentDiv = $('<div>').css(css.contentDiv).appendTo(div);
-        $('<div>').css(css.titleDiv).text('Uploading').appendTo(this.contentDiv);
+
+        $('<div>').css(css.titleDiv).text('Create File').appendTo(this.contentDiv);
+        $('<span>').text('Name ').css('margin-left', '5px').appendTo(this.contentDiv);
+        let newFileInput = $('<input>').appendTo(this.contentDiv);
+        let newFileButton = $('<button>').text('Create & Edit').appendTo(this.contentDiv);
+        
+        $('<div>').css(css.titleDiv).css('margin-top','1em').text('Upload Files').appendTo(this.contentDiv);
         let box = $('<div>').css(css.box).appendTo(this.contentDiv);
         let dropzone = $('<div>').css(css.dropzone).appendTo(box);
-        let input = $('<input>').attr('type','file').css('display', 'none');
+        let dropInput = $('<input>').attr('type','file').css('display', 'none');
         this.overwritable = $('<div>').appendTo(this.contentDiv).html('<label><input type="checkbox">Overwrite without confirmation</label>').find('input');
         $('<span>').text('Drop a file here, or click this to select a file').appendTo(dropzone);
         
@@ -287,6 +293,10 @@ export class FileManagerPanel extends Panel {
         this.indicator = new JGIndicatorWidget($('<div>').appendTo(div));
         this.savePopup = $('<dialog>').addClass('sd-pad').appendTo(div);
 
+
+        newFileButton.bind('click', e => {
+            this._createFile(newFileInput.val(), e);
+        });
         dropzone.bind('dragenter', e => {
             e.preventDefault();
             box.css(css.box_active);
@@ -307,9 +317,9 @@ export class FileManagerPanel extends Panel {
         $('body').bind('dragover', e => { e.preventDefault();});
         $('body').bind('drop', e => { e.preventDefault();});
         dropzone.bind('click', e => {
-            input.click();
+            dropInput.click();
         });
-        input.bind('change', e => {
+        dropInput.bind('change', e => {
             this._upload(e.target.files ?? [], e);
         });
     }
@@ -321,6 +331,35 @@ export class FileManagerPanel extends Panel {
     }
 
 
+    _createFile(filename, event=null) {
+        if (! filename) {
+            return;
+        }
+
+        const url = './api/config/file/' + filename;
+        this.indicator.open("Sending Command...", "&#x23f3;", event?.clientX ?? null, event?.clientY ?? null);
+        fetch(url, {
+            method: 'POST',
+            body: ''
+        })
+        .then(response => {
+            if (response.status == 202) {
+                this.indicator.close("File already exists", "&#x274c;", 5000);
+                return;
+            }
+            if (! response.ok) {
+                throw new Error(response.status + " " + response.statusText);
+            }
+            this.indicator.close("File created", "&#x2705;", 1000);
+            this._update(); // for future "back"
+            window.location = `slowedit.html?filename=${filename}`;
+        })
+        .catch(e => {
+            this.indicator.close("Error on file creation: " + e.message, "&#x274c;", 5000);
+        });
+    }
+
+    
     _upload(files, event=null) {
         for (const file of files) {
             const reader = new FileReader();
@@ -376,7 +415,7 @@ export class FileManagerPanel extends Panel {
                 return null;
             })
             .then(filelist => {
-                for (const entry of filelist) {
+                for (const entry of filelist ?? []) {
                     const ext = entry.name.split('.').pop();
                     
                     let edit;
@@ -384,10 +423,11 @@ export class FileManagerPanel extends Panel {
                         edit = $('<a>').html('&#x1f4dd;').attr({
                             href: `slowedit.html?filename=${entry.name}`,
                             target: '_blank',
+                            title: 'edit',
                         });
                     }
                     else {
-                        edit = $('<span>').html('&#x1fae3');
+                        edit = $('<span>').html('&#x1fae3').attr('title', 'reading not permitted');
                     }
                     
                     let download;
@@ -395,13 +435,34 @@ export class FileManagerPanel extends Panel {
                         download = $('<a>').html('&#x1f4e5;').attr({
                             href: `api/config/file/${entry.name}?content=raw`,
                             download: entry.file,
+                            title: 'download',
                         });
                     }
                     else {
-                        download = $('<span>').html('&#x1fae3');
+                        download = $('<span>').html('&#x1fae3').attr('title', 'reading not permitted');
                     }
                     
-                    const del = $('<span>').html('&#x1f5d1');
+                    const del = $('<span>').html('&#x1f5d1').attr({
+                        title: 'delete',
+                    }).css({
+                        cursor: 'pointer',
+                    }).bind('click', e=>{
+                        this.indicator.open("Deleting " + entry.name, "&#x23f3;");
+                        fetch(`./api/config/file/${entry.name}`, {
+                            method: 'DELETE',
+                        })
+                            .then(response => {
+                                if (! response.ok) {
+                                    throw new Error(response.status + " " + response.statusText);
+                                }
+                                this.indicator.close("File deleted", "&#x2705;", 1000);
+                                this._update();
+                            })
+                            .catch(e => {
+                                this.indicator.close("Deletion Failed: " + e.message, "&#x274c;", 5000);
+                                return null;
+                            })
+                    });
                     
                     edit.css(css_button);
                     download.css(css_button);
