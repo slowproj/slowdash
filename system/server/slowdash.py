@@ -168,7 +168,10 @@ class App:
                 
                 if ext in [ '.json', '.yaml' ]:
                     if opts.get('content', None) == 'raw':
-                        content_type = 'plain/text'
+                        if ext == '.json':
+                            content_type = 'application/json'
+                        elif ext == '.yaml':
+                            content_type = 'text/plain'
                         if filesize > 0:
                             output.write(io.FileIO(filepath, 'r').readall())
                     else:
@@ -209,13 +212,15 @@ class App:
                     elif ext == '.html':
                         content_type = 'text/html'
                     elif ext == '.csv':
-                        content_type = 'text/csv'
+                        content_type = 'text/plain'
                     if filesize > 0:
                         output.write(io.FileIO(filepath, 'r').readall())
                     
                 else:
                     return None
+                
                 return content_type
+            
             else:
                 return None
                 

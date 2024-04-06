@@ -21,7 +21,7 @@
     import { boot, Frame } from './controlframe.mjs';
 
     window.addEventListener('DOMContentLoaded', function() {
-        let defaults = { channels: null, length: 86400, to: $.time(), format: 'csv' };
+        let defaults = {};
         let optparse = options => options;
         boot(defaults, optparse, start);
     });

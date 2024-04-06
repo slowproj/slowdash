@@ -374,9 +374,10 @@ export class FileManagerPanel extends Panel {
     _upload(files, event=null) {
         for (const file of files) {
             const reader = new FileReader();
-            reader.onload = () => {
-                upload(this.savePopup, 'config/file/' + file.name, reader.result, {
-                    contentType: 'text/plain; charset=utf-8',
+            reader.onload = (e) => {
+                const content = e.target.result;
+                upload(this.savePopup, 'config/file/' + file.name, content, {
+                    contentType: 'application/octet-stream',
                     overwritable: this.overwritable.val(),
                     quietOnSuccess: true,
                     on_success: () => {
@@ -393,7 +394,7 @@ export class FileManagerPanel extends Panel {
             }
             
             this.indicator.open("Uploading " + file.name, "&#x23f3;", event?.clientX ?? null, event?.clientY ?? null);
-            reader.readAsText(file);
+            reader.readAsArrayBuffer(file);
         }
     }
 
@@ -434,12 +435,12 @@ export class FileManagerPanel extends Panel {
         this.fileTable.empty();
         let tr = $('<tr>').appendTo(this.fileTable);
         $('<th>').text("Name").appendTo(tr);
+        $('<th>').text("Edit / Delete").appendTo(tr);
         $('<th>').text("Last Modified").appendTo(tr);
         $('<th>').text("Size").appendTo(tr);
         $('<th>').text("Owner").appendTo(tr);
         $('<th>').text("Group").appendTo(tr);
         $('<th>').text("Mode").appendTo(tr);
-        $('<th>').text("Edit").appendTo(tr);
 
         const css_button = {
             'margin-left': '0.7em',
@@ -459,52 +460,53 @@ export class FileManagerPanel extends Panel {
             })
             .then(filelist => {
                 for (const entry of filelist ?? []) {
+                    let name;
                     const ext = entry.name.split('.').pop();
+                    if (['json', 'yaml', 'csv'].includes(ext)) {
+                        name = $('<a>').attr({
+                            'href': `./api/config/file/${entry.name}?content=raw`,
+                            'target': '_blank',
+                        });
+                    }
+                    else if (['html', 'svg', 'jpg', 'jpeg', 'png'].includes(ext)) {
+                        name = $('<a>').attr({
+                            'href': `./api/config/file/${entry.name}?content=raw`,
+                            'target': '_blank'
+                        });
+                    }
+                    else {
+                        name = $('<span>');
+                    }
+                    name.text(entry.name);
                     
                     let edit;
                     if (['json', 'yaml', 'html', 'csv', 'svg'].includes(ext)) {
                         edit = $('<a>').html('&#x1f4dd;').attr({
                             href: `slowedit.html?filename=${entry.name}`,
                             target: '_blank',
-                            title: 'edit',
                         });
                     }
                     else {
-                        edit = $('<span>').html('&#x26d4').attr('title', 'reading not permitted');
+                        edit = $('<span>').html('&#x26d4');
                     }
                     
-                    let download;
-                    if (['json', 'yaml', 'html', 'jpg', 'jpeg', 'png', 'svg', 'csv'].includes(ext)) {
-                        download = $('<a>').html('&#x1f4e5;').attr({
-                            href: `api/config/file/${entry.name}?content=raw`,
-                            download: entry.file,
-                            title: 'download',
-                        });
-                    }
-                    else {
-                        download = $('<span>').html('&#x26d4').attr('title', 'reading not permitted');
-                    }
-                    
-                    const del = $('<span>').html('&#x1f5d1').attr({
-                        title: 'delete',
-                    }).css({
+                    const del = $('<span>').html('&#x1f5d1').css({
                         cursor: 'pointer',
                     }).bind('click', e=>{
                         this._deleteFile(entry.name);
                     });
                     
                     edit.css(css_button);
-                    download.css(css_button);
                     del.css(css_button);
 
                     let tr = $('<tr>');
-                    $('<td>').appendTo(tr).text(entry.name);
-                    $('<td>').appendTo(tr).text((new JGDateTime(entry.mtime)).asString('%b %d, %Y'));
+                    $('<td>').appendTo(tr).append(name);
+                    $('<td>').appendTo(tr).append(edit).append(del).css('text-align', 'center');
+                    $('<td>').appendTo(tr).text((new JGDateTime(entry.mtime)).asString('%b %d, %Y')).css('text-align', 'center');;
                     $('<td>').appendTo(tr).text(Number(entry.size).toLocaleString('en-US')).css('text-align', 'right');
-                    $('<td>').appendTo(tr).text(entry.owner);
-                    $('<td>').appendTo(tr).text(entry.group);
-                    $('<td>').appendTo(tr).text(entry.mode).css('font-family', 'monospace');
-                    $('<td>').appendTo(tr).append(edit).append(download).append(del);
+                    $('<td>').appendTo(tr).text(entry.owner).css('text-align', 'center');;
+                    $('<td>').appendTo(tr).text(entry.group).css('text-align', 'center');;
+                    $('<td>').appendTo(tr).text(entry.mode).css('font-family', 'monospace').css('text-align', 'center');;
                     this.fileTable.append(tr);
                 }
             });

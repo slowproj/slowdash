@@ -226,9 +226,14 @@ export function upload(dialog, filename, content, options) {
         url += '?overwrite=yes';
     }
 
+    let headers = {};
+    if (opts.contentType) {
+        headers['Content-Type'] = opts.contentType;
+    }
+    
     fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': opts.contentType },
+        headers: headers,
         body: content,
     })
         .then(response => {
@@ -238,9 +243,9 @@ export function upload(dialog, filename, content, options) {
                     <h4>${filename}</h4>
                     <div class="jaga-dialog-button-pane"><button>Yes</button><button>No</button></div>
                 `);
-                opts.overwritable = true;
                 dialog.find('button').at(0).click(e=>{
                     dialog.get().close();
+                    opts.overwritable = true;
                     upload(dialog, filename, content, opts);
                 });
                 dialog.find('button').at(1).click(e=>{
