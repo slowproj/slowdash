@@ -116,13 +116,16 @@ class App:
 
                         meta_info, config_error = {}, None
                         if ext in [ '.json', '.yaml' ]:
-                            with open(filepath) as f:
-                                try:
-                                    this_config = yaml.safe_load(f)
-                                    meta_info = this_config.get('meta', {})
-                                except Exception as e:
-                                    config_error = str(e)
-                                    logging.error('Invalid Configuration File: %s' % str(e))
+                            if os.path.getsize(filepath) > 0:
+                                with open(filepath) as f:
+                                    try:
+                                        this_config = yaml.safe_load(f)
+                                        meta_info = this_config.get('meta', {})
+                                    except Exception as e:
+                                        config_error = str(e)
+                            else:
+                                config_error = 'empty file'
+
                     
                         contents[kind].append({
                             'name': name,
@@ -157,18 +160,17 @@ class App:
                 filepath = os.path.join(self.project_dir, 'config', params[2])
                 if not (os.path.isfile(filepath) and os.access(filepath, os.R_OK)):
                     return None
-
                 ext = os.path.splitext(filepath)[1].lower()
                 if ext == '':
                     ext = '.yaml'
-                    
+                filesize = os.path.getsize(filepath)
                 output.flush()
                 
                 if ext in [ '.json', '.yaml' ]:
                     if opts.get('content', None) == 'raw':
                         content_type = 'plain/text'
-                        content_file = io.FileIO(filepath, 'r')
-                        output.write(content_file.readall())
+                        if filesize > 0:
+                            output.write(io.FileIO(filepath, 'r').readall())
                     else:
                         meta = {
                             'type': 'config',
@@ -176,8 +178,11 @@ class App:
                             'error': None
                         }
                         try:
-                            with open(filepath) as f:
-                                doc = yaml.safe_load(f)
+                            if filesize > 0:
+                                with open(filepath) as f:
+                                    doc = yaml.safe_load(f)
+                            else:
+                                doc = {}
                         except yaml.YAMLError as e:
                             if hasattr(e, 'problem_mark'):
                                 line = e.problem_mark.line+1
@@ -205,8 +210,8 @@ class App:
                         content_type = 'text/html'
                     elif ext == '.csv':
                         content_type = 'text/csv'
-                    content_file = io.FileIO(filepath, 'r')
-                    output.write(content_file.readall())
+                    if filesize > 0:
+                        output.write(io.FileIO(filepath, 'r').readall())
                     
                 else:
                     return None
@@ -321,11 +326,11 @@ class App:
             if (len(path_list) < 3) or (path_list[1] != 'file'):
                 return 403
             filename = path_list[2]
-            if not filename.replace('_', '').replace('-', '').replace('.', '').isalnum():
+            if (len(filename) == 0) or not filename[0].isalpha():
                 return 403
-            if filename.split('-', 1)[0] not in [ 'slowdash', 'slowplot', 'slowcruise' ]:
+            if not filename.replace('_', '0').replace('-', '0').replace('.', '0').replace(' ', '0').isalnum():
                 return 403
-            if os.path.splitext(filename)[1] not in [ '.json', '.yaml' ]:
+            if os.path.splitext(filename)[1] not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]:
                 return 403
 
             config_dir = os.path.join(self.project_dir, 'config')
@@ -422,12 +427,19 @@ class App:
 
     
     def delete(self, path_list):
-        print(path_list)
+        if (len(path_list) < 3) or (path_list[1] != 'file'):
+            return 403
+        filename = path_list[2]
+        try:
+            os.remove(os.path.join('config', filename))
+        except Exception as e:
+            logging.error('file deletion error: %s' % str(e))
+            return 500
         return 200
         
 
     
-from urllib.parse import urlparse, parse_qsl
+from urllib.parse import urlparse, parse_qsl, unquote
 import io
 
 class Reply:
@@ -476,8 +488,8 @@ class WebUI:
 
         
     def check_sanity(self, string):
-        string = string.replace('_', '').replace('-', '').replace('.', '').replace(',', '')
-        string = string.replace(':', '').replace('[', '').replace(']', '')
+        string = string.replace('_', '0').replace('-', '0').replace('.', '0').replace(',', '0').replace(' ', '0')
+        string = string.replace(':', '0').replace('[', '0').replace(']', '0')
         return string.isalnum()
 
     
@@ -485,7 +497,7 @@ class WebUI:
         if self.app is None:
             return Reply(404)
         u = urlparse(url)
-        path_list = u.path.split('/')
+        path_list = unquote(u.path).split('/')
         while path_list.count(''):
             path_list.remove('')
         if not path_list:
@@ -528,14 +540,14 @@ class WebUI:
         if self.app is None:
             return Reply(404)
         u = urlparse(url)
-        path_list = u.path.split('/')
+        path_list = unquote(u.path).split('/')
         while path_list.count(''):
             path_list.remove('')
         for element in path_list:
             if (len(element) == 0) or not element[0].isalpha():
                 logging.error('bad file name (invalid first char): %s' % url)
                 return Reply(400)
-            if not element.replace('_', '').replace('-', '').replace('.', '').isalnum():
+            if not element.replace('_', '0').replace('-', '0').replace('.', '0').replace(' ', '0').isalnum():
                 logging.error('bad file name (invalid char): %s' % url)
                 return Reply(400)
         
@@ -561,14 +573,14 @@ class WebUI:
         if self.app is None:
             return Reply(404)
         u = urlparse(url)
-        path_list = u.path.split('/')
+        path_list = unquote(u.path).split('/')
         while path_list.count(''):
             path_list.remove('')
         for element in path_list:
             if (len(element) == 0) or not element[0].isalpha():
                 logging.error('bad file name (invalid first char): %s' % url)
                 return Reply(400)
-            if not element.replace('_', '').replace('-', '').replace('.', '').isalnum():
+            if not element.replace('_', '0').replace('-', '0').replace('.', '0').replace(' ', '0').isalnum():
                 logging.error('bad file name (invalid char): %s' % url)
                 return Reply(400)
         

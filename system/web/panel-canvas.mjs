@@ -938,7 +938,7 @@ export class CanvasPanel extends Panel {
 
         this.items = [];
         this.inputChannels = [];
-        for (let itemConfig of this.canvasConfig.items) {
+        for (let itemConfig of this.canvasConfig.items ?? []) {
             if (! itemConfig.type) {
                 continue;
             }

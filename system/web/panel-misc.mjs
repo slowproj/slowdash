@@ -264,8 +264,17 @@ export class FileManagerPanel extends Panel {
                 width: '100%',
                 height: '10rem',
             },
+            tableDiv: {
+                position: 'relative',
+                width:'calc(100% - 12px)',
+                height:'calc(100% - 34px - 10rem - 10em)',
+                'margin-top': '10px',
+                'margin-left': '10px',
+                padding:0,
+                overflow:'auto',
+            },
             filetable: {
-                width: '100%',
+                width: 'calc(100% - 20px)',
                 margin: '5px',
                 padding: 0,
                 border: 'none',
@@ -279,6 +288,7 @@ export class FileManagerPanel extends Panel {
         $('<span>').text('Name ').css('margin-left', '5px').appendTo(this.contentDiv);
         let newFileInput = $('<input>').appendTo(this.contentDiv);
         let newFileButton = $('<button>').text('Create & Edit').appendTo(this.contentDiv);
+        $('<span>').text(' (allowed file types: json, yaml, csv, html)').appendTo(this.contentDiv);
         
         $('<div>').css(css.titleDiv).css('margin-top','1em').text('Upload Files').appendTo(this.contentDiv);
         let box = $('<div>').css(css.box).appendTo(this.contentDiv);
@@ -288,12 +298,13 @@ export class FileManagerPanel extends Panel {
         $('<span>').text('Drop a file here, or click this to select a file').appendTo(dropzone);
         
         $('<div>').css(css.titleDiv).css('margin-top', '1em').text('File List').appendTo(this.contentDiv);
-        this.fileTable = $('<table>').addClass('sd-data-table').appendTo(this.contentDiv).css(css.filetable);        
+        let fileTableDiv = $('<div>').css(css.tableDiv).appendTo(this.contentDiv);
+        this.fileTable = $('<table>').addClass('sd-data-table').css(css.filetable).appendTo(fileTableDiv);
         
         this.indicator = new JGIndicatorWidget($('<div>').appendTo(div));
         this.savePopup = $('<dialog>').addClass('sd-pad').appendTo(div);
-
-
+        this.deletePopup = $('<dialog>').addClass('sd-pad').appendTo(div);
+        
         newFileButton.bind('click', e => {
             this._createFile(newFileInput.val(), e);
         });
@@ -327,7 +338,7 @@ export class FileManagerPanel extends Panel {
     
     configure(config, callbacks={}) {
         super.configure(config, callbacks);
-        this._update();
+        this._updateFileList();
     }
 
 
@@ -351,7 +362,7 @@ export class FileManagerPanel extends Panel {
                 throw new Error(response.status + " " + response.statusText);
             }
             this.indicator.close("File created", "&#x2705;", 1000);
-            this._update(); // for future "back"
+            this._updateFileList(); // for future "back"
             window.location = `slowedit.html?filename=${filename}`;
         })
         .catch(e => {
@@ -370,7 +381,7 @@ export class FileManagerPanel extends Panel {
                     quietOnSuccess: true,
                     on_success: () => {
                         this.indicator.close("File uploaded", "&#x2705;", 1000);
-                        this._update();
+                        this._updateFileList();
                     },
                     on_cancel: () => {
                         this.indicator.close();
@@ -386,8 +397,40 @@ export class FileManagerPanel extends Panel {
         }
     }
 
-    
-    _update() {
+
+    _deleteFile(filename) {
+        let commitDeletion = (() => {
+            this.indicator.open("Deleting " + filename, "&#x23f3;");
+            fetch(`./api/config/file/${filename}`, {
+                method: 'DELETE',
+            })
+                .then(response => {
+                    if (! response.ok) {
+                        throw new Error(response.status + " " + response.statusText);
+                    }
+                    this.indicator.close("File deleted", "&#x2705;", 1000);
+                    this._updateFileList();
+                })
+                .catch(e => {
+                    this.indicator.close("Deletion Failed: " + e.message, "&#x274c;", 5000);
+                    return null;
+                })
+        });
+        this.deletePopup.html(`
+            <h3>Delete ${filename}?</h3>
+            <div class="jaga-dialog-button-pane"><button>Yes</button><button>No</button></div>
+        `);
+        this.deletePopup.find('button').at(0).click(e=>{
+            commitDeletion();
+            this.deletePopup.get().close();
+        });
+        this.deletePopup.find('button').at(1).click(e=>{
+            this.deletePopup.get().close();
+        });
+        this.deletePopup.get().showModal();
+    }
+        
+    _updateFileList() {
         this.fileTable.empty();
         let tr = $('<tr>').appendTo(this.fileTable);
         $('<th>').text("Name").appendTo(tr);
@@ -427,7 +470,7 @@ export class FileManagerPanel extends Panel {
                         });
                     }
                     else {
-                        edit = $('<span>').html('&#x1fae3').attr('title', 'reading not permitted');
+                        edit = $('<span>').html('&#x26d4').attr('title', 'reading not permitted');
                     }
                     
                     let download;
@@ -439,7 +482,7 @@ export class FileManagerPanel extends Panel {
                         });
                     }
                     else {
-                        download = $('<span>').html('&#x1fae3').attr('title', 'reading not permitted');
+                        download = $('<span>').html('&#x26d4').attr('title', 'reading not permitted');
                     }
                     
                     const del = $('<span>').html('&#x1f5d1').attr({
@@ -447,21 +490,7 @@ export class FileManagerPanel extends Panel {
                     }).css({
                         cursor: 'pointer',
                     }).bind('click', e=>{
-                        this.indicator.open("Deleting " + entry.name, "&#x23f3;");
-                        fetch(`./api/config/file/${entry.name}`, {
-                            method: 'DELETE',
-                        })
-                            .then(response => {
-                                if (! response.ok) {
-                                    throw new Error(response.status + " " + response.statusText);
-                                }
-                                this.indicator.close("File deleted", "&#x2705;", 1000);
-                                this._update();
-                            })
-                            .catch(e => {
-                                this.indicator.close("Deletion Failed: " + e.message, "&#x274c;", 5000);
-                                return null;
-                            })
+                        this._deleteFile(entry.name);
                     });
                     
                     edit.css(css_button);
