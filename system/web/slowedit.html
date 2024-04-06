@@ -75,7 +75,7 @@
                 overwritable: true,
                 quietOnSuccess: true,
                 on_success: () => {
-                    updateStatus();
+                    updateServerErrorStatus();
                     saveButton.enabled(false);
                     editor.focus();
                 }
@@ -85,43 +85,51 @@
         frame.appendButton(saveButton);
         saveButton.enabled(false);
 
-        let setKeymap = (map) => {
-            editor.setKeyboardHandler('ace/keyboard/' + map);
-            editor.commands.addCommand({
-                name: 'save',
-                bindKey: {win: "Ctrl-S", "mac": "Cmd-S"},
-                exec: (editor) => { saveButton.click(); }
+        
+        let configureEditor = () => {
+            let setKeymap = (map) => {
+                editor.setKeyboardHandler('ace/keyboard/' + map);
+                editor.commands.addCommand({
+                    name: 'save',
+                    bindKey: {win: "Ctrl-S", "mac": "Cmd-S"},
+                    exec: (editor) => { saveButton.click(); }
+                });
+                localStorage.setItem('EditorKeyBinding', map);
+            }
+            let keymapSelect = $('<select>').bind('change', e => {
+                setKeymap($(e.target).val());
+                editor.focus();
             });
-            editor.focus();
-            localStorage.setItem('EditorKeyBinding', map);
-        }
-        let keymapSelect = $('<select>').bind('change', e => { setKeymap($(e.target).val()); });
-        keymapSelect.append($('<option>').attr('value', 'vscode').text('VSCode'));
-        keymapSelect.append($('<option>').attr('value', 'vim').text('Vim'));
-        keymapSelect.append($('<option>').attr('value', 'emacs').text('Emacs'));
-        frame.appendSelect(keymapSelect);
-        const map = localStorage.getItem('EditorKeyBinding');
-        if (map ?? false) {
-            keymapSelect.val(map);
-            setKeymap(map);
-        }
-
-        let setWrapMode = (val) => {
-            editor.session.setUseWrapMode(val == 'on');
-            editor.focus();
-            localStorage.setItem('EditorWrapMode', val);
-        }
-        let wrapModeSelect = $('<select>').bind('change', e => { setWrapMode($(e.target).val()); });
-        wrapModeSelect.append($('<option>').attr('value', 'off').text('Warp: off'));
-        wrapModeSelect.append($('<option>').attr('value', 'on').text('Warp: on'));
-        frame.appendSelect(wrapModeSelect);
-        const wrapMode = localStorage.getItem('EditorWrapMode');
-        if (wrapMode ?? false) {
-            wrapModeSelect.val(wrapMode);
-            setWrapMode(wrapMode);
-        }
+            keymapSelect.append($('<option>').attr('value', 'vscode').text('VSCode'));
+            keymapSelect.append($('<option>').attr('value', 'vim').text('Vim'));
+            keymapSelect.append($('<option>').attr('value', 'emacs').text('Emacs'));
+            frame.appendSelect(keymapSelect);
+            const map = localStorage.getItem('EditorKeyBinding');
+            if (map ?? false) {
+                keymapSelect.val(map);
+                setKeymap(map);
+            }
             
-        let initializeEditor = async () => {
+            let setWrapMode = (val) => {
+                editor.session.setUseWrapMode(val == 'on');
+                localStorage.setItem('EditorWrapMode', val);
+            }
+            let wrapModeSelect = $('<select>').bind('change', e => {
+                setWrapMode($(e.target).val());
+                editor.focus();
+            });
+            wrapModeSelect.append($('<option>').attr('value', 'off').text('Warp: off'));
+            wrapModeSelect.append($('<option>').attr('value', 'on').text('Warp: on'));
+            frame.appendSelect(wrapModeSelect);
+            const wrapMode = localStorage.getItem('EditorWrapMode');
+            if (wrapMode ?? false) {
+                wrapModeSelect.val(wrapMode);
+                setWrapMode(wrapMode);
+            }
+        };
+
+        
+        let loadContents = async () => {
             if (! config.filename) {
                 return;
             }
@@ -132,27 +140,32 @@
             }
             const content = await response.text();
 
+            config.filetype = (function(filename) {
+                const dot = filename.lastIndexOf('.');
+                if (dot > 1) {
+                    return filename.slice(dot+1).toLowerCase();
+                }
+                else {
+                    return '';
+                }
+            })(config.filename);
+            
             editor.setTheme('ace/theme/' + config.theme);
             if (! config.mode) {
-                const dot = config.filename.lastIndexOf('.');
-                if (dot > 1) {
-                    const ext = config.filename.slice(dot+1).toLowerCase();
-                    if (['json', 'yaml', 'html'].includes(ext)) {
-                        config.mode = ext;
-                    }
+                if (['json', 'yaml', 'html'].includes(config.filetype)) {
+                    config.mode = config.filetype;
                 }
             }
             if (config.mode) {
                 editor.session.setMode('ace/mode/' + config.mode);
             }
-            editor.setValue(content);
-
-            const meta = await updateStatus();
+            if (content) {
+                editor.setValue(content);
+                editor.gotoLine(0);
+            }
+            const meta = await updateServerErrorStatus();
             if (meta.error) {
                 editor.gotoLine(meta.error_line);
-            }
-            else {
-                editor.gotoLine(0);
             }
             
             editor.session.on('change', e => {
@@ -164,7 +177,13 @@
             editor.focus();
         };
 
-        let updateStatus = async () => {
+        
+        let updateServerErrorStatus = async () => {
+            if (! ['json', 'yaml'].includes(config.filetype)) {
+                config.status = '';
+                return {};
+            }
+                
             let response = await fetch('./api/config/file/' + config.filename + '?content=meta');
             const meta = await response.json();
 
@@ -178,8 +197,9 @@
             
             return meta;
         };
-        
-        initializeEditor();
+
+        configureEditor();
+        loadContents();
     }
 
   </script>    
