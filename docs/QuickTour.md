@@ -20,7 +20,7 @@ $ cd QuickTour
 ```
 
 ### Using Docker?
-The directory just created will be mapped into the container as a volume. You can work either inside the container (by `docker exec ...  /bin/bash` or outside, but working outside should be easier.
+The directory just created will be mapped into the container as a volume. You can work either inside the container (by `docker exec ...  /bin/bash`) or outside, but working outside should be easier.
 
 # Test-Data Generation
 Download the test data generation script <a href="generate-testdata.py.txt" download="generate-testdata.py">generate-testdata.py</a>, or get it from `PATH/TO/SLOWDASH/ExampleProjects/QuickTour/generate-testdata.py`, and place it at the project directory.
@@ -158,20 +158,41 @@ $ slowdash "data/ch00?length=10"
 ```
 
 ## Running
-### Step 1 
-#### Docker
-```console
-$ docker-compose up
-```
-This will start a SlowDash server and open a port at 18881. To stop it, type `ctrl`-`c` on the terminal, or run `docker-compose stop` (or `down`)
-if you started `docker-compose` with the `-d` option.
+### Step 1: Starting the SlowDash Server
+This step will start a SlowDash server and open a port at 18881. To stop it, type `ctrl`-`c` on the terminal.
 
 #### Bare-Metal
-Launch the server, with an arbitrary port number. Leave this command running while testing.
 ```console
 $ slowdash --port=18881
 ```
-### Step 2
+
+#### Docker
+```console
+$ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash:2402
+```
+
+
+#### Docker-Compose
+Create a `docker-compose.yaml` file at the project directory
+```yaml
+version: '3'
+
+services:
+  slowdash:
+    image: slowproj/slowdash:2402
+    volumes:
+      - .:/project
+    ports:
+      - "18881:18881"
+```
+
+Then start `docker-compose`
+```console
+$ docker-compose up
+```
+
+
+### Step 2: Opening a Web Browser
 Launch a web browser, access to `http://localhost:18881`.
 ```console
 $ firefox http://localhost:18881
@@ -180,7 +201,8 @@ The browser should show the home page of the project:
 
 <img src="fig/QuickTour-Home.png" style="width:40%">
 
-### Step 3: Only for this quick tour
+
+### Step 3: Start Generating Testdata (only for this quick tour)
 In order to continuously fill the data while plotting, run the test-data generator in parallel (maybe in another terminal window):
 ```console
 $ python3 generate-testdata.py
@@ -188,17 +210,18 @@ $ python3 generate-testdata.py
 The data file size is roughly 5 MB per hour. The test data file, `QuickTourTestData.db`, can be deleted safely when SlowDash is not running.
 Once the file is deleted, run `generate-testdata.py` again before starting Slow-Dash next time.
 
+
+
 ## Making Plots
-### Time-series Plot
+### Simple Plots
 Probably just playing with the GUI would be easier than reading this section...
 
 - Click one of the channels in the "Channel List" panel to make a time-series  plot of the channel.
-- Or, click "Blank" or "Blank 2x2" in the "Slow-Plot" panel to start a new empty layout.
+- Or, click "New Plot Layout" in the "Tools" panel to start a new empty layout.
 <p>
 - Putting mouse pointer on blank space will show a "Add New Panel" button. Click it and then select "Time-Axis Plot" to make a new plot.
 - Putting mouse pointer on a plot shows a set of control buttons. Click the &#x1f6e0; button to configure the plot axes and styles, and to add a new time-series.
 
-### Histogram
 ### Dashboard Canvas
 ### Table View
 ### Map View
