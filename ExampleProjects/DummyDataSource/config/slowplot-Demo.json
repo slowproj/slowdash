@@ -2,8 +2,10 @@
     "control": {
         "range": { "length": 259200 },
         "reload": 300,
-        "grid": { "rows": 3, "columns": 3 }
+        "grid": { "rows": 3, "columns": 3 },
+        "mode": "normal"
     },
+    "style": { },
     "panels": [
         {
             "type": "timeaxis",
@@ -92,5 +94,5 @@
             "legend": { "style": "none" }
         }
     ],
-    "meta": { "name": "demo", "title": "", "description": "Plot Demonstrations" }
+    "meta": { "name": "Demo", "title": "", "description": "Plot Demonstrations" }
 }

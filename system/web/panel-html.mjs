@@ -34,6 +34,7 @@ export class HtmlPanel extends Panel {
         button.bind('click', e=>{
             let config = {
                 type: 'html',
+                location: 'project',  // 'config' or 'system' (or 'external'?)
                 file: table.find('input').val(),
                 title: '',
             };
@@ -82,8 +83,10 @@ export class HtmlPanel extends Panel {
         super.configure(config, callbacks);
         this.titleDiv.text(this.config.title ?? '');
         this.variables = [];
+
+        const base = ((config.location??'') == 'system' ? './' : './api/config/file/');
         
-        fetch('./api/config/file/html-' + config.file + '.html')
+        fetch(base + 'html-' + config.file + '.html')
             .then(response => {
                 if (! response.ok) {
                     throw new Error(response.status + " " + response.statusText);

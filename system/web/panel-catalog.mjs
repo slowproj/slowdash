@@ -186,20 +186,11 @@ export class CatalogPanel extends Panel {
             'filter': 'grayscale(80%)',
             'cursor': 'pointer'
         });
-        let uploadButton = $('<span>').attr('title', 'upload').html('&#x1f4e4;').appendTo(headDiv).css({
-            'margin-left': '0.5em',
-            'margin-top': '0.2em',
-            'filter': 'grayscale(80%)',
-            'cursor': 'pointer'
-        });
         updateButton.bind('click', e=>{
             localStorage.setItem(this.cachePath + '-cachetime', 0);
             this.frameDiv.empty().text("loading catalog...");
             this._load();
             fetch('api/channels');  // update the channel list on the server (new scripts might need it)
-        });
-        uploadButton.bind('click', e=>{
-            window.location = './slowfile.html';
         });
         
         let contentDiv = $('<div>').appendTo(this.frameDiv).css(this.contentDiv_css);
@@ -210,46 +201,14 @@ export class CatalogPanel extends Panel {
         
         let table = $('<table>').addClass('sd-data-table').appendTo(contentDiv).css(this.table_css);
         let tr = $('<tr>').appendTo(table);
-        $('<th>').text("Name").css({'width':'20%'}).appendTo(tr);
-        $('<th>').text("Last Modified").css({'width':'6em'}).appendTo(tr);
+        $('<th>').text("Name").css({'width':'30%'}).appendTo(tr);
+        $('<th>').text("Last Modified").css({'width':'20%'}).appendTo(tr);
         $('<th>').text("Description").appendTo(tr);
-        $('<th>').text("Edit").css({'width':'1em'}).appendTo(tr);
+        const bg = window.getComputedStyle(tr.get()).getPropertyValue('background-color');
+        tr.find('th').css({position: 'sticky', top:0, left:0, background: bg});
 
-        if (content_type == "slowplot") {
-            catalog.unshift({
-                name: 'Blank',
-                href: './slowplot.html',
-                title: 'Blank',
-                description: 'blank plot page',
-                file: null, error: null, mtime: null,
-            });
-            catalog.unshift({
-                name: 'Blank2x2',
-                href: './slowplot.html?grid=2x2',
-                title: 'Blank 2x2',
-                description: 'blank plot page, 2x2 Grid',
-                file: null, error: null, mtime: null,
-            });
-        }
-        
         for (const entry of catalog) {
             const open = $('<a>').text(entry.title).attr('href', entry.href);
-            const edit = $('<a>').html('&#x1f4dd;').attr({
-                href: `slowedit.html?filename=${entry.file}`,
-                target: '_blank',
-            }).css({
-                'margin-left': '0.2em',
-                'filter': 'grayscale(50%)',
-                'text-decoration': 'none',
-            });
-            const download = $('<a>').html('&#x1f4e5;').attr({
-                href: `api/config/file/${entry.file}`,
-                download: entry.file,
-            }).css({
-                'margin-left': '0.5em',
-                'filter': 'grayscale(50%)',
-                'text-decoration': 'none',
-            });
             let tr = $('<tr>').appendTo(table);
             let td =$('<td>');
             if (entry.error !== null) {
@@ -258,14 +217,11 @@ export class CatalogPanel extends Panel {
             td.append(open).appendTo(tr);
             if (parseFloat(entry.mtime) > 0) {
                 $('<td>').text((new JGDateTime(entry.mtime)).asString('%b %d, %Y')).appendTo(tr);
-                $('<td>').text(entry.description).appendTo(tr);
-                $('<td>').append(edit).append(download).appendTo(tr);
             }                    
             else {
                 $('<td>').text('').appendTo(tr);
-                $('<td>').text(entry.description).appendTo(tr);
-                $('<td>').text('').appendTo(tr);
             }
+            $('<td>').text(entry.description).appendTo(tr);
         }
     }
 }
@@ -450,8 +406,11 @@ export class ChannelListPanel extends Panel {
 
     
     _render(config, record) {
-        this.table.html('<tr><th>Channel Name</th><th>Data Type</th><th>Description</th></tr>');
-        let tr = this.table.find('tr');
+        this.table.empty();
+        let tr = $('<tr>').appendTo(this.table);
+        $('<th>').text("Channel Name").css({'width':'30%'}).appendTo(tr);
+        $('<th>').text("DataType").css({'width':'20%'}).appendTo(tr);
+        $('<th>').text("Description").appendTo(tr);
         const bg = window.getComputedStyle(tr.get()).getPropertyValue('background-color');
         tr.find('th').css({position: 'sticky', top:0, left:0, background: bg});
         

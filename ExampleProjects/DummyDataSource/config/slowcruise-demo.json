@@ -2,7 +2,7 @@
     "title": "Autocruise: Dummy",
     "interval": 60,
     "pages": [
-        "slowplot.html?config=slowplot-demo.json",
+        "slowplot.html?config=slowplot-Demo.json",
         "slowplot.html?config=slowplot-HitMap.json",
         "slowplot.html?config=slowplot-FPDHitMap.json"
     ]

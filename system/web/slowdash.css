@@ -8,12 +8,15 @@ body {
 
 a {
     color: blue;
+    text-decoration: none;
 }
 a:visited {
     color: blue;
+    text-decoration: none;
 }
 a:hover {
     color: #8888ff;
+    text-decoration: underline;
 }
 
 input, button, select, option, textarea {
