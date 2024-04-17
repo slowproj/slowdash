@@ -110,7 +110,7 @@ Type `Ctrl-c` to stop slowdash.
 If slowdash is already running, stop it before updating it.
 ```console
 $ cd PATH/TO/SLOWDASH
-$ git pull --recurse-submodule
+$ git pull --recurse-submodules
 $ cd system
 $ make
 ```

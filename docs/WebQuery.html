@@ -328,7 +328,7 @@ reducer=REDUCER [default &quot;last&quot;]</code></pre>
 <li>If the command is not recognized, returns the HTTP response 400 (Bad Request).</li>
 <li>If the command is processed, returns the HTTP response 201, with contents of:
 <ul>
-<li>If the user module provides custom result JSON (typically with <code>{"status" xxx and "message": ...}</code>), it will be returned.</li>
+<li>If the user module provides custom result JSON (typically with <code>{"status": ...; "message": ...}</code>), it will be returned.</li>
 <li>Otherwise, returns <code>{"status": "ok"}</code> on success, or <code>{"status": "error"}</code> on error.</li>
 </ul></li>
 </ul>

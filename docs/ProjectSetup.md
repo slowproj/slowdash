@@ -177,22 +177,32 @@ When the argument includes a special character of the shell (such as `?` and `&`
 
 ## Run in a Docker Container
 The SlowDash container image is configured to have a project directory at `/project` and open a port at `18881`. Map the volume and port accordingly:
+
+#### Single Container
 ```console
 $ cd PATH/TO/SLOWDASH/PROJECT
-$ docker run -p 18881:18881 -v $(pwd):/project slowdash
+$ docker run -p 18881:18881 -v $(pwd):/project REPO/slowdash:TAG
 ```
 
-Or with Docker Compose:
+If you built the container image locally, `REPO/slowdash:TAG` will be jsut `slowdash:TAG` or `slowdash`.
+
+#### Docker Compose
+First write `docker-compose.yaml` at your project directory.
 ```yaml
 version: '3'
 
 services:
   slowdash:
-    image: slowproj/slowdash:2402
+    image: REPO/slowdash:TAG
     volumes:
       - .:/project
     ports:
       - "18881:18881"
+```
+If you built the container image locally, `REPO/slowdash:TAG` will be jsut `slowdash:TAG` or `slowdash`.
+
+```console
+$ docker-compose up
 ```
 
 

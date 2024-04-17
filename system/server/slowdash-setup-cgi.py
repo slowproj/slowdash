@@ -41,8 +41,8 @@ def ask_yes_no(question, default="yes"):
             sys.stdout.write("Please respond with 'y(es)' or 'n(o)'\n")
 
 
-def find_web_base_dir():
-    web_base_dir = ''
+def find_cgi_base_dir():
+    cgi_base_dir = ''
     home_dir = os.getenv('HOME')
     if not home_dir:
         current_dir = os.getcwd()
@@ -51,27 +51,27 @@ def find_web_base_dir():
     home_dir_spilt = home_dir[1:].split('/')
     if len(home_dir_spilt) > 1:
         if home_dir_spilt[-2] == 'home':
-            web_base_dir = os.path.join(home_dir, 'public_html')
+            cgi_base_dir = os.path.join(home_dir, 'public_html')
         elif home_dir_spilt[-2] == 'Users':
-            web_base_dir = os.path.join(home_dir, 'Sites')
-    if not os.path.isdir(web_base_dir):
+            cgi_base_dir = os.path.join(home_dir, 'Sites')
+    if not os.path.isdir(cgi_base_dir):
         logging.warning(
             'unable to find HTML directory (public_html or Sites)'
         )
         return None
-    return web_base_dir
+    return cgi_base_dir
 
-web_base_dir = find_web_base_dir()
-if web_base_dir:
-    web_dir = os.path.join(web_base_dir, 'SlowDash', project_name)
+cgi_base_dir = find_cgi_base_dir()
+if cgi_base_dir:
+    cgi_dir = os.path.join(cgi_base_dir, 'SlowDash', project_name)
 else:
-    sys.stdout.write('ERROR: unable to determine web directory\n')
+    sys.stdout.write('ERROR: unable to determine CGI directory\n')
     exit(-1)
 
         
 sys.stdout.write('Project: %s\n' % project_name)
 sys.stdout.write('Project directory: %s\n' % project_dir)
-sys.stdout.write('Web-file directory: %s\n' % web_dir)
+sys.stdout.write('CGI directory: %s\n' % cgi_dir)
 if user_list is not None:
     sys.stdout.write('User: %s\n' % ', '.join(user_list.keys()))
 if not (len(project_dir) > 0 and os.path.isdir(project_dir)):
@@ -86,25 +86,25 @@ elif ask_yes_no('continue?') != 'yes':
     exit(-1)
 
 
-if os.path.isdir(web_dir):
-    sys.stdout.write('Web-file directory already exists: %s\n' % web_dir)
+if os.path.isdir(cgi_dir):
+    sys.stdout.write('CGI directory already exists: %s\n' % cgi_dir)
 else:
     try:
-        os.makedirs(web_dir)
-        sys.stdout.write('Web-file directory created: %s\n' % web_dir)
+        os.makedirs(cgi_dir)
+        sys.stdout.write('CGI directory created: %s\n' % cgi_dir)
     except:
         sys.stdout.write(
-            'ERROR: unable to create Web-file directory: %s\n' % web_dir
+            'ERROR: unable to create CGI directory: %s\n' % cgi_dir
         )
         exit(-1)
 
 
-with open(os.path.join(web_dir, 'slowdash_web_config.py'), 'w') as f:
+with open(os.path.join(cgi_dir, 'slowdash_cgi_config.py'), 'w') as f:
     f.write("sys_dir = '%s'\n" % sys_dir)
     f.write("project_dir = '%s'\n" % project_dir)
     f.close()
 
-with open(os.path.join(web_dir, '.htaccess'), 'w') as f:
+with open(os.path.join(cgi_dir, '.htaccess'), 'w') as f:
     f.write('DirectoryIndex slowhome.html\n')
     f.write('Options +ExecCGI\n')
     f.write('AddType application/x-httpd-cgi .cgi\n')
@@ -117,11 +117,11 @@ with open(os.path.join(web_dir, '.htaccess'), 'w') as f:
     if user_list is not None:
         f.write('AuthType Basic\n')
         f.write('AuthName "Slowdash Authorization"\n')
-        f.write('AuthUserFile %s/.htpasswd\n' % web_dir)
+        f.write('AuthUserFile %s/.htpasswd\n' % cgi_dir)
         f.write('Require user %s\n' % ' '.join(user_list.keys()))
         
 if user_list is not None:
-    with open(os.path.join(web_dir, '.htpasswd'), 'w') as f:
+    with open(os.path.join(cgi_dir, '.htpasswd'), 'w') as f:
         for user in user_list:
             f.write('%s:%s\n' % (user, user_list[user]))
 
@@ -131,16 +131,16 @@ filelist = {
     '*.html', '*.js', '*.mjs', '*.png', '*.css'
 }
 dirlist = {
-    'jagaimo', 'autocruise', 'doc', 'extern'
+    'jagaimo', 'autocruise', 'docs', 'extern'
 }
 for fileglob in filelist:
     for src in glob.glob(os.path.join(sys_dir, 'system', 'web', fileglob)):
         name = os.path.basename(src)
-        shutil.copy(src, web_dir)
+        shutil.copy(src, cgi_dir)
 for dirname in dirlist:
     src = os.path.join(sys_dir, 'system', 'web', dirname)
     name = os.path.basename(src)
-    dst = os.path.join(web_dir, name)
+    dst = os.path.join(cgi_dir, name)
     if os.path.isdir(dst):
         shutil.rmtree(dst)
     shutil.copytree(src, dst)
@@ -149,9 +149,9 @@ for dirname in dirlist:
     
 sys.stdout.write('\n')
 sys.stdout.write('=== INSTALLATION IS SUCCESSFUL ===\n')
-sys.stdout.write('*) To setup SLOWDASH Web for another project, set SLOWDASH_PROJECT and run this program.\n')
-sys.stdout.write('*) It is safe to run this slowdash-setup-web multiple times, even for the same project.\n')
-sys.stdout.write('*) Web interface can be disabled by deleting the web-file directory.\n')
-sys.stdout.write('*) Disabled Web interface can be re-enabled by running this program again.\n')
-sys.stdout.write('*) Web-file directory for this project: %s\n' % web_dir)
+sys.stdout.write('*) To setup SLOWDASH CGI for another project, set SLOWDASH_PROJECT and run this program.\n')
+sys.stdout.write('*) It is safe to run this slowdash-setup-cgi.py multiple times, even for the same project.\n')
+sys.stdout.write('*) CGI can be disabled by deleting the CGI directory.\n')
+sys.stdout.write('*) Disabled CGI can be re-enabled by running this program again.\n')
+sys.stdout.write('*) CGI directory for this project: %s\n' % cgi_dir)
 sys.stdout.write('\n')

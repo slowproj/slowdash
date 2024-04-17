@@ -86,9 +86,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="#simple-cases">Simple Cases</a></li>
 <li><a href="#concepts-and-terminologies">Concepts and Terminologies</a><ul>
 <li><a href="#data-model">Data Model</a></li>
-<li><a href="#channels-and-data-store-schema">Channels and Data Store Schema</a></li>
+<li><a href="#channels-and-data-store-schemata">Channels and Data-Store Schemata</a></li>
 </ul></li>
-<li><a href="#sql-db-1">SQL DB</a><ul>
+<li><a href="#rdbms-sql-database">RDBMS (SQL Database)</a><ul>
 <li><a href="#supported-database-systems">Supported Database Systems</a></li>
 <li><a href="#preparation">Preparation</a></li>
 <li><a href="#time-series-of-scalar-values">Time-Series of Scalar Values</a></li>
@@ -204,7 +204,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li>Data can be a time-series of histograms, graphs, tables, or trees
 <p></li>
 </ul></li>
-<li>For data not explicitly bound for time-stamps, the time-series data can contain single element with a time-stamp of “neutral” or “current”.
+<li>For data not explicitly bound for time-stamps, the time-series data can contain a single element with a time-stamp of “neutral” or “current”.
 <ul>
 <li>The “neutral” timestamp matches with any data request time intervals.</li>
 <li>The “current” timestamp matches only if the data request includes the current time.</li>
@@ -250,9 +250,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h3 id="data-indexing-channels">Data Indexing (Channels)</h3>
 <ul>
 <li>Each time-series has an unique name, “channel”.</li>
-<li>Single data element can be identified by a pair of channel and time-stamp.</li>
-<li>A data element can be a numerical scalar value (typical), a scalar value of boolean or string, or an object such as a histogram, graph, table or tree.</li>
-<li>Using an array (vector of scalars) as a data element is under consideration. A table can be always used for an array.
+<li>Single data element can be uniquely identified by a pair of “channel” and “time-stamp”.</li>
+<li>A data element can be a numerical scalar value (typical), a scalar value of boolean or string, or an object such as a histogram, graph, table, tree, or blob (image etc).</li>
+<li>[TODO] Using an array (vector of scalars) as a data element is under consideration. A table can be always used for an array.
 <p></li>
 <li>In a data table, if channel names are stored as a value of a column (case 1 below), this is called a “tag”.</li>
 <li>In a data table, column(s) that contain(s) data values is/are called “field”(s).
@@ -267,7 +267,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <ul>
 <li><code>data_table[endpoint_name]@timestamp=value</code></li>
 <li><code>data_table[endpoint_name,set_or_ist]@timestamp(unix)=value_raw,value_cal</code></li>
-<li><code>data_table[endpoint_name,set_or_ist]@timestamp(unix)=value_raw(default),value_cal</code></li>
+<li><code>data_table[endpoint_name]@datetime(with timezome)=value_raw(default),value_cal</code></li>
 </ul>
 <p>
 <h4 id="syntax">Syntax</h4>
@@ -275,7 +275,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li>The first word is the table name.</li>
 <li>Tag names, if exist, come next. Multiple tags are separated by <code>,</code>.</li>
 <li>Timestamp column name follows a prefix of <code>@</code>.</li>
-<li>After a <code>=</code>, field column names are listed.
+<li>After an <code>=</code>, field column names are listed.
 <p></li>
 <li>If the timestamp column is inferrable, it can be omitted.</li>
 <li>Timestamp may have a type specifier in <code>()</code>. Type specifier is case insensitive.</li>
@@ -286,11 +286,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul>
 <h3 id="restrictions">Restrictions</h3>
 <ul>
-<li>For security reasons, for SQL databases, Slow-Dash accepts only alphabets, digits, and tightly selected special characters such as <code>_</code>, <code>-</code>, <code>.</code>, and <code>:</code>, for tags, fields, and column names.</li>
-<li>Therefore, a name like <code>';drop table datatable</code> is not allowed, and will be rejected, even though proper handling is technically possible.</li>
+<li>For security reasons, for SQL databases, SlowDash accepts for column names only alphabets, digits, and tightly selected special characters such as <code>_</code>, <code>-</code>, <code>.</code>, and <code>:</code>.</li>
+<li>Therefore, a channel name like <code>';drop table datatable</code> is not allowed, and will be rejected, even though proper handling is technically possible.</li>
 </ul>
-<h2 id="channels-and-data-store-schema">Channels and Data Store Schema</h2>
-<p>Note that the numeric data values shown here can be of other scalar types (string etc.) or objects (histogram etc.).</p>
+<h2 id="channels-and-data-store-schemata">Channels and Data-Store Schemata</h2>
+<p>Note that the numeric data values shown here can be of any other scalar types (string etc.) or objects (histogram etc.).</p>
 <h3 id="case-1-tag-values-for-channel">Case 1: Tag Values for Channel</h3>
 <table>
 <thead>
@@ -365,7 +365,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><code>table[endpoint]@timestamp(unix)</code></li>
 </ul></li>
 </ul>
-<h3 id="case-2-fields-for-channel">Case 2: Fields for Channel</h3>
+<h3 id="case-2-field-names-for-channel">Case 2: Field Names for Channel</h3>
 <table>
 <thead>
 <tr class="header">
@@ -472,7 +472,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><code>RunTable@TimeStamp(unix)</code></li>
 </ul></li>
 </ul>
-<h3 id="case-3-tag-values-and-fields-for-channel">Case 3: Tag Values and Fields for Channel</h3>
+<h3 id="case-3-tag-values-and-field-names-for-channel">Case 3: Tag Values and Field Names for Channel</h3>
 <table>
 <thead>
 <tr class="header">
@@ -658,7 +658,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p></li>
 <li>Schema Descriptor example: <code>table[metric,set_or_ist]@timestamp(with timezone)=value_raw,value_cal</code></li>
 </ul>
-<h1 id="sql-db-1">SQL DB</h1>
+<h1 id="rdbms-sql-database">RDBMS (SQL Database)</h1>
 <h2 id="supported-database-systems">Supported Database Systems</h2>
 <table>
 <thead>
@@ -765,7 +765,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h4 id="case-1-tag-values-for-channel-1">Case 1: Tag Values for Channel</h4>
 <div class="sourceCode" id="cb12"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb12-1" title="1">      <span class="fu">time_series:</span></a>
 <a class="sourceLine" id="cb12-2" title="2">        <span class="fu">schema:</span><span class="at"> numeric_data[endpoint]@timestamp(with timezone)=value_raw</span></a></code></pre></div>
-<h4 id="case-2-fields-for-channel-1">Case 2: Fields for Channel</h4>
+<h4 id="case-2-fields-for-channel">Case 2: Fields for Channel</h4>
 <div class="sourceCode" id="cb13"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb13-1" title="1">      <span class="fu">time_series:</span></a>
 <a class="sourceLine" id="cb13-2" title="2">        <span class="fu">schema:</span><span class="at"> numeric_data@timestamp(with timezone)=value_raw,value_cal</span></a></code></pre></div>
 <h4 id="case-3-tag-and-fields-for-channel">Case 3: Tag and Fields for Channel</h4>
@@ -970,7 +970,7 @@ Example of a Python script to write a “current” histogram:</li>
 <a class="sourceLine" id="cb28-6" title="6">}</a>
 <a class="sourceLine" id="cb28-7" title="7">r.json().<span class="bu">set</span>(<span class="st">&#39;hist00&#39;</span>, <span class="st">&#39;$&#39;</span>, hist)</a></code></pre></div>
 <ul>
-<li>The VAKA utility can also be used to write the JSON objects: just replace <code>write_object_timeseries()</code> with <code>write.object()</code>.</li>
+<li>The SlowPy utility can also be used to write the JSON objects: just replace <code>write_object_timeseries()</code> with <code>write.object()</code>.</li>
 </ul>
 <h1 id="mongodb">MongoDB</h1>
 <h2 id="preparation-3">Preparation</h2>
@@ -1024,7 +1024,7 @@ Example of a Python script to write a “current” histogram:</li>
 <h4 id="case-1-tag-values-for-channel-2">Case 1: Tag Values for Channel</h4>
 <div class="sourceCode" id="cb33"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb33-1" title="1">      <span class="fu">time_series:</span><span class="at"> </span></a>
 <a class="sourceLine" id="cb33-2" title="2">        <span class="fu">schema:</span><span class="at"> MyDesigDoc/MyIndex[Tag]</span></a></code></pre></div>
-<h4 id="case-2-fields-for-channel-2">Case 2: Fields for Channel</h4>
+<h4 id="case-2-fields-for-channel-1">Case 2: Fields for Channel</h4>
 <div class="sourceCode" id="cb34"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb34-1" title="1">      <span class="fu">time_series:</span><span class="at"> </span></a>
 <a class="sourceLine" id="cb34-2" title="2">        <span class="fu">schema:</span><span class="at"> MyDesignDoc/MyIndex = Field01, Field02,...</span></a></code></pre></div>
 <h4 id="case-3-tag-and-fields-for-channel-1">Case 3: Tag and Fields for Channel</h4>

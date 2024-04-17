@@ -255,20 +255,25 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p><strong>WARNING</strong>: Slow-Dash is designed for internal use within a secured network and therefore no security protection is implemented. It is strongly recommended not to expose the system to the public internet. External access is assumed to be done through VPN or ssh tunnel.</p>
 <h2 id="run-in-a-docker-container">Run in a Docker Container</h2>
 <p>The SlowDash container image is configured to have a project directory at <code>/project</code> and open a port at <code>18881</code>. Map the volume and port accordingly:</p>
+<h4 id="single-container">Single Container</h4>
 <div class="sourceCode" id="cb8"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">$ cd PATH/TO/SLOWDASH/PROJECT</span></a>
-<a class="sourceLine" id="cb8-2" title="2"><span class="kw">$ docker run -p 18881:18881 -v $(pwd):/project slowdash</span></a></code></pre></div>
-<p>Or with Docker Compose:</p>
+<a class="sourceLine" id="cb8-2" title="2"><span class="kw">$ docker run -p 18881:18881 -v $(pwd):/project REPO/slowdash:TAG</span></a></code></pre></div>
+<p>If you built the container image locally, <code>REPO/slowdash:TAG</code> will be jsut <code>slowdash:TAG</code> or <code>slowdash</code>.</p>
+<h4 id="docker-compose">Docker Compose</h4>
+<p>First write <code>docker-compose.yaml</code> at your project directory.</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb9-1" title="1"><span class="fu">version:</span><span class="at"> </span><span class="st">&#39;3&#39;</span></a>
 <a class="sourceLine" id="cb9-2" title="2"></a>
 <a class="sourceLine" id="cb9-3" title="3"><span class="fu">services:</span></a>
 <a class="sourceLine" id="cb9-4" title="4">  <span class="fu">slowdash:</span></a>
-<a class="sourceLine" id="cb9-5" title="5">    <span class="fu">image:</span><span class="at"> slowproj/slowdash:2402</span></a>
+<a class="sourceLine" id="cb9-5" title="5">    <span class="fu">image:</span><span class="at"> REPO/slowdash:TAG</span></a>
 <a class="sourceLine" id="cb9-6" title="6">    <span class="fu">volumes:</span></a>
 <a class="sourceLine" id="cb9-7" title="7">      <span class="kw">-</span> .:/project</a>
 <a class="sourceLine" id="cb9-8" title="8">    <span class="fu">ports:</span></a>
 <a class="sourceLine" id="cb9-9" title="9">      <span class="kw">-</span> <span class="st">&quot;18881:18881&quot;</span></a></code></pre></div>
+<p>If you built the container image locally, <code>REPO/slowdash:TAG</code> will be jsut <code>slowdash:TAG</code> or <code>slowdash</code>.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb10-1" title="1"><span class="kw">$ docker-compose up</span></a></code></pre></div>
 <h2 id="bare-metal-run-as-a-user-process">Bare-Metal, Run as a User Process</h2>
-<div class="sourceCode" id="cb10"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb10-1" title="1"><span class="kw">$ slowdash --project-dir=PROJECT_DIR --port=18881</span></a></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb11-1" title="1"><span class="kw">$ slowdash --project-dir=PROJECT_DIR --port=18881</span></a></code></pre></div>
 <ul>
 <li><code>--project-dir</code> can be omitted if:
 <ul>
@@ -280,28 +285,28 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul>
 <h2 id="bare-metal-launch-from-cgi">Bare Metal, Launch from CGI</h2>
 <p>Slowdash can be executed as CGI of a web server such as Apache or Nginx. To setup this, run the script below at the project directory:</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb11-1" title="1"><span class="kw">$ slowdash-setup-web</span></a>
-<a class="sourceLine" id="cb11-2" title="2">Project: MySlowSystem</a>
-<a class="sourceLine" id="cb11-3" title="3">Project directory: /home/sanshiro/MySlowSystem/SlowdashProject</a>
-<a class="sourceLine" id="cb11-4" title="4">Web-file directory: /home/sanshiro/public_html/SlowDash/MySlowSystem</a>
-<a class="sourceLine" id="cb11-5" title="5">continue? [Y/n] y</a>
-<a class="sourceLine" id="cb11-6" title="6">Web-file directory created: /home/sanshiro/public_html/SlowDash/MySlowSystem</a>
-<a class="sourceLine" id="cb11-7" title="7"></a>
-<a class="sourceLine" id="cb11-8" title="8">=== INSTALLATION IS SUCCESSFUL ===</a>
-<a class="sourceLine" id="cb11-9" title="9">*) To setup SLOWDASH Web for another project, set SLOWDASH_PROJECT and run this program.</a>
-<a class="sourceLine" id="cb11-10" title="10">*) It is safe to run this slowdash-setup-web multiple times, even for the same project.</a>
-<a class="sourceLine" id="cb11-11" title="11">*) Web interface can be disabled by deleting the web-file directory.</a>
-<a class="sourceLine" id="cb11-12" title="12">*) Disabled Web interface can be re-enabled by running this program again.</a>
-<a class="sourceLine" id="cb11-13" title="13">*) Web-file directory for this project: /home/sanshiro/public_html/SlowDash/MySlowSystem</a></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb12-1" title="1"><span class="kw">$ slowdash-setup-web</span></a>
+<a class="sourceLine" id="cb12-2" title="2">Project: MySlowSystem</a>
+<a class="sourceLine" id="cb12-3" title="3">Project directory: /home/sanshiro/MySlowSystem/SlowdashProject</a>
+<a class="sourceLine" id="cb12-4" title="4">Web-file directory: /home/sanshiro/public_html/SlowDash/MySlowSystem</a>
+<a class="sourceLine" id="cb12-5" title="5">continue? [Y/n] y</a>
+<a class="sourceLine" id="cb12-6" title="6">Web-file directory created: /home/sanshiro/public_html/SlowDash/MySlowSystem</a>
+<a class="sourceLine" id="cb12-7" title="7"></a>
+<a class="sourceLine" id="cb12-8" title="8">=== INSTALLATION IS SUCCESSFUL ===</a>
+<a class="sourceLine" id="cb12-9" title="9">*) To setup SLOWDASH Web for another project, set SLOWDASH_PROJECT and run this program.</a>
+<a class="sourceLine" id="cb12-10" title="10">*) It is safe to run this slowdash-setup-web multiple times, even for the same project.</a>
+<a class="sourceLine" id="cb12-11" title="11">*) Web interface can be disabled by deleting the web-file directory.</a>
+<a class="sourceLine" id="cb12-12" title="12">*) Disabled Web interface can be re-enabled by running this program again.</a>
+<a class="sourceLine" id="cb12-13" title="13">*) Web-file directory for this project: /home/sanshiro/public_html/SlowDash/MySlowSystem</a></code></pre></div>
 <p>The script will copy all the necessary files under user’s web directory (typically <code>/home/USER/public_html</code>) and create <code>.htaccess</code> with the contents below:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode apache"><code class="sourceCode apache"><a class="sourceLine" id="cb12-1" title="1">DirectoryIndex<span class="st"> home.html</span></a>
-<a class="sourceLine" id="cb12-2" title="2"><span class="ex">Options</span><span class="ch"> </span><span class="kw">+ExecCGI</span></a>
-<a class="sourceLine" id="cb12-3" title="3">AddType<span class="st"> application/x-httpd-cgi .cgi</span></a>
-<a class="sourceLine" id="cb12-4" title="4">AddHandler<span class="st"> cgi-script .cgi</span></a>
-<a class="sourceLine" id="cb12-5" title="5">AddType<span class="st"> text/javascript .mjs</span></a>
-<a class="sourceLine" id="cb12-6" title="6"></a>
-<a class="sourceLine" id="cb12-7" title="7"><span class="ex">RewriteEngine</span><span class="ch"> </span><span class="kw">On</span></a>
-<a class="sourceLine" id="cb12-8" title="8">RewriteRule<span class="st"> ^api/(.*)$ slowdash.cgi/$1</span></a></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode apache"><code class="sourceCode apache"><a class="sourceLine" id="cb13-1" title="1">DirectoryIndex<span class="st"> home.html</span></a>
+<a class="sourceLine" id="cb13-2" title="2"><span class="ex">Options</span><span class="ch"> </span><span class="kw">+ExecCGI</span></a>
+<a class="sourceLine" id="cb13-3" title="3">AddType<span class="st"> application/x-httpd-cgi .cgi</span></a>
+<a class="sourceLine" id="cb13-4" title="4">AddHandler<span class="st"> cgi-script .cgi</span></a>
+<a class="sourceLine" id="cb13-5" title="5">AddType<span class="st"> text/javascript .mjs</span></a>
+<a class="sourceLine" id="cb13-6" title="6"></a>
+<a class="sourceLine" id="cb13-7" title="7"><span class="ex">RewriteEngine</span><span class="ch"> </span><span class="kw">On</span></a>
+<a class="sourceLine" id="cb13-8" title="8">RewriteRule<span class="st"> ^api/(.*)$ slowdash.cgi/$1</span></a></code></pre></div>
 <p>The web server must be configured so as to:</p>
 <ul>
 <li>enable cgi, userdir and rewrite engine, and</li>
@@ -325,30 +330,30 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h4 id="basic-authentication">Basic Authentication</h4>
 <p>In a sad case that you cannot trust your internal friends, the “Basic Authentication” can be used. Combine the authentication <b>with HTTPS using a reverse proxy</b> to encrypt the password and communication.</p>
 <p>To use the Basic Authentication, first install the <code>bcrypt</code> Python package if it is not yet installed:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb13-1" title="1"><span class="kw">$ pip3 install bcrypt</span></a></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb14-1" title="1"><span class="kw">$ pip3 install bcrypt</span></a></code></pre></div>
 <p>Then generate an authentication key by <code>slowdash authkey/USER?password=PASS</code>:</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb14-1" title="1"><span class="kw">$ slowdash authkey/slow?password=dash</span></a>
-<a class="sourceLine" id="cb14-2" title="2">{</a>
-<a class="sourceLine" id="cb14-3" title="3">    &quot;type&quot;: &quot;Basic&quot;,</a>
-<a class="sourceLine" id="cb14-4" title="4">    &quot;key&quot;: &quot;slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS&quot;</a>
-<a class="sourceLine" id="cb14-5" title="5">}</a></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb15-1" title="1"><span class="kw">$ slowdash authkey/slow?password=dash</span></a>
+<a class="sourceLine" id="cb15-2" title="2">{</a>
+<a class="sourceLine" id="cb15-3" title="3">    &quot;type&quot;: &quot;Basic&quot;,</a>
+<a class="sourceLine" id="cb15-4" title="4">    &quot;key&quot;: &quot;slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS&quot;</a>
+<a class="sourceLine" id="cb15-5" title="5">}</a></code></pre></div>
 <p>Add the key in the project configuration file under the <code>authentication</code> entry:</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb15-1" title="1"><span class="fu">slowdash_project:</span></a>
-<a class="sourceLine" id="cb15-2" title="2">  ...</a>
-<a class="sourceLine" id="cb15-3" title="3"></a>
-<a class="sourceLine" id="cb15-4" title="4">  <span class="fu">authentication:</span></a>
-<a class="sourceLine" id="cb15-5" title="5">    <span class="fu">type:</span><span class="at"> Basic</span></a>
-<a class="sourceLine" id="cb15-6" title="6">    <span class="fu">key:</span><span class="at"> slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS</span></a></code></pre></div>
-<p>This key can also be used for Apache, although some Apache keys, especially old ones such as MD5 keys which are still widely used, can not be used for SlowDash.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb16-1" title="1"><span class="fu">slowdash_project:</span></a>
+<a class="sourceLine" id="cb16-2" title="2">  ...</a>
+<a class="sourceLine" id="cb16-3" title="3"></a>
+<a class="sourceLine" id="cb16-4" title="4">  <span class="fu">authentication:</span></a>
+<a class="sourceLine" id="cb16-5" title="5">    <span class="fu">type:</span><span class="at"> Basic</span></a>
+<a class="sourceLine" id="cb16-6" title="6">    <span class="fu">key:</span><span class="at"> slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS</span></a></code></pre></div>
+<p>This key can also be used for Apache, but some Apache keys, especially old ones such as MD5 keys which are still widely used, can not be used for SlowDash.</p>
 <h4 id="only-for-the-cgi-mode">Only for the CGI mode</h4>
 <p>Rerun the <code>slowdash-setup-web.py</code> command to update the Web Server configuration.</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb16-1" title="1"><span class="kw">$ slowdash-setup-web</span></a>
-<a class="sourceLine" id="cb16-2" title="2">Project: MySlowSystem</a>
-<a class="sourceLine" id="cb16-3" title="3">Project directory: /home/sanshiro/MySlowSystem/SlowdashProject</a>
-<a class="sourceLine" id="cb16-4" title="4">Web-file directory: /home/sanshiro/public_html/SlowDash/MySlowSystem</a>
-<a class="sourceLine" id="cb16-5" title="5">User: slow</a>
-<a class="sourceLine" id="cb16-6" title="6">continue? [Y/n] y</a>
-<a class="sourceLine" id="cb16-7" title="7">...</a></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb17-1" title="1"><span class="kw">$ slowdash-setup-web</span></a>
+<a class="sourceLine" id="cb17-2" title="2">Project: MySlowSystem</a>
+<a class="sourceLine" id="cb17-3" title="3">Project directory: /home/sanshiro/MySlowSystem/SlowdashProject</a>
+<a class="sourceLine" id="cb17-4" title="4">Web-file directory: /home/sanshiro/public_html/SlowDash/MySlowSystem</a>
+<a class="sourceLine" id="cb17-5" title="5">User: slow</a>
+<a class="sourceLine" id="cb17-6" title="6">continue? [Y/n] y</a>
+<a class="sourceLine" id="cb17-7" title="7">...</a></code></pre></div>
 <p>Note that a new line, <code>User: slow</code>, is now added.</p>
 
 
