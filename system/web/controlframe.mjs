@@ -1063,7 +1063,7 @@ export class SaveConfigDialog {
             else {
                 $(e.target).val(prevName);
             }
-            div.find('button').at(0).enabled($(e.target).val().length > 0);
+            div.find('button').at(0).enabled(e.target.validity.valid);
         });
         
         // buttons

@@ -130,13 +130,14 @@ export class CatalogPanel extends Panel {
         };
         
         if (this.cachePath) {
+            let cachedDoc = localStorage.getItem(this.cachePath + '-doc');
+            if (cachedDoc) {
+                this.frameDiv.empty();
+                processDoc(JSON.parse(cachedDoc));
+            }
             const cacheTime = localStorage.getItem(this.cachePath + '-cachetime');
-            if (parseFloat(cacheTime ?? 0) > $.time() - 3600) {
-                let cachedDoc = localStorage.getItem(this.cachePath + '-doc');
-                if (cachedDoc) {
-                    processDoc(JSON.parse(cachedDoc));
-                    return;
-                }
+            if (parseFloat(cacheTime ?? 0) > $.time() - 10) {
+                return;
             }
         }
 
@@ -151,6 +152,7 @@ export class CatalogPanel extends Panel {
                 return null;
             })
             .then(proj_config => {
+                this.frameDiv.empty();
                 if (! proj_config?.contents) {
                     for (const content_type of content_types) {
                         this._render(content_type, proj_config === null ? null : []);
@@ -169,10 +171,6 @@ export class CatalogPanel extends Panel {
 
     
     _render(content_type, catalog) {
-        if (this.frameDiv.find('div').size() == 0) {
-            this.frameDiv.empty();
-        }
-
         let title = content_type.substr(0,1).toUpperCase() + content_type.substr(1);
         if (title.length > 4 && title.substr(0,4) == 'Slow') {
             title = 'Slow' + title[4].toUpperCase() + title.substr(5);
@@ -187,7 +185,8 @@ export class CatalogPanel extends Panel {
             'cursor': 'pointer'
         });
         updateButton.bind('click', e=>{
-            localStorage.setItem(this.cachePath + '-cachetime', 0);
+            localStorage.removeItem(this.cachePath + '-cachetime');
+            localStorage.removeItem(this.cachePath + '-doc');
             this.frameDiv.empty().text("loading catalog...");
             this._load();
             fetch('api/channels');  // update the channel list on the server (new scripts might need it)
