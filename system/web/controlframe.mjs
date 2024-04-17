@@ -210,7 +210,7 @@ function setupDataList() {
 }
 
 
-export function upload(dialog, filename, content, options) {
+export function upload(dialog, filename, content, options={}) {
     const defaults = {
         contentType: 'text/plain',
         overwritable: false,
@@ -1003,7 +1003,7 @@ export class SaveConfigDialog {
         let div = this.obj.find('.jaga-dialog-content');
         div.html(`
             <table style="margin-top:1em;margin-left:1em">
-              <tr><td>Name</td><td><input pattern="^[a-zA-Z][a-zA-Z0-9_-]*$" required="true" placeholder="use only alphabets or digits, do not use space" style="width:30em"></td></tr>
+              <tr><td>Name</td><td><input pattern="^[a-zA-Z][a-zA-Z0-9_\\-]*$" required="true" placeholder="use only alphabets or digits, do not use space" style="width:30em"></td></tr>
               <tr><td>Title</td><td><input placeholder="optional" style="width:30em"></td></tr>
               <tr><td>Description</td><td><textarea rows="3" cols="60" placeholder="optional"></textarea></td></tr>
               <tr><td>---</td><td></td></tr>
@@ -1030,7 +1030,7 @@ export class SaveConfigDialog {
         `);
 
         let orgName = '';
-        let validNamePattern = new RegExp('^[a-zA-Z0-9][a-zA-Z0-9_-]*$');
+        let validNamePattern = new RegExp('^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$');
         if (config.meta?.name?.length>0 && validNamePattern.test(config.meta?.name)) {
             orgName = config.meta.name;
         }

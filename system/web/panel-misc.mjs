@@ -28,11 +28,7 @@ export class WelcomePanel extends Panel {
             padding:'5px',
             overflow:'auto',
         });
-    }
 
-    
-    configure(config, callbacks={}) {
-        super.configure(config, callbacks);
         this.contentDiv.html(`
             <h3>To get started, create a new project</h3>
             See <a href="./docs/index.html">SlowDash Documentation</a> for how to do it.
@@ -58,6 +54,11 @@ export class WelcomePanel extends Panel {
              </ol>
         `);
     }
+
+    
+    configure(config, callbacks={}) {
+        super.configure(config, callbacks);
+    }
 }
 
 
@@ -82,53 +83,131 @@ export class ToolsPanel extends Panel {
             padding:'5px',
             overflow:'auto',
         });
+
+        this.contentDiv.html(`
+            <h3>Tools</h3>
+            <ul>
+              <li>&#x1f4c8; <a href="slowplot.html?grid=2x2">New Plot Layout</a>
+              <li>&#x1f4e5; <a href="slowdown.html">Data Download</a>
+              <li>&#x1f4c1; <a href="slowfile.html">Config File Manager</a>
+              <li>&#x1f6f3; <a href="slowplan.html">Cruise Planner</a>
+            </ul>
+            <h3>Resources</h3>
+            <ul>
+              <li>&#x2753; <a href="./docs/index.html" target="_blank">Documentation</a>
+              <li>&#x1f4f0; <a href="https://github.com/slowproj/slowdash/wiki/Status-and-Updates" target="_blank">Release Note</a>
+              <li>&#x1f422; <a href="https://github.com/slowproj/slowdash/" target="_blank">Code Repository</a>
+            </ul>
+        `);
+        this.contentDiv.find('h3').css({
+            'font-weight': 'normal',
+            'font-size': '130%',
+            'margin': '0.5em',
+            'padding': '0',
+        });
+        this.contentDiv.find('ul').css({
+            'list-style-type': 'none',
+            'margin': '0 0 0 2em',
+            'padding': '0 0 2em 0',
+        });
+        this.contentDiv.find('li').css({
+            'padding-top': '0.5em'
+        });
     }
 
     
     configure(config, callbacks={}) {
         super.configure(config, callbacks);
-        this.contentDiv.html(`
-            <html>
-              <head>
-                <style>
-                  #slowtools h3 {
-                  font-weight: normal;
-                  font-size: 130%;
-                  margin: 0.5em;
-                  padding: 0;
-                  }
-                  #slowtools ul {
-                  list-style-type: none;
-                  margin: 0 0 0 2em;
-                  padding: 0 0 2em 0;
-                  }
-                  #slowtools li {
-                  padding-top: 0.5em;
-                  }
-                </style>
-              </head>
-              <body>
-                <div id="slowtools">
-                  <h3>Tools</h3>
-                  <ul>
-                    <li>&#x1f4c8; <a href="slowplot.html?grid=2x2">New Plot Layout</a>
-                    <li>&#x1f4e5; <a href="slowdown.html">Data Download</a>
-                    <li>&#x1f4c1; <a href="slowfile.html">Config File Manager</a>
-                  </ul>
-                  
-                  <h3>Resources</h3>
-                  <ul>
-                    <li>&#x2753; <a href="./docs/index.html" target="_blank">Documentation</a>
-                    <li>&#x1f4f0; <a href="https://github.com/slowproj/slowdash/wiki/Status-and-Updates" target="_blank">Release Note</a>
-                    <li>&#x1f422; <a href="https://github.com/slowproj/slowdash/" target="_blank">Code Repository</a>
-                  </ul>
-                </div>
-              </body>
-            </html>
-        `);
     }
 }
 
+
+
+export class CruisePlannerPanel extends Panel {
+    static describe() {
+        return { type: 'cruise_planner', label: '' };
+    }
+    
+    static buildConstructRows(table, on_done=config=>{}) {
+    }
+
+    
+    constructor(div, style) {
+        super(div, style);
+        this.contentDiv = $('<div>').appendTo(div);        
+        this.contentDiv.css({
+            position: 'relative',
+            width:'calc(100% - 35px)',
+            height:'calc(100% - 35px)',
+            margin: '0px 10px 10px 10px',
+            padding:'5px',
+            overflow:'auto',
+        });
+
+        this.contentDiv.html(`
+          <h3>Itinerary Example</h3>
+          <div style="margin-left:3em;width:95%">
+              <pre style="width:100%;border:thin solid black;border-radius:5px;padding:0.5em"></pre>
+              See <a href="docs/index.html#AutoCruise" target="_blank">Document</a> for details.
+          </div>
+          <h3>Write Yours Here</h3>
+          <div style="margin-left:3em;width:95%">
+            <form>
+              <textarea style="width:100%;height:15em;border-radius:5px;padding:0.5em"></textarea>
+              <p>
+              slowcruise-<input type="text" name="name" pattern="^[a-zA-Z][a-zA-Z0-9_\\-]*$" required="true" placeholder="name">.yaml 
+              <input type="submit" value="Create" style="font-size:large" disabled>
+              <p>
+              (to edit an existing itinerary, use the editor in the <a href="slowfile.html">Config File Manager</a>)
+          </div>
+        `);
+        this.contentDiv.find('h3').css({
+            'font-weight': 'normal',
+            'font-size': '130%',
+            'margin': '0.5em',
+            'padding': '0',
+        });
+        this.contentDiv.find('pre').text(
+`title: My Slow Cruise
+interval: 10
+pages:
+  - slowplot.html?config=slowplot-Demo.json
+  - slowplot.html?config=slowplot-Summary.json
+  - https://github.com/slowproj/slowdash
+`       );
+        this.contentDiv.find('textarea').val(
+`title: My Slow Cruise
+interval: 10
+pages:
+  - slowplot.html?config=slowplot-XXX.json
+  - slowplot.html?config=slowplot-XXX.json
+`       );
+
+        this.savePopup = $('<dialog>').addClass('sd-pad').appendTo(div);
+        let nameInput = this.contentDiv.find('input').at(0).css('width','10em');
+        let submitButton = this.contentDiv.find('input').at(1);
+        nameInput.bind('input', e=>{
+            if (nameInput.get().validity.valid) {
+                submitButton.enabled(true);
+            }
+            else {
+                submitButton.enabled(false);
+            }
+        });
+        submitButton.bind('click', e=>{
+            e.preventDefault();
+            const filename = 'slowcruise-' + nameInput.val() + '.yaml';
+            const content = this.contentDiv.find('textarea').val();
+            upload(this.savePopup, 'config/file/' + filename, content);
+        });
+    }
+
+    
+    configure(config, callbacks={}) {
+        super.configure(config, callbacks);
+        this.contentDiv.find('textarea').focus();
+    }
+}
 
 
 export class ConfigEditorPanel extends Panel {

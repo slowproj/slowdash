@@ -23,6 +23,10 @@ input, button, select, option, textarea {
     font-size: 100%;
 }
 
+input:invalid {
+    background:#f0c0c0;
+}
+
 summary {
     cursor: pointer;
 }
@@ -69,6 +73,9 @@ summary {
 }
 .sd-data-table tr:first-child {
     background-color: #e0e0e0;
+}
+.sd-data-table tr:hover {
+    background-color: #d0d0d0;
 }
 .sd-data-tree-header th {
     background-color: #e0e0e0;

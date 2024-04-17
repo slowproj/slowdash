@@ -100,9 +100,10 @@
                     iframe.src = a.getAttribute('href');
                 });
             }
+            if (location.hash) {
+                iframe.src = location.hash.substr(1) + '.html';
+            }
         });
     </script>
   </body>
 </html>
-
-        
