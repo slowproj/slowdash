@@ -52,7 +52,7 @@ slowdash_project:
   - Data can be a time-series of scalars
   - Data can be a time-series of histograms, graphs, tables, or trees
 <p>
-- For data not explicitly bound for time-stamps, the time-series data can contain single element with a time-stamp of "neutral" or "current".
+- For data not explicitly bound for time-stamps, the time-series data can contain a single element with a time-stamp of "neutral" or "current".
   - The "neutral" timestamp matches with any data request time intervals. 
   - The "current" timestamp matches only if the data request includes the current time.
   - Therefore data storages can contain data without time-stamps. Examples are:
@@ -84,9 +84,9 @@ slowdash_project:
   
 ### Data Indexing (Channels)
 - Each time-series has an unique name, "channel".
-- Single data element can be identified by a pair of channel and time-stamp.
-- A data element can be a numerical scalar value (typical), a scalar value of boolean or string, or an object such as a histogram, graph, table or tree.
-- Using an array (vector of scalars) as a data element is under consideration. A table can be always used for an array.
+- Single data element can be uniquely identified by a pair of "channel" and "time-stamp".
+- A data element can be a numerical scalar value (typical), a scalar value of boolean or string, or an object such as a histogram, graph, table, tree, or blob (image etc).
+- [TODO] Using an array (vector of scalars) as a data element is under consideration. A table can be always used for an array.
 <p>
 - In a data table, if channel names are stored as a value of a column (case 1 below), this is called a "tag".
 - In a data table, column(s) that contain(s) data values is/are called "field"(s).
@@ -102,14 +102,14 @@ For a table storing time-series data, a "schema descriptor" describes which colu
 #### Examples
 - `data_table[endpoint_name]@timestamp=value`
 - `data_table[endpoint_name,set_or_ist]@timestamp(unix)=value_raw,value_cal`
-- `data_table[endpoint_name,set_or_ist]@timestamp(unix)=value_raw(default),value_cal`
+- `data_table[endpoint_name]@datetime(with timezome)=value_raw(default),value_cal`
 
 <p>
 #### Syntax
 - The first word is the table name. 
 - Tag names, if exist, come next. Multiple tags are separated by `,`.
 - Timestamp column name follows a prefix of `@`.
-- After a `=`, field column names are listed.
+- After an `=`, field column names are listed.
 <p>
 - If the timestamp column is inferrable, it can be omitted.
 - Timestamp may have a type specifier in `()`. Type specifier is case insensitive.
@@ -120,12 +120,12 @@ For a table storing time-series data, a "schema descriptor" describes which colu
 
 
 ### Restrictions
-- For security reasons, for SQL databases, Slow-Dash accepts only alphabets, digits, and tightly selected special characters such as `_`, `-`, `.`, and `:`, for tags, fields, and column names.
-- Therefore, a name like `';drop table datatable` is not allowed, and will be rejected, even though proper handling is technically possible.
+- For security reasons, for SQL databases, SlowDash accepts for column names only alphabets, digits, and tightly selected special characters such as `_`, `-`, `.`, and `:`.
+- Therefore, a channel name like `';drop table datatable` is not allowed, and will be rejected, even though proper handling is technically possible.
 
 
-## Channels and Data Store Schema
-Note that the numeric data values shown here can be of other scalar types (string etc.) or objects (histogram etc.).
+## Channels and Data-Store Schemata
+Note that the numeric data values shown here can be of any other scalar types (string etc.) or objects (histogram etc.).
 
 ### Case 1: Tag Values for Channel
 
@@ -152,7 +152,7 @@ Note that the numeric data values shown here can be of other scalar types (strin
   - `table[endpoint]@timestamp(unix)`
 
 
-### Case 2: Fields for Channel
+### Case 2: Field Names for Channel
 
 |RunNumber| TimeStamp| sccm.Alicat.Inj| mbar.CC10.Inj| K.ThrmCpl.Diss| mbar.IG.AS|
 |---------|---------|---------|---------|---------|---------|
@@ -177,7 +177,7 @@ Note that the numeric data values shown here can be of other scalar types (strin
   - `RunTable@TimeStamp(unix)`
 
 
-### Case 3: Tag Values and Fields for Channel
+### Case 3: Tag Values and Field Names for Channel
 |      metric         |           timestamp           |  value_raw   |   value_cal  |
 |---------------------|-------------------------------|--------------|--------------|
 | psia.Alicat.Inj.Gas | 2022-09-15 03:19:25.419417+00 |          9.6 |          9.6 |
@@ -226,7 +226,7 @@ Note that the numeric data values shown here can be of other scalar types (strin
 
 
 
-# SQL DB
+# RDBMS (SQL Database)
 
 ## Supported Database Systems
 |DBMS              |Python Module|Server-side <br>down sampling |
@@ -563,7 +563,7 @@ hist = {
 r.json().set('hist00', '$', hist)
 ```
 
-- The VAKA utility can also be used to write the JSON objects: just replace `write_object_timeseries()` with `write.object()`.
+- The SlowPy utility can also be used to write the JSON objects: just replace `write_object_timeseries()` with `write.object()`.
 
 
 # MongoDB

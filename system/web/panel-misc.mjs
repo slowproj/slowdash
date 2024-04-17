@@ -62,6 +62,75 @@ export class WelcomePanel extends Panel {
 
 
 
+export class ToolsPanel extends Panel {
+    static describe() {
+        return { type: 'tools', label: '' };
+    }
+    
+    static buildConstructRows(table, on_done=config=>{}) {
+    }
+
+    
+    constructor(div, style) {
+        super(div, style);
+        this.contentDiv = $('<div>').appendTo(div);        
+        this.contentDiv.css({
+            position: 'relative',
+            width:'calc(100% - 35px)',
+            height:'calc(100% - 35px)',
+            margin: '0px 10px 10px 10px',
+            padding:'5px',
+            overflow:'auto',
+        });
+    }
+
+    
+    configure(config, callbacks={}) {
+        super.configure(config, callbacks);
+        this.contentDiv.html(`
+            <html>
+              <head>
+                <style>
+                  #slowtools h3 {
+                  font-weight: normal;
+                  font-size: 130%;
+                  margin: 0.5em;
+                  padding: 0;
+                  }
+                  #slowtools ul {
+                  list-style-type: none;
+                  margin: 0 0 0 2em;
+                  padding: 0 0 2em 0;
+                  }
+                  #slowtools li {
+                  padding-top: 0.5em;
+                  }
+                </style>
+              </head>
+              <body>
+                <div id="slowtools">
+                  <h3>Tools</h3>
+                  <ul>
+                    <li>&#x1f4c8; <a href="slowplot.html?grid=2x2">New Plot Layout</a>
+                    <li>&#x1f4e5; <a href="slowdown.html">Data Download</a>
+                    <li>&#x1f4c1; <a href="slowfile.html">Config File Manager</a>
+                  </ul>
+                  
+                  <h3>Resources</h3>
+                  <ul>
+                    <li>&#x2753; <a href="./docs/index.html" target="_blank">Documentation</a>
+                    <li>&#x1f4f0; <a href="https://github.com/slowproj/slowdash/wiki/Status-and-Updates" target="_blank">Release Note</a>
+                    <li>&#x1f422; <a href="https://github.com/slowproj/slowdash/" target="_blank">Code Repository</a>
+                  </ul>
+                </div>
+              </body>
+            </html>
+        `);
+    }
+}
+
+
+
 export class ConfigEditorPanel extends Panel {
     static describe() {
         return { type: 'config_editor', label: '' };

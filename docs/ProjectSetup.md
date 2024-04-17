@@ -281,7 +281,7 @@ slowdash_project:
     key: slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS
 ```
 
-This key can also be used for Apache, although some Apache keys, especially old ones such as MD5 keys which are still widely used, can not be used for SlowDash.
+This key can also be used for Apache, but some Apache keys, especially old ones such as MD5 keys which are still widely used, can not be used for SlowDash.
 
 #### Only for the CGI mode
 Rerun the `slowdash-setup-web.py` command to update the Web Server configuration.

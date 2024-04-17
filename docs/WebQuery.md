@@ -273,7 +273,7 @@ POST http://ADDRESS:PORT/api/control
 ### Response
 - If the command is not recognized, returns the HTTP response 400 (Bad Request).
 - If the command is processed, returns the HTTP response 201, with contents of:
-  - If the user module provides custom result JSON (typically with `{"status" xxx and "message": ...}`), it will be returned.
+  - If the user module provides custom result JSON (typically with `{"status": ...; "message": ...}`), it will be returned.
   - Otherwise, returns `{"status": "ok"}` on success, or  `{"status": "error"}` on error.
 
 ### JavaScript Snippet
