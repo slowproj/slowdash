@@ -1014,7 +1014,6 @@ export class PlotPanel extends Panel {
         
         this.axes = new JGPlotWidget(this.plotDiv, {
             width: w, height: h, labelScaling: plotScaling,
-            marginLeft: 80 + (this.style.plotTicksOutwards === true ? 8 : 0),
             colorScale: this.config.axes.colorscale,
             cursorDigits: 6,
             logX: this.config.axes.xlog,
