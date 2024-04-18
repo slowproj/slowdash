@@ -651,7 +651,7 @@ class TimeRangeDialog {
             <table>
               <tr><th align="left">From</th><th align="left">To</th></tr>
               <tr><td>
-                <label><input type="radio" name="fromtype"> <input type="number" style="width:5em">
+                <label><input type="radio" name="fromtype"> <input type="number" step="any" style="width:5em">
                 <select>
                   <option value="s">sec</option>
                   <option value="m">min</option>
@@ -743,8 +743,8 @@ class GridDialog {
         let div = this.obj.find('.jaga-dialog-content');
         div.html(`
             <div class="jaga-dialog-content" style="margin:1em">
-              Rows: <input type="number" min="1" max="8" style="width:10ex"> x
-              Columns: <input type="number" min="1" max="8" style="width:10ex">
+              Rows: <input type="number" min="1" max="8" step="1" style="width:10ex"> x
+              Columns: <input type="number" min="1" max="8" step="1" style="width:10ex">
             </div>
         `);
         let [rows, cols] = initialValue.split('x');

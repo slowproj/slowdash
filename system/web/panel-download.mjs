@@ -174,7 +174,7 @@ export class DownloadPanel extends Panel {
             <tr>
               <td>Resampling</td>
               <td>
-                <input type="number" placeholder="auto" style="width:6em">
+                <input type="number" step="any" placeholder="auto" style="width:6em">
                 <select>
                   <option value="s">sec</option>
                   <option value="m">min</option>

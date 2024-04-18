@@ -24,7 +24,7 @@ input, button, select, option, textarea {
 }
 
 input:invalid {
-    background:#f0c0c0;
+    background:#ffdddd;
 }
 
 summary {

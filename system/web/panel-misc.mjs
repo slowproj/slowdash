@@ -147,7 +147,7 @@ export class CruisePlannerPanel extends Panel {
         this.contentDiv.html(`
           <h3>Itinerary Example</h3>
           <div style="margin-left:3em;width:95%">
-              <pre style="width:100%;border:thin solid black;border-radius:5px;padding:0.5em"></pre>
+              <pre style="width:100%;border:thin solid gray;border-radius:5px;padding:0.5em"></pre>
               See <a href="docs/index.html#AutoCruise" target="_blank">Document</a> for details.
           </div>
           <h3>Write Yours Here</h3>

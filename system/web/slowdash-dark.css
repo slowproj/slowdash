@@ -4,6 +4,10 @@ body {
     color: #e8e8e8;
 }
 
+input:invalid {
+    background: #a06060;
+}
+
 .sd-header {
     background: #660000;
     color: white;
@@ -36,6 +40,9 @@ body {
 .sd-data-table tr:first-child {
     background-color: #303030;
 }
+.sd-data-table tr:hover {
+    background-color: #202020;
+}
 .sd-data-tree-header th {
     background-color: #303030;
 }
@@ -45,11 +52,11 @@ button, select, input, textarea {
     background: #606060;
     color: white;
 }
-button {
-    margin-left: 3px;
-}
 select {
     border: none;
+}
+button:disabled {
+    color: #909090;
 }
 
 
@@ -87,7 +94,9 @@ a:hover {
 .jaga-dialog-button-pane button {
     background: #606060;
     color: white;
-    margin-left: 3px;
+}
+.jaga-dialog-button-pane button:disabled {
+    color: #909090;
 }
 
 

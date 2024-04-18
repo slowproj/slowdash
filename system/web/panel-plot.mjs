@@ -97,7 +97,7 @@ class Plot {
         bindInput(this.config, 'format', div.find('input').at(k++).css('width', '5em'));
         if (this.config.color) {
             table.append($('<tr>').html(`
-              <tr><td>Color</td><td><input type="color">, Opacity: <input type="number" placeholder="1"></td></tr>
+              <tr><td>Color</td><td><input type="color">, Opacity: <input type="number" step="any" placeholder="1"></td></tr>
             `));
             bindInput(this.config, 'color', div.find('input').at(k++).css('width', '5em'));
             bindInput(this.config, 'opacity', div.find('input').at(k++).css('width', '5em'));
@@ -570,17 +570,17 @@ class LineMarkerPlot extends GraphPlot {
                 <option value="opendiamond">opendiamond</option>
                 <option value="opentriangle">opentriangle</option>
             </select>,
-            size: <input type="number"></td>
+            size: <input type="number" step="any"></td>
         `));
         table.append($('<tr>').html(`
-            <td>Line</td><td>width: <input type="number">, 
+            <td>Line</td><td>width: <input type="number" step="any">, 
             type: <select>
                 <option value="connect">connect</option>
                 <option value="last">last</option>
             </select></td>
         `));
         table.append($('<tr>').html(`
-            <td>Fill</td><td>opacity: <input type="number">, baseline: <input type="number"></td>
+            <td>Fill</td><td>opacity: <input type="number" step="any">, baseline: <input type="number" step="any"></td>
         `));
 
         bindInput(this.config, 'marker_type', div.find('select').at(0).css('width', '7em'));
@@ -870,6 +870,9 @@ export class PlotPanel extends Panel {
         if (this.config.axes.ylog === undefined) {
             this.config.axes.ylog = false;
         }
+        if (this.config.axes.zlog === undefined) {
+            this.config.axes.zlog = false;
+        }
         if (this.config.legend === undefined) {
             this.config.legend = { style: null };
         }
@@ -1016,6 +1019,7 @@ export class PlotPanel extends Panel {
             cursorDigits: 6,
             logX: this.config.axes.xlog,
             logY: this.config.axes.ylog,
+            logZ: this.config.axes.zlog,
             ticksX: Math.floor(divWidth/300) + 2,
             ticksY: 4,
             ticksOutwards: this.style.plotTicksOutwards,
@@ -1077,7 +1081,7 @@ export class PlotPanel extends Panel {
               <tr><td>Title</td><td><input placeholder="empty"></td></tr>
               <tr><td>Range</td><td>
                   <label><input type="radio" name="xrange">Auto</label>
-                  <label><input type="radio" name="xrange">Fixed</label>: <input type="number">-<input type="number">
+                  <label><input type="radio" name="xrange">Fixed</label>: <input type="number" step="any">-<input type="number" step="any">
               </td></tr>
               <tr><td></td><td><label><input type="checkbox">log</label></td></tr>
 
@@ -1085,7 +1089,7 @@ export class PlotPanel extends Panel {
               <tr><td>Title</td><td><input placeholder="empty"></td></tr>
               <tr><td>Range</td><td>
                   <label><input type="radio" name="yrange">Auto</label>
-                  <label><input type="radio" name="yrange">Fixed</label>: <input type="number">-<input type="number">
+                  <label><input type="radio" name="yrange">Fixed</label>: <input type="number" step="any">-<input type="number" step="any">
               </td></tr>
               <tr><td></td><td><label><input type="checkbox">log</label></td></tr>
 
@@ -1107,7 +1111,7 @@ export class PlotPanel extends Panel {
               <tr><td>Title</td><td><input placeholder="empty"></td></tr>
               <tr><td>Range</td><td><label>
                   <label><input type="radio" name="zrange">Auto</label>
-                  <input type="radio" name="zrange">Fixed</label>: <input type="number">-<input type="number">
+                  <input type="radio" name="zrange">Fixed</label>: <input type="number" step="any">-<input type="number" step="any">
               </td></tr>
               <tr><td></td><td><label><input type="checkbox">log</label></td></tr>
             </table>
@@ -1116,6 +1120,7 @@ export class PlotPanel extends Panel {
         let axes = this.config.axes;
         let [xmin, xmax] = [axes.xmin ?? '', axes.xmax ?? ''];
         let [ymin, ymax] = [axes.ymin ?? '', axes.ymax ?? ''];
+        let [zmin, zmax] = [axes.zmin ?? '', axes.zmax ?? ''];
         if ((xmin === '') || (xmax === '')) {
             let currentRange = this.axes.getRange();
             [ xmin, xmax ] = this.trimRange(currentRange.xmin, currentRange.xmax, axes.xlog);
@@ -1124,8 +1129,13 @@ export class PlotPanel extends Panel {
             let currentRange = this.axes.getRange();
             [ ymin, ymax ] = this.trimRange(currentRange.ymin, currentRange.ymax, axes.ylog);
         }
+        if ((zmin === '') || (zmax === '')) {
+            let currentRange = this.axes.getRange();
+            [ zmin, zmax ] = this.trimRange(currentRange.zmin, currentRange.zmax, axes.zlog);
+        }
         axes.xmin = xmin; axes.xmax = xmax;
         axes.ymin = ymin; axes.ymax = ymax;
+        axes.zmin = zmin; axes.zmax = zmax;
 
         let legend = this.config.legend;
         
@@ -1507,7 +1517,7 @@ export class TimeAxisPlotPanel extends PlotPanel {
               <tr><th>Title</th><td><input placeholder="auto"></td></tr>
               <tr><th>Y Axis</th><td></td></tr>
               <tr><td>Title</td><td><input placeholder="empty"></td></tr>
-              <tr><td>Range</td><td><label><input type="radio" name="yrange">Fixed</label>: <input type="number">-<input type="number"></td></tr>
+              <tr><td>Range</td><td><label><input type="radio" name="yrange">Fixed</label>: <input type="number" step="any">-<input type="number" step="any"></td></tr>
               <tr><td></td><td><label><input type="radio" name="yrange">Auto</label></td></tr>
               <tr><td></td><td><label><input type="checkbox">log</label></td></tr>
               <tr><th>Legend</th><td></td></tr>

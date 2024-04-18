@@ -139,7 +139,7 @@ export class HtmlPanel extends Panel {
             <table style="margin-top:1em">
               <tr><th>HTML File</th><td><input list="sd-html-datalist"></td></tr>
               <tr><th>Title</th><td><input></td></tr>
-              <tr><th>Scaling</th><td><input type="number" placeholder="auto-scale"></td></tr>
+              <tr><th>Scaling</th><td><input type="number" step="any" placeholder="auto-scale"></td></tr>
             </table>
         `);
 
