@@ -119,6 +119,14 @@ with open(os.path.join(cgi_dir, '.htaccess'), 'w') as f:
         f.write('AuthName "Slowdash Authorization"\n')
         f.write('AuthUserFile %s/.htpasswd\n' % cgi_dir)
         f.write('Require user %s\n' % ' '.join(user_list.keys()))
+        f.write('\n')
+    f.write('<FilesMatch "\\.(html|mjs|js)$">\n')
+    f.write('  <IfModule mod_headers.c>\n')
+    f.write('    Header set Cache-Control "max-age=3600"\n')
+    f.write('  </IfModule>\n')
+    f.write('</FilesMatch>\n')
+    f.write('\n')
+  
         
 if user_list is not None:
     with open(os.path.join(cgi_dir, '.htpasswd'), 'w') as f:
