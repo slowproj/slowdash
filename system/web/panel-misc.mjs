@@ -153,10 +153,10 @@ export class CruisePlannerPanel extends Panel {
           <h3>Write Yours Here</h3>
           <div style="margin-left:3em;width:95%">
             <form>
-              <textarea style="width:100%;height:15em;border-radius:5px;padding:0.5em"></textarea>
+              <textarea spellcheck="false" style="width:100%;height:15em;border-radius:5px;padding:0.5em"></textarea>
               <p>
               slowcruise-<input type="text" name="name" pattern="^[a-zA-Z][a-zA-Z0-9_\\-]*$" required="true" placeholder="name">.yaml 
-              <input type="submit" value="Create" style="font-size:large" disabled>
+              <button disabled>Create</button>
               <p>
               (to edit an existing itinerary, use the editor in the <a href="slowfile.html">Config File Manager</a>)
           </div>
@@ -185,7 +185,7 @@ pages:
 
         this.savePopup = $('<dialog>').addClass('sd-pad').appendTo(div);
         let nameInput = this.contentDiv.find('input').at(0).css('width','10em');
-        let submitButton = this.contentDiv.find('input').at(1);
+        let submitButton = this.contentDiv.find('button').at(0);
         nameInput.bind('input', e=>{
             if (nameInput.get().validity.valid) {
                 submitButton.enabled(true);

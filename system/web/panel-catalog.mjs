@@ -317,8 +317,9 @@ export class ChannelListPanel extends Panel {
             'cursor': 'pointer'
         });
         updateButton.bind('click', e=>{
-            localStorage.setItem(this.cachePath + '-cachetime', 0);
-            this.table.empty();
+            localStorage.removeItem(this.cachePath + '-cachetime');
+            localStorage.removeItem(this.cachePath + '-doc');
+            this.table.html('<tr><td></td></tr><tr><td>loading channel list...</td></tr>');
             this._load(config);
         });
         
@@ -357,13 +358,13 @@ export class ChannelListPanel extends Panel {
 
     _load(config) {
         if (this.cachePath) {
+            let cachedDoc = localStorage.getItem(this.cachePath + '-doc');
+            if (cachedDoc) {
+                this._render(config, JSON.parse(cachedDoc));
+            }
             const cacheTime = localStorage.getItem(this.cachePath + '-cachetime');
-            if (parseFloat(cacheTime ?? 0) > $.time() - 3600) {
-                let cachedDoc = localStorage.getItem(this.cachePath + '-doc');
-                if (cachedDoc) {
-                    this._render(config, JSON.parse(cachedDoc));
-                    return;
-                }
+            if (parseFloat(cacheTime ?? 0) > $.time() - 60) {
+                return;
             }
         }
 

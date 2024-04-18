@@ -58,6 +58,9 @@ select {
 button:disabled {
     color: #909090;
 }
+button:hover {
+    background: #909090;
+}
 
 
 
@@ -94,6 +97,9 @@ a:hover {
 .jaga-dialog-button-pane button {
     background: #606060;
     color: white;
+}
+.jaga-dialog-button-pane button:hover {
+    background: #909090;
 }
 .jaga-dialog-button-pane button:disabled {
     color: #909090;
