@@ -134,7 +134,7 @@ Forms are defined separately in the same configuration file:
             "title": " Injection Flow",
             "initial": {},
             "inputs": [
-                { "name": "flow", "label": "Set-point (sccm)", "type": "number", "initial": 15 }
+                { "name": "flow", "label": "Set-point (sccm)", "type": "number", "step": 0.1 "initial": 15 }
             ],
             "buttons": [
                 { "name": "apply", "label": "Apply Set-point" },

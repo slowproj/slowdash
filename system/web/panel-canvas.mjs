@@ -235,7 +235,7 @@ class ShapeItem extends CanvasItem {
         if (this.attr.label) {
             let [dx, dy] = [this.attr['label-dx'], this.attr['label-dy']];
             let labelAttr = $.extend({}, this.attr, {
-                stroke: undefined,
+                stroke: 'null',
                 fill: this.attr['label-color'],
                 x: this.attr.x + (dx ?? this.attr.width/2),
                 y: this.attr.y + (dy ?? this.attr.height/2),
@@ -259,7 +259,7 @@ class ShapeItem extends CanvasItem {
                 anchor = 'start';
             }
             let textAttr = $.extend({}, this.attr, {
-                stroke: undefined,
+                stroke: 'none',
                 fill: this.attr['data-color'],
                 x: this.attr.x + (dx ?? 0),
                 y: this.attr.y + (dy ?? 0),
@@ -270,6 +270,7 @@ class ShapeItem extends CanvasItem {
                 'text-anchor': anchor ?? 'start'
             });
             this.text = $('<text>', 'svg').attr(textAttr).text('---');
+            console.log(textAttr);
             elem.append(this.text);
         }
         if (this.metric && this.metric.alarmLevels) {
@@ -780,7 +781,11 @@ class Viewlet {
             let tr = $('<tr>').appendTo(table);
             $('<td>').appendTo(tr).text(entry.label || entry.name);
             let input = $('<input>').appendTo($('<td>').appendTo(tr));
-            input.attr('name', entry.name).attr('type', entry.type||'number');
+            input.attr({
+                'name':  entry.name,
+                'type': entry.type ?? 'number',
+                'step': entry.step ?? 'any',
+            });
             input.val(entry.initial ?? (formConfig.initial ? formConfig.initial[entry.name] : ''));
         }
         let buttonDiv = form.find('div');

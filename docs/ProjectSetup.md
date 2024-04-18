@@ -220,19 +220,20 @@ $ slowdash --project-dir=PROJECT_DIR --port=18881
 Slowdash can be executed as CGI of a web server such as Apache or Nginx. To setup this, run the script below at the project directory:
 
 ```console
-$ slowdash-setup-web
+$ cd PATH/TO/PROJECT
+$ PATH/TO/SLOWDASH/SOURCE/system/server/slowdash-setup-cgi.py
 Project: MySlowSystem
 Project directory: /home/sanshiro/MySlowSystem/SlowdashProject
 Web-file directory: /home/sanshiro/public_html/SlowDash/MySlowSystem
 continue? [Y/n] y
-Web-file directory created: /home/sanshiro/public_html/SlowDash/MySlowSystem
+CGI directory created: /home/sanshiro/public_html/SlowDash/MySlowSystem
 
 === INSTALLATION IS SUCCESSFUL ===
-*) To setup SLOWDASH Web for another project, set SLOWDASH_PROJECT and run this program.
-*) It is safe to run this slowdash-setup-web multiple times, even for the same project.
-*) Web interface can be disabled by deleting the web-file directory.
-*) Disabled Web interface can be re-enabled by running this program again.
-*) Web-file directory for this project: /home/sanshiro/public_html/SlowDash/MySlowSystem
+- To setup SLOWDASH CGI for another project, set SLOWDASH_PROJECT and run this program.
+- It is safe to run this slowdash-setup-cgi.py multiple times, even for the same project.
+- CGI can be disabled by deleting the CGI directory.
+- Disabled CGI can be re-enabled by running this program again.
+- Web-file directory for this project: /home/sanshiro/public_html/SlowDash/MySlowSystem
 ```
 
 The script will copy all the necessary files under user's web directory (typically `/home/USER/public_html`) and create `.htaccess` with the contents below:

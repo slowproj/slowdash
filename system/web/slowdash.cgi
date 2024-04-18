@@ -3,7 +3,7 @@
 
 import sys, os, io, cgi, json
 
-from slowdash_web_config import sys_dir, project_dir
+from slowdash_cgi_config import sys_dir, project_dir
 sys.path.insert(0, os.path.join(sys_dir, 'system', 'server'))
 from slowdash import WebUI
 
