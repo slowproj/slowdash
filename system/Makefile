@@ -14,7 +14,7 @@ all:
 
 	@if [ ! -f $(SLOWDASH_DIR)/system/web/jagaimo/jagaimo.mjs ]; then \
 		if [ x$(GIT) = x ]; then \
-			echo 'submodules not '; \
+			echo 'submodules not cloned, git command not available'; \
 			exit 255; \
 		fi; \
 		$(GIT) submodule update --init --recursive; \
