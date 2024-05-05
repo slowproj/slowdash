@@ -1,161 +1,56 @@
 {
-  "control": {
-    "range": {
-      "length": 300
+    "control": {
+        "range": { "length": 300 },
+        "reload": 2,
+        "grid": { "rows": 2, "columns": 3 },
+        "mode": "normal"
     },
-    "reload": 2,
-    "grid": {
-      "rows": 2,
-      "columns": 3
-    }
-  },
-  "panels": [
-    {
-      "type": "plot",
-      "plots": [
+    "style": { },
+    "panels": [
         {
-          "type": "graph",
-          "channel": "test_graph_02",
-          "color": "#009090",
-          "label": "",
-          "format": "%.5g",
-          "opacity": 1,
-          "marker_type": "circle",
-          "marker_size": 2,
-          "line_width": 1,
-          "line_type": "connect",
-          "fill_opacity": 0,
-          "fill_baseline": "1e-100"
-        }
-      ],
-      "axes": {
-        "xfixed": false,
-        "yfixed": false,
-        "xlog": false,
-        "ylog": false
-      }
-    },
-    {
-      "type": "plot",
-      "plots": [
-        {
-          "type": "histogram",
-          "channel": "test_histogram_02",
-          "color": "#009090",
-          "opacity": 0.2,
-          "label": "",
-          "format": "%.5g"
-        }
-      ],
-      "axes": {
-        "xfixed": false,
-        "yfixed": false,
-        "xlog": false,
-        "ylog": false
-      }
-    },
-    {
-      "type": "timeaxis",
-      "plots": [
-        {
-          "type": "timeseries",
-          "channel": "test_histogram_02.objindex",
-          "color": "#009090",
-          "label": "",
-          "format": "%.5g",
-          "opacity": 1,
-          "marker_type": "circle",
-          "marker_size": 2,
-          "line_width": 1,
-          "line_type": "connect",
-          "fill_opacity": 0,
-          "fill_baseline": "1e-100"
-        }
-      ],
-      "axes": {
-        "xfixed": false,
-        "yfixed": false,
-        "xlog": false,
-        "ylog": false
-      }
-    },
-    {
-      "type": "tree",
-      "channel": "Status"
-    },
-    {
-      "type": "timeaxis",
-      "plots": [
-        {
-          "type": "timeseries",
-          "channel": "ch00",
-          "color": "#009090",
-          "label": "",
-          "format": "%.5g",
-          "opacity": 1,
-          "marker_type": "circle",
-          "marker_size": 2,
-          "line_width": 1,
-          "line_type": "connect",
-          "fill_opacity": 0,
-          "fill_baseline": 1e-100
+            "type": "plot",
+            "plots": [
+                { "type": "graph", "channel": "test_graph_01", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "xmin": -0.05, "xmax": 2, "ymin": 0, "ymax": 2, "zmin": 0, "zmax": 1 },
+            "legend": { "style": "side" }
         },
         {
-          "type": "timeseries",
-          "channel": "ch01",
-          "color": "#dd8000",
-          "label": "",
-          "format": "%.5g",
-          "opacity": 1,
-          "marker_type": "circle",
-          "marker_size": 2,
-          "line_width": 1,
-          "line_type": "connect",
-          "fill_opacity": 0,
-          "fill_baseline": 1e-100
+            "type": "plot",
+            "plots": [
+                { "type": "histogram", "channel": "test_histogram_01", "color": "#009090", "opacity": 0.2, "label": "", "format": "%.5g" }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "xmin": -0.05, "xmax": 2, "ymin": 0, "ymax": 2, "zmin": 0, "zmax": 1 },
+            "legend": { "style": "side" }
         },
         {
-          "type": "timeseries",
-          "channel": "ch02",
-          "color": "#4169e1",
-          "label": "",
-          "format": "%.5g",
-          "opacity": 1,
-          "marker_type": "circle",
-          "marker_size": 2,
-          "line_width": 1,
-          "line_type": "connect",
-          "fill_opacity": 0,
-          "fill_baseline": 1e-100
+            "type": "plot",
+            "plots": [
+                { "type": "histogram2d", "channel": "test_histogram2d_00", "label": "", "format": "%.5g" }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "colorscale": "Parula" },
+            "legend": { "style": "side" }
         },
         {
-          "type": "timeseries",
-          "channel": "ch03",
-          "color": "#b030b0",
-          "label": "",
-          "format": "%.5g",
-          "opacity": 1,
-          "marker_type": "circle",
-          "marker_size": 2,
-          "line_width": 1,
-          "line_type": "connect",
-          "fill_opacity": 0,
-          "fill_baseline": 1e-100
-        }
-      ],
-      "axes": {
-        "xfixed": false,
-        "yfixed": false,
-        "xlog": false,
-        "ylog": false,
-        "ymin": -6,
-        "ymax": 20
-      }
-    }
-  ],
-  "meta": {
-    "name": "redis-test",
-    "title": "",
-    "description": ""
-  }
+            "type": "timeaxis",
+            "plots": [
+                { "type": "timeseries", "channel": "ch00", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" },
+                { "type": "timeseries", "channel": "ch01", "color": "#dd8000", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" },
+                { "type": "timeseries", "channel": "ch02", "color": "#4169e1", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" },
+                { "type": "timeseries", "channel": "ch03", "color": "#b030b0", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "ymin": -6, "ymax": 20, "zlog": false },
+            "legend": { "style": "side" }
+        },
+        {
+            "type": "timeaxis",
+            "plots": [
+                { "type": "timeseries", "channel": "test_histogram_01.objindex", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 0, "ymax": 2 },
+            "legend": { "style": "side" }
+        },
+        { "type": "tree", "channel": "Status" }
+    ],
+    "meta": { "name": "redis-test", "title": "", "description": "" }
 }

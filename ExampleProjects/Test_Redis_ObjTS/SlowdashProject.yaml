@@ -6,4 +6,5 @@ slowdash_project:
       time_series:
         - { db: 1 }
         - { db: 2, suffix: '.objindex' }
+      object: { db: 1 }
       object_time_series: { db: 2 }

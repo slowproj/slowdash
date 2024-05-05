@@ -45,8 +45,8 @@ while True:
     datastore.write_object(histogram)
     datastore.write_object(graph)
 
-    datastore.write_object_timeseries(histogram, name="test_histogram_02")
-    datastore.write_object_timeseries(graph, name="test_graph_02")
+    datastore.write_object_timeseries(histogram)
+    datastore.write_object_timeseries(graph)
 
     for i in range(1000):
         x = np.random.normal(5, 2)

@@ -3,7 +3,7 @@ FROM python:3.12
 # we install Python packages that might be used by user modules
 RUN pip install numpy scipy pandas matplotlib pillow pyyaml psutil bcrypt requests psycopg2 mysqlclient influxdb-client redis pymongo couchdb
 
-RUN apt-get update && apt-get install -y gosu 
+RUN apt-get update && apt-get install -y gosu
 
 
 ARG USERNAME=slowuser
