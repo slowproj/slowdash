@@ -285,19 +285,20 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul>
 <h2 id="bare-metal-launch-from-cgi">Bare Metal, Launch from CGI</h2>
 <p>Slowdash can be executed as CGI of a web server such as Apache or Nginx. To setup this, run the script below at the project directory:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb12-1" title="1"><span class="kw">$ slowdash-setup-web</span></a>
-<a class="sourceLine" id="cb12-2" title="2">Project: MySlowSystem</a>
-<a class="sourceLine" id="cb12-3" title="3">Project directory: /home/sanshiro/MySlowSystem/SlowdashProject</a>
-<a class="sourceLine" id="cb12-4" title="4">Web-file directory: /home/sanshiro/public_html/SlowDash/MySlowSystem</a>
-<a class="sourceLine" id="cb12-5" title="5">continue? [Y/n] y</a>
-<a class="sourceLine" id="cb12-6" title="6">Web-file directory created: /home/sanshiro/public_html/SlowDash/MySlowSystem</a>
-<a class="sourceLine" id="cb12-7" title="7"></a>
-<a class="sourceLine" id="cb12-8" title="8">=== INSTALLATION IS SUCCESSFUL ===</a>
-<a class="sourceLine" id="cb12-9" title="9">*) To setup SLOWDASH Web for another project, set SLOWDASH_PROJECT and run this program.</a>
-<a class="sourceLine" id="cb12-10" title="10">*) It is safe to run this slowdash-setup-web multiple times, even for the same project.</a>
-<a class="sourceLine" id="cb12-11" title="11">*) Web interface can be disabled by deleting the web-file directory.</a>
-<a class="sourceLine" id="cb12-12" title="12">*) Disabled Web interface can be re-enabled by running this program again.</a>
-<a class="sourceLine" id="cb12-13" title="13">*) Web-file directory for this project: /home/sanshiro/public_html/SlowDash/MySlowSystem</a></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb12-1" title="1"><span class="kw">$ cd PATH/TO/PROJECT</span></a>
+<a class="sourceLine" id="cb12-2" title="2"><span class="kw">$ PATH/TO/SLOWDASH/SOURCE/system/server/slowdash-setup-cgi.py</span></a>
+<a class="sourceLine" id="cb12-3" title="3">Project: MySlowSystem</a>
+<a class="sourceLine" id="cb12-4" title="4">Project directory: /home/sanshiro/MySlowSystem/SlowdashProject</a>
+<a class="sourceLine" id="cb12-5" title="5">Web-file directory: /home/sanshiro/public_html/SlowDash/MySlowSystem</a>
+<a class="sourceLine" id="cb12-6" title="6">continue? [Y/n] y</a>
+<a class="sourceLine" id="cb12-7" title="7">CGI directory created: /home/sanshiro/public_html/SlowDash/MySlowSystem</a>
+<a class="sourceLine" id="cb12-8" title="8"></a>
+<a class="sourceLine" id="cb12-9" title="9">=== INSTALLATION IS SUCCESSFUL ===</a>
+<a class="sourceLine" id="cb12-10" title="10">- To setup SLOWDASH CGI for another project, set SLOWDASH_PROJECT and run this program.</a>
+<a class="sourceLine" id="cb12-11" title="11">- It is safe to run this slowdash-setup-cgi.py multiple times, even for the same project.</a>
+<a class="sourceLine" id="cb12-12" title="12">- CGI can be disabled by deleting the CGI directory.</a>
+<a class="sourceLine" id="cb12-13" title="13">- Disabled CGI can be re-enabled by running this program again.</a>
+<a class="sourceLine" id="cb12-14" title="14">- Web-file directory for this project: /home/sanshiro/public_html/SlowDash/MySlowSystem</a></code></pre></div>
 <p>The script will copy all the necessary files under user’s web directory (typically <code>/home/USER/public_html</code>) and create <code>.htaccess</code> with the contents below:</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode apache"><code class="sourceCode apache"><a class="sourceLine" id="cb13-1" title="1">DirectoryIndex<span class="st"> home.html</span></a>
 <a class="sourceLine" id="cb13-2" title="2"><span class="ex">Options</span><span class="ch"> </span><span class="kw">+ExecCGI</span></a>

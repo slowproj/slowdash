@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  pgsql_db:
+    image: postgres:16
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=SlowStore
+
+  slowdash:
+    image: slowdash
+    volumes:
+      - .:/project
+    ports:
+      - "18881:18881"
+    environment:
+      - DB_URL=postgresql://postgres:postgres@pgsql_db:5432/SlowStore
+
+  testdata:
+    image: slowdash
+    volumes:
+      - .:/project
+    command: python /project/generate-testdata.py --db-url=postgresql://postgres:postgres@pgsql_db:5432/SlowStore

@@ -1,21 +1,20 @@
-# Created by Sanshiro Enomoto on 3 June 2023 #
+# Created by Sanshiro Enomoto on 3 May 2024 #
 
 
 import os, sys, time, logging
 from .datastore import DataStore
 
 
-class DataStore_SQLite(DataStore):
+class DataStore_PostgreSQL(DataStore):
     schema_ts = '(timestamp INTEGER, channel TEXT, value REAL, PRIMARY KEY(timestamp, channel))'
     schema_obj = '(channel TEXT, value TEXT, PRIMARY KEY(channel))'
     schema_objts = '(timestamp INTEGER, channel TEXT, value TEXT, PRIMARY KEY(timestamp, channel))'
 
-    def __init__(self, db_name='SlowStore', table_name=None, obj_table_name=None, objts_table_name=None):
-        #### START OF SQLITE-SPECIFIC ####
+    def __init__(self, db_url='postgresql://postgres:postgres@localhost:5432/SlowStore', table_name=None, obj_table_name=None, objts_table_name=None):
         
-        self.db_name = db_name
-        if len(self.db_name) > 3 and self.db_name[-3:] == '.db':
-            self.db_name = self.db_name[0:-3]
+        #### START OF PGSQL-SPECIFIC ####
+        
+        self.db_url = db_url if db_url.startswith('postgresql://') else 'postgresql://' + db_url
             
         table_basename = table_name if table_name is not None else 'slowpy'
         self.ts_table_name = table_name if table_name is not None else table_basename+'_ts'
@@ -23,19 +22,33 @@ class DataStore_SQLite(DataStore):
         self.objts_table_name = objts_table_name if objts_table_name is not None else table_basename+'_objts'
 
         self.conn = None
-        
-        import sqlite3
-        if not os.path.exists('%s.db' % self.db_name):
-            logging.info('DB file "%s.db" does not exist. Creating...' % self.db_name)
-        self.conn = sqlite3.connect('%s.db' % self.db_name)
-        logging.info('DB "%s" is connnected.' % self.db_name)
-
-        #### END OF SQLITE-SPECIFIC ####
+        import psycopg2 as pg2
+        tries = 0
+        while tries < 10:
+            try:
+                self.conn = pg2.connect(self.db_url)
+                break
+            except Exception as e:
+                self.conn = None
+                logging.error('PostgreSQL: %s: %s', self.db_url, str(e))
+                tries = tries + 1
+                time.sleep(10)
+        if self.conn is None:
+            return
+        logging.info('DB "%s" is connnected.' % self.db_url)
 
         
         cur = self.conn.cursor()
-        cur.execute('select name from sqlite_master where type="table"')
+        try:
+            cur.execute("select tablename from pg_tables where schemaname='public'")
+        except Exception as e:
+            logging.error('PostgreSQL: unable to get table list: %s: %s', self.db_url, str(e))
+
         table_list = [ table_name[0] for table_name in cur.fetchall() ]
+
+        #### END OF PGSQL-SPECIFIC ####
+
+        
         if self.ts_table_name is not None and self.ts_table_name not in table_list:
             logging.info('Creating a new time-series data table "%s"...' % self.ts_table_name)
             cur.execute('CREATE TABLE %s%s' % (self.ts_table_name, self.schema_ts))
@@ -53,12 +66,12 @@ class DataStore_SQLite(DataStore):
     def __del__(self):
         if self.conn is not None:
             self.conn.close()
-            logging.info('DB "%s" is disconnnected.' % self.db_name)
+            logging.info('DB "%s" is disconnnected.' % self.db_url)
 
 
-    def another(self, db_name=None, table_name=None, obj_table_name=None, objts_table_name=None):
-        if db_name is None:
-            db_name = self.db_name
+    def another(self, db_url=None, table_name=None, obj_table_name=None, objts_table_name=None):
+        if db_url is None:
+            db_url = self.db_url
         if table_name is None:
             table_name = self.table_name
         if obj_table_name is None:
@@ -66,7 +79,7 @@ class DataStore_SQLite(DataStore):
         if objts_table_name is None:
             objts_table_name = self.objts_table_name
             
-        return DataStore_SQLite(db_name, table_name, obj_table_name, objts_table_name)
+        return DataStore_PostgreSQL(db_url, table_name, obj_table_name, objts_table_name)
         
 
     def write_timeseries(self, fields, tag=None, timestamp=None):
@@ -99,7 +112,7 @@ class DataStore_SQLite(DataStore):
 
         cur = self.conn.cursor()
         cur.execute(
-            # this UPSERT is SQLite specific, similar to PostgreSQL (>=9.5), different from MySQL
+            # this UPSERT is PostgreSQL specific (>= 9.5), similar to SQLite, different from MySQL
             '''INSERT INTO %s(channel,value) VALUES('%s','%s') ON CONFLICT(channel) DO UPDATE SET value=excluded.value''' %
             (self.obj_table_name, name, str(obj))
         )

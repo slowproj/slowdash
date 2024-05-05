@@ -255,7 +255,7 @@ Enter ".help" for usage hints.
 sqlite> .table
 testdata
 sqlite> .schema testdata
-CREATE TABLE testdata(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel));
+CREATE TABLE testdata(datetime DATETIME, timestamp INTEGER, channel TEXT, value REAL, PRIMARY KEY(timestamp, channel));
 sqlite> select * from testdata limit 10;
 2023-04-11 23:52:13|1681257133|ch00|0.187859
 2023-04-11 23:52:13|1681257133|ch01|-0.418021
@@ -266,14 +266,14 @@ sqlite> select * from testdata limit 10;
 
 `sqlite3` の `.schema` コマンド出力にあるとおり，データは `testdata` というテーブルに保存されていて，その構造は以下のようになっています．
 ```
-testdata(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel))
+testdata(datetime DATETIME, timestamp INTEGER, channel TEXT, value REAL, PRIMARY KEY(timestamp, channel))
 ```
 
 テスト目的のために，データのタイムスタンプは日付時刻型（SQLite では ISO 表記の文字列）のものと，整数の UNIX 時間の両方が入っていますが，通常はどちらか一方のことが多いと思います．SQLite では，タイムゾーンの扱いに罠が多いので，UNIX 時間の方がいいかもしれません．
 
 データの中身はこんな感じです:
 
-|datetime (DATETIME/STRING)|timestamp (INTEGER)|channel (STRING)|value (REAL)|
+|datetime (DATETIME/TEXT)|timestamp (INTEGER)|channel (TEXT)|value (REAL)|
 |----|-----|-----|-----|
 |2023-04-11 23:52:13|1681257133|ch00|0.187859|
 |2023-04-11 23:52:13|1681257133|ch01|-0.418021|

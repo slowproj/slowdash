@@ -51,7 +51,7 @@ Enter ".help" for usage hints.
 sqlite> .table
 testdata
 sqlite> .schema testdata
-CREATE TABLE testdata(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel));
+CREATE TABLE testdata(datetime DATETIME, timestamp INTEGER, channel TEXT, value REAL, PRIMARY KEY(timestamp, channel));
 sqlite> select * from testdata limit 10;
 2023-04-11 23:52:13|1681257133|ch00|0.187859
 2023-04-11 23:52:13|1681257133|ch01|-0.418021
@@ -62,12 +62,12 @@ sqlite> select * from testdata limit 10;
 
 As shown above, the schema of the data table is:
 ```
-testdata(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel))
+testdata(datetime DATETIME, timestamp INTEGER, channel TEXT, value REAL, PRIMARY KEY(timestamp, channel))
 ```
 
 and the table contents are:
 
-|datetime (DATETIME/STRING)|timestamp (INTEGER)|channel (STRING)|value (REAL)|
+|datetime (DATETIME/TEXT)|timestamp (INTEGER)|channel (TEXT)|value (REAL)|
 |----|-----|-----|-----|
 |2023-04-11 23:52:13|1681257133|ch00|0.187859|
 |2023-04-11 23:52:13|1681257133|ch01|-0.418021|
@@ -75,7 +75,7 @@ and the table contents are:
 |2023-04-11 23:52:13|1681257133|ch03|1.733749|
 |...||||
 
-(In SQLite, DATETIME is STRING. Here the time-zone is UTC although it is not specified explicitly.)
+(In SQLite, DATETIME is TEXT. Here the time-zone is UTC although it is not specified explicitly.)
 
 For demonstration purpose, this table has two timestamp columns, one for (emulated) hardware data time in the UNIX time type, and the other for database writing time in the date-time type. An actual system might have only one of them in either types.
 

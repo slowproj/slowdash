@@ -7,6 +7,7 @@ from .datastat import HistogramBasicStat, HistogramCountStat, GraphYStat, Histog
 
 from .datastore import DataStore_Null
 from .datastore_SQLite import DataStore_SQLite
+from .datastore_PostgreSQL import DataStore_PostgreSQL
 from .datastore_InfluxDB import DataStore_InfluxDB
 from .datastore_Redis import DataStore_Redis
 
