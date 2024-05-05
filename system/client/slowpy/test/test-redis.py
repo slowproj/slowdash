@@ -3,7 +3,7 @@
 
 import slowpy as slp
 
-datastore = slp.DataStore_Redis(host='localhost', port=6379, db=1, retention_length=3600)
+datastore = slp.DataStore_Redis('redis://localhost:6379/1', retention_length=3600)
 datastore_objts = datastore.another(db=2)
 
 #slp.DataStore_Redis.use_redis_json = True

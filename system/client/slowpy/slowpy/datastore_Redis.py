@@ -8,12 +8,10 @@ from .datastore import DataStore
 class DataStore_Redis(DataStore):
     use_redis_json = False
     
-    def __init__(self, host, port, db, retention_length, time_bin_width=1):
+    def __init__(self, url, retention_length, time_bin_width=1):
         import redis
 
-        self.host = host
-        self.port = port
-        self.db = db
+        self.url = url
         self.retention_length = retention_length
         self.time_bin_width = time_bin_width
 
@@ -22,7 +20,7 @@ class DataStore_Redis(DataStore):
         self.ts_set = set()
         for i in range(12):
             try:
-                self.redis = redis.Redis(host=self.host, port=self.port, db=self.db, decode_responses=True)
+                self.redis = redis.from_url(self.url, decode_responses=True)
                 for key in self.redis.keys():
                     if self.redis.type(key) == 'TSDB-TYPE':
                         self.ts_set.add(key)
@@ -35,7 +33,7 @@ class DataStore_Redis(DataStore):
             self.redis = None
         
         if self.redis is None:
-            logging.error('Redis not loaded: %s:%s/%s' % (self.host, self.port, self.db))
+            logging.error('Redis not loaded: %s' % self.url)
             return
         
             
@@ -51,7 +49,7 @@ class DataStore_Redis(DataStore):
         if time_bin_width is None:
             time_bin_width = self.time_bin_width
 
-        return DataStore_Redis(self.host, self.port, db, retention_length, time_bin_width)
+        return DataStore_Redis(self.url, retention_length, time_bin_width)
             
 
     def write_timeseries(self, fields, tag=None, timestamp=None):
