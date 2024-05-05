@@ -36,20 +36,24 @@ class DataStore_Redis(DataStore):
             logging.error('Redis not loaded: %s' % self.url)
             return
         
-            
+                
     def __del__(self):
         pass
 
     
     def another(self, db=None, retention_length=None, time_bin_width=None):
-        if db is None:
-            db = self.db
+        url_params = self.redis.get_connection_kwargs()
+        if db is not None:
+            url_params['db'] = db
+        url = 'redis://{host}:{port}/{db}'.format_map(url_params)
+        
         if retention_length is None:
             retention_length = self.retention_length
         if time_bin_width is None:
             time_bin_width = self.time_bin_width
 
-        return DataStore_Redis(self.url, retention_length, time_bin_width)
+
+        return DataStore_Redis(url, retention_length, time_bin_width)
             
 
     def write_timeseries(self, fields, tag=None, timestamp=None):

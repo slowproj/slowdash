@@ -1,6 +1,6 @@
 slowdash_project:
   data_source:
-    url: redis://localhost:6379
+    url: ${DB_URL:-redis://localhost:6379}
     parameters:
       key_value: { db: 1 }
       time_series:
