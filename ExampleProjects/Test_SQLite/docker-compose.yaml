@@ -2,8 +2,14 @@ version: '3'
 
 services:
   slowdash:
-    image: slowproj/slowdash:2402
+    image: slowdash
     volumes:
       - .:/project
     ports:
       - "18881:18881"
+
+  testdata:
+    image: slowdash
+    volumes:
+      - .:/project
+    command: python /project/generate-testdata.py --db-url=sqlite:///SlowStore

@@ -10,12 +10,14 @@ class DataStore_SQLite(DataStore):
     schema_obj = '(channel TEXT, value TEXT, PRIMARY KEY(channel))'
     schema_objts = '(timestamp INTEGER, channel TEXT, value TEXT, PRIMARY KEY(timestamp, channel))'
 
-    def __init__(self, db_name='SlowStore', table_name=None, obj_table_name=None, objts_table_name=None):
+    def __init__(self, db_url='sqlite:///SlowStore.db', table_name=None, obj_table_name=None, objts_table_name=None):
         #### START OF SQLITE-SPECIFIC ####
         
-        self.db_name = db_name
-        if len(self.db_name) > 3 and self.db_name[-3:] == '.db':
-            self.db_name = self.db_name[0:-3]
+        self.db_url = db_url
+        if self.db_url.startswith('sqlite:///'):
+            self.db_url = self.db_url[10:]
+        if self.db_url.endswith('.db'):
+            self.db_url = self.db_url[0:-3]
             
         table_basename = table_name if table_name is not None else 'slowpy'
         self.ts_table_name = table_name if table_name is not None else table_basename+'_ts'
@@ -25,10 +27,10 @@ class DataStore_SQLite(DataStore):
         self.conn = None
         
         import sqlite3
-        if not os.path.exists('%s.db' % self.db_name):
-            logging.info('DB file "%s.db" does not exist. Creating...' % self.db_name)
-        self.conn = sqlite3.connect('%s.db' % self.db_name)
-        logging.info('DB "%s" is connnected.' % self.db_name)
+        if not os.path.exists('%s.db' % self.db_url):
+            logging.info('DB file "%s.db" does not exist. Creating...' % self.db_url)
+        self.conn = sqlite3.connect('%s.db' % self.db_url)
+        logging.info('DB "%s" is connnected.' % self.db_url)
 
         #### END OF SQLITE-SPECIFIC ####
 
@@ -53,12 +55,12 @@ class DataStore_SQLite(DataStore):
     def __del__(self):
         if self.conn is not None:
             self.conn.close()
-            logging.info('DB "%s" is disconnnected.' % self.db_name)
+            logging.info('DB "%s" is disconnnected.' % self.db_url)
 
 
-    def another(self, db_name=None, table_name=None, obj_table_name=None, objts_table_name=None):
-        if db_name is None:
-            db_name = self.db_name
+    def another(self, db_url=None, table_name=None, obj_table_name=None, objts_table_name=None):
+        if db_url is None:
+            db_url = self.db_url
         if table_name is None:
             table_name = self.table_name
         if obj_table_name is None:
@@ -66,7 +68,7 @@ class DataStore_SQLite(DataStore):
         if objts_table_name is None:
             objts_table_name = self.objts_table_name
             
-        return DataStore_SQLite(db_name, table_name, obj_table_name, objts_table_name)
+        return DataStore_SQLite(db_url, table_name, obj_table_name, objts_table_name)
         
 
     def write_timeseries(self, fields, tag=None, timestamp=None):
@@ -118,6 +120,10 @@ class DataStore_SQLite(DataStore):
             name = obj.name
             
         cur = self.conn.cursor()
+        print(
+            '''INSERT INTO %s VALUES(%d,'%s','%s')''' %
+            (self.objts_table_name, timestamp, name, str(obj))
+        )
         cur.execute(
             '''INSERT INTO %s VALUES(%d,'%s','%s')''' %
             (self.objts_table_name, timestamp, name, str(obj))

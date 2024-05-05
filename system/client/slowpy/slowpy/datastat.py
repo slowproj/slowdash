@@ -31,9 +31,9 @@ class HistogramBasicStat:
             elif key.lower() == 'outliers':
                 result[key] = hist.underflow + hist.overflow
             elif key.lower() in ['m', 'mean']:
-                result[key] = round(mean, self.ndigits)
+                result[key] = (round(mean, self.ndigits) if mean is not None else 'NaN')
             elif key.lower() in ['sd', 'std', 'rms', 'sigma']:
-                result[key] = round(std, self.ndigits)
+                result[key] = (round(std, self.ndigits) if std is not None else 'NaN')
             else:
                 result[key] = None
         return result

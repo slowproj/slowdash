@@ -16,7 +16,7 @@ slowdash_project:
         - name: objts_raw
           sql: select * from slowpy_objts order by timestamp desc limit 20
         - name: hist_raw
-          sql: select * from slowpy_obj where channel="test_histogram_01"
+          sql: select * from slowpy_obj where channel="test_histogram"
 
   style:
     theme: light

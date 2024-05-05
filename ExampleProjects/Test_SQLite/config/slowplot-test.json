@@ -1,25 +1,26 @@
 {
     "control": {
         "range": { "length": 300, "to": null },
-        "reload": 5,
+        "reload": 2,
         "grid": { "rows": 2, "columns": 2 },
         "mode": "normal"
     },
+    "style": { },
     "panels": [
         {
             "type": "plot",
             "plots": [
-                { "type": "histogram", "channel": "test_histogram_01", "color": "#009090", "opacity": 0.2, "label": "", "format": "%.5g" }
+                { "type": "histogram", "channel": "test_histogram", "color": "#009090", "opacity": 0.2, "label": "", "format": "%.5g" }
             ],
-            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": true, "xmin": -20, "xmax": 20, "ymin": 0, "ymax": 200 },
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": true, "xmin": -20, "xmax": 20, "ymin": 0, "ymax": 200, "zlog": false },
             "legend": { "style": "transparent" }
         },
         {
             "type": "plot",
             "plots": [
-                { "type": "graph", "channel": "test_graph_01", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 4, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" }
+                { "type": "graph", "channel": "test_graph", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 4, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" }
             ],
-            "axes": { "xfixed": true, "yfixed": false, "xlog": false, "ylog": false, "xmin": -1, "xmax": 16, "ymin": -5, "ymax": 7 },
+            "axes": { "xfixed": true, "yfixed": false, "xlog": false, "ylog": false, "xmin": -1, "xmax": 16, "ymin": -5, "ymax": 7, "zlog": false },
             "legend": { "style": "transparent" }
         },
         {
@@ -28,7 +29,7 @@
                 { "type": "timeseries", "channel": "ch00", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" },
                 { "type": "timeseries", "channel": "ch01", "color": "#dd8000", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" }
             ],
-            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "ymin": -9, "ymax": 9 },
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "ymin": -9, "ymax": 9, "zlog": false },
             "legend": { "style": "transparent" }
         },
         {
@@ -36,7 +37,7 @@
             "plots": [
                 { "type": "timeseries", "channel": "ch02", "color": "#4169e1", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0.1, "fill_baseline": "1e-100" }
             ],
-            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "ymin": -9, "ymax": 9 },
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "ymin": -9, "ymax": 9, "zlog": false },
             "legend": { "style": "transparent" }
         },
         { "type": "table", "channel": "obj_raw", "reversed": false, "title": "Raw Object Data" },
@@ -44,12 +45,20 @@
         {
             "type": "plot",
             "plots": [
-                { "type": "histogram", "channel": "test_histogram_01", "color": "#009090", "opacity": 0.2, "label": "", "format": "%.5g" }
+                { "type": "histogram", "channel": "test_histogram", "color": "#009090", "opacity": 0.2, "label": "", "format": "%.5g" }
             ],
-            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false },
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
             "legend": { "style": "side" }
         },
-        { "type": "table", "channel": "hist_raw", "reversed": false }
+        { "type": "table", "channel": "hist_raw", "reversed": false },
+        {
+            "type": "plot",
+            "plots": [
+                { "type": "histogram2d", "channel": "test_histogram2d", "label": "", "format": "%.5g" }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "colorscale": "Parula" },
+            "legend": { "style": "side" }
+        }
     ],
     "meta": { "name": "test", "title": "", "description": "" }
 }

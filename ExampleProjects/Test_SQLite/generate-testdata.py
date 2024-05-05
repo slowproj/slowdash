@@ -3,18 +3,17 @@
 
 import numpy as np
 import slowpy as slp
-default_db_url = 'redis://localhost:6379/1'
+default_db_url = 'sqlite:///SlowStore'
 
 
 def start(db_url):
-    datastore = slp.DataStore_Redis(db_url, retention_length=3600)
-    datastore_objts = datastore.another(db=2)
+    datastore = slp.DataStore_SQLite(db_url)
     
     dummy_device = slp.DummyWalkDevice()
     readout_count = 0
-    histogram = slp.Histogram('test_histogram_01', 100, -10, 10)
-    graph = slp.Graph('test_graph_01', labels=['ch', 'value'])
-    histogram2d = slp.Histogram2d('test_histogram2d_00', 10, 0, 10, 10, 0, 10)
+    histogram = slp.Histogram('test_histogram', 100, -10, 10)
+    graph = slp.Graph('test_graph', labels=['ch', 'value'])
+    histogram2d = slp.Histogram2d('test_histogram2d', 10, 0, 10, 10, 0, 10)
 
     histogram.add_stat(slp.HistogramBasicStat(['Entries', 'Underflow', 'Overflow', 'Mean', 'RMS'], ndigits=3))
     histogram.add_stat(slp.HistogramCountStat(-5.2, 5.2))
@@ -30,6 +29,8 @@ def start(db_url):
     while True:
         #histogram.clear()
         graph.clear()
+        histogram.add_attr('color', readout_count)
+        graph.add_attr('color', readout_count+1)
     
         records = dummy_device.read()
     
@@ -41,8 +42,8 @@ def start(db_url):
         datastore.write_object(histogram)
         datastore.write_object(graph)
 
-        datastore_objts.write_object_timeseries(histogram)
-        datastore_objts.write_object_timeseries(graph)
+        datastore.write_object_timeseries(histogram, name='test_histogram_ts')
+        datastore.write_object_timeseries(graph, name='test_graph_ts')
     
         for i in range(1000):
             x = np.random.normal(5, 2)
@@ -50,10 +51,6 @@ def start(db_url):
             histogram2d.fill(x, y)
         datastore.write_object(histogram2d)
     
-        datastore.write_hash('Status', {
-            'Generator': __file__,
-            'Count': readout_count
-        })
         readout_count = readout_count + 1
 
             

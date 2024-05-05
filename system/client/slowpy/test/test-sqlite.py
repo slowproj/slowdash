@@ -7,9 +7,9 @@ import slowpy as slp
 
 datastore = slp.DataStore_SQLite('SlowStore')
 
-histogram = slp.Histogram('test_histogram_01', 20, -10, 10)
-graph = slp.Graph('test_graph_01', labels=['ch', 'value'])
-histogram2d = slp.Histogram2d('test_histogram2d_00', 10, 0, 10, 10, 0, 10)
+histogram = slp.Histogram('test_histogram', 20, -10, 10)
+graph = slp.Graph('test_graph', labels=['ch', 'value'])
+histogram2d = slp.Histogram2d('test_histogram2d', 10, 0, 10, 10, 0, 10)
 
 histogram.add_stat(slp.HistogramBasicStat(['Entries', 'Underflow', 'Overflow', 'Mean', 'RMS'], ndigits=3))
 histogram.add_stat(slp.HistogramCountStat(-5.2, 5.2))
@@ -45,8 +45,8 @@ while True:
     datastore.write_object(histogram)
     datastore.write_object(graph)
 
-    datastore.write_object_timeseries(histogram)
-    datastore.write_object_timeseries(graph)
+    datastore.write_object_timeseries(histogram, name='test_histogram_ts')
+    datastore.write_object_timeseries(graph, name='test_graph_ts')
 
     for i in range(1000):
         x = np.random.normal(5, 2)
