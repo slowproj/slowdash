@@ -43,7 +43,6 @@ def find_project_dir():
         search_dir = os.path.normpath(os.path.join(search_dir, '..'))
 
     if not project_dir:
-        logging.warn('unable to find Slowdash Project Dir: specify it with the --project-dir option, set the SLOWDASH_PROJECT environmental variable, or run the slowdash command at a project directory')
         return None
 
     if project_dir[0] != '/':
@@ -56,6 +55,8 @@ def find_project_dir():
 
 class Config:
     def __init__(self, project_dir=None):
+        self.project = None
+        self.variables = {}
         self.auth_list = None
         
         self.version = slowdash_version
@@ -67,49 +68,55 @@ class Config:
             self.bin_dir = None
             self.doc_dir = None
             
-        if project_dir is not None:
-            self.project_dir = project_dir
-        else:
-            self.project_dir = find_project_dir()
-        self.project = None
-
-        self.variables = {}
-        
-        if self.sys_dir is None or self.project_dir is None:
-            return
-
-        self.project_dir = os.path.abspath(self.project_dir)
-        try:
-            os.chdir(self.project_dir)
-        except Exception as e:
-            logging.error('unable to move to project dir "%s": %s' % (self.project_dir, str(e)))            
-            self.project_dir = None
-            return
+        self.project_dir = project_dir if project_dir is not None else find_project_dir()
+        if self.project_dir is not None:
+            self.project_dir = os.path.abspath(self.project_dir)
+            try:
+                os.chdir(self.project_dir)
+            except Exception as e:
+                logging.error('unable to move to project dir "%s": %s' % (self.project_dir, str(e)))            
+                self.project_dir = None
             
         self.update()
         
 
     def update(self):
+        project_conf = {}
         if self.project_dir is None:
-            return
-        
-        project_file = os.path.join(self.project_dir, 'SlowdashProject.yaml')
-        if not os.path.isfile(project_file):
-            project_file = os.path.join(self.project_dir, 'SlowdashProject.json')
-            if not os.path.isfile(project_file):
-                logging.error('unable to find project file: %s' % project_file)
+            db_url = os.environ.get('SLOWDASH_INIT_DATASOURCE_URL', None)
+            if db_url is None:
+                logging.warn('unable to find Slowdash Project Dir: specify it with the --project-dir option, set the SLOWDASH_PROJECT environmental variable, or run the slowdash command at a project directory')
                 return
+            project_conf = {
+                'name': 'SlowDash',
+                'data_source': {
+                    'url': db_url,
+                    'parameters': {}
+                }
+            }
+            ts_schema = os.environ.get('SLOWDASH_INIT_TIMESERIES_SCHEMA', None)
+            if ts_schema is not None:
+                project_conf['data_source']['parameters'] = {
+                    'time_series': { 'schema': ts_schema }
+                }
+        else:
+            project_file = os.path.join(self.project_dir, 'SlowdashProject.yaml')
+            if not os.path.isfile(project_file):
+                project_file = os.path.join(self.project_dir, 'SlowdashProject.json')
+                if not os.path.isfile(project_file):
+                    logging.error('unable to find project file: %s' % project_file)
+                    return
             
-        with open(os.path.join(project_file)) as f:
-            try:
-                config = yaml.safe_load(f)
-            except Exception as e:
-                logging.error('Invalid Configuration File: %s' % str(e))
-                config = {}
-        project_conf = config.get("slowdash_project", None)
-        if (project_conf is None) or type(project_conf) is not dict :
-            logging.error('invalid Slowdash project file: %s' % project_file)
-            return
+            with open(os.path.join(project_file)) as f:
+                try:
+                    config = yaml.safe_load(f)
+                except Exception as e:
+                    logging.error('Invalid Configuration File: %s' % str(e))
+                    config = {}
+            project_conf = config.get("slowdash_project", None)
+            if (project_conf is None) or type(project_conf) is not dict :
+                logging.error('invalid Slowdash project file: %s' % project_file)
+                return
         self.project = self.process_substitution(project_conf)
 
         if 'name' not in self.project:

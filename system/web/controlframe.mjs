@@ -195,15 +195,15 @@ function setupDataList() {
         })
         .then(config => {
             let dashboard_dl = $('<datalist>').attr('id', 'sd-dashboard-datalist').appendTo(document.body);
-            for (let entry of config.contents?.slowdash ?? []) {
+            for (let entry of config.contents?.slowdash_config ?? []) {
                 dashboard_dl.append($('<option>').attr('value', entry.name).text(entry.name));
             }
             let map_dl = $('<datalist>').attr('id', 'sd-map-datalist').appendTo(document.body);
-            for (let entry of config.contents?.map ?? []) {
+            for (let entry of config.contents?.map_config ?? []) {
                 map_dl.append($('<option>').attr('value', entry.name).text(entry.name));
             }
             let html_dl = $('<datalist>').attr('id', 'sd-html-datalist').appendTo(document.body);
-            for (let entry of config.contents?.html ?? []) {
+            for (let entry of config.contents?.html_config ?? []) {
                 html_dl.append($('<option>').attr('value', entry.name).text(entry.name));
             }
         });    

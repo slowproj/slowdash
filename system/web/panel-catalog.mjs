@@ -111,7 +111,7 @@ export class CatalogPanel extends Panel {
         let processDoc = (doc) => {
             for (const content_type of this.content_types) {
                 let catalog = [];
-                for (let entry of doc[content_type] ?? []) {
+                for (let entry of doc[content_type+'_config'] ?? []) {
                     if (entry.config_file) {
                         let href = './' + content_type + '.html?config=' + entry.config_file;
                         catalog.push({
@@ -154,7 +154,7 @@ export class CatalogPanel extends Panel {
             .then(proj_config => {
                 this.frameDiv.empty();
                 if (! proj_config?.contents) {
-                    for (const content_type of content_types) {
+                    for (const content_type of this.content_types) {
                         this._render(content_type, proj_config === null ? null : []);
                     }
                     return;

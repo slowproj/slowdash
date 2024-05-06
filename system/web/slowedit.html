@@ -164,8 +164,8 @@
                 editor.gotoLine(0);
             }
             const meta = await updateServerErrorStatus();
-            if (meta.error) {
-                editor.gotoLine(meta.error_line);
+            if (meta.config_error) {
+                editor.gotoLine(meta.config_error_line);
             }
             
             editor.session.on('change', e => {
@@ -184,11 +184,11 @@
                 return {};
             }
                 
-            let response = await fetch('./api/config/file/' + config.filename + '?content=meta');
+            let response = await fetch('./api/config/filemeta/' + config.filename);
             const meta = await response.json();
 
-            if (meta.error) {
-                config.status = ': ' + meta.error;
+            if (meta.config_error) {
+                config.status = ': ' + meta.config_error;
             }
             else {
                 config.status = '';

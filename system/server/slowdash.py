@@ -76,168 +76,29 @@ class App:
         
         
     def get(self, params, opts, output):
-        if self.project is None:
-            output.write(json.dumps({}).encode())
-            return 'application/json'
-
         content_type = 'application/json'
-        
-        if params[0] == 'config':
-            if len(params) <= 2:
-                self.config.update()
-                doc = {
-                    'project': {
-                        'name': self.config.project.get('name', 'Untitled Project'),
-                        'title': self.config.project.get('title', ''),
-                        'error_message': self.error_message
-                    },
-                    'data_source_module': [
-                        ds.modulename for ds in self.datasource_list
-                    ],
-                    'user_module': [
-                        module.filepath for module in self.usermodule_list
-                    ],
-                    'style': self.config.project.get('style', None),
-                }
-                
-                if (len(params) == 2) and (params[1] == 'list'):
-                    contents = { 'slowdash': [], 'slowplot': [] }
-                    filelist = []
-                    for filepath in glob.glob(os.path.join(self.project_dir, 'config', '*-*.*')):
-                        filelist.append([filepath, int(os.path.getmtime(filepath))])
-                    filelist = sorted(filelist, key=lambda entry: entry[1], reverse=True)
-                    for filepath, mtime in filelist:
-                        rootname, ext = os.path.splitext(os.path.basename(filepath))
-                        kind, name = rootname.split('-', 1)
-                        if ext not in [ '.json', '.yaml', '.html' ]:
-                            continue
-                        if kind not in contents:
-                            contents[kind] = []
-
-                        meta_info, config_error = {}, None
-                        if ext in [ '.json', '.yaml' ]:
-                            if os.path.getsize(filepath) > 0:
-                                with open(filepath) as f:
-                                    try:
-                                        this_config = yaml.safe_load(f)
-                                        meta_info = this_config.get('meta', {})
-                                    except Exception as e:
-                                        config_error = str(e)
-                            else:
-                                config_error = 'empty file'
-
-                    
-                        contents[kind].append({
-                            'name': name,
-                            'mtime': mtime,
-                            'title': meta_info.get('title', ''),
-                            'description': meta_info.get('description', ''),
-                            'config_file': rootname + ext,
-                            'config_error': config_error
-                        })
-                    doc['contents'] = contents
-
-                elif (len(params) == 2) and (params[1] == 'filelist'):
-                    doc, filelist = [], []
-                    for filepath in glob.glob(os.path.join(self.project_dir, 'config', '*')):
-                        filelist.append([filepath, int(os.path.getmtime(filepath))])
-                    filelist = sorted(filelist, key=lambda entry: entry[0], reverse=False)
-                    for filepath, mtime in filelist:
-                        filestat = os.lstat(filepath)
-                        doc.append({
-                            'name': os.path.basename(filepath),
-                            'size': os.path.getsize(filepath),
-                            'mode': stat.filemode(filestat.st_mode),
-                            'owner': pwd.getpwuid(filestat.st_uid)[0],
-                            'group': grp.getgrgid(filestat.st_gid)[0],
-                            'mtime': mtime
-                        })
-                    
-                output.write(json.dumps(doc, indent=4).encode())
-                return content_type
-                    
-            elif (len(params) == 3) and (params[1] == 'file'):
-                filepath = os.path.join(self.project_dir, 'config', params[2])
-                if not (os.path.isfile(filepath) and os.access(filepath, os.R_OK)):
-                    return None
-                ext = os.path.splitext(filepath)[1].lower()
-                if ext == '':
-                    ext = '.yaml'
-                filesize = os.path.getsize(filepath)
-                output.flush()
-                
-                if ext in [ '.json', '.yaml' ]:
-                    if opts.get('content', None) == 'raw':
-                        if ext == '.json':
-                            content_type = 'application/json'
-                        elif ext == '.yaml':
-                            content_type = 'text/plain'
-                        if filesize > 0:
-                            output.write(io.FileIO(filepath, 'r').readall())
-                    else:
-                        meta = {
-                            'type': 'config',
-                            'name': params[2],
-                            'error': None
-                        }
-                        try:
-                            if filesize > 0:
-                                with open(filepath) as f:
-                                    doc = yaml.safe_load(f)
-                            else:
-                                doc = {}
-                        except yaml.YAMLError as e:
-                            if hasattr(e, 'problem_mark'):
-                                line = e.problem_mark.line+1
-                                meta['error'] = 'Line %d: %s' % (line, e.problem)
-                                meta['error_line'] = line
-                            else:
-                                meta['error'] = str(e)
-                            if opts.get('content', None) != 'meta':
-                                return None
-                        if opts.get('content', None) == 'meta':
-                            content_type = 'application/json'
-                            output.write(json.dumps(meta, indent=4).encode())
-                        else:
-                            content_type = 'application/json'
-                            output.write(json.dumps(doc, indent=4).encode())
-                            
-                elif ext in [ '.png', '.jpg', '.jpeg', '.svg', '.html', '.csv' ]:
-                    if ext == '.svg':
-                        content_type = 'image/svg+xml'
-                    elif ext == '.png':
-                        content_type = 'image/png'
-                    elif ext in ['.jpg', '.jpeg']:
-                        content_type = 'image/jpeg'
-                    elif ext == '.html':
-                        content_type = 'text/html'
-                    elif ext == '.csv':
-                        content_type = 'text/plain'
-                    if filesize > 0:
-                        output.write(io.FileIO(filepath, 'r').readall())
-                    
-                else:
-                    return None
-                
-                return content_type
-            
-            else:
-                return None
-                
         result = None
-        if params[0] == 'channels':
-            result = []
-            for ds in self.datasource_list:
-                channels = ds.get_channels()
-                if channels is not None:
-                    result.extend(channels)
-            for usermodule in self.usermodule_list:
-                channels = usermodule.get_channels()
-                if channels is not None:
-                    result.extend(channels)
+        if self.project is None:
+            pass
+        
+        elif (len(params) == 3) and (params[0] == 'config') and (params[1] == 'file'):
+            return self._get_config_file(params[2], output)
+            
+        elif params[0] == 'config':
+            if len(params) == 1:
+                result = self._get_config(with_list=False)
+            elif len(params) == 2:
+                if params[1] == 'list':
+                    result = self._get_config(with_list=True,with_content_meta=True)
+                elif params[1] == 'filelist':
+                    result = self._get_config_filelist()
+            elif (len(params) == 3) and (params[1] == 'filemeta'):
+                    result = self._get_config_filemeta(params[2])
+                
+        elif params[0] == 'channels':
+            result = self._get_channels()
                 
         elif params[0] in ['data'] and len(params) >= 2:
-            result = {}
             try:
                 channels = params[1].split(',')
                 length = float(opts.get('length', '3600'))
@@ -249,25 +110,7 @@ class App:
                 return None
             if resample < 0:
                 resample = None
-                
-            for ds in self.datasource_list:
-                result_ts = ds.get_timeseries(channels, length, to, resample, reducer)
-                if result_ts is not None:
-                    result.update(result_ts)
-                result_obj = ds.get_object(channels, length, to)
-                if result_obj is not None:
-                    result.update(result_obj)
-                    
-            for usermodule in self.usermodule_list:
-                for ch in channels:
-                    data = usermodule.get_data(ch)
-                    if data is None:
-                        continue
-                    result[ch] = {
-                        'start': to-length, 'length': length,
-                        't': to,
-                        'x': data
-                    }
+            result = self._get_data(channels, length, to, resample, reducer)
             
         elif params[0] in ['blob'] and len(params) >= 3:
             for ds in self.datasource_list:
@@ -324,111 +167,18 @@ class App:
 
 
     def post(self, path_list, opts, doc, output):
-        if self.project is None:
-            return 404
+        if (self.project is None) or (self.project_dir is None):
+            return 404  # Not Found
 
         if path_list[0] == 'config':
             if (len(path_list) < 3) or (path_list[1] != 'file'):
-                return 403
-            filename = path_list[2]
-            if (len(filename) == 0) or not filename[0].isalpha():
-                return 403
-            if not filename.replace('_', '0').replace('-', '0').replace('.', '0').replace(' ', '0').isalnum():
-                return 403
-            if os.path.splitext(filename)[1] not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]:
-                return 403
-
-            config_dir = os.path.join(self.project_dir, 'config')
-            if not os.path.isdir(config_dir):
-                try:
-                    os.makedirs(config_dir)
-                except:
-                    logging.error('unable to create directory: ' + config_dir)
-                    return 500
-                mode = self.project.get('system', {}).get('file_mode', 0o644) + 0o100
-                if mode & 0o070 != 0:
-                    mode = mode + 0o010
-                if mode & 0o007 != 0:
-                    mode = mode + 0o001
-                try:
-                    os.chmod(config_dir, mode)
-                except Exception as e:
-                    logging.warn('unable to change file mode (%03o): %s: %s' % (mode, config_dir, str(e)))
-                gid = self.project.get('system', {}).get('file_gid', -1)
-                try:
-                    os.chown(config_dir, -1, gid)
-                except Exception as e:
-                    logging.warn('unable to change file gid (%d): %s: %s' % (gid, config_dir, str(e)))
-
-            filepath = os.path.join(config_dir, filename)
-            if os.path.exists(filepath):
-                if not os.access(filepath, os.W_OK):
-                    return 403   # Forbidden
-                if (opts.get('overwrite', 'no') != 'yes'):
-                    return 202   # Accepted: no action made, try with overwrite flag
-            
-            try:
-                with open(filepath, "wb") as f:
-                    f.write(doc)
-            except Exception as e:
-                logging.error(e)
-                return 500    # Internal Server Error
-            try:
-                mode = self.project.get('system', {}).get('file_mode', 0o644)
-                os.chmod(filepath, mode)
-            except Exception as e:                
-                logging.warn('unable to change file mode (%03o): %s: %s' % (mode, filepath, str(e)))
-            try:
-                gid = self.project.get('system', {}).get('file_gid', -1)
-                os.chown(filepath, -1, gid)
-            except Exception as e:
-                logging.warn('unable to change file gid (%d): %s: %s' % (gid, config_dir, str(e)))
-
-            
-        elif path_list[0] == 'control':
-            try:
-                json_doc = json.loads(doc.decode())
-                logging.info("DISPATCH: %s" % json_doc)
-            except Exception as e:
-                logging.error('Dispatch: JSON decoding error: %s' % str(e))
-                return 400
-
-            # user code might write something to stdout, which can disturb HTTP response
-            stdout = sys.stdout
-            sys.stdout = io.StringIO()
-            result = None
-            for usermodule in self.usermodule_list:
-                result = usermodule.process_command(json_doc)
-                if result is not None:
-                    # chain of responsibility
-                    break
-            sys.stdout.close()
-            sys.stdout = stdout
-            if result is None:
-                return 400
-
-            if type(result) is str:
-                output.write(result.encode())
-            elif type(result) is dict:
-                output.write(json.dumps(result).encode())
-            elif type(result) is bool:
-                if result:
-                    doc = {'status': 'ok'}
-                else:
-                    doc = {'status': 'error'}
-                output.write(json.dumps(doc).encode())
+                return 403  # Forbidden
             else:
-                try:
-                    output.write(str(result).encode())
-                except:
-                    return 500
-
-            return 'application/json'
-            
-        else:
-            return 400
-
-        return 201
+                return self._save_config_file(path_list[2], doc, opts)
+        elif path_list[0] == 'control':
+            return self._dispatch_control(doc, opts)
+        
+        return 400  # Bad Request
 
     
     def delete(self, path_list):
@@ -443,6 +193,289 @@ class App:
         return 200
         
 
+    def _get_config(self, with_list=True, with_content_meta=True):
+        self.config.update()
+        doc = {
+            'project': {
+                'name': self.config.project.get('name', 'Untitled Project'),
+                'title': self.config.project.get('title', ''),
+                'error_message': self.error_message
+            },
+            'data_source_module': [
+                ds.modulename for ds in self.datasource_list
+            ],
+            'user_module': [
+                module.filepath for module in self.usermodule_list
+            ],
+            'style': self.config.project.get('style', None)
+        }
+        
+        if (not with_list) or (self.project_dir is None):
+            return doc
+        
+        filelist = []
+        for filepath in glob.glob(os.path.join(self.project_dir, 'config', '*-*.*')):
+            filelist.append([filepath, int(os.path.getmtime(filepath))])
+            filelist = sorted(filelist, key=lambda entry: entry[1], reverse=True)
+                
+        contents = {}
+        for filepath, mtime in filelist:
+            filename = os.path.basename(filepath)
+            rootname, ext = os.path.splitext(os.path.basename(filepath))
+            kind, name = rootname.split('-', 1)
+            config_key = '%s_config' % kind
+            if ext not in [ '.json', '.yaml', '.html' ]:
+                continue
+            if config_key not in contents:
+                contents[config_key] = []
+
+            meta_info = {}
+            if with_content_meta:
+                meta_info = self._get_config_filemeta(filename)
+
+            contents[config_key].append({
+                'name': name,
+                'mtime': mtime,
+                'title': meta_info.get('title', ''),
+                'description': meta_info.get('description', ''),
+                'config_file': filename,
+                'config_error': meta_info.get('config_error', ''),
+                'config_error_line': meta_info.get('config_error_line', '')
+            })
+        doc['contents'] = contents
+
+        return doc
+
+                
+    def _get_config_filemeta(self, filename):
+        meta_info = {}
+        
+        if self.project_dir is None:
+            return meta_info
+        filepath = os.path.join(self.project_dir, 'config', filename)
+        if not (os.path.isfile(filepath) and os.access(filepath, os.R_OK)):
+            return meta_info
+
+        ext = os.path.splitext(os.path.basename(filepath))[1]
+        if ext not in [ '.json', '.yaml' ]:
+            return meta_info
+
+        if os.path.getsize(filepath) <= 0:
+            meta_info['config_error'] = 'empty file'
+        else:
+            try:
+                with open(filepath) as f:
+                    this_config = yaml.safe_load(f)
+                    meta_info = this_config.get('meta', {})
+            except yaml.YAMLError as e:
+                if hasattr(e, 'problem_mark'):
+                    line = e.problem_mark.line+1
+                    meta_info['config_error_line'] = line
+                    meta_info['config_error'] = 'Line %d: %s' % (line, e.problem)
+                else:
+                    meta_info['config_error'] = str(e)
+
+        return meta_info
+                    
+
+    def _get_config_filelist(self):
+        if self.project_dir is None:
+            return []
+        
+        filelist = []
+        for filepath in glob.glob(os.path.join(self.project_dir, 'config', '*-*.*')):
+            filelist.append([filepath, int(os.path.getmtime(filepath))])
+            filelist = sorted(filelist, key=lambda entry: entry[1], reverse=True)
+                
+        result = []
+        for filepath, mtime in filelist:
+            filestat = os.lstat(filepath)
+            result.append({
+                'name': os.path.basename(filepath),
+                'size': os.path.getsize(filepath),
+                'mode': stat.filemode(filestat.st_mode),
+                'owner': pwd.getpwuid(filestat.st_uid)[0],
+                'group': grp.getgrgid(filestat.st_gid)[0],
+                'mtime': mtime
+            })
+            
+        return result
+
+
+    def _get_config_file(self, filename, output):
+        if self.project_dir is None:
+            return None
+        filepath = os.path.join(self.project_dir, 'config', filename)
+        if not (os.path.isfile(filepath) and os.access(filepath, os.R_OK)):
+            return None
+        
+        ext = os.path.splitext(filepath)[1].lower()
+        if ext == '.json':
+            content_type = 'application/json'
+        elif ext == '.yaml':
+            content_type = 'text/plain'
+        elif ext == '.svg':
+            content_type = 'image/svg+xml'
+        elif ext == '.png':
+            content_type = 'image/png'
+        elif ext in ['.jpg', '.jpeg']:
+            content_type = 'image/jpeg'
+        elif ext == '.html':
+            content_type = 'text/html'
+        elif ext == '.csv':
+            content_type = 'text/plain'
+        else:
+            return None
+            
+        output.flush()        
+        if os.path.getsize(filepath) > 0:
+            output.write(io.FileIO(filepath, 'r').readall())
+
+        return content_type
+
+
+    def _save_config_file(self, filename, doc, opts):
+        if self.project_dir is None:
+            return 500
+        if (len(filename) == 0) or not filename[0].isalpha():
+            return 403
+        if not filename.replace('_', '0').replace('-', '0').replace('.', '0').replace(' ', '0').isalnum():
+            return 403
+        ext = os.path.splitext(filename)[1]
+        if ext not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]:
+            return 403
+
+        config_dir = os.path.join(self.project_dir, 'config')
+        if not os.path.isdir(config_dir):
+            try:
+                os.makedirs(config_dir)
+            except:
+                logging.error('unable to create directory: ' + config_dir)
+                return 500
+            
+        mode = self.project.get('system', {}).get('file_mode', 0o644) + 0o100
+        if mode & 0o070 != 0:
+            mode = mode + 0o010
+        if mode & 0o007 != 0:
+            mode = mode + 0o001
+        try:
+            os.chmod(config_dir, mode)
+        except Exception as e:
+            logging.warn('unable to change file mode (%03o): %s: %s' % (mode, config_dir, str(e)))
+            
+        gid = self.project.get('system', {}).get('file_gid', -1)
+        try:
+            os.chown(config_dir, -1, gid)
+        except Exception as e:
+            logging.warn('unable to change file gid (%d): %s: %s' % (gid, config_dir, str(e)))
+
+        filepath = os.path.join(config_dir, filename)
+        if os.path.exists(filepath):
+            if not os.access(filepath, os.W_OK):
+                return 403   # Forbidden
+            if (opts.get('overwrite', 'no') != 'yes'):
+                return 202   # Accepted: no action made, try with overwrite flag
+            
+        try:
+            with open(filepath, "wb") as f:
+                f.write(doc)
+        except Exception as e:
+            logging.error(e)
+            return 500    # Internal Server Error
+
+        try:
+            mode = self.project.get('system', {}).get('file_mode', 0o644)
+            os.chmod(filepath, mode)
+        except Exception as e:                
+            logging.warn('unable to change file mode (%03o): %s: %s' % (mode, filepath, str(e)))
+        try:
+            gid = self.project.get('system', {}).get('file_gid', -1)
+            os.chown(filepath, -1, gid)
+        except Exception as e:
+            logging.warn('unable to change file gid (%d): %s: %s' % (gid, config_dir, str(e)))
+
+        return 201 # Created
+    
+                
+    def _get_channels(self):
+        result = []
+        for ds in self.datasource_list:
+            channels = ds.get_channels()
+            if channels is not None:
+                result.extend(channels)
+        for usermodule in self.usermodule_list:
+            channels = usermodule.get_channels()
+            if channels is not None:
+                result.extend(channels)
+
+        return result
+
+    
+    def _get_data(self, channels, length, to, resample, reducer):
+        result = {}
+        for ds in self.datasource_list:
+            result_ts = ds.get_timeseries(channels, length, to, resample, reducer)
+            if result_ts is not None:
+                result.update(result_ts)
+            result_obj = ds.get_object(channels, length, to)
+            if result_obj is not None:
+                result.update(result_obj)
+                    
+        for usermodule in self.usermodule_list:
+            for ch in channels:
+                data = usermodule.get_data(ch)
+                if data is None:
+                    continue
+                result[ch] = {
+                    'start': to-length, 'length': length,
+                    't': to,
+                    'x': data
+                }
+
+        return result
+
+    
+    def _dispatch_control(self, doc, opts):
+        try:
+            json_doc = json.loads(doc.decode())
+            logging.info("DISPATCH: %s" % json_doc)
+        except Exception as e:
+            logging.error('Dispatch: JSON decoding error: %s' % str(e))
+            return 400
+            
+        # user code might write something to stdout, which can disturb HTTP response
+        stdout = sys.stdout
+        sys.stdout = io.StringIO()
+        result = None
+        for usermodule in self.usermodule_list:
+            result = usermodule.process_command(json_doc)
+            if result is not None:
+                # chain of responsibility
+                break
+        sys.stdout.close()
+        sys.stdout = stdout
+        if result is None:
+            return 400
+
+        if type(result) is str:
+            output.write(result.encode())
+        elif type(result) is dict:
+            output.write(json.dumps(result).encode())
+        elif type(result) is bool:
+            if result:
+                doc = {'status': 'ok'}
+            else:
+                doc = {'status': 'error'}
+            output.write(json.dumps(doc).encode())
+        else:
+            try:
+                output.write(str(result).encode())
+            except:
+                return 500
+
+        return 'application/json'
+
+        
     
 from urllib.parse import urlparse, parse_qsl, unquote
 import io

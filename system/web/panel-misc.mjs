@@ -323,7 +323,7 @@ export class ConfigEditorPanel extends Panel {
         this.titleDiv.text(thisconfig.title);
         this.nameDiv.text(thisconfig.file);
         
-        fetch('./api/config/file/' + thisconfig.file + '?content=raw')
+        fetch('./api/config/file/' + thisconfig.file)
             .then(response => {
                 if (! response.ok) {
                     throw new Error(response.status + " " + response.statusText);
@@ -336,7 +336,7 @@ export class ConfigEditorPanel extends Panel {
             .then(content => {
                 this.textarea.val(content);
                 
-                fetch('./api/config/file/' + thisconfig.file + '?content=meta')
+                fetch('./api/config/filemeta/' + thisconfig.file)
                     .then(response => {
                         if (! response.ok) {
                             throw new Error(response.status + " " + response.statusText);
@@ -346,13 +346,13 @@ export class ConfigEditorPanel extends Panel {
                     .catch(error => {
                         this.statusDiv.text(`Server Error: ${error.message}`);
                     })
-                    .then(doc => {
-                        if (doc.error) {
-                            this.statusDiv.text(doc.error);
-                            if (doc.error_line > 0) {
+                    .then(meta => {
+                        if (meta.config_error) {
+                            this.statusDiv.text(meta.config_error);
+                            if (meta.config_error_line > 0) {
                                 const lines = content.split('\n');
-                                const pos1 = lines.slice(0, doc.error_line-1).join('\n').length;
-                                const pos2 = pos1 + lines[doc.error_line-1].length;
+                                const pos1 = lines.slice(0, meta.config_error_line-1).join('\n').length;
+                                const pos2 = pos1 + lines[meta.config_error_line-1].length;
                                 this.textarea.focus();
                                 this.textarea.get().setSelectionRange(pos1, pos2);
                             }
@@ -612,13 +612,13 @@ export class FileManagerPanel extends Panel {
                     const ext = entry.name.split('.').pop();
                     if (['json', 'yaml', 'csv'].includes(ext)) {
                         name = $('<a>').attr({
-                            'href': `./api/config/file/${entry.name}?content=raw`,
+                            'href': `./api/config/file/${entry.name}`,
                             'target': '_blank',
                         });
                     }
                     else if (['html', 'svg', 'jpg', 'jpeg', 'png'].includes(ext)) {
                         name = $('<a>').attr({
-                            'href': `./api/config/file/${entry.name}?content=raw`,
+                            'href': `./api/config/file/${entry.name}`,
                             'target': '_blank'
                         });
                     }
