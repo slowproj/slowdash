@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 3 May 2024 #
 
 
-import os, sys, time, logging
+import os, sys, time, logging, traceback
 from .datastore import DataStore
 
 
@@ -23,18 +23,20 @@ class DataStore_PostgreSQL(DataStore):
 
         self.conn = None
         import psycopg2 as pg2
-        tries = 0
-        while tries < 10:
+
+        for i in range(12):
             try:
                 self.conn = pg2.connect(self.db_url)
                 break
             except Exception as e:
-                self.conn = None
-                logging.error('PostgreSQL: %s: %s', self.db_url, str(e))
-                tries = tries + 1
-                time.sleep(10)
-        if self.conn is None:
-            return
+                logging.info(e)
+                logging.info('retrying in 5 sec...')
+                time.sleep(5)
+        else:
+            self.conn = None
+            logging.error('Unable to connect to PostgreSQL')
+            logging.error(traceback.format_exc())
+            return 
         logging.info('DB "%s" is connnected.' % self.db_url)
 
         

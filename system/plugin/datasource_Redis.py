@@ -14,12 +14,19 @@ class KeyValueSource:
         self.channels = {}
         self.redis = None
         
-        try:
-            self.redis = Redis(host=host, port=port, db=db, decode_responses=True)
-            logging.debug('Redis loaded: %s:%s/%s' % (host, port, db))
-        except Exception as e:
-            logging.error(e)
+        for i in range(12):
+            try:
+                self.redis = Redis(host=host, port=port, db=db, decode_responses=True)
+                self.redis.keys()
+                break
+            except Exception as e:
+                logging.info(e)
+                logging.info('retrying in 5 sec...')
+                time.sleep(5)
+        else:
+            self.redis = None
             return
+        logging.debug('Redis loaded: %s:%s/%s' % (host, port, db))
 
         
     def get_channels(self):

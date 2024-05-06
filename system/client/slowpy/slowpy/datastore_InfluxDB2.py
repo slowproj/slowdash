@@ -4,19 +4,42 @@ import datetime
 from .datastore import DataStore
 
 
-class DataStore_InfluxDB(DataStore):
-    def __init__(self, url, org, token, bucket, measurement, use_tag=True):
+class DataStore_InfluxDB2(DataStore):
+    # URL: influxdb2://org:token@host:port/bucket
+    def __init__(self, url, measurement='slowpy', use_tag=True):
         from influxdb_client import InfluxDBClient, Point
         from influxdb_client.client.write_api import SYNCHRONOUS, WritePrecision
 
         self.url = url
-        self.org = org
-        self.token = token
-        self.bucket = bucket
         self.measurement = measurement
         self.use_tag = use_tag
         
-        self.client = InfluxDBClient(url=url, org=org, token=token)
+        if url.startswith('influxdb2://'):
+            url = url[12:]
+        split_at = url.rsplit('@', 1)
+        if  len(split_at) < 2:
+            org, token = '', ''
+        else:
+            split_at_colon = split_at[0].split(':', 1)
+            if len(split_at_colon) < 2:
+                org, token = split_at_colon[0], ''
+            else:
+                org, token = split_at_colon[0], split_at_colon[1]
+        split_at_slash = split_at[1].split('/', 1)
+        if len(split_at_slash) < 2:
+            bucket = ''
+        else:
+            bucket = split_at_slash[1]
+        split_at_slash_colon = split_at_slash[0].split(':', 1)
+        if len(split_at_slash_colon) < 2:
+            host, port = split_at_slash, '8086'
+        else:
+            host, port = split_at_slash_colon[0], split_at_slash_colon[1]
+            
+        self.org = org
+        self.bucket = bucket
+        
+        self.client = InfluxDBClient(url='http://%s:%s'%(host,port), org=self.org, token=token)
         self.write_api = self.client.write_api(write_options=SYNCHRONOUS)
 
         self.Point = Point
@@ -30,7 +53,7 @@ class DataStore_InfluxDB(DataStore):
     def another(self, measurement=None):
         if measurement is None:
             measurement = self.measurement
-        return DataStore_InfluxDB(self.url, self.org, self.token, self.bucket, measurement)
+        return DataStore_InfluxDB2(self.url, measurement)
 
     
     def write_timeseries(self, fields, tag=None, timestamp=None):

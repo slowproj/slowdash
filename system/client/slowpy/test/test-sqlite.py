@@ -5,7 +5,7 @@ import numpy as np
 import slowpy as slp
 
 
-datastore = slp.DataStore_SQLite('SlowStore')
+datastore = slp.DataStore_SQLite('SlowTestData')
 
 histogram = slp.Histogram('test_histogram', 20, -10, 10)
 graph = slp.Graph('test_graph', labels=['ch', 'value'])

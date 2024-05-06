@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  influxdb:
+    image: influxdb:2
+    restart: always
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=slowdash
+      - DOCKER_INFLUXDB_INIT_PASSWORD=slowdash
+      - DOCKER_INFLUXDB_INIT_ORG=sloworg
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=slowtoken
+      - DOCKER_INFLUXDB_INIT_BUCKET=SlowTestData
+
+  slowdash:
+    image: slowdash
+    volumes:
+      - .:/project
+    ports:
+      - "18881:18881"
+    environment:
+      - "DB_URL=influxdb2://sloworg:slowtoken@influxdb:8086/SlowTestData"
+
+  testdata:
+    image: slowdash
+    volumes:
+      - .:/project
+    command: "python /project/generate-testdata.py --db-url=influxdb2://sloworg:slowtoken@influxdb:8086/SlowTestData"

@@ -1,6 +1,6 @@
 slowdash_project:
   data_source:
-    url: ${DB_URL:-postgresql://postgres:postgres@localhost:5432/SlowStore}
+    url: ${DB_URL:-postgresql://postgres:postgres@localhost:5432/SlowTestData}
     parameters:
       time_series:
         schema: slowpy_ts [channel] @timestamp(unix) = value

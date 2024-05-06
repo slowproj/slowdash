@@ -5,7 +5,7 @@ import numpy as np
 import slowpy as slp
 
 
-datastore = slp.DataStore_PostgreSQL('postgresql://postgres:postgres@localhost:5432/SlowStore')
+datastore = slp.DataStore_PostgreSQL('postgresql://postgres:postgres@localhost:5432/SlowTestData')
 
 histogram = slp.Histogram('test_histogram_01', 20, -10, 10)
 graph = slp.Graph('test_graph_01', labels=['ch', 'value'])

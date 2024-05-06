@@ -171,6 +171,7 @@ class DataSource_SQL(DataSource):
                     schema.tag_values = [ row[0] for row in result ]
                 except Exception as e:
                     logging.error('SQL Error: %s' % str(e))
+                    self.channels_scanned = False  # maybe the table is not created yet. Try again later
 
             all_fields_have_types = True
             if not schema.is_for_ts:

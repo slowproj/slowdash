@@ -3,19 +3,16 @@
 
 import slowpy as slp
 
-datastore = slp.DataStore_InfluxDB(
-    url = 'http://localhost:8086',
-    org = 'SlowDash',
-    token = 'TCr7R5dupugRMAQL_r_dXf_bXO5vgScMMee3ZMu8WbMAsz07GvsHwQJoCv85JnBW58BAs6REJuOKAS_8tfTp6w==',
-    bucket = 'TestData',
-    measurement = 'TestTimeSeries'
+datastore = slp.DataStore_InfluxDB2(
+    url = 'influxdb2://sloworg:slowtoken@localhost:8087/SlowTestData',
+    measurement = 'slowpy_ts'
 )
-datastore_obj = datastore.another(measurement='TestTimeSeriesOfObjects')
+datastore_objts = datastore.another(measurement='slowpy_objts')
 
 
 dummy_device = slp.DummyWalkDevice()
-histogram = slp.Histogram('test_histogram_01', 100, -10, 10)
-graph = slp.Graph('test_graph_01', labels=['ch', 'value'])
+histogram = slp.Histogram('test_histogram', 100, -10, 10)
+graph = slp.Graph('test_graph', labels=['ch', 'value'])
 
 
 while True:
@@ -28,5 +25,5 @@ while True:
         histogram.fill(record["value"])
         graph.add_point(record["channel"], record["value"])
 
-    datastore_obj.write_object_timeseries(histogram, name="test_histogram_02")
-    datastore_obj.write_object_timeseries(graph, name="test_graph_02")
+    datastore_objts.write_object_timeseries(histogram, name="test_histogram_ts")
+    datastore_objts.write_object_timeseries(graph, name="test_graph_ts")

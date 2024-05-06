@@ -310,7 +310,7 @@ class Schema:
         if url is None or len(url) == 0:
             return config
         
-        match = re.findall(r'^[a-zA-Z]+://', url)
+        match = re.findall(r'^[a-zA-Z0-9]+://', url)
         if len(match) > 0:
             config['type'] = match[0][0:-3]
             url = url[len(match[0]):]

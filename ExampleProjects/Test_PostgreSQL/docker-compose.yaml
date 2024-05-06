@@ -9,7 +9,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=SlowStore
+      - POSTGRES_DB=SlowTestData
 
   slowdash:
     image: slowdash
@@ -18,10 +18,10 @@ services:
     ports:
       - "18881:18881"
     environment:
-      - DB_URL=postgresql://postgres:postgres@pgsql_db:5432/SlowStore
+      - DB_URL=postgresql://postgres:postgres@pgsql_db:5432/SlowTestData
 
   testdata:
     image: slowdash
     volumes:
       - .:/project
-    command: python /project/generate-testdata.py --db-url=postgresql://postgres:postgres@pgsql_db:5432/SlowStore
+    command: python /project/generate-testdata.py --db-url=postgresql://postgres:postgres@pgsql_db:5432/SlowTestData

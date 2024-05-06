@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 26 May 2022 #
 
 
-import sys, os, time, logging
+import sys, os, time, logging, traceback
 from datasource import DataSource, Schema
 
 from influxdb_client import InfluxDBClient, Point, WritePrecision
@@ -9,28 +9,28 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 
 
 
-class DataSource_InfluxDB(DataSource):
+class DataSource_InfluxDB2(DataSource):
     def __init__(self, project_config, config):
         super().__init__(project_config, config)
         self.client = None
         self.channels_scanned = False
 
         dburl = Schema.parse_dburl(self.config.get('url', ''))
-        self.protocol = dburl.get('type', 'http')
-        self.host = dburl.get('host', 'localhost')
-        self.port = dburl.get('port', '8086')
-        self.org = dburl.get('user', None)
-        self.bucket = dburl.get('db', None)
-        self.token = self.config.get('token', None)
+        self.protocol = self.config.get('protocol', 'http')
+        self.host = self.config.get('host', dburl.get('host', 'localhost'))
+        self.port = self.config.get('port', dburl.get('port', '8086'))
+        self.org = self.config.get('organization', dburl.get('user', None))
+        self.token = self.config.get('token', dburl.get('password', None))
+        self.bucket = self.config.get('bucket', dburl.get('db', None))
 
         if self.org is None:
-            logging.error('Insufficient URL: "organization" is not specified')
-            return
-        if self.bucket is None:
-            logging.error('Insufficient URL: "bucket" is not specified')
+            logging.error('"organization" is not specified')
             return
         if self.token is None:
             logging.error('"token" not provided')
+            return
+        if self.bucket is None:
+            logging.error('"bucket" is not specified')
             return
             
         def load_schema(config, entrytype):
@@ -40,7 +40,7 @@ class DataSource_InfluxDB(DataSource):
                 measurement = entry.get('measurement', None)
                 schema_conf = entry.get('schema', None)
                 if measurement is None and schema_conf is None:
-                    logging.error('InfluxDB: measurement not specified')
+                    logging.error('InfluxDB2: measurement not specified')
                     continuee
                 if schema_conf is None:
                     schema_conf = measurement
@@ -78,23 +78,30 @@ class DataSource_InfluxDB(DataSource):
         self.channels_scanned = True
         
         if self.client is None:
-            protocol = 'https' if self.protocol == 'https' else 'http'
-            try:
-                self.client = InfluxDBClient(
-                    url='%s://%s:%s' % (protocol, self.host, self.port),
-                    org=self.org,
-                    token=self.token
-                )
-                self.api = self.client.query_api()
-            except Exception as e:
-                logging.error(e)
+            url = '%s://%s:%s' % (self.protocol, self.host, self.port)
+            test_query = '''
+                from(bucket:"%s")
+                |> range(start: -1s)
+            ''' % (self.bucket)
+            for i in range(12):
+                try:
+                    self.client = InfluxDBClient(url=url, org=self.org, token=self.token)
+                    self.api = self.client.query_api()
+                    self.api.query(test_query, org=self.org)
+                    break
+                except Exception as e:
+                    logging.info('Unable to connect to InfluxDB2 "%s", retrying in 5 sec: %s' % (url, str(e)))
+                    time.sleep(5)
+            else:
+                logging.error('Unable to connect to InfluxDB2 "%s"' % url)
+                logging.error(traceback.format_exc())
                 self.client = None
                 return
 
         for schema in self.ts_schemata + self.objts_schemata:
             schema.initialize()
             if schema.table is None:
-                logging.error('InfluxDB: measurement not specified')
+                logging.error('InfluxDB2: measurement not specified')
                 continue
 
             # no "tag" and "fields" specified -> find a tag in data schema
