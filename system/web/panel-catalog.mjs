@@ -210,7 +210,7 @@ export class CatalogPanel extends Panel {
             const open = $('<a>').text(entry.title).attr('href', entry.href);
             let tr = $('<tr>').appendTo(table);
             let td =$('<td>');
-            if (entry.error !== null) {
+            if ((entry.error??'') != '') {
                 td.append('<span>').html("&#x26d4; ");
             }
             td.append(open).appendTo(tr);
