@@ -3,11 +3,11 @@
 
 import numpy as np
 import slowpy as slp
-default_db_url = 'sqlite:///SlowStore'
+default_db_url = 'sqlite:///SlowTestData'
 
 
-def start(db_url):
-    datastore = slp.DataStore_SQLite(db_url)
+def start(db_url, ts_name='ts_data', obj_name='obj_data', objts_name='objts_data'):
+    datastore = slp.create_datastore_from_url(db_url, ts_name, obj_name, objts_name)
     
     dummy_device = slp.DummyWalkDevice()
     readout_count = 0
@@ -50,7 +50,13 @@ def start(db_url):
             y = np.random.normal(5, 3)
             histogram2d.fill(x, y)
         datastore.write_object(histogram2d)
-    
+
+        # Redis only
+        if hasattr(datastore, 'write_hash'):
+            datastore.write_hash('Status', {
+                'Generator': __file__,
+                'Count': readout_count
+            })
         readout_count = readout_count + 1
 
             

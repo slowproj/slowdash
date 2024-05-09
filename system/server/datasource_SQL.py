@@ -1,13 +1,14 @@
 # Created by Sanshiro Enomoto on 10 April 2023 #
 
 
-import sys, os, logging, time, datetime
+import sys, os, time, datetime, logging, traceback
 from datasource import DataSource, Schema
 
 
 class SQLQueryResult:
     def __init__(self, cursor=None):
         self.cursor = cursor
+        self.is_error = False
         
     def __del__(self):
         if self.cursor is not None:
@@ -23,7 +24,15 @@ class SQLQueryResult:
             return []
         return self.cursor.fetchall()
 
+    
 
+class SQLQueryErrorResult(SQLQueryResult):
+    def __init__(self, error_message):
+        super().__init__(None)
+        self.is_error = True
+        self.error = error_message
+
+        
 
 class SQLServer():
     def __init__(self, conn):
@@ -46,8 +55,9 @@ class SQLServer():
             if commit:
                 self.conn.commit()
         except Exception as e:
-            logging.error('SQL Query Error: %s' %(e))
-            return SQLQueryResult()
+            logging.error('SQL Query Error: %s' % str(e))
+            logging.error(traceback.format_exc())
+            return SQLQueryErrorResult(str(e))
             
         return SQLQueryResult(cursor)
 
@@ -166,12 +176,13 @@ class DataSource_SQL(DataSource):
                 if schema.tag_value_sql is None:
                     # TODO: this is inefficient. Modify not to go though all the DB entries.
                     schema.tag_value_sql = 'select distinct %s from %s' % (schema.tag, schema.table)
-                try:
-                    result = self.server.execute(schema.tag_value_sql).get_table()
-                    schema.tag_values = [ row[0] for row in result ]
-                except Exception as e:
-                    logging.error('SQL Error: %s' % str(e))
+                result = self.server.execute(schema.tag_value_sql)
+                if result.is_error:
+                    logging.error('SQL Error: %s: %s' % (result.error, schema.tag_value_sql))
                     self.channels_scanned = False  # maybe the table is not created yet. Try again later
+                    continue
+                else:
+                    schema.tag_values = [ row[0] for row in result.get_table() ]
 
             all_fields_have_types = True
             if not schema.is_for_ts:
@@ -182,16 +193,18 @@ class DataSource_SQL(DataSource):
 
             if len(schema.fields) == 0 or not all_fields_have_types:
                 sql = 'select * from %s limit 1' % schema.table
+                result = self.server.execute(sql)
+                if result.is_error:
+                    logging.error('SQL Error: %s: %s' % (result.error, sql))
+                    self.channels_scanned = False  # maybe the table is not created yet. Try again later
+                    continue
+                columns = [ v for v in result.get_column_names() ]
+                table = result.get_table()
                 try:
-                    result = self.server.execute(sql)
-                    columns = [ v for v in result.get_column_names() ]
-                    table = result.get_table()
-                    try:
-                        record = table[0]
-                    except:
-                        record = [None] * len(columns)
-                except Exception as e:
-                    logging.error('SQL Error: %s' % str(e))
+                    record = table[0]
+                except:
+                    record = [None] * len(columns)
+                    self.channels_scanned = False  # maybe the table is not created yet. Try again later
                 fields = {}
                 for k in range(len(columns)):
                     column = columns[k]
@@ -236,12 +249,14 @@ class DataSource_SQL(DataSource):
                         else:
                             schema.channel_table[ch]['name'] = ch
                         if not schema.is_for_ts and schema.channel_table[ch].get('type', None) is None:
-                            sql = 'select %s from %s where %s=="%s" limit 1' % (field, schema.table, schema.tag, tag_value)
+                            sql = "select %s from %s where %s='%s' limit 1" % (field, schema.table, schema.tag, tag_value)
+                            result = self.server.execute(sql)
+                            if result.is_error:
+                                logging.error('SQL Error: %s: %s' % (result.error, sql))
+                                continue
                             try:
-                                result = self.server.execute(sql)
                                 value = result.get_table()[0][0]
                             except Exception as e:
-                                logging.error('SQL Error: %s' % str(e))
                                 continue
                             schema.channel_table[ch]['type'] = Schema.identify_datatype(value)
 
@@ -321,6 +336,9 @@ class DataSource_SQL(DataSource):
             sql = sql.replace('${TO_DATETIME_UTC}', to_datetime_utc.isoformat(sep=self.time_sep))
             
             query_result = self.server.execute(sql)
+            if query_result.is_error:
+                logging.error('SQL Query Error: %s: %s' % (query_result.error, sql))
+                continue
 
             table = {
                 'columns': [k for k in query_result.get_column_names()],
@@ -466,7 +484,10 @@ class DataSource_SQL(DataSource):
             result[channel]['x'].append(value)
             
         remaining_channels = set(target_channels)
-        for row in self.server.execute(sql).get_table():
+        query_result = self.server.execute(sql)
+        if query_result.is_error:
+            logging.error('SQL Query Error: %s: %s' % (query_result.error, sql))
+        for row in query_result.get_table():
             if len(remaining_channels) <= 0:
                 break
             

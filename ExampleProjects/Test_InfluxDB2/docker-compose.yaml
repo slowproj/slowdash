@@ -25,6 +25,4 @@ services:
 
   testdata:
     image: slowdash
-    volumes:
-      - .:/project
-    command: "python /project/generate-testdata.py --db-url=influxdb2://sloworg:slowtoken@influxdb:8086/SlowTestData"
+    command: python /slowdash/system/client/slowpy/test/generate-testdata.py --db-url=influxdb2://sloworg:slowtoken@influxdb:8086/SlowTestData

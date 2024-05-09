@@ -12,4 +12,4 @@ services:
     image: slowdash
     volumes:
       - .:/project
-    command: python /project/generate-testdata.py --db-url=sqlite:///SlowTestData
+    command: python /slowdash/system/client/slowpy/test/generate-testdata.py --db-url=sqlite:///SlowTestData

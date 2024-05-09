@@ -6,12 +6,14 @@ from .datastore import DataStore
 
 class DataStore_InfluxDB2(DataStore):
     # URL: influxdb2://org:token@host:port/bucket
-    def __init__(self, url, measurement='slowpy', use_tag=True):
+    def __init__(self, url, ts_measurement=None, obj_measurement=None, objts_measurement=None, use_tag=True):
         from influxdb_client import InfluxDBClient, Point
         from influxdb_client.client.write_api import SYNCHRONOUS, WritePrecision
 
         self.url = url
-        self.measurement = measurement
+        self.ts_measurement = ts_measurement
+        self.obj_measurement = obj_measurement
+        self.objts_measurement = objts_measurement
         self.use_tag = use_tag
         
         if url.startswith('influxdb2://'):
@@ -50,28 +52,34 @@ class DataStore_InfluxDB2(DataStore):
         self.client.close()
 
 
-    def another(self, measurement=None):
-        if measurement is None:
-            measurement = self.measurement
-        return DataStore_InfluxDB2(self.url, measurement)
-
-    
     def write_timeseries(self, fields, tag=None, timestamp=None):
+        if self.ts_measurement is None:
+            return
         if self.use_tag and tag is None:
             for key, value in fields.items():
-                self._write(value, key, timestamp, float)
+                self._write(self.ts_measurement, value, key, timestamp, float)
         else:
-            self._write(fields, tag, timestamp, float)
+            self._write(self.ts_measurement, fields, tag, timestamp, float)
+
+        
+    def write_object(self, obj, timestamp=None, name=None):
+        if self.obj_measurement is None:
+            return
+        if name is None:
+            name = obj.name
+        self._write(self.obj_measurement, str(obj), name, timestamp, str)
 
         
     def write_object_timeseries(self, obj, timestamp=None, name=None):
+        if self.objts_measurement is None:
+            return
         if name is None:
             name = obj.name
-        self._write(str(obj), name, timestamp, str)
+        self._write(self.objts_measurement, str(obj), name, timestamp, str)
 
         
-    def _write(self, fields, tag, timestamp, datatype):
-        point = self.Point(self.measurement)
+    def _write(self, measurement, fields, tag, timestamp, datatype):
+        point = self.Point(measurement)
         if tag is not None:
             point = point.tag("channel", tag)
             

@@ -41,7 +41,7 @@ class DataSource_InfluxDB2(DataSource):
                 schema_conf = entry.get('schema', None)
                 if measurement is None and schema_conf is None:
                     logging.error('InfluxDB2: measurement not specified')
-                    continuee
+                    continue
                 if schema_conf is None:
                     schema_conf = measurement
                 tag_value_list = entry.get('tags', {}).get('list', [])
@@ -53,13 +53,6 @@ class DataSource_InfluxDB2(DataSource):
         
         self.ts_schemata = load_schema(config, 'time_series')
         self.objts_schemata = load_schema(config, 'object_time_series')
-
-        # "measurement" entry instead of "time_series"
-        entry_list = config.get('measurement', [])
-        for meas in entry_list if type(entry_list) is list else [ entry_list ]:
-            schema = Schema(meas)
-            schema.is_for_objts = False
-            self.ts_schemata.append(schema)
 
         # "measurement" in URL
         bucket_and_meas = self.bucket.split('/')

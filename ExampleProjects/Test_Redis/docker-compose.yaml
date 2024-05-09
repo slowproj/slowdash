@@ -15,10 +15,8 @@ services:
     ports:
       - "18881:18881"
     environment:
-      - DB_URL=redis://redis_server:6379/1
+      - DB_URL=redis://redis_server:6379/12
 
   testdata:
     image: slowdash
-    volumes:
-      - .:/project
-    command: python /project/generate-testdata.py --db-url=redis://redis_server:6379/1
+    command: python /slowdash/system/client/slowpy/test/generate-testdata.py --db-url=redis://redis_server:6379/12

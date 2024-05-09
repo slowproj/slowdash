@@ -5,7 +5,7 @@ import sys, os, time, json
 
 from .dataobject import Histogram, Histogram2d, Graph
 from .datastore import DataStore
-from .datastore_SQLite import DataStore_SQLite
+from .datastore_factory import create_datastore_from_url
 
 import numpy as np
 from matplotlib import pyplot as mpl_plt
@@ -341,14 +341,13 @@ class slowplot:
     @classmethod
     def set_datastore(cls, datastore=None):
         if datastore is None:
-            datastore = 'SlowStore.db'
+            datastore = 'sqlite:///SlowStore.db'
         if type(datastore) == str:
-            if len(datastore) > 4 and datastore[-3:] == '.db':
-                datastore = DataStore_SQLite(datastore)
-            else:
+            cls.datastore = create_datastore_from_url(datastore)
+            if cls.datastore is None:
                 sys.stderr.write('invalid DataStore name: %s\n' % datastore)
-                datastore = None
-        cls.datastore = datastore
+        else:
+            cls.datastore = datastore
 
         
     @classmethod

@@ -1,8 +1,9 @@
 slowdash_project:
+  name: InfluxDB2 Test
   data_source:
     url: ${DB_URL:-influxdb2://sloworg:slowtoken@localhost:8086/SlowTestData}
     parameters:
       time_series:
-        measurement: slowpy_ts
+        schema: ts_data
       object_time_series:
-        measurement: slowpy_objts
+        schema: objts_data

@@ -6,6 +6,8 @@ from datasource import DataSource, Schema
 
 from redis import Redis
 
+objts_prefix = '__sd_objts'
+
 
 class KeyValueSource:
     def __init__(self, host, port, db, config):
@@ -61,8 +63,12 @@ class KeyValueSource:
     
     def scan_channels(self):
         self.channels = {}
+        if self.redis is None:
+            return
         
         for key in self.redis.keys():
+            if key.startswith(objts_prefix):
+                continue
             if self.redis.type(key) == 'hash':
                 self.channels[key+self.suffix] = { 'type': 'tree' }
 
@@ -108,11 +114,12 @@ class ObjectSource(KeyValueSource):
     
     def scan_channels(self):
         self.channels = {}
-        
         if self.redis is None:
             return
         
         for key in self.redis.keys():
+            if key.startswith(objts_prefix):
+                continue
             objtype, keytype = self.find_object_type(key)
             if objtype is not None:
                 self.channels[key+self.suffix] = { 'type': objtype }
@@ -157,6 +164,8 @@ class TimeSeriesSource(ObjectSource):
             return
         
         for key in self.redis.keys():
+            if key.startswith(objts_prefix):
+                continue
             if self.redis.type(key) == 'TSDB-TYPE':
                 self.channels[key+self.suffix] = { 'type': 'timeseries' }
 
@@ -192,10 +201,8 @@ class TimeSeriesSource(ObjectSource):
 class ObjectTimeSeriesSource(TimeSeriesSource):
     def __init__(self, host, port, db, config):
         super().__init__(host, port, db, config)
+
         
-        self.name_template = config.get('name_template', '{series}_{index:#d}')
-
-
     def get_timeseries(self, channels, length, to):
         return {}
 
@@ -212,8 +219,9 @@ class ObjectTimeSeriesSource(TimeSeriesSource):
                 continue
             key = ch[0:len(ch)-len(self.suffix)]
             
+            tsname = '%sindex_%s' % (objts_prefix, key)
             try:
-                ts = self.redis.ts().range(key, int(1000*start), int(1000*to))
+                ts = self.redis.ts().range(tsname, int(1000*start), int(1000*to))
             except Exception as e:
                 logging.warn('Redis: Unable load TS data: %s: %s' % (ch, str(e)))
                 continue
@@ -226,18 +234,18 @@ class ObjectTimeSeriesSource(TimeSeriesSource):
                 continue
 
             tk, index = ts[len(ts)-1]
-            name = self.name_template.format(series=key, index=int(index))
+            objname = '%s_%s_%d' % (objts_prefix, key, int(index))
             if key in self.json_str_channels:
                 try:
-                    obj = self.redis.get(name)
+                    obj = self.redis.get(objname)
                 except Exception as e:
                     logging.error('Redis: error on get(): %s: %s' % (ch, str(e)))
                     continue
             else:
                 try:
-                    obj = self.redis.json().get(name)
+                    obj = self.redis.json().get(objname)
                 except Exception as e:
-                    logging.warn('Redis: error on json().get(): %s: %s' % (name, str(e)))
+                    logging.warn('Redis: error on json().get(): %s: %s' % (objname, str(e)))
                     continue
 
             record[ch] = {
@@ -251,28 +259,30 @@ class ObjectTimeSeriesSource(TimeSeriesSource):
     
     def scan_channels(self):
         self.channels = {}
-
         if self.redis is None:
             return
 
         for key in self.redis.keys():
-            if self.redis.type(key) == 'TSDB-TYPE':
-                objtype, keytype = self.find_object_type(key)
-                if objtype is not None:
-                    self.channels[key+self.suffix] = { 'type': objtype }
-                    if keytype == 'string':
-                        self.json_str_channels.add(key)
+            if not key.startswith(objts_prefix):
+                continue
+            if self.redis.type(key) != 'TSDB-TYPE':
+                continue
+            name = key[len(objts_prefix+'index_'):]
+            objtype, keytype = self.find_object_type(name)
+            if objtype is not None:
+                self.channels[name+self.suffix] = { 'type': objtype }
+                if keytype == 'string':
+                    self.json_str_channels.add(name)
         
 
-    def find_object_type(self, channel):
+    def find_object_type(self, name):
+        tskey = objts_prefix + 'index_' + name
         try:
-            tk, index = self.redis.ts().get(channel)
+            tk, index = self.redis.ts().get(tskey)
         except Exception as e:
-            logging.error(e)
             return None, None
 
-        name = self.name_template.format(series=channel, index=int(index))
-        return super().find_object_type(name)
+        return super().find_object_type('%s_%s_%d' % (objts_prefix, name, int(index)))
     
                     
 
@@ -303,7 +313,11 @@ class DataSource_Redis(DataSource):
             self.kv_sources = [ KeyValueSource(host, port, default_db, {}) ]
             self.obj_sources = [ ObjectSource(host, port, default_db, {}) ]
             self.ts_sources = [ TimeSeriesSource(host, port, default_db, {}) ]
-            self.sources = self.kv_sources + self.obj_sources + self.ts_sources
+            self.objts_sources = [ ObjectTimeSeriesSource(host, port, default_db, {}) ]
+            self.sources = self.kv_sources + self.obj_sources + self.ts_sources + self.objts_sources
+            
+        for src in self.sources:
+            src.scan_channels()
         
                     
     def get_channels(self):
@@ -313,6 +327,7 @@ class DataSource_Redis(DataSource):
         channels = []
         for src in self.sources:
             channels.extend([ k for k in src.get_channels() ])
+            
         return channels
 
     

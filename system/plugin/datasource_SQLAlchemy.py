@@ -29,7 +29,7 @@ class SQLServer_SQLAlchemy(SQLServer):
                 self.conn.commit()
         except Exception as e:
             logging.error(e)
-            return SQLQueryResult()
+            return SQLQueryErrorResult(str(e))
             
         return SQLQueryResult_SQLAlchemy(cursor)
 
