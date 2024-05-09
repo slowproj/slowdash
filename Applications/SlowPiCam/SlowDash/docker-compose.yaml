@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  couchdb:
+    image: couchdb:3.3
+    ports:
+      - "5984:5984"
+#    volumes:
+#      - "./couchdb/data:/opt/couchdb/data"
+#      - "./couchdb/etc:/opt/couchdb/etc/local.d"
+    logging:
+      driver: "none"
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=neutrino
+
+  slowdash:
+    image: slowdash
+    volumes:
+      - .:/project
+    ports:
+      - "18881:18881"
+    environment:
+      - RPI_URL=http://10.95.99.68/~picam
+      - DB_URL=couchdb://admin:neutrino@couchdb:5984/photos
+    logging:
+      driver: "none"
+    depends_on:
+      - couchdb

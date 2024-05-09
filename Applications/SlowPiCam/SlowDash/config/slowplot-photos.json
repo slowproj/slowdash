@@ -1,0 +1,26 @@
+{
+    "control": {
+        "range": { "length": 129600, "to": null },
+        "reload": 300,
+        "grid": { "rows": "2", "columns": "3" },
+        "mode": "normal"
+    },
+    "style": { },
+    "panels": [
+        { "type": "blob", "channel": "RPiCamera", "title": "Latest: %a, %d %b %Y, %H:%M:%S %Z" },
+        { "type": "tree", "channel": "RPiCameraProperties", "title": "Latest Photo Properties" },
+        {
+            "type": "timeaxis",
+            "plots": [
+                { "type": "timeseries", "channel": "Brightness.RPiCamera", "color": "#cd2355", "label": "Brightness", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 3, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "ymin": 45.85, "ymax": 45.9, "ytitle": "(%)" },
+            "legend": { "style": "none" }
+        },
+        { "type": "html", "file": "control", "title": "Configuration & Control" },
+        { "type": "tree", "channel": "DBInfo", "title": "Database Stats" },
+        { "type": "tree", "channel": "system", "title": "System Resources" },
+        { "type": "tree", "channel": "Run", "title": "Current Setting" }
+    ],
+    "meta": { "name": "photos", "title": "", "description": "" }
+}

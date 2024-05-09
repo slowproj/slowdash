@@ -2,7 +2,7 @@
 
 # Setting the user/group id's of the slowuser
 # If the id's are not given through the environmental variables,
-# extract thrm from the /project directory.
+# extract them from the /project directory.
 if [ -z "$USER_ID" ]; then
     USER_ID=$(ls -dln /project | cut --delimiter=' ' --field=3)
 fi    

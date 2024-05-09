@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Raspberry-Pi Camera &amp; SlowDash</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style type="text/css">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <style type="text/css">html {
+font-family: sans-serif;
+}
+body {
+margin-left: 10%;
+margin-right: 10%;
+background: #ffffff;
+}
+header {
+# display: flex;
+margin-bottom: 3em;
+}
+.title {
+margin-top: 0.2em;
+width: 100%;
+font-size: 2.5em;
+font-weight: bold;
+text-align: center;
+}
+.toc {
+margin-left: -5%;
+width: 25%;
+padding: 15px;
+background: #fcfcfc;
+border: thin solid gray;
+border-radius: 10px;
+}
+.toc-title {
+font-size: large;
+font-weight: bold;
+}
+.toc ul {
+list-style-type: none;
+margin: 0;
+padding-left: 1em;
+}
+.toc li {
+padding-top: 0.5em;
+}
+.toc a {
+color: blue;
+}
+.toc a:visited {
+color: blue;
+}
+h1, h2, h3, h4, h5, h6 {
+font-weight: 600;
+line-height: 1.25;
+margin-bottom: 16px;
+margin-top: 24px;
+}
+h1 {
+margin-left: -5%;
+padding-left: 0.3em;
+padding-bottom: 0.3em;
+font-size: 2em;
+border-left: 5px solid #d0d0d0;
+border-bottom: 3px solid #d0d0d0;
+}
+h2 {
+margin-left: -3%;
+padding-bottom: 0.3em;
+font-size: 1.7em;
+border-bottom: 1px solid #d0d0d0;
+}
+h3 {
+margin-left: -1%;
+font-size: 1.5em;
+}
+h4 {
+margin-left: -1%;
+font-size: 1em;
+}
+h5 {
+margin-left: 0;
+border-left: thick solid darkgray;
+padding-left: 0.5em;
+font-size: 1.1em;
+text-decoration: underline;
+font-weight: normal;
+}
+h6 {
+margin-left: 0;
+font-size: 1em;
+text-decoration: underline;
+font-weight: normal;
+}
+code {
+font-family: monospace, monospace;
+background: #eeeeee;
+color: #880000;
+padding-left: 0.2em;
+padding-right: 0.2em;
+}
+pre {
+margin-top: 10px;
+margin-bottom: 10px;
+padding: 0 0 1em 10px;
+padding-top: 0.8em;
+border-radius: 10px;
+white-space: pre;
+font-family: monospace, monospace;
+background: #eeeeee;
+border: thin solid #c0c0c0;
+}
+pre code {
+color: black;
+}
+pre.sourceCode.console {
+background: #505050;
+}
+pre.sourceCode.console code {
+background: none;
+color: white;
+}
+.sourceCode.console .kw {
+font-weight: bold;
+color: lightgreen;
+}
+.sourceCode.console .co {
+color: #880000;
+}
+pre:not(.sourceCode) {
+border-radius: 10px;
+background: none;
+border: thin solid black;
+}
+pre:not(.sourceCode) code {
+background: none;
+color: black;
+}
+.sourceCode.json .er {
+color: #880000;
+}
+div.sourceCode,table,img {
+margin-left: 1em;
+}
+th,td {
+padding-left: 0.5em;
+padding-right: 1em;
+text-align: left;
+white-space: nowrap;
+}
+th {
+padding-left: 1em;
+text-align: center;
+}
+tr.header {
+background-color: #e0e0e0;
+}
+tr.odd {
+background-color: #f8f8f8;
+}
+tr.even {
+background-color: #f0f0f0;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="title">Raspberry-Pi Camera &amp; SlowDash</div><p>
+<div class="toc">
+<span class="toc-title">Contents</span>
+<nav id="TOC">
+<ul>
+<li><a href="#ingredient">Ingredient</a></li>
+<li><a href="#setup">Setup</a><ul>
+<li><a href="#respberry-pi">Respberry Pi</a></li>
+<li><a href="#server">Server</a></li>
+<li><a href="#slowdash-configuration">SlowDash Configuration</a></li>
+</ul></li>
+</ul>
+</nav>
+</div>
+</header>
+
+<h1 id="ingredient">Ingredient</h1>
+<ul>
+<li>Respberry Pi &amp; Camera</li>
+<li>Apache Web Server on Raspberry Pi</li>
+<li>CouchDB for image store</li>
+<li>SlowDash</li>
+</ul>
+<p>This uses the <code>libcamera-still</code> command, which is included in the standard installation of RPi. A CGI program on RPi takes a photo and returns the image. A SlowDash user module periodically accesses the CGI and stores the image data on CouchDB.</p>
+<h1 id="setup">Setup</h1>
+<p>Make sure everything is inside a secure network.</p>
+<h2 id="respberry-pi">Respberry Pi</h2>
+<h3 id="install-apache2-web-server">Install Apache2 Web Server</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">$ sudo apt install apache2</span></a></code></pre></div>
+<h3 id="placing-the-cgi-code">Placing the CGI code</h3>
+<ul>
+<li>copy <code>RPi-PhotoServer/photo.cgi</code> to your HTML directory</li>
+<li>make it executable</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">$ chmod 755 photo.cgi</span></a></code></pre></div>
+<ul>
+<li>allow camera access</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">$ sudo adduser www-data video</span></a></code></pre></div>
+<ul>
+<li>allow USB-light access</li>
+</ul>
+<div class="sourceCode" id="cb4"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">$ sudo adduser www-data dialout</span></a></code></pre></div>
+<h3 id="apache-configuration-for-user-cgi">Apache configuration for user CGI</h3>
+<h4 id="place-config-files">Place config files</h4>
+<div class="sourceCode" id="cb5"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">$ cd /etc/apache2/mods-enabled</span></a>
+<a class="sourceLine" id="cb5-2" title="2"><span class="kw">$ sudo ln -s ../mods-available/userdir.conf .</span></a>
+<a class="sourceLine" id="cb5-3" title="3"><span class="kw">$ sudo ln -s ../mods-available/userdir.load .</span></a>
+<a class="sourceLine" id="cb5-4" title="4"><span class="kw">$ sudo ln -s ../mods-available/cgi.load .</span></a></code></pre></div>
+<h4 id="edit-files">Edit Files</h4>
+<h4 id="etcapache2mods-enableduserdir.conf"><code>/etc/apache2/mods-enabled/userdir.conf</code></h4>
+<pre><code>AllowOverride: All</code></pre>
+<h5 id="homeuserpublic_html.htaccess"><code>/home/USER/public_html/.htaccess</code></h5>
+<pre><code>  Options +ExecCGI
+  AddType application/x-httpd-cgi .cgi
+  AddHandler cgi-script .cgi</code></pre>
+<h2 id="server">Server</h2>
+<h3 id="docker-compose">Docker-Compose</h3>
+<p>Nothing is necessary</p>
+<h3 id="bare-metal">Bare-Metal</h3>
+<h4 id="couchdb">CouchDB</h4>
+<h5 id="installation">Installation</h5>
+<p>(Ubuntu 20.04, Jan 17 2024)</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">$ sudo apt update &amp;&amp; sudo apt install -y curl apt-transport-https gnupg</span></a>
+<a class="sourceLine" id="cb8-2" title="2"><span class="kw">$ curl https://couchdb.apache.org/repo/keys.asc | gpg --dearmor | sudo tee /usr/share/keyrings/couchdb-archive-keyring.gpg &gt;/dev/null 2&gt;&amp;1</span></a>
+<a class="sourceLine" id="cb8-3" title="3"><span class="kw">$ source /etc/os-release</span></a>
+<a class="sourceLine" id="cb8-4" title="4"><span class="kw">$ echo &quot;deb [signed-by=/usr/share/keyrings/couchdb-archive-keyring.gpg] https://apache.jfrog.io/artifactory/couchdb-deb/ ${VERSION_CODENAME} main&quot; | sudo tee /etc/apt/sources.list.d/couchdb.list &gt;/dev/null</span></a></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb9-1" title="1"><span class="kw">$ sudo apt update</span></a>
+<a class="sourceLine" id="cb9-2" title="2"><span class="kw">$ sudo apt install -y couchdb</span></a></code></pre></div>
+<h5 id="configuration">Configuration</h5>
+<pre><code>http://localhost:5984/_utils/</code></pre>
+<h4 id="python-module">Python Module</h4>
+<div class="sourceCode" id="cb11"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb11-1" title="1"><span class="kw">$ pip3 install couchdb</span></a></code></pre></div>
+<h2 id="slowdash-configuration">SlowDash Configuration</h2>
+<h3 id="docker-compose-1">Docker-Compose</h3>
+<ul>
+<li>edit <code>docker-compose.yaml</code></li>
+</ul>
+<h3 id="bare-metal-1">Bare-Metal</h3>
+<ul>
+<li>edit <code>SlowdashProject.yaml</code></li>
+</ul>
+
+
+</body>
+</html>

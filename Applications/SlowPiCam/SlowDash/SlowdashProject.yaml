@@ -1,0 +1,33 @@
+slowdash_project:
+  name: SlowCam
+  title: Raspberry-Pi Camera
+
+  environment:
+    - DB_URL=${DB_URL:-couchdb://admin:neutrino@localhost:5984/photos}
+    - RPI_URL=${RPI_URL:-http://10.95.99.68/~picam}
+
+  data_source:
+    - url: ${DB_URL}
+      parameters:
+        object_time_series:
+          schema: SlowView/RPiCamera
+        time_series:
+          schema: SlowView/RPiCameraProperties=Brightness
+          suffix: .RPiCamera
+        database_info:
+          name: DBInfo
+        
+    - type: SystemResource
+
+  module:
+    file: fetch-blob-couchdb.py
+    parameters:
+      series_name: RPiCamera
+      interval: 1800
+      source_url: ${RPI_URL}/photo.cgi
+      light_url: ${RPI_URL}/light.cgi
+      couchdb_url: ${DB_URL}
+
+  style:
+    title_text_color: "#46af4b"
+    title_color: "#cd2355"

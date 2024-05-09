@@ -1,0 +1,24 @@
+<form>
+  <table>  
+    <tr><td>Series Name</td><td><input name="series" style="width:20em" sd-value="Run['Config/Series']" disabled></td></tr>
+    <tr><td>Image URL</td><td><input name="source_url" style="width:30em" sd-value="Run['Config/SourceUrl']" disabled></td></tr>
+    <tr><td>CouchDB URL</td><td><input name="couchdb_url" style="width:30em" sd-value="Run['Config/CouchdbUrl']" disabled></td></tr>
+    <tr><td>Interval</td><td><input name="interval" type="number" style="width:10em" sd-value="Run['Config/Interval']"> (s) <input type="submit" name="update" value="Set"></td></tr>
+  </table>
+  <p>
+  <input type="submit" name="start" value="Start" style="font-size:150%" sd-enabled="Run['Status/Running']->invert()">
+  <input type="submit" name="stop" value="Stop" style="font-size:150%" sd-enabled="Run['Status/Running']">
+  /  
+  <input type="submit" name="single" value="Single" style="font-size:150%">
+</form>
+
+
+<div style="font-size:85%;border:thin solid gray;margin-top:4em;padding:1em;border-radius:1em">
+<span style="font-weight:bold;font-size:120%">Video Streaming</span> to adjust camera settings
+<ul>
+  <li>Stop still-photo taking before starting video streaming.
+  <li>The video window must be closed before resuming still-photo taking.
+  <li>Only one connection can be made at a time.
+</ul>
+<a href="http://10.0.0.181/~project8/stream.cgi" target="_blank" style="margin-left:1em">Open Video Streaming</a>
+</div>
