@@ -78,10 +78,8 @@ class App:
     def get(self, params, opts, output):
         content_type = 'application/json'
         result = None
-        if self.project is None:
-            pass
         
-        elif (len(params) == 3) and (params[0] == 'config') and (params[1] == 'file'):
+        if (len(params) == 3) and (params[0] == 'config') and (params[1] == 'file'):
             return self._get_config_file(params[2], output)
             
         elif params[0] == 'config':
@@ -167,9 +165,6 @@ class App:
 
 
     def post(self, path_list, opts, doc, output):
-        if (self.project is None) or (self.project_dir is None):
-            return 404  # Not Found
-
         if path_list[0] == 'config':
             if (len(path_list) < 3) or (path_list[1] != 'file'):
                 return 403  # Forbidden
@@ -183,8 +178,11 @@ class App:
     
     def delete(self, path_list):
         if (len(path_list) < 3) or (path_list[1] != 'file'):
-            return 403
+            return 403  # Forbidden
+        
         filename = path_list[2]
+        if (self.project_dir is None):
+            return 404  # Not Found
         try:
             os.remove(os.path.join('config', filename))
         except Exception as e:
@@ -195,21 +193,26 @@ class App:
 
     def _get_config(self, with_list=True, with_content_meta=True):
         self.config.update()
-        doc = {
-            'project': {
-                'name': self.config.project.get('name', 'Untitled Project'),
-                'title': self.config.project.get('title', ''),
-                'error_message': self.error_message
-            },
-            'data_source_module': [
-                ds.modulename for ds in self.datasource_list
-            ],
-            'user_module': [
-                module.filepath for module in self.usermodule_list
-            ],
-            'style': self.config.project.get('style', None)
-        }
-        
+        if self.project is None:
+            doc = {
+                'project': {}
+            }
+        else:
+            doc = {
+                'project': {
+                    'name': self.config.project.get('name', 'Untitled Project'),
+                    'title': self.config.project.get('title', ''),
+                    'error_message': self.error_message
+                },
+                'data_source_module': [
+                    ds.modulename for ds in self.datasource_list
+                ],
+                'user_module': [
+                    module.filepath for module in self.usermodule_list
+                ],
+                'style': self.config.project.get('style', None)
+            }
+            
         if (not with_list) or (self.project_dir is None):
             return doc
         

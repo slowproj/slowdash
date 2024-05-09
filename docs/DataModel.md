@@ -5,8 +5,8 @@ title: Data Model
 # Concepts / Terminologies
 - Each "channel" produces a series of values.
 - Query is made for a set of channels for a period of time.
-- Query result is a set of channel data, indexed by the channel name.
-- Each channel data contains an array of values (i.e., series). 
+- Query result is a set of channel data, indexed by the channel names.
+- Each channel data consists of an array of values (i.e., series). 
 - If the length of the array is one, it could be represented as a single value instead of an array.
 - Every value has an associated time-stamp (which does not have to be unique).
 - A value can be a "scalar" (number, string or bool) or an "object" (histogram, table, tree, ...).
@@ -226,5 +226,5 @@ X
     "meta": META_INFO
 }
 ```
-- Having `mime` identifies the object as a Tree.
-- The `url` is required. Others are optional.
+- Having `mime` identifies the object as a Blob.
+- The `id` is required. Others are optional.
