@@ -1,15 +1,6 @@
 # Created by Sanshiro Enomoto on 4 June 2022 #
 
 
-''' MongoDB
-## Install MongoDB
-- sudo apt install mongodb
-
-## Install MongoDB Python client
-- sudo apt install python3-pymongo
-'''
-
-
 import sys, os, time, logging
 from datasource import DataSource
 

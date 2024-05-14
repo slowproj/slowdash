@@ -7,7 +7,6 @@ from datasource import DataSource, Schema
 import couchdb
 
 
-
 class DataSource_CouchDB(DataSource):
     def __init__(self, project_config, config):
         super().__init__(project_config, config)
