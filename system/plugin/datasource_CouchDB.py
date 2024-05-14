@@ -111,7 +111,7 @@ class DataSource_CouchDB(DataSource):
 
             if schema.tag is None:
                 for field, channel in channel_list.items():
-                    schema.add_channel(field, channel['type'])
+                    schema.add_channel(field, channel.get('type', None))
 
                     
         def scan_tags(schema, view):
@@ -141,11 +141,10 @@ class DataSource_CouchDB(DataSource):
                     value = record.get(field, None)
                     if value is None:
                         continue
-                    datatype = Schema.identify_datatype(record[field])
-                    channel_list[channel] = {'name': channel, 'type': datatype}
+                    channel_list[channel] = {'name': channel, 'type': Schema.identify_datatype(record[field]) }
 
             for field, channel in channel_list.items():
-                schema.add_channel(field, channel['type'])
+                schema.add_channel(field, channel.get('type', None))
 
         for schemata in [ self.ts_schemata, self.objts_schemata ]:
             for schema in schemata:
@@ -166,12 +165,12 @@ class DataSource_CouchDB(DataSource):
                             schema.add_channel(ch)
                     scan_tags(schema, view)
 
-        couchdb_entries = {
+        couchdb_extra_entries = {
             'table': self.viewtable_schemata,
             'tree': self.viewtree_schemata,
             'tree': self.dbinfo_schemata
         }
-        for datatype, schemata in couchdb_entries:
+        for datatype, schemata in couchdb_extra_entries.items():
             for schema in schemata:
                 if schema.name is None:
                     schema.name = '%s_%s' % (datatype, schema.table.split('/')[-1])
