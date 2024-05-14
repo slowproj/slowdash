@@ -101,7 +101,10 @@
                 });
             }
             if (location.hash) {
-                iframe.src = location.hash.substr(1) + '.html';
+                const page = location.hash.substr(1);
+                if (/^[a-zA-Z0-9_\-]+$/.test(page)) {
+                    iframe.src = page + '.html';
+                }
             }
         });
     </script>

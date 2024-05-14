@@ -32,6 +32,15 @@ class Schema:
         self.parse(self.init_description)
 
             
+    def add_channel(self, channel_name, field_type=None):
+        if channel_name not in self.channel_table:
+            self.channel_table[channel_name] = { 'name': channel_name }
+        else:
+            self.channel_table[channel_name]['name'] = channel_name
+        if field_type is not None:
+            self.channel_table[channel_name]['type'] = field_type
+
+                    
     def parse(self, schema):
         # syntax:  TABLE [TAG, FLAG, FLAG...] @TIME(TIME_TYPE) = FIELD(OPT), FIELD(OPT), ...
         # all elements are optional

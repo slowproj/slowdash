@@ -270,7 +270,6 @@ class ShapeItem extends CanvasItem {
                 'text-anchor': anchor ?? 'start'
             });
             this.text = $('<text>', 'svg').attr(textAttr).text('---');
-            console.log(textAttr);
             elem.append(this.text);
         }
         if (this.metric && this.metric.alarmLevels) {

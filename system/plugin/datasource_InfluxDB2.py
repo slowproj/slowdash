@@ -133,13 +133,7 @@ class DataSource_InfluxDB2(DataSource):
 
             if schema.tag is None:
                 for k in range(len(schema.fields)):
-                    ch = schema.fields[k]
-                    if ch not in schema.channel_table:
-                        schema.channel_table[ch] = { 'name': ch }
-                    else:
-                        schema.channel_table[ch]['name'] = ch
-                    if schema.field_types[k] is not None:
-                        schema.channel_table[ch]['type'] = schema.field_types[k]
+                    schema.add_channel(schema.fields[k], schema.field_types[k])
             else:
                 for tag_value in schema.tag_values:
                     for k in range(len(schema.fields)):
@@ -148,12 +142,7 @@ class DataSource_InfluxDB2(DataSource):
                             ch = tag_value
                         else:
                             ch = '%s%s%s' % (tag_value, Schema.tag_field_separator, field)
-                        if ch not in schema.channel_table:
-                            schema.channel_table[ch] = { 'name': ch }
-                        else:
-                            schema.channel_table[ch]['name'] = ch
-                        if schema.field_types[k] is not None:
-                            schema.channel_table[ch]['type'] = schema.field_types[k]
+                        schema.add_channel(ch, schema.field_types[k])
 
             if schema.is_for_objts:
                 for ch in schema.channel_table:
@@ -167,7 +156,7 @@ class DataSource_InfluxDB2(DataSource):
                             value = result[ch].get('x', {})
                             if type(value) is list and len(value) > 0:
                                 value = value[0]
-                            schema.channel_table[ch]['type'] = Schema.identify_datatype(value)
+                            schema.add_channel(ch, Schema.identify_datatype(value)) # update fieldtype
                             break
                 
         
