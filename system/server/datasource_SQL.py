@@ -231,7 +231,7 @@ class DataSource_SQL(DataSource_TableStore):
             return SQLServer(None)
         
     
-    def _execute_query(self, table, time_col, time_from, time_to, tag, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
+    def _execute_query(self, table_name, time_col, time_from, time_to, tag_col, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
         if self.server is None:
             self.server = self._connect_with_retry()
         if self.server is None:
@@ -241,24 +241,24 @@ class DataSource_SQL(DataSource_TableStore):
             time_field = '%d' % int(time.time())
         else:
             time_field = time_col
-        if tag is None:
+        if tag_col is None:
             sql_select = 'SELECT %s' % ','.join([ time_field ] + fields)
         else:
-            sql_select = 'SELECT %s' % ','.join([ time_field, tag ] + fields)
-        sql_from = 'FROM %s' % table
+            sql_select = 'SELECT %s' % ','.join([ time_field, tag_col ] + fields)
+        sql_from = 'FROM %s' % table_name
         if time_col is not None:
             sql_where_list = [ '%s>=%s' % (time_col, time_from), '%s<%s' % (time_col, time_to) ]
         else:
             sql_where_list = []
         if len(tag_values) > 0:
-            sql_where_list += [ '%s in (%s)' % (tag, ','.join([ "'%s'" % val for val in tag_values ])) ]
+            sql_where_list += [ '%s in (%s)' % (tag_col, ','.join([ "'%s'" % val for val in tag_values ])) ]
         sql_where = 'WHERE ' + ' AND '.join(sql_where_list)
         
         if time_col is None:
             sql_orderby = ''
         elif lastonly:
             sql_orderby = 'ORDER BY %s DESC' % time_col
-            if len(channels) == 1 or tag is None:
+            if len(channels) == 1 or tag_col is None:
                 sql_orderby = sql_orderby + ' limit 1'
         else:
             sql_orderby = 'ORDER BY %s ASC' % time_col
@@ -274,12 +274,12 @@ class DataSource_SQL(DataSource_TableStore):
                     f"SELECT",
                     f"    floor(({stop}-extract(epoch from timestamp))/{resampling}) AS bucket, ",
                     f"    %s({time_col}) AS picked_timestamp" % ("max" if reducer == 'last' else 'min'),
-                    f"    %s" % ("" if tag is None else f", {tag}"),
+                    f"    %s" % ("" if tag_col is None else f", {tag_col}"),
                     f"{sql_from}",
                     f"{sql_where}",
                     f"GROUP BY ",
                     f"    bucket",
-                    f"    %s" % ("" if tag is None else f", {tag}")
+                    f"    %s" % ("" if tag_col is None else f", {tag_col}")
                 ]);
                 sql_cte_data = ' '.join([ sql_select, sql_from, sql_where ])
                 sql = ' '.join([
@@ -287,14 +287,14 @@ class DataSource_SQL(DataSource_TableStore):
                     f"    cte_bucket AS ({sql_cte_bucket}),",
                     f"    cte_data AS ({sql_cte_data})",
                     f"SELECT",
-                    f"    {stop}-{resampling}*(bucket+0.5) AS {time_col}, t.{tag}, %s" % ','.join(fields),
+                    f"    {stop}-{resampling}*(bucket+0.5) AS {time_col}, t.{tag_col}, %s" % ','.join(fields),
                     f"FROM",
                     f"    cte_data AS t",
                     f"JOIN",
                     f"    cte_bucket AS b",
                     f"ON ",
                     f"    t.timestamp = b.picked_timestamp",
-                    f"    %s" % ("" if tag is None else f"AND t.{tag} = b.{tag}"),
+                    f"    %s" % ("" if tag_col is None else f"AND t.{tag_col} = b.{tag_col}"),
                     f"{sql_orderby}"
                 ])
             elif reducer in ['mean', 'sum', 'min', 'max'] and self.db_has_floor:  # "count" cannot be applied twice
@@ -305,20 +305,20 @@ class DataSource_SQL(DataSource_TableStore):
                 sql_cte_bucket = ' '.join([
                     f"SELECT",
                     f"    floor(({stop}-extract(epoch from timestamp))/{resampling}) AS bucket,",
-                    f"    %s" % ("" if tag is None else f"{tag},"),
+                    f"    %s" % ("" if tag_col is None else f"{tag_col},"),
                     f"    %s" % ','.join([f"{agg_func}({field}) as {field}" for field in fields]),
                     f"{sql_from}",
                     f"{sql_where}",
                     f"GROUP BY ",
                     f"    bucket",
-                    f"    %s" % (f", {tag}" if tag is not None else "")
+                    f"    %s" % (f", {tag_col}" if tag_col is not None else "")
                 ]);
                 sql = ' '.join([
                     f"WITH",
                     f"    cte_bucket AS ({sql_cte_bucket})",
                     f"SELECT",
                     f"    {stop}-{resampling}*(bucket+0.5) as {time_col},",
-                    f"    %s" % ("" if tag is None else f"{tag},"),
+                    f"    %s" % ("" if tag_col is None else f"{tag_col},"),
                     f"    %s" % ','.join(fields),
                     f"FROM",
                     f"    cte_bucket",

@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 10 April 2023 #
 
 
-import sys, os, logging
+import sys, os, datetime, logging
 from datasource import DataSource, Schema
 
 
@@ -31,7 +31,7 @@ class DataSource_TableStore(DataSource):
 
         
     # override this
-    def _execute_query(self, table, time_col, time_from, time_to, tag, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
+    def _execute_query(self, table_name, time_col, time_from, time_to, tag, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
         columns, table = [], []
         return columns, table
 
@@ -250,8 +250,11 @@ class DataSource_TableStore(DataSource):
             
             timestamp = row[0]
             if type(timestamp) == str:
-                timestamp = datetime.datetime.fromisoformat(timestamp)
-            if type(timestamp).__name__ == 'datetime':
+                if timestamp.isdigit():
+                    timestamp = float(timestamp)
+                else:
+                    timestamp = datetime.datetime.fromisoformat(timestamp)
+            elif type(timestamp).__name__ == 'datetime':
                 if schema.time_type == 'unspecifiedutc':
                     timestamp = timestamp.replace(tzinfo=datetime.timezone.utc)
                 timestamp = timestamp.timestamp()
