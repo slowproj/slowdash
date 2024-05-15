@@ -16,8 +16,13 @@ class DataSource_CSV(DataSource_TableStore):
         if directory is None:
             directory = '.'
         
-        if os.path.isdir(directory) and os.access(directory, os.R_OK):
-            self.directory = directory
+        for i in range(12):
+            if os.path.isdir(directory) and os.access(directory, os.R_OK):
+                self.directory = directory
+                break
+            else:
+                logging.info('Unable to find CSV directory: "%s", retrying in 5 sec: %s' % (directory, str(e)))
+                time.sleep(5)
         else:
             logging.error('invalid CSV directory: %s' % directory)
             return

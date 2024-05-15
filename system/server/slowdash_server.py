@@ -261,15 +261,17 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.wfile.flush()
 
 
-class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
-    pass
         
 
+
+import signal
+def signal_handler(signum, frame):
+    signal.raise_signal(signal.SIGINT)
+signal.signal(signal.SIGTERM, signal_handler)
 
 
 def start(port, webui, cgi_name, web_path, index_file):
     try:
-#       httpserver = ThreadedHTTPServer(
         httpserver = HTTPServer(
             ('', port),
             functools.partial(RequestHandler, webui, cgi_name, web_path, index_file)
@@ -285,6 +287,11 @@ def start(port, webui, cgi_name, web_path, index_file):
     except KeyboardInterrupt:
         sys.stdout.write('Terminated\n')
 
+    try:
+        httpserver.shutdown()
+    except:
+        pass
+        
     httpserver.server_close()
     webui.close()
     

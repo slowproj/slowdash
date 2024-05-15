@@ -6,6 +6,15 @@ import slowpy as slp
 default_db_url = 'sqlite:///SlowTestData'
 
 
+stop_requested = False
+import signal
+def signal_handler(signum, frame):
+    global stop_requested
+    stop_requested = True
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+
+
 def start(db_url, ts_name='ts_data', obj_name='obj_data', objts_name='objts_data'):
     datastore = slp.create_datastore_from_url(db_url, ts_name, obj_name, objts_name)
     
@@ -26,7 +35,7 @@ def start(db_url, ts_name='ts_data', obj_name='obj_data', objts_name='objts_data
     histogram.add_attr('ytitle', "test y-title")
 
 
-    while True:
+    while not stop_requested:
         #histogram.clear()
         graph.clear()
         histogram.add_attr('color', readout_count)
