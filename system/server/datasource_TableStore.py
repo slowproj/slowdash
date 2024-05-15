@@ -31,10 +31,11 @@ class DataSource_TableStore(DataSource):
 
         
     # override this
-    def _execute_query(self, schema, channels, length, to, resampling=None, reducer=None, lastonly=False):
-        return {}
+    def _execute_query(self, table, time_col, time_from, time_to, tag, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
+        columns, table = [], []
+        return columns, table
 
-    
+        
     def get_channels(self):
         self._scan_channels()
             
@@ -55,7 +56,7 @@ class DataSource_TableStore(DataSource):
         
         result = {}
         for schema in self.ts_schemata:
-            result.update(self._execute_query(
+            result.update(self._get_query_result(
                 schema, channels, length, to, resampling=resampling, reducer=reducer, lastonly=False
             ))
             
@@ -69,13 +70,13 @@ class DataSource_TableStore(DataSource):
         result = {}
         for schema in self.obj_schemata + self.objts_schemata:
             if schema.tag is None:
-                result.update(self._execute_query(
+                result.update(self._get_query_result(
                     schema, channels, length, to, resampling=None, reducer=None, lastonly=True
                 ))
             else:
                 # to make use of "limit 1"
                 for ch in channels:  
-                    result.update(self._execute_query(
+                    result.update(self._get_query_result(
                         schema, [ch], length, to, resampling=None, reducer=None, lastonly=True
                     ))
             # retry if the value is null?
@@ -151,7 +152,7 @@ class DataSource_TableStore(DataSource):
                         all_fields_have_types = False
                         break
             if len(schema.fields) == 0 or not all_fields_have_types:
-                columns, record = self._get_first_data_row(schema.table)
+                columns, record = self._get_first_data_row(schema)
                 if columns is None:
                     self.channels_scanned = False  # maybe the table is not created yet. Try again later
                     continue
@@ -194,6 +195,83 @@ class DataSource_TableStore(DataSource):
                         schema.add_channel(channel_name)
                         field_type = schema.channel_table[channel_name].get('type', None)
                         if (not schema.is_for_ts) and (field_type is None):
-                            value = self.get_first_data_value(schema.table, schema.tag, tag_value, field)
+                            value = self._get_first_data_value(schema.table, schema.tag, tag_value, field)
                             if value is not None:
                                 schema.add_channel(channel_name, Schema.identify_datatype(value))
+
+
+    def _get_query_result(self, schema, channels, length, to, resampling=None, reducer=None, lastonly=False):
+        result = {}
+        stop = int(to)
+        start = int(stop - float(length))
+        
+        if schema.time is None and not schema.is_for_obj:
+            return result
+            
+        target_channels = []
+        for name in channels:
+            if not name.replace('.', '').replace('_', '').replace('-', '').replace(':', '').isalnum():
+                logging.error('bad channel name: %s' % name)
+            else:
+                key = name[0:len(name)-len(schema.suffix)]
+                if key in schema.channel_table:
+                    target_channels.append(key)
+        if len(target_channels) == 0:
+            return result
+
+        time_col, time_from, time_to = schema.get_query_times(start, stop, self.time_sep)
+        if time_from is None or time_to is None:
+            return result
+
+        tag_values, fields, name_mapping = schema.get_query_tagvalues_fields(target_channels)
+        if len(fields) < 1:
+            return result
+
+        query_result_columns, query_result_table = self._execute_query(
+            schema.table, 
+            time_col, time_from, time_to, 
+            schema.tag, tag_values, fields,
+            resampling=resampling, reducer=reducer, stop=stop,
+            lastonly=lastonly
+        )
+
+        def add_result(channel, timestamp, value):
+            if channel not in result:
+                result[channel] = {
+                    'start': start, 'length': int(length), 't': [], 'x': []
+                }
+            result[channel]['t'].append(int(1000*(timestamp-start))/1000.0)
+            result[channel]['x'].append(value)
+            
+        remaining_channels = set(target_channels)
+        for row in query_result_table:
+            if len(remaining_channels) <= 0:
+                break
+            
+            timestamp = row[0]
+            if type(timestamp) == str:
+                timestamp = datetime.datetime.fromisoformat(timestamp)
+            if type(timestamp).__name__ == 'datetime':
+                if schema.time_type == 'unspecifiedutc':
+                    timestamp = timestamp.replace(tzinfo=datetime.timezone.utc)
+                timestamp = timestamp.timestamp()
+
+            if schema.tag is None:
+                # no tag: channel as field
+                for k in range(len(fields)):
+                    channel = fields[k]
+                    if channel in remaining_channels:
+                        if lastonly:
+                            remaining_channels.remove(channel)
+                        add_result(channel+schema.suffix, timestamp, row[1+k])
+            else:
+                # tag and fields
+                for k in range(len(fields)):
+                    channel = '%s%s%s' % (row[1], Schema.tag_field_separator, fields[k])
+                    channel = name_mapping.get(channel, channel)
+                    if channel in remaining_channels:
+                        if lastonly:
+                            remaining_channels.remove(channel)
+                        add_result(channel+schema.suffix, timestamp, row[2+k])
+                            
+        return result

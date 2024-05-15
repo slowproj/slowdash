@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 20 March 2022 #
 
-import sys, os, glob, math, re, json, enum, datetime, time, logging, traceback
+import sys, os, glob, math, re, json, enum, datetime, logging, traceback
 import importlib.machinery
 import numpy as np
 
@@ -233,7 +233,7 @@ class Schema:
         if self.time is not None:
             time_col = self.time
         else:
-            time_col = '%d' % int(time.time())
+            time_col = None
                 
         return time_col, time_from, time_to
 
@@ -324,7 +324,7 @@ class Schema:
             config['type'] = match[0][0:-3]
             url = url[len(match[0]):]
         pos = url.find('@')
-        if pos > 0:
+        if pos >= 0:
             auth = url[0:pos]
             url = url[pos+1:]
             pos = auth.find(':')
@@ -334,11 +334,11 @@ class Schema:
             else:
                 config['user'] = auth
         pos = url.find('/')
-        if pos > 0:
+        if pos >= 0:
             config['db'] = url[pos+1:]
             url = url[0:pos]
         pos = url.find(':')
-        if pos > 0:
+        if pos >= 0:
             config['host'] = url[0:pos]
             config['port'] = url[pos+1:]
         else:

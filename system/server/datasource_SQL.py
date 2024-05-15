@@ -66,10 +66,10 @@ class SQLServer():
     
 class DataSource_SQL(DataSource_TableStore):
     def __init__(self, project_config, config):
-        super().__init__(project_config, config)
         self.server = None
         self.time_sep = 'T'
         self.db_has_floor = False
+        super().__init__(project_config, config)
 
         
     # override this in DB implementation class
@@ -176,7 +176,7 @@ class DataSource_SQL(DataSource_TableStore):
             logging.error('SQL Error: %s: %s' % (result.error, schema.tag_value_sql))
             return None
         
-        return [ row[0] for row in result.get_table() ]
+        return sorted([ row[0] for row in result.get_table() ])
 
 
     def _get_first_data_row(self, schema):
@@ -231,62 +231,40 @@ class DataSource_SQL(DataSource_TableStore):
             return SQLServer(None)
         
     
-    def _execute_query(self, schema, channels, length, to, resampling=None, reducer=None, lastonly=False):
-        result = {}
-        stop = int(to)
-        start = int(stop - float(length))
-        
+    def _execute_query(self, table, time_col, time_from, time_to, tag, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
         if self.server is None:
             self.server = self._connect_with_retry()
         if self.server is None:
-            return result
+            return [], []
 
-        if schema.time is None and not schema.is_for_obj:
-            return result
-            
-        target_channels = []
-        for name in channels:
-            if not name.replace('.', '').replace('_', '').replace('-', '').replace(':', '').isalnum():
-                logging.error('bad channel name: %s' % name)
-            else:
-                key = name[0:len(name)-len(schema.suffix)]
-                if key in schema.channel_table:
-                    target_channels.append(key)
-        if len(target_channels) == 0:
-            return result
-
-        time_col, time_from, time_to = schema.get_query_times(start, stop, self.time_sep)
-        if time_from is None or time_to is None:
-            return result
-
-        tag_values, fields, name_mapping = schema.get_query_tagvalues_fields(target_channels)
-        if len(fields) < 1:
-            return result
-
-        if schema.tag is None:
-            sql_select = 'SELECT %s' % ','.join([ time_col ] + fields)
+        if time_col is None:
+            time_field = '%d' % int(time.time())
         else:
-            sql_select = 'SELECT %s' % ','.join([ time_col, schema.tag ] + fields)
-        sql_from = 'FROM %s' % schema.table
-        if schema.time is not None:
-            sql_where_list = [ '%s>=%s' % (schema.time, time_from), '%s<%s' % (schema.time, time_to) ]
+            time_field = time_col
+        if tag is None:
+            sql_select = 'SELECT %s' % ','.join([ time_field ] + fields)
+        else:
+            sql_select = 'SELECT %s' % ','.join([ time_field, tag ] + fields)
+        sql_from = 'FROM %s' % table
+        if time_col is not None:
+            sql_where_list = [ '%s>=%s' % (time_col, time_from), '%s<%s' % (time_col, time_to) ]
         else:
             sql_where_list = []
         if len(tag_values) > 0:
-            sql_where_list += [ '%s in (%s)' % (schema.tag, ','.join([ "'%s'" % val for val in tag_values ])) ]
+            sql_where_list += [ '%s in (%s)' % (tag, ','.join([ "'%s'" % val for val in tag_values ])) ]
         sql_where = 'WHERE ' + ' AND '.join(sql_where_list)
         
-        if schema.time is None:
+        if time_col is None:
             sql_orderby = ''
         elif lastonly:
-            sql_orderby = 'ORDER BY %s DESC' % schema.time
-            if len(channels) == 1 or schema.tag is None:
+            sql_orderby = 'ORDER BY %s DESC' % time_col
+            if len(channels) == 1 or tag is None:
                 sql_orderby = sql_orderby + ' limit 1'
         else:
-            sql_orderby = 'ORDER BY %s ASC' % schema.time
+            sql_orderby = 'ORDER BY %s ASC' % time_col
 
         sql = None
-        if schema.time is None or lastonly:
+        if time_col is None or lastonly:
             pass
         elif resampling is None or resampling <= 0:
             pass
@@ -295,13 +273,13 @@ class DataSource_SQL(DataSource_TableStore):
                 sql_cte_bucket = ' '.join([
                     f"SELECT",
                     f"    floor(({stop}-extract(epoch from timestamp))/{resampling}) AS bucket, ",
-                    f"    %s({schema.time}) AS picked_timestamp" % ("max" if reducer == 'last' else 'min'),
-                    f"    %s" % ("" if schema.tag is None else f", {schema.tag}"),
+                    f"    %s({time_col}) AS picked_timestamp" % ("max" if reducer == 'last' else 'min'),
+                    f"    %s" % ("" if tag is None else f", {tag}"),
                     f"{sql_from}",
                     f"{sql_where}",
                     f"GROUP BY ",
                     f"    bucket",
-                    f"    %s" % ("" if schema.tag is None else f", {schema.tag}")
+                    f"    %s" % ("" if tag is None else f", {tag}")
                 ]);
                 sql_cte_data = ' '.join([ sql_select, sql_from, sql_where ])
                 sql = ' '.join([
@@ -309,14 +287,14 @@ class DataSource_SQL(DataSource_TableStore):
                     f"    cte_bucket AS ({sql_cte_bucket}),",
                     f"    cte_data AS ({sql_cte_data})",
                     f"SELECT",
-                    f"    {stop}-{resampling}*(bucket+0.5) AS {schema.time}, t.{schema.tag}, %s" % ','.join(fields),
+                    f"    {stop}-{resampling}*(bucket+0.5) AS {time_col}, t.{tag}, %s" % ','.join(fields),
                     f"FROM",
                     f"    cte_data AS t",
                     f"JOIN",
                     f"    cte_bucket AS b",
                     f"ON ",
                     f"    t.timestamp = b.picked_timestamp",
-                    f"    %s" % ("" if schema.tag is None else f"AND t.{schema.tag} = b.{schema.tag}"),
+                    f"    %s" % ("" if tag is None else f"AND t.{tag} = b.{tag}"),
                     f"{sql_orderby}"
                 ])
             elif reducer in ['mean', 'sum', 'min', 'max'] and self.db_has_floor:  # "count" cannot be applied twice
@@ -327,20 +305,20 @@ class DataSource_SQL(DataSource_TableStore):
                 sql_cte_bucket = ' '.join([
                     f"SELECT",
                     f"    floor(({stop}-extract(epoch from timestamp))/{resampling}) AS bucket,",
-                    f"    %s" % ("" if schema.tag is None else f"{schema.tag},"),
+                    f"    %s" % ("" if tag is None else f"{tag},"),
                     f"    %s" % ','.join([f"{agg_func}({field}) as {field}" for field in fields]),
                     f"{sql_from}",
                     f"{sql_where}",
                     f"GROUP BY ",
                     f"    bucket",
-                    f"    %s" % (f", {schema.tag}" if schema.tag is not None else "")
+                    f"    %s" % (f", {tag}" if tag is not None else "")
                 ]);
                 sql = ' '.join([
                     f"WITH",
                     f"    cte_bucket AS ({sql_cte_bucket})",
                     f"SELECT",
-                    f"    {stop}-{resampling}*(bucket+0.5) as {schema.time},",
-                    f"    %s" % ("" if schema.tag is None else f"{schema.tag},"),
+                    f"    {stop}-{resampling}*(bucket+0.5) as {time_col},",
+                    f"    %s" % ("" if tag is None else f"{tag},"),
                     f"    %s" % ','.join(fields),
                     f"FROM",
                     f"    cte_bucket",
@@ -349,46 +327,9 @@ class DataSource_SQL(DataSource_TableStore):
         if sql is None:
             sql = ' '.join([ sql_select, sql_from, sql_where, sql_orderby ])
 
-        def add_result(channel, timestamp, value):
-            if channel not in result:
-                result[channel] = {
-                    'start': start, 'length': int(length), 't': [], 'x': []
-                }
-            result[channel]['t'].append(int(1000*(timestamp-start))/1000.0)
-            result[channel]['x'].append(value)
-            
-        remaining_channels = set(target_channels)
         query_result = self.server.execute(sql)
         if query_result.is_error:
             logging.error('SQL Query Error: %s: %s' % (query_result.error, sql))
-        for row in query_result.get_table():
-            if len(remaining_channels) <= 0:
-                break
-            
-            timestamp = row[0]
-            if type(timestamp) == str:
-                timestamp = datetime.datetime.fromisoformat(timestamp)
-            if type(timestamp).__name__ == 'datetime':
-                if schema.time_type == 'unspecifiedutc':
-                    timestamp = timestamp.replace(tzinfo=datetime.timezone.utc)
-                timestamp = timestamp.timestamp()
+            return [], []
 
-            if schema.tag is None:
-                # no tag: channel as field
-                for k in range(len(fields)):
-                    channel = fields[k]
-                    if channel in remaining_channels:
-                        if lastonly:
-                            remaining_channels.remove(channel)
-                        add_result(channel+schema.suffix, timestamp, row[1+k])
-            else:
-                # tag and fields
-                for k in range(len(fields)):
-                    channel = '%s%s%s' % (row[1], Schema.tag_field_separator, fields[k])
-                    channel = name_mapping.get(channel, channel)
-                    if channel in remaining_channels:
-                        if lastonly:
-                            remaining_channels.remove(channel)
-                        add_result(channel+schema.suffix, timestamp, row[2+k])
-                            
-        return result
+        return query_result.get_column_names(), query_result.get_table()
