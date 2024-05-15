@@ -10,5 +10,6 @@ from .datastore_factory import create_datastore_from_url
 from .datastore_SQL import DataStore_SQLite, DataStore_PostgreSQL
 from .datastore_InfluxDB2 import DataStore_InfluxDB2
 from .datastore_Redis import DataStore_Redis
+from .datastore_CSV import DataStore_CSV
 
 from .dummydevice import DummyWalkDevice
