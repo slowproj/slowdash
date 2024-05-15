@@ -31,9 +31,6 @@ class DataSource_CSV(DataSource_TableStore):
 
         super()._configure(project_config, config)
 
-
-
-
         ### TABLES ###
         self.tables = {}
         tables = config.get('table', [])
@@ -44,7 +41,6 @@ class DataSource_CSV(DataSource_TableStore):
                 if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
                     name = os.path.basename(filepath)
                     tables.append({'name': name, 'file': filepath})                
-
         for table in tables:
             if not (('name' in table) and ('file' in table)):
                 logging.error('table needs "name" and "file" fields: "%s"' % table)
@@ -60,13 +56,13 @@ class DataSource_CSV(DataSource_TableStore):
         if self.directory is None:
             return None
         
-        columns, tag_value_set = None, set()
+        columns, tag_value_set = [], set()
         tag_column = None
         filepath = os.path.join(self.directory, schema.table + '.csv')
         try:
             with open(filepath) as f:
                 for line in f:
-                    if columns is None:
+                    if len(columns) == 0:
                         columns = self._split(line)
                         for k in range(len(columns)):
                             if columns[k] == schema.tag:
@@ -76,9 +72,11 @@ class DataSource_CSV(DataSource_TableStore):
                             logging.error('unable to find tag column: %s: %s' % (schema.tag, filepath))
                             return None
                     else:
-                         tag_value_set.add(self._split(line)[tag_column])
+                        record = self._split(line)
+                        if len(record) == len(columns):
+                            tag_value_set.add(self._split(line)[tag_column])
         except Exception as e:
-            logging.error('unable to read CSV file: %s: %s', (filepath, str(e)))
+            logging.error('unable to read CSV file: %s: %s' % (filepath, str(e)))
             return None
         
         return sorted([ tag for tag in tag_value_set ])
@@ -88,34 +86,35 @@ class DataSource_CSV(DataSource_TableStore):
         if self.directory is None:
             return None, []
         
-        columns, record = None, []
+        columns, record = [], []
         filepath = os.path.join(self.directory, schema.table + '.csv')
         try:
             with open(filepath) as f:
                 for line in f:
-                    if columns is None:
+                    if len(columns) == 0:
                         columns = self._split(line)
                     else:
                         record = self._split(line)
-                        break
+                        if len(record) == len(columns):
+                            break
         except Exception as e:
-            logging.error('unable to read CSV file: %s: %s', (filepath, str(e)))
+            logging.error('unable to read CSV file: %s: %s' % (filepath, str(e)))
             return None, []
         
         return columns, record
 
     
-    def _get_first_data_value(self, table, tag_name, tag_value, field):
+    def _get_first_data_value(self, table_name, tag_name, tag_value, field):
         if self.directory is None:
             return None
 
         value = None
-        columns, tag_column, value_column = None, None, None
-        filepath = os.path.join(self.directory, table + '.csv')
+        columns, tag_column, value_column = [], None, None
+        filepath = os.path.join(self.directory, table_name + '.csv')
         try:
             with open(filepath) as f:
                 for line in f:
-                    if columns is None:
+                    if len(columns) == 0:
                         columns = self._split(line)
                         for k in range(len(columns)):
                             if columns[k] == tag_name:
@@ -130,19 +129,18 @@ class DataSource_CSV(DataSource_TableStore):
                             return None
                     else:
                         record = self._split(line)
-                        if record[tag_column] == tag_value:
+                        if (len(record) == len(columns)) and (record[tag_column] == tag_value):
                             value = record[field_column]
                             break
-                            
         except Exception as e:
-            logging.error('unable to read CSV file: %s: %s', (filepath, str(e)))
+            logging.error('unable to read CSV file: %s: %s' % (filepath, str(e)))
             return None
         
         return value
 
         
     def _execute_query(self, table_name, time_col, time_from, time_to, tag_col, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
-        columns, table = None, []
+        columns, table = [], []
 
         time_from, time_to = int(time_from), int(time_to)
         time_column, tag_column, field_columns = None, None, []
@@ -150,7 +148,7 @@ class DataSource_CSV(DataSource_TableStore):
         try:
             with open(filepath) as f:
                 for line in f:
-                    if columns is None:
+                    if len(columns) == 0:
                         columns = self._split(line)
                         for k in range(len(columns)):
                             if time_col is not None and (columns[k] == time_col):
@@ -160,7 +158,9 @@ class DataSource_CSV(DataSource_TableStore):
                             elif columns[k] in fields:
                                 field_columns.append(k)
                     else:
-                        record = self._split(line)                        
+                        record = self._split(line)
+                        if len(record) != len(columns):
+                            continue
                         time_val = int(record[time_column]) if time_column is not None else int(time.time())
                         if time_column is not None and (time_val < time_from or time_val >= time_to):
                             continue
@@ -176,7 +176,7 @@ class DataSource_CSV(DataSource_TableStore):
                         else:
                             table.append(row)
         except Exception as e:
-            logging.error('unable to read CSV file: %s: %s', (filepath, str(e)))
+            logging.error('unable to read CSV file: %s: %s' % (filepath, str(e)))
             return [], []
         
         return columns, table
@@ -196,7 +196,7 @@ class DataSource_CSV(DataSource_TableStore):
         for ch in channels:
             if ch not in self.tables:
                 continue
-            entry = self.tables[ch]
+            entry = self.tables.get(ch)
             filepath = entry['file']
             head = entry.get('head', None)
             tail = entry.get('tail', None)
@@ -217,7 +217,7 @@ class DataSource_CSV(DataSource_TableStore):
                     'x': { 'columns': columns, 'table': table }
                 }
             except Exception as e:
-                logging.error('unable to read CSV file: %s: %s', (filepath, str(e)))
+                logging.error('unable to read CSV file: %s: %s' % (filepath, str(e)))
                 pass
             
         return result

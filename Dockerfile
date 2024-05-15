@@ -14,8 +14,7 @@ RUN groupadd -g $GID $GROUPNAME && useradd -u $UID -g $GID -d /home/$USERNAME -m
 
 COPY system /slowdash/system
 COPY docs /slowdash/docs
-COPY ExampleProjects /slowdash/ExampleProjects
-
+COPY utils /slowdash/utils
 RUN cd /slowdash/system && make && ln -s /slowdash/bin/slowdash /bin
 RUN pip install /slowdash/system/client/slowpy
 

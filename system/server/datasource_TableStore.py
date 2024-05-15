@@ -26,7 +26,7 @@ class DataSource_TableStore(DataSource):
 
     
     # override this
-    def _get_first_data_value(self, table, tag_name, tag_value, field):
+    def _get_first_data_value(self, table_name, tag_name, tag_value, field):
         return None
 
         

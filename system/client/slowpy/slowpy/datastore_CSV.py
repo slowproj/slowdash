@@ -43,8 +43,9 @@ class DataStore_CSV(DataStore):
             if not is_new:
                 try:
                     obj_file = open(filename, "r")
+                    headder = obj_file.readline()
                     for line in obj_file:
-                        channel, value = line.split(',', 1)
+                        channel, value = line.rstrip('\n').split(',', 1)
                         self.obj_list[channel] = value
                 except Exception as e:
                     pass

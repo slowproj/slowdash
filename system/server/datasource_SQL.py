@@ -195,11 +195,11 @@ class DataSource_SQL(DataSource_TableStore):
         return columns, record
 
                 
-    def _get_first_data_value(self, schema, tag_value, field):
-        if schema.tag is not None:
-            sql = "select %s from %s where %s='%s' limit 1" % (field, schema.table, schema.tag, tag_value)
+    def _get_first_data_value(self, table_name, tag_name, tag_value, field):
+        if tag_name is not None:
+            sql = "select %s from %s where %s='%s' limit 1" % (field, table_name, tag_name, tag_value)
         else:
-            sql = "select %s from %s limit 1" % (field, schema.table)
+            sql = "select %s from %s limit 1" % (field, table_name)
         result = self.server.execute(sql)
         if result.is_error:
             logging.error('SQL Error: %s: %s' % (result.error, sql))
