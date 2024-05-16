@@ -1,0 +1,9 @@
+slowdash_project:
+  name: DriplineFirstMesh
+  title: Dripline First-Mesh Walkthrough
+
+  data_source:
+    url: postgresql://postgres@postgres:5432/sensor_data
+    parameters:
+      time_series:
+        - schema: numeric_data[sensor_name]@timestamp(aware)=value_raw(default),value_cal

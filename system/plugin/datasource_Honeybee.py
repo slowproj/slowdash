@@ -10,6 +10,7 @@ class DataSource_Honeybee(DataSource):
         super().__init__(project_config, config)
         self.bin_dir = self.config.get('bin_dir', None)
         self.config_file = self.config.get('config', None)
+        self.dripline_db = self.config.get('dripline_db', None)
         if self.bin_dir is not None:
             self.bin_dir = os.path.join(project_config.project_dir, self.bin_dir)
         if self.config_file is not None:
@@ -19,6 +20,8 @@ class DataSource_Honeybee(DataSource):
     def get_channels(self):
         cmd = [ os.path.join(self.bin_dir, 'hb-list-sensors') ]
         cmd.append('--config=' + self.config_file)
+        if self.dripline_db is not None:
+            cmd.append('--dripline-db=' + self.dripline_db)
         cmd.append('--fields=name')
         try:
             return json.loads(self.execute(cmd))
@@ -37,6 +40,8 @@ class DataSource_Honeybee(DataSource):
         if resampling is not None:
             cmd.append('--resample=%s,%s' % (resampling, reducer))
         cmd.append('--config=' + self.config_file)
+        if self.dripline_db is not None:
+            cmd.append('--dripline-db=' + self.dripline_db)
         try:
             output = self.execute(cmd)
         except Exception as e:
@@ -69,6 +74,8 @@ class DataSource_Honeybee(DataSource):
 #        if resampling is not None:
 #            cmd.append('--resample=%s,%s' % (resampling, reducer))
 #        cmd.append('--config=' + self.config_file)
+#        if self.dripline_db is not None:
+#            cmd.append('--dripline-db=' + self.dripline_db)
 #        return self.execute(cmd)
 
     

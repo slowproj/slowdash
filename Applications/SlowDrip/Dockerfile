@@ -1,0 +1,36 @@
+# to build: docker build -t slowdash-dripline ../..
+
+
+# if you have Honeybee, build the dripline-honeybee image first with Dockerfile.dripline-honeybee at Honeybee
+#FROM dripline-honeybee  
+
+# without Honeybee:
+FROM driplineorg/dripline-python:v4.5.8
+
+
+
+
+# we install Python packages that might be used by user modules
+RUN pip install numpy scipy pandas matplotlib pillow pyyaml psutil bcrypt requests psycopg2 influxdb-client redis pymongo couchdb
+
+RUN apt-get update && apt-get install -y gosu
+
+
+ARG USERNAME=slowuser
+ARG GROUPNAME=slowuser
+ARG UID=18881
+ARG GID=18881
+RUN groupadd -g $GID $GROUPNAME && useradd -u $UID -g $GID -d /home/$USERNAME -m -s /bin/bash $USERNAME 
+
+COPY system /slowdash/system
+COPY docs /slowdash/docs
+COPY utils /slowdash/utils
+RUN cd /slowdash/system && make && ln -s /slowdash/bin/slowdash /bin
+RUN pip install /slowdash/system/client/slowpy
+
+WORKDIR /project
+VOLUME /project
+
+ENTRYPOINT ["/slowdash/system/docker/entrypoint.sh"]
+CMD ["/bin/slowdash", "--port=18881"]
+EXPOSE 18881
