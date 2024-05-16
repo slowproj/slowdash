@@ -2,16 +2,18 @@
 title: Dash Start
 ---
 
-<div style="font-size:120%;margin-bottom:3em">
+<strong>Status: Not yet available</strong> (TODO: upload a Docker image to dockerhub and ghcr)
+
+<div style="font-size:120%">
 If you already have:
 
 - time-series data stored on a database, and
 - `docker-compose` command available on your system,
 
-visualization can be done instantly (without creating a project etc.).
-
-<strong>TODO: Docker image not yet uploaded</strong>
+then visualization can be done instantly (without creating a project etc.).
 </div>
+
+<img src="fig/Top-InitialPlot.png" width="50%" style="box-shadow:gray 2px 2px;margin-bottom:3em">
 
 
 # PostgreSQL
@@ -31,6 +33,7 @@ visualization can be done instantly (without creating a project etc.).
 | mbar.IG.Vac.MS      | 2022-09-15 03:19:31.529545+00 |        2e-09|
 | mbar.IG.Vac.BS      | 2022-09-15 03:19:31.610188+00 |        4e-09|
 (for the other table structure (e.g., "wide format"), refer to [Data Binding section](DataBinding.html))
+
 
 
 ### Do this:

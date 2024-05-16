@@ -731,6 +731,48 @@ slowdash_project:
         name: DBInfo
 ```
 
+
+# Local CSV Files
+- A directory containing CSV files can be used as a data store, in a very similar way as tables in the RDBMS (no SQL queries, though).
+- One CSV file corresopnds to one table, each CSV file must have a header line for its first line.
+
+## Time-Series of Scalar Values
+To access a table containing time-series data, write the schema in the `time_series` entry:
+```yaml
+slowdash_project:
+  data_source:
+    url: csv:///PATH/TO/DIRECTORY
+    parameters:
+      time_series:
+        schema: FILE_ROOT_NAME [ TAG_COLUMN ] @ TIME_COLUMN
+```
+
+##  Time-Series of Histograms, Graphs, Tables & Trees
+- same as SQL databases
+  - store JSON string as data value
+  - use `object_time_series` entry
+```yaml
+slowdash_project:
+  data_source:
+    parameters:
+      url: csv:///PATH/TO/DIRECTORY
+      object_time_series:
+        schema: histograms[channel]@timestamp(unix)=value
+```
+
+##  "Current" Histograms, Graphs, Tables & Trees
+- a table without a time-stamp column stores "current" objects
+- use `object` entry
+```yaml
+slowdash_project:
+  data_source:
+    parameters:
+      url: csv:///PATH/TO/DIRECTORY
+      object_time_series:
+        schema: histograms[channel]=value
+```
+
+
 # Local YAML Files
 - One YAML file stores one Tree object
 - [TODO] Multiple YAML files with time-stamps encoded in the file names
@@ -745,8 +787,6 @@ slowdash_project:
       valid_from: now
 ```
   
-# Local CSV Files
-[TODO]
 
 # Local ROOT Files
 [TODO]
