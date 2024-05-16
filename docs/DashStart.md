@@ -9,6 +9,8 @@ If you already have:
 - `docker-compose` command available on your system,
 
 visualization can be done instantly (without creating a project etc.).
+
+<strong>TODO: Docker image not yet uploaded</strong>
 </div>
 
 
@@ -39,7 +41,7 @@ version: '3'
 
 services:
   slowdash:
-    image: slowdash
+    image: slowproj/slowdash:2405
     ports:
       - "18881:18881"
     environment:
@@ -77,7 +79,7 @@ version: '3'
 
 services:
   slowdash:
-    image: slowdash
+    image: slowproj/slowdash:2405
     ports:
       - "18881:18881"
     environment:
@@ -112,7 +114,7 @@ version: '3'
 
 services:
   slowdash:
-    image: slowdash
+    image: slowproj/slowdash:2405
     ports:
       - "18881:18881"
     environment:

@@ -20,7 +20,7 @@ SlowDash is a web GUI tool for control and monitoring of concurrent systems (slo
 <img src="https://slowproj.github.io/slowdash/fig/Gallery-PlotDemo.png" width="70%">
 
 ## Dash-Start
-If you already have time-series data stored on a database, and have `docker-compose` command available on your system, visualization can be done instantly. See the "Dash Start" section of [Github Pages](https://slowproj.github.io/slowdash/).
+If you already have time-series data stored on a database, and have `docker-compose` available on your system, visualization can be done instantly. See the ["Dash Start" section of Github Pages](https://slowproj.github.io/slowdash/#DashStart).
 
 ## Setup and Quick Look
 
