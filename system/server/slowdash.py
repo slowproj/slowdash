@@ -171,7 +171,7 @@ class App:
             else:
                 return self._save_config_file(path_list[2], doc, opts)
         elif path_list[0] == 'control':
-            return self._dispatch_control(doc, opts)
+            return self._dispatch_control(doc, opts, output)
         
         return 400  # Bad Request
 
@@ -438,7 +438,7 @@ class App:
         return result
 
     
-    def _dispatch_control(self, doc, opts):
+    def _dispatch_control(self, doc, opts, output):
         try:
             json_doc = json.loads(doc.decode())
             logging.info("DISPATCH: %s" % json_doc)

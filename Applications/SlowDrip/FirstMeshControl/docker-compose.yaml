@@ -49,5 +49,5 @@ services:
     ports:
       - "18881:18881"
     volumes:
-      - ./authentications.json:/root/authentications.json
+      - ./authentications.json:/project/authentications.json
       - ./slowdash.d:/project

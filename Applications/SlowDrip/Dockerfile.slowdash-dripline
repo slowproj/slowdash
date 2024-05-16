@@ -1,4 +1,4 @@
-# to build: docker build -t slowdash-dripline ../..
+# to build: docker build -t slowdash-dripline -f ./Dockerfile.slowdash-dripline ../..
 
 
 # if you have Honeybee, build the dripline-honeybee image first with Dockerfile.dripline-honeybee at Honeybee
@@ -6,7 +6,6 @@
 
 # without Honeybee:
 FROM driplineorg/dripline-python:v4.5.8
-
 
 
 
