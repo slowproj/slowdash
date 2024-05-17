@@ -3,6 +3,12 @@
 # Setting the user/group id's of the slowuser
 # If the id's are not given through the environmental variables,
 # extract them from the /project directory.
+
+# Do this only when the user in the container is "root" (e.g., in Docker)
+if [ $(whoami) != 'root' ]; then
+    exec "$@"
+fi
+
 if [ -z "$USER_ID" ]; then
     USER_ID=$(ls -dln /project | cut --delimiter=' ' --field=3)
 fi    

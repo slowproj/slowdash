@@ -266,7 +266,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 import signal
 def signal_handler(signum, frame):
-    signal.raise_signal(signal.SIGINT)
+    raise InterruptedError
 signal.signal(signal.SIGTERM, signal_handler)
 
 
@@ -285,6 +285,8 @@ def start(port, webui, cgi_name, web_path, index_file):
     try:
         httpserver.serve_forever()
     except KeyboardInterrupt:
+        sys.stdout.write('Terminated\n')
+    except InterruptedError:
         sys.stdout.write('Terminated\n')
 
     try:

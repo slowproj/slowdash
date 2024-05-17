@@ -18,9 +18,9 @@ COPY utils /slowdash/utils
 RUN cd /slowdash/system && make && ln -s /slowdash/bin/slowdash /bin
 RUN pip install /slowdash/system/client/slowpy
 
-WORKDIR /project
 VOLUME /project
+EXPOSE 18881
 
+WORKDIR /project
 ENTRYPOINT ["/slowdash/system/docker/entrypoint.sh"]
 CMD ["/bin/slowdash", "--port=18881"]
-EXPOSE 18881

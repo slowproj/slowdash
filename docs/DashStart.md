@@ -36,7 +36,7 @@ then visualization can be done instantly (without creating a project etc.).
 
 
 
-### Do this:
+### Do this for SlowDash:
 
 write `docker-compose.yaml` as below:
 ```yaml
@@ -74,7 +74,7 @@ and open `http://localhost:18881` with a web-browser.
 
 (for the other table structure, refer to [Data Binding section](DataBinding.html))
 
-### Do this:
+### Do this for SlowDash:
 
 write `docker-compose.yaml` as below:
 ```yaml
@@ -109,7 +109,7 @@ and open `http://localhost:18881` with a web-browser.
 ##### Data Schema and Contents
 - stored in Reids Time-Series
 
-### Do this:
+### Do this for SlowDash:
 
 write `docker-compose.yaml` as below:
 ```yaml

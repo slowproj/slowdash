@@ -21,7 +21,7 @@ class DataSource_CSV(DataSource_TableStore):
                 self.directory = directory
                 break
             else:
-                logging.info('Unable to find CSV directory: "%s", retrying in 5 sec: %s' % (directory, str(e)))
+                logging.info('Unable to find CSV directory: "%s", retrying in 5 sec' % directory)
                 time.sleep(5)
         else:
             logging.error('invalid CSV directory: %s' % directory)
