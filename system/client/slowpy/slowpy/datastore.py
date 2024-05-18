@@ -1,6 +1,7 @@
 # Created by Sanshiro Enomoto on 3 June 2023 #
 
 
+
 class DataStore:
     
     def write_timeseries(self, fields, tag=None, timestamp=None):
@@ -16,4 +17,5 @@ class DataStore:
     
 class DataStore_Null(DataStore):
     pass
+
 

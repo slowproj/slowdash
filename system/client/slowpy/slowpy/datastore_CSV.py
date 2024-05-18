@@ -5,6 +5,8 @@ import os, sys, time, logging
 from .datastore import DataStore
 
 
+
+    
 class DataStore_CSV(DataStore):
     def __init__(self, db_url='csv:///SlowStore.d', ts_table_name=None, obj_table_name=None, objts_table_name=None, recreate=False):
         self.db_url = db_url
@@ -13,7 +15,7 @@ class DataStore_CSV(DataStore):
         self.objts_table_name = objts_table_name
         self.flag = "w" if recreate else "a"
 
-        dirname = self.db_url[7:] if  self.db_url.startswith('csv:///') else self.db_url
+        dirname = self.db_url[7:] if self.db_url.startswith('csv:///') else self.db_url
         while len(dirname) > 0 and dirname[0] == '/':
             dirname = dirname[1:]
         dirname = os.path.abspath(dirname)
@@ -128,3 +130,21 @@ class DataStore_CSV(DataStore):
     def _escape(self, text):
         # TODO: do not replace "\," with "\\,"
         return text.replace(',', '\\,')
+
+
+
+class DataStore_TextDump(DataStore_CSV):
+    def __init__(self, output=sys.stdout):
+        self.ts_file = output
+        self.obj_file = output
+        self.objts_file = output
+
+        
+    def write_object(self, obj, name=None):
+        if name is None:
+            name = obj.name
+        self.objts_file.write("%s,%s\n" % (self._escape(name), self._escape(str(obj))))
+
+    def _escape(self, text):
+        return text
+        
