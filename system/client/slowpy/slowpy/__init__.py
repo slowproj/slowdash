@@ -12,5 +12,8 @@ from .datastore_InfluxDB2 import DataStore_InfluxDB2
 from .datastore_Redis import DataStore_Redis
 from .datastore_CSV import DataStore_CSV, DataStore_TextDump
 
+from .control import Endpoint, ScpiEndpoint, EthernetEndpoint, ControlSystem
+
+
 from .serial_device import SerialDevice, ScpiDevice, SerialDeviceEthernetServer
-from .dummy_device import DummyWalkDevice, DummyScpiDevice
+from .dummy_device import DummyDevice_RandomWalk, DummyScpiDevice_RandomWalk

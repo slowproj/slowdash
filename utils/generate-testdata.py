@@ -16,7 +16,7 @@ signal.signal(signal.SIGTERM, signal_handler)
 def start(db_url, ts_name='ts_data', obj_name='obj_data', objts_name='objts_data'):
     datastore = slowpy.create_datastore_from_url(db_url, ts_name, obj_name, objts_name)
     
-    dummy_device = slowpy.DummyWalkDevice()
+    dummy_device = slowpy.DummyDevice_RandomWalk()
     readout_count = 0
     histogram = slowpy.Histogram('test_histogram', 100, -10, 10)
     graph = slowpy.Graph('test_graph', labels=['ch', 'value'])

@@ -6,7 +6,7 @@ import sys, time, os, subprocess, threading, socket, signal
 
 class SerialDevice:
     def __init__(self, **kwargs):
-        self.line_terminator = kwargs.get('line_terminator') or '\x0a' #CR
+        self.line_terminator = kwargs.get('line_terminator') or '\x0d' #CR
 
         
     # override this
@@ -80,6 +80,7 @@ class SerialDeviceEthernetLink(threading.Thread):
                     line.clear()
                     
         self.sock.close()
+        print("connection closed")
 
         
 
@@ -108,6 +109,7 @@ class SerialDeviceEthernetServer:
             while True:
                 sock, addr = self.sock.accept()
                 link = SerialDeviceEthernetLink(self.serial_device, sock, addr)
+                print("connection accepted")
                 link.start()
                 self.links.append(link)
         except InterruptedError:

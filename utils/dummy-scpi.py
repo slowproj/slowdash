@@ -14,8 +14,8 @@ if __name__ == '__main__':
         '--terminator', action='store', dest='line_terminator', type='string', default='CR',
         help='line terminator, CR or LF'
     )
-    (options, args) = optionparser.parse_args()
+    (opts, args) = optionparser.parse_args()
     
-    device = slowpy.DummyScpiDevice(line_terminator='\x0a' if options.line_terminator=='LF' else '\x0d')
-    server = slowpy.SerialDeviceEthernetServer(device, port=options.port)
+    device = slowpy.DummyScpiDevice_RandomWalk(line_terminator='\x0a' if opts.line_terminator=='LF' else '\x0d')
+    server = slowpy.SerialDeviceEthernetServer(device, port=opts.port)
     server.start()
