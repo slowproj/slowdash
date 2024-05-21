@@ -1,7 +1,7 @@
 import sys, time
 
-import dripline as dl
-dripline = dl.core.Interface(dripline_config={'auth-file':'/project/authentications.json'})
+import dripline
+ifc = dripline.core.Interface(dripline_config={'auth-file':'/project/authentications.json'})
 
 target, ramp, is_ramping = None, None, False
 
@@ -19,7 +19,7 @@ def get_data(channel):
 def loop():
     global target, ramp, is_ramping
     try:
-        current = dripline.get('peaches').payload.to_python().get('value_raw', None)
+        current = ifc.get('peaches').payload.to_python().get('value_raw', None)
         next_value = None
         if current is not None:
             diff = abs(target - current)
@@ -33,7 +33,7 @@ def loop():
                 next_value = current - ramp
         if next_value is not None:
             is_ramping = True
-            dripline.set('peaches', next_value)
+            ifc.set('peaches', next_value)
         else:
             is_ramping = False
     except Exception as e:

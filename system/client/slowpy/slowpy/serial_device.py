@@ -42,7 +42,7 @@ class ScpiDevice(SerialDevice):
             cmd_path = [ node.upper().strip() for node in cmd_path ]
                 
             reply = self.process_scpi_command(cmd_path, params)
-            print("query: [%s] -> [%s]" % (':'.join(cmd_path), reply))
+            print("scpi: [%s] -> [%s]" % (cmd.strip(), reply))
 
         return reply
 
@@ -69,7 +69,7 @@ class SerialDeviceEthernetLink(threading.Thread):
             packet = self.sock.recv(1024)
             if len(packet) == 0 or self.stop_event.is_set():
                 break
-            
+
             for ch in packet:
                 if ch != ord(self.serial_device.line_terminator):
                     if ch not in [ ord('\x0a'), ord('\x0d') ]:
@@ -99,7 +99,8 @@ class SerialDeviceEthernetServer:
         self.sock.bind((host, port))
         self.sock.listen(10)
         self.links = []
-        print("listening at %d@%s" % (port, host))
+        print("listening at %s:%d" % (host, port))
+        print("line terminator is: x%02x" % ord(self.serial_device.line_terminator))
 
         
     def start(self):

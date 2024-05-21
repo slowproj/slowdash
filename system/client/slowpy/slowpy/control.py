@@ -1,107 +1,88 @@
+import os, importlib, logging, traceback
 
 
 class Endpoint:
-    def __init__(self):
-        pass
+    def __init__(self, parent=None):
+        self.parent = parent
 
+    # override this as needed
     def set(self, value):
-        pass
+        if parent:
+            parent.set(value)
 
+    # override this as needed
     def get(self):
-        return None
+        if parent:
+            return parent.get()
+        else:
+            return None
 
+    # override this as needed
     def __str__(self):
         return str(self.get())
     
+    # override this as needed
     def __float__(self):
         return float(self.get())
+
+    # override this as needed
+    @classmethod
+    def _endpoint_creator_method(MyClass):
+        def endpoint(self, *args, **kwargs):  # "self" is a parent (the node to which this method is added)
+            return MyClass(self, *args, **kwargs)
+        return endpoint
+
     
     @classmethod
-    def load(cls, module_name):
-        pass
-
-    
-
-class ScpiEndpoint(Endpoint):
-    def __init__(self, connection, base_name):
-        self.connection = connection
-        self.base_name = base_name
-        
-    
-    def set(self, value):
-        self.connection.set('%s %s' % (self.base_name, str(value)))
-        self.connection.get()
-
-    
-    def get(self):
-        self.connection.set('%s?' % self.base_name)
-        return self.connection.get()
-
-
-
-class EthernetEndpoint(Endpoint):
-    def __init__(self, host, port, **kwargs):
-        import socket
-        self.host = host
-        self.port = port
-        
-        self.line_terminator = kwargs.get('line_terminator') or '\x0a'
-        self.socket_buffer = []
-        
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((self.host, self.port))
-        print('Ethernet: %s:%s connected' % (host, str(port)))
-
-    
-    def __del__(self):
-        self.socket.close()
+    def add_endpoint(cls, EndpointClass, name=None):
+        method = EndpointClass._endpoint_creator_method()
+        if name is None:
+            name = method.__name__
+        setattr(cls, name, method)
 
         
-    def set(self, value):
-        self.socket.sendall((value+self.line_terminator).encode('utf-8'))
-
-    
-    def get(self):
-        line = []
-        while True:
-            if len(self.socket_buffer) == 0:
-                self.socket_buffer = self.socket.recv(1024)
-            if len(self.socket_buffer) == 0:
+    @classmethod
+    def load_endpoint_module(cls, module_name, search_dirs=[]):
+        filename = 'control_%s.py' % module_name
+        if search_dirs is None or len(search_dirs) == 0:
+            search_dirs = [
+                os.path.abspath(os.getcwd()),
+                os.path.abspath(os.path.dirname(__file__))
+            ]
+        for module_dir in search_dirs:
+            filepath = os.path.join(module_dir, filename)
+            if os.path.isfile(filepath):
                 break
-
-            while True:
-                ch = self.socket_buffer[0]
-                self.socket_buffer = self.socket_buffer[1:]
-                if ch not in [ ord('\x0a'), ord('\x0d') ]:
-                    line.append(ch)
-                if (len(self.socket_buffer)) == 0 or (ch == ord(self.line_terminator)):
-                    return bytes(line).decode('utf-8')
-                
-        return bytes(line).decode('utf-8')
-
-
-    
-    def scpi(self, base_name):
-        return ScpiEndpoint(self, base_name)
-
-
-    
+        else:
+            logging.error('unable to find control plugin: %s' % module_name)
+            return None
         
+        try:
+            module = importlib.machinery.SourceFileLoader(filename, filepath).load_module()
+        except Exception as e:
+            logging.error('unable to load control module: %s: %s' % (module_name, str(e)))
+            logging.error(traceback.format_exc())
+            return None
+        
+        logging.debug('loaded control module "%s"' % module_name)
+
+        export_func = module.__dict__.get('export', None)
+        if export_func is not None:
+            for func in export_func():
+                cls.add_endpoint(func)
+        else:
+            endpoint_classes = []
+            for name, entry in module.__dict__.items():
+                if callable(entry):
+                    if '_endpoint_creator_method' in dir(entry):
+                        endpoint_classes.append(entry)
+            if len(endpoint_classes) > 1:
+                cls.add_endpoint(endpoint_classes[1])
+            else:
+                logging.error('unable to identify Endpoint class: %s' % module_name)
+
+        
+
 class ControlSystem(Endpoint):
     def __init__(self):
-        self.ethernet_endpoints = {}
-
-    
-    def ethernet(self, host, port):
-        name = '%s:%s' % (host, str(port))
-        try:
-            self.ethernet_endpoints
-        except:
-            self.ethernet_endpoints = {}
-        endpoint = self.ethernet_endpoints.get(name, None)
-        
-        if endpoint is None:
-            endpoint = EthernetEndpoint(host, port)
-            self.ethernet_endpoints[name] = endpoint
-
-        return endpoint
+        self.load_endpoint_module('Ethernet')

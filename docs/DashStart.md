@@ -32,7 +32,7 @@ then visualization can be done instantly (without creating a project etc.).
 | mbar.IG.Vac.AS      | 2022-09-15 03:19:31.490579+00 |     2.26e-07|
 | mbar.IG.Vac.MS      | 2022-09-15 03:19:31.529545+00 |        2e-09|
 | mbar.IG.Vac.BS      | 2022-09-15 03:19:31.610188+00 |        4e-09|
-(for the other table structure (e.g., "wide format"), refer to [Data Binding section](DataBinding.html))
+(for other table structures (e.g., "wide format"), refer to [Data Binding section](DataBinding.html))
 
 
 
@@ -72,7 +72,7 @@ and open `http://localhost:18881` with a web-browser.
 - all the data in a single "measurment"
 - channel name as a "tag"
 
-(for the other table structure, refer to [Data Binding section](DataBinding.html))
+(for other table structures, refer to [Data Binding section](DataBinding.html))
 
 ### Do this for SlowDash:
 

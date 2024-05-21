@@ -8,10 +8,10 @@ title: Auto-Cruise
 - Tile View: shows all the pages in a tile, still keeping the pages active
 
 <p>
-- Any web sites can be added to the Auto-Cruise list, but "pausing on mouse-click" does not work for the external pages due to security restrictions.
+- Any web sites can be added to the Auto-Cruise list, but for external pages some functions (such as "pausing on mouse-click") are restricted due to security reasons.
 
 # Setup
-Place a JSON or YAML configuration file under `PROJECT/config` with name like `slowcruise-NAME.json` (the name must start with `slowcruise-`).
+Place a JSON or YAML configuration file under `PROJECT/config` with name like `slowcruise-NAME.json` (the name must start with `slowcruise-`). The "Cruise Planner" tool available on the home page will privide a web interface for it.
 
 Example of `Projects/ATDS/config/slowcruise-ATDS.yaml`:
 
