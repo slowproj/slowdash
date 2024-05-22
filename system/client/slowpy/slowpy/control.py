@@ -2,34 +2,26 @@ import os, importlib, logging, traceback
 
 
 class Endpoint:
-    def __init__(self, parent=None):
-        self.parent = parent
-
-    # override this as needed
+    # override this
     def set(self, value):
-        if parent:
-            parent.set(value)
+        pass
 
-    # override this as needed
+    # override this
     def get(self):
-        if parent:
-            return parent.get()
-        else:
-            return None
+        return None
 
-    # override this as needed
     def __str__(self):
         return str(self.get())
     
-    # override this as needed
     def __float__(self):
         return float(self.get())
 
-    # override this as needed
+    
+    # override this to add a child endoint
     @classmethod
     def _endpoint_creator_method(MyClass):    # return a method to be injected
         def endpoint(self, *args, **kwargs):  # "self" here is a parent (the node to which this method is added)
-            return MyClass(self, *args, **kwargs)
+            return MyClass(*args, **kwargs)
         return endpoint
 
     
@@ -42,7 +34,7 @@ class Endpoint:
 
         
     @classmethod
-    def load_endpoint_module(cls, module_name, search_dirs=[]):
+    def load_control_module(cls, module_name, search_dirs=[]):
         filename = 'control_%s.py' % module_name
         if search_dirs is None or len(search_dirs) == 0:
             search_dirs = [
@@ -85,4 +77,4 @@ class Endpoint:
 
 class ControlSystem(Endpoint):
     def __init__(self):
-        self.load_endpoint_module('Ethernet')
+        self.load_control_module('Ethernet')

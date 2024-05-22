@@ -34,7 +34,14 @@ class RedisEndpoint(Endpoint):
     def get(self):
         return self.redis.info()
 
-    # child endopints #
+    ## Redis specific functions ##
+    def info(self):
+        return self.redis.info()
+
+    def keys(self, pattern='*'):
+        return self.redis.keys(pattern)
+    
+    ## child endopints ##
     def string(self, name):
         return RedisStringEndpoint(self.redis, name)
     
@@ -43,6 +50,9 @@ class RedisEndpoint(Endpoint):
     
     def json(self, name, base='$'):
         return RedisJsonEndpoint(self.redis, name, base)
+    
+    def ts(self, name, length=3600, to=0):
+        return RedisTimeseriesEndpoint(self.redis, name, length, to)
     
 
     @classmethod
@@ -140,10 +150,87 @@ class RedisJsonEndpoint(Endpoint):
                 return result[0]
         return result
 
-    # child endopints #
+    ## child endopints ##
+    # redis().json(name).node(name)
     def node(self, name):
         return RedisJsonEndpoint(self.redis, self.name, self.base + '.' + name)
 
+    
+    
+class RedisTimeseriesEndpoint(Endpoint):
+    def __init__(self, redis, name, length=3600, to=0):
+        self.redis = redis
+        self.name = name
+        self.length = length
+        self.to = to    # zero for "now", positive for UNIX timestamp, negative for time to "now"
+    
+    def set(self, value):
+        for t,x in value:
+            self.redis.ts().add(self.name, t, x)
+
+    def get(self):
+        to = self.to if self.to > 0 else time.time() + self.to
+        start = to - self.length
+        return self.redis.ts().range(self.name, int(1000*start), int(1000*to))
+       
+    ## child endopints ##
+    # Redis.ts(name).last()
+    def last(self):
+        return RedisTimeseriesLastEndpoint(self)
+
+    
+    
+class RedisTimeseriesLastEndpoint(Endpoint):
+    def __init__(self, parent):
+        self.parent = parent
+    
+    def set(self, value):
+        self.parent.set([(int(1000*time.time()), value)])
+
+    def get(self):
+        return self.get_tx()[1]
+        
+    def get_tx(self):
+        if self.parent.to == 0:
+            return self.parent.redis.ts().get(self.parent.name)
+        else:
+            ts = self.parent.get()
+            if len(ts) > 0:
+                return ts[-1]
+            else:
+                return (None, None)
+        
+    ## child endopints ##
+    # Redis.ts(name).last().time()
+    def time(self):
+        return RedisTimeseriesLastTimeEndpoint(self)
+
+    # Redis.ts(name).last().lapse()    
+    def lapse(self):
+        return RedisTimeseriesLastLapseEndpoint(self)
+
+    
+    
+class RedisTimeseriesLastTimeEndpoint(Endpoint):
+    def __init__(self, parent):
+        self.parent = parent
+    
+    def set(self, value):
+        pass
+
+    def get(self):
+        return self.parent.get_tx()[0]/1000.0
+
+    
+class RedisTimeseriesLastLapseEndpoint(Endpoint):
+    def __init__(self, parent):
+        self.parent = parent
+    
+    def set(self, value):
+        pass
+
+    def get(self):
+        return time.time() - self.parent.get_tx()[0]/1000.0
     
     
 def export():

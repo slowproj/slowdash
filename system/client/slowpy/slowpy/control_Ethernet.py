@@ -3,7 +3,7 @@ from slowpy.control import Endpoint
 
 
 class EthernetEndpoint(Endpoint):
-    def __init__(self, parent, host, port, **kwargs):
+    def __init__(self, host, port, **kwargs):
         import socket
         self.host = host
         self.port = port
@@ -60,7 +60,7 @@ class EthernetEndpoint(Endpoint):
             endpoint = self._ethernet_endpoints.get(name, None)
         
             if endpoint is None:
-                endpoint = EthernetEndpoint(self, host, port)
+                endpoint = EthernetEndpoint(host, port)
                 self._ethernet_endpoints[name] = endpoint
 
             return endpoint
