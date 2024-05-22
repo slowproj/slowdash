@@ -27,8 +27,8 @@ class Endpoint:
 
     # override this as needed
     @classmethod
-    def _endpoint_creator_method(MyClass):
-        def endpoint(self, *args, **kwargs):  # "self" is a parent (the node to which this method is added)
+    def _endpoint_creator_method(MyClass):    # return a method to be injected
+        def endpoint(self, *args, **kwargs):  # "self" here is a parent (the node to which this method is added)
             return MyClass(self, *args, **kwargs)
         return endpoint
 
