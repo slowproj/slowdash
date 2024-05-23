@@ -1,7 +1,7 @@
 import os, importlib, logging, traceback
 
 
-class Endpoint:
+class ControlNode:
     # override this
     def set(self, value):
         pass
@@ -19,15 +19,15 @@ class Endpoint:
     
     # override this to add a child endoint
     @classmethod
-    def _endpoint_creator_method(MyClass):    # return a method to be injected
-        def endpoint(self, *args, **kwargs):  # "self" here is a parent (the node to which this method is added)
+    def _node_creator_method(MyClass):    # return a method to be injected
+        def child(self, *args, **kwargs):  # "self" here is a parent (the node to which this method is added)
             return MyClass(*args, **kwargs)
-        return endpoint
+        return child
 
     
     @classmethod
-    def add_endpoint(cls, EndpointClass, name=None):
-        method = EndpointClass._endpoint_creator_method()
+    def add_node(cls, NodeClass, name=None):
+        method = NodeClass._node_creator_method()
         if name is None:
             name = method.__name__
         setattr(cls, name, method)
@@ -61,20 +61,20 @@ class Endpoint:
         export_func = module.__dict__.get('export', None)
         if export_func is not None:
             for func in export_func():
-                cls.add_endpoint(func)
+                cls.add_node(func)
         else:
-            endpoint_classes = []
+            node_classes = []
             for name, entry in module.__dict__.items():
                 if callable(entry):
-                    if '_endpoint_creator_method' in dir(entry):
-                        endpoint_classes.append(entry)
-            if len(endpoint_classes) > 1:
-                cls.add_endpoint(endpoint_classes[1])
+                    if '_node_creator_method' in dir(entry):
+                        node_classes.append(entry)
+            if len(node_classes) > 1:
+                cls.add_node(node_classes[1])
             else:
-                logging.error('unable to identify Endpoint class: %s' % module_name)
+                logging.error('unable to identify Node class: %s' % module_name)
 
         
 
-class ControlSystem(Endpoint):
+class ControlSystem(ControlNode):
     def __init__(self):
         self.load_control_module('Ethernet')

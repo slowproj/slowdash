@@ -1,8 +1,8 @@
 
-from slowpy.control import Endpoint
+from slowpy.control import ControlNode
 
 
-class EthernetEndpoint(Endpoint):
+class EthernetNode(ControlNode):
     def __init__(self, host, port, **kwargs):
         import socket
         self.host = host
@@ -42,34 +42,32 @@ class EthernetEndpoint(Endpoint):
         return bytes(line).decode('utf-8')
 
 
-    # This method can be injected dynamically by the method call below:
-    #    EthernetEndpoint.add_endpoint(ScpiEndpoint, name="scpi")
-    # As this endpoint is small, we just "hard-code" it.
+    ## child nodes ##
     def scpi(self, base_name):
-        return ScpiEndpoint(self, base_name)
+        return ScpiNode(self, base_name)
     
 
     @classmethod
-    def _endpoint_creator_method(cls):
+    def _node_creator_method(cls):
         def ethernet(self, host, port):
             name = '%s:%s' % (host, str(port))
             try:
-                self._ethernet_endpoints.keys()
+                self._ethernet_nodes.keys()
             except:
-                self._ethernet_endpoints = {}
-            endpoint = self._ethernet_endpoints.get(name, None)
+                self._ethernet_nodes = {}
+            node = self._ethernet_nodes.get(name, None)
         
-            if endpoint is None:
-                endpoint = EthernetEndpoint(host, port)
-                self._ethernet_endpoints[name] = endpoint
+            if node is None:
+                node = EthernetNode(host, port)
+                self._ethernet_nodes[name] = node
 
-            return endpoint
+            return node
 
         return ethernet
 
     
     
-class ScpiEndpoint(Endpoint):
+class ScpiNode(ControlNode):
     def __init__(self, connection, base_name):
         self.connection = connection
         self.base_name = base_name
@@ -87,4 +85,4 @@ class ScpiEndpoint(Endpoint):
 
     
 def export():
-    return [ EthernetEndpoint ]
+    return [ EthernetNode ]

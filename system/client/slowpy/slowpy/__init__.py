@@ -12,9 +12,10 @@ from .datastore_InfluxDB2 import DataStore_InfluxDB2
 from .datastore_Redis import DataStore_Redis
 from .datastore_CSV import DataStore_CSV, DataStore_TextDump
 
-from .control import Endpoint, ControlSystem
-from .control_Ethernet import EthernetEndpoint, ScpiEndpoint
-from .control_Redis import RedisEndpoint
+from .control import ControlNode, ControlSystem
+from .control_Ethernet import EthernetNode, ScpiNode
+from .control_Redis import RedisNode
+from .control_Dripline import DriplineNode
 
 from .serial_device import SerialDevice, ScpiDevice, SerialDeviceEthernetServer
 from .dummy_device import DummyDevice_RandomWalk, DummyScpiDevice_RandomWalk

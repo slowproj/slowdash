@@ -1,9 +1,9 @@
 
 import time, logging
-from slowpy.control import Endpoint
+from slowpy.control import ControlNode
 
 
-class RedisEndpoint(Endpoint):
+class RedisNode(ControlNode):
     def __init__(self, parent, url, **kwargs):
         # retries up to 60 sec, for docker-compose etc.
         self.redis = None
@@ -41,27 +41,27 @@ class RedisEndpoint(Endpoint):
     def keys(self, pattern='*'):
         return self.redis.keys(pattern)
     
-    ## child endopints ##
+    ## child nodes ##
     def string(self, name):
-        return RedisStringEndpoint(self.redis, name)
+        return RedisStringNode(self.redis, name)
     
     def hash(self, name):
-        return RedisHashEndpoint(self.redis, name)
+        return RedisHashNode(self.redis, name)
     
     def json(self, name, base='$'):
-        return RedisJsonEndpoint(self.redis, name, base)
+        return RedisJsonNode(self.redis, name, base)
     
     def ts(self, name, length=3600, to=0):
-        return RedisTimeseriesEndpoint(self.redis, name, length, to)
+        return RedisTimeseriesNode(self.redis, name, length, to)
     
 
     @classmethod
-    def _endpoint_creator_method(cls):
+    def _node_creator_method(cls):
         def redis(self, url=None):
             try:
-                keys = [ key for key in self._redis_endpoints.keys() ]
+                keys = [ key for key in self._redis_nodes.keys() ]
             except:
-                self._redis_endpoints = {}
+                self._redis_nodes = {}
                 keys = []
             if url is None:
                 if len(keys) == 0:
@@ -69,22 +69,22 @@ class RedisEndpoint(Endpoint):
                     return None
                 else:
                     url = keys[-1]
-            endpoint = self._redis_endpoints.get(url, None)
+            node = self._redis_nodes.get(url, None)
                 
-            if endpoint is None:
-                endpoint = RedisEndpoint(self, url)
-                self._redis_endpoints[url] = endpoint  # even if endpoint is None; not to repeat the initialization error
-                if endpoint.redis is None:
-                    endpoint = None
+            if node is None:
+                node = RedisNode(self, url)
+                self._redis_nodes[url] = node  # even if node is None; not to repeat the initialization error
+                if node.redis is None:
+                    node = None
                     logging.error('unable to connect to Redis: %s' % url)
 
-            return endpoint
+            return node
 
         return redis
 
     
     
-class RedisStringEndpoint(Endpoint):
+class RedisStringNode(ControlNode):
     def __init__(self, redis, name):
         self.redis = redis
         self.name = name
@@ -100,7 +100,7 @@ class RedisStringEndpoint(Endpoint):
     
 
     
-class RedisHashEndpoint(Endpoint):
+class RedisHashNode(ControlNode):
     def __init__(self, redis, name):
         self.redis = redis
         self.name = name
@@ -112,13 +112,13 @@ class RedisHashEndpoint(Endpoint):
     def get(self):
         return self.redis.hgetall(self.name)
     
-    # child endopints #
+    # child nodes #
     def field(self, fieldname):
-        return RedisHashFieldEndpoint(self.redis, self.name, fieldname)
+        return RedisHashFieldNode(self.redis, self.name, fieldname)
 
     
     
-class RedisHashFieldEndpoint(Endpoint):
+class RedisHashFieldNode(ControlNode):
     def __init__(self, redis, name, fieldname):
         self.redis = redis
         self.name = name
@@ -132,7 +132,7 @@ class RedisHashFieldEndpoint(Endpoint):
 
     
     
-class RedisJsonEndpoint(Endpoint):
+class RedisJsonNode(ControlNode):
     def __init__(self, redis, name, base='$'):
         self.redis = redis
         self.name = name
@@ -150,14 +150,14 @@ class RedisJsonEndpoint(Endpoint):
                 return result[0]
         return result
 
-    ## child endopints ##
+    ## child nodes ##
     # redis().json(name).node(name)
     def node(self, name):
-        return RedisJsonEndpoint(self.redis, self.name, self.base + '.' + name)
+        return RedisJsonNode(self.redis, self.name, self.base + '.' + name)
 
     
     
-class RedisTimeseriesEndpoint(Endpoint):
+class RedisTimeseriesNode(ControlNode):
     def __init__(self, redis, name, length=3600, to=0):
         self.redis = redis
         self.name = name
@@ -173,14 +173,14 @@ class RedisTimeseriesEndpoint(Endpoint):
         start = to - self.length
         return self.redis.ts().range(self.name, int(1000*start), int(1000*to))
        
-    ## child endopints ##
+    ## child nodes ##
     # Redis.ts(name).last()
     def last(self):
-        return RedisTimeseriesLastEndpoint(self)
+        return RedisTimeseriesLastNode(self)
 
     
     
-class RedisTimeseriesLastEndpoint(Endpoint):
+class RedisTimeseriesLastNode(ControlNode):
     def __init__(self, parent):
         self.parent = parent
     
@@ -200,18 +200,18 @@ class RedisTimeseriesLastEndpoint(Endpoint):
             else:
                 return (None, None)
         
-    ## child endopints ##
+    ## child nodes ##
     # Redis.ts(name).last().time()
     def time(self):
-        return RedisTimeseriesLastTimeEndpoint(self)
+        return RedisTimeseriesLastTimeNode(self)
 
     # Redis.ts(name).last().lapse()    
     def lapse(self):
-        return RedisTimeseriesLastLapseEndpoint(self)
+        return RedisTimeseriesLastLapseNode(self)
 
     
     
-class RedisTimeseriesLastTimeEndpoint(Endpoint):
+class RedisTimeseriesLastTimeNode(ControlNode):
     def __init__(self, parent):
         self.parent = parent
     
@@ -222,7 +222,7 @@ class RedisTimeseriesLastTimeEndpoint(Endpoint):
         return self.parent.get_tx()[0]/1000.0
 
     
-class RedisTimeseriesLastLapseEndpoint(Endpoint):
+class RedisTimeseriesLastLapseNode(ControlNode):
     def __init__(self, parent):
         self.parent = parent
     
@@ -234,4 +234,4 @@ class RedisTimeseriesLastLapseEndpoint(Endpoint):
     
     
 def export():
-    return [ RedisEndpoint ]
+    return [ RedisNode ]
