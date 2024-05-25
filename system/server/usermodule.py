@@ -7,32 +7,36 @@ import threading
 
 
 class UserThread:
-    def __init__(self, run_func, halt_func):
+    def __init__(self, run_func, halt_func=None):
         self.run_func = run_func
         self.halt_func = halt_func
         self.thread = None
 
+        
     def start(self):
         try:
             self.thread = threading.Thread(target=self.run_func)
             self.thread.start()
             logging.info('started user module run function')
         except Exception as e:
-            logging.error('user module error: %s' % str(e))
+            logging.error('user module error: start(): %s' % str(e))
             logging.error(traceback.format_exc())
 
+            
     def halt(self):
         if self.thread is not None:
             logging.info('stoping user module run function')
-            try:
-                self.halt_func()
-            except Exception as e:
-                logging.error('user module error: %s' % str(e))
-                logging.error(traceback.format_exc())
+            if self.halt_func is not None:
+                try:
+                    self.halt_func()
+                except Exception as e:
+                    logging.error('user module error: halt(): %s' % str(e))
+                    logging.error(traceback.format_exc())
                 
             self.thread.join()
             self.thread = None
             logging.info('stopped user module run function')
+
             
 
 class UserLoopThread(threading.Thread):
@@ -41,16 +45,18 @@ class UserLoopThread(threading.Thread):
         self.loop_func = loop_func
         self.is_stop_requested = False
 
+        
     def run(self):
         logging.info('started user module loop function')
         while not self.is_stop_requested:
             try:
                 self.loop_func()
             except Exception as e:
-                logging.error('user module error: %s' % str(e))
+                logging.error('user module error: LoopThread.run(): %s' % str(e))
                 logging.error(traceback.format_exc())
             time.sleep(0.01)
 
+            
     def halt(self):
         self.is_stop_requested = True
         self.join()
@@ -59,18 +65,22 @@ class UserLoopThread(threading.Thread):
 
             
 class UserModule:        
+    def _get_func(self, name):
+        if (name in self.module.__dict__) and callable(self.module.__dict__[name]):
+            return self.module.__dict__[name]
+        else:
+            return None
+        
     def __init__(self, module, params):
-        get_func = lambda name: (
-            module.__dict__[name] if (name in module.__dict__ and callable(module.__dict__[name])) else None
-        )
-        self.func_get_channels = get_func('get_channels')
-        self.func_get_data = get_func('get_data')
-        self.func_process_command = get_func('process_command')
-        self.func_initialize = get_func('initialize')
-        self.func_finalize = get_func('finalize')
-        self.func_run = get_func('run')
-        self.func_halt = get_func('halt')
-        self.func_loop = get_func('loop')
+        self.module = module
+        self.func_get_channels = self._get_func('get_channels')
+        self.func_get_data = self._get_func('get_data')
+        self.func_process_command = self._get_func('process_command')
+        self.func_initialize = self._get_func('initialize')
+        self.func_finalize = self._get_func('finalize')
+        self.func_run = self._get_func('run')
+        self.func_halt = self._get_func('halt')
+        self.func_loop = self._get_func('loop')
 
         self.user_thread = None
         
@@ -79,13 +89,11 @@ class UserModule:
         if self.func_process_command:
             logging.info('loaded user module command processor')
                 
-        logging.info('user module loaded')
-        
         if self.func_initialize:
             try:
                 self.func_initialize(params)
             except Exception as e:
-                logging.error('user module error: %s' % str(e))
+                logging.error('user module error: func_initialize(): %s' % str(e))
                 logging.error(traceback.format_exc())
                 return
 
@@ -111,7 +119,7 @@ class UserModule:
             try:
                 self.func_finalize()
             except Exception as e:
-                logging.error('user module error: %s' % str(e))
+                logging.error('user module error: __del__(): %s' % str(e))
                 logging.error(traceback.format_exc())
 
 
@@ -121,7 +129,7 @@ class UserModule:
             try:
                 return self.func_get_channels()
             except Exception as e:
-                logging.error('user module error: %s' % str(e))
+                logging.error('user module error: get_channels(): %s' % str(e))
                 logging.error(traceback.format_exc())
         return None
 
@@ -132,7 +140,7 @@ class UserModule:
             try:
                 return self.func_get_data(channel)
             except Exception as e:
-                logging.error('user module error: %s' % str(e))
+                logging.error('user module error: get_data(): %s' % str(e))
                 logging.error(traceback.format_exc())
         return None
 
@@ -145,13 +153,13 @@ class UserModule:
         try:
             return self.func_process_command(params)
         except Exception as e:
-            logging.error('user module error: %s' % str(e))
+            logging.error('user module error: process_command(): %s' % str(e))
             logging.error(traceback.format_exc())
             return {'status': 'error', 'message': str(e) }
 
 
     
-def load(filepath, project_config, params):
+def load(ModuleClass, filepath, project_config, params):
     if os.path.exists(filepath):
         module_name = os.path.splitext(os.path.basename(filepath))[0]
         try:
@@ -161,7 +169,7 @@ def load(filepath, project_config, params):
             logging.error(traceback.format_exc())
             return None
 
-        module = UserModule(module, params)
-        module.filepath = filepath
+        usermodule = ModuleClass(module, params)
+        usermodule.filepath = filepath
 
-        return module
+        return usermodule

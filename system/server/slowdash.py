@@ -3,7 +3,7 @@
 
 
 import sys, os, stat, pwd, grp, io, time, glob, json, yaml, logging
-import datasource, usermodule
+import datasource, usermodule, controlmodule
 from slowdash_config import Config
 
 
@@ -14,13 +14,14 @@ class App:
         self.project_dir = self.config.project_dir
         self.datasource_list = []
         self.usermodule_list = []
+        self.taskmodule_list = []
         self.error_message = ''
 
         if self.project is None:
             self.datasource_list = [ datasource.DataSource({}, self.config) ]
             return
 
-        ### Load Datasources ###
+        ### Datasources ###
         
         datasource_node = self.project.get('data_source', None)
         if datasource_node is None:
@@ -41,14 +42,14 @@ class App:
                 self.error_message = 'no datasource type specified'
                 logging.error(self.error_message)
             else:
-                datasource_module = datasource.load(ds_type, self.config, params)
-                if datasource_module is None:
+                datasource_plugin = datasource.load(ds_type, self.config, params)
+                if datasource_plugin is None:
                     self.error_message = 'Unable to load data source: %s' % ds_type
                     logging.error(self.error_message)
                 else:
-                    self.datasource_list.append(datasource_module)
+                    self.datasource_list.append(datasource_plugin)
 
-        ### Load User Module ###
+        ### User Modules ###
         
         usermodule_node = self.project.get('module', [])
         if not isinstance(usermodule_node, list):
@@ -63,7 +64,7 @@ class App:
                 continue
             filepath = node['file']
             params = node.get('parameters', {})
-            module = usermodule.load(filepath, self.config, params)
+            module = usermodule.load(usermodule.UserModule, filepath, self.config, params)
             if module is None:
                 self.error_message = 'Unable to load user module: %s' % filepath
                 logging.error(self.error_message)
@@ -71,8 +72,38 @@ class App:
                 self.usermodule_list.append(module)
 
 
+        ### Task Modules ###
+        
+        taskmodule_node = self.project.get('task', [])
+        if not isinstance(taskmodule_node, list):
+            taskmodule_node = [ taskmodule_node ]
+            
+        for node in taskmodule_node:
+            if not isinstance(node, dict):
+                self.error_message = 'bad control module configuration'
+                logging.error(self.error_message)
+                continue
+            if is_cgi and node.get('cgi_enabled', False) != True:
+                continue
+            if 'name' not in node:
+                self.error_message = 'name is required for control module'
+                logging.error(self.error_message)
+                continue
+
+            name = node['name']
+            filepath = node.get('file', './config/slowtask-%s.py' % name)
+            params = node.get('parameters', {})
+            module = usermodule.load(taskmodule.TaskModule, filepath, self.config, params)
+            if module is None:
+                self.error_message = 'Unable to load control module: %s' % filepath
+                logging.error(self.error_message)
+            else:
+                self.taskmodule_list.append(module)
+
+
     def __del__(self):
         self.usermodule_list.clear()
+        self.taskmodule_list.clear()
         
         
     def get(self, params, opts, output):
@@ -209,6 +240,9 @@ class App:
                 ],
                 'user_module': [
                     module.filepath for module in self.usermodule_list
+                ],
+                'control_module': [
+                    module.filepath for module in self.taskmodule_list
                 ],
                 'style': self.config.project.get('style', None)
             }
@@ -402,14 +436,11 @@ class App:
                 
     def _get_channels(self):
         result = []
-        for ds in self.datasource_list:
-            channels = ds.get_channels()
-            if channels is not None:
-                result.extend(channels)
-        for usermodule in self.usermodule_list:
-            channels = usermodule.get_channels()
-            if channels is not None:
-                result.extend(channels)
+        for src_list in [ self.datasource_list, self.usermodule_list, self.taskmodule_list ]:
+            for src in src_list:
+                channels = src.get_channels()
+                if channels is not None:
+                    result.extend(channels)
 
         return result
 
@@ -424,16 +455,17 @@ class App:
             if result_obj is not None:
                 result.update(result_obj)
                     
-        for usermodule in self.usermodule_list:
-            for ch in channels:
-                data = usermodule.get_data(ch)
-                if data is None:
-                    continue
-                result[ch] = {
-                    'start': to-length, 'length': length,
-                    't': to,
-                    'x': data
-                }
+        for module_list in [ self.usermodule_list, self.taskmodule_list ]:
+            for module in module_list:
+                for ch in channels:
+                    data = module.get_data(ch)
+                    if data is None:
+                        continue
+                    result[ch] = {
+                        'start': to-length, 'length': length,
+                        't': to,
+                        'x': data
+                    }
 
         return result
 
@@ -450,10 +482,13 @@ class App:
         stdout = sys.stdout
         sys.stdout = io.StringIO()
         result = None
-        for usermodule in self.usermodule_list:
-            result = usermodule.process_command(json_doc)
+        for module_list in [ self.taskmodule_list, self.usermodule_list ]:
+            for module in module_list:
+                result = module.process_command(json_doc)
+                if result is not None:
+                    # chain of responsibility
+                    break
             if result is not None:
-                # chain of responsibility
                 break
         sys.stdout.close()
         sys.stdout = stdout
