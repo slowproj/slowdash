@@ -3,7 +3,7 @@
 
 
 import sys, os, stat, pwd, grp, io, time, glob, json, yaml, logging
-import datasource, usermodule, controlmodule
+import datasource, usermodule, taskmodule
 from slowdash_config import Config
 
 
@@ -64,7 +64,7 @@ class App:
                 continue
             filepath = node['file']
             params = node.get('parameters', {})
-            module = usermodule.load(usermodule.UserModule, filepath, self.config, params)
+            module = usermodule.load(usermodule.UserModule, filepath, filepath, params)
             if module is None:
                 self.error_message = 'Unable to load user module: %s' % filepath
                 logging.error(self.error_message)
@@ -93,11 +93,12 @@ class App:
             name = node['name']
             filepath = node.get('file', './config/slowtask-%s.py' % name)
             params = node.get('parameters', {})
-            module = usermodule.load(taskmodule.TaskModule, filepath, self.config, params)
+            module = usermodule.load(taskmodule.TaskModule, filepath, name, params)
             if module is None:
                 self.error_message = 'Unable to load control module: %s' % filepath
                 logging.error(self.error_message)
             else:
+                module.name = name
                 self.taskmodule_list.append(module)
 
 
@@ -477,24 +478,13 @@ class App:
         except Exception as e:
             logging.error('Dispatch: JSON decoding error: %s' % str(e))
             return 400
-            
-        # user code might write something to stdout, which can disturb HTTP response
-        stdout = sys.stdout
-        sys.stdout = io.StringIO()
-        result = None
-        for module_list in [ self.taskmodule_list, self.usermodule_list ]:
-            for module in module_list:
-                result = module.process_command(json_doc)
-                if result is not None:
-                    # chain of responsibility
-                    break
-            if result is not None:
-                break
-        sys.stdout.close()
-        sys.stdout = stdout
+
+        result = self._dispatch_task(json_doc)
+        if result is None:
+            result = self._dispatch_user_command(json_doc, opts, output)
+        
         if result is None:
             return 400
-
         if type(result) is str:
             output.write(result.encode())
         elif type(result) is dict:
@@ -513,6 +503,40 @@ class App:
 
         return 'application/json'
 
+        
+    
+    def _dispatch_task(self, doc):
+        # user code might write something to stdout, which can disturb HTTP response
+        stdout = sys.stdout
+        sys.stdout = io.StringIO()
+        result = None
+        for module in self.taskmodule_list:
+            result = module.process_command(doc)
+            if result is not None:
+                # chain of responsibility
+                break
+        sys.stdout.close()
+        sys.stdout = stdout
+
+        return result
+
+    
+    def _dispatch_user_command(self, doc, opts, output):
+        # user code might write something to stdout, which can disturb HTTP response
+        stdout = sys.stdout
+        sys.stdout = io.StringIO()
+        result = None
+        for module in self.usermodule_list:
+            result = module.process_command(doc)
+            if result is not None:
+                # chain of responsibility
+                break
+        sys.stdout.close()
+        sys.stdout = stdout
+
+        return result
+
+    
         
     
 from urllib.parse import urlparse, parse_qsl, unquote

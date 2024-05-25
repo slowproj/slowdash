@@ -71,8 +71,9 @@ class UserModule:
         else:
             return None
         
-    def __init__(self, module, params):
+    def __init__(self, module, name, params):
         self.module = module
+        self.name = name
         self.func_get_channels = self._get_func('get_channels')
         self.func_get_data = self._get_func('get_data')
         self.func_process_command = self._get_func('process_command')
@@ -159,7 +160,7 @@ class UserModule:
 
 
     
-def load(ModuleClass, filepath, project_config, params):
+def load(ModuleClass, filepath, name, params):
     if os.path.exists(filepath):
         module_name = os.path.splitext(os.path.basename(filepath))[0]
         try:
@@ -169,7 +170,7 @@ def load(ModuleClass, filepath, project_config, params):
             logging.error(traceback.format_exc())
             return None
 
-        usermodule = ModuleClass(module, params)
+        usermodule = ModuleClass(module, name, params)
         usermodule.filepath = filepath
 
         return usermodule

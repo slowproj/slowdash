@@ -18,8 +18,8 @@ class TaskFunctionThread(threading.Thread):
 
         
 class TaskModule(UserModule):
-    def __init__(self, module, params):
-        super().__init__(module, params)
+    def __init__(self, module, name, params):
+        super().__init__(module, name, params)
         self.thread = None
 
         logging.info('user task module loaded')
@@ -48,9 +48,13 @@ class TaskModule(UserModule):
                 function_name = key[:-2]
             else:
                 kwargs[key] = value
-        if function_name is None:
-            return super().process_command(params)
+
+        # task namespace
+        if function_name is None or not function_name.startswith(self.name + '.'):
+            return None
+        function_name = function_name[len(self.name)+1:]
             
+        # task is single-threaded, except for loop()
         if self.thread is not None:
             if self.thread.is_alive():
                 return {'status': 'error', 'message': 'script already running'}
