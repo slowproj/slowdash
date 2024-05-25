@@ -1,6 +1,6 @@
 
 import time, logging
-from slowpy.control import ControlNode
+from slowpy import ControlNode
 
 
 class DriplineNode(ControlNode):
@@ -46,7 +46,7 @@ class DriplineEndpointNode(ControlNode):
 
     
 class DriplineCalibratedValueNode(ControlNode):
-    def __init__(self, endpoint):
+    def __init__(self, interface, name):
         self.interface = interface
         self.name = name
             
@@ -55,7 +55,6 @@ class DriplineCalibratedValueNode(ControlNode):
     
     def get(self):
         return self.interface.get(self.name).payload.to_python().get('value_cal', None)
-
 
 
     

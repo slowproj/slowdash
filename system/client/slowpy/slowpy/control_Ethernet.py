@@ -1,5 +1,5 @@
 
-from slowpy.control import ControlNode
+from slowpy import ControlNode
 
 
 class EthernetNode(ControlNode):

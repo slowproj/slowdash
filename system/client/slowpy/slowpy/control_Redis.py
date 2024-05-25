@@ -1,6 +1,6 @@
 
 import time, logging
-from slowpy.control import ControlNode
+from slowpy import ControlNode
 
 
 class RedisNode(ControlNode):

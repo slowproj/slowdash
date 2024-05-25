@@ -2,8 +2,8 @@
 
 
 import time
-#host, port = '10.19.72.198', 17674
-host, port = '192.168.1.43', 17674
+host, port = '10.19.72.198', 17674
+#host, port = '192.168.1.43', 17674
 
 
 import slowpy as slp
