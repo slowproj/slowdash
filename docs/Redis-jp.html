@@ -85,8 +85,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <ul>
 <li><a href="#できること">できること</a></li>
 <li><a href="#インストール">インストール</a><ul>
-<li><a href="#redis">Redis</a></li>
-<li><a href="#slowdash">SlowDash</a></li>
+<li><a href="#docker-を使う場合redis-と-slowdash-の一括インストールとテスト">Docker を使う場合：Redis と SlowDash の一括インストールとテスト</a></li>
+<li><a href="#redis-bare-metal-インストール">Redis, Bare-Metal インストール</a></li>
+<li><a href="#slowdash-bare-metal-インストール">SlowDash, Bare-Metal インストール</a></li>
 </ul></li>
 <li><a href="#使い方">使い方</a><ul>
 <li><a href="#プロジェクト設定">プロジェクト設定</a></li>
@@ -105,8 +106,40 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li>Redis TS と Redis JSON (または普通の JSON 文字列) を組み合わせて作ったヒストグラムの時系列データに対して，時間範囲指定付きの描画</li>
 </ul>
 <h1 id="インストール">インストール</h1>
-<h2 id="redis">Redis</h2>
-<p>Redis のサイトに行って Redis-Stack のイントール方法に従う： <a href="https://redis.io/docs/stack/get-started/install/linux/">https://redis.io/docs/stack/get-started/install/linux/</a></p>
+<h2 id="docker-を使う場合redis-と-slowdash-の一括インストールとテスト">Docker を使う場合：Redis と SlowDash の一括インストールとテスト</h2>
+<p><code>ExampleProjects/Test_Redis</code> に Redis Server と，SlowDash と，テストデータ生成スクリプトが全て入った <code>docker-compose.yaml</code> があるので，これを使う：</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">$ cd PATH/TO/SLOWDASH/ExampleProjects/Test_Redis</span></a>
+<a class="sourceLine" id="cb1-2" title="2"><span class="kw">$ docker-compose up</span></a></code></pre></div>
+<p>システムが立ち上がったら，ブラウザで <code>http://localhost:18881</code> にアクセス：</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">$ firefox http://localhost:18881</span></a></code></pre></div>
+<p>ちなみに，<code>docker-compose.yaml</code> の中身はこんな感じ：</p>
+<pre><code>version: &#39;3&#39;
+
+services:
+  redis_server:
+    image: redis/redis-stack:7.2.0-v10
+    restart: always
+    ports:
+      - &quot;6379:6379&quot;
+      - &quot;8001:8001&quot;
+
+  slowdash:
+    image: slowdash
+    volumes:
+      - .:/project
+    ports:
+      - &quot;18881:18881&quot;
+    environment:
+      - DB_URL=redis://redis_server:6379/12
+
+  testdata:
+    image: slowdash
+    command: python /slowdash/utils/generate-testdata.py --db-url=redis://redis_server:6379/12</code></pre>
+<p>Redis Insight も入っているので，ブラウザで <code>http://localhost:8001</code> にアクセスすれば Redis のデータを見られる．</p>
+<h2 id="redis-bare-metal-インストール">Redis, Bare-Metal インストール</h2>
+<ul>
+<li>Redis のサイトに行って Redis-Stack のイントール方法に従う： <a href="https://redis.io/docs/stack/get-started/install/linux/">https://redis.io/docs/stack/get-started/install/linux/</a></li>
+</ul>
 <h3 id="centos7-2023-年-6-月-6-日">CentOS7, 2023 年 6 月 6 日</h3>
 <h4 id="redis-本体-redis-stack">Redis 本体 (Redis Stack)</h4>
 <p>以下のファイルを <code>/etc/yum.repos.d/redis.repo</code> に作成</p>
@@ -116,143 +149,140 @@ baseurl=http://packages.redis.io/rpm/rhel7
 enabled=1
 gpgcheck=1</code></pre>
 <p>以下のコマンドを実行</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">$ curl -fsSL https://packages.redis.io/gpg &gt; /tmp/redis.key</span></a>
-<a class="sourceLine" id="cb2-2" title="2"><span class="kw">$ sudo rpm --import /tmp/redis.key</span></a>
-<a class="sourceLine" id="cb2-3" title="3"><span class="kw">$ sudo yum install epel-release</span></a>
-<a class="sourceLine" id="cb2-4" title="4"><span class="kw">$ sudo yum install redis-stack-server</span></a></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">$ curl -fsSL https://packages.redis.io/gpg &gt; /tmp/redis.key</span></a>
+<a class="sourceLine" id="cb5-2" title="2"><span class="kw">$ sudo rpm --import /tmp/redis.key</span></a>
+<a class="sourceLine" id="cb5-3" title="3"><span class="kw">$ sudo yum install epel-release</span></a>
+<a class="sourceLine" id="cb5-4" title="4"><span class="kw">$ sudo yum install redis-stack-server</span></a></code></pre></div>
 <p>インストール直後</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">$ sudo systemctl status redis-stack-server</span></a>
-<a class="sourceLine" id="cb3-2" title="2">● redis-stack-server.service - Redis stack server</a>
-<a class="sourceLine" id="cb3-3" title="3">   Loaded: loaded (/etc/systemd/system/redis-stack-server.service; disabled; vendor preset: disabled)</a>
-<a class="sourceLine" id="cb3-4" title="4">   Active: inactive (dead)</a>
-<a class="sourceLine" id="cb3-5" title="5">     Docs: https://redis.io/</a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">$ sudo systemctl status redis-stack-server</span></a>
+<a class="sourceLine" id="cb6-2" title="2">● redis-stack-server.service - Redis stack server</a>
+<a class="sourceLine" id="cb6-3" title="3">   Loaded: loaded (/etc/systemd/system/redis-stack-server.service; disabled; vendor preset: disabled)</a>
+<a class="sourceLine" id="cb6-4" title="4">   Active: inactive (dead)</a>
+<a class="sourceLine" id="cb6-5" title="5">     Docs: https://redis.io/</a></code></pre></div>
 <p>スタートさせてみる</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">$ sudo systemctl start redis-stack-server</span></a>
-<a class="sourceLine" id="cb4-2" title="2"><span class="kw">$ sudo systemctl status redis-stack-server</span></a>
-<a class="sourceLine" id="cb4-3" title="3">● redis-stack-server.service - Redis stack server</a>
-<a class="sourceLine" id="cb4-4" title="4">   Loaded: loaded (/etc/systemd/system/redis-stack-server.service; disabled; vendor preset: disabled)</a>
-<a class="sourceLine" id="cb4-5" title="5">   Active: active (running) since 火 2023-06-06 12:40:11 PDT; 3s ago</a>
-<a class="sourceLine" id="cb4-6" title="6">     Docs: https://redis.io/</a>
-<a class="sourceLine" id="cb4-7" title="7"> Main PID: 4099 (redis-server)</a>
-<a class="sourceLine" id="cb4-8" title="8">    Tasks: 14</a>
-<a class="sourceLine" id="cb4-9" title="9">   CGroup: /system.slice/redis-stack-server.service</a>
-<a class="sourceLine" id="cb4-10" title="10">           └─4099 /opt/redis-stack/bin/redis-server *:6379</a>
-<a class="sourceLine" id="cb4-11" title="11"></a>
-<a class="sourceLine" id="cb4-12" title="12"> 6月 06 12:40:11 vs13centos7 redis-server[4099]: 4099:M 06 Jun 2023 12:40:11.578 * &lt;ReJSON&gt; version: 20007 git sha: e51b585 branch: HEAD</a>
-<a class="sourceLine" id="cb4-13" title="13"> 6月 06 12:40:11 vs13centos7 redis-server[4099]: 4099:M 06 Jun 2023 12:40:11.578 * &lt;ReJSON&gt; Exported RedisJSON_V1 API</a>
-<a class="sourceLine" id="cb4-14" title="14"> 6月 06 12:40:11 vs13centos7 redis-server[4099]: 4099:M 06 Jun 2023 12:40:11.578 * &lt;ReJSON&gt; Enabled diskless replication</a>
-<a class="sourceLine" id="cb4-15" title="15"> 6月 06 12:40:11 vs13centos7 redis-server[4099]: 4099:M 06 Jun 2023 12:40:11.578 * &lt;ReJSON&gt; Created new data type &#39;ReJSON-RL&#39;</a>
-<a class="sourceLine" id="cb4-16" title="16"> 6月 06 12:40:11 vs13centos7 redis-server[4099]: 4099:M 06 Jun 2023 12:40:11.578 * Module &#39;ReJSON&#39; loaded from /opt/redis-stack...son.so</a>
-<a class="sourceLine" id="cb4-17" title="17"> 6月 06 12:40:11 vs13centos7 redis-server[4099]: 4099:M 06 Jun 2023 12:40:11.578 * &lt;search&gt; Acquired RedisJSON_V1 API</a>
-<a class="sourceLine" id="cb4-18" title="18"> 6月 06 12:40:11 vs13centos7 redis-server[4099]: 4099:M 06 Jun 2023 12:40:11.578 * &lt;graph&gt; Acquired RedisJSON_V1 API</a>
-<a class="sourceLine" id="cb4-19" title="19"> 6月 06 12:40:11 vs13centos7 redis-server[4099]: 4099:M 06 Jun 2023 12:40:11.578 * Module &#39;bf&#39; loaded from /opt/redis-stack/lib...oom.so</a>
-<a class="sourceLine" id="cb4-20" title="20"> 6月 06 12:40:11 vs13centos7 redis-server[4099]: 4099:M 06 Jun 2023 12:40:11.579 * The AOF directory appendonlydir doesn&#39;t exist</a>
-<a class="sourceLine" id="cb4-21" title="21"> 6月 06 12:40:11 vs13centos7 redis-server[4099]: 4099:M 06 Jun 2023 12:40:11.579 * Ready to accept connections</a>
-<a class="sourceLine" id="cb4-22" title="22">Hint: Some lines were ellipsized, use -l to show in full.</a>
-<a class="sourceLine" id="cb4-23" title="23"><span class="kw">$ redis-server --version</span></a>
-<a class="sourceLine" id="cb4-24" title="24">Redis server v=6.9.241 sha=00000000:0 malloc=jemalloc-5.2.1 bits=64 build=79cf147c911caf62</a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">$ sudo systemctl start redis-stack-server</span></a>
+<a class="sourceLine" id="cb7-2" title="2"><span class="kw">$ sudo systemctl status redis-stack-server</span></a>
+<a class="sourceLine" id="cb7-3" title="3">● redis-stack-server.service - Redis stack server</a>
+<a class="sourceLine" id="cb7-4" title="4">   Loaded: loaded (/etc/systemd/system/redis-stack-server.service; disabled; vendor preset: disabled)</a>
+<a class="sourceLine" id="cb7-5" title="5">   Active: active (running) since 火 2023-06-06 12:40:11 PDT; 3s ago</a>
+<a class="sourceLine" id="cb7-6" title="6">     Docs: https://redis.io/</a>
+<a class="sourceLine" id="cb7-7" title="7"> Main PID: 4099 (redis-server)</a>
+<a class="sourceLine" id="cb7-8" title="8">    Tasks: 14</a>
+<a class="sourceLine" id="cb7-9" title="9">   CGroup: /system.slice/redis-stack-server.service</a>
+<a class="sourceLine" id="cb7-10" title="10">           └─4099 /opt/redis-stack/bin/redis-server *:6379</a>
+<a class="sourceLine" id="cb7-11" title="11"></a>
+<a class="sourceLine" id="cb7-12" title="12"> 6月 06 12:40:11 vs13centos7 redis-server[4099]: 4099:M 06 Jun 2023 12:40:11.578 * &lt;ReJSON&gt; version: 20007 git sha: e51b585 branch: HEAD</a>
+<a class="sourceLine" id="cb7-13" title="13"> 6月 06 12:40:11 vs13centos7 redis-server[4099]: 4099:M 06 Jun 2023 12:40:11.578 * &lt;ReJSON&gt; Exported RedisJSON_V1 API</a>
+<a class="sourceLine" id="cb7-14" title="14"> 6月 06 12:40:11 vs13centos7 redis-server[4099]: 4099:M 06 Jun 2023 12:40:11.578 * &lt;ReJSON&gt; Enabled diskless replication</a>
+<a class="sourceLine" id="cb7-15" title="15"> 6月 06 12:40:11 vs13centos7 redis-server[4099]: 4099:M 06 Jun 2023 12:40:11.578 * &lt;ReJSON&gt; Created new data type &#39;ReJSON-RL&#39;</a>
+<a class="sourceLine" id="cb7-16" title="16"> 6月 06 12:40:11 vs13centos7 redis-server[4099]: 4099:M 06 Jun 2023 12:40:11.578 * Module &#39;ReJSON&#39; loaded from /opt/redis-stack...son.so</a>
+<a class="sourceLine" id="cb7-17" title="17"> 6月 06 12:40:11 vs13centos7 redis-server[4099]: 4099:M 06 Jun 2023 12:40:11.578 * &lt;search&gt; Acquired RedisJSON_V1 API</a>
+<a class="sourceLine" id="cb7-18" title="18"> 6月 06 12:40:11 vs13centos7 redis-server[4099]: 4099:M 06 Jun 2023 12:40:11.578 * &lt;graph&gt; Acquired RedisJSON_V1 API</a>
+<a class="sourceLine" id="cb7-19" title="19"> 6月 06 12:40:11 vs13centos7 redis-server[4099]: 4099:M 06 Jun 2023 12:40:11.578 * Module &#39;bf&#39; loaded from /opt/redis-stack/lib...oom.so</a>
+<a class="sourceLine" id="cb7-20" title="20"> 6月 06 12:40:11 vs13centos7 redis-server[4099]: 4099:M 06 Jun 2023 12:40:11.579 * The AOF directory appendonlydir doesn&#39;t exist</a>
+<a class="sourceLine" id="cb7-21" title="21"> 6月 06 12:40:11 vs13centos7 redis-server[4099]: 4099:M 06 Jun 2023 12:40:11.579 * Ready to accept connections</a>
+<a class="sourceLine" id="cb7-22" title="22">Hint: Some lines were ellipsized, use -l to show in full.</a>
+<a class="sourceLine" id="cb7-23" title="23"><span class="kw">$ redis-server --version</span></a>
+<a class="sourceLine" id="cb7-24" title="24">Redis server v=6.9.241 sha=00000000:0 malloc=jemalloc-5.2.1 bits=64 build=79cf147c911caf62</a></code></pre></div>
 <p>自動起動の設定</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">$ sudo systemctl enable redis-stack-server</span></a></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">$ sudo systemctl enable redis-stack-server</span></a></code></pre></div>
 <h4 id="python-ライブラリ">Python ライブラリ</h4>
-<div class="sourceCode" id="cb6"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">$ python3 --version</span></a>
-<a class="sourceLine" id="cb6-2" title="2">Python 3.6.8</a></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb9-1" title="1"><span class="kw">$ python3 --version</span></a>
+<a class="sourceLine" id="cb9-2" title="2">Python 3.6.8</a></code></pre></div>
 <p>Redis-py のページ(<a href="https://redis-py.readthedocs.io/en/stable/">https://redis-py.readthedocs.io/en/stable/</a>)には Python 3.7+ と書いてあったけれど，CentOS7 の Python 3.6.8 でもいけた．</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">$ pip3 install redis</span></a>
-<a class="sourceLine" id="cb7-2" title="2">Collecting redis</a>
-<a class="sourceLine" id="cb7-3" title="3">  Downloading https://files.pythonhosted.org/packages/d6/f6/19237b28c632935c7359bddf703395ba13bbd134fc5e2eb297c4c120398c/redis-4.3.6-py3-none-any.whl (248kB)</a>
-<a class="sourceLine" id="cb7-4" title="4">    100% |████████████████████████████████| 256kB 2.4MB/s </a>
-<a class="sourceLine" id="cb7-5" title="5">Collecting typing-extensions; python_version &lt; &quot;3.8&quot; (from redis)</a>
-<a class="sourceLine" id="cb7-6" title="6">  Downloading https://files.pythonhosted.org/packages/45/6b/44f7f8f1e110027cf88956b59f2fad776cca7e1704396d043f89effd3a0e/typing_extensions-4.1.1-py3-none-any.whl</a>
-<a class="sourceLine" id="cb7-7" title="7">Collecting importlib-metadata&gt;=1.0; python_version &lt; &quot;3.8&quot; (from redis)</a>
-<a class="sourceLine" id="cb7-8" title="8">  Downloading https://files.pythonhosted.org/packages/a0/a1/b153a0a4caf7a7e3f15c2cd56c7702e2cf3d89b1b359d1f1c5e59d68f4ce/importlib_metadata-4.8.3-py3-none-any.whl</a>
-<a class="sourceLine" id="cb7-9" title="9">Collecting packaging&gt;=20.4 (from redis)</a>
-<a class="sourceLine" id="cb7-10" title="10">  Downloading https://files.pythonhosted.org/packages/05/8e/8de486cbd03baba4deef4142bd643a3e7bbe954a784dc1bb17142572d127/packaging-21.3-py3-none-any.whl (40kB)</a>
-<a class="sourceLine" id="cb7-11" title="11">    100% |████████████████████████████████| 40kB 7.2MB/s </a>
-<a class="sourceLine" id="cb7-12" title="12">Collecting async-timeout&gt;=4.0.2 (from redis)</a>
-<a class="sourceLine" id="cb7-13" title="13">  Downloading https://files.pythonhosted.org/packages/d6/c1/8991e7c5385b897b8c020cdaad718c5b087a6626d1d11a23e1ea87e325a7/async_timeout-4.0.2-py3-none-any.whl</a>
-<a class="sourceLine" id="cb7-14" title="14">Collecting zipp&gt;=0.5 (from importlib-metadata&gt;=1.0; python_version &lt; &quot;3.8&quot;-&gt;redis)</a>
-<a class="sourceLine" id="cb7-15" title="15">  Downloading https://files.pythonhosted.org/packages/bd/df/d4a4974a3e3957fd1c1fa3082366d7fff6e428ddb55f074bf64876f8e8ad/zipp-3.6.0-py3-none-any.whl</a>
-<a class="sourceLine" id="cb7-16" title="16">Collecting pyparsing!=3.0.5,&gt;=2.0.2 (from packaging&gt;=20.4-&gt;redis)</a>
-<a class="sourceLine" id="cb7-17" title="17">  Downloading https://files.pythonhosted.org/packages/6c/10/a7d0fa5baea8fe7b50f448ab742f26f52b80bfca85ac2be9d35cdd9a3246/pyparsing-3.0.9-py3-none-any.whl (98kB)</a>
-<a class="sourceLine" id="cb7-18" title="18">    100% |████████████████████████████████| 102kB 9.0MB/s </a>
-<a class="sourceLine" id="cb7-19" title="19">Installing collected packages: typing-extensions, zipp, importlib-metadata, pyparsing, packaging, async-timeout, redis</a>
-<a class="sourceLine" id="cb7-20" title="20">Successfully installed async-timeout-4.0.2 importlib-metadata-4.8.3 packaging-21.3 pyparsing-3.0.9 redis-4.3.6 typing-extensions-4.1.1 zipp-3.6.0</a></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb10-1" title="1"><span class="kw">$ pip3 install redis</span></a>
+<a class="sourceLine" id="cb10-2" title="2">Collecting redis</a>
+<a class="sourceLine" id="cb10-3" title="3">  Downloading https://files.pythonhosted.org/packages/d6/f6/19237b28c632935c7359bddf703395ba13bbd134fc5e2eb297c4c120398c/redis-4.3.6-py3-none-any.whl (248kB)</a>
+<a class="sourceLine" id="cb10-4" title="4">    100% |████████████████████████████████| 256kB 2.4MB/s </a>
+<a class="sourceLine" id="cb10-5" title="5">Collecting typing-extensions; python_version &lt; &quot;3.8&quot; (from redis)</a>
+<a class="sourceLine" id="cb10-6" title="6">  Downloading https://files.pythonhosted.org/packages/45/6b/44f7f8f1e110027cf88956b59f2fad776cca7e1704396d043f89effd3a0e/typing_extensions-4.1.1-py3-none-any.whl</a>
+<a class="sourceLine" id="cb10-7" title="7">Collecting importlib-metadata&gt;=1.0; python_version &lt; &quot;3.8&quot; (from redis)</a>
+<a class="sourceLine" id="cb10-8" title="8">  Downloading https://files.pythonhosted.org/packages/a0/a1/b153a0a4caf7a7e3f15c2cd56c7702e2cf3d89b1b359d1f1c5e59d68f4ce/importlib_metadata-4.8.3-py3-none-any.whl</a>
+<a class="sourceLine" id="cb10-9" title="9">Collecting packaging&gt;=20.4 (from redis)</a>
+<a class="sourceLine" id="cb10-10" title="10">  Downloading https://files.pythonhosted.org/packages/05/8e/8de486cbd03baba4deef4142bd643a3e7bbe954a784dc1bb17142572d127/packaging-21.3-py3-none-any.whl (40kB)</a>
+<a class="sourceLine" id="cb10-11" title="11">    100% |████████████████████████████████| 40kB 7.2MB/s </a>
+<a class="sourceLine" id="cb10-12" title="12">Collecting async-timeout&gt;=4.0.2 (from redis)</a>
+<a class="sourceLine" id="cb10-13" title="13">  Downloading https://files.pythonhosted.org/packages/d6/c1/8991e7c5385b897b8c020cdaad718c5b087a6626d1d11a23e1ea87e325a7/async_timeout-4.0.2-py3-none-any.whl</a>
+<a class="sourceLine" id="cb10-14" title="14">Collecting zipp&gt;=0.5 (from importlib-metadata&gt;=1.0; python_version &lt; &quot;3.8&quot;-&gt;redis)</a>
+<a class="sourceLine" id="cb10-15" title="15">  Downloading https://files.pythonhosted.org/packages/bd/df/d4a4974a3e3957fd1c1fa3082366d7fff6e428ddb55f074bf64876f8e8ad/zipp-3.6.0-py3-none-any.whl</a>
+<a class="sourceLine" id="cb10-16" title="16">Collecting pyparsing!=3.0.5,&gt;=2.0.2 (from packaging&gt;=20.4-&gt;redis)</a>
+<a class="sourceLine" id="cb10-17" title="17">  Downloading https://files.pythonhosted.org/packages/6c/10/a7d0fa5baea8fe7b50f448ab742f26f52b80bfca85ac2be9d35cdd9a3246/pyparsing-3.0.9-py3-none-any.whl (98kB)</a>
+<a class="sourceLine" id="cb10-18" title="18">    100% |████████████████████████████████| 102kB 9.0MB/s </a>
+<a class="sourceLine" id="cb10-19" title="19">Installing collected packages: typing-extensions, zipp, importlib-metadata, pyparsing, packaging, async-timeout, redis</a>
+<a class="sourceLine" id="cb10-20" title="20">Successfully installed async-timeout-4.0.2 importlib-metadata-4.8.3 packaging-21.3 pyparsing-3.0.9 redis-4.3.6 typing-extensions-4.1.1 zipp-3.6.0</a></code></pre></div>
 <p>使ってみる</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">$ python3</span></a>
-<a class="sourceLine" id="cb8-2" title="2">Python 3.6.8 (default, Nov 16 2020, 16:55:22) </a>
-<a class="sourceLine" id="cb8-3" title="3">[GCC 4.8.5 20150623 (Red Hat 4.8.5-44)] on linux</a>
-<a class="sourceLine" id="cb8-4" title="4">Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;license&quot; for more information.</a>
-<a class="sourceLine" id="cb8-5" title="5">&gt;&gt;&gt; import redis</a>
-<a class="sourceLine" id="cb8-6" title="6">&gt;&gt;&gt; r = redis.Redis()</a>
-<a class="sourceLine" id="cb8-7" title="7">&gt;&gt;&gt; r.ping()</a>
-<a class="sourceLine" id="cb8-8" title="8">True</a>
-<a class="sourceLine" id="cb8-9" title="9">&gt;&gt;&gt; </a></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb11-1" title="1"><span class="kw">$ python3</span></a>
+<a class="sourceLine" id="cb11-2" title="2">Python 3.6.8 (default, Nov 16 2020, 16:55:22) </a>
+<a class="sourceLine" id="cb11-3" title="3">[GCC 4.8.5 20150623 (Red Hat 4.8.5-44)] on linux</a>
+<a class="sourceLine" id="cb11-4" title="4">Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;license&quot; for more information.</a>
+<a class="sourceLine" id="cb11-5" title="5">&gt;&gt;&gt; import redis</a>
+<a class="sourceLine" id="cb11-6" title="6">&gt;&gt;&gt; r = redis.Redis()</a>
+<a class="sourceLine" id="cb11-7" title="7">&gt;&gt;&gt; r.ping()</a>
+<a class="sourceLine" id="cb11-8" title="8">True</a>
+<a class="sourceLine" id="cb11-9" title="9">&gt;&gt;&gt; </a></code></pre></div>
 <h3 id="ubuntu-20.04-2023-年-6-月-6-日">Ubuntu 20.04, 2023 年 6 月 6 日</h3>
 <h4 id="redis-本体-redis-stack-1">Redis 本体 (Redis Stack)</h4>
-<div class="sourceCode" id="cb9"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb9-1" title="1"><span class="kw">$ curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg</span></a>
-<a class="sourceLine" id="cb9-2" title="2"><span class="kw">$ sudo chmod 644 /usr/share/keyrings/redis-archive-keyring.gpg</span></a>
-<a class="sourceLine" id="cb9-3" title="3"><span class="kw">$ echo &quot;deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main&quot; | sudo tee /etc/apt/sources.list.d/redis.list</span></a>
-<a class="sourceLine" id="cb9-4" title="4"><span class="kw">$ sudo apt-get update</span></a>
-<a class="sourceLine" id="cb9-5" title="5"><span class="kw">$ sudo apt-get install redis-stack-server</span></a></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb12-1" title="1"><span class="kw">$ curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg</span></a>
+<a class="sourceLine" id="cb12-2" title="2"><span class="kw">$ sudo chmod 644 /usr/share/keyrings/redis-archive-keyring.gpg</span></a>
+<a class="sourceLine" id="cb12-3" title="3"><span class="kw">$ echo &quot;deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main&quot; | sudo tee /etc/apt/sources.list.d/redis.list</span></a>
+<a class="sourceLine" id="cb12-4" title="4"><span class="kw">$ sudo apt-get update</span></a>
+<a class="sourceLine" id="cb12-5" title="5"><span class="kw">$ sudo apt-get install redis-stack-server</span></a></code></pre></div>
 <h4 id="python-ライブラリ-1">Python ライブラリ</h4>
 <pre><code>$ pip3 install redis</code></pre>
-<h2 id="slowdash">SlowDash</h2>
+<h2 id="slowdash-bare-metal-インストール">SlowDash, Bare-Metal インストール</h2>
 <h3 id="python-インストール">Python インストール</h3>
 <ul>
 <li>python3</li>
 <li>pip3: pyyaml, numpy</li>
 </ul>
 <h3 id="slowdash-インストール">SlowDash インストール</h3>
-<ul>
-<li><del>git clone</del> パケージを展開</li>
-<li><code>PATH/TO/SLOWDASH/system</code> に <code>cd</code> して <code>make</code></li>
-<li><code>PATH/TO/SLOWDASH/bin/slowdash-bashrc</code> を <code>source</code> （毎回やるか，<code>.bashrc</code> に書く）</li>
-</ul>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb14-1" title="1">$ <span class="fu">git</span> clone https://github.com/slowproj/slowdash.git --recurse-submodules</a>
+<a class="sourceLine" id="cb14-2" title="2">$ <span class="bu">cd</span> system<span class="kw">;</span> <span class="fu">make</span></a>
+<a class="sourceLine" id="cb14-3" title="3">$ <span class="bu">cd</span> ..<span class="kw">;</span> <span class="bu">source</span> bin/slowdash-bashrc  <span class="co"># 毎回やるか，`.bashrc`  に書く</span></a></code></pre></div>
 <h3 id="動作確認">動作確認</h3>
 <h4 id="テストデータの生成">テストデータの生成</h4>
 <p><strong>以下のダミーデータ生成スクリプトは，既存の Redis データがあるとその内容と干渉する可能性があります．すでにデータがある場合はこの手順をスキップして，手持ちのデータを使う方がいいです．</strong></p>
 <p>SlowDash に入っている Python ライブラリ SlowPy を使う．SlowPy は Python パッケージだけれど，今回はインストールせずに使うので，環境変数を設定する．それをする bash のスクリプトを <code>source</code> する：</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb11-1" title="1"><span class="kw">$ source PATH/TO/SLOWDASH/bin/slowdash-bashrc</span></a></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb15-1" title="1"><span class="kw">$ source PATH/TO/SLOWDASH/bin/slowdash-bashrc</span></a></code></pre></div>
 <p>これでダミーデータを生成するスクリプトが走るはず：</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb12-1" title="1"><span class="kw">$ cd PATH/TO/SLOWDASH/system/client/test</span></a>
-<a class="sourceLine" id="cb12-2" title="2"><span class="kw">$ ./test-redis.py</span></a>
-<a class="sourceLine" id="cb12-3" title="3">[{&#39;key&#39;: &#39;test_graph_01&#39;}, {&#39;key&#39;: &#39;test_histogram_01&#39;}]</a>
-<a class="sourceLine" id="cb12-4" title="4">[{&#39;key&#39;: &#39;ch00&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch10&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch14&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch04&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch15&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch03&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch11&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch02&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch09&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch08&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch13&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch05&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch06&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch01&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch07&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch12&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}]</a>
-<a class="sourceLine" id="cb12-5" title="5">[{&#39;key&#39;: &#39;test_graph_02&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;test_histogram_02&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}]</a></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb16-1" title="1"><span class="kw">$ PATH/TO/SLOWDASH/utils/generate-testdata.py --db-url=redis://redis_server:6379/1</span></a>
+<a class="sourceLine" id="cb16-2" title="2">[{&#39;key&#39;: &#39;test_graph_01&#39;}, {&#39;key&#39;: &#39;test_histogram_01&#39;}]</a>
+<a class="sourceLine" id="cb16-3" title="3">[{&#39;key&#39;: &#39;ch00&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch10&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch14&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch04&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch15&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch03&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch11&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch02&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch09&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch08&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch13&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch05&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch06&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch01&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch07&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;ch12&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}]</a>
+<a class="sourceLine" id="cb16-4" title="4">[{&#39;key&#39;: &#39;test_graph_02&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}, {&#39;key&#39;: &#39;test_histogram_02&#39;, &#39;totalSamples&#39;: 1, &#39;firstTimeStamp&#39;: None, &#39;lastTimeStamp&#39;: None, &#39;retentionTime&#39;: 3600000}]</a></code></pre></div>
 <h4 id="slowdash-の実行テスト">SlowDash の実行テスト</h4>
 <p>上記データ生成コマンドを走らせたまま別ウィンドウで SlowDash を走らせる：</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb13-1" title="1"><span class="kw">$ cd PATH/TO/SLOWDASH/Projects/Test_Redis_Simple</span></a>
-<a class="sourceLine" id="cb13-2" title="2"><span class="kw">$ slowdash channels</span></a>
-<a class="sourceLine" id="cb13-3" title="3">[{&quot;name&quot;: &quot;Status&quot;, &quot;type&quot;: &quot;tree&quot;}, {&quot;name&quot;: &quot;test_graph_01&quot;, &quot;type&quot;: &quot;graph&quot;}, {&quot;name&quot;: &quot;test_histogram_01&quot;, &quot;type&quot;: &quot;histogram&quot;}, {&quot;name&quot;: &quot;ch00&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch10&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch14&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch04&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch15&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch03&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch11&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch02&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch09&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch08&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch13&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch05&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch06&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch01&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch07&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch12&quot;, &quot;type&quot;: &quot;timeseries&quot;}]</a></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb17-1" title="1"><span class="kw">$ cd PATH/TO/SLOWDASH/ExampleProjects/Test_Redis</span></a>
+<a class="sourceLine" id="cb17-2" title="2"><span class="kw">$ slowdash channels</span></a>
+<a class="sourceLine" id="cb17-3" title="3">[{&quot;name&quot;: &quot;Status&quot;, &quot;type&quot;: &quot;tree&quot;}, {&quot;name&quot;: &quot;test_graph_01&quot;, &quot;type&quot;: &quot;graph&quot;}, {&quot;name&quot;: &quot;test_histogram_01&quot;, &quot;type&quot;: &quot;histogram&quot;}, {&quot;name&quot;: &quot;ch00&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch10&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch14&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch04&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch15&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch03&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch11&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch02&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch09&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch08&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch13&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch05&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch06&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch01&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch07&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch12&quot;, &quot;type&quot;: &quot;timeseries&quot;}]</a></code></pre></div>
 <p>ちゃんとデータが見えているので，ポート番号を指定して SlowDash を走らせる：</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb14-1" title="1"><span class="kw">$ slowdash --port=18881</span></a></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb18-1" title="1"><span class="kw">$ slowdash --port=18881</span></a></code></pre></div>
 <p>ブラウザで <code>http://localhost:18881/</code> に接続．</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb15-1" title="1"><span class="kw">$ firefox http://localhost:18881/</span></a></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb19-1" title="1"><span class="kw">$ firefox http://localhost:18881/</span></a></code></pre></div>
 <p><img src="fig/Redis-Home.png" width="80%" style="margin:2rem;box-shadow: 0px 0px 15px -5px rgba(0,0,0,0.7);"></p>
 左下の Channel List にチャンネルが表示されていることを確認．
 <p>
 <p>右上の Slow-Plot にある <code>redis-test</code> をクリックしてデータパネルを表示する： <img src="fig/Redis-SimplePlots.png" width="80%" style="margin:2rem;box-shadow: 0px 0px 15px -5px rgba(0,0,0,0.7);"></p>
 <h1 id="使い方">使い方</h1>
 <h2 id="プロジェクト設定">プロジェクト設定</h2>
-<p>動作テストに使った <code>Projects/Test_Redis_Simple</code> の <code>SlowdashProject.yaml</code> にあるように，Redis サーバのアドレス，ポート番号とデータベース番号を指定するだけで良い．</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb16-1" title="1"><span class="fu">slowdash_project:</span></a>
-<a class="sourceLine" id="cb16-2" title="2">  <span class="fu">data_source:</span></a>
-<a class="sourceLine" id="cb16-3" title="3">    <span class="fu">url:</span><span class="at"> redis://localhost:6379/1</span></a></code></pre></div>
+<p>動作テストに使った <code>ExampleProjects/Test_Redis</code> の <code>SlowdashProject.yaml</code> にあるように，Redis サーバのアドレス，ポート番号とデータベース番号を指定するだけで良い．</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb20-1" title="1"><span class="fu">slowdash_project:</span></a>
+<a class="sourceLine" id="cb20-2" title="2">  <span class="fu">data_source:</span></a>
+<a class="sourceLine" id="cb20-3" title="3">    <span class="fu">url:</span><span class="at"> redis://localhost:6379/1</span></a></code></pre></div>
 <p>複数のデータベース番号を使いたいときは，<code>data_source</code> を配列にできる．ただし，これは省略形式で，正式には，以下のようにデータ形式ごとにエントリを作る．こうするとよりきめ細かくパラメータを設定できる．</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb17-1" title="1"><span class="fu">slowdash_project:</span></a>
-<a class="sourceLine" id="cb17-2" title="2">  <span class="fu">name:</span><span class="at"> RedisTest</span></a>
-<a class="sourceLine" id="cb17-3" title="3">  <span class="fu">title:</span><span class="at"> Redis Test, Simple version</span></a>
-<a class="sourceLine" id="cb17-4" title="4"></a>
-<a class="sourceLine" id="cb17-5" title="5">  <span class="fu">data_source:</span></a>
-<a class="sourceLine" id="cb17-6" title="6">    <span class="fu">type:</span><span class="at"> Redis</span></a>
-<a class="sourceLine" id="cb17-7" title="7">    <span class="fu">parameters:</span></a>
-<a class="sourceLine" id="cb17-8" title="8">      <span class="fu">url:</span><span class="at"> redis://localhost:6379/</span></a>
-<a class="sourceLine" id="cb17-9" title="9">      <span class="fu">hash:</span><span class="at"> </span><span class="kw">{</span> <span class="fu">db:</span><span class="at"> </span><span class="dv">1</span><span class="at"> </span><span class="kw">}</span></a>
-<a class="sourceLine" id="cb17-10" title="10">      <span class="fu">time_series:</span><span class="at"> </span></a>
-<a class="sourceLine" id="cb17-11" title="11">        <span class="kw">-</span> <span class="fu">db:</span><span class="at"> </span><span class="dv">2</span></a>
-<a class="sourceLine" id="cb17-12" title="12">        <span class="kw">-</span> <span class="fu">db:</span><span class="at"> </span><span class="dv">3</span></a>
-<a class="sourceLine" id="cb17-13" title="13">          <span class="fu">suffix:</span><span class="at"> </span><span class="st">&#39;.second_TS&#39;</span></a>
-<a class="sourceLine" id="cb17-14" title="14">      <span class="fu">object:</span><span class="at"> </span><span class="kw">{</span> <span class="fu">db:</span><span class="at"> </span><span class="dv">1</span><span class="at"> </span><span class="kw">}</span></a></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb21-1" title="1"><span class="fu">slowdash_project:</span></a>
+<a class="sourceLine" id="cb21-2" title="2">  <span class="fu">name:</span><span class="at"> RedisTest</span></a>
+<a class="sourceLine" id="cb21-3" title="3">  <span class="fu">title:</span><span class="at"> Redis Test, Simple version</span></a>
+<a class="sourceLine" id="cb21-4" title="4"></a>
+<a class="sourceLine" id="cb21-5" title="5">  <span class="fu">data_source:</span></a>
+<a class="sourceLine" id="cb21-6" title="6">    <span class="fu">type:</span><span class="at"> Redis</span></a>
+<a class="sourceLine" id="cb21-7" title="7">    <span class="fu">parameters:</span></a>
+<a class="sourceLine" id="cb21-8" title="8">      <span class="fu">url:</span><span class="at"> redis://localhost:6379/</span></a>
+<a class="sourceLine" id="cb21-9" title="9">      <span class="fu">hash:</span><span class="at"> </span><span class="kw">{</span> <span class="fu">db:</span><span class="at"> </span><span class="dv">1</span><span class="at"> </span><span class="kw">}</span></a>
+<a class="sourceLine" id="cb21-10" title="10">      <span class="fu">time_series:</span><span class="at"> </span></a>
+<a class="sourceLine" id="cb21-11" title="11">        <span class="kw">-</span> <span class="fu">db:</span><span class="at"> </span><span class="dv">2</span></a>
+<a class="sourceLine" id="cb21-12" title="12">        <span class="kw">-</span> <span class="fu">db:</span><span class="at"> </span><span class="dv">3</span></a>
+<a class="sourceLine" id="cb21-13" title="13">          <span class="fu">suffix:</span><span class="at"> </span><span class="st">&#39;.second_TS&#39;</span></a>
+<a class="sourceLine" id="cb21-14" title="14">      <span class="fu">object:</span><span class="at"> </span><span class="kw">{</span> <span class="fu">db:</span><span class="at"> </span><span class="dv">1</span><span class="at"> </span><span class="kw">}</span></a></code></pre></div>
 <table>
 <colgroup>
 <col style="width: 50%" />
@@ -292,37 +322,37 @@ gpgcheck=1</code></pre>
 <h3 id="ヒストグラムとグラフ-最新値のみ保持の簡単な場合">ヒストグラムとグラフ (最新値のみ保持の簡単な場合)</h3>
 <p>Redis JSON を使って特定の構造の JSON オブジェクトを記録すると SlowDash にヒストグラムやグラフとして認識される．</p>
 <p>Python のコードはこんな感じ：</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb18-1" title="1"><span class="im">import</span> redis</a>
-<a class="sourceLine" id="cb18-2" title="2">r <span class="op">=</span> redis.Redis(<span class="st">&#39;localhost&#39;</span>, <span class="dv">6379</span>, <span class="dv">1</span>)</a>
-<a class="sourceLine" id="cb18-3" title="3">hist <span class="op">=</span> {</a>
-<a class="sourceLine" id="cb18-4" title="4">  <span class="st">&#39;bins&#39;</span>: { <span class="st">&#39;min&#39;</span>: <span class="dv">0</span>, <span class="st">&#39;max&#39;</span>: <span class="dv">100</span> },</a>
-<a class="sourceLine" id="cb18-5" title="5">  <span class="st">&#39;counts&#39;</span>: [ <span class="dv">3</span>, <span class="dv">5</span>, <span class="dv">8</span>, <span class="dv">14</span>, <span class="dv">11</span>, <span class="dv">3</span>, <span class="dv">6</span>, <span class="dv">4</span>, <span class="dv">4</span>, <span class="dv">1</span> ]</a>
-<a class="sourceLine" id="cb18-6" title="6">}</a>
-<a class="sourceLine" id="cb18-7" title="7">r.json().<span class="bu">set</span>(<span class="st">&#39;hist00&#39;</span>, <span class="st">&#39;$&#39;</span>, hist)</a></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb22-1" title="1"><span class="im">import</span> redis</a>
+<a class="sourceLine" id="cb22-2" title="2">r <span class="op">=</span> redis.Redis(<span class="st">&#39;localhost&#39;</span>, <span class="dv">6379</span>, <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb22-3" title="3">hist <span class="op">=</span> {</a>
+<a class="sourceLine" id="cb22-4" title="4">  <span class="st">&#39;bins&#39;</span>: { <span class="st">&#39;min&#39;</span>: <span class="dv">0</span>, <span class="st">&#39;max&#39;</span>: <span class="dv">100</span> },</a>
+<a class="sourceLine" id="cb22-5" title="5">  <span class="st">&#39;counts&#39;</span>: [ <span class="dv">3</span>, <span class="dv">5</span>, <span class="dv">8</span>, <span class="dv">14</span>, <span class="dv">11</span>, <span class="dv">3</span>, <span class="dv">6</span>, <span class="dv">4</span>, <span class="dv">4</span>, <span class="dv">1</span> ]</a>
+<a class="sourceLine" id="cb22-6" title="6">}</a>
+<a class="sourceLine" id="cb22-7" title="7">r.json().<span class="bu">set</span>(<span class="st">&#39;hist00&#39;</span>, <span class="st">&#39;$&#39;</span>, hist)</a></code></pre></div>
 <p>あるいは，普通の Key-Value に，JSON 文字列で保存しても良い (C++ とかからならこちらの方が便利かも)：</p>
-<div class="sourceCode" id="cb19"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb19-1" title="1"><span class="im">import</span> redis</a>
-<a class="sourceLine" id="cb19-2" title="2">r <span class="op">=</span> redis.Redis(<span class="st">&#39;localhost&#39;</span>, <span class="dv">6379</span>, <span class="dv">1</span>)</a>
-<a class="sourceLine" id="cb19-3" title="3">hist <span class="op">=</span> <span class="st">&#39;&#39;&#39;{</span></a>
-<a class="sourceLine" id="cb19-4" title="4"><span class="st">  &quot;bins&quot;: { &quot;min&quot;: 0, &quot;max&quot;: 100 },</span></a>
-<a class="sourceLine" id="cb19-5" title="5"><span class="st">  &quot;counts&quot;: [ 3, 5, 8, 14, 11, 3, 6, 4, 4, 1 ]</span></a>
-<a class="sourceLine" id="cb19-6" title="6"><span class="st">}&#39;&#39;&#39;</span></a>
-<a class="sourceLine" id="cb19-7" title="7">r.<span class="bu">set</span>(<span class="st">&#39;hist00&#39;</span>, hist)</a></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb23-1" title="1"><span class="im">import</span> redis</a>
+<a class="sourceLine" id="cb23-2" title="2">r <span class="op">=</span> redis.Redis(<span class="st">&#39;localhost&#39;</span>, <span class="dv">6379</span>, <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb23-3" title="3">hist <span class="op">=</span> <span class="st">&#39;&#39;&#39;{</span></a>
+<a class="sourceLine" id="cb23-4" title="4"><span class="st">  &quot;bins&quot;: { &quot;min&quot;: 0, &quot;max&quot;: 100 },</span></a>
+<a class="sourceLine" id="cb23-5" title="5"><span class="st">  &quot;counts&quot;: [ 3, 5, 8, 14, 11, 3, 6, 4, 4, 1 ]</span></a>
+<a class="sourceLine" id="cb23-6" title="6"><span class="st">}&#39;&#39;&#39;</span></a>
+<a class="sourceLine" id="cb23-7" title="7">r.<span class="bu">set</span>(<span class="st">&#39;hist00&#39;</span>, hist)</a></code></pre></div>
 <p>JSON のデータ構造は以下の通り：</p>
 <h5 id="ヒストグラム">ヒストグラム</h5>
-<div class="sourceCode" id="cb20"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb20-1" title="1"><span class="fu">{</span> </a>
-<a class="sourceLine" id="cb20-2" title="2">    <span class="dt">&quot;bins&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;min&quot;</span><span class="fu">:</span> <span class="er">MIN</span><span class="fu">,</span> <span class="dt">&quot;max&quot;</span><span class="fu">:</span> <span class="er">MAX</span><span class="fu">},</span> </a>
-<a class="sourceLine" id="cb20-3" title="3">    <span class="dt">&quot;counts&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="er">C0</span><span class="ot">,</span> <span class="er">C1</span><span class="ot">,</span> <span class="er">C2</span><span class="ot">,</span> <span class="er">...</span><span class="ot">]</span> </a>
-<a class="sourceLine" id="cb20-4" title="4"><span class="fu">}</span></a></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb24-1" title="1"><span class="fu">{</span> </a>
+<a class="sourceLine" id="cb24-2" title="2">    <span class="dt">&quot;bins&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;min&quot;</span><span class="fu">:</span> <span class="er">MIN</span><span class="fu">,</span> <span class="dt">&quot;max&quot;</span><span class="fu">:</span> <span class="er">MAX</span><span class="fu">},</span> </a>
+<a class="sourceLine" id="cb24-3" title="3">    <span class="dt">&quot;counts&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="er">C0</span><span class="ot">,</span> <span class="er">C1</span><span class="ot">,</span> <span class="er">C2</span><span class="ot">,</span> <span class="er">...</span><span class="ot">]</span> </a>
+<a class="sourceLine" id="cb24-4" title="4"><span class="fu">}</span></a></code></pre></div>
 <ul>
 <li><code>counts</code> があることにより，この JSON がヒストグラムだと判別される．</li>
 <li>ビンは現在のところ等間隔のみ．ビン数は <code>counts</code> 配列の長さで決められる．</li>
 </ul>
 <h5 id="グラフ">グラフ</h5>
-<div class="sourceCode" id="cb21"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb21-1" title="1"><span class="fu">{</span> </a>
-<a class="sourceLine" id="cb21-2" title="2">    <span class="dt">&quot;labels&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">XLABEL</span><span class="ot">,</span> <span class="er">YLABEL</span> <span class="ot">]</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb21-3" title="3">    <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="er">x0</span><span class="ot">,</span> <span class="er">x1</span><span class="ot">,</span> <span class="er">x2</span><span class="ot">,</span> <span class="er">...</span><span class="ot">]</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb21-4" title="4">    <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="er">y0</span><span class="ot">,</span> <span class="er">y1</span><span class="ot">,</span> <span class="er">y2</span><span class="ot">,</span> <span class="er">...</span><span class="ot">]</span><span class="fu">,</span>    </a>
-<a class="sourceLine" id="cb21-5" title="5"><span class="fu">}</span></a></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb25-1" title="1"><span class="fu">{</span> </a>
+<a class="sourceLine" id="cb25-2" title="2">    <span class="dt">&quot;labels&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">XLABEL</span><span class="ot">,</span> <span class="er">YLABEL</span> <span class="ot">]</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb25-3" title="3">    <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="er">x0</span><span class="ot">,</span> <span class="er">x1</span><span class="ot">,</span> <span class="er">x2</span><span class="ot">,</span> <span class="er">...</span><span class="ot">]</span><span class="fu">,</span></a>
+<a class="sourceLine" id="cb25-4" title="4">    <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="er">y0</span><span class="ot">,</span> <span class="er">y1</span><span class="ot">,</span> <span class="er">y2</span><span class="ot">,</span> <span class="er">...</span><span class="ot">]</span><span class="fu">,</span>    </a>
+<a class="sourceLine" id="cb25-5" title="5"><span class="fu">}</span></a></code></pre></div>
 <ul>
 <li><code>y</code> があることにより，この JSON がグラフだと判別される．</li>
 </ul>
@@ -331,21 +361,21 @@ gpgcheck=1</code></pre>
 <h3 id="ヒストグラムやグラフの時系列">ヒストグラムやグラフの時系列</h3>
 <p>Redis TimeSeries と Redis JSON を組み合わせて実現されている．構造が面倒なので，SlowPy ライブラリを使うのが便利だと思う．</p>
 <p>こんな感じ：</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb22-1" title="1"><span class="im">import</span> sys, os, time</a>
-<a class="sourceLine" id="cb22-2" title="2"><span class="im">import</span> numpy <span class="im">as</span> np</a>
-<a class="sourceLine" id="cb22-3" title="3"><span class="im">import</span> slowpy <span class="im">as</span> slp</a>
-<a class="sourceLine" id="cb22-4" title="4">    </a>
-<a class="sourceLine" id="cb22-5" title="5">datastore <span class="op">=</span> slp.DataStore_Redis(host<span class="op">=</span><span class="st">&#39;localhost&#39;</span>, port<span class="op">=</span><span class="dv">6379</span>, db<span class="op">=</span><span class="dv">2</span>, retention_length<span class="op">=</span><span class="dv">3600</span>)</a>
-<a class="sourceLine" id="cb22-6" title="6">histogram <span class="op">=</span> slp.Histogram(<span class="st">&#39;test_histogram_01&#39;</span>, <span class="dv">100</span>, <span class="dv">-10</span>, <span class="dv">10</span>)</a>
-<a class="sourceLine" id="cb22-7" title="7"></a>
-<a class="sourceLine" id="cb22-8" title="8"><span class="cf">while</span> <span class="va">True</span>:</a>
-<a class="sourceLine" id="cb22-9" title="9">    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">100</span>):</a>
-<a class="sourceLine" id="cb22-10" title="10">        h.fill(np.random.normal(<span class="dv">5</span>, <span class="dv">2</span>))</a>
-<a class="sourceLine" id="cb22-11" title="11"></a>
-<a class="sourceLine" id="cb22-12" title="12">    <span class="co"># これ</span></a>
-<a class="sourceLine" id="cb22-13" title="13">    datastore.write_object_timeseries(histogram)</a>
-<a class="sourceLine" id="cb22-14" title="14">    </a>
-<a class="sourceLine" id="cb22-15" title="15">    time.sleep(<span class="dv">1</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb26-1" title="1"><span class="im">import</span> sys, os, time</a>
+<a class="sourceLine" id="cb26-2" title="2"><span class="im">import</span> numpy <span class="im">as</span> np</a>
+<a class="sourceLine" id="cb26-3" title="3"><span class="im">import</span> slowpy <span class="im">as</span> slp</a>
+<a class="sourceLine" id="cb26-4" title="4">    </a>
+<a class="sourceLine" id="cb26-5" title="5">datastore <span class="op">=</span> slp.DataStore_Redis(host<span class="op">=</span><span class="st">&#39;localhost&#39;</span>, port<span class="op">=</span><span class="dv">6379</span>, db<span class="op">=</span><span class="dv">2</span>, retention_length<span class="op">=</span><span class="dv">3600</span>)</a>
+<a class="sourceLine" id="cb26-6" title="6">histogram <span class="op">=</span> slp.Histogram(<span class="st">&#39;test_histogram_01&#39;</span>, <span class="dv">100</span>, <span class="dv">-10</span>, <span class="dv">10</span>)</a>
+<a class="sourceLine" id="cb26-7" title="7"></a>
+<a class="sourceLine" id="cb26-8" title="8"><span class="cf">while</span> <span class="va">True</span>:</a>
+<a class="sourceLine" id="cb26-9" title="9">    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">100</span>):</a>
+<a class="sourceLine" id="cb26-10" title="10">        h.fill(np.random.normal(<span class="dv">5</span>, <span class="dv">2</span>))</a>
+<a class="sourceLine" id="cb26-11" title="11"></a>
+<a class="sourceLine" id="cb26-12" title="12">    <span class="co"># これ</span></a>
+<a class="sourceLine" id="cb26-13" title="13">    datastore.write_object_timeseries(histogram)</a>
+<a class="sourceLine" id="cb26-14" title="14">    </a>
+<a class="sourceLine" id="cb26-15" title="15">    time.sleep(<span class="dv">1</span>)</a></code></pre></div>
 <p>現時点では，通常の時系列データとヒストグラムやグラフの時系列データは同じデータベースに共存できないので，この例ではデータベース番号 2 を使用している．</p>
 <p>ちなみに，<code>write_object_timeseries()</code> の代わりに <code>write_object()</code> とすると，時刻情報なしで最新版だけを同じキーで保存するようになる（上記の例）．</p>
 

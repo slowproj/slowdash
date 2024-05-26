@@ -91,7 +91,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 </header>
 
-<p><strong>Status: Not yet available</strong> (TODO: upload a Docker image to dockerhub and ghcr)</p>
+<p><strong>This feature is yet available</strong> (TODO: upload a Docker image to DockerHub)</p>
 <div style="font-size:120%">
 <p>If you already have:</p>
 <ul>
@@ -103,7 +103,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p><img src="fig/Top-InitialPlot.png" width="50%" style="box-shadow:gray 2px 2px;margin-bottom:3em"></p>
 <h1 id="postgresql">PostgreSQL</h1>
 <h3 id="for-database-setup-like-this">For database setup like this:</h3>
-<h5 id="database-and-data-table">Database and Data Table</h5>
+<h4 id="database-and-data-table">Database and Data Table</h4>
 <table>
 <thead>
 <tr class="header">
@@ -122,66 +122,107 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <td>db_user</td>
 <td>db_pass</td>
 <td>my_db</td>
-<td>data_table</td>
+<td>my_data_table</td>
 </tr>
 </tbody>
 </table>
-<h5 id="data-schema-and-contents-long-format">Data Schema and Contents (“long format”)</h5>
+<h4 id="data-schema-and-contents">Data Schema and Contents</h4>
+<h5 id="in-long-format">In “long format”</h5>
 <table>
 <thead>
 <tr class="header">
-<th>endpoint</th>
+<th>channel</th>
 <th>timestamp</th>
-<th>value_raw</th>
+<th>value</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>sccm.Alicat.Inj.Gas</td>
+<td>sccm.Inj</td>
 <td>2022-09-15 03:19:25.496212+00</td>
 <td>0</td>
 </tr>
 <tr class="even">
-<td>V.ThermoCo.Diss.AS</td>
+<td>V.ThrmCpl</td>
 <td>2022-09-15 03:19:27.612427+00</td>
-<td>6.605405e-05</td>
+<td>6.6e-05</td>
 </tr>
 <tr class="odd">
-<td>mbar.IG.Vac.AS</td>
+<td>mbar.IG.AS</td>
 <td>2022-09-15 03:19:31.490579+00</td>
-<td>2.26e-07</td>
+<td>2.3e-07</td>
 </tr>
 <tr class="even">
-<td>mbar.IG.Vac.MS</td>
+<td>mbar.IG.MS</td>
 <td>2022-09-15 03:19:31.529545+00</td>
 <td>2e-09</td>
 </tr>
 <tr class="odd">
-<td>mbar.IG.Vac.BS</td>
+<td>mbar.IG.BS</td>
 <td>2022-09-15 03:19:31.610188+00</td>
 <td>4e-09</td>
 </tr>
+<tr class="even">
+<td>…</td>
+<td></td>
+<td></td>
+</tr>
 </tbody>
 </table>
-<p>(for other table structures (e.g., “wide format”), refer to <a href="DataBinding.html">Data Binding section</a>)</p>
-<h3 id="do-this-for-slowdash">Do this for SlowDash:</h3>
-<p>write <code>docker-compose.yaml</code> as below:</p>
+<h5 id="or-in-wide-format">Or, in “wide format”</h5>
+<table>
+<thead>
+<tr class="header">
+<th>timestamp</th>
+<th>sccm.Inj</th>
+<th>V.ThrmCpl</th>
+<th>mbar.IG.AS</th>
+<th>mbar.IG.MS</th>
+<th>mbar.IG.BS</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>2022-09-15 03:19:25.496212+00</td>
+<td>0</td>
+<td>6.6e-05</td>
+<td>2.3e-07</td>
+<td>2e-9</td>
+<td>4e-9</td>
+</tr>
+<tr class="even">
+<td>…</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="write-a-docker-compose.yaml-file-like-this">Write a docker-compose.yaml file like this:</h3>
+<p>(modify the last two lines according to your setup)</p>
+<h5 id="for-long-format">For “long format”</h5>
 <div class="sourceCode" id="cb1"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb1-1" title="1"><span class="fu">version:</span><span class="at"> </span><span class="st">&#39;3&#39;</span></a>
 <a class="sourceLine" id="cb1-2" title="2"></a>
 <a class="sourceLine" id="cb1-3" title="3"><span class="fu">services:</span></a>
 <a class="sourceLine" id="cb1-4" title="4">  <span class="fu">slowdash:</span></a>
-<a class="sourceLine" id="cb1-5" title="5">    <span class="fu">image:</span><span class="at"> slowproj/slowdash:2405</span></a>
+<a class="sourceLine" id="cb1-5" title="5">    <span class="fu">image:</span><span class="at"> slowproj/slowdash:2406</span></a>
 <a class="sourceLine" id="cb1-6" title="6">    <span class="fu">ports:</span></a>
 <a class="sourceLine" id="cb1-7" title="7">      <span class="kw">-</span> <span class="st">&quot;18881:18881&quot;</span></a>
 <a class="sourceLine" id="cb1-8" title="8">    <span class="fu">environment:</span></a>
 <a class="sourceLine" id="cb1-9" title="9">      <span class="kw">-</span> <span class="st">&quot;SLOWDASH_INIT_DATASOURCE_URL=postgresql://db_user:db_pass@db_host:5432/my_db&quot;</span></a>
-<a class="sourceLine" id="cb1-10" title="10">      <span class="kw">-</span> <span class="st">&quot;SLOWDASH_INIT_TIMESERIES_SCHEMA=data_table[endpoint]@timestamp(aware)=value_raw&quot;</span></a></code></pre></div>
-<p>then run:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">$ docker-compose up</span></a></code></pre></div>
-<p>and open <code>http://localhost:18881</code> with a web-browser.</p>
+<a class="sourceLine" id="cb1-10" title="10">      <span class="kw">-</span> <span class="st">&quot;SLOWDASH_INIT_TIMESERIES_SCHEMA=my_data_table[channel]@timestamp(aware)=value&quot;</span></a></code></pre></div>
+<h5 id="for-wide-format">For “wide format”</h5>
+<p>replace the last line with:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb2-1" title="1">      <span class="kw">-</span> <span class="st">&quot;SLOWDASH_INIT_TIMESERIES_SCHEMA=my_data_table@timestamp(aware)&quot;</span></a></code></pre></div>
+<h3 id="and-run-it">And run it:</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">$ docker-compose up</span></a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">$ firefox http://localhost:18881</span></a></code></pre></div>
 <h1 id="influxdb">InfluxDB</h1>
 <h3 id="for-database-setup-like-this-1">For database setup like this:</h3>
-<h5 id="database">Database</h5>
+<h4 id="database">Database</h4>
+<p>InfluxDB version: 2</p>
 <table>
 <thead>
 <tr class="header">
@@ -204,30 +245,30 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </tr>
 </tbody>
 </table>
-<h5 id="data-schema-and-contents">Data Schema and Contents</h5>
+<h4 id="data-schema-and-contents-1">Data Schema and Contents</h4>
 <ul>
 <li>all the data in a single “measurment”</li>
 <li>channel name as a “tag”</li>
 </ul>
 <p>(for other table structures, refer to <a href="DataBinding.html">Data Binding section</a>)</p>
-<h3 id="do-this-for-slowdash-1">Do this for SlowDash:</h3>
-<p>write <code>docker-compose.yaml</code> as below:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb3-1" title="1"><span class="fu">version:</span><span class="at"> </span><span class="st">&#39;3&#39;</span></a>
-<a class="sourceLine" id="cb3-2" title="2"></a>
-<a class="sourceLine" id="cb3-3" title="3"><span class="fu">services:</span></a>
-<a class="sourceLine" id="cb3-4" title="4">  <span class="fu">slowdash:</span></a>
-<a class="sourceLine" id="cb3-5" title="5">    <span class="fu">image:</span><span class="at"> slowproj/slowdash:2405</span></a>
-<a class="sourceLine" id="cb3-6" title="6">    <span class="fu">ports:</span></a>
-<a class="sourceLine" id="cb3-7" title="7">      <span class="kw">-</span> <span class="st">&quot;18881:18881&quot;</span></a>
-<a class="sourceLine" id="cb3-8" title="8">    <span class="fu">environment:</span></a>
-<a class="sourceLine" id="cb3-9" title="9">      <span class="kw">-</span> <span class="st">&quot;SLOWDASH_INIT_DATASOURCE_URL=influxdb2://my_org:my_token@db_host:8086/my_bucket&quot;</span></a>
-<a class="sourceLine" id="cb3-10" title="10">      <span class="kw">-</span> <span class="st">&quot;SLOWDASH_INIT_TIMESERIES_SCHEMA=my_meas&quot;</span></a></code></pre></div>
-<p>then run:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">$ docker-compose up</span></a></code></pre></div>
-<p>and open <code>http://localhost:18881</code> with a web-browser.</p>
+<h3 id="write-a-docker-compose.yaml-file-like-this-1">Write a docker-compose.yaml file like this:</h3>
+<p>(modify the last two lines according to your setup)</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb5-1" title="1"><span class="fu">version:</span><span class="at"> </span><span class="st">&#39;3&#39;</span></a>
+<a class="sourceLine" id="cb5-2" title="2"></a>
+<a class="sourceLine" id="cb5-3" title="3"><span class="fu">services:</span></a>
+<a class="sourceLine" id="cb5-4" title="4">  <span class="fu">slowdash:</span></a>
+<a class="sourceLine" id="cb5-5" title="5">    <span class="fu">image:</span><span class="at"> slowproj/slowdash:2406</span></a>
+<a class="sourceLine" id="cb5-6" title="6">    <span class="fu">ports:</span></a>
+<a class="sourceLine" id="cb5-7" title="7">      <span class="kw">-</span> <span class="st">&quot;18881:18881&quot;</span></a>
+<a class="sourceLine" id="cb5-8" title="8">    <span class="fu">environment:</span></a>
+<a class="sourceLine" id="cb5-9" title="9">      <span class="kw">-</span> <span class="st">&quot;SLOWDASH_INIT_DATASOURCE_URL=influxdb2://my_org:my_token@db_host:8086/my_bucket&quot;</span></a>
+<a class="sourceLine" id="cb5-10" title="10">      <span class="kw">-</span> <span class="st">&quot;SLOWDASH_INIT_TIMESERIES_SCHEMA=my_meas&quot;</span></a></code></pre></div>
+<h3 id="and-run-it-1">And run it:</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">$ docker-compose up</span></a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">$ firefox http://localhost:18881</span></a></code></pre></div>
 <h1 id="redis-time-series">Redis Time-Series</h1>
 <h3 id="for-database-setup-like-this-2">For database setup like this:</h3>
-<h5 id="database-and-data-table-1">Database and Data Table</h5>
+<h4 id="database-and-data-table-1">Database and Data Table</h4>
 <table>
 <thead>
 <tr class="header">
@@ -244,24 +285,24 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </tr>
 </tbody>
 </table>
-<h5 id="data-schema-and-contents-1">Data Schema and Contents</h5>
+<h4 id="data-schema-and-contents-2">Data Schema and Contents</h4>
 <ul>
 <li>stored in Reids Time-Series</li>
 </ul>
-<h3 id="do-this-for-slowdash-2">Do this for SlowDash:</h3>
-<p>write <code>docker-compose.yaml</code> as below:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb5-1" title="1"><span class="fu">version:</span><span class="at"> </span><span class="st">&#39;3&#39;</span></a>
-<a class="sourceLine" id="cb5-2" title="2"></a>
-<a class="sourceLine" id="cb5-3" title="3"><span class="fu">services:</span></a>
-<a class="sourceLine" id="cb5-4" title="4">  <span class="fu">slowdash:</span></a>
-<a class="sourceLine" id="cb5-5" title="5">    <span class="fu">image:</span><span class="at"> slowproj/slowdash:2405</span></a>
-<a class="sourceLine" id="cb5-6" title="6">    <span class="fu">ports:</span></a>
-<a class="sourceLine" id="cb5-7" title="7">      <span class="kw">-</span> <span class="st">&quot;18881:18881&quot;</span></a>
-<a class="sourceLine" id="cb5-8" title="8">    <span class="fu">environment:</span></a>
-<a class="sourceLine" id="cb5-9" title="9">      <span class="kw">-</span> SLOWDASH_INIT_DATASOURCE_URL=<span class="st">&quot;redis://redis_host:6739/1&quot;</span></a></code></pre></div>
-<p>then run:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">$ docker-compose up</span></a></code></pre></div>
-<p>and open <code>http://localhost:18881</code> with a web-browser.</p>
+<h3 id="write-a-docker-compose.yaml-file-like-this-2">Write a docker-compose.yaml file like this:</h3>
+<p>(modify the last line according to your setup)</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb8-1" title="1"><span class="fu">version:</span><span class="at"> </span><span class="st">&#39;3&#39;</span></a>
+<a class="sourceLine" id="cb8-2" title="2"></a>
+<a class="sourceLine" id="cb8-3" title="3"><span class="fu">services:</span></a>
+<a class="sourceLine" id="cb8-4" title="4">  <span class="fu">slowdash:</span></a>
+<a class="sourceLine" id="cb8-5" title="5">    <span class="fu">image:</span><span class="at"> slowproj/slowdash:2406</span></a>
+<a class="sourceLine" id="cb8-6" title="6">    <span class="fu">ports:</span></a>
+<a class="sourceLine" id="cb8-7" title="7">      <span class="kw">-</span> <span class="st">&quot;18881:18881&quot;</span></a>
+<a class="sourceLine" id="cb8-8" title="8">    <span class="fu">environment:</span></a>
+<a class="sourceLine" id="cb8-9" title="9">      <span class="kw">-</span> SLOWDASH_INIT_DATASOURCE_URL=<span class="st">&quot;redis://redis_host:6739/1&quot;</span></a></code></pre></div>
+<h3 id="and-run-it-2">And run it:</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb9-1" title="1"><span class="kw">$ docker-compose up</span></a></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb10-1" title="1"><span class="kw">$ firefox http://localhost:18881</span></a></code></pre></div>
 
 
 </body>

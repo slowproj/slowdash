@@ -10,9 +10,49 @@ title: SlowDash で Redis を使う
 
 # インストール
 
-## Redis
+## Docker を使う場合：Redis と SlowDash の一括インストールとテスト
+`ExampleProjects/Test_Redis` に Redis Server と，SlowDash と，テストデータ生成スクリプトが全て入った `docker-compose.yaml` があるので，これを使う：
+```console
+$ cd PATH/TO/SLOWDASH/ExampleProjects/Test_Redis
+$ docker-compose up
+```
 
-Redis のサイトに行って Redis-Stack のイントール方法に従う： [https://redis.io/docs/stack/get-started/install/linux/](https://redis.io/docs/stack/get-started/install/linux/)
+システムが立ち上がったら，ブラウザで `http://localhost:18881` にアクセス：
+```console
+$ firefox http://localhost:18881
+```
+
+ちなみに，`docker-compose.yaml` の中身はこんな感じ：
+```
+version: '3'
+
+services:
+  redis_server:
+    image: redis/redis-stack:7.2.0-v10
+    restart: always
+    ports:
+      - "6379:6379"
+      - "8001:8001"
+
+  slowdash:
+    image: slowdash
+    volumes:
+      - .:/project
+    ports:
+      - "18881:18881"
+    environment:
+      - DB_URL=redis://redis_server:6379/12
+
+  testdata:
+    image: slowdash
+    command: python /slowdash/utils/generate-testdata.py --db-url=redis://redis_server:6379/12
+```
+Redis Insight も入っているので，ブラウザで `http://localhost:8001` にアクセスすれば Redis のデータを見られる．
+
+
+## Redis, Bare-Metal インストール
+
+- Redis のサイトに行って Redis-Stack のイントール方法に従う： [https://redis.io/docs/stack/get-started/install/linux/](https://redis.io/docs/stack/get-started/install/linux/)
 
 ### CentOS7, 2023 年 6 月 6 日
 
@@ -133,15 +173,17 @@ $ sudo apt-get install redis-stack-server
 $ pip3 install redis
 ```
 
-## SlowDash
+## SlowDash, Bare-Metal インストール
 ### Python インストール
 - python3
 - pip3: pyyaml, numpy
 
 ### SlowDash インストール
-- ~~git clone~~ パケージを展開
-- `PATH/TO/SLOWDASH/system` に `cd` して `make`
-- `PATH/TO/SLOWDASH/bin/slowdash-bashrc` を `source` （毎回やるか，`.bashrc`  に書く）
+```bash
+$ git clone https://github.com/slowproj/slowdash.git --recurse-submodules
+$ cd system; make
+$ cd ..; source bin/slowdash-bashrc  # 毎回やるか，`.bashrc`  に書く
+```
 
 ### 動作確認
 #### テストデータの生成
@@ -154,8 +196,7 @@ $ source PATH/TO/SLOWDASH/bin/slowdash-bashrc
 
 これでダミーデータを生成するスクリプトが走るはず：
 ```console
-$ cd PATH/TO/SLOWDASH/system/client/test
-$ ./test-redis.py
+$ PATH/TO/SLOWDASH/utils/generate-testdata.py --db-url=redis://redis_server:6379/1
 [{'key': 'test_graph_01'}, {'key': 'test_histogram_01'}]
 [{'key': 'ch00', 'totalSamples': 1, 'firstTimeStamp': None, 'lastTimeStamp': None, 'retentionTime': 3600000}, {'key': 'ch10', 'totalSamples': 1, 'firstTimeStamp': None, 'lastTimeStamp': None, 'retentionTime': 3600000}, {'key': 'ch14', 'totalSamples': 1, 'firstTimeStamp': None, 'lastTimeStamp': None, 'retentionTime': 3600000}, {'key': 'ch04', 'totalSamples': 1, 'firstTimeStamp': None, 'lastTimeStamp': None, 'retentionTime': 3600000}, {'key': 'ch15', 'totalSamples': 1, 'firstTimeStamp': None, 'lastTimeStamp': None, 'retentionTime': 3600000}, {'key': 'ch03', 'totalSamples': 1, 'firstTimeStamp': None, 'lastTimeStamp': None, 'retentionTime': 3600000}, {'key': 'ch11', 'totalSamples': 1, 'firstTimeStamp': None, 'lastTimeStamp': None, 'retentionTime': 3600000}, {'key': 'ch02', 'totalSamples': 1, 'firstTimeStamp': None, 'lastTimeStamp': None, 'retentionTime': 3600000}, {'key': 'ch09', 'totalSamples': 1, 'firstTimeStamp': None, 'lastTimeStamp': None, 'retentionTime': 3600000}, {'key': 'ch08', 'totalSamples': 1, 'firstTimeStamp': None, 'lastTimeStamp': None, 'retentionTime': 3600000}, {'key': 'ch13', 'totalSamples': 1, 'firstTimeStamp': None, 'lastTimeStamp': None, 'retentionTime': 3600000}, {'key': 'ch05', 'totalSamples': 1, 'firstTimeStamp': None, 'lastTimeStamp': None, 'retentionTime': 3600000}, {'key': 'ch06', 'totalSamples': 1, 'firstTimeStamp': None, 'lastTimeStamp': None, 'retentionTime': 3600000}, {'key': 'ch01', 'totalSamples': 1, 'firstTimeStamp': None, 'lastTimeStamp': None, 'retentionTime': 3600000}, {'key': 'ch07', 'totalSamples': 1, 'firstTimeStamp': None, 'lastTimeStamp': None, 'retentionTime': 3600000}, {'key': 'ch12', 'totalSamples': 1, 'firstTimeStamp': None, 'lastTimeStamp': None, 'retentionTime': 3600000}]
 [{'key': 'test_graph_02', 'totalSamples': 1, 'firstTimeStamp': None, 'lastTimeStamp': None, 'retentionTime': 3600000}, {'key': 'test_histogram_02', 'totalSamples': 1, 'firstTimeStamp': None, 'lastTimeStamp': None, 'retentionTime': 3600000}]
@@ -165,7 +206,7 @@ $ ./test-redis.py
 上記データ生成コマンドを走らせたまま別ウィンドウで SlowDash を走らせる：
 
 ```console
-$ cd PATH/TO/SLOWDASH/Projects/Test_Redis_Simple
+$ cd PATH/TO/SLOWDASH/ExampleProjects/Test_Redis
 $ slowdash channels
 [{"name": "Status", "type": "tree"}, {"name": "test_graph_01", "type": "graph"}, {"name": "test_histogram_01", "type": "histogram"}, {"name": "ch00", "type": "timeseries"}, {"name": "ch10", "type": "timeseries"}, {"name": "ch14", "type": "timeseries"}, {"name": "ch04", "type": "timeseries"}, {"name": "ch15", "type": "timeseries"}, {"name": "ch03", "type": "timeseries"}, {"name": "ch11", "type": "timeseries"}, {"name": "ch02", "type": "timeseries"}, {"name": "ch09", "type": "timeseries"}, {"name": "ch08", "type": "timeseries"}, {"name": "ch13", "type": "timeseries"}, {"name": "ch05", "type": "timeseries"}, {"name": "ch06", "type": "timeseries"}, {"name": "ch01", "type": "timeseries"}, {"name": "ch07", "type": "timeseries"}, {"name": "ch12", "type": "timeseries"}]
 ```
@@ -191,7 +232,7 @@ $ slowdash channels
 
 # 使い方
 ## プロジェクト設定
-動作テストに使った `Projects/Test_Redis_Simple` の `SlowdashProject.yaml` にあるように，Redis サーバのアドレス，ポート番号とデータベース番号を指定するだけで良い．
+動作テストに使った `ExampleProjects/Test_Redis` の `SlowdashProject.yaml` にあるように，Redis サーバのアドレス，ポート番号とデータベース番号を指定するだけで良い．
 
 ```yaml
 slowdash_project:
