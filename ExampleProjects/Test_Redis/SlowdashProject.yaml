@@ -1,4 +1,4 @@
 slowdash_project:
-  name: Redis Test
+  name: Redis_Test
   data_source:
     url: ${DB_URL:-redis://localhost:6379/12}

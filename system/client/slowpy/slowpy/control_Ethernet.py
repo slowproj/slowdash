@@ -44,7 +44,14 @@ class EthernetNode(ControlNode):
 
     ## child nodes ##
     def scpi(self, base_name):
-        return ScpiNode(self, base_name)
+        try:
+            self.scpi_nodes.keys()
+        except:
+            self.scpi_nodes = {}
+        if base_name not in self.scpi_nodes:
+            self.scpi_nodes[base_name] = ScpiNode(self, base_name)
+            
+        return self.scpi_nodes[base_name]
     
 
     @classmethod

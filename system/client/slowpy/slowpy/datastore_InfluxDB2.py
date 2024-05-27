@@ -41,8 +41,20 @@ class DataStore_InfluxDB2(DataStore):
         self.org = org
         self.bucket = bucket
         
-        self.client = InfluxDBClient(url='http://%s:%s'%(host,port), org=self.org, token=token)
-        self.write_api = self.client.write_api(write_options=SYNCHRONOUS)
+        for i in range(12):
+            try:
+                self.client = InfluxDBClient(url='http://%s:%s'%(host,port), org=self.org, token=token)
+                self.write_api = self.client.write_api(write_options=SYNCHRONOUS)
+                break
+            except Exception as e:
+                logging.warn(e)
+                logging.warn('Unable to connect to the Db server. Retrying in 5 sec...')
+                time.sleep(5)
+        else:
+            self.conn = None
+            logging.error('Unable to connect to the InfluxDB server')
+            logging.error(traceback.format_exc())
+            return
 
         self.Point = Point
         self.write_precision = WritePrecision.S

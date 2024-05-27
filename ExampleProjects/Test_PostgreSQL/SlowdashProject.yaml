@@ -1,5 +1,5 @@
 slowdash_project:
-  name: PostgreSQL Test
+  name: PostgreSQL_Test
   data_source:
     url: ${DB_URL:-postgresql://postgres:postgres@localhost:5432/SlowTestData}
     parameters:

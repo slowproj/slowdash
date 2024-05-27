@@ -238,7 +238,7 @@ class DataSource_SQL(DataSource_TableStore):
             return [], []
 
         if time_col is None:
-            time_field = '%d' % int(time.time())
+            time_field = '%.3f' % float(time.time())
         else:
             time_field = time_col
         if tag_col is None:

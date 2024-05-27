@@ -6,9 +6,9 @@ from .datastore import DataStore
 
 
 class DataStore_SQL(DataStore):
-    schema_ts = '(timestamp INTEGER, channel TEXT, value REAL, PRIMARY KEY(timestamp, channel))'
+    schema_ts = '(timestamp REAL, channel TEXT, value REAL, PRIMARY KEY(timestamp, channel))'
     schema_obj = '(channel TEXT, value TEXT, PRIMARY KEY(channel))'
-    schema_objts = '(timestamp INTEGER, channel TEXT, value TEXT, PRIMARY KEY(timestamp, channel))'
+    schema_objts = '(timestamp REAL, channel TEXT, value TEXT, PRIMARY KEY(timestamp, channel))'
 
     # to be implemented in a subclass
     def construct(self):
@@ -60,11 +60,11 @@ class DataStore_SQL(DataStore):
         if not isinstance(fields, dict):
             if tag is None:
                 return
-            cur.execute("INSERT INTO %s VALUES(%d,'%s',%f)" % (self.ts_table_name, timestamp, tag, fields))
+            cur.execute("INSERT INTO %s VALUES(%.3f,'%s',%f)" % (self.ts_table_name, timestamp, tag, fields))
         else:
             for k, v in fields.items():
                 ch = k if tag is None else "%s:%s" % (tag, k)
-                cur.execute("INSERT INTO %s VALUES(%d,'%s',%f)" % (self.ts_table_name, timestamp, ch, v))
+                cur.execute("INSERT INTO %s VALUES(%.3f,'%s',%f)" % (self.ts_table_name, timestamp, ch, v))
         self.conn.commit()
                     
     
@@ -95,7 +95,7 @@ class DataStore_SQL(DataStore):
             
         cur = self.conn.cursor()
         cur.execute(
-            '''INSERT INTO %s VALUES(%d,'%s','%s')''' %
+            '''INSERT INTO %s VALUES(%.3f,'%s','%s')''' %
             (self.objts_table_name, timestamp, name, str(obj))
         )
         self.conn.commit()
@@ -155,7 +155,7 @@ class DataStore_PostgreSQL(DataStore_SQL):
                 break
             except Exception as e:
                 logging.warn(e)
-                logging.warn('retrying in 5 sec...')
+                logging.warn('Unable to connect to the Db server. Retrying in 5 sec...')
                 time.sleep(5)
         else:
             self.conn = None

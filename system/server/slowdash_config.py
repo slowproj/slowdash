@@ -124,21 +124,22 @@ class Config:
             if name.lower() == 'slowdash':
                 name = self.project_dir.split(os.path.sep)[-2]
             self.project['name'] = name
-            if 'title' not in self.project:
-                if name.count(' ') > 0:
-                    title = name
-                elif name.count('_') > 0:
-                    title = name.replace('_', ' ')
-                elif name.count('-') > 0:
-                    title = name.replace('-', ' ')
-                else:
-                    title = name[0]
-                    for k in range(1,len(name)-1):
-                        if name[k].isupper() and name[k+1].islower():
-                            title += ' '
-                        title += name[k]
-                    title += name[-1]
-                self.project['title'] = title
+        if 'title' not in self.project:
+            name = self.project['name']
+            if name.count(' ') > 0:
+                title = name
+            elif name.count('_') > 0:
+                title = name.replace('_', ' ')
+            elif name.count('-') > 0:
+                title = name.replace('-', ' ')
+            else:
+                title = name[0]
+                for k in range(1,len(name)-1):
+                    if name[k].isupper() and name[k+1].islower():
+                        title += ' '
+                    title += name[k]
+                title += name[-1]
+            self.project['title'] = title
                 
             
         auth_key = self.project.get('authentication', {}).get('key', None)

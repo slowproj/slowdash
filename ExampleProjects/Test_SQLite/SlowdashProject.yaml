@@ -1,5 +1,5 @@
 slowdash_project:
-  name: SQLite Test
+  name: SQLite_Test
   data_source:
     url: sqlite:///SlowTestData
     parameters:

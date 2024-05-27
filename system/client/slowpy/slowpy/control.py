@@ -1,4 +1,4 @@
-import os, importlib, logging, traceback
+import os, time, importlib, logging, traceback
 
 
 class ControlNode:
@@ -10,13 +10,28 @@ class ControlNode:
     def get(self):
         return None
 
+    # override this
+    def has_data(self):
+        return None
+
     def __str__(self):
         return str(self.get())
     
     def __float__(self):
         return float(self.get())
 
+
+    # child nodes
+    def ramp(self, change_per_sec=None):
+        try:
+            self.ramp_node.get()
+            if change_per_sec is not None:
+                self.ramp_node.change_per_sec = abs(float(change_per_sec))
+        except:
+            self.ramp_node = RampNode(self, change_per_sec)
+        return self.ramp_node
     
+
     # override this to add a child endoint
     @classmethod
     def _node_creator_method(MyClass):    # return a method to be injected
@@ -75,6 +90,49 @@ class ControlNode:
 
         
 
+class RampNode(ControlNode):
+    def __init__(self, value_node, change_per_sec):
+        self.value_node = value_node
+        self.change_per_sec = None
+        try:
+            if float(change_per_sec) > 0:
+                self.change_per_sec = float(change_per_sec)
+        except:
+            self.change_per_sec = None
+                
+        self.target_value = None
+
+        
+    def set(self, target_value):
+        if self.change_per_sec is None or (self.change_per_sec < 1e-10):
+            self.value_node.set(target_value)
+            return
+            
+        self.target_value = float(target_value)
+        current_value = float(self.value_node.get())
+        tolerance =  1e-5 * (abs(self.target_value) + abs(current_value) + 1e-10)
+        
+        while True:
+            diff = current_value - self.target_value
+            if abs(diff) < tolerance:
+                break
+            elif abs(diff) <= self.change_per_sec:
+                current_value = self.target_value
+            elif diff > 0:
+                current_value -= self.change_per_sec
+            else:
+                current_value += self.change_per_sec
+            self.value_node.set(current_value)
+            time.sleep(1)
+            
+        self.target_value = None
+
+
+    def get(self):
+        return self.target_value is not None
+
+
+    
 class ControlSystem(ControlNode):
     def __init__(self):
         self.load_control_module('Ethernet')

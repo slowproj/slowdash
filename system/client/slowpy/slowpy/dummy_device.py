@@ -8,16 +8,18 @@ from .serial_device import ScpiDevice, SerialDeviceEthernetServer
 
 
 class DummyDevice_RandomWalk:
-    def __init__(self, n=16, walk=1.0, decay=0.1, tick=1.0):
+    def __init__(self, n=16, center=0, walk=1.0, decay=0.1, tick=1.0):
         self.n = n
+        self.center = center
         self.walk = walk
         self.decay = decay
         self.tick = tick
 
         self.t = [time.time()] * n
-        self.x = [0] * n
+        self.x0 = [center] * n
+        self.x = [center] * n
         for ch in range(self.n):
-            self.x[ch] = np.random.normal(0, 5*self.walk)
+            self.x[ch] = np.random.normal(self.x0[ch], 10*self.walk)
 
 
     def channels(self):
@@ -25,10 +27,11 @@ class DummyDevice_RandomWalk:
             
         
     def write(self, channel, value):
-        if channel >= len(self.x):
+        if channel < 0 or channel >= len(self.x0):
             return
         
-        self.x[channel] = value
+        self.x0[channel] = float(value)
+        self.x[channel] = np.random.normal(self.x0[channel], self.walk)
 
         
     def read(self, channel):
@@ -44,7 +47,7 @@ class DummyDevice_RandomWalk:
             self.t[channel] = now
             
         for k in range(steps):
-            self.x[channel] = (1-self.decay) * self.x[channel] + np.random.normal(0, self.walk)
+            self.x[channel] -= self.decay * (self.x[channel] - self.x0[channel]) + np.random.normal(0, self.walk)
         
         return round(self.x[channel], 3)
 

@@ -1,5 +1,5 @@
 slowdash_project:
-  name: CSV Test
+  name: CSV_Test
   data_source:
     url: csv:///SlowTestData.d
     parameters:

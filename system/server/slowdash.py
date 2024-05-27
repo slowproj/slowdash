@@ -503,7 +503,6 @@ class App:
 
         return 'application/json'
 
-        
     
     def _dispatch_task(self, doc):
         # user code might write something to stdout, which can disturb HTTP response
@@ -647,7 +646,7 @@ class WebUI:
             if (len(element) == 0) or not element[0].isalpha():
                 logging.error('bad file name (invalid first char): %s' % url)
                 return Reply(400)
-            if not element.replace('_', '0').replace('-', '0').replace('.', '0').replace(' ', '0').isalnum():
+            if not element.replace('_', '0').replace('-', '0').replace('~', '0').replace('.', '0').replace(' ', '0').isalnum():
                 logging.error('bad file name (invalid char): %s' % url)
                 return Reply(400)
         
@@ -680,7 +679,7 @@ class WebUI:
             if (len(element) == 0) or not element[0].isalpha():
                 logging.error('bad file name (invalid first char): %s' % url)
                 return Reply(400)
-            if not element.replace('_', '0').replace('-', '0').replace('.', '0').replace(' ', '0').isalnum():
+            if not element.replace('_', '0').replace('-', '0').replace('~', '0').replace('.', '0').replace(' ', '0').isalnum():
                 logging.error('bad file name (invalid char): %s' % url)
                 return Reply(400)
         
