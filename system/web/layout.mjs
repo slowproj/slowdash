@@ -13,7 +13,7 @@ import { CanvasPanel } from './panel-canvas.mjs';
 import { HtmlPanel, HrefPanel } from './panel-html.mjs';
 import { CatalogPanel, ChannelListPanel } from './panel-catalog.mjs';
 import { DownloadPanel, SlowpyPanel } from './panel-download.mjs';
-import { WelcomePanel, ToolsPanel, CruisePlannerPanel, ConfigEditorPanel, FileManagerPanel } from './panel-misc.mjs';
+import { WelcomePanel, ToolsPanel, CruisePlannerPanel, ConfigEditorPanel, FileManagerPanel, TaskManagerPanel } from './panel-misc.mjs';
 
 let PanelCollection = [
     TimeAxisPlotPanel, PlotPanel,
@@ -21,8 +21,9 @@ let PanelCollection = [
     CanvasPanel,
     TablePanel, TreePanel, BlobPanel,
     HtmlPanel, HrefPanel,
-    CatalogPanel, ChannelListPanel, DownloadPanel, SlowpyPanel,
-    WelcomePanel, ToolsPanel, CruisePlannerPanel, ConfigEditorPanel, FileManagerPanel,
+    CatalogPanel, ChannelListPanel,
+    DownloadPanel, SlowpyPanel,
+    WelcomePanel, ToolsPanel, CruisePlannerPanel, ConfigEditorPanel, FileManagerPanel, TaskManagerPanel,
 ];
 
 

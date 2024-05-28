@@ -8,7 +8,7 @@ from slowdash_config import Config
 
 
 class App:
-    def __init__(self, project_dir=None, is_cgi=False):
+    def __init__(self, project_dir=None, is_cgi=False, is_command=False):
         self.config = Config(project_dir)
         self.project = self.config.project
         self.project_dir = self.config.project_dir
@@ -64,7 +64,7 @@ class App:
                 continue
             filepath = node['file']
             params = node.get('parameters', {})
-            module = usermodule.load(usermodule.UserModule, filepath, filepath, params)
+            module = usermodule.load(usermodule.UserModule, filepath, filepath, params, start_thread=not is_command)
             if module is None:
                 self.error_message = 'Unable to load user module: %s' % filepath
                 logging.error(self.error_message)
@@ -93,7 +93,7 @@ class App:
             name = node['name']
             filepath = node.get('file', './config/slowtask-%s.py' % name)
             params = node.get('parameters', {})
-            module = usermodule.load(taskmodule.TaskModule, filepath, name, params)
+            module = usermodule.load(taskmodule.TaskModule, filepath, name, params, start_thread=not is_command)
             if module is None:
                 self.error_message = 'Unable to load control module: %s' % filepath
                 logging.error(self.error_message)
@@ -165,6 +165,10 @@ class App:
                 result = ds.get_dataframe(channels, length, to, resample, reducer, timezone)
                 break ##....
 
+        elif params[0] == 'control':
+            if len(params) >= 2 and params[1] == 'task':
+                result = self._get_task_status(params, opts)
+            
         elif params[0] == 'authkey' and len(params) >= 2:
             name = params[1]
             word = opts.get('password', '')
@@ -197,13 +201,45 @@ class App:
 
 
     def post(self, path_list, opts, doc, output):
+        # write a reply to output and return the content-type, or
+        # return a HTTP response code.
+        
         if path_list[0] == 'config':
             if (len(path_list) < 3) or (path_list[1] != 'file'):
                 return 403  # Forbidden
             else:
                 return self._save_config_file(path_list[2], doc, opts)
+            
         elif path_list[0] == 'control':
-            return self._dispatch_control(doc, opts, output)
+            result = None
+            if len(path_list) == 1:
+                result = self._dispatch_control_command(doc, opts)
+            elif path_list[1] == 'task':
+                if len(path_list) >= 3:
+                    name = path_list[2]
+                else:
+                    name = None
+                result = self._control_task(name, doc, opts)
+
+            if result is None:
+                return 400  # Bad Request
+            if type(result) is str:
+                output.write(result.encode())
+            elif type(result) is dict:
+                output.write(json.dumps(result).encode())
+            elif type(result) is bool:
+                if result:
+                    doc = {'status': 'ok'}
+                else:
+                    doc = {'status': 'error'}
+                output.write(json.dumps(doc).encode())
+            else:
+                try:
+                    output.write(str(result).encode())
+                except:
+                    return 500   # Internal Server Error
+
+            return 'application/json'
         
         return 400  # Bad Request
 
@@ -219,7 +255,7 @@ class App:
             os.remove(os.path.join('config', filename))
         except Exception as e:
             logging.error('file deletion error: %s' % str(e))
-            return 500
+            return 500   # Internal Server Error
         return 200
         
 
@@ -239,11 +275,11 @@ class App:
                 'data_source_module': [
                     ds.modulename for ds in self.datasource_list
                 ],
+                'task_module': [
+                    module.filepath for module in self.taskmodule_list
+                ],
                 'user_module': [
                     module.filepath for module in self.usermodule_list
-                ],
-                'control_module': [
-                    module.filepath for module in self.taskmodule_list
                 ],
                 'style': self.config.project.get('style', None)
             }
@@ -374,7 +410,7 @@ class App:
 
     def _save_config_file(self, filename, doc, opts):
         if self.project_dir is None:
-            return 500
+            return 500       # Internal Server Error
         if (len(filename) == 0) or not filename[0].isalpha():
             return 403
         if not filename.replace('_', '0').replace('-', '0').replace('.', '0').replace(' ', '0').isalnum():
@@ -389,7 +425,7 @@ class App:
                 os.makedirs(config_dir)
             except:
                 logging.error('unable to create directory: ' + config_dir)
-                return 500
+                return 500       # Internal Server Error
             
         mode = self.project.get('system', {}).get('file_mode', 0o644) + 0o100
         if mode & 0o070 != 0:
@@ -471,56 +507,24 @@ class App:
         return result
 
     
-    def _dispatch_control(self, doc, opts, output):
+    def _dispatch_control_command(self, doc, opts):
+        # return a dict or string for JSON, True/False for success/error, or None for error
         try:
             json_doc = json.loads(doc.decode())
             logging.info("DISPATCH: %s" % json_doc)
         except Exception as e:
             logging.error('Dispatch: JSON decoding error: %s' % str(e))
-            return 400
+            return {'status': 'error', 'message': 'bad JSON doc: %s' % str(e)}
 
-        result = self._dispatch_task(json_doc)
+        # user module first, to give the user module a change to modify the command
+        result = self._dispatch_user_command(json_doc, opts)
         if result is None:
-            result = self._dispatch_user_command(json_doc, opts, output)
-        
-        if result is None:
-            return 400
-        if type(result) is str:
-            output.write(result.encode())
-        elif type(result) is dict:
-            output.write(json.dumps(result).encode())
-        elif type(result) is bool:
-            if result:
-                doc = {'status': 'ok'}
-            else:
-                doc = {'status': 'error'}
-            output.write(json.dumps(doc).encode())
-        else:
-            try:
-                output.write(str(result).encode())
-            except:
-                return 500
-
-        return 'application/json'
-
-    
-    def _dispatch_task(self, doc):
-        # user code might write something to stdout, which can disturb HTTP response
-        stdout = sys.stdout
-        sys.stdout = io.StringIO()
-        result = None
-        for module in self.taskmodule_list:
-            result = module.process_command(doc)
-            if result is not None:
-                # chain of responsibility
-                break
-        sys.stdout.close()
-        sys.stdout = stdout
+            result = self._dispatch_task_command(json_doc, opts)
 
         return result
 
     
-    def _dispatch_user_command(self, doc, opts, output):
+    def _dispatch_user_command(self, doc, opts):
         # user code might write something to stdout, which can disturb HTTP response
         stdout = sys.stdout
         sys.stdout = io.StringIO()
@@ -536,6 +540,47 @@ class App:
         return result
 
     
+    def _dispatch_task_command(self, doc, opts):
+        # user code might write something to stdout, which can disturb HTTP response
+        stdout = sys.stdout
+        sys.stdout = io.StringIO()
+        result = None
+        for module in self.taskmodule_list:
+            result = module.process_command(doc)
+            if result is not None:
+                # chain of responsibility
+                break
+        sys.stdout.close()
+        sys.stdout = stdout
+
+        return result
+
+    
+    def _get_task_status(self, params, opts):
+        result = []
+        for module in self.taskmodule_list:
+            last_routine = module.routine_history[-1] if len(module.routine_history) > 0 else None
+            last_command = module.command_history[-1] if len(module.command_history) > 0 else None
+            record = {
+                'name': module.name,
+                'is_routine_running': module.is_running(),
+                'is_command_running': module.is_command_running(),
+                'last_routine_time': last_routine[0] if last_routine is not None else None,
+                'last_routine': last_routine[1] if last_routine is not None else None,
+                'last_command_time': last_command[0] if last_command is not None else None,
+                'last_command': last_command[1] if last_command is not None else None,
+                'last_log': '',
+                'has_error': False
+            }
+            result.append(record)
+
+        return result
+
+    
+    def _control_task(self, name, doc, opts):
+        return None
+
+    
         
     
 from urllib.parse import urlparse, parse_qsl, unquote
@@ -548,6 +593,7 @@ class Reply:
         self.content = content
         self.content_readable = None
 
+        
     def write_to(self, output):
         try:
             if self.content:
@@ -568,7 +614,8 @@ class Reply:
             logging.warn('error on sending out a reply: %s' % str(e))
 
         return self
-        
+
+    
     def destroy(self):
         if self.content_readable:
             content_readable.close()
@@ -576,8 +623,8 @@ class Reply:
 
             
 class WebUI:
-    def __init__(self, project_dir=None, is_cgi=False):
-        self.app = App(project_dir, is_cgi)
+    def __init__(self, project_dir=None, is_cgi=False, is_command=False):
+        self.app = App(project_dir, is_cgi, is_command)
         self.auth_list = self.app.config.auth_list
 
         
@@ -665,7 +712,7 @@ class WebUI:
                 return Reply(201, result, output.getvalue())
             else:
                 logging.error('API error: %s' % url)
-                return Reply(500)
+                return Reply(500)       # Internal Server Error
 
             
     def process_delete_request(self, url):
@@ -688,7 +735,7 @@ class WebUI:
             return Reply(result)
         else:
             logging.error('API error: %s' % url)
-            return Reply(500)
+            return Reply(500)       # Internal Server Error
             
             
 
@@ -727,14 +774,15 @@ if __name__ == '__main__':
 
     logging.basicConfig(level=10)
         
-    webui = WebUI(options.project_dir)
 
     if options.port <= 0:
+        webui = WebUI(options.project_dir, is_command=True)
         result = webui.process_get_request(args[0])
         result.write_to(sys.stdout.buffer).destroy()
         sys.stdout.write('\n')
         webui.close()
     else:
+        webui = WebUI(options.project_dir)
         index_file = 'slowhome.html'
         if webui.app.project is None:
             index_file = 'welcome.html'

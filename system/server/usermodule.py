@@ -24,6 +24,10 @@ class UserModuleThread(threading.Thread):
         self.is_stop_requested = False
 
         if self.func_initialize:
+            self.usermodule.routine_history.append((
+                time.time(),
+                'initialize(%s)' % ','.join(['%s=%s' % (k,v) for k,v in self.params])
+            ))
             try:
                 self.func_initialize(self.params)
             except Exception as e:
@@ -31,12 +35,14 @@ class UserModuleThread(threading.Thread):
                 logging.error(traceback.format_exc())
             
         if self.func_run:
+            self.usermodule.routine_history.append((time.time(), 'run()'))
             try:
                 self.func_run()
             except Exception as e:
                 logging.error('user module error: run(): %s' % str(e))
                 logging.error(traceback.format_exc())
         if self.func_loop:
+            self.usermodule.routine_history.append((time.time(), 'loop()'))
             while not self.is_stop_requested:
                 try:
                     self.func_loop()
@@ -47,6 +53,7 @@ class UserModuleThread(threading.Thread):
                     break
         
         if self.func_finalize:
+            self.usermodule.routine_history.append((time.time(), 'finalize()'))
             try:
                 self.func_finalize()
             except Exception as e:
@@ -55,7 +62,7 @@ class UserModuleThread(threading.Thread):
 
             
 class UserModule:        
-    def __init__(self, module, name, params):
+    def __init__(self, module, name, params, start_thread):
         self.module = module
         self.name = name
 
@@ -68,9 +75,14 @@ class UserModule:
             logging.info('loaded user module data interface')
         if self.func_process_command:
             logging.info('loaded user module command processor')
-                
-        self.user_thread = UserModuleThread(self, params)
-        self.user_thread.start()
+
+        self.routine_history = []
+            
+        if start_thread:
+            self.user_thread = UserModuleThread(self, params)
+            self.user_thread.start()
+        else:
+            self.user_thread = None
             
 
     def __del__(self):
@@ -79,6 +91,10 @@ class UserModule:
             logging.info('stopped user module run function')
             
                 
+    def is_running(self):
+        return self.user_thread is not None and self.user_thread.is_alive()
+
+        
     def get_func(self, name):
         if (name in self.module.__dict__) and callable(self.module.__dict__[name]):
             return self.module.__dict__[name]
@@ -124,6 +140,10 @@ class UserModule:
         if not self.func_process_command:
             return None
         
+        self.routine_history.append((
+            time.time(),
+            'process_command(%s)' % ','.join(['%s=%s' % (k,v) for k,v in params.items()])
+        ))
         try:
             return self.func_process_command(params)
         except Exception as e:
@@ -133,7 +153,7 @@ class UserModule:
 
 
     
-def load(ModuleClass, filepath, name, params):
+def load(ModuleClass, filepath, name, params, start_thread):
     if os.path.exists(filepath):
         module_name = os.path.splitext(os.path.basename(filepath))[0]
         try:
@@ -143,7 +163,7 @@ def load(ModuleClass, filepath, name, params):
             logging.error(traceback.format_exc())
             return None
 
-        usermodule = ModuleClass(module, name, params)
+        usermodule = ModuleClass(module, name, params, start_thread)
         usermodule.filepath = filepath
 
         return usermodule

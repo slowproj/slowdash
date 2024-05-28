@@ -19,7 +19,7 @@ class DummyDevice_RandomWalk:
         self.x0 = [center] * n
         self.x = [center] * n
         for ch in range(self.n):
-            self.x[ch] = np.random.normal(self.x0[ch], 10*self.walk)
+            self.x[ch] = np.random.normal(self.x0[ch], 3*self.walk)
 
 
     def channels(self):

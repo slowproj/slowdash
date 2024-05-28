@@ -18,7 +18,7 @@
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 0, "ymax": 2 },
             "legend": { "style": "side" }
         },
-        { "type": "tree", "channel": "Status" },
+        { "type": "table", "channel": "Status", "reversed": false, "title": "Current Status" },
         { "type": "html", "location": "project", "file": "test", "title": "Control" }
     ],
     "meta": { "name": "test", "title": "", "description": "" }

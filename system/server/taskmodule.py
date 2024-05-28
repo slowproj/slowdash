@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 24 May 2024 #
 
-import logging, traceback
+import time, logging, traceback
 import threading
 from usermodule import UserModule
 
@@ -18,28 +18,29 @@ class TaskFunctionThread(threading.Thread):
 
         
 class TaskModule(UserModule):
-    def __init__(self, module, name, params):
-        super().__init__(module, name, params)
-        self.thread = None
+    def __init__(self, module, name, params, start_thread):
+        super().__init__(module, name, params, start_thread)
+        self.command_thread = None
         self.exports = None
         self.channel_list = None
+        self.command_history = []
 
         logging.info('user task module loaded')
         
         
     def __del__(self):
-        if self.thread is not None:
-            if self.thread.is_alive():
+        if self.command_thread is not None:
+            if self.command_thread.is_alive():
                 #kill
                 pass
             thread.join()
         super().__del__()
         
 
-    def is_running(self):
-        return self.thread is not None and self.thread.is_alive()
+    def is_command_running(self):
+        return self.command_thread is not None and self.command_thread.is_alive()
 
-        
+
     def scan_channels(self):
         self.channel_list = []
         self.exports = {}
@@ -61,7 +62,10 @@ class TaskModule(UserModule):
             self.exports[name] = node
             value = node.get()
             if type(value) == dict:
-                self.channel_list.append({'name': name, 'type': 'tree'})
+                if 'table' in value:
+                    self.channel_list.append({'name': name, 'type': 'table'})
+                else:
+                    self.channel_list.append({'name': name, 'type': 'tree'})
             else:
                 self.channel_list.append({'name': name})
 
@@ -81,7 +85,10 @@ class TaskModule(UserModule):
 
         value = self.exports[channel].get()
         if type(value) == dict:
-            return { 'tree': value }
+            if 'tree' in value or 'table' in value:
+                return value
+            else:
+                return { 'tree': value }
         else:
             return str(value)
 
@@ -106,23 +113,26 @@ class TaskModule(UserModule):
         function_name = function_name[len(self.name)+1:]
 
         # task is single-threaded, except for loop()
-        if self.thread is not None:
-            if self.thread.is_alive():
-                return {'status': 'error', 'message': 'script already running'}
+        if self.command_thread is not None:
+            if self.command_thread.is_alive():
+                return {'status': 'error', 'message': 'command already running'}
             else:
-                self.thread.join()
+                self.command_thread.join()
         
         func = self.get_func(function_name)
         if func is None:
             return {'status': 'error', 'message': 'undefined function: %s' % function_name}
         
+        cmd = '%s.%s(%s)' % (self.name, function_name, ','.join(['%s=%s'%(key,value) for key,value in kwargs.items()]))
+        self.command_history.append((time.time(), cmd))
+        
         if is_async:
-            self.thread = TaskFunctionThread(func, kwargs)
-            self.thread.start()
+            self.command_thread = TaskFunctionThread(func, kwargs)
+            self.command_thread.start()
         else:
             try:
                 func(**kwargs)
             except Exception as e:
                 return {'status': 'error', 'message': str(e) }
-            
+
         return True

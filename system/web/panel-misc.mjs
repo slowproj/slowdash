@@ -660,3 +660,139 @@ export class FileManagerPanel extends Panel {
             });
     }    
 }
+
+
+
+export class TaskManagerPanel extends Panel {
+    static describe() {
+        return { type: 'taskmanager', label: '' };
+    }
+    
+    static buildConstructRows(table, on_done=config=>{}) {
+    }
+
+    
+    constructor(div, style) {
+        super(div, style);
+        
+        this.frameDiv = $('<div>').appendTo(div);        
+        this.titleDiv = $('<div>').appendTo(this.frameDiv);
+        this.contentDiv = $('<div>').appendTo(this.frameDiv);
+        
+        this.table = $('<table>').appendTo(this.contentDiv);
+        this.table.html('<tr><td></td></tr><tr><td>loading task list...</td></tr>');
+
+        this.frameDiv.css({
+            width:'calc(100% - 44px)',
+            height:'calc(100% - 44px)',
+            margin: '10px 10px 10px 10px',
+            padding:'10px',
+            border: 'thin solid',
+            'border-radius': '5px',
+            overflow:'auto',
+        });
+        this.titleDiv.css({
+            width:'calc(100% - 10px)',
+            'font-family': 'sans-serif',
+            'font-size': '20px',
+            'font-weight': 'normal',
+            'margin': '0',
+            'margin-bottom': '10px',
+            'white-space': 'nowrap',
+            'overflow': 'hidden',
+        });
+        this.contentDiv.css({
+            position: 'relative',
+            width:'calc(100% - 10px)',
+            height:'calc(100% - 10px - 4.5em)',
+            margin: 0,
+            padding:0,
+            overflow:'auto',
+        });
+        this.table.addClass('sd-data-table').css({
+            width: '100%',
+            margin: 0,
+            padding: 0,
+            border: 'none',
+        });
+
+        $('<span>').appendTo(this.titleDiv).text('SlowTask');
+
+        let repeat = ()=>{
+            this._load(()=>{
+                setTimeout(repeat, 5000);
+            });
+        };
+        repeat();
+    }
+
+    
+    configure(config, callbacks={}, project_config=null) {
+        super.configure(config, callbacks);
+    }
+
+
+    _load(on_complete) {
+        fetch('api/control/task')
+            .then(response => {
+                if (response.ok) return response.json();
+            })
+            .then(record => {
+                if (record) {
+                    this._render(record);
+                    on_complete();
+                }
+            });
+    }
+
+    
+    _render(record) {
+        this.table.empty();
+        let tr = $('<tr>');
+        $('<th>').text("Name").appendTo(tr);
+        $('<th>').text("Routine Task").appendTo(tr);
+        $('<th>').text("Command Task").appendTo(tr);
+        $('<th>').text("Status").appendTo(tr);
+        tr.appendTo(this.table);
+        const bg = window.getComputedStyle(tr.get()).getPropertyValue('background-color');
+        tr.find('th').css({position: 'sticky', top:0, left:0, background: bg});
+
+        function clip(text, len=16) {
+            if (text.length > len) {
+                return text.substr(0, len) + '...';
+            }
+            else {
+                return text;
+            }
+        }
+
+        for (let entry of record) {
+            const now = parseInt($.time());
+            let last_routine = '-', last_command = '-';
+            if (entry.last_routine !== null) {
+                const lapse = now - parseInt(entry.last_routine_time);
+                last_routine = (
+                    (entry.is_routine_running ? 'running ' : 'completed ') +
+                    clip(entry.last_routine ?? '') +
+                    ", " +
+                    (lapse > 3600 ? '>1h' : lapse+"s")
+                );
+            }
+            if (entry.last_command !== null) {
+                const lapse = now - parseInt(entry.last_command_time);
+                last_command = (
+                    (entry.is_command_running ? 'running ' : 'completed ') +
+                    clip(entry.last_command ?? '') +
+                    ", " +
+                    (lapse > 3600 ? '>1h' : lapse+"s")
+                );
+            }
+            let tr = $('<tr>');
+            $('<td>').appendTo(tr).text(entry.name);
+            $('<td>').appendTo(tr).text(last_routine);
+            $('<td>').appendTo(tr).text(last_command);
+            $('<td>').appendTo(tr).text(entry.has_error ? 'Error' : 'Good');
+            tr.appendTo(this.table);
+        }
+    }
+}

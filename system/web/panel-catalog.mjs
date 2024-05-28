@@ -178,19 +178,21 @@ export class CatalogPanel extends Panel {
         
         let headDiv = $('<div>').appendTo(this.frameDiv).css(this.titleDiv_css).css('display','flex');
         $('<span>').appendTo(headDiv).text(title);
-        let updateButton = $('<span>').attr('title', 'update').html('&#x1f504;').appendTo(headDiv).css({
-            'margin-left': 'auto',
-            'margin-top': '0.2em',
-            'filter': 'grayscale(80%)',
-            'cursor': 'pointer'
-        });
-        updateButton.bind('click', e=>{
-            localStorage.removeItem(this.cachePath + '-cachetime');
-            localStorage.removeItem(this.cachePath + '-doc');
-            this.frameDiv.empty().text("loading catalog...");
-            this._load();
-            fetch('api/channels');  // update the channel list on the server (new scripts might need it)
-        });
+        if (false) {
+            let updateButton = $('<span>').attr('title', 'update').html('&#x1f504;').appendTo(headDiv).css({
+                'margin-left': 'auto',
+                'margin-top': '0.2em',
+                'filter': 'grayscale(80%)',
+                'cursor': 'pointer'
+            });
+            updateButton.bind('click', e=>{
+                localStorage.removeItem(this.cachePath + '-cachetime');
+                localStorage.removeItem(this.cachePath + '-doc');
+                this.frameDiv.empty().text("loading catalog...");
+                this._load();
+                fetch('api/channels');  // update the channel list on the server (new scripts might need it)
+            });
+        }
         
         let contentDiv = $('<div>').appendTo(this.frameDiv).css(this.contentDiv_css);
         if (catalog === null) {
@@ -309,7 +311,7 @@ export class ChannelListPanel extends Panel {
         }
         
         this.titleDiv.css('display','flex');
-        $('<span>').appendTo(this.titleDiv).text('Channel List');
+        $('<span>').appendTo(this.titleDiv).text('Data Channels');
         let updateButton = $('<span>').html('&#x1f504;').appendTo(this.titleDiv).css({
             'margin-left': 'auto',
             'margin-top': '0.2em',
