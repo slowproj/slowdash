@@ -49,6 +49,7 @@ class ControlNode:
 
         
     @classmethod
+
     def load_control_module(cls, module_name, search_dirs=[]):
         filename = 'control_%s.py' % module_name
         if search_dirs is None or len(search_dirs) == 0:
@@ -112,7 +113,7 @@ class RampNode(ControlNode):
         current_value = float(self.value_node.get())
         tolerance =  1e-5 * (abs(self.target_value) + abs(current_value) + 1e-10)
         
-        while True:
+        while self.target_value is not None:
             diff = current_value - self.target_value
             if abs(diff) < tolerance:
                 break
@@ -129,9 +130,29 @@ class RampNode(ControlNode):
 
 
     def get(self):
-        return self.target_value is not None
+        return self.value_node.get()
 
 
+    # child nodes
+    def status(self):
+        return RampStatusNode(self)
+
+    
+        
+class RampStatusNode(ControlNode):
+    def __init__(self, ramp_node):
+        self.ramp_node = ramp_node
+
+        
+    def set(self, zero_to_stop):
+        if str(zero_to_stop) == '0':
+            self.ramp_node.target_value = None
+
+    
+    def get(self):
+        return self.ramp_node.target_value is not None
+    
+    
     
 class ControlSystem(ControlNode):
     def __init__(self):

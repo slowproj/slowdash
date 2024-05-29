@@ -40,6 +40,11 @@ def set_V3(V3, **kwargs):
     ramping = kwargs.get('ramping', 10)
     device.ch(3).ramp(ramping).set(V3)
 
+def stop(**kwargs):
+    device.ch(0).ramp().status().set(0)
+    device.ch(1).ramp().status().set(0)
+    device.ch(2).ramp().status().set(0)
+    device.ch(3).ramp().status().set(0)
 
     
 ### Exporting Variables ###
@@ -49,10 +54,10 @@ class StatusNode(slp.ControlNode):
         return {
             'columns': [ 'Channel', 'Value', 'Ramping' ],
             'table': [
-                [ 'Ch0', float(device.ch(0)), 'Yes' if device.ch(0).ramp().get() else 'No' ],
-                [ 'Ch1', float(device.ch(1)), 'Yes' if device.ch(1).ramp().get() else 'No' ],
-                [ 'Ch2', float(device.ch(2)), 'Yes' if device.ch(2).ramp().get() else 'No' ],
-                [ 'Ch3', float(device.ch(3)), 'Yes' if device.ch(3).ramp().get() else 'No' ],
+                [ 'Ch0', float(device.ch(0)), 'Yes' if device.ch(0).ramp().status().get() else 'No' ],
+                [ 'Ch1', float(device.ch(1)), 'Yes' if device.ch(1).ramp().status().get() else 'No' ],
+                [ 'Ch2', float(device.ch(2)), 'Yes' if device.ch(2).ramp().status().get() else 'No' ],
+                [ 'Ch3', float(device.ch(3)), 'Yes' if device.ch(3).ramp().status().get() else 'No' ],
             ]
         }
     

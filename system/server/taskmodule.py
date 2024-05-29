@@ -21,6 +21,7 @@ class TaskModule(UserModule):
     def __init__(self, module, name, params, start_thread):
         super().__init__(module, name, params, start_thread)
         self.command_thread = None
+        self.async_command_thread_set = set()
         self.exports = None
         self.channel_list = None
         self.command_history = []
@@ -30,10 +31,13 @@ class TaskModule(UserModule):
         
     def __del__(self):
         if self.command_thread is not None:
-            if self.command_thread.is_alive():
+            self.async_command_thread_set.add(self.command_thread)
+        for thread in self.async_command_thread_set:
+            if thread.is_alive():
                 #kill
                 pass
             thread.join()
+            
         super().__del__()
         
 
@@ -97,12 +101,17 @@ class TaskModule(UserModule):
         if self.func_process_command:
             return super().process_command(params)
 
-        function_name, kwargs, is_async = None, {}, True
+        function_name, kwargs = None, {}
+        is_await = False  # if True, wait for the command to complete before returning a response
+        is_async = False  # if False, the command is rejected if another command is running
         for key, value in params.items():
             if len(key) > 2 and key.endswith('()'):
                 function_name = key[:-2]
                 if function_name.startswith('await '):
-                    is_async = False
+                    is_await = True
+                    function_name = function_name[5:].lstrip()
+                if function_name.startswith('async '):
+                    is_async = True
                     function_name = function_name[5:].lstrip()
             else:
                 kwargs[key] = value
@@ -111,28 +120,37 @@ class TaskModule(UserModule):
         if function_name is None or not function_name.startswith(self.name + '.'):
             return None
         function_name = function_name[len(self.name)+1:]
-
-        # task is single-threaded, except for loop()
-        if self.command_thread is not None:
-            if self.command_thread.is_alive():
-                return {'status': 'error', 'message': 'command already running'}
-            else:
-                self.command_thread.join()
         
         func = self.get_func(function_name)
         if func is None:
             return {'status': 'error', 'message': 'undefined function: %s' % function_name}
+
+        # task is single-threaded unless "async" is specified, except for loop()
+        if not is_async and self.command_thread is not None:
+            if self.command_thread.is_alive():
+                return {'status': 'error', 'message': 'command already running'}
+            else:
+                self.command_thread.join()
+        for thread in [ thread for thread in self.async_command_thread_set ]:
+            if not thread.is_alive():
+                thread.join()
+                self.async_command_thread_set.remove(thread)
         
         cmd = '%s.%s(%s)' % (self.name, function_name, ','.join(['%s=%s'%(key,value) for key,value in kwargs.items()]))
         self.command_history.append((time.time(), cmd))
         
-        if is_async:
-            self.command_thread = TaskFunctionThread(func, kwargs)
-            self.command_thread.start()
-        else:
+        # "await" waits for the command to complete before returning a response
+        if is_await:
             try:
                 func(**kwargs)
             except Exception as e:
                 return {'status': 'error', 'message': str(e) }
-
+        else:
+            this_thread = TaskFunctionThread(func, kwargs)
+            this_thread.start()
+            if is_async:
+                self.async_command_thread_set.add(this_thread)
+            else:
+                self.command_thread = this_thread
+            
         return True
