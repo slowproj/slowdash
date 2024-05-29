@@ -678,9 +678,14 @@ export class TaskManagerPanel extends Panel {
         this.frameDiv = $('<div>').appendTo(div);        
         this.titleDiv = $('<div>').appendTo(this.frameDiv);
         this.contentDiv = $('<div>').appendTo(this.frameDiv);
+        this.tableDiv = $('<div>').appendTo(this.contentDiv);
+        this.title2Div = $('<div>').appendTo(this.contentDiv);
+        this.consoleDiv = $('<div>').appendTo(this.contentDiv);
+        this.inputDiv = $('<div>').appendTo(this.contentDiv);
         
-        this.table = $('<table>').appendTo(this.contentDiv);
+        this.table = $('<table>').appendTo(this.tableDiv);
         this.table.html('<tr><td></td></tr><tr><td>loading task list...</td></tr>');
+        this.indicator = new JGIndicatorWidget($('<div>').appendTo(div));
 
         this.frameDiv.css({
             width:'calc(100% - 44px)',
@@ -701,13 +706,51 @@ export class TaskManagerPanel extends Panel {
             'white-space': 'nowrap',
             'overflow': 'hidden',
         });
+        this.title2Div.css({
+            width:'calc(100% - 10px)',
+            'font-family': 'sans-serif',
+            'font-size': '20px',
+            'font-weight': 'normal',
+            'margin': '0',
+            'margin-bottom': '10px',
+            'white-space': 'nowrap',
+            'overflow': 'hidden',
+        }).text('Console');
         this.contentDiv.css({
             position: 'relative',
-            width:'calc(100% - 10px)',
-            height:'calc(100% - 10px - 4.5em)',
+            width:'100%',
+            height:'calc(100% - 10px - 25px)',
+            margin: 0,
+            padding:0,
+            overflow:'hidden',
+        });
+        this.tableDiv.css({
+            position: 'relative',
+            width:'calc(100% - 14px)',
+            height:'calc(50% - 5px)',
             margin: 0,
             padding:0,
             overflow:'auto',
+        });
+        this.consoleDiv.css({
+            position: 'relative',
+            width:'calc(100% - 20px)',
+            height:'calc(50% - 15px - 5em)',
+            margin: 0,
+            padding: '5px',
+            overflow:'auto',
+            border: 'thin solid gray',
+            'border-radius': '5px',
+            'white-space': 'pre',
+            'font-size': '80%',
+        });
+        this.inputDiv.css({
+            position: 'relative',
+            width:'calc(100% - 20px)',
+            height:'calc(3em - 10px)',
+            margin: 0,
+            padding: '5px',
+            overflow:'hidden',
         });
         this.table.addClass('sd-data-table').css({
             width: '100%',
@@ -716,14 +759,37 @@ export class TaskManagerPanel extends Panel {
             border: 'none',
         });
 
-        $('<span>').appendTo(this.titleDiv).text('SlowTask');
+        $('<span>').appendTo(this.titleDiv).text('SlowTask Status');
 
-        let repeat = ()=>{
-            this._load(()=>{
-                setTimeout(repeat, 5000);
-            });
-        };
-        repeat();
+        this.inputDiv.html('&gt; <input style="width:calc(100% - 10em)"><button>Send</button>');
+        this.inputDiv.find('button').bind('click', e=>{
+            const cmd = $(e.target).closest('div').find('input').val();
+            const url = './api/console/';
+            this.indicator.open("Sending Command...", "&#x23f3;", e?.clientX ?? null, e?.clientY ?? null);
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json; charset=utf-8' },
+                body: cmd,
+            })
+                .then(response => {
+                    if (! response.ok) {
+                        throw new Error(response.status + " " + response.statusText);
+                    }
+                    this.indicator.close("ok", "&#x2705;", 1000);
+                })
+                .catch(e => {
+                    this.indicator.close("Error: " + e.message, "&#x274c;", 5000);
+                });
+        });
+        
+        if (true) {
+            let repeat = ()=>{
+                this._load(()=>{
+                    setTimeout(repeat, 1000);
+                });
+            };
+            repeat();
+        }
     }
 
     
@@ -738,15 +804,22 @@ export class TaskManagerPanel extends Panel {
                 if (response.ok) return response.json();
             })
             .then(record => {
-                if (record) {
-                    this._render(record);
-                    on_complete();
-                }
+                if (! record) return;
+                this._render_task_table(record);
+                fetch('api/console')
+                    .then(response => {
+                        if (response.ok) return response.text();
+                    })
+                    .then(text => {
+                        if (! text) return;
+                        this._render_console(text);
+                        on_complete();
+                    });
             });
     }
 
     
-    _render(record) {
+    _render_task_table(record) {
         this.table.empty();
         let tr = $('<tr>');
         $('<th>').text("Name").appendTo(tr);
@@ -768,7 +841,7 @@ export class TaskManagerPanel extends Panel {
 
         for (let entry of record) {
             const now = parseInt($.time());
-            let last_routine = '-', last_command = '-';
+            let last_routine = 'none', last_command = 'none';
             if (entry.last_routine !== null) {
                 const lapse = now - parseInt(entry.last_routine_time);
                 last_routine = (
@@ -782,7 +855,7 @@ export class TaskManagerPanel extends Panel {
                 const lapse = now - parseInt(entry.last_command_time);
                 last_command = (
                     (entry.is_command_running ? 'running ' : 'completed ') +
-                    clip(entry.last_command ?? '') +
+                    clip(entry.last_command.substr(entry.name.length+1) ?? '') +
                     ", " +
                     (lapse > 3600 ? '>1h' : lapse+"s")
                 );
@@ -794,5 +867,10 @@ export class TaskManagerPanel extends Panel {
             $('<td>').appendTo(tr).text(entry.has_error ? 'Error' : 'Good');
             tr.appendTo(this.table);
         }
+    }
+
+    _render_console(text) {
+        this.consoleDiv.text(text);
+        this.consoleDiv.get().scrollTop = this.consoleDiv.get().scrollHeight;
     }
 }

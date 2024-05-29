@@ -17,6 +17,18 @@ class App:
         self.taskmodule_list = []
         self.error_message = ''
 
+        self.console_outputs = []
+        self.original_stdin = sys.stdin
+        self.original_stdout = sys.stdout
+        if not is_command:
+            self.console_stdin = io.StringIO()
+            self.console_stdout = io.StringIO()
+            sys.stdin = self.console_stdin
+            sys.stdout = self.console_stdout
+        else:
+            self.console_stdin = None
+            self.console_stdout = None
+            
         if self.project is None:
             self.datasource_list = [ datasource.DataSource({}, self.config) ]
             return
@@ -49,6 +61,7 @@ class App:
                 else:
                     self.datasource_list.append(datasource_plugin)
 
+                    
         ### User Modules ###
         
         usermodule_node = self.project.get('module', [])
@@ -105,7 +118,13 @@ class App:
     def __del__(self):
         self.usermodule_list.clear()
         self.taskmodule_list.clear()
-        
+
+        if self.console_stdout is not None:
+            self.console_stdin.close()
+            self.console_stdout.close()
+            sys.stdin = self.original_stdin
+            sys.stdout = self.original_stdout
+
         
     def get(self, params, opts, output):
         content_type = 'application/json'
@@ -169,6 +188,21 @@ class App:
             if len(params) >= 2 and params[1] == 'task':
                 result = self._get_task_status(params, opts)
             
+        elif params[0] == 'console':
+            if self.console_stdout is not None:
+                self.console_outputs += [ line for line in self.console_stdout.getvalue().split('\n') if len(line)>0 ]
+                self.console_stdout.seek(0)
+                self.console_stdout.truncate(0)
+                self.console_stdout.seek(0)
+                if len(self.console_outputs) > 10000:
+                    self.console_outputs = self.console_outputs[-10000:]
+                output.write('\n'.join(self.console_outputs[-20:]).encode())
+            else:
+                output.write('[no console output]'.encode())
+            output.flush()
+
+            return 'text/plain'
+                
         elif params[0] == 'authkey' and len(params) >= 2:
             name = params[1]
             word = opts.get('password', '')
@@ -241,6 +275,18 @@ class App:
 
             return 'application/json'
         
+        elif path_list[0] == 'console':
+            cmd = doc.decode()
+            if cmd is None:
+                return 400  # Bad Request
+            print(cmd)
+            pos = self.console_stdin.tellp()
+            self.console_stdin.seek(0, io.SEEK_END)
+            self.console_stdin.write('%s\n' % cmd)
+            self.console_stdin.seek(pos)
+            output.write(json.dumps({'status': 'ok'}).encode())
+            return 'application/json'
+        
         return 400  # Bad Request
 
     
@@ -256,6 +302,7 @@ class App:
         except Exception as e:
             logging.error('file deletion error: %s' % str(e))
             return 500   # Internal Server Error
+        
         return 200
         
 
@@ -525,33 +572,23 @@ class App:
 
     
     def _dispatch_user_command(self, doc, opts):
-        # user code might write something to stdout, which can disturb HTTP response
-        stdout = sys.stdout
-        sys.stdout = io.StringIO()
         result = None
         for module in self.usermodule_list:
             result = module.process_command(doc)
             if result is not None:
                 # chain of responsibility
                 break
-        sys.stdout.close()
-        sys.stdout = stdout
 
         return result
 
     
     def _dispatch_task_command(self, doc, opts):
-        # user code might write something to stdout, which can disturb HTTP response
-        stdout = sys.stdout
-        sys.stdout = io.StringIO()
         result = None
         for module in self.taskmodule_list:
             result = module.process_command(doc)
             if result is not None:
                 # chain of responsibility
                 break
-        sys.stdout.close()
-        sys.stdout = stdout
 
         return result
 
@@ -778,9 +815,9 @@ if __name__ == '__main__':
     if options.port <= 0:
         webui = WebUI(options.project_dir, is_command=True)
         result = webui.process_get_request(args[0])
+        webui.close()
         result.write_to(sys.stdout.buffer).destroy()
         sys.stdout.write('\n')
-        webui.close()
     else:
         webui = WebUI(options.project_dir)
         index_file = 'slowhome.html'

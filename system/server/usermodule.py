@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 24 October 2022 #
 
-import sys, os, time, logging, traceback
+import sys, os, time, io, logging, traceback
 import importlib.machinery
 import threading
 

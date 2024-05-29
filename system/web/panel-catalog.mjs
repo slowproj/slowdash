@@ -179,6 +179,7 @@ export class CatalogPanel extends Panel {
         let headDiv = $('<div>').appendTo(this.frameDiv).css(this.titleDiv_css).css('display','flex');
         $('<span>').appendTo(headDiv).text(title);
         if (false) {
+            // this is no longer necessary as the cache will be updated on every reload with >10s interval
             let updateButton = $('<span>').attr('title', 'update').html('&#x1f504;').appendTo(headDiv).css({
                 'margin-left': 'auto',
                 'margin-top': '0.2em',
