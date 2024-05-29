@@ -715,7 +715,7 @@ export class TaskManagerPanel extends Panel {
             'margin-bottom': '10px',
             'white-space': 'nowrap',
             'overflow': 'hidden',
-        }).text('Console');
+        }).html('Console <span style="font-size:60%">for print() and input()</span>');
         this.contentDiv.css({
             position: 'relative',
             width:'100%',

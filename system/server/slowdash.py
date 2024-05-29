@@ -280,7 +280,7 @@ class App:
             if cmd is None:
                 return 400  # Bad Request
             print(cmd)
-            pos = self.console_stdin.tellp()
+            pos = self.console_stdin.tell()
             self.console_stdin.seek(0, io.SEEK_END)
             self.console_stdin.write('%s\n' % cmd)
             self.console_stdin.seek(pos)

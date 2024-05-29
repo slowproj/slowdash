@@ -60,7 +60,19 @@ class UserModuleThread(threading.Thread):
                 logging.error('user module error: finalize(): %s' % str(e))
                 logging.error(traceback.format_exc())
 
-            
+
+
+def input_waiting_at_EOF(prompt=None):
+    if prompt:
+        print(prompt)
+    while True:
+        try:
+            return input()
+        except EOFError:
+            time.sleep(0.1)
+
+
+                
 class UserModule:        
     def __init__(self, module, name, params, start_thread):
         self.module = module
@@ -76,6 +88,9 @@ class UserModule:
         if self.func_process_command:
             logging.info('loaded user module command processor')
 
+        # override the input() function to work with input from StringIO
+        self.module.__dict__['input'] = input_waiting_at_EOF
+            
         self.routine_history = []
             
         if start_thread:

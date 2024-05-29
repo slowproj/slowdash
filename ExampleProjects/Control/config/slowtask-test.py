@@ -82,18 +82,12 @@ def finalize():
     global datastore
     del datastore
 
-i=0
+
 def loop():
     for ch in range(4):
         value = float(device.ch(ch))
         datastore.write_timeseries(value, tag='ch%02d'%ch)
     time.sleep(1)
-    global i
-    i+=1
-    print(i)
-    if True:
-        name = input("who are you?")
-        print('hello, %s' % name)
 
     
 ### Stand-alone Testing ###
