@@ -34,18 +34,32 @@ class TaskModule(UserModule):
         logging.info('user task module loaded')
         
         
-    def __del__(self):
+    def load(self):
+        self.exports = None
+        self.channel_list = None
+        self.command_history = []
+        
+        return super().load()
+
+        
+    def stop(self):
+        super().stop()
+        
         if self.command_thread is not None:
-            self.async_command_thread_set.add(self.command_thread)
+            if self.command_thread.is_alive():
+                #kill
+                pass
+            self.command_thread.join()
+            self.command_thread = None
+
         for thread in self.async_command_thread_set:
             if thread.is_alive():
                 #kill
                 pass
             thread.join()
-            
-        super().__del__()
+        self.async_command_thread_set = set()
         
-
+        
     def is_command_running(self):
         return self.command_thread is not None and self.command_thread.is_alive()
 
@@ -89,7 +103,9 @@ class TaskModule(UserModule):
             self.scan_channels()
             
         if channel not in self.exports:
-            return None
+            self.scan_channels()
+            if channel not in self.exports:
+                return None
 
         value = self.exports[channel].get()
         if type(value) == dict:

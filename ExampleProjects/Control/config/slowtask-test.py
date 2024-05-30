@@ -8,19 +8,13 @@ device = ctrl.dummy_device()
 
 print("DummyDevice Loaded")
 
-### Accepting Controls ###
+con = slp.ControlSystem.console()
+con.print("who are you?")
+name = con.input()
+con.print("hello ", name)
 
-def set(**kwargs):
-    ramping = kwargs.get('ramping', 10)
-    for key, value in kwargs.items():
-        if key == 'V0':
-            device.ch(0).ramp(ramping).set(value)
-        elif key == 'V1':
-            device.ch(1).ramp(ramping).set(value)
-        elif key == 'V2':
-            device.ch(2).ramp(ramping).set(value)
-        elif key == 'V3':
-            device.ch(3).ramp(ramping).set(value)
+
+### Accepting Controls ###
 
 def set_V0(V0, **kwargs):
     ramping = kwargs.get('ramping', 10)
@@ -37,6 +31,12 @@ def set_V2(V2, **kwargs):
 def set_V3(V3, **kwargs):
     ramping = kwargs.get('ramping', 10)
     device.ch(3).ramp(ramping).set(V3)
+
+def set_all(**kwargs):
+    set_V0(**kwargs)
+    set_V1(**kwargs)
+    set_V2(**kwargs)
+    set_V3(**kwargs)
 
 def stop(**kwargs):
     device.ch(0).ramp().status().set(0)

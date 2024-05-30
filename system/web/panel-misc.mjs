@@ -772,18 +772,22 @@ export class TaskManagerPanel extends Panel {
             this._send_command(cmd, e);
         });
         
-        // BUG: "repeat" is not deleted when "this" is deleted
         if (true) {
-            this.last_load_time = 0;
+            const id = window.slowdash_task_timer_id ?? null;
+            if (id !== null) {
+                clearTimeout(id);
+            }
+            window.slowdash_task_last_load = 0;
             let repeat = ()=>{
                 const now = $.time();
-                if (now - this.last_load_time >= 1) {
-                    this.last_load_time = now;
+                const last = window.slowdash_task_last_load;
+                window.slowdash_task_last_load = now;
+                if (now - last >= 1) {
                     this._load(()=>{
-                        this.last_load_time = $.time();
+                        window.slowdash_task_last_load = $.time();
+                        window.slowdash_task_timer_id = setTimeout(repeat, 1000);
                     });
                 }
-                setTimeout(repeat, 1000);
             };
             repeat();
         }

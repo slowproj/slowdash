@@ -21,15 +21,16 @@ class ControlNode:
         return float(self.get())
 
 
-    # child nodes
+    ### child nodes ###
+    # ramp the set value
     def ramp(self, change_per_sec=None):
         try:
-            self.ramp_node.get()
+            self._node_ramp.get()
             if change_per_sec is not None:
-                self.ramp_node.change_per_sec = abs(float(change_per_sec))
+                self._node_ramp.change_per_sec = abs(float(change_per_sec))
         except:
-            self.ramp_node = RampNode(self, change_per_sec)
-        return self.ramp_node
+            self._node_ramp = RampNode(self, change_per_sec)
+        return self._node_ramp
     
 
     # override this to add a child endoint
@@ -49,7 +50,6 @@ class ControlNode:
 
         
     @classmethod
-
     def load_control_module(cls, module_name, search_dirs=[]):
         filename = 'control_%s.py' % module_name
         if search_dirs is None or len(search_dirs) == 0:
@@ -153,7 +153,38 @@ class RampStatusNode(ControlNode):
         return self.ramp_node.target_value is not None
     
     
-    
+
+class ConsoleNode(ControlNode):
+    def set(self, value):
+        self.print(value)
+
+
+    def get(self):
+        return self.input()
+
+
+    def print(self, *args):
+        print(*args)
+
+        
+    def input(self, prompt=None):
+        # The stdin might be bound to a network connection using StringIO.
+        # In this case the standard input() fails (EOFError) if StringIO is empty.
+        if prompt:
+            self.print(prompt)
+        while True:
+            try:
+                return input()
+            except EOFError:
+                time.sleep(0.1)
+
+
+        
 class ControlSystem(ControlNode):
     def __init__(self):
         self.load_control_module('Ethernet')
+
+        
+    @staticmethod
+    def console():
+        return ConsoleNode()

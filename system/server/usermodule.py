@@ -81,11 +81,17 @@ class UserModule:
 
         self.module = None
         self.user_thread = None
-        self.routine_history = []
-        self.error = None
 
         if self.name is None:
             self.name = os.path.splitext(os.path.basename(self.filepath))[0]
+
+        self.func_get_channels = None
+        self.func_get_data = None
+        self.func_process_command = None
+        self.func_halt = None
+        
+        self.routine_history = []
+        self.error = None
 
         
     def __del__(self):
@@ -93,7 +99,8 @@ class UserModule:
 
         
     def load(self):
-        self.clear_error()
+        self.routine_history = []
+        self.error = None
         
         if self.module is not None and False:  # ??? it look like just re-doing load() works...
             #??? this reload() does not execute statements outside a function
@@ -127,7 +134,9 @@ class UserModule:
         if self.func_process_command:
             logging.info('loaded user module command processor')
 
-        # override the input() function to work with input from StringIO
+        # Overriding the input() function to work with input from StringIO
+        # BUG: this does not take affect while module loading (statements outside callback functions).
+        # For now, use slowpy.ControlSystem.console().input() instead.
         self.module.__dict__['input'] = input_waiting_at_EOF
 
         logging.info('user module loaded: %s' % self.name)

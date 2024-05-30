@@ -8,4 +8,4 @@ slowdash_project:
 
   task:
     name: test
-    auto_load: false
+    auto_load: true
