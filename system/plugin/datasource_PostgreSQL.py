@@ -26,9 +26,9 @@ class DataSource_PostgreSQL(DataSource_SQL):
             conn = db.connect(self.url)
         except Exception as e:
             logging.error("PostgreSQL: %s: %s" % (self.url, str(e)))
-            return super().connect()
+            return None
         if conn is None:
-            return super().connect()
+            return None
 
         logging.info('PostgreSQL: DB connected: "%s"' % self.url)
         

@@ -322,43 +322,45 @@ export class ConfigEditorPanel extends Panel {
         }
         this.titleDiv.text(thisconfig.title);
         this.nameDiv.text(thisconfig.file);
-        
-        fetch('./api/config/file/' + thisconfig.file)
-            .then(response => {
-                if (! response.ok) {
-                    throw new Error(response.status + " " + response.statusText);
-                }
-                return response.text();
-            })
-            .catch(error => {
-                this.statusDiv.text(`Server Error: ${error.message}`);
-            })
-            .then(content => {
-                this.textarea.val(content);
-                
-                fetch('./api/config/filemeta/' + thisconfig.file)
-                    .then(response => {
-                        if (! response.ok) {
-                            throw new Error(response.status + " " + response.statusText);
-                        }
-                        return response.json();
-                    })
-                    .catch(error => {
-                        this.statusDiv.text(`Server Error: ${error.message}`);
-                    })
-                    .then(meta => {
-                        if (meta.config_error) {
-                            this.statusDiv.text(meta.config_error);
-                            if (meta.config_error_line > 0) {
-                                const lines = content.split('\n');
-                                const pos1 = lines.slice(0, meta.config_error_line-1).join('\n').length;
-                                const pos2 = pos1 + lines[meta.config_error_line-1].length;
-                                this.textarea.focus();
-                                this.textarea.get().setSelectionRange(pos1, pos2);
-                            }
-                        }
-                    });
-            });
+
+        this._load(thisconfig.file);
+    }
+
+    async _load(filepath) {
+        let content = null;
+        try {
+            let response = await fetch('./api/config/file/' + filepath);
+            if (! response.ok) {
+                throw new Error(response.status + " " + response.statusText);
+            }
+            content = await response.text();
+        }
+        catch (error) {
+            this.statusDiv.text(`Server Error: ${error.message}`);
+        }
+        this.textarea.val(content);
+
+        let meta = {};
+        try {
+            let response = await fetch('./api/config/filemeta/' + filepath);
+            if (! response.ok) {
+                throw new Error(response.status + " " + response.statusText);
+            }
+            meta = await response.json();
+        }
+        catch (error) {
+            this.statusDiv.text(`Server Error: ${error.message}`);
+        }
+        if (meta.config_error) {
+            this.statusDiv.text(meta.config_error);
+            if (meta.config_error_line > 0) {
+                const lines = content.split('\n');
+                const pos1 = lines.slice(0, meta.config_error_line-1).join('\n').length;
+                const pos2 = pos1 + lines[meta.config_error_line-1].length;
+                this.textarea.focus();
+                this.textarea.get().setSelectionRange(pos1, pos2);
+            }
+        }
     }
 }
 
@@ -513,7 +515,7 @@ export class FileManagerPanel extends Panel {
             this._updateFileList(); // for future "back"
             window.location = `slowedit.html?filename=${filename}`;
         })
-        .catch(e => {
+        .catch (e => {
             this.indicator.close("Error on file creation: " + e.message, "&#x274c;", 5000);
         });
     }
@@ -560,7 +562,7 @@ export class FileManagerPanel extends Panel {
                     this.indicator.close("File deleted", "&#x2705;", 1000);
                     this._updateFileList();
                 })
-                .catch(e => {
+                .catch (e => {
                     this.indicator.close("Deletion Failed: " + e.message, "&#x274c;", 5000);
                     return null;
                 })
@@ -579,7 +581,7 @@ export class FileManagerPanel extends Panel {
         this.deletePopup.get().showModal();
     }
         
-    _updateFileList() {
+    async _updateFileList() {
         this.fileTable.empty();
         let tr = $('<tr>').appendTo(this.fileTable);
         $('<th>').text("Name").appendTo(tr);
@@ -595,69 +597,70 @@ export class FileManagerPanel extends Panel {
             'filter': 'grayscale(50%)',
             'text-decoration': 'none',
         };
-        
-        fetch('./api/config/filelist')
-            .then(response => {
-                if (! response.ok) {
-                    throw new Error(response.status + " " + response.statusText);
-                }
-                return response.json();
-            })
-            .catch(e => {
-                return null;
-            })
-            .then(filelist => {
-                for (const entry of filelist ?? []) {
-                    let name;
-                    const ext = entry.name.split('.').pop();
-                    if (['json', 'yaml', 'csv'].includes(ext)) {
-                        name = $('<a>').attr({
-                            'href': `./api/config/file/${entry.name}`,
-                            'target': '_blank',
-                        });
-                    }
-                    else if (['html', 'svg', 'jpg', 'jpeg', 'png'].includes(ext)) {
-                        name = $('<a>').attr({
-                            'href': `./api/config/file/${entry.name}`,
-                            'target': '_blank'
-                        });
-                    }
-                    else {
-                        name = $('<span>');
-                    }
-                    name.text(entry.name);
-                    
-                    let edit;
-                    if (['json', 'yaml', 'html', 'csv', 'svg'].includes(ext)) {
-                        edit = $('<a>').html('&#x1f4dd;').attr({
-                            href: `slowedit.html?filename=${entry.name}`,
-                            target: '_blank',
-                        });
-                    }
-                    else {
-                        edit = $('<span>').html('&#x26d4');
-                    }
-                    
-                    const del = $('<span>').html('&#x1f5d1').css({
-                        cursor: 'pointer',
-                    }).bind('click', e=>{
-                        this._deleteFile(entry.name);
-                    });
-                    
-                    edit.css(css_button);
-                    del.css(css_button);
 
-                    let tr = $('<tr>');
-                    $('<td>').appendTo(tr).append(name);
-                    $('<td>').appendTo(tr).append(edit).append(del).css('text-align', 'center');
-                    $('<td>').appendTo(tr).text((new JGDateTime(entry.mtime)).asString('%b %d, %Y')).css('text-align', 'center');;
-                    $('<td>').appendTo(tr).text(Number(entry.size).toLocaleString('en-US')).css('text-align', 'right');
-                    $('<td>').appendTo(tr).text(entry.owner).css('text-align', 'center');;
-                    $('<td>').appendTo(tr).text(entry.group).css('text-align', 'center');;
-                    $('<td>').appendTo(tr).text(entry.mode).css('font-family', 'monospace').css('text-align', 'center');;
-                    this.fileTable.append(tr);
-                }
+        let filelist = null;
+        try {
+            let response = await fetch('./api/config/filelist');
+            if (! response.ok) {
+                throw new Error(response.status + " " + response.statusText);
+            }
+            filelist = await response.json();
+        }
+        catch (e) {
+            console.log(e);
+            return null;
+        }
+        
+        for (const entry of filelist ?? []) {
+            let name;
+            const ext = entry.name.split('.').pop();
+            if (['json', 'yaml', 'csv'].includes(ext)) {
+                name = $('<a>').attr({
+                    'href': `./api/config/file/${entry.name}`,
+                    'target': '_blank',
+                });
+            }
+            else if (['html', 'svg', 'jpg', 'jpeg', 'png'].includes(ext)) {
+                name = $('<a>').attr({
+                    'href': `./api/config/file/${entry.name}`,
+                    'target': '_blank'
+                });
+            }
+            else {
+                name = $('<span>');
+            }
+            name.text(entry.name);
+            
+            let edit;
+            if (['json', 'yaml', 'html', 'csv', 'svg'].includes(ext)) {
+                edit = $('<a>').html('&#x1f4dd;').attr({
+                    href: `slowedit.html?filename=${entry.name}`,
+                    target: '_blank',
+                });
+            }
+            else {
+                edit = $('<span>').html('&#x26d4');
+            }
+            
+            const del = $('<span>').html('&#x1f5d1').css({
+                cursor: 'pointer',
+            }).bind('click', e=>{
+                this._deleteFile(entry.name);
             });
+            
+            edit.css(css_button);
+            del.css(css_button);
+            
+            let tr = $('<tr>');
+            $('<td>').appendTo(tr).append(name);
+            $('<td>').appendTo(tr).append(edit).append(del).css('text-align', 'center');
+            $('<td>').appendTo(tr).text((new JGDateTime(entry.mtime)).asString('%b %d, %Y')).css('text-align', 'center');;
+            $('<td>').appendTo(tr).text(Number(entry.size).toLocaleString('en-US')).css('text-align', 'right');
+            $('<td>').appendTo(tr).text(entry.owner).css('text-align', 'center');;
+            $('<td>').appendTo(tr).text(entry.group).css('text-align', 'center');;
+            $('<td>').appendTo(tr).text(entry.mode).css('font-family', 'monospace').css('text-align', 'center');;
+            this.fileTable.append(tr);
+        }
     }    
 }
 
@@ -667,6 +670,7 @@ export class TaskManagerPanel extends Panel {
     static describe() {
         return { type: 'taskmanager', label: '' };
     }
+
     
     static buildConstructRows(table, on_done=config=>{}) {
     }
@@ -686,6 +690,7 @@ export class TaskManagerPanel extends Panel {
         this.table = $('<table>').appendTo(this.tableDiv);
         this.table.html('<tr><td></td></tr><tr><td>loading task list...</td></tr>');
         this.indicator = new JGIndicatorWidget($('<div>').appendTo(div));
+        this.last_text = '';
 
         this.frameDiv.css({
             width:'calc(100% - 44px)',
@@ -764,29 +769,21 @@ export class TaskManagerPanel extends Panel {
         this.inputDiv.html('&gt; <input style="width:calc(100% - 10em)"><button>Send</button>');
         this.inputDiv.find('button').bind('click', e=>{
             const cmd = $(e.target).closest('div').find('input').val();
-            const url = './api/console/';
-            this.indicator.open("Sending Command...", "&#x23f3;", e?.clientX ?? null, e?.clientY ?? null);
-            fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json; charset=utf-8' },
-                body: cmd,
-            })
-                .then(response => {
-                    if (! response.ok) {
-                        throw new Error(response.status + " " + response.statusText);
-                    }
-                    this.indicator.close("ok", "&#x2705;", 1000);
-                })
-                .catch(e => {
-                    this.indicator.close("Error: " + e.message, "&#x274c;", 5000);
-                });
+            this._send_command(cmd, e);
         });
         
+        // BUG: "repeat" is not deleted when "this" is deleted
         if (true) {
+            this.last_load_time = 0;
             let repeat = ()=>{
-                this._load(()=>{
-                    setTimeout(repeat, 1000);
-                });
+                const now = $.time();
+                if (now - this.last_load_time >= 1) {
+                    this.last_load_time = now;
+                    this._load(()=>{
+                        this.last_load_time = $.time();
+                    });
+                }
+                setTimeout(repeat, 1000);
             };
             repeat();
         }
@@ -798,34 +795,56 @@ export class TaskManagerPanel extends Panel {
     }
 
 
-    _load(on_complete) {
-        fetch('api/control/task')
-            .then(response => {
-                if (response.ok) return response.json();
-            })
-            .then(record => {
-                if (! record) return;
-                this._render_task_table(record);
-                fetch('api/console')
-                    .then(response => {
-                        if (response.ok) return response.text();
-                    })
-                    .then(text => {
-                        if (! text) return;
-                        this._render_console(text);
-                        on_complete();
-                    });
-            });
+    async _load(on_complete) {
+        try {
+            let response = await fetch('api/control/task');
+            let record = await response.json();
+            this._render_task_table(record);
+        }
+        catch (e) {
+            console.log(e);
+        }
+        try {
+            let response = await fetch('api/console');
+            let text = await response.text();
+            this._render_console(text);
+        }
+        catch (e) {
+            console.log(e);
+        }
+        on_complete();
     }
 
+    
+    async _send_command(cmd, event=null) {
+        const url = './api/console/';
+        try {
+            this.indicator.open("Sending Command...", "&#x23f3;", event?.clientX ?? null, event?.clientY ?? null);
+            let response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json; charset=utf-8' },
+                body: cmd,
+            });
+            if (! response.ok) {
+                throw new Error(response.status + " " + response.statusText);
+            }
+            this.indicator.close("ok", "&#x2705;", 1000);
+        }
+        catch (e) {
+            console.log(e);
+            this.indicator.close("Error: " + e.message, "&#x274c;", 5000);
+        }
+    }
+    
     
     _render_task_table(record) {
         this.table.empty();
         let tr = $('<tr>');
         $('<th>').text("Name").appendTo(tr);
-        $('<th>').text("Routine Task").appendTo(tr);
-        $('<th>').text("Command Task").appendTo(tr);
+        $('<th>').text("Routine Task").css('width','30%').appendTo(tr);
+        $('<th>').text("Command Task").css('width','30%').appendTo(tr);
         $('<th>').text("Status").appendTo(tr);
+        $('<th>').text("Control").appendTo(tr);
         tr.appendTo(this.table);
         const bg = window.getComputedStyle(tr.get()).getPropertyValue('background-color');
         tr.find('th').css({position: 'sticky', top:0, left:0, background: bg});
@@ -841,7 +860,7 @@ export class TaskManagerPanel extends Panel {
 
         for (let entry of record) {
             const now = parseInt($.time());
-            let last_routine = 'none', last_command = 'none';
+            let last_routine = 'none', last_command = 'none', status = '&#x2615; inactive';
             if (entry.last_routine !== null) {
                 const lapse = now - parseInt(entry.last_routine_time);
                 last_routine = (
@@ -860,17 +879,54 @@ export class TaskManagerPanel extends Panel {
                     (lapse > 3600 ? '>1h' : lapse+"s")
                 );
             }
+            if (entry.has_error) {
+                status = '&#x2757; ERROR';
+            }
+            else if (entry.is_loaded) {
+                status = '&#x2705; loaded';
+            }
+            let control;
+            if (entry.is_routine_running || entry.is_command_running) {
+                control = '<button disabled>Start</button><button>Stop</button>';
+            }
+            else {
+                control = '<button>Start</button><button disabled>Stop</button>';
+            }
+            
             let tr = $('<tr>');
             $('<td>').appendTo(tr).text(entry.name);
             $('<td>').appendTo(tr).text(last_routine);
             $('<td>').appendTo(tr).text(last_command);
-            $('<td>').appendTo(tr).text(entry.has_error ? 'Error' : 'Good');
+            $('<td>').appendTo(tr).html(status);
+            $('<td>').appendTo(tr).attr('align','center').html(control);
             tr.appendTo(this.table);
+
+            tr.find('button').bind('click', e=>{
+                const action = $(e.target).text().toLowerCase();
+                const url = `./api/control/task/${entry.name}`;
+                this.indicator.open("sending command...", "&#x23f3;", event?.clientX ?? null, event?.clientY ?? null);
+                fetch(url, {
+                    method: 'POST',
+                    body: `{"action":"${action}"}`
+                })
+                    .then(response => {
+                        if (! response.ok) {
+                            throw new Error(response.status + " " + response.statusText);
+                        }
+                        this.indicator.close("ok", "&#x2705;", 1000);
+                    })
+                    .catch (e => {
+                        this.indicator.close("error: " + e.message, "&#x274c;", 5000);
+                    });
+            });
         }
     }
 
     _render_console(text) {
-        this.consoleDiv.text(text);
-        this.consoleDiv.get().scrollTop = this.consoleDiv.get().scrollHeight;
+        if (text != this.last_text) {
+            this.consoleDiv.text(text);
+            this.consoleDiv.get().scrollTop = this.consoleDiv.get().scrollHeight;
+            this.last_text = text;
+        }
     }
 }

@@ -7,19 +7,24 @@ from usermodule import UserModule
 
 
 class TaskFunctionThread(threading.Thread):
-    def __init__(self, func, kwargs):
+    def __init__(self, taskmodule, func, kwargs):
         super().__init__()
+        self.taskmodule = taskmodule
         self.func = func
         self.kwargs = kwargs
 
     def run(self):
-        self.func(**self.kwargs)
+        try:
+            self.func(**self.kwargs)
+        except Exception as e:
+            self.taskmodule.handle_error('task function error: %s' % str(e))
 
 
         
 class TaskModule(UserModule):
-    def __init__(self, module, name, params, start_thread):
-        super().__init__(module, name, params, start_thread)
+    def __init__(self, filepath, name, params):
+        super().__init__(filepath, name, params)
+        
         self.command_thread = None
         self.async_command_thread_set = set()
         self.exports = None
@@ -56,8 +61,7 @@ class TaskModule(UserModule):
         try:
             exports = func()
         except Exception as e:
-            logging.error('user module error: export(): %s' % str(e))
-            logging.error(traceback.format_exc())
+            self.handle_error('task module error: export(): %s' % str(e))
             return None
         if exports is None:
             return
@@ -144,9 +148,10 @@ class TaskModule(UserModule):
             try:
                 func(**kwargs)
             except Exception as e:
+                self.handle_error('task command error: %s' % str(e))
                 return {'status': 'error', 'message': str(e) }
         else:
-            this_thread = TaskFunctionThread(func, kwargs)
+            this_thread = TaskFunctionThread(self, func, kwargs)
             this_thread.start()
             if is_async:
                 self.async_command_thread_set.add(this_thread)

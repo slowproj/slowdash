@@ -17,18 +17,6 @@ class App:
         self.taskmodule_list = []
         self.error_message = ''
 
-        self.console_outputs = []
-        self.original_stdin = sys.stdin
-        self.original_stdout = sys.stdout
-        if not is_command:
-            self.console_stdin = io.StringIO()
-            self.console_stdout = io.StringIO()
-            sys.stdin = self.console_stdin
-            sys.stdout = self.console_stdout
-        else:
-            self.console_stdin = None
-            self.console_stdout = None
-            
         if self.project is None:
             self.datasource_list = [ datasource.DataSource({}, self.config) ]
             return
@@ -77,11 +65,12 @@ class App:
                 continue
             filepath = node['file']
             params = node.get('parameters', {})
-            module = usermodule.load(usermodule.UserModule, filepath, filepath, params, start_thread=not is_command)
+            module = usermodule.UserModule(filepath, filepath, params)
             if module is None:
                 self.error_message = 'Unable to load user module: %s' % filepath
                 logging.error(self.error_message)
             else:
+                module.auto_load = node.get('auto_load', True)
                 self.usermodule_list.append(module)
 
 
@@ -106,16 +95,41 @@ class App:
             name = node['name']
             filepath = node.get('file', './config/slowtask-%s.py' % name)
             params = node.get('parameters', {})
-            module = usermodule.load(taskmodule.TaskModule, filepath, name, params, start_thread=not is_command)
+            module = taskmodule.TaskModule(filepath, name, params)
             if module is None:
                 self.error_message = 'Unable to load control module: %s' % filepath
                 logging.error(self.error_message)
             else:
-                module.name = name
+                module.auto_load = node.get('auto_load', False)
                 self.taskmodule_list.append(module)
 
+                
+        ### Console Redirect ###
+        
+        self.console_outputs = []
+        self.original_stdin = sys.stdin
+        self.original_stdout = sys.stdout
+        if not is_command:
+            self.console_stdin = io.StringIO()
+            self.console_stdout = io.StringIO()
+            sys.stdin = self.console_stdin
+            sys.stdout = self.console_stdout
+        else:
+            self.console_stdin = None
+            self.console_stdout = None
 
+            
+        ### Starting Modules ###
+        
+        if not is_command:
+            for module in self.usermodule_list + self.taskmodule_list:
+                if module.auto_load:
+                    module.start()
+
+                
     def __del__(self):
+        for module in self.usermodule_list + self.taskmodule_list:
+            module.stop()
         self.usermodule_list.clear()
         self.taskmodule_list.clear()
 
@@ -245,35 +259,7 @@ class App:
                 return self._save_config_file(path_list[2], doc, opts)
             
         elif path_list[0] == 'control':
-            result = None
-            if len(path_list) == 1:
-                result = self._dispatch_control_command(doc, opts)
-            elif path_list[1] == 'task':
-                if len(path_list) >= 3:
-                    name = path_list[2]
-                else:
-                    name = None
-                result = self._control_task(name, doc, opts)
-
-            if result is None:
-                return 400  # Bad Request
-            if type(result) is str:
-                output.write(result.encode())
-            elif type(result) is dict:
-                output.write(json.dumps(result).encode())
-            elif type(result) is bool:
-                if result:
-                    doc = {'status': 'ok'}
-                else:
-                    doc = {'status': 'error'}
-                output.write(json.dumps(doc).encode())
-            else:
-                try:
-                    output.write(str(result).encode())
-                except:
-                    return 500   # Internal Server Error
-
-            return 'application/json'
+            return self._dispatch_control(path_list, opts, doc, output)
         
         elif path_list[0] == 'console':
             cmd = doc.decode()
@@ -554,43 +540,63 @@ class App:
         return result
 
     
-    def _dispatch_control_command(self, doc, opts):
-        # return a dict or string for JSON, True/False for success/error, or None for error
+    def _dispatch_control(self, path_list, opts, doc, output):
+        # write a reply to output and return the content-type, or
+        # return a HTTP response code.
+        
         try:
-            json_doc = json.loads(doc.decode())
-            logging.info("DISPATCH: %s" % json_doc)
+            record = json.loads(doc.decode())
         except Exception as e:
-            logging.error('Dispatch: JSON decoding error: %s' % str(e))
-            return {'status': 'error', 'message': 'bad JSON doc: %s' % str(e)}
-
-        # user module first, to give the user module a change to modify the command
-        result = self._dispatch_user_command(json_doc, opts)
-        if result is None:
-            result = self._dispatch_task_command(json_doc, opts)
-
-        return result
-
-    
-    def _dispatch_user_command(self, doc, opts):
+            logging.error('control: JSON decoding error: %s' % str(e))
+            return 400 # Bad Request
+        
         result = None
+        if len(path_list) == 1:
+            logging.info("DISPATCH: %s" % str(record))
+            result = self._dispatch_command(record, opts)
+            
+        elif path_list[1] == 'task':
+            if len(path_list) >= 3:
+                name = path_list[2]
+            else:
+                name = None
+            logging.info("TASK COMMAND: %s.%s" % ('' if name is None else name, str(record)))
+            result = self._control_task(name, record, opts)
+
+        if result is None:
+            return 400  # Bad Request
+        if type(result) is str:
+            output.write(result.encode())
+        elif type(result) is dict:
+            output.write(json.dumps(result).encode())
+        elif type(result) is bool:
+            if result:
+                doc = {'status': 'ok'}
+            else:
+                doc = {'status': 'error'}
+            output.write(json.dumps(doc).encode())
+        else:
+            try:
+                output.write(str(result).encode())
+            except:
+                return 500   # Internal Server Error
+
+        return 'application/json'
+
+        
+    def _dispatch_command(self, doc, opts):
+        # user module first, to give the user module a change to modify the command
         for module in self.usermodule_list:
             result = module.process_command(doc)
             if result is not None:
-                # chain of responsibility
-                break
+                return result
 
-        return result
-
-    
-    def _dispatch_task_command(self, doc, opts):
-        result = None
         for module in self.taskmodule_list:
             result = module.process_command(doc)
             if result is not None:
-                # chain of responsibility
-                break
-
-        return result
+                return result
+            
+        return None
 
     
     def _get_task_status(self, params, opts):
@@ -600,6 +606,7 @@ class App:
             last_command = module.command_history[-1] if len(module.command_history) > 0 else None
             record = {
                 'name': module.name,
+                'is_loaded': module.is_loaded(),
                 'is_routine_running': module.is_running(),
                 'is_command_running': module.is_command_running(),
                 'last_routine_time': last_routine[0] if last_routine is not None else None,
@@ -607,7 +614,7 @@ class App:
                 'last_command_time': last_command[0] if last_command is not None else None,
                 'last_command': last_command[1] if last_command is not None else None,
                 'last_log': '',
-                'has_error': False
+                'has_error': module.error is not None
             }
             result.append(record)
 
@@ -615,6 +622,18 @@ class App:
 
     
     def _control_task(self, name, doc, opts):
+        action = doc.get('action', None)
+        for module in self.taskmodule_list:
+            if module.name == name:
+                if action == 'start':
+                    module.start()
+                    return True
+                elif action == 'stop':
+                    module.stop()
+                    return True
+                else:
+                    return False
+                
         return None
 
     
@@ -809,8 +828,7 @@ if __name__ == '__main__':
         optionparser.print_help()
         sys.exit(-1)
 
-    logging.basicConfig(level=10)
-        
+    logging.basicConfig(level=logging.INFO)
 
     if options.port <= 0:
         webui = WebUI(options.project_dir, is_command=True)

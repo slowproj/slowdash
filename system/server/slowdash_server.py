@@ -280,14 +280,14 @@ def start(port, webui, cgi_name, web_path, index_file):
         sys.stderr.write('ERROR: %s\n' % str(e))
         return -1
 
-    sys.stdout.write('listening at port %d\n' % port)
+    sys.stderr.write('listening at port %d\n' % port)
 
     try:
         httpserver.serve_forever()
     except KeyboardInterrupt:
-        sys.stdout.write('Terminated\n')
+        sys.stderr.write('Terminated\n')
     except InterruptedError:
-        sys.stdout.write('Terminated\n')
+        sys.stderr.write('Terminated\n')
 
     try:
         httpserver.shutdown()

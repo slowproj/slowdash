@@ -1,4 +1,3 @@
-
 import time, logging
 import slowpy as slp
 
@@ -8,7 +7,6 @@ device = ctrl.dummy_device()
 
 
 print("DummyDevice Loaded")
-
 
 ### Accepting Controls ###
 
@@ -46,7 +44,7 @@ def stop(**kwargs):
     device.ch(2).ramp().status().set(0)
     device.ch(3).ramp().status().set(0)
 
-    
+
 ### Exporting Variables ###
     
 class StatusNode(slp.ControlNode):
@@ -86,7 +84,6 @@ def initialize(params):
 def finalize():
     global datastore
     del datastore
-
 
 def loop():
     for ch in range(4):
