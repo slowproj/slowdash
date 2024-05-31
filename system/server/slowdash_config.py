@@ -54,7 +54,7 @@ def find_project_dir():
 
 
 class Config:
-    def __init__(self, project_dir=None):
+    def __init__(self, project_dir=None, project_file=None):
         self.project = None
         self.variables = {}
         self.auth_list = None
@@ -76,6 +76,11 @@ class Config:
             except Exception as e:
                 logging.error('unable to move to project dir "%s": %s' % (self.project_dir, str(e)))            
                 self.project_dir = None
+
+        if project_file is not None:
+            self.project_file = project_file
+        else:
+            self.project_file = 'SlowdashProject.yaml'
             
         self.update()
         
@@ -100,7 +105,7 @@ class Config:
                     'time_series': { 'schema': ts_schema }
                 }
         else:
-            project_file = os.path.join(self.project_dir, 'SlowdashProject.yaml')
+            project_file = os.path.join(self.project_dir, self.project_file)
             if not os.path.isfile(project_file):
                 project_file = os.path.join(self.project_dir, 'SlowdashProject.json')
                 if not os.path.isfile(project_file):
@@ -140,7 +145,13 @@ class Config:
                     title += name[k]
                 title += name[-1]
             self.project['title'] = title
-                
+        if 'system' not in self.project:
+            self.project['system'] = {}
+        if self.project['system'].get('our_security_is_perfect', False):
+            del self.project['system']['our_security_is_perfect']
+            self.project['system']['is_secure'] = True
+        else:
+            self.project['system']['is_secure'] = False
             
         auth_key = self.project.get('authentication', {}).get('key', None)
         if auth_key is None:

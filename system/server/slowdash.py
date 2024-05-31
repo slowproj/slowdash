@@ -8,8 +8,8 @@ from slowdash_config import Config
 
 
 class App:
-    def __init__(self, project_dir=None, is_cgi=False, is_command=False):
-        self.config = Config(project_dir)
+    def __init__(self, project_dir=None, project_file=None, is_cgi=False, is_command=False):
+        self.config = Config(project_dir, project_file)
         self.project = self.config.project
         self.project_dir = self.config.project_dir
         self.datasource_list = []
@@ -303,7 +303,8 @@ class App:
                 'project': {
                     'name': self.config.project.get('name', 'Untitled Project'),
                     'title': self.config.project.get('title', ''),
-                    'error_message': self.error_message
+                    'error_message': self.error_message,
+                    'is_secure': self.config.project.get('system', {}).get('is_secure', False)
                 },
                 'data_source_module': [
                     ds.modulename for ds in self.datasource_list
@@ -412,10 +413,11 @@ class App:
     def _get_config_file(self, filename, output):
         if self.project_dir is None:
             return None
+        is_secure = self.project.get('system', {}).get('is_secure', False)
         filepath = os.path.join(self.project_dir, 'config', filename)
         if not (os.path.isfile(filepath) and os.access(filepath, os.R_OK)):
             return None
-        
+
         ext = os.path.splitext(filepath)[1].lower()
         if ext == '.json':
             content_type = 'application/json'
@@ -430,6 +432,10 @@ class App:
         elif ext == '.html':
             content_type = 'text/html'
         elif ext == '.csv':
+            content_type = 'text/plain'
+        elif is_secure and (ext == '.py'):
+            content_type = 'text/plain'
+        elif is_secure and (ext == '.js'):
             content_type = 'text/plain'
         else:
             return None
@@ -448,8 +454,9 @@ class App:
             return 403
         if not filename.replace('_', '0').replace('-', '0').replace('.', '0').replace(' ', '0').isalnum():
             return 403
+        is_secure = self.project.get('system', {}).get('is_secure', False)
         ext = os.path.splitext(filename)[1]
-        if ext not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]:
+        if not is_secure and (ext not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]):
             return 403
 
         config_dir = os.path.join(self.project_dir, 'config')
@@ -679,8 +686,8 @@ class Reply:
 
             
 class WebUI:
-    def __init__(self, project_dir=None, is_cgi=False, is_command=False):
-        self.app = App(project_dir, is_cgi, is_command)
+    def __init__(self, project_dir=None, project_file=None, is_cgi=False, is_command=False):
+        self.app = App(project_dir, project_file, is_cgi, is_command)
         self.auth_list = self.app.config.auth_list
 
         
@@ -818,6 +825,11 @@ if __name__ == '__main__':
         help='project directory (default: current dir if not specified by SLOWDASH_PROJECT environmental variable)'
     )
     optionparser.add_option(
+        '--project-file',
+        action='store', dest='project_file', type='string', default=None,
+        help='project file (default: SlowdashProject.yaml file at the project directory)'
+    )
+    optionparser.add_option(
         '--logging',
         action='store', dest='loglevel', type='string', default='info',
         help='set log level. One of "debug", "info" (default)", "warn", or "error"'
@@ -831,13 +843,13 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
 
     if options.port <= 0:
-        webui = WebUI(options.project_dir, is_command=True)
+        webui = WebUI(options.project_dir, options.project_file, is_command=True)
         result = webui.process_get_request(args[0])
         webui.close()
         result.write_to(sys.stdout.buffer).destroy()
         sys.stdout.write('\n')
     else:
-        webui = WebUI(options.project_dir)
+        webui = WebUI(options.project_dir, options.project_file)
         index_file = 'slowhome.html'
         if webui.app.project is None:
             index_file = 'welcome.html'

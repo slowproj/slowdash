@@ -5,13 +5,7 @@ ctrl = slp.ControlSystem()
 ctrl.load_control_module('DummyDevice')
 device = ctrl.dummy_device()
 
-
 print("DummyDevice Loaded")
-
-con = slp.ControlSystem.console()
-con.print("who are you?")
-name = con.input()
-con.print("hello ", name)
 
 
 ### Accepting Controls ###
@@ -80,6 +74,9 @@ datastore = None
 def initialize(params):
     global datastore
     datastore = slp.create_datastore_from_url('sqlite:///SlowTaskTest.db', 'test')
+
+    name = input('who are you?')
+    print('hello, ' + name)
 
 def finalize():
     global datastore

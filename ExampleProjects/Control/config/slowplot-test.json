@@ -5,7 +5,7 @@
         "grid": { "rows": "2", "columns": "2" },
         "mode": "normal"
     },
-    "style": {},
+    "style": { },
     "panels": [
         {
             "type": "timeaxis",
@@ -19,7 +19,15 @@
             "legend": { "style": "side" }
         },
         { "type": "table", "channel": "Status", "reversed": false, "title": "Current Status" },
-        { "type": "html", "location": "project", "file": "test", "title": "Control" }
+        { "type": "html", "location": "project", "file": "test", "title": "Control" },
+        {
+            "type": "plot",
+            "plots": [
+                { "type": "ts-histogram", "channel": "ch00", "color": "#009090", "opacity": 0.2, "label": "", "format": "%.5g" }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
+            "legend": { "style": "side" }
+        }
     ],
     "meta": { "name": "test", "title": "", "description": "" }
 }

@@ -143,16 +143,19 @@
             config.filetype = (function(filename) {
                 const dot = filename.lastIndexOf('.');
                 if (dot > 1) {
-                    return filename.slice(dot+1).toLowerCase();
+                    const ext = filename.slice(dot+1).toLowerCase();
+                    if (ext == 'js') return 'javascript';
+                    if (ext == 'py') return 'python';
+                    return ext;
                 }
                 else {
                     return '';
                 }
             })(config.filename);
-            
+
             editor.setTheme('ace/theme/' + config.theme);
             if (! config.mode) {
-                if (['json', 'yaml', 'html'].includes(config.filetype)) {
+                if (['json', 'yaml', 'html', 'javascript', 'python'].includes(config.filetype)) {
                     config.mode = config.filetype;
                 }
             }

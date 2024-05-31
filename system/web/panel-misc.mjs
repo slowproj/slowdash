@@ -436,9 +436,9 @@ export class FileManagerPanel extends Panel {
 
         $('<div>').css(css.titleDiv).text('Create File').appendTo(this.contentDiv);
         $('<span>').text('Name ').css('margin-left', '5px').appendTo(this.contentDiv);
-        let newFileInput = $('<input>').appendTo(this.contentDiv);
+        this.newFileInput = $('<input>').appendTo(this.contentDiv);
         let newFileButton = $('<button>').text('Create & Edit').appendTo(this.contentDiv);
-        $('<span>').text(' (allowed file types: json, yaml, csv, html)').appendTo(this.contentDiv);
+        this.filetype_comment = $('<span>').text('').appendTo(this.contentDiv);
         
         $('<div>').css(css.titleDiv).css('margin-top','1em').text('Upload Files').appendTo(this.contentDiv);
         let box = $('<div>').css(css.box).appendTo(this.contentDiv);
@@ -486,9 +486,19 @@ export class FileManagerPanel extends Panel {
     }
 
     
-    configure(config, callbacks={}) {
+    configure(config, callbacks={}, project_config=null) {
         super.configure(config, callbacks);
+        this.is_secure = project_config?.project?.is_secure ?? false;
+        
         this._updateFileList();
+        if (this.is_secure) {
+            this.filetype_comment.text(' (allowed file types: json, yaml, csv, html, py, js)');
+            this.newFileInput.attr('pattern', '.+\.(json|yaml|csv|html|py|js)')
+        }
+        else {
+            this.filetype_comment.text(' (allowed file types: json, yaml, csv, html)');
+            this.newFileInput.attr('pattern', '.+\.(json|yaml|csv|html)')
+        }
     }
 
 
@@ -610,20 +620,21 @@ export class FileManagerPanel extends Panel {
             console.log(e);
             return null;
         }
+
+        let readables = ['json', 'yaml', 'csv', 'html', 'svg', 'jpg', 'jpeg', 'png', 'obj'];
+        let editables = ['json', 'yaml', 'html', 'csv', 'svg'];
+        if (this.is_secure) {
+            readables.push('py', 'js');
+            editables.push('py', 'js');
+        }
         
         for (const entry of filelist ?? []) {
             let name;
             const ext = entry.name.split('.').pop();
-            if (['json', 'yaml', 'csv'].includes(ext)) {
+            if (readables.includes(ext)) {
                 name = $('<a>').attr({
                     'href': `./api/config/file/${entry.name}`,
                     'target': '_blank',
-                });
-            }
-            else if (['html', 'svg', 'jpg', 'jpeg', 'png'].includes(ext)) {
-                name = $('<a>').attr({
-                    'href': `./api/config/file/${entry.name}`,
-                    'target': '_blank'
                 });
             }
             else {
@@ -632,7 +643,7 @@ export class FileManagerPanel extends Panel {
             name.text(entry.name);
             
             let edit;
-            if (['json', 'yaml', 'html', 'csv', 'svg'].includes(ext)) {
+            if (editables.includes(ext)) {
                 edit = $('<a>').html('&#x1f4dd;').attr({
                     href: `slowedit.html?filename=${entry.name}`,
                     target: '_blank',
@@ -678,6 +689,7 @@ export class TaskManagerPanel extends Panel {
     
     constructor(div, style) {
         super(div, style);
+        this.is_secure = false;
         
         this.frameDiv = $('<div>').appendTo(div);        
         this.titleDiv = $('<div>').appendTo(this.frameDiv);
@@ -796,6 +808,7 @@ export class TaskManagerPanel extends Panel {
     
     configure(config, callbacks={}, project_config=null) {
         super.configure(config, callbacks);
+        this.is_secure = project_config?.project?.is_secure ?? false;
     }
 
 
@@ -889,6 +902,13 @@ export class TaskManagerPanel extends Panel {
             else if (entry.is_loaded) {
                 status = '&#x2705; loaded';
             }
+            let name;
+            if (this.is_secure) {
+                name = `<a href="slowedit.html?filename=slowtask-${entry.name}.py" target="_blank">${entry.name}</a>`;
+            }
+            else {
+                name = entry.name;
+            }
             let control;
             if (entry.is_routine_running || entry.is_command_running) {
                 control = '<button disabled>Start</button><button>Stop</button>';
@@ -898,7 +918,7 @@ export class TaskManagerPanel extends Panel {
             }
             
             let tr = $('<tr>');
-            $('<td>').appendTo(tr).text(entry.name);
+            $('<td>').appendTo(tr).html(name);
             $('<td>').appendTo(tr).text(last_routine);
             $('<td>').appendTo(tr).text(last_command);
             $('<td>').appendTo(tr).html(status);
