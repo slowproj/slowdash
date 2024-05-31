@@ -1,0 +1,15 @@
+slowdash_project:
+  name: Control_Test
+  data_source:
+    url: sqlite:///SlowTaskTest
+    parameters:
+      time_series:
+        schema: test [channel] @timestamp(unix) = value
+
+  task:
+    name: test
+    auto_load: true
+
+  system:
+    our_security_is_perfect: true
+    

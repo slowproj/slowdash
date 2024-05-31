@@ -8,6 +8,8 @@ In Slow-Dash projects, user Python module can be used for:
 - sending data to the web interface (table, tree, etc)
 - dispatching "command" from the web interface
 
+SlowTask is an extension of the user module, and it should be good for most simple cases. User module is provided for full flexibility beyond SlowTask.
+
 # Project Configuration File
 ```yaml
 slowdash_project:
@@ -39,12 +41,12 @@ slowdash_project:
 # User Module structure
 ```python
 ### Called when this module is loaded. The params are the parameters in the configuration file.
-def initialize(params):
+def _initialize(params):
     ...
 
     
 ### Called during termination of slow-dash.
-def finalize():
+def _finalize():
     ...
 
     
@@ -58,7 +60,7 @@ def get_channels():
 ### Called when web clients request data.
 # If the channel is not known, return None
 # else return a JSON object of the data, in the format described in the Data Model document.
-def get_data(channel):
+def _get_data(channel):
     ...
     return None
 
@@ -67,7 +69,7 @@ def get_data(channel):
 # If command is not recognized, return None
 # elif command is executed successfully, return True
 # else return False or { "status": "error", "message": ... }
-def process_command(doc):
+def _process_command(doc):
     ...
     return None
 
@@ -75,7 +77,7 @@ def process_command(doc):
 ### Called periodically while the system is running
 # If this function is defined, a dedicated thread is created for that.
 # Do not forget to insert a sleep otherwise the system load becomes unnecessarily large.
-def loop():
+def _loop():
     ...
     time.sleep(0.1)
 
@@ -83,12 +85,12 @@ def loop():
 ### Instead of loop(), a lower level implementation with run() and halt() can also be used.
 # run() is called as a thread after initialize(), and halt() is called before finalize().
 is_stop_requested = False
-def run():
+def _run():
     global is_stop_requested
     while not is_stop_requested:
         ....
         time.sleep(0.1)
-def halt():
+def _halt():
     global is_stop_requested
     is_stop_requested = True
 ```
@@ -115,18 +117,18 @@ slowdash_project:
 import time, datetime
 timeoffset = 0
 
-def initialize(params):
+def _initialize(params):
     global timeoffset
     timeoffset = params.get('timeoffset', 0)
 
     
-def get_channels():
+def _get_channels():
     return [
         {'name': 'WorldClock', 'type': 'tree'},
     ]
 
 
-def get_data(channel):
+def _get_data(channel):
     if channel == 'WorldClock':
         t = time.time()
         dt = datetime.datetime.fromtimestamp(t)
@@ -142,7 +144,7 @@ def get_data(channel):
 
 # for testing
 if __name__ == '__main__':
-    print(get_data(get_channels()[0]['name']))
+    print(_get_data(get_channels()[0]['name']))
 ```
 
 ### Testing the module
@@ -181,7 +183,7 @@ To the example user data source above, add the following function:
 
 ### Python Module
 ```python
-def process_command(doc):
+def _process_command(doc):
     global timeoffset
     try:
         if doc.get('set_time_offset', False):
@@ -213,51 +215,33 @@ POST: /slowdash.cgi/control
 ```
 
 # User Module Threading
-If the `loop()` function is defined in a user module, a dedicated thread is created and the function is called periodically:
+A dedicated thread is created for each user module, and the module is loaded within the thread. Therefore, all the statements outside a function will be executed in this thread at the time of module loading, followed by `_initialize()`. 
+
+If the `_loop()` function is defined in a user module, the function is called periodically within the user module thread:
 ```python
-def loop():
+def _loop():
     do_my_task()
     time.sleep(0.1)
 ```
 
-Instead of using `loop()`, if the `run()` function is defined, a dedicated thread is created and the function will be started immediately after `initialize()`. When `run()` is used, a terminator function, `halt()` must be also defined in the user module to stop the thread. The `halt()` function is called just before `finalize()` is called. A typical construction of `run()` and `halt()` looks like:
+If the `_run()` function is defined, a dedicated thread is created and the function will be started immediately after `_initialize()`. When `_run()` is used, a terminator function, `_halt()` should also be defined in the user module to stop the thread. The `_halt()` function is called just before `_finalize()`. A typical construction of `_run()` and `_halt()` looks like:
 ```python
 is_stop_requested = False
 
-def run():
+def _run():
     global is_stop_requested
     while not is_stop_requested:
         do_my_task()
         time.sleep(0.1)
 
-def halt():
+def _halt():
     global is_stop_requested
     is_stop_requested = True    
 ```
 
-It is okay to implement threading within the user module. Just avoid using the reserved function names (`run()` etc.)
-```python
-import threading
-current_thread = None
-is_stop_requested = False
+If both `_run()` and `loop()` are defined, `run()` is called first (after `_initialize()`), followed by `loop()` and `finalize()`.
 
-def main():
-    global is_stop_requested
-    while not is_stop_requested:
-        do_my_task()
-        time.sleep(0.1)
-
-def initialize(params):
-    global current_thread
-    current_thread = threading.Thread(target=main)
-    current_thread.start()
-    
-def finalize():
-    global current_thread, is_stop_requested
-    is_stop_requested = True
-    if current_thread is not None:
-        current_thread.join()
-```
+All the other callback functions, such as `_process_command()`, `_get_channels()`, and `_get_data()`, are called from the main Slowdash thread (not the user module thread) and therefore these can be called concurrently with the user thread callbacks (`_initialize()`, `_loop()`, `_run()`, etc.). It is okay to start another thread in user modules, as done in SlowTask which creates a dedicated thread for each `_process_command()` call.
 
 # Tips
 ### Debug / Log Messages 
@@ -268,7 +252,7 @@ logger = logging.getLogger(name)
 logger.addHandler(logging.StreamHandler(sys.stderr))
 logger.setLevel(logging.INFO)
 
-def process_command(doc):
+def _process_command(doc):
     logger.info(doc)
     ...
 ```
@@ -281,31 +265,33 @@ class MyTask:
 
 my_task = MyTask()
 
-def loop():
+def _loop():
     my_task.do()
     time.sleep(0.1)
     
-def process_command(doc):
+def _process_command(doc):
     return my_task.process_command(doc)    
 ```
 
 ### Standalone Mode
-It is often convenient to have the user module executable standalone. For single execution of a user task, just call `loop()` once:
+It is often convenient to have the user module executable standalone. 
 ```python
 if __name__ == '__main__':
-    initialize({})
-    loop()
-    finalize()
+    _initialize({})
+    for i in range(10):
+        _loop()
+    _finalize()
 ```
 
-For contineous execution, signal might be used to stop the loop:
+For contineous execution, signal might be used to stop the thread:
 ```python
 def stop(signum, frame):
-    halt()
+    _halt()
     
 if __name__ == '__main__':
     import signal
     signal.signal(signal.SIGINT, stop)
-    initialize({})
-    run()
+    _initialize({})
+    _run()
+    _finalize()
 ```

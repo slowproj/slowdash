@@ -68,7 +68,7 @@ class TaskModule(UserModule):
         self.channel_list = []
         self.exports = {}
         
-        func = self.get_func('export')
+        func = self.get_func('_export')
         if func is None:
             return
         
@@ -118,9 +118,27 @@ class TaskModule(UserModule):
 
     
     def process_command(self, params):
-        if self.func_process_command:
-            return super().process_command(params)
+        result = self.process_task_command(params)
+        if result is not None:
+            return result
+        
+        if self.module is None or self.func_process_command is None:
+            return None
+        
+        self.command_history.append((
+            time.time(),
+            'process_command(%s)' % ','.join(['%s=%s' % (k,v) for k,v in params.items()])
+        ))
+        try:
+            result = self.func_process_command(params)
+        except Exception as e:
+            self.handle_error('user module error: process_command(): %s' % str(e))
+            return {'status': 'error', 'message': str(e) }
 
+        return result
+    
+
+    def process_task_command(self, params):
         function_name, kwargs = None, {}
         is_await = False  # if True, wait for the command to complete before returning a response
         is_async = False  # if False, the command is rejected if another command is running

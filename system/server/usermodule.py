@@ -19,17 +19,17 @@ class UserModuleThread(threading.Thread):
         if not self.usermodule.load():
             return
             
-        func_initialize = self.usermodule.get_func('initialize')
-        func_finalize = self.usermodule.get_func('finalize')
-        func_run = self.usermodule.get_func('run')
-        func_loop = self.usermodule.get_func('loop')
+        func_initialize = self.usermodule.get_func('_initialize')
+        func_finalize = self.usermodule.get_func('_finalize')
+        func_run = self.usermodule.get_func('_run')
+        func_loop = self.usermodule.get_func('_loop')
         
         self.is_stop_requested = False
 
         if func_initialize:
             self.usermodule.routine_history.append((
                 time.time(),
-                'initialize(%s)' % ','.join(['%s=%s' % (k,v) for k,v in self.params])
+                '_initialize(%s)' % ','.join(['%s=%s' % (k,v) for k,v in self.params])
             ))
             try:
                 func_initialize(self.params)
@@ -124,10 +124,10 @@ class UserModule:
         if self.module is None:
             return False
 
-        self.func_get_channels = self.get_func('get_channels')
-        self.func_get_data = self.get_func('get_data')
-        self.func_process_command = self.get_func('process_command')
-        self.func_halt = self.get_func('halt')
+        self.func_get_channels = self.get_func('_get_channels')
+        self.func_get_data = self.get_func('_get_data')
+        self.func_process_command = self.get_func('_process_command')
+        self.func_halt = self.get_func('_halt')
 
         if self.func_get_channels and self.func_get_data:
             logging.info('loaded user module data interface')
