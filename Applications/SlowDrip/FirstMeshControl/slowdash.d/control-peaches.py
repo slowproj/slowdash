@@ -6,17 +6,17 @@ ifc = dripline.core.Interface(dripline_config={'auth-file':'/project/authenticat
 target, ramp, is_ramping = None, None, False
 
 
-def get_channels():
+def _get_channels():
     return [ {'name': 'peaches_status', 'type': 'tree'} ]
 
 
-def get_data(channel):
+def _get_data(channel):
     if channel == 'peaches_status':
         return { 'tree': { 'ramping': is_ramping } }
     return None
 
 
-def loop():
+def _loop():
     global target, ramp, is_ramping
     try:
         current = ifc.get('peaches').payload.to_python().get('value_raw', None)
@@ -42,7 +42,7 @@ def loop():
     time.sleep(1)
 
     
-def process_command(doc):
+def _process_command(doc):
     global target, ramp
     try:
         if doc.get('set', False):
@@ -63,4 +63,4 @@ if __name__ == '__main__':
     target = 10
     ramp = 0.1
     while True:
-        loop()
+        _loop()

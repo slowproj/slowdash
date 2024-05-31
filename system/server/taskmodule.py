@@ -30,6 +30,8 @@ class TaskModule(UserModule):
         self.exports = None
         self.channel_list = None
         self.command_history = []
+        self.namespace_prefix = params.get('namespace_prefix', '%s.' % name)
+        self.namespace_suffix = params.get('namespace_suffix', '')
 
         logging.info('user task module loaded')
         
@@ -81,15 +83,16 @@ class TaskModule(UserModule):
             return
 
         for name, node in exports:
-            self.exports[name] = node
+            external_name = '%s%s%s' % (self.namespace_prefix, name, self.namespace_suffix)
+            self.exports[external_name] = node
             value = node.get()
             if type(value) == dict:
                 if 'table' in value:
-                    self.channel_list.append({'name': name, 'type': 'table'})
+                    self.channel_list.append({'name': external_name, 'type': 'table'})
                 else:
-                    self.channel_list.append({'name': name, 'type': 'tree'})
+                    self.channel_list.append({'name': external_name, 'type': 'tree'})
             else:
-                self.channel_list.append({'name': name})
+                self.channel_list.append({'name': external_name})
 
         return self.channel_list
     
@@ -155,9 +158,18 @@ class TaskModule(UserModule):
                 kwargs[key] = value
 
         # task namespace
-        if function_name is None or not function_name.startswith(self.name + '.'):
+        if len(self.namespace_prefix) > 0:
+            if not function_name.startswith(self.namespace_prefix):
+                function_name = None
+            else:
+                function_name = function_name[len(self.namespace_prefix):]
+        if len(self.namespace_suffix) > 0:
+            if not function_name.endswith(self.namespace_suffix):
+                function_name = None
+            else:
+                function_name = function_name[:-len(self.namespace_suffix)]
+        if function_name is None:
             return None
-        function_name = function_name[len(self.name)+1:]
         
         func = self.get_func(function_name)
         if func is None:

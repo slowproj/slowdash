@@ -4,18 +4,18 @@ import time, datetime
 timeoffset = 0
 
 
-def initialize(params):
+def _initialize(params):
     global timeoffset
     timeoffset = params.get('timeoffset', 0)
 
     
-def get_channels():
+def _get_channels():
     return [
         {'name': 'WorldClock', 'type': 'tree'},
     ]
 
 
-def get_data(channel):
+def _get_data(channel):
     if channel == 'WorldClock':
         t = time.time()
         dt = datetime.datetime.fromtimestamp(t)
@@ -30,7 +30,7 @@ def get_data(channel):
     return None
 
 
-def process_command(doc):
+def _process_command(doc):
     global timeoffset
     try:
         if doc.get('set_time_offset', False):

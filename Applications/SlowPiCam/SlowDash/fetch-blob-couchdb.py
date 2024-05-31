@@ -191,13 +191,13 @@ is_stop_requested = False
 last_fetch_time = 0
 
 
-def get_channels():
+def _get_channels():
     return [
         {'name': 'Run', 'type': 'tree'},
     ]
 
 
-def get_data(channel):
+def _get_data(channel):
     if channel == 'Run':
         return { 'tree': {
             'Config': {
@@ -214,7 +214,7 @@ def get_data(channel):
     return None
 
 
-def initialize(params):
+def _initialize(params):
     global series_name, interval, source_url, couchdb_url, light_url
     global datastore
     global is_running, is_fetching, last_fetch_time
@@ -235,7 +235,7 @@ def initialize(params):
     last_fetch_time = 0
     
     
-def finalize():
+def _finalize():
     global light_url
     try:
         requests.get(light_url)
@@ -296,7 +296,7 @@ def fetch():
     is_fetching = False
 
     
-def loop():
+def _loop():
     global is_running, interval, last_fetch_time
     if is_running and (interval > 0):
         now = time.time()
@@ -306,7 +306,7 @@ def loop():
     time.sleep(1)
 
 
-def process_command(doc):
+def _process_command(doc):
     try:
         if doc.get('start', False):
             start()
@@ -333,7 +333,7 @@ def process_command(doc):
 
 if __name__ == '__main__':
     pi_url = 'http://10.95.99.68/~picam',
-    initialize({
+    _initialize({
         'series_name': 'RPiCamera',
         'source_url': '%s/photo.cgi' % pi_url,
         'light_url': '%s/light.cgi' % pi_url,
