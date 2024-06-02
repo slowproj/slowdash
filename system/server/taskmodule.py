@@ -46,6 +46,10 @@ class TaskModule(UserModule):
         
     def stop(self):
         super().stop()
+
+        # somehow want to get a reference to the ControlSystem class in usermodule...
+        #if self.ControlSystem:
+        #    ControlSystem.stop()
         
         if self.command_thread is not None:
             if self.command_thread.is_alive():
@@ -64,6 +68,11 @@ class TaskModule(UserModule):
         
     def is_command_running(self):
         return self.command_thread is not None and self.command_thread.is_alive()
+
+
+    def is_waiting_input(self):
+        #return self.is_waiting or (self.ControlSystem and self.ControlSystem._is_waiting_input)
+        return self.is_waiting
 
 
     def scan_channels(self):
@@ -130,7 +139,7 @@ class TaskModule(UserModule):
         
         self.command_history.append((
             time.time(),
-            'process_command(%s)' % ','.join(['%s=%s' % (k,v) for k,v in params.items()])
+            '_process_command(%s)' % ','.join(['%s=%s' % (k,v) for k,v in params.items()])
         ))
         try:
             result = self.func_process_command(params)
@@ -168,6 +177,8 @@ class TaskModule(UserModule):
                 function_name = None
             else:
                 function_name = function_name[:-len(self.namespace_suffix)]
+        if function_name.startswith('_'):
+            function_name = None
         if function_name is None:
             return None
         

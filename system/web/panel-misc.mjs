@@ -899,6 +899,9 @@ export class TaskManagerPanel extends Panel {
             if (entry.has_error) {
                 status = '&#x2757; ERROR';
             }
+            else if (entry.is_waiting_input) {
+                status = '&#x23f3; waiting';
+            }
             else if (entry.is_loaded) {
                 status = '&#x2705; loaded';
             }

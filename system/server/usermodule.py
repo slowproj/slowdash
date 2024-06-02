@@ -7,25 +7,26 @@ import threading
 
 
 class UserModuleThread(threading.Thread):
-    def __init__(self, usermodule, params):
+    def __init__(self, usermodule, params, stop_event):
         threading.Thread.__init__(self)
 
         self.usermodule = usermodule
         self.params = params
-        self.is_stop_requested = False
+        self.stop_event = stop_event
         
         
     def run(self):
+        self.stop_event.clear()
         if not self.usermodule.load():
             return
-            
+        if self.stop_event.is_set():
+            return
+        
         func_initialize = self.usermodule.get_func('_initialize')
         func_finalize = self.usermodule.get_func('_finalize')
         func_run = self.usermodule.get_func('_run')
         func_loop = self.usermodule.get_func('_loop')
         
-        self.is_stop_requested = False
-
         if func_initialize:
             self.usermodule.routine_history.append((
                 time.time(),
@@ -36,16 +37,16 @@ class UserModuleThread(threading.Thread):
             except Exception as e:
                 self.usermodule.handle_error('user module error: initialize(): %s' % str(e))
             
-        if func_run:
+        if func_run and not self.stop_event.is_set():
             self.usermodule.routine_history.append((time.time(), 'run()'))
             try:
                 func_run()
             except Exception as e:
                 self.usermodule.handle_error('user module error: run(): %s' % str(e))
                 
-        if func_loop:
+        if func_loop and not self.stop_event.is_set():
             self.usermodule.routine_history.append((time.time(), 'loop()'))
-            while not self.is_stop_requested:
+            while not self.stop_event.is_set():
                 try:
                     func_loop()
                     time.sleep(0.01)
@@ -54,6 +55,7 @@ class UserModuleThread(threading.Thread):
                     break
         
         if func_finalize:
+            self.stop_event.clear()
             self.usermodule.routine_history.append((time.time(), 'finalize()'))
             try:
                 func_finalize()
@@ -62,17 +64,6 @@ class UserModuleThread(threading.Thread):
 
 
 
-def input_waiting_at_EOF(prompt=None):
-    if prompt:
-        print(prompt)
-    while True:
-        try:
-            return input()
-        except EOFError:
-            time.sleep(0.1)
-
-
-                
 class UserModule:        
     def __init__(self, filepath, name, params):
         self.filepath = filepath
@@ -81,6 +72,7 @@ class UserModule:
 
         self.module = None
         self.user_thread = None
+        self.stop_event = threading.Event()
 
         if self.name is None:
             self.name = os.path.splitext(os.path.basename(self.filepath))[0]
@@ -92,6 +84,7 @@ class UserModule:
         
         self.routine_history = []
         self.error = None
+        self.is_waiting = False
 
         
     def __del__(self):
@@ -137,6 +130,23 @@ class UserModule:
         # Overriding the input() function to work with input from StringIO
         # BUG: this does not take affect while module loading (statements outside callback functions).
         # For now, use slowpy.ControlSystem.console().input() instead.
+        def input_waiting_at_EOF(prompt=None):
+            if prompt:
+                print(prompt)
+            self.is_waiting = True
+            while True:
+                if self.stop_event.is_set():
+                    line = ''
+                    break
+                try:
+                    line = input()
+                    break
+                except EOFError:
+                    time.sleep(0.1)
+                    
+            self.is_waiting = False
+            return line
+                
         self.module.__dict__['input'] = input_waiting_at_EOF
 
         logging.info('user module loaded: %s' % self.name)
@@ -148,7 +158,7 @@ class UserModule:
         self.stop()
         logging.info('starting user module "%s"' % self.name)
         
-        self.user_thread = UserModuleThread(self, self.params)
+        self.user_thread = UserModuleThread(self, self.params, self.stop_event)
         self.user_thread.start()
         
         
@@ -157,8 +167,8 @@ class UserModule:
             return
         
         logging.info('stoping user module "%s"' % self.name)
-
-        self.user_thread.is_stop_requested = True
+        self.stop_event.set()
+        
         if self.func_halt is not None:
             try:
                 self.func_halt()
@@ -176,6 +186,10 @@ class UserModule:
         
     def is_running(self):
         return self.user_thread is not None and self.user_thread.is_alive()
+
+
+    def is_waiting_input(self):
+        return self.is_waiting
 
 
     def get_func(self, name):

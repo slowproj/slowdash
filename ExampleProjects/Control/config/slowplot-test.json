@@ -18,12 +18,12 @@
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 0, "ymax": 2 },
             "legend": { "style": "side" }
         },
-        { "type": "table", "channel": "Status", "reversed": false, "title": "Current Status" },
+        { "type": "table", "channel": "test.Status", "reversed": false, "title": "Current Status" },
         { "type": "html", "location": "project", "file": "test", "title": "Control" },
         {
             "type": "plot",
             "plots": [
-                { "type": "ts-histogram", "channel": "ch00", "color": "#009090", "opacity": 0.2, "label": "", "format": "%.5g" }
+                { "type": "ts-histogram", "channel": "ch01", "color": "#dd8000", "opacity": 0.2, "label": "", "format": "%.5g" }
             ],
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
             "legend": { "style": "side" }
