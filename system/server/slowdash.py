@@ -616,6 +616,7 @@ class App:
                 'is_loaded': module.is_loaded(),
                 'is_routine_running': module.is_running(),
                 'is_command_running': module.is_command_running(),
+                'is_waiting_input': module.is_waiting_input(),
                 'last_routine_time': last_routine[0] if last_routine is not None else None,
                 'last_routine': last_routine[1] if last_routine is not None else None,
                 'last_command_time': last_command[0] if last_command is not None else None,

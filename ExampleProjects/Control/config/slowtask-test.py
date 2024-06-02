@@ -8,6 +8,7 @@ device = ctrl.dummy_device()
 print("DummyDevice Loaded")
 
 
+
 ### Accepting Controls ###
 
 def set_V0(V0, **kwargs):
@@ -39,6 +40,7 @@ def stop(**kwargs):
     device.ch(3).ramp().status().set(0)
 
 
+    
 ### Exporting Variables ###
     
 class StatusNode(slp.ControlNode):
@@ -75,12 +77,14 @@ def _initialize(params):
     global datastore
     datastore = slp.create_datastore_from_url('sqlite:///SlowTaskTest.db', 'test')
 
-    name = input('who are you?')
+    name = input('who are you???')
     print('hello, ' + name)
 
+    
 def _finalize():
     global datastore
     del datastore
+
 
 def _loop():
     for ch in range(4):
@@ -88,13 +92,23 @@ def _loop():
         datastore.write_timeseries(value, tag='ch%02d'%ch)
     time.sleep(1)
 
+
+def _halt():
+    ctrl.stop()
+    
+    
     
 ### Stand-alone Testing ###
     
 if __name__ == '__main__':
-    initialize({})
-    while True:
-        loop()
+    import signal
+    def stop(signum, frame):
+        _halt()
+    signal.signal(signal.SIGINT, stop)
+
+    _initialize({})
+    while not ctrl._stop_event.is_set():
+        _loop()
         for ch in range(4):
             print(device.ch(ch))
-    finalize()
+    _finalize()

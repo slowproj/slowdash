@@ -38,6 +38,9 @@ class DriplineEndpointNode(ControlNode):
     def get(self):
         return self.interface.get(self.name).payload.to_python().get('value_raw', None)
 
+    def cmd(self, method, ordered_args=[], keyed_args={}, timeout=0):
+        return self.interface.cmd(self.name, method, ordered_args, keyed_args, timeout)
+
     ## child nodes ##
     # dripline().endpoint(name).calibrated() 
     def calibrated(self):
