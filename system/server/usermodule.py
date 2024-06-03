@@ -3,6 +3,7 @@
 
 import sys, os, time, io, logging, traceback
 import importlib.machinery
+import types
 import threading
 
 
@@ -91,6 +92,28 @@ class UserModule:
         self.stop()
 
         
+    def _preset_module(self, module):
+        # Overriding the input() function to work with input from StringIO
+        def input_waiting_at_EOF(prompt=None):
+            if prompt:
+                print(prompt)
+            self.is_waiting = True
+            while True:
+                if self.stop_event.is_set():
+                    line = ''
+                    break
+                try:
+                    line = input()
+                    break
+                except EOFError:
+                    time.sleep(0.1)
+                    
+            self.is_waiting = False
+            return line
+
+        module.__dict__['input'] = input_waiting_at_EOF
+        
+        
     def load(self):
         self.routine_history = []
         self.error = None
@@ -98,16 +121,25 @@ class UserModule:
         if self.module is not None and False:  # ??? it look like just re-doing load() works...
             #??? this reload() does not execute statements outside a function
             print("=== Reloading %s ===" % self.filepath)
+            self._preset_module(self.module)
             try:
                 self.module = importlib.reload(self.module)
             except Exception as e:
                 self.handle_error('unable to reload user module: %s' % str(e))
                 return False
+            
         else:
             print("=== Loading %s ===" % self.filepath)
             if not os.path.exists(self.filepath):
                 self.handle_error('unable to find user module: %s' % self.filepath)
                 return False
+
+            # use a dummy module with the same name as the user module:
+            # entries in the dummy modules will remain after loading the user module
+            dummy_module = types.ModuleType(self.name)
+            self._preset_module(dummy_module)
+            sys.modules[self.name] = dummy_module
+            
             try:
                 self.module = importlib.machinery.SourceFileLoader(self.name, self.filepath).load_module()
             except Exception as e:
@@ -127,27 +159,6 @@ class UserModule:
         if self.func_process_command:
             logging.info('loaded user module command processor')
 
-        # Overriding the input() function to work with input from StringIO
-        # BUG: this does not take affect while module loading (statements outside callback functions).
-        # For now, use slowpy.ControlSystem.console().input() instead.
-        def input_waiting_at_EOF(prompt=None):
-            if prompt:
-                print(prompt)
-            self.is_waiting = True
-            while True:
-                if self.stop_event.is_set():
-                    line = ''
-                    break
-                try:
-                    line = input()
-                    break
-                except EOFError:
-                    time.sleep(0.1)
-                    
-            self.is_waiting = False
-            return line
-                
-        self.module.__dict__['input'] = input_waiting_at_EOF
 
         logging.info('user module loaded: %s' % self.name)
 

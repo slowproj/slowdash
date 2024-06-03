@@ -7,6 +7,9 @@ device = ctrl.dummy_device()
 
 print("DummyDevice Loaded")
 
+name = input('who are you?')
+print('hello, ' + name)
+
 
 
 ### Accepting Controls ###
@@ -77,10 +80,7 @@ def _initialize(params):
     global datastore
     datastore = slp.create_datastore_from_url('sqlite:///SlowTaskTest.db', 'test')
 
-    name = input('who are you???')
-    print('hello, ' + name)
 
-    
 def _finalize():
     global datastore
     del datastore
@@ -93,21 +93,17 @@ def _loop():
     time.sleep(1)
 
 
-def _halt():
-    ctrl.stop()
-    
-    
     
 ### Stand-alone Testing ###
     
 if __name__ == '__main__':
     import signal
     def stop(signum, frame):
-        _halt()
+        ControlSystem.stop()
     signal.signal(signal.SIGINT, stop)
 
     _initialize({})
-    while not ctrl._stop_event.is_set():
+    while not ctrl.is_stop_requested():
         _loop()
         for ch in range(4):
             print(device.ch(ch))

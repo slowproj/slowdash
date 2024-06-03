@@ -125,11 +125,12 @@ class RampNode(ControlNode):
                 current_value += self.change_per_sec
             self.value_node.set(current_value)
 
-            if ControlSystem._stop_event.is_set():
-                logging.info('ramping aborted')
-                break
-            else:
-                time.sleep(1)
+            for i in range(10):
+                if ControlSystem.is_stop_requested():
+                    self.target_value = None
+                    return
+                else:
+                    time.sleep(0.1)
             
         self.target_value = None
 
@@ -159,60 +160,18 @@ class RampStatusNode(ControlNode):
     
     
 
-class ConsoleNode(ControlNode):
-    def set(self, value):
-        self.print(value)
-
-
-    def get(self):
-        return self.input()
-
-
-    def print(self, *args):
-        print(*args)
-
-        
-    def input(self, prompt=None):
-        # The stdin might be bound to a network connection using StringIO.
-        # In this case the standard input() fails (EOFError) if StringIO is empty.
-        if prompt:
-            print(prompt)
-        ControlSystem._is_waiting_input = True
-        while True:
-            if ControlSystem._stop_event.is_set():
-                logging.info('input() aborted')
-                line = ''
-                break
-            try:
-                line = input()
-                break
-            except EOFError:
-                time.sleep(0.1)
-                    
-        ControlSystem._is_waiting_input = False
-        return line
-
-    
-        
 class ControlSystem(ControlNode):
     _stop_event = threading.Event()
-    _is_waiting_input = False
     
     def __init__(self):
-        self._stop_event.clear()
+        self._stop_event.clear()        
         self.load_control_module('Ethernet')
 
-        
     @classmethod
     def stop(cls):
         cls._stop_event.set()
-        
-        
+
     @classmethod
-    def is_waiting_input(cls):
-        return cls.is_waiting_input
+    def is_stop_requested(cls):
+        return cls._stop_event.is_set()
         
-        
-    ### child nodes ###
-    def console(self):
-        return ConsoleNode()

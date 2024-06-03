@@ -33,24 +33,41 @@ class TaskModule(UserModule):
         self.namespace_prefix = params.get('namespace_prefix', '%s.' % name)
         self.namespace_suffix = params.get('namespace_suffix', '')
 
+        self.control_system = None
+        
         logging.info('user task module loaded')
         
+        
+    def _preset_module(self, module):
+        super()._preset_module(module)
+
+        # obtain a reference to the ControlSystem class in the user task module
+        def register(control_system):
+            self.control_system = control_system
+        module.__dict__['_register'] = register
+        try:
+            exec("from slowpy import ControlSystem", module.__dict__)
+            exec("_register(ControlSystem())", module.__dict__)
+        except Exception as e:
+            self.handle_error('unable to load user module: %s' % str(e))
+
         
     def load(self):
         self.exports = None
         self.channel_list = None
         self.command_history = []
         
-        return super().load()
+        if not super().load():
+            return False
 
-        
+            
     def stop(self):
         super().stop()
 
-        # somehow want to get a reference to the ControlSystem class in usermodule...
-        #if self.ControlSystem:
-        #    ControlSystem.stop()
-        
+        if self.control_system:
+            logging.info('calling ControlSystem.stop() in UserTask "%s"' % self.name)
+            self.control_system.stop()
+            
         if self.command_thread is not None:
             if self.command_thread.is_alive():
                 #kill
@@ -68,11 +85,6 @@ class TaskModule(UserModule):
         
     def is_command_running(self):
         return self.command_thread is not None and self.command_thread.is_alive()
-
-
-    def is_waiting_input(self):
-        #return self.is_waiting or (self.ControlSystem and self.ControlSystem._is_waiting_input)
-        return self.is_waiting
 
 
     def scan_channels(self):
