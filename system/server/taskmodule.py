@@ -57,8 +57,7 @@ class TaskModule(UserModule):
         self.channel_list = None
         self.command_history = []
         
-        if not super().load():
-            return False
+        return super().load()
 
             
     def stop(self):

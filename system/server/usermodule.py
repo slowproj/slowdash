@@ -154,13 +154,11 @@ class UserModule:
         self.func_process_command = self.get_func('_process_command')
         self.func_halt = self.get_func('_halt')
 
+        logging.info('user module loaded: %s' % self.name)
         if self.func_get_channels and self.func_get_data:
             logging.info('loaded user module data interface')
         if self.func_process_command:
             logging.info('loaded user module command processor')
-
-
-        logging.info('user module loaded: %s' % self.name)
 
         return True
         

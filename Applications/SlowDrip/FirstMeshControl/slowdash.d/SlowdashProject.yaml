@@ -8,5 +8,9 @@ slowdash_project:
       time_series:
         - schema: numeric_data[sensor_name]@timestamp(aware)=value_raw(default),value_cal
         
-  module:
-    file: ./control-peaches.py
+#  module:
+#    file: ./control-peaches.py
+
+  task:
+    name: control-peaches
+    

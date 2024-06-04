@@ -48,8 +48,8 @@ def _process_command(doc):
         if doc.get('set', False):
             if doc.get('target', None):
                 target = float(doc.get('target', target))
-            if doc.get('ramp', None):
-                ramp = abs(float(doc.get('ramp', ramp)))
+            if doc.get('ramping', None):
+                ramp = abs(float(doc.get('ramping', ramp)))
         else:
             return False
     except Exception as e:
