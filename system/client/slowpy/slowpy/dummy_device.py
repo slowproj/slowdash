@@ -66,7 +66,9 @@ class DummyScpiDevice_RandomWalk(ScpiDevice):
         #   *IDN?, *OPC?, *RST, *CLS, SYSTem:ERRor?
         #   MEASure:V0?, MEASure:V1?, *MEASure:V2?, MEASure:V3?
         #   WALK?, WALK n.nn, DECAY?, DECAY n.nn
-            
+
+        time.sleep(1)
+        
         if cmd_path[0] == '*IDN?':
             return 'Dummy SCPI Device'
         elif cmd_path[0] == '*OPC?':

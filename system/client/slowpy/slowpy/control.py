@@ -14,13 +14,34 @@ class ControlNode:
     def has_data(self):
         return None
 
+    # stoppable-wait: to be used in subclasses
+    # condition_lambda is a function that takes a value from self.get() and returns True or False.
+    #   example: lambda x: (float(x)>100)
+    def wait_until(condition_lambda, poll_interval=0.1, timeout=0):
+        while True:
+            if self.has_data() is not False and condition_lambda(self.get()):
+                return True
+            if not self.is_stop_requested():
+                return False
+            if timeout > 0 and (time.time() - start > timeout):
+                return False
+            time.sleep(poll_interval)
+            
+        return False
+        
+            
+    # to be used by external code
     def __str__(self):
         return str(self.get())
     
     def __float__(self):
-        return float(self.get())
+        value = self.get()
+        try:
+            return float(value)
+        except:
+            return float("nan")
 
-
+    
     ### child nodes ###
     # ramp the set value
     def ramp(self, change_per_sec=None):
@@ -90,6 +111,12 @@ class ControlNode:
                 logging.error('unable to identify Node class: %s' % module_name)
 
         
+    _stop_event = threading.Event()
+    @classmethod
+    def is_stop_requested(cls):
+        return cls._stop_event.is_set()
+        
+    
 
 class RampNode(ControlNode):
     def __init__(self, value_node, change_per_sec):
@@ -108,9 +135,12 @@ class RampNode(ControlNode):
         if self.change_per_sec is None or (self.change_per_sec < 1e-10):
             self.value_node.set(target_value)
             return
-            
+        
         self.target_value = float(target_value)
-        current_value = float(self.value_node.get())
+        try:
+            current_value = float(self.value_node.get())
+        except:
+            return
         tolerance =  1e-5 * (abs(self.target_value) + abs(current_value) + 1e-10)
         
         while self.target_value is not None:
@@ -126,7 +156,7 @@ class RampNode(ControlNode):
             self.value_node.set(current_value)
 
             for i in range(10):
-                if ControlSystem.is_stop_requested():
+                if self.is_stop_requested():
                     self.target_value = None
                     return
                 else:
@@ -161,10 +191,7 @@ class RampStatusNode(ControlNode):
     
 
 class ControlSystem(ControlNode):
-    _stop_event = threading.Event()
-    
     def __init__(self):
-        self._stop_event.clear()        
         self.load_control_module('Ethernet')
 
     @classmethod
@@ -172,6 +199,19 @@ class ControlSystem(ControlNode):
         cls._stop_event.set()
 
     @classmethod
-    def is_stop_requested(cls):
-        return cls._stop_event.is_set()
-        
+    def sleep(cls, duration_sec):
+        sec10 = int(10*duration_sec)
+        subsec10 = 10*duration_sec - sec10
+        if sec10 > 0:
+            for i in range(sec10):
+                if cls.is_stop_requested():
+                    return False
+                else:
+                    time.sleep(0.1)
+        elif subsec10 > 0:
+            time.sleep(subsec/10.0)
+
+        return not cls.is_stop_requested()
+
+            
+ 

@@ -1,7 +1,8 @@
 # Created by Sanshiro Enomoto on 17 May 2024 #
 
 
-import sys, time, os, subprocess, threading, socket, signal
+import sys, time, os, subprocess, threading, signal
+import socket, selectors
 
 
 class SerialDevice:
@@ -56,16 +57,26 @@ class SerialDeviceEthernetLink(threading.Thread):
         self.sock = sock
         self.addr = addr
         self.stop_event = threading.Event()
+        self.selectors = selectors.DefaultSelector()
+        self.selectors.register(self.sock, selectors.EVENT_READ)
 
         
     def stop(self):
         self.stop_event.set()
+        del self.selectors
 
         
     def run(self):
         line = []
-        while not self.stop_event.is_set():
-            # TODO: use select() to check the stop_event
+        while True:
+            events = self.selectors.select(timeout=0.1)
+            for key, mask in events:
+                if key.fileobj == self.sock and mask != 0:
+                    break
+            else:
+                if self.stop_event.is_set():
+                    break
+            
             packet = self.sock.recv(1024)
             if len(packet) == 0 or self.stop_event.is_set():
                 break
@@ -76,7 +87,10 @@ class SerialDeviceEthernetLink(threading.Thread):
                         line.append(ch)
                 else:
                     reply = self.serial_device.process_command(bytes(line).decode('utf-8'))
-                    self.sock.sendall((reply+self.serial_device.line_terminator).encode('utf-8'))
+                    try:
+                        self.sock.sendall((reply+self.serial_device.line_terminator).encode('utf-8'))
+                    except:
+                        break
                     line.clear()
                     
         self.sock.close()

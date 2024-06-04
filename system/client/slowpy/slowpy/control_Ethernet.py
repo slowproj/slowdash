@@ -1,5 +1,6 @@
 
 from slowpy import ControlNode
+import socket, selectors
 
 
 class EthernetNode(ControlNode):
@@ -12,11 +13,14 @@ class EthernetNode(ControlNode):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.host, self.port))
         self.socket_buffer = []
+        self.selectors = selectors.DefaultSelector()
+        self.selectors.register(self.socket, selectors.EVENT_READ)
         print('Ethernet: %s:%s connected' % (host, str(port)))
 
     
     def __del__(self):
         self.socket.close()
+        del self.selectors
 
         
     def set(self, value):
@@ -27,7 +31,17 @@ class EthernetNode(ControlNode):
         line = []
         while True:
             if len(self.socket_buffer) == 0:
+                events = self.selectors.select(timeout=0.1)
+                for key, mask in events:
+                    if key.fileobj == self.socket and mask != 0:
+                        break
+                else:
+                    if self.is_stop_requested():
+                        break
+                    else:
+                        continue
                 self.socket_buffer = self.socket.recv(1024)
+                
             if len(self.socket_buffer) == 0:
                 break
 

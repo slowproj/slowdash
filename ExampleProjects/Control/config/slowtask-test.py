@@ -99,7 +99,7 @@ def _loop():
 if __name__ == '__main__':
     import signal
     def stop(signum, frame):
-        ControlSystem.stop()
+        slp.ControlSystem.stop()
     signal.signal(signal.SIGINT, stop)
 
     _initialize({})
