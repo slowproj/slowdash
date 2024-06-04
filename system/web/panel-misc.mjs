@@ -897,7 +897,11 @@ export class TaskManagerPanel extends Panel {
                 );
             }
             if (entry.has_error) {
-                status = '&#x2757; ERROR';
+                //status = '&#x2757; ERROR';
+                status = '&#x1f6a8; ERROR';
+            }
+            else if (entry.is_stopped) {
+                status = '&#x1f425; stopped';
             }
             else if (entry.is_waiting_input) {
                 status = '&#x23f3; waiting';

@@ -56,12 +56,16 @@ class UserModuleThread(threading.Thread):
                     break
         
         if func_finalize:
-            self.stop_event.clear()
+            is_stopped = self.stop_event.is_set()
+            if is_stopped:
+                self.stop_event.clear()
             self.usermodule.routine_history.append((time.time(), 'finalize()'))
             try:
                 func_finalize()
             except Exception as e:
                 self.usermodule.handle_error('user module error: finalize(): %s' % str(e))
+            if is_stopped:
+                self.stop_event.set()
 
 
 
@@ -167,16 +171,17 @@ class UserModule:
         self.stop()
         logging.info('starting user module "%s"' % self.name)
         
+        self.stop_event.clear()
         self.user_thread = UserModuleThread(self, self.params, self.stop_event)
         self.user_thread.start()
         
         
     def stop(self):
-        if self.module is None or self.user_thread is None or not self.user_thread.is_alive():
-            return
-        
         logging.info('stoping user module "%s"' % self.name)
         self.stop_event.set()
+        
+        if self.module is None or self.user_thread is None or not self.user_thread.is_alive():
+            return
         
         if self.func_halt is not None:
             try:
@@ -199,6 +204,10 @@ class UserModule:
 
     def is_waiting_input(self):
         return self.is_waiting
+
+
+    def is_stopped(self):
+        return self.stop_event.is_set()
 
 
     def get_func(self, name):

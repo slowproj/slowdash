@@ -20,5 +20,5 @@ def _export():
     ]
 
 def set(target, ramping, **kwargs):
-    print("setting peaches to " + target + " with ramping " + ramping)
+    print("setting peaches to " + target + ", with ramping=" + ramping)
     peaches.ramp(ramping).set(target)
