@@ -794,8 +794,10 @@ class Viewlet {
             }
             $('<button>').appendTo(buttonDiv).text(btn.label || btn.name).data('name', btn.name).bind('click', e=>{
                 e.preventDefault();
+                let doc = {}
                 let button = $(e.target).closest('button');
-                let doc = $.extend({'form': formName, 'action': button.data('name')}, formConfig.initial ?? {});
+                doc[button.data('name')] = true;
+                $.extend(doc, formConfig.initial ?? {});
                 submit_func(doc, button.closest('form'), e);
             });
         }
@@ -866,7 +868,11 @@ export class CanvasPanel extends Panel {
                 window.open(itemConfig.action.open);
             }
             else if (itemConfig.action?.submit) {
-                this.submit(itemConfig.action.submit, null, event);
+                let doc = {};
+                if (itemConfig.action.submit.name) {
+                    doc[itemConfig.action.submit.name] = true;
+                }
+                this.submit(doc, null, event);
             }
             else {
                 this.viewlet.fillData(itemConfig.metric?.channel, this.currentDataPacket);

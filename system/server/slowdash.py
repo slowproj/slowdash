@@ -100,7 +100,7 @@ class App:
                 self.error_message = 'Unable to load control module: %s' % filepath
                 logging.error(self.error_message)
             else:
-                module.auto_load = node.get('auto_load', False)
+                module.auto_load = node.get('auto_load', True)
                 self.taskmodule_list.append(module)
 
                 

@@ -104,6 +104,29 @@ class ScpiNode(ControlNode):
         return self.connection.get()
 
 
+    ## child nodes ##
+    def with_OPC_for_set():
+        return ScpiWithOpcNode(self.connection, self.base_name)
+    
+    
+
+class ScpiWithOpcNode(ControlNode):
+    def __init__(self, connection, base_name):
+        self.connection = connection
+        self.base_name = base_name
+
+        
+    def set(self, value):
+        self.connection.set('%s %s;OPC?' % (self.base_name, str(value)))
+        self.connection.get()
+
+    
+    def get(self):
+        self.connection.set('%s?' % self.base_name)
+        return self.connection.get()
+
+    
+
     
 def export():
     return [ EthernetNode ]

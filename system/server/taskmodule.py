@@ -163,7 +163,7 @@ class TaskModule(UserModule):
     
 
     def process_task_command(self, params):
-        function_name, kwargs = None, {}
+        function_name, kwargs = '', {}
         is_await = False  # if True, wait for the command to complete before returning a response
         is_async = False  # if False, the command is rejected if another command is running
         for key, value in params.items():
@@ -181,17 +181,17 @@ class TaskModule(UserModule):
         # task namespace
         if len(self.namespace_prefix) > 0:
             if not function_name.startswith(self.namespace_prefix):
-                function_name = None
+                function_name = ''
             else:
                 function_name = function_name[len(self.namespace_prefix):]
         if len(self.namespace_suffix) > 0:
             if not function_name.endswith(self.namespace_suffix):
-                function_name = None
+                function_name = ''
             else:
                 function_name = function_name[:-len(self.namespace_suffix)]
         if function_name.startswith('_'):
-            function_name = None
-        if function_name is None:
+            function_name = ''
+        if len(function_name) == 0:
             return None
         
         func = self.get_func(function_name)
