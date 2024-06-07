@@ -57,13 +57,13 @@ class EthernetNode(ControlNode):
 
 
     ## child nodes ##
-    def scpi(self, base_name):
+    def scpi(self, base_name, **kwargs):
         try:
             self.scpi_nodes.keys()
         except:
             self.scpi_nodes = {}
         if base_name not in self.scpi_nodes:
-            self.scpi_nodes[base_name] = ScpiNode(self, base_name)
+            self.scpi_nodes[base_name] = ScpiNode(self, base_name, **kwargs)
             
         return self.scpi_nodes[base_name]
     
@@ -89,13 +89,17 @@ class EthernetNode(ControlNode):
     
     
 class ScpiNode(ControlNode):
-    def __init__(self, connection, base_name):
+    def __init__(self, connection, base_name, set_format=None):
         self.connection = connection
         self.base_name = base_name
+        self.set_format = set_format
         
     
     def set(self, value):
-        self.connection.set('%s %s' % (self.base_name, str(value)))
+        if self.set_format is None:
+            self.connection.set('%s %s' % (self.base_name, str(value)))
+        else:
+            self.connection.set(self.set_format.format(value))
         self.connection.get()
 
     
@@ -103,29 +107,6 @@ class ScpiNode(ControlNode):
         self.connection.set('%s?' % self.base_name)
         return self.connection.get()
 
-
-    ## child nodes ##
-    def with_opc_for_set(self):
-        return ScpiWithOpcNode(self.connection, self.base_name)
-    
-    
-
-class ScpiWithOpcNode(ControlNode):
-    def __init__(self, connection, base_name):
-        self.connection = connection
-        self.base_name = base_name
-
-        
-    def set(self, value):
-        self.connection.set('%s %s;OPC?' % (self.base_name, str(value)))
-        self.connection.get()
-
-    
-    def get(self):
-        self.connection.set('%s?' % self.base_name)
-        return self.connection.get()
-
-    
 
     
 def export():
