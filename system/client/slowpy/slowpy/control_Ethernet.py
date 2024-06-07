@@ -105,7 +105,7 @@ class ScpiNode(ControlNode):
 
 
     ## child nodes ##
-    def with_OPC_for_set():
+    def with_opc_for_set(self):
         return ScpiWithOpcNode(self.connection, self.base_name)
     
     
