@@ -151,7 +151,7 @@ for dirname in dirlist:
     dst = os.path.join(cgi_dir, name)
     if os.path.isdir(dst):
         shutil.rmtree(dst)
-    shutil.copytree(src, dst)
+    shutil.copytree(src, dst, symlinks=True)
 
 
     

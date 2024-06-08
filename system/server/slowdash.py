@@ -109,7 +109,7 @@ class App:
         self.console_outputs = []
         self.original_stdin = sys.stdin
         self.original_stdout = sys.stdout
-        if not is_command:
+        if not is_command and not is_cgi:
             self.console_stdin = io.StringIO()
             self.console_stdout = io.StringIO()
             sys.stdin = self.console_stdin
