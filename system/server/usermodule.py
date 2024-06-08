@@ -24,48 +24,45 @@ class UserModuleThread(threading.Thread):
             return
         
         func_initialize = self.usermodule.get_func('_initialize')
-        func_finalize = self.usermodule.get_func('_finalize')
         func_run = self.usermodule.get_func('_run')
         func_loop = self.usermodule.get_func('_loop')
         
         if func_initialize:
             self.usermodule.routine_history.append((
                 time.time(),
-                '_initialize(%s)' % ','.join(['%s=%s' % (k,v) for k,v in self.params])
+                '_initialize(%s)' % ','.join(['%s=%s' % (k,v) for k,v in self.params.items()])
             ))
             try:
                 func_initialize(self.params)
             except Exception as e:
-                self.usermodule.handle_error('user module error: initialize(): %s' % str(e))
+                self.usermodule.handle_error('user module error: _initialize(): %s' % str(e))
             
         if func_run and not self.stop_event.is_set():
-            self.usermodule.routine_history.append((time.time(), 'run()'))
+            self.usermodule.routine_history.append((time.time(), '_run()'))
             try:
                 func_run()
             except Exception as e:
-                self.usermodule.handle_error('user module error: run(): %s' % str(e))
+                self.usermodule.handle_error('user module error: _run(): %s' % str(e))
                 
         if func_loop and not self.stop_event.is_set():
-            self.usermodule.routine_history.append((time.time(), 'loop()'))
+            self.usermodule.routine_history.append((time.time(), '_loop()'))
             while not self.stop_event.is_set():
                 try:
                     func_loop()
                     time.sleep(0.01)
                 except Exception as e:
-                    self.usermodule.handle_error('user module error: run(): %s' % str(e))
+                    self.usermodule.handle_error('user module error: _loop(): %s' % str(e))
                     break
-        
+
+                
+    def terminate(self):
+        func_finalize = self.usermodule.get_func('_finalize')
         if func_finalize:
-            is_stopped = self.stop_event.is_set()
-            if is_stopped:
-                self.stop_event.clear()
-            self.usermodule.routine_history.append((time.time(), 'finalize()'))
+            self.usermodule.routine_history.append((time.time(), '_finalize()'))
             try:
                 func_finalize()
             except Exception as e:
-                self.usermodule.handle_error('user module error: finalize(): %s' % str(e))
-            if is_stopped:
-                self.stop_event.set()
+                self.usermodule.handle_error('user module error: _finalize(): %s' % str(e))
 
 
 
@@ -190,6 +187,7 @@ class UserModule:
                 self.handle_error('user module error: halt(): %s' % str(e))
 
         if self.user_thread is not None:
+            self.user_thread.terminate()
             self.user_thread.join()
             self.user_thread = None
 
