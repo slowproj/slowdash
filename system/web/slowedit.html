@@ -133,7 +133,7 @@
             if (! config.filename) {
                 return;
             }
-            let response = await fetch('./api/config/file/' + config.filename + '?content=raw');
+            let response = await fetch('./api/config/file/' + config.filename);
             if (response.status != 200) {
                 frame.setStatus(config.filename + ": " + response.statusText);
                 return;

@@ -144,10 +144,13 @@ class App:
         content_type = 'application/json'
         result = None
         
-        if (len(params) == 3) and (params[0] == 'config') and (params[1] == 'file'):
-            return self._get_config_file(params[2], output)
+        if params[0] == 'config':
+            if (len(params) == 3) and (params[1] == 'file'):
+                return self._get_config_file(params[2], output)
             
-        elif params[0] == 'config':
+            elif (len(params) == 3) and (params[1] == 'jsonfile'):
+                return self._get_config_file(params[2], output, to_json=True)
+
             if len(params) == 1:
                 result = self._get_config(with_list=False)
             elif len(params) == 2:
@@ -410,7 +413,7 @@ class App:
         return result
 
 
-    def _get_config_file(self, filename, output):
+    def _get_config_file(self, filename, output, to_json=False):
         if self.project_dir is None:
             return None
         is_secure = self.project.get('system', {}).get('is_secure', False)
@@ -440,8 +443,21 @@ class App:
         else:
             return None
             
-        output.flush()        
-        if os.path.getsize(filepath) > 0:
+        output.flush()
+        if os.path.getsize(filepath) <= 0:
+            return content_type
+
+        if to_json and (ext == '.yaml'):
+            try:
+                with open(filepath) as f:
+                    original = yaml.safe_load(f)
+                    converted = json.dumps(original, indent=4)
+                    output.write(converted.encode())
+                    content_type = 'application/json'
+            except:
+                return None
+            
+        else:
             output.write(io.FileIO(filepath, 'r').readall())
 
         return content_type
