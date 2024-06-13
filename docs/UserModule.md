@@ -35,7 +35,7 @@ slowdash_project:
     file: ./mymodule.py
 ```
 - `mymodule.py` at the user project directory will be loaded to slow-dash.
-- Call-back functions in `mudule.py` will be called for various context.
+- Call-back functions in `mymodule.py` will be called for various context.
 
 
 # User Module structure

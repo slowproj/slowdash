@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 14 June 2023 #
 
 import datetime
-from .datastore import DataStore
+from .base import DataStore
 
 
 class DataStore_InfluxDB2(DataStore):

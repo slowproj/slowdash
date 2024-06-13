@@ -34,7 +34,7 @@ all:
 	@chmod 755 $(SLOWDASH_BIN)
 
 	@echo 'export PATH=$$PATH:$(SLOWDASH_DIR)/bin' > $(SLOWDASH_ENV)
-	@echo 'export PYTHONPATH=$(SLOWDASH_DIR)/system/client/slowpy:$$PYTHONPATH' >> $(SLOWDASH_ENV)
+	@echo 'export PYTHONPATH=$(SLOWDASH_DIR)/lib/slowpy:$$PYTHONPATH' >> $(SLOWDASH_ENV)
 
 	@ln -fs $(SLOWDASH_DIR)/docs $(SLOWDASH_DIR)/system/web
 

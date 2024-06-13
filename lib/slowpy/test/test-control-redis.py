@@ -1,7 +1,7 @@
 #! /bin/env python3
 
-import slowpy
-ctrl = slowpy.ControlSystem()
+from slowpy.control import ControlSystem
+ctrl = ControlSystem()
 ctrl.load_control_module('Redis')
 redis = ctrl.redis('redis://localhost:6379/12')
 
@@ -16,12 +16,6 @@ print(redis.hash("Status"))
 print(redis.hash("Status").field("Count"))
 redis.hash("Status").field("Count2").set(10)
 
-h = redis.hash("hh")
-h.set({'fooo':3, 'bar':5})
-print(h)
-h.field('foo').set(0)
-print(h)
-
 
 # json
 j = redis.json("jj")
@@ -30,14 +24,15 @@ print(j)
 j.node('bar').node('foo').set(1)
 print(j.node('bar'))
 
-import time
+
 # ts
 print(redis.ts('ch00'))
 print(redis.ts('ch00').last())
 print(redis.ts('ch00').last().time())
 print(redis.ts('ch00').last().lapse())
 
-redis.ts('ts00').last().set(123)
+import time
+redis.ts('ts00').current().set(123)
 redis.ts('ts00').set([(int(1000*(time.time()-100)), 456)])
 print(redis.ts('ts00'))
 print(redis.ts('ts00').last().lapse())

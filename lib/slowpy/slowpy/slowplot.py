@@ -3,15 +3,13 @@
 
 import sys, os, time, json
 
-from .dataobject import Histogram, Histogram2d, Graph
-from .datastore import DataStore
-from .datastore_factory import create_datastore_from_url
-
 import numpy as np
 from matplotlib import pyplot as mpl_plt
 from matplotlib import colors
 import matplotlib.animation as animation
 
+from .data import Histogram, Histogram2d, Graph
+from .store import DataStore, create_datastore_from_url
 
 
 class Axes:

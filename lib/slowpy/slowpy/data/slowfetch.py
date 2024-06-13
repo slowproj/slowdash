@@ -4,7 +4,7 @@
 import os, sys, time, json, io, datetime, logging
 import pandas as pd
 from urllib import request, parse
-from .dataobject import DataObject
+from .objects import DataObject
 
 
 class SlowFetch:

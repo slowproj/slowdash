@@ -16,7 +16,7 @@ COPY system /slowdash/system
 COPY docs /slowdash/docs
 COPY utils /slowdash/utils
 RUN cd /slowdash/system && make && ln -s /slowdash/bin/slowdash /bin
-RUN pip install /slowdash/system/client/slowpy
+RUN pip install /slowdash/lib/slowpy
 
 VOLUME /project
 EXPOSE 18881

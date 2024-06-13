@@ -905,7 +905,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li>Each object makes one RedisJSON entry, with a dedicated key.</li>
 <li>RedisTS holds a series of object keys.</li>
 <li>Keys are formatted as <code>{Channel}_{Index}</code>, unless specified in user configuration.</li>
-<li>Time-Sereis of objects are stored in a dedicated ‘db’.</li>
+<li>Time-Series of objects are stored in a dedicated ‘db’.</li>
 <li>To implement a ring buffer, <code>Index</code> is typically calculated by <code>int(TimeStamp % RetentionLength)</code>.</li>
 </ul>
 <h3 id="configuration-file">Configuration File</h3>
@@ -1107,7 +1107,7 @@ Example of a Python script to write a “current” histogram:</li>
 <h1 id="local-csv-files">Local CSV Files</h1>
 <ul>
 <li>A directory containing CSV files can be used as a data store, in a very similar way as tables in the RDBMS (no SQL queries, though).</li>
-<li>One CSV file corresopnds to one table, each CSV file must have a header line for its first line.</li>
+<li>One CSV file corresponds to one table, each CSV file must have a header line for its first line.</li>
 </ul>
 <h2 id="time-series-of-scalar-values-3">Time-Series of Scalar Values</h2>
 <p>To access a table containing time-series data, write the schema in the <code>time_series</code> entry:</p>

@@ -1,5 +1,5 @@
 
-from slowpy import ControlNode
+from slowpy.control import ControlNode
 import socket, selectors
 
 

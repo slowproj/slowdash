@@ -175,7 +175,7 @@ When the argument includes a special character of the shell (such as `?` and `&`
 
 <strong>WARNING</strong>: Slow-Dash is designed for internal use within a secured network and therefore no security protection is implemented. It is strongly recommended not to expose the system to the public internet. External access is assumed to be done through VPN or ssh tunnel.
 
-## Run in a Docker Container
+## Running in a Docker Container
 The SlowDash container image is configured to have a project directory at `/project` and open a port at `18881`. Map the volume and port accordingly:
 
 #### Single Container
@@ -184,7 +184,7 @@ $ cd PATH/TO/SLOWDASH/PROJECT
 $ docker run -p 18881:18881 -v $(pwd):/project REPO/slowdash:TAG
 ```
 
-If you built the container image locally, `REPO/slowdash:TAG` will be jsut `slowdash:TAG` or `slowdash`.
+If you built the container image locally, `REPO/slowdash:TAG` will be just `slowdash:TAG` or `slowdash`.
 
 #### Docker Compose
 First write `docker-compose.yaml` at your project directory.
@@ -199,14 +199,14 @@ services:
     ports:
       - "18881:18881"
 ```
-If you built the container image locally, `REPO/slowdash:TAG` will be jsut `slowdash:TAG` or `slowdash`.
+If you built the container image locally, `REPO/slowdash:TAG` will be just `slowdash:TAG` or `slowdash`.
 
 ```console
 $ docker-compose up
 ```
 
 
-## Bare-Metal, Run as a User Process
+## Bare-Metal, Running as a User Process
 ```console
 $ slowdash --project-dir=PROJECT_DIR --port=18881
 ```
@@ -216,7 +216,7 @@ $ slowdash --project-dir=PROJECT_DIR --port=18881
 <p>
 - The `slowdash` process must keep running while accepting the Web requests. For this, a terminal multiplexer, such as "tumx" or "GNU Screen" would be useful.
 
-## Bare Metal, Launch from CGI
+## Bare Metal, Launching from CGI
 Slowdash can be executed as CGI of a web server such as Apache or Nginx. To setup this, run the script below at the project directory:
 
 ```console
@@ -238,7 +238,7 @@ CGI directory created: /home/sanshiro/public_html/SlowDash/MySlowSystem
 
 The script will copy all the necessary files under user's web directory (typically `/home/USER/public_html`) and create `.htaccess` with the contents below:
 ```apache
-DirectoryIndex home.html
+DirectoryIndex slowhome.html
 Options +ExecCGI
 AddType application/x-httpd-cgi .cgi
 AddHandler cgi-script .cgi

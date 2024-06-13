@@ -1,6 +1,9 @@
 #! /usr/bin/env python3        
 
-import time, numpy, slowpy
+import time
+import numpy as np
+import slowpy
+
 
 
 stop_requested = False
@@ -14,9 +17,9 @@ signal.signal(signal.SIGTERM, signal_handler)
 
     
 def start(db_url, ts_name='ts_data', obj_name='obj_data', objts_name='objts_data'):
-    datastore = slowpy.create_datastore_from_url(db_url, ts_name, obj_name, objts_name)
+    datastore = slowpy.datastore.create_datastore_from_url(db_url, ts_name, obj_name, objts_name)
     
-    dummy_device = slowpy.DummyDevice_RandomWalk()
+    dummy_device = sld.DummyDevice_RandomWalk()
     readout_count = 0
     histogram = slowpy.Histogram('test_histogram', 100, -10, 10)
     graph = slowpy.Graph('test_graph', labels=['ch', 'value'])
@@ -53,8 +56,8 @@ def start(db_url, ts_name='ts_data', obj_name='obj_data', objts_name='objts_data
         datastore.write_object_timeseries(graph, name='test_graph_ts')
     
         for i in range(1000):
-            x = numpy.random.normal(5, 2)
-            y = numpy.random.normal(5, 3)
+            x = np.random.normal(5, 2)
+            y = np.random.normal(5, 3)
             histogram2d.fill(x, y)
         datastore.write_object(histogram2d)
 

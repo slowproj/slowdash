@@ -1,7 +1,8 @@
 #! /bin/env python3
 
-import slowpy
-ctrl = slowpy.ControlSystem()
+from slowpy.control import ControlSystem
+ctrl = ControlSystem()
+
 ctrl.load_control_module('Dripline')
 dripline = ctrl.dripline(dripline_config={'auth-file':'/project/authentications.json'})
 

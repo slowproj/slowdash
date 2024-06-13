@@ -2,10 +2,10 @@
 
 
 import time
+from slowpy.control import ControlSystem
 
-import slowpy as slp
-ctrl = slp.ControlSystem()
-ctrl.load_control_module('Dummy')
+ctrl = ControlSystem()
+ctrl.load_control_module('DummyDevice')
 
 ch0 = ctrl.dummy_device().ch(0)
 ch1 = ctrl.dummy_device().ch(1)

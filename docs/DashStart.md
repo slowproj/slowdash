@@ -85,7 +85,7 @@ InfluxDB version: 2
 |  db_host | 8086 | my_org | my_token | my_bucket | my_meas |
 
 #### Data Schema and Contents
-- all the data in a single "measurment"
+- all the data in a single "measurement"
 - channel name as a "tag"
 
 (for other table structures, refer to [Data Binding section](DataBinding.html))
@@ -123,7 +123,7 @@ $ firefox http://localhost:18881
 |  redis_host | 6739 | 1 |
 
 #### Data Schema and Contents
-- stored in Reids Time-Series
+- stored in Redis Time-Series
 
 ### Write a docker-compose.yaml file like this:
 (modify the last line according to your setup)

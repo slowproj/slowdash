@@ -1,10 +1,10 @@
 import logging
 
-from .datastore import DataStore, DataStore_Null
-from .datastore_SQL import DataStore_PostgreSQL,  DataStore_SQLite
-from .datastore_InfluxDB2 import DataStore_InfluxDB2
-from .datastore_Redis import DataStore_Redis
-from .datastore_CSV import DataStore_CSV, DataStore_TextDump
+from .base import DataStore, DataStore_Null
+from .store_SQL import DataStore_PostgreSQL,  DataStore_SQLite
+from .store_InfluxDB2 import DataStore_InfluxDB2
+from .store_Redis import DataStore_Redis
+from .store_CSV import DataStore_CSV, DataStore_TextDump
 
 
 def create_datastore_from_url(url, ts_name=None, obj_name=None, objts_name=None, **kwargs):

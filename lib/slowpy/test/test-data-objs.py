@@ -2,7 +2,7 @@
 
 
 import numpy as np
-import slowpy as slp
+import slowpy.data as slp
 
 
 h = slp.Histogram('test_histogram_00', 100, 0, 10)

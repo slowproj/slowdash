@@ -1,6 +1,6 @@
 
 import time, logging
-from slowpy import ControlNode
+from slowpy.control import ControlNode
 
 
 class DriplineNode(ControlNode):

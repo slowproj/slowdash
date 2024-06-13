@@ -47,7 +47,7 @@ class TaskModule(UserModule):
             self.control_system._stop_event.clear()
         module.__dict__['_register'] = register
         try:
-            exec("from slowpy import ControlSystem", module.__dict__)
+            exec("from slowpy.control import ControlSystem", module.__dict__)
             exec("_register(ControlSystem())", module.__dict__)
         except Exception as e:
             self.handle_error('unable to load user module: %s' % str(e))

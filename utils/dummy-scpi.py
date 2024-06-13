@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
         
-import slowpy
+import slowpy.control as slc
 
 
 if __name__ == '__main__':
@@ -16,6 +16,6 @@ if __name__ == '__main__':
     )
     (opts, args) = optionparser.parse_args()
     
-    device = slowpy.DummyScpiDevice_RandomWalk(line_terminator='\x0a' if opts.line_terminator=='LF' else '\x0d')
-    server = slowpy.SerialDeviceEthernetServer(device, port=opts.port)
+    device = slc.DummyScpiDevice_RandomWalk(line_terminator='\x0a' if opts.line_terminator=='LF' else '\x0d')
+    server = slc.SerialDeviceEthernetServer(device, port=opts.port)
     server.start()

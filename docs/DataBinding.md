@@ -494,7 +494,7 @@ slowdash_project:
 - Each object makes one RedisJSON entry, with a dedicated key.
 - RedisTS holds a series of object keys.
 - Keys are formatted as `{Channel}_{Index}`, unless specified in user configuration.
-- Time-Sereis of objects are stored in a dedicated 'db'.
+- Time-Series of objects are stored in a dedicated 'db'.
 - To implement a ring buffer, `Index` is typically calculated by `int(TimeStamp % RetentionLength)`.
 
 ### Configuration File
@@ -734,7 +734,7 @@ slowdash_project:
 
 # Local CSV Files
 - A directory containing CSV files can be used as a data store, in a very similar way as tables in the RDBMS (no SQL queries, though).
-- One CSV file corresopnds to one table, each CSV file must have a header line for its first line.
+- One CSV file corresponds to one table, each CSV file must have a header line for its first line.
 
 ## Time-Series of Scalar Values
 To access a table containing time-series data, write the schema in the `time_series` entry:

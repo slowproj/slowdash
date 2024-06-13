@@ -1,6 +1,6 @@
 
 import time, logging
-from slowpy import ControlNode
+from slowpy.control import ControlNode
 
 
 class RedisNode(ControlNode):
@@ -174,10 +174,26 @@ class RedisTimeseriesNode(ControlNode):
         return self.redis.ts().range(self.name, int(1000*start), int(1000*to))
        
     ## child nodes ##
-    # Redis.ts(name).last()
+    # Redis.ts(name).current() to set()
+    def current(self):  
+        return RedisTimeseriesCurrentNode(self)
+
+    # Redis.ts(name).last() to get()
     def last(self):
         return RedisTimeseriesLastNode(self)
 
+    
+    
+class RedisTimeseriesCurrentNode(ControlNode):
+    def __init__(self, parent):
+        self.parent = parent
+    
+    def set(self, value):
+        self.parent.set([(int(1000*time.time()), value)])
+
+    def get(self):
+        return None
+        
     
     
 class RedisTimeseriesLastNode(ControlNode):
@@ -185,6 +201,7 @@ class RedisTimeseriesLastNode(ControlNode):
         self.parent = parent
     
     def set(self, value):
+        # same as ts().current().set()
         self.parent.set([(int(1000*time.time()), value)])
 
     def get(self):
@@ -221,6 +238,7 @@ class RedisTimeseriesLastTimeNode(ControlNode):
     def get(self):
         return self.parent.get_tx()[0]/1000.0
 
+
     
 class RedisTimeseriesLastLapseNode(ControlNode):
     def __init__(self, parent):
@@ -232,6 +250,7 @@ class RedisTimeseriesLastLapseNode(ControlNode):
     def get(self):
         return time.time() - self.parent.get_tx()[0]/1000.0
     
+
     
 def export():
     return [ RedisNode ]

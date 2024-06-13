@@ -1,5 +1,5 @@
 
-from slowpy import ControlNode, DummyDevice_RandomWalk
+from slowpy.control import ControlNode, DummyDevice_RandomWalk
 
 
 

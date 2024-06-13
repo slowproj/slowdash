@@ -1,6 +1,6 @@
 #! /usr/bin/env python3        
 
-from slowpy import SlowFetch
+from slowpy.data import SlowFetch
 
 sf = SlowFetch('http://localhost:18881')
 

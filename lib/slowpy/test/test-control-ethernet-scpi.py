@@ -1,21 +1,16 @@
 #! /bin/env python3
 
 
-import time
 #host, port = '10.19.72.198', 10000
 host, port = '192.168.1.43', 17674
 
 
-import slowpy as slp
-ctrl = slp.ControlSystem()
-
-
+import time
 import signal
-def stop(signum, frame):
-    slp.ControlSystem.stop()
-signal.signal(signal.SIGINT, stop)
+from slowpy.control import ControlSystem
 
-
+ctrl = ControlSystem()
+ctrl.stop_by_signal()
 
 ep_id = ctrl.ethernet(host, port).scpi('*idn')
 print("ID: %s" % str(ep_id))
