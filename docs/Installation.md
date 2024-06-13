@@ -60,7 +60,7 @@ See [Data Binding section](DataBinding.html) for details.
 This process will not create any files other than the git-cloned directory. Installation can be removed completely by deleting this directory.
 ```console
 $ git clone https://github.com/slowproj/slowdash.git --recurse-submodules
-$ cd slowdash/system
+$ cd slowdash
 $ make
 ```
 
@@ -111,7 +111,6 @@ If slowdash is already running, stop it before updating it.
 ```console
 $ cd PATH/TO/SLOWDASH
 $ git pull --recurse-submodules
-$ cd system
 $ make
 ```
 Often `make` does not do anything, but it is safe to run it every time.

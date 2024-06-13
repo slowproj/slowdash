@@ -100,8 +100,8 @@ git clone https://github.com/slowproj/slowdash.git --recurse-submodules
 
 #### Step 2: Setup
 ```
-cd slowdash/system; make
-cd ..; source bin/slowdash-bashrc
+cd slowdash; make
+source bin/slowdash-bashrc
 ```
 Here `make` is used only to copy some files within the `slowdash` directory. If submodules are missing, `make` will also run `git submodule update --init --recursive`.
 

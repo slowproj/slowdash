@@ -1,5 +1,5 @@
 
-SLOWDASH_DIR = $(shell cd ..; pwd)
+SLOWDASH_DIR = $(shell pwd)
 SLOWDASH_BIN = $(SLOWDASH_DIR)/bin/slowdash
 SLOWDASH_ENV = $(SLOWDASH_DIR)/bin/slowdash-bashrc
 PYTHON = $(shell which python3)

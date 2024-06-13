@@ -153,7 +153,7 @@ $ firefox slowdash/docs/FirstStep-JP.html
 
 ### インストール
 ```console
-$ cd slowdash/system
+$ cd slowdash
 $ make
 ```
 `make` を使っているけれど，基本的にはファイルをコピーしているだけで，一瞬で終わります．
