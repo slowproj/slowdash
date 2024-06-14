@@ -1,7 +1,8 @@
 import time, logging
-import slowpy as slp
+import slowpy.control as slc
+import slowpy.store as sls
 
-ctrl = slp.ControlSystem()
+ctrl = slc.ControlSystem()
 ctrl.load_control_module('DummyDevice')
 device = ctrl.dummy_device()
 
@@ -46,7 +47,7 @@ def stop(**kwargs):
     
 ### Exporting Variables ###
     
-class StatusNode(slp.ControlNode):
+class StatusNode(slc.ControlNode):
     def get(self):
         return {
             'columns': [ 'Channel', 'Value', 'Ramping' ],
@@ -78,7 +79,7 @@ datastore = None
 
 def _initialize(params):
     global datastore
-    datastore = slp.create_datastore_from_url('sqlite:///SlowTaskTest.db', 'test')
+    datastore = sls.create_datastore_from_url('sqlite:///SlowTaskTest.db', 'test')
 
 
 def _finalize():
@@ -97,12 +98,8 @@ def _loop():
 ### Stand-alone Testing ###
     
 if __name__ == '__main__':
-    import signal
-    def stop(signum, frame):
-        slp.ControlSystem.stop()
-    signal.signal(signal.SIGINT, stop)
-
     _initialize({})
+    ctrl.stop_by_signal()
     while not ctrl.is_stop_requested():
         _loop()
         for ch in range(4):

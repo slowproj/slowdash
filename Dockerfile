@@ -13,9 +13,11 @@ ARG GID=18881
 RUN groupadd -g $GID $GROUPNAME && useradd -u $UID -g $GID -d /home/$USERNAME -m -s /bin/bash $USERNAME 
 
 COPY system /slowdash/system
+COPY lib /slowdash/lib
 COPY docs /slowdash/docs
 COPY utils /slowdash/utils
-RUN cd /slowdash/system && make && ln -s /slowdash/bin/slowdash /bin
+COPY Makefile /slowdash
+RUN cd /slowdash && make && ln -s /slowdash/bin/slowdash /bin
 RUN pip install /slowdash/lib/slowpy
 
 VOLUME /project

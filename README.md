@@ -27,7 +27,7 @@ If you already have time-series data stored on a database, and have `docker-comp
 ### Docker (amd64-linux)
 <details>
 
-#### Prerequisite for this trial
+#### Prerequisites for this trial
 - Git
 - Docker & Docker Compose
 
@@ -53,7 +53,7 @@ To stop, type `ctrl`-`c` in the docker-compose window, or use `docker-compose st
 ### Docker on Windows, Mac (Apple Silicon), Raspberry-Pi, etc.
 <details>
 
-#### Prerequisite for this trial
+#### Prerequisites for this trial
 - Git
 - Docker & Docker Compose
 
@@ -85,7 +85,7 @@ To stop, type `ctrl`-`c` in the docker-compose window, or use `docker-compose st
 ### Bare-Metal
 <details>
   
-#### Prerequisite for this trial
+#### Prerequisites for this trial
 - Git
 - Python3 (>=3.8) and packages:
   - numpy, pyyaml, psutil
@@ -100,7 +100,8 @@ git clone https://github.com/slowproj/slowdash.git --recurse-submodules
 
 #### Step 2: Setup
 ```
-cd slowdash; make
+cd slowdash
+make
 source bin/slowdash-bashrc
 ```
 Here `make` is used only to copy some files within the `slowdash` directory. If submodules are missing, `make` will also run `git submodule update --init --recursive`.

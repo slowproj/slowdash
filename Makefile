@@ -49,3 +49,8 @@ all:
 	@echo '    export PATH=$${PATH}:$(SLOWDASH_DIR)/bin'
 	@echo '        or'
 	@echo '    source $(SLOWDASH_DIR)/bin/slowdash-bashrc'
+
+
+docker:
+	docker rmi -f slowdash
+	docker build -t slowdash .
