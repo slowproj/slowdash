@@ -1,5 +1,6 @@
-FROM ${BASE_IMAGE:-python:3.12}
+ARG BASE_IMAGE=python:3.12
 
+FROM ${BASE_IMAGE}
 
 # we install Python packages that might be used by user modules
 RUN pip install numpy scipy pandas matplotlib pillow pyyaml psutil bcrypt requests psycopg2 mysqlclient influxdb-client redis pymongo couchdb
