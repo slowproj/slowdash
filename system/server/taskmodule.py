@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 24 May 2024 #
 
-import time, logging, traceback
+import os, time, logging, traceback
 import threading
 from usermodule import UserModule
 
@@ -45,6 +45,7 @@ class TaskModule(UserModule):
         def register(control_system):
             self.control_system = control_system
             self.control_system._stop_event.clear()
+
         module.__dict__['_register'] = register
         try:
             exec("from slowpy.control import ControlSystem", module.__dict__)

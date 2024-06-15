@@ -73,12 +73,12 @@ class ControlNode:
     @classmethod
     def load_control_module(cls, module_name, search_dirs=[]):
         filename = 'control_%s.py' % module_name
-        if search_dirs is None or len(search_dirs) == 0:
-            search_dirs = [
-                os.path.abspath(os.getcwd()),
-                os.path.abspath(os.path.dirname(__file__))
-            ]
-        for module_dir in search_dirs:
+        this_search_dirs = search_dirs + [
+            os.path.abspath(os.getcwd()),
+            os.path.abspath(os.path.dirname(__file__))
+        ]
+        print(this_search_dirs)
+        for module_dir in this_search_dirs:
             filepath = os.path.join(module_dir, filename)
             if os.path.isfile(filepath):
                 break

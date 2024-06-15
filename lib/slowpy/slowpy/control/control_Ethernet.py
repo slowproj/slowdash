@@ -9,10 +9,11 @@ class EthernetNode(ControlNode):
         self.host = host
         self.port = port
         self.line_terminator = kwargs.get('line_terminator') or '\x0d'
+        self.dump_initial = kwargs.get('dump_initial', False)
         
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.host, self.port))
-        self.socket_buffer = []
+        self.socket_buffer = ''
         self.selectors = selectors.DefaultSelector()
         self.selectors.register(self.socket, selectors.EVENT_READ)
         print('Ethernet: %s:%s connected' % (host, str(port)))
@@ -28,7 +29,12 @@ class EthernetNode(ControlNode):
 
     
     def get(self):
-        line = []
+        if self.dump_initial:
+            self.dump_initial = False
+            #TODO: implement timeout here
+            print(f'Ethernet: initial dump: {self.get()}')
+            
+        line = ''
         while True:
             if len(self.socket_buffer) == 0:
                 events = self.selectors.select(timeout=0.1)
@@ -40,20 +46,22 @@ class EthernetNode(ControlNode):
                         break
                     else:
                         continue
-                self.socket_buffer = self.socket.recv(1024)
-                
-            if len(self.socket_buffer) == 0:
-                break
+                    
+                self.socket_buffer = self.socket.recv(1024).decode('utf-8')
+                if len(self.socket_buffer) == 0:
+                    break
 
-            while True:
-                ch = self.socket_buffer[0]
-                self.socket_buffer = self.socket_buffer[1:]
-                if ch not in [ ord('\x0a'), ord('\x0d') ]:
-                    line.append(ch)
-                if (len(self.socket_buffer)) == 0 or (ch == ord(self.line_terminator)):
-                    return bytes(line).decode('utf-8')
+            for k in range(len(self.socket_buffer)):
+                ch = self.socket_buffer[k]
+                if ch not in [ '\x0a', '\x0d' ]:
+                    line += ch
+                else:
+                    if len(line) > 0:
+                        self.socket_buffer = self.socket_buffer[k+1:]
+                        return line
+            self.socket_buffer = ''
                 
-        return bytes(line).decode('utf-8')
+        return line
 
 
     ## child nodes ##
