@@ -64,6 +64,19 @@ class EthernetNode(ControlNode):
         return line
 
 
+    ## methods ##
+    def do_flush_input(self):
+        self.socket_buffer = ''
+        while not self.is_stop_requested():
+            events = self.selectors.select(timeout=0.01)
+            for key, mask in events:
+                if key.fileobj == self.socket and mask != 0:
+                    self.socket.recv(1024).decode('utf-8')
+                    break
+            else:
+                break
+    
+
     ## child nodes ##
     def scpi(self, base_name, **kwargs):
         try:

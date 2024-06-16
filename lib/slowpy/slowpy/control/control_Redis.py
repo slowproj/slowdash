@@ -35,10 +35,10 @@ class RedisNode(ControlNode):
         return self.redis.info()
 
     ## Redis specific functions ##
-    def info(self):
+    def get_info(self):
         return self.redis.info()
 
-    def keys(self, pattern='*'):
+    def get_keys(self, pattern='*'):
         return self.redis.keys(pattern)
     
     ## child nodes ##
@@ -95,7 +95,7 @@ class RedisStringNode(ControlNode):
     def get(self):
         return self.redis.get(self.name)
 
-    def incr(self, amount=1):
+    def do_incr(self, amount=1):
         return self.redis.incr(self.name, amount)
     
 
@@ -201,23 +201,25 @@ class RedisTimeseriesLastNode(ControlNode):
         self.parent = parent
     
     def set(self, value):
-        # same as ts().current().set()
-        self.parent.set([(int(1000*time.time()), value)])
+        pass
 
     def get(self):
-        return self.get_tx()[1]
-        
-    def get_tx(self):
         if self.parent.to == 0:
             return self.parent.redis.ts().get(self.parent.name)
         else:
-            ts = self.parent.get()
+            to = self.parent.to if self.parent.to > 0 else time.time() + self.parent.to
+            start = to - self.parent.length
+            ts = self.parent.redis.ts().revrange(self.parent.name, int(1000*start), int(1000*to), count=1)
             if len(ts) > 0:
-                return ts[-1]
+                return ts[0]
             else:
                 return (None, None)
         
     ## child nodes ##
+    # Redis.ts(name).last().time()
+    def value(self):
+        return RedisTimeseriesLastValueNode(self)
+
     # Redis.ts(name).last().time()
     def time(self):
         return RedisTimeseriesLastTimeNode(self)
@@ -227,6 +229,18 @@ class RedisTimeseriesLastNode(ControlNode):
         return RedisTimeseriesLastLapseNode(self)
 
     
+    
+class RedisTimeseriesLastValueNode(ControlNode):
+    def __init__(self, parent):
+        self.parent = parent
+    
+    def set(self, value):
+        pass
+
+    def get(self):
+        return self.parent.get()[1]
+
+
     
 class RedisTimeseriesLastTimeNode(ControlNode):
     def __init__(self, parent):

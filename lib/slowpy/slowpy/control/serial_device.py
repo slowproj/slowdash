@@ -125,6 +125,7 @@ class SerialDeviceEthernetServer:
                 sock, addr = self.sock.accept()
                 link = SerialDeviceEthernetLink(self.serial_device, sock, addr)
                 print("connection accepted")
+                sock.sendall(('hello'+self.serial_device.line_terminator).encode('utf-8'))
                 link.start()
                 self.links.append(link)
         except InterruptedError:

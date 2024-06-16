@@ -14,6 +14,24 @@ class ControlNode:
     def has_data(self):
         return None
 
+    
+    # stoppable-sleep: to be used in subclasses
+    @classmethod
+    def sleep(cls, duration_sec):
+        sec10 = int(10*duration_sec)
+        subsec10 = 10*duration_sec - sec10
+        if sec10 > 0:
+            for i in range(sec10):
+                if cls.is_stop_requested():
+                    return False
+                else:
+                    time.sleep(0.1)
+        elif subsec10 > 0:
+            time.sleep(subsec/10.0)
+
+        return not cls.is_stop_requested()
+
+    
     # stoppable-wait: to be used in subclasses
     # condition_lambda is a function that takes a value from self.get() and returns True or False.
     #   example: lambda x: (float(x)>100)
@@ -31,8 +49,17 @@ class ControlNode:
         
             
     # to be used by external code
+    def __repr__(self):
+        return repr(self.get())
+    
     def __str__(self):
         return str(self.get())
+    
+    def __bool__(self):
+        return bool(self.get())
+    
+    def __int__(self):
+        return int(self.get())
     
     def __float__(self):
         value = self.get()
@@ -43,15 +70,24 @@ class ControlNode:
 
     
     ### child nodes ###
-    # ramp the set value
-    def ramp(self, change_per_sec=None):
+    # hold setpoint
+    def setpoint(self):
         try:
-            self._node_ramp.get()
-            if change_per_sec is not None:
-                self._node_ramp.change_per_sec = abs(float(change_per_sec))
+            self._node_setpoint.get()
         except:
-            self._node_ramp = RampNode(self, change_per_sec)
-        return self._node_ramp
+            self._node_setpoint = SetpointNode(self)
+        return self._node_setpoint
+
+    
+    # ramp the set value
+    def ramping(self, change_per_sec=None):
+        try:
+            self._node_ramping.get()
+            if change_per_sec is not None:
+                self._node_ramping.change_per_sec = abs(float(change_per_sec))
+        except:
+            self._node_ramping = RampingNode(self, change_per_sec)
+        return self._node_ramping
     
 
     # override this to add a child endoint
@@ -71,7 +107,7 @@ class ControlNode:
 
         
     @classmethod
-    def load_control_module(cls, module_name, search_dirs=[]):
+    def import_control_module(cls, module_name, search_dirs=[]):
         filename = 'control_%s.py' % module_name
         this_search_dirs = search_dirs + [
             os.path.abspath(os.getcwd()),
@@ -84,14 +120,14 @@ class ControlNode:
                 break
         else:
             logging.error('unable to find control plugin: %s' % module_name)
-            return None
+            return cls
         
         try:
             module = importlib.machinery.SourceFileLoader(filename, filepath).load_module()
         except Exception as e:
             logging.error('unable to load control module: %s: %s' % (module_name, str(e)))
             logging.error(traceback.format_exc())
-            return None
+            return cls
         
         logging.info('loaded control module "%s"' % module_name)
 
@@ -109,6 +145,8 @@ class ControlNode:
                 cls.add_node(node_classes[1])
             else:
                 logging.error('unable to identify Node class: %s' % module_name)
+                
+        return cls
 
         
     _stop_event = threading.Event()
@@ -118,7 +156,23 @@ class ControlNode:
         
     
 
-class RampNode(ControlNode):
+class SetpointNode(ControlNode):
+    def __init__(self, node):
+        self.node = node
+        self.setpoint = None
+
+        
+    def set(self, value):
+        self.setpoint = value
+        self.node.set(value)
+
+        
+    def get(self):
+        return self.setpoint
+
+    
+        
+class RampingNode(ControlNode):
     def __init__(self, value_node, change_per_sec):
         self.value_node = value_node
         self.change_per_sec = None
@@ -133,14 +187,17 @@ class RampNode(ControlNode):
         
     def set(self, target_value):
         if self.change_per_sec is None or (self.change_per_sec < 1e-10):
-            self.value_node.set(target_value)
+            self.value_node.setpoint().set(target_value)
             return
         
         self.target_value = float(target_value)
         try:
             current_value = float(self.value_node.get())
         except:
-            return
+            try:
+                current_value = float(self.value_node.setpoint().get())
+            except:
+                return
         tolerance =  1e-5 * (abs(self.target_value) + abs(current_value) + 1e-10)
         
         while self.target_value is not None:
@@ -153,7 +210,7 @@ class RampNode(ControlNode):
                 current_value -= self.change_per_sec
             else:
                 current_value += self.change_per_sec
-            self.value_node.set(current_value)
+            self.value_node.setpoint().set(current_value)
 
             for i in range(10):
                 if self.is_stop_requested():
@@ -171,20 +228,20 @@ class RampNode(ControlNode):
 
     # child nodes
     def status(self):
-        return RampStatusNode(self)
+        return RampingStatusNode(self)
 
     
         
-class RampStatusNode(ControlNode):
-    def __init__(self, ramp_node):
-        self.ramp_node = ramp_node
+class RampingStatusNode(ControlNode):
+    def __init__(self, ramping_node):
+        self.ramping_node = ramping_node
 
         
     def set(self, zero_to_stop):
         if str(zero_to_stop) == '0':
-            self.ramp_node.target_value = None
+            self.ramping_node.target_value = None
 
     
     def get(self):
-        return self.ramp_node.target_value is not None
+        return self.ramping_node.target_value is not None
     

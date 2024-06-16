@@ -1,10 +1,9 @@
 import time, logging
-import slowpy.control as slc
+import slowpy.control as sc
 import slowpy.store as sls
 
-ctrl = slc.ControlSystem()
-ctrl.load_control_module('DummyDevice')
-device = ctrl.dummy_device()
+ctrl = sc.ControlSystem()
+device = ctrl.import_control_module('DummyDevice').dummy_device()
 
 print("DummyDevice Loaded")
 
@@ -47,7 +46,7 @@ def stop(**kwargs):
     
 ### Exporting Variables ###
     
-class StatusNode(slc.ControlNode):
+class StatusNode(sc.ControlNode):
     def get(self):
         return {
             'columns': [ 'Channel', 'Value', 'Ramping' ],

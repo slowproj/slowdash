@@ -12,11 +12,17 @@ V0 = ctrl.ethernet(host, port).scpi('MEAS:V0', set_format='V0 {};*OPC?')
 
 
 if __name__ == '__main__':
+    ctrl.ethernet(host, port).do_flush_input()
     print('ID: %s' % str(device_id))
+    
+    V0.setpoint().set(10)
     
     ctrl.stop_by_signal()
     while not ctrl.is_stop_requested():
-        V0.ramp(1).set(10)
+        
+        print(f'ramping to {-float(V0.setpoint())}...')
+        V0.ramping(1).set(-float(V0.setpoint()))
+        
         for i in range(10):
             print(V0)
             if not ctrl.sleep(1):

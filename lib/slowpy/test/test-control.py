@@ -1,11 +1,9 @@
 #! /bin/env python3
 
-
 import time
-from slowpy.control import ControlSystem
 
-ctrl = ControlSystem()
-ctrl.load_control_module('DummyDevice')
+from slowpy.control import ControlSystem
+dummy_device = ControlSystem.import_control_module('DummyDevice').dummy_device()
 
 ch0 = ctrl.dummy_device().ch(0)
 ch1 = ctrl.dummy_device().ch(1)
