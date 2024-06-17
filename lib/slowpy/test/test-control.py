@@ -3,10 +3,11 @@
 import time
 
 from slowpy.control import ControlSystem
-dummy_device = ControlSystem.import_control_module('DummyDevice').dummy_device()
+ControlSystem.import_control_module('DummyDevice')
 
-ch0 = ctrl.dummy_device().ch(0)
-ch1 = ctrl.dummy_device().ch(1)
+dummy_device = ControlSystem().dummy_device()
+ch0 = dummy_device.ch(0)
+ch1 = dummy_device.ch(1)
 
 for i in range(10):
     print(ch0, ch1)

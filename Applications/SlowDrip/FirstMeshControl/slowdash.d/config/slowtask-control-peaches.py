@@ -1,16 +1,15 @@
 
-from slowpy.control import ControlSystem
-dripline = ControlSystem.import_control_module('Dripline').dripline(
-    dripline_config={'auth-file':'/root/authentications.json'}
-)
-
+from slowpy.control import ControlSystem, ControlNode
+ctrl = ControlSystem()
+ctrl.import_control_module('Dripline')
+dripline = ctrl.dripline(dripline_config={'auth-file':'/home/slowuser/authentications.json'})
 peaches = dripline.endpoint("peaches")
 
 
-class StatusNode(slowpy.ControlNode):
+class StatusNode(ControlNode):
     def get(self):
         return {
-            'ramping': peaches.ramp().status().get()
+            'ramping': peaches.ramping().status().get()
         }
     
 def _export():
@@ -21,4 +20,4 @@ def _export():
 
 def set(target, ramping, **kwargs):
     print("setting peaches to " + target + ", with ramping=" + ramping)
-    peaches.ramp(ramping).set(target)
+    peaches.ramping(ramping).set(target)

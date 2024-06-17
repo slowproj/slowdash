@@ -113,7 +113,6 @@ class ControlNode:
             os.path.abspath(os.getcwd()),
             os.path.abspath(os.path.dirname(__file__))
         ]
-        print(this_search_dirs)
         for module_dir in this_search_dirs:
             filepath = os.path.join(module_dir, filename)
             if os.path.isfile(filepath):

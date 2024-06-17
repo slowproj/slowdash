@@ -1,7 +1,9 @@
 #! /bin/env python3
 
 from slowpy.control import ControlSystem
-redis = ControlSystem.import_control_module('Redis').redis('redis://localhost:6379/12')
+ControlSystem.import_control_module('Redis')
+
+redis = ControlSystem().redis('redis://localhost:6379/12')
 
 
 # string
