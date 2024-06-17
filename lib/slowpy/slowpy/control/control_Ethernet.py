@@ -71,7 +71,7 @@ class EthernetNode(ControlNode):
             events = self.selectors.select(timeout=0.01)
             for key, mask in events:
                 if key.fileobj == self.socket and mask != 0:
-                    self.socket.recv(1024).decode('utf-8')
+                    print(f"dumping [{self.socket.recv(1024).decode('utf-8').strip()}]")
                     break
             else:
                 break
