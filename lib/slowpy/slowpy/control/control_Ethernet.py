@@ -9,7 +9,6 @@ class EthernetNode(ControlNode):
         self.host = host
         self.port = port
         self.line_terminator = kwargs.get('line_terminator') or '\x0d'
-        self.dump_initial = kwargs.get('dump_initial', False)
         
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.host, self.port))
@@ -29,11 +28,6 @@ class EthernetNode(ControlNode):
 
     
     def get(self):
-        if self.dump_initial:
-            self.dump_initial = False
-            #TODO: implement timeout here
-            print(f'Ethernet: initial dump: {self.get()}')
-            
         line = ''
         while True:
             if len(self.socket_buffer) == 0:
