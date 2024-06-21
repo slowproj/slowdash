@@ -8,7 +8,8 @@ from matplotlib import pyplot as mpl_plt
 from matplotlib import colors
 import matplotlib.animation as animation
 
-from .data import Histogram, Histogram2d, Graph
+from .histograms import Histogram, Histogram2d
+from .graphs import Graph
 from .store import DataStore, create_datastore_from_url
 
 

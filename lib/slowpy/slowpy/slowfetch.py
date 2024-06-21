@@ -4,7 +4,7 @@
 import os, sys, time, json, io, datetime, logging
 import pandas as pd
 from urllib import request, parse
-from .objects import DataObject
+from .basetypes import DataElement
 
 
 class SlowFetch:
@@ -61,7 +61,7 @@ class SlowFetch:
                     x = json.loads(x)
                 except:
                     pass
-            result[ch] = DataObject.from_json(ch, x)
+            result[ch] = DataElement.from_json(ch, x)
             
         return result
     

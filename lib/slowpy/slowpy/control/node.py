@@ -4,7 +4,7 @@ import os, time, threading, importlib, logging, traceback
 class ControlNode:
     # override this
     def set(self, value):
-        pass
+        return None
 
     # override this
     def get(self):
@@ -49,6 +49,12 @@ class ControlNode:
         
             
     # to be used by external code
+    def __call__(self, value=None):
+        if value is not None:
+            return self.set(value)
+        else:
+            return self.get()
+    
     def __repr__(self):
         return repr(self.get())
     
