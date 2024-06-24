@@ -36,6 +36,8 @@ class DataStore_CSV(DataStore):
                 logging.error('unable to create a CSV file: %s: %s' % (filename, str(e)))
                 self.csv_file = None
 
+        self.update_error_shown = False
+
             
     def __del__(self):
         if self.csv_file is not None:
@@ -51,9 +53,9 @@ class DataStore_CSV(DataStore):
 
     
     def _write_one(self, csv_file, timestamp, tag, fields, values, update):
-        if update is True:
-            logging.error('CSV: function not available: update')
-            return
+        if update is True and self.update_error_shown is False:
+            logging.error('CSV: "update()" is not available for CSV: switched to append()')
+            self.update_error_shown = True
                 
         channels = self._channels(tag, fields)
         for i in range(min(len(channels), len(values))):

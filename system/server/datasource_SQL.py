@@ -207,7 +207,10 @@ class DataSource_SQL(DataSource_TableStore):
         try:
             value = result.get_table()[0][0]
         except Exception as e:
+            logging.error('SQL Error: %s: %s' % (str(e), sql))
             return None
+
+        return value
 
         
     def _connect_with_retry(self, repeat=12, interval=5):
@@ -258,8 +261,8 @@ class DataSource_SQL(DataSource_TableStore):
             sql_orderby = ''
         elif lastonly:
             sql_orderby = 'ORDER BY %s DESC' % time_col
-            if len(channels) == 1 or tag_col is None:
-                sql_orderby = sql_orderby + ' limit 1'
+            if (tag_col is None) or (len(tag_values) == 1):
+                sql_orderby += ' limit 1'
         else:
             sql_orderby = 'ORDER BY %s ASC' % time_col
 

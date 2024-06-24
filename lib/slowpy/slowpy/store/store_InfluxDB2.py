@@ -65,6 +65,7 @@ class DataStore_InfluxDB2(DataStore):
         self.write_api = self.client.write_api(write_options=SYNCHRONOUS)
         self.Point = Point
         self.write_precision = WritePrecision.S
+        self.update_error_shown = False
 
         
     def __del__(self):
@@ -84,9 +85,9 @@ class DataStore_InfluxDB2(DataStore):
 
     
     def _write_one(self, measurement, timestamp, tag, fields, values, update):
-        if update is True:
-            logging.error('InfluxDB2: function not available: update')
-            return
+        if update is True and self.update_error_shown is False:
+            logging.error('InfluxDB2: "update()" is not available for InfluxDB: switched to append()')
+            self.update_error_shown = True
         
         if self.field is not None:  # long format
             channels = self._channels(tag, fields)

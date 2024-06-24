@@ -89,23 +89,6 @@ class DataStore_SQL(DataStore):
             logging.info('DB "%s" is disconnnected.' % self.db_url)
 
 
-    def _open_transaction(self):
-        if self.conn is None:
-            return False
-        cur = self.conn.cursor()
-        cur.execute('BEGIN TRANSACTION;')
-        return cur
-        
-    
-    def _close_transaction(self, cur):
-        try:
-            self.conn.commit()
-        except Exception as e:
-            logging.error('SQL commit(): %s' % str(e))
-            
-        del cur
-
-    
     def _write_one(self, cur, timestamp, tag, fields, values, update):
         if not self.table_exists:
             self.table_exists = self.inserter.create_table(cur, tag, fields, values)
@@ -153,8 +136,23 @@ class DataStore_SQLite(DataStore_SQL):
         return [ table_name[0] for table_name in cur.fetchall() ]
 
     
+    def _open_transaction(self):
+        if self.conn is None:
+            return False
+        cur = self.conn.cursor()
+        cur.execute('BEGIN TRANSACTION;')
+        return cur
+        
+    
+    def _close_transaction(self, cur):
+        try:
+            self.conn.commit()
+        except Exception as e:
+            logging.error('SQL commit(): %s' % str(e))
+        del cur
 
-
+    
+    
 class DataStore_PostgreSQL(DataStore_SQL):
     def __init__(self, db_url, table_name, Inserter=SimpleLongFormatInserter):
         super().__init__(db_url, table_name, Inserter)
@@ -182,7 +180,7 @@ class DataStore_PostgreSQL(DataStore_SQL):
             logging.error('Unable to connect to PostgreSQL')
             logging.error(traceback.format_exc())
             return
-        
+
         logging.info('DB "%s" is connnected.' % self.db_url)
         return self.conn
 
@@ -194,8 +192,24 @@ class DataStore_PostgreSQL(DataStore_SQL):
         cur = self.conn.cursor()
         try:
             cur.execute("select tablename from pg_tables where schemaname='public';")
+            result = [ table_name[0] for table_name in cur.fetchall() ]
         except Exception as e:
             logging.error('PostgreSQL: unable to get table list: %s: %s' % (self.db_url, str(e)))
-            return []
+            result = []
+        cur.close()
+        
+        return result
+    
 
-        return [ table_name[0] for table_name in cur.fetchall() ]
+    def _open_transaction(self):
+        if self.conn is None:
+            return False
+        return self.conn.cursor()
+        
+    
+    def _close_transaction(self, cur):
+        try:
+            self.conn.commit()
+        except Exception as e:
+            logging.error('SQL commit(): %s' % str(e))
+        del cur

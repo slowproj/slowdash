@@ -72,7 +72,9 @@ def start(db_url, ts_name='ts_data', obj_name='obj_data', objts_name='objts_data
             })
         readout_count = readout_count + 1
 
-            
+        time.sleep(1)
+
+        
 
 if __name__ == '__main__':
     from optparse import OptionParser
