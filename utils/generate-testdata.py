@@ -3,6 +3,7 @@
 import time
 import numpy as np
 import slowpy
+from slowpy.control import DummyDevice_RandomWalk
 
 
 
@@ -17,13 +18,15 @@ signal.signal(signal.SIGTERM, signal_handler)
 
     
 def start(db_url, ts_name='ts_data', obj_name='obj_data', objts_name='objts_data'):
-    datastore = slowpy.datastore.create_datastore_from_url(db_url, ts_name, obj_name, objts_name)
+    datastore_ts = slowpy.store.create_datastore_from_url(db_url, ts_name)
+    datastore_obj = slowpy.store.create_datastore_from_url(db_url, obj_name)
+    datastore_objts = slowpy.store.create_datastore_from_url(db_url, objts_name)
     
-    dummy_device = sld.DummyDevice_RandomWalk()
+    dummy_device = DummyDevice_RandomWalk()
     readout_count = 0
-    histogram = slowpy.Histogram('test_histogram', 100, -10, 10)
-    graph = slowpy.Graph('test_graph', labels=['ch', 'value'])
-    histogram2d = slowpy.Histogram2d('test_histogram2d', 10, 0, 10, 10, 0, 10)
+    histogram = slowpy.Histogram(100, -10, 10)
+    graph = slowpy.Graph(labels=['ch', 'value'])
+    histogram2d = slowpy.Histogram2d(10, 0, 10, 10, 0, 10)
 
     histogram.add_stat(slowpy.HistogramBasicStat(['Entries', 'Underflow', 'Overflow', 'Mean', 'RMS'], ndigits=3))
     histogram.add_stat(slowpy.HistogramCountStat(-5.2, 5.2))
@@ -45,25 +48,25 @@ def start(db_url, ts_name='ts_data', obj_name='obj_data', objts_name='objts_data
         for channel in dummy_device.channels():
             t = time.time()
             value = dummy_device.read(channel)
-            datastore.write_timeseries(value, tag='ch%02d'%channel, timestamp=t)
+            datastore_ts.append(value, tag='ch%02d'%channel, timestamp=t)
             histogram.fill(value)
             graph.add_point(channel, value)
 
-        datastore.write_object(histogram)
-        datastore.write_object(graph)
+        datastore_obj.update(histogram, tag='test_histogram')
+        datastore_obj.update(graph, tag='test_graph')
 
-        datastore.write_object_timeseries(histogram, name='test_histogram_ts')
-        datastore.write_object_timeseries(graph, name='test_graph_ts')
+        datastore_objts.append(histogram, tag='test_histogram_ts')
+        datastore_objts.append(graph, tag='test_graph_ts')
     
         for i in range(1000):
             x = np.random.normal(5, 2)
             y = np.random.normal(5, 3)
             histogram2d.fill(x, y)
-        datastore.write_object(histogram2d)
+        datastore_obj.update(histogram2d, tag='test_histogram2d')
 
         # Redis only
-        if hasattr(datastore, 'write_hash'):
-            datastore.write_hash('Status', {
+        if hasattr(datastore_obj, 'write_hash'):
+            datastore_obj.write_hash('Status', {
                 'Generator': __file__,
                 'Count': readout_count
             })

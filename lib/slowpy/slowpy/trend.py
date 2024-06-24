@@ -6,9 +6,8 @@ from .basetypes import DataElement, TimeSeries
         
 
 class Trend(DataElement):    
-    def __init__(self, name, length=3600, tick=1, metric='mean', start=None):
+    def __init__(self, length=3600, tick=1, metric='mean', start=None):
         super().__init__()
-        self.name = name
         self.metric = metric
         self.tick = abs(tick)
         if start is None:
@@ -85,7 +84,7 @@ class Trend(DataElement):
             self.has_values = False
 
 
-    def timeseries(self, flush=False):
+    def timeseries(self, name, flush=False):
     # returns a time-series object
         ts = TimeSeries()
         ts.fields = []
@@ -94,9 +93,9 @@ class Trend(DataElement):
         ts.t = [ t + self.start for t in record['x'] ]
         for key in record:
             if key == 'y':
-                field = self.name
+                field = name
             elif key.startswith('y_'):
-                field = f'{key[2:]}.{self.name}'
+                field = f'{key[2:]}.{name}'
             else:
                 continue
             ts.fields.append(field)
@@ -157,11 +156,11 @@ class Trend(DataElement):
 
     
     @staticmethod
-    def from_json(name, obj):
+    def from_json(obj):
         return None
 
 
 
 class RateTrend(Trend):
-    def __init__(self, name, length=3600, tick=1, start=None):
-        super().__init__(name=name, length=length, tick=tick, start=start, metric='cps')
+    def __init__(self, length=3600, tick=1, start=None):
+        super().__init__(length=length, tick=tick, start=start, metric='cps')

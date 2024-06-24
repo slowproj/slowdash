@@ -41,14 +41,14 @@ class DataElement:
 
     
     @staticmethod
-    def from_json(name, obj):
+    def from_json(obj):
         # this assumes that the user has already imported the histogram and graph modules
         if 'bins' in obj:
-            return Histogram.from_json(name, obj)
+            return Histogram.from_json(obj)
         elif 'ybins' in obj:
-            return Histogram2d.from_json(name, obj)
+            return Histogram2d.from_json(obj)
         elif 'y' in obj:
-            return Graph.from_json(name, obj)
+            return Graph.from_json(obj)
         return None
 
     
@@ -58,8 +58,8 @@ class DataElement:
 
 
 class TimeSeries:
-    def __init__(self, fields=['x']):
-        self.fields = fields if len(fields) > 0 else ['x']
+    def __init__(self, fields=['']):
+        self.fields = fields if len(fields) > 0 else ['']
         self.t = []
         self.values = []
 
@@ -80,11 +80,11 @@ class TimeSeries:
                 record[i] = values.get(self.fields[i], None)
         elif type(values) == list:
             for i in range(min(len(values), len(record))):
-                record[self.fields.keys()[i]] = values[i]
+                record[i] = values[i]
         else:
             record[0] = values
 
-        self.t.append(time - self.start)
+        self.t.append(time)
         self.values.append(record)
 
 

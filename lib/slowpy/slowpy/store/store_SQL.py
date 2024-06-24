@@ -5,11 +5,58 @@ import os, sys, time, logging
 from .base import DataStore
 
 
-class DataStore_SQL(DataStore):
-    schema_ts = '(timestamp REAL, channel TEXT, value REAL, PRIMARY KEY(timestamp, channel))'
-    schema_obj = '(channel TEXT, value TEXT, PRIMARY KEY(channel))'
-    schema_objts = '(timestamp REAL, channel TEXT, value TEXT, PRIMARY KEY(timestamp, channel))'
+class SimpleLongFormatInserter:
+    schema_numeric = '(timestamp REAL, channel TEXT, value REAL, PRIMARY KEY(timestamp,channel))'
+    schema_text = '(timestamp REAL, channel TEXT, value TEXT, PRIMARY KEY(timestamp,channel))'
 
+    def __init__(self, table_name):
+        self.table_name = table_name
+        self.placeholder = '?'
+        self.floating_type = 'REAL'
+            
+    
+    def create_table(self, cur, tag, fields, values):
+        if self.table_name is None or len(values) == 0:
+            return False
+
+        if type(values[0]) in [ int, float ]:
+            schema = self.schema_numeric.replace('REAL', self.floating_type)
+        else:
+            schema = self.schema_text.replace('REAL', self.floating_type)
+        try:
+            cur.execute('CREATE TABLE %s%s;' % (self.table_name, schema))
+        except Exception as e:
+            logging.error('SQL: unable to create table "%s": %s' % (self.table_name, str(e)))
+            return False
+        
+        return True
+
+
+    def write_one(self, cur, timestamp, tag, fields, values, update):
+        channels = DataStore._channels(tag, fields)
+        for i in range(min(len(channels), len(values))):
+            ch, value = channels[i], values[i]
+
+            if update is True:
+                sql = f"DELETE FROM {self.table_name} WHERE channel={self.placeholder} "
+                sql += f"AND EXISTS (SELECT 1 FROM {self.table_name} WHERE channel={self.placeholder});"
+                cur.execute(sql, (ch, ch))
+            
+            sql = f"INSERT INTO {self.table_name}(timestamp,channel,value) "
+            if type(value) in [int, float]:
+                sql += f"VALUES(%.3f,%s,%f);" % (timestamp, self.placeholder, value)
+                params = (ch,)
+            else:
+                sql += f"VALUES(%.3f,%s,%s);" % (timestamp, self.placeholder, self.placeholder)
+                params = (ch, str(value))
+            try:
+                cur.execute(sql, params)
+            except Exception as e:
+                logging.error('SQL execute(): %s' % str(e))
+
+            
+
+class DataStore_SQL(DataStore):
     # to be implemented in a subclass
     def construct(self):
         return None # conn
@@ -17,95 +64,65 @@ class DataStore_SQL(DataStore):
         return []
     
     
-    def __init__(self, db_url='sqlite:///SlowStore.db', ts_table_name=None, obj_table_name=None, objts_table_name=None):
+    def __init__(self, db_url, table_name, Inserter=SimpleLongFormatInserter):        
+        if not table_name.replace('_', '').isalnum():
+            logging.error('SQL: bad table name "%s"' % table_name)
+            self.table_name = None
+            self.conn = None
+            return
+        
         self.db_url = db_url
-        self.ts_table_name = ts_table_name
-        self.obj_table_name = obj_table_name
-        self.objts_table_name = objts_table_name
+        self.table_name = table_name
+        self.inserter = Inserter(self.table_name)
         
         self.conn = self.construct()
         if self.conn is None:
             return
         
-        table_list = self.get_table_list()
-        cur = self.conn.cursor()
-        if self.ts_table_name is not None and self.ts_table_name not in table_list:
-            logging.info('Creating a new time-series data table "%s"...' % self.ts_table_name)
-            cur.execute('CREATE TABLE %s%s' % (self.ts_table_name, self.schema_ts))
-            self.conn.commit()
-        if self.obj_table_name is not None and self.obj_table_name not in table_list:
-            logging.info('Creating a new object data table "%s"...' % self.obj_table_name)
-            cur.execute('CREATE TABLE %s%s' % (self.obj_table_name, self.schema_obj))
-            self.conn.commit()
-        if self.objts_table_name is not None and self.objts_table_name not in table_list:
-            logging.info('Creating a new object-timeseries data table "%s"...' % self.objts_table_name)
-            cur.execute('CREATE TABLE %s%s' % (self.objts_table_name, self.schema_objts))
-            self.conn.commit()
+        table_list = [ name.upper() for name in self.get_table_list() ]
+        self.table_exists = (self.table_name is not None) and (self.table_name.upper() in table_list)
 
-            
+        
     def __del__(self):
         if self.conn is not None:
             self.conn.close()
             logging.info('DB "%s" is disconnnected.' % self.db_url)
 
 
-    def write_timeseries(self, fields, tag=None, timestamp=None):
-        if (self.conn is None) or (self.ts_table_name is None):
-            return
-        
-        if timestamp is None:
-            timestamp = time.time()
-
+    def _open_transaction(self):
+        if self.conn is None:
+            return False
         cur = self.conn.cursor()
-        if not isinstance(fields, dict):
-            if tag is None:
-                return
-            cur.execute("INSERT INTO %s VALUES(%.3f,'%s',%f)" % (self.ts_table_name, timestamp, tag, fields))
-        else:
-            for k, v in fields.items():
-                ch = k if tag is None else "%s:%s" % (tag, k)
-                cur.execute("INSERT INTO %s VALUES(%.3f,'%s',%f)" % (self.ts_table_name, timestamp, ch, v))
-        self.conn.commit()
-                    
+        cur.execute('BEGIN TRANSACTION;')
+        return cur
+        
     
-    def write_object(self, obj, name=None):
-        if (self.conn is None) or (self.obj_table_name is None):
-            return
-
-        if name is None:
-            name = obj.name
-
-        cur = self.conn.cursor()
-        cur.execute(
-            # this UPSERT is SQLite & PostgreSQL(>=9.5) specific, different from MySQL
-            '''INSERT INTO %s(channel,value) VALUES('%s','%s') ON CONFLICT(channel) DO UPDATE SET value=excluded.value''' %
-            (self.obj_table_name, name, str(obj))
-        )
-        self.conn.commit()
-
-        
-    def write_object_timeseries(self, obj, timestamp=None, name=None):
-        if (self.conn is None) or (self.objts_table_name is None):
-            return
-        
-        if timestamp is None:
-            timestamp = time.time()
-        if name is None:
-            name = obj.name
+    def _close_transaction(self, cur):
+        try:
+            self.conn.commit()
+        except Exception as e:
+            logging.error('SQL commit(): %s' % str(e))
             
-        cur = self.conn.cursor()
-        cur.execute(
-            '''INSERT INTO %s VALUES(%.3f,'%s','%s')''' %
-            (self.objts_table_name, timestamp, name, str(obj))
-        )
-        self.conn.commit()
+        del cur
 
+    
+    def _write_one(self, cur, timestamp, tag, fields, values, update):
+        if not self.table_exists:
+            self.table_exists = self.inserter.create_table(cur, tag, fields, values)
+            if not self.table_exists:
+                return
 
+        self.inserter.write_one(cur, timestamp, tag, fields, values, update)
+
+                    
         
 class DataStore_SQLite(DataStore_SQL):
-    def __init__(self, db_url='sqlite:///SlowStore.db', ts_table_name=None, obj_table_name=None, objts_table_name=None):
-        super().__init__(db_url, ts_table_name, obj_table_name, objts_table_name)
+    def __init__(self, db_url, table_name, Inserter=SimpleLongFormatInserter):
+        super().__init__(db_url, table_name, Inserter)
+        self.inserter.placeholder = '?'
+        self.inserter.floating_type = 'REAL'
 
+        
     def construct(self):
         db_url = self.db_url
         if db_url.startswith('sqlite:///'):
@@ -128,9 +145,9 @@ class DataStore_SQLite(DataStore_SQL):
             
         cur = self.conn.cursor()
         try:
-            cur.execute('select name from sqlite_master where type="table"')
+            cur.execute('select name from sqlite_master where type="table";')
         except Exception as e:
-            logging.error('SQLite: unable to get table list: %s: %s', self.db_url, str(e))
+            logging.error('SQLite: unable to get table list: %s: %s' % (self.db_url, str(e)))
             return []
         
         return [ table_name[0] for table_name in cur.fetchall() ]
@@ -139,8 +156,11 @@ class DataStore_SQLite(DataStore_SQL):
 
 
 class DataStore_PostgreSQL(DataStore_SQL):
-    def __init__(self, db_url='postgresql://postgres:postgres@localhost:5432/SlowStore', ts_table_name=None, obj_table_name=None, objts_table_name=None):
-        super().__init__(db_url, ts_table_name, obj_table_name, objts_table_name)
+    def __init__(self, db_url, table_name, Inserter=SimpleLongFormatInserter):
+        super().__init__(db_url, table_name, Inserter)
+        self.inserter.placeholder = '%s'
+        self.inserter.floating_type = 'DOUBLE PRECISION'
+
         
     def construct(self):
         db_url = self.db_url
@@ -173,9 +193,9 @@ class DataStore_PostgreSQL(DataStore_SQL):
         
         cur = self.conn.cursor()
         try:
-            cur.execute("select tablename from pg_tables where schemaname='public'")
+            cur.execute("select tablename from pg_tables where schemaname='public';")
         except Exception as e:
-            logging.error('PostgreSQL: unable to get table list: %s: %s', self.db_url, str(e))
+            logging.error('PostgreSQL: unable to get table list: %s: %s' % (self.db_url, str(e)))
             return []
 
         return [ table_name[0] for table_name in cur.fetchall() ]

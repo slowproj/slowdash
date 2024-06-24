@@ -5,9 +5,8 @@ from .basetypes import DataElement
 
 
 class Graph(DataElement):
-    def __init__(self, name, labels=['x', 'y']):
+    def __init__(self, labels=['x', 'y']):
         super().__init__()
-        self.name = name
         self.labels = labels
         self.clear()
 
@@ -76,8 +75,8 @@ class Graph(DataElement):
 
     
     @staticmethod
-    def from_json(name, obj):
-        graph = Graph(name, obj.get('labels', ['x', 'y']))
+    def from_json(obj):
+        graph = Graph(obj.get('labels', ['x', 'y']))
         
         graph.y = obj.get('y', [])
         graph.x = obj.get('x', [xk for xk in range(len(graph.y))])

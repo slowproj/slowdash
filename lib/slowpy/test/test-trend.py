@@ -6,8 +6,8 @@ import slowpy as slp
 
 import time
 start = int(time.time() - 100)
-rate_trend = slp.RateTrend('test_ratetrend_00', start=start, length=300, tick=10)
-value_trend = slp.Trend('test_trend_00', start=start, length=300, tick=10)
+rate_trend = slp.RateTrend(start=start, length=300, tick=10)
+value_trend = slp.Trend(start=start, length=300, tick=10)
 
 
 for lapse in range(0, 350, 1):
@@ -19,8 +19,9 @@ for lapse in range(0, 350, 1):
         x = np.random.normal(10, 3)
         value_trend.fill(t, x)
 
+        
 print(rate_trend)  # as a graph
 print()
-print(rate_trend.timeseries())  # as time-series
+print(rate_trend.timeseries('rate'))  # as time-series
 print()
-print(value_trend.timeseries())
+print(value_trend.timeseries('value'))

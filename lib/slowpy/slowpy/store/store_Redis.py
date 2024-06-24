@@ -13,7 +13,6 @@ class DataStore_Redis(DataStore):
         self.retention_length = retention_length
         self.objts_retention_length = objts_retention_length
         self.objts_timebin = objts_timebin
-        self.use_redis_json = False
 
         # retries up to 60 sec, for docker-compose etc.
         import redis
@@ -41,69 +40,52 @@ class DataStore_Redis(DataStore):
     def __del__(self):
         pass
 
-    
-    def write_timeseries(self, fields, tag=None, timestamp=None):
-        if self.redis is None:
-            return
-        if timestamp is None:
-            timestamp = time.time()
 
-        if not isinstance(fields, dict):
-            if tag is None:
-                return
-            if tag not in self.ts_set:
-                try:
-                    if self.retention_length is None:
-                        self.redis.ts().create(tag)
-                    else:
-                        self.redis.ts().create(tag, retention_msecs=1000*self.retention_length)
-                    self.ts_set.add(tag)
-                except Exception as e:
-                    logging.error('RedisTS.create(): %s' % str(e))
-            if tag in self.ts_set:
-                self.redis.ts().add(tag, int(1000*timestamp), fields)
+    def _open_transaction(self):
+        return self.redis
+
+    
+    def _close_transaction(self, redis):
+        pass
+
+    
+    def _write_one(self, redis, timestamp, tag, fields, values, update):
+        channels = self._channels(tag, fields)
+        for i in range(min(len(channels), len(values))):
+            if update is True:
+                self.write_element(channel=channels[i], value=values[i])
+            elif type(values[i]) in [ int, float ]:
+                self.write_timeseries(timestamp, channel=channels[i], value=values[i])
+            else:
+                self.write_object_timeseries(timestamp, channel=channels[i], value=values[i])
+
+        
+    ### Redis specific implementations ###
+    
+    def write_element(self, channel, value):
+        try:
+            self.redis.set(channel, str(value))
+        except Exception as e:
+            logging.error('RedisTS.set(): %s' % str(e))
             
-        else:
-            for k, v in fields.items():
-                ch = k if tag is None else "%s:%s" % (tag, k)
-                if ch not in self.ts_set:
-                    try:
-                        if self.retention_length is None:
-                            self.redis.ts().create(ch)
-                        else:
-                            self.redis.ts().create(ch, retention_msecs=1000*self.retention_length)
-                        self.ts_set.add(ch)
-                    except Exception as e:
-                        logging.error('RedisTS.create(): %s' % str(e))
-                if ch in self.ts_set:
-                    self.redis.ts().add(ch, int(1000*timestamp), v)
+        
+    def write_timeseries(self, timestamp, channel, value):
+        if channel not in self.ts_set:
+            try:
+                if self.retention_length is None:
+                    self.redis.ts().create(channel)
+                else:
+                    self.redis.ts().create(channel, retention_msecs=1000*self.retention_length)
+                self.ts_set.add(channel)
+            except Exception as e:
+                logging.error('RedisTS.create(): %s' % str(e))
+                
+        if channel in self.ts_set:
+            self.redis.ts().add(channel, int(1000*timestamp), value)
                     
     
-    def write_object(self, obj, name=None):
-        if self.redis is None:
-            return
-        if name is None:
-            name = obj.name
-            
-        try:
-            if self.use_redis_json:
-                self.redis.json().set(name, '$', obj.get())     
-            else:
-                self.redis.set(name, str(obj))                  
-        except Exception as e:
-            logging.error(e)
-        
-
-    def write_object_timeseries(self, obj, timestamp=None, name=None):
-        if self.redis is None:
-            return
-        
-        if timestamp is None:
-            timestamp = time.time()
-        if name is None:
-            name = obj.name
-
-        tsname = '%sindex_%s' % (objts_prefix, name)
+    def write_object_timeseries(self, timestamp, channel, value):
+        tsname = '%sindex_%s' % (objts_prefix, channel)
         if not self.redis.exists(tsname):
             try:
                 self.redis.ts().create(tsname, retention_msecs=1000*self.objts_retention_length)
@@ -114,12 +96,9 @@ class DataStore_Redis(DataStore):
             return
 
         index = int((timestamp % self.objts_retention_length) / self.objts_timebin)
-        objname = '%s_%s_%d' % (objts_prefix, name, int(index))
+        objname = '%s_%s_%d' % (objts_prefix, channel, int(index))
         try:
-            if self.use_redis_json:
-                self.redis.json().set(objname, '$', obj.get())
-            else:
-                self.redis.set(objname, str(obj))
+            self.redis.set(objname, str(value))
         except Exception as e:
             logging.error(e)
         try:
@@ -130,17 +109,17 @@ class DataStore_Redis(DataStore):
             
     ### Redis specific methods ###
     
+    def flush_db(self):
+        # this deletes all the contents in the DB
+        self.redis.flushdb()
+        self.ts_set = set()
+
+            
     def write_hash(self, name, record):
         try:
             self.redis.hset(name, mapping=record)
         except Exception as e:
             logging.error(e)
-
-            
-    def flush_db(self):
-        # this deletes all the contents in the DB
-        self.redis.flushdb()
-        self.ts_set = set()
 
             
     def list_timeseries(self):

@@ -6,9 +6,8 @@ from .basetypes import DataElement
 
 
 class Table(DataElement):
-    def __init__(self, name, columns):
+    def __init__(self, columns):
         super().__init__()
-        self.name = name
         self.columns = columns
         self.tabular = []
 
@@ -30,14 +29,14 @@ class Table(DataElement):
 
     
     @staticmethod
-    def from_json(name, obj):
+    def from_json(obj):
         return None
 
     
     
 class Log(Table):
-    def __init__(self, name="Log", dateformat='%a, %b %d %Y, %H:%M:%S'):
-        super().__init__(name, columns=['Level', 'Time', 'Message'])
+    def __init__(self, dateformat='%a, %b %d %Y, %H:%M:%S'):
+        super().__init__(columns=['Level', 'Time', 'Message'])
         self.dateformat = dateformat
 
         
@@ -63,9 +62,8 @@ class Log(Table):
 
     
 class Record(DataElement):
-    def __init__(self, name, path_delimiter='/'):
+    def __init__(self, path_delimiter='/'):
         super().__init__()
-        self.name = name
         self.path_delimiter = path_delimiter
         self.record = {}
 
@@ -95,7 +93,7 @@ class Record(DataElement):
 
     
     @staticmethod
-    def from_json(name, obj):
+    def from_json(obj):
         return None
 
     

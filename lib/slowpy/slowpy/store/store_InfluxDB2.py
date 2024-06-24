@@ -1,20 +1,25 @@
 # Created by Sanshiro Enomoto on 14 June 2023 #
 
-import datetime
+import time, datetime, traceback, logging
 from .base import DataStore
 
 
 class DataStore_InfluxDB2(DataStore):
-    # URL: influxdb2://org:token@host:port/bucket
-    def __init__(self, url, ts_measurement=None, obj_measurement=None, objts_measurement=None, use_tag=True):
+    def __init__(self, url, measurement, tag_column='channel', field='value'):
+        '''
+        - URL: influxdb2://org:token@host:port/bucket
+        - tag_column: name of the tag column, None for not using tags (wide format)
+        - field: None for the wide format (fields specified by data), or name of the value field for the long format
+        Use a different measurement or field for different data types (e.g., numerical values and histograms)
+        '''
+    
         from influxdb_client import InfluxDBClient, Point
         from influxdb_client.client.write_api import SYNCHRONOUS, WritePrecision
 
         self.url = url
-        self.ts_measurement = ts_measurement
-        self.obj_measurement = obj_measurement
-        self.objts_measurement = objts_measurement
-        self.use_tag = use_tag
+        self.measurement = measurement
+        self.tag_column = tag_column
+        self.field = field
         
         if url.startswith('influxdb2://'):
             url = url[12:]
@@ -38,75 +43,80 @@ class DataStore_InfluxDB2(DataStore):
         else:
             host, port = split_at_slash_colon[0], split_at_slash_colon[1]
             
-        self.org = org
         self.bucket = bucket
-        
+        self.org = org
+
+        self.client = None
         for i in range(12):
             try:
                 self.client = InfluxDBClient(url='http://%s:%s'%(host,port), org=self.org, token=token)
-                self.write_api = self.client.write_api(write_options=SYNCHRONOUS)
+                buckets = self.client.buckets_api().find_buckets().buckets
                 break
             except Exception as e:
                 logging.warn(e)
                 logging.warn('Unable to connect to the Db server. Retrying in 5 sec...')
                 time.sleep(5)
         else:
-            self.conn = None
+            self.client = None
             logging.error('Unable to connect to the InfluxDB server')
             logging.error(traceback.format_exc())
             return
 
+        self.write_api = self.client.write_api(write_options=SYNCHRONOUS)
         self.Point = Point
         self.write_precision = WritePrecision.S
 
         
     def __del__(self):
-        self.client.close()
+        if self.client is not None:
+            self.client.close()
 
 
-    def write_timeseries(self, fields, tag=None, timestamp=None):
-        if self.ts_measurement is None:
-            return
-        if self.use_tag and tag is None:
-            for key, value in fields.items():
-                self._write(self.ts_measurement, value, key, timestamp, float)
-        else:
-            self._write(self.ts_measurement, fields, tag, timestamp, float)
-
+    def _open_transaction(self):
+        if self.measurement is None or self.write_api is None:
+            return False
         
-    def write_object(self, obj, timestamp=None, name=None):
-        if self.obj_measurement is None:
-            return
-        if name is None:
-            name = obj.name
-        self._write(self.obj_measurement, str(obj), name, timestamp, str)
-
+        return self.measurement
+    
         
-    def write_object_timeseries(self, obj, timestamp=None, name=None):
-        if self.objts_measurement is None:
-            return
-        if name is None:
-            name = obj.name
-        self._write(self.objts_measurement, str(obj), name, timestamp, str)
+    def _close_transaction(self, measurement):
+        pass
 
+    
+    def _write_one(self, measurement, timestamp, tag, fields, values, update):
+        if update is True:
+            logging.error('InfluxDB2: function not available: update')
+            return
         
-    def _write(self, measurement, fields, tag, timestamp, datatype):
+        if self.field is not None:  # long format
+            channels = self._channels(tag, fields)
+            for i in range(min(len(channels), len(values))):
+                self._write_point(measurement, timestamp, tag=channels[i], fields=[self.field], values=[values[i]])
+                
+        elif fields is not None:   # wide format, fields from data
+            self._write_point(measurement, timestamp, tag, fields, values)
+                
+        else:                      # field not given: long format with a fallback field name
+            self._write_point(measurement, timestamp, tag, fields=['__value']*len(values), values=values)
+            
+            
+    def _write_point(self, measurement, timestamp, tag, fields, values):
         point = self.Point(measurement)
-        if tag is not None:
-            point = point.tag("channel", tag)
             
         if timestamp is not None:
             if type(timestamp) in [ float, int ]:
                 timestamp = datetime.datetime.fromtimestamp(timestamp, datetime.timezone.utc)
             point.time(timestamp, self.write_precision)
             
-        if not isinstance(fields, dict):
-            if tag is None:
-                return
-            point = point.field('value', datatype(fields))
-        else:
-            for key, value in fields.items():
-                point = point.field(key, datatype(value))
-                
+        if self.tag_column is not None and tag is not None:
+            point = point.tag(self.tag_column, tag)
+
+        for i in range(min(len(fields), len(values))):
+            if type(values[i]) in [ int, float ]:
+                point = point.field(fields[i], values[i])
+            else:
+                point = point.field(fields[i], str(values[i]))
+            
         #print(point)
         self.write_api.write(self.bucket, self.org, point)
+

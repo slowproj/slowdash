@@ -32,9 +32,8 @@ class HistogramScale:
 
     
 class Histogram(DataElement):
-    def __init__(self, name, nbins, range_min, range_max):
+    def __init__(self, nbins, range_min, range_max):
         super().__init__()
-        self.name = name
         self.scale = HistogramScale(nbins, range_min, range_max)
         if self.scale.nbins > 0:
             self.counts = [0] * self.scale.nbins
@@ -84,18 +83,17 @@ class Histogram(DataElement):
 
     
     @staticmethod
-    def from_json(name, obj):
+    def from_json(obj):
         bins, counts = obj['bins'], obj['counts']
-        hist = Histogram(name, len(counts), bins['min'], bins['max'])
+        hist = Histogram(len(counts), bins['min'], bins['max'])
         hist.counts = counts
         return hist
         
 
     
 class Histogram2d(DataElement):
-    def __init__(self, name, xnbins, xrange_min, xrange_max, ynbins, yrange_min, yrange_max):
+    def __init__(self, xnbins, xrange_min, xrange_max, ynbins, yrange_min, yrange_max):
         super().__init__()
-        self.name = name
         self.xscale = HistogramScale(xnbins, xrange_min, xrange_max)
         self.yscale = HistogramScale(ynbins, yrange_min, yrange_max)
         if self.xscale.nbins > 0 and self.yscale.nbins > 0:
@@ -130,9 +128,9 @@ class Histogram2d(DataElement):
 
     
     @staticmethod
-    def from_json(name, obj):
+    def from_json(obj):
         xbins, ybins, counts = obj['xbins'], obj['ybins'], obj['counts']
-        hist = Histogram2d(name, len(counts[0]), xbins['min'], xbins['max'], len(counts), ybins['min'], ybins['max'])
+        hist = Histogram2d(len(counts[0]), xbins['min'], xbins['max'], len(counts), ybins['min'], ybins['max'])
         hist.counts = counts
         return hist
 
