@@ -8,8 +8,8 @@ objts_prefix = '__sd_objts'
 
 
 class DataStore_Redis(DataStore):
-    def __init__(self, url, retention_length=None, objts_retention_length=3600, objts_timebin=1):
-        self.url = url
+    def __init__(self, db_url, retention_length=None, objts_retention_length=3600, objts_timebin=1):
+        self.db_url = db_url
         self.retention_length = retention_length
         self.objts_retention_length = objts_retention_length
         self.objts_timebin = objts_timebin
@@ -20,7 +20,7 @@ class DataStore_Redis(DataStore):
         self.ts_set = set()
         for i in range(12):
             try:
-                self.redis = redis.from_url(self.url, decode_responses=True)
+                self.redis = redis.from_url(self.db_url, decode_responses=True)
                 for key in self.redis.keys():
                     if self.redis.type(key) == 'TSDB-TYPE':
                         self.ts_set.add(key)
@@ -33,7 +33,7 @@ class DataStore_Redis(DataStore):
             self.redis = None
         
         if self.redis is None:
-            logging.error('Redis not loaded: %s' % self.url)
+            logging.error('Redis not loaded: %s' % self.db_url)
             return
         
                 
@@ -41,6 +41,22 @@ class DataStore_Redis(DataStore):
         pass
 
 
+    def another(self, db=None, retention_length=0, objts_retention_length=0, objts_timebin=0):
+        if db is not None:
+            db_url = self.db_url.rsplit('/', 1)[0] + f'/{db}'
+        else:
+            db_url = self.db_url
+
+        if retention_length == 0:
+            retention_length = self.retention_length
+        if objts_retention_length == 0:
+            objts_retention_length = self.objts_retention_length
+        if objts_timebin == 0:
+            objts_timebin = self.objts_timebin
+
+        return DataStore_Redis(db_url, retention_length, objts_retention_length, objts_timebin)
+
+    
     def _open_transaction(self):
         return self.redis
 

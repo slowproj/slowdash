@@ -9,7 +9,7 @@ class DataStore_InfluxDB2(DataStore):
         '''
         - URL: influxdb2://org:token@host:port/bucket
         - tag_column: name of the tag column, None for not using tags (wide format)
-        - field: None for the wide format (fields specified by data), or name of the value field for the long format
+        - field: name of the value field for the long format, or None for the wide format (fields specified by data)
         Use a different measurement or field for different data types (e.g., numerical values and histograms)
         '''
     
@@ -73,6 +73,17 @@ class DataStore_InfluxDB2(DataStore):
             self.client.close()
 
 
+    def another(self, measurement='', tag_column='', field=''):
+        if measurement == '':
+            measurement = self.measurement
+        if tag_column == '':
+            tag_column = self.tag_column
+        if field == '':
+            field = self.field
+            
+        return DataStore_InfluxDB2(self.url, measurement, tag_column, field)
+    
+        
     def _open_transaction(self):
         if self.measurement is None or self.write_api is None:
             return False

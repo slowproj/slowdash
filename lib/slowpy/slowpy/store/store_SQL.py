@@ -6,8 +6,14 @@ from .base import DataStore
 
 
 class Format:
-    def __init__(self, table_name):
-        self.table_name = table_name
+    def __init__(self):
+        self.db = None
+        self.table = None
+
+    
+    def bind(self, db, table):
+        self.db = db
+        self.table = table
 
         
     # to be implemented in a subclass
@@ -32,24 +38,18 @@ class SimpleLongFormat(Format):
     schema_numeric = '(timestamp REAL, channel TEXT, value REAL, PRIMARY KEY(timestamp,channel))'
     schema_text = '(timestamp REAL, channel TEXT, value TEXT, PRIMARY KEY(timestamp,channel))'
 
-    def __init__(self, table_name):
-        super().__init__(table_name)
-        self.placeholder = '?'
-        self.floating_type = 'REAL'
-            
-    
     def create_table(self, cur, tag, fields, values):
-        if self.table_name is None or len(values) == 0:
+        if self.table is None or len(values) == 0:
             return False
 
         if type(values[0]) in [ int, float ]:
-            schema = self.schema_numeric.replace('REAL', self.floating_type)
+            schema = self.schema_numeric
         else:
-            schema = self.schema_text.replace('REAL', self.floating_type)
+            schema = self.schema_text
         try:
-            cur.execute('CREATE TABLE %s%s;' % (self.table_name, schema))
+            cur.execute('CREATE TABLE %s%s;' % (self.table, schema))
         except Exception as e:
-            logging.error('SQL: unable to create table "%s": %s' % (self.table_name, str(e)))
+            logging.error('SQL: unable to create table "%s": %s' % (self.table, str(e)))
             return False
         
         return True
@@ -57,16 +57,16 @@ class SimpleLongFormat(Format):
 
     def write_single(self, cur, timestamp, channel, value, update):
         if update is True:
-            sql = f"DELETE FROM {self.table_name} WHERE channel={self.placeholder} "
-            sql += f"AND EXISTS (SELECT 1 FROM {self.table_name} WHERE channel={self.placeholder});"
+            sql = f"DELETE FROM {self.table} WHERE channel={self.db.placeholder} "
+            sql += f"AND EXISTS (SELECT 1 FROM {self.table} WHERE channel={self.db.placeholder});"
             cur.execute(sql, (channel, channel))
             
-        sql = f"INSERT INTO {self.table_name}(timestamp,channel,value) "
+        sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
         if type(value) in [int, float]:
-            sql += f"VALUES(%.3f,%s,%f);" % (timestamp, self.placeholder, value)
+            sql += f"VALUES(%.3f,%s,%f);" % (timestamp, self.db.placeholder, value)
             params = (channel,)
         else:
-            sql += f"VALUES(%.3f,%s,%s);" % (timestamp, self.placeholder, self.placeholder)
+            sql += f"VALUES(%.3f,%s,%s);" % (timestamp, self.db.placeholder, self.db.placeholder)
             params = (channel, str(value))
         try:
             cur.execute(sql, params)
@@ -77,29 +77,31 @@ class SimpleLongFormat(Format):
 
 class DataStore_SQL(DataStore):
     # to be implemented in a subclass
+    placeholder = '?'
     def construct(self):
         return None # conn
     def get_table_list(self):
         return []
     
     
-    def __init__(self, db_url, table_name, Format=SimpleLongFormat):        
-        if not table_name.replace('_', '').isalnum():
-            logging.error('SQL: bad table name "%s"' % table_name)
-            self.table_name = None
+    def __init__(self, db_url, table, format):
+        if not table.replace('_', '').isalnum():
+            logging.error('SQL: bad table name "%s"' % table)
+            self.table = None
             self.conn = None
             return
         
         self.db_url = db_url
-        self.table_name = table_name
-        self.format = Format(self.table_name)
+        self.table = table
+        self.format = format
+        format.bind(self, table)
         
         self.conn = self.construct()
         if self.conn is None:
             return
         
         table_list = [ name.upper() for name in self.get_table_list() ]
-        self.table_exists = (self.table_name is not None) and (self.table_name.upper() in table_list)
+        self.table_exists = (self.table is not None) and (self.table.upper() in table_list)
 
         
     def __del__(self):
@@ -119,11 +121,18 @@ class DataStore_SQL(DataStore):
                     
         
 class DataStore_SQLite(DataStore_SQL):
-    def __init__(self, db_url, table_name, Format=SimpleLongFormat):
-        super().__init__(db_url, table_name, Format)
-        self.format.placeholder = '?'
-        self.format.floating_type = 'REAL'
+    placeholder = '?'
+    
+    def __init__(self, db_url, table, format=SimpleLongFormat()):
+        super().__init__(db_url, table, format)
+        
 
+    def another(self, table, format=None):
+        if format is None:
+            format = type(self.format)()
+            
+        return DataStore_SQLite(self.db_url, table, format)
+        
         
     def construct(self):
         db_url = self.db_url
@@ -173,11 +182,18 @@ class DataStore_SQLite(DataStore_SQL):
     
     
 class DataStore_PostgreSQL(DataStore_SQL):
-    def __init__(self, db_url, table_name, Format=SimpleLongFormat):
-        super().__init__(db_url, table_name, Format)
-        self.format.placeholder = '%s'
-        self.format.floating_type = 'DOUBLE PRECISION'
+    placeholder = '%s'
+        
+    def __init__(self, db_url, table, format=SimpleLongFormat()):
+        super().__init__(db_url, table, format)
 
+        
+    def another(self, table, format=None):
+        if format is None:
+            format = type(self.format)()
+            
+        return DataStore_SQLite(self.db_url, table, format)
+        
         
     def construct(self):
         db_url = self.db_url

@@ -6,7 +6,7 @@ from slowpy.control import DummyDevice_RandomWalk
 from slowpy.store import DataStore_InfluxDB2
 
 datastore = DataStore_InfluxDB2('influxdb2://sloworg:slowtoken@localhost:8086/SlowTestData', measurement='Test')
-json_datastore = DataStore_InfluxDB2('influxdb2://sloworg:slowtoken@localhost:8086/SlowTestData', measurement='Test2')
+datastore_obj = datastore.another(measurement='Test2')
 device = DummyDevice_RandomWalk(n=4)
 histogram = Histogram(nbins=20, range_min=-10, range_max=10)
 
@@ -18,6 +18,6 @@ while True:
     datastore.append(records)
     
     histogram.fill(records['ch0'])
-    json_datastore.append(histogram, tag="ch0_hist")
+    datastore_obj.append(histogram, tag="ch0_hist")
     
     time.sleep(1)

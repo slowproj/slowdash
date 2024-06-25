@@ -6,6 +6,7 @@ from slowpy.control import DummyDevice_RandomWalk
 from slowpy.store import DataStore_Redis
 
 datastore = DataStore_Redis('redis://localhost/12')
+datastore_obj = datastore.another(db=10)
 device = DummyDevice_RandomWalk(n=4)
 histogram = Histogram(nbins=20, range_min=-10, range_max=10)
 
@@ -17,6 +18,6 @@ while True:
     datastore.append(records)
     
     histogram.fill(records['ch0'])
-    datastore.update(histogram, tag="ch0_hist")
+    datastore_obj.update(histogram, tag="ch0_hist")
     
     time.sleep(1)
