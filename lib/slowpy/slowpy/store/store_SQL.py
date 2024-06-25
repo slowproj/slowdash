@@ -5,12 +5,35 @@ import os, sys, time, logging
 from .base import DataStore
 
 
-class SimpleLongFormatInserter:
+class Format:
+    def __init__(self, table_name):
+        self.table_name = table_name
+
+        
+    # to be implemented in a subclass
+    def create_table(self, cur, tag, fields, values):
+        return False
+
+    
+    # override as needed
+    def write(self, cur, timestamp, tag, fields, values, update):
+        channels = DataStore._channels(tag, fields)
+        for i in range(min(len(channels), len(values))):
+            self.write_single(cur, timestamp, channels[i], values[i], update)
+
+            
+    # to be implemented in a subclass
+    def write_single(self, cur, timestamp, channel, value, update):
+        pass
+    
+
+    
+class SimpleLongFormat(Format):
     schema_numeric = '(timestamp REAL, channel TEXT, value REAL, PRIMARY KEY(timestamp,channel))'
     schema_text = '(timestamp REAL, channel TEXT, value TEXT, PRIMARY KEY(timestamp,channel))'
 
     def __init__(self, table_name):
-        self.table_name = table_name
+        super().__init__(table_name)
         self.placeholder = '?'
         self.floating_type = 'REAL'
             
@@ -32,27 +55,23 @@ class SimpleLongFormatInserter:
         return True
 
 
-    def write_one(self, cur, timestamp, tag, fields, values, update):
-        channels = DataStore._channels(tag, fields)
-        for i in range(min(len(channels), len(values))):
-            ch, value = channels[i], values[i]
-
-            if update is True:
-                sql = f"DELETE FROM {self.table_name} WHERE channel={self.placeholder} "
-                sql += f"AND EXISTS (SELECT 1 FROM {self.table_name} WHERE channel={self.placeholder});"
-                cur.execute(sql, (ch, ch))
+    def write_single(self, cur, timestamp, channel, value, update):
+        if update is True:
+            sql = f"DELETE FROM {self.table_name} WHERE channel={self.placeholder} "
+            sql += f"AND EXISTS (SELECT 1 FROM {self.table_name} WHERE channel={self.placeholder});"
+            cur.execute(sql, (channel, channel))
             
-            sql = f"INSERT INTO {self.table_name}(timestamp,channel,value) "
-            if type(value) in [int, float]:
-                sql += f"VALUES(%.3f,%s,%f);" % (timestamp, self.placeholder, value)
-                params = (ch,)
-            else:
-                sql += f"VALUES(%.3f,%s,%s);" % (timestamp, self.placeholder, self.placeholder)
-                params = (ch, str(value))
-            try:
-                cur.execute(sql, params)
-            except Exception as e:
-                logging.error('SQL execute(): %s' % str(e))
+        sql = f"INSERT INTO {self.table_name}(timestamp,channel,value) "
+        if type(value) in [int, float]:
+            sql += f"VALUES(%.3f,%s,%f);" % (timestamp, self.placeholder, value)
+            params = (channel,)
+        else:
+            sql += f"VALUES(%.3f,%s,%s);" % (timestamp, self.placeholder, self.placeholder)
+            params = (channel, str(value))
+        try:
+            cur.execute(sql, params)
+        except Exception as e:
+            logging.error('SQL execute(): %s' % str(e))
 
             
 
@@ -64,7 +83,7 @@ class DataStore_SQL(DataStore):
         return []
     
     
-    def __init__(self, db_url, table_name, Inserter=SimpleLongFormatInserter):        
+    def __init__(self, db_url, table_name, Format=SimpleLongFormat):        
         if not table_name.replace('_', '').isalnum():
             logging.error('SQL: bad table name "%s"' % table_name)
             self.table_name = None
@@ -73,7 +92,7 @@ class DataStore_SQL(DataStore):
         
         self.db_url = db_url
         self.table_name = table_name
-        self.inserter = Inserter(self.table_name)
+        self.format = Format(self.table_name)
         
         self.conn = self.construct()
         if self.conn is None:
@@ -91,19 +110,19 @@ class DataStore_SQL(DataStore):
 
     def _write_one(self, cur, timestamp, tag, fields, values, update):
         if not self.table_exists:
-            self.table_exists = self.inserter.create_table(cur, tag, fields, values)
+            self.table_exists = self.format.create_table(cur, tag, fields, values)
             if not self.table_exists:
                 return
 
-        self.inserter.write_one(cur, timestamp, tag, fields, values, update)
+        self.format.write(cur, timestamp, tag, fields, values, update)
 
                     
         
 class DataStore_SQLite(DataStore_SQL):
-    def __init__(self, db_url, table_name, Inserter=SimpleLongFormatInserter):
-        super().__init__(db_url, table_name, Inserter)
-        self.inserter.placeholder = '?'
-        self.inserter.floating_type = 'REAL'
+    def __init__(self, db_url, table_name, Format=SimpleLongFormat):
+        super().__init__(db_url, table_name, Format)
+        self.format.placeholder = '?'
+        self.format.floating_type = 'REAL'
 
         
     def construct(self):
@@ -154,10 +173,10 @@ class DataStore_SQLite(DataStore_SQL):
     
     
 class DataStore_PostgreSQL(DataStore_SQL):
-    def __init__(self, db_url, table_name, Inserter=SimpleLongFormatInserter):
-        super().__init__(db_url, table_name, Inserter)
-        self.inserter.placeholder = '%s'
-        self.inserter.floating_type = 'DOUBLE PRECISION'
+    def __init__(self, db_url, table_name, Format=SimpleLongFormat):
+        super().__init__(db_url, table_name, Format)
+        self.format.placeholder = '%s'
+        self.format.floating_type = 'DOUBLE PRECISION'
 
         
     def construct(self):
