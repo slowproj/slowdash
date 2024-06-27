@@ -199,6 +199,14 @@ def _get_channels():
 
 def _get_data(channel):
     if channel == 'Run':
+        if is_running:
+            time_to_next = int((last_fetch_time + interval) - time.time())
+            if time_to_next < 0:
+                time_to_next = 0
+        else:
+            time_to_next = '-'
+
+        
         return { 'tree': {
             'Config': {
                 'Series': series_name,
@@ -207,7 +215,9 @@ def _get_data(channel):
                 'Interval': interval
             },
             'Status': {
-                'Running': is_running
+                'Running': is_running,
+                'TimeToNext': time_to_next
+
             }
         }}
 
@@ -243,7 +253,7 @@ def _finalize():
         print(e)
     
 def start():
-    global is_running, light_url
+    global is_running, last_fetch_time, light_url
     is_running = True
     last_fetch_time = 0
     try:

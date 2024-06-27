@@ -5,9 +5,9 @@ services:
     image: couchdb:3.3
     ports:
       - "5984:5984"
-#    volumes:
-#      - "./couchdb/data:/opt/couchdb/data"
-#      - "./couchdb/etc:/opt/couchdb/etc/local.d"
+    volumes:
+      - "./couchdb/data:/opt/couchdb/data"
+      - "./couchdb/etc:/opt/couchdb/etc/local.d"
     logging:
       driver: "none"
     environment:
