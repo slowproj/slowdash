@@ -14,7 +14,7 @@ ARG UID=18881
 ARG GID=18881
 RUN groupadd -g $GID $GROUPNAME && useradd -u $UID -g $GID -d /home/$USERNAME -m -s /bin/bash $USERNAME 
 
-COPY system /slowdash/system
+COPY main /slowdash/main
 COPY lib /slowdash/lib
 COPY docs /slowdash/docs
 COPY utils /slowdash/utils
@@ -26,5 +26,5 @@ VOLUME /project
 EXPOSE 18881
 
 WORKDIR /project
-ENTRYPOINT ["/slowdash/system/docker/entrypoint.sh"]
+ENTRYPOINT ["/slowdash/main/docker/entrypoint.sh"]
 CMD ["/bin/slowdash", "--port=18881"]

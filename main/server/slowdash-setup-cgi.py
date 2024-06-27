@@ -142,11 +142,11 @@ dirlist = {
     'jagaimo', 'autocruise', 'docs', 'extern'
 }
 for fileglob in filelist:
-    for src in glob.glob(os.path.join(sys_dir, 'system', 'web', fileglob)):
+    for src in glob.glob(os.path.join(sys_dir, 'main', 'web', fileglob)):
         name = os.path.basename(src)
         shutil.copy(src, cgi_dir)
 for dirname in dirlist:
-    src = os.path.join(sys_dir, 'system', 'web', dirname)
+    src = os.path.join(sys_dir, 'main', 'web', dirname)
     name = os.path.basename(src)
     dst = os.path.join(cgi_dir, name)
     if os.path.isdir(dst):

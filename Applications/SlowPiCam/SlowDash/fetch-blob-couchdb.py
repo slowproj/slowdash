@@ -245,6 +245,7 @@ def _finalize():
 def start():
     global is_running, light_url
     is_running = True
+    last_fetch_time = 0
     try:
         requests.get('%s?seq=Byg' % light_url)
     except Exception as e:

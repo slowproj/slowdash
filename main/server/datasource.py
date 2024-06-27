@@ -494,7 +494,7 @@ class DataSource:
     
 
 def load(ds_type, project_config, datasource_config):
-    moduledir = os.path.abspath(os.path.join(project_config.sys_dir, 'system', 'plugin'))
+    moduledir = os.path.abspath(os.path.join(project_config.sys_dir, 'main', 'plugin'))
     for plugin_file in glob.glob(os.path.join(moduledir, 'datasource_*.py')):
         name = os.path.basename(plugin_file)[11:-3]
         if ds_type.lower() == name.lower():
