@@ -50,6 +50,6 @@ all:
 	@echo '- To create a docker image, run "make docker"'
 
 
-docker:
+docker: all
 	docker rmi -f slowdash
 	docker build -t slowdash .
