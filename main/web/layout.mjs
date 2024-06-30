@@ -93,7 +93,7 @@ export class Layout {
 
         const scrollBarWidth = 20; // this does not exist yet, so <html>.clientWidth does not include it
         const layoutInnerWidth = layoutWidth - scrollBarWidth;
-        const layoutInnerHeight = layoutHeight /*- scrollBarWidth */;
+        const layoutInnerHeight = layoutHeight /*- scrollBarWidth */ - 2; // 4 for panel border on hover
         
         const ncols = parseInt(this.config.control.grid.columns ?? 1);
         const nrows = parseInt(this.config.control.grid.rows ?? 1);
