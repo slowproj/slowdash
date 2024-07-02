@@ -98,10 +98,10 @@ class App:
             name = node['name']
             filepath = node.get('file', './config/slowtask-%s.py' % name)
             params = node.get('parameters', {})
-            task_table[name] = (filepath, params, {'auto_load':node.get('auto_load', True)})
+            task_table[name] = (filepath, params, {'auto_load':node.get('auto_load', False)})
         
-        if not is_cgi:
-            # make task entries from file list of the config dir
+        # make task entries from file list of the config dir; currently disabled
+        if False and not is_cgi:
             for filepath in glob.glob(os.path.join(self.project_dir, 'config', 'slowtask-*.py')):
                 rootname, ext = os.path.splitext(os.path.basename(filepath))
                 kind, name = rootname.split('-', 1)
