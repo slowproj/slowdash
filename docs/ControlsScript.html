@@ -97,6 +97,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="#callback-functions-command-task">Callback Functions (Command Task)</a></li>
 <li><a href="#thread-functions-routine-task">Thread Functions (Routine Task)</a></li>
 <li><a href="#control-variable-binding">Control Variable Binding</a></li>
+<li><a href="#listing-starting-stopping-and-reloading-the-slow-task-scripts">Listing, Starting, Stopping and Reloading the Slow-Task Scripts</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -140,7 +141,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul></li>
 </ul>
 <h2 id="simple-examples">Simple Examples</h2>
-<h4 id="controlling-an-ethernet-voltmeter-with-scpi-command">Controlling an ethernet voltmeter with SCPI command</h4>
+<h4 id="controlling-a-voltmeter-with-scpi-commands-over-ethernet">Controlling a voltmeter with SCPI commands over Ethernet</h4>
 <div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb1-1" title="1"><span class="im">from</span> slowpy.control <span class="im">import</span> ControlSystem</a>
 <a class="sourceLine" id="cb1-2" title="2">ctrl <span class="op">=</span> ControlSystem()</a>
 <a class="sourceLine" id="cb1-3" title="3"></a>
@@ -325,20 +326,168 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li>sleep(duration_sec): blocks for the duration and returns True unless ControlSystem receives a stop request</li>
 </ul>
 <h2 id="database-interface">Database Interface</h2>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb8-1" title="1"><span class="im">import</span> time</a>
+<a class="sourceLine" id="cb8-2" title="2"><span class="im">from</span> slowpy.control <span class="im">import</span> DummyDevice_RandomWalk</a>
+<a class="sourceLine" id="cb8-3" title="3"><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_PostgreSQL</a>
+<a class="sourceLine" id="cb8-4" title="4"></a>
+<a class="sourceLine" id="cb8-5" title="5">device <span class="op">=</span> DummyDevice_RandomWalk(n<span class="op">=</span><span class="dv">4</span>)</a>
+<a class="sourceLine" id="cb8-6" title="6">datastore <span class="op">=</span> DataStore_PostgreSQL(<span class="st">&#39;postgresql://postgres:postgres@localhost:5432/SlowTestData&#39;</span>, table<span class="op">=</span><span class="st">&quot;Test&quot;</span>)</a>
+<a class="sourceLine" id="cb8-7" title="7"></a>
+<a class="sourceLine" id="cb8-8" title="8"><span class="cf">while</span> <span class="va">True</span>:</a>
+<a class="sourceLine" id="cb8-9" title="9">    records <span class="op">=</span> { <span class="st">&#39;ch</span><span class="sc">%01d</span><span class="st">&#39;</span><span class="op">%</span>ch: device.read(ch) <span class="cf">for</span> ch <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">4</span>) }</a>
+<a class="sourceLine" id="cb8-10" title="10">    <span class="bu">print</span>(records)</a>
+<a class="sourceLine" id="cb8-11" title="11"></a>
+<a class="sourceLine" id="cb8-12" title="12">    datastore.append(records)</a>
+<a class="sourceLine" id="cb8-13" title="13">    </a>
+<a class="sourceLine" id="cb8-14" title="14">    time.sleep(<span class="dv">1</span>)</a></code></pre></div>
 <h2 id="analysis-components">Analysis Components</h2>
 <p>SlowPy provides commonly used data objects such as histograms and graphs. These objects can be directly written to the database using the SlowPy Daabase Interface described above.</p>
 <h3 id="histogram">Histogram</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb9-1" title="1"><span class="im">import</span> slowpy <span class="im">as</span> slp</a>
+<a class="sourceLine" id="cb9-2" title="2">hist <span class="op">=</span> slp.Histogram(<span class="dv">100</span>, <span class="dv">0</span>, <span class="dv">10</span>)</a>
+<a class="sourceLine" id="cb9-3" title="3"></a>
+<a class="sourceLine" id="cb9-4" title="4">device <span class="op">=</span> ...</a>
+<a class="sourceLine" id="cb9-5" title="5">datastore <span class="op">=</span> ...</a>
+<a class="sourceLine" id="cb9-6" title="6"></a>
+<a class="sourceLine" id="cb9-7" title="7"><span class="cf">while</span> <span class="kw">not</span> ControlSystem.is_stop_requested():</a>
+<a class="sourceLine" id="cb9-8" title="8">  value <span class="op">=</span> device.read(...</a>
+<a class="sourceLine" id="cb9-9" title="9">  hist.fill(value)</a>
+<a class="sourceLine" id="cb9-10" title="10">  data_store.write(hist, tag<span class="op">=</span><span class="st">&quot;test_hist&quot;</span>)</a></code></pre></div>
 <h3 id="graph">Graph</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb10-1" title="1"><span class="im">import</span> slowpy <span class="im">as</span> slp</a>
+<a class="sourceLine" id="cb10-2" title="2">graph <span class="op">=</span> slp.Graph([<span class="st">&#39;channel&#39;</span>, <span class="st">&#39;value&#39;</span>])</a>
+<a class="sourceLine" id="cb10-3" title="3"></a>
+<a class="sourceLine" id="cb10-4" title="4"><span class="cf">while</span> <span class="kw">not</span> ControlSystem.is_stop_requested():</a>
+<a class="sourceLine" id="cb10-5" title="5">  <span class="cf">for</span> ch <span class="kw">in</span> <span class="bu">range</span>(n_ch):</a>
+<a class="sourceLine" id="cb10-6" title="6">    value <span class="op">=</span> device.read(ch, ...</a>
+<a class="sourceLine" id="cb10-7" title="7">    graph.fill(ch, value)</a>
+<a class="sourceLine" id="cb10-8" title="8">  data_store.write(graph, tag<span class="op">=</span><span class="st">&quot;test_graph&quot;</span>)</a></code></pre></div>
 <h3 id="trend">Trend</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb11-1" title="1"><span class="im">import</span> slowpy <span class="im">as</span> slp</a>
+<a class="sourceLine" id="cb11-2" title="2">rate_trend <span class="op">=</span> slp.RateTrend(length<span class="op">=</span><span class="dv">300</span>, tick<span class="op">=</span><span class="dv">10</span>)</a>
+<a class="sourceLine" id="cb11-3" title="3"></a>
+<a class="sourceLine" id="cb11-4" title="4"><span class="cf">while</span> <span class="kw">not</span> ControlSystem.is_stop_requested():</a>
+<a class="sourceLine" id="cb11-5" title="5">  value <span class="op">=</span> device.read(...</a>
+<a class="sourceLine" id="cb11-6" title="6">  rate_trend.fill(time.time())</a>
+<a class="sourceLine" id="cb11-7" title="7"></a>
+<a class="sourceLine" id="cb11-8" title="8">  data_store.write(rate_trend.time_series(<span class="st">&#39;test_rate&#39;</span>))</a></code></pre></div>
 <h1 id="slowtask-slowdash-gui-script-interconnect">SlowTask: Slowdash GUI-Script Interconnect</h1>
 <p>SlowTask is a user Python script placed under the SlowDash config directory with a name like <code>slowtask-XXX.py</code>. SlowDash GUI can start/stop the script, call functions defined in the script, and bind control variables in the script to GUI elements. Using the SlowPy library from a SlowTask script is assumed for this design, but this is not a requirement.</p>
 <h2 id="callback-functions-command-task">Callback Functions (Command Task)</h2>
-<p>Functions in SlowTask scripts can be called from SlowDash GUI. If a script has a function like this</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">def</span> destroy_apparatus():</a>
-<a class="sourceLine" id="cb8-2" title="2">  <span class="co">#... do your work here</span></a></code></pre></div>
-<p>This can be called from SlowDash GUI, from a HTML form panel or from a Canvas panel:</p>
+<p>Functions in SlowTask scripts can be called from SlowDash GUI. If a script (of name <code>test</code>) has a function like this</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb12-1" title="1"><span class="kw">def</span> destroy_apparatus():</a>
+<a class="sourceLine" id="cb12-2" title="2">  <span class="co">#... do your work here</span></a></code></pre></div>
+<p>This can be called from SlowDash GUI in several ways.</p>
+<p>From a HTML form panel in SlowPlot, clicking a <code>&lt;button&gt;</code> with a name of the task module and the function will call the function:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode html"><code class="sourceCode html"><a class="sourceLine" id="cb13-1" title="1"><span class="kw">&lt;form&gt;</span></a>
+<a class="sourceLine" id="cb13-2" title="2">  <span class="kw">&lt;input</span><span class="ot"> type=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name=</span><span class="st">&quot;test.set_V0()&quot;</span><span class="ot"> value=</span><span class="st">&quot;Set&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb13-3" title="3"><span class="kw">&lt;/form&gt;</span></a></code></pre></div>
+<p>Here the parenthesis at the and of the button name indicates that this button is bound to a SlowTask function.</p>
+<p>SlowTask functions can take parameters:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb14-1" title="1"><span class="kw">def</span> set_V0(voltage, ramping):</a>
+<a class="sourceLine" id="cb14-2" title="2">  <span class="co">#... do your work here</span></a></code></pre></div>
+<p>and these parameter values are taken from the form values (typically from <code>&lt;input&gt;</code> entries):</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode html"><code class="sourceCode html"><a class="sourceLine" id="cb15-1" title="1"><span class="kw">&lt;form&gt;</span></a>
+<a class="sourceLine" id="cb15-2" title="2">  Voltage: <span class="kw">&lt;input</span><span class="ot"> type=</span><span class="st">&quot;number&quot;</span><span class="ot"> name=</span><span class="st">&quot;voltage&quot;</span><span class="ot"> value=</span><span class="st">&quot;0&quot;</span><span class="kw">&gt;&lt;br&gt;</span></a>
+<a class="sourceLine" id="cb15-3" title="3">  Ramping: <span class="kw">&lt;input</span><span class="ot"> type=</span><span class="st">&quot;number&quot;</span><span class="ot"> name=</span><span class="st">&quot;ramping&quot;</span><span class="ot"> value=</span><span class="st">&quot;1&quot;</span><span class="kw">&gt;&lt;br&gt;</span></a>
+<a class="sourceLine" id="cb15-4" title="4">  <span class="kw">&lt;input</span><span class="ot"> type=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name=</span><span class="st">&quot;test.set_V0()&quot;</span><span class="ot"> value=</span><span class="st">&quot;Set&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb15-5" title="5"><span class="kw">&lt;/form&gt;</span></a></code></pre></div>
+<p>It is possible to place multiple buttons in one form.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode html"><code class="sourceCode html"><a class="sourceLine" id="cb16-1" title="1"><span class="kw">&lt;form&gt;</span></a>
+<a class="sourceLine" id="cb16-2" title="2">  Ramping: <span class="kw">&lt;input</span><span class="ot"> type=</span><span class="st">&quot;number&quot;</span><span class="ot"> name=</span><span class="st">&quot;ramping&quot;</span><span class="ot"> value=</span><span class="st">&quot;1&quot;</span><span class="ot"> style=</span><span class="st">&quot;width:5em&quot;</span><span class="kw">&gt;</span>/sec</a>
+<a class="sourceLine" id="cb16-3" title="3">  <span class="kw">&lt;p&gt;</span></a>
+<a class="sourceLine" id="cb16-4" title="4">  V0: <span class="kw">&lt;input</span><span class="ot"> type=</span><span class="st">&quot;number&quot;</span><span class="ot"> name=</span><span class="st">&quot;V0&quot;</span><span class="ot"> value=</span><span class="st">&quot;0&quot;</span><span class="kw">&gt;&lt;input</span><span class="ot"> type=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name=</span><span class="st">&quot;async test.set_V0()&quot;</span><span class="ot"> value=</span><span class="st">&quot;Set&quot;</span><span class="kw">&gt;&lt;br&gt;</span></a>
+<a class="sourceLine" id="cb16-5" title="5">  V1: <span class="kw">&lt;input</span><span class="ot"> type=</span><span class="st">&quot;number&quot;</span><span class="ot"> name=</span><span class="st">&quot;V1&quot;</span><span class="ot"> value=</span><span class="st">&quot;0&quot;</span><span class="kw">&gt;&lt;input</span><span class="ot"> type=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name=</span><span class="st">&quot;async test.set_V1()&quot;</span><span class="ot"> value=</span><span class="st">&quot;Set&quot;</span><span class="kw">&gt;&lt;br&gt;</span></a>
+<a class="sourceLine" id="cb16-6" title="6">  V2: <span class="kw">&lt;input</span><span class="ot"> type=</span><span class="st">&quot;number&quot;</span><span class="ot"> name=</span><span class="st">&quot;V2&quot;</span><span class="ot"> value=</span><span class="st">&quot;0&quot;</span><span class="kw">&gt;&lt;input</span><span class="ot"> type=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name=</span><span class="st">&quot;async test.set_V2()&quot;</span><span class="ot"> value=</span><span class="st">&quot;Set&quot;</span><span class="kw">&gt;&lt;br&gt;</span></a>
+<a class="sourceLine" id="cb16-7" title="7">  V3: <span class="kw">&lt;input</span><span class="ot"> type=</span><span class="st">&quot;number&quot;</span><span class="ot"> name=</span><span class="st">&quot;V3&quot;</span><span class="ot"> value=</span><span class="st">&quot;0&quot;</span><span class="kw">&gt;&lt;input</span><span class="ot"> type=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name=</span><span class="st">&quot;async test.set_V3()&quot;</span><span class="ot"> value=</span><span class="st">&quot;Set&quot;</span><span class="kw">&gt;&lt;br&gt;</span></a>
+<a class="sourceLine" id="cb16-8" title="8">  <span class="kw">&lt;p&gt;</span></a>
+<a class="sourceLine" id="cb16-9" title="9">  <span class="kw">&lt;input</span><span class="ot"> type=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name=</span><span class="st">&quot;test.set_all()&quot;</span><span class="ot"> value=</span><span class="st">&quot;Set All&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb16-10" title="10">  <span class="kw">&lt;input</span><span class="ot"> type=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name=</span><span class="st">&quot;async test.stop()&quot;</span><span class="ot"> value=</span><span class="st">&quot;Stop Ramping&quot;</span><span class="kw">&gt;&lt;br&gt;</span>    </a>
+<a class="sourceLine" id="cb16-11" title="11"><span class="kw">&lt;/form&gt;</span></a></code></pre></div>
+<p>In that case, some input fields might not be used by some buttons. Since all the input field values are passed to the function parameters, it may cause a Python error of unexpected parameters. To absorb the unused parameters, a best practice is always adding <code>**kwargs</code> to the SlowTask function parameters:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb17-1" title="1"><span class="kw">def</span> set_V0(V0, ramping, <span class="op">**</span>kwargs):</a>
+<a class="sourceLine" id="cb17-2" title="2">  <span class="co">#... do your work here</span></a></code></pre></div>
+<p>In the example above, some functions have the <code>async</code> qualifier: by default, if a previous function call is in execution, a next action cannot be accepted to avoid multi-threading issues in the user code. The <code>async</code> qualifier indicates that this function call can be run in parallel to others. Another common qualifier is <code>await</code>, which instruct the GUI to wait for completion of the function execution before doing any other things (therefore it will look frozen).</p>
+<p>The canvas panel can have a form to do the same as the HTML form panel. See the UI Panels section for details.</p>
 <h2 id="thread-functions-routine-task">Thread Functions (Routine Task)</h2>
+<p>If a SlowTask script has functions of <code>_initialize(params)</code>, <code>_finalize()</code>, <code>_run()</code>, and/or <code>_loop()</code>, one dedicated thread will be created and these function are called in a sequence:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>function</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>_initialize(params)</code></td>
+<td>called once when the script is loaded. The <code>params</code> values are given by the SlowDash configuration.</td>
+</tr>
+<tr class="even">
+<td><code>_run()</code></td>
+<td>called once after <code>_initialize()</code>. If <code>_run()</code> is defined, <code>_halt()</code> should be also defined to stop the <code>_run()</code> function. <code>_halt()</code> will be called by SlowDash when the user stops the system.</td>
+</tr>
+<tr class="odd">
+<td><code>_loop()</code></td>
+<td>called repeatedly after <code>_initialize()</code>, until the user stops the system. To control the intervals, the function usually contains <code>time.sleep()</code> or equivalent.</td>
+</tr>
+<tr class="even">
+<td><code>_finalize()</code></td>
+<td>called once after <code>_run()</code> or <code>_loop()</code></td>
+</tr>
+</tbody>
+</table>
 <h2 id="control-variable-binding">Control Variable Binding</h2>
+<p>Control variables (instances of the Control Node classes) can be bound to GUI elements if a SlowTask script exports them with the <code>_export()</code> function:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb18-1" title="1"><span class="kw">def</span> _export():</a>
+<a class="sourceLine" id="cb18-2" title="2">    <span class="cf">return</span> [</a>
+<a class="sourceLine" id="cb18-3" title="3">      (<span class="st">&#39;V0&#39;</span>, V0),</a>
+<a class="sourceLine" id="cb18-4" title="4">      (<span class="st">&#39;V1&#39;</span>, V1),</a>
+<a class="sourceLine" id="cb18-5" title="5">      (<span class="st">&#39;V2&#39;</span>, V2),</a>
+<a class="sourceLine" id="cb18-6" title="6">      (<span class="st">&#39;V3&#39;</span>, V3)</a>
+<a class="sourceLine" id="cb18-7" title="7">    ]</a></code></pre></div>
+<p>Here the return value is a list of tuples of (name, control_node_variable). In the GUI, the exported entries can be used in the same way as data from a database. To export a variable that is not a control node, wrapping it with a control node is easy:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb19-1" title="1"><span class="kw">class</span> RampingStatusNode(ControlNode):</a>
+<a class="sourceLine" id="cb19-2" title="2">    <span class="kw">def</span> get(<span class="va">self</span>):</a>
+<a class="sourceLine" id="cb19-3" title="3">        <span class="cf">return</span> {</a>
+<a class="sourceLine" id="cb19-4" title="4">            <span class="st">&#39;columns&#39;</span>: [ <span class="st">&#39;Channel&#39;</span>, <span class="st">&#39;Value&#39;</span>, <span class="st">&#39;Ramping&#39;</span> ],</a>
+<a class="sourceLine" id="cb19-5" title="5">            <span class="st">&#39;table&#39;</span>: [</a>
+<a class="sourceLine" id="cb19-6" title="6">                [ <span class="st">&#39;Ch0&#39;</span>, <span class="bu">float</span>(V0), <span class="st">&#39;Yes&#39;</span> <span class="cf">if</span> V0.ramping().status().get() <span class="cf">else</span> <span class="st">&#39;No&#39;</span> ],</a>
+<a class="sourceLine" id="cb19-7" title="7">                [ <span class="st">&#39;Ch1&#39;</span>, <span class="bu">float</span>(V1), <span class="st">&#39;Yes&#39;</span> <span class="cf">if</span> V1.ramping().status().get() <span class="cf">else</span> <span class="st">&#39;No&#39;</span> ],</a>
+<a class="sourceLine" id="cb19-8" title="8">                [ <span class="st">&#39;Ch2&#39;</span>, <span class="bu">float</span>(V2), <span class="st">&#39;Yes&#39;</span> <span class="cf">if</span> V2.ramping().status().get() <span class="cf">else</span> <span class="st">&#39;No&#39;</span> ],</a>
+<a class="sourceLine" id="cb19-9" title="9">                [ <span class="st">&#39;Ch3&#39;</span>, <span class="bu">float</span>(V3), <span class="st">&#39;Yes&#39;</span> <span class="cf">if</span> V3.ramping().status().get() <span class="cf">else</span> <span class="st">&#39;No&#39;</span> ]</a>
+<a class="sourceLine" id="cb19-10" title="10">            ]</a>
+<a class="sourceLine" id="cb19-11" title="11">        }</a>
+<a class="sourceLine" id="cb19-12" title="12">    </a>
+<a class="sourceLine" id="cb19-13" title="13"><span class="kw">def</span> _export():</a>
+<a class="sourceLine" id="cb19-14" title="14">    <span class="cf">return</span> [</a>
+<a class="sourceLine" id="cb19-15" title="15">        (<span class="st">&#39;V0&#39;</span>, V0),</a>
+<a class="sourceLine" id="cb19-16" title="16">        (<span class="st">&#39;V1&#39;</span>, V1),</a>
+<a class="sourceLine" id="cb19-17" title="17">        (<span class="st">&#39;V2&#39;</span>, V2),</a>
+<a class="sourceLine" id="cb19-18" title="18">        (<span class="st">&#39;V3&#39;</span>, V3),</a>
+<a class="sourceLine" id="cb19-19" title="19">        (<span class="st">&#39;Status&#39;</span>, StatusNode())</a>
+<a class="sourceLine" id="cb19-20" title="20">    ]</a></code></pre></div>
+<p>Here the new node <code>StatusNode</code> returns a table object.</p>
+<h2 id="listing-starting-stopping-and-reloading-the-slow-task-scripts">Listing, Starting, Stopping and Reloading the Slow-Task Scripts</h2>
+<p>All SlowTask scripts (python file placed under project configuration directory with a name of <code>slowtask-XXX.py</code>) are automatically listed in the SlowDash Task Manager. Here users can manually start and stop the script. Starting again will reload the script.</p>
+<p>Scripts can be started automatically, by making an entry in the <code>SlowdashProject.yaml</code>:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb20-1" title="1"><span class="fu">slowdash_project:</span></a>
+<a class="sourceLine" id="cb20-2" title="2">  ...</a>
+<a class="sourceLine" id="cb20-3" title="3"></a>
+<a class="sourceLine" id="cb20-4" title="4">  <span class="fu">task:</span></a>
+<a class="sourceLine" id="cb20-5" title="5">    <span class="fu">name:</span><span class="at"> test</span></a>
+<a class="sourceLine" id="cb20-6" title="6">    <span class="fu">auto_load:</span><span class="at"> </span><span class="ch">true</span></a>
+<a class="sourceLine" id="cb20-7" title="7">    <span class="fu">parameters:</span></a>
+<a class="sourceLine" id="cb20-8" title="8">      <span class="fu">default_ramping_speed:</span><span class="at"> </span><span class="fl">0.1</span></a>
+<a class="sourceLine" id="cb20-9" title="9"></a>
+<a class="sourceLine" id="cb20-10" title="10">  <span class="fu">system:</span></a>
+<a class="sourceLine" id="cb20-11" title="11">    <span class="fu">our_security_is_perfect:</span><span class="at"> </span><span class="ch">false</span></a></code></pre></div>
+<p>In the Slowdash configuration you can also pass parameters to the <code>_initialize()</code> function.</p>
+<p>By setting <code>system/our_security_is_peferct</code> to <code>true</code> will enable editing of the Python scripts on the SlowDash web page. While this is convenient, be aware what this means. Python scripts can do anything, such as <code>system("rm *")</code>. Enable this feature only when the access is strictly controlled. Some careful systems run processes only in Docker containers, where the container system runs on a virtual machine (in case the container is cracked) inside a firewall.</p>
 
 
 </body>

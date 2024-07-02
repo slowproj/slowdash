@@ -28,7 +28,7 @@ title: Controls Script
   - Data storage interface to store the data objects, as well as raw data from the external systems
 
 ## Simple Examples
-#### Controlling an ethernet voltmeter with SCPI command
+#### Controlling a voltmeter with SCPI commands over Ethernet
 ```python
 from slowpy.control import ControlSystem
 ctrl = ControlSystem()
@@ -207,13 +207,65 @@ All the control nodes (derived from slowpy.control.ControlNode) have the followi
 
 
 ## Database Interface
+```python
+import time
+from slowpy.control import DummyDevice_RandomWalk
+from slowpy.store import DataStore_PostgreSQL
+
+device = DummyDevice_RandomWalk(n=4)
+datastore = DataStore_PostgreSQL('postgresql://postgres:postgres@localhost:5432/SlowTestData', table="Test")
+
+while True:
+    records = { 'ch%01d'%ch: device.read(ch) for ch in range(4) }
+    print(records)
+
+    datastore.append(records)
+    
+    time.sleep(1)
+```
+
 
 ## Analysis Components
 SlowPy provides commonly used data objects such as histograms and graphs. These objects can be directly written to the database using the SlowPy Daabase Interface described above.
 
 ### Histogram
+```python
+import slowpy as slp
+hist = slp.Histogram(100, 0, 10)
+
+device = ...
+datastore = ...
+
+while not ControlSystem.is_stop_requested():
+  value = device.read(...
+  hist.fill(value)
+  data_store.write(hist, tag="test_hist")
+```
+
 ### Graph
+```python
+import slowpy as slp
+graph = slp.Graph(['channel', 'value'])
+
+while not ControlSystem.is_stop_requested():
+  for ch in range(n_ch):
+    value = device.read(ch, ...
+    graph.fill(ch, value)
+  data_store.write(graph, tag="test_graph")
+```
+
 ### Trend
+```python
+import slowpy as slp
+rate_trend = slp.RateTrend(length=300, tick=10)
+
+while not ControlSystem.is_stop_requested():
+  value = device.read(...
+  rate_trend.fill(time.time())
+
+  data_store.write(rate_trend.time_series('test_rate'))
+```
+
 
 
 
@@ -221,16 +273,123 @@ SlowPy provides commonly used data objects such as histograms and graphs. These 
 SlowTask is a user Python script placed under the SlowDash config directory with a name like `slowtask-XXX.py`. SlowDash GUI can start/stop the script, call functions defined in the script, and bind control variables in the script to GUI elements. Using the SlowPy library from a SlowTask script is assumed for this design, but this is not a requirement.
 
 ## Callback Functions (Command Task)
-Functions in SlowTask scripts can be called from SlowDash GUI. If a script has a function like this
+Functions in SlowTask scripts can be called from SlowDash GUI. If a script (of name `test`) has a function like this
 ```python
 def destroy_apparatus():
   #... do your work here
 ```
-This can be called from SlowDash GUI, from a HTML form panel or from a Canvas panel:
+This can be called from SlowDash GUI in several ways.
 
+From a HTML form panel in SlowPlot, clicking a `<button>` with a name of the task module and the function will call the function:
+```html
+<form>
+  <input type="submit" name="test.set_V0()" value="Set">
+</form>
+```
+Here the parenthesis at the and of the button name indicates that this button is bound to a SlowTask function.
+
+SlowTask functions can take parameters:
+```python
+def set_V0(voltage, ramping):
+  #... do your work here
+```
+and these parameter values are taken from the form values (typically from `<input>` entries):
+```html
+<form>
+  Voltage: <input type="number" name="voltage" value="0"><br>
+  Ramping: <input type="number" name="ramping" value="1"><br>
+  <input type="submit" name="test.set_V0()" value="Set">
+</form>
+```
+
+It is possible to place multiple buttons in one form. 
+```html
+<form>
+  Ramping: <input type="number" name="ramping" value="1" style="width:5em">/sec
+  <p>
+  V0: <input type="number" name="V0" value="0"><input type="submit" name="async test.set_V0()" value="Set"><br>
+  V1: <input type="number" name="V1" value="0"><input type="submit" name="async test.set_V1()" value="Set"><br>
+  V2: <input type="number" name="V2" value="0"><input type="submit" name="async test.set_V2()" value="Set"><br>
+  V3: <input type="number" name="V3" value="0"><input type="submit" name="async test.set_V3()" value="Set"><br>
+  <p>
+  <input type="submit" name="test.set_all()" value="Set All">
+  <input type="submit" name="async test.stop()" value="Stop Ramping"><br>    
+</form>
+```
+In that case, some input fields might not be used by some buttons. Since all the input field values are passed to the function parameters, it may cause a Python error of unexpected parameters. To absorb the unused parameters, a best practice is always adding `**kwargs` to the SlowTask function parameters:
+```python
+def set_V0(V0, ramping, **kwargs):
+  #... do your work here
+```
+
+In the example above, some functions have the `async` qualifier: by default, if a previous function call is in execution, a next action cannot be accepted to avoid multi-threading issues in the user code. The `async` qualifier indicates that this function call can be run in parallel to others. Another common qualifier is `await`, which instruct the GUI to wait for completion of the function execution before doing any other things (therefore it will look frozen).
+
+The canvas panel can have a form to do the same as the HTML form panel. See the UI Panels section for details.
 
 ## Thread Functions (Routine Task)
+If a SlowTask script has functions of `_initialize(params)`, `_finalize()`, `_run()`, and/or `_loop()`, one dedicated thread will be created and these function are called in a sequence:
+
+| function | description |
+|---|---|
+| `_initialize(params)` | called once when the script is loaded. The `params` values are given by the SlowDash configuration. |
+| `_run()` | called once after `_initialize()`. If `_run()` is defined, `_halt()` should be also defined to stop the `_run()` function. `_halt()` will be called by SlowDash when the user stops the system. |
+| `_loop()` | called repeatedly after `_initialize()`, until the user stops the system. To control the intervals, the function usually contains `time.sleep()` or equivalent. |
+| `_finalize()` | called once after `_run()` or `_loop()` |
+
 ## Control Variable Binding
+Control variables (instances of the Control Node classes) can be bound to GUI elements if a SlowTask script exports them with the `_export()` function:
+```python
+def _export():
+    return [
+      ('V0', V0),
+      ('V1', V1),
+      ('V2', V2),
+      ('V3', V3)
+    ]
+```
+Here the return value is a list of tuples of (name, control_node_variable). In the GUI, the exported entries can be used in the same way as data from a database. To export a variable that is not a control node, wrapping it with a control node is easy:
+```python
+class RampingStatusNode(ControlNode):
+    def get(self):
+        return {
+            'columns': [ 'Channel', 'Value', 'Ramping' ],
+            'table': [
+                [ 'Ch0', float(V0), 'Yes' if V0.ramping().status().get() else 'No' ],
+                [ 'Ch1', float(V1), 'Yes' if V1.ramping().status().get() else 'No' ],
+                [ 'Ch2', float(V2), 'Yes' if V2.ramping().status().get() else 'No' ],
+                [ 'Ch3', float(V3), 'Yes' if V3.ramping().status().get() else 'No' ]
+            ]
+        }
+    
+def _export():
+    return [
+        ('V0', V0),
+        ('V1', V1),
+        ('V2', V2),
+        ('V3', V3),
+        ('Status', StatusNode())
+    ]
+```
+Here the new node `StatusNode` returns a table object.
 
 
+## Listing, Starting, Stopping and Reloading the Slow-Task Scripts
+All SlowTask scripts (python file placed under project configuration directory with a name of `slowtask-XXX.py`) are automatically listed in the SlowDash Task Manager. Here users can manually start and stop the script. Starting again will reload the script.
 
+Scripts can be started automatically, by making an entry in the `SlowdashProject.yaml`:
+```yaml
+slowdash_project:
+  ...
+
+  task:
+    name: test
+    auto_load: true
+    parameters:
+      default_ramping_speed: 0.1
+
+  system:
+    our_security_is_perfect: false
+```
+In the Slowdash configuration you can also pass parameters to the `_initialize()` function.
+
+By setting `system/our_security_is_peferct` to `true` will enable editing of the Python scripts on the SlowDash web page. While this is convenient, be aware what this means. Python scripts can do anything, such as `system("rm *")`. Enable this feature only when the access is strictly controlled. Some careful systems run processes only in Docker containers, where the container system runs on a virtual machine (in case the container is cracked) inside a firewall.
