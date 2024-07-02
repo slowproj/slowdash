@@ -41,8 +41,13 @@ class DataStore_CSV(DataStore):
 
             
     def __del__(self):
+        self.close()
+
+
+    def close(self):
         if self.csv_file is not None:
             self.csv_file.close()
+            self.csv_file = None
 
 
     def another(self, table, recreate=None):

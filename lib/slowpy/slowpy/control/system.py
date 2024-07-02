@@ -19,4 +19,3 @@ class ControlSystem(ControlNode):
         def handle_signal(signum, frame):
             cls.stop()
         signal.signal(signal_number, handle_signal)
-        

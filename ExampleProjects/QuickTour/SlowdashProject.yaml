@@ -16,8 +16,13 @@ slowdash_project:
         - name: objdatatable
           sql: select * from testdata_obj order by timestamp desc limit 30
 
-  module_disabled:
-    file: generate-testdata.py
-    parameters:
-      histogram_name: hist01
-      graph_name: graph01
+
+  task:
+    name: testdata
+
+
+#  module:
+#    file: generate-testdata.py
+#    parameters:
+#      histogram_name: hist01
+#      graph_name: graph01

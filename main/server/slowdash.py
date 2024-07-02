@@ -15,6 +15,8 @@ class App:
         self.datasource_list = []
         self.usermodule_list = []
         self.taskmodule_list = []
+        self.console_stdin = None
+        self.console_stdout = None
         self.error_message = ''
 
         if self.project is None:
@@ -79,7 +81,8 @@ class App:
         taskmodule_node = self.project.get('task', [])
         if not isinstance(taskmodule_node, list):
             taskmodule_node = [ taskmodule_node ]
-            
+                    
+        task_table = {}
         for node in taskmodule_node:
             if not isinstance(node, dict):
                 self.error_message = 'bad control module configuration'
@@ -95,12 +98,23 @@ class App:
             name = node['name']
             filepath = node.get('file', './config/slowtask-%s.py' % name)
             params = node.get('parameters', {})
+            task_table[name] = (filepath, params, {'auto_load':node.get('auto_load', True)})
+        
+        if not is_cgi:
+            # make task entries from file list of the config dir
+            for filepath in glob.glob(os.path.join(self.project_dir, 'config', 'slowtask-*.py')):
+                rootname, ext = os.path.splitext(os.path.basename(filepath))
+                kind, name = rootname.split('-', 1)
+                if name not in task_table:
+                    task_table[name] = (filepath, {}, {'auto_load':False})
+
+        for name, (filepath, params, opts) in task_table.items():
             module = taskmodule.TaskModule(filepath, name, params)
             if module is None:
                 self.error_message = 'Unable to load control module: %s' % filepath
                 logging.error(self.error_message)
             else:
-                module.auto_load = node.get('auto_load', True)
+                module.auto_load = opts.get('auto_load', False)
                 self.taskmodule_list.append(module)
 
                 

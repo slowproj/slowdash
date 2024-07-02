@@ -89,12 +89,6 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="#project-configuration">Project Configuration</a></li>
 <li><a href="#running">Running</a></li>
 <li><a href="#making-plots">Making Plots</a></li>
-<li><a href="#configuration-by-url">Configuration by URL</a></li>
-</ul></li>
-<li><a href="#advanced-usage">Advanced Usage</a><ul>
-<li><a href="#data-transform">Data Transform</a></li>
-<li><a href="#user-module">User Module</a></li>
-<li><a href="#sending-commands">Sending Commands</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -277,7 +271,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="sourceCode" id="cb17"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb17-1" title="1"><span class="kw">$ python3 generate-testdata.py</span></a></code></pre></div>
 <p>The data file size is roughly 5 MB per hour. The test data file, <code>QuickTourTestData.db</code>, can be deleted safely when SlowDash is not running. Once the file is deleted, run <code>generate-testdata.py</code> again before starting Slow-Dash next time.</p>
 <h2 id="making-plots">Making Plots</h2>
-<h3 id="simple-plots">Simple Plots</h3>
+<h3 id="interactive-building">Interactive Building</h3>
 <p>Probably just playing with the GUI would be easier than reading this section…</p>
 <ul>
 <li>Click one of the channels in the “Channel List” panel to make a time-series plot of the channel.</li>
@@ -286,21 +280,16 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li>Putting mouse pointer on blank space will show a “Add New Panel” button. Click it and then select “Time-Axis Plot” to make a new plot.</li>
 <li>Putting mouse pointer on a plot shows a set of control buttons. Click the 🛠 button to configure the plot axes and styles, and to add a new time-series.</li>
 </ul>
-<h3 id="dashboard-canvas">Dashboard Canvas</h3>
-<h3 id="table-view">Table View</h3>
-<h3 id="map-view">Map View</h3>
-<h2 id="configuration-by-url">Configuration by URL</h2>
+<p>So far we have only time-series data in the test database, so only time-series plots can be created at the moment.</p>
+<h3 id="saving">Saving</h3>
+<p>Created plots (called SlowPlot Layout) can be saved and shared. Click the 💾 button on the top right corner. Saved layouts are listed in the SlowDash home page.</p>
 <h3 id="panel-building-from-url">Panel Building from URL</h3>
 <h4 id="by-configuration-file">By configuration file</h4>
+<p>A URL can be used to open a saved layout with a specified time range:</p>
 <pre><code>http://localhost:18881/slowplot.html?config=slowplot-QuickTour.json&amp;time=2023-03-30T18:00:00&amp;reload=0</code></pre>
 <h4 id="by-channels-and-plot-types">By channels and plot types</h4>
+<p>A layout can be created by URL only, with specifying the channel(s) and time range:</p>
 <pre><code>http://localhost:18881/slowplot.html?channel=ch00;ch00/ts-histogram&amp;length=360&amp;reload=60&amp;grid=2x1</code></pre>
-<h4 id="useful-parameters">Useful parameters</h4>
-<h3 id="auto-cruise">Auto-Cruise</h3>
-<h1 id="advanced-usage">Advanced Usage</h1>
-<h2 id="data-transform">Data Transform</h2>
-<h2 id="user-module">User Module</h2>
-<h2 id="sending-commands">Sending Commands</h2>
 
 
 </body>

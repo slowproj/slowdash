@@ -103,13 +103,18 @@ class DataStore_SQL(DataStore):
         table_list = [ name.upper() for name in self.get_table_list() ]
         self.table_exists = (self.table is not None) and (self.table.upper() in table_list)
 
-        
+
     def __del__(self):
+        self.close()
+
+
+    def close(self):
         if self.conn is not None:
             self.conn.close()
+            self.conn = None
             logging.info('DB "%s" is disconnnected.' % self.db_url)
 
-
+            
     def _write_one(self, cur, timestamp, tag, fields, values, update):
         if not self.table_exists:
             self.table_exists = self.format.create_table(cur, tag, fields, values)
@@ -166,7 +171,7 @@ class DataStore_SQLite(DataStore_SQL):
     
     def _open_transaction(self):
         if self.conn is None:
-            return False
+            return None
         cur = self.conn.cursor()
         cur.execute('BEGIN TRANSACTION;')
         return cur
@@ -238,7 +243,7 @@ class DataStore_PostgreSQL(DataStore_SQL):
 
     def _open_transaction(self):
         if self.conn is None:
-            return False
+            return None
         return self.conn.cursor()
         
     

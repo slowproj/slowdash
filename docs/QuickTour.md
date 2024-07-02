@@ -20,7 +20,7 @@ $ cd QuickTour
 ```
 
 ### Using Docker?
-The directory just created will be mapped into the container as a volume. You can work either inside the container (by `docker exec ...  /bin/bash`) or outside, but working outside should be easier.
+The directory just created will be mapped into the container as a volume. You can work either inside the container (by `docker exec ...  /bin/bash`) or outside, but working outside should be easier in the beginning.
 
 # Test-Data Generation
 Download the test data generation script <a href="generate-testdata.py.txt" download="generate-testdata.py">generate-testdata.py</a>, or get it from `PATH/TO/SLOWDASH/ExampleProjects/QuickTour/generate-testdata.py`, and place it at the project directory.
@@ -213,7 +213,7 @@ Once the file is deleted, run `generate-testdata.py` again before starting Slow-
 
 
 ## Making Plots
-### Simple Plots
+### Interactive Building
 Probably just playing with the GUI would be easier than reading this section...
 
 - Click one of the channels in the "Channel List" panel to make a time-series  plot of the channel.
@@ -221,29 +221,23 @@ Probably just playing with the GUI would be easier than reading this section...
 <p>
 - Putting mouse pointer on blank space will show a "Add New Panel" button. Click it and then select "Time-Axis Plot" to make a new plot.
 - Putting mouse pointer on a plot shows a set of control buttons. Click the &#x1f6e0; button to configure the plot axes and styles, and to add a new time-series.
+  
+So far we have only time-series data in the test database, so only time-series plots can be created at the moment.
 
-### Dashboard Canvas
-### Table View
-### Map View
+### Saving
+Created plots (called SlowPlot Layout) can be saved and shared. Click the &#x1f4be; button on the top right corner.
+Saved layouts are listed in the SlowDash home page.
 
-## Configuration by URL
 ### Panel Building from URL
 #### By configuration file
+A URL can be used to open a saved layout with a specified time range:
 ```
 http://localhost:18881/slowplot.html?config=slowplot-QuickTour.json&time=2023-03-30T18:00:00&reload=0
 ```
 
 #### By channels and plot types
+A layout can be created by URL only, with specifying the channel(s) and time range:
 ```
 http://localhost:18881/slowplot.html?channel=ch00;ch00/ts-histogram&length=360&reload=60&grid=2x1
 ```
 
-#### Useful parameters
-
-
-### Auto-Cruise
-
-# Advanced Usage
-## Data Transform
-## User Module
-## Sending Commands

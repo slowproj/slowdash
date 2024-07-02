@@ -13,4 +13,7 @@ slowdash_project:
 
   task:
     name: control-peaches
+
+  system:
+    our_security_is_perfect: true
     

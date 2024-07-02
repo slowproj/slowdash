@@ -24,7 +24,6 @@ class ShellNode(ControlNode):
     
     def do_command(self, *args, **kwargs):
         cmd = self.command + ''.join([ f' {arg}' for arg in args ])
-        print(f"###{cmd}###")
         try:
             p = subprocess.run(cmd, **{**self.kwargs, **kwargs})
         except Exception as e:

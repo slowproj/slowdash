@@ -8,8 +8,8 @@ device = ControlSystem().dummy_device()
 
 print("DummyDevice Loaded")
 
-name = input('who are you?')
-print('hello, ' + name)
+#name = input('who are you?')
+#print('hello, ' + name)
 
 
 
@@ -17,19 +17,19 @@ print('hello, ' + name)
 
 def set_V0(V0, **kwargs):
     ramping = kwargs.get('ramping', 10)
-    device.ch(0).ramp(ramping).set(V0)
+    device.ch(0).ramping(ramping).set(V0)
 
 def set_V1(V1, **kwargs):
     ramping = kwargs.get('ramping', 10)
-    device.ch(1).ramp(ramping).set(V1)
+    device.ch(1).ramping(ramping).set(V1)
 
 def set_V2(V2, **kwargs):
     ramping = kwargs.get('ramping', 10)
-    device.ch(2).ramp(ramping).set(V2)
+    device.ch(2).ramping(ramping).set(V2)
 
 def set_V3(V3, **kwargs):
     ramping = kwargs.get('ramping', 10)
-    device.ch(3).ramp(ramping).set(V3)
+    device.ch(3).ramping(ramping).set(V3)
 
 def set_all(**kwargs):
     set_V0(**kwargs)
@@ -38,10 +38,10 @@ def set_all(**kwargs):
     set_V3(**kwargs)
 
 def stop(**kwargs):
-    device.ch(0).ramp().status().set(0)
-    device.ch(1).ramp().status().set(0)
-    device.ch(2).ramp().status().set(0)
-    device.ch(3).ramp().status().set(0)
+    device.ch(0).ramping().status().set(0)
+    device.ch(1).ramping().status().set(0)
+    device.ch(2).ramping().status().set(0)
+    device.ch(3).ramping().status().set(0)
 
 
     
@@ -52,10 +52,10 @@ class StatusNode(ControlNode):
         return {
             'columns': [ 'Channel', 'Value', 'Ramping' ],
             'table': [
-                [ 'Ch0', float(device.ch(0)), 'Yes' if device.ch(0).ramp().status().get() else 'No' ],
-                [ 'Ch1', float(device.ch(1)), 'Yes' if device.ch(1).ramp().status().get() else 'No' ],
-                [ 'Ch2', float(device.ch(2)), 'Yes' if device.ch(2).ramp().status().get() else 'No' ],
-                [ 'Ch3', float(device.ch(3)), 'Yes' if device.ch(3).ramp().status().get() else 'No' ],
+                [ 'Ch0', float(device.ch(0)), 'Yes' if device.ch(0).ramping().status().get() else 'No' ],
+                [ 'Ch1', float(device.ch(1)), 'Yes' if device.ch(1).ramping().status().get() else 'No' ],
+                [ 'Ch2', float(device.ch(2)), 'Yes' if device.ch(2).ramping().status().get() else 'No' ],
+                [ 'Ch3', float(device.ch(3)), 'Yes' if device.ch(3).ramping().status().get() else 'No' ],
             ]
         }
     
@@ -73,7 +73,7 @@ def _export():
 ### Storing Data ###
 
 # SQLite needs to be used from only one thread.
-# The initialize(), run(), loop(), and finalize() functions are called in one thread.
+# The _initialize(), _run(), _loop(), and _finalize() functions are called in one thread.
 
 datastore = None
 
@@ -90,7 +90,7 @@ def _finalize():
 def _loop():
     for ch in range(4):
         value = float(device.ch(ch))
-        datastore.write_timeseries(value, tag='ch%02d'%ch)
+        datastore.append(value, tag='ch%02d'%ch)
     time.sleep(1)
 
 
@@ -99,9 +99,7 @@ def _loop():
     
 if __name__ == '__main__':
     _initialize({})
-    ctrl.stop_by_signal()
-    while not ctrl.is_stop_requested():
+    ControlSystem.stop_by_signal()
+    while not ControlSystem.is_stop_requested():
         _loop()
-        for ch in range(4):
-            print(device.ch(ch))
     _finalize()

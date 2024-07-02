@@ -69,8 +69,13 @@ class DataStore_InfluxDB2(DataStore):
 
         
     def __del__(self):
+        self.close()
+
+
+    def close(self):
         if self.client is not None:
             self.client.close()
+            self.client = None
 
 
     def another(self, measurement='', tag_column='', field=''):

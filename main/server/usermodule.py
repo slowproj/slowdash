@@ -26,6 +26,7 @@ class UserModuleThread(threading.Thread):
         func_initialize = self.usermodule.get_func('_initialize')
         func_run = self.usermodule.get_func('_run')
         func_loop = self.usermodule.get_func('_loop')
+        func_finalize = self.usermodule.get_func('_finalize')
         
         if func_initialize:
             self.usermodule.routine_history.append((
@@ -54,9 +55,6 @@ class UserModuleThread(threading.Thread):
                     self.usermodule.handle_error('user module error: _loop(): %s' % str(e))
                     break
 
-                
-    def terminate(self):
-        func_finalize = self.usermodule.get_func('_finalize')
         if func_finalize:
             self.usermodule.routine_history.append((time.time(), '_finalize()'))
             try:
@@ -175,19 +173,18 @@ class UserModule:
         
     def stop(self):
         logging.info('stoping user module "%s"' % self.name)
-        self.stop_event.set()
-        
-        if self.module is None or self.user_thread is None or not self.user_thread.is_alive():
-            return
         
         if self.func_halt is not None:
             try:
                 self.func_halt()
             except Exception as e:
                 self.handle_error('user module error: halt(): %s' % str(e))
-
+        self.stop_event.set()
+        
+        if self.module is None or self.user_thread is None or not self.user_thread.is_alive():
+            return
+        
         if self.user_thread is not None:
-            self.user_thread.terminate()
             self.user_thread.join()
             self.user_thread = None
 
