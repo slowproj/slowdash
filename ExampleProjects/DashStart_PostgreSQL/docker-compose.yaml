@@ -10,7 +10,7 @@ services:
       - POSTGRES_DB=SlowTestData
 
   slowdash:
-    image: slowdash
+    image: slowproj/slowdash:2407
     ports:
       - "18881:18881"
     environment:

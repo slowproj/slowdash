@@ -15,7 +15,7 @@ services:
       - DOCKER_INFLUXDB_INIT_BUCKET=SlowTestData
 
   slowdash:
-    image: slowdash
+    image: slowproj/slowdash:2407
     volumes:
       - .:/project
     ports:

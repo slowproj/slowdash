@@ -8,7 +8,7 @@ slowdash_project:
 
   task:
     name: test
-    auto_load: false
+    auto_load: true
 
   system:
     our_security_is_perfect: false

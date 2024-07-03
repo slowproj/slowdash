@@ -9,7 +9,7 @@ services:
       - "8001:8001"
 
   slowdash:
-    image: slowdash
+    image: slowproj/slowdash:2407
     volumes:
       - .:/project
     ports:
@@ -18,5 +18,5 @@ services:
       - DB_URL=redis://redis_server:6379/12
 
   testdata:
-    image: slowdash
+    image: slowproj/slowdash:2407
     command: python /slowdash/utils/generate-testdata.py --db-url=redis://redis_server:6379/12

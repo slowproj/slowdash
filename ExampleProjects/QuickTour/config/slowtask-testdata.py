@@ -1,28 +1,29 @@
 
-import time, logging
 from slowpy.control import DummyDevice_RandomWalk, ControlSystem
-from slowpy.store import DataStore_SQLite
+from slowpy.store import DataStore_SQLite, SimpleLongFormat
 
 
-def _initialize(params):
-    global device, datastore
-    device = DummyDevice_RandomWalk(n=4)
-    datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata")
+class TestDataFormat(SimpleLongFormat):
+    schema_numeric = '(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel))'
+    def insert_numeric_data(self, cur, timestamp, channel, value):
+        cur.execute(f'INSERT INTO {self.table} VALUES(CURRENT_TIMESTAMP,%d,"%s",%f)' % (timestamp, channel, value))
 
-    
+datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata", format=TestDataFormat())
+device = DummyDevice_RandomWalk(n=4)
+
+
 def _loop():
     for ch in range(4):
         data = device.read(ch)
         datastore.append(data, tag="ch%02d"%ch)
-    time.sleep(1)
-
+    ControlSystem.sleep(1)
 
 def _finalize():
     datastore.close()
-
+    
     
 if __name__ == '__main__':
-    _initialize({})
     ControlSystem.stop_by_signal()
     while not ControlSystem.is_stop_requested():
         _loop()
+    _finalize()

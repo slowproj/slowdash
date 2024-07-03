@@ -3,26 +3,11 @@ slowdash_project:
   title: Slow-Dash Quick Tour
   
   data_source:
-    type: SQLite
+    url: sqlite:///QuickTourTestData.db
     parameters:
-      file: QuickTourTestData.db
       time_series:
         schema: testdata [channel] @timestamp(unix) = value
-      object_time_series:
-        schema: testdata_obj [channel] @timestamp(unix) = value
-      view:
-        - name: datatable
-          sql: select * from testdata order by timestamp desc limit 30
-        - name: objdatatable
-          sql: select * from testdata_obj order by timestamp desc limit 30
-
 
   task:
     name: testdata
-
-
-#  module:
-#    file: generate-testdata.py
-#    parameters:
-#      histogram_name: hist01
-#      graph_name: graph01
+    auto_load: true

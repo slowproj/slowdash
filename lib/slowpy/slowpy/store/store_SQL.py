@@ -5,7 +5,7 @@ import os, sys, time, logging
 from .base import DataStore
 
 
-class Format:
+class TableFormat:
     def __init__(self):
         self.db = None
         self.table = None
@@ -16,63 +16,87 @@ class Format:
         self.table = table
 
         
-    # to be implemented in a subclass
+    # override as needed
     def create_table(self, cur, tag, fields, values):
-        return False
+        if self.table is None or len(values) == 0:
+            return False
+
+        try:
+            if type(values[0]) in [ int, float ]:
+                self.create_numeric_table(cur)
+            else:
+                self.create_text_table(cur)
+        except Exception as e:
+            logging.error('SQL: unable to create table "%s": %s' % (self.table, str(e)))
+            return False
+
+        return True
+        
+    # to be implemented in a subclass    
+    def create_numeric_table(self, cur):
+        pass
+
+    # to be implemented in a subclass    
+    def create_text_table(self, cur):
+        pass
 
     
     # override as needed
     def write(self, cur, timestamp, tag, fields, values, update):
         channels = DataStore._channels(tag, fields)
-        for i in range(min(len(channels), len(values))):
-            self.write_single(cur, timestamp, channels[i], values[i], update)
-
-            
-    # to be implemented in a subclass
-    def write_single(self, cur, timestamp, channel, value, update):
-        pass
-    
-
-    
-class SimpleLongFormat(Format):
-    schema_numeric = '(timestamp REAL, channel TEXT, value REAL, PRIMARY KEY(timestamp,channel))'
-    schema_text = '(timestamp REAL, channel TEXT, value TEXT, PRIMARY KEY(timestamp,channel))'
-
-    def create_table(self, cur, tag, fields, values):
-        if self.table is None or len(values) == 0:
-            return False
-
-        if type(values[0]) in [ int, float ]:
-            schema = self.schema_numeric
-        else:
-            schema = self.schema_text
         try:
-            cur.execute('CREATE TABLE %s%s;' % (self.table, schema))
+            for i in range(min(len(channels), len(values))):
+                self.write_single(cur, timestamp, channels[i], values[i], update)
         except Exception as e:
-            logging.error('SQL: unable to create table "%s": %s' % (self.table, str(e)))
-            return False
-        
-        return True
-
-
+            logging.error('SQL Error: %s' % str(e))
+            
+    # override as needed
     def write_single(self, cur, timestamp, channel, value, update):
         if update is True:
             sql = f"DELETE FROM {self.table} WHERE channel={self.db.placeholder} "
             sql += f"AND EXISTS (SELECT 1 FROM {self.table} WHERE channel={self.db.placeholder});"
             cur.execute(sql, (channel, channel))
             
-        sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
         if type(value) in [int, float]:
-            sql += f"VALUES(%.3f,%s,%f);" % (timestamp, self.db.placeholder, value)
-            params = (channel,)
+            self.insert_numeric_data(cur, timestamp, channel, value)
         else:
-            sql += f"VALUES(%.3f,%s,%s);" % (timestamp, self.db.placeholder, self.db.placeholder)
-            params = (channel, str(value))
-        try:
-            cur.execute(sql, params)
-        except Exception as e:
-            logging.error('SQL execute(): %s' % str(e))
+            self.insert_text_data(cur, timestamp, channel, value)
+    
+    # to be implemented in a subclass
+    def insert_numeric_data(self, cur, timestamp, channel, value):
+        pass
 
+    # to be implemented in a subclass
+    def insert_text_data(self, cur, timestamp, channel, value):
+        pass
+    
+
+    
+class SimpleLongFormat(TableFormat):
+    schema_numeric = '(timestamp REAL, channel TEXT, value REAL, PRIMARY KEY(timestamp,channel))'
+    schema_text = '(timestamp REAL, channel TEXT, value TEXT, PRIMARY KEY(timestamp,channel))'
+
+    def create_numeric_table(self, cur):
+        cur.execute(f'CREATE TABLE {self.table}{self.schema_numeric}')
+
+    
+    def create_text_table(self, cur):
+        cur.execute(f'CREATE TABLE {self.table}{self.schema_text}')
+
+
+    def insert_numeric_data(self, cur, timestamp, channel, value):
+        sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
+        sql += f"VALUES(%.3f,%s,%f);" % (timestamp, self.db.placeholder, value)
+        params = (channel,)
+        cur.execute(sql, params)
+
+        
+    def insert_text_data(self, cur, timestamp, channel, value):
+        sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
+        sql += f"VALUES(%.3f,%s,%s);" % (timestamp, self.db.placeholder, self.db.placeholder)
+        params = (channel, str(value))
+        cur.execute(sql, params)
+            
             
 
 class DataStore_SQL(DataStore):

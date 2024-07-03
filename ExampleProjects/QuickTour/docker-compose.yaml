@@ -2,7 +2,7 @@ version: '3'
 
 services:
   slowdash:
-    image: slowproj/slowdash:2402
+    image: slowproj/slowdash:2407
     volumes:
       - .:/project
     ports:
