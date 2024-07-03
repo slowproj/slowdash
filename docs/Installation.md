@@ -15,7 +15,7 @@ Choose a specific tag. The `:latest` tag is not made on purpose.
 
 ## Building an Image
 ```console
-$ git clone https://github.com/slowproj/slowdash.git
+$ git clone https://github.com/slowproj/slowdash.git --recurse-submodules
 $ cd slowdash
 $ docker build -t slowdash .
 ```
@@ -64,15 +64,11 @@ $ cd slowdash
 $ make
 ```
 
-It might be convenient to include the `slowdash` executable into the `PATH`,
-```bash
-export PATH="${PATH}:PATH/TO/SLOWDASH/bin"
+This will create a bash file to set environmental variables. `source` it to include the settings:
+```console
+$ source PATH/TO/SLOWDASH/bin/slowdash-bashrc
 ```
-or `source` a script to do it:
-```bash
-source PATH/TO/SLOWDASH/bin/slowdash-bashrc
-```
-
+For permanent installation, it might be convenient to include this line in the `.bashrc` file.
 
 Test the installation by running the command:
 ```console

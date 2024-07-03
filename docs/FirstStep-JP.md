@@ -45,7 +45,7 @@ Grafana と違って，物理屋に使いやすいようになっています（
 - 何も考えずに長期間のデータを表示してもブラウザがデータを溜め込まない
 - 表示範囲のデータを簡単に CSV  等でダウンロードできる
 
-さらに，コントロール用の機能も実装しています（半分くらい完成）:
+さらに，コントロール用の機能も実装しています（８割くらい完成）:
 
 - サーバー側にユーザの Python コードを置いて，ブラウザからコマンドを送れる
 - サーバー側のユーザ Python コードが動的に生成したデータも表示できる
@@ -75,10 +75,10 @@ Grafana にあって今の SlowDash にないもの：
 
 JSROOT や Bokeh との違い：
 
-- Grafana にもあるけど JSROOT/Bokeh にない機能
+- SlowDash と Grafana にあるけど JSROOT/Bokeh にない機能
   - コーディングなし：マウス数回のクリックでデータベース上のデータを可視化
   - データを見るユーザが自分でブラウザ上でプロットを作成し，保存・共有できる
-- LabVIEW UI にもあるけど JSROOT/Bokeh にない機能
+- SlowDash と LabVIEW UI にあるけど JSROOT/Bokeh にない機能
   - 装置の構成図の上にデータを表示して，デバイスを操作できる
   - たくさんのユーザ入力を受け取るフォームを作れる
 - 数値データでなくても良い．ログメッセージとか，ステータス一覧とか，写真とか
@@ -158,15 +158,11 @@ $ make
 ```
 `make` を使っているけれど，基本的にはファイルをコピーしているだけで，一瞬で終わります．
 
-必ずしも必要ではないけれど，PATH を通しておくとこの後の作業が少し楽になります．
-```console
-$ export PATH="${PATH}:PATH/TO/SLOWDASH/bin"
-```
-あるいは，これを行う bash 用スクリプトが `slowdash/bin` の下にあります
+`slowdash/bin`  の下に環境変数を設定するスクリプト `slowdash-bashrc` ができるので，これを `source`  してください．これは，新しいターミナルを開くたびに必要です．
 ```console
 $ source PATH/TO/SLOWDASH/bin/slowdash-bashrc
 ```
-上記の行を `.bashrc` などに書いておくと毎回やる必要がなくて便利かもしれません．
+SlowDash を継続的に使うなら，上記の行を `.bashrc` などに書いておくと毎回やる必要がなくなります．
 
 インストールが成功したかは，`slowdash` コマンドを実行してチェックできます．
 (`slowdash` コマンドは `slowdash/bin` の下にあります）
@@ -227,19 +223,48 @@ $ mkdir QuickTour
 $ cd QuickTour
 ```
 
-### 準備：SQLite を使ってテスト用のデータストアを作る
-一秒ごとに乱数でテストデータを作ってデータベースに書き込むスクリプト，<a href="generate-testdata.py.txt" download="generate-testdata.py">generate-testdata.py</a> があるので，これをダウンロードするか，もしリンク切れなら，`SlowDash/ExampleProjects/QuickTour/generate-testdata.py` からコピーしてきます．
-```console
-ダウンロードしてから
-$ mv PATH/TO/DOWNLOAD/generate-testdata.py .
-リンク切れだったら
-$ cp PATH/TO/SLOWDASH/ExampleProjects/QuickTour/generate-testdata.py .
+### 準備：SlowPy ライブラリを使ってテスト用のデータストアを作る
+SlowPy は，SlowDash に含まれる Python のライブラリです．上記のインストールで，`source slowdash/bin/slowdash-bashrc` をしていれば，SlowPy のパスが環境変数 `PYTHONPATH` に追加れていて，すでに使えるようになっています．
+
+SlowPy を使って，一秒ごとに乱数の値を SQLite に書き込むスクリプトを作成します．
+```python
+from slowpy.control import DummyDevice_RandomWalk, ControlSystem
+from slowpy.store import DataStore_SQLite, SimpleLongFormat
+
+
+class TestDataFormat(SimpleLongFormat):
+    schema_numeric = '(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel))'
+    def insert_numeric_data(self, cur, timestamp, channel, value):
+        cur.execute(f'INSERT INTO {self.table} VALUES(CURRENT_TIMESTAMP,%d,"%s",%f)' % (timestamp, channel, value))
+
+datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata", format=TestDataFormat())
+device = DummyDevice_RandomWalk(n=4)
+
+
+def _loop():
+    for ch in range(4):
+        data = device.read(ch)
+        datastore.append(data, tag="ch%02d"%ch)
+    ControlSystem.sleep(1)
+
+def _finalize():
+    datastore.close()
+    
+    
+if __name__ == '__main__':
+    ControlSystem.stop_by_signal()
+    while not ControlSystem.is_stop_requested():
+        _loop()
+    _finalize()
 ```
+このスクリプトの詳細は公式ドキュメントの [Controls セクション](ControlsScript.html)に説明があります．ここでは，上記の内容をコピペして，`generate-testdata.py`  というファイル名でプロジェクトディレクトリに保存してください．
 
 このスクリプトを走らせると，テスト用のデータファイルが生成されます．
 ```console
 $ python3 generate-testdata.py
 ```
+（もしコピペに失敗してエラーが出るようであれば，同じ内容のファイルが `slowdash/ExampleProjects/QuickTour/config/slowtask-testdata.py` にあります．）
+
 10 秒くらい経過したら `Ctrl-c` で止めて，できたファイルを確認してください．
 ```console
 $ ls -l

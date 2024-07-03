@@ -102,20 +102,46 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li>Configuring a project, with describing the user data schema</li>
 <li>Running Slow-Dash</li>
 <li>Creating several plots on a Web-browser</li>
-<li>Running user code on the server-side</li>
-<li>Sending commands to the user code</li>
+<li><del>Running user code on the server-side</del> (preparing)</li>
+<li><del>Sending commands to the user code</del> (preparing)</li>
 </ul>
 <h3 id="first-thing-first">First thing first</h3>
 <p>To get started, prepare a place:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">$ mkdir QuickTour</span></a>
 <a class="sourceLine" id="cb1-2" title="2"><span class="kw">$ cd QuickTour</span></a></code></pre></div>
 <h3 id="using-docker">Using Docker?</h3>
-<p>The directory just created will be mapped into the container as a volume. You can work either inside the container (by <code>docker exec ...  /bin/bash</code>) or outside, but working outside should be easier.</p>
+<p>The directory just created will be mapped into the container as a volume. You can work either inside the container (by <code>docker exec ...  /bin/bash</code>) or outside, but working outside should be easier in the beginning.</p>
 <h1 id="test-data-generation">Test-Data Generation</h1>
-<p>Download the test data generation script <a href="generate-testdata.py.txt" download="generate-testdata.py">generate-testdata.py</a>, or get it from <code>PATH/TO/SLOWDASH/ExampleProjects/QuickTour/generate-testdata.py</code>, and place it at the project directory.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">$ mv PATH/TO/DOWNLOAD/generate-testdata.py .</span></a>
-<a class="sourceLine" id="cb2-2" title="2">OR</a>
-<a class="sourceLine" id="cb2-3" title="3"><span class="kw">$ cp PATH/TO/SLOWDASH/ExampleProjects/QuickTour/generate-testdata.py .</span></a></code></pre></div>
+<p>To generate test-data, we use the SlowPy Python library that comes with the SlowDash package. Write the code below and save it as <code>generate-testdata.py</code> at your project directory:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb2-1" title="1"><span class="im">from</span> slowpy.control <span class="im">import</span> DummyDevice_RandomWalk, ControlSystem</a>
+<a class="sourceLine" id="cb2-2" title="2"><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_SQLite, SimpleLongFormat</a>
+<a class="sourceLine" id="cb2-3" title="3"></a>
+<a class="sourceLine" id="cb2-4" title="4"></a>
+<a class="sourceLine" id="cb2-5" title="5"><span class="kw">class</span> TestDataFormat(SimpleLongFormat):</a>
+<a class="sourceLine" id="cb2-6" title="6">    schema_numeric <span class="op">=</span> <span class="st">&#39;(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel))&#39;</span></a>
+<a class="sourceLine" id="cb2-7" title="7">    <span class="kw">def</span> insert_numeric_data(<span class="va">self</span>, cur, timestamp, channel, value):</a>
+<a class="sourceLine" id="cb2-8" title="8">        cur.execute(<span class="ss">f&#39;INSERT INTO </span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>table<span class="sc">}</span><span class="ss"> VALUES(CURRENT_TIMESTAMP,%d,&quot;%s&quot;,%f)&#39;</span> <span class="op">%</span> (timestamp, channel, value))</a>
+<a class="sourceLine" id="cb2-9" title="9"></a>
+<a class="sourceLine" id="cb2-10" title="10">datastore <span class="op">=</span> DataStore_SQLite(<span class="st">&#39;sqlite:///QuickTourTestData.db&#39;</span>, table<span class="op">=</span><span class="st">&quot;testdata&quot;</span>, <span class="bu">format</span><span class="op">=</span>TestDataFormat())</a>
+<a class="sourceLine" id="cb2-11" title="11">device <span class="op">=</span> DummyDevice_RandomWalk(n<span class="op">=</span><span class="dv">4</span>)</a>
+<a class="sourceLine" id="cb2-12" title="12"></a>
+<a class="sourceLine" id="cb2-13" title="13"></a>
+<a class="sourceLine" id="cb2-14" title="14"><span class="kw">def</span> _loop():</a>
+<a class="sourceLine" id="cb2-15" title="15">    <span class="cf">for</span> ch <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">4</span>):</a>
+<a class="sourceLine" id="cb2-16" title="16">        data <span class="op">=</span> device.read(ch)</a>
+<a class="sourceLine" id="cb2-17" title="17">        datastore.append(data, tag<span class="op">=</span><span class="st">&quot;ch</span><span class="sc">%02d</span><span class="st">&quot;</span><span class="op">%</span>ch)</a>
+<a class="sourceLine" id="cb2-18" title="18">    ControlSystem.sleep(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb2-19" title="19"></a>
+<a class="sourceLine" id="cb2-20" title="20"><span class="kw">def</span> _finalize():</a>
+<a class="sourceLine" id="cb2-21" title="21">    datastore.close()</a>
+<a class="sourceLine" id="cb2-22" title="22">    </a>
+<a class="sourceLine" id="cb2-23" title="23">    </a>
+<a class="sourceLine" id="cb2-24" title="24"><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</a>
+<a class="sourceLine" id="cb2-25" title="25">    ControlSystem.stop_by_signal()</a>
+<a class="sourceLine" id="cb2-26" title="26">    <span class="cf">while</span> <span class="kw">not</span> ControlSystem.is_stop_requested():</a>
+<a class="sourceLine" id="cb2-27" title="27">        _loop()</a>
+<a class="sourceLine" id="cb2-28" title="28">    _finalize()</a></code></pre></div>
+<p>Details of the script is described in the <a href="ControlsScript.html">Controls</a> section. For now just copy-and-past the script and use it to generate some test-data.</p>
 <p>Running this script will create a SQLite database file and fill it with dummy time-series data every second.</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">$ python3 generate-testdata.py</span></a></code></pre></div>
 <p>Stop the script by <kbd>ctrl</kbd>-<kbd>C</kbd> after a minute and look at the created file:</p>
@@ -192,13 +218,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="sourceCode" id="cb7"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb7-1" title="1"><span class="fu">slowdash_project:</span></a>
 <a class="sourceLine" id="cb7-2" title="2">  <span class="fu">name:</span><span class="at"> QuickTour</span></a>
 <a class="sourceLine" id="cb7-3" title="3">  <span class="fu">title:</span><span class="at"> Slow-Dash Quick Tour</span></a>
-<a class="sourceLine" id="cb7-4" title="4">  </a>
+<a class="sourceLine" id="cb7-4" title="4"></a>
 <a class="sourceLine" id="cb7-5" title="5">  <span class="fu">data_source:</span></a>
-<a class="sourceLine" id="cb7-6" title="6">    <span class="fu">type:</span><span class="at"> SQLite</span></a>
+<a class="sourceLine" id="cb7-6" title="6">    <span class="fu">url:</span><span class="at"> sqlite:///QuickTourTestData.db</span></a>
 <a class="sourceLine" id="cb7-7" title="7">    <span class="fu">parameters:</span></a>
-<a class="sourceLine" id="cb7-8" title="8">      <span class="fu">file:</span><span class="at"> QuickTourTestData.db</span></a>
-<a class="sourceLine" id="cb7-9" title="9">      <span class="fu">time_series:</span></a>
-<a class="sourceLine" id="cb7-10" title="10">          <span class="fu">schema:</span><span class="at"> testdata[channel]@timestamp(unix)=value</span></a></code></pre></div>
+<a class="sourceLine" id="cb7-8" title="8">      <span class="fu">time_series:</span></a>
+<a class="sourceLine" id="cb7-9" title="9">        <span class="fu">schema:</span><span class="at"> testdata [channel] @timestamp(unix) = value</span></a></code></pre></div>
 <p>To use the <code>datetime</code> column for the timestamps, the schema part of the configuration file would look like this:</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb8-1" title="1">      <span class="fu">time_series:</span></a>
 <a class="sourceLine" id="cb8-2" title="2">          <span class="fu">schema:</span><span class="at"> testdata[channel]@datetime(unspecified utc)=value</span></a></code></pre></div>
@@ -247,28 +272,31 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h4 id="bare-metal">Bare-Metal</h4>
 <div class="sourceCode" id="cb12"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb12-1" title="1"><span class="kw">$ slowdash --port=18881</span></a></code></pre></div>
 <h4 id="docker">Docker</h4>
-<div class="sourceCode" id="cb13"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb13-1" title="1"><span class="kw">$ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash:2402</span></a></code></pre></div>
+<p>Image from DockerHub</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb13-1" title="1"><span class="kw">$ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash:2407</span></a></code></pre></div>
+<p>or locally created image:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb14-1" title="1"><span class="kw">$ docker run --rm -p 18881:18881 -v $(pwd):/project slowdash</span></a></code></pre></div>
 <h4 id="docker-compose">Docker-Compose</h4>
 <p>Create a <code>docker-compose.yaml</code> file at the project directory</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb14-1" title="1"><span class="fu">version:</span><span class="at"> </span><span class="st">&#39;3&#39;</span></a>
-<a class="sourceLine" id="cb14-2" title="2"></a>
-<a class="sourceLine" id="cb14-3" title="3"><span class="fu">services:</span></a>
-<a class="sourceLine" id="cb14-4" title="4">  <span class="fu">slowdash:</span></a>
-<a class="sourceLine" id="cb14-5" title="5">    <span class="fu">image:</span><span class="at"> slowproj/slowdash:2402</span></a>
-<a class="sourceLine" id="cb14-6" title="6">    <span class="fu">volumes:</span></a>
-<a class="sourceLine" id="cb14-7" title="7">      <span class="kw">-</span> .:/project</a>
-<a class="sourceLine" id="cb14-8" title="8">    <span class="fu">ports:</span></a>
-<a class="sourceLine" id="cb14-9" title="9">      <span class="kw">-</span> <span class="st">&quot;18881:18881&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb15-1" title="1"><span class="fu">version:</span><span class="at"> </span><span class="st">&#39;3&#39;</span></a>
+<a class="sourceLine" id="cb15-2" title="2"></a>
+<a class="sourceLine" id="cb15-3" title="3"><span class="fu">services:</span></a>
+<a class="sourceLine" id="cb15-4" title="4">  <span class="fu">slowdash:</span></a>
+<a class="sourceLine" id="cb15-5" title="5">    <span class="fu">image:</span><span class="at"> slowproj/slowdash:2407</span></a>
+<a class="sourceLine" id="cb15-6" title="6">    <span class="fu">volumes:</span></a>
+<a class="sourceLine" id="cb15-7" title="7">      <span class="kw">-</span> .:/project</a>
+<a class="sourceLine" id="cb15-8" title="8">    <span class="fu">ports:</span></a>
+<a class="sourceLine" id="cb15-9" title="9">      <span class="kw">-</span> <span class="st">&quot;18881:18881&quot;</span></a></code></pre></div>
 <p>Then start <code>docker-compose</code></p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb15-1" title="1"><span class="kw">$ docker-compose up</span></a></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb16-1" title="1"><span class="kw">$ docker-compose up</span></a></code></pre></div>
 <h3 id="step-2-opening-a-web-browser">Step 2: Opening a Web Browser</h3>
 <p>Launch a web browser, access to <code>http://localhost:18881</code>.</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb16-1" title="1"><span class="kw">$ firefox http://localhost:18881</span></a></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb17-1" title="1"><span class="kw">$ firefox http://localhost:18881</span></a></code></pre></div>
 <p>The browser should show the home page of the project:</p>
 <p><img src="fig/QuickTour-Home.png" style="width:40%"></p>
 <h3 id="step-3-start-generating-testdata-only-for-this-quick-tour">Step 3: Start Generating Testdata (only for this quick tour)</h3>
 <p>In order to continuously fill the data while plotting, run the test-data generator in parallel (maybe in another terminal window):</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb17-1" title="1"><span class="kw">$ python3 generate-testdata.py</span></a></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb18-1" title="1"><span class="kw">$ python3 generate-testdata.py</span></a></code></pre></div>
 <p>The data file size is roughly 5 MB per hour. The test data file, <code>QuickTourTestData.db</code>, can be deleted safely when SlowDash is not running. Once the file is deleted, run <code>generate-testdata.py</code> again before starting Slow-Dash next time.</p>
 <h2 id="making-plots">Making Plots</h2>
 <h3 id="interactive-building">Interactive Building</h3>

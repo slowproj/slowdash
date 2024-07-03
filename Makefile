@@ -38,10 +38,6 @@ all:
 
 	@ln -fs $(SLOWDASH_DIR)/docs $(SLOWDASH_DIR)/main/web
 
-	@if [ -f $(SLOWDASH_DIR)/ExampleProjects/QuickTour/generate-testdata.py ]; then \
-		cat $(SLOWDASH_DIR)/ExampleProjects/QuickTour/generate-testdata.py > $(SLOWDASH_DIR)/docs/generate-testdata.py.txt; \
-	fi
-
 	@echo "Installation successful"
 	@echo ""
 	@echo "- Executable files are copied to $(SLOWDASH_DIR)/bin."

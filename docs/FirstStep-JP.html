@@ -131,7 +131,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li>何も考えずに長期間のデータを表示してもブラウザがデータを溜め込まない</li>
 <li>表示範囲のデータを簡単に CSV 等でダウンロードできる</li>
 </ul>
-<p>さらに，コントロール用の機能も実装しています（半分くらい完成）:</p>
+<p>さらに，コントロール用の機能も実装しています（８割くらい完成）:</p>
 <ul>
 <li>サーバー側にユーザの Python コードを置いて，ブラウザからコマンドを送れる</li>
 <li>サーバー側のユーザ Python コードが動的に生成したデータも表示できる</li>
@@ -161,12 +161,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul>
 <p>JSROOT や Bokeh との違い：</p>
 <ul>
-<li>Grafana にもあるけど JSROOT/Bokeh にない機能
+<li>SlowDash と Grafana にあるけど JSROOT/Bokeh にない機能
 <ul>
 <li>コーディングなし：マウス数回のクリックでデータベース上のデータを可視化</li>
 <li>データを見るユーザが自分でブラウザ上でプロットを作成し，保存・共有できる</li>
 </ul></li>
-<li>LabVIEW UI にもあるけど JSROOT/Bokeh にない機能
+<li>SlowDash と LabVIEW UI にあるけど JSROOT/Bokeh にない機能
 <ul>
 <li>装置の構成図の上にデータを表示して，デバイスを操作できる</li>
 <li>たくさんのユーザ入力を受け取るフォームを作れる</li>
@@ -270,36 +270,34 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="sourceCode" id="cb4"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">$ cd slowdash</span></a>
 <a class="sourceLine" id="cb4-2" title="2"><span class="kw">$ make</span></a></code></pre></div>
 <p><code>make</code> を使っているけれど，基本的にはファイルをコピーしているだけで，一瞬で終わります．</p>
-<p>必ずしも必要ではないけれど，PATH を通しておくとこの後の作業が少し楽になります．</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">$ export PATH=&quot;${PATH}:PATH/TO/SLOWDASH/bin&quot;</span></a></code></pre></div>
-<p>あるいは，これを行う bash 用スクリプトが <code>slowdash/bin</code> の下にあります</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">$ source PATH/TO/SLOWDASH/bin/slowdash-bashrc</span></a></code></pre></div>
-<p>上記の行を <code>.bashrc</code> などに書いておくと毎回やる必要がなくて便利かもしれません．</p>
+<p><code>slowdash/bin</code> の下に環境変数を設定するスクリプト <code>slowdash-bashrc</code> ができるので，これを <code>source</code> してください．これは，新しいターミナルを開くたびに必要です．</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">$ source PATH/TO/SLOWDASH/bin/slowdash-bashrc</span></a></code></pre></div>
+<p>SlowDash を継続的に使うなら，上記の行を <code>.bashrc</code> などに書いておくと毎回やる必要がなくなります．</p>
 <p>インストールが成功したかは，<code>slowdash</code> コマンドを実行してチェックできます． (<code>slowdash</code> コマンドは <code>slowdash/bin</code> の下にあります）</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">$ slowdash</span></a>
-<a class="sourceLine" id="cb7-2" title="2">Usage: </a>
-<a class="sourceLine" id="cb7-3" title="3">  Web-Server Mode:    slowdash.py [Options] --port=PORT</a>
-<a class="sourceLine" id="cb7-4" title="4">  Command-line Mode:  slowdash.py [Options] Command</a>
-<a class="sourceLine" id="cb7-5" title="5"></a>
-<a class="sourceLine" id="cb7-6" title="6">Options:</a>
-<a class="sourceLine" id="cb7-7" title="7">  -h, --help            show this help message and exit</a>
-<a class="sourceLine" id="cb7-8" title="8">  -p PORT, --port=PORT  port number for web connection; command-line mode</a>
-<a class="sourceLine" id="cb7-9" title="9">                        without this option</a>
-<a class="sourceLine" id="cb7-10" title="10">  --project-dir=PROJECT_DIR</a>
-<a class="sourceLine" id="cb7-11" title="11">                        project directory (default: current dir if not</a>
-<a class="sourceLine" id="cb7-12" title="12">                        specified by SLOWDASH_PROJECT environmental variable)</a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">$ slowdash</span></a>
+<a class="sourceLine" id="cb6-2" title="2">Usage: </a>
+<a class="sourceLine" id="cb6-3" title="3">  Web-Server Mode:    slowdash.py [Options] --port=PORT</a>
+<a class="sourceLine" id="cb6-4" title="4">  Command-line Mode:  slowdash.py [Options] Command</a>
+<a class="sourceLine" id="cb6-5" title="5"></a>
+<a class="sourceLine" id="cb6-6" title="6">Options:</a>
+<a class="sourceLine" id="cb6-7" title="7">  -h, --help            show this help message and exit</a>
+<a class="sourceLine" id="cb6-8" title="8">  -p PORT, --port=PORT  port number for web connection; command-line mode</a>
+<a class="sourceLine" id="cb6-9" title="9">                        without this option</a>
+<a class="sourceLine" id="cb6-10" title="10">  --project-dir=PROJECT_DIR</a>
+<a class="sourceLine" id="cb6-11" title="11">                        project directory (default: current dir if not</a>
+<a class="sourceLine" id="cb6-12" title="12">                        specified by SLOWDASH_PROJECT environmental variable)</a></code></pre></div>
 <p>任意のポート番号を指定して <code>slowdash</code> コマンドを実行し，ブラウザとの接続を確認してください．ここで，プロジェクトがないという警告が出ますが，今はこのまま先に進みます．</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">$ slowdash --port=18881</span></a>
-<a class="sourceLine" id="cb8-2" title="2">23-05-15 20:12:35 WARNING: unable to find Slowdash Project Dir: specify it with the --project-dir option, set the SLOWDASH_PROJECT environmental variable, or run the slowdash commands at a project directory</a>
-<a class="sourceLine" id="cb8-3" title="3">listening at port 18881</a></code></pre></div>
-<div class="sourceCode" id="cb9"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb9-1" title="1"><span class="kw">$ firefox http://localhost:18881</span></a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">$ slowdash --port=18881</span></a>
+<a class="sourceLine" id="cb7-2" title="2">23-05-15 20:12:35 WARNING: unable to find Slowdash Project Dir: specify it with the --project-dir option, set the SLOWDASH_PROJECT environmental variable, or run the slowdash commands at a project directory</a>
+<a class="sourceLine" id="cb7-3" title="3">listening at port 18881</a></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">$ firefox http://localhost:18881</span></a></code></pre></div>
 <p>成功すれば以下のようなエラーメッセージが表示されます．</p>
 <p><img src="fig/QuickTour-Welcome.png" style="width:40%"></p>
 <p>確認したら，<code>Ctrl-c</code> で <code>slowdash</code> コマンドを終了してください．</p>
 <h1 id="ダミーデータで-ui-を動かしてみる">ダミーデータで UI を動かしてみる</h1>
 <p>ダミーデータを使って SlowDash の UI をテストするプロジェクトがあるので，これを使ってとりあえず動かしてみます．展開した SlowDash ディレクトリの下にある <code>ExampleProjects</code> の <code>DummyDataSource</code> に <code>cd</code> して，そこから <code>slowdash</code> を走らせてください．</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb10-1" title="1"><span class="kw">$ cd PATH/TO/SLOWDASH/ExampleProjects/DummyDataSource</span></a>
-<a class="sourceLine" id="cb10-2" title="2"><span class="kw">$ slowdash --port=18881</span></a></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb9-1" title="1"><span class="kw">$ cd PATH/TO/SLOWDASH/ExampleProjects/DummyDataSource</span></a>
+<a class="sourceLine" id="cb9-2" title="2"><span class="kw">$ slowdash --port=18881</span></a></code></pre></div>
 <p>プラウザを立ち上げて <code>http://localhost:18881</code> に接続すると作成済みページの一覧が表示されます．右上の SlowPlot にある <code>demo</code> をクリックすると，以下のようなプロットのデモページが表示されます．データに意味はなく，更新するたびに中身が変わりますが，SlowDash の表示要素の操作を一通り試してみることができます．</p>
 <p><img src="fig/QuickTour-DummyDataSource.png" style="width:40%"></p>
 <p>もし古いバージョンの SlowDash から更新してこの段階で不具合が出る場合は，ブラウザのキャッシュに残っている古いスクリプトが影響している可能性があります．この場合は，<code>Ctrl</code>-<code>F5</code> などにより強制リロードを試してみてください．</p>
@@ -307,34 +305,61 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>ここでは，公式ドキュメントの Quick Tour の前半くらい，時系列データのプロットを作るところまでやってみます．</p>
 <p>テスト用のデータストアには，SQLite を使います．これは，追加のライブラリをインストールせずに使用でき，また，データがファイルに保存されるため，使用後のクリーンアップが簡単なためです．</p>
 <p>最初に，プロジェクト用のディレクトリを作成してください．ディレクトリを作る場所はどこでもいいです．このプロジェクトで作成されるファイルは全てこのディレクトリ以下に格納されます．プロジェクト終了後はディレクトリをまるごと削除しても大丈夫です．途中でプロジェクトディレクトリを別の場所へ移動することも可能です．</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb11-1" title="1"><span class="kw">$ mkdir QuickTour</span></a>
-<a class="sourceLine" id="cb11-2" title="2"><span class="kw">$ cd QuickTour</span></a></code></pre></div>
-<h3 id="準備sqlite-を使ってテスト用のデータストアを作る">準備：SQLite を使ってテスト用のデータストアを作る</h3>
-<p>一秒ごとに乱数でテストデータを作ってデータベースに書き込むスクリプト，<a href="generate-testdata.py.txt" download="generate-testdata.py">generate-testdata.py</a> があるので，これをダウンロードするか，もしリンク切れなら，<code>SlowDash/ExampleProjects/QuickTour/generate-testdata.py</code> からコピーしてきます．</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb12-1" title="1">ダウンロードしてから</a>
-<a class="sourceLine" id="cb12-2" title="2"><span class="kw">$ mv PATH/TO/DOWNLOAD/generate-testdata.py .</span></a>
-<a class="sourceLine" id="cb12-3" title="3">リンク切れだったら</a>
-<a class="sourceLine" id="cb12-4" title="4"><span class="kw">$ cp PATH/TO/SLOWDASH/ExampleProjects/QuickTour/generate-testdata.py .</span></a></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb10-1" title="1"><span class="kw">$ mkdir QuickTour</span></a>
+<a class="sourceLine" id="cb10-2" title="2"><span class="kw">$ cd QuickTour</span></a></code></pre></div>
+<h3 id="準備slowpy-ライブラリを使ってテスト用のデータストアを作る">準備：SlowPy ライブラリを使ってテスト用のデータストアを作る</h3>
+<p>SlowPy は，SlowDash に含まれる Python のライブラリです．上記のインストールで，<code>source slowdash/bin/slowdash-bashrc</code> をしていれば，SlowPy のパスが環境変数 <code>PYTHONPATH</code> に追加れていて，すでに使えるようになっています．</p>
+<p>SlowPy を使って，一秒ごとに乱数の値を SQLite に書き込むスクリプトを作成します．</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb11-1" title="1"><span class="im">from</span> slowpy.control <span class="im">import</span> DummyDevice_RandomWalk, ControlSystem</a>
+<a class="sourceLine" id="cb11-2" title="2"><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_SQLite, SimpleLongFormat</a>
+<a class="sourceLine" id="cb11-3" title="3"></a>
+<a class="sourceLine" id="cb11-4" title="4"></a>
+<a class="sourceLine" id="cb11-5" title="5"><span class="kw">class</span> TestDataFormat(SimpleLongFormat):</a>
+<a class="sourceLine" id="cb11-6" title="6">    schema_numeric <span class="op">=</span> <span class="st">&#39;(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel))&#39;</span></a>
+<a class="sourceLine" id="cb11-7" title="7">    <span class="kw">def</span> insert_numeric_data(<span class="va">self</span>, cur, timestamp, channel, value):</a>
+<a class="sourceLine" id="cb11-8" title="8">        cur.execute(<span class="ss">f&#39;INSERT INTO </span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>table<span class="sc">}</span><span class="ss"> VALUES(CURRENT_TIMESTAMP,%d,&quot;%s&quot;,%f)&#39;</span> <span class="op">%</span> (timestamp, channel, value))</a>
+<a class="sourceLine" id="cb11-9" title="9"></a>
+<a class="sourceLine" id="cb11-10" title="10">datastore <span class="op">=</span> DataStore_SQLite(<span class="st">&#39;sqlite:///QuickTourTestData.db&#39;</span>, table<span class="op">=</span><span class="st">&quot;testdata&quot;</span>, <span class="bu">format</span><span class="op">=</span>TestDataFormat())</a>
+<a class="sourceLine" id="cb11-11" title="11">device <span class="op">=</span> DummyDevice_RandomWalk(n<span class="op">=</span><span class="dv">4</span>)</a>
+<a class="sourceLine" id="cb11-12" title="12"></a>
+<a class="sourceLine" id="cb11-13" title="13"></a>
+<a class="sourceLine" id="cb11-14" title="14"><span class="kw">def</span> _loop():</a>
+<a class="sourceLine" id="cb11-15" title="15">    <span class="cf">for</span> ch <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">4</span>):</a>
+<a class="sourceLine" id="cb11-16" title="16">        data <span class="op">=</span> device.read(ch)</a>
+<a class="sourceLine" id="cb11-17" title="17">        datastore.append(data, tag<span class="op">=</span><span class="st">&quot;ch</span><span class="sc">%02d</span><span class="st">&quot;</span><span class="op">%</span>ch)</a>
+<a class="sourceLine" id="cb11-18" title="18">    ControlSystem.sleep(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb11-19" title="19"></a>
+<a class="sourceLine" id="cb11-20" title="20"><span class="kw">def</span> _finalize():</a>
+<a class="sourceLine" id="cb11-21" title="21">    datastore.close()</a>
+<a class="sourceLine" id="cb11-22" title="22">    </a>
+<a class="sourceLine" id="cb11-23" title="23">    </a>
+<a class="sourceLine" id="cb11-24" title="24"><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</a>
+<a class="sourceLine" id="cb11-25" title="25">    ControlSystem.stop_by_signal()</a>
+<a class="sourceLine" id="cb11-26" title="26">    <span class="cf">while</span> <span class="kw">not</span> ControlSystem.is_stop_requested():</a>
+<a class="sourceLine" id="cb11-27" title="27">        _loop()</a>
+<a class="sourceLine" id="cb11-28" title="28">    _finalize()</a></code></pre></div>
+<p>このスクリプトの詳細は公式ドキュメントの <a href="ControlsScript.html">Controls セクション</a>に説明があります．ここでは，上記の内容をコピペして，<code>generate-testdata.py</code> というファイル名でプロジェクトディレクトリに保存してください．</p>
 <p>このスクリプトを走らせると，テスト用のデータファイルが生成されます．</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb13-1" title="1"><span class="kw">$ python3 generate-testdata.py</span></a></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb12-1" title="1"><span class="kw">$ python3 generate-testdata.py</span></a></code></pre></div>
+<p>（もしコピペに失敗してエラーが出るようであれば，同じ内容のファイルが <code>slowdash/ExampleProjects/QuickTour/config/slowtask-testdata.py</code> にあります．）</p>
 <p>10 秒くらい経過したら <code>Ctrl-c</code> で止めて，できたファイルを確認してください．</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb14-1" title="1"><span class="kw">$ ls -l</span></a>
-<a class="sourceLine" id="cb14-2" title="2">-rw-r--r-- 1 sanshiro sanshiro 24576 Apr 11 16:52 QuickTourTestData.db</a>
-<a class="sourceLine" id="cb14-3" title="3">-rwxr-xr-x 1 sanshiro sanshiro  3562 Apr 11 16:51 generate-testdata.py</a></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb13-1" title="1"><span class="kw">$ ls -l</span></a>
+<a class="sourceLine" id="cb13-2" title="2">-rw-r--r-- 1 sanshiro sanshiro 24576 Apr 11 16:52 QuickTourTestData.db</a>
+<a class="sourceLine" id="cb13-3" title="3">-rwxr-xr-x 1 sanshiro sanshiro  3562 Apr 11 16:51 generate-testdata.py</a></code></pre></div>
 <p>データの中身は <code>sqlite3</code> コマンドで確認できます．（このコマンドがインストールされてなければ，この手順は飛ばしていいです．）</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb15-1" title="1"><span class="kw">$ sqlite3 QuickTourTestData.db </span></a>
-<a class="sourceLine" id="cb15-2" title="2">SQLite version 3.31.1 2020-01-27 19:55:54</a>
-<a class="sourceLine" id="cb15-3" title="3">Enter &quot;.help&quot; for usage hints.</a>
-<a class="sourceLine" id="cb15-4" title="4">sqlite&gt; .table</a>
-<a class="sourceLine" id="cb15-5" title="5">testdata</a>
-<a class="sourceLine" id="cb15-6" title="6">sqlite&gt; .schema testdata</a>
-<a class="sourceLine" id="cb15-7" title="7">CREATE TABLE testdata(datetime DATETIME, timestamp INTEGER, channel TEXT, value REAL, PRIMARY KEY(timestamp, channel));</a>
-<a class="sourceLine" id="cb15-8" title="8">sqlite&gt; select * from testdata limit 10;</a>
-<a class="sourceLine" id="cb15-9" title="9">2023-04-11 23:52:13|1681257133|ch00|0.187859</a>
-<a class="sourceLine" id="cb15-10" title="10">2023-04-11 23:52:13|1681257133|ch01|-0.418021</a>
-<a class="sourceLine" id="cb15-11" title="11">2023-04-11 23:52:13|1681257133|ch02|0.482607</a>
-<a class="sourceLine" id="cb15-12" title="12">2023-04-11 23:52:13|1681257133|ch03|1.733749</a>
-<a class="sourceLine" id="cb15-13" title="13">...</a></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb14-1" title="1"><span class="kw">$ sqlite3 QuickTourTestData.db </span></a>
+<a class="sourceLine" id="cb14-2" title="2">SQLite version 3.31.1 2020-01-27 19:55:54</a>
+<a class="sourceLine" id="cb14-3" title="3">Enter &quot;.help&quot; for usage hints.</a>
+<a class="sourceLine" id="cb14-4" title="4">sqlite&gt; .table</a>
+<a class="sourceLine" id="cb14-5" title="5">testdata</a>
+<a class="sourceLine" id="cb14-6" title="6">sqlite&gt; .schema testdata</a>
+<a class="sourceLine" id="cb14-7" title="7">CREATE TABLE testdata(datetime DATETIME, timestamp INTEGER, channel TEXT, value REAL, PRIMARY KEY(timestamp, channel));</a>
+<a class="sourceLine" id="cb14-8" title="8">sqlite&gt; select * from testdata limit 10;</a>
+<a class="sourceLine" id="cb14-9" title="9">2023-04-11 23:52:13|1681257133|ch00|0.187859</a>
+<a class="sourceLine" id="cb14-10" title="10">2023-04-11 23:52:13|1681257133|ch01|-0.418021</a>
+<a class="sourceLine" id="cb14-11" title="11">2023-04-11 23:52:13|1681257133|ch02|0.482607</a>
+<a class="sourceLine" id="cb14-12" title="12">2023-04-11 23:52:13|1681257133|ch03|1.733749</a>
+<a class="sourceLine" id="cb14-13" title="13">...</a></code></pre></div>
 <p><code>sqlite3</code> の <code>.schema</code> コマンド出力にあるとおり，データは <code>testdata</code> というテーブルに保存されていて，その構造は以下のようになっています．</p>
 <pre><code>testdata(datetime DATETIME, timestamp INTEGER, channel TEXT, value REAL, PRIMARY KEY(timestamp, channel))</code></pre>
 <p>テスト目的のために，データのタイムスタンプは日付時刻型（SQLite では ISO 表記の文字列）のものと，整数の UNIX 時間の両方が入っていますが，通常はどちらか一方のことが多いと思います．SQLite では，タイムゾーンの扱いに罠が多いので，UNIX 時間の方がいいかもしれません．</p>
@@ -386,61 +411,61 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h3 id="プロジェクト設定">プロジェクト設定</h3>
 <p>SlowDash のプロジェクトでは，通常，専用のディレクトリを作って，そこに <code>SlowdashProject.yaml</code> という名前のプロジェクト設定ファイルを置きます．（データファイルを直接読む場合などの例外はあります．）どこのデータベースからどのようなデータを読むかなどを，このプロジェクト設定ファイルに記述します．</p>
 <p>プロジェクトディレクトリに，以下の内容で <code>SlowdashProject.yaml</code> という名前のファイルを作成してください．</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb17-1" title="1"><span class="fu">slowdash_project:</span></a>
-<a class="sourceLine" id="cb17-2" title="2">  <span class="fu">name:</span><span class="at"> QuickTour   (なんでも良いが，スペースや特殊文字を含まない方が人生が楽になる)</span></a>
-<a class="sourceLine" id="cb17-3" title="3">  <span class="fu">title:</span><span class="at"> SlowDash Quick Tour  （なんでも良いが，改行や極悪な文字は含まない方がいいと思う）</span></a>
-<a class="sourceLine" id="cb17-4" title="4">  </a>
-<a class="sourceLine" id="cb17-5" title="5">  <span class="fu">data_source:</span></a>
-<a class="sourceLine" id="cb17-6" title="6">    <span class="fu">type:</span><span class="at"> SQLite</span></a>
-<a class="sourceLine" id="cb17-7" title="7">    <span class="fu">parameters:</span></a>
-<a class="sourceLine" id="cb17-8" title="8">      <span class="fu">file:</span><span class="at"> QuickTourTestData.db</span></a>
-<a class="sourceLine" id="cb17-9" title="9">      <span class="fu">time_series:</span></a>
-<a class="sourceLine" id="cb17-10" title="10">        <span class="fu">schema:</span><span class="at"> testdata[channel]@timestamp(unix)=value</span></a></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb16-1" title="1"><span class="fu">slowdash_project:</span></a>
+<a class="sourceLine" id="cb16-2" title="2">  <span class="fu">name:</span><span class="at"> QuickTour   (なんでも良いが，スペースや特殊文字を含まない方が人生が楽になる)</span></a>
+<a class="sourceLine" id="cb16-3" title="3">  <span class="fu">title:</span><span class="at"> SlowDash Quick Tour  （なんでも良いが，改行や極悪な文字は含まない方がいいと思う）</span></a>
+<a class="sourceLine" id="cb16-4" title="4">  </a>
+<a class="sourceLine" id="cb16-5" title="5">  <span class="fu">data_source:</span></a>
+<a class="sourceLine" id="cb16-6" title="6">    <span class="fu">type:</span><span class="at"> SQLite</span></a>
+<a class="sourceLine" id="cb16-7" title="7">    <span class="fu">parameters:</span></a>
+<a class="sourceLine" id="cb16-8" title="8">      <span class="fu">file:</span><span class="at"> QuickTourTestData.db</span></a>
+<a class="sourceLine" id="cb16-9" title="9">      <span class="fu">time_series:</span></a>
+<a class="sourceLine" id="cb16-10" title="10">        <span class="fu">schema:</span><span class="at"> testdata[channel]@timestamp(unix)=value</span></a></code></pre></div>
 <p><code>schema</code> のところで，データのテーブル名と，どの情報がどのカラムに書かれているかを記述しています．フォーマットは，<code>テーブル名 [チャンネル情報のカラム名] @ 時刻情報のカラム名（時刻の表現形式）= データ値のカラム名</code> みたいな感じです．詳しくは，<a href="DataBinding.html">DataBinding</a> の章を参照してください．</p>
 <p>この例では，時刻情報に，UNIX タイムスタンプの方を使っています．DateTime 型の方の時刻情報を使う場合は，<code>schema</code> の記述を以下のようにしてください：</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb18-1" title="1">      <span class="fu">time_series:</span></a>
-<a class="sourceLine" id="cb18-2" title="2">        <span class="fu">schema:</span><span class="at"> testdata[channel]@datetime(unspecified utc)=value</span></a></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb17-1" title="1">      <span class="fu">time_series:</span></a>
+<a class="sourceLine" id="cb17-2" title="2">        <span class="fu">schema:</span><span class="at"> testdata[channel]@datetime(unspecified utc)=value</span></a></code></pre></div>
 <p>ここでは，UTC 時刻がタイムゾーン指定なしで使われている悪い例に対応するために，時刻表現形式を <code>unspecified utc</code> (「書いてないけど UTC だよ」)と伝えています．保存されているデータがちゃんとタイムゾーン付きの場合は <code>with timezone</code> または <code>aware</code> を，最悪のケースでタイムゾーンなしでローカルタイムが使われている場合は <code>without timezone</code> または <code>naive</code> と書いてください．この情報は，SlowDash がクエリを構築する際に，データと同じ時刻表現を使用するために使われます．タイムゾーンを明示しないでローカルタイムを使った場合の惨事が多数報告されているので，新しく作るデータで <code>without timezone</code> を選択する理由はないです．（日本国内だけなら関係ないと思ってすでにそういう形式でデータを取ってる場合は，夏時間の導入に反対しておいた方がいいです．）</p>
 <p><code>slowdash config</code> コマンドで設定情報の一部が表示されるので，設定ファイルが読めているかのチェックができます．これは，<code>SlowdashProject.yaml</code> ファイルを作成したプロジェクトディレクトリで実行してください．</p>
-<div class="sourceCode" id="cb19"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb19-1" title="1"><span class="kw">$ slowdash config</span></a>
-<a class="sourceLine" id="cb19-2" title="2">{</a>
-<a class="sourceLine" id="cb19-3" title="3">    &quot;project&quot;: {</a>
-<a class="sourceLine" id="cb19-4" title="4">        &quot;name&quot;: &quot;QuickTour&quot;,</a>
-<a class="sourceLine" id="cb19-5" title="5">        &quot;title&quot;: &quot;SlowDash Quick Tour&quot;,</a>
-<a class="sourceLine" id="cb19-6" title="6">        &quot;error_message&quot;: &quot;&quot;</a>
-<a class="sourceLine" id="cb19-7" title="7">    },</a>
-<a class="sourceLine" id="cb19-8" title="8">    &quot;data_source_module&quot;: [</a>
-<a class="sourceLine" id="cb19-9" title="9">        &quot;datasource_SQLite.py&quot;</a>
-<a class="sourceLine" id="cb19-10" title="10">    ],</a>
-<a class="sourceLine" id="cb19-11" title="11">    &quot;user_module&quot;: [],</a>
-<a class="sourceLine" id="cb19-12" title="12">    &quot;style&quot;: null</a>
-<a class="sourceLine" id="cb19-13" title="13">}</a></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb18-1" title="1"><span class="kw">$ slowdash config</span></a>
+<a class="sourceLine" id="cb18-2" title="2">{</a>
+<a class="sourceLine" id="cb18-3" title="3">    &quot;project&quot;: {</a>
+<a class="sourceLine" id="cb18-4" title="4">        &quot;name&quot;: &quot;QuickTour&quot;,</a>
+<a class="sourceLine" id="cb18-5" title="5">        &quot;title&quot;: &quot;SlowDash Quick Tour&quot;,</a>
+<a class="sourceLine" id="cb18-6" title="6">        &quot;error_message&quot;: &quot;&quot;</a>
+<a class="sourceLine" id="cb18-7" title="7">    },</a>
+<a class="sourceLine" id="cb18-8" title="8">    &quot;data_source_module&quot;: [</a>
+<a class="sourceLine" id="cb18-9" title="9">        &quot;datasource_SQLite.py&quot;</a>
+<a class="sourceLine" id="cb18-10" title="10">    ],</a>
+<a class="sourceLine" id="cb18-11" title="11">    &quot;user_module&quot;: [],</a>
+<a class="sourceLine" id="cb18-12" title="12">    &quot;style&quot;: null</a>
+<a class="sourceLine" id="cb18-13" title="13">}</a></code></pre></div>
 <p>データベースに正しくアクセスできる場合，<code>slowdash channels</code> コマンドでチャンネルの一覧を表示できます．</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb20-1" title="1"><span class="kw">$ slowdash channels</span></a>
-<a class="sourceLine" id="cb20-2" title="2">[</a>
-<a class="sourceLine" id="cb20-3" title="3">  {&quot;name&quot;: &quot;ch00&quot;}, {&quot;name&quot;: &quot;ch01&quot;}, {&quot;name&quot;: &quot;ch02&quot;}, ...</a>
-<a class="sourceLine" id="cb20-4" title="4">]</a></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb19-1" title="1"><span class="kw">$ slowdash channels</span></a>
+<a class="sourceLine" id="cb19-2" title="2">[</a>
+<a class="sourceLine" id="cb19-3" title="3">  {&quot;name&quot;: &quot;ch00&quot;}, {&quot;name&quot;: &quot;ch01&quot;}, {&quot;name&quot;: &quot;ch02&quot;}, ...</a>
+<a class="sourceLine" id="cb19-4" title="4">]</a></code></pre></div>
 <p>データの中身は，<code>slowdash data/CHANNEL</code> コマンドで見ることができます．</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb21-1" title="1"><span class="kw">$ slowdash &quot;data/ch00?length=10&quot;</span></a>
-<a class="sourceLine" id="cb21-2" title="2">{</a>
-<a class="sourceLine" id="cb21-3" title="3">  &quot;ch00&quot;: {</a>
-<a class="sourceLine" id="cb21-4" title="4">    &quot;start&quot;: 1680223465, &quot;length&quot;: 10, </a>
-<a class="sourceLine" id="cb21-5" title="5">    &quot;t&quot;: [0.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0], </a>
-<a class="sourceLine" id="cb21-6" title="6">    &quot;x&quot;: [5.180761, 5.92074, 5.515459, 4.883299, 5.650556, 4.284527, 3.884656, 3.223627, 2.06343]</a>
-<a class="sourceLine" id="cb21-7" title="7">  }</a>
-<a class="sourceLine" id="cb21-8" title="8">}</a></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb20-1" title="1"><span class="kw">$ slowdash &quot;data/ch00?length=10&quot;</span></a>
+<a class="sourceLine" id="cb20-2" title="2">{</a>
+<a class="sourceLine" id="cb20-3" title="3">  &quot;ch00&quot;: {</a>
+<a class="sourceLine" id="cb20-4" title="4">    &quot;start&quot;: 1680223465, &quot;length&quot;: 10, </a>
+<a class="sourceLine" id="cb20-5" title="5">    &quot;t&quot;: [0.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0], </a>
+<a class="sourceLine" id="cb20-6" title="6">    &quot;x&quot;: [5.180761, 5.92074, 5.515459, 4.883299, 5.650556, 4.284527, 3.884656, 3.223627, 2.06343]</a>
+<a class="sourceLine" id="cb20-7" title="7">  }</a>
+<a class="sourceLine" id="cb20-8" title="8">}</a></code></pre></div>
 <p>もう気づいたかもしれませんが，<code>slowdash</code> コマンドの第１引数は HTTP でアクセスした場合の URL で，出力はそのリプライです．</p>
 <h3 id="サーバーを走らせる">サーバーを走らせる</h3>
 <p>SlowDash にネットワークからアクセスするために，<code>--port</code> オプションで適当なポート番号を指定します．これで，コマンドを HTTP 経由で受け取るようになります．</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb22-1" title="1"><span class="kw">$ slowdash --port=18881</span></a></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb21-1" title="1"><span class="kw">$ slowdash --port=18881</span></a></code></pre></div>
 <p>SlowDash を走らせたままブラウザを立ち上げ，使ったポートに接続してください．</p>
-<div class="sourceCode" id="cb23"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb23-1" title="1"><span class="kw">$ firefox http://localhost:18881</span></a></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb22-1" title="1"><span class="kw">$ firefox http://localhost:18881</span></a></code></pre></div>
 <p>今回はプロジェクト付きで走らせているので，以下のようなスタートページが表示されるはずです．</p>
 <p><img src="fig/QuickTour-Home.png" style="width:40%"></p>
 <p>テスト用のデータベースにデータを継続的に記録するため，別ターミナルで先程のデータ生成プログラムを走らせてください．</p>
-<div class="sourceCode" id="cb24"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb24-1" title="1">(別ターミナルを開く)</a>
-<a class="sourceLine" id="cb24-2" title="2"><span class="kw">$ cd PATH/TO/MySlowDashProject</span></a>
-<a class="sourceLine" id="cb24-3" title="3"><span class="kw">$ python3 ./generate-testdata.py</span></a></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb23-1" title="1">(別ターミナルを開く)</a>
+<a class="sourceLine" id="cb23-2" title="2"><span class="kw">$ cd PATH/TO/MySlowDashProject</span></a>
+<a class="sourceLine" id="cb23-3" title="3"><span class="kw">$ python3 ./generate-testdata.py</span></a></code></pre></div>
 <p>データサイズは一時間で 5MB 程度なので，しばらくは走らせ続けて大丈夫です．データファイル（<code>QuickTourTestData.db</code>）は，SlowDash が走ってなければ，いつ消しても構いません．またデータが欲しくなったら，再度 <code>generate-testdata.py</code> を走らせてください．（データファルを削除せずに走らせても問題ありません．複数同時に走らせたら変なことになると思います．）</p>
 <p>プログラムの終了は，全て <code>Ctrl-c</code> です．それなりに上品に止まります．だめだったら，<code>Ctrl-\</code> を使ってください．</p>
 <h3 id="ブラウザでデータを見る">ブラウザでデータを見る</h3>
@@ -452,18 +477,18 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p><b>SlowDash は，ファイアウォールの内部で使う目的で作られています．</b> このためセキュリティ関係の機能は実装されていません．SlowDash のポートを外部からアクセスできるところに開けないようにしてください．外部からは，VPN もしくは SSH のトンネルを経由して使用するのが想定です．</p>
 <p>もし内部の人を信用できない場合，最低限として，基本認証を使ってパスワードを設定することはできます．この場合は，リバースプロキシを使って HTTPS に乗せ換え，パスワードと通信を暗号化してください．</p>
 <p>基本認証の設定は，<code>SlowdashProject.yaml</code> に <code>authentication</code> エントリを追加し，パスワードハッシュを指定します．</p>
-<div class="sourceCode" id="cb25"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb25-1" title="1"><span class="fu">slowdash_project:</span></a>
-<a class="sourceLine" id="cb25-2" title="2">  ...</a>
-<a class="sourceLine" id="cb25-3" title="3"></a>
-<a class="sourceLine" id="cb25-4" title="4">  <span class="fu">authentication:</span></a>
-<a class="sourceLine" id="cb25-5" title="5">    <span class="fu">type:</span><span class="at"> Basic</span></a>
-<a class="sourceLine" id="cb25-6" title="6">    <span class="fu">key:</span><span class="at"> slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS</span></a></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb24-1" title="1"><span class="fu">slowdash_project:</span></a>
+<a class="sourceLine" id="cb24-2" title="2">  ...</a>
+<a class="sourceLine" id="cb24-3" title="3"></a>
+<a class="sourceLine" id="cb24-4" title="4">  <span class="fu">authentication:</span></a>
+<a class="sourceLine" id="cb24-5" title="5">    <span class="fu">type:</span><span class="at"> Basic</span></a>
+<a class="sourceLine" id="cb24-6" title="6">    <span class="fu">key:</span><span class="at"> slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS</span></a></code></pre></div>
 <p>パスワードハッシュは，<code>slowdash authkey/USER?password=PASS</code> コマンドにより作ることがきます．</p>
-<div class="sourceCode" id="cb26"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb26-1" title="1"><span class="kw">$ slowdash authkey/slow?password=dash</span></a>
-<a class="sourceLine" id="cb26-2" title="2">{</a>
-<a class="sourceLine" id="cb26-3" title="3">    &quot;type&quot;: &quot;Basic&quot;,</a>
-<a class="sourceLine" id="cb26-4" title="4">    &quot;key&quot;: &quot;slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS&quot;</a>
-<a class="sourceLine" id="cb26-5" title="5">}</a></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb25-1" title="1"><span class="kw">$ slowdash authkey/slow?password=dash</span></a>
+<a class="sourceLine" id="cb25-2" title="2">{</a>
+<a class="sourceLine" id="cb25-3" title="3">    &quot;type&quot;: &quot;Basic&quot;,</a>
+<a class="sourceLine" id="cb25-4" title="4">    &quot;key&quot;: &quot;slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS&quot;</a>
+<a class="sourceLine" id="cb25-5" title="5">}</a></code></pre></div>
 <p>このパスワードハッシュは Apache でも流用できますが，Apache で今でも広く使われている古いタイプのハッシュは，SlowDash では使えません．</p>
 <p>リバースプロキシの設定方法については，大規模言語モデル系の AI が詳しく教えてくれます．もとのポートはちゃんと塞いでおいてください．</p>
 <p>ローカルマシン上でパケットダンプができる人からシステムを守る術はありませんが，そういう人は別の方法でもっと簡単に攻撃できるはずです．</p>

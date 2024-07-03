@@ -9,8 +9,8 @@ In this tour we will use SQLite for data backend which does not require server s
 - Configuring a project, with describing the user data schema
 - Running Slow-Dash
 - Creating several plots on a Web-browser
-- Running user code on the server-side
-- Sending commands to the user code
+- ~~Running user code on the server-side~~ (preparing)
+- ~~Sending commands to the user code~~ (preparing)
 
 ### First thing first
 To get started, prepare a place:
@@ -23,13 +23,38 @@ $ cd QuickTour
 The directory just created will be mapped into the container as a volume. You can work either inside the container (by `docker exec ...  /bin/bash`) or outside, but working outside should be easier in the beginning.
 
 # Test-Data Generation
-Download the test data generation script <a href="generate-testdata.py.txt" download="generate-testdata.py">generate-testdata.py</a>, or get it from `PATH/TO/SLOWDASH/ExampleProjects/QuickTour/generate-testdata.py`, and place it at the project directory.
+To generate test-data, we use the SlowPy Python library that comes with the SlowDash package. Write the code below and save it as `generate-testdata.py` at your project directory:
+```python
+from slowpy.control import DummyDevice_RandomWalk, ControlSystem
+from slowpy.store import DataStore_SQLite, SimpleLongFormat
 
-```console
-$ mv PATH/TO/DOWNLOAD/generate-testdata.py .
-OR
-$ cp PATH/TO/SLOWDASH/ExampleProjects/QuickTour/generate-testdata.py .
+
+class TestDataFormat(SimpleLongFormat):
+    schema_numeric = '(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel))'
+    def insert_numeric_data(self, cur, timestamp, channel, value):
+        cur.execute(f'INSERT INTO {self.table} VALUES(CURRENT_TIMESTAMP,%d,"%s",%f)' % (timestamp, channel, value))
+
+datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata", format=TestDataFormat())
+device = DummyDevice_RandomWalk(n=4)
+
+
+def _loop():
+    for ch in range(4):
+        data = device.read(ch)
+        datastore.append(data, tag="ch%02d"%ch)
+    ControlSystem.sleep(1)
+
+def _finalize():
+    datastore.close()
+    
+    
+if __name__ == '__main__':
+    ControlSystem.stop_by_signal()
+    while not ControlSystem.is_stop_requested():
+        _loop()
+    _finalize()
 ```
+Details of the script is described in the [Controls](ControlsScript.html) section. For now just copy-and-past the script and use it to generate some test-data.
 
 Running this script will create a SQLite database file and fill it with dummy time-series data every second.
 ```console
@@ -93,13 +118,12 @@ Create `SlowdashProject.yaml` with the contents below:
 slowdash_project:
   name: QuickTour
   title: Slow-Dash Quick Tour
-  
+
   data_source:
-    type: SQLite
+    url: sqlite:///QuickTourTestData.db
     parameters:
-      file: QuickTourTestData.db
       time_series:
-          schema: testdata[channel]@timestamp(unix)=value
+        schema: testdata [channel] @timestamp(unix) = value
 ```
 
 To use the `datetime` column for the timestamps, the schema part of the configuration file would look like this:
@@ -167,10 +191,14 @@ $ slowdash --port=18881
 ```
 
 #### Docker
+Image from DockerHub
 ```console
-$ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash:2402
+$ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash:2407
 ```
-
+or locally created image:
+```console
+$ docker run --rm -p 18881:18881 -v $(pwd):/project slowdash
+```
 
 #### Docker-Compose
 Create a `docker-compose.yaml` file at the project directory
@@ -179,7 +207,7 @@ version: '3'
 
 services:
   slowdash:
-    image: slowproj/slowdash:2402
+    image: slowproj/slowdash:2407
     volumes:
       - .:/project
     ports:
