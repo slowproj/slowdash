@@ -24,7 +24,7 @@ If you already have time-series data stored on a database, and have `docker-comp
 
 ## Setup and Quick Look
 
-### Docker (amd64-linux)
+### Docker (amd64-linux & Windows WSL)
 <details>
 
 #### Prerequisites for this trial
@@ -50,7 +50,7 @@ Open a web browser and connect to `http://localhost:18881`.
 To stop, type `ctrl`-`c` in the docker-compose window, or use `docker-compose stop` (or `down` to remove the container)
 </details>
   
-### Docker on Windows, Mac (Apple Silicon), Raspberry-Pi, etc.
+### Docker on Mac (Apple Silicon), Raspberry-Pi, etc.
 <details>
 
 #### Prerequisites for this trial
