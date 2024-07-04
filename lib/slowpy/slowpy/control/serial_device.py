@@ -31,7 +31,7 @@ class ScpiDevice(SerialDevice):
         
         cmd_path = []
         for cmd in command.split(';'):
-            split = cmd.strip().split()
+            split = cmd.strip().upper().split()
             if len(split) == 0 or len(split[0]) == 0:
                 continue
             this_cmd_path, params = split[0], split[1:]
@@ -40,9 +40,15 @@ class ScpiDevice(SerialDevice):
                 cmd_path = this_cmd_path[1:].split(':')
             else:
                 cmd_path = cmd_path[:-1] + this_cmd_path.split(':')
-            cmd_path = [ node.upper().strip() for node in cmd_path ]
-                
-            reply = self.process_scpi_command(cmd_path, params)
+            cmd_path = [ node.strip() for node in cmd_path ]
+
+            cmd_path_padded, params_padded = [None]*32, [None]*32
+            for k in range(len(cmd_path)):
+                cmd_path_padded[k] = cmd_path[k]
+            for k in range(len(params)):
+                params_padded[k] = params[k].strip()
+            
+            reply = self.process_scpi_command(cmd_path_padded, params_padded)
             print("scpi: [%s] -> [%s]" % (cmd.strip(), reply))
 
         return reply

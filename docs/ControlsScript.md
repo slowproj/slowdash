@@ -250,9 +250,19 @@ while True:
     time.sleep(1)
 ```
 
-The default is to use a long form. To use other table schemata, an user defined `Form` class is used:
+For SQL databases, the "long format" with UNIX timestamps is used by default. To use other table schemata, specify an user defined `Format`:
 ```python
-...
+class QuickTourTestDataFormat(SimpleLongFormat):
+    schema_numeric = '(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel))'
+    schema_text = '(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel))'
+
+    def insert_numeric_data(self, cur, timestamp, channel, value):
+        cur.execute(f'INSERT INTO {self.table} VALUES(CURRENT_TIMESTAMP,%d,?,%f)' % (timestamp, value), channel)
+
+    def insert_text_data(self, cur, timestamp, channel, value):
+        cur.execute(f'INSERT INTO {self.table} VALUES(CURRENT_TIMESTAMP,%d,?,?' % timestamp), (channel, value))
+
+datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata", format=QuickTourTestDataFormat())
 ```
 
 ## Analysis Components
@@ -299,6 +309,50 @@ while not ControlSystem.is_stop_requested():
 
   data_store.append(rate_trend.time_series('test_rate'))
 ```
+
+## Scpizing Your Device
+If your device has some programming capability, such as Raspberry-Pi GPIO, an easy way to integrate it into a SlowDash system is to implement the SCPI interface on it. This approach is also useful to use USB devices connected to a remote computer. 
+
+Here is an example to wrap a (dummy) device with the ethernet-SCPI capability:
+
+```python
+from slowpy.control import ScpiDevice, SerialDeviceEthernetServer
+from slowpy.control import DummyDevice_RandomWalk
+
+class MyFantasticScpiDevice(ScpiDevice):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.device = DummyDevice_RandomWalk(n=4)
+
+    def process_scpi_command(self, cmd_path, params):
+        '''
+        "meas:V0?" -> cmd_path=['MEAS', 'V0?', None, ...], params=[None, None, ...]
+        "v0 3.21" -> cmd_path=['V0', None, None, ...], params=['3.2', None, ...]
+        '''
+        if cmd_path[0] == '*IDN?':
+            return 'Dummy SCPI Device'
+        elif cmd_path[0] == '*OPC?':
+            return '1'
+        elif cmd_path[0][0:4] == 'MEAS' and cmd_path[1] == 'V0?':
+            return '%f' % self.device.read(0)
+        elif cmd_path[0][0:4] == 'MEAS' and cmd_path[1] == 'V1?':
+          ...
+
+if __name__ == '__main__':
+    from optparse import OptionParser
+    optionparser = OptionParser()
+    optionparser.add_option(
+        '--port', action='store', dest='port', type='int', default=17674,
+        help='port number'
+    )
+    (opts, args) = optionparser.parse_args()
+    
+    device = MyFantasticScpiDevice()
+    server = SerialDeviceEthernetServer(device, port=opts.port)
+    server.start()
+```
+
+Make this code start automatically on PC boot in your favorite way (`/etc/rc.local`, Docker, ...).
 
 
 # SlowTask: Slowdash GUI-Script Interconnect

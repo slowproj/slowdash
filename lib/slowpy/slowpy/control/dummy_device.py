@@ -90,27 +90,27 @@ class DummyScpiDevice_RandomWalk(ScpiDevice):
         elif cmd_path[0][0:4] == 'MEAS' and cmd_path[1] == 'V3?':
             return '%f' % self.device.read(3)
 
-        elif cmd_path[0][0:4] == 'MEAS' and cmd_path[1] == 'V0':
+        elif cmd_path[0] == 'V0':
             try:
                 self.device.x[0] = float(params[0])
             except:
                 self.errors.append('-224,"Illegal parameter value: %s"' % ':'.join(cmd_path))
             return ''
-        elif cmd_path[0][0:4] == 'MEAS' and cmd_path[1] == 'V1':
+        elif cmd_path[0] == 'V1':
             try:
-                self.device.x[1] = float(params[1])
+                self.device.x[1] = float(params[0])
             except:
                 self.errors.append('-224,"Illegal parameter value: %s"' % ':'.join(cmd_path))
             return ''
-        elif cmd_path[0][0:4] == 'MEAS' and cmd_path[1] == 'V2':
+        elif cmd_path[0] == 'V2':
             try:
-                self.device.x[2] = float(params[2])
+                self.device.x[2] = float(params[0])
             except:
                 self.errors.append('-224,"Illegal parameter value: %s"' % ':'.join(cmd_path))
             return ''
-        elif cmd_path[0][0:4] == 'MEAS' and cmd_path[1] == 'V3':
+        elif cmd_path[0] == 'V3':
             try:
-                self.device.x[3] = float(params[3])
+                self.device.x[3] = float(params[0])
             except:
                 self.errors.append('-224,"Illegal parameter value: %s"' % ':'.join(cmd_path))
             return ''
