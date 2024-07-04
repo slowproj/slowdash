@@ -21,24 +21,25 @@ class TableFormat:
         if self.table is None or len(values) == 0:
             return False
 
+        result = False
         try:
             if type(values[0]) in [ int, float ]:
-                self.create_numeric_table(cur)
+                result = self.create_numeric_table(cur)
             else:
-                self.create_text_table(cur)
+                result = self.create_text_table(cur)
         except Exception as e:
             logging.error('SQL: unable to create table "%s": %s' % (self.table, str(e)))
-            return False
+            result = False
 
-        return True
+        return result
         
     # to be implemented in a subclass    
     def create_numeric_table(self, cur):
-        pass
+        return False
 
     # to be implemented in a subclass    
     def create_text_table(self, cur):
-        pass
+        return False
 
     
     # override as needed
@@ -73,15 +74,24 @@ class TableFormat:
 
     
 class SimpleLongFormat(TableFormat):
+    # these can be overriden. Set None to disable table creation
     schema_numeric = '(timestamp REAL, channel TEXT, value REAL, PRIMARY KEY(timestamp,channel))'
     schema_text = '(timestamp REAL, channel TEXT, value TEXT, PRIMARY KEY(timestamp,channel))'
 
     def create_numeric_table(self, cur):
-        cur.execute(f'CREATE TABLE {self.table}{self.schema_numeric}')
+        if self.schema_numeric is None:
+            return False
+        else:
+            cur.execute(f'CREATE TABLE {self.table}{self.schema_numeric}')
+            return True
 
     
     def create_text_table(self, cur):
-        cur.execute(f'CREATE TABLE {self.table}{self.schema_text}')
+        if self.schema_text is None:
+            return False
+        else:
+            cur.execute(f'CREATE TABLE {self.table}{self.schema_text}')
+            return True
 
 
     def insert_numeric_data(self, cur, timestamp, channel, value):
