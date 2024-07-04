@@ -394,7 +394,7 @@ export class SlowpyPanel extends Panel {
         super(div, style);
         
         this.frameDiv = $('<div>').appendTo(div);
-        this.titleDiv = $('<div>').appendTo(this.frameDiv).text("SlowPy Plotting Script");
+        this.titleDiv = $('<div>').appendTo(this.frameDiv).text("SlowPy Plotting Script (EXPERIMENTAL: this script might not be compatible with future releases of SlowDash)");
         this.contentDiv = $('<div>').appendTo(this.frameDiv);
 
         this.contentDiv.html(`
@@ -402,7 +402,7 @@ export class SlowpyPanel extends Panel {
               <div style="flex-grow:1;height:100%;min-width:70%">
                   <textarea spellcheck="false" autocomplete="off"></textarea>
                   <div style="font-size:80%;margin-top:0.5em">
-                      <b>Note</b> SlowDash must be installed to run this script. See <a href="./docs/index.html">documentation</a> for installation procedures.
+                      <b>Note</b> The SlowPy library must be installed to run this script. See <a href="./docs/index.html#Installation" target="_blank">documentation</a> for installation procedures.
                   </div>
               </div>
               <div style="display:flex;flex-direction:column;height:100%;width:100%;margin-left:3ex">
