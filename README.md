@@ -6,7 +6,7 @@ SlowDash is a web GUI tool for control and monitoring of concurrent systems (slo
 - LabVIEW-like visual control (graphical control panel)
 - Jupyter-like interactive scripting with Python
 
-#### Current Status: ~60% of the initial design implemented
+#### Current Status: ~70% of the initial design implemented
 - Data browser mostly working
 - Controls partly implemented
 - Analysis part (scripting etc.) is experimental
