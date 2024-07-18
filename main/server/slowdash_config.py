@@ -3,7 +3,7 @@
 
 import sys, os, subprocess, logging, enum, json, yaml
 
-slowdash_version = '0.0.1'
+slowdash_version = '2407'
 
 logging.basicConfig(
     level=logging.INFO, 

@@ -2,8 +2,6 @@
 title: Dash Start
 ---
 
-<strong>This feature is yet available</strong> (TODO: upload a Docker image to DockerHub)
-
 <div style="font-size:120%">
 If you already have:
 
