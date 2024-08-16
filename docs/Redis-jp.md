@@ -181,8 +181,9 @@ $ pip3 install redis
 ### SlowDash インストール
 ```bash
 $ git clone https://github.com/slowproj/slowdash.git --recurse-submodules
-$ cd system; make
-$ cd ..; source bin/slowdash-bashrc  # 毎回やるか，`.bashrc`  に書く
+$ cd slowdash
+$ make
+$ source bin/slowdash-bashrc      # 毎回やるか，`.bashrc`  に書く
 ```
 
 ### 動作確認
@@ -328,23 +329,25 @@ Redis TimeSeries と Redis JSON を組み合わせて実現されている．構
 
 こんな感じ：
 ```python
-import sys, os, time
+import time
 import numpy as np
-import slowpy as slp
+from slowpy import Histogram
+from slowpy.store import DataStore_Redis
+
     
-datastore = slp.DataStore_Redis(host='localhost', port=6379, db=2, retention_length=3600)
-histogram = slp.Histogram('test_histogram_01', 100, -10, 10)
+datastore = DataStore_Redis('redis://localhost/2', retention_length=3600)
+histogram = Histogram(nbins=20, range_min=-10, range_max=10)
 
 while True:
     for i in range(100):
         h.fill(np.random.normal(5, 2))
 
     # これ
-    datastore.write_object_timeseries(histogram)
+    datastore.append(histogram, tag='test_histogram_01')
     
     time.sleep(1)
 ```
 
-現時点では，通常の時系列データとヒストグラムやグラフの時系列データは同じデータベースに共存できないので，この例ではデータベース番号 2 を使用している．
+ヒストグラムやグラフの時系列データは大量のキーバリューを作るので、別のデータベースを使用した方が良い．この例ではデータベース番号 2 を使用している．
 
-ちなみに，`write_object_timeseries()` の代わりに `write_object()` とすると，時刻情報なしで最新版だけを同じキーで保存するようになる（上記の例）．
+ちなみに，`append()` の代わりに `update()` とすると，時刻情報なしで最新版だけを同じキーで保存するようになる（上記の例）．
