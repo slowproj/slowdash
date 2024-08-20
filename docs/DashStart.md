@@ -49,7 +49,7 @@ version: '3'
 
 services:
   slowdash:
-    image: slowproj/slowdash:2406
+    image: slowproj/slowdash:2407
     ports:
       - "18881:18881"
     environment:
@@ -95,7 +95,7 @@ version: '3'
 
 services:
   slowdash:
-    image: slowproj/slowdash:2406
+    image: slowproj/slowdash:2407
     ports:
       - "18881:18881"
     environment:
@@ -130,7 +130,7 @@ version: '3'
 
 services:
   slowdash:
-    image: slowproj/slowdash:2406
+    image: slowproj/slowdash:2407
     ports:
       - "18881:18881"
     environment:

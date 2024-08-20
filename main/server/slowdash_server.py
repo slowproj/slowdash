@@ -2,7 +2,7 @@
 # Created by Sanshiro Enomoto on 2 November 2017 #
 
 
-import sys, os, json, logging, collections, subprocess, functools, socket
+import sys, os, json, logging, collections, subprocess, functools, socket, traceback
 from urllib.parse import urlparse, parse_qsl
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -71,6 +71,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             sys.stderr.write('done\n')
         except Exception as e:
             logging.warn("slowdash_server: do_GET(): %s" % str(e))
+            logging.warn(traceback.format_exc())
             sys.stderr.write('ERROR\n')
 
                          
@@ -128,6 +129,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.wfile.flush()
         except Exception as e:
             logging.warn("slowdash_server: do_POST(): %s" % str(e))
+            logging.warn(traceback.format_exc())
 
     
     def do_DELETE(self):
@@ -278,6 +280,7 @@ def start(port, webui, cgi_name, web_path, index_file):
         )
     except Exception as e:
         sys.stderr.write('ERROR: %s\n' % str(e))
+        logging.error(traceback.format_exc())
         return -1
 
     sys.stderr.write('listening at port %d\n' % port)

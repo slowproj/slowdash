@@ -28,7 +28,6 @@ class TableFormat:
             else:
                 result = self.create_text_table(cur)
         except Exception as e:
-            logging.error('SQL: unable to create table "%s": %s' % (self.table, str(e)))
             result = False
 
         return result
@@ -73,7 +72,7 @@ class TableFormat:
     
 
     
-class SimpleLongFormat(TableFormat):
+class LongTableFormat(TableFormat):
     # these can be overriden. Set None to disable table creation
     schema_numeric = '(timestamp REAL, channel TEXT, value REAL, PRIMARY KEY(timestamp,channel))'
     schema_text = '(timestamp REAL, channel TEXT, value TEXT, PRIMARY KEY(timestamp,channel))'
@@ -109,6 +108,26 @@ class SimpleLongFormat(TableFormat):
             
             
 
+class LongTableFormat_DateTime_PostgreSQL(LongTableFormat):
+    schema_numeric = '("timestamp" timestamp with time zone , channel TEXT, value REAL, PRIMARY KEY(timestamp,channel))'
+    schema_text = '("timestamp" timestamp with time zone, channel TEXT, value TEXT, PRIMARY KEY(timestamp,channel))'
+
+    def insert_numeric_data(self, cur, timestamp, channel, value):
+        sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
+        sql += f"VALUES(to_timestamp(%.3f),%s,%f);" % (timestamp, self.db.placeholder, value)
+        params = (channel,)
+        cur.execute(sql, params)
+
+        
+    def insert_text_data(self, cur, timestamp, channel, value):
+        sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
+        sql += f"VALUES(to_timestamp(%.3f),%s,%s);" % (timestamp, self.db.placeholder, self.db.placeholder)
+        params = (channel, str(value))
+        cur.execute(sql, params)
+        
+
+
+        
 class DataStore_SQL(DataStore):
     # to be implemented in a subclass
     placeholder = '?'
@@ -118,7 +137,7 @@ class DataStore_SQL(DataStore):
         return []
     
     
-    def __init__(self, db_url, table, format):
+    def __init__(self, db_url, table, table_format):
         if not table.replace('_', '').isalnum():
             logging.error('SQL: bad table name "%s"' % table)
             self.table = None
@@ -127,8 +146,8 @@ class DataStore_SQL(DataStore):
         
         self.db_url = db_url
         self.table = table
-        self.format = format
-        format.bind(self, table)
+        self.table_format = table_format
+        self.table_format.bind(self, table)
         
         self.conn = self.construct()
         if self.conn is None:
@@ -150,27 +169,30 @@ class DataStore_SQL(DataStore):
 
             
     def _write_one(self, cur, timestamp, tag, fields, values, update):
-        if not self.table_exists:
-            self.table_exists = self.format.create_table(cur, tag, fields, values)
+        if self.table_exists is False:
+            self.table_exists = self.table_format.create_table(cur, tag, fields, values)
             if not self.table_exists:
+                self.table_exists = None  # no further retrying
                 return
 
-        self.format.write(cur, timestamp, tag, fields, values, update)
+        self.table_format.write(cur, timestamp, tag, fields, values, update)
 
                     
         
 class DataStore_SQLite(DataStore_SQL):
     placeholder = '?'
     
-    def __init__(self, db_url, table, format=SimpleLongFormat()):
-        super().__init__(db_url, table, format)
+    def __init__(self, db_url, table, table_format=None):
+        if table_format is None:
+            table_format = LongTableFormat()
+        super().__init__(db_url, table, table_format)
         
 
-    def another(self, table, format=None):
-        if format is None:
-            format = type(self.format)()
+    def another(self, table, table_format=None):
+        if table_format is None:
+            table_format = type(self.table_format)()
             
-        return DataStore_SQLite(self.db_url, table, format)
+        return DataStore_SQLite(self.db_url, table, table_format)
         
         
     def construct(self):
@@ -223,15 +245,17 @@ class DataStore_SQLite(DataStore_SQL):
 class DataStore_PostgreSQL(DataStore_SQL):
     placeholder = '%s'
         
-    def __init__(self, db_url, table, format=SimpleLongFormat()):
-        super().__init__(db_url, table, format)
+    def __init__(self, db_url, table, table_format=None):
+        if table_format is None:
+            table_format = LongTableFormat_DateTime_PostgreSQL()
+        super().__init__(db_url, table, table_format)
 
         
-    def another(self, table, format=None):
-        if format is None:
-            format = type(self.format)()
+    def another(self, table, table_format=None):
+        if table_format is None:
+            table_format = type(self.table_format)()
             
-        return DataStore_SQLite(self.db_url, table, format)
+        return DataStore_PostgreSQL(self.db_url, table, table_format)
         
         
     def construct(self):

@@ -9,15 +9,15 @@ from .store_CSV import DataStore_CSV, DataStore_TextDump
 
 def create_datastore_from_url(url, *args, **kwargs):
     if url.startswith('postgresql://'):
-        return DataStore_PostgreSQL(url, args[0])
+        return DataStore_PostgreSQL(db_url=url, table=args[0])
     elif url.startswith('sqlite://'):
-        return DataStore_SQLite(url, args[0])
+        return DataStore_SQLite(db_url=url, table=args[0])
     elif url.startswith('influxdb2://'):
-        return DataStore_InfluxDB2(url, args[0])
+        return DataStore_InfluxDB2(db_url=url, measurement=args[0])
     elif url.startswith('redis://'):
-        return DataStore_Redis(url)
+        return DataStore_Redis(db_url=url)
     elif url.startswith('csv:///'):
-        return DataStore_CSV(url, args[0])
+        return DataStore_CSV(db_url, table=args[0])
     elif url.startswith('dump:///'):
         return DataStore_TextDump()
 

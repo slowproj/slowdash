@@ -5,9 +5,9 @@ from .base import DataStore
 
 
 class DataStore_InfluxDB2(DataStore):
-    def __init__(self, url, measurement, tag_column='channel', field='value'):
+    def __init__(self, db_url, measurement, tag_column='channel', field='value'):
         '''
-        - URL: influxdb2://org:token@host:port/bucket
+        - db_url: influxdb2://org:token@host:port/bucket
         - tag_column: name of the tag column, None for not using tags (wide format)
         - field: name of the value field for the long format, or None for the wide format (fields specified by data)
         Use a different measurement or field for different data types (e.g., numerical values and histograms)
@@ -16,14 +16,14 @@ class DataStore_InfluxDB2(DataStore):
         from influxdb_client import InfluxDBClient, Point
         from influxdb_client.client.write_api import SYNCHRONOUS, WritePrecision
 
-        self.url = url
+        self.url = db_url
         self.measurement = measurement
         self.tag_column = tag_column
         self.field = field
         
-        if url.startswith('influxdb2://'):
-            url = url[12:]
-        split_at = url.rsplit('@', 1)
+        if db_url.startswith('influxdb2://'):
+            db_url = db_url[12:]
+        split_at = db_url.rsplit('@', 1)
         if  len(split_at) < 2:
             org, token = '', ''
         else:

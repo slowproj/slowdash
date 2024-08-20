@@ -1,14 +1,15 @@
 
 from slowpy.control import DummyDevice_RandomWalk, ControlSystem
-from slowpy.store import DataStore_SQLite, SimpleLongFormat
+from slowpy.store import DataStore_SQLite, LongTableFormat
 
 
-class TestDataFormat(SimpleLongFormat):
+class TestDataFormat(LongTableFormat):
     schema_numeric = '(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel))'
     def insert_numeric_data(self, cur, timestamp, channel, value):
-        cur.execute(f'INSERT INTO {self.table} VALUES(CURRENT_TIMESTAMP,%d,"%s",%f)' % (timestamp, channel, value))
+        cur.execute(f'INSERT INTO {self.table} VALUES(CURRENT_TIMESTAMP,%d,?,%f)' % (timestamp, value), (channel,))
 
-datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata", format=TestDataFormat())
+        
+datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata", table_format=TestDataFormat())
 device = DummyDevice_RandomWalk(n=4)
 
 
@@ -20,6 +21,7 @@ def _loop():
 
 def _finalize():
     datastore.close()
+
     
     
 if __name__ == '__main__':

@@ -459,7 +459,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb26-1"><a h
 <span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>    datastore.append(histogram, tag<span class="op">=</span><span class="st">&#39;test_histogram_01&#39;</span>)</span>
 <span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>    time.sleep(<span class="dv">1</span>)</span></code></pre></div>
-<p>ヒストグラムやグラフの時系列データは大量のキーバリューを作るので、別のデータベースを使用した方が良い．この例ではデータベース番号
+<p>ヒストグラムやグラフの時系列データは大量のキーバリューを作るので、専用のデータベースを使用した方が良い．この例ではデータベース番号
 2 を使用している．</p>
 <p>ちなみに，<code>append()</code> の代わりに <code>update()</code>
 とすると，時刻情報なしで最新版だけを同じキーで保存するようになる（上記の例）．</p>

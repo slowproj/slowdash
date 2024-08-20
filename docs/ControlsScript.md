@@ -250,19 +250,19 @@ while True:
     time.sleep(1)
 ```
 
-For SQL databases, the "long format" with UNIX timestamps is used by default. To use other table schemata, specify an user defined `Format`:
+For SQL databases, the "long format" with UNIX timestamps is used by default. To use other table schemata, specify an user defined `TableFormat`:
 ```python
-class QuickTourTestDataFormat(SimpleLongFormat):
+class QuickTourTestDataFormat(LongTableFormat):
     schema_numeric = '(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel))'
     schema_text = '(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel))'
 
     def insert_numeric_data(self, cur, timestamp, channel, value):
-        cur.execute(f'INSERT INTO {self.table} VALUES(CURRENT_TIMESTAMP,%d,?,%f)' % (timestamp, value), channel)
+        cur.execute(f'INSERT INTO {self.table} VALUES(CURRENT_TIMESTAMP,%d,?,%f)' % (timestamp, value), (channel,))
 
     def insert_text_data(self, cur, timestamp, channel, value):
         cur.execute(f'INSERT INTO {self.table} VALUES(CURRENT_TIMESTAMP,%d,?,?' % timestamp), (channel, value))
 
-datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata", format=QuickTourTestDataFormat())
+datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata", table_format=QuickTourTestDataFormat())
 ```
 
 ## Analysis Components
