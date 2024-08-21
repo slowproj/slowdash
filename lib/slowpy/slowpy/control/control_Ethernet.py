@@ -11,12 +11,19 @@ class EthernetNode(ControlNode):
         self.line_terminator = kwargs.get('line_terminator') or '\x0d'
         
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((self.host, self.port))
         self.socket_buffer = ''
         self.selectors = selectors.DefaultSelector()
         self.selectors.register(self.socket, selectors.EVENT_READ)
-        print('Ethernet: %s:%s connected' % (host, str(port)))
 
+        try:
+            self.socket.connect((self.host, self.port))
+        except Exception as e:
+            print('ERROR: Ethernet: unable to connect to %s:%s: %s' % (host, str(port), str(e)))
+            del self.socket
+            self.socket = None
+        
+        print('Ethernet: %s:%s connected' % (host, str(port)))
+            
     
     def __del__(self):
         self.socket.close()
@@ -24,10 +31,14 @@ class EthernetNode(ControlNode):
 
         
     def set(self, value):
-        self.socket.sendall((value+self.line_terminator).encode('utf-8'))
+        if self.socket:
+            self.socket.sendall((value+self.line_terminator).encode('utf-8'))
 
     
     def get(self):
+        if self.socket is None:
+            return None
+        
         line = ''
         while True:
             if len(self.socket_buffer) == 0:
@@ -60,6 +71,9 @@ class EthernetNode(ControlNode):
 
     ## methods ##
     def do_flush_input(self):
+        if self.socket is None:
+            return
+        
         self.socket_buffer = ''
         while not self.is_stop_requested():
             events = self.selectors.select(timeout=0.01)
