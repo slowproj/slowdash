@@ -131,12 +131,14 @@ cd slowdash
 docker build -t slowdash .
 ```
 
-#### [DockerHub](https://hub.docker.com/r/slowproj/slowdash)
+#### DockerHub 
+[https://hub.docker.com/r/slowproj/slowdash](https://hub.docker.com/r/slowproj/slowdash)
 ```
 docker pull slowproj/slowdash:2407
 ```
 
-#### [GitHub Package](https://github.com/slowproj/slowdash/pkgs/container/slowdash)
+#### GitHub Package 
+[https://github.com/slowproj/slowdash/pkgs/container/slowdash](https://github.com/slowproj/slowdash/pkgs/container/slowdash)
 ```
 docker pull ghcr.io/slowproj/slowdash:2407
 ```
