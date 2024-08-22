@@ -6,14 +6,18 @@ slowdash_project:
     url: postgresql://postgres@postgres:5432/sensor_data
     parameters:
       time_series:
-        - schema: numeric_data[sensor_name]@timestamp(aware)=value_raw(default),value_cal
-        
-#  module:
-#    file: ./control-peaches.py
-
-  task:
-    name: control-peaches
+        - schema: numeric_data [sensor_name] @timestamp(aware) = value_raw(default), value_cal
 
   system:
     our_security_is_perfect: true
-    
+
+
+  ### Peaches control by user module (disabled) ###
+  module_disabled:
+    file: ./control-peaches.py
+
+
+  ### Peaches control by slow-task ###
+  task:
+    name: control-peaches
+    auto_load: true

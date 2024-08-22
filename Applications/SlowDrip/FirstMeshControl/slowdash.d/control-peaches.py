@@ -3,7 +3,7 @@ import sys, time
 import dripline
 ifc = dripline.core.Interface(dripline_config={'auth-file':'/project/authentications.json'})
 
-target, ramp, is_ramping = None, None, False
+target, ramping, is_ramping = None, None, False
 
 
 def _get_channels():
@@ -17,7 +17,7 @@ def _get_data(channel):
 
 
 def _loop():
-    global target, ramp, is_ramping
+    global target, ramping, is_ramping
     try:
         current = ifc.get('peaches').payload.to_python().get('value_raw', None)
         next_value = None
@@ -25,12 +25,12 @@ def _loop():
             diff = abs(target - current)
             if diff < 1e-5 * (abs(target)+abs(current)+1e-10):
                 pass
-            elif ramp is None or ramp < 1e-10 or diff < ramp:
+            elif ramping is None or ramping < 1e-10 or diff < ramping:
                 next_value = target
             elif target > current:
-                next_value = current + ramp
+                next_value = current + ramping
             else:
-                next_value = current - ramp
+                next_value = current - ramping
         if next_value is not None:
             is_ramping = True
             ifc.set('peaches', next_value)
@@ -43,13 +43,14 @@ def _loop():
 
     
 def _process_command(doc):
-    global target, ramp
+    global target, ramping
     try:
         if doc.get('set', False):
             if doc.get('target', None):
                 target = float(doc.get('target', target))
             if doc.get('ramping', None):
-                ramp = abs(float(doc.get('ramping', ramp)))
+                ramping = abs(float(doc.get('ramping', ramping)))
+            print(f'setting peaches to {target}, with ramping={ramping}')
         else:
             return False
     except Exception as e:
@@ -61,6 +62,6 @@ def _process_command(doc):
 
 if __name__ == '__main__':
     target = 10
-    ramp = 0.1
+    ramping = 0.1
     while True:
         _loop()

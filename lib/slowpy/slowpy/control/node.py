@@ -228,7 +228,7 @@ class RampingNode(ControlNode):
 
 
     def get(self):
-        return self.value_node.get()
+        return self.value_node.get() if self.target_value is None else self.target_value
 
 
     # child nodes
