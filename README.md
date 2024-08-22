@@ -124,12 +124,19 @@ See [Github Pages](https://slowproj.github.io/slowdash/).
 For status and updates, see [GitHub Wiki](https://github.com/slowproj/slowdash/wiki/Status-and-Updates).
 
 ## Docker Images
-[DockerHub](https://hub.docker.com/r/slowproj/slowdash)
+#### Building from Source
+```
+git clone https://github.com/slowproj/slowdash.git --recurse-submodules
+cd slowdash
+docker build -t slowdash .
+```
+
+#### [DockerHub](https://hub.docker.com/r/slowproj/slowdash)
 ```
 docker pull slowproj/slowdash:2407
 ```
 
-[GitHub Package](https://github.com/slowproj/slowdash/pkgs/container/slowdash)
+#### [GitHub Package](https://github.com/slowproj/slowdash/pkgs/container/slowdash)
 ```
 docker pull ghcr.io/slowproj/slowdash:2407
 ```
