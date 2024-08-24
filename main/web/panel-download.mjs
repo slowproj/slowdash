@@ -200,11 +200,18 @@ export class DownloadPanel extends Panel {
             <details>
             <summary>Auto Resampling Behavior</summary>
             <ul style="margin-top:0">
-              <li>For CSV, the median data interval among channels is used, where
-              <br>for each channel, the median interval between points is used.
-              <li>For JSON, no resampling is applied for "auto".
-              <li>Resampling is done on DB query whenever possible, but auto-resampling disables this.
-              A non-auto resampling value might significantly improve the speed.
+              <li>If only one channel is selected, no resampling is applied for the "auto" setting.
+            </ul>
+            <b>CSV Table Format</b>
+            <ul style="margin-top:0">
+              <li>For the time points, the median data interval among the selected channels is used, where
+              <br>for each channel, the median interval among data points of the channel is used.
+              <li>Resampling is done within the DB queries whenever possible, but auto-resampling disables this.
+              A non-auto resampling value might significantly improve the speed (especially for TSDBs).
+            </ul>
+            <b>JSON Format</b>
+            <ul style="margin-top:0">
+              <li>No resampling is applied for the "auto" setting.
             </ul>
             </details>
           <div>
@@ -234,9 +241,11 @@ export class DownloadPanel extends Panel {
         bindInput(thisconfig, 'format', channelDiv.find('select').at(0));
         channelDiv.find('select').at(0).bind('change', e => {
             channelInput.attr('list', (thisconfig.format == 'csv' ? 'sd-timeseries-datalist' : 'sd-all-datalist'));
-            channelTable.empty();
-            channelTableMessage.css('display', 'inline');
-            buttonDiv.find('button').enabled(false);
+            if (false /* switcing to JSON format is always safe... */) {
+                channelTable.empty();
+                channelTableMessage.css('display', 'inline');
+                buttonDiv.find('button').enabled(false);
+            }
         });
         channelInput.attr('list', (thisconfig.format == 'csv' ? 'sd-timeseries-datalist' : 'sd-all-datalist'));
         

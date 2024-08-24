@@ -97,7 +97,7 @@ class Plot {
         bindInput(this.config, 'format', div.find('input').at(k++).css('width', '5em'));
         if (this.config.color) {
             table.append($('<tr>').html(`
-              <tr><td>Color</td><td><input type="color">, Opacity: <input type="number" step="any" placeholder="1"></td></tr>
+              <tr><td>Color</td><td><input type="color">, Opacity: <input type="number" step="0.05" min="0" max="1" placeholder="1"></td></tr>
             `));
             bindInput(this.config, 'color', div.find('input').at(k++).css('width', '5em'));
             bindInput(this.config, 'opacity', div.find('input').at(k++).css('width', '5em'));
@@ -570,17 +570,17 @@ class LineMarkerPlot extends GraphPlot {
                 <option value="opendiamond">opendiamond</option>
                 <option value="opentriangle">opentriangle</option>
             </select>,
-            size: <input type="number" step="any"></td>
+            size: <input type="number" step="any" min="0"></td>
         `));
         table.append($('<tr>').html(`
-            <td>Line</td><td>width: <input type="number" step="any">, 
+            <td>Line</td><td>width: <input type="number" step="any" min="0">, 
             type: <select>
                 <option value="connect">connect</option>
                 <option value="last">last</option>
             </select></td>
         `));
         table.append($('<tr>').html(`
-            <td>Fill</td><td>opacity: <input type="number" step="any">, baseline: <input type="number" step="any"></td>
+            <td>Fill</td><td>opacity: <input type="number" step="0.05" min="0" max="1">, baseline: <input type="number" step="any"></td>
         `));
 
         bindInput(this.config, 'marker_type', div.find('select').at(0).css('width', '7em'));

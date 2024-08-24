@@ -1,0 +1,84 @@
+{
+    "control": {
+        "range": { "length": 300 },
+        "reload": 0,
+        "grid": { "rows": 3, "columns": 3 },
+        "mode": "normal"
+    },
+    "style": { },
+    "panels": [
+        {
+            "type": "timeaxis",
+            "plots": [
+                { "type": "timeseries", "channel": "ch0", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 5, "line_width": 0, "line_type": "connect", "fill_opacity": 0, "fill_baseline": 1e-100 }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 10, "ymax": 50 },
+            "legend": { "style": "none" }
+        },
+        {
+            "type": "timeaxis",
+            "plots": [
+                { "type": "timeseries", "channel": "ch0", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 0, "line_width": 2, "line_type": "connect", "fill_opacity": 0, "fill_baseline": 1e-100 }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 10, "ymax": 50 },
+            "legend": { "style": "none" }
+        },
+        {
+            "type": "timeaxis",
+            "plots": [
+                { "type": "timeseries", "channel": "ch0", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 0, "line_width": 0, "line_type": "connect", "fill_opacity": 0.3, "fill_baseline": 1e-100 }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 10, "ymax": 50 },
+            "legend": { "style": "none" }
+        },
+        {
+            "type": "timeaxis",
+            "plots": [
+                { "type": "timeseries", "channel": "ch0", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 5, "line_width": 2, "line_type": "connect", "fill_opacity": 0, "fill_baseline": 1e-100 }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": -60, "ymax": 300 },
+            "legend": { "style": "none" }
+        },
+        {
+            "type": "timeaxis",
+            "plots": [
+                { "type": "timeseries", "channel": "ch0", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 0, "line_width": 2, "line_type": "connect", "fill_opacity": 0.15, "fill_baseline": 1e-100 }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": -60, "ymax": 300 },
+            "legend": { "style": "none" }
+        },
+        {
+            "type": "timeaxis",
+            "plots": [
+                { "type": "timeseries", "channel": "ch0", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "square", "marker_size": 5, "line_width": 0, "line_type": "connect", "fill_opacity": 0.2, "fill_baseline": 1e-100 }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": -60, "ymax": 300 },
+            "legend": { "style": "none" }
+        },
+        {
+            "type": "timeaxis",
+            "plots": [
+                { "type": "timeseries", "channel": "ch0", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "opencircle", "marker_size": 5, "line_width": 2, "line_type": "connect", "fill_opacity": 0.15, "fill_baseline": 1e-100 }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 10, "ymax": 50 },
+            "legend": { "style": "none" }
+        },
+        {
+            "type": "timeaxis",
+            "plots": [
+                { "type": "timeseries", "channel": "ch0", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "diamond", "marker_size": 6, "line_width": 2, "line_type": "last", "fill_opacity": 0, "fill_baseline": 1e-100 }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 10, "ymax": 50 },
+            "legend": { "style": "none" }
+        },
+        {
+            "type": "timeaxis",
+            "plots": [
+                { "type": "timeseries", "channel": "ch0", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 4, "line_width": 2, "line_type": "last", "fill_opacity": 0.2, "fill_baseline": 1e-100 }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 10, "ymax": 50 },
+            "legend": { "style": "none" }
+        }
+    ],
+    "meta": { "name": "plotting-styles", "title": "Plotting Styles", "description": "" }
+}
