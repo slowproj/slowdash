@@ -631,21 +631,84 @@ class BarChartPlot extends GraphPlot {
 };
 
 
-class TimeseriesScatterPlot extends LineMarkerPlot {
-    configure(config, axes, legend, panel) {
+class TimeseriesScatterPlot extends GraphPlot {
+    configure(config, axes, legend, panel) {        
         if (! (config.opacity >= 0)) {
             config.opacity = 0.5;
+        }
+        if (! config.marker_type) {
+            config.marker_type = 'circle';
         }
         if (! (config.marker_size > 0)) {
             config.marker_size = 3;
         }
+        if (! config.format || config.format.length == 0) {
+            config.format = '%f, %f';
+        }
+        if (config.line_width === undefined) {
+            config.line_width = 0;
+        }
+
         super.configure(config, axes, legend, panel);
         
-        this.graph.style.lineWidth = 0;
-        if (! (this.graph.style.MarkerSize > 0)) {
-            this.graph.style.MarkerSize = 3;
+        this.graph.style = {
+            lineWidth: config.line_width, lineColor: config.color, lineOpacity: config.opacity,
+            markerType: config.marker_type, markerSize: config.marker_size, 
+            markerColor: config.color, markerOpacity: config.opacity,
+        };
+        this.axes.addGraph(this.graph);
+    }
+
+    setStyle(style) {
+        super.setStyle(style);
+        if (style?.color) {
+            let color = parseInt(style.color);
+            color = isNaN(color) ? style.color : getPaletteColor(color);
+            this.graph.style.lineColor = color;
+            this.graph.style.markerColor = color;
+            this.label.css('color', color);
+        }
+        if (style?.line_width) {
+            this.graph.style.lineWidth = line_width;
+        }
+        if (style?.marker_type) {
+            this.graph.style.markerType = marker_type;
+        }
+        if (style?.marker_size) {
+            this.graph.style.markerSize = marker_size;
+        }
+        if (style.opacity) {
+            this.graph.style.markerOpacity = style.opacity;
         }
     }
+
+    openSettings(div) {
+        super.openSettings(div);
+        let table = div.find('table');
+        let k = table.find('input').size();
+        table.append($('<tr>').html(`
+            <td>Marker</td><td>type: <select>
+                <option value="circle">circle</option>
+                <option value="square">square</option>
+                <option value="diamond">diamond</option>
+                <option value="triangle">triangle</option>
+                <option value="opencircle">opencircle</option>
+                <option value="opensquare">opensquare</option>
+                <option value="opendiamond">opendiamond</option>
+                <option value="opentriangle">opentriangle</option>
+            </select>,
+            size: <input type="number" step="any" min="0"></td>
+        `));
+        table.append($('<tr>').html(`
+            <td>Line</td><td>width: <input type="number" step="any" min="0"></td>
+        `));
+
+        bindInput(this.config, 'marker_type', div.find('select').at(0).css('width', '7em'));
+        bindInput(this.config, 'marker_size', div.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config, 'line_width', div.find('input').at(k++).css('width', '5em'));
+    }
+
+
     
     draw(dataPacket) {
         let ts0 = dataPacket.data[this.config.channelX];
