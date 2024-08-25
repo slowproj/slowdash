@@ -55,9 +55,9 @@
             "type": "plot",
             "plots": [
                 { "type": "ts-scatter", "channelX": "ch0", "channelY": "ch1", "opacity": 0.3, "color": "#009090", "line_width": 1, "marker_size": 3, "marker_type": "circle", "label": "", "format": "%.5g", "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" },
-                { "type": "ts-scatter", "channelX": "ch2", "channelY": "ch3", "color": "#dd8000", "opacity": 0.5, "label": "", "format": "%.5g", "marker_type": "circle", "marker_size": 3, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" }
+                { "type": "ts-scatter", "channelX": "ch2", "channelY": "ch3", "color": "#dd8000", "opacity": 0.5, "label": "", "format": "%.5g", "marker_type": "circle", "marker_size": 3, "line_width": 0, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" }
             ],
-            "axes": { "ylog": false, "xfixed": false, "yfixed": false, "xmin": -300, "xmax": 200, "ymin": 30, "ymax": 200, "xtitle": "Ch0 , Ch2", "ytitle": "Ch 1 , Ch3", "title": "Time-Series Scatters", "xlog": false, "zlog": false },
+            "axes": { "ylog": false, "xfixed": false, "yfixed": false, "xmin": -300, "xmax": 200, "ymin": 30, "ymax": 200, "xtitle": "Ch0 , Ch2", "ytitle": "Ch 1 , Ch3", "title": "Time-Series Scatters", "xlog": false, "zlog": false, "zmin": 0, "zmax": 1 },
             "legend": { "style": "hidden" }
         },
         {
