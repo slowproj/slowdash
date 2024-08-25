@@ -1,0 +1,14 @@
+#! /usr/bin/env python3
+
+import os, re, datetime
+
+sys_dir = os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir, os.pardir)))
+ver_file = os.path.join(sys_dir, 'main', 'server', 'slowdash_version.py')
+
+with open(ver_file) as f:
+    line = f.readline()
+    
+line = re.sub(r'[\d]{6}', datetime.date.today().strftime('%y%m%d'), line)
+
+with open(ver_file, 'w') as f:
+    f.write(line)
