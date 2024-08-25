@@ -313,10 +313,16 @@ class App:
         self.config.update()
         if self.project is None:
             doc = {
+                'slowdash': {
+                    'version': self.config.version
+                },
                 'project': {}
             }
         else:
             doc = {
+                'slowdash': {
+                    'version': self.config.version
+                },
                 'project': {
                     'name': self.config.project.get('name', 'Untitled Project'),
                     'title': self.config.project.get('title', ''),

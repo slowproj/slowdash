@@ -2,8 +2,7 @@
 # Created by Sanshiro Enomoto on 19 Mar 2022 #
 
 import sys, os, subprocess, logging, enum, json, yaml
-
-slowdash_version = '2407'
+from slowdash_version import slowdash_version
 
 logging.basicConfig(
     level=logging.INFO, 

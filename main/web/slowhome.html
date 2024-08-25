@@ -26,10 +26,10 @@
         boot(defaults, optparse, start);
     });
 
-    function start(config) {
-        config = {
-            _project: config._project,
-            meta: config.meta,
+    function start(config_arg) {
+        let config = {
+            _project: config_arg._project,
+            meta: config_arg.meta,
             control: {
                 grid: { 'rows': 2, 'columns': 2 },
                 immutable: true,
@@ -75,7 +75,9 @@
 
         let frame = new Frame($('#sd-header'), {
             title: title,
-            initialStatus: "SlowDash Catalog",
+//            initialStatus: "SlowDash",
+//            initialBeat: "Version " + config._project.slowdash.version,
+            initialStatus: "SlowDash - Version " + config._project.slowdash.version,
             style: style,
             reloadIntervalSelection: null
         });

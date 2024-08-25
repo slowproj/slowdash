@@ -1,7 +1,7 @@
 {
     "control": {
-        "range": { "length": 300 },
-        "reload": 0,
+        "range": { "length": 300, "to": null },
+        "reload": 5,
         "grid": { "rows": 3, "columns": 3 },
         "mode": "normal"
     },
