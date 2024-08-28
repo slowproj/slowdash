@@ -17,7 +17,7 @@ services:
       - POSTGRES_HOST_AUTH_METHOD=trust
 
   key-value-store:
-    image: driplineorg/dripline-python:v4.5.8
+    image: driplineorg/dripline-python:v4.7.1
     depends_on:
       - rabbit-broker
     volumes:
@@ -29,7 +29,7 @@ services:
       - /root/key-value-store.yaml
 
   sensor-logger:
-    image: driplineorg/dripline-python:v4.5.8
+    image: driplineorg/dripline-python:v4.7.1
     depends_on:
       - rabbit-broker
       - postgres

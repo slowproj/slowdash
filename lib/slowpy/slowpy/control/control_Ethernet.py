@@ -118,22 +118,35 @@ class EthernetNode(ControlNode):
     
     
 class ScpiNode(ControlNode):
-    def __init__(self, connection, base_name, set_format=None):
+    def __init__(self, connection, base_name, set_format=None, sync=True):
         self.connection = connection
         self.base_name = base_name
         self.set_format = set_format
+        self.sync = sync
         
     
-    def set(self, value):
+    def set(self, value=None):
         if self.set_format is None:
-            self.connection.set('%s %s' % (self.base_name, str(value)))
+            if value is None:
+                self.connection.set('%s' % self.base_name)
+            else:
+                self.connection.set('%s %s' % (self.base_name, str(value)))
         else:
-            self.connection.set(self.set_format.format(value))
-        self.connection.get()
+            if value is None:
+                self.connection.set(self.set_format)
+            else:
+                self.connection.set(self.set_format.format(value))
+
+        if self.sync:
+            self.connection.get()
+            
 
     
     def get(self):
-        self.connection.set('%s?' % self.base_name)
+        if self.base_name[-1] == '?':
+            self.connection.set('%s' % self.base_name)
+        else:
+            self.connection.set('%s?' % self.base_name)
         return self.connection.get()
 
 
