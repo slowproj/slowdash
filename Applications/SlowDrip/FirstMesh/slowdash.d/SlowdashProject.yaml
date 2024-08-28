@@ -7,10 +7,3 @@ slowdash_project:
     parameters:
       time_series:
         - schema: numeric_data [sensor_name] @timestamp(aware) = value_raw(default), value_cal
-
-  system:
-    our_security_is_perfect: true
-
-  task:
-    name: control-peaches
-    auto_load: true

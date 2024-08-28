@@ -23,7 +23,8 @@
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 0, "ymax": 30 },
             "legend": { "style": "side" }
         },
-        { "type": "html", "location": "project", "file": "peaches-control", "title": "Peaches Control" }
+        { "type": "html", "location": "project", "file": "peaches-control", "title": "Peaches Control" },
+        { "type": "tree", "channel": "control-peaches.status", "title": "Peaches Status" }
     ],
     "meta": { "name": "peaches-control", "title": "", "description": "" }
 }
