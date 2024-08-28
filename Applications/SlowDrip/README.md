@@ -8,7 +8,7 @@ This directory contains three docker deployments for different usage levels:
 
 
 ## FirstMesh
-Here the SlowDash container is added to the FirstMesh Walkthrough. The only difference is adding the slowdash entry to the `docker-compose.yaml` file (instead of Grafana) and the SlowDash configuration file placed under `slowdash.d` subdirectory.
+Here the SlowDash container is added to the FirstMesh Walkthrough. The changes to the Dripline Walkthrough are addiion of the `slowdash` entry to the `docker-compose.yaml` file (instead of Grafana), and the SlowDash configuration file placed under the `slowdash.d` subdirectory.
 ```yaml
   slowdash:
     image: slowproj/slowdash:2407
@@ -18,7 +18,7 @@ Here the SlowDash container is added to the FirstMesh Walkthrough. The only diff
       - ./slowdash.d:/project
 ```
 
-### Usage
+### Running
 ```
 cd FirstMesh
 docker compose up -d
@@ -41,8 +41,15 @@ This runs the following command, which builds a SlowDash image using a Dripline 
 cd ../..; docker build --build-arg BASE_IMAGE=driplineorg/dripline-python:v4.7.1 -t slowdash-dripline .
 ```
 
+If the FirstMesh containers are running, stop it before starting FirstMeshControl:
+```
+(at the FirstMesh directory)
+docker compose stop
+cd ..
+```
 
-### Usage
+
+### Running
 ```
 cd FirstMeshControl
 docker compose up -d
@@ -82,8 +89,14 @@ The SlowPy library (Python library part of the SlowDash system) is used to inter
 
 This uses a docker image that includes both Dripline and SlowDash. Build the image as described in the FirstMeshControl section if it has not been done.
 
+If the FirstMesh(Control) containers are running, stop it before starting FirstMeshControlSlowpy:
+```
+(at the FirstMesh(Control) directory)
+docker compose stop
+cd ..
+```
 
-### Usage
+### Running
 ```
 cd FirstMeshControlSlowpy
 docker compose up -d
