@@ -1,12 +1,23 @@
 Dripline with SlowDash
 ======================
 
-This directory includes three docker deployments for different usage depths:
-- First Mesh: add only SlowDash GUI to the Dripline First-Mesh Walkthrough
-- First Mesh Control: add SlowDash GUI and execution of Dripline python scripts
-- First Mesh Control by SlowPy: add SlowDash GUI and SlowPy Scripting to fully integrate Dripline
+This directory contains three docker deployments for different usage levels:
+- FirstMesh: Dripline First-Mesh Walkthrough plus SlowDash data visualization (instead of Grafana)
+- FirstMeshControl: SlowDash visualization and execution of Dripline python scripts from SlowDash
+- FirstMeshControlSlowPy: SlowDash visualization and SlowPy Scripting for full Dripline integration
+
 
 ## FirstMesh
+Here the SlowDash container is added to the FirstMesh Walkthrough. The only difference is adding the slowdash entry to the `docker-compose.yaml` file (instead of Grafana) and the SlowDash configuration file placed under `slowdash.d` subdirectory.
+```yaml
+  slowdash:
+    image: slowproj/slowdash:2407
+    ports:
+      - "18881:18881"
+    volumes:
+      - ./slowdash.d:/project
+```
+
 ### Usage
 ```
 cd FirstMesh
@@ -19,10 +30,17 @@ then open a web browser and connect to `http://localhost:18881`
 
 
 ## FirstMeshControl
-This uses a docker image that includes both Dripline and SlowDash. First build this image by running `make` at the `SlowDrip` directory:
+Dripline Python script is placed under `slowdash.d/config` so that it can be used from SlowDash GUI.
+
+This uses a docker image that includes both Dripline and SlowDash. First build the image by running `make` at the `SlowDrip` directory:
 ```
 make
 ```
+This runs the following command, which builds a SlowDash image using a Dripline image as its base image:
+```
+cd ../..; docker build --build-arg BASE_IMAGE=driplineorg/dripline-python:v4.7.1 -t slowdash-dripline .
+```
+
 
 ### Usage
 ```
@@ -32,7 +50,6 @@ docker compose up -d
 docker compose up -d
 ```
 then open a web browser and connect to `http://localhost:18881`
-
 
 
 ### How it works
@@ -61,7 +78,10 @@ This creates one input field and one button. When the button is clicked, the fun
 
 
 ## FirstMeshControlSlowpy
+The SlowPy library (Python library part of the SlowDash system) is used to interface with Dripline for full integration.
+
 This uses a docker image that includes both Dripline and SlowDash. Build the image as described in the FirstMeshControl section if it has not been done.
+
 
 ### Usage
 ```
@@ -74,7 +94,7 @@ then open a web browser and connect to `http://localhost:18881`
 
 
 ### How it works
-The script file is `FirstMeshControl/slowdash.d/config/slowtask-control-peaches.py`:
+The script file is `FirstMeshControlSlowpy/slowdash.d/config/slowtask-control-peaches.py`:
 ```python
 from slowpy.control import ControlSystem, ControlNode
 ctrl = ControlSystem()
@@ -105,4 +125,4 @@ def _export():
     ]
 ```
 
-This time, the Dripline interfacing is done via a SlowPy control object ('peaches') mapped to an Dripline endpoint. The `set()` method of the control object write the value to the endpoint, and `get()` method reads a value. In addition, the SlowPy control object can be directly exported to SlowDash GUI for displaying and modifying. Also the object implementes some common control functions such as `ramping()`. See the "Controls" section of the SlowDash documentation for full details.
+The Dripline interfacing is done via a SlowPy control object ('peaches') mapped to an Dripline endpoint. The `set()` method of the control object write the value to the endpoint, and `get()` method reads a value. In addition, the SlowPy control object can be directly exported to SlowDash GUI for displaying and modifying. Also the object implementes some common control functions such as `ramping()`. See the "Controls" section of the SlowDash documentation for full details.
