@@ -5,7 +5,7 @@ FROM ${BASE_IMAGE}
 RUN apt-get update && apt-get install -y gosu
 
 # we install Python packages that might be used by user modules
-RUN pip install numpy scipy pandas matplotlib pillow pyyaml psutil bcrypt requests psycopg2 mysqlclient influxdb-client redis pymongo couchdb
+RUN pip install numpy scipy pandas matplotlib pillow pyyaml psutil bcrypt requests psycopg2 influxdb-client redis pymongo couchdb
 
 
 ARG USERNAME=slowuser
