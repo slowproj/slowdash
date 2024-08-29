@@ -456,7 +456,7 @@ export class FileManagerPanel extends Panel {
         this.deletePopup = $('<dialog>').addClass('sd-pad').appendTo(div);
         
         newFileButton.bind('click', e => {
-            this._createFile(newFileInput.val(), e);
+            this._createFile(this.newFileInput.val(), e);
         });
         dropzone.bind('dragenter', e => {
             e.preventDefault();
@@ -595,7 +595,7 @@ export class FileManagerPanel extends Panel {
         this.fileTable.empty();
         let tr = $('<tr>').appendTo(this.fileTable);
         $('<th>').text("Name").appendTo(tr);
-        $('<th>').text("Edit / Delete").appendTo(tr);
+        $('<th>').text("Operation").appendTo(tr);
         $('<th>').text("Last Modified").appendTo(tr);
         $('<th>').text("Size").appendTo(tr);
         $('<th>').text("Owner").appendTo(tr);
@@ -783,36 +783,25 @@ export class TaskManagerPanel extends Panel {
             const cmd = $(e.target).closest('div').find('input').val();
             this._send_command(cmd, e);
         });
-        
-        if (true) {
-            const id = window.slowdash_task_timer_id ?? null;
-            if (id !== null) {
-                clearTimeout(id);
-            }
-            window.slowdash_task_last_load = 0;
-            let repeat = ()=>{
-                const now = $.time();
-                const last = window.slowdash_task_last_load;
-                window.slowdash_task_last_load = now;
-                if (now - last >= 1) {
-                    this._load(()=>{
-                        window.slowdash_task_last_load = $.time();
-                        window.slowdash_task_timer_id = setTimeout(repeat, 1000);
-                    });
-                }
-            };
-            repeat();
-        }
+
+        this.is_loading = true;  // postpone loading until configure() is completed
+        this.beatCallback = () => { this._load(); };
     }
 
     
     configure(config, callbacks={}, project_config=null) {
         super.configure(config, callbacks);
         this.is_secure = project_config?.project?.is_secure ?? false;
+        this.is_loading = false;
     }
 
 
-    async _load(on_complete) {
+    async _load() {
+        if (this.is_loading) {
+            return;
+        }
+        this.is_loading = true;
+        
         try {
             let response = await fetch('api/control/task');
             let record = await response.json();
@@ -829,7 +818,7 @@ export class TaskManagerPanel extends Panel {
         catch (e) {
             console.log(e);
         }
-        on_complete();
+        this.is_loading = false;
     }
 
     

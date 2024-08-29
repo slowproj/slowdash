@@ -26,6 +26,24 @@
         boot(defaults, optparse, start);
     });
 
+
+    async function update_server() {
+        try {
+            let response = await fetch('./api/update/tasklist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json; charset=utf-8' },
+                body: '',
+            });
+            if (! response.ok) {
+                throw new Error(response.status + " " + response.statusText);
+            }
+        }
+        catch (e) {
+            console.log(e);
+        }
+    }
+
+
     function start(config_arg) {
         let config = {
             _project: config_arg._project,
@@ -82,6 +100,8 @@
             reloadIntervalSelection: null
         });
 
+        update_server();
+        
         layout.configure(config);
         layout.load({from:0, to:0}, function(status) {});
 

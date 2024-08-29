@@ -38,10 +38,10 @@ all:
 
 	@ln -fs $(SLOWDASH_DIR)/docs $(SLOWDASH_DIR)/main/web
 
-	@echo "Installation successful"
+	@echo "## Installation successful"
 	@echo ""
 	@echo "- Executable files are copied to $(SLOWDASH_DIR)/bin."
-	@echo "- Set enviromnental variables for slowdash executables and Python modules by: "
+	@echo "- Set enviromnental variables for the slowdash executables and Python modules by: "
 	@echo "  source $(SLOWDASH_DIR)/bin/slowdash-bashrc"
 	@echo '- To create a docker image, run "make docker"'
 

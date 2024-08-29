@@ -60,7 +60,19 @@ export class Layout {
             plotGridEnabled: true,
             negatingImages: style.negate,
         };
+
+        this.beatCallbacks = [];
+        this.beat();
     }
+
+
+    beat() {
+        for (let f of this.beatCallbacks) {
+            f();
+        }
+        setTimeout(()=>{this.beat();}, 1000);
+    }
+    
     
     configure(config=null, callbacks={}) {
         const default_callbacks = {
@@ -121,6 +133,7 @@ export class Layout {
         let style = $.extend({}, this.defaultStyle, this.config._project?.style?.panel ?? {});
         
         this.panels = [];
+        this.beatCallbacks = [];
         for (let entry of this.config.panels) {
             let panelDiv = $('<div>').addClass('sd-panel').appendTo(this.layoutDiv);
             panelDiv.css({
@@ -201,6 +214,9 @@ export class Layout {
                 };
                 panel.configure(entry, callbacks, this.config._project);
                 this.panels.push(panel);
+                if (panel.beatCallback) {
+                    this.beatCallbacks.push(panel.beatCallback);
+                }
             }
         }
 

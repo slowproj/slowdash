@@ -12,9 +12,11 @@ class App:
         self.config = Config(project_dir, project_file)
         self.project = self.config.project
         self.project_dir = self.config.project_dir
+        self.is_cgi = is_cgi
         self.datasource_list = []
         self.usermodule_list = []
         self.taskmodule_list = []
+        self.known_task_list = []
         self.console_stdin = None
         self.console_stdout = None
         self.error_message = ''
@@ -63,7 +65,7 @@ class App:
                 self.error_message = 'bad user module configuration'
                 logging.error(self.error_message)
                 continue
-            if is_cgi and node.get('cgi_enabled', False) != True:
+            if self.is_cgi and node.get('cgi_enabled', False) != True:
                 continue
             filepath = node['file']
             params = node.get('parameters', {})
@@ -88,7 +90,7 @@ class App:
                 self.error_message = 'bad control module configuration'
                 logging.error(self.error_message)
                 continue
-            if is_cgi and node.get('cgi_enabled', False) != True:
+            if self.is_cgi and node.get('cgi_enabled', False) != True:
                 continue
             if 'name' not in node:
                 self.error_message = 'name is required for control module'
@@ -99,14 +101,16 @@ class App:
             filepath = node.get('file', './config/slowtask-%s.py' % name)
             params = node.get('parameters', {})
             task_table[name] = (filepath, params, {'auto_load':node.get('auto_load', False)})
+            self.known_task_list.append(name)
         
-        # make task entries from file list of the config dir; currently disabled
-        if False and not is_cgi:
+        # make task entries from file list of the config dir
+        if not self.is_cgi:
             for filepath in glob.glob(os.path.join(self.project_dir, 'config', 'slowtask-*.py')):
                 rootname, ext = os.path.splitext(os.path.basename(filepath))
                 kind, name = rootname.split('-', 1)
-                if name not in task_table:
+                if name not in self.known_task_list:
                     task_table[name] = (filepath, {}, {'auto_load':False})
+                    self.known_task_list.append(name)
 
         for name, (filepath, params, opts) in task_table.items():
             module = taskmodule.TaskModule(filepath, name, params)
@@ -123,7 +127,7 @@ class App:
         self.console_outputs = []
         self.original_stdin = sys.stdin
         self.original_stdout = sys.stdout
-        if not is_command and not is_cgi:
+        if not is_command and not self.is_cgi:
             self.console_stdin = io.StringIO()
             self.console_stdout = io.StringIO()
             sys.stdin = self.console_stdin
@@ -269,7 +273,16 @@ class App:
         # write a reply to output and return the content-type, or
         # return a HTTP response code.
         
-        if path_list[0] == 'config':
+        if path_list[0] == 'update' and len(path_list) > 1:
+            target = path_list[1]
+            if target == 'tasklist':
+                if not self.is_cgi:
+                    self._scan_task_files()
+                return 'text/plain'
+            else:
+                return 400  # Bad Request
+            
+        elif path_list[0] == 'config':
             if (len(path_list) < 3) or (path_list[1] != 'file'):
                 return 403  # Forbidden
             else:
@@ -640,6 +653,23 @@ class App:
                 return result
             
         return None
+
+    
+    def _scan_task_files(self):
+        for filepath in glob.glob(os.path.join(self.project_dir, 'config', 'slowtask-*.py')):
+            rootname, ext = os.path.splitext(os.path.basename(filepath))
+            kind, name = rootname.split('-', 1)
+            if name in self.known_task_list:
+                continue
+            self.known_task_list.append(name)
+
+            module = taskmodule.TaskModule(filepath, name, {})
+            if module is None:
+                self.error_message = 'Unable to load control module: %s' % filepath
+                logging.error(self.error_message)
+            else:
+                module.auto_load = False
+                self.taskmodule_list.append(module)
 
     
     def _get_task_status(self, params, opts):

@@ -74,6 +74,7 @@ export class Panel {
     constructor(div, style) {
         this.div = div;
         this.style = style;
+        this.beatCallback = null; // if not null, layout will call this on every second
     }
 
     configure(config, callbacks={}) {

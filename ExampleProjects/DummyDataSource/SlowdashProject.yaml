@@ -11,6 +11,7 @@ slowdash_project:
       plotFrameThickness: 0
       plotBackgroundColor: "#fafafa"
       plotGridColor: lightgray
+      
   style2:
     theme: dark
     title_color: darkgreen
@@ -20,6 +21,7 @@ slowdash_project:
       plotFrameColor: "#d0d0d0"
       plotBackgroundColor: "#101010"
       plotGridColor: lightgray
+      
   data_source:
     - type: Dummy
       parameters:
@@ -72,4 +74,3 @@ slowdash_project:
 
 
     - type: SystemResource
-      
