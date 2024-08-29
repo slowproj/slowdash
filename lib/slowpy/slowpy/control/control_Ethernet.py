@@ -52,7 +52,7 @@ class EthernetNode(ControlNode):
                     else:
                         continue
                     
-                self.socket_buffer = self.socket.recv(1024).decode('utf-8')
+                self.socket_buffer = self.socket.recv(1024).decode('utf-8', errors='ignore')
                 if len(self.socket_buffer) == 0:
                     break
 
@@ -79,7 +79,7 @@ class EthernetNode(ControlNode):
             events = self.selectors.select(timeout=0.01)
             for key, mask in events:
                 if key.fileobj == self.socket and mask != 0:
-                    print(f"dumping [{self.socket.recv(1024).decode('utf-8').strip()}]")
+                    print(f"dumping [{self.socket.recv(1024).decode('utf-8', errors='ignore').strip()}]")
                     break
             else:
                 break
