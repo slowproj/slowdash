@@ -142,13 +142,14 @@ The Dripline interfacing is done via a SlowPy control object ('peaches') bound t
 
 
 ## Security Considerations
-SlowDash is designed to be used in a secured network. External access should be done through VPN and/or SSH tunnel. Under this assumption, everyone who has access to the SlowDash page can upload and modify Python scripts through its Web interface.
+SlowDash is designed to be used within a secured network. External access should be done through VPN and/or SSH tunnel. Under this assumption, SlowDash trusts all the users.
 
-Even though, Python script uploading and modifying are disabled by the SlowDash default setting. In these Dripline-SlowDash applications, this is explicitly enabled in the `SlowdashProject.yaml` configuration file by:
+Despite this, Python script uploading and editting through its Web pages are disabled by the SlowDash default settings. Here for the Dripline-SlowDash applications, this is explicitly enabled in the `SlowdashProject.yaml` configuration file by:
 ```yaml
   system:
     our_security_is_perfect: true
 ```
+If `our_secirity_is_perfect` is not `true`, users will have to log-in to the system and edit the files in the usual way.
 
 If needed, the access to the SlowDash page can be protedted by the HTTP basic authentication:
 ```yaml
@@ -157,6 +158,6 @@ If needed, the access to the SlowDash page can be protedted by the HTTP basic au
     key: hachi:$2a$12$V/5o6No5eeCRUBrUMi7wee8vYKtFijp18oWsVulFQ4JMAAtpDhPOa
     
 ```
-See the "Project Setup" section of the SlowDash documentation for details.
+See the "Project Setup" section of the SlowDash document for details.
 
 It is possible to specify which SlowDash configuration file to use at the time of starting. Running multiple SlowDash instances with different configurations, such as one for unlimited access for limited users and another for limited access for unlimited users, might be useful. SlowDash currently does not implement user role management.

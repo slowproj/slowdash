@@ -204,7 +204,10 @@ class TelnetNode(ControlNode):
 
     
     def get(self):
-        return '\n'.join(self.do_get_lines_to_prompt())
+        if self.prompt is not None:
+            return '\n'.join(self.do_get_lines_to_prompt())
+        else:
+            return self.connection.do_get_line(timeout=self.timeout)
             
         
     ## methods ##
