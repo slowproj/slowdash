@@ -30,7 +30,7 @@ then open a web browser and connect to `http://localhost:18881`
 
 
 ## FirstMeshControl
-Dripline Python script is placed under `slowdash.d/config` so that it can be used from SlowDash GUI.
+A Dripline Python script is placed under `slowdash.d/config` so that it can be used from SlowDash GUI.
 
 This uses a docker image that includes both Dripline and SlowDash. First build the image by running `make` at the `SlowDrip` directory:
 ```
@@ -43,7 +43,7 @@ cd ../..; docker build --build-arg BASE_IMAGE=driplineorg/dripline-python:v4.7.1
 
 If the FirstMesh containers are running, stop it before starting FirstMeshControl:
 ```
-(at the FirstMesh directory)
+# (at the FirstMesh directory)
 docker compose stop
 cd ..
 ```
@@ -56,7 +56,7 @@ docker compose up -d
 (wait for a few seconds)
 docker compose up -d
 ```
-then open a web browser and connect to `http://localhost:18881`
+then open a web browser and connect to `http://localhost:18881`. From the SlowDash home page, open the `peaches-control` SlowPlot page. You will see a control panel to set the peaches value.
 
 
 ### How it works
@@ -75,13 +75,13 @@ To have the script file recognized by SlowDash, the file must be placed under th
 The functions in the script can be called from SlowDash GUI. An easy way to do it is to make a HTML form panel with the content like:
 ```html
 <form>
-  value: <input type="number" name="value" style="widtd:8em" step="any" value="0">
-  <input type="submit" name="control-peaches.set_peaches()" value="set" style="font-size:130%">
+  value: <input type="number" name="value" value="0">
+  <input type="submit" name="control-peaches.set_peaches()" value="set">
 </form>    
 ```
-This creates one input field and one button. When the button is clicked, the function in the Python script is called with parameters defined in the form (`value` in this example).
+This creates one input field (bound to a parameter `value`) and one button (bound to a function `control-peaches.set_peaches()`. When the button is clicked, the function in the Python script is called with the parameters defined in the form.
 
-
+As all the parameters in the form will be passed to the function call, it would be a good practice to have the `**kwargs` in the Python function parameter list, otherwise adding an extra `<input>` in the form might cause a Python run-time error.
 
 
 ## FirstMeshControlSlowpy
@@ -91,7 +91,7 @@ This uses a docker image that includes both Dripline and SlowDash. Build the ima
 
 If the FirstMesh(Control) containers are running, stop it before starting FirstMeshControlSlowpy:
 ```
-(at the FirstMesh(Control) directory)
+# (at the FirstMesh(Control) directory)
 docker compose stop
 cd ..
 ```
@@ -103,7 +103,7 @@ docker compose up -d
 (wait for a few seconds)
 docker compose up -d
 ```
-then open a web browser and connect to `http://localhost:18881`
+then open a web browser and connect to `http://localhost:18881`. From the SlowDash home page, open the `peaches-control` SlowPlot page. You will see a control panel to set the peaches value with the ramping feature, and a table showing the control status (i.e., the values of the control variables and process variables in the Python script).
 
 
 ### How it works
@@ -138,4 +138,25 @@ def _export():
     ]
 ```
 
-The Dripline interfacing is done via a SlowPy control object ('peaches') mapped to an Dripline endpoint. The `set()` method of the control object write the value to the endpoint, and `get()` method reads a value. In addition, the SlowPy control object can be directly exported to SlowDash GUI for displaying and modifying. Also the object implementes some common control functions such as `ramping()`. See the "Controls" section of the SlowDash documentation for full details.
+The Dripline interfacing is done via a SlowPy control object ('peaches') bound to a Dripline endpoint. The `set(value)` method of the control object writes the value to the endpoint, and `get()` method reads a value. In addition, the SlowPy control objects can be directly exported to SlowDash GUI for displaying and modifying, as access to control/process variables of a control system. Also the object implementes some common control functions such as `ramping()`. See the "Controls" section of the SlowDash documentation for details.
+
+
+## Security Considerations
+SlowDash is designed to be used in a secured network. External access should be done through VPN and/or SSH tunnel. Under this assumption, everyone who has access to the SlowDash page can upload and modify Python scripts through its Web interface.
+
+Even though, Python script uploading and modifying are disabled by the SlowDash default setting. In these Dripline-SlowDash applications, this is explicitly enabled in the `SlowdashProject.yaml` configuration file by:
+```yaml
+  system:
+    our_security_is_perfect: true
+```
+
+If needed, the access to the SlowDash page can be protedted by the HTTP basic authentication:
+```yaml
+  authentication:
+    type: Basic
+    key: hachi:$2a$12$V/5o6No5eeCRUBrUMi7wee8vYKtFijp18oWsVulFQ4JMAAtpDhPOa
+    
+```
+See the "Project Setup" section of the SlowDash documentation for details.
+
+It is possible to specify which SlowDash configuration file to use at the time of starting. Running multiple SlowDash instances with different configurations, such as one for unlimited access for limited users and another for limited access for unlimited users, might be useful. SlowDash currently does not implement user role management.

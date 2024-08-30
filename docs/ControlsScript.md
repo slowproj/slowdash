@@ -177,6 +177,9 @@ Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to do some
   - **path(path)**: path string to be appended to the base_url
     - set(value): sends a POST request to `base_url` `path` with `value` as its content
     - get(): sends a GET request to `base_url` `path` and return the reply content
+    - **json()**: 
+      - set(value): `value` is a Python object to be converted to JSON
+      - get(): receives a JSON document and returns a Python object
   
 #### Shell Command
 ##### Loading

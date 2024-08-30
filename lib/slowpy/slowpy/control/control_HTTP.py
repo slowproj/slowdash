@@ -1,6 +1,6 @@
 
 from slowpy.control import ControlNode
-import logging, requests
+import requests, json, logging
 
 
 class HttpNode(ControlNode):
@@ -97,6 +97,31 @@ class HttpPathNode(ControlNode):
     
     def get(self):
         return self.connection.do_get_request(self.path)
+
+    
+    ## child nodes ##
+    def json(self, **kwargs):
+        return HttpJaonPathNode(self, **kwargs)
+    
+
+class HttpJsonPathNode(ControlNode):
+    def __init__(self, connection, **kwargs):
+        self.connection = connection
+        
+    
+    def set(self, value):
+        return self.connection.set(json.dumps(value))
+            
+    
+    def get(self):
+        content = self.connection.get(self.path)
+        try:
+            return json.loads(content)
+        except Exception as e:
+            logging.error('bad JSON document')
+            return None
+            
+    
 
 
     
