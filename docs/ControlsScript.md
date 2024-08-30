@@ -36,7 +36,7 @@ from slowpy.control import ControlSystem
 ctrl = ControlSystem()
 
 # make a control node for a SCIP command of "MEAS:V0" on a device at 182.168.1.43
-V0 = ctrl.ethernet(host='192.168.1.43', port=17674).scpi('MEAS:V0', set_format='V0 {};*OPC?')
+V0 = ctrl.ethernet(host='192.168.1.43', port=17674).scpi().command('MEAS:V0', set_format='V0 {};*OPC?')
 
 # write a value to the control node: this will issue a SCPI command "V0 10;*OPC?"
 V0.set(10)
@@ -76,9 +76,9 @@ Then clicking the `Set` button will call the function `set_V0()` with a paramete
 #### Displaying the readout values on the SlowDash panels
 For a control node `V0`, and `V1`, defining `_export()` function in the User Task Script will export these node values, making them available in SlowDash GUI in the same way as the values stored in database.
 ```python
-device = ctrl.ethernet(host='192.168.1.43', port=17674)
-V0 = device.scpi('MEAS:V0', set_format='V0 {};*OPC?')
-V1 = device.scpi('MEAS:V1', set_format='V1 {};*OPC?')
+device = ctrl.ethernet(host='192.168.1.43', port=17674).scpi()
+V0 = device.command('MEAS:V0', set_format='V0 {};*OPC?')
+V1 = device.command('MEAS:V1', set_format='V1 {};*OPC?')
 def _export():
     return [
         ('V0', V0),
@@ -111,7 +111,7 @@ SlowPy is a Python library (module) that provides functions like:
 The SlowPy library is included in the SlowDash package, under `slowdash/lib/slowpy`. By running `source slowdash/bin/slowdash-bashrc`, as instructed in the Installation section, this path will be included in the environmental variable `PYTHONPAH`, so that users can use the library without modifying users system. It is also possible to install the library in a usual way: you can do `pip install slowdas/lib/slowpy` to install SlowPy into your Python environment. You might want to combine this with `pyenv` not to mess up your Python.
 
 ## Controls
-SlowPy provides an unified interface to connect external software systems and hardware devices; everything will be mapped into a single "ControlTree" where each node has `set()` and `get()`. The tree represents logical structure of the system, for example, a SCPI command of `MEAS:V` to a voltmeter connected to an ethernet would be addressed like `ControlSystem.ethernet(host, port).scpi('MEAS:V')`, and `set(value)` to this node will send a SCPI command of `MEAS:V?` to the voltmeter. The `get()` method makes a read access and returns a value.
+SlowPy provides an unified interface to connect external software systems and hardware devices; everything will be mapped into a single "ControlTree" where each node has `set()` and `get()`. The tree represents logical structure of the system, for example, a SCPI command of `MEAS:V` to a voltmeter connected to an ethernet would be addressed like `ControlSystem.ethernet(host, port).scpi().command('MEAS:V')`, and `set(value)` to this node will send a SCPI command of `MEAS:V?` to the voltmeter. The `get()` method makes a read access and returns a value.
 
 Plugin modules can dynamically add branches to the control tree. For example, Redis plugin adds the `redis()` node and a number of sub-branches for functions that Redis provides, such as hash, json and time-series. Plugins are loaded to a node, not (necessarily) to the root ControlSystem; for example, a plugin that uses ethernet is loaded to an ethernet node, creating a sub-branch under the ethernet node, and the plugin can make use of the function provided by the ethernet node such as `send()` (which is `set()` of the node) and `receive()` (which is `get()`).
 
@@ -123,7 +123,7 @@ from slowpy.control import ControlSystem
 ctrl = ControlSystem()
 
 # make a control node for a SCIP command of "MEAS:V0" on a device at 182.168.1.32
-V0 = ctrl.ethernet(host='192.168.1.43', port=17674).scpi('MEAS:V0', set_format='V0 {};*OPC?')
+V0 = ctrl.ethernet(host='192.168.1.43', port=17674).scpi().command('MEAS:V0', set_format='V0 {};*OPC?')
 
 # write a value to the control node: this will issue a SCPI command "V0 10;*OPC?"
 V0.set(10)
@@ -141,26 +141,43 @@ ctrl.load_control_module('Ethernet')
 ```
 This will search for a file named `control_Ethernet.py` from search directories, load it, and inject the `ethernet()` Python method to the node class that loaded the plugin (which is ControlSystem in this case). The Ethernet plugin already includes sub-branches for SCPI; for specific protocols not already included, a plugin would be loaded onto the Ethernet node.
 
-Each node constructor takes parameters. In this example, the ethernet node, which sends and receives data to/from the ethernet, takes the host/IP and port parameters, and a SCPI node, which is bound to a specific SCPI command, takes the SCPI command parameter with optional `set_format` which overrides the default SCPI command for writing. (The default SCPI command to be written/read `.scpi(CMD)` are `CMD` and `CMD?`, respectively. Often write operations should wait for the command completion, and SlowPy expects a return value from each command. A technique to do it, regardless to the actual command behaviors of the device, is to append `OPC?` to the command, as done in the example.)
+Each node constructor takes parameters. In this example, the ethernet node, which sends and receives data to/from the ethernet, takes the host/IP and port parameters, and a SCPI command node, which is bound to a specific SCPI command, takes the SCPI command parameter with optional `set_format` which overrides the default SCPI command for writing. (The default SCPI command to be written/read `.scpi().command(CMD)` are `CMD` and `CMD?`, respectively. Often write operations should wait for the command completion, and SlowPy expects a return value from each command. A technique to do it, regardless to the actual command behaviors of the device, is to append `OPC?` to the command, as done in the example.)
 
 Once you get the control node object, you can call `node.set(value)` to write the value, and call `value=node.get()` to read from it. As a shortcut, `node(value)` is equivalent to `node.set(value)`, and `value=node()` is equivalent to `value=node.get()`. Also control nodes define Python's `__str__()`, `__float__()`, etc., so `print(node)` and `x = float(node)` will implicitly call `node.get()`.
 
 ### Commonly used nodes
 Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to do something. Methods with a noun name return a sub-node.
 
-#### Ethernet and SCPI
+#### Ethernet, SCPI and Telnet
 ##### Loading
 `ControlSystem.load_control_module('Ethernet')`: already included
 
 ##### Nodes
 - **ethernet(host,port)**: sends and receives text messages through a TCP socket connection
-  - set(value): sends the value with adding a line delimiter (typically CR or LF)
-  - get(): receives a line terminated by a line delimiter and returns it
-  - do_flush(): empty the receiving buffer
-  - **scpi(cmd)** [sub-node]: issue a SCPI command via the parent ethernet connection
-    - set(value): sends `cmd value` and waits for a reply
-    - get(): sends `cmd?` and waits for a reply, then returns the reply
+  - set(value): sends the value as encoded text
+  - get(): receives a chunk of text
+  - do_get_chunk(timeout=None): receives a chunk of text
+  - do_get_line(timeout=None): receives a chunk and returns one line (with reconstruction)
+  - do_flush_input(): empties the receiving buffer
+  - **scpi()** bridges the parent ethernet connection and holds SCPI configurations
+    - **command(cmd)** issue a SCPI command via the parent ethernet connection
+      - set(value=None): sends `cmd value` and waits for a reply
+      - get(): sends `cmd?` and waits for a reply, then returns the reply
+  - **telnet()** bridges the parent ethernet connection and holds telnet configurations
+    - **command(cmd)** issue a SCPI command via the parent ethernet connection
+      - set(value=None): sends `cmd value line_terminator`, consumes echo
+      - get(): sends `cmd line_terminator`, consumes echo, and returns a reply until the next prompt
 
+#### HTTP (Web API)
+##### Loading
+`ControlSystem.load_control_module('HTTP')`
+
+##### Nodes
+- **http(base_url)**:
+  - **path(path)**: path string to be appended to the base_url
+    - set(value): sends a POST request to `base_url` `path` with `value` as its content
+    - get(): sends a GET request to `base_url` `path` and return the reply content
+  
 #### Shell Command
 ##### Loading
 `ControlSystem.load_control_module('Shell')`: already included
@@ -171,7 +188,7 @@ Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to do some
   - get(): launches `cmd` and returns the result
   - **arg(\*args)**: append program arguments to the parent "shell" node. <br>
     Example: `adc0 = ctrl.shell('read_adc', '--timeout=0').arg('--ch=0')`
-  
+    
 #### Redis Interface
 ##### Loading
 `ControlSystem.load_control_module('Redis')`
