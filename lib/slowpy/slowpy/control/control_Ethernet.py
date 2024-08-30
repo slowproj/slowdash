@@ -8,7 +8,6 @@ class EthernetNode(ControlNode):
         import socket
         self.host = host
         self.port = port
-        self.line_terminator = kwargs.get('line_terminator') or '\x0d'
         
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket_buffer = ''
@@ -32,15 +31,15 @@ class EthernetNode(ControlNode):
         
     def set(self, value):
         if self.socket:
-            self.socket.sendall((value+self.line_terminator).encode('utf-8'))
+            self.socket.sendall(value.encode('utf-8'))
 
     
     def get(self):
-        return self.do_get_line()
+        return self.do_get_chunk(timeout=None)
 
 
     ## methods ##    
-    def do_get_chunk(self, timeout=1.0):
+    def do_get_chunk(self, timeout=None):
         if self.socket is None:
             return None
     
@@ -67,7 +66,9 @@ class EthernetNode(ControlNode):
                 self.socket_buffer = self.do_get_chunk(timeout=0.1)
                 
             if len(self.socket_buffer) == 0:
-                if wait_until is not None and time.time() > wait_until:
+                if wait_until is not None and time.time() >= wait_until:
+                    if timeout > 1:
+                        print('do_get_line(): socket timeout')
                     break
                 else:
                     continue
@@ -90,16 +91,16 @@ class EthernetNode(ControlNode):
             text = self.do_get_chunk(timeout=0.01)
             if len(text) == 0:
                 break
-            #print(f"dumping [{text.strip()}]")
+            print(f"dumping [{text.strip()}]")
     
 
     ## child nodes ##
-    def scpi(self, base_name, **kwargs):
-        return ScpiNode(self, base_name, **kwargs)
+    def scpi(self, **kwargs):
+        return ScpiNode(self, **kwargs)
     
 
-    def telnet(self, command, **kwargs):
-        return TelnetNode(self, command, **kwargs)
+    def telnet(self, **kwargs):
+        return TelnetNode(self, **kwargs)
     
 
     @classmethod
@@ -123,79 +124,96 @@ class EthernetNode(ControlNode):
     
     
 class ScpiNode(ControlNode):
-    def __init__(self, connection, base_name, set_format=None, sync=True, timeout=10):
+    def __init__(self, connection, timeout=10, line_terminator='\x0d'):
         self.connection = connection
-        self.base_name = base_name
+        self.timeout = timeout
+        self.line_terminator = line_terminator
+        
+    
+    def set(self, value=None):
+        return self.connection.set(value + self.line_terminator)
+            
+    
+    def get(self):
+        return self.connection.do_get_line(timeout=timeout)
+
+
+    ## child nodes ##
+    def command(self, command, **kwargs):
+        return ScipCommandNode(self, command, **kwargs)
+
+    
+
+class ScpiCommandNode(ControlNode):
+    def __init__(self, scpi, name, set_format=None, sync=True):
+        self.scpi = scpi
+        self.name = name
         self.set_format = set_format
         self.sync = sync
-        self.timeout = timeout
         
     
     def set(self, value=None):
         if self.set_format is None:
             if value is None:
-                self.connection.set('%s' % self.base_name)
+                cmd = self.name
             else:
-                self.connection.set('%s %s' % (self.base_name, str(value)))
+                cmd = '%s %s' % (self.name, str(value))
         else:
             if value is None:
-                self.connection.set(self.set_format)
+                cmd = self.set_format
             else:
-                self.connection.set(self.set_format.format(value))
-
+                cmd = self.set_format.format(value)
+                
+        self.scpi.set(cmd)
+                
         if self.sync:
-            self.connection.get()
-            
+            self.scpi.get()
+
     
     def get(self):
-        if self.base_name[-1] == '?':
-            self.connection.set('%s' % self.base_name)
+        if self.name[-1] == '?':
+            cmd = self.name
         else:
-            self.connection.set('%s?' % self.base_name)
-        return self.connection.do_get_line(timeout=timeout)
-
+            cmd = f'{self.name}?'
+            
+        return self.scpi.get(cmd)
 
     
+
 class TelnetNode(ControlNode):
-    def __init__(self, connection, command, prompt='>', timeout=10, has_echo=True):
+    def __init__(self, connection, prompt='>', timeout=10, has_echo=True, line_terminator='\n'):
         self.connection = connection
-        self.command = command
         self.prompt = prompt
         self.timeout = timeout
         self.has_echo = has_echo
+        self.line_terminator = line_terminator
+
+        while len(self.connection.do_get_chunk(timeout=0.1)) > 0:
+            pass
+
         
-    
-    def set(self, value=None):
-        if value is None:
-            cmd = self.command
-        else:
-            cmd = '%s %s' % (self.command, str(value))
-            
-        self.connection.do_flush_input()
-        self.connection.set(cmd)
-        self.do_get_lines_to_prompt()
+    def set(self, value):
+        self.connection.set(value + self.line_terminator)
+        if self.has_echo:
+            self.connection.do_get_line()
 
     
     def get(self):
-        self.connection.do_flush_input()
-        self.connection.set(self.command)
-        lines = self.do_get_lines_to_prompt()
-        
-        if self.has_echo and len(lines) > 0 and lines[0] == self.command:
-            # TODO: check this is really the echo string
-            lines = lines[1:]
-
-        return '\n'.join(lines)
+        return '\n'.join(self.do_get_lines_to_prompt())
             
         
-    def do_get_lines_to_prompt(self):
+    ## methods ##
+    def do_get_lines_to_prompt(self, timeout=None):
         lines = []
-        wait_until = time.time() + (self.timeout or 10)
+        wait_until = time.time() + (timeout or self.timeout or 10)
         
-        while not self.is_stop_requested() and time.time() < wait_until:
+        while not self.is_stop_requested():
             line = self.connection.do_get_line(timeout=0.1)
             if len(line) == 0:
-                continue
+                if time.time() >= wait_until:
+                    break
+                else:
+                    continue
             if line.startswith(self.prompt):
                 break
             lines.append(line.strip())
@@ -203,5 +221,30 @@ class TelnetNode(ControlNode):
         return lines
         
     
+    ## child nodes ##
+    def command(self, command, **kwargs):
+        return TelnetCommandNode(self, command, **kwargs)
+    
+
+
+class TelnetCommandNode(ControlNode):
+    def __init__(self, telnet, command):
+        self.telnet = telnet
+        self.command = command
+        
+    
+    def set(self, value=None):
+        if value is None:
+            return self.telnet.set(self.command)
+        else:
+            return self.telnet.set(f'{self.command} {str(value)}')
+
+    
+    def get(self):
+        self.telnet.set(self.command)
+        return self.telnet.get()
+
+    
+   
 def export():
     return [ EthernetNode ]
