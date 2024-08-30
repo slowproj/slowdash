@@ -4,8 +4,9 @@ import requests, json, logging
 
 
 class HttpNode(ControlNode):
-    def __init__(self, url):
+    def __init__(self, url, auth=None):
         self.url = url
+        self.auth = auth  # None or tuple of (user, pass)
 
         
     def __del__(self):
@@ -28,7 +29,10 @@ class HttpNode(ControlNode):
             url = self.url + path
             
         try:
-            response = requests.get(url)
+            if self.auth is None:
+                response = requests.get(url)
+            else:
+                response = requests.get(url, auth=self.auth)
             if response.status_code != 200:
                 logging.error('unable to fetch URL resource "%s": status %d' % (url, response.status_code))
                 response = None
@@ -48,7 +52,10 @@ class HttpNode(ControlNode):
             url = self.url + path
             
         try:
-            response = requests.post(url, data=content)
+            if self.auth is None:
+                response = requests.post(url, data=content)
+            else:
+                response = requests.post(url, data=content, auth=self.auth)
             if response.status_code != 200:
                 logging.error('unable to fetch URL resource "%s": status %d' % (url, response.status_code))
                 response = None
@@ -68,18 +75,8 @@ class HttpNode(ControlNode):
 
     @classmethod
     def _node_creator_method(cls):
-        def http(self, url):
-            try:
-                self._http_nodes.keys()
-            except:
-                self._http_nodes = {}
-                
-            node = self._http_nodes.get(url, None)
-            if node is None:
-                node = HttpNode(url)
-                self._http_nodes[url] = node
-
-            return node
+        def http(self, url, **kwargs):
+            return HttpNode(url, **kwargs)
 
         return http
 
@@ -104,6 +101,7 @@ class HttpPathNode(ControlNode):
         return HttpJaonPathNode(self, **kwargs)
     
 
+    
 class HttpJsonPathNode(ControlNode):
     def __init__(self, connection, **kwargs):
         self.connection = connection
@@ -122,8 +120,6 @@ class HttpJsonPathNode(ControlNode):
             return None
             
     
-
-
     
 def export():
     return [ HttpNode ]

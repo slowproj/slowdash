@@ -8,7 +8,7 @@ from .basetypes import DataElement
 
 
 class SlowFetch:
-    def __init__(self, url, user=None, passwd=None):
+    def __init__(self, url):
         self.baseurl = url + '/api'
         self.opener = None
 

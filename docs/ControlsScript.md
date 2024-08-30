@@ -170,7 +170,7 @@ Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to do some
 
 #### HTTP (Web API)
 ##### Loading
-`ControlSystem.load_control_module('HTTP')`
+`ControlSystem.load_control_module('HTTP')`: already included
 
 ##### Nodes
 - **http(base_url)**:
