@@ -129,18 +129,21 @@ class ScpiNode(ControlNode):
         self.timeout = timeout
         self.line_terminator = line_terminator
         
+        while len(self.connection.do_get_chunk(timeout=0.1)) > 0:
+            pass
+
     
     def set(self, value=None):
         return self.connection.set(value + self.line_terminator)
             
     
     def get(self):
-        return self.connection.do_get_line(timeout=timeout)
+        return self.connection.do_get_line(timeout=self.timeout)
 
 
     ## child nodes ##
     def command(self, name, **kwargs):
-        return ScipCommandNode(self, name, **kwargs)
+        return ScpiCommandNode(self, name, **kwargs)
 
     
 
@@ -176,7 +179,9 @@ class ScpiCommandNode(ControlNode):
         else:
             cmd = f'{self.name}?'
             
-        return self.scpi.get(cmd)
+        self.scpi.set(cmd)
+        
+        return self.scpi.get()
 
     
 
