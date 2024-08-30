@@ -99,8 +99,8 @@ class EthernetNode(ControlNode):
         return ScpiNode(self, **kwargs)
     
 
-    def telnet(self, **kwargs):
-        return TelnetNode(self, **kwargs)
+    def telnet(self, prompt, line_terminator, **kwargs):
+        return TelnetNode(self, prompt, line_terminator, **kwargs)
     
 
     @classmethod
@@ -139,8 +139,8 @@ class ScpiNode(ControlNode):
 
 
     ## child nodes ##
-    def command(self, command, **kwargs):
-        return ScipCommandNode(self, command, **kwargs)
+    def command(self, name, **kwargs):
+        return ScipCommandNode(self, name, **kwargs)
 
     
 
@@ -181,7 +181,7 @@ class ScpiCommandNode(ControlNode):
     
 
 class TelnetNode(ControlNode):
-    def __init__(self, connection, prompt='>', timeout=10, has_echo=True, line_terminator='\n'):
+    def __init__(self, connection, prompt, line_terminator, timeout=10, has_echo=True):
         self.connection = connection
         self.prompt = prompt
         self.timeout = timeout

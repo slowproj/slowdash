@@ -1,5 +1,4 @@
 
-import time, logging
 from slowpy.control import ControlNode
 
 

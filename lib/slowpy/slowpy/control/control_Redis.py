@@ -4,7 +4,7 @@ from slowpy.control import ControlNode
 
 
 class RedisNode(ControlNode):
-    def __init__(self, parent, url, **kwargs):
+    def __init__(self, url, **kwargs):
         # retries up to 60 sec, for docker-compose etc.
         self.redis = None
         
@@ -72,7 +72,7 @@ class RedisNode(ControlNode):
             node = self._redis_nodes.get(url, None)
                 
             if node is None:
-                node = RedisNode(self, url)
+                node = RedisNode(url)
                 self._redis_nodes[url] = node  # even if node is None; not to repeat the initialization error
                 if node.redis is None:
                     node = None
