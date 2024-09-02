@@ -2,8 +2,9 @@
 
 
 import slowpy as slp
+from slowpy.control import RandomWalkDevice
 
-dummy_device = slp.DummyWalkDevice()
+device = RandomWalkDevice()
 histogram = slp.Histogram('test_histogram_01', 20, -10, 10)
 histogram2d = slp.Histogram2d('test_histogram2d_01', 50, 0, 10, 50, 0, 100)
 graph = slp.Graph('test_graph_01', labels=['ch', 'value', 'error'])
@@ -25,7 +26,7 @@ import numpy as np
 
 
 def update():
-    records = dummy_device.read()
+    records = device.read()
     x = np.linspace(0, 10, 100)
     y = np.random.randn(100)
     

@@ -383,7 +383,8 @@ returns a reply until the next prompt</li>
 </ul>
 <h4 id="http-web-api">HTTP (Web API)</h4>
 <h5 id="loading-1">Loading</h5>
-<p><code>ControlSystem.load_control_module('HTTP')</code></p>
+<p><code>ControlSystem.load_control_module('HTTP')</code>: already
+included</p>
 <h5 id="nodes-1">Nodes</h5>
 <ul>
 <li><strong>http(base_url)</strong>:
@@ -604,40 +605,53 @@ devices connected to a remote computer.</p>
 <p>Here is an example to wrap a (dummy) device with the ethernet-SCPI
 capability:</p>
 <div class="sourceCode" id="cb16"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ScpiDevice, SerialDeviceEthernetServer</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> DummyDevice_RandomWalk</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ScpiServer, ScpiAdapter, RandomWalkDevice</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyFantasticScpiDevice(ScpiDevice):</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, <span class="op">**</span>kwargs):</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>(<span class="op">**</span>kwargs)</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.device <span class="op">=</span> DummyDevice_RandomWalk(n<span class="op">=</span><span class="dv">4</span>)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RandomWalkScpiDevice(ScpiAdapter):</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>)</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>(idn<span class="op">=</span><span class="st">&#39;RandomWalk&#39;</span>)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.device <span class="op">=</span> RandomWalkDevice(n<span class="op">=</span><span class="dv">2</span>)</span>
 <span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> process_scpi_command(<span class="va">self</span>, cmd_path, params):</span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>        <span class="co">&#39;&#39;&#39;</span></span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="co">        &quot;meas:V0?&quot; -&gt; cmd_path=[&#39;MEAS&#39;, &#39;V0?&#39;, None, ...], params=[None, None, ...]</span></span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="co">        &quot;v0 3.21&quot; -&gt; cmd_path=[&#39;V0&#39;, None, None, ...], params=[&#39;3.2&#39;, None, ...]</span></span>
-<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="co">        &#39;&#39;&#39;</span></span>
-<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> cmd_path[<span class="dv">0</span>] <span class="op">==</span> <span class="st">&#39;*IDN?&#39;</span>:</span>
-<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">&#39;Dummy SCPI Device&#39;</span></span>
-<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> cmd_path[<span class="dv">0</span>] <span class="op">==</span> <span class="st">&#39;*OPC?&#39;</span>:</span>
-<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">&#39;1&#39;</span></span>
-<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> cmd_path[<span class="dv">0</span>][<span class="dv">0</span>:<span class="dv">4</span>] <span class="op">==</span> <span class="st">&#39;MEAS&#39;</span> <span class="kw">and</span> cmd_path[<span class="dv">1</span>] <span class="op">==</span> <span class="st">&#39;V0?&#39;</span>:</span>
-<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">&#39;</span><span class="sc">%f</span><span class="st">&#39;</span> <span class="op">%</span> <span class="va">self</span>.device.read(<span class="dv">0</span>)</span>
-<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> cmd_path[<span class="dv">0</span>][<span class="dv">0</span>:<span class="dv">4</span>] <span class="op">==</span> <span class="st">&#39;MEAS&#39;</span> <span class="kw">and</span> cmd_path[<span class="dv">1</span>] <span class="op">==</span> <span class="st">&#39;V1?&#39;</span>:</span>
-<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>          ...</span>
-<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
-<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>    <span class="im">from</span> optparse <span class="im">import</span> OptionParser</span>
-<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>    optionparser <span class="op">=</span> OptionParser()</span>
-<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>    optionparser.add_option(</span>
-<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;--port&#39;</span>, action<span class="op">=</span><span class="st">&#39;store&#39;</span>, dest<span class="op">=</span><span class="st">&#39;port&#39;</span>, <span class="bu">type</span><span class="op">=</span><span class="st">&#39;int&#39;</span>, default<span class="op">=</span><span class="dv">17674</span>,</span>
-<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>        <span class="bu">help</span><span class="op">=</span><span class="st">&#39;port number&#39;</span></span>
-<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>    (opts, args) <span class="op">=</span> optionparser.parse_args()</span>
-<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>    device <span class="op">=</span> MyFantasticScpiDevice()</span>
-<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a>    server <span class="op">=</span> SerialDeviceEthernetServer(device, port<span class="op">=</span>opts.port)</span>
-<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a>    server.start()</span></code></pre></div>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> do_command(<span class="va">self</span>, cmd_path, params):</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>        <span class="co">&#39;&#39;&#39;</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="co">        parameters:</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="co">          cmd_path: array of strings, SCPI command splitted by &#39;:&#39;</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="co">          params: array of strings, SCPI command parameters splited by &#39;,&#39;</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="co">        return value: reply text (even if empty) or None if command is not recognized</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="co">        &#39;&#39;&#39;</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Implemented Commands: &quot;V0 Value&quot; &quot;V1 Value&quot; &quot;MEASure:V0?&quot; &quot;MEASure:V1?&quot;</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Common SCPI commands, such as &quot;*IDN?&quot;, are implemented in the parent ScpiAdapter class</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">len</span>(params) <span class="op">==</span> <span class="dv">1</span> <span class="kw">and</span> cmd_path[<span class="dv">0</span>].startswith(<span class="st">&#39;V&#39;</span>):</span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>            <span class="cf">try</span>:</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> cmd_path[<span class="dv">0</span>] <span class="op">==</span> <span class="st">&#39;V0&#39;</span>:</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>                    <span class="va">self</span>.device.write(<span class="dv">0</span>, <span class="bu">float</span>(params[<span class="dv">0</span>]))</span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>                <span class="cf">elif</span> cmd_path[<span class="dv">0</span>] <span class="op">==</span> <span class="st">&#39;V1&#39;</span>:</span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>                    <span class="va">self</span>.device.write(<span class="dv">1</span>, <span class="bu">float</span>(params[<span class="dv">0</span>]))</span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>                <span class="cf">else</span>:</span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>                    <span class="va">self</span>.push_error(<span class="ss">f&#39;invalid command </span><span class="sc">{</span>cmd_path[<span class="dv">0</span>]<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>            <span class="cf">except</span>:</span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>                <span class="va">self</span>.push_error(<span class="ss">f&#39;bad parameter value: </span><span class="sc">{</span>params[<span class="dv">0</span>]<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">&#39;&#39;</span></span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> <span class="bu">len</span>(cmd_path) <span class="op">==</span> <span class="dv">2</span> <span class="kw">and</span> cmd_path[<span class="dv">0</span>].startswith(<span class="st">&#39;MEAS&#39;</span>):</span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> cmd_path[<span class="dv">1</span>] <span class="op">==</span> <span class="st">&#39;V0?&#39;</span>:</span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="va">self</span>.device.read(<span class="dv">0</span>)</span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a>            <span class="cf">elif</span> cmd_path[<span class="dv">1</span>] <span class="op">==</span> <span class="st">&#39;V1?&#39;</span>:</span>
+<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="va">self</span>.device.read(<span class="dv">1</span>)</span>
+<span id="cb16-37"><a href="#cb16-37" aria-hidden="true" tabindex="-1"></a>            <span class="cf">else</span>:</span>
+<span id="cb16-38"><a href="#cb16-38" aria-hidden="true" tabindex="-1"></a>                <span class="va">self</span>.push_error(<span class="ss">f&#39;invalid command </span><span class="sc">{</span>cmd_path[<span class="dv">0</span>]<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb16-39"><a href="#cb16-39" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">&#39;&#39;</span></span>
+<span id="cb16-40"><a href="#cb16-40" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb16-41"><a href="#cb16-41" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">None</span></span>
+<span id="cb16-42"><a href="#cb16-42" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-43"><a href="#cb16-43" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb16-44"><a href="#cb16-44" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
+<span id="cb16-45"><a href="#cb16-45" aria-hidden="true" tabindex="-1"></a>    device <span class="op">=</span> RandomWalkScpiDevice()</span>
+<span id="cb16-46"><a href="#cb16-46" aria-hidden="true" tabindex="-1"></a>    server <span class="op">=</span> ScpiServer(device, port<span class="op">=</span><span class="dv">17674</span>)</span>
+<span id="cb16-47"><a href="#cb16-47" aria-hidden="true" tabindex="-1"></a>    server.start()</span></code></pre></div>
 <p>Make this code start automatically on PC boot in your favorite way
 (<code>/etc/rc.local</code>, Docker, …).</p>
 <h1 id="slowtask-slowdash-gui-script-interconnect">SlowTask: Slowdash

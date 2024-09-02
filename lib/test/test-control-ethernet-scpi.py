@@ -5,7 +5,7 @@ from slowpy.control import ControlSystem
 ctrl = ControlSystem()
 
 
-host, port = '192.168.1.43', 17674
+host, port = '192.168.1.29', 17674
 
 device_id = ctrl.ethernet(host, port).scpi().command('*IDN')
 V0 = ctrl.ethernet(host, port).scpi().command('MEAS:V0', set_format='V0 {};*OPC?')

@@ -3,10 +3,8 @@ from slowpy.control import ControlSystem, ControlNode
 import slowpy.store as sls
 
 ControlSystem.import_control_module('DummyDevice')
-device = ControlSystem().dummy_device()
-
-
-print("DummyDevice Loaded")
+device = ControlSystem().randomwalk_device()
+print("Random-Walk Device Loaded")
 
 #name = input('who are you?')
 #print('hello, ' + name)

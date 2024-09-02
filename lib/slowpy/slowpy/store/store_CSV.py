@@ -12,8 +12,9 @@ class DataStore_CSV(DataStore):
         - table: file root name of the CSV file. Example: 'test' for file name 'test.csv'
         '''
         self.db_url = db_url
-        self.table = table
         self.flag = "w" if recreate else "a"
+        self.csv_file = None
+        self.update_error_shown = False
 
         dirname = self.db_url[7:] if self.db_url.startswith('csv:///') else self.db_url
         while len(dirname) > 0 and dirname[0] == '/':
@@ -25,8 +26,7 @@ class DataStore_CSV(DataStore):
             except:
                 logging.error('unable to create directory: ' + dirname)
 
-        self.csv_file = None
-        if self.table is not None:
+        if table is not None:
             filename = os.path.join(dirname, table+".csv")
             is_new = recreate or not os.path.isfile(filename)
             try:
@@ -36,8 +36,6 @@ class DataStore_CSV(DataStore):
             except Exception as e:
                 logging.error('unable to create a CSV file: %s: %s' % (filename, str(e)))
                 self.csv_file = None
-
-        self.update_error_shown = False
 
             
     def __del__(self):
@@ -87,6 +85,7 @@ class DataStore_CSV(DataStore):
 class DataStore_TextDump(DataStore_CSV):
     def __init__(self, output=sys.stdout):
         self.csv_file = output
+        self.update_error_shown = False
 
         
     def _escape(self, text):

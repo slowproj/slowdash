@@ -3,7 +3,7 @@
 import time
 import numpy as np
 import slowpy
-from slowpy.control import DummyDevice_RandomWalk
+from slowpy.control import RandomWalkDevice
 
 
 
@@ -22,7 +22,7 @@ def start(db_url, ts_name='ts_data', obj_name='obj_data', objts_name='objts_data
     datastore_obj = slowpy.store.create_datastore_from_url(db_url, obj_name)
     datastore_objts = slowpy.store.create_datastore_from_url(db_url, objts_name)
     
-    dummy_device = DummyDevice_RandomWalk()
+    device = RandomWalkDevice()
     readout_count = 0
     histogram = slowpy.Histogram(100, -10, 10)
     graph = slowpy.Graph(labels=['ch', 'value'])
@@ -45,9 +45,9 @@ def start(db_url, ts_name='ts_data', obj_name='obj_data', objts_name='objts_data
         histogram.add_attr('color', readout_count)
         graph.add_attr('color', readout_count+1)
 
-        for channel in dummy_device.channels():
+        for channel in device.channels():
             t = time.time()
-            value = dummy_device.read(channel)
+            value = device.read(channel)
             datastore_ts.append(value, tag='ch%02d'%channel, timestamp=t)
             histogram.fill(value)
             graph.add_point(channel, value)

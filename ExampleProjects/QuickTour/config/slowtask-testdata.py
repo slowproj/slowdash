@@ -1,5 +1,5 @@
 
-from slowpy.control import DummyDevice_RandomWalk, ControlSystem
+from slowpy.control import ControlSystem, RandomWalkDevice
 from slowpy.store import DataStore_SQLite, LongTableFormat
 
 
@@ -10,7 +10,7 @@ class TestDataFormat(LongTableFormat):
 
         
 datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata", table_format=TestDataFormat())
-device = DummyDevice_RandomWalk(n=4)
+device = RandomWalkDevice(n=4)
 
 
 def _loop():
