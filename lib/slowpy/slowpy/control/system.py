@@ -18,5 +18,6 @@ class ControlSystem(ControlNode):
     @classmethod
     def stop_by_signal(cls, signal_number=signal.SIGINT):
         def handle_signal(signum, frame):
+            print(f'Signal {signum} handled')
             cls.stop()
         signal.signal(signal_number, handle_signal)

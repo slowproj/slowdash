@@ -331,9 +331,9 @@ while not ControlSystem.is_stop_requested():
 ```
 
 ## Scpizing Your Device
-If your device has some programming capability, such as Raspberry-Pi GPIO, an easy way to integrate it into a SlowDash system is to implement the SCPI interface on it. This approach is also useful to use USB devices connected to a remote computer. 
+If your device has some programming capability, such as Raspberry-Pi GPIO, an easy way to integrate it into a SlowDash system is to implement the SCPI interface on it. This approach is also useful to integrate other non-ethernet devices (such as USB) connected to a remote computer.
 
-Here is an example to wrap a (dummy) device with the ethernet-SCPI capability:
+Here is an example to wrap a device with the ethernet-SCPI capability:
 
 ```python
 from slowpy.control import ScpiServer, ScpiAdapter, RandomWalkDevice

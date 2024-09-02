@@ -158,7 +158,44 @@ class ControlNode:
     @classmethod
     def is_stop_requested(cls):
         return cls._stop_event.is_set()
+
+
+    # if "self" has the "run()" and/or "loop()" methods, "start()" will create a thread and call it
+    def start(self):
+        if not (callable(getattr(self, 'run', None)) or callable(getattr(self, 'loop', None))):
+            return
+        if hasattr(self, 'node_thread'):
+            # already running
+            return
         
+        self.node_thread = NodeThread(self)
+        self.node_thread_stop_event = threading.Event()
+        self.node_thread.start()
+            
+
+    def stop(self):
+        if not hasattr(self, 'node_thread'):
+            return
+        self.node_thread_stop_event.set()
+        self.node_thread.join()
+        del self.node_thread
+        del self.node_thread_stop_event
+        
+        
+        
+class NodeThread(threading.Thread):
+    def __init__(self, node):
+        threading.Thread.__init__(self)
+        self.node = node
+
+    def run(self):
+        if callable(getattr(self.node, 'run', None)):
+            self.node.run()
+            
+        if callable(getattr(self.node, 'loop', None)):
+            while not self.node.node_thread_stop_event.is_set() and not self.node.is_stop_requested():
+                self.node.loop()
+            
     
 
 class SetpointNode(ControlNode):

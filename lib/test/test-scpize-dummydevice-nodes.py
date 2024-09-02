@@ -15,16 +15,17 @@ adapter.bind_nodes([
     ('MEAS:V1', device.ch(1)),
 ])
 
+device.start()
+
 
 
 if __name__ == '__main__':
     from optparse import OptionParser
     optionparser = OptionParser()
     optionparser.add_option(
-        '--port', action='store', dest='port', type='int', default=17674,
-        help='port number'
+        '--port', action='store', dest='port', type='int', default=17674, help='port number'
     )
     (opts, args) = optionparser.parse_args()
-    
+
     server = ScpiServer(adapter, port=opts.port)
     server.start()

@@ -34,7 +34,7 @@ class RandomWalkDeviceNode(ControlNode):
 
         return randomwalk_device
 
-    
+
     
 class RandomWalkChannelNode(ControlNode):
     def __init__(self, device, channel):
