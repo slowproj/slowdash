@@ -149,8 +149,8 @@ Once you get the control node object, you can call `node.set(value)` to write th
 ### Control Node Threading
 If a control node has a threading method of `run()` or `loop()`, calling `start()` of the node will create a dedicated thread and start it. This is useful for:
 
-- The node can perform tasks independent from the `set()` and `get()` queries.
-- If getting data is slow, data can be pre-fetched periodically and stored in a cache for future queries.
+- The node can perform tasks independent from the `set()` and `get()` queries, such as PID loop.
+- If fetching data is slow, data can be pre-fetched periodically and stored in a cache.
 
 The `run()` function is called once, and then `loop()` is called repeatedly. In the `loop()` function, `sleep()` or similar must be inserted to control the frequency.
 
@@ -239,9 +239,17 @@ Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to do some
         - get(): returns the number of seconds since the last time-series point
   
 ### Node Functions
-All the control nodes (derived from slowpy.control.ControlNode) have the following methods:
+All the control nodes (derived from `slowpy.control.ControlNode`) have the following methods:
 
-- (ControlNode)
+- [ControlNode]
+  - has_data(): returns True if a value is available for `get()`
+  - wait_until(condition_lambda, polling_interval=1, timeout=0): blocks until the condition_lambda returns True
+  - sleep(duration_sec): blocks for the duration and returns True unless ControlSystem receives a stop request
+  - is_stop_requested(): returns True if a stop request has been received
+
+Nodes derived from `ControlValueNode` have the following methods:
+
+- [ControlValueNode] -> [ControlNode]
   - **setpoint()**: holds the setpoint
     - set(value): holds the value as a set-point, and calls `set(value)` of the parent node.
     - get(): returns the holding set-point value
@@ -251,11 +259,13 @@ All the control nodes (derived from slowpy.control.ControlNode) have the followi
     - **status()**
       - set(value): `set(0)` will stop the current ramping if it is running
       - get(): returns `True` if rumping is in progress, otherwise returns `False`
-  - has_data(): returns True if a value is available for `get()`
-  - wait_until(condition_lambda, polling_interval=1, timeout=0): blocks until the condition_lambda returns True
-  - sleep(duration_sec): blocks for the duration and returns True unless ControlSystem receives a stop request
+
+Nodes derived from `ControlThreadNode` have the following methods:
+
+- [ControlThreadNode] -> [ControlNode]
   - start(): creates and starts a thread for `run()` and/or `loop()`, if the node has one of these methods (or both)
   - stop(): stops the thread
+
 
 ## Database Interface
 Simple example of writing single values to a long form table:
@@ -401,7 +411,7 @@ if __name__ == '__main__':
 Make this code start automatically on PC boot in your favorite way (`/etc/rc.local`, Docker, ...).
 
 
-# SlowTask: Slowdash GUI-Script Interconnect
+# SlowTask: Slowdash GUI-Script Binding
 SlowTask is a user Python script placed under the SlowDash config directory with a name like `slowtask-XXX.py`. SlowDash GUI can start/stop the script, call functions defined in the script, and bind control variables in the script to GUI elements. Using the SlowPy library from a SlowTask script is assumed for this design, but this is not a requirement.
 
 
@@ -571,3 +581,8 @@ def _export():
     ]
 ```
 Here the new node `StatusNode` returns a table object.
+
+
+# Network Deployment
+## SlowDash Interconnect
+## SlowTask Scpization

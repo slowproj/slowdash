@@ -147,7 +147,7 @@ class ScpiNode(ControlNode):
 
     
 
-class ScpiCommandNode(ControlNode):
+class ScpiCommandNode(ControlValueNode):
     def __init__(self, scpi, name, set_format=None, sync=True):
         self.scpi = scpi
         self.name = name
@@ -235,7 +235,7 @@ class TelnetNode(ControlNode):
     
 
 
-class TelnetCommandNode(ControlNode):
+class TelnetCommandNode(ControlValueNode):
     def __init__(self, telnet, command):
         self.telnet = telnet
         self.command = command

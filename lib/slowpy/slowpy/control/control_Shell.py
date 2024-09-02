@@ -51,9 +51,27 @@ class ShellNode(ControlNode):
 
 
     ## child nodes ##
+    def value(self):  # for set_point() and ramping() grand-child nodes
+        return ShellValueNode(self, *args)
+
+    
     def arg(self, *args):
         return ShellArgNode(self, *args)
 
+    
+    
+class ShellValueNode(ControlValueNode):
+    def __init__(self, parent_node):
+        self.parent_node = parent_node
+        
+    
+    def set(self, value):
+        return self.parent_node.set(value)
+            
+    
+    def get(self):
+        return self.parent_node.get()
+            
     
     
 class ShellArgNode(ControlNode):
@@ -71,6 +89,11 @@ class ShellArgNode(ControlNode):
         
     def get(self):
         return self.shell_node.do_command(*self.args)
+
+    
+    ## child nodes ##
+    def value(self):  # for set_point() and ramping() grand-child nodes
+        return ShellValueNode(self)
 
     
     

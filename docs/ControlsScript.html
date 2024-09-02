@@ -106,9 +106,9 @@ Components</a></li>
 <li><a href="#scpizing-your-device"
 id="toc-scpizing-your-device">Scpizing Your Device</a></li>
 </ul></li>
-<li><a href="#slowtask-slowdash-gui-script-interconnect"
-id="toc-slowtask-slowdash-gui-script-interconnect">SlowTask: Slowdash
-GUI-Script Interconnect</a>
+<li><a href="#slowtask-slowdash-gui-script-binding"
+id="toc-slowtask-slowdash-gui-script-binding">SlowTask: Slowdash
+GUI-Script Binding</a>
 <ul>
 <li><a href="#starting-stopping-and-reloading-the-slow-task-scripts"
 id="toc-starting-stopping-and-reloading-the-slow-task-scripts">Starting,
@@ -121,6 +121,14 @@ id="toc-thread-functions-routine-task">Thread Functions (Routine
 Task)</a></li>
 <li><a href="#control-variable-binding"
 id="toc-control-variable-binding">Control Variable Binding</a></li>
+</ul></li>
+<li><a href="#network-deployment" id="toc-network-deployment">Network
+Deployment</a>
+<ul>
+<li><a href="#slowdash-interconnect"
+id="toc-slowdash-interconnect">SlowDash Interconnect</a></li>
+<li><a href="#slowtask-scpization" id="toc-slowtask-scpization">SlowTask
+Scpization</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -342,9 +350,9 @@ implicitly call <code>node.get()</code>.</p>
 create a dedicated thread and start it. This is useful for:</p>
 <ul>
 <li>The node can perform tasks independent from the <code>set()</code>
-and <code>get()</code> queries.</li>
-<li>If getting data is slow, data can be pre-fetched periodically and
-stored in a cache for future queries.</li>
+and <code>get()</code> queries, such as PID loop.</li>
+<li>If fetching data is slow, data can be pre-fetched periodically and
+stored in a cache.</li>
 </ul>
 <p>The <code>run()</code> function is called once, and then
 <code>loop()</code> is called repeatedly. In the <code>loop()</code>
@@ -504,10 +512,25 @@ point</li>
 </ul></li>
 </ul>
 <h3 id="node-functions">Node Functions</h3>
-<p>All the control nodes (derived from slowpy.control.ControlNode) have
-the following methods:</p>
+<p>All the control nodes (derived from
+<code>slowpy.control.ControlNode</code>) have the following methods:</p>
 <ul>
-<li>(ControlNode)
+<li>[ControlNode]
+<ul>
+<li>has_data(): returns True if a value is available for
+<code>get()</code></li>
+<li>wait_until(condition_lambda, polling_interval=1, timeout=0): blocks
+until the condition_lambda returns True</li>
+<li>sleep(duration_sec): blocks for the duration and returns True unless
+ControlSystem receives a stop request</li>
+<li>is_stop_requested(): returns True if a stop request has been
+received</li>
+</ul></li>
+</ul>
+<p>Nodes derived from <code>ControlValueNode</code> have the following
+methods:</p>
+<ul>
+<li>[ControlValueNode] -&gt; [ControlNode]
 <ul>
 <li><strong>setpoint()</strong>: holds the setpoint
 <ul>
@@ -528,12 +551,13 @@ is running</li>
 otherwise returns <code>False</code></li>
 </ul></li>
 </ul></li>
-<li>has_data(): returns True if a value is available for
-<code>get()</code></li>
-<li>wait_until(condition_lambda, polling_interval=1, timeout=0): blocks
-until the condition_lambda returns True</li>
-<li>sleep(duration_sec): blocks for the duration and returns True unless
-ControlSystem receives a stop request</li>
+</ul></li>
+</ul>
+<p>Nodes derived from <code>ControlThreadNode</code> have the following
+methods:</p>
+<ul>
+<li>[ControlThreadNode] -&gt; [ControlNode]
+<ul>
 <li>start(): creates and starts a thread for <code>run()</code> and/or
 <code>loop()</code>, if the node has one of these methods (or both)</li>
 <li>stop(): stops the thread</li>
@@ -678,8 +702,8 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb16-1"><a h
 <span id="cb16-47"><a href="#cb16-47" aria-hidden="true" tabindex="-1"></a>    server.start()</span></code></pre></div>
 <p>Make this code start automatically on PC boot in your favorite way
 (<code>/etc/rc.local</code>, Docker, …).</p>
-<h1 id="slowtask-slowdash-gui-script-interconnect">SlowTask: Slowdash
-GUI-Script Interconnect</h1>
+<h1 id="slowtask-slowdash-gui-script-binding">SlowTask: Slowdash
+GUI-Script Binding</h1>
 <p>SlowTask is a user Python script placed under the SlowDash config
 directory with a name like <code>slowtask-XXX.py</code>. SlowDash GUI
 can start/stop the script, call functions defined in the script, and
@@ -900,6 +924,9 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb27-1"><a h
 <span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&#39;Status&#39;</span>, StatusNode())</span>
 <span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>    ]</span></code></pre></div>
 <p>Here the new node <code>StatusNode</code> returns a table object.</p>
+<h1 id="network-deployment">Network Deployment</h1>
+<h2 id="slowdash-interconnect">SlowDash Interconnect</h2>
+<h2 id="slowtask-scpization">SlowTask Scpization</h2>
 
 
 </body>

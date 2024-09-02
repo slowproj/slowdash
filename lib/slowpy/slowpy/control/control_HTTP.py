@@ -97,10 +97,28 @@ class HttpPathNode(ControlNode):
 
     
     ## child nodes ##
+    def value(self, **kwargs):
+        return HttpValuePathNode(self, **kwargs)
+
+    
     def json(self, **kwargs):
         return HttpJaonPathNode(self, **kwargs)
     
 
+    
+class HttpValuePathNode(ControlValueNode):
+    def __init__(self, connection, **kwargs):
+        self.connection = connection
+        
+    
+    def set(self, value):
+        return self.connection.set(json.dumps(value))
+            
+    
+    def get(self):
+        return self.connection.get(self.path)
+            
+    
     
 class HttpJsonPathNode(ControlNode):
     def __init__(self, connection, **kwargs):

@@ -74,27 +74,6 @@ class ControlNode:
             return float("nan")
 
     
-    ### child nodes ###
-    # hold setpoint
-    def setpoint(self):
-        try:
-            self._node_setpoint.get()
-        except:
-            self._node_setpoint = SetpointNode(self)
-        return self._node_setpoint
-
-    
-    # ramp the set value
-    def ramping(self, change_per_sec=None):
-        try:
-            self._node_ramping.get()
-            if change_per_sec is not None:
-                self._node_ramping.change_per_sec = abs(float(change_per_sec))
-        except:
-            self._node_ramping = RampingNode(self, change_per_sec)
-        return self._node_ramping
-    
-
     # override this to add a child endoint
     @classmethod
     def _node_creator_method(MyClass):    # return a method to be injected
@@ -162,26 +141,35 @@ class ControlNode:
         return False
 
 
+    
+class ControlThreadNode(ControlNode):
+    def __init__(self):
+        super().__init__()
+        self.node_thread = None
+        self.node_thread_stop_event = threading.Event()
+
+        
     # if "self" has the "run()" and/or "loop()" methods, "start()" will create a thread and call it
     def start(self):
         if not (callable(getattr(self, 'run', None)) or callable(getattr(self, 'loop', None))):
             return
-        if hasattr(self, 'node_thread'):
+
+        if self.node_thread is not None:
             # already running
             return
         
         self.node_thread = NodeThread(self)
-        self.node_thread_stop_event = threading.Event()
+        self.node_thread_stop_event.clear()
         self.node_thread.start()
             
 
     def stop(self):
-        if not hasattr(self, 'node_thread'):
+        if self.node_thread is None:
             return
+        
         self.node_thread_stop_event.set()
         self.node_thread.join()
-        del self.node_thread
-        del self.node_thread_stop_event
+        self.node_thread = None
         
         
         
@@ -200,6 +188,33 @@ class NodeThread(threading.Thread):
             
     
 
+class ControlValueNode(ControlNode):
+    def __init__(self):
+        super().__init__()
+    
+
+    ### child nodes ###
+    # hold setpoint
+    def setpoint(self):
+        try:
+            self._node_setpoint.get()
+        except:
+            self._node_setpoint = SetpointNode(self)
+        return self._node_setpoint
+
+    
+    # ramp the set value
+    def ramping(self, change_per_sec=None):
+        try:
+            self._node_ramping.get()
+            if change_per_sec is not None:
+                self._node_ramping.change_per_sec = abs(float(change_per_sec))
+        except:
+            self._node_ramping = RampingNode(self, change_per_sec)
+        return self._node_ramping
+    
+
+    
 class SetpointNode(ControlNode):
     def __init__(self, node):
         self.node = node

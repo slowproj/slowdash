@@ -15,8 +15,6 @@ adapter.bind_nodes([
     ('MEAS:V1', device.ch(1)),
 ])
 
-device.start()
-
 
 
 if __name__ == '__main__':
