@@ -44,7 +44,7 @@ class TaskModule(UserModule):
         # obtain a reference to the ControlSystem class in the user task module
         def register(control_system):
             self.control_system = control_system
-            self.control_system._stop_event.clear()
+            self.control_system._global_stop_event.clear()
 
         module.__dict__['_register'] = register
         try:

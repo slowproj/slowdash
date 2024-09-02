@@ -145,6 +145,18 @@ Each node constructor takes parameters. In this example, the ethernet node, whic
 
 Once you get the control node object, you can call `node.set(value)` to write the value, and call `value=node.get()` to read from it. As a shortcut, `node(value)` is equivalent to `node.set(value)`, and `value=node()` is equivalent to `value=node.get()`. Also control nodes define Python's `__str__()`, `__float__()`, etc., so `print(node)` and `x = float(node)` will implicitly call `node.get()`.
 
+
+### Control Node Threading
+If a control node has a threading method of `run()` or `loop()`, calling `start()` of the node will create a dedicated thread and start it. This is useful for:
+
+- The node can perform tasks independent from the `set()` and `get()` queries.
+- If getting data is slow, data can be pre-fetched periodically and stored in a cache for future queries.
+
+The `run()` function is called once, and then `loop()` is called repeatedly. In the `loop()` function, `sleep()` or similar must be inserted to control the frequency.
+
+The thread is stopped by calling the `stop()` method of the node, or by a global stop request (such as `ControlSystem.stop()` or by signals). The `run()` function must watch the stop request (by `is_stop_requested()`) and terminate itself when a stop request is made. `loop()` will not be called after stop.
+
+
 ### Commonly used nodes
 Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to do something. Methods with a noun name return a sub-node.
 
@@ -242,7 +254,8 @@ All the control nodes (derived from slowpy.control.ControlNode) have the followi
   - has_data(): returns True if a value is available for `get()`
   - wait_until(condition_lambda, polling_interval=1, timeout=0): blocks until the condition_lambda returns True
   - sleep(duration_sec): blocks for the duration and returns True unless ControlSystem receives a stop request
-
+  - start(): creates and starts a thread for `run()` and/or `loop()`, if the node has one of these methods (or both)
+  - stop(): stops the thread
 
 ## Database Interface
 Simple example of writing single values to a long form table:

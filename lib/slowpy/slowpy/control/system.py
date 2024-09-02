@@ -12,7 +12,7 @@ class ControlSystem(ControlNode):
         
     @classmethod
     def stop(cls):
-        cls._stop_event.set()
+        cls._global_stop_event.set()
 
         
     @classmethod

@@ -336,6 +336,26 @@ and <code>value=node()</code> is equivalent to
 <code>__str__()</code>, <code>__float__()</code>, etc., so
 <code>print(node)</code> and <code>x = float(node)</code> will
 implicitly call <code>node.get()</code>.</p>
+<h3 id="control-node-threading">Control Node Threading</h3>
+<p>If a control node has a threading method of <code>run()</code> or
+<code>loop()</code>, calling <code>start()</code> of the node will
+create a dedicated thread and start it. This is useful for:</p>
+<ul>
+<li>The node can perform tasks independent from the <code>set()</code>
+and <code>get()</code> queries.</li>
+<li>If getting data is slow, data can be pre-fetched periodically and
+stored in a cache for future queries.</li>
+</ul>
+<p>The <code>run()</code> function is called once, and then
+<code>loop()</code> is called repeatedly. In the <code>loop()</code>
+function, <code>sleep()</code> or similar must be inserted to control
+the frequency.</p>
+<p>The thread is stopped by calling the <code>stop()</code> method of
+the node, or by a global stop request (such as
+<code>ControlSystem.stop()</code> or by signals). The <code>run()</code>
+function must watch the stop request (by
+<code>is_stop_requested()</code>) and terminate itself when a stop
+request is made. <code>loop()</code> will not be called after stop.</p>
 <h3 id="commonly-used-nodes">Commonly used nodes</h3>
 <p>Naming convention: <code>set()</code>, <code>get()</code>, and
 <code>do_XXX()</code> are usual methods to do something. Methods with a
@@ -514,6 +534,9 @@ otherwise returns <code>False</code></li>
 until the condition_lambda returns True</li>
 <li>sleep(duration_sec): blocks for the duration and returns True unless
 ControlSystem receives a stop request</li>
+<li>start(): creates and starts a thread for <code>run()</code> and/or
+<code>loop()</code>, if the node has one of these methods (or both)</li>
+<li>stop(): stops the thread</li>
 </ul></li>
 </ul>
 <h2 id="database-interface">Database Interface</h2>
@@ -600,9 +623,10 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a h
 <h2 id="scpizing-your-device">Scpizing Your Device</h2>
 <p>If your device has some programming capability, such as Raspberry-Pi
 GPIO, an easy way to integrate it into a SlowDash system is to implement
-the SCPI interface on it. This approach is also useful to use USB
-devices connected to a remote computer.</p>
-<p>Here is an example to wrap a (dummy) device with the ethernet-SCPI
+the SCPI interface on it. This approach is also useful to integrate
+other non-ethernet devices (such as USB) connected to a remote
+computer.</p>
+<p>Here is an example to wrap a device with the ethernet-SCPI
 capability:</p>
 <div class="sourceCode" id="cb16"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ScpiServer, ScpiAdapter, RandomWalkDevice</span>

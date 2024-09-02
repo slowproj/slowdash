@@ -16,20 +16,19 @@ class ControlNode:
 
     
     # stoppable-sleep: to be used in subclasses
-    @classmethod
-    def sleep(cls, duration_sec):
+    def sleep(self, duration_sec):
         sec10 = int(10*duration_sec)
         subsec10 = 10*duration_sec - sec10
         if sec10 > 0:
             for i in range(sec10):
-                if cls.is_stop_requested():
+                if self.is_stop_requested():
                     return False
                 else:
                     time.sleep(0.1)
         elif subsec10 > 0:
             time.sleep(subsec/10.0)
 
-        return not cls.is_stop_requested()
+        return not self.is_stop_requested()
 
     
     # stoppable-wait: to be used in subclasses
@@ -154,10 +153,13 @@ class ControlNode:
         return cls
 
         
-    _stop_event = threading.Event()
-    @classmethod
-    def is_stop_requested(cls):
-        return cls._stop_event.is_set()
+    _global_stop_event = threading.Event()
+    def is_stop_requested(self):
+        if self._global_stop_event.is_set():
+            return True
+        if hasattr(self, 'node_thread_stop_event') and self.node_thread_stop_event.is_set():
+            return True
+        return False
 
 
     # if "self" has the "run()" and/or "loop()" methods, "start()" will create a thread and call it
@@ -193,7 +195,7 @@ class NodeThread(threading.Thread):
             self.node.run()
             
         if callable(getattr(self.node, 'loop', None)):
-            while not self.node.node_thread_stop_event.is_set() and not self.node.is_stop_requested():
+            while not self.node.is_stop_requested():
                 self.node.loop()
             
     
