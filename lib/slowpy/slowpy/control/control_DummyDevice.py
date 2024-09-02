@@ -1,10 +1,10 @@
 
-from slowpy.control import ControlNode, RandomWalkDevice
+import slowpy.control
 
 
-class RandomWalkDeviceNode(ControlNode):
+class RandomWalkDeviceNode(slowpy.control.ControlNode):
     def __init__(self, walk, decay):
-        self.device = RandomWalkDevice(n=4, walk=walk, decay=decay, tick=0)
+        self.device = slowpy.control.RandomWalkDevice(n=4, walk=walk, decay=decay, tick=0)
         
     ## child nodes ##
     # randomwalk_device().ch(0)
@@ -36,7 +36,7 @@ class RandomWalkDeviceNode(ControlNode):
 
 
     
-class RandomWalkChannelNode(ControlValueNode):
+class RandomWalkChannelNode(slowpy.control.ControlValueNode):
     def __init__(self, device, channel):
         self.device = device
         self.channel = channel
@@ -51,7 +51,7 @@ class RandomWalkChannelNode(ControlValueNode):
 
 
     
-class RandomWalkConfigNode(ControlValueNode):
+class RandomWalkConfigNode(slowpy.control.ControlValueNode):
     def __init__(self, device, param_name):
         self.device = device
         self.param_name = param_name

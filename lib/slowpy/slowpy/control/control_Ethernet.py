@@ -1,9 +1,9 @@
 
-from slowpy.control import ControlNode
 import socket, selectors, time
+import slowpy.control as slc
 
 
-class EthernetNode(ControlNode):
+class EthernetNode(slc.ControlNode):
     def __init__(self, host, port, **kwargs):
         import socket
         self.host = host
@@ -17,9 +17,9 @@ class EthernetNode(ControlNode):
         try:
             self.socket.connect((self.host, self.port))
         except Exception as e:
-            print('ERROR: Ethernet: unable to connect to %s:%s: %s' % (host, str(port), str(e)))
             del self.socket
             self.socket = None
+            raise slc.ControlException('EthernetNode: unable to connect to %s:%s: %s' % (host, str(port), str(e)))
         
         print('Ethernet: %s:%s connected' % (host, str(port)))
             
@@ -123,7 +123,7 @@ class EthernetNode(ControlNode):
 
     
     
-class ScpiNode(ControlNode):
+class ScpiNode(slc.ControlNode):
     def __init__(self, connection, timeout=10, line_terminator='\x0d'):
         self.connection = connection
         self.timeout = timeout
@@ -147,7 +147,7 @@ class ScpiNode(ControlNode):
 
     
 
-class ScpiCommandNode(ControlValueNode):
+class ScpiCommandNode(slc.ControlValueNode):
     def __init__(self, scpi, name, set_format=None, sync=True):
         self.scpi = scpi
         self.name = name
@@ -185,7 +185,7 @@ class ScpiCommandNode(ControlValueNode):
 
     
 
-class TelnetNode(ControlNode):
+class TelnetNode(slc.ControlNode):
     def __init__(self, connection, prompt, line_terminator, timeout=10, has_echo=True):
         self.connection = connection
         self.prompt = prompt
@@ -235,7 +235,7 @@ class TelnetNode(ControlNode):
     
 
 
-class TelnetCommandNode(ControlValueNode):
+class TelnetCommandNode(slc.ControlValueNode):
     def __init__(self, telnet, command):
         self.telnet = telnet
         self.command = command

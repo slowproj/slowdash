@@ -1,5 +1,5 @@
 
-import signal, logging
+import signal
 from slowpy.control import ControlNode
 
 

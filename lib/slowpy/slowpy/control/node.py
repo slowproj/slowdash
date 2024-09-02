@@ -1,18 +1,29 @@
-import os, time, threading, importlib, logging, traceback
+import os, time, threading, importlib, traceback
 
 
+class ControlException(Exception):
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return str(self.message)
+
+
+    
 class ControlNode:
     # override this
     def set(self, value):
-        return None
+        raise ControlException('set() method not available')
 
+    
     # override this
     def get(self):
-        return None
+        raise ControlException('get() method not available')
+
 
     # override this
     def has_data(self):
-        return None
+        raise ControlException('has() method not available')
 
     
     # stoppable-sleep: to be used in subclasses
@@ -73,7 +84,10 @@ class ControlNode:
         except:
             return float("nan")
 
-    
+    def readonly(self):
+        return ControlReadOnlyNode(self)
+
+        
     # override this to add a child endoint
     @classmethod
     def _node_creator_method(MyClass):    # return a method to be injected
@@ -102,18 +116,14 @@ class ControlNode:
             if os.path.isfile(filepath):
                 break
         else:
-            logging.error('unable to find control plugin: %s' % module_name)
-            return cls
+            raise ControlException('unable to find control plugin: %s' % module_name)
         
         try:
             module = importlib.machinery.SourceFileLoader(filename, filepath).load_module()
         except Exception as e:
-            logging.error('unable to load control module: %s: %s' % (module_name, str(e)))
-            logging.error(traceback.format_exc())
-            return cls
+            print(traceback.format_exc())
+            raise ControlException('unable to load control module: %s: %s' % (module_name, str(e)))
         
-        logging.info('loaded control module "%s"' % module_name)
-
         export_func = module.__dict__.get('export', None)
         if export_func is not None:
             for func in export_func():
@@ -127,7 +137,7 @@ class ControlNode:
             if len(node_classes) > 1:
                 cls.add_node(node_classes[1])
             else:
-                logging.error('unable to identify Node class: %s' % module_name)
+                raise ControlException('unable to identify Node class: %s' % module_name)
                 
         return cls
 
@@ -152,7 +162,7 @@ class ControlThreadNode(ControlNode):
     # if "self" has the "run()" and/or "loop()" methods, "start()" will create a thread and call it
     def start(self):
         if not (callable(getattr(self, 'run', None)) or callable(getattr(self, 'loop', None))):
-            return
+            raise ControlException('ControlThreadNode.start(): no threading method defined')
 
         if self.node_thread is not None:
             # already running
@@ -187,7 +197,17 @@ class NodeThread(threading.Thread):
                 self.node.loop()
             
     
+class ControlReadOnlyNode(ControlNode):
+    def __init__(self, node):
+        self.node = node
 
+    def set(self, value):
+        raise ControlException('node is read-only')
+
+    def get(self):
+        return self.node.get()
+
+    
 class ControlValueNode(ControlNode):
     def __init__(self):
         super().__init__()
@@ -195,11 +215,11 @@ class ControlValueNode(ControlNode):
 
     ### child nodes ###
     # hold setpoint
-    def setpoint(self):
+    def setpoint(self, limits=(None, None)):
         try:
             self._node_setpoint.get()
         except:
-            self._node_setpoint = SetpointNode(self)
+            self._node_setpoint = SetpointNode(self, limits)
         return self._node_setpoint
 
     
@@ -216,12 +236,24 @@ class ControlValueNode(ControlNode):
 
     
 class SetpointNode(ControlNode):
-    def __init__(self, node):
+    def __init__(self, node, limits=(None, None)):
         self.node = node
         self.setpoint = None
+        self.limits = limits
 
         
     def set(self, value):
+        try:
+            x = float(value)
+        except:
+            raise ControlException('numeric value is expected')
+            
+        if (
+            (self.limits[0] is not None and x < float(self.limits[0])) or
+            (self.limits[1] is not None and x > float(self.limits[1]))
+        ):
+            raise ControlException('setpoint out of valid range')
+
         self.setpoint = value
         self.node.set(value)
 
@@ -234,22 +266,27 @@ class SetpointNode(ControlNode):
 class RampingNode(ControlNode):
     def __init__(self, value_node, change_per_sec):
         self.value_node = value_node
-        self.change_per_sec = None
         try:
-            if float(change_per_sec) > 0:
-                self.change_per_sec = float(change_per_sec)
+            self.change_per_sec = abs(float(change_per_sec))
         except:
             self.change_per_sec = None
+            raise ControlException('invalid ramping speed')
                 
         self.target_value = None
 
         
     def set(self, target_value):
-        if self.change_per_sec is None or (self.change_per_sec < 1e-10):
+        try:
+            self.target_value = float(target_value)
+        except:
+            raise ControlException('numeric value is expected')
+        if self.change_per_sec is None:
+            raise ControlException('invalid ramping speed')
+        
+        if (self.change_per_sec < 1e-10):
             self.value_node.setpoint().set(target_value)
             return
         
-        self.target_value = float(target_value)
         try:
             current_value = float(self.value_node.get())
         except:
@@ -297,7 +334,7 @@ class RampingStatusNode(ControlNode):
 
         
     def set(self, zero_to_stop):
-        if str(zero_to_stop) == '0':
+        if str(zero_to_stop) == '0' or bool(zero_to_stop) == False:
             self.ramping_node.target_value = None
 
     

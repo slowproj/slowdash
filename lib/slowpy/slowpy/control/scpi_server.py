@@ -18,7 +18,17 @@ class ScpiAdapter:
     def bind_nodes(self, nodelist):
         # nodelist: array of tuples of (path, node)
         for path, node in nodelist:
-            self.bound_nodes.append((path.split(':'), node))
+            cmds = []
+            for p in path.split(':'):
+                cmd = ''
+                for ch in p:
+                    if ch.islower():
+                        break
+                    cmd += ch
+                if len(cmd) == 0:
+                    cmd = p.upper()
+                cmds.append(cmd)
+            self.bound_nodes.append((cmds, node))
 
         
     def do_RST(self):
@@ -75,7 +85,8 @@ class ScpiAdapter:
                 else:
                     try:
                         if command[-1][-1] == '?':
-                            return str(node.get())
+                            value = node.get()
+                            return str(value) if value is not None else ''
                         else:
                             node.set(' '.join(params))
                             return ''
@@ -84,7 +95,9 @@ class ScpiAdapter:
                         self.push_error('command error: %s: %s' % (str(e), ':'.join(command)))
                         return ''
 
-        self.push_error('100: Command error: %s' % ':'.join(command))
+        print('ERROR: invalid command: %s' % ':'.join(command))
+        self.push_error('invalid command: %s' % ':'.join(command))
+        
         return ''
 
 
@@ -172,14 +185,13 @@ class ScpiServer:
         self.scpi_adapter = scpi_adapter
         self.line_terminator = line_terminator
         
-        host = subprocess.check_output("hostname -I | cut -d' ' -f1", shell=True).decode('utf-8').splitlines()[0]
-        #host = socket.gethostname()
+        self.host = subprocess.check_output("hostname -I | cut -d' ' -f1", shell=True).decode('utf-8').splitlines()[0]
+        self.port = port
+        
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.bind((host, port))
+        self.sock.bind((self.host, port))
         self.sock.listen(10)
         self.connections = []
-        print("listening at %s:%d" % (host, port))
-        print("line terminator is: x%02x" % ord(self.line_terminator))
 
         
     def start(self):
@@ -188,6 +200,8 @@ class ScpiServer:
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)
             
+        print("listening at %s:%d" % (self.host, self.port))
+        print("line terminator is: x%02x" % ord(self.line_terminator))
         try:
             while True:
                 sock, addr = self.sock.accept()

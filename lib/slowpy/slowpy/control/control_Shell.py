@@ -1,17 +1,15 @@
 
-import subprocess, logging
-from slowpy.control import ControlNode
+import subprocess
+import slowpy.control as slc
 
 
-class ShellNode(ControlNode):
+class ShellNode(slc.ControlNode):
     def __init__(self, command, decode=True, strip=True, **kwargs):
         self.command = command
         self.kwargs = { key:value for key,value in kwargs if key not in ['shell', 'stdout', 'capture_output'] }
         self.kwargs['shell'] = kwargs.get('shell', True)
         self.decode = decode
         self.strip = strip
-
-        self.last_return_code = None
 
         
     def set(self, value):
@@ -27,17 +25,16 @@ class ShellNode(ControlNode):
         try:
             p = subprocess.run(cmd, **{**self.kwargs, **kwargs})
         except Exception as e:
-            logging.error(f'ShellNode("{cmd}"): %s' % str(e))
-            self.last_return_code = None
-            return None
-        self.last_return_code = p.returncode
-        output = p.stdout
+            raise slc.ControlException(f'ShellNode("{cmd}"): %s' % str(e))
 
-        if output is not None:
-            if self.decode:
-                output = output.decode()
-            if self.strip:
-                output = output.strip()
+        output = p.stdout
+        if output is None:
+            return ''
+        
+        if self.decode:
+            output = output.decode()
+        if self.strip:
+            output = output.strip()
 
         return output
 
@@ -60,21 +57,7 @@ class ShellNode(ControlNode):
 
     
     
-class ShellValueNode(ControlValueNode):
-    def __init__(self, parent_node):
-        self.parent_node = parent_node
-        
-    
-    def set(self, value):
-        return self.parent_node.set(value)
-            
-    
-    def get(self):
-        return self.parent_node.get()
-            
-    
-    
-class ShellArgNode(ControlNode):
+class ShellArgNode(slc.ControlNode):
     def __init__(self, shell_node, *args):
         self.shell_node = shell_node
         self.args = args
@@ -95,6 +78,20 @@ class ShellArgNode(ControlNode):
     def value(self):  # for set_point() and ramping() grand-child nodes
         return ShellValueNode(self)
 
+    
+    
+class ShellValueNode(slc.ControlValueNode):
+    def __init__(self, parent_node):
+        self.parent_node = parent_node
+        
+    
+    def set(self, value):
+        return self.parent_node.set(value)
+            
+    
+    def get(self):
+        return self.parent_node.get()
+            
     
     
 def export():

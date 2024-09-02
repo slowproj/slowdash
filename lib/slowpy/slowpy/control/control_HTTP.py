@@ -1,9 +1,9 @@
 
-from slowpy.control import ControlNode
-import requests, json, logging
+import requests, json
+import slowpy.control as slc
 
 
-class HttpNode(ControlNode):
+class HttpNode(slc.ControlNode):
     def __init__(self, url, auth=None):
         self.url = url
         self.auth = auth  # None or tuple of (user, pass)
@@ -33,15 +33,11 @@ class HttpNode(ControlNode):
                 response = requests.get(url)
             else:
                 response = requests.get(url, auth=self.auth)
-            if response.status_code != 200:
-                logging.error('unable to fetch URL resource "%s": status %d' % (url, response.status_code))
-                response = None
-            else:
-                logging.info('URL resource fetched: %d: %s' % (response.status_code, url))
         except Exception as e:
-            response = None
-            logging.error('unable to fetch URL resource "%s": %s' % (url, str(e)))
-            
+            raise slc.ControlExcetion('unable to fetch URL resource "%s": %s' % (url, str(e)))
+        if response.status_code != 200:
+            raise slc.ControlException('unable to fetch URL resource "%s": status %d' % (url, response.status_code))
+
         return response.content.decode()
     
         
@@ -56,15 +52,11 @@ class HttpNode(ControlNode):
                 response = requests.post(url, data=content)
             else:
                 response = requests.post(url, data=content, auth=self.auth)
-            if response.status_code != 200:
-                logging.error('unable to fetch URL resource "%s": status %d' % (url, response.status_code))
-                response = None
-            else:
-                logging.info('URL resource fetched: %d: %s' % (response.status_code, url))
         except Exception as e:
-            response = None
-            logging.error('unable to fetch URL resource "%s": %s' % (url, str(e)))
-            
+            raise slc.ControlException('unable to fetch URL resource "%s": %s' % (url, str(e)))
+        if response.status_code != 200:
+            raise slc.ControlException('unable to fetch URL resource "%s": status %d' % (url, response.status_code))
+
         return response.content.decode()
     
         
@@ -82,7 +74,7 @@ class HttpNode(ControlNode):
 
     
     
-class HttpPathNode(ControlNode):
+class HttpPathNode(slc.ControlNode):
     def __init__(self, connection, path, **kwargs):
         self.connection = connection
         self.path = path
@@ -106,7 +98,7 @@ class HttpPathNode(ControlNode):
     
 
     
-class HttpValuePathNode(ControlValueNode):
+class HttpValuePathNode(slc.ControlValueNode):
     def __init__(self, connection, **kwargs):
         self.connection = connection
         
@@ -120,7 +112,7 @@ class HttpValuePathNode(ControlValueNode):
             
     
     
-class HttpJsonPathNode(ControlNode):
+class HttpJsonPathNode(slc.ControlNode):
     def __init__(self, connection, **kwargs):
         self.connection = connection
         
@@ -134,8 +126,7 @@ class HttpJsonPathNode(ControlNode):
         try:
             return json.loads(content)
         except Exception as e:
-            logging.error('bad JSON document')
-            return None
+            raise slc.ControlException('bad JSON document: %s' % str(e))
             
     
     

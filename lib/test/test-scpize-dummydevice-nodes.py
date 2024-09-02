@@ -7,12 +7,12 @@ device = ControlSystem().randomwalk_device()
 
 adapter = ScpiAdapter(idn='RandomWalk')
 adapter.bind_nodes([
-    ('CONFIG:WALK', device.decay()),
-    ('CONFIG:DECAY', device.decay()),
+    ('CONFIGure:WALK', device.walk().setpoint(limits=(0,None))),
+    ('CONFIGure:DECAY', device.decay().setpoint(limits=(0,1))),
     ('V0', device.ch(0).setpoint()),
     ('V1', device.ch(1).setpoint()),
-    ('MEAS:V0', device.ch(0)),
-    ('MEAS:V1', device.ch(1)),
+    ('MEASure:V0', device.ch(0).readonly()),
+    ('MEASure:V1', device.ch(1).readonly()),
 ])
 
 

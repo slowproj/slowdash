@@ -192,6 +192,7 @@ Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to do some
     - **json()**: 
       - set(value): `value` is a Python object to be converted to JSON
       - get(): receives a JSON document and returns a Python object
+    - **value()**: returns ControlValueNode for ramping() etc.
   
 #### Shell Command
 ##### Loading
@@ -201,8 +202,10 @@ Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to do some
 - **shell(cmd)**: run a shell command. 
   - set(value): launches `cmd value`, 
   - get(): launches `cmd` and returns the result
+  - **value()**: returns ControlValueNode for ramping() etc.
   - **arg(\*args)**: append program arguments to the parent "shell" node. <br>
     Example: `adc0 = ctrl.shell('read_adc', '--timeout=0').arg('--ch=0')`
+    - **value()**: returns ControlValueNode for ramping() etc.
     
 #### Redis Interface
 ##### Loading
@@ -361,12 +364,10 @@ Here is an example to wrap a device with the ethernet-SCPI capability:
 ```python
 from slowpy.control import ScpiServer, ScpiAdapter, RandomWalkDevice
 
-
 class RandomWalkScpiDevice(ScpiAdapter):
     def __init__(self)
         super().__init__(idn='RandomWalk')
         self.device = RandomWalkDevice(n=2)
-
 
     def do_command(self, cmd_path, params):
         '''
@@ -400,18 +401,36 @@ class RandomWalkScpiDevice(ScpiAdapter):
             return ''
             
         return None
-    
         
-if __name__ == '__main__':
-    device = RandomWalkScpiDevice()
-    server = ScpiServer(device, port=17674)
-    server.start()
+device = RandomWalkScpiDevice()
+server = ScpiServer(device, port=17674)
+server.start()
 ```
 
 Make this code start automatically on PC boot in your favorite way (`/etc/rc.local`, Docker, ...).
 
+if Control Nodes are already available, these can be directly mapped to SCPI interface:
+```python
+from slowpy.control import ControlSystem, ScpiServer, ScpiAdapter
 
-# SlowTask: Slowdash GUI-Script Binding
+ControlSystem.import_control_module('DummyDevice')
+device = ControlSystem().randomwalk_device()
+
+adapter = ScpiAdapter(idn='RandomWalk')
+adapter.bind_nodes([
+    ('CONFIGure:WALK', device.walk().setpoint(limits=(0,None))),
+    ('CONFIGure:DECAY', device.decay().setpoint(limits=(0,1))),
+    ('V0', device.ch(0).setpoint()),
+    ('V1', device.ch(1).setpoint()),
+    ('MEASure:V0', device.ch(0).readonly()),
+    ('MEASure:V1', device.ch(1).readonly()),
+])
+
+server = ScpiServer(adapter, port=17674)
+server.start()
+```
+
+# SlowTask: GUI-Script Binding
 SlowTask is a user Python script placed under the SlowDash config directory with a name like `slowtask-XXX.py`. SlowDash GUI can start/stop the script, call functions defined in the script, and bind control variables in the script to GUI elements. Using the SlowPy library from a SlowTask script is assumed for this design, but this is not a requirement.
 
 
