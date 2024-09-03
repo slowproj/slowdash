@@ -30,6 +30,42 @@ class ScpiAdapter:
                 cmds.append(cmd)
             self.bound_nodes.append((cmds, node))
 
+
+    # to be used internally or by subclasses
+    def push_error(self, error):
+        self.errors.append(error)
+
+
+    # to be used internally
+    def _process_node_command(self, command, params):
+        target_node = None
+        for name_path, node in self.bound_nodes:
+            if len(name_path) != len(command):
+                continue
+            for k in range(len(name_path)):
+                if not command[k].startswith(name_path[k]):
+                    break
+            else:
+                target_node = node
+                break
+
+        if target_node is None:
+            return None
+                
+        try:
+            if command[-1][-1] == '?':
+                value = node.get()
+                return str(value) if value is not None else ''
+            else:
+                node.set(' '.join(params))
+                return ''
+        except Exception as e:
+            print('ERROR: %s' % str(e))
+            self.push_error('command error: %s: %s' % (str(e), ':'.join(command)))
+            return ''
+
+    
+    ### Override the methods below as needed ###
         
     def do_RST(self):
         self.is_running = False
@@ -53,11 +89,8 @@ class ScpiAdapter:
         return None
 
     
-    def push_error(self, error):
-        self.errors.append(error)
-        
-                
     def process_command(self, command, params):
+        # device specific SCPI commands
         reply = self.do_command(command, params)
         if reply is not None:
             return reply
@@ -65,35 +98,23 @@ class ScpiAdapter:
         # common SCPI commands
         if command[0] == '*IDN?':
             return self.idn
-        elif command[0] == '*OPC?':
-            return '1' if self.is_running else '0'
         elif command[0] == '*RST':
             return self.do_RST() or ''
         elif command[0] == '*CLS':
             return self.do_CLS() or ''
+        elif command[0] == '*OPC?':
+            return self.do_OPC()
+
+        # SYSTem:ERRor? to get error messages
         elif len(command) > 1 and command[0].startswith('SYST'):
-            if command[1].startswith('ERR'):
+            if command[1].startswith('ERR') and command[1].endswith('?'):
                 return self.errors.pop() if len(self.errors) > 0 else ''
 
+        # SlowPy Control-Node commands
         else:
-            for name_path, node in self.bound_nodes:
-                if len(name_path) != len(command):
-                    continue
-                for k in range(len(name_path)):
-                    if not command[k].startswith(name_path[k]):
-                        break
-                else:
-                    try:
-                        if command[-1][-1] == '?':
-                            value = node.get()
-                            return str(value) if value is not None else ''
-                        else:
-                            node.set(' '.join(params))
-                            return ''
-                    except Exception as e:
-                        print('ERROR: %s' % str(e))
-                        self.push_error('command error: %s: %s' % (str(e), ':'.join(command)))
-                        return ''
+            reply = self._process_node_command(command, params)
+            if reply is not None:
+                return reply
 
         print('ERROR: invalid command: %s' % ':'.join(command))
         self.push_error('invalid command: %s' % ':'.join(command))

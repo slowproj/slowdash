@@ -246,18 +246,19 @@ All the control nodes (derived from `slowpy.control.ControlNode`) have the follo
 
 - [ControlNode]
   - has_data(): returns True if a value is available for `get()`
-  - wait_until(condition_lambda, polling_interval=1, timeout=0): blocks until the condition_lambda returns True
-  - sleep(duration_sec): blocks for the duration and returns True unless ControlSystem receives a stop request
+  - wait(condition_lambda=None, polling_interval=1, timeout=0): blocks until the `condition_lambda` returns `True` if the lambda is not `None`; if `condition_lambda` is `None`, wait until `has_data()` returns `True`. On timeout, `wait()` returns `None`, and on stop-request, returns `False`. Otherwise, it returns `True`.
+  - sleep(duration_sec): blocks for the duration and returns True unless a stop request is received.
   - is_stop_requested(): returns True if a stop request has been received
+  - **readonly()**: returns a node that has only `get()` which calls `parent_node.get()`
 
 Nodes derived from `ControlValueNode` have the following methods:
 
 - [ControlValueNode] -> [ControlNode]
-  - **setpoint()**: holds the setpoint
+  - **setpoint(limits=[None,None])**: holds the setpoint
     - set(value): holds the value as a set-point, and calls `set(value)` of the parent node.
     - get(): returns the holding set-point value
   - **ramping(change_per_sec)**
-      - set(value): starts ramping to the target value in the parent node
+      - set(value): starts ramping to the target value in the parent node. If the value is not numeric or not in the limits, raises an exception
       - get(): returns parent's `get()` 
     - **status()**
       - set(value): `set(0)` will stop the current ramping if it is running

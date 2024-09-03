@@ -27,6 +27,8 @@ class ControlNode:
 
     
     # stoppable-sleep: to be used in subclasses
+    # return_value: False if stop-request is received, unless True
+    # As a stop request can be sent to a specific node, this method must be implemented here
     def sleep(self, duration_sec):
         sec10 = int(10*duration_sec)
         subsec10 = 10*duration_sec - sec10
@@ -45,17 +47,21 @@ class ControlNode:
     # stoppable-wait: to be used in subclasses
     # condition_lambda is a function that takes a value from self.get() and returns True or False.
     #   example: lambda x: (float(x)>100)
-    def wait_until(condition_lambda, poll_interval=0.1, timeout=0):
+    # return value: True if condition is satisfied, None for timeout, False for stop-request
+    def wait(condition_lambda=None, poll_interval=0.1, timeout=0):
         while True:
-            if self.has_data() is not False and condition_lambda(self.get()):
-                return True
+            if self.has_data() is not False:
+                if condition_lambda is None:
+                    return True
+                elif condition_lambda(self.get()):
+                    return True
             if not self.is_stop_requested():
                 return False
             if timeout > 0 and (time.time() - start > timeout):
-                return False
+                break
             time.sleep(poll_interval)
             
-        return False
+        return None
         
             
     # to be used by external code
@@ -92,7 +98,7 @@ class ControlNode:
     @classmethod
     def _node_creator_method(MyClass):    # return a method to be injected
         def child(self, *args, **kwargs):  # "self" here is a parent (the node to which this method is added)
-            return MyClass(*args, **kwargs)
+            return MyNodeClassExample(parent=self, *args, **kwargs)
         return child
 
     

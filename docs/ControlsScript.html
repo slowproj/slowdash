@@ -526,12 +526,19 @@ point</li>
 <ul>
 <li>has_data(): returns True if a value is available for
 <code>get()</code></li>
-<li>wait_until(condition_lambda, polling_interval=1, timeout=0): blocks
-until the condition_lambda returns True</li>
+<li>wait(condition_lambda=None, polling_interval=1, timeout=0): blocks
+until the <code>condition_lambda</code> returns <code>True</code> if the
+lambda is not <code>None</code>; if <code>condition_lambda</code> is
+<code>None</code>, wait until <code>has_data()</code> returns
+<code>True</code>. On timeout, <code>wait()</code> returns
+<code>None</code>, and on stop-request, returns <code>False</code>.
+Otherwise, it returns <code>True</code>.</li>
 <li>sleep(duration_sec): blocks for the duration and returns True unless
-ControlSystem receives a stop request</li>
+a stop request is received.</li>
 <li>is_stop_requested(): returns True if a stop request has been
 received</li>
+<li><strong>readonly()</strong>: returns a node that has only
+<code>get()</code> which calls <code>parent_node.get()</code></li>
 </ul></li>
 </ul>
 <p>Nodes derived from <code>ControlValueNode</code> have the following
@@ -539,7 +546,7 @@ methods:</p>
 <ul>
 <li>[ControlValueNode] -&gt; [ControlNode]
 <ul>
-<li><strong>setpoint()</strong>: holds the setpoint
+<li><strong>setpoint(limits=[None,None])</strong>: holds the setpoint
 <ul>
 <li>set(value): holds the value as a set-point, and calls
 <code>set(value)</code> of the parent node.</li>
@@ -547,8 +554,9 @@ methods:</p>
 </ul></li>
 <li><strong>ramping(change_per_sec)</strong>
 <ul>
-<li>set(value): starts ramping to the target value in the parent
-node</li>
+<li>set(value): starts ramping to the target value in the parent node.
+If the value is not numeric or not in the limits, raises an
+exception</li>
 <li>get(): returns parent’s <code>get()</code></li>
 <li><strong>status()</strong>
 <ul>
