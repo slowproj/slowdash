@@ -63,8 +63,3 @@ class RandomWalkConfigNode(slowpy.control.ControlValueNode):
         
     def get(self):
         return getattr(self.device, self.param_name)
-
-
-    
-def export():
-    return [ RandomWalkDeviceNode ]

@@ -6,7 +6,7 @@ from slowpy.control import ControlNode
 class ControlSystem(ControlNode):
     def __init__(self):
         self.import_control_module('Ethernet')
-        self.import_control_module('HTTP')
+        self.import_control_module('HTTP')[0].import_control_module('Slowdash')
         self.import_control_module('Shell')
 
         

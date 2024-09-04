@@ -1,5 +1,5 @@
 
-from .node import ControlNode, ControlValueNode, ControlThreadNode
+from .node import ControlNode, ControlValueNode, ControlThreadNode, ControlException
 from .system import ControlSystem
 
 from .scpi_server import ScpiServer, ScpiAdapter

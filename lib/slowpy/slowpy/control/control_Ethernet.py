@@ -251,8 +251,3 @@ class TelnetCommandNode(slc.ControlValueNode):
     def get(self):
         self.telnet.set(self.command)
         return self.telnet.get()
-
-    
-   
-def export():
-    return [ EthernetNode ]

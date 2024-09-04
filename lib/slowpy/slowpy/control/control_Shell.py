@@ -91,8 +91,3 @@ class ShellValueNode(slc.ControlValueNode):
     
     def get(self):
         return self.parent_node.get()
-            
-    
-    
-def export():
-    return [ ShellNode ]

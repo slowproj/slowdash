@@ -7,16 +7,21 @@ class HttpNode(slc.ControlNode):
     def __init__(self, url, auth=None):
         self.url = url
         self.auth = auth  # None or tuple of (user, pass)
-
         
     def __del__(self):
         pass
 
-        
+    @classmethod
+    def _node_creator_method(cls):
+        def http(self, url, **kwargs):
+            return HttpNode(url, **kwargs)
+
+        return http
+
+    
     def set(self, value):
         return self.do_post_request(path='', content=value)
 
-    
     def get(self):
         return self.do_get_request(path='')
 
@@ -34,7 +39,7 @@ class HttpNode(slc.ControlNode):
             else:
                 response = requests.get(url, auth=self.auth)
         except Exception as e:
-            raise slc.ControlExcetion('unable to fetch URL resource "%s": %s' % (url, str(e)))
+            raise slc.ControlException('unable to fetch URL resource "%s": %s' % (url, str(e)))
         if response.status_code != 200:
             raise slc.ControlException('unable to fetch URL resource "%s": status %d' % (url, response.status_code))
 
@@ -46,6 +51,7 @@ class HttpNode(slc.ControlNode):
             url = self.url
         else:
             url = self.url + path
+        print(f'POST: {url}')
             
         try:
             if self.auth is None:
@@ -54,10 +60,10 @@ class HttpNode(slc.ControlNode):
                 response = requests.post(url, data=content, auth=self.auth)
         except Exception as e:
             raise slc.ControlException('unable to fetch URL resource "%s": %s' % (url, str(e)))
-        if response.status_code != 200:
+        if response.status_code >= 300:
             raise slc.ControlException('unable to fetch URL resource "%s": status %d' % (url, response.status_code))
 
-        return response.content.decode()
+        return response.status_code
     
         
     ## child nodes ##
@@ -65,25 +71,23 @@ class HttpNode(slc.ControlNode):
         return HttpPathNode(self, path, **kwargs)
     
 
-    @classmethod
-    def _node_creator_method(cls):
-        def http(self, url, **kwargs):
-            return HttpNode(url, **kwargs)
-
-        return http
-
-    
     
 class HttpPathNode(slc.ControlNode):
     def __init__(self, connection, path, **kwargs):
         self.connection = connection
-        self.path = path
         
-    
+        opts = '&'.join([f'{k}={v}' for k,v in kwargs.items()])
+        if len(opts) == 0:
+            self.path = path
+        elif '?' in path:
+            self.path = path + '&' + opts
+        else:
+            self.path = path + '?' + opts
+        
+        
     def set(self, value):
         return self.connection.do_post_request(self.path, value)
             
-    
     def get(self):
         return self.connection.do_get_request(self.path)
 
@@ -92,43 +96,35 @@ class HttpPathNode(slc.ControlNode):
     def value(self, **kwargs):
         return HttpValuePathNode(self, **kwargs)
 
-    
     def json(self, **kwargs):
-        return HttpJaonPathNode(self, **kwargs)
+        return HttpJsonPathNode(self, **kwargs)
     
 
     
 class HttpValuePathNode(slc.ControlValueNode):
-    def __init__(self, connection, **kwargs):
-        self.connection = connection
+    def __init__(self, path_node, **kwargs):
+        self.path_node = path_node
         
-    
     def set(self, value):
-        return self.connection.set(json.dumps(value))
+        return self.path_node.set(value)
             
-    
     def get(self):
-        return self.connection.get(self.path)
+        return self.path_node.get()
             
     
     
 class HttpJsonPathNode(slc.ControlNode):
-    def __init__(self, connection, **kwargs):
-        self.connection = connection
+    def __init__(self, path_node, **kwargs):
+        self.path_node = path_node
         
     
     def set(self, value):
-        return self.connection.set(json.dumps(value))
+        return self.path_node.set(json.dumps(value))
             
     
     def get(self):
-        content = self.connection.get(self.path)
+        content = self.path_node.get()
         try:
             return json.loads(content)
         except Exception as e:
             raise slc.ControlException('bad JSON document: %s' % str(e))
-            
-    
-    
-def export():
-    return [ HttpNode ]

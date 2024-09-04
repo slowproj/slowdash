@@ -117,6 +117,9 @@ class Config:
                 except Exception as e:
                     logging.error('Invalid Configuration File: %s' % str(e))
                     config = {}
+                if type(config) != dict:
+                    config = {}
+                    
             project_conf = config.get("slowdash_project", None)
             if (project_conf is None) or type(project_conf) is not dict :
                 logging.error('invalid Slowdash project file: %s' % project_file)

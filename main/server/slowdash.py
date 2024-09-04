@@ -410,7 +410,10 @@ class App:
             try:
                 with open(filepath) as f:
                     this_config = yaml.safe_load(f)
-                    meta_info = this_config.get('meta', {})
+                    if type(this_config) != dict:
+                        meta_info['config_error'] = 'not a dict'
+                    else:
+                        meta_info = this_config.get('meta', {})
             except yaml.YAMLError as e:
                 if hasattr(e, 'problem_mark'):
                     line = e.problem_mark.line+1

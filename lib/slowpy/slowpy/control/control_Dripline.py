@@ -57,8 +57,3 @@ class DriplineCalibratedValueNode(slowpy.control.ControlValueNode):
     
     def get(self):
         return self.interface.get(self.name).payload.to_python().get('value_cal', None)
-
-
-    
-def export():
-    return [ DriplineNode ]

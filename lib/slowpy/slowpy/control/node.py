@@ -1,4 +1,4 @@
-import os, time, threading, importlib, traceback
+import os, time, threading, importlib, traceback, inspect
 
 
 class ControlException(Exception):
@@ -135,22 +135,21 @@ class ControlNode:
             print(traceback.format_exc())
             raise ControlException('unable to load control module: %s: %s' % (module_name, str(e)))
         
-        export_func = module.__dict__.get('export', None)
-        if export_func is not None:
-            for func in export_func():
-                cls.add_node(func)
-        else:
-            node_classes = []
-            for name, entry in module.__dict__.items():
-                if callable(entry):
-                    if '_node_creator_method' in dir(entry):
-                        node_classes.append(entry)
-            if len(node_classes) > 1:
-                cls.add_node(node_classes[1])
-            else:
-                raise ControlException('unable to identify Node class: %s' % module_name)
+        node_classes = []
+        for class_name, NodeClass in module.__dict__.items():
+            if not inspect.isclass(NodeClass):
+                continue
+            for member_name, member in inspect.getmembers(NodeClass):
+                if inspect.ismethod(member) and member.__qualname__ == f'{class_name}._node_creator_method':
+                    node_classes.append(NodeClass)
+        if len(node_classes) == 0:
+            raise ControlException('unable to identify Node class: %s' % module_name)
+        
+        for NodeClass in node_classes:
+            cls.add_node(NodeClass)
+            #print(f'Control: importing {str(NodeClass)}')
                 
-        return cls
+        return node_classes
 
         
     _global_stop_event = threading.Event()

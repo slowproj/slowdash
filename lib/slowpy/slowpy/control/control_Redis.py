@@ -271,8 +271,3 @@ class RedisTimeseriesLastLapseNode(slc.ControlNode):
 
     def get(self):
         return time.time() - self.parent.get_tx()[0]/1000.0
-    
-
-    
-def export():
-    return [ RedisNode ]
