@@ -90,8 +90,13 @@ class ControlNode:
         except:
             return float("nan")
 
+        
+    # make the node read or write only
     def readonly(self):
         return ControlReadOnlyNode(self)
+
+    def writeonly(self):
+        return ControlWriteOnlyNode(self)
 
         
     # override this to add a child endoint
@@ -201,7 +206,8 @@ class NodeThread(threading.Thread):
         if callable(getattr(self.node, 'loop', None)):
             while not self.node.is_stop_requested():
                 self.node.loop()
-            
+
+                
     
 class ControlReadOnlyNode(ControlNode):
     def __init__(self, node):
@@ -212,6 +218,19 @@ class ControlReadOnlyNode(ControlNode):
 
     def get(self):
         return self.node.get()
+
+    
+    
+class ControlWriteOnlyNode(ControlNode):
+    def __init__(self, node):
+        self.node = node
+
+    def set(self, value):
+        return self.node.set(value)
+
+    def get(self):
+        raise ControlException('node is write-only')
+
 
     
 class ControlValueNode(ControlNode):

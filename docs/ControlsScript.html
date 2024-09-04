@@ -537,8 +537,12 @@ Otherwise, it returns <code>True</code>.</li>
 a stop request is received.</li>
 <li>is_stop_requested(): returns True if a stop request has been
 received</li>
-<li><strong>readonly()</strong>: returns a node that has only
-<code>get()</code> which calls <code>parent_node.get()</code></li>
+<li><strong>readonly()</strong>: makes the node readonly; it returns a
+node that has only <code>get()</code> which calls
+<code>parent_node.get()</code></li>
+<li><strong>writeonly()</strong>: makes the node write only; it returns
+a node that has only <code>set()</code> which calls
+<code>parent_node.set()</code></li>
 </ul></li>
 </ul>
 <p>Nodes derived from <code>ControlValueNode</code> have the following

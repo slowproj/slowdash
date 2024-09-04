@@ -249,7 +249,8 @@ All the control nodes (derived from `slowpy.control.ControlNode`) have the follo
   - wait(condition_lambda=None, polling_interval=1, timeout=0): blocks until the `condition_lambda` returns `True` if the lambda is not `None`; if `condition_lambda` is `None`, wait until `has_data()` returns `True`. On timeout, `wait()` returns `None`, and on stop-request, returns `False`. Otherwise, it returns `True`.
   - sleep(duration_sec): blocks for the duration and returns True unless a stop request is received.
   - is_stop_requested(): returns True if a stop request has been received
-  - **readonly()**: returns a node that has only `get()` which calls `parent_node.get()`
+  - **readonly()**: makes the node readonly; it returns a node that has only `get()` which calls `parent_node.get()`
+  - **writeonly()**: makes the node write only; it returns a node that has only `set()` which calls `parent_node.set()`
 
 Nodes derived from `ControlValueNode` have the following methods:
 
