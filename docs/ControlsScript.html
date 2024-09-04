@@ -582,10 +582,10 @@ methods:</p>
 <p>Simple example of writing single values to a long form table:</p>
 <div class="sourceCode" id="cb10"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> time</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> DummyDevice_RandomWalk</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> RandomWalkDevice</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_PostgreSQL</span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> DummyDevice_RandomWalk(n<span class="op">=</span><span class="dv">4</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> RandomWalkDevice(n<span class="op">=</span><span class="dv">4</span>)</span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_PostgreSQL(<span class="st">&#39;postgresql://postgres:postgres@localhost:5432/SlowTestData&#39;</span>, table<span class="op">=</span><span class="st">&quot;Test&quot;</span>)</span>
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
@@ -713,8 +713,8 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb16-1"><a h
 <span id="cb16-43"><a href="#cb16-43" aria-hidden="true" tabindex="-1"></a>server.start()</span></code></pre></div>
 <p>Make this code start automatically on PC boot in your favorite way
 (<code>/etc/rc.local</code>, Docker, …).</p>
-<p>if Control Nodes are already available, these can be directly mapped
-to SCPI interface:</p>
+<p>if SlowPy Control Nodes are already available for the device, the
+nodes can be directly mapped to the SCPI interface:</p>
 <div class="sourceCode" id="cb17"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ControlSystem, ScpiServer, ScpiAdapter</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
