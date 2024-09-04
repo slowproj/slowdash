@@ -2,12 +2,12 @@
 
 import time
 from slowpy import Histogram
-from slowpy.control import DummyDevice_RandomWalk
+from slowpy.control import RandomWalkDevice
 from slowpy.store import DataStore_PostgreSQL
 
 datastore = DataStore_PostgreSQL('postgresql://postgres:postgres@localhost:5432/SlowTestData', table="Test")
 datastore_obj = datastore.another(table="Test2")
-device = DummyDevice_RandomWalk(n=4)
+device = RandomWalkDevice(n=4)
 histogram = Histogram(nbins=20, range_min=-10, range_max=10)
 
 

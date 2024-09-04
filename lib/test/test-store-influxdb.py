@@ -2,12 +2,12 @@
 
 import time
 from slowpy import Histogram
-from slowpy.control import DummyDevice_RandomWalk
+from slowpy.control import RandomWalkDevice
 from slowpy.store import DataStore_InfluxDB2
 
 datastore = DataStore_InfluxDB2('influxdb2://sloworg:slowtoken@localhost:8086/SlowTestData', measurement='Test')
 datastore_obj = datastore.another(measurement='Test2')
-device = DummyDevice_RandomWalk(n=4)
+device = RandomWalkDevice(n=4)
 histogram = Histogram(nbins=20, range_min=-10, range_max=10)
 
 

@@ -275,10 +275,10 @@ Nodes derived from `ControlThreadNode` have the following methods:
 Simple example of writing single values to a long form table:
 ```python
 import time
-from slowpy.control import DummyDevice_RandomWalk
+from slowpy.control import RandomWalkDevice
 from slowpy.store import DataStore_PostgreSQL
 
-device = DummyDevice_RandomWalk(n=4)
+device = RandomWalkDevice(n=4)
 datastore = DataStore_PostgreSQL('postgresql://postgres:postgres@localhost:5432/SlowTestData', table="Test")
 
 while True:
@@ -410,7 +410,7 @@ server.start()
 
 Make this code start automatically on PC boot in your favorite way (`/etc/rc.local`, Docker, ...).
 
-if Control Nodes are already available, these can be directly mapped to SCPI interface:
+if SlowPy Control Nodes are already available for the device, the nodes can be directly mapped to the SCPI interface:
 ```python
 from slowpy.control import ControlSystem, ScpiServer, ScpiAdapter
 
