@@ -12,17 +12,12 @@ class SlowdashNode(slc.ControlNode):
     @classmethod
     def _node_creator_method(cls):
         def slowdash(self):
+            if self.__class__.__name__ != 'HttpNode':
+                raise slc.ControlException('SlowdashNode can be inserted only to HttpNode')
             return SlowdashNode(self)
         return slowdash
 
     
-    def set(self, value):
-        return self.http.do_post_request(path='/api', content=value)
-
-    def get(self):
-        return self.http.do_get_request(path='/api')
-
-
     ### Child Nodes ###
     def ping(self):
         return self.http.path('/api/ping').json().readonly()

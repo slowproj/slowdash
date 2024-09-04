@@ -368,9 +368,8 @@ request is made. <code>loop()</code> will not be called after stop.</p>
 <code>do_XXX()</code> are usual methods to do something. Methods with a
 noun name return a sub-node.</p>
 <h4 id="ethernet-scpi-and-telnet">Ethernet, SCPI and Telnet</h4>
-<h5 id="loading">Loading</h5>
-<p><code>ControlSystem.load_control_module('Ethernet')</code>: already
-included</p>
+<h5 id="loading-already-included">Loading (already included)</h5>
+<p><code>ControlSystem.load_control_module('Ethernet')</code></p>
 <h5 id="nodes">Nodes</h5>
 <ul>
 <li><strong>ethernet(host,port)</strong>: sends and receives text
@@ -409,9 +408,8 @@ returns a reply until the next prompt</li>
 </ul></li>
 </ul>
 <h4 id="http-web-api">HTTP (Web API)</h4>
-<h5 id="loading-1">Loading</h5>
-<p><code>ControlSystem.load_control_module('HTTP')</code>: already
-included</p>
+<h5 id="loading-already-included-1">Loading (already included)</h5>
+<p><code>ControlSystem.load_control_module('HTTP')</code></p>
 <h5 id="nodes-1">Nodes</h5>
 <ul>
 <li><strong>http(base_url)</strong>:
@@ -435,9 +433,8 @@ etc.</li>
 </ul></li>
 </ul>
 <h4 id="shell-command">Shell Command</h4>
-<h5 id="loading-2">Loading</h5>
-<p><code>ControlSystem.load_control_module('Shell')</code>: already
-included</p>
+<h5 id="loading-already-included-2">Loading (already included)</h5>
+<p><code>ControlSystem.load_control_module('Shell')</code></p>
 <h5 id="nodes-2">Nodes</h5>
 <ul>
 <li><strong>shell(cmd)</strong>: run a shell command.
@@ -455,10 +452,29 @@ etc.</li>
 </ul></li>
 </ul></li>
 </ul>
-<h4 id="redis-interface">Redis Interface</h4>
-<h5 id="loading-3">Loading</h5>
-<p><code>ControlSystem.load_control_module('Redis')</code></p>
+<h4 id="slowdash-server-control">SlowDash server control</h4>
+<h5 id="loading-already-included-3">Loading (already included)</h5>
+<p><code>HttpNode = ControlSystem.load_control_module('HTTP')[0]</code><br>
+<code>HttpNode.load_control_module('Slowdash')</code></p>
 <h5 id="nodes-3">Nodes</h5>
+<ul>
+<li><strong>http(url).slowdash()</strong>
+<ul>
+<li><strong>ping()</strong>: returns <code>pong</code></li>
+<li><strong>channels()</strong>: gets a JSON object of the channel
+list</li>
+<li><strong>data(channels,length=3600)</strong>: gets a JSON object of
+data for the channels</li>
+<li><strong>config()</strong>: gets a JSON object of the project
+configuration</li>
+<li><strong>config_file(name)</strong>: gets or posts a configuration
+file</li>
+</ul></li>
+</ul>
+<h4 id="redis-interface">Redis Interface</h4>
+<h5 id="loading">Loading</h5>
+<p><code>ControlSystem.load_control_module('Redis')</code></p>
+<h5 id="nodes-4">Nodes</h5>
 <ul>
 <li><strong>redis(url)</strong>
 <ul>

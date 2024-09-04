@@ -161,8 +161,8 @@ The thread is stopped by calling the `stop()` method of the node, or by a global
 Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to do something. Methods with a noun name return a sub-node.
 
 #### Ethernet, SCPI and Telnet
-##### Loading
-`ControlSystem.load_control_module('Ethernet')`: already included
+##### Loading (already included)
+`ControlSystem.load_control_module('Ethernet')`
 
 ##### Nodes
 - **ethernet(host,port)**: sends and receives text messages through a TCP socket connection
@@ -181,8 +181,8 @@ Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to do some
       - get(): sends `cmd line_terminator`, consumes echo, and returns a reply until the next prompt
 
 #### HTTP (Web API)
-##### Loading
-`ControlSystem.load_control_module('HTTP')`: already included
+##### Loading (already included)
+`ControlSystem.load_control_module('HTTP')`
 
 ##### Nodes
 - **http(base_url)**:
@@ -195,8 +195,8 @@ Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to do some
     - **value()**: returns ControlValueNode for ramping() etc.
   
 #### Shell Command
-##### Loading
-`ControlSystem.load_control_module('Shell')`: already included
+##### Loading (already included)
+`ControlSystem.load_control_module('Shell')`
 
 ##### Nodes
 - **shell(cmd)**: run a shell command. 
@@ -206,6 +206,20 @@ Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to do some
   - **arg(\*args)**: append program arguments to the parent "shell" node. <br>
     Example: `adc0 = ctrl.shell('read_adc', '--timeout=0').arg('--ch=0')`
     - **value()**: returns ControlValueNode for ramping() etc.
+    
+#### SlowDash server control
+##### Loading (already included)
+`HttpNode = ControlSystem.load_control_module('HTTP')[0]`<br>
+`HttpNode.load_control_module('Slowdash')`
+
+
+##### Nodes
+- **http(url).slowdash()**
+  - **ping()**: returns `pong`
+  - **channels()**: gets a JSON object of the channel list
+  - **data(channels,length=3600)**: gets a JSON object of data for the channels
+  - **config()**: gets a JSON object of the project configuration
+  - **config_file(name)**: gets or posts a configuration file
     
 #### Redis Interface
 ##### Loading
