@@ -121,8 +121,9 @@ Task)</a></li>
 <li><a href="#control-variable-binding"
 id="toc-control-variable-binding">Control Variable Binding</a></li>
 </ul></li>
-<li><a href="#network-deployment" id="toc-network-deployment">Network
-Deployment</a>
+<li><a href="#distributed-system-network-deployment"
+id="toc-distributed-system-network-deployment">Distributed System /
+Network Deployment</a>
 <ul>
 <li><a href="#slowdash-interconnect"
 id="toc-slowdash-interconnect">SlowDash Interconnect</a></li>
@@ -454,8 +455,7 @@ etc.</li>
 </ul>
 <h4 id="slowdash-server-control">SlowDash server control</h4>
 <h5 id="loading-already-included-3">Loading (already included)</h5>
-<p><code>HttpNode = ControlSystem.load_control_module('HTTP')[0]</code><br>
-<code>HttpNode.load_control_module('Slowdash')</code></p>
+<p><code>ControlSystem.load_control_module('HTTP').load_control_module('Slowdash')</code></p>
 <h5 id="nodes-3">Nodes</h5>
 <ul>
 <li><strong>http(url).slowdash()</strong>
@@ -974,7 +974,8 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb28-1"><a h
 <span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&#39;Status&#39;</span>, StatusNode())</span>
 <span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>    ]</span></code></pre></div>
 <p>Here the new node <code>StatusNode</code> returns a table object.</p>
-<h1 id="network-deployment">Network Deployment</h1>
+<h1 id="distributed-system-network-deployment">Distributed System /
+Network Deployment</h1>
 <h2 id="slowdash-interconnect">SlowDash Interconnect</h2>
 <h2 id="slowtask-scpization">SlowTask Scpization</h2>
 

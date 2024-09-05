@@ -14,5 +14,3 @@ print("data/ch0,ch1 -> ", slowdash.data('ch0,ch1',length=60))
 
 print(slowdash.config_file('slowplot-trash.json').set('{"message": "hello"}'))
 print(slowdash.config_file('slowplot-trash.json'))
-
-print(slowdash.__class__.__name__)

@@ -1,16 +1,13 @@
 
 import requests, json
-import slowpy.control as slc
+import slowpy.control as spc
 
 
-class HttpNode(slc.ControlNode):
+class HttpNode(spc.ControlNode):
     def __init__(self, url, auth=None):
         self.url = url
         self.auth = auth  # None or tuple of (user, pass)
         
-    def __del__(self):
-        pass
-
     @classmethod
     def _node_creator_method(cls):
         def http(self, url, **kwargs):
@@ -39,9 +36,9 @@ class HttpNode(slc.ControlNode):
             else:
                 response = requests.get(url, auth=self.auth)
         except Exception as e:
-            raise slc.ControlException('unable to fetch URL resource "%s": %s' % (url, str(e)))
+            raise spc.ControlException('unable to fetch URL resource "%s": %s' % (url, str(e)))
         if response.status_code != 200:
-            raise slc.ControlException('unable to fetch URL resource "%s": status %d' % (url, response.status_code))
+            raise spc.ControlException('unable to fetch URL resource "%s": status %d' % (url, response.status_code))
 
         return response.content.decode()
     
@@ -59,9 +56,9 @@ class HttpNode(slc.ControlNode):
             else:
                 response = requests.post(url, data=content, auth=self.auth)
         except Exception as e:
-            raise slc.ControlException('unable to fetch URL resource "%s": %s' % (url, str(e)))
+            raise spc.ControlException('unable to fetch URL resource "%s": %s' % (url, str(e)))
         if response.status_code >= 300:
-            raise slc.ControlException('unable to fetch URL resource "%s": status %d' % (url, response.status_code))
+            raise spc.ControlException('unable to fetch URL resource "%s": status %d' % (url, response.status_code))
 
         return response.status_code
     
@@ -72,7 +69,7 @@ class HttpNode(slc.ControlNode):
     
 
     
-class HttpPathNode(slc.ControlNode):
+class HttpPathNode(spc.ControlNode):
     def __init__(self, connection, path, **kwargs):
         self.connection = connection
         
@@ -101,7 +98,7 @@ class HttpPathNode(slc.ControlNode):
     
 
     
-class HttpValuePathNode(slc.ControlValueNode):
+class HttpValuePathNode(spc.ControlValueNode):
     def __init__(self, path_node, **kwargs):
         self.path_node = path_node
         
@@ -113,7 +110,7 @@ class HttpValuePathNode(slc.ControlValueNode):
             
     
     
-class HttpJsonPathNode(slc.ControlNode):
+class HttpJsonPathNode(spc.ControlNode):
     def __init__(self, path_node, **kwargs):
         self.path_node = path_node
         
@@ -127,4 +124,4 @@ class HttpJsonPathNode(slc.ControlNode):
         try:
             return json.loads(content)
         except Exception as e:
-            raise slc.ControlException('bad JSON document: %s' % str(e))
+            raise spc.ControlException('bad JSON document: %s' % str(e))

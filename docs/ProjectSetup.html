@@ -10,26 +10,28 @@
       div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
   <style type="text/css">
-a.sourceLine { display: inline-block; line-height: 1.25; }
-a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
-a.sourceLine:empty { height: 1.2em; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
-code.sourceCode { white-space: pre; position: relative; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
 @media screen {
 div.sourceCode { overflow: auto; }
 }
 @media print {
-code.sourceCode { white-space: pre-wrap; }
-a.sourceLine { text-indent: -1em; padding-left: 1em; }
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
-pre.numberSource a.sourceLine
-  { position: relative; left: -4em; }
-pre.numberSource a.sourceLine::before
-  { content: attr(title);
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
     position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; pointer-events: all; display: inline-block;
+    border: none; display: inline-block;
     -webkit-touch-callout: none; -webkit-user-select: none;
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
@@ -38,15 +40,15 @@ pre.numberSource a.sourceLine::before
   }
 pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
 div.sourceCode
-  {  }
+  {   }
 @media screen {
-a.sourceLine::before { text-decoration: underline; }
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
 code span.at { color: #7d9029; } /* Attribute */
 code span.bn { color: #40a070; } /* BaseN */
-code span.bu { } /* BuiltIn */
+code span.bu { color: #008000; } /* BuiltIn */
 code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
 code span.ch { color: #4070a0; } /* Char */
 code span.cn { color: #880000; } /* Constant */
@@ -59,7 +61,7 @@ code span.er { color: #ff0000; font-weight: bold; } /* Error */
 code span.ex { } /* Extension */
 code span.fl { color: #40a070; } /* Float */
 code span.fu { color: #06287e; } /* Function */
-code span.im { } /* Import */
+code span.im { color: #008000; font-weight: bold; } /* Import */
 code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
 code span.kw { color: #007020; font-weight: bold; } /* Keyword */
 code span.op { color: #666666; } /* Operator */
@@ -83,18 +85,31 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span class="toc-title">Contents</span>
 <nav id="TOC">
 <ul>
-<li><a href="#configuration">Configuration</a><ul>
-<li><a href="#project-directory">Project Directory</a></li>
-<li><a href="#configuration-file">Configuration File</a></li>
-<li><a href="#styles">Styles</a></li>
-<li><a href="#testing-the-configuration">Testing the Configuration</a></li>
+<li><a href="#configuration" id="toc-configuration">Configuration</a>
+<ul>
+<li><a href="#project-directory" id="toc-project-directory">Project
+Directory</a></li>
+<li><a href="#configuration-file"
+id="toc-configuration-file">Configuration File</a></li>
+<li><a href="#styles" id="toc-styles">Styles</a></li>
+<li><a href="#testing-the-configuration"
+id="toc-testing-the-configuration">Testing the Configuration</a></li>
 </ul></li>
-<li><a href="#running-the-server">Running the Server</a><ul>
-<li><a href="#running-in-a-docker-container">Running in a Docker Container</a></li>
-<li><a href="#bare-metal-running-as-a-user-process">Bare-Metal, Running as a User Process</a></li>
-<li><a href="#bare-metal-launching-from-cgi">Bare Metal, Launching from CGI</a></li>
+<li><a href="#running-the-server" id="toc-running-the-server">Running
+the Server</a>
+<ul>
+<li><a href="#running-in-a-docker-container"
+id="toc-running-in-a-docker-container">Running in a Docker
+Container</a></li>
+<li><a href="#bare-metal-running-as-a-user-process"
+id="toc-bare-metal-running-as-a-user-process">Bare-Metal, Running as a
+User Process</a></li>
+<li><a href="#bare-metal-launching-from-cgi"
+id="toc-bare-metal-launching-from-cgi">Bare Metal, Launching from
+CGI</a></li>
 </ul></li>
-<li><a href="#security-considerations">Security Considerations</a></li>
+<li><a href="#security-considerations"
+id="toc-security-considerations">Security Considerations</a></li>
 </ul>
 </nav>
 </div>
@@ -103,15 +118,19 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h1 id="configuration">Configuration</h1>
 <h2 id="project-directory">Project Directory</h2>
 <ul>
-<li>Every project has a dedicated project directory.</li>
-<li><p>Configuration file is <code>SlowdashProject.yaml</code>, placed at the project directory.</p></li>
-<li>Project directory is specified at run time by one of the followings:
+<li><p>Every project has a dedicated project directory.</p></li>
+<li><p>Configuration file is <code>SlowdashProject.yaml</code>, placed
+at the project directory.</p></li>
+<li><p>Project directory is specified at run time by one of the
+followings:</p>
 <ul>
 <li><code>--project-dir</code> option</li>
 <li><code>SLOWDASH_PROJECT</code> environmental variable</li>
 <li>current working directory</li>
 </ul></li>
-<li><p>Under the project directory, <code>config</code> directory is automatically created. Web interface posts files only to this directory.</p></li>
+<li><p>Under the project directory, <code>config</code> directory is
+automatically created. Web interface posts files only to this
+directory.</p></li>
 </ul>
 <h2 id="configuration-file">Configuration File</h2>
 <p>Project configuration file describes:</p>
@@ -123,157 +142,210 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li>System control parameters (optional)</li>
 </ul>
 <p>Example:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb1-1" title="1"><span class="fu">slowdash_project:</span></a>
-<a class="sourceLine" id="cb1-2" title="2">  <span class="fu">name:</span><span class="at"> ATDS</span></a>
-<a class="sourceLine" id="cb1-3" title="3">  <span class="fu">title:</span><span class="at"> Atomic Tritium Demonstrator at UW (ATDS)</span></a>
-<a class="sourceLine" id="cb1-4" title="4"></a>
-<a class="sourceLine" id="cb1-5" title="5">  <span class="fu">data_source:</span></a>
-<a class="sourceLine" id="cb1-6" title="6">    <span class="fu">type:</span><span class="at"> PostgreSQL</span></a>
-<a class="sourceLine" id="cb1-7" title="7">    <span class="fu">parameters:</span></a>
-<a class="sourceLine" id="cb1-8" title="8">      <span class="fu">url:</span><span class="at"> p8_db_user:****@localhost:5432/p8_sc_db</span></a>
-<a class="sourceLine" id="cb1-9" title="9">      <span class="fu">time_series:</span></a>
-<a class="sourceLine" id="cb1-10" title="10">        <span class="fu">schema:</span><span class="at"> data_table[channel]@timestamp=value</span></a>
-<a class="sourceLine" id="cb1-11" title="11"></a>
-<a class="sourceLine" id="cb1-12" title="12">  <span class="fu">style:</span></a>
-<a class="sourceLine" id="cb1-13" title="13">    <span class="fu">theme:</span><span class="at"> light</span></a>
-<a class="sourceLine" id="cb1-14" title="14">    <span class="fu">title:</span></a>
-<a class="sourceLine" id="cb1-15" title="15">      <span class="fu">color:</span><span class="at"> white</span></a>
-<a class="sourceLine" id="cb1-16" title="16">      <span class="fu">background:</span><span class="at"> </span><span class="st">&quot;#4b2e83&quot;</span></a>
-<a class="sourceLine" id="cb1-17" title="17"></a>
-<a class="sourceLine" id="cb1-18" title="18">  <span class="fu">system:</span></a>
-<a class="sourceLine" id="cb1-19" title="19">    <span class="fu">file_mode:</span><span class="at"> </span><span class="dv">0666</span></a></code></pre></div>
-<h4 id="data-source-entry-data_source-often-necessary">Data Source Entry (<code>data_source</code>, often necessary)</h4>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> ATDS</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">title</span><span class="kw">:</span><span class="at"> Atomic Tritium Demonstrator at UW (ATDS)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> PostgreSQL</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">parameters</span><span class="kw">:</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">url</span><span class="kw">:</span><span class="at"> p8_db_user:****@localhost:5432/p8_sc_db</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> data_table[channel]@timestamp=value</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">style</span><span class="kw">:</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">theme</span><span class="kw">:</span><span class="at"> light</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">title</span><span class="kw">:</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">color</span><span class="kw">:</span><span class="at"> white</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">background</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;#4b2e83&quot;</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">system</span><span class="kw">:</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">file_mode</span><span class="kw">:</span><span class="at"> </span><span class="dv">0666</span></span></code></pre></div>
+<h4 id="data-source-entry-data_source-often-necessary">Data Source Entry
+(<code>data_source</code>, often necessary)</h4>
 <ul>
 <li><code>type</code>: type of user data store. Common ones are:
 <ul>
-<li><code>PostgreSQL</code>, <code>MySQL</code>, <code>SQLite</code></li>
+<li><code>PostgreSQL</code>, <code>MySQL</code>,
+<code>SQLite</code></li>
 <li><code>InfluxDB</code></li>
 <li><code>Redis</code></li>
 <li><code>MongoDB</code></li>
 <li><code>CouchDB</code></li>
 <li><code>YAML</code></li>
 </ul></li>
-<li><code>parameters</code>: defined by each data source. See the <a href="DataBinding.html">Data Binding section</a> for details.</li>
+<li><code>parameters</code>: defined by each data source. See the <a
+href="DataBinding.html">Data Binding section</a> for details.</li>
 </ul>
-<h4 id="module-entry-module-optional">Module Entry (<code>module</code>, optional)</h4>
+<h4 id="module-entry-module-optional">Module Entry (<code>module</code>,
+optional)</h4>
 <ul>
-<li>Server-side user Python module. See the <a href="UserModule.html">User Module section</a> for details.</li>
+<li>Server-side user Python module. See the <a
+href="UserModule.html">User Module section</a> for details.</li>
 </ul>
-<h4 id="style-entry-style-optional">Style Entry (<code>style</code>, optional)</h4>
+<h4 id="style-entry-style-optional">Style Entry (<code>style</code>,
+optional)</h4>
 <p>See <a href="#styles">Styles</a> below.</p>
-<h4 id="system-entry-system-optional">System Entry (<code>system</code>, optional)</h4>
+<h4 id="system-entry-system-optional">System Entry (<code>system</code>,
+optional)</h4>
 <ul>
-<li><code>file_mode</code> (default ’0644`): Access mode of configuration files uploaded from Web clients</li>
-<li><code>file_gid</code>: Group ID of configuration files uploaded from Web clients</li>
+<li><code>file_mode</code> (default ’0644`): Access mode of
+configuration files uploaded from Web clients</li>
+<li><code>file_gid</code>: Group ID of configuration files uploaded from
+Web clients</li>
 </ul>
-<h4 id="authenticate-entry-authenticate-for-special-purposes">Authenticate Entry (<code>authenticate</code>, for special purposes)</h4>
-<p>See <a href="#security-considerations">Security Considerations</a> below.</p>
+<h4
+id="authenticate-entry-authenticate-for-special-purposes">Authenticate
+Entry (<code>authenticate</code>, for special purposes)</h4>
+<p>See <a href="#security-considerations">Security Considerations</a>
+below.</p>
 <h2 id="styles">Styles</h2>
 <h3 id="configuration-1">Configuration</h3>
 <ul>
-<li><code>theme</code> (default <code>light</code>): currently <code>light</code> or <code>dark</code></li>
+<li><code>theme</code> (default <code>light</code>): currently
+<code>light</code> or <code>dark</code></li>
 <li><code>title</code>:
 <ul>
-<li><code>color</code>: title text color (default <code>white</code>)</li>
-<li><code>background</code>: title bar background (default <code>#4b2e83</code>)</li>
+<li><code>color</code>: title text color (default
+<code>white</code>)</li>
+<li><code>background</code>: title bar background (default
+<code>#4b2e83</code>)</li>
 </ul></li>
 <li><code>logo</code>:
 <ul>
-<li><code>file</code>: file name of the logo image, stored under the project <code>config</code> directory.</li>
+<li><code>file</code>: file name of the logo image, stored under the
+project <code>config</code> directory.</li>
 <li><code>position</code>: <code>left</code> or <code>right</code></li>
-<li><code>background</code>: background color (default <code>none</code>)</li>
+<li><code>background</code>: background color (default
+<code>none</code>)</li>
 <li><code>link</code>: URL to open when the logo is clicked</li>
 </ul></li>
 <li><code>panel</code>:
 <ul>
-<li><code>plotGridEnabled</code>, <code>plotTicksOutwards</code>: <code>true</code> or <code>false</code></li>
-<li><code>plotBackgroundColor</code>, <code>plotMarginColor</code>, <code>plotFrameColor</code>, <code>plotLabelColor</code>, <code>plotGridColor</code></li>
+<li><code>plotGridEnabled</code>, <code>plotTicksOutwards</code>:
+<code>true</code> or <code>false</code></li>
+<li><code>plotBackgroundColor</code>, <code>plotMarginColor</code>,
+<code>plotFrameColor</code>, <code>plotLabelColor</code>,
+<code>plotGridColor</code></li>
 <li><code>plotFrameThickness</code>: default <code>2</code></li>
 </ul></li>
-<li><code>negate</code>: list of image files used in canvas, the colors of which are to be negated (for dark mode)</li>
+<li><code>negate</code>: list of image files used in canvas, the colors
+of which are to be negated (for dark mode)</li>
 </ul>
 <h3 id="title-bar-style-example">Title-bar Style Example</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb2-1" title="1">  <span class="fu">style:</span></a>
-<a class="sourceLine" id="cb2-2" title="2">    <span class="fu">title:</span></a>
-<a class="sourceLine" id="cb2-3" title="3">      <span class="fu">background:</span><span class="at"> linear-gradient(125deg, rgba(75,46,131,1), rgba(75,46,131,1), rgba(75,46,131,0.9))</span></a>
-<a class="sourceLine" id="cb2-4" title="4">    <span class="fu">logo:</span></a>
-<a class="sourceLine" id="cb2-5" title="5">      <span class="fu">file:</span><span class="at"> P8_Logo_2017.png</span></a>
-<a class="sourceLine" id="cb2-6" title="6">      <span class="fu">position:</span><span class="at"> left</span></a>
-<a class="sourceLine" id="cb2-7" title="7">      <span class="fu">background:</span><span class="at"> linear-gradient(90deg, rgba(255,255,255, 0.6), rgba(255,255,255, 0.4), rgba(255,255,255, 0))</span></a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">style</span><span class="kw">:</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">title</span><span class="kw">:</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">background</span><span class="kw">:</span><span class="at"> linear-gradient(125deg, rgba(75,46,131,1), rgba(75,46,131,1), rgba(75,46,131,0.9))</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">logo</span><span class="kw">:</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">file</span><span class="kw">:</span><span class="at"> P8_Logo_2017.png</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">position</span><span class="kw">:</span><span class="at"> left</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">background</span><span class="kw">:</span><span class="at"> linear-gradient(90deg, rgba(255,255,255, 0.6), rgba(255,255,255, 0.4), rgba(255,255,255, 0))</span></span></code></pre></div>
 <p><img src="fig/ProjectSetup-Styles-TitleBar.png" style="width:50%;margin-left:2em;border:thin solid gray"></p>
-<p>The <code>background</code> property takes CSS “background” values / expressions. See, e.g., <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/background" target="_blank">a Mozilla document</a> for some examples.</p>
-<p>The logo file(s) must be placed under the project <code>config</code> directory.</p>
+<p>The <code>background</code> property takes CSS “background” values /
+expressions. See, e.g.,
+<a href="https://developer.mozilla.org/en-US/docs/Web/CSS/background" target="_blank">a
+Mozilla document</a> for some examples.</p>
+<p>The logo file(s) must be placed under the project <code>config</code>
+directory.</p>
 <h3 id="plot-style-examples">Plot Style Examples</h3>
 <h4 id="default-style">Default Style</h4>
 <p><img src="fig/ProjectSetup-Styles-Default.png" style="width:50%;margin-left:2em;border:thin solid gray"></p>
 <h4 id="dark-theme">Dark Theme</h4>
-<div class="sourceCode" id="cb3"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb3-1" title="1">  <span class="fu">style:</span></a>
-<a class="sourceLine" id="cb3-2" title="2">    <span class="fu">theme:</span><span class="at"> dark</span></a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">style</span><span class="kw">:</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">theme</span><span class="kw">:</span><span class="at"> dark</span></span></code></pre></div>
 <p><img src="fig/ProjectSetup-Styles-Dark.png" style="width:50%;margin-left:2em;border:thin solid gray"></p>
 <h4 id="custom-style">Custom Style</h4>
-<div class="sourceCode" id="cb4"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb4-1" title="1">  <span class="fu">style:</span></a>
-<a class="sourceLine" id="cb4-2" title="2">    <span class="fu">panel:</span></a>
-<a class="sourceLine" id="cb4-3" title="3">      <span class="fu">plotTicksOutwards:</span><span class="at"> </span><span class="ch">true</span></a>
-<a class="sourceLine" id="cb4-4" title="4">      <span class="fu">plotFrameThickness:</span><span class="at"> </span><span class="dv">0</span></a>
-<a class="sourceLine" id="cb4-5" title="5">      <span class="fu">plotBackgroundColor:</span><span class="at"> </span><span class="st">&quot;#f0f0f0&quot;</span></a>
-<a class="sourceLine" id="cb4-6" title="6">      <span class="fu">plotGridColor:</span><span class="at"> gray</span></a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">style</span><span class="kw">:</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">panel</span><span class="kw">:</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">plotTicksOutwards</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">plotFrameThickness</span><span class="kw">:</span><span class="at"> </span><span class="dv">0</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">plotBackgroundColor</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;#f0f0f0&quot;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">plotGridColor</span><span class="kw">:</span><span class="at"> gray</span></span></code></pre></div>
 <p><img src="fig/ProjectSetup-Styles-2.png" style="width:50%;margin-left:2em;border:thin solid gray"></p>
 <h2 id="testing-the-configuration">Testing the Configuration</h2>
-<p>Running the <code>slowdash</code> command without the <code>--port</code> option takes parameters from the arguments and prints output to screen. Run the command at the same directory as the configuration file is located.</p>
+<p>Running the <code>slowdash</code> command without the
+<code>--port</code> option takes parameters from the arguments and
+prints output to screen. Run the command at the same directory as the
+configuration file is located.</p>
 <h4 id="printing-the-configuration">Printing the Configuration</h4>
-<div class="sourceCode" id="cb5"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">$ slowdash config</span></a>
-<a class="sourceLine" id="cb5-2" title="2">{</a>
-<a class="sourceLine" id="cb5-3" title="3">    &quot;project&quot;: {</a>
-<a class="sourceLine" id="cb5-4" title="4">        &quot;name&quot;: &quot;ATDS&quot;,</a>
-<a class="sourceLine" id="cb5-5" title="5">        &quot;title&quot;: &quot;Atomic Tritium Demonstrator at UW (ATDS)&quot;,</a>
-<a class="sourceLine" id="cb5-6" title="6">        &quot;error_message&quot;: &quot;&quot;</a>
-<a class="sourceLine" id="cb5-7" title="7">    },</a>
-<a class="sourceLine" id="cb5-8" title="8">    ...</a>
-<a class="sourceLine" id="cb5-9" title="9">}</a></code></pre></div>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash config</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    &quot;project&quot;: {</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        &quot;name&quot;: &quot;ATDS&quot;,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        &quot;title&quot;: &quot;Atomic Tritium Demonstrator at UW (ATDS)&quot;,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        &quot;error_message&quot;: &quot;&quot;</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <h4 id="printing-channel-list">Printing Channel List</h4>
-<div class="sourceCode" id="cb6"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">$ slowdash channels</span></a>
-<a class="sourceLine" id="cb6-2" title="2">23-03-22 12:48:34 INFO: loaded datasource module &quot;datasource_SQLAlchemy&quot;</a>
-<a class="sourceLine" id="cb6-3" title="3">[</a>
-<a class="sourceLine" id="cb6-4" title="4">  {&quot;name&quot;: &quot;sccm_Alicat_Inj_Gas&quot;}, </a>
-<a class="sourceLine" id="cb6-5" title="5">  {&quot;name&quot;: &quot;mbar_CC10_Inj_Gas&quot;}, </a>
-<a class="sourceLine" id="cb6-6" title="6">  {&quot;name&quot;: &quot;mbar_IG_Vac_MS&quot;}, </a>
-<a class="sourceLine" id="cb6-7" title="7">  {&quot;name&quot;: &quot;degC_RTD1_Acc_AS&quot;}, </a>
-<a class="sourceLine" id="cb6-8" title="8">  {&quot;name&quot;: &quot;degC_RTD2_Acc_AS&quot;}, </a>
-<a class="sourceLine" id="cb6-9" title="9">  ...</a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash channels</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>23-03-22 12:48:34 INFO: loaded datasource module &quot;datasource_SQLAlchemy&quot;</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>[</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  {&quot;name&quot;: &quot;sccm_Alicat_Inj_Gas&quot;}, </span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  {&quot;name&quot;: &quot;mbar_CC10_Inj_Gas&quot;}, </span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  {&quot;name&quot;: &quot;mbar_IG_Vac_MS&quot;}, </span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  {&quot;name&quot;: &quot;degC_RTD1_Acc_AS&quot;}, </span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  {&quot;name&quot;: &quot;degC_RTD2_Acc_AS&quot;}, </span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  ...</span></code></pre></div>
 <h4 id="printing-data">Printing Data</h4>
-<div class="sourceCode" id="cb7"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">$ slowdash &#39;data/sccm_Alicat_Inj_Gas?length=60&#39;</span></a>
-<a class="sourceLine" id="cb7-2" title="2">23-03-22 12:50:20 INFO: loaded datasource module &quot;datasource_SQLAlchemy&quot;</a>
-<a class="sourceLine" id="cb7-3" title="3">{</a>
-<a class="sourceLine" id="cb7-4" title="4">  &quot;sccm_Alicat_Inj_Gas&quot;: {</a>
-<a class="sourceLine" id="cb7-5" title="5">    &quot;start&quot;: 1679514341, &quot;length&quot;: 60, </a>
-<a class="sourceLine" id="cb7-6" title="6">    &quot;t&quot;: [2.364, 12.364, 22.355, 32.366, 42.364, 52.362], </a>
-<a class="sourceLine" id="cb7-7" title="7">    &quot;x&quot;: [-0.015, -0.014, -0.014, -0.015, -0.014, -0.016]</a>
-<a class="sourceLine" id="cb7-8" title="8">  }</a>
-<a class="sourceLine" id="cb7-9" title="9">}</a></code></pre></div>
-<p>When the argument includes a special character of the shell (such as <code>?</code> and <code>&amp;</code>), quote the entire argument.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash &#39;data/sccm_Alicat_Inj_Gas?length=60&#39;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>23-03-22 12:50:20 INFO: loaded datasource module &quot;datasource_SQLAlchemy&quot;</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  &quot;sccm_Alicat_Inj_Gas&quot;: {</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    &quot;start&quot;: 1679514341, &quot;length&quot;: 60, </span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    &quot;t&quot;: [2.364, 12.364, 22.355, 32.366, 42.364, 52.362], </span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    &quot;x&quot;: [-0.015, -0.014, -0.014, -0.015, -0.014, -0.016]</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>When the argument includes a special character of the shell (such as
+<code>?</code> and <code>&amp;</code>), quote the entire argument.</p>
 <h1 id="running-the-server">Running the Server</h1>
-<p><strong>WARNING</strong>: Slow-Dash is designed for internal use within a secured network and therefore no security protection is implemented. It is strongly recommended not to expose the system to the public internet. External access is assumed to be done through VPN or ssh tunnel.</p>
-<h2 id="running-in-a-docker-container">Running in a Docker Container</h2>
-<p>The SlowDash container image is configured to have a project directory at <code>/project</code> and open a port at <code>18881</code>. Map the volume and port accordingly:</p>
+<p><strong>WARNING</strong>: Slow-Dash is designed for internal use
+within a secured network and therefore no security protection is
+implemented. It is strongly recommended not to expose the system to the
+public internet. External access is assumed to be done through VPN or
+ssh tunnel.</p>
+<h2 id="running-in-a-docker-container">Running in a Docker
+Container</h2>
+<p>The SlowDash container image is configured to have a project
+directory at <code>/project</code> and open a port at
+<code>18881</code>. Map the volume and port accordingly:</p>
 <h4 id="single-container">Single Container</h4>
-<div class="sourceCode" id="cb8"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">$ cd PATH/TO/SLOWDASH/PROJECT</span></a>
-<a class="sourceLine" id="cb8-2" title="2"><span class="kw">$ docker run -p 18881:18881 -v $(pwd):/project REPO/slowdash:TAG</span></a></code></pre></div>
-<p>If you built the container image locally, <code>REPO/slowdash:TAG</code> will be just <code>slowdash:TAG</code> or <code>slowdash</code>.</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH/PROJECT</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker run -p 18881:18881 -v $(pwd):/project REPO/slowdash:TAG</span></span></code></pre></div>
+<p>If you built the container image locally,
+<code>REPO/slowdash:TAG</code> will be just <code>slowdash:TAG</code> or
+<code>slowdash</code>.</p>
 <h4 id="docker-compose">Docker Compose</h4>
-<p>First write <code>docker-compose.yaml</code> at your project directory.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb9-1" title="1"><span class="fu">version:</span><span class="at"> </span><span class="st">&#39;3&#39;</span></a>
-<a class="sourceLine" id="cb9-2" title="2"></a>
-<a class="sourceLine" id="cb9-3" title="3"><span class="fu">services:</span></a>
-<a class="sourceLine" id="cb9-4" title="4">  <span class="fu">slowdash:</span></a>
-<a class="sourceLine" id="cb9-5" title="5">    <span class="fu">image:</span><span class="at"> REPO/slowdash:TAG</span></a>
-<a class="sourceLine" id="cb9-6" title="6">    <span class="fu">volumes:</span></a>
-<a class="sourceLine" id="cb9-7" title="7">      <span class="kw">-</span> .:/project</a>
-<a class="sourceLine" id="cb9-8" title="8">    <span class="fu">ports:</span></a>
-<a class="sourceLine" id="cb9-9" title="9">      <span class="kw">-</span> <span class="st">&quot;18881:18881&quot;</span></a></code></pre></div>
-<p>If you built the container image locally, <code>REPO/slowdash:TAG</code> will be just <code>slowdash:TAG</code> or <code>slowdash</code>.</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb10-1" title="1"><span class="kw">$ docker-compose up</span></a></code></pre></div>
-<h2 id="bare-metal-running-as-a-user-process">Bare-Metal, Running as a User Process</h2>
-<div class="sourceCode" id="cb11"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb11-1" title="1"><span class="kw">$ slowdash --project-dir=PROJECT_DIR --port=18881</span></a></code></pre></div>
+<p>First write <code>docker-compose.yaml</code> at your project
+directory.</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;3&#39;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> REPO/slowdash:TAG</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> .:/project</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881:18881&quot;</span></span></code></pre></div>
+<p>If you built the container image locally,
+<code>REPO/slowdash:TAG</code> will be just <code>slowdash:TAG</code> or
+<code>slowdash</code>.</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker-compose up</span></span></code></pre></div>
+<h2 id="bare-metal-running-as-a-user-process">Bare-Metal, Running as a
+User Process</h2>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash --project-dir=PROJECT_DIR --port=18881</span></span></code></pre></div>
 <ul>
 <li><code>--project-dir</code> can be omitted if:
 <ul>
@@ -281,80 +353,111 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><code>slowdash</code> command is launched at the project directory.
 <p></li>
 </ul></li>
-<li>The <code>slowdash</code> process must keep running while accepting the Web requests. For this, a terminal multiplexer, such as “tumx” or “GNU Screen” would be useful.</li>
+<li>The <code>slowdash</code> process must keep running while accepting
+the Web requests. For this, a terminal multiplexer, such as “tumx” or
+“GNU Screen” would be useful.</li>
 </ul>
-<h2 id="bare-metal-launching-from-cgi">Bare Metal, Launching from CGI</h2>
-<p>Slowdash can be executed as CGI of a web server such as Apache or Nginx. To setup this, run the script below at the project directory:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb12-1" title="1"><span class="kw">$ cd PATH/TO/PROJECT</span></a>
-<a class="sourceLine" id="cb12-2" title="2"><span class="kw">$ PATH/TO/SLOWDASH/SOURCE/system/server/slowdash-setup-cgi.py</span></a>
-<a class="sourceLine" id="cb12-3" title="3">Project: MySlowSystem</a>
-<a class="sourceLine" id="cb12-4" title="4">Project directory: /home/sanshiro/MySlowSystem/SlowdashProject</a>
-<a class="sourceLine" id="cb12-5" title="5">Web-file directory: /home/sanshiro/public_html/SlowDash/MySlowSystem</a>
-<a class="sourceLine" id="cb12-6" title="6">continue? [Y/n] y</a>
-<a class="sourceLine" id="cb12-7" title="7">CGI directory created: /home/sanshiro/public_html/SlowDash/MySlowSystem</a>
-<a class="sourceLine" id="cb12-8" title="8"></a>
-<a class="sourceLine" id="cb12-9" title="9">=== INSTALLATION IS SUCCESSFUL ===</a>
-<a class="sourceLine" id="cb12-10" title="10">- To setup SLOWDASH CGI for another project, set SLOWDASH_PROJECT and run this program.</a>
-<a class="sourceLine" id="cb12-11" title="11">- It is safe to run this slowdash-setup-cgi.py multiple times, even for the same project.</a>
-<a class="sourceLine" id="cb12-12" title="12">- CGI can be disabled by deleting the CGI directory.</a>
-<a class="sourceLine" id="cb12-13" title="13">- Disabled CGI can be re-enabled by running this program again.</a>
-<a class="sourceLine" id="cb12-14" title="14">- Web-file directory for this project: /home/sanshiro/public_html/SlowDash/MySlowSystem</a></code></pre></div>
-<p>The script will copy all the necessary files under user’s web directory (typically <code>/home/USER/public_html</code>) and create <code>.htaccess</code> with the contents below:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode apache"><code class="sourceCode apache"><a class="sourceLine" id="cb13-1" title="1">DirectoryIndex<span class="st"> slowhome.html</span></a>
-<a class="sourceLine" id="cb13-2" title="2"><span class="ex">Options</span><span class="ch"> </span><span class="kw">+ExecCGI</span></a>
-<a class="sourceLine" id="cb13-3" title="3">AddType<span class="st"> application/x-httpd-cgi .cgi</span></a>
-<a class="sourceLine" id="cb13-4" title="4">AddHandler<span class="st"> cgi-script .cgi</span></a>
-<a class="sourceLine" id="cb13-5" title="5">AddType<span class="st"> text/javascript .mjs</span></a>
-<a class="sourceLine" id="cb13-6" title="6"></a>
-<a class="sourceLine" id="cb13-7" title="7"><span class="ex">RewriteEngine</span><span class="ch"> </span><span class="kw">On</span></a>
-<a class="sourceLine" id="cb13-8" title="8">RewriteRule<span class="st"> ^api/(.*)$ slowdash.cgi/$1</span></a></code></pre></div>
+<h2 id="bare-metal-launching-from-cgi">Bare Metal, Launching from
+CGI</h2>
+<p>Slowdash can be executed as CGI of a web server such as Apache or
+Nginx. To setup this, run the script below at the project directory:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/PROJECT</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ PATH/TO/SLOWDASH/main/server/slowdash-setup-cgi.py</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>Project: MySlowSystem</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>Project directory: /home/sanshiro/MySlowSystem/SlowdashProject</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>Web-file directory: /home/sanshiro/public_html/SlowDash/MySlowSystem</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>continue? [Y/n] y</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>CGI directory created: /home/sanshiro/public_html/SlowDash/MySlowSystem</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>=== INSTALLATION IS SUCCESSFUL ===</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>- To setup SLOWDASH CGI for another project, set SLOWDASH_PROJECT and run this program.</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>- It is safe to run this slowdash-setup-cgi.py multiple times, even for the same project.</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>- CGI can be disabled by deleting the CGI directory.</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>- Disabled CGI can be re-enabled by running this program again.</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>- Web-file directory for this project: /home/sanshiro/public_html/SlowDash/MySlowSystem</span></code></pre></div>
+<p>The script will copy all the necessary files under user’s web
+directory (typically <code>/home/USER/public_html</code>) and create
+<code>.htaccess</code> with the contents below:</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode apache"><code class="sourceCode apache"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>DirectoryIndex<span class="st"> slowhome.html</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Options</span><span class="ch"> </span><span class="kw">+ExecCGI</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>AddType<span class="st"> application/x-httpd-cgi .cgi</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>AddHandler<span class="st"> cgi-script .cgi</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>AddType<span class="st"> text/javascript .mjs</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="ex">RewriteEngine</span><span class="ch"> </span><span class="kw">On</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>RewriteRule<span class="st"> ^api/(.*)$ slowdash.cgi/$1</span></span></code></pre></div>
 <p>The web server must be configured so as to:</p>
 <ul>
 <li>enable cgi, userdir and rewrite engine, and</li>
-<li>allow users to override the parameters used (ExecCGI and FileInfo).</li>
+<li>allow users to override the parameters used (ExecCGI and
+FileInfo).</li>
 </ul>
 <h4 id="advantages">Advantages</h4>
 <ul>
-<li>As long as the web server is running, there will be no additional maintenance overhead for slow-dash. This is maybe useful to keep data accessible after the measurement has been finished.</li>
+<li>As long as the web server is running, there will be no additional
+maintenance overhead for slow-dash. This is maybe useful to keep data
+accessible after the measurement has been finished.</li>
 </ul>
 <h4 id="disadvantages">Disadvantages</h4>
 <ul>
 <li>The slowdash command is called on each request, therefore
 <ul>
 <li>Severe performance overhead exists.</li>
-<li>No continuous data processing is possible, such as the ones typically done in user modules.</li>
+<li>No continuous data processing is possible, such as the ones
+typically done in user modules.</li>
 </ul></li>
 </ul>
-<p>User modules are disabled for CGI by default. To use a module with CGI, set the <code>cgi_enabled</code> parameter <code>true</code> in the module configuration. Be careful for all the side effects, including performance overhead and security concerns.</p>
+<p>User modules are disabled for CGI by default. To use a module with
+CGI, set the <code>cgi_enabled</code> parameter <code>true</code> in the
+module configuration. Be careful for all the side effects, including
+performance overhead and security concerns.</p>
 <h1 id="security-considerations">Security Considerations</h1>
-<p>As already mentioned, <b>SlowDash is designed for internal use only</b> within a secured network and therefore no security protection is implemented. It is strongly recommended not to expose the system to the public internet. External access is assumed to be done <b>through VPN or ssh tunnel</b>.</p>
+<p>As already mentioned, <b>SlowDash is designed for internal use
+only</b> within a secured network and therefore no security protection
+is implemented. It is strongly recommended not to expose the system to
+the public internet. External access is assumed to be done <b>through
+VPN or ssh tunnel</b>.</p>
 <h4 id="basic-authentication">Basic Authentication</h4>
-<p>In a sad case that you cannot trust your internal friends, the “Basic Authentication” can be used. Combine the authentication <b>with HTTPS using a reverse proxy</b> to encrypt the password and communication.</p>
-<p>To use the Basic Authentication, first install the <code>bcrypt</code> Python package if it is not yet installed:</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb14-1" title="1"><span class="kw">$ pip3 install bcrypt</span></a></code></pre></div>
-<p>Then generate an authentication key by <code>slowdash authkey/USER?password=PASS</code>:</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb15-1" title="1"><span class="kw">$ slowdash authkey/slow?password=dash</span></a>
-<a class="sourceLine" id="cb15-2" title="2">{</a>
-<a class="sourceLine" id="cb15-3" title="3">    &quot;type&quot;: &quot;Basic&quot;,</a>
-<a class="sourceLine" id="cb15-4" title="4">    &quot;key&quot;: &quot;slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS&quot;</a>
-<a class="sourceLine" id="cb15-5" title="5">}</a></code></pre></div>
-<p>Add the key in the project configuration file under the <code>authentication</code> entry:</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb16-1" title="1"><span class="fu">slowdash_project:</span></a>
-<a class="sourceLine" id="cb16-2" title="2">  ...</a>
-<a class="sourceLine" id="cb16-3" title="3"></a>
-<a class="sourceLine" id="cb16-4" title="4">  <span class="fu">authentication:</span></a>
-<a class="sourceLine" id="cb16-5" title="5">    <span class="fu">type:</span><span class="at"> Basic</span></a>
-<a class="sourceLine" id="cb16-6" title="6">    <span class="fu">key:</span><span class="at"> slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS</span></a></code></pre></div>
-<p>This key can also be used for Apache, but some Apache keys, especially old ones such as MD5 keys which are still widely used, can not be used for SlowDash.</p>
+<p>In a sad case that you cannot trust your internal friends, the “Basic
+Authentication” can be used. Combine the authentication <b>with HTTPS
+using a reverse proxy</b> to encrypt the password and communication.</p>
+<p>To use the Basic Authentication, first install the
+<code>bcrypt</code> Python package if it is not yet installed:</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pip3 install bcrypt</span></span></code></pre></div>
+<p>Then generate an authentication key by
+<code>slowdash authkey/USER?password=PASS</code>:</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash authkey/slow?password=dash</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    &quot;type&quot;: &quot;Basic&quot;,</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    &quot;key&quot;: &quot;slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS&quot;</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Add the key in the project configuration file under the
+<code>authentication</code> entry:</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="at">  ...</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">authentication</span><span class="kw">:</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> Basic</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">key</span><span class="kw">:</span><span class="at"> slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS</span></span></code></pre></div>
+<p>This key can also be used for Apache, but some Apache keys,
+especially old ones such as MD5 keys which are still widely used, can
+not be used for SlowDash.</p>
 <h4 id="only-for-the-cgi-mode">Only for the CGI mode</h4>
-<p>Rerun the <code>slowdash-setup-web.py</code> command to update the Web Server configuration.</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb17-1" title="1"><span class="kw">$ slowdash-setup-web</span></a>
-<a class="sourceLine" id="cb17-2" title="2">Project: MySlowSystem</a>
-<a class="sourceLine" id="cb17-3" title="3">Project directory: /home/sanshiro/MySlowSystem/SlowdashProject</a>
-<a class="sourceLine" id="cb17-4" title="4">Web-file directory: /home/sanshiro/public_html/SlowDash/MySlowSystem</a>
-<a class="sourceLine" id="cb17-5" title="5">User: slow</a>
-<a class="sourceLine" id="cb17-6" title="6">continue? [Y/n] y</a>
-<a class="sourceLine" id="cb17-7" title="7">...</a></code></pre></div>
+<p>Rerun the <code>slowdash-setup-web.py</code> command to update the
+Web Server configuration.</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ PATH/TO/SLOWDASH/main/server/slowdash-setup-cgi.py</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>Project: MySlowSystem</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>Project directory: /home/sanshiro/MySlowSystem/SlowdashProject</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>Web-file directory: /home/sanshiro/public_html/SlowDash/MySlowSystem</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>User: slow</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>continue? [Y/n] y</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
 <p>Note that a new line, <code>User: slow</code>, is now added.</p>
 
 

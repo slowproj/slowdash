@@ -209,9 +209,7 @@ Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to do some
     
 #### SlowDash server control
 ##### Loading (already included)
-`HttpNode = ControlSystem.load_control_module('HTTP')[0]`<br>
-`HttpNode.load_control_module('Slowdash')`
-
+`ControlSystem.load_control_module('HTTP').load_control_module('Slowdash')`
 
 ##### Nodes
 - **http(url).slowdash()**
@@ -618,6 +616,6 @@ def _export():
 Here the new node `StatusNode` returns a table object.
 
 
-# Network Deployment
+# Distributed System / Network Deployment
 ## SlowDash Interconnect
 ## SlowTask Scpization

@@ -149,7 +149,7 @@ class ControlNode:
             cls.add_node(NodeClass)
             #print(f'Control: importing {str(NodeClass)}')
                 
-        return node_classes
+        return node_classes[0] if len(node_classes) == 1 else node_classes
 
         
     _global_stop_event = threading.Event()

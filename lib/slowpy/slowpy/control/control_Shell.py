@@ -1,9 +1,9 @@
 
 import subprocess
-import slowpy.control as slc
+import slowpy.control as spc
 
 
-class ShellNode(slc.ControlNode):
+class ShellNode(spc.ControlNode):
     def __init__(self, command, decode=True, strip=True, **kwargs):
         self.command = command
         self.kwargs = { key:value for key,value in kwargs if key not in ['shell', 'stdout', 'capture_output'] }
@@ -25,7 +25,7 @@ class ShellNode(slc.ControlNode):
         try:
             p = subprocess.run(cmd, **{**self.kwargs, **kwargs})
         except Exception as e:
-            raise slc.ControlException(f'ShellNode("{cmd}"): %s' % str(e))
+            raise spc.ControlException(f'ShellNode("{cmd}"): %s' % str(e))
 
         output = p.stdout
         if output is None:
@@ -57,7 +57,7 @@ class ShellNode(slc.ControlNode):
 
     
     
-class ShellArgNode(slc.ControlNode):
+class ShellArgNode(spc.ControlNode):
     def __init__(self, shell_node, *args):
         self.shell_node = shell_node
         self.args = args
@@ -80,7 +80,7 @@ class ShellArgNode(slc.ControlNode):
 
     
     
-class ShellValueNode(slc.ControlValueNode):
+class ShellValueNode(spc.ControlValueNode):
     def __init__(self, parent_node):
         self.parent_node = parent_node
         

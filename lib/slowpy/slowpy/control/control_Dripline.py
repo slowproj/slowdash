@@ -1,8 +1,8 @@
 
-import slowpy.control
+import slowpy.control as spc
 
 
-class DriplineNode(slowpy.control.ControlNode):
+class DriplineNode(spc.ControlNode):
     def __init__(self, dripline_config):
         import dripline
         self.interface = dripline.core.Interface(dripline_config)
@@ -26,7 +26,7 @@ class DriplineNode(slowpy.control.ControlNode):
 
     
     
-class DriplineEndpointNode(slowpy.control.ControlValueNode):
+class DriplineEndpointNode(spc.ControlValueNode):
     def __init__(self, interface, name):
         self.interface = interface
         self.name = name
@@ -47,7 +47,7 @@ class DriplineEndpointNode(slowpy.control.ControlValueNode):
     
 
     
-class DriplineCalibratedValueNode(slowpy.control.ControlValueNode):
+class DriplineCalibratedValueNode(spc.ControlValueNode):
     def __init__(self, interface, name):
         self.interface = interface
         self.name = name

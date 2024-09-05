@@ -221,7 +221,7 @@ Slowdash can be executed as CGI of a web server such as Apache or Nginx. To setu
 
 ```console
 $ cd PATH/TO/PROJECT
-$ PATH/TO/SLOWDASH/SOURCE/system/server/slowdash-setup-cgi.py
+$ PATH/TO/SLOWDASH/main/server/slowdash-setup-cgi.py
 Project: MySlowSystem
 Project directory: /home/sanshiro/MySlowSystem/SlowdashProject
 Web-file directory: /home/sanshiro/public_html/SlowDash/MySlowSystem
@@ -297,7 +297,7 @@ This key can also be used for Apache, but some Apache keys, especially old ones 
 #### Only for the CGI mode
 Rerun the `slowdash-setup-web.py` command to update the Web Server configuration.
 ```console
-$ slowdash-setup-web
+$ PATH/TO/SLOWDASH/main/server/slowdash-setup-cgi.py
 Project: MySlowSystem
 Project directory: /home/sanshiro/MySlowSystem/SlowdashProject
 Web-file directory: /home/sanshiro/public_html/SlowDash/MySlowSystem

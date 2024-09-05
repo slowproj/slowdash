@@ -1,9 +1,9 @@
 
 import time, traceback
-import slowpy.control as slc
+import slowpy.control as spc
 
 
-class RedisNode(slc.ControlNode):
+class RedisNode(spc.ControlNode):
     def __init__(self, url, **kwargs):
         # retries up to 60 sec, for docker-compose etc.
         self.redis = None
@@ -11,7 +11,7 @@ class RedisNode(slc.ControlNode):
         try:
             import redis
         except Exception as e:
-            raise slc.ControlException('radis python module import error: %s' % str(e))
+            raise spc.ControlException('radis python module import error: %s' % str(e))
         
         for i in range(12):
             try:
@@ -26,7 +26,7 @@ class RedisNode(slc.ControlNode):
             self.redis = None
         
         if self.redis is None:
-            raise slc.ControlException('Redis not loaded: %s' % url)
+            raise spc.ControlException('Redis not loaded: %s' % url)
 
         
     def __del__(self):
@@ -77,7 +77,7 @@ class RedisNode(slc.ControlNode):
                 keys = []
             if url is None:
                 if len(keys) == 0:
-                    raise slc.ControlException('Redis URL not provided')
+                    raise spc.ControlException('Redis URL not provided')
                 else:
                     url = keys[-1]
             node = self._redis_nodes.get(url, None)
@@ -92,7 +92,7 @@ class RedisNode(slc.ControlNode):
 
     
     
-class RedisStringNode(slc.ControlNode):
+class RedisStringNode(spc.ControlNode):
     def __init__(self, redis, name):
         self.redis = redis
         self.name = name
@@ -108,7 +108,7 @@ class RedisStringNode(slc.ControlNode):
     
 
     
-class RedisHashNode(slc.ControlNode):
+class RedisHashNode(spc.ControlNode):
     def __init__(self, redis, name):
         self.redis = redis
         self.name = name
@@ -126,7 +126,7 @@ class RedisHashNode(slc.ControlNode):
 
     
     
-class RedisHashFieldNode(slc.ControlNode):
+class RedisHashFieldNode(spc.ControlNode):
     def __init__(self, redis, name, fieldname):
         self.redis = redis
         self.name = name
@@ -140,7 +140,7 @@ class RedisHashFieldNode(slc.ControlNode):
 
     
     
-class RedisJsonNode(slc.ControlNode):
+class RedisJsonNode(spc.ControlNode):
     def __init__(self, redis, name, base='$'):
         self.redis = redis
         self.name = name
@@ -165,7 +165,7 @@ class RedisJsonNode(slc.ControlNode):
 
     
     
-class RedisTimeseriesNode(slc.ControlNode):
+class RedisTimeseriesNode(spc.ControlNode):
     def __init__(self, redis, name, length=3600, to=0):
         self.redis = redis
         self.name = name
@@ -192,7 +192,7 @@ class RedisTimeseriesNode(slc.ControlNode):
 
     
     
-class RedisTimeseriesCurrentNode(slc.ControlNode):
+class RedisTimeseriesCurrentNode(spc.ControlNode):
     def __init__(self, parent):
         self.parent = parent
     
@@ -204,7 +204,7 @@ class RedisTimeseriesCurrentNode(slc.ControlNode):
         
     
     
-class RedisTimeseriesLastNode(slc.ControlNode):
+class RedisTimeseriesLastNode(spc.ControlNode):
     def __init__(self, parent):
         self.parent = parent
     
@@ -238,7 +238,7 @@ class RedisTimeseriesLastNode(slc.ControlNode):
 
     
     
-class RedisTimeseriesLastValueNode(slc.ControlNode):
+class RedisTimeseriesLastValueNode(spc.ControlNode):
     def __init__(self, parent):
         self.parent = parent
     
@@ -250,7 +250,7 @@ class RedisTimeseriesLastValueNode(slc.ControlNode):
 
 
     
-class RedisTimeseriesLastTimeNode(slc.ControlNode):
+class RedisTimeseriesLastTimeNode(spc.ControlNode):
     def __init__(self, parent):
         self.parent = parent
     
@@ -262,7 +262,7 @@ class RedisTimeseriesLastTimeNode(slc.ControlNode):
 
 
     
-class RedisTimeseriesLastLapseNode(slc.ControlNode):
+class RedisTimeseriesLastLapseNode(spc.ControlNode):
     def __init__(self, parent):
         self.parent = parent
     

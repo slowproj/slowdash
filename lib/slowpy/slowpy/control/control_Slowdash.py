@@ -1,19 +1,16 @@
 
-import slowpy.control as slc
+import slowpy.control as spc
 
 
-class SlowdashNode(slc.ControlNode):
+class SlowdashNode(spc.ControlNode):
     def __init__(self, http_node):
         self.http = http_node
         
-    def __del__(self):
-        pass
-
     @classmethod
     def _node_creator_method(cls):
         def slowdash(self):
             if self.__class__.__name__ != 'HttpNode':
-                raise slc.ControlException('SlowdashNode can be inserted only to HttpNode')
+                raise spc.ControlException('SlowdashNode can be inserted only to HttpNode')
             return SlowdashNode(self)
         return slowdash
 
