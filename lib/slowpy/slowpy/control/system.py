@@ -1,3 +1,5 @@
+# Created by Sanshiro Enomoto on 17 May 2024 #
+
 
 import signal
 from slowpy.control import ControlNode

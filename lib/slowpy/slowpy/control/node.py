@@ -1,3 +1,6 @@
+# Created by Sanshiro Enomoto on 17 May 2024 #
+
+
 import os, time, threading, importlib, traceback, inspect
 
 
@@ -25,11 +28,14 @@ class ControlNode:
     def has_data(self):
         raise ControlException('has() method not available')
 
-    
-    # stoppable-sleep: to be used in subclasses
-    # return_value: False if stop-request is received, unless True
-    # As a stop request can be sent to a specific node, this method must be implemented here
+    # to be used in subclasses
     def sleep(self, duration_sec):
+        """stoppable-sleep
+        Returns:
+            False if stop-request is received, unless True
+        """
+        # As a stop request can be sent to a specific node, this method must be implemented here
+        
         sec10 = int(10*duration_sec)
         subsec10 = 10*duration_sec - sec10
         if sec10 > 0:
@@ -44,11 +50,16 @@ class ControlNode:
         return not self.is_stop_requested()
 
     
-    # stoppable-wait: to be used in subclasses
-    # condition_lambda is a function that takes a value from self.get() and returns True or False.
-    #   example: lambda x: (float(x)>100)
-    # return value: True if condition is satisfied, None for timeout, False for stop-request
     def wait(condition_lambda=None, poll_interval=0.1, timeout=0):
+        """stoppable-wait: to be used in subclasses
+        Args:
+            condition_lambda (lambda x): a function that takes a value from self.get() and returns True or False.
+        Returns:
+            True if condition is satisfied, None for timeout, False for stop-request
+        Examples:
+          node.wait(lambda x: (float(x)>100))
+        """
+        
         while True:
             if self.has_data() is not False:
                 if condition_lambda is None:
@@ -67,10 +78,25 @@ class ControlNode:
     # to be used by external code
     def __call__(self, value=None):
         if value is not None:
-            return self.set(value)
+            if isinstance(value, ControlNode):
+                return self.set(value.get())
+            else:
+                return self.set(value)
         else:
             return self.get()
     
+    def __eq__(self, value):
+        if isinstance(value, ControlNode):
+            return self.get() == value.get()
+        else:
+            return self.get() == value
+        
+    def __ne__(self, value):
+        if isinstance(value, ControlNode):
+            return self.get() == value.get()
+        else:
+            return self.get() == value
+        
     def __repr__(self):
         return repr(self.get())
     
@@ -364,4 +390,3 @@ class RampingStatusNode(ControlNode):
     
     def get(self):
         return self.ramping_node.target_value is not None
-    
