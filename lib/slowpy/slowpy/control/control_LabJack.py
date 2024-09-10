@@ -27,6 +27,12 @@ class LabJackU12(spc.ControlNode):
     def dout(self, ch):
         return LabjackU12_DigitalOut(self.u12, ch)
     
+    def dbin(self, ch):
+        return LabjackU12_DigitalIn(self.u12, ch, for_db25=True)
+    
+    def dbout(self, ch):
+        return LabjackU12_DigitalOut(self.u12, ch, for_db25=True)
+    
     @classmethod
     def _node_creator_method(cls):
         def labjack_U12(self):
@@ -78,24 +84,26 @@ class LabjackU12_AnalogOut(spc.ControlVariableNode):
 
     
 class LabjackU12_DigitalIn(spc.ControlVariableNode):
-    def __init__(self, u12, ch):
+    def __init__(self, u12, ch, for_db25=False):
         self.u12 = u12
         self.ch = int(ch)
+        self.readD = 1 if for_db25 else 0
             
     def get(self):
-        return self.u12.eDigitalIn(channel=self.ch).get('state', None)
+        return self.u12.eDigitalIn(channel=self.ch, readD=self.readD).get('state', None)
 
 
     
 class LabjackU12_DigitalOut(spc.ControlVariableNode):
-    def __init__(self, u12, ch):
+    def __init__(self, u12, ch, for_db25=False):
         self.u12 = u12
         self.ch = int(ch)
+        self.writeD = 1 if for_db25 else 0
         self.value = None
             
     def set(self, value):
         self.value = 1 if bool(value) else 0
-        self.u12.eDigitalOut(channel=self.ch, state=self.value)
+        self.u12.eDigitalOut(channel=self.ch, writeD=self.writeD, state=self.value)
 
     def get(self):
         return self.value
