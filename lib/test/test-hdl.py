@@ -35,12 +35,6 @@ class CounterModule(Module):
 
         self.counter <= 0
         self.running <= 0
-
-        self.a = reg()
-        self.b = reg()
-
-        self.a <= 'A'
-        self.b <= 'B'
                 
 
     @always
@@ -64,13 +58,6 @@ class CounterModule(Module):
     def show_internals(self):
         print(self.start, self.stop, self.clear, self.counter)
         
-    @always
-    def swap_ab(self):
-        self.a <= self.b
-        self.b <= self.a
-
-        print(self.a, self.b)
-        
 
         
 clock = Clock(Hz=1)
@@ -81,8 +68,8 @@ counter = CounterModule(
     clear = clear_btn,
     display = display
 )
-clock.start()
 
+clock.start()
 
 time.sleep(2)
 start_btn.set(True)
