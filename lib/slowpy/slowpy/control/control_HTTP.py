@@ -100,7 +100,7 @@ class HttpPathNode(spc.ControlNode):
     
 
     
-class HttpValuePathNode(spc.ControlValueNode):
+class HttpValuePathNode(spc.ControlVariableNode):
     def __init__(self, path_node, **kwargs):
         self.path_node = path_node
         

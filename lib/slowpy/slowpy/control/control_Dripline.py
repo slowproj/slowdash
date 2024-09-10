@@ -28,7 +28,7 @@ class DriplineNode(spc.ControlNode):
 
     
     
-class DriplineEndpointNode(spc.ControlValueNode):
+class DriplineEndpointNode(spc.ControlVariableNode):
     def __init__(self, interface, name):
         self.interface = interface
         self.name = name
@@ -49,7 +49,7 @@ class DriplineEndpointNode(spc.ControlValueNode):
     
 
     
-class DriplineCalibratedValueNode(spc.ControlValueNode):
+class DriplineCalibratedValueNode(spc.ControlVariableNode):
     def __init__(self, interface, name):
         self.interface = interface
         self.name = name

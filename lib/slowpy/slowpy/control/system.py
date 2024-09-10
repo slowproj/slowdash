@@ -2,10 +2,10 @@
 
 
 import signal
-from slowpy.control import ControlNode
+import slowpy.control as spc
 
 
-class ControlSystem(ControlNode):
+class ControlSystem(spc.ControlNode):
     def __init__(self):
         self.import_control_module('Ethernet')
         self.import_control_module('HTTP').import_control_module('Slowdash')
@@ -23,3 +23,14 @@ class ControlSystem(ControlNode):
             print(f'Signal {signum} handled')
             cls.stop()
         signal.signal(signal_number, handle_signal)
+
+        
+    @classmethod
+    def is_stop_requested(cls):
+        return cls._global_stop_event.is_set()
+
+        
+    # child nodes
+    def value(self, initial_value=None):
+        return spc.ValueNode(initial_value)
+    

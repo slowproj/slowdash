@@ -82,7 +82,7 @@ class ShellArgNode(spc.ControlNode):
 
     
     
-class ShellValueNode(spc.ControlValueNode):
+class ShellValueNode(spc.ControlVariableNode):
     def __init__(self, parent_node):
         self.parent_node = parent_node
         

@@ -38,7 +38,7 @@ class RandomWalkDeviceNode(spc.ControlNode):
 
 
     
-class RandomWalkChannelNode(spc.ControlValueNode):
+class RandomWalkChannelNode(spc.ControlVariableNode):
     def __init__(self, device, channel):
         self.device = device
         self.channel = channel
@@ -53,7 +53,7 @@ class RandomWalkChannelNode(spc.ControlValueNode):
 
 
     
-class RandomWalkConfigNode(spc.ControlValueNode):
+class RandomWalkConfigNode(spc.ControlVariableNode):
     def __init__(self, device, param_name):
         self.device = device
         self.param_name = param_name

@@ -195,8 +195,10 @@ class ControlThreadNode(ControlNode):
         self.node_thread_stop_event = threading.Event()
 
         
-    # if "self" has the "run()" and/or "loop()" methods, "start()" will create a thread and call it
     def start(self):
+        """if "self" has the "run()" and/or "loop()" methods, this function will create a thread and call it
+        """
+        
         if not (callable(getattr(self, 'run', None)) or callable(getattr(self, 'loop', None))):
             raise ControlException('ControlThreadNode.start(): no threading method defined')
 
@@ -258,31 +260,58 @@ class ControlWriteOnlyNode(ControlNode):
 
 
     
-class ControlValueNode(ControlNode):
+class ControlVariableNode(ControlNode):
     def __init__(self):
         super().__init__()
     
 
     ### child nodes ###
-    # hold setpoint
     def setpoint(self, limits=(None, None)):
+        """child node that holds setpoints
+        """
+        
         try:
-            self._node_setpoint.get()
+            self._node_setpoint
         except:
             self._node_setpoint = SetpointNode(self, limits)
         return self._node_setpoint
 
     
-    # ramp the set value
     def ramping(self, change_per_sec=None):
+        """child node that ramps the set value
+        """
+        
         try:
-            self._node_ramping.get()
+            self._node_ramping
             if change_per_sec is not None:
                 self._node_ramping.change_per_sec = abs(float(change_per_sec))
         except:
             self._node_ramping = RampingNode(self, change_per_sec)
         return self._node_ramping
     
+
+    def oneshot(self, duration=None, normal=None):
+        """child node that sets a value for a given duration and restores the original value
+        """
+        
+        try:
+            self._node_oneshot
+        except:
+            self._node_oneshot = OneshotNode(self, duration, normal)
+        return self._node_oneshot
+    
+
+    
+class ValueNode(ControlVariableNode):
+    def __init__(self, initial_value=None):
+        self.value = initial_value
+
+    def set(self, value):
+        self.value = value
+
+    def get(self):
+        return self.value
+
 
     
 class SetpointNode(ControlNode):
@@ -311,6 +340,11 @@ class SetpointNode(ControlNode):
     def get(self):
         return self.setpoint
 
+
+    # child node which is the parent
+    def current(self):
+        return self.node
+    
     
         
 class RampingNode(ControlNode):
@@ -390,3 +424,39 @@ class RampingStatusNode(ControlNode):
     
     def get(self):
         return self.ramping_node.target_value is not None
+
+
+    
+class OneshotNode(ControlNode):
+    def __init__(self, node, duration=None, normal=None):
+        """A value by `set()` is held for a given duration, then goes back to the `normal` value
+        Args:
+            duration (float or None): if None, the first get() after set() returns the set-value
+        """
+        self.node = node
+        self.duration = abs(float(duration)) if duration is not None else None
+        self.normal = normal
+        
+        self.start_time = None
+
+        
+    def set(self, value):
+        if self.normal is None:
+            self.normal = self.node.get()
+        self.node.set(value)
+        self.start_time = time.time()
+
+        
+    def get(self):
+        if self.start_time is not None:
+            if self.duration is None:
+                value = self.node.get()
+                self.node.set(self.normal)
+                self.start_time = None
+                return value
+                
+            if time.time() > self.start_time + self.duration:
+                self.node.set(self.normal)
+                self.start_time = None
+                
+        return self.node.get()
