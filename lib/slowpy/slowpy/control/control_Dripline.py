@@ -18,7 +18,7 @@ class DriplineNode(spc.ControlNode):
     def _node_creator_method(cls):
         def dripline(self, dripline_config={}):
             try:
-                self.dripline_node.get()
+                self.dripline_node
             except:
                 self.dripline_node = DriplineNode(dripline_config)
 
