@@ -65,7 +65,7 @@ class TaskModule(UserModule):
     def stop(self):
         super().stop()
 
-        if self.control_system:
+        if self.control_system is not None:
             logging.info('calling ControlSystem.stop() in UserTask "%s"' % self.name)
             self.control_system.stop()
             

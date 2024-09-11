@@ -350,11 +350,13 @@ class SetpointNode(ControlNode):
 class RampingNode(ControlNode):
     def __init__(self, value_node, change_per_sec):
         self.value_node = value_node
-        try:
-            self.change_per_sec = abs(float(change_per_sec))
-        except:
+        if change_per_sec is None:
             self.change_per_sec = None
-            raise ControlException('invalid ramping speed')
+        else:
+            try:
+                self.change_per_sec = abs(float(change_per_sec))
+            except:
+                self.change_per_sec = None
                 
         self.target_value = None
 

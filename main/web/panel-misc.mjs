@@ -895,6 +895,9 @@ export class TaskManagerPanel extends Panel {
             else if (entry.is_waiting_input) {
                 status = '&#x23f3; waiting';
             }
+            else if (entry.is_routine_running || entry.is_command_running) {
+                status = '&#x1f3c3; running';
+            }
             else if (entry.is_loaded) {
                 status = '&#x2705; loaded';
             }

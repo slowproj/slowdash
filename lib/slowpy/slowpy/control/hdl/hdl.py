@@ -11,7 +11,7 @@ class RegisterNode(spc.ControlNode):
     - `get()` from this register will return a value latched on the previous clock cycle
     - The Clock class calls `set()` of all the registers then `get()` periodically at a specified interval
     - An alias operator `<=` is added for calling `set()`
-    - To use the `<=` operator for the usual way, do like `float(reg) <= 31`.
+    - To use the `<=` operator for the usual way (numerical comparison), do like `float(reg) <= 31`.
     '''
     
     def __init__(self, node=None):
