@@ -3,7 +3,6 @@
 
 import time
 import slowpy.control as spc
-from slowpy.control.hdl import *
 
 
 ctrl = spc.ControlSystem()    
@@ -21,6 +20,7 @@ def _export():
     ]
 
 
+from slowpy.control.hdl import *
 
 class CounterModule(Module):
     def __init__(self, clock, start, stop, clear, display):
