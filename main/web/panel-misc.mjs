@@ -596,7 +596,7 @@ export class FileManagerPanel extends Panel {
         let tr = $('<tr>').appendTo(this.fileTable);
         $('<th>').text("Name").appendTo(tr);
         $('<th>').text("Operation").appendTo(tr);
-        $('<th>').text("Last Modified").appendTo(tr);
+        $('<th>').text("Last Accessed").appendTo(tr);
         $('<th>').text("Size").appendTo(tr);
         $('<th>').text("Owner").appendTo(tr);
         $('<th>').text("Group").appendTo(tr);
@@ -610,7 +610,7 @@ export class FileManagerPanel extends Panel {
 
         let filelist = null;
         try {
-            let response = await fetch('./api/config/filelist');
+            let response = await fetch('./api/config/filelist?sortby=name');
             if (! response.ok) {
                 throw new Error(response.status + " " + response.statusText);
             }

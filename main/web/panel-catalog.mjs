@@ -204,7 +204,7 @@ export class CatalogPanel extends Panel {
         let table = $('<table>').addClass('sd-data-table').appendTo(contentDiv).css(this.table_css);
         let tr = $('<tr>').appendTo(table);
         $('<th>').text("Name").css({'width':'30%'}).appendTo(tr);
-        $('<th>').text("Last Modified").css({'width':'20%'}).appendTo(tr);
+        $('<th>').text("Last Accessed").css({'width':'20%'}).appendTo(tr);
         $('<th>').text("Description").appendTo(tr);
         const bg = window.getComputedStyle(tr.get()).getPropertyValue('background-color');
         tr.find('th').css({position: 'sticky', top:0, left:0, background: bg});

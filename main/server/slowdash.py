@@ -2,7 +2,7 @@
 # Created by Sanshiro Enomoto on 3 Sep 2021 #
 
 
-import sys, os, stat, pwd, grp, io, time, glob, json, yaml, logging
+import sys, os, stat, pathlib, pwd, grp, io, time, glob, json, yaml, logging
 import datasource, usermodule, taskmodule
 from slowdash_config import Config
 
@@ -175,7 +175,9 @@ class App:
                 if params[1] == 'list':
                     result = self._get_config(with_list=True,with_content_meta=True)
                 elif params[1] == 'filelist':
-                    result = self._get_config_filelist()
+                    sortby = opts.get('sortby', 'mtime')
+                    reverse = (opts.get('reverse', 'false').upper() != 'FALSE')
+                    result = self._get_config_filelist(sortby=sortby, reverse=reverse)
             elif (len(params) == 3) and (params[1] == 'filemeta'):
                     result = self._get_config_filemeta(params[2])
                 
@@ -425,19 +427,15 @@ class App:
         return meta_info
                     
 
-    def _get_config_filelist(self):
+    def _get_config_filelist(self, sortby='name', reverse=False):
         if self.project_dir is None:
             return []
         
         filelist = []
         for filepath in glob.glob(os.path.join(self.project_dir, 'config', '*-*.*')):
-            filelist.append([filepath, int(os.path.getmtime(filepath))])
-            filelist = sorted(filelist, key=lambda entry: entry[1], reverse=True)
-                
-        result = []
-        for filepath, mtime in filelist:
             filestat = os.lstat(filepath)
-            result.append({
+            mtime = int(os.path.getmtime(filepath))
+            filelist.append({
                 'name': os.path.basename(filepath),
                 'size': os.path.getsize(filepath),
                 'mode': stat.filemode(filestat.st_mode),
@@ -445,8 +443,11 @@ class App:
                 'group': grp.getgrgid(filestat.st_gid)[0],
                 'mtime': mtime
             })
+
+        if len(filelist) > 0 and sortby in filelist[0].keys():
+            filelist = sorted(filelist, key=lambda entry: entry[sortby], reverse=reverse)
             
-        return result
+        return filelist
 
 
     def _get_config_file(self, filename, output, to_json=False):
@@ -456,6 +457,7 @@ class App:
         filepath = os.path.join(self.project_dir, 'config', filename)
         if not (os.path.isfile(filepath) and os.access(filepath, os.R_OK)):
             return None
+        pathlib.Path(filepath).touch()
 
         ext = os.path.splitext(filepath)[1].lower()
         if ext == '.json':
