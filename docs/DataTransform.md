@@ -1,9 +1,6 @@
 ---
-title: "Data Transform"
+title: "Data Transform (experimental)"
 ---
-
-# Status
-All the functions discussed in this document is under a design stage and not yet available.
 
 # Overview
 ### Applications
