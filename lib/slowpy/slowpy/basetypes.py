@@ -2,7 +2,6 @@
 
 
 import time, json
-import numpy as np
 
 
 class DataElement:

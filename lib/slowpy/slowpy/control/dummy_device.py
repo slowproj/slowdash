@@ -1,7 +1,14 @@
 # Created by Sanshiro Enomoto on 5 June 2023 #
 
-import time
-import numpy as np
+import time, random, math
+
+def normal(mean, sigma):
+    u1 = random.random()
+    u2 = random.random()
+    r = math.sqrt(-2.0*math.log(u1)) * math.cos(2.0 * math.pi * u2)
+    
+    return mean + r * sigma
+
 
 
 class RandomWalkDevice:
@@ -15,7 +22,7 @@ class RandomWalkDevice:
         self.x0 = [initial] * n
         self.x = [initial] * n
         for ch in range(self.n):
-            self.x[ch] = np.random.normal(self.x0[ch], 3*self.walk)
+            self.x[ch] = normal(self.x0[ch], 3*self.walk)
 
 
     def channels(self):
@@ -27,7 +34,7 @@ class RandomWalkDevice:
             return
         
         self.x0[channel] = float(value)
-        self.x[channel] = np.random.normal(self.x0[channel], self.walk)
+        self.x[channel] = normal(self.x0[channel], self.walk)
 
         
     def read(self, channel):
@@ -43,6 +50,6 @@ class RandomWalkDevice:
             self.t[channel] = now
             
         for k in range(steps):
-            self.x[channel] -= self.decay * (self.x[channel] - self.x0[channel]) + np.random.normal(0, self.walk)
+            self.x[channel] -= self.decay * (self.x[channel] - self.x0[channel]) + normal(0, self.walk)
         
         return round(self.x[channel], 3)
