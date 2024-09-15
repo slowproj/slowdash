@@ -3,6 +3,7 @@
 // Created on 24 July 2022 //
 
 import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
+import { JGFileIconWidget } from './jagaimo/jagawidgets.mjs';
 import { Panel, bindInput } from './panel.mjs';
 
 
@@ -41,8 +42,10 @@ export class CatalogPanel extends Panel {
     
     constructor(div, style) {
         super(div, style);        
+        
         this.frameDiv = $('<div>').appendTo(div);        
-        this.frameDiv.text("loading catalog...");
+        this.titleDiv = $('<div>').appendTo(this.frameDiv);
+        this.contentDiv = $('<div>').appendTo(this.frameDiv);
 
         this.frameDiv.css({
             width:'calc(100% - 44px)',
@@ -53,29 +56,18 @@ export class CatalogPanel extends Panel {
             'border-radius': '5px',
             overflow:'auto',
         });
-        this.titleDiv_css = {
+        this.titleDiv.css({
             width:'calc(100% - 10px)',
             'font-family': 'sans-serif',
             'font-size': '20px',
             'font-weight': 'normal',
-            'margin-bottom': '0',
             'white-space': 'nowrap',
             'overflow': 'hidden',
-        };
-        this.contentDiv_css = {
-            position: 'relative',
+        });
+        this.contentDiv.css({
             width:'calc(100% - 10px)',
-            'margin-top': '10px',
-            padding:0,
-        };
-        this.table_css = {
-            'width': '100%',
-            margin: 0,
-            padding: 0,
-            border: 'none',
-            'margin-bottom': '2em',
-            'white-space': 'nowrap',
-        };
+        });
+        this.titleDiv.html("SlowDash, SlowPlot &amp; SlowCruise");
     }
 
     
@@ -108,6 +100,8 @@ export class CatalogPanel extends Panel {
 
     
     _load() {
+        this.contentDiv.html("loading catalog...");
+        
         let processDoc = (doc) => {
             for (const content_type of this.content_types) {
                 let catalog = [];
@@ -132,7 +126,7 @@ export class CatalogPanel extends Panel {
         if (this.cachePath) {
             let cachedDoc = localStorage.getItem(this.cachePath + '-doc');
             if (cachedDoc) {
-                this.frameDiv.empty();
+                this.contentDiv.empty();
                 processDoc(JSON.parse(cachedDoc));
             }
             const cacheTime = localStorage.getItem(this.cachePath + '-cachetime');
@@ -152,7 +146,7 @@ export class CatalogPanel extends Panel {
                 return null;
             })
             .then(proj_config => {
-                this.frameDiv.empty();
+                this.contentDiv.empty();
                 if (! proj_config?.contents) {
                     for (const content_type of this.content_types) {
                         this._render(content_type, proj_config === null ? null : []);
@@ -171,60 +165,23 @@ export class CatalogPanel extends Panel {
 
     
     _render(content_type, catalog) {
-        let title = content_type.substr(0,1).toUpperCase() + content_type.substr(1);
-        if (title.length > 4 && title.substr(0,4) == 'Slow') {
-            title = 'Slow' + title[4].toUpperCase() + title.substr(5);
-        }
-        
-        let headDiv = $('<div>').appendTo(this.frameDiv).css(this.titleDiv_css).css('display','flex');
-        $('<span>').appendTo(headDiv).text(title);
-        if (false) {
-            // this is no longer necessary as the cache will be updated on every reload with >10s interval
-            let updateButton = $('<span>').attr('title', 'update').html('&#x1f504;').appendTo(headDiv).css({
-                'margin-left': 'auto',
-                'margin-top': '0.2em',
-                'filter': 'grayscale(80%)',
-                'cursor': 'pointer'
-            });
-            updateButton.bind('click', e=>{
-                localStorage.removeItem(this.cachePath + '-cachetime');
-                localStorage.removeItem(this.cachePath + '-doc');
-                this.frameDiv.empty().text("loading catalog...");
-                this._load();
-                fetch('api/channels');  // update the channel list on the server (new scripts might need it)
-            });
-        }
-        
-        let contentDiv = $('<div>').appendTo(this.frameDiv).css(this.contentDiv_css);
         if (catalog === null) {
-            contentDiv.html('<div style="color:gray;padding-bottom:3em">Content loading error');
+            this.contentDiv.append($('<div>').text(`Content loading error: ${content_type}`));
             return;
         }
-        
-        let table = $('<table>').addClass('sd-data-table').appendTo(contentDiv).css(this.table_css);
-        let tr = $('<tr>').appendTo(table);
-        $('<th>').text("Name").css({'width':'30%'}).appendTo(tr);
-        $('<th>').text("Last Accessed").css({'width':'20%'}).appendTo(tr);
-        $('<th>').text("Description").appendTo(tr);
-        const bg = window.getComputedStyle(tr.get()).getPropertyValue('background-color');
-        tr.find('th').css({position: 'sticky', top:0, left:0, background: bg});
 
+        const type = content_type;
         for (const entry of catalog) {
-            const open = $('<a>').text(entry.title).attr('href', entry.href);
-            let tr = $('<tr>').appendTo(table);
-            let td =$('<td>');
+            let div = $('<div>').text(entry.title).appendTo(this.contentDiv).click(e=>{
+                window.location.href = entry.href;
+            });
+            let icon = content_type[4].toUpperCase() + content_type.substr(5);
             if ((entry.error??'') != '') {
-                td.append('<span>').html("&#x26d4; ");
+                icon += "&#x26d4;";
             }
-            td.append(open).appendTo(tr);
-            if (parseFloat(entry.mtime) > 0) {
-                $('<td>').text((new JGDateTime(entry.mtime)).asString('%b %d, %Y')).appendTo(tr);
-            }                    
-            else {
-                $('<td>').text('').appendTo(tr);
-            }
-            $('<td>').text(entry.description).appendTo(tr);
+            new JGFileIconWidget(div, { filetype: icon });
         }
+        this.contentDiv.append($('<br>'));
     }
 }
 
