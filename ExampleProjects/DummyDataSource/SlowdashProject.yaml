@@ -21,7 +21,10 @@ slowdash_project:
       plotFrameColor: "#d0d0d0"
       plotBackgroundColor: "#101010"
       plotGridColor: lightgray
-      
+
+  system:
+    our_security_is_perfect: true
+
   data_source:
     - type: Dummy
       parameters:
