@@ -162,13 +162,16 @@
             if (config.mode) {
                 editor.session.setMode('ace/mode/' + config.mode);
             }
-            if (content) {
+            if (content && (content.length > 0)) {
                 editor.setValue(content);
                 editor.gotoLine(0);
+                const meta = await updateServerErrorStatus();
+                if (meta.config_error) {
+                    editor.gotoLine(meta.config_error_line);
+                }
             }
-            const meta = await updateServerErrorStatus();
-            if (meta.config_error) {
-                editor.gotoLine(meta.config_error_line);
+            else {
+                config.status = '';
             }
             
             editor.session.on('change', e => {

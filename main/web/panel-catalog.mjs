@@ -175,11 +175,14 @@ export class CatalogPanel extends Panel {
             let div = $('<div>').text(entry.title).appendTo(this.contentDiv).click(e=>{
                 window.location.href = entry.href;
             });
-            let icon = content_type[4].toUpperCase() + content_type.substr(5);
+            let options = {
+                filetype: content_type[4].toUpperCase() + content_type.substr(5),
+            };
             if ((entry.error??'') != '') {
-                icon += "&#x26d4;";
+                //options.badge = "&#x1f4a3;"; // bomb
+                options.badge = "&#x1f6a7;";  // construction fence
             }
-            new JGFileIconWidget(div, { filetype: icon });
+            new JGFileIconWidget(div, options);
         }
         this.contentDiv.append($('<br>'));
     }
