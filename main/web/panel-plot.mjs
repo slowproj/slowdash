@@ -5,7 +5,7 @@
 
  
 import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
-import { JGTabWidget, JGHiddenWidget } from './jagaimo/jagawidgets.mjs';
+import { JGTabWidget, JGInvisibleWidget } from './jagaimo/jagawidgets.mjs';
 import { JGPlotWidget, JGPlotAxisScale } from './jagaimo/jagaplot.mjs';
 import { Panel, bindInput, getPaletteColor } from './panel.mjs';
 
@@ -1007,7 +1007,7 @@ export class PlotPanel extends Panel {
                 'border-radius': '7px',
             });
             if (this.config.legend.style == 'hidden') {
-                new JGHiddenWidget(this.legendDiv, { sensingObj: this.div, group: 'legend', opacity: 1 });
+                new JGInvisibleWidget(this.legendDiv, { sensingObj: this.div, group: 'legend', opacity: 1 });
             }
             if (this.config.legend.style == 'transparent') {
                 let color = this.style.pageBackgroundColor;

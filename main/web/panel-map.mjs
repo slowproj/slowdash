@@ -4,7 +4,7 @@
 
 
 import { JG as $ } from './jagaimo/jagaimo.mjs';
-import { JGHiddenWidget } from './jagaimo/jagawidgets.mjs';
+import { JGInvisibleWidget } from './jagaimo/jagawidgets.mjs';
 import { JGPlotColorBarScale } from './jagaimo/jagaplot.mjs';
 import { Panel, bindInput } from './panel.mjs';
 
@@ -168,7 +168,7 @@ export class MapPanel extends Panel {
                 'border-radius': '7px',
             });
             if (this.config.legend.style == 'hidden') {
-                new JGHiddenWidget(this.legendDiv, { sensingObj: this.div, group: 'legend', opacity: 1 });
+                new JGInvisibleWidget(this.legendDiv, { sensingObj: this.div, group: 'legend', opacity: 1 });
             }
         }
 

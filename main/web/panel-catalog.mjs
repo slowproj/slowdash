@@ -3,7 +3,7 @@
 // Created on 24 July 2022 //
 
 import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
-import { JGFileIconWidget } from './jagaimo/jagawidgets.mjs';
+import { JGFileIconWidget, JGHiddenWidget } from './jagaimo/jagawidgets.mjs';
 import { Panel, bindInput } from './panel.mjs';
 
 
@@ -182,7 +182,37 @@ export class CatalogPanel extends Panel {
                 //options.badge = "&#x1f4a3;"; // bomb
                 options.badge = "&#x1f6a7;";  // construction fence
             }
+            if (content_type.substr(4) == 'dash') {
+                options.back = '&#x1f3a8;';
+            }
+            else if (content_type.substr(4) == 'plot') {
+                options.back = '&#x1f4c8;';
+            }
+            else if (content_type.substr(4) == 'cruise') {
+                options.back = '&#x1f6f3';
+            }
             new JGFileIconWidget(div, options);
+
+            let descrDiv = $('<div>').appendTo(div).css({
+                position: 'absolute',
+                top: '6em', left: '6em',
+                'min-width': '12em',
+                padding: '0.2em',
+                border: 'thin solid gray',
+                background: 'white',
+                'border-radius': '10px',
+                'z-index': 10000,
+                'cursor': 'default',
+            });
+            descrDiv.html(`
+                <div style="line-height:1.1;margin-bottom:1em;white-space:nowrap">
+                  <span style="font-size:150%">${options.back}</span>
+                  <span style="font-weight:bold">${entry.title}</span><br>
+                  <a href="slowedit.html?filename=${entry.file}" style="font-size:80%" target="_blank">${entry.file}</a>
+                </div>
+                ${entry.description}
+            `).click(e=>{e.stopPropagation()});
+            new JGHiddenWidget(descrDiv, { sensingObj: div, autoHide: 10 });
         }
         this.contentDiv.append($('<br>'));
     }

@@ -5,7 +5,7 @@
 
  
 import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
-import { JGHiddenWidget, JGDialogWidget } from './jagaimo/jagawidgets.mjs';
+import { JGInvisibleWidget, JGDialogWidget } from './jagaimo/jagawidgets.mjs';
 
 
 export function getPaletteColor(index) {
@@ -117,7 +117,7 @@ export class Panel {
             'z-index': '+10',
         };
         this.ctrlDiv = $('<div>').addClass('sd-buttonchain').css(ctrlDivStyle).appendTo(this.div);
-        new JGHiddenWidget(this.ctrlDiv, { sensingObj: this.div, group: 'ctrl', opacity: 1, autoHide: 10 });
+        new JGInvisibleWidget(this.ctrlDiv, { sensingObj: this.div, group: 'ctrl', opacity: 1, autoHide: 10 });
 
         let popoutBtn = $('<button>').html('&#x2197;').appendTo(this.ctrlDiv);
         popoutBtn.attr('title', 'Pop out').bind('click', e=>{

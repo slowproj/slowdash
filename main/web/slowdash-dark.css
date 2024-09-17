@@ -128,3 +128,10 @@ a:hover {
     background-color: #404040;
 }
 
+.jaga-fileicon-icon {
+    background: #202020;
+}
+.jaga-fileicon:hover {
+    background: linear-gradient(#303030, #404040);
+    cursor: pointer;
+}

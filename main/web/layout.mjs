@@ -5,7 +5,7 @@
 
 
 import { JG as $ } from './jagaimo/jagaimo.mjs';
-import { JGHiddenWidget, JGDialogWidget } from './jagaimo/jagawidgets.mjs';
+import { JGInvisibleWidget, JGDialogWidget } from './jagaimo/jagawidgets.mjs';
 import { PlotPanel, TimeAxisPlotPanel } from './panel-plot.mjs';
 import { TablePanel, TreePanel, BlobPanel } from './panel-table.mjs';
 import { MapPanel } from './panel-map.mjs';
@@ -247,7 +247,7 @@ export class Layout {
             };
             let addDiv = $('<div>').addClass('sd-pad').css(addDivStyle).appendTo(this.layoutDiv);
             if (this.config.panels.length > 0) {
-                new JGHiddenWidget(addDiv);
+                new JGInvisibleWidget(addDiv);
             }
 
             let addDialogDiv = $('<div>').addClass('sd-pad').css({'display':'none'});
