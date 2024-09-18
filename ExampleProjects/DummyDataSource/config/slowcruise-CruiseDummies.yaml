@@ -1,0 +1,6 @@
+title: "Dummy Data Source Cruising"
+interval: 60
+pages:
+    - "slowplot.html?config=slowplot-PlotsDemo.json"
+    - "slowplot.html?config=slowplot-PlottingStyles.json"
+    - "slowplot.html?config=slowplot-FPDHitMap.json"

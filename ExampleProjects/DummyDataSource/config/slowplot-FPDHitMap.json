@@ -1,60 +1,27 @@
 {
-  "control": {
-    "range": {
-      "length": 900
+    "control": {
+        "range": { "length": 900 },
+        "reload": 300,
+        "grid": { "rows": 1, "columns": 2 },
+        "mode": "normal"
     },
-    "reload": 300,
-    "grid": {
-      "rows": 2,
-      "columns": 2
-    }
-  },
-  "panels": [
-    {
-      "type": "map",
-      "map": "FPD",
-      "channel": "hitmap",
-      "axes": {
-        "ylog": true,
-        "yfixed": false,
-        "ymin": 0.1,
-        "ymax": 1000,
-        "ytitle": "(cps)",
-        "title": "FPD Rate Map"
-      }
-    },
-    {
-      "type": "plot",
-      "plots": [
+    "style": { },
+    "panels": [
         {
-          "type": "graph",
-          "channel": "hitmap",
-          "color": "#009090",
-          "label": "",
-          "format": "%.5g",
-          "opacity": 1,
-          "marker_type": "circle",
-          "marker_size": 2,
-          "line_width": 1
+            "type": "map",
+            "map": "FPD",
+            "channel": "hitmap",
+            "axes": { "ylog": true, "yfixed": false, "ymin": 0.1, "ymax": 1000, "ytitle": "(cps)", "title": "FPD Rate Map" },
+            "legend": { "style": "none" }
+        },
+        {
+            "type": "plot",
+            "plots": [
+                { "type": "graph", "channel": "hitmap", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": 1e-100 }
+            ],
+            "axes": { "xfixed": true, "yfixed": false, "ylog": false, "xmin": "-0.8", "xmax": "148.8", "ymin": 0, "ymax": 30, "title": "FPD Pixel Rates", "xtitle": "Pixel", "ytitle": "(cps)", "xlog": false, "zlog": false, "zmin": 0, "zmax": 1 },
+            "legend": { "style": "transparent" }
         }
-      ],
-      "axes": {
-        "xfixed": true,
-        "yfixed": false,
-        "ylog": false,
-        "xmin": "-0.8",
-        "xmax": "148.8",
-        "ymin": 0,
-        "ymax": 30,
-        "title": "FPD Pixel Rates",
-        "xtitle": "Pixel",
-        "ytitle": "(cps)"
-      }
-    }
-  ],
-  "meta": {
-    "name": "FPDHitMap",
-    "title": "FPD Hit-Rate Map",
-    "description": ""
-  }
+    ],
+    "meta": { "name": "FPDHitMap", "title": "FPD Hit-Rate Map", "description": "" }
 }

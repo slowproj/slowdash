@@ -28,9 +28,24 @@ all:
 
 	@if [ ! -d $(SLOWDASH_DIR)/bin ]; then mkdir $(SLOWDASH_DIR)/bin; fi
 
-	@echo '#! /bin/sh' > $(SLOWDASH_BIN)
+	@echo '#! /bin/bash' > $(SLOWDASH_BIN)
 	@echo '' >> $(SLOWDASH_BIN)
-	@echo '$(PYTHON) $(SLOWDASH_DIR)/main/server/slowdash.py "$$@"' >> $(SLOWDASH_BIN)
+	@echo 'use_slowdog=0' >> $(SLOWDASH_BIN)
+	@echo 'args=()' >> $(SLOWDASH_BIN)
+	@echo 'for arg in "$$@"; do' >> $(SLOWDASH_BIN)
+	@echo '    if [[ "$$arg" == "--slowdog" ]]; then' >> $(SLOWDASH_BIN)
+	@echo '        use_slowdog=1' >> $(SLOWDASH_BIN)
+	@echo '    else' >> $(SLOWDASH_BIN)
+	@echo '        args+=("$$arg")' >> $(SLOWDASH_BIN)
+	@echo '    fi' >> $(SLOWDASH_BIN)
+	@echo 'done' >> $(SLOWDASH_BIN)
+	@echo '' >> $(SLOWDASH_BIN)
+	@echo 'if [[ $$use_slowdog = 1 ]];  then' >> $(SLOWDASH_BIN)
+	@echo '    $(PYTHON) $(SLOWDASH_DIR)/utils/slowdog.py $(SLOWDASH_DIR)/main/server/slowdash.py "$${args[@]}"' >> $(SLOWDASH_BIN)
+	@echo 'else' >> $(SLOWDASH_BIN)
+	@echo '    $(PYTHON) $(SLOWDASH_DIR)/main/server/slowdash.py "$${args[@]}"' >> $(SLOWDASH_BIN)
+	@echo 'fi' >> $(SLOWDASH_BIN)
+	@echo '' >> $(SLOWDASH_BIN)
 	@chmod 755 $(SLOWDASH_BIN)
 
 	@echo 'export PATH=$$PATH:$(SLOWDASH_DIR)/bin' > $(SLOWDASH_ENV)

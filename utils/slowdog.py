@@ -1,11 +1,17 @@
 #! /usr/bin/env python3
 
+'''slowdog.py: SlowDash watchdog
+periodically sends a HTTP request and if timeout or an error occurs, terminate the slowdash process and restart it
+'''
+
+
 startup_grace = 60
-terminate_grace = 5
-check_interval = 10
+terminate_grace = 10
+check_interval = 60
+timeout = 60
 
 
-import sys, time, getopt, signal, subprocess
+import sys, time, signal, subprocess
 
 if len(sys.argv) < 2:
     print(f'USAGE: {sys.argv[0]} slowdash_bin_path args...')
@@ -21,12 +27,16 @@ for arg in sys.argv[2:]:
         break
 
     
-
-import requests
-
+import urllib.request
 def is_alive():
-    response = requests.get(f'http://localhost:{port}/ping')
-    return response.status_code == 200
+    url = f'http://localhost:{port}/ping'
+    status = None
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url), timeout=timeout) as response:
+            status = response.status
+    except Exception as e:
+        return False
+    return status == 200
 
     
 
@@ -34,7 +44,7 @@ is_stop_requested = False
 def handle_signal(signum, frame):
     global is_stop_requested
     is_stop_requested = True
-    print(f'SlowDog: Signal {signum} handled')
+    sys.stderr.write(f'SlowDog: Signal {signum} handled\n')
 signal.signal(signal.SIGINT, handle_signal)
 signal.signal(signal.SIGTERM, handle_signal)
 
@@ -44,7 +54,7 @@ while not is_stop_requested:
     if port is None:
         proc.wait()
         break
-    print(f'SlowDog: starting {cmd}')
+    sys.stderr.write(f'SlowDog: starting {cmd}\n')
     
     last_check = time.time() + startup_grace
     while not is_stop_requested and proc.poll() is None:
@@ -54,21 +64,21 @@ while not is_stop_requested:
         
         last_check = time.time()
         if not is_alive():
-            print(f'SlowDog: no response from {name}')
+            sys.stderr.write(f'SlowDog: no response from {name}\n')
             break
         
     if proc.poll() is None:
-        print(f'SlowDog: terminating {name}')
+        sys.stderr.write(f'SlowDog: terminating {name}\n')
         proc.terminate()
         proc.send_signal(signal.SIGINT)
         term_time = time.time()
         while proc.poll() is None:
             time.sleep(0.1)
             if time.time() - term_time > terminate_grace:
-                print(f'SlowDog: killing {name}')
+                sys.stderr.write(f'SlowDog: killing {name}\n')
                 proc.kill()
                 break
         
     proc.wait()
-    print(f'SlowDog: {name} is terminated')
+    sys.stderr.write(f'SlowDog: {name} is terminated\n')
 

@@ -27,4 +27,4 @@ EXPOSE 18881
 
 WORKDIR /project
 ENTRYPOINT ["/slowdash/main/docker/entrypoint.sh"]
-CMD ["/bin/slowdash", "--port=18881"]
+CMD ["/bin/slowdash", "--slowdog", "--port=18881"]
