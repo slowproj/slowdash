@@ -41,6 +41,14 @@ summary {
     background: lightgray;
 }
 
+.sd-popup {
+    padding: 0.2em;
+    border: thin solid gray;
+    background: white;
+    border-radius: 10px;
+    z-index: 10000;
+}
+
 .sd-header {
     background: lightgray;
 }

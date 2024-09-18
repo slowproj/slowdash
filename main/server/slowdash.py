@@ -432,7 +432,7 @@ class App:
             return []
         
         filelist = []
-        for filepath in glob.glob(os.path.join(self.project_dir, 'config', '*-*.*')):
+        for filepath in glob.glob(os.path.join(self.project_dir, 'config', '*.*')):
             filestat = os.lstat(filepath)
             mtime = int(os.path.getmtime(filepath))
             filelist.append({

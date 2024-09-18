@@ -1,4 +1,4 @@
-title: "Autocruise: Dummy"
+title: "Dummy Data Source Cruising"
 interval: 60
 pages:
     - "slowplot.html?config=slowplot-Demo.json"

@@ -31,6 +31,13 @@ input:invalid {
     color: white;
 }
 
+.sd-popup {
+    border: thin solid gray;
+    background: #202020;
+}
+
+
+
 .sd-data-table tr:nth-child(even) {
     background-color: #080808;
 }

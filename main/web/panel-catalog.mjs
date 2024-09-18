@@ -2,7 +2,7 @@
 // Author: Sanshiro Enomoto <sanshiro@uw.edu> //
 // Created on 24 July 2022 //
 
-import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
+import { JG as $ } from './jagaimo/jagaimo.mjs';
 import { JGFileIconWidget, JGHiddenWidget } from './jagaimo/jagawidgets.mjs';
 import { Panel, bindInput } from './panel.mjs';
 
@@ -193,15 +193,10 @@ export class CatalogPanel extends Panel {
             }
             new JGFileIconWidget(div, options);
 
-            let descrDiv = $('<div>').appendTo(div).css({
+            let descrDiv = $('<div>').appendTo(div).addClass('sd-popup').css({
                 position: 'absolute',
                 top: '6em', left: '6em',
                 'min-width': '12em',
-                padding: '0.2em',
-                border: 'thin solid gray',
-                background: 'white',
-                'border-radius': '10px',
-                'z-index': 10000,
                 'cursor': 'default',
             });
             descrDiv.html(`

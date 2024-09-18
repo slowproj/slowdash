@@ -412,7 +412,7 @@ export class FileManagerPanel extends Panel {
             },
             dropzone: {
                 width: '100%',
-                height: '10rem',
+                height: '8rem',
             },
             tableDiv: {
                 position: 'relative',
@@ -595,8 +595,8 @@ export class FileManagerPanel extends Panel {
         this.fileTable.empty();
         let tr = $('<tr>').appendTo(this.fileTable);
         $('<th>').text("Name").appendTo(tr);
-        $('<th>').text("Operation").appendTo(tr);
-        $('<th>').text("Last Accessed").appendTo(tr);
+        $('<th>').css('width', '1em').appendTo(tr);
+        $('<th>').text("Last Modified").appendTo(tr);
         $('<th>').text("Size").appendTo(tr);
         $('<th>').text("Owner").appendTo(tr);
         $('<th>').text("Group").appendTo(tr);
@@ -627,11 +627,18 @@ export class FileManagerPanel extends Panel {
             readables.push('py', 'js');
             editables.push('py', 'js');
         }
-        
+
         for (const entry of filelist ?? []) {
-            let name;
             const ext = entry.name.split('.').pop();
-            if (readables.includes(ext)) {
+
+            let name;
+            if (editables.includes(ext)) {
+                name = $('<a>').attr({
+                    href: `slowedit.html?filename=${entry.name}`,
+                    target: '_blank',
+                });
+            }
+            else if (readables.includes(ext)) {
                 name = $('<a>').attr({
                     'href': `./api/config/file/${entry.name}`,
                     'target': '_blank',
@@ -641,31 +648,23 @@ export class FileManagerPanel extends Panel {
                 name = $('<span>');
             }
             name.text(entry.name);
-            
-            let edit;
-            if (editables.includes(ext)) {
-                edit = $('<a>').html('&#x1f4dd;').attr({
-                    href: `slowedit.html?filename=${entry.name}`,
-                    target: '_blank',
+
+            let trash;
+            if (readables.includes(ext)) {
+                trash = $('<span>').html('&#x1f5d1').css({
+                    cursor: 'pointer',
+                }).bind('click', e=>{
+                    this._deleteFile(entry.name);
                 });
             }
             else {
-                edit = $('<span>').html('&#x26d4');
+                trash = $('<span>').html('&#x26d4;');
             }
-            
-            const del = $('<span>').html('&#x1f5d1').css({
-                cursor: 'pointer',
-            }).bind('click', e=>{
-                this._deleteFile(entry.name);
-            });
-            
-            edit.css(css_button);
-            del.css(css_button);
             
             let tr = $('<tr>');
             $('<td>').appendTo(tr).append(name);
-            $('<td>').appendTo(tr).append(edit).append(del).css('text-align', 'center');
-            $('<td>').appendTo(tr).text((new JGDateTime(entry.mtime)).asString('%b %d, %Y')).css('text-align', 'center');;
+            $('<td>').appendTo(tr).append(trash).css('text-align', 'center').css('padding', 0);
+            $('<td>').appendTo(tr).text((new JGDateTime(entry.mtime)).asString('%b %d, %Y %H:%M')).css('text-align', 'center');;
             $('<td>').appendTo(tr).text(Number(entry.size).toLocaleString('en-US')).css('text-align', 'right');
             $('<td>').appendTo(tr).text(entry.owner).css('text-align', 'center');;
             $('<td>').appendTo(tr).text(entry.group).css('text-align', 'center');;

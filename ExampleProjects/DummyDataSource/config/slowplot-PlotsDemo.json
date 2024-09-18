@@ -94,5 +94,5 @@
             "legend": { "style": "none" }
         }
     ],
-    "meta": { "name": "Demo", "title": "", "description": "Plot Demonstrations" }
+    "meta": { "name": "Demo", "title": "Plots Demo", "description": "Plot Demonstrations" }
 }
