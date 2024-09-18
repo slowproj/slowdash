@@ -34,8 +34,14 @@ class RequestHandler(BaseHTTPRequestHandler):
         pass
 
     
-    def do_GET(self):
-        sys.stderr.write('GET: %s ...' % self.path)
+    def do_GET(self):        
+        if self.path == '/ping':
+            self.send_response(200)
+            self.send_header('content-type', 'text/plain')
+            self.end_headers()
+            self.wfile.write('pong'.encode())
+            self.wfile.flush()
+            return
 
         if not self.check_auth():
             self.send_response(401)
@@ -44,6 +50,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             sys.stderr.write('AUTH\n')
             return
             
+        sys.stderr.write('GET: %s ...' % self.path)
+        
         url = urlparse(self.path)
         path_split = url.path.split('/')
         while path_split.count(''):
