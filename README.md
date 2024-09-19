@@ -1,10 +1,10 @@
 # SlowDash
-SlowDash is a web GUI tool for control and monitoring of concurrent systems (slow-controls and data-acquisition), originally designed for physics experiments. Like Grafana, SlowDash does not include device interfaces and data storage systems; SlowDash interacts with users and exchanges data and messages with existing databases and controls systems.
+SlowDash is a web GUI tool for controlling and monitoring concurrent systems (slow controls and data acquisition), originally designed for physics experiments. Like Grafana, SlowDash does not include data storage systems; it interacts with users and exchanges data and messages with existing databases, devices, and/or other control systems.
 
 #### Project Goal
 - Grafana-like data browser for time-series data and ROOT-like data objects (graphs, histograms, etc.)
 - LabVIEW-like visual control (graphical control panel)
-- Jupyter-like interactive scripting with Python
+- Jupyter-like Python scripting
 
 #### Current Status: ~70% of the initial design implemented
 - Data browser mostly working
@@ -119,9 +119,11 @@ To stop, type `ctrl`-`c` in the slowdash console in Step 3.
 </details>
 
 ## Documentation
-See [Github Pages](https://slowproj.github.io/slowdash/).
+Manuals are on the [Github Pages](https://slowproj.github.io/slowdash/).
 
-For status and updates, see [GitHub Wiki](https://github.com/slowproj/slowdash/wiki/Status-and-Updates).
+See Github Wiki for
+- [Status and Updates](https://github.com/slowproj/slowdash/wiki/Status-and-Updates)
+- [Feature Ideas](https://github.com/slowproj/slowdash/wiki/Status-and-Updates); your ideas are welcome!
 
 ## Docker Images
 #### Building from Source
