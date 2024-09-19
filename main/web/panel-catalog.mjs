@@ -66,6 +66,7 @@ export class CatalogPanel extends Panel {
         });
         this.contentDiv.css({
             width:'calc(100% - 10px)',
+            'font-size': '80%',
         });
         this.titleDiv.html("SlowDash, SlowPlot &amp; SlowCruise");
     }

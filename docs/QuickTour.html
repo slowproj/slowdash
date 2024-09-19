@@ -10,26 +10,28 @@
       div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
   <style type="text/css">
-a.sourceLine { display: inline-block; line-height: 1.25; }
-a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
-a.sourceLine:empty { height: 1.2em; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
-code.sourceCode { white-space: pre; position: relative; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
 @media screen {
 div.sourceCode { overflow: auto; }
 }
 @media print {
-code.sourceCode { white-space: pre-wrap; }
-a.sourceLine { text-indent: -1em; padding-left: 1em; }
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
-pre.numberSource a.sourceLine
-  { position: relative; left: -4em; }
-pre.numberSource a.sourceLine::before
-  { content: attr(title);
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
     position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; pointer-events: all; display: inline-block;
+    border: none; display: inline-block;
     -webkit-touch-callout: none; -webkit-user-select: none;
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
@@ -38,15 +40,15 @@ pre.numberSource a.sourceLine::before
   }
 pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
 div.sourceCode
-  {  }
+  {   }
 @media screen {
-a.sourceLine::before { text-decoration: underline; }
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
 code span.at { color: #7d9029; } /* Attribute */
 code span.bn { color: #40a070; } /* BaseN */
-code span.bu { } /* BuiltIn */
+code span.bu { color: #008000; } /* BuiltIn */
 code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
 code span.ch { color: #4070a0; } /* Char */
 code span.cn { color: #880000; } /* Constant */
@@ -59,7 +61,7 @@ code span.er { color: #ff0000; font-weight: bold; } /* Error */
 code span.ex { } /* Extension */
 code span.fl { color: #40a070; } /* Float */
 code span.fu { color: #06287e; } /* Function */
-code span.im { } /* Import */
+code span.im { color: #008000; font-weight: bold; } /* Import */
 code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
 code span.kw { color: #007020; font-weight: bold; } /* Keyword */
 code span.op { color: #666666; } /* Operator */
@@ -83,12 +85,16 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span class="toc-title">Contents</span>
 <nav id="TOC">
 <ul>
-<li><a href="#course-overview">Course Overview</a></li>
-<li><a href="#test-data-generation">Test-Data Generation</a></li>
-<li><a href="#basic-usage">Basic Usage</a><ul>
-<li><a href="#project-configuration">Project Configuration</a></li>
-<li><a href="#running">Running</a></li>
-<li><a href="#making-plots">Making Plots</a></li>
+<li><a href="#course-overview" id="toc-course-overview">Course
+Overview</a></li>
+<li><a href="#test-data-generation"
+id="toc-test-data-generation">Test-Data Generation</a></li>
+<li><a href="#basic-usage" id="toc-basic-usage">Basic Usage</a>
+<ul>
+<li><a href="#project-configuration"
+id="toc-project-configuration">Project Configuration</a></li>
+<li><a href="#running" id="toc-running">Running</a></li>
+<li><a href="#making-plots" id="toc-making-plots">Making Plots</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -96,7 +102,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </header>
 
 <h1 id="course-overview">Course Overview</h1>
-<p>In this tour we will use SQLite for data backend which does not require server setup. All the files created during the tour are confined under a project directory, and can be removed completely and safely by just deleting the directory.</p>
+<p>In this tour we will use SQLite for data backend which does not
+require server setup. All the files created during the tour are confined
+under a project directory, and can be removed completely and safely by
+just deleting the directory.</p>
 <h3 id="menu">Menu</h3>
 <ul>
 <li>Configuring a project, with describing the user data schema</li>
@@ -107,65 +116,91 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul>
 <h3 id="first-thing-first">First thing first</h3>
 <p>To get started, prepare a place:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">$ mkdir QuickTour</span></a>
-<a class="sourceLine" id="cb1-2" title="2"><span class="kw">$ cd QuickTour</span></a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ mkdir QuickTour</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd QuickTour</span></span></code></pre></div>
 <h3 id="using-docker">Using Docker?</h3>
-<p>The directory just created will be mapped into the container as a volume. You can work either inside the container (by <code>docker exec ...  /bin/bash</code>) or outside, but working outside should be easier in the beginning.</p>
+<p>The directory just created will be mapped into the container as a
+volume. You can work either inside the container (by
+<code>docker exec ...  /bin/bash</code>) or outside, but working outside
+should be easier in the beginning.</p>
 <h1 id="test-data-generation">Test-Data Generation</h1>
-<p>To generate test-data, we use the SlowPy Python library that comes with the SlowDash package. Write the code below and save it as <code>generate-testdata.py</code> at your project directory:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb2-1" title="1"><span class="im">from</span> slowpy.control <span class="im">import</span> DummyDevice_RandomWalk, ControlSystem</a>
-<a class="sourceLine" id="cb2-2" title="2"><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_SQLite, SimpleLongFormat</a>
-<a class="sourceLine" id="cb2-3" title="3"></a>
-<a class="sourceLine" id="cb2-4" title="4"></a>
-<a class="sourceLine" id="cb2-5" title="5"><span class="kw">class</span> TestDataFormat(SimpleLongFormat):</a>
-<a class="sourceLine" id="cb2-6" title="6">    schema_numeric <span class="op">=</span> <span class="st">&#39;(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel))&#39;</span></a>
-<a class="sourceLine" id="cb2-7" title="7">    <span class="kw">def</span> insert_numeric_data(<span class="va">self</span>, cur, timestamp, channel, value):</a>
-<a class="sourceLine" id="cb2-8" title="8">        cur.execute(<span class="ss">f&#39;INSERT INTO </span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>table<span class="sc">}</span><span class="ss"> VALUES(CURRENT_TIMESTAMP,%d,&quot;%s&quot;,%f)&#39;</span> <span class="op">%</span> (timestamp, channel, value))</a>
-<a class="sourceLine" id="cb2-9" title="9"></a>
-<a class="sourceLine" id="cb2-10" title="10">datastore <span class="op">=</span> DataStore_SQLite(<span class="st">&#39;sqlite:///QuickTourTestData.db&#39;</span>, table<span class="op">=</span><span class="st">&quot;testdata&quot;</span>, <span class="bu">format</span><span class="op">=</span>TestDataFormat())</a>
-<a class="sourceLine" id="cb2-11" title="11">device <span class="op">=</span> DummyDevice_RandomWalk(n<span class="op">=</span><span class="dv">4</span>)</a>
-<a class="sourceLine" id="cb2-12" title="12"></a>
-<a class="sourceLine" id="cb2-13" title="13"></a>
-<a class="sourceLine" id="cb2-14" title="14"><span class="kw">def</span> _loop():</a>
-<a class="sourceLine" id="cb2-15" title="15">    <span class="cf">for</span> ch <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">4</span>):</a>
-<a class="sourceLine" id="cb2-16" title="16">        data <span class="op">=</span> device.read(ch)</a>
-<a class="sourceLine" id="cb2-17" title="17">        datastore.append(data, tag<span class="op">=</span><span class="st">&quot;ch</span><span class="sc">%02d</span><span class="st">&quot;</span><span class="op">%</span>ch)</a>
-<a class="sourceLine" id="cb2-18" title="18">    ControlSystem.sleep(<span class="dv">1</span>)</a>
-<a class="sourceLine" id="cb2-19" title="19"></a>
-<a class="sourceLine" id="cb2-20" title="20"><span class="kw">def</span> _finalize():</a>
-<a class="sourceLine" id="cb2-21" title="21">    datastore.close()</a>
-<a class="sourceLine" id="cb2-22" title="22">    </a>
-<a class="sourceLine" id="cb2-23" title="23">    </a>
-<a class="sourceLine" id="cb2-24" title="24"><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</a>
-<a class="sourceLine" id="cb2-25" title="25">    ControlSystem.stop_by_signal()</a>
-<a class="sourceLine" id="cb2-26" title="26">    <span class="cf">while</span> <span class="kw">not</span> ControlSystem.is_stop_requested():</a>
-<a class="sourceLine" id="cb2-27" title="27">        _loop()</a>
-<a class="sourceLine" id="cb2-28" title="28">    _finalize()</a></code></pre></div>
-<p>Details of the script is described in the <a href="ControlsScript.html">Controls</a> section. For now just copy-and-past the script and use it to generate some test-data.</p>
-<p>Running this script will create a SQLite database file and fill it with dummy time-series data every second.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">$ python3 generate-testdata.py</span></a></code></pre></div>
-<p>Stop the script by <kbd>ctrl</kbd>-<kbd>C</kbd> after a minute and look at the created file:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">$ ls -l</span></a>
-<a class="sourceLine" id="cb4-2" title="2">-rw-r--r-- 1 sanshiro sanshiro 24576 Apr 11 16:52 QuickTourTestData.db</a>
-<a class="sourceLine" id="cb4-3" title="3">-rwxr-xr-x 1 sanshiro sanshiro  3562 Apr 11 16:51 generate-testdata.py</a></code></pre></div>
-<p>The contents can be viewed with the SQLite command-line program, <code>sqlite3</code>. If this program is not available on your system, just skip this step; you will see the contents with Slow-Dash in the next step.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">$ sqlite3 QuickTourTestData.db </span></a>
-<a class="sourceLine" id="cb5-2" title="2">SQLite version 3.31.1 2020-01-27 19:55:54</a>
-<a class="sourceLine" id="cb5-3" title="3">Enter &quot;.help&quot; for usage hints.</a>
-<a class="sourceLine" id="cb5-4" title="4">sqlite&gt; .table</a>
-<a class="sourceLine" id="cb5-5" title="5">testdata</a>
-<a class="sourceLine" id="cb5-6" title="6">sqlite&gt; .schema testdata</a>
-<a class="sourceLine" id="cb5-7" title="7">CREATE TABLE testdata(datetime DATETIME, timestamp INTEGER, channel TEXT, value REAL, PRIMARY KEY(timestamp, channel));</a>
-<a class="sourceLine" id="cb5-8" title="8">sqlite&gt; select * from testdata limit 10;</a>
-<a class="sourceLine" id="cb5-9" title="9">2023-04-11 23:52:13|1681257133|ch00|0.187859</a>
-<a class="sourceLine" id="cb5-10" title="10">2023-04-11 23:52:13|1681257133|ch01|-0.418021</a>
-<a class="sourceLine" id="cb5-11" title="11">2023-04-11 23:52:13|1681257133|ch02|0.482607</a>
-<a class="sourceLine" id="cb5-12" title="12">2023-04-11 23:52:13|1681257133|ch03|1.733749</a>
-<a class="sourceLine" id="cb5-13" title="13">...</a></code></pre></div>
+<p>To generate test-data, we use the SlowPy Python library that comes
+with the SlowDash package. Write the code below and save it as
+<code>generate-testdata.py</code> at your project directory:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy.control</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy.store</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TestDataFormat(slowpy.store.LongTableFormat):</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    schema_numeric <span class="op">=</span> <span class="st">&#39;(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel))&#39;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> insert_numeric_data(<span class="va">self</span>, cur, timestamp, channel, value):</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        cur.execute(<span class="ss">f&#39;INSERT INTO </span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>table<span class="sc">}</span><span class="ss"> VALUES(CURRENT_TIMESTAMP,</span><span class="sc">{</span><span class="bu">int</span>(timestamp)<span class="sc">}</span><span class="ss">,?,</span><span class="sc">{</span><span class="bu">float</span>(value)<span class="sc">}</span><span class="ss">)&#39;</span>, (<span class="bu">str</span>(channel),))</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>ctrl <span class="op">=</span> slowpy.control.ControlSystem()</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> slowpy.control.RandomWalkDevice(n<span class="op">=</span><span class="dv">4</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> slowpy.store.DataStore_SQLite(<span class="st">&#39;sqlite:///QuickTourTestData.db&#39;</span>, table<span class="op">=</span><span class="st">&quot;testdata&quot;</span>, table_format<span class="op">=</span>TestDataFormat())</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> ch <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">4</span>):</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>        data <span class="op">=</span> device.read(ch)</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        datastore.append(data, tag<span class="op">=</span><span class="st">&quot;ch</span><span class="sc">%02d</span><span class="st">&quot;</span><span class="op">%</span>ch)</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _finalize():</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    datastore.close()</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    ctrl.stop_by_signal()</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="kw">not</span> ctrl.is_stop_requested():</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        _loop()</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    _finalize()</span></code></pre></div>
+<p>Details of the script is described in the <a
+href="ControlsScript.html">Controls</a> section. For now just
+copy-and-past the script and use it to generate some test-data.</p>
+<p>Running this script will create a SQLite database file and fill it
+with dummy time-series data every second.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 generate-testdata.py</span></span></code></pre></div>
+<p>Stop the script by <kbd>ctrl</kbd>-<kbd>C</kbd> after a minute and
+look at the created file:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ ls -l</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>-rw-r--r-- 1 sanshiro sanshiro 24576 Apr 11 16:52 QuickTourTestData.db</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>-rwxr-xr-x 1 sanshiro sanshiro  3562 Apr 11 16:51 generate-testdata.py</span></code></pre></div>
+<p>The contents can be viewed with the SQLite command-line program,
+<code>sqlite3</code>. If this program is not available on your system,
+just skip this step; you will see the contents with Slow-Dash in the
+next step.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sqlite3 QuickTourTestData.db </span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>SQLite version 3.31.1 2020-01-27 19:55:54</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>Enter &quot;.help&quot; for usage hints.</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>sqlite&gt; .table</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>testdata</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>sqlite&gt; .schema testdata</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>CREATE TABLE testdata(datetime DATETIME, timestamp INTEGER, channel TEXT, value REAL, PRIMARY KEY(timestamp, channel));</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>sqlite&gt; select * from testdata limit 10;</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>2023-04-11 23:52:13|1681257133|ch00|0.187859</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>2023-04-11 23:52:13|1681257133|ch01|-0.418021</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>2023-04-11 23:52:13|1681257133|ch02|0.482607</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>2023-04-11 23:52:13|1681257133|ch03|1.733749</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
 <p>As shown above, the schema of the data table is:</p>
 <pre><code>testdata(datetime DATETIME, timestamp INTEGER, channel TEXT, value REAL, PRIMARY KEY(timestamp, channel))</code></pre>
 <p>and the table contents are:</p>
 <table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 26%" />
+<col style="width: 26%" />
+<col style="width: 26%" />
+</colgroup>
 <thead>
 <tr class="header">
 <th>datetime (DATETIME/TEXT)</th>
@@ -207,116 +242,171 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </tr>
 </tbody>
 </table>
-<p>(In SQLite, DATETIME is TEXT. Here the time-zone is UTC although it is not specified explicitly.)</p>
-<p>For demonstration purpose, this table has two timestamp columns, one for (emulated) hardware data time in the UNIX time type, and the other for database writing time in the date-time type. An actual system might have only one of them in either types.</p>
-<p>Other forms of data tables also can be handled by Slow-Dash. See the <a href="DataBinding.html">Data Binding section</a> for details.</p>
+<p>(In SQLite, DATETIME is TEXT. Here the time-zone is UTC although it
+is not specified explicitly.)</p>
+<p>For demonstration purpose, this table has two timestamp columns, one
+for (emulated) hardware data time in the UNIX time type, and the other
+for database writing time in the date-time type. An actual system might
+have only one of them in either types.</p>
+<p>Other forms of data tables also can be handled by Slow-Dash. See the
+<a href="DataBinding.html">Data Binding section</a> for details.</p>
 <h1 id="basic-usage">Basic Usage</h1>
 <h2 id="project-configuration">Project Configuration</h2>
-<p>Project configuration file describes which database to read, which column is for the time-stamps and which column is for the data values, etc. Each Slow-Dash project has one project configuration file, named <code>SlowdashProject.yaml</code>, located at the project directory.</p>
+<p>Project configuration file describes which database to read, which
+column is for the time-stamps and which column is for the data values,
+etc. Each Slow-Dash project has one project configuration file, named
+<code>SlowdashProject.yaml</code>, located at the project directory.</p>
 <h3 id="writing-a-configuration-file">Writing a Configuration File</h3>
 <p>Create <code>SlowdashProject.yaml</code> with the contents below:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb7-1" title="1"><span class="fu">slowdash_project:</span></a>
-<a class="sourceLine" id="cb7-2" title="2">  <span class="fu">name:</span><span class="at"> QuickTour</span></a>
-<a class="sourceLine" id="cb7-3" title="3">  <span class="fu">title:</span><span class="at"> Slow-Dash Quick Tour</span></a>
-<a class="sourceLine" id="cb7-4" title="4"></a>
-<a class="sourceLine" id="cb7-5" title="5">  <span class="fu">data_source:</span></a>
-<a class="sourceLine" id="cb7-6" title="6">    <span class="fu">url:</span><span class="at"> sqlite:///QuickTourTestData.db</span></a>
-<a class="sourceLine" id="cb7-7" title="7">    <span class="fu">parameters:</span></a>
-<a class="sourceLine" id="cb7-8" title="8">      <span class="fu">time_series:</span></a>
-<a class="sourceLine" id="cb7-9" title="9">        <span class="fu">schema:</span><span class="at"> testdata [channel] @timestamp(unix) = value</span></a></code></pre></div>
-<p>To use the <code>datetime</code> column for the timestamps, the schema part of the configuration file would look like this:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb8-1" title="1">      <span class="fu">time_series:</span></a>
-<a class="sourceLine" id="cb8-2" title="2">          <span class="fu">schema:</span><span class="at"> testdata[channel]@datetime(unspecified utc)=value</span></a></code></pre></div>
-<p>The timestamp type is indicated after the time column name. Other common values of timestamp type are: <code>aware</code> (or <code>with time zone</code>) for time data with explicit time zone, and <code>naive</code> (or <code>without time zone</code> or <code>local</code>) for implied “local” time zone (often a bad idea). The <code>unspecified utc</code> is a special one that the time data does not have explicit time zone, which looks like “local”, but the times are actually in UTC.</p>
-<h3 id="testing-the-configuration-bare-metal-installation-only">Testing the Configuration (Bare-Metal installation only)</h3>
-<p>To test the configuration, run the <code>slowdash config</code> command at the project directory:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb9-1" title="1"><span class="kw">$ slowdash config</span></a>
-<a class="sourceLine" id="cb9-2" title="2">{</a>
-<a class="sourceLine" id="cb9-3" title="3">    &quot;project&quot;: {</a>
-<a class="sourceLine" id="cb9-4" title="4">        &quot;name&quot;: &quot;QuickTour&quot;,</a>
-<a class="sourceLine" id="cb9-5" title="5">        &quot;title&quot;: &quot;Slow-Dash Quick Tour&quot;,</a>
-<a class="sourceLine" id="cb9-6" title="6">        &quot;error_message&quot;: &quot;&quot;</a>
-<a class="sourceLine" id="cb9-7" title="7">    },</a>
-<a class="sourceLine" id="cb9-8" title="8">    &quot;data_source&quot;: {</a>
-<a class="sourceLine" id="cb9-9" title="9">        &quot;type&quot;: &quot;SQLite&quot;,</a>
-<a class="sourceLine" id="cb9-10" title="10">        &quot;parameters&quot;: {</a>
-<a class="sourceLine" id="cb9-11" title="11">            &quot;file&quot;: &quot;QuickTourTestData.db&quot;,</a>
-<a class="sourceLine" id="cb9-12" title="12">            &quot;time_series&quot;: {</a>
-<a class="sourceLine" id="cb9-13" title="13">                &quot;schema&quot;: &quot;testdata[channel]@timestamp(unix)=value&quot;</a>
-<a class="sourceLine" id="cb9-14" title="14">            }</a>
-<a class="sourceLine" id="cb9-15" title="15">        }</a>
-<a class="sourceLine" id="cb9-16" title="16">    },</a>
-<a class="sourceLine" id="cb9-17" title="17">    &quot;style&quot;: null,</a>
-<a class="sourceLine" id="cb9-18" title="18">    &quot;contents&quot;: {</a>
-<a class="sourceLine" id="cb9-19" title="19">        &quot;slowdash&quot;: [],</a>
-<a class="sourceLine" id="cb9-20" title="20">        &quot;slowplot&quot;: []</a>
-<a class="sourceLine" id="cb9-21" title="21">    }</a>
-<a class="sourceLine" id="cb9-22" title="22">}</a></code></pre></div>
-<p>The channels in the data-store can be listed with the <code>slowdash channels</code> command:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb10-1" title="1"><span class="kw">$ slowdash channels</span></a>
-<a class="sourceLine" id="cb10-2" title="2">[</a>
-<a class="sourceLine" id="cb10-3" title="3">  {&quot;name&quot;: &quot;ch00&quot;}, {&quot;name&quot;: &quot;ch01&quot;}, {&quot;name&quot;: &quot;ch02&quot;}, ...</a>
-<a class="sourceLine" id="cb10-4" title="4">]</a></code></pre></div>
-<p>The data values can be displayed with the <code>slowdash data</code> command:</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb11-1" title="1"><span class="kw">$ slowdash &quot;data/ch00?length=10&quot;</span></a>
-<a class="sourceLine" id="cb11-2" title="2">{</a>
-<a class="sourceLine" id="cb11-3" title="3">  &quot;ch00&quot;: {</a>
-<a class="sourceLine" id="cb11-4" title="4">    &quot;start&quot;: 1680223465, &quot;length&quot;: 10, </a>
-<a class="sourceLine" id="cb11-5" title="5">    &quot;t&quot;: [0.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0], </a>
-<a class="sourceLine" id="cb11-6" title="6">    &quot;x&quot;: [5.180761, 5.92074, 5.515459, 4.883299, 5.650556, 4.284527, 3.884656, 3.223627, 2.06343]</a>
-<a class="sourceLine" id="cb11-7" title="7">  }</a>
-<a class="sourceLine" id="cb11-8" title="8">}</a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> QuickTour</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">title</span><span class="kw">:</span><span class="at"> Slow-Dash Quick Tour</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> sqlite:///QuickTourTestData.db</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">parameters</span><span class="kw">:</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> testdata [channel] @timestamp(unix) = value</span></span></code></pre></div>
+<p>To use the <code>datetime</code> column for the timestamps, the
+schema part of the configuration file would look like this:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> testdata[channel]@datetime(unspecified utc)=value</span></span></code></pre></div>
+<p>The timestamp type is indicated after the time column name. Other
+common values of timestamp type are: <code>aware</code> (or
+<code>with time zone</code>) for time data with explicit time zone, and
+<code>naive</code> (or <code>without time zone</code> or
+<code>local</code>) for implied “local” time zone (often a bad idea).
+The <code>unspecified utc</code> is a special one that the time data
+does not have explicit time zone, which looks like “local”, but the
+times are actually in UTC.</p>
+<h3 id="testing-the-configuration">Testing the Configuration</h3>
+<p>(If you are using Docker, first get into the container by
+<code>docker exec -it CONTAINER_ID /bin/bash</code>.)</p>
+<p>To test the configuration, run the <code>slowdash config</code>
+command at the project directory:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash config</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    &quot;project&quot;: {</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>        &quot;name&quot;: &quot;QuickTour&quot;,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        &quot;title&quot;: &quot;Slow-Dash Quick Tour&quot;,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        &quot;error_message&quot;: &quot;&quot;</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    &quot;data_source&quot;: {</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>        &quot;type&quot;: &quot;SQLite&quot;,</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>        &quot;parameters&quot;: {</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>            &quot;file&quot;: &quot;QuickTourTestData.db&quot;,</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>            &quot;time_series&quot;: {</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>                &quot;schema&quot;: &quot;testdata[channel]@timestamp(unix)=value&quot;</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>            }</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    &quot;style&quot;: null,</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    &quot;contents&quot;: {</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>        &quot;slowdash&quot;: [],</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>        &quot;slowplot&quot;: []</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>The channels in the data-store can be listed with the
+<code>slowdash channels</code> command:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash channels</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>[</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  {&quot;name&quot;: &quot;ch00&quot;}, {&quot;name&quot;: &quot;ch01&quot;}, {&quot;name&quot;: &quot;ch02&quot;}, ...</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>]</span></code></pre></div>
+<p>The data values can be displayed with the <code>slowdash data</code>
+command:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash &quot;data/ch00?length=10&quot;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  &quot;ch00&quot;: {</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    &quot;start&quot;: 1680223465, &quot;length&quot;: 10, </span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    &quot;t&quot;: [0.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0], </span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    &quot;x&quot;: [5.180761, 5.92074, 5.515459, 4.883299, 5.650556, 4.284527, 3.884656, 3.223627, 2.06343]</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <h2 id="running">Running</h2>
-<h3 id="step-1-starting-the-slowdash-server">Step 1: Starting the SlowDash Server</h3>
-<p>This step will start a SlowDash server and open a port at 18881. To stop it, type <code>ctrl</code>-<code>c</code> on the terminal.</p>
+<h3 id="step-1-starting-the-slowdash-server">Step 1: Starting the
+SlowDash Server</h3>
+<p>This step will start a SlowDash server and open a port at 18881. To
+stop it, type <code>ctrl</code>-<code>c</code> on the terminal.</p>
 <h4 id="bare-metal">Bare-Metal</h4>
-<div class="sourceCode" id="cb12"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb12-1" title="1"><span class="kw">$ slowdash --port=18881</span></a></code></pre></div>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash --port=18881</span></span></code></pre></div>
 <h4 id="docker">Docker</h4>
 <p>Image from DockerHub</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb13-1" title="1"><span class="kw">$ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash:2407</span></a></code></pre></div>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash:2407</span></span></code></pre></div>
 <p>or locally created image:</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb14-1" title="1"><span class="kw">$ docker run --rm -p 18881:18881 -v $(pwd):/project slowdash</span></a></code></pre></div>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker run --rm -p 18881:18881 -v $(pwd):/project slowdash</span></span></code></pre></div>
 <h4 id="docker-compose">Docker-Compose</h4>
-<p>Create a <code>docker-compose.yaml</code> file at the project directory</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb15-1" title="1"><span class="fu">version:</span><span class="at"> </span><span class="st">&#39;3&#39;</span></a>
-<a class="sourceLine" id="cb15-2" title="2"></a>
-<a class="sourceLine" id="cb15-3" title="3"><span class="fu">services:</span></a>
-<a class="sourceLine" id="cb15-4" title="4">  <span class="fu">slowdash:</span></a>
-<a class="sourceLine" id="cb15-5" title="5">    <span class="fu">image:</span><span class="at"> slowproj/slowdash:2407</span></a>
-<a class="sourceLine" id="cb15-6" title="6">    <span class="fu">volumes:</span></a>
-<a class="sourceLine" id="cb15-7" title="7">      <span class="kw">-</span> .:/project</a>
-<a class="sourceLine" id="cb15-8" title="8">    <span class="fu">ports:</span></a>
-<a class="sourceLine" id="cb15-9" title="9">      <span class="kw">-</span> <span class="st">&quot;18881:18881&quot;</span></a></code></pre></div>
+<p>Create a <code>docker-compose.yaml</code> file at the project
+directory</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;3&#39;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowdash:2407</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> .:/project</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881:18881&quot;</span></span></code></pre></div>
 <p>Then start <code>docker-compose</code></p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb16-1" title="1"><span class="kw">$ docker-compose up</span></a></code></pre></div>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker-compose up</span></span></code></pre></div>
 <h3 id="step-2-opening-a-web-browser">Step 2: Opening a Web Browser</h3>
-<p>Launch a web browser, access to <code>http://localhost:18881</code>.</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb17-1" title="1"><span class="kw">$ firefox http://localhost:18881</span></a></code></pre></div>
+<p>Launch a web browser, access to
+<code>http://localhost:18881</code>.</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ firefox http://localhost:18881</span></span></code></pre></div>
 <p>The browser should show the home page of the project:</p>
 <p><img src="fig/QuickTour-Home.png" style="width:40%"></p>
-<h3 id="step-3-start-generating-testdata-only-for-this-quick-tour">Step 3: Start Generating Testdata (only for this quick tour)</h3>
-<p>In order to continuously fill the data while plotting, run the test-data generator in parallel (maybe in another terminal window):</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb18-1" title="1"><span class="kw">$ python3 generate-testdata.py</span></a></code></pre></div>
-<p>The data file size is roughly 5 MB per hour. The test data file, <code>QuickTourTestData.db</code>, can be deleted safely when SlowDash is not running. Once the file is deleted, run <code>generate-testdata.py</code> again before starting Slow-Dash next time.</p>
+<h3 id="step-3-start-generating-testdata-only-for-this-quick-tour">Step
+3: Start Generating Testdata (only for this quick tour)</h3>
+<p>In order to continuously fill the data while plotting, run the
+test-data generator in parallel (maybe in another terminal window):</p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 generate-testdata.py</span></span></code></pre></div>
+<p>The data file size is roughly 5 MB per hour. The test data file,
+<code>QuickTourTestData.db</code>, can be deleted safely when SlowDash
+is not running. Once the file is deleted, run
+<code>generate-testdata.py</code> again before starting Slow-Dash next
+time.</p>
 <h2 id="making-plots">Making Plots</h2>
 <h3 id="interactive-building">Interactive Building</h3>
-<p>Probably just playing with the GUI would be easier than reading this section…</p>
+<p>Probably just playing with the GUI would be easier than reading this
+section…</p>
 <ul>
-<li>Click one of the channels in the “Channel List” panel to make a time-series plot of the channel.</li>
-<li>Or, click “New Plot Layout” in the “Tools” panel to start a new empty layout.
+<li>Click one of the channels in the “Channel List” panel to make a
+time-series plot of the channel.</li>
+<li>Or, click “New Plot Layout” in the “Tools” panel to start a new
+empty layout.
 <p></li>
-<li>Putting mouse pointer on blank space will show a “Add New Panel” button. Click it and then select “Time-Axis Plot” to make a new plot.</li>
-<li>Putting mouse pointer on a plot shows a set of control buttons. Click the 🛠 button to configure the plot axes and styles, and to add a new time-series.</li>
+<li>Putting mouse pointer on blank space will show a “Add New Panel”
+button. Click it and then select “Time-Axis Plot” to make a new
+plot.</li>
+<li>Putting mouse pointer on a plot shows a set of control buttons.
+Click the 🛠 button to configure the plot axes and styles, and to add a
+new time-series.</li>
 </ul>
-<p>So far we have only time-series data in the test database, so only time-series plots can be created at the moment.</p>
+<p>So far we have only time-series data in the test database, so only
+time-series plots can be created at the moment.</p>
 <h3 id="saving">Saving</h3>
-<p>Created plots (called SlowPlot Layout) can be saved and shared. Click the 💾 button on the top right corner. Saved layouts are listed in the SlowDash home page.</p>
+<p>Created plots (called SlowPlot Layout) can be saved and shared. Click
+the 💾 button on the top right corner. Saved layouts are listed in the
+SlowDash home page.</p>
 <h3 id="panel-building-from-url">Panel Building from URL</h3>
 <h4 id="by-configuration-file">By configuration file</h4>
-<p>A URL can be used to open a saved layout with a specified time range:</p>
+<p>A URL can be used to open a saved layout with a specified time
+range:</p>
 <pre><code>http://localhost:18881/slowplot.html?config=slowplot-QuickTour.json&amp;time=2023-03-30T18:00:00&amp;reload=0</code></pre>
 <h4 id="by-channels-and-plot-types">By channels and plot types</h4>
-<p>A layout can be created by URL only, with specifying the channel(s) and time range:</p>
+<p>A layout can be created by URL only, with specifying the channel(s)
+and time range:</p>
 <pre><code>http://localhost:18881/slowplot.html?channel=ch00;ch00/ts-histogram&amp;length=360&amp;reload=60&amp;grid=2x1</code></pre>
 
 

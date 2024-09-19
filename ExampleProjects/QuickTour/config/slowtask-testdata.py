@@ -9,23 +9,25 @@ class TestDataFormat(LongTableFormat):
         cur.execute(f'INSERT INTO {self.table} VALUES(CURRENT_TIMESTAMP,%d,?,%f)' % (timestamp, value), (channel,))
 
         
-datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata", table_format=TestDataFormat())
+ctrl = ControlSystem()
 device = RandomWalkDevice(n=4)
+datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata", table_format=TestDataFormat())
 
 
 def _loop():
     for ch in range(4):
         data = device.read(ch)
         datastore.append(data, tag="ch%02d"%ch)
-    ControlSystem.sleep(1)
+    ctrl.sleep(1)
 
+    
 def _finalize():
     datastore.close()
 
     
     
 if __name__ == '__main__':
-    ControlSystem.stop_by_signal()
-    while not ControlSystem.is_stop_requested():
+    ctrl.stop_by_signal()
+    while not ctrl.is_stop_requested():
         _loop()
     _finalize()

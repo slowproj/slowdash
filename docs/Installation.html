@@ -10,26 +10,28 @@
       div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
   <style type="text/css">
-a.sourceLine { display: inline-block; line-height: 1.25; }
-a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
-a.sourceLine:empty { height: 1.2em; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
-code.sourceCode { white-space: pre; position: relative; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
 @media screen {
 div.sourceCode { overflow: auto; }
 }
 @media print {
-code.sourceCode { white-space: pre-wrap; }
-a.sourceLine { text-indent: -1em; padding-left: 1em; }
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
-pre.numberSource a.sourceLine
-  { position: relative; left: -4em; }
-pre.numberSource a.sourceLine::before
-  { content: attr(title);
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
     position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; pointer-events: all; display: inline-block;
+    border: none; display: inline-block;
     -webkit-touch-callout: none; -webkit-user-select: none;
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
@@ -38,15 +40,15 @@ pre.numberSource a.sourceLine::before
   }
 pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
 div.sourceCode
-  {  }
+  {   }
 @media screen {
-a.sourceLine::before { text-decoration: underline; }
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
 code span.at { color: #7d9029; } /* Attribute */
 code span.bn { color: #40a070; } /* BaseN */
-code span.bu { } /* BuiltIn */
+code span.bu { color: #008000; } /* BuiltIn */
 code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
 code span.ch { color: #4070a0; } /* Char */
 code span.cn { color: #880000; } /* Constant */
@@ -59,7 +61,7 @@ code span.er { color: #ff0000; font-weight: bold; } /* Error */
 code span.ex { } /* Extension */
 code span.fl { color: #40a070; } /* Float */
 code span.fu { color: #06287e; } /* Function */
-code span.im { } /* Import */
+code span.im { color: #008000; font-weight: bold; } /* Import */
 code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
 code span.kw { color: #007020; font-weight: bold; } /* Keyword */
 code span.op { color: #666666; } /* Operator */
@@ -83,15 +85,23 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span class="toc-title">Contents</span>
 <nav id="TOC">
 <ul>
-<li><a href="#docker">Docker</a><ul>
-<li><a href="#prerequisite">Prerequisite</a></li>
-<li><a href="#using-docker-images-amd64-linux">Using Docker Images (amd64-linux)</a></li>
-<li><a href="#building-an-image">Building an Image</a></li>
+<li><a href="#docker" id="toc-docker">Docker</a>
+<ul>
+<li><a href="#prerequisite" id="toc-prerequisite">Prerequisite</a></li>
+<li><a href="#using-docker-images-amd64-linux"
+id="toc-using-docker-images-amd64-linux">Using Docker Images
+(amd64-linux)</a></li>
+<li><a href="#building-an-image" id="toc-building-an-image">Building an
+Image</a></li>
 </ul></li>
-<li><a href="#standard-bare-metal-installation">Standard (Bare-Metal) Installation</a><ul>
-<li><a href="#prerequisite-1">Prerequisite</a></li>
-<li><a href="#installing">Installing</a></li>
-<li><a href="#updating">Updating</a></li>
+<li><a href="#standard-bare-metal-installation"
+id="toc-standard-bare-metal-installation">Standard (Bare-Metal)
+Installation</a>
+<ul>
+<li><a href="#prerequisite-1"
+id="toc-prerequisite-1">Prerequisite</a></li>
+<li><a href="#installing" id="toc-installing">Installing</a></li>
+<li><a href="#updating" id="toc-updating">Updating</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -104,17 +114,23 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><code>git</code></li>
 <li><code>docker</code> and <code>docker-compose</code></li>
 </ul>
-<h2 id="using-docker-images-amd64-linux">Using Docker Images (amd64-linux)</h2>
+<h2 id="using-docker-images-amd64-linux">Using Docker Images
+(amd64-linux)</h2>
 <ul>
-<li>DockerHub: <a href="https://hub.docker.com/r/slowproj/slowdash/tags">slowproj/slowdash:TAG</a></li>
-<li>GitHub Container Registry: <a href="https://github.com/slowproj/slowdash/pkgs/container/slowdash">ghcr.io/slowproj/slowdash:TAG</a></li>
+<li>DockerHub: <a
+href="https://hub.docker.com/r/slowproj/slowdash/tags">slowproj/slowdash:TAG</a></li>
+<li>GitHub Container Registry: <a
+href="https://github.com/slowproj/slowdash/pkgs/container/slowdash">ghcr.io/slowproj/slowdash:TAG</a></li>
 </ul>
-<p>Choose a specific tag. The <code>:latest</code> tag is not made on purpose.</p>
+<p>Choose a specific tag. The <code>:latest</code> tag is not made on
+purpose.</p>
 <h2 id="building-an-image">Building an Image</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">$ git clone https://github.com/slowproj/slowdash.git --recurse-submodules</span></a>
-<a class="sourceLine" id="cb1-2" title="2"><span class="kw">$ cd slowdash</span></a>
-<a class="sourceLine" id="cb1-3" title="3"><span class="kw">$ docker build -t slowdash .</span></a></code></pre></div>
-<h1 id="standard-bare-metal-installation">Standard (Bare-Metal) Installation</h1>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ git clone https://github.com/slowproj/slowdash.git --recurse-submodules</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd slowdash</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker build -t slowdash .</span></span></code></pre></div>
+<h1 id="standard-bare-metal-installation">Standard (Bare-Metal)
+Installation</h1>
 <h2 id="prerequisite-1">Prerequisite</h2>
 <h3 id="base-system">Base System</h3>
 <ul>
@@ -126,18 +142,22 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul></li>
 <li>Python 3
 <ul>
-<li>Version &gt;= 3.7</li>
-<li>with NumPy and pyyaml
+<li>Version &gt;= 3.8</li>
+<li>with NumPy and pyyaml</li>
+<li>also Pandas and Matplotlib if SlowDash python library (SlowPy) is
+used
 <p></li>
 </ul></li>
 <li>Web Browser
 <ul>
-<li>Firefox most tested, Chrome &amp; Edge ok, Safari &amp; Opera never tested.</li>
+<li>Firefox most tested, Chrome &amp; Edge ok, Safari &amp; Opera never
+tested.</li>
 <li>Also works on mobile devices</li>
 </ul></li>
 </ul>
 <h3 id="data-backend">Data Backend</h3>
-<p>Install standard Python modules for the data storage system being used.</p>
+<p>Install standard Python modules for the data storage system being
+used.</p>
 <p>Currently supported data backend systems are:</p>
 <table>
 <thead>
@@ -185,43 +205,65 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </tr>
 </tbody>
 </table>
-<p>*) “System Resource” is a pseudo-database, responding to queries for CPU, memory and disk usage etc.</p>
-<p>See <a href="DataBinding.html">Data Binding section</a> for details.</p>
+<p>*) “System Resource” is a pseudo-database, responding to queries for
+CPU, memory and disk usage etc.</p>
+<p>See <a href="DataBinding.html">Data Binding section</a> for
+details.</p>
 <h2 id="installing">Installing</h2>
-<p>This process will not create any files other than the git-cloned directory. Installation can be removed completely by deleting this directory.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">$ git clone https://github.com/slowproj/slowdash.git --recurse-submodules</span></a>
-<a class="sourceLine" id="cb2-2" title="2"><span class="kw">$ cd slowdash</span></a>
-<a class="sourceLine" id="cb2-3" title="3"><span class="kw">$ make</span></a></code></pre></div>
-<p>This will create a bash file to set environmental variables. <code>source</code> it to include the settings:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">$ source PATH/TO/SLOWDASH/bin/slowdash-bashrc</span></a></code></pre></div>
-<p>For permanent installation, it might be convenient to include this line in the <code>.bashrc</code> file.</p>
+<p>This process will not create any files other than the git-cloned
+directory. Installation can be removed completely by deleting this
+directory.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ git clone https://github.com/slowproj/slowdash.git --recurse-submodules</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd slowdash</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make</span></span></code></pre></div>
+<p>This will create a bash file to set environmental variables.
+<code>source</code> it to include the settings:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source PATH/TO/SLOWDASH/bin/slowdash-bashrc</span></span></code></pre></div>
+<p>For permanent installation, it might be convenient to include this
+line in the <code>.bashrc</code> file.</p>
 <p>Test the installation by running the command:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">$ slowdash</span></a>
-<a class="sourceLine" id="cb4-2" title="2">Usage: </a>
-<a class="sourceLine" id="cb4-3" title="3">  Web-Server Mode:    slowdash.py [Options] --port=PORT</a>
-<a class="sourceLine" id="cb4-4" title="4">  Command-line Mode:  slowdash.py [Options] Command</a>
-<a class="sourceLine" id="cb4-5" title="5"></a>
-<a class="sourceLine" id="cb4-6" title="6">Options:</a>
-<a class="sourceLine" id="cb4-7" title="7">  -h, --help            show this help message and exit</a>
-<a class="sourceLine" id="cb4-8" title="8">  -p PORT, --port=PORT  port number for web connection; command-line mode</a>
-<a class="sourceLine" id="cb4-9" title="9">                        without this option</a>
-<a class="sourceLine" id="cb4-10" title="10">  --project-dir=PROJECT_DIR</a>
-<a class="sourceLine" id="cb4-11" title="11">                        project directory (default: current dir if not</a>
-<a class="sourceLine" id="cb4-12" title="12">                        specified by SLOWDASH_PROJECT environmental variable)</a></code></pre></div>
-<p>Test the browser connection using an arbitrary port. As we have not yet defined a project, a warning message will be shown, but we proceed for now.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">$ slowdash --port=18881</span></a>
-<a class="sourceLine" id="cb5-2" title="2">23-05-15 20:12:35 WARNING: unable to find Slowdash Project Dir: specify it with the --project-dir option, set the SLOWDASH_PROJECT environmental variable, or run the slowdash commands at a project directory</a>
-<a class="sourceLine" id="cb5-3" title="3">listening at port 18881</a></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">$ firefox http://localhost:18881</span></a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>Usage: </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  Web-Server Mode:    slowdash.py [Options] --port=PORT</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  Command-line Mode:  slowdash.py [Options] Command</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>Options:</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  -h, --help            show this help message and exit</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  -p PORT, --port=PORT  port number for web connection; command-line mode</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>                        without this option</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  --project-dir=PROJECT_DIR</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>                        project directory (default: current dir if not</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>                        specified by SLOWDASH_PROJECT environmental variable)</span></code></pre></div>
+<p>Test the browser connection using an arbitrary port. As we have not
+yet defined a project, a warning message will be shown, but we proceed
+for now.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash --port=18881</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>23-05-15 20:12:35 WARNING: unable to find Slowdash Project Dir: specify it with the --project-dir option, set the SLOWDASH_PROJECT environmental variable, or run the slowdash commands at a project directory</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>listening at port 18881</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ firefox http://localhost:18881</span></span></code></pre></div>
 <p>On success, the error messages below will be shown:</p>
 <p><img src="fig/QuickTour-Welcome.png" style="width:40%"></p>
 <p>Type <code>Ctrl-c</code> to stop slowdash.</p>
 <h2 id="updating">Updating</h2>
+<h3 id="updating-the-server">Updating the Server</h3>
 <p>If slowdash is already running, stop it before updating it.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">$ cd PATH/TO/SLOWDASH</span></a>
-<a class="sourceLine" id="cb7-2" title="2"><span class="kw">$ git pull --recurse-submodules</span></a>
-<a class="sourceLine" id="cb7-3" title="3"><span class="kw">$ make</span></a></code></pre></div>
-<p>Often <code>make</code> does not do anything, but it is safe to run it every time.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ git pull --recurse-submodules</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make</span></span></code></pre></div>
+<p>Often <code>make</code> does not do anything, but it is safe to run
+it every time.</p>
+<h3 id="refreshing-the-browser-cache-hard-refresh">Refreshing the
+browser cache (Hard Refresh)</h3>
+<p>SlowDash scripts cached in user web browsers might cause troubles
+after the SlowDash server is updated. In that case, perform “hard
+refresh” the browser by clicking the <code>Reload</code> button with
+holding down the <code>Shift</code> key at a SlowDash page.</p>
 
 
 </body>

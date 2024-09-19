@@ -25,32 +25,35 @@ The directory just created will be mapped into the container as a volume. You ca
 # Test-Data Generation
 To generate test-data, we use the SlowPy Python library that comes with the SlowDash package. Write the code below and save it as `generate-testdata.py` at your project directory:
 ```python
-from slowpy.control import DummyDevice_RandomWalk, ControlSystem
-from slowpy.store import DataStore_SQLite, SimpleLongFormat
+import slowpy.control
+import slowpy.store
 
 
-class TestDataFormat(SimpleLongFormat):
+class TestDataFormat(slowpy.store.LongTableFormat):
     schema_numeric = '(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel))'
     def insert_numeric_data(self, cur, timestamp, channel, value):
-        cur.execute(f'INSERT INTO {self.table} VALUES(CURRENT_TIMESTAMP,%d,"%s",%f)' % (timestamp, channel, value))
+        cur.execute(f'INSERT INTO {self.table} VALUES(CURRENT_TIMESTAMP,{int(timestamp)},?,{float(value)})', (str(channel),))
 
-datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata", format=TestDataFormat())
-device = DummyDevice_RandomWalk(n=4)
+
+ctrl = slowpy.control.ControlSystem()
+device = slowpy.control.RandomWalkDevice(n=4)
+datastore = slowpy.store.DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata", table_format=TestDataFormat())
 
 
 def _loop():
     for ch in range(4):
         data = device.read(ch)
         datastore.append(data, tag="ch%02d"%ch)
-    ControlSystem.sleep(1)
+    ctrl.sleep(1)
+    
 
 def _finalize():
     datastore.close()
     
     
 if __name__ == '__main__':
-    ControlSystem.stop_by_signal()
-    while not ControlSystem.is_stop_requested():
+    ctrl.stop_by_signal()
+    while not ctrl.is_stop_requested():
         _loop()
     _finalize()
 ```
@@ -133,7 +136,9 @@ To use the `datetime` column for the timestamps, the schema part of the configur
 ```
 The timestamp type is indicated after the time column name. Other common values of timestamp type are: `aware` (or `with time zone`) for time data with explicit time zone, and `naive` (or `without time zone` or `local`) for implied "local" time zone (often a bad idea). The `unspecified utc` is a special one that the time data does not have explicit time zone, which looks like "local", but the times are actually in UTC.
 
-### Testing the Configuration (Bare-Metal installation only)
+### Testing the Configuration
+
+(If you are using Docker, first get into the container by `docker exec -it CONTAINER_ID /bin/bash`.)
 
 To test the configuration, run the `slowdash config` command at the project directory:
 ```console

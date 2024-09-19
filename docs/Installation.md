@@ -28,8 +28,9 @@ $ docker build -t slowdash .
   - macOS and Windows (WSL) seem ok
 <p>
 - Python 3
-  - Version >= 3.7
+  - Version >= 3.8
   - with NumPy and pyyaml
+  - also Pandas and Matplotlib if SlowDash python library (SlowPy) is used
 <p>
 - Web Browser
   - Firefox most tested, Chrome &amp; Edge ok, Safari &amp; Opera never tested.
@@ -103,6 +104,7 @@ Type `Ctrl-c` to stop slowdash.
 
 
 ## Updating
+### Updating the Server
 If slowdash is already running, stop it before updating it.
 ```console
 $ cd PATH/TO/SLOWDASH
@@ -110,3 +112,6 @@ $ git pull --recurse-submodules
 $ make
 ```
 Often `make` does not do anything, but it is safe to run it every time.
+
+### Refreshing the browser cache (Hard Refresh)
+SlowDash scripts cached in user web browsers might cause troubles after the SlowDash server is updated. In that case, perform "hard refresh" the browser by clicking the `Reload` button with holding down the `Shift` key at a SlowDash page.

@@ -306,3 +306,14 @@ continue? [Y/n] y
 ...
 ```
 Note that a new line, `User: slow`, is now added.
+
+
+# SlowDash Watch-Dog (SlowDog)
+SlowDog sends HTTP requests to the SlowDash server periodically and if it does not receive a reply before timeout, the dog kills the server and restarts another one.
+
+To enable SlowDog, add `--slowdog` option:
+```console
+$ slowdash --port=18881 --slowdog
+```
+
+SlowDog is enabled in the SlowDash Docker container.
