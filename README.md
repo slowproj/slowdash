@@ -123,7 +123,7 @@ Manuals are on the [Github Pages](https://slowproj.github.io/slowdash/).
 
 See Github Wiki for
 - [Status and Updates](https://github.com/slowproj/slowdash/wiki/Status-and-Updates)
-- [Feature Ideas](https://github.com/slowproj/slowdash/wiki/Status-and-Updates); your ideas are welcome!
+- [Feature Ideas](https://github.com/slowproj/slowdash/wiki/Feature-Ideas); your ideas are welcome!
 
 ## Docker Images
 #### Building from Source
