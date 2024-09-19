@@ -310,6 +310,25 @@ slowdash_project:
       url: DBTYPE://USER:PASS@HOST:PORT/DB
 ```
 
+### Avoiding Channel Scanning Overhead
+In order to obtain a list of channels, SlowDash makes a query like `SELECT DISTINCT tag FROM table`, which can be slow if the table is large. This can be avoided either by manually listing the channels or providing an efficient SQL statement:
+
+#### By a manual list
+```yaml
+      time_series:
+        schema: numeric_data[endpoint]@timestamp(with timezone)=value_raw
+        tags:
+           list: [ "Ch0", "Ch1", "Ch2", "Ch3" ]
+```
+#### By a SQL query
+If the database has a channel table, separately from the data table:
+```yaml
+      time_series:
+        schema: numeric_data[endpoint]@timestamp(with timezone)=value_raw
+        tags:
+           sql: "select name from endpoint_table"
+```
+
 ## Time-Series of Scalar Values
 To access a table containing time-series data, write the schema in the `time_series` entry:
 ```yaml

@@ -171,6 +171,10 @@ class DataSource_SQL(DataSource_TableStore):
         if schema.tag_value_sql is None:
             # TODO: this is inefficient. Modify not to go though all the DB entries.
             schema.tag_value_sql = 'select distinct %s from %s' % (schema.tag, schema.table)
+            logging.warn('Performing a full scan of the SQL table (%s) for available channels...' % schema.table)
+            logging.warn('  This full-scan can be avoided by either:')
+            logging.warn('    - manually list the channels, in "data_source/time_series/tags/list" as an array, or')
+            logging.warn('    - provide a SQL that returns the list, in "data_source/time_series/tags/sql" as a string')
         result = self.server.execute(schema.tag_value_sql)
         if result.is_error:
             logging.error('SQL Error: %s: %s' % (result.error, schema.tag_value_sql))
