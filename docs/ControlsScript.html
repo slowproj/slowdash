@@ -167,8 +167,8 @@ systems</li>
 <p><img src="fig/ContrlScript-UserTask.png" width="40%"></p>
 <ul>
 <li>Controls are implemented as user task python script.</li>
-<li>User task script is a normal Python script. Executable
-independently.</li>
+<li>User task script is a normal Python script. Scripts are executable
+independently from the SlowDash server.</li>
 <li>Panels on the Slowdash GUI, built by users, can call functions
 defined in user task scripts.</li>
 <li>A Python library, <code>slowpy</code>, is provided to be imported by
@@ -182,25 +182,22 @@ data from the external systems</li>
 </ul>
 <h2 id="simple-examples">Simple Examples</h2>
 <h4
-id="controlling-a-voltmeter-with-scpi-commands-over-ethernet">Controlling
-a voltmeter with SCPI commands over Ethernet</h4>
+id="reading-data-from-a-voltmeter-with-scpi-commands-over-ethernet">Reading
+data from a voltmeter with SCPI commands over Ethernet</h4>
 <div class="sourceCode" id="cb1"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ControlSystem</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>ctrl <span class="op">=</span> ControlSystem()</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># make a control node for a SCIP command of &quot;MEAS:V0&quot; on a device at 182.168.1.43</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>V0 <span class="op">=</span> ctrl.ethernet(host<span class="op">=</span><span class="st">&#39;192.168.1.43&#39;</span>, port<span class="op">=</span><span class="dv">17674</span>).scpi().command(<span class="st">&#39;MEAS:V0&#39;</span>, set_format<span class="op">=</span><span class="st">&#39;V0 </span><span class="sc">{}</span><span class="st">;*OPC?&#39;</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>V0 <span class="op">=</span> ctrl.ethernet(host<span class="op">=</span><span class="st">&#39;192.168.1.43&#39;</span>, port<span class="op">=</span><span class="dv">17674</span>).scpi().command(<span class="st">&#39;MEAS:V0&#39;</span>)</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># write a value to the control node: this will issue a SCPI command &quot;V0 10;*OPC?&quot;</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>V0.<span class="bu">set</span>(<span class="dv">10</span>)</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># read a value from the control node, with a SCPI command &quot;MEAS:V?&quot;</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  value <span class="op">=</span> V0.get()</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  ...</span></code></pre></div>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># read a value from the control node, with a SCPI command &quot;MEAS:V?&quot;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  value <span class="op">=</span> V0.get()</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  ...</span></code></pre></div>
 <h4
-id="writing-a-data-value-to-postgresql-database-using-a-default-schema">Writing
-a data value to PostgreSQL database (using a default schema)</h4>
+id="writing-data-to-postgresql-database-using-a-default-schema">Writing
+data to PostgreSQL database (using a default schema)</h4>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_PostgreSQL</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -232,8 +229,8 @@ these node values, making them available in SlowDash GUI in the same way
 as the values stored in database.</p>
 <div class="sourceCode" id="cb5"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(host<span class="op">=</span><span class="st">&#39;192.168.1.43&#39;</span>, port<span class="op">=</span><span class="dv">17674</span>).scpi()</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>V0 <span class="op">=</span> device.command(<span class="st">&#39;MEAS:V0&#39;</span>, set_format<span class="op">=</span><span class="st">&#39;V0 </span><span class="sc">{}</span><span class="st">;*OPC?&#39;</span>)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>V1 <span class="op">=</span> device.command(<span class="st">&#39;MEAS:V1&#39;</span>, set_format<span class="op">=</span><span class="st">&#39;V1 </span><span class="sc">{}</span><span class="st">;*OPC?&#39;</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>V0 <span class="op">=</span> device.command(<span class="st">&#39;MEAS:V0&#39;</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>V1 <span class="op">=</span> device.command(<span class="st">&#39;MEAS:V1&#39;</span>)</span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _export():</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> [</span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&#39;V0&#39;</span>, V0),</span>
@@ -757,15 +754,17 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb17-1"><a h
 <p>SlowTask is a user Python script placed under the SlowDash config
 directory with a name like <code>slowtask-XXX.py</code>. SlowDash GUI
 can start/stop the script, call functions defined in the script, and
-bind control variables in the script to GUI elements. Using the SlowPy
-library from a SlowTask script is assumed for this design, but this is
-not a requirement.</p>
+bind control variables in the script to GUI elements. The SlowPy library
+was designed to be used in user task scripts, but this is not a
+requirement.</p>
 <h2 id="starting-stopping-and-reloading-the-slow-task-scripts">Starting,
 Stopping and Reloading the Slow-Task Scripts</h2>
 <p>SlowTask script files (such as <code>slowtask-test.py</code>) are
-placed under the project configuration directory. The files are enabled
-by making an entry in the project configuration file
-(<code>SlowdashProject.yaml</code>):</p>
+placed under the project configuration directory. By default, tasks are
+“listed” in the Task Manager panel of SlowDash web page, but they will
+not be “loaded” until the <code>start</code> button is clicked.
+Auto-loading can be set by making an entry in the SlowDash configuration
+file (<code>SlowdashProject.yaml</code>):</p>
 <div class="sourceCode" id="cb18"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="at">  ...</span></span>
@@ -778,12 +777,10 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb18-1"><a href=
 <span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">system</span><span class="kw">:</span></span>
 <span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">our_security_is_perfect</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span></code></pre></div>
-<p>Tasks will be listed in the Task Manager table of SlowDash page, and
-can be controlled from there.</p>
 <p>The parameters are optional, and if given, these will be passed to
 the <code>_initialize(params)</code> function of the script (described
 later).</p>
-<p>By setting <code>system/our_security_is_peferct</code> to
+<p>Setting <code>system/our_security_is_peferct</code> to
 <code>true</code> will enable editing of the Python scripts on the
 SlowDash web page. While this is convenient, be aware what it means.
 Python scripts can do anything, such as <code>system("rm *")</code>.
@@ -792,10 +789,10 @@ careful systems run processes only in Docker containers, where the
 container system runs on a virtual machine (in case the container is
 cracked) inside a firewall which accepts only VPN or SSH accesses from
 listed addresses. On top of that, in order to prevent unintended
-destruction by novice operators, it would be safer to run two instances
-of SlowDash, one with full features and one with limited operations (no
-or selected tasks); the <code>slowdash</code> command have an option to
-specify which configuration file to use.</p>
+destruction by novice operators, it might be safer to run two instances
+of SlowDash, one with full features and one with limited operations
+(without or only with selected tasks); the <code>slowdash</code> command
+have an option to specify which configuration file to use.</p>
 <h2 id="callback-functions-command-task">Callback Functions (Command
 Task)</h2>
 <p>Functions in SlowTask scripts can be called from SlowDash GUI. If a

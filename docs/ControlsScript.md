@@ -442,11 +442,11 @@ server.start()
 ```
 
 # SlowTask: GUI-Script Binding
-SlowTask is a user Python script placed under the SlowDash config directory with a name like `slowtask-XXX.py`. SlowDash GUI can start/stop the script, call functions defined in the script, and bind control variables in the script to GUI elements. Using the SlowPy library from a SlowTask script is assumed for this design, but this is not a requirement.
+SlowTask is a user Python script placed under the SlowDash config directory with a name like `slowtask-XXX.py`. SlowDash GUI can start/stop the script, call functions defined in the script, and bind control variables in the script to GUI elements. The SlowPy library was designed to be used in user task scripts, but this is not a requirement.
 
 
 ## Starting, Stopping and Reloading the Slow-Task Scripts
-SlowTask script files (such as `slowtask-test.py`) are placed under the project configuration directory. The files are enabled by making an entry in the project configuration file (`SlowdashProject.yaml`):
+SlowTask script files (such as `slowtask-test.py`) are placed under the project configuration directory. By default, tasks are "listed" in the Task Manager panel of SlowDash web page, but they will not be "loaded" until the `start` button is clicked. Auto-loading can be set by making an entry in the SlowDash configuration file (`SlowdashProject.yaml`):
 ```yaml
 slowdash_project:
   ...
@@ -460,11 +460,10 @@ slowdash_project:
   system:
     our_security_is_perfect: false
 ```
-Tasks will be listed in the Task Manager table of SlowDash page, and can be controlled from there.
 
 The parameters are optional, and if given, these will be passed to the `_initialize(params)` function of the script (described later).
 
-By setting `system/our_security_is_peferct` to `true` will enable editing of the Python scripts on the SlowDash web page. While this is convenient, be aware what it means. Python scripts can do anything, such as `system("rm *")`. Enable this feature only when the access is strictly controlled. Some careful systems run processes only in Docker containers, where the container system runs on a virtual machine (in case the container is cracked) inside a firewall which accepts only VPN or SSH accesses from listed addresses. On top of that, in order to prevent unintended destruction by novice operators, it would be safer to run two instances of SlowDash, one with full features and one with limited operations (no or selected tasks); the `slowdash` command have an option to specify which configuration file to use.
+Setting `system/our_security_is_peferct` to `true` will enable editing of the Python scripts on the SlowDash web page. While this is convenient, be aware what it means. Python scripts can do anything, such as `system("rm *")`. Enable this feature only when the access is strictly controlled. Some careful systems run processes only in Docker containers, where the container system runs on a virtual machine (in case the container is cracked) inside a firewall which accepts only VPN or SSH accesses from listed addresses. On top of that, in order to prevent unintended destruction by novice operators, it might be safer to run two instances of SlowDash, one with full features and one with limited operations (without or only with selected tasks); the `slowdash` command have an option to specify which configuration file to use.
 
 
 ## Callback Functions (Command Task)

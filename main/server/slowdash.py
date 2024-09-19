@@ -457,7 +457,10 @@ class App:
         filepath = os.path.join(self.project_dir, 'config', filename)
         if not (os.path.isfile(filepath) and os.access(filepath, os.R_OK)):
             return None
-        pathlib.Path(filepath).touch()
+        try:
+            pathlib.Path(filepath).touch()
+        except:
+            pass
 
         ext = os.path.splitext(filepath)[1].lower()
         if ext == '.json':
