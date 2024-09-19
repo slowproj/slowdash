@@ -22,7 +22,7 @@ title: Controls Script
 <img src="fig/ContrlScript-UserTask.png" width="40%">
 
 - Controls are implemented as user task python script.
-- User task script is a normal Python script. Executable independently.
+- User task script is a normal Python script. Scripts are executable independently from the SlowDash server.
 - Panels on the Slowdash GUI, built by users, can call functions defined in user task scripts.
 - A Python library, `slowpy`, is provided to be imported by the user task scripts, for:
   - Simple unified methods to control external systems
@@ -30,16 +30,13 @@ title: Controls Script
   - Data storage interface to store the data objects, as well as raw data from the external systems
 
 ## Simple Examples
-#### Controlling a voltmeter with SCPI commands over Ethernet
+#### Reading data from a voltmeter with SCPI commands over Ethernet
 ```python
 from slowpy.control import ControlSystem
 ctrl = ControlSystem()
 
 # make a control node for a SCIP command of "MEAS:V0" on a device at 182.168.1.43
-V0 = ctrl.ethernet(host='192.168.1.43', port=17674).scpi().command('MEAS:V0', set_format='V0 {};*OPC?')
-
-# write a value to the control node: this will issue a SCPI command "V0 10;*OPC?"
-V0.set(10)
+V0 = ctrl.ethernet(host='192.168.1.43', port=17674).scpi().command('MEAS:V0')
 
 while True:
   # read a value from the control node, with a SCPI command "MEAS:V?"
@@ -47,7 +44,7 @@ while True:
   ...
 ```
 
-#### Writing a data value to PostgreSQL database (using a default schema)
+#### Writing data to PostgreSQL database (using a default schema)
 ```python
 from slowpy.store import DataStore_PostgreSQL
 
@@ -77,8 +74,8 @@ Then clicking the `Set` button will call the function `set_V0()` with a paramete
 For a control node `V0`, and `V1`, defining `_export()` function in the User Task Script will export these node values, making them available in SlowDash GUI in the same way as the values stored in database.
 ```python
 device = ctrl.ethernet(host='192.168.1.43', port=17674).scpi()
-V0 = device.command('MEAS:V0', set_format='V0 {};*OPC?')
-V1 = device.command('MEAS:V1', set_format='V1 {};*OPC?')
+V0 = device.command('MEAS:V0')
+V1 = device.command('MEAS:V1')
 def _export():
     return [
         ('V0', V0),

@@ -775,7 +775,7 @@ export class TaskManagerPanel extends Panel {
             border: 'none',
         });
 
-        $('<span>').appendTo(this.titleDiv).text('SlowTask Status');
+        $('<span>').appendTo(this.titleDiv).html('SlowTask Status <span style="font-size:80%">(<a href="docs/index.html#ControlsScript" target="_blank">?</a>)</span>');
 
         this.inputDiv.html('&gt; <input style="width:calc(100% - 10em)"><button>Send</button>');
         this.inputDiv.find('button').bind('click', e=>{
