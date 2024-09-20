@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Build and Push Docker Image to DockerHub
 
 on:
   push:
@@ -23,9 +23,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
           
       - name: Build Docker image
-        run: |
-          docker build -t slowproj/slowdash:latest .
+        run: docker build -t slowproj/slowdash:latest .
 
       - name: Push Docker image to DockerHub
-        run: |
-          docker push slowproj/slowdash:latest
+        run: docker push slowproj/slowdash:latest
