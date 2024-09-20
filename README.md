@@ -72,7 +72,7 @@ docker build -t slowdash .
 ```
 cd slowdash/ExampleProjects/DummyDataSource
 ```
-Edit `docker-compose.yaml` to change `image: slowproj/slowdash:2401` to `image: slowdash`
+Edit `docker-compose.yaml` to change `image: slowproj/slowdash` to `image: slowdash`
 ```
 docker-compose up
 ```
@@ -136,12 +136,12 @@ docker build -t slowdash .
 #### DockerHub 
 [https://hub.docker.com/r/slowproj/slowdash](https://hub.docker.com/r/slowproj/slowdash)
 ```
-docker pull slowproj/slowdash:2407
+docker pull slowproj/slowdash
 ```
 
 #### GitHub Package 
 [https://github.com/slowproj/slowdash/pkgs/container/slowdash](https://github.com/slowproj/slowdash/pkgs/container/slowdash)
 ```
-docker pull ghcr.io/slowproj/slowdash:2407
+docker pull ghcr.io/slowproj/slowdash
 ```
 

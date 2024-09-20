@@ -198,7 +198,7 @@ $ slowdash --port=18881
 #### Docker
 Image from DockerHub
 ```console
-$ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash:2407
+$ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash
 ```
 or locally created image:
 ```console
@@ -212,7 +212,7 @@ version: '3'
 
 services:
   slowdash:
-    image: slowproj/slowdash:2407
+    image: slowproj/slowdash
     volumes:
       - .:/project
     ports:

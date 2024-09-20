@@ -9,7 +9,7 @@ services:
       - "18881:18881"
 
   testdata:
-    image: slowproj/slowdash:2407
+    image: slowproj/slowdash
     volumes:
       - .:/project
     command: python /slowdash/utils/generate-testdata.py --db-url=csv:///SlowTestData.d

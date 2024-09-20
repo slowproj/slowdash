@@ -15,7 +15,7 @@ services:
       - COUCHDB_PASSWORD=neutrino
 
   slowdash:
-    image: slowproj/slowdash:2407
+    image: slowproj/slowdash
     volumes:
       - .:/project
     ports:

@@ -10,26 +10,28 @@
       div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
   <style type="text/css">
-a.sourceLine { display: inline-block; line-height: 1.25; }
-a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
-a.sourceLine:empty { height: 1.2em; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
-code.sourceCode { white-space: pre; position: relative; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
 @media screen {
 div.sourceCode { overflow: auto; }
 }
 @media print {
-code.sourceCode { white-space: pre-wrap; }
-a.sourceLine { text-indent: -1em; padding-left: 1em; }
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
-pre.numberSource a.sourceLine
-  { position: relative; left: -4em; }
-pre.numberSource a.sourceLine::before
-  { content: attr(title);
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
     position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; pointer-events: all; display: inline-block;
+    border: none; display: inline-block;
     -webkit-touch-callout: none; -webkit-user-select: none;
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
@@ -38,15 +40,15 @@ pre.numberSource a.sourceLine::before
   }
 pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
 div.sourceCode
-  {  }
+  {   }
 @media screen {
-a.sourceLine::before { text-decoration: underline; }
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
 code span.at { color: #7d9029; } /* Attribute */
 code span.bn { color: #40a070; } /* BaseN */
-code span.bu { } /* BuiltIn */
+code span.bu { color: #008000; } /* BuiltIn */
 code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
 code span.ch { color: #4070a0; } /* Char */
 code span.cn { color: #880000; } /* Constant */
@@ -59,7 +61,7 @@ code span.er { color: #ff0000; font-weight: bold; } /* Error */
 code span.ex { } /* Extension */
 code span.fl { color: #40a070; } /* Float */
 code span.fu { color: #06287e; } /* Function */
-code span.im { } /* Import */
+code span.im { color: #008000; font-weight: bold; } /* Import */
 code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
 code span.kw { color: #007020; font-weight: bold; } /* Keyword */
 code span.op { color: #666666; } /* Operator */
@@ -83,23 +85,37 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span class="toc-title">Contents</span>
 <nav id="TOC">
 <ul>
-<li><a href="#time-axis-plot-time-series">Time-Axis Plot (Time-Series)</a></li>
-<li><a href="#xy-plot-histograms-graphs">XY Plot (Histograms &amp; Graphs)</a></li>
-<li><a href="#canvas">Canvas</a><ul>
-<li><a href="#user-canvas-configuration-file">User Canvas Configuration File</a></li>
-<li><a href="#items">Items</a></li>
+<li><a href="#time-axis-plot-time-series"
+id="toc-time-axis-plot-time-series">Time-Axis Plot
+(Time-Series)</a></li>
+<li><a href="#xy-plot-histograms-graphs"
+id="toc-xy-plot-histograms-graphs">XY Plot (Histograms &amp;
+Graphs)</a></li>
+<li><a href="#canvas" id="toc-canvas">Canvas</a>
+<ul>
+<li><a href="#user-canvas-configuration-file"
+id="toc-user-canvas-configuration-file">User Canvas Configuration
+File</a></li>
+<li><a href="#items" id="toc-items">Items</a></li>
 </ul></li>
-<li><a href="#map">Map</a><ul>
-<li><a href="#user-map-file">User Map File</a></li>
+<li><a href="#map" id="toc-map">Map</a>
+<ul>
+<li><a href="#user-map-file" id="toc-user-map-file">User Map
+File</a></li>
 </ul></li>
-<li><a href="#table">Table</a></li>
-<li><a href="#tree">Tree</a></li>
-<li><a href="#blob">Blob</a></li>
-<li><a href="#html-form">HTML / Form</a><ul>
-<li><a href="#user-html-file">User HTML File</a></li>
+<li><a href="#table" id="toc-table">Table</a></li>
+<li><a href="#tree" id="toc-tree">Tree</a></li>
+<li><a href="#blob" id="toc-blob">Blob</a></li>
+<li><a href="#html-form" id="toc-html-form">HTML / Form</a>
+<ul>
+<li><a href="#user-html-file" id="toc-user-html-file">User HTML
+File</a></li>
 </ul></li>
-<li><a href="#external-page">External Page</a><ul>
-<li><a href="#external-user-page-with-slow-dash-data-and-controls">External User Page with Slow-Dash data and controls</a></li>
+<li><a href="#external-page" id="toc-external-page">External Page</a>
+<ul>
+<li><a href="#external-user-page-with-slow-dash-data-and-controls"
+id="toc-external-user-page-with-slow-dash-data-and-controls">External
+User Page with Slow-Dash data and controls</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -107,7 +123,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </header>
 
 <h1 id="time-axis-plot-time-series">Time-Axis Plot (Time-Series)</h1>
-<h1 id="xy-plot-histograms-graphs">XY Plot (Histograms &amp; Graphs)</h1>
+<h1 id="xy-plot-histograms-graphs">XY Plot (Histograms &amp;
+Graphs)</h1>
 <h1 id="canvas">Canvas</h1>
 <p><img src="fig/Panel-Canvas-Simple.png" style="width:40%;margin-left:2em;border:thin solid gray"></p>
 <ul>
@@ -115,75 +132,89 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li>Items are graphical element on the base image.</li>
 <li>Most items are bound to data values (metric).</li>
 <li>Most items (can) show data values by text next to it.</li>
-<li>“Shape Items” (can) show active/non-active status based on data values.</li>
+<li>“Shape Items” (can) show active/non-active status based on data
+values.</li>
 </ul>
-<h2 id="user-canvas-configuration-file">User Canvas Configuration File</h2>
+<h2 id="user-canvas-configuration-file">User Canvas Configuration
+File</h2>
 <ul>
 <li>User configuration file describes the base image and elements.</li>
-<li>The file is located under <code>PROJECT/config</code>, and the name must be <code>slowdash-NAME.json</code>.</li>
+<li>The file is located under <code>PROJECT/config</code>, and the name
+must be <code>slowdash-NAME.json</code>.</li>
 <li>Example from <code>Projects/ATDS/Config</code>:</li>
 </ul>
-<div class="sourceCode" id="cb1"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb1-1" title="1"><span class="fu">{</span></a>
-<a class="sourceLine" id="cb1-2" title="2">    <span class="dt">&quot;meta&quot;</span><span class="fu">:</span> <span class="fu">{</span></a>
-<a class="sourceLine" id="cb1-3" title="3">        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;ATDS&quot;</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb1-4" title="4">        <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;&quot;</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb1-5" title="5">        <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;Atomic Tritium Demonstrator at UW Top Level&quot;</span></a>
-<a class="sourceLine" id="cb1-6" title="6">    <span class="fu">},</span></a>
-<a class="sourceLine" id="cb1-7" title="7"></a>
-<a class="sourceLine" id="cb1-8" title="8">    <span class="dt">&quot;view_box&quot;</span><span class="fu">:</span> <span class="st">&quot;0 -10 1600 700&quot;</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb1-9" title="9">    </a>
-<a class="sourceLine" id="cb1-10" title="10">    <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="ot">[</span></a>
-<a class="sourceLine" id="cb1-11" title="11">        <span class="fu">{</span></a>
-<a class="sourceLine" id="cb1-12" title="12">            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;image&quot;</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb1-13" title="13">            <span class="dt">&quot;attr&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="dv">50</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="dv">-2</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">554</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">1003</span><span class="fu">,</span> <span class="dt">&quot;href&quot;</span><span class="fu">:</span> <span class="st">&quot;ATDS.png&quot;</span> <span class="fu">}</span></a>
-<a class="sourceLine" id="cb1-14" title="14">        <span class="fu">}</span><span class="ot">,</span></a>
-<a class="sourceLine" id="cb1-15" title="15">        <span class="fu">{</span><span class="dt">&quot;_type&quot;</span><span class="fu">:</span> <span class="st">&quot;grid&quot;</span><span class="fu">}</span><span class="ot">,</span></a>
-<a class="sourceLine" id="cb1-16" title="16">        </a>
-<a class="sourceLine" id="cb1-17" title="17">        <span class="fu">{</span></a>
-<a class="sourceLine" id="cb1-18" title="18">            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;valve&quot;</span><span class="fu">,</span> </a>
-<a class="sourceLine" id="cb1-19" title="19">            <span class="dt">&quot;attr&quot;</span><span class="fu">:</span> <span class="fu">{</span></a>
-<a class="sourceLine" id="cb1-20" title="20">                <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="dv">135</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="dv">235</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span> <span class="dt">&quot;orientation&quot;</span><span class="fu">:</span> <span class="st">&quot;horizontal&quot;</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb1-21" title="21">                <span class="dt">&quot;data-dx&quot;</span><span class="fu">:</span> <span class="dv">-10</span><span class="fu">,</span> <span class="dt">&quot;data-dy&quot;</span><span class="fu">:</span> <span class="dv">50</span></a>
-<a class="sourceLine" id="cb1-22" title="22">            <span class="fu">},</span></a>
-<a class="sourceLine" id="cb1-23" title="23">            <span class="dt">&quot;metric&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;channel&quot;</span><span class="fu">:</span> <span class="st">&quot;sccm.Alicat.Gas&quot;</span><span class="fu">,</span> <span class="dt">&quot;active-above&quot;</span><span class="fu">:</span> <span class="fl">0.1</span><span class="fu">,</span> <span class="dt">&quot;format&quot;</span><span class="fu">:</span> <span class="st">&quot;%.1f sccm&quot;</span> <span class="fu">},</span></a>
-<a class="sourceLine" id="cb1-24" title="24">            <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;form&quot;</span><span class="fu">:</span> <span class="st">&quot;AlicatFlow&quot;</span> <span class="fu">}</span></a>
-<a class="sourceLine" id="cb1-25" title="25">        <span class="fu">}</span><span class="ot">,</span></a>
-<a class="sourceLine" id="cb1-26" title="26">        <span class="fu">{</span></a>
-<a class="sourceLine" id="cb1-27" title="27">            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;circle&quot;</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb1-28" title="28">            <span class="dt">&quot;attr&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="dv">185</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="dv">85</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span> <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;P&quot;</span> <span class="fu">},</span></a>
-<a class="sourceLine" id="cb1-29" title="29">            <span class="dt">&quot;metric&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;channel&quot;</span><span class="fu">:</span> <span class="st">&quot;mbar.CC10.Gas&quot;</span><span class="fu">,</span> <span class="dt">&quot;active-below&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span> <span class="dt">&quot;format&quot;</span><span class="fu">:</span> <span class="st">&quot;%.1e mbar&quot;</span> <span class="fu">}</span></a>
-<a class="sourceLine" id="cb1-30" title="30">        <span class="fu">}</span><span class="ot">,</span></a>
-<a class="sourceLine" id="cb1-31" title="31"></a>
-<a class="sourceLine" id="cb1-32" title="32">        <span class="er">...</span></a>
-<a class="sourceLine" id="cb1-33" title="33">    <span class="ot">]</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb1-34" title="34">    </a>
-<a class="sourceLine" id="cb1-35" title="35">    <span class="dt">&quot;forms&quot;</span><span class="fu">:</span> <span class="fu">{</span></a>
-<a class="sourceLine" id="cb1-36" title="36">        <span class="dt">&quot;AlicatFlow&quot;</span><span class="fu">:</span> <span class="fu">{</span></a>
-<a class="sourceLine" id="cb1-37" title="37">        <span class="er">...</span></a>
-<a class="sourceLine" id="cb1-38" title="38">    <span class="fu">}</span></a>
-<a class="sourceLine" id="cb1-39" title="39"><span class="fu">}</span></a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;meta&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;ATDS&quot;</span><span class="fu">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;&quot;</span><span class="fu">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="st">&quot;Atomic Tritium Demonstrator at UW Top Level&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">},</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;view_box&quot;</span><span class="fu">:</span> <span class="st">&quot;0 -10 1600 700&quot;</span><span class="fu">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;image&quot;</span><span class="fu">,</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;attr&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="dv">50</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="dv">-2</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">554</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">1003</span><span class="fu">,</span> <span class="dt">&quot;href&quot;</span><span class="fu">:</span> <span class="st">&quot;ATDS.png&quot;</span> <span class="fu">}</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span><span class="dt">&quot;_type&quot;</span><span class="fu">:</span> <span class="st">&quot;grid&quot;</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;valve&quot;</span><span class="fu">,</span> </span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;attr&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="dv">135</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="dv">235</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span> <span class="dt">&quot;orientation&quot;</span><span class="fu">:</span> <span class="st">&quot;horizontal&quot;</span><span class="fu">,</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;data-dx&quot;</span><span class="fu">:</span> <span class="dv">-10</span><span class="fu">,</span> <span class="dt">&quot;data-dy&quot;</span><span class="fu">:</span> <span class="dv">50</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>            <span class="fu">},</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;metric&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;channel&quot;</span><span class="fu">:</span> <span class="st">&quot;sccm.Alicat.Gas&quot;</span><span class="fu">,</span> <span class="dt">&quot;active-above&quot;</span><span class="fu">:</span> <span class="fl">0.1</span><span class="fu">,</span> <span class="dt">&quot;format&quot;</span><span class="fu">:</span> <span class="st">&quot;%.1f sccm&quot;</span> <span class="fu">},</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;form&quot;</span><span class="fu">:</span> <span class="st">&quot;AlicatFlow&quot;</span> <span class="fu">}</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;circle&quot;</span><span class="fu">,</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;attr&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="dv">185</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="dv">85</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span> <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;P&quot;</span> <span class="fu">},</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;metric&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;channel&quot;</span><span class="fu">:</span> <span class="st">&quot;mbar.CC10.Gas&quot;</span><span class="fu">,</span> <span class="dt">&quot;active-below&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span> <span class="dt">&quot;format&quot;</span><span class="fu">:</span> <span class="st">&quot;%.1e mbar&quot;</span> <span class="fu">}</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>        <span class="er">...</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;forms&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;AlicatFlow&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>        <span class="er">...</span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <ul>
-<li><code>meta</code> for meta information of this configuration file.</li>
-<li><code>view_box</code> defines the coordinate for item placement.</li>
+<li><code>meta</code> for meta information of this configuration
+file.</li>
+<li><code>view_box</code> defines the coordinate for item
+placement.</li>
 <li><code>items</code> is a list of items.</li>
-<li><code>forms</code> is for a mini control panel to send commands to server-side scripts (typically to control the device).</li>
+<li><code>forms</code> is for a mini control panel to send commands to
+server-side scripts (typically to control the device).</li>
 </ul>
 <h3 id="item-attributes">Item Attributes</h3>
 <ul>
 <li>Attributes describes how the items appear on the canvas.</li>
-<li>Attributes are mostly identical to SVG attributes for the corresponding shape, with some additions.</li>
+<li>Attributes are mostly identical to SVG attributes for the
+corresponding shape, with some additions.</li>
 <li>Commonly used SVG attributes are:
 <ul>
-<li><code>x</code>, <code>y</code>, <code>width</code>, <code>height</code>: position and size of the item on the canvas</li>
-<li><code>stroke</code>, <code>fill</code>: line color and fill color</li>
+<li><code>x</code>, <code>y</code>, <code>width</code>,
+<code>height</code>: position and size of the item on the canvas</li>
+<li><code>stroke</code>, <code>fill</code>: line color and fill
+color</li>
 </ul></li>
 <li>Some additional attributes are:
 <ul>
 <li><code>label</code>: text drawn in the shape</li>
-<li><code>label-dx</code>, <code>label-dy</code>: offset position of the label text</li>
-<li><code>label-font-family</code>, <code>label-font-size</code>: label font</li>
-<li><code>data-dx</code>, <code>data-dy</code>: offset position of the data value indicator</li>
-<li><code>data-font-family</code>, <code>data-font-size</code>: data indicator font</li>
+<li><code>label-dx</code>, <code>label-dy</code>: offset position of the
+label text</li>
+<li><code>label-font-family</code>, <code>label-font-size</code>: label
+font</li>
+<li><code>data-dx</code>, <code>data-dy</code>: offset position of the
+data value indicator</li>
+<li><code>data-font-family</code>, <code>data-font-size</code>: data
+indicator font</li>
 <li><code>data-color</code>: data indicator color</li>
 </ul></li>
 </ul>
@@ -199,58 +230,71 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul></li>
 </ul>
 <h5 id="example">Example:</h5>
-<div class="sourceCode" id="cb2"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb2-1" title="1"><span class="fu">{</span></a>
-<a class="sourceLine" id="cb2-2" title="2">    <span class="dt">&quot;metric&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;channel&quot;</span><span class="fu">:</span> <span class="st">&quot;mbar.CC10.Gas&quot;</span><span class="fu">,</span> <span class="dt">&quot;active-below&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span> <span class="dt">&quot;format&quot;</span><span class="fu">:</span> <span class="st">&quot;%.1e mbar&quot;</span> <span class="fu">},</span></a>
-<a class="sourceLine" id="cb2-3" title="3">    <span class="er">...</span></a>
-<a class="sourceLine" id="cb2-4" title="4"><span class="fu">}</span></a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;metric&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;channel&quot;</span><span class="fu">:</span> <span class="st">&quot;mbar.CC10.Gas&quot;</span><span class="fu">,</span> <span class="dt">&quot;active-below&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span> <span class="dt">&quot;format&quot;</span><span class="fu">:</span> <span class="st">&quot;%.1e mbar&quot;</span> <span class="fu">},</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="er">...</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <ul>
-<li><code>active-above</code> and/or <code>active-below</code> defines the active range. The color of the item changes accordingly.</li>
+<li><code>active-above</code> and/or <code>active-below</code> defines
+the active range. The color of the item changes accordingly.</li>
 <li><code>format</code> is used for data indicator text.</li>
-<li><code>tolerable-gap</code> can be specified for gap in time-series before alarm icon is shown. Default is 60 sec.</li>
+<li><code>tolerable-gap</code> can be specified for gap in time-series
+before alarm icon is shown. Default is 60 sec.</li>
 </ul>
 <h3 id="action-binding">Action Binding</h3>
 <ul>
 <li>Items can have associated actions.</li>
 <li>Actions can be:
 <ul>
-<li>sending commands to a server-side user scripts (see <a href="UserModule.html">UserModule</a>)</li>
+<li>sending commands to a server-side user scripts (see <a
+href="UserModule.html">UserModule</a>)</li>
 <li>opening a web page</li>
 </ul></li>
 </ul>
 <h5 id="example-opening-a-web-page">Example: Opening a web page</h5>
-<div class="sourceCode" id="cb3"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb3-1" title="1"><span class="fu">{</span></a>
-<a class="sourceLine" id="cb3-2" title="2">    <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;open&quot;</span><span class="fu">:</span> <span class="st">&quot;./slowplot.html?config=slowplot-ATDS.json&quot;</span> <span class="fu">},</span></a>
-<a class="sourceLine" id="cb3-3" title="3">    <span class="er">...</span></a>
-<a class="sourceLine" id="cb3-4" title="4"><span class="fu">}</span></a></code></pre></div>
-<h5 id="example-sending-a-command-to-server-side-user-module">Example: Sending a command to server-side User Module</h5>
-<div class="sourceCode" id="cb4"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb4-1" title="1"><span class="fu">{</span></a>
-<a class="sourceLine" id="cb4-2" title="2">    <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;submit&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;restart_IG&quot;</span> <span class="fu">}</span> <span class="fu">},</span></a>
-<a class="sourceLine" id="cb4-3" title="3">    <span class="er">...</span></a>
-<a class="sourceLine" id="cb4-4" title="4"><span class="fu">}</span></a></code></pre></div>
-<h5 id="example-sending-a-command-to-server-side-user-module-with-parameters-form">Example: Sending a command to server-side User Module with parameters (“form”)</h5>
-<div class="sourceCode" id="cb5"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb5-1" title="1"><span class="fu">{</span></a>
-<a class="sourceLine" id="cb5-2" title="2">    <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;form&quot;</span><span class="fu">:</span> <span class="st">&quot;AlicatFlow&quot;</span> <span class="fu">},</span></a>
-<a class="sourceLine" id="cb5-3" title="3">    <span class="er">...</span></a>
-<a class="sourceLine" id="cb5-4" title="4"><span class="fu">}</span></a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;open&quot;</span><span class="fu">:</span> <span class="st">&quot;./slowplot.html?config=slowplot-ATDS.json&quot;</span> <span class="fu">},</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="er">...</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h5 id="example-sending-a-command-to-server-side-user-module">Example:
+Sending a command to server-side User Module</h5>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;submit&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;restart_IG&quot;</span> <span class="fu">}</span> <span class="fu">},</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="er">...</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h5
+id="example-sending-a-command-to-server-side-user-module-with-parameters-form">Example:
+Sending a command to server-side User Module with parameters
+(“form”)</h5>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;form&quot;</span><span class="fu">:</span> <span class="st">&quot;AlicatFlow&quot;</span> <span class="fu">},</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="er">...</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>Forms are defined separately in the same configuration file:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb6-1" title="1"><span class="fu">{</span></a>
-<a class="sourceLine" id="cb6-2" title="2">    <span class="dt">&quot;forms&quot;</span><span class="fu">:</span> <span class="fu">{</span></a>
-<a class="sourceLine" id="cb6-3" title="3">        <span class="dt">&quot;AlicatFlow&quot;</span><span class="fu">:</span> <span class="fu">{</span></a>
-<a class="sourceLine" id="cb6-4" title="4">            <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot; Injection Flow&quot;</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb6-5" title="5">            <span class="dt">&quot;initial&quot;</span><span class="fu">:</span> <span class="fu">{},</span></a>
-<a class="sourceLine" id="cb6-6" title="6">            <span class="dt">&quot;inputs&quot;</span><span class="fu">:</span> <span class="ot">[</span></a>
-<a class="sourceLine" id="cb6-7" title="7">                <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;flow&quot;</span><span class="fu">,</span> <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;Set-point (sccm)&quot;</span><span class="fu">,</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;number&quot;</span><span class="fu">,</span> <span class="dt">&quot;step&quot;</span><span class="fu">:</span> <span class="fl">0.1</span> <span class="st">&quot;initial&quot;</span><span class="er">:</span> <span class="dv">15</span> <span class="fu">}</span></a>
-<a class="sourceLine" id="cb6-8" title="8">            <span class="ot">]</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb6-9" title="9">            <span class="dt">&quot;buttons&quot;</span><span class="fu">:</span> <span class="ot">[</span></a>
-<a class="sourceLine" id="cb6-10" title="10">                <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;apply&quot;</span><span class="fu">,</span> <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;Apply Set-point&quot;</span> <span class="fu">}</span><span class="ot">,</span></a>
-<a class="sourceLine" id="cb6-11" title="11">                <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;close&quot;</span><span class="fu">,</span> <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;Close Valve&quot;</span> <span class="fu">}</span></a>
-<a class="sourceLine" id="cb6-12" title="12">            <span class="ot">]</span></a>
-<a class="sourceLine" id="cb6-13" title="13">        <span class="fu">},</span></a>
-<a class="sourceLine" id="cb6-14" title="14">        <span class="er">...</span></a>
-<a class="sourceLine" id="cb6-15" title="15">    <span class="fu">},</span></a>
-<a class="sourceLine" id="cb6-16" title="16">    <span class="er">...</span></a>
-<a class="sourceLine" id="cb6-17" title="17"><span class="fu">}</span></a></code></pre></div>
-<p>The configuration above creates a form like this (bottom part of the panel):</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;forms&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;AlicatFlow&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot; Injection Flow&quot;</span><span class="fu">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;initial&quot;</span><span class="fu">:</span> <span class="fu">{},</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;inputs&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>                <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;flow&quot;</span><span class="fu">,</span> <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;Set-point (sccm)&quot;</span><span class="fu">,</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;number&quot;</span><span class="fu">,</span> <span class="dt">&quot;step&quot;</span><span class="fu">:</span> <span class="fl">0.1</span> <span class="st">&quot;initial&quot;</span><span class="er">:</span> <span class="dv">15</span> <span class="fu">}</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>            <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;buttons&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>                <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;apply&quot;</span><span class="fu">,</span> <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;Apply Set-point&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>                <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;close&quot;</span><span class="fu">,</span> <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;Close Valve&quot;</span> <span class="fu">}</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>            <span class="ot">]</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        <span class="fu">},</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>        <span class="er">...</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">},</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="er">...</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>The configuration above creates a form like this (bottom part of the
+panel):</p>
 <p><img src="fig/Panel-Canvas-Form.png" style="width:25%;border:thin solid gray"></p>
 <h2 id="items">Items</h2>
 <h3 id="base-image">Base Image</h3>
@@ -258,120 +302,146 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li>type: <code>image</code></li>
 <li>attributes (defaults):</li>
 </ul>
-<div class="sourceCode" id="cb7"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb7-1" title="1"><span class="fu">{</span></a>
-<a class="sourceLine" id="cb7-2" title="2">    <span class="dt">&quot;href&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb7-3" title="3">    <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="kw">null</span></a>
-<a class="sourceLine" id="cb7-4" title="4"><span class="fu">}</span></a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;href&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="kw">null</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h5 id="tips">Tips</h5>
 <ul>
-<li>For <code>width</code> and <code>height</code>, using the same aspect ratio as the image file will prevent stretching.</li>
-<li>Use the Grid item below to see the coordinates for item placement.</li>
-<li>Adjust <code>x</code> and <code>y</code> (and possibly <code>width</code> and <code>height</code>) to place the base image for a convenient alignment.</li>
+<li>For <code>width</code> and <code>height</code>, using the same
+aspect ratio as the image file will prevent stretching.</li>
+<li>Use the Grid item below to see the coordinates for item
+placement.</li>
+<li>Adjust <code>x</code> and <code>y</code> (and possibly
+<code>width</code> and <code>height</code>) to place the base image for
+a convenient alignment.</li>
 </ul>
 <h3 id="grid">Grid</h3>
 <ul>
 <li>type: <code>grid</code></li>
 <li>draws coordinate grids. Useful when placing elements on base image.
 <p></li>
-<li>Tips: change <code>type: grid</code> to <code>_type: grid</code> to disable the grid once item placement is completed.</li>
+<li>Tips: change <code>type: grid</code> to <code>_type: grid</code> to
+disable the grid once item placement is completed.</li>
 </ul>
-<h5 id="example-minimal-base-image-and-grid">Example: minimal Base Image and Grid</h5>
-<div class="sourceCode" id="cb8"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb8-1" title="1"><span class="fu">{</span></a>
-<a class="sourceLine" id="cb8-2" title="2">    <span class="dt">&quot;view_box&quot;</span><span class="fu">:</span> <span class="st">&quot;0 -10 1600 700&quot;</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb8-3" title="3">    <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="ot">[</span></a>
-<a class="sourceLine" id="cb8-4" title="4">        <span class="fu">{</span></a>
-<a class="sourceLine" id="cb8-5" title="5">            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;image&quot;</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb8-6" title="6">            <span class="dt">&quot;attr&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="dv">50</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="dv">-2</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">1003</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">553</span><span class="fu">,</span> <span class="dt">&quot;href&quot;</span><span class="fu">:</span> <span class="st">&quot;ATDS.png&quot;</span> <span class="fu">}</span></a>
-<a class="sourceLine" id="cb8-7" title="7">        <span class="fu">}</span><span class="ot">,</span></a>
-<a class="sourceLine" id="cb8-8" title="8">        <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;grid&quot;</span><span class="fu">}</span><span class="ot">,</span></a>
-<a class="sourceLine" id="cb8-9" title="9">    <span class="ot">]</span></a>
-<a class="sourceLine" id="cb8-10" title="10"><span class="fu">}</span></a></code></pre></div>
+<h5 id="example-minimal-base-image-and-grid">Example: minimal Base Image
+and Grid</h5>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;view_box&quot;</span><span class="fu">:</span> <span class="st">&quot;0 -10 1600 700&quot;</span><span class="fu">,</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;image&quot;</span><span class="fu">,</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;attr&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="dv">50</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="dv">-2</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">1003</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">553</span><span class="fu">,</span> <span class="dt">&quot;href&quot;</span><span class="fu">:</span> <span class="st">&quot;ATDS.png&quot;</span> <span class="fu">}</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;grid&quot;</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p><img src="fig/Panel-Canvas-Grid.png" style="width:40%;border:thin solid gray"></p>
 <ul>
-<li>Here the image file size is 1003x553. The <code>width</code> and <code>height</code> attributes are set to match the image dimension. Changing these values scales the image.</li>
-<li>The <code>x</code> and <code>y</code> attributes are adjusted to align the image component nicely on the grid.</li>
-<li>The global <code>view_box</code> defines the overall coordinate, in (xmin, ymin, xmax, ymax). Non-zero min values are often useful to adjust the margin.</li>
+<li>Here the image file size is 1003x553. The <code>width</code> and
+<code>height</code> attributes are set to match the image dimension.
+Changing these values scales the image.</li>
+<li>The <code>x</code> and <code>y</code> attributes are adjusted to
+align the image component nicely on the grid.</li>
+<li>The global <code>view_box</code> defines the overall coordinate, in
+(xmin, ymin, xmax, ymax). Non-zero min values are often useful to adjust
+the margin.</li>
 </ul>
 <h3 id="shape-items">Shape Items</h3>
 <ul>
-<li>Boxes, circles, etc., can be placed on the canvas, typically on a base image.</li>
-<li>Shape items without <code>metric</code> binding create static shapes.</li>
+<li>Boxes, circles, etc., can be placed on the canvas, typically on a
+base image.</li>
+<li>Shape items without <code>metric</code> binding create static
+shapes.</li>
 <li>Shape items with <code>metric</code> binding will have:
 <ul>
 <li>dynamic <code>fill</code> colors based on data values.</li>
-<li>“data labels” showing the value, with format indicated in <code>"metric": {"format": ...}</code></li>
+<li>“data labels” showing the value, with format indicated in
+<code>"metric": {"format": ...}</code></li>
 </ul></li>
 </ul>
 <p>Attributes common among Shape Items and the default values are:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb9-1" title="1"><span class="fu">{</span></a>
-<a class="sourceLine" id="cb9-2" title="2">    <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb9-3" title="3">    <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb9-4" title="4">    <span class="dt">&quot;stroke&quot;</span><span class="fu">:</span> <span class="er">this.style.strokeColor</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb9-5" title="5">    <span class="dt">&quot;fill&quot;</span><span class="fu">:</span> <span class="st">&quot;none&quot;</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb9-6" title="6">    <span class="dt">&quot;data-dx&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;data-dy&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb9-7" title="7">    <span class="dt">&quot;label-dx&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;label-dy&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb9-8" title="8">    <span class="dt">&quot;data-color&quot;</span><span class="fu">:</span> <span class="er">this.style.dataColor</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb9-9" title="9">    <span class="dt">&quot;data-font-family&quot;</span><span class="fu">:</span> <span class="er">this.style.dataFontFamily</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb9-10" title="10">    <span class="dt">&quot;data-font-weight&quot;</span><span class="fu">:</span> <span class="er">this.style.dataFontWeight</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb9-11" title="11">    <span class="dt">&quot;data-font-size&quot;</span><span class="fu">:</span> <span class="er">this.style.dataFontSize</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb9-12" title="12">    <span class="dt">&quot;data-dominant-baseline&quot;</span><span class="fu">:</span> <span class="er">undefined</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb9-13" title="13">    <span class="dt">&quot;data-text-anchor&quot;</span><span class="fu">:</span> <span class="er">undefined</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb9-14" title="14">    <span class="dt">&quot;label-font-family&quot;</span><span class="fu">:</span> <span class="er">this.style.labelFontFamily</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb9-15" title="15">    <span class="dt">&quot;label-font-weight&quot;</span><span class="fu">:</span> <span class="er">this.style.labelFontWeight</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb9-16" title="16">    <span class="dt">&quot;label-font-size&quot;</span><span class="fu">:</span> <span class="er">this.style.labelFontSize</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb9-17" title="17">    <span class="dt">&quot;label-dominant-baseline&quot;</span><span class="fu">:</span> <span class="st">&quot;central&quot;</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb9-18" title="18">    <span class="dt">&quot;label-text-anchor&quot;</span><span class="fu">:</span> <span class="st">&quot;middle&quot;</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb9-19" title="19"><span class="fu">}</span></a></code></pre></div>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;stroke&quot;</span><span class="fu">:</span> <span class="er">this.style.strokeColor</span><span class="fu">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;fill&quot;</span><span class="fu">:</span> <span class="st">&quot;none&quot;</span><span class="fu">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;data-dx&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;data-dy&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;label-dx&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;label-dy&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;data-color&quot;</span><span class="fu">:</span> <span class="er">this.style.dataColor</span><span class="fu">,</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;data-font-family&quot;</span><span class="fu">:</span> <span class="er">this.style.dataFontFamily</span><span class="fu">,</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;data-font-weight&quot;</span><span class="fu">:</span> <span class="er">this.style.dataFontWeight</span><span class="fu">,</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;data-font-size&quot;</span><span class="fu">:</span> <span class="er">this.style.dataFontSize</span><span class="fu">,</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;data-dominant-baseline&quot;</span><span class="fu">:</span> <span class="er">undefined</span><span class="fu">,</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;data-text-anchor&quot;</span><span class="fu">:</span> <span class="er">undefined</span><span class="fu">,</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;label-font-family&quot;</span><span class="fu">:</span> <span class="er">this.style.labelFontFamily</span><span class="fu">,</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;label-font-weight&quot;</span><span class="fu">:</span> <span class="er">this.style.labelFontWeight</span><span class="fu">,</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;label-font-size&quot;</span><span class="fu">:</span> <span class="er">this.style.labelFontSize</span><span class="fu">,</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;label-dominant-baseline&quot;</span><span class="fu">:</span> <span class="st">&quot;central&quot;</span><span class="fu">,</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;label-text-anchor&quot;</span><span class="fu">:</span> <span class="st">&quot;middle&quot;</span><span class="fu">,</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h4 id="box-shape">Box Shape</h4>
 <ul>
 <li>type: <code>box</code></li>
 </ul>
 <p>mandatory attributes and default values are:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb10-1" title="1"><span class="fu">{</span> <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">30</span> <span class="fu">}</span></a></code></pre></div>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">30</span> <span class="fu">}</span></span></code></pre></div>
 <h4 id="circle-shape">Circle Shape</h4>
 <ul>
 <li>type: <code>circle</code></li>
 </ul>
 <p>Mandatory attributes and default values are:</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb11-1" title="1"><span class="fu">{</span> <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">30</span> <span class="fu">}</span></a></code></pre></div>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">30</span> <span class="fu">}</span></span></code></pre></div>
 <h4 id="valve-shape">Valve Shape</h4>
 <ul>
 <li>type: <code>valve</code></li>
 </ul>
 <p>Mandatory attributes and default values are:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb12-1" title="1"><span class="fu">{</span> <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span> <span class="dt">&quot;orientation&quot;</span><span class="fu">:</span> <span class="st">&quot;horizontal&quot;</span> <span class="fu">}</span></a></code></pre></div>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span> <span class="dt">&quot;orientation&quot;</span><span class="fu">:</span> <span class="st">&quot;horizontal&quot;</span> <span class="fu">}</span></span></code></pre></div>
 <h4 id="solenoid-shape">Solenoid Shape</h4>
 <ul>
 <li>type: <code>solenoid</code></li>
 </ul>
 <p>Mandatory attributes and default values are:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb13-1" title="1"><span class="fu">{</span> <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">50</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span> <span class="dt">&quot;fill&quot;</span><span class="fu">:</span> <span class="st">&quot;none&quot;</span><span class="fu">,</span> <span class="dt">&quot;stroke-width&quot;</span><span class="fu">:</span> <span class="dv">3</span><span class="fu">,</span> <span class="dt">&quot;turns&quot;</span><span class="fu">:</span> <span class="dv">12</span> <span class="fu">}</span></a></code></pre></div>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">50</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span> <span class="dt">&quot;fill&quot;</span><span class="fu">:</span> <span class="st">&quot;none&quot;</span><span class="fu">,</span> <span class="dt">&quot;stroke-width&quot;</span><span class="fu">:</span> <span class="dv">3</span><span class="fu">,</span> <span class="dt">&quot;turns&quot;</span><span class="fu">:</span> <span class="dv">12</span> <span class="fu">}</span></span></code></pre></div>
 <h4 id="invisible-shape">Invisible Shape</h4>
 <ul>
 <li>type: <code>invisible</code>
 <p></li>
 <li>no shape will be drawn; only data values</li>
-<li>The <code>x</code> and <code>y</code> attributes are still necessary to draw the data labels.</li>
+<li>The <code>x</code> and <code>y</code> attributes are still necessary
+to draw the data labels.</li>
 </ul>
 <p>Mandatory attributes and default values are:</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb14-1" title="1"><span class="fu">{</span> <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="kw">null</span> <span class="fu">}</span></a></code></pre></div>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="kw">null</span> <span class="fu">}</span></span></code></pre></div>
 <h3 id="text">Text</h3>
 <ul>
 <li>type: <code>text</code>
 <p></li>
 <li>Text with static attributes only creates a static text label.</li>
-<li>Text with <code>"action": {"open": URL}</code> creates a hyperlink.</li>
-<li>Text with <code>metric</code> shows only the data values. (the <code>text</code> attribute will have no effect.)</li>
+<li>Text with <code>"action": {"open": URL}</code> creates a
+hyperlink.</li>
+<li>Text with <code>metric</code> shows only the data values. (the
+<code>text</code> attribute will have no effect.)</li>
 </ul>
 <p>Mandatory attributes and default values are:</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb15-1" title="1"><span class="fu">{</span></a>
-<a class="sourceLine" id="cb15-2" title="2">    <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;text&quot;</span><span class="fu">:</span> <span class="st">&quot;&quot;</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb15-3" title="3">    <span class="dt">&quot;font-family&quot;</span><span class="fu">:</span> <span class="er">this.style.fontFamily</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb15-4" title="4">    <span class="dt">&quot;font-weight&quot;</span><span class="fu">:</span> <span class="er">this.style.fontWeight</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb15-5" title="5">    <span class="dt">&quot;font-size&quot;</span><span class="fu">:</span> <span class="er">this.style.fontSize</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb15-6" title="6">    <span class="dt">&quot;fill&quot;</span><span class="fu">:</span> <span class="er">this.style.strokeColor</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb15-7" title="7">    <span class="dt">&quot;data-color&quot;</span><span class="fu">:</span> <span class="er">this.style.dataColor</span></a>
-<a class="sourceLine" id="cb15-8" title="8"><span class="fu">}</span></a></code></pre></div>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;text&quot;</span><span class="fu">:</span> <span class="st">&quot;&quot;</span><span class="fu">,</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;font-family&quot;</span><span class="fu">:</span> <span class="er">this.style.fontFamily</span><span class="fu">,</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;font-weight&quot;</span><span class="fu">:</span> <span class="er">this.style.fontWeight</span><span class="fu">,</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;font-size&quot;</span><span class="fu">:</span> <span class="er">this.style.fontSize</span><span class="fu">,</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;fill&quot;</span><span class="fu">:</span> <span class="er">this.style.strokeColor</span><span class="fu">,</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;data-color&quot;</span><span class="fu">:</span> <span class="er">this.style.dataColor</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h3 id="button">Button</h3>
 <ul>
 <li>Type: <code>plot</code>
@@ -379,121 +449,147 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li>Typically used with <code>action</code>.</li>
 </ul>
 <p>Mandatory attributes and default values are:</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb16-1" title="1"><span class="fu">{</span></a>
-<a class="sourceLine" id="cb16-2" title="2">    <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">120</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb16-3" title="3">    <span class="dt">&quot;rx&quot;</span><span class="fu">:</span> <span class="dv">5</span><span class="fu">,</span> <span class="dt">&quot;ry&quot;</span><span class="fu">:</span> <span class="dv">5</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb16-4" title="4">    <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;&quot;</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb16-5" title="5"><span class="fu">}</span>        </a></code></pre></div>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">120</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;rx&quot;</span><span class="fu">:</span> <span class="dv">5</span><span class="fu">,</span> <span class="dt">&quot;ry&quot;</span><span class="fu">:</span> <span class="dv">5</span><span class="fu">,</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;&quot;</span><span class="fu">,</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span>        </span></code></pre></div>
 <h3 id="embedded-plot">Embedded Plot</h3>
 <ul>
 <li>Type: <code>plot</code> / <code>micro_plot</code>
 <p></li>
 <li>Use <code>metric</code> to assign a channel.</li>
 </ul>
-<p>Mandatory attributes and default values for a <code>plot</code> are:</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb17-1" title="1"><span class="fu">{</span></a>
-<a class="sourceLine" id="cb17-2" title="2">    <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">100</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">100</span><span class="fu">,</span> <span class="dt">&quot;zoom&quot;</span><span class="fu">:</span> <span class="fl">0.8</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb17-3" title="3">    <span class="dt">&quot;length&quot;</span><span class="fu">:</span> <span class="dv">3600</span><span class="fu">,</span> <span class="dt">&quot;dateFormat&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb17-4" title="4">    <span class="dt">&quot;ticksX&quot;</span><span class="fu">:</span> <span class="dv">5</span><span class="fu">,</span> <span class="dt">&quot;ticksY&quot;</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span> <span class="dt">&quot;grid&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb17-5" title="5">    <span class="dt">&quot;min&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;max&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;logY&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb17-6" title="6">    <span class="dt">&quot;marginTop&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb17-7" title="7">    <span class="dt">&quot;data-color&quot;</span><span class="fu">:</span> <span class="er">this.style.dataColor</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb17-8" title="8">    <span class="dt">&quot;fill-opacity&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;fill-baseline&quot;</span><span class="fu">:</span> <span class="dv">1e-100</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb17-9" title="9">    <span class="dt">&quot;timerange-margin-percent&quot;</span><span class="fu">:</span> <span class="dv">3</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb17-10" title="10"><span class="fu">}</span></a></code></pre></div>
-<p><code>micro_plot</code> is a small box showing a data history plot without axis labels. This is basically the same as <code>plot</code>, with some different default values:</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb18-1" title="1"><span class="fu">{</span></a>
-<a class="sourceLine" id="cb18-2" title="2">     <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">50</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span> <span class="dt">&quot;zoom&quot;</span><span class="fu">:</span> <span class="fl">0.2</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb18-3" title="3">     <span class="dt">&quot;marker-opacity&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;fill-opacity&quot;</span><span class="fu">:</span> <span class="fl">0.3</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb18-4" title="4">     <span class="dt">&quot;ticksX&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;ticksY&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> </a>
-<a class="sourceLine" id="cb18-5" title="5">     <span class="dt">&quot;marginTop&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;marginBotton&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;marginLeft&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;marginRight&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb18-6" title="6">     <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;&quot;</span></a>
-<a class="sourceLine" id="cb18-7" title="7">    <span class="st">&quot;timerange-margin-percent&quot;</span><span class="er">:</span> <span class="dv">0</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb18-8" title="8"><span class="fu">}</span></a></code></pre></div>
+<p>Mandatory attributes and default values for a <code>plot</code>
+are:</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">100</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">100</span><span class="fu">,</span> <span class="dt">&quot;zoom&quot;</span><span class="fu">:</span> <span class="fl">0.8</span><span class="fu">,</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;length&quot;</span><span class="fu">:</span> <span class="dv">3600</span><span class="fu">,</span> <span class="dt">&quot;dateFormat&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;ticksX&quot;</span><span class="fu">:</span> <span class="dv">5</span><span class="fu">,</span> <span class="dt">&quot;ticksY&quot;</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span> <span class="dt">&quot;grid&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;min&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;max&quot;</span><span class="fu">:</span> <span class="kw">null</span><span class="fu">,</span> <span class="dt">&quot;logY&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;marginTop&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;data-color&quot;</span><span class="fu">:</span> <span class="er">this.style.dataColor</span><span class="fu">,</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;fill-opacity&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;fill-baseline&quot;</span><span class="fu">:</span> <span class="dv">1e-100</span><span class="fu">,</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;timerange-margin-percent&quot;</span><span class="fu">:</span> <span class="dv">3</span><span class="fu">,</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p><code>micro_plot</code> is a small box showing a data history plot
+without axis labels. This is basically the same as <code>plot</code>,
+with some different default values:</p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">50</span><span class="fu">,</span> <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="dv">30</span><span class="fu">,</span> <span class="dt">&quot;zoom&quot;</span><span class="fu">:</span> <span class="fl">0.2</span><span class="fu">,</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;marker-opacity&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;fill-opacity&quot;</span><span class="fu">:</span> <span class="fl">0.3</span><span class="fu">,</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;ticksX&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;ticksY&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> </span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;marginTop&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;marginBotton&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;marginLeft&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;marginRight&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;&quot;</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;timerange-margin-percent&quot;</span><span class="er">:</span> <span class="dv">0</span><span class="fu">,</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h1 id="map">Map</h1>
 <ul>
-<li>Map is a schematic representation of a graph of <code>(x,y)</code>.</li>
-<li>The graph value of <code>x</code> is used for index of elements, and <code>y</code> is used for color.</li>
+<li>Map is a schematic representation of a graph of
+<code>(x,y)</code>.</li>
+<li>The graph value of <code>x</code> is used for index of elements, and
+<code>y</code> is used for color.</li>
 <li>Element shapes are described in a user configuration file.</li>
 </ul>
-<p><img src="fig/Panel-Map-KL.png" style="width:30%;margin-left:2em;border:thin solid gray"> <img src="fig/Panel-Map-FPD.png" style="width:30%;margin-left:2em;border:thin solid gray"></p>
+<p><img src="fig/Panel-Map-KL.png" style="width:30%;margin-left:2em;border:thin solid gray">
+<img src="fig/Panel-Map-FPD.png" style="width:30%;margin-left:2em;border:thin solid gray"></p>
 <h2 id="user-map-file">User Map File</h2>
 <h3 id="file-format">File Format</h3>
 <ul>
-<li>JSON file, containing a list of shape elements. Shapes are SVG drawable elements.</li>
-<li>The <code>index</code> fields define binding to the <code>x</code> values of the data object (graph or histogram).</li>
+<li>JSON file, containing a list of shape elements. Shapes are SVG
+drawable elements.</li>
+<li>The <code>index</code> fields define binding to the <code>x</code>
+values of the data object (graph or histogram).</li>
 </ul>
 <p>Example 1:</p>
-<div class="sourceCode" id="cb19"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb19-1" title="1"><span class="fu">{</span></a>
-<a class="sourceLine" id="cb19-2" title="2">  <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="fl">1.0</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb19-3" title="3">  <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="fl">1.0</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb19-4" title="4">  <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="ot">[</span></a>
-<a class="sourceLine" id="cb19-5" title="5">    <span class="fu">{</span><span class="dt">&quot;index&quot;</span><span class="fu">:</span><span class="dv">1200</span><span class="fu">,</span><span class="dt">&quot;shape&quot;</span><span class="fu">:</span><span class="st">&quot;circle&quot;</span><span class="fu">,</span><span class="dt">&quot;attr&quot;</span><span class="fu">:{</span><span class="dt">&quot;cx&quot;</span><span class="fu">:</span><span class="fl">0.370000</span><span class="fu">,</span><span class="dt">&quot;cy&quot;</span><span class="fu">:</span><span class="fl">0.822000</span><span class="fu">,</span><span class="dt">&quot;r&quot;</span><span class="fu">:</span><span class="fl">0.015</span><span class="fu">}}</span><span class="ot">,</span></a>
-<a class="sourceLine" id="cb19-6" title="6">    <span class="fu">{</span><span class="dt">&quot;index&quot;</span><span class="fu">:</span><span class="dv">1201</span><span class="fu">,</span><span class="dt">&quot;shape&quot;</span><span class="fu">:</span><span class="st">&quot;circle&quot;</span><span class="fu">,</span><span class="dt">&quot;attr&quot;</span><span class="fu">:{</span><span class="dt">&quot;cx&quot;</span><span class="fu">:</span><span class="fl">0.403000</span><span class="fu">,</span><span class="dt">&quot;cy&quot;</span><span class="fu">:</span><span class="fl">0.814000</span><span class="fu">,</span><span class="dt">&quot;r&quot;</span><span class="fu">:</span><span class="fl">0.015</span><span class="fu">}}</span><span class="ot">,</span></a>
-<a class="sourceLine" id="cb19-7" title="7">    <span class="fu">{</span><span class="dt">&quot;index&quot;</span><span class="fu">:</span><span class="dv">1202</span><span class="fu">,</span><span class="dt">&quot;shape&quot;</span><span class="fu">:</span><span class="st">&quot;circle&quot;</span><span class="fu">,</span><span class="dt">&quot;attr&quot;</span><span class="fu">:{</span><span class="dt">&quot;cx&quot;</span><span class="fu">:</span><span class="fl">0.367000</span><span class="fu">,</span><span class="dt">&quot;cy&quot;</span><span class="fu">:</span><span class="fl">0.780000</span><span class="fu">,</span><span class="dt">&quot;r&quot;</span><span class="fu">:</span><span class="fl">0.015</span><span class="fu">}}</span><span class="ot">,</span></a>
-<a class="sourceLine" id="cb19-8" title="8">    <span class="fu">{</span><span class="dt">&quot;index&quot;</span><span class="fu">:</span><span class="dv">1203</span><span class="fu">,</span><span class="dt">&quot;shape&quot;</span><span class="fu">:</span><span class="st">&quot;circle&quot;</span><span class="fu">,</span><span class="dt">&quot;attr&quot;</span><span class="fu">:{</span><span class="dt">&quot;cx&quot;</span><span class="fu">:</span><span class="fl">0.400000</span><span class="fu">,</span><span class="dt">&quot;cy&quot;</span><span class="fu">:</span><span class="fl">0.783000</span><span class="fu">,</span><span class="dt">&quot;r&quot;</span><span class="fu">:</span><span class="fl">0.015</span><span class="fu">}}</span><span class="ot">,</span></a>
-<a class="sourceLine" id="cb19-9" title="9">    <span class="er">...</span></a>
-<a class="sourceLine" id="cb19-10" title="10">  <span class="ot">]</span></a>
-<a class="sourceLine" id="cb19-11" title="11"><span class="fu">}</span></a></code></pre></div>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="fl">1.0</span><span class="fu">,</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="fl">1.0</span><span class="fu">,</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;index&quot;</span><span class="fu">:</span><span class="dv">1200</span><span class="fu">,</span><span class="dt">&quot;shape&quot;</span><span class="fu">:</span><span class="st">&quot;circle&quot;</span><span class="fu">,</span><span class="dt">&quot;attr&quot;</span><span class="fu">:{</span><span class="dt">&quot;cx&quot;</span><span class="fu">:</span><span class="fl">0.370000</span><span class="fu">,</span><span class="dt">&quot;cy&quot;</span><span class="fu">:</span><span class="fl">0.822000</span><span class="fu">,</span><span class="dt">&quot;r&quot;</span><span class="fu">:</span><span class="fl">0.015</span><span class="fu">}}</span><span class="ot">,</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;index&quot;</span><span class="fu">:</span><span class="dv">1201</span><span class="fu">,</span><span class="dt">&quot;shape&quot;</span><span class="fu">:</span><span class="st">&quot;circle&quot;</span><span class="fu">,</span><span class="dt">&quot;attr&quot;</span><span class="fu">:{</span><span class="dt">&quot;cx&quot;</span><span class="fu">:</span><span class="fl">0.403000</span><span class="fu">,</span><span class="dt">&quot;cy&quot;</span><span class="fu">:</span><span class="fl">0.814000</span><span class="fu">,</span><span class="dt">&quot;r&quot;</span><span class="fu">:</span><span class="fl">0.015</span><span class="fu">}}</span><span class="ot">,</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;index&quot;</span><span class="fu">:</span><span class="dv">1202</span><span class="fu">,</span><span class="dt">&quot;shape&quot;</span><span class="fu">:</span><span class="st">&quot;circle&quot;</span><span class="fu">,</span><span class="dt">&quot;attr&quot;</span><span class="fu">:{</span><span class="dt">&quot;cx&quot;</span><span class="fu">:</span><span class="fl">0.367000</span><span class="fu">,</span><span class="dt">&quot;cy&quot;</span><span class="fu">:</span><span class="fl">0.780000</span><span class="fu">,</span><span class="dt">&quot;r&quot;</span><span class="fu">:</span><span class="fl">0.015</span><span class="fu">}}</span><span class="ot">,</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">&quot;index&quot;</span><span class="fu">:</span><span class="dv">1203</span><span class="fu">,</span><span class="dt">&quot;shape&quot;</span><span class="fu">:</span><span class="st">&quot;circle&quot;</span><span class="fu">,</span><span class="dt">&quot;attr&quot;</span><span class="fu">:{</span><span class="dt">&quot;cx&quot;</span><span class="fu">:</span><span class="fl">0.400000</span><span class="fu">,</span><span class="dt">&quot;cy&quot;</span><span class="fu">:</span><span class="fl">0.783000</span><span class="fu">,</span><span class="dt">&quot;r&quot;</span><span class="fu">:</span><span class="fl">0.015</span><span class="fu">}}</span><span class="ot">,</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    <span class="er">...</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>Example 2:</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode json"><code class="sourceCode json"><a class="sourceLine" id="cb20-1" title="1"><span class="fu">{</span></a>
-<a class="sourceLine" id="cb20-2" title="2">    <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="fl">1.000</span><span class="fu">,</span> </a>
-<a class="sourceLine" id="cb20-3" title="3">    <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="fl">1.000</span><span class="fu">,</span></a>
-<a class="sourceLine" id="cb20-4" title="4">    <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="ot">[</span></a>
-<a class="sourceLine" id="cb20-5" title="5">        <span class="fu">{</span></a>
-<a class="sourceLine" id="cb20-6" title="6">            <span class="dt">&quot;index&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> </a>
-<a class="sourceLine" id="cb20-7" title="7">            <span class="dt">&quot;shape&quot;</span><span class="fu">:</span> <span class="st">&quot;path&quot;</span><span class="fu">,</span> </a>
-<a class="sourceLine" id="cb20-8" title="8">            <span class="dt">&quot;attr&quot;</span><span class="fu">:</span> <span class="fu">{</span></a>
-<a class="sourceLine" id="cb20-9" title="9">                <span class="dt">&quot;d&quot;</span><span class="fu">:</span> <span class="st">&quot;M0.500,0.500 L0.580,0.500 A0.080,0.080 0 0,0 0.500,0.420 z&quot;</span></a>
-<a class="sourceLine" id="cb20-10" title="10">            <span class="fu">}</span></a>
-<a class="sourceLine" id="cb20-11" title="11">        <span class="fu">}</span><span class="ot">,</span> </a>
-<a class="sourceLine" id="cb20-12" title="12">        <span class="fu">{</span></a>
-<a class="sourceLine" id="cb20-13" title="13">            <span class="dt">&quot;index&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span> </a>
-<a class="sourceLine" id="cb20-14" title="14">            <span class="dt">&quot;shape&quot;</span><span class="fu">:</span> <span class="st">&quot;path&quot;</span><span class="fu">,</span> </a>
-<a class="sourceLine" id="cb20-15" title="15">            <span class="dt">&quot;attr&quot;</span><span class="fu">:</span> <span class="fu">{</span></a>
-<a class="sourceLine" id="cb20-16" title="16">                <span class="dt">&quot;d&quot;</span><span class="fu">:</span> <span class="st">&quot;M0.500,0.500 L0.500,0.420 A0.080,0.080 0 0,0 0.420,0.500 z&quot;</span></a>
-<a class="sourceLine" id="cb20-17" title="17">            <span class="fu">}</span></a>
-<a class="sourceLine" id="cb20-18" title="18">        <span class="fu">}</span><span class="ot">,</span> </a>
-<a class="sourceLine" id="cb20-19" title="19">    <span class="er">...</span></a>
-<a class="sourceLine" id="cb20-20" title="20">  <span class="ot">]</span></a>
-<a class="sourceLine" id="cb20-21" title="21"><span class="fu">}</span></a></code></pre></div>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="fl">1.000</span><span class="fu">,</span> </span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;height&quot;</span><span class="fu">:</span> <span class="fl">1.000</span><span class="fu">,</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;index&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> </span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;shape&quot;</span><span class="fu">:</span> <span class="st">&quot;path&quot;</span><span class="fu">,</span> </span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;attr&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;d&quot;</span><span class="fu">:</span> <span class="st">&quot;M0.500,0.500 L0.580,0.500 A0.080,0.080 0 0,0 0.500,0.420 z&quot;</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span><span class="ot">,</span> </span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;index&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span> </span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;shape&quot;</span><span class="fu">:</span> <span class="st">&quot;path&quot;</span><span class="fu">,</span> </span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;attr&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;d&quot;</span><span class="fu">:</span> <span class="st">&quot;M0.500,0.500 L0.500,0.420 A0.080,0.080 0 0,0 0.420,0.500 z&quot;</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span><span class="ot">,</span> </span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>    <span class="er">...</span></span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h3 id="creator-tool">Creator Tool</h3>
 <ul>
-<li>For simple cases where shapes are only circles, <code>system/server/slowdash-xy2map.py</code> can be used to create a JSON map file from a CSV of <code>index, x, y</code>.</li>
+<li>For simple cases where shapes are only circles,
+<code>system/server/slowdash-xy2map.py</code> can be used to create a
+JSON map file from a CSV of <code>index, x, y</code>.</li>
 </ul>
 <pre class="csv"><code>index,x,y
 24,0.485,0.915
 25,0.461,0.915
 26,0.449,0.915
 ...</code></pre>
-<div class="sourceCode" id="cb22"><pre class="sourceCode console"><code class="sourceCode highlightconsole"><a class="sourceLine" id="cb22-1" title="1"><span class="kw">$ slowdash-xy2map.py NAME.csv &gt; map-NAME.json</span></a></code></pre></div>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-xy2map.py NAME.csv &gt; map-NAME.json</span></span></code></pre></div>
 <ul>
-<li>[TODO] This utility will be further improved. Currently hard-coded values are:
+<li>[TODO] This utility will be further improved. Currently hard-coded
+values are:
 <ul>
 <li><code>width</code> and <code>height</code> are both 1.0.</li>
 <li><code>radius</code> is 0.01.</li>
 </ul></li>
-<li>[TODO] with the <code>--svg</code> option a SVG image file will be also created, which is convenient to test the map file.</li>
+<li>[TODO] with the <code>--svg</code> option a SVG image file will be
+also created, which is convenient to test the map file.</li>
 </ul>
 <h1 id="table">Table</h1>
 <h1 id="tree">Tree</h1>
 <h1 id="blob">Blob</h1>
 <ul>
-<li>Primarily intended for image data, but can be used for many others.</li>
+<li>Primarily intended for image data, but can be used for many
+others.</li>
 <li>Data must have a MIME type and URL.</li>
 </ul>
 <h5 id="implementation">Implementation</h5>
 <ul>
-<li>For mime type of <code>image/*</code>, <code>&lt;img src="..."&gt;</code></li>
+<li>For mime type of <code>image/*</code>,
+<code>&lt;img src="..."&gt;</code></li>
 <li>For others, <code>&lt;iframe src="..."&gt;</code></li>
 </ul>
 <h1 id="html-form">HTML / Form</h1>
 <ul>
-<li>Displays a HTML page described in an user HTML file stored under the user configuration directory.</li>
-<li>The user configuration file can contain a <code>&lt;form&gt;</code> to send commands to the server-side user script.</li>
-<li>When the form is submitted, a function in the user script (dispatcher) is called with the form data as a JSON object (see the <a href="UserModule.html">User Module section</a>).
+<li>Displays a HTML page described in an user HTML file stored under the
+user configuration directory.</li>
+<li>The user configuration file can contain a <code>&lt;form&gt;</code>
+to send commands to the server-side user script.</li>
+<li>When the form is submitted, a function in the user script
+(dispatcher) is called with the form data as a JSON object (see the <a
+href="UserModule.html">User Module section</a>).
 <p></li>
-<li>[TODO] If the <code>Current</code> property is set, the panel contents are displayed only when the display time range includes “now”.</li>
+<li>[TODO] If the <code>Current</code> property is set, the panel
+contents are displayed only when the display time range includes
+“now”.</li>
 </ul>
 <h5 id="implementation-1">Implementation</h5>
 <ul>
@@ -501,56 +597,70 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul>
 <h5 id="restrictions">Restrictions</h5>
 <ul>
-<li>User HTML cannot contain JavaScript. To use the full feature of HTML and JavaScript, consider using the External Page panel.</li>
+<li>User HTML cannot contain JavaScript. To use the full feature of HTML
+and JavaScript, consider using the External Page panel.</li>
 </ul>
 <h2 id="user-html-file">User HTML File</h2>
 <h5 id="example-1">Example:</h5>
-<div class="sourceCode" id="cb23"><pre class="sourceCode html"><code class="sourceCode html"><a class="sourceLine" id="cb23-1" title="1"><span class="kw">&lt;h3&gt;</span>Crate Power Control<span class="kw">&lt;/h3&gt;</span></a>
-<a class="sourceLine" id="cb23-2" title="2">Temperature: <span class="kw">&lt;span</span><span class="ot"> sd-value=</span><span class="st">&quot;ch1-&gt;last()-&gt;format(&#39;%.1f degC&#39;)&quot;</span><span class="kw">&gt;</span>---<span class="kw">&lt;/span&gt;</span></a>
-<a class="sourceLine" id="cb23-3" title="3"><span class="kw">&lt;p&gt;</span>  </a>
-<a class="sourceLine" id="cb23-4" title="4"><span class="kw">&lt;form&gt;</span></a>
-<a class="sourceLine" id="cb23-5" title="5">  <span class="kw">&lt;input</span><span class="ot"> type=</span><span class="st">&quot;hidden&quot;</span><span class="ot"> name=</span><span class="st">&quot;form&quot;</span><span class="ot"> value=</span><span class="st">&quot;power_control&quot;</span><span class="kw">&gt;</span></a>
-<a class="sourceLine" id="cb23-6" title="6">  <span class="kw">&lt;div</span><span class="ot"> style=</span><span class="st">&quot;margin:10px;border:thin solid;padding:10px;width:30em&quot;</span><span class="kw">&gt;</span></a>
-<a class="sourceLine" id="cb23-7" title="7">    <span class="kw">&lt;label&gt;&lt;input</span><span class="ot"> type=</span><span class="st">&quot;checkbox&quot;</span><span class="ot"> name=</span><span class="st">&quot;crate1&quot;</span><span class="kw">&gt;</span>Crate 1<span class="kw">&lt;/label&gt;&lt;br&gt;</span></a>
-<a class="sourceLine" id="cb23-8" title="8">    <span class="kw">&lt;label&gt;&lt;input</span><span class="ot"> type=</span><span class="st">&quot;checkbox&quot;</span><span class="ot"> name=</span><span class="st">&quot;crate2&quot;</span><span class="kw">&gt;</span>Crate 2<span class="kw">&lt;/label&gt;&lt;br&gt;</span></a>
-<a class="sourceLine" id="cb23-9" title="9">    <span class="kw">&lt;label&gt;&lt;input</span><span class="ot"> type=</span><span class="st">&quot;checkbox&quot;</span><span class="ot"> name=</span><span class="st">&quot;crate3&quot;</span><span class="kw">&gt;</span>Crate 3<span class="kw">&lt;/label&gt;&lt;br&gt;</span></a>
-<a class="sourceLine" id="cb23-10" title="10">  <span class="kw">&lt;/div&gt;</span></a>
-<a class="sourceLine" id="cb23-11" title="11">  <span class="kw">&lt;p&gt;</span></a>
-<a class="sourceLine" id="cb23-12" title="12">  <span class="kw">&lt;select</span><span class="ot"> name=</span><span class="st">&quot;action&quot;</span><span class="kw">&gt;</span></a>
-<a class="sourceLine" id="cb23-13" title="13">    <span class="kw">&lt;option</span><span class="ot"> value=</span><span class="st">&quot;turn_on&quot;</span><span class="kw">&gt;</span>Turn On<span class="kw">&lt;/option&gt;</span></a>
-<a class="sourceLine" id="cb23-14" title="14">    <span class="kw">&lt;option</span><span class="ot"> value=</span><span class="st">&quot;turn_off&quot;</span><span class="kw">&gt;</span>Turn Off<span class="kw">&lt;/option&gt;</span></a>
-<a class="sourceLine" id="cb23-15" title="15">  <span class="kw">&lt;/select&gt;</span></a>
-<a class="sourceLine" id="cb23-16" title="16">  <span class="kw">&lt;p&gt;</span></a>
-<a class="sourceLine" id="cb23-17" title="17">  <span class="kw">&lt;input</span><span class="ot"> type=</span><span class="st">&quot;submit&quot;</span><span class="ot"> value=</span><span class="st">&quot;Apply&quot;</span><span class="ot"> style=</span><span class="st">&quot;font-size:x-large&quot;</span><span class="kw">&gt;</span></a>
-<a class="sourceLine" id="cb23-18" title="18"><span class="kw">&lt;/form&gt;</span></a></code></pre></div>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">h3</span><span class="dt">&gt;</span>Crate Power Control<span class="dt">&lt;/</span><span class="kw">h3</span><span class="dt">&gt;</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>Temperature: <span class="dt">&lt;</span><span class="kw">span</span> <span class="er">sd-value</span><span class="ot">=</span><span class="st">&quot;ch1-&gt;last()-&gt;format(&#39;%.1f degC&#39;)&quot;</span><span class="dt">&gt;</span>---<span class="dt">&lt;/</span><span class="kw">span</span><span class="dt">&gt;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span>  </span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;hidden&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;form&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;power_control&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">div</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;margin:10px;border:thin solid;padding:10px;width:30em&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">label</span><span class="dt">&gt;&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;checkbox&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;crate1&quot;</span><span class="dt">&gt;</span>Crate 1<span class="dt">&lt;/</span><span class="kw">label</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">label</span><span class="dt">&gt;&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;checkbox&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;crate2&quot;</span><span class="dt">&gt;</span>Crate 2<span class="dt">&lt;/</span><span class="kw">label</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">label</span><span class="dt">&gt;&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;checkbox&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;crate3&quot;</span><span class="dt">&gt;</span>Crate 3<span class="dt">&lt;/</span><span class="kw">label</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;/</span><span class="kw">div</span><span class="dt">&gt;</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">select</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;action&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">option</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;turn_on&quot;</span><span class="dt">&gt;</span>Turn On<span class="dt">&lt;/</span><span class="kw">option</span><span class="dt">&gt;</span></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">option</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;turn_off&quot;</span><span class="dt">&gt;</span>Turn Off<span class="dt">&lt;/</span><span class="kw">option</span><span class="dt">&gt;</span></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;/</span><span class="kw">select</span><span class="dt">&gt;</span></span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Apply&quot;</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;font-size:x-large&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <ul>
-<li>Either full or partial HTML can be used. CSS in <code>&lt;head&gt;</code> works.</li>
-<li>Use <code>&lt;form&gt;</code> to submit command to the server-side user code.</li>
+<li>Either full or partial HTML can be used. CSS in
+<code>&lt;head&gt;</code> works.</li>
+<li>Use <code>&lt;form&gt;</code> to submit command to the server-side
+user code.</li>
 </ul>
 <h4 id="data-binding">Data Binding</h4>
 <ul>
-<li><code>&lt;span&gt;</code> and <code>&lt;div&gt;</code> can have a binding to data: use the <code>sd-value=METRIC</code> attribute.
+<li><code>&lt;span&gt;</code> and <code>&lt;div&gt;</code> can have a
+binding to data: use the <code>sd-value=METRIC</code> attribute.
 <ul>
-<li>Example: <code>&lt;span sd-value="pressure-&gt;format('%.3e mbar')"&gt;--&lt;/span&gt;</code>
+<li>Example:
+<code>&lt;span sd-value="pressure-&gt;format('%.3e mbar')"&gt;--&lt;/span&gt;</code>
 <p></li>
 </ul></li>
-<li><code>&lt;input&gt;</code> also can have a binding to data, but the values are updated at the initial loading and after every user operation.
+<li><code>&lt;input&gt;</code> also can have a binding to data, but the
+values are updated at the initial loading and after every user
+operation.
 <ul>
-<li>Example: <code>&lt;input type="number" name="threshold" sd-value="threshold"&gt;</code>
+<li>Example:
+<code>&lt;input type="number" name="threshold" sd-value="threshold"&gt;</code>
 <p></li>
 </ul></li>
-<li><code>&lt;input&gt;</code> can be enabled/disabled based on data values: use the <code>sd-enabled=METRIC</code> attribute.
+<li><code>&lt;input&gt;</code> can be enabled/disabled based on data
+values: use the <code>sd-enabled=METRIC</code> attribute.
 <ul>
 <li>Here the value of the METRIC must be a boolean.</li>
-<li>Example: <code>&lt;input type="submit" name="start" value="Start" sd-enabled="RnuInfo['Status']-&gt;match('Idle')"&gt;</code>
+<li>Example:
+<code>&lt;input type="submit" name="start" value="Start" sd-enabled="RnuInfo['Status']-&gt;match('Idle')"&gt;</code>
 <p></li>
 </ul></li>
-<li>For the expressions that can be used in <code>sd-value</code> and <code>sd-enabled</code>, see the <a href="DataTransform.html">Data Transform section</a>.</li>
+<li>For the expressions that can be used in <code>sd-value</code> and
+<code>sd-enabled</code>, see the <a href="DataTransform.html">Data
+Transform section</a>.</li>
 </ul>
 <h1 id="external-page">External Page</h1>
 <ul>
 <li>Maybe useful for Web-Cam etc.</li>
-<li>[TODO] If the <code>Current</code> property is set, the page is displayed only when the display time range includes “now”.</li>
+<li>[TODO] If the <code>Current</code> property is set, the page is
+displayed only when the display time range includes “now”.</li>
 <li>[TODO] Parameter substitution in URL</li>
 </ul>
 <h5 id="implementation-2">Implementation</h5>
@@ -559,14 +669,16 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul>
 <h5 id="restrictions-1">Restrictions</h5>
 <ul>
-<li>For external sites, some operations are prohibited due to the same-origin security policy, including:
+<li>For external sites, some operations are prohibited due to the
+same-origin security policy, including:
 <ul>
 <li>auto scaling (auto fit to panel size etc.)</li>
 <li>display offset</li>
 <li>mouse click detection (for Autocruise etc.)</li>
 </ul></li>
 </ul>
-<h2 id="external-user-page-with-slow-dash-data-and-controls">External User Page with Slow-Dash data and controls</h2>
+<h2 id="external-user-page-with-slow-dash-data-and-controls">External
+User Page with Slow-Dash data and controls</h2>
 <p>[ WRITE THIS ]</p>
 
 

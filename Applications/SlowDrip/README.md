@@ -11,7 +11,7 @@ This directory contains three docker deployments for different usage levels:
 Here the SlowDash container is added to the FirstMesh Walkthrough. The changes to the Dripline Walkthrough are addiion of the `slowdash` entry to the `docker-compose.yaml` file (instead of Grafana), and the SlowDash configuration file placed under the `slowdash.d` subdirectory.
 ```yaml
   slowdash:
-    image: slowproj/slowdash:2407
+    image: slowproj/slowdash
     ports:
       - "18881:18881"
     volumes:

@@ -11,7 +11,7 @@ title: Installation
 - DockerHub: [slowproj/slowdash:TAG](https://hub.docker.com/r/slowproj/slowdash/tags)
 - GitHub Container Registry: [ghcr.io/slowproj/slowdash:TAG](https://github.com/slowproj/slowdash/pkgs/container/slowdash)
 
-Choose a specific tag. The `:latest` tag is not made on purpose.
+Choose a specific tag. 
 
 ## Building an Image
 ```console
