@@ -1,4 +1,4 @@
-name: Build and Push Docker Image to GHCR
+name: Build and Push Docker Image
 
 on:
   push:
@@ -9,6 +9,10 @@ jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      packages: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -16,10 +20,15 @@ jobs:
           submodules: recursive
         
       - name: Log in to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Build Docker image
         run: docker build -t ghcr.io/slowproj/slowdash:latest .
           
       - name: Push Docker image to GitHub Container Registry
         run: docker push ghcr.io/slowproj/slowdash:latest
+          
