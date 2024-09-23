@@ -1,0 +1,11 @@
+slowdash_project:
+  name: SlowpyHDL
+  title: SlowPy HDL
+  
+  task:
+    name: counter
+    auto_load: true
+
+  system:
+    our_security_is_perfect: true
+    
