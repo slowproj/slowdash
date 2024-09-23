@@ -202,7 +202,7 @@ services:
 If you built the container image locally, `REPO/slowdash:TAG` will be just `slowdash:TAG` or `slowdash`.
 
 ```console
-$ docker-compose up
+$ docker compose up
 ```
 
 

@@ -14,7 +14,7 @@ title: SlowDash で Redis を使う
 `ExampleProjects/Test_Redis` に Redis Server と，SlowDash と，テストデータ生成スクリプトが全て入った `docker-compose.yaml` があるので，これを使う：
 ```console
 $ cd PATH/TO/SLOWDASH/ExampleProjects/Test_Redis
-$ docker-compose up
+$ docker compose up
 ```
 
 システムが立ち上がったら，ブラウザで `http://localhost:18881` にアクセス：

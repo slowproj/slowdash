@@ -94,7 +94,7 @@ $ slowdash --port=18881
 or
 ```console
 $ cd slowdash/ExampleProjects/SlowTask
-$ docker-compose up
+$ docker compose up
 ```
 
 

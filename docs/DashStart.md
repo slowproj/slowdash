@@ -6,7 +6,7 @@ title: Dash Start
 If you already have:
 
 - time-series data stored on a database, and
-- `docker-compose` command available on your system,
+- `docker compose` command available on your system,
 
 then visualization can be done instantly (without creating a project etc.).
 </div>
@@ -65,7 +65,7 @@ replace the last line with:
 
 ### And run it:
 ```console
-$ docker-compose up
+$ docker compose up
 ```
 ```console
 $ firefox http://localhost:18881
@@ -105,7 +105,7 @@ services:
 
 ### And run it:
 ```console
-$ docker-compose up
+$ docker compose up
 ```
 ```console
 $ firefox http://localhost:18881
@@ -139,7 +139,7 @@ services:
 
 ### And run it:
 ```console
-$ docker-compose up
+$ docker compose up
 ```
 ```console
 $ firefox http://localhost:18881

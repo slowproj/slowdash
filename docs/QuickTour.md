@@ -219,9 +219,9 @@ services:
       - "18881:18881"
 ```
 
-Then start `docker-compose`
+Then start `docker compose`
 ```console
-$ docker-compose up
+$ docker compose up
 ```
 
 

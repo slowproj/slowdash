@@ -5,7 +5,7 @@ title: Installation
 # Docker
 ## Prerequisite
 - `git`
-- `docker` and `docker-compose`
+- `docker` and `docker compose`
 
 ## Using Docker Images (amd64-linux)
 - DockerHub: [slowproj/slowdash:TAG](https://hub.docker.com/r/slowproj/slowdash/tags)
@@ -104,7 +104,7 @@ Type `Ctrl-c` to stop slowdash.
 
 
 ## Updating
-### Updating the Server
+### Updating the Server (Bare-Metal Installation)
 If slowdash is already running, stop it before updating it.
 ```console
 $ cd PATH/TO/SLOWDASH
@@ -113,5 +113,5 @@ $ make
 ```
 Often `make` does not do anything, but it is safe to run it every time.
 
-### Refreshing the browser cache (Hard Refresh)
+### Refreshing the browser cache: Hard Refresh
 SlowDash scripts cached in user web browsers might cause troubles after the SlowDash server is updated. In that case, perform "hard refresh" the browser by clicking the `Reload` button with holding down the `Shift` key at a SlowDash page.
