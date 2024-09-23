@@ -42,19 +42,21 @@ class RegisterNode(spc.ControlNode):
     def _update_output(self):
         if self.set_value is None:
             return
-        
-        if self.node is None:
-            self.get_value = self.set_value
-        else:
+
+        if self.node is not None and self.has_output:
             self.node.set(self.set_value)
+        
+        if self.node is None or not self.has_input:
+            self.get_value = self.set_value
+            
         self.set_value = None
 
             
     def _update_input(self):
-        if self.node is None:
-            pass  # already taken care of in _update_output()
-        else:
+        if self.node is not None and self.has_input:
             self.get_value = self.node.get()
+        else:
+            pass  # already taken care of in _update_output()
 
 
             
@@ -82,6 +84,13 @@ def outp(node):
     return register
 
 
+def inout(node):
+    register = reg(node)
+    register.has_input = True
+    register.has_output = True
+    return register
+
+
 
 class Clock(threading.Thread):
     def __init__(self, Hz=1):
@@ -91,56 +100,73 @@ class Clock(threading.Thread):
         self.interval = 1.0/Hz
         self.modules = []
 
+        self.processes = []
+        self.registers = []
+
+        self.start_time = None
+        self.ticks = 0
+        
         
     def add_module(self, module):
         self.modules.append(module)
 
         
-    def stop(self):
-        self.stop_event.set()
-
-            
-    def run(self):
-        processes = []
-        input_registers, output_registers = [], []
+    def initialize(self, params={}):
         for module in self.modules:
             for name, member in inspect.getmembers(module, inspect.ismethod):
                 if str(inspect.signature(member)) == str(inspect.signature(always(None))):
                     #print(f'HDL.always: {type(module).__name__}.{name}')
-                    processes.append(member)
+                    self.processes.append(member)
                 
             for item_name in vars(module):
                 item = getattr(module, item_name)
                 if isinstance(item, RegisterNode):
-                    if item.has_input or not item.has_output:
-                        input_registers.append(item)
-                    if item.has_output or not item.has_input:
-                        output_registers.append(item)
+                    self.registers.append(item)
 
         # initial values might have been set
-        for reg in output_registers:
+        for reg in self.registers:
             reg._update_output()
-            
-        start_time = time.time()
-        ticks = 0
-        while not self.stop_event.is_set() and not spc.ControlSystem.is_stop_requested():
-            for reg in input_registers:
-                reg._update_input()
 
-            for proc in processes:
+        self.start_time = time.time()
+        self.next_time = self.start_time
+        self.ticks = 0
+
+        
+    # loop option: call this in a loop
+    def loop(self):
+        if self.start_time is None:
+            self.initialize()
+            
+        now = time.time()
+        if self.next_time < now:
+            self.ticks = int((now - self.start_time) / self.interval) + 1
+            self.next_time = self.start_time + self.ticks * self.interval
+
+            for reg in self.registers:
+                reg._update_input()
+            for proc in self.processes:
                 proc()
-                
-            for reg in output_registers:
+            for reg in self.registers:
                 reg._update_output()
 
-            ticks += 1
-            now = time.time()
-            togo = (start_time + ticks * self.interval) - now
-            if togo <= 0:
-                ticks = int((now - start_time) / self.interval)
-            else:
-                time.sleep(togo)
+        elif self.next_time - now < 2:
+            time.sleep(self.next_time - now < 2)
+        else:
+            time.sleep(1)
+
+            
+    # threading option: use start() to start, stop() to stop
+    def run(self):
+        self.stop_event.clear()
+        while not self.stop_event.is_set() and not spc.ControlSystem.is_stop_requested():
+            self.loop()
                 
+
+    # for threading option
+    def stop(self):
+        self.stop_event.set()
+
+            
 
             
 class Module:

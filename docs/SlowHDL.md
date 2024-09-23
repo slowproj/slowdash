@@ -8,19 +8,21 @@ SlowPy HDL enables describing control sequences in a Verilog-like style. If you 
 
 
 ### Example
-For a control system that consists of a counter and start / stop buttons:
+For a control system that consists of a counter display and start / stop / clear buttons:
 ```python
 import slowpy.control as spc
 
 ctrl = spc.ControlSystem()    
-start_btn = ctrl.value(False).oneshot()
-stop_btn = ctrl.value(False).oneshot()
+start_btn = ctrl.value(initial_value=False).oneshot()
+stop_btn = ctrl.value(initial_value=False).oneshot()
+clear_btn = ctrl.value(initial_value=False).oneshot()
 display = ctrl.value()
 
 def _export():
     return [
         ('start', start_btn.writeonly()),
         ('stop', stop_btn.writeonly()),
+        ('clear', clear_btn.writeonly()),
         ('display', display.readonly())
     ]
 ```
@@ -30,15 +32,17 @@ The logic to control the counter can be written like this:
 from slowpy.control.hdl import *
 
 class CounterModule(Module):
-    def __init__(self, clock, start, stop, counter):
+    def __init__(self, clock, start, stop, clear, count):
         super().__init__(clock)
+        
         self.start = inp(start)
         self.stop = inp(stop)
-        self.counter = outp(counter)
+        self.clear = inp(clear)
+        self.count = outp(count)
         self.running = reg()
 
+        self.count <= 0
         self.running <= False
-        self.counter <= 0
                 
     @always
     def startstop(self):
@@ -48,21 +52,24 @@ class CounterModule(Module):
             self.running <= True
 
     @always
-    def count(self):
-        if self.running:
-            if self.counter == 10:
-                self.counter <= 0
+    def update(self):
+        if self.clear:
+            self.count <= 0
+        elif self.running:
+            if self.count == 16:
+                self.count <= 0
             else:
-                self.counter <= int(self.counter) + 1
+                self.count <= int(self.count) + 1
 
-        
+
 clock = Clock(Hz=1)
 
 counter = CounterModule(
     clock,
     start = start_btn,
     stop = stop_btn,
-    counter = display
+    clear = clear_btn,
+    count = display
 )
 
 clock.start()
@@ -71,11 +78,12 @@ Here the `@always` decorator and the `<=` operator are abused to mimic the Veril
 
 This is a direct mapping from a corresponding Verilog code (if it were implemented in FPGA):
 ```verilog
-module Counter(clock, start, stop, counter);
+module Counter(clock, start, stop, clear, count);
     input clock;
     input reg start;
     input reg stop;
-    output reg[3:0] counter;
+    input reg clear;
+    output reg[3:0] count;
     reg running;
 
     always @(posedge clock) 
@@ -88,11 +96,13 @@ module Counter(clock, start, stop, counter);
 
     always @(posedge clock) 
     begin
-        if (running == 1'b1)
-            if (counter == 4'ha)
-                counter <= 4'h0;
+        if (clear == 1'b1)
+            count <= 4'h0;
+        else if (running == 1'b1)
+            if (count == 4'ha)
+                count <= 4'h0;
             else
-                counter <= counter + 4'h1;
+                count <= count + 4'h1;
     end
 endmodule
 

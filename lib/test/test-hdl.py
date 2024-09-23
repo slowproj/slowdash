@@ -23,20 +23,18 @@ def _export():
 from slowpy.control.hdl import *
 
 class CounterModule(Module):
-    def __init__(self, clock, start, stop, clear, display):
+    def __init__(self, clock, start, stop, clear, count):
         super().__init__(clock)
         
         self.start = inp(start)
         self.stop = inp(stop)
         self.clear = inp(clear)
-        self.display = outp(display)
-        self.counter = reg()
+        self.count = outp(count)
         self.running = reg()
 
-        self.counter <= 0
-        self.running <= 0
+        self.count <= 0
+        self.running <= False
                 
-
     @always
     def startstop(self):
         if self.stop:
@@ -45,18 +43,19 @@ class CounterModule(Module):
             self.running <= True
 
     @always
-    def count(self):
+    def update(self):
         if self.clear:
-            self.counter <= 0
+            self.count <= 0
         elif self.running:
-            if self.counter == 15:
-                self.counter <= 0
+            if int(self.count) == 32:
+                self.count <= 0
             else:
-                self.counter <= int(self.counter) + 1
-
+                self.count <= int(self.count) + 1
+                
     @always
     def show_internals(self):
-        print(self.start, self.stop, self.clear, self.counter)
+        print(self.start, self.stop, self.clear, self.running, self.count)
+        print(display)
         
 
         
@@ -66,7 +65,7 @@ counter = CounterModule(
     start = start_btn,
     stop = stop_btn,
     clear = clear_btn,
-    display = display
+    count = display
 )
 
 clock.start()
