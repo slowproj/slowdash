@@ -103,14 +103,14 @@ File</a></li>
 <li><a href="#user-map-file" id="toc-user-map-file">User Map
 File</a></li>
 </ul></li>
-<li><a href="#table" id="toc-table">Table</a></li>
-<li><a href="#tree" id="toc-tree">Tree</a></li>
-<li><a href="#blob" id="toc-blob">Blob</a></li>
 <li><a href="#html-form" id="toc-html-form">HTML / Form</a>
 <ul>
 <li><a href="#user-html-file" id="toc-user-html-file">User HTML
 File</a></li>
 </ul></li>
+<li><a href="#table" id="toc-table">Table</a></li>
+<li><a href="#tree" id="toc-tree">Tree</a></li>
+<li><a href="#blob" id="toc-blob">Blob</a></li>
 <li><a href="#external-page" id="toc-external-page">External Page</a>
 <ul>
 <li><a href="#external-user-page-with-slow-dash-data-and-controls"
@@ -563,20 +563,6 @@ values are:
 <li>[TODO] with the <code>--svg</code> option a SVG image file will be
 also created, which is convenient to test the map file.</li>
 </ul>
-<h1 id="table">Table</h1>
-<h1 id="tree">Tree</h1>
-<h1 id="blob">Blob</h1>
-<ul>
-<li>Primarily intended for image data, but can be used for many
-others.</li>
-<li>Data must have a MIME type and URL.</li>
-</ul>
-<h5 id="implementation">Implementation</h5>
-<ul>
-<li>For mime type of <code>image/*</code>,
-<code>&lt;img src="..."&gt;</code></li>
-<li>For others, <code>&lt;iframe src="..."&gt;</code></li>
-</ul>
 <h1 id="html-form">HTML / Form</h1>
 <ul>
 <li>Displays a HTML page described in an user HTML file stored under the
@@ -591,7 +577,7 @@ href="UserModule.html">User Module section</a>).
 contents are displayed only when the display time range includes
 “now”.</li>
 </ul>
-<h5 id="implementation-1">Implementation</h5>
+<h5 id="implementation">Implementation</h5>
 <ul>
 <li><code>div.innerHTML = ...</code> with parameter substitutions.</li>
 </ul>
@@ -655,6 +641,21 @@ values: use the <code>sd-enabled=METRIC</code> attribute.
 <li>For the expressions that can be used in <code>sd-value</code> and
 <code>sd-enabled</code>, see the <a href="DataTransform.html">Data
 Transform section</a>.</li>
+</ul>
+<h4 id="actionvariable-binding">Action/Variable Binding</h4>
+<h1 id="table">Table</h1>
+<h1 id="tree">Tree</h1>
+<h1 id="blob">Blob</h1>
+<ul>
+<li>Primarily intended for image data, but can be used for many
+others.</li>
+<li>Data must have a MIME type and URL.</li>
+</ul>
+<h5 id="implementation-1">Implementation</h5>
+<ul>
+<li>For mime type of <code>image/*</code>,
+<code>&lt;img src="..."&gt;</code></li>
+<li>For others, <code>&lt;iframe src="..."&gt;</code></li>
 </ul>
 <h1 id="external-page">External Page</h1>
 <ul>

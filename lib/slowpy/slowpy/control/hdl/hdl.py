@@ -72,19 +72,19 @@ def reg(node=None):
     return node._register_node
 
 
-def inp(node):
+def input_reg(node):
     register = reg(node)
     register.has_input = True
     return register
 
 
-def outp(node):
+def output_reg(node):
     register = reg(node)
     register.has_output = True
     return register
 
 
-def inout(node):
+def inout_reg(node):
     register = reg(node)
     register.has_input = True
     register.has_output = True

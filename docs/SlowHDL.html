@@ -93,6 +93,8 @@ id="toc-typical-code-structure">Typical Code Structure</a></li>
 <li><a href="#behavior" id="toc-behavior">Behavior</a></li>
 <li><a href="#components" id="toc-components">Components</a></li>
 </ul></li>
+<li><a href="#using-in-slowtask" id="toc-using-in-slowtask">Using in
+SlowTask</a></li>
 <li><a href="#internal-implementation"
 id="toc-internal-implementation">Internal Implementation</a></li>
 </ul>
@@ -128,88 +130,95 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a hr
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&#39;clear&#39;</span>, clear_btn.writeonly()),</span>
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&#39;display&#39;</span>, display.readonly())</span>
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    ]</span></code></pre></div>
-<p>The logic to control the counter can be written like this:</p>
+<p>We will make a counter with start/stop/clear, the value of which is
+shown in the display.</p>
+<p>If this were to be implemented in FPGA, a Verilog code block
+(excluding RESET) would look like:</p>
 <div class="sourceCode" id="cb2"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control.hdl <span class="im">import</span> <span class="op">*</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> CounterModule(Module):</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, clock, start, stop, clear, count):</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>(clock)</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.start <span class="op">=</span> inp(start)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.stop <span class="op">=</span> inp(stop)</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.clear <span class="op">=</span> inp(clear)</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.count <span class="op">=</span> outp(count)</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.running <span class="op">=</span> reg()</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.count <span class="op">&lt;=</span> <span class="dv">0</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.running <span class="op">&lt;=</span> <span class="va">False</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>                </span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">@always</span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> startstop(<span class="va">self</span>):</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="va">self</span>.stop:</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.running <span class="op">&lt;=</span> <span class="va">False</span></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> <span class="va">self</span>.start:</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.running <span class="op">&lt;=</span> <span class="va">True</span></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">@always</span></span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> update(<span class="va">self</span>):</span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="va">self</span>.clear:</span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.count <span class="op">&lt;=</span> <span class="dv">0</span></span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> <span class="va">self</span>.running:</span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="va">self</span>.count <span class="op">==</span> <span class="dv">16</span>:</span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>                <span class="va">self</span>.count <span class="op">&lt;=</span> <span class="dv">0</span></span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>            <span class="cf">else</span>:</span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>                <span class="va">self</span>.count <span class="op">&lt;=</span> <span class="bu">int</span>(<span class="va">self</span>.count) <span class="op">+</span> <span class="dv">1</span></span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>clock <span class="op">=</span> Clock(Hz<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>counter <span class="op">=</span> CounterModule(</span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>    clock,</span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>    start <span class="op">=</span> start_btn,</span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>    stop <span class="op">=</span> stop_btn,</span>
-<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>    clear <span class="op">=</span> clear_btn,</span>
-<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>    count <span class="op">=</span> display</span>
-<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>clock.start()</span></code></pre></div>
-<p>Here the <code>@always</code> decorator and the <code>&lt;=</code>
-operator are abused to mimic the Verilog syntax. Do not mind these too
-much for now.</p>
-<p>This is a direct mapping from a corresponding Verilog code (if it
-were implemented in FPGA):</p>
+class="sourceCode verilog"><code class="sourceCode verilog"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Counter<span class="op">(</span>clock<span class="op">,</span> start<span class="op">,</span> stop<span class="op">,</span> clear<span class="op">,</span> count<span class="op">);</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">input</span> clock<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">input</span> <span class="dt">reg</span> start<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">input</span> <span class="dt">reg</span> stop<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">input</span> <span class="dt">reg</span> clear<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">output</span> <span class="dt">reg</span><span class="op">[</span><span class="dv">7</span><span class="op">:</span><span class="dv">0</span><span class="op">]</span> count<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">reg</span> running<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">always</span> <span class="op">@(</span><span class="kw">posedge</span> clock<span class="op">)</span> </span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">begin</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">if</span> <span class="op">(</span>stop <span class="op">==</span> <span class="bn">1&#39;b1</span><span class="op">)</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>            running <span class="op">&lt;=</span> <span class="bn">1&#39;b0</span><span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">else</span> <span class="kw">if</span> <span class="op">(</span>start <span class="op">==</span> <span class="bn">1&#39;b1</span><span class="op">)</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>            running <span class="op">&lt;=</span> <span class="bn">1&#39;b1</span><span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">end</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">always</span> <span class="op">@(</span><span class="kw">posedge</span> clock<span class="op">)</span> </span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">begin</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        <span class="kw">if</span> <span class="op">(</span>clear <span class="op">==</span> <span class="bn">1&#39;b1</span><span class="op">)</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>            count <span class="op">&lt;=</span> <span class="bn">8&#39;d0</span><span class="op">;</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>        <span class="kw">else</span> <span class="kw">if</span> <span class="op">(</span>running <span class="op">==</span> <span class="bn">1&#39;b1</span><span class="op">)</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>            <span class="kw">if</span> <span class="op">(</span>count <span class="op">==</span> <span class="bn">8&#39;d59</span><span class="op">)</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>                count <span class="op">&lt;=</span> <span class="bn">8&#39;d0</span><span class="op">;</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>            <span class="kw">else</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>                count <span class="op">&lt;=</span> count <span class="op">+</span> <span class="bn">8&#39;d1</span><span class="op">;</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">end</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="kw">endmodule</span></span></code></pre></div>
+<p>The SlowPy-HDL code (Python software script; emulation of HDL
+behavior) has basically the same structure:</p>
 <div class="sourceCode" id="cb3"><pre
-class="sourceCode verilog"><code class="sourceCode verilog"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> Counter<span class="op">(</span>clock<span class="op">,</span> start<span class="op">,</span> stop<span class="op">,</span> clear<span class="op">,</span> count<span class="op">);</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">input</span> clock<span class="op">;</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">input</span> <span class="dt">reg</span> start<span class="op">;</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">input</span> <span class="dt">reg</span> stop<span class="op">;</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">input</span> <span class="dt">reg</span> clear<span class="op">;</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">output</span> <span class="dt">reg</span><span class="op">[</span><span class="dv">3</span><span class="op">:</span><span class="dv">0</span><span class="op">]</span> count<span class="op">;</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">reg</span> running<span class="op">;</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">always</span> <span class="op">@(</span><span class="kw">posedge</span> clock<span class="op">)</span> </span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">begin</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">if</span> <span class="op">(</span>stop <span class="op">==</span> <span class="bn">1&#39;b1</span><span class="op">)</span></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>            running <span class="op">&lt;=</span> <span class="bn">1&#39;b0</span><span class="op">;</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">else</span> <span class="kw">if</span> <span class="op">(</span>start <span class="op">==</span> <span class="bn">1&#39;b1</span><span class="op">)</span></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>            running <span class="op">&lt;=</span> <span class="bn">1&#39;b1</span><span class="op">;</span></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">end</span></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">always</span> <span class="op">@(</span><span class="kw">posedge</span> clock<span class="op">)</span> </span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">begin</span></span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>        <span class="kw">if</span> <span class="op">(</span>clear <span class="op">==</span> <span class="bn">1&#39;b1</span><span class="op">)</span></span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>            count <span class="op">&lt;=</span> <span class="bn">4&#39;h0</span><span class="op">;</span></span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>        <span class="kw">else</span> <span class="kw">if</span> <span class="op">(</span>running <span class="op">==</span> <span class="bn">1&#39;b1</span><span class="op">)</span></span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>            <span class="kw">if</span> <span class="op">(</span>count <span class="op">==</span> <span class="bn">4&#39;ha</span><span class="op">)</span></span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>                count <span class="op">&lt;=</span> <span class="bn">4&#39;h0</span><span class="op">;</span></span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>            <span class="kw">else</span></span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>                count <span class="op">&lt;=</span> count <span class="op">+</span> <span class="bn">4&#39;h1</span><span class="op">;</span></span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">end</span></span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="kw">endmodule</span></span></code></pre></div>
-<p>In SlowPy HDL, module arguments are all registers (except for the
-clock). Register initializations, typically done with RESET in FPGA, can
-be done in the <code>__init__()</code> function.</p>
+class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control.hdl <span class="im">import</span> <span class="op">*</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># control module, with inputs and outputs given in the __init()__ arguments</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> CounterModule(Module):</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, clock, start, stop, clear, count):</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>(clock)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        <span class="co"># internal registers and binding of inputs and outputs</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.start <span class="op">=</span> input_reg(start)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.stop <span class="op">=</span> input_reg(stop)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.clear <span class="op">=</span> input_reg(clear)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.count <span class="op">=</span> output_reg(count)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.running <span class="op">=</span> reg()</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        <span class="co"># initialization (RESET)</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.count <span class="op">&lt;=</span> <span class="dv">0</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.running <span class="op">&lt;=</span> <span class="va">False</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>                </span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">@always</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> startstop(<span class="va">self</span>):</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="va">self</span>.stop:</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.running <span class="op">&lt;=</span> <span class="va">False</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> <span class="va">self</span>.start:</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.running <span class="op">&lt;=</span> <span class="va">True</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">@always</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> update(<span class="va">self</span>):</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="va">self</span>.clear:</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.count <span class="op">&lt;=</span> <span class="dv">0</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> <span class="va">self</span>.running:</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="va">self</span>.count <span class="op">==</span> <span class="dv">59</span>:</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>                <span class="va">self</span>.count <span class="op">&lt;=</span> <span class="dv">0</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>            <span class="cf">else</span>:</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>                <span class="va">self</span>.count <span class="op">&lt;=</span> <span class="bu">int</span>(<span class="va">self</span>.count) <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="co"># Create an instance, map peripherals (SlowPy control nodes)</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>clock <span class="op">=</span> Clock(Hz<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>counter <span class="op">=</span> CounterModule(</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    clock,</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>    start <span class="op">=</span> start_btn,</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>    stop <span class="op">=</span> stop_btn,</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>    clear <span class="op">=</span> clear_btn,</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>    count <span class="op">=</span> display</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>clock.start()</span></code></pre></div>
+<p>Here the <code>@always</code> decorator and the <code>&lt;=</code>
+operator are abused to mimic the Verilog syntax. In SlowPy HDL, module
+arguments are all registers (except for the clock). Register
+initializations, typically done with RESET in FPGA, can be done in the
+<code>__init__()</code> function.</p>
 <p>SlowPy HDL behaves like HDL. The following code works as if it were
 written in Verilog:</p>
 <div class="sourceCode" id="cb4"><pre
@@ -244,15 +253,15 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a hr
 <span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control.hdl <span class="im">import</span> <span class="op">*</span></span>
 <span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co"># user class to implement the logic</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> UserModule(Module):</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyModule(Module):</span>
 <span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, clock, var1, var2, ...):</span>
 <span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        <span class="co"># clock binding (base class initialization)</span></span>
 <span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>(clock)</span>
 <span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        </span>
 <span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        <span class="co"># registers and input/output binding</span></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.var1 <span class="op">=</span> inp(var1)    <span class="co"># register for input</span></span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.var2 <span class="op">=</span> outp(var2)   <span class="co"># register for output</span></span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.var3 <span class="op">=</span> reg()        <span class="co"># internal register</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.var1 <span class="op">=</span> input_reg(var1)    <span class="co"># register for input</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.var2 <span class="op">=</span> output_reg(var2)   <span class="co"># register for output</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.var3 <span class="op">=</span> reg()              <span class="co"># internal register</span></span>
 <span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>        ...</span>
 <span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>        <span class="co"># initial values</span></span>
@@ -275,11 +284,12 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a hr
 <span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>        </span>
 <span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a><span class="co"># create instances</span></span>
 <span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>clock <span class="op">=</span> Clock(Hz<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>module <span class="op">=</span> UserModule(clock, var1<span class="op">=</span>node1, var2<span class="op">=</span>node2, ...)</span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>module <span class="op">=</span> MyModule(clock, var1<span class="op">=</span>node1, var2<span class="op">=</span>node2, ...)</span>
 <span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a><span class="co"># starting the thread</span></span>
-<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>clock.start()</span></code></pre></div>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a><span class="co"># starting the thread for standalone execution; for use in SlowTask, see below.</span></span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>   clock.start()</span></code></pre></div>
 <h2 id="behavior">Behavior</h2>
 <ul>
 <li>Module implements the user logic, and clock calls user methods
@@ -305,25 +315,60 @@ below. The user class methods that are decorated with
 Clocks create a own thread by <code>start()</code> for the recurrent
 calls of the module processes (the methods decorated with
 <code>@always</code>).</p>
+<p>It is possible and maybe useful to create multiple clocks at
+different frequencies. For example, if a device is slow and readout from
+it takes time, a slow clock can be used to (pre)fetch the data from the
+device.</p>
 <h3 id="registers">Registers</h3>
 <p>This implements the flip-flop behavior. The value of a register is
-updated on clock cycles. If the register is bound to a input from a node
-(by <code>register = inp(node)</code>), the <code>get()</code> of the
-node is called before the clock cycle and held until next cycle. If the
-register is bound to an output to a node (by
-<code>register = outp(node)</code>, the assigned value is written to the
-node only once right after a clock cycle. If it is not bound to a node,
-the assigned value will take effect on the next clock cycle.</p>
-<p>Register value assignment should be done with a special operator
-<code>&lt;=</code>. The usual assignment operator, <code>=</code>, works
-in the same way, but using <code>&lt;=</code> highlights this semantics.
-Also using the <code>&lt;=</code> operator to a non-register object
-should cause a syntax error, helping detect this hard-to-notice
-error.</p>
-<p>To use the <code>&lt;=</code> operator in the usual way (numeric
-comparison), do like <code>int(reg) &lt; 32</code>.</p>
-<p>The content of the register is just a Python value, therefore any
+updated on clock cycles. If the register is bound to an input from a
+node (by <code>register = input_reg(node)</code> or
+<code>register = inout_reg(node)</code>), the <code>get()</code> of the
+bound node is called just before every clock cycle and the value is held
+until the next cycle. If the register is bound to an output to a node
+(by <code>register = output_reg(node)</code> or
+<code>register = inout_reg(node)</code>), the assigned register value is
+written to the node by callling <code>set(value)</code> right after
+every clock cycle. If a register is not bound to a node, the assigned
+value will take effect on the next clock cycle.</p>
+<p>The <code>&lt;=</code> operator is overloaded for register value
+assignment. To use the operator in the usual way (numeric comparison),
+do like <code>int(reg) &lt;= 31</code>.</p>
+<p>The content of a register is just a Python value, therefore any
 Python value types can be stored, not limited to numerical types.</p>
+<h1 id="using-in-slowtask">Using in SlowTask</h1>
+<p>Keep it in mind that each Clock instance has its own thread. Use
+SlowTask’s <code>_run()</code> and <code>_halt()</code> to control the
+thread.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">#... Variable Nodes</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyModule(Module):</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">#...</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>clock <span class="op">=</span> Clock(Hz<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>module <span class="op">=</span> MyModule(</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    clock,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">#...</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co"># SlowTask callbacks</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _run():</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    clock.start()   <span class="co"># start the clocking thread</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    clock.join()    <span class="co"># wait for the thread to terminate</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _halt():</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    clock.stop()    <span class="co"># stop the thread</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="co"># for standalone execution (not in SlowTask)</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>   clock.start()</span></code></pre></div>
+<p>Note that by the end of <code>_run()</code>, the thread must have
+been completed, otherwise the next start of SlowTask would duplicate the
+clocking thread.</p>
 <h1 id="internal-implementation">Internal Implementation</h1>
 <h4 id="structure">Structure</h4>
 <ul>
@@ -341,24 +386,22 @@ decorator signature.</li>
 for writing, in addition to the bound node.</p>
 <ul>
 <li>Reading from a register returns the reading value.</li>
-<li>The overloaded <code>register &lt;= rhs</code> operator sets the rhs
+<li>The overloaded operator <code>register &lt;= rhs</code> sets the rhs
 value to the register writing value.</li>
 </ul></li>
 </ul>
 <h4 id="node-register-binding">Node-Register Binding</h4>
 <ul>
-<li>The <code>inp(node)</code>/<code>outp(node)</code> functions create
-a register bound to the node and mark it for reading/writing.</li>
-<li>The <code>reg(node)</code> functions creates a register bound to the
-node and marks it for both reading and writing.</li>
-<li>The <code>reg()</code> functions creates a register not bound to any
-nodes.
-<p></li>
-<li>Using the <code>&lt;=</code> operator directly to a node should
-cause a syntax error.</li>
-<li>Using the <code>=</code> operator directly to a node is still
-possible, and the assignment will take effect immediately, but doing it
-is not recommended.</li>
+<li>The <code>input_reg(node)</code> function creates a register bound
+to the node and mark it for reading.</li>
+<li>The <code>output_reg(node)</code> function creates a register bound
+to the node and mark it for writing. Reading from this register returns
+the value written on the last clock, instead of getting a value from the
+bound node.</li>
+<li>The <code>inout_reg(node)</code> function creates a register bound
+to the node and marks it for both reading and writing.</li>
+<li>The <code>reg()</code> function creates a register not bound to any
+nodes. Reading from it returns the value written on the last clock.</li>
 </ul>
 <h4 id="sequence">Sequence</h4>
 <ul>

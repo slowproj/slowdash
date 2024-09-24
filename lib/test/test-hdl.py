@@ -26,10 +26,10 @@ class CounterModule(Module):
     def __init__(self, clock, start, stop, clear, count):
         super().__init__(clock)
         
-        self.start = inp(start)
-        self.stop = inp(stop)
-        self.clear = inp(clear)
-        self.count = outp(count)
+        self.start = input_reg(start)
+        self.stop = input_reg(stop)
+        self.clear = input_reg(clear)
+        self.count = output_reg(count)
         self.running = reg()
 
         self.count <= 0

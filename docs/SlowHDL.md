@@ -27,20 +27,56 @@ def _export():
     ]
 ```
 
-The logic to control the counter can be written like this:
+We will make a counter with start/stop/clear, the value of which is shown in the display.
+
+If this were to be implemented in FPGA, a Verilog code block (excluding RESET) would look like:
+```verilog
+module Counter(clock, start, stop, clear, count);
+    input clock;
+    input reg start;
+    input reg stop;
+    input reg clear;
+    output reg[7:0] count;
+    reg running;
+
+    always @(posedge clock) 
+    begin
+        if (stop == 1'b1)
+            running <= 1'b0;
+        else if (start == 1'b1)
+            running <= 1'b1;
+    end
+
+    always @(posedge clock) 
+    begin
+        if (clear == 1'b1)
+            count <= 8'd0;
+        else if (running == 1'b1)
+            if (count == 8'd59)
+                count <= 8'd0;
+            else
+                count <= count + 8'd1;
+    end
+endmodule
+```
+
+The SlowPy-HDL code (Python software script; emulation of HDL behavior) has basically the same structure:
 ```python
 from slowpy.control.hdl import *
 
+# control module, with inputs and outputs given in the __init()__ arguments
 class CounterModule(Module):
     def __init__(self, clock, start, stop, clear, count):
         super().__init__(clock)
-        
-        self.start = inp(start)
-        self.stop = inp(stop)
-        self.clear = inp(clear)
-        self.count = outp(count)
+
+        # internal registers and binding of inputs and outputs
+        self.start = input_reg(start)
+        self.stop = input_reg(stop)
+        self.clear = input_reg(clear)
+        self.count = output_reg(count)
         self.running = reg()
 
+        # initialization (RESET)
         self.count <= 0
         self.running <= False
                 
@@ -56,11 +92,13 @@ class CounterModule(Module):
         if self.clear:
             self.count <= 0
         elif self.running:
-            if self.count == 16:
+            if self.count == 59:
                 self.count <= 0
             else:
                 self.count <= int(self.count) + 1
 
+
+# Create an instance, map peripherals (SlowPy control nodes)
 
 clock = Clock(Hz=1)
 
@@ -74,40 +112,7 @@ counter = CounterModule(
 
 clock.start()
 ```
-Here the `@always` decorator and the `<=` operator are abused to mimic the Verilog syntax. Do not mind these too much for now.
-
-This is a direct mapping from a corresponding Verilog code (if it were implemented in FPGA):
-```verilog
-module Counter(clock, start, stop, clear, count);
-    input clock;
-    input reg start;
-    input reg stop;
-    input reg clear;
-    output reg[3:0] count;
-    reg running;
-
-    always @(posedge clock) 
-    begin
-        if (stop == 1'b1)
-            running <= 1'b0;
-        else if (start == 1'b1)
-            running <= 1'b1;
-    end
-
-    always @(posedge clock) 
-    begin
-        if (clear == 1'b1)
-            count <= 4'h0;
-        else if (running == 1'b1)
-            if (count == 4'ha)
-                count <= 4'h0;
-            else
-                count <= count + 4'h1;
-    end
-endmodule
-
-```
-In SlowPy HDL, module arguments are all registers (except for the clock). Register initializations, typically done with RESET in FPGA, can be done in the `__init__()` function.
+Here the `@always` decorator and the `<=` operator are abused to mimic the Verilog syntax. In SlowPy HDL, module arguments are all registers (except for the clock). Register initializations, typically done with RESET in FPGA, can be done in the `__init__()` function.
 
 SlowPy HDL behaves like HDL. The following code works as if it were written in Verilog:
 ```python
@@ -143,15 +148,15 @@ node2 = ctrl.whatever()....
 from slowpy.control.hdl import *
 
 # user class to implement the logic
-class UserModule(Module):
+class MyModule(Module):
     def __init__(self, clock, var1, var2, ...):
         # clock binding (base class initialization)
         super().__init__(clock)
         
         # registers and input/output binding
-        self.var1 = inp(var1)    # register for input
-        self.var2 = outp(var2)   # register for output
-        self.var3 = reg()        # internal register
+        self.var1 = input_reg(var1)    # register for input
+        self.var2 = output_reg(var2)   # register for output
+        self.var3 = reg()              # internal register
         ...
 
         # initial values
@@ -174,11 +179,12 @@ class UserModule(Module):
         
 # create instances
 clock = Clock(Hz=1)
-module = UserModule(clock, var1=node1, var2=node2, ...)
+module = MyModule(clock, var1=node1, var2=node2, ...)
 
 
-# starting the thread
-clock.start()
+# starting the thread for standalone execution; for use in SlowTask, see below.
+if __name__ == '__main__':
+   clock.start()
 ```
 
 ## Behavior
@@ -196,15 +202,48 @@ User modules must be derived from the `Module` class defined in `slowpy.control.
 ### Clock
 A clock defines the recurrence intervals. An instance of the `Clock` class is passed to `Module` instances. Clocks create a own thread by `start()` for the recurrent calls of the module processes (the methods decorated with `@always`).
 
+It is possible and maybe useful to create multiple clocks at different frequencies. For example, if a device is slow and readout from it takes time, a slow clock can be used to (pre)fetch the data from the device.
 
 ### Registers
-This implements the flip-flop behavior. The value of a register is updated on clock cycles. If the register is bound to a input from a node (by `register = inp(node)`), the `get()` of the node is called before the clock cycle and held until next cycle. If the register is bound to an output to a node (by `register = outp(node)`, the assigned value is written to the node only once right after a clock cycle. If it is not bound to a node, the assigned value will take effect on the next clock cycle.
+This implements the flip-flop behavior. The value of a register is updated on clock cycles. If the register is bound to an input from a node (by `register = input_reg(node)` or `register = inout_reg(node)`), the `get()` of the bound node is called just before every clock cycle and the value is held until the next cycle. If the register is bound to an output to a node (by `register = output_reg(node)` or `register = inout_reg(node)`), the assigned register value is written to the node by callling `set(value)` right after every clock cycle. If a register is not bound to a node, the assigned value will take effect on the next clock cycle.
 
-Register value assignment should be done with a special operator `<=`. The usual assignment operator, `=`, works in the same way, but using `<=` highlights this semantics. Also using the `<=` operator to a non-register object should cause a syntax error, helping detect this hard-to-notice error.
+The `<=` operator is overloaded for register value assignment. To use the operator in the usual way (numeric comparison), do like `int(reg) <= 31`.
 
-To use the `<=` operator in the usual way (numeric comparison), do like `int(reg) < 32`.
+The content of a register is just a Python value, therefore any Python value types can be stored, not limited to numerical types.
 
-The content of the register is just a Python value, therefore any Python value types can be stored, not limited to numerical types.
+
+# Using in SlowTask
+Keep it in mind that each Clock instance has its own thread. Use SlowTask's `_run()` and `_halt()` to control the thread.
+
+```python
+#... Variable Nodes
+
+class MyModule(Module):
+#...
+
+clock = Clock(Hz=1)
+module = MyModule(
+    clock,
+    #...
+)
+
+
+# SlowTask callbacks
+
+def _run():
+    clock.start()   # start the clocking thread
+    clock.join()    # wait for the thread to terminate
+
+def _halt():
+    clock.stop()    # stop the thread
+
+
+# for standalone execution (not in SlowTask)
+if __name__ == '__main__':
+   clock.start()
+```
+
+Note that by the end of `_run()`, the thread must have been completed, otherwise the next start of SlowTask would duplicate the clocking thread.
 
 
 # Internal Implementation
@@ -217,15 +256,13 @@ The content of the register is just a Python value, therefore any Python value t
   
 - Each register has two internal values, one for reading and one for writing, in addition to the bound node.
   - Reading from a register returns the reading value.
-  - The overloaded `register <= rhs` operator sets the rhs value to the register writing value.
+  - The overloaded operator `register <= rhs` sets the rhs value to the register writing value.
 
 #### Node-Register Binding
-- The `inp(node)`/`outp(node)` functions create a register bound to the node and mark it for reading/writing.
-- The `reg(node)` functions creates a register bound to the node and marks it for both reading and writing.
-- The `reg()` functions creates a register not bound to any nodes.
-<p>
-- Using the `<=` operator directly to a node should cause a syntax error.
-- Using the `=` operator directly to a node is still possible, and the assignment will take effect immediately, but doing it is not recommended.
+- The `input_reg(node)` function creates a register bound to the node and mark it for reading.
+- The `output_reg(node)` function creates a register bound to the node and mark it for writing. Reading from this register returns the value written on the last clock, instead of getting a value from the bound node.
+- The `inout_reg(node)` function creates a register bound to the node and marks it for both reading and writing.
+- The `reg()` function creates a register not bound to any nodes. Reading from it returns the value written on the last clock.
 
 #### Sequence
 - A clocking thread is started by `Clock.start()`. In the thread, the clock object repeatedly performs:

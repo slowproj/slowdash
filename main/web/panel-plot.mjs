@@ -256,9 +256,12 @@ class TimeseriesHistogramPlot extends HistogramPlot {
             }
             return;
         }
-        if ((ts.x === undefined) || (ts.x.length <= 0)) {
+        if ((ts?.x === undefined) || (Array.isArray(ts.x) && (ts.x.length <= 0))) {
             this.setStat('---');
             return;
+        }
+        if (! (Array.isArray(ts.x))) {
+            ts.x = [ ts.x ];
         }
         
         let nbins = parseInt(this.config.bins?.n ?? null);
@@ -775,21 +778,25 @@ class TimeseriesPlot extends LineMarkerPlot {
             }
             return;
         }
-        if ((ts?.x === undefined) || (ts.x.length <= 0)) {
+        if ((ts?.x === undefined) || (Array.isArray(ts.x) && (ts.x.length <= 0))) {
             this.setStat('---');
             return;
+        }
+        if (! (Array.isArray(ts.x))) {
+            ts.t = [ ts.t ];
+            ts.x = [ ts.x ];
         }
         
         const t0 = dataPacket.data[this.config.channel].start;
         this.graph.x = [];
         this.graph.y = [];
-        
+
         let [xmin, xmax, ymin, ymax] = [null, null, null, null];
         for (let k = 0; k < ts.x.length; k++) {
-            if (ts.x[k] === null) {
+            const [xk, yk] = [t0 + ts.t[k], parseFloat(ts.x[k])];
+            if (isNaN(yk)) {
                 continue;
             }
-            const [xk, yk] = [t0 + ts.t[k], ts.x[k]];
             this.graph.x.push(xk);
             this.graph.y.push(yk);
             [ xmin, xmax ] = [ Math.min(xmin??xk, xk), Math.max(xmax??xk, xk) ];

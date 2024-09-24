@@ -11,7 +11,7 @@
         {
             "type": "timeaxis",
             "plots": [
-                { "type": "timeseries", "channel": "counter.display", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": 1e-100 }
+                { "type": "timeseries", "channel": "counter.display", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 5, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": 1e-100 }
             ],
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 0, "ymax": 2 },
             "legend": { "style": "side" }

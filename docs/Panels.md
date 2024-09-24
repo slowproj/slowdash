@@ -398,18 +398,6 @@ $ slowdash-xy2map.py NAME.csv > map-NAME.json
   - `radius` is 0.01.
 - [TODO] with the `--svg` option a SVG image file will be also created, which is convenient to test the map file.
   
-# Table
-
-# Tree
-
-# Blob
-- Primarily intended for image data, but can be used for many others.
-- Data must have a MIME type and URL.
-
-##### Implementation
-- For mime type of `image/*`, `<img src="...">`
-- For others, `<iframe src="...">`
-
 
 # HTML / Form
 - Displays a HTML page described in an user HTML file stored under the user configuration directory.
@@ -462,6 +450,23 @@ Temperature: <span sd-value="ch1->last()->format('%.1f degC')">---</span>
   - Example: `<input type="submit" name="start" value="Start" sd-enabled="RnuInfo['Status']->match('Idle')">`
 <p>
 - For the expressions that can be used in `sd-value` and `sd-enabled`, see the [Data Transform section](DataTransform.html).
+
+#### Action/Variable Binding
+
+
+
+# Table
+
+# Tree
+
+# Blob
+- Primarily intended for image data, but can be used for many others.
+- Data must have a MIME type and URL.
+
+##### Implementation
+- For mime type of `image/*`, `<img src="...">`
+- For others, `<iframe src="...">`
+
 
 # External Page
 - Maybe useful for Web-Cam etc.

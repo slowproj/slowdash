@@ -17,10 +17,10 @@ class CounterModule(Module):
         super().__init__(clock)
         
         # binding to registers #
-        self.start = inp(start)
-        self.stop = inp(stop)
-        self.clear = inp(clear)
-        self.count = outp(count)
+        self.start = input_reg(start)
+        self.stop = input_reg(stop)
+        self.clear = input_reg(clear)
+        self.count = output_reg(count)
         self.running = reg()
 
         # register initialization #
@@ -39,7 +39,7 @@ class CounterModule(Module):
         if self.clear:
             self.count <= 0
         elif self.running:
-            if self.count == 32:
+            if self.count == 59:
                 self.count <= 0
             else:
                 self.count <= int(self.count) + 1

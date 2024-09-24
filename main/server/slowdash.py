@@ -188,7 +188,7 @@ class App:
             try:
                 channels = params[1].split(',')
                 length = float(opts.get('length', '3600'))
-                to = float(opts.get('to', int(time.time())))
+                to = float(opts.get('to', int(time.time())+1))
                 resample = float(opts.get('resample', -1))
                 reducer = opts.get('reducer', 'last')
             except Exception as e:
@@ -208,7 +208,7 @@ class App:
             try:
                 channels = params[1].split(',')
                 length = float(opts.get('length', '3600'))
-                to = float(opts.get('to', int(time.time())))
+                to = float(opts.get('to', int(time.time())+1))
                 resample = float(opts.get('resample', -1))
                 reducer = opts.get('reducer', 'last')
                 timezone = opts.get('timezone', 'local')
@@ -588,18 +588,21 @@ class App:
             result_obj = ds.get_object(channels, length, to)
             if result_obj is not None:
                 result.update(result_obj)
-                    
-        for module_list in [ self.usermodule_list, self.taskmodule_list ]:
-            for module in module_list:
-                for ch in channels:
-                    data = module.get_data(ch)
-                    if data is None:
-                        continue
-                    result[ch] = {
-                        'start': to-length, 'length': length,
-                        't': to,
-                        'x': data
-                    }
+
+        start = to - length
+        t = time.time() - start
+        if t >= 0 and t <= length:
+            for module_list in [ self.usermodule_list, self.taskmodule_list ]:
+                for module in module_list:
+                    for ch in channels:
+                        data = module.get_data(ch)
+                        if data is None:
+                            continue
+                        result[ch] = {
+                            'start': start, 'length': length,
+                            't': t,
+                            'x': data
+                        }
 
         return result
 
