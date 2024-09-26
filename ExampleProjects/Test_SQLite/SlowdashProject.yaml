@@ -11,6 +11,8 @@ slowdash_project:
         schema: objts_data [channel] @timestamp(unix) = value
 
       view:
+        - name: ts_raw
+          sql: select * from ts_data order by timestamp desc limit 20
         - name: obj_raw
           sql: select * from obj_data
         - name: objts_raw

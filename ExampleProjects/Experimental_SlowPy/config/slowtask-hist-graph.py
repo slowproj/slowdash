@@ -21,6 +21,7 @@ fig.subplots_adjust(hspace=0.4)
 
 import numpy as np
 def update():
+    #print("update")
     x = np.linspace(0, 10, 100)
     y = np.random.poisson(10, size=100)
     y2 = np.random.poisson(20, size=100)
@@ -44,9 +45,19 @@ def update():
     
 # for execusion as a SlowTask    
 import time
-def _loop():
+
+def _initialize(params={}):
+    print("_ini")
     update()
-    time.sleep(500)
+    plt.generate_slowdash_config()
+    plt.set_recurrence(update, interval=1000)
+    plt.show()
+
+def _loop():
+    print("_loop")
+    #update()
+    time.sleep(1000)
+
     
 
 # for standalone execusion
@@ -54,4 +65,3 @@ if __name__ == '__main__':
     plt.set_recurrence(update, interval=500)
     plt.show()
     plt.savefig("test-slowplot-hist-graph.png")
-    plt.generate_slowdash_config()

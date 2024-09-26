@@ -12,7 +12,7 @@
             "plots": [
                 { "type": "histogram", "channel": "test_histogram", "color": "#009090", "opacity": 0.2, "label": "", "format": "%.5g" }
             ],
-            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": true, "xmin": -20, "xmax": 20, "ymin": 0, "ymax": 200, "zlog": false },
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "xmin": -20, "xmax": 20, "ymin": 0, "ymax": 200, "zlog": false, "zmin": 0, "zmax": 1 },
             "legend": { "style": "transparent" }
         },
         {
@@ -40,17 +40,9 @@
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "ymin": -9, "ymax": 9, "zlog": false },
             "legend": { "style": "transparent" }
         },
+        { "type": "table", "channel": "ts_raw", "reversed": false, "title": "Raw Time-Series Data" },
         { "type": "table", "channel": "obj_raw", "reversed": false, "title": "Raw Object Data" },
         { "type": "table", "channel": "objts_raw", "reversed": false, "title": "Raw Object-TimeSeries Data" },
-        {
-            "type": "plot",
-            "plots": [
-                { "type": "histogram", "channel": "test_histogram", "color": "#009090", "opacity": 0.2, "label": "", "format": "%.5g" }
-            ],
-            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
-            "legend": { "style": "side" }
-        },
-        { "type": "table", "channel": "hist_raw", "reversed": false },
         {
             "type": "plot",
             "plots": [

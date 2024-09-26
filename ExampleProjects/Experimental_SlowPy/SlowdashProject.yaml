@@ -1,7 +1,10 @@
 slowdash_project:
   name: SlowPy
   title: SlowTask with SlowPy
-  
+
+  system:
+    our_security_is_perfect: true
+
   data_source:
     url: sqlite:///SlowStore.db
     parameters:

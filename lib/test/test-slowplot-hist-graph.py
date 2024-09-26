@@ -42,14 +42,6 @@ def update():
 
     
     
-# for execusion as a SlowTask    
-import time
-def _loop():
-    update()
-    time.sleep(500)
-    
-
-# for standalone execusion
 if __name__ == '__main__':
     plt.set_recurrence(update, interval=500)
     plt.show()
