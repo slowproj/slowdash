@@ -2,8 +2,8 @@
 SlowDash is a web GUI tool for controlling and monitoring concurrent systems (slow controls and data acquisition), originally designed for physics experiments. Like Grafana, SlowDash does not include data storage systems; it interacts with users and exchanges data and messages with existing databases, devices, and/or other control systems.
 
 #### Project Goal
-- Grafana-like data browser for time-series data and ROOT-like data objects (graphs, histograms, etc.)
-- LabVIEW-like visual control (graphical control panel)
+- Grafana-like data browser, for time-series data and ROOT-like data objects (graphs, histograms, etc.)
+- LabVIEW-like visual control (graphical control panel and control logic behind it)
 - Jupyter-like Python scripting
 
 #### Current Status: ~70% of the initial design implemented

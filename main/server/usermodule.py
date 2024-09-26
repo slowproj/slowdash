@@ -83,6 +83,7 @@ class UserModule:
         self.func_halt = None
         
         self.routine_history = []
+        self.command_history = []
         self.error = None
         self.is_waiting = False
 
@@ -115,6 +116,7 @@ class UserModule:
         
     def load(self):
         self.routine_history = []
+        self.command_history = []
         self.error = None
         
         if self.module is not None and False:  # ??? it look like just re-doing load() works...
@@ -240,16 +242,18 @@ class UserModule:
         if self.module is None or self.func_process_command is None:
             return None
         
-        self.routine_history.append((
-            time.time(),
-            'process_command(%s)' % ','.join(['%s=%s' % (k,v) for k,v in params.items()])
-        ))
         try:
-            return self.func_process_command(params)
+            result = self.func_process_command(params)
         except Exception as e:
             self.handle_error('user module error: process_command(): %s' % str(e))
             return {'status': 'error', 'message': str(e) }
 
+        if result is not None:
+            self.command_history.append((
+                time.time(),
+                'process_command(%s)' % ','.join(['%s=%s' % (k,v) for k,v in params.items()])
+            ))
+            
 
     def handle_error(self, message):
         if self.error is None:

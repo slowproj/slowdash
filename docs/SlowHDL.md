@@ -33,9 +33,9 @@ If this were to be implemented in FPGA, a Verilog code block (excluding RESET) w
 ```verilog
 module Counter(clock, start, stop, clear, count);
     input clock;
-    input reg start;
-    input reg stop;
-    input reg clear;
+    input start;
+    input stop;
+    input clear;
     output reg[7:0] count;
     reg running;
 

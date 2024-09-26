@@ -78,45 +78,50 @@ class Axes:
             if len(args) > 0 and type(args[0]) is str:
                 args[0] = kwargs['data'][args[0]]
                     
+        if len(args) > 0 and type(args[-1]) is str:
+            kwargs.update(self._decode_format(args[-1]))
+            
+        if isinstance(obj, Histogram):
+            name = slowplot.create_name(kwargs.get('label', None), 'histogram')
+            return self._draw_histogram(obj, name, **kwargs)
+        elif isinstance(obj, Histogram2d):
+            name = slowplot.create_name(kwargs.get('label', None), 'histogram2d')
+            return self._draw_histogram2d(obj, name, **kwargs)
+        elif isinstance(obj, Graph):
+            name = slowplot.create_name(kwargs.get('label', None), 'graph')
+            return self._draw_graph(obj, name, **kwargs)
+        
         nx, ny = 0, 0
         if isinstance(obj, list) or isinstance(obj, np.ndarray):
             nx = len(obj)
             if len(args) == 1 and isinstance(args[0], list):
                 ny = len(args[0])
-
         if nx > 0:
-            graph = Graph(slowplot.create_name(kwargs.get('label', None), 'plot'))
+            graph = Graph()
             if len(args) == 0 or type(args[0]) is str:
                 graph.x = [ k for k in range(nx) ]
                 graph.y = [ float(xk) for xk in obj ]
             else:
                 graph.x = [ float(xk) for xk in obj ]
                 graph.y = [ float(yk) for yk in args[0] ]
-            obj = graph
-            
-        if len(args) > 0 and type(args[-1]) is str:
-            kwargs.update(self._decode_format(args[-1]))
-            
-        if isinstance(obj, Histogram):
-            return self._draw_histogram(obj, **kwargs)
-        elif isinstance(obj, Histogram2d):
-            return self._draw_histogram2d(obj, **kwargs)
-        elif isinstance(obj, Graph):
-            return self._draw_graph(obj, **kwargs)
+            name = slowplot.create_name(kwargs.get('label', None), 'plot')
+            return self._draw_graph(graph, name, **kwargs)
 
         return None
 
                 
     def errorbar(self, x, y, yerr=None, xerr=None, **kwargs):
-        graph = Graph(slowplot.create_name(kwargs.get('label', None), 'plot'))
+        graph = Graph()
         graph.x = [ float(xk) for xk in x ]
         graph.y = [ float(xk) for xk in x ]
         if xerr is not None:
             graph.x_err = [ float(xk) for xk in xerr ]
         if xerr is not None:
             graph.y_err = [ float(xk) for xk in yerr ]
+            
+        name = slowplot.create_name(kwargs.get('label', None), 'errorbar')
 
-        return self._draw_graph(graph, **kwargs)
+        return self._draw_graph(graph, name, **kwargs)
 
     
     def hist(self, values, bins=None, **kwargs):
@@ -127,11 +132,12 @@ class Axes:
             counts, edges = np.histogram(values)
         else:
             counts, edges = np.histogram(values, bins)
-        name = slowplot.create_name(kwargs.get('label', None), 'hist')
-        hist = Histogram(name, len(edges)-1, edges[0], edges[-1])
+        hist = Histogram(len(edges)-1, edges[0], edges[-1])
         hist.counts = counts.tolist()
         
-        return self._draw_histogram(hist, **kwargs)
+        name = slowplot.create_name(kwargs.get('label', None), 'hist')
+        
+        return self._draw_histogram(hist, name, **kwargs)
         
 
     def hist2d(self, x, y, bins=None, weights=None, **kwargs):
@@ -145,12 +151,13 @@ class Axes:
             counts, xedges, yedges = np.histogram2d(x, y, weights=weights)
         else:
             counts, xedges, yedges = np.histogram2d(x, y, bins, weights=weights)
-        name = slowplot.create_name(kwargs.get('label', None), 'hist2d')
-        hist2d = Histogram2d(name, len(xedges)-1, xedges[0], xedges[-1], len(yedges)-1, yedges[0], yedges[-1])
+        hist2d = Histogram2d(len(xedges)-1, xedges[0], xedges[-1], len(yedges)-1, yedges[0], yedges[-1])
         for yk in range(len(yedges)-1):
             hist2d.counts[yk][:] = counts[yk][:].tolist()
         
-        return self._draw_histogram2d(hist2d, **kwargs)
+        name = slowplot.create_name(kwargs.get('label', None), 'hist2d')
+        
+        return self._draw_histogram2d(hist2d, name, **kwargs)
         
 
     def scatter(self, x, y, s=None, c=None, marker=None, **kwargs):
@@ -161,6 +168,8 @@ class Axes:
         if 'linewidth' not in kwargs:
             kwargs['linewidth'] = 0
             
+        kwargs['label'] = slowplot.create_name(kwargs.get('label', None), 'scatter')
+        
         return self.plot(x, y, **kwargs)
 
     
@@ -215,8 +224,8 @@ class Axes:
         return opts
 
             
-    def _draw_graph(self, graph, **kwargs):
-        obj = {'type': 'graph', 'channel': graph.name }
+    def _draw_graph(self, graph, name, **kwargs):
+        obj = {'type': 'graph', 'channel': name }
         obj.update(self._get_opts(**kwargs))
         self.config['plots'].append(obj)
 
@@ -230,13 +239,13 @@ class Axes:
             obj['color'] = colors.to_hex(p[0].get_color())
 
         if slowplot.datastore is not None:
-            slowplot.datastore.write_object(graph)
+            slowplot.datastore.append(graph, tag=name)
             
         return p
             
 
-    def _draw_histogram(self, hist, **kwargs):
-        obj = { 'type': 'histogram', 'channel': hist.name }
+    def _draw_histogram(self, hist, name, **kwargs):
+        obj = { 'type': 'histogram', 'channel': name }
         obj.update(self._get_opts(**kwargs))
         self.config['plots'].append(obj)
         
@@ -248,13 +257,13 @@ class Axes:
             obj['opacity'] = 1
 
         if slowplot.datastore is not None:
-            slowplot.datastore.write_object(hist)
+            slowplot.datastore.append(hist, tag=name)
             
         return (n, b, p)
 
                    
-    def _draw_histogram2d(self, hist2d, **kwargs):
-        obj = { 'type': 'histogram2d', 'channel': hist2d.name }
+    def _draw_histogram2d(self, hist2d, name, **kwargs):
+        obj = { 'type': 'histogram2d', 'channel': name }
         obj.update(self._get_opts(**kwargs))
         self.config['plots'].append(obj)
         
@@ -268,7 +277,7 @@ class Axes:
         result = self.mpl_axes.hist2d(x, y, bins=[xbins, ybins], weights=weights, **kwargs)
 
         if slowplot.datastore is not None:
-            slowplot.datastore.write_object(hist2d)
+            slowplot.datastore.append(hist2d, tag=name)
             
         return result
 
@@ -334,15 +343,17 @@ class slowplot:
     figure_list = []
     animation_list = []
     recurrence_interval = 0
-    sequence = 0
+    sequence_table = {}
 
     
     @classmethod
-    def set_datastore(cls, datastore=None):
+    def set_datastore(cls, datastore=None, table=None):
         if datastore is None:
             datastore = 'sqlite:///SlowStore.db'
+        if table is None:
+            table = 'SlowData'
         if type(datastore) == str:
-            cls.datastore = create_datastore_from_url(datastore)
+            cls.datastore = create_datastore_from_url(datastore, table)
             if cls.datastore is None:
                 sys.stderr.write('invalid DataStore name: %s\n' % datastore)
         else:
@@ -352,8 +363,10 @@ class slowplot:
     @classmethod
     def create_name(cls, label, prefix):
         if label is None or len(label) == 0:
-            cls.sequence = cls.sequence + 1
-            return '%s%03d' % (prefix, cls.sequence)
+            seq = cls.sequence_table.get(prefix, 0)
+            cls.sequence_table[prefix] = seq + 1
+            return '%s%03d' % (prefix, seq)
+        
         name = label[0] if label[0].isalpha() else '_'
         for i in range(1, len(label)):
             name += label[i] if label[i].isalnum() or label[i] in [ '-', '.' ] else '_'

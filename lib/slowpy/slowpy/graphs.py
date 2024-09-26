@@ -35,25 +35,31 @@ class Graph(DataElement):
 
             
     def add_point(self, x, y, z=None, x_err=None, y_err=None, z_err=None):
-        if type(x) is list:
+        if isinstance(x, (list, np.ndarray)):
             for v in [ y, z, x_err, y_err, z_err ]:
-                if v is not None and (type(v) is not list or len(v) != len(x)):
+                if v is not None and (not isinstance(v, (list, np.ndarray)) or len(v) != len(x)):
                     # ERROR: ...
                     return
             for k in range(len(x)):
-                self.add_point(x[k], y[k], z[k], x_err[k], y_err[k], z_err[k])
-                return
+                self.add_point(
+                    x[k], y[k],
+                    z[k] if z is not None else None,
+                    x_err[k] if x_err is not None else None,
+                    y_err[k] if y_err is not None else None,
+                    z_err[k] if z_err is not None else None
+                )
+            return
         else:
             for v in [ x, y, z, x_err, y_err, z_err ]:
                 if v is not None and not isinstance(v, (int, float)):
                     # ERROR: ...
                     continue
-            self.x.append(x)
-            self.y.append(y)
-            self.z.append(z)
-            self.x_err.append(x_err)
-            self.y_err.append(y_err)
-            self.z_err.append(z_err)
+            self.x.append(float(x) if x is not None else None)
+            self.y.append(float(y) if y is not None else None)
+            self.z.append(float(z) if z is not None else None)
+            self.x_err.append(float(x_err) if x_err is not None else None)
+            self.y_err.append(float(y_err) if y_err is not None else None)
+            self.z_err.append(float(z_err) if z_err is not None else None)
 
             
     def to_json(self):

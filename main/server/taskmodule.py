@@ -29,7 +29,6 @@ class TaskModule(UserModule):
         self.async_command_thread_set = set()
         self.exports = None
         self.channel_list = None
-        self.command_history = []
         self.namespace_prefix = params.get('namespace_prefix', '%s.' % name)
         self.namespace_suffix = params.get('namespace_suffix', '')
 
@@ -57,7 +56,6 @@ class TaskModule(UserModule):
     def load(self):
         self.exports = None
         self.channel_list = None
-        self.command_history = []
         
         return super().load()
 
@@ -111,6 +109,14 @@ class TaskModule(UserModule):
             if type(value) == dict:
                 if 'table' in value:
                     self.channel_list.append({'name': external_name, 'type': 'table'})
+                elif 'tree' in value:
+                    self.channel_list.append({'name': external_name, 'type': 'tree'})
+                elif 'bins' in value:
+                    self.channel_list.append({'name': external_name, 'type': 'histogram'})
+                elif 'ybins' in value:
+                    self.channel_list.append({'name': external_name, 'type': 'histogram2d'})
+                elif 'y' in value:
+                    self.channel_list.append({'name': external_name, 'type': 'graph'})
                 else:
                     self.channel_list.append({'name': external_name, 'type': 'tree'})
             else:
@@ -133,8 +139,11 @@ class TaskModule(UserModule):
                 return None
 
         value = self.exports[channel].get()
-        if type(value) == dict:
-            if 'tree' in value or 'table' in value:
+        
+        if type(value) in [ bool, int, float, str ]:
+            return value
+        elif type(value) == dict:
+            if 'tree' in value or 'table' in value or 'bins' in value or 'ybin' in value or 'y' in value:
                 return value
             else:
                 return { 'tree': value }
@@ -150,16 +159,18 @@ class TaskModule(UserModule):
         if self.module is None or self.func_process_command is None:
             return None
         
-        self.command_history.append((
-            time.time(),
-            '_process_command(%s)' % ','.join(['%s=%s' % (k,v) for k,v in params.items()])
-        ))
         try:
             result = self.func_process_command(params)
         except Exception as e:
             self.handle_error('user module error: process_command(): %s' % str(e))
             return {'status': 'error', 'message': str(e) }
 
+        if result is not None:
+            self.command_history.append((
+                time.time(),
+                '_process_command(%s)' % ','.join(['%s=%s' % (k,v) for k,v in params.items()])
+            ))
+        
         return result
     
 

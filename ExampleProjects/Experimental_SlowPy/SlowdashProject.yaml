@@ -1,23 +1,12 @@
 slowdash_project:
   name: SlowPy
-  title: SlowPy Examples
+  title: SlowTask with SlowPy
   
   data_source:
-    url: sqlite:///SlowTestData
+    url: sqlite:///SlowStore.db
     parameters:
-      time_series:
-        schema: slowpy_ts [channel] @timestamp(unix) = value
-      object:
-        schema: slowpy_obj [channel] = value
       object_time_series:
-        schema: slowpy_objts [channel] @timestamp(unix) = value
-        suffix: .ts
-
+        schema: SlowData [channel] @timestamp(unix) = value
       view:
-        - name: obj_raw
-          sql: select * from slowpy_obj
         - name: objts_raw
-          sql: select * from slowpy_objts order by timestamp desc limit 20
-          
-  module:
-    file: generate-testdata.py
+          sql: select * from SlowData order by timestamp desc limit 10

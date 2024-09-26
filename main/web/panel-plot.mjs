@@ -786,6 +786,8 @@ class TimeseriesPlot extends LineMarkerPlot {
             ts.t = [ ts.t ];
             ts.x = [ ts.x ];
         }
+
+        console.log(ts.x);
         
         const t0 = dataPacket.data[this.config.channel].start;
         this.graph.x = [];

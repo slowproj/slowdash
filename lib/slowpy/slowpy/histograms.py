@@ -49,14 +49,21 @@ class Histogram(DataElement):
 
         
     def fill(self, value, weight=1):
+        if isinstance(value, (list, np.ndarray)):
+            if not isinstance(weight, (list, np.ndarray)):
+                weight = [weight] * len(value)
+            for k in range(len(value)):
+                self.fill(value[k], weight[k])
+            return
+                
         bin = self.scale.get_bin_of(value)
         if bin is not None:
-            self.counts[bin] += weight
+            self.counts[bin] += float(weight)
         else:
             if value < self.scale.min:
-                self.underflow += weight
+                self.underflow += float(weight)
             if value >= self.scale.max:
-                self.overflow += weight
+                self.overflow += float(weight)
 
                 
     def rebin(self, nbins, range_min, range_max):
@@ -111,12 +118,23 @@ class Histogram2d(DataElement):
 
         
     def fill(self, x, y, weight=1):
+        if isinstance(x, (list, np.ndarray)):
+            if not isinstance(y, (list, np.ndarray)) or len(x) != len(y):
+                # ERROR: ...
+                return
+            if not isinstance(weight, (list, np.ndarray)):
+                weight = [weight] * len(x)
+            for k in range(len(x)):
+                self.fill(x[k], y[k], weight[k])
+            return
+            
+            
         xbin = self.xscale.get_bin_of(x)
         ybin = self.yscale.get_bin_of(y)
         if self.counts is None or xbin is None or ybin is None:
-            self.outliers += weight
+            self.outliers += float(weight)
         else:
-            self.counts[ybin][xbin] += weight
+            self.counts[ybin][xbin] += float(weight)
 
                 
     def to_json(self):
