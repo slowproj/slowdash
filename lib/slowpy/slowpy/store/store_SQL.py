@@ -137,7 +137,9 @@ class DataStore_SQL(DataStore):
         return []
     
     
-    def __init__(self, db_url, table, table_format):
+    def __init__(self, db_url, table, table_format, lazy_construction=False):
+        self.lazy_construction = lazy_construction
+        
         if not table.replace('_', '').isalnum():
             logging.error('SQL: bad table name "%s"' % table)
             self.table = None
@@ -148,9 +150,13 @@ class DataStore_SQL(DataStore):
         self.table = table
         self.table_format = table_format
         self.table_format.bind(self, table)
+
+        if self.lazy_construction:
+            return
         
         self.conn = self.construct()
         if self.conn is None:
+            self.table_exists = None
             return
         
         table_list = [ name.upper() for name in self.get_table_list() ]
@@ -168,7 +174,20 @@ class DataStore_SQL(DataStore):
             logging.info('DB "%s" is disconnnected.' % self.db_url)
 
             
+    def _write(self, values, tag=None, timestamp=None, update=False):
+        if self.lazy_construction:
+            self.lazy_construction = False
+            self.conn = self.construct()
+            if self.conn is None:
+                self.table_exists = None
+        
+        super()._write(values, tag, timestamp, update)
+
+        
     def _write_one(self, cur, timestamp, tag, fields, values, update):
+        table_list = [ name.upper() for name in self.get_table_list() ]
+        self.table_exists = (self.table is not None) and (self.table.upper() in table_list)
+                    
         if self.table_exists is False:
             self.table_exists = self.table_format.create_table(cur, tag, fields, values)
             if not self.table_exists:
@@ -183,9 +202,12 @@ class DataStore_SQLite(DataStore_SQL):
     placeholder = '?'
     
     def __init__(self, db_url, table, table_format=None):
+        
         if table_format is None:
             table_format = LongTableFormat()
-        super().__init__(db_url, table, table_format)
+            
+        # lazy_construction is enabled so that the same thread is used for both connect() and write()
+        super().__init__(db_url, table, table_format, lazy_construction=True)
         
 
     def another(self, table, table_format=None):

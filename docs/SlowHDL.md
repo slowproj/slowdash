@@ -119,8 +119,8 @@ SlowPy HDL behaves like HDL. The following code works as if it were written in V
 class TestModule(Module):
     def __init__(self, clock, a, b):
         super().__init__(clock)
-        self.a = reg(a)
-        self.b = reg(b)
+        self.a = output_reg(a)
+        self.b = output_reg(b)
         
         self.a <= 'A'
         self.b <= 'B'
