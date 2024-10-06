@@ -27,10 +27,11 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Build Docker image
-        run: docker build -t ghcr.io/slowproj/slowdash:latest .
-        run: docker build -f ./lib/Dockerfile -t ghcr.io/slowproj/slowpy-notebook:latest ./lib
+        run:
+          - docker build -t ghcr.io/slowproj/slowdash:latest .
+          - docker build -f ./lib/Dockerfile -t ghcr.io/slowproj/slowpy-notebook:latest ./lib
           
       - name: Push Docker image to GitHub Container Registry
-        run: docker push ghcr.io/slowproj/slowdash:latest
-        run: docker push ghcr.io/slowproj/slowpy-notebook:latest
-          
+        run:
+          - docker push ghcr.io/slowproj/slowdash:latest
+          - docker push ghcr.io/slowproj/slowpy-notebook:latest

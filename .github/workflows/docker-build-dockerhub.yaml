@@ -23,9 +23,11 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
           
       - name: Build Docker image
-        run: docker build -t slowproj/slowdash:latest .
-        run: docker build -f ./lib/Dockerfile -t slowproj/slowpy-notebook:latest ./lib
+        run:
+          - docker build -t slowproj/slowdash:latest .
+          - docker build -f ./lib/Dockerfile -t slowproj/slowpy-notebook:latest ./lib
 
       - name: Push Docker image to DockerHub
-        run: docker push slowproj/slowdash:latest
-        run: docker push slowproj/slowpy-notebook:latest
+        run:
+          - docker push slowproj/slowdash:latest
+          - docker push slowproj/slowpy-notebook:latest
