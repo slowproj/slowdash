@@ -2,7 +2,7 @@ version: '3.4'
 
 services:
   notebook:
-    image: jupyter-slowpy
+    image: slowpy-notebook
     command:
       - start-notebook.sh
       - --NotebookApp.token=''                   # disable token
