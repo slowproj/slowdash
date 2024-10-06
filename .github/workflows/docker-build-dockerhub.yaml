@@ -22,12 +22,14 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
           
-      - name: Build Docker image
-        run:
-          - docker build -t slowproj/slowdash:latest .
-          - docker build -f ./lib/Dockerfile -t slowproj/slowpy-notebook:latest ./lib
+      - name: Build SlowDash Docker image
+        run: docker build -t slowproj/slowdash:latest .
 
-      - name: Push Docker image to DockerHub
-        run:
-          - docker push slowproj/slowdash:latest
-          - docker push slowproj/slowpy-notebook:latest
+      - name: Build SlowPy-Notebook Docker image
+        run: docker build -f ./lib/Dockerfile -t slowproj/slowpy-notebook:latest ./lib
+
+      - name: Push SlowDash Docker image to DockerHub
+        run: docker push slowproj/slowdash:latest
+          
+      - name: Push SlowPy-Notebook Docker image to DockerHub
+        run: docker push slowproj/slowpy-notebook:latest
