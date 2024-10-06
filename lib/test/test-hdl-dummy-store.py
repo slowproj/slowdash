@@ -13,7 +13,6 @@ from slowpy.control.hdl import *
 class MyReadoutModule(Module):
     def __init__(self, clock, src, dest):
         super().__init__(clock)
-        
         self.src = input_reg(src)
         self.dest = output_reg(dest)
                 
@@ -21,7 +20,6 @@ class MyReadoutModule(Module):
     def do(self):
         self.dest <= self.src
         print(self.src)
-
         
 clock = Clock(Hz=1)
 module = MyReadoutModule(

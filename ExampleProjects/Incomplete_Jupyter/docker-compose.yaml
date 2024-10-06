@@ -1,0 +1,13 @@
+version: '3.4'
+
+services:
+  notebook:
+    image: jupyter-slowpy
+    command:
+      - start-notebook.sh
+      - --NotebookApp.token=''                   # disable token
+      - --NotebookApp.disable_check_xsrf=True    # disable CSRF check
+    ports:
+      - 8888:8888
+    volumes:
+      - ./notebook:/home/jovyan

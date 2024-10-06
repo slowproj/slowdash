@@ -82,6 +82,32 @@ class TaskModule(UserModule):
         self.async_command_thread_set = set()
         
         
+    def match_namespace(self, name):
+        if len(self.namespace_prefix) > 0:
+            if not name.startswith(self.namespace_prefix):
+                return ''
+            else:
+                name = name[len(self.namespace_prefix):]
+        if len(self.namespace_suffix) > 0:
+            if not name.endswith(self.namespace_suffix):
+                return ''
+            else:
+                name = name[:-len(self.namespace_suffix)]
+        if name.startswith('_'):
+            return ''
+
+        return name
+
+            
+    def get_variable(self, name):
+        if name not in self.exports:
+            self.scan_channels()
+            if name not in self.exports:
+                return None
+
+        return self.exports[name]
+
+        
     def is_command_running(self):
         return self.command_thread is not None and self.command_thread.is_alive()
 
@@ -138,7 +164,7 @@ class TaskModule(UserModule):
             if channel not in self.exports:
                 return None
 
-        value = self.exports[channel].get()
+        value = self.get_variable(channel).get()
         
         if type(value) in [ bool, int, float, str ]:
             return value
@@ -175,7 +201,7 @@ class TaskModule(UserModule):
     
 
     def process_task_command(self, params):
-        function_name, kwargs = '', {}
+        variable_name, function_name, kwargs = '', '', {}
         is_await = False  # if True, wait for the command to complete before returning a response
         is_async = False  # if False, the command is rejected if another command is running
         for key, value in params.items():
@@ -187,25 +213,27 @@ class TaskModule(UserModule):
                 if function_name.startswith('async '):
                     is_async = True
                     function_name = function_name[5:].lstrip()
+            elif len(key) > 1 and key.startswith('@'):
+                variable_name = key[1:]
             else:
                 kwargs[key] = value
 
-        # task namespace
-        if len(self.namespace_prefix) > 0:
-            if not function_name.startswith(self.namespace_prefix):
-                function_name = ''
-            else:
-                function_name = function_name[len(self.namespace_prefix):]
-        if len(self.namespace_suffix) > 0:
-            if not function_name.endswith(self.namespace_suffix):
-                function_name = ''
-            else:
-                function_name = function_name[:-len(self.namespace_suffix)]
-        if function_name.startswith('_'):
-            function_name = ''
+        # direct writing to mapped variables
+        variable_name = self.match_namespace(variable_name)
+        if len(variable_name) > 0:
+            var = self.get_variable(variable_name)
+            if var is None:
+                return {'status': 'error', 'message': 'undefined control variable: "%s"' % variable_name }
+            try:
+                var.set(value)
+            except Exception as e:
+                return {'status': 'error', 'message': str(e) }
+            return True
+
+        # function call
+        function_name = self.match_namespace(function_name)
         if len(function_name) == 0:
             return None
-        
         func = self.get_func(function_name)
         if func is None:
             return {'status': 'error', 'message': 'undefined function: %s' % function_name}
