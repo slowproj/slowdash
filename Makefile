@@ -58,9 +58,10 @@ all:
 	@echo "- Executable files are copied to $(SLOWDASH_DIR)/bin."
 	@echo "- Set enviromnental variables for the slowdash executables and Python modules by: "
 	@echo "  source $(SLOWDASH_DIR)/bin/slowdash-bashrc"
-	@echo '- To create a docker image, run "make docker"'
+	@echo '- To build docker images, run "make docker"'
 
 
 docker: all
-	docker rmi -f slowdash
+	docker rmi -f slowdash slowpy-notebook
 	docker build -t slowdash .
+	docker build -t slowpy-notebook -f ./lib/Dockerfile ./lib

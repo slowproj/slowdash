@@ -1,6 +1,6 @@
 # Jupyter (w/ Scipy) with SlowPy
 
-ARG BASE_IMAGE=jupyter/scipy-notebook
+ARG BASE_IMAGE=quay.io/jupyter/scipy-notebook
 FROM ${BASE_IMAGE}
 
 USER root

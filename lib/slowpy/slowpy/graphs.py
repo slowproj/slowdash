@@ -94,6 +94,11 @@ class Graph(DataElement):
         return graph
 
 
+    def to_numpy(self):
+        obj = self.to_json()
+        return (obj['x'], obj['y'], obj.get('y_err', None))
+
+    
     
 class GraphYStat:
     def __init__(self, fields=['n', 'y-mean', 'y-std'], ndigits=4):

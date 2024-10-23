@@ -95,6 +95,18 @@ class Histogram(DataElement):
         hist = Histogram(len(counts), bins['min'], bins['max'])
         hist.counts = counts
         return hist
+
+    
+    def to_numpy(self):
+        obj = self.to_json()
+        counts = obj['counts']
+        bin_edges = np.linspace(
+            start = obj['bins']['min'],
+            stop = obj['bins']['max'],
+            num = len(counts)+1,
+            endpoint = True
+        )
+        return (counts, bin_edges)
         
 
     

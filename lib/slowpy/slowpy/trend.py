@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 17 July 2024 #
 
-import math
+import math, time, datetime
 import numpy as np
 from .basetypes import DataElement, TimeSeries
         
@@ -159,7 +159,15 @@ class Trend(DataElement):
     def from_json(obj):
         return None
 
+    
+    def to_numpy(self):
+        obj = self.to_json()
+        t = [datetime.datetime.fromtimestamp(self.start+t) for t in obj['x']]
+        x = obj['y']
+        x_err = obj.get('y_err', None)
+        return (t, x, x_err)
 
+    
 
 class RateTrend(Trend):
     def __init__(self, length=3600, tick=1, start=None):
