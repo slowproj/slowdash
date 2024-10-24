@@ -140,10 +140,11 @@ class DataStore_SQL(DataStore):
     def __init__(self, db_url, table, table_format, lazy_construction=False):
         self.lazy_construction = lazy_construction
         
+        self.table = None
+        self.conn = None
+        
         if not table.replace('_', '').isalnum():
             logging.error('SQL: bad table name "%s"' % table)
-            self.table = None
-            self.conn = None
             return
         
         self.db_url = db_url

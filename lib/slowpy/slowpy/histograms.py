@@ -100,14 +100,22 @@ class Histogram(DataElement):
     def to_numpy(self):
         obj = self.to_json()
         counts = obj['counts']
-        bin_edges = np.linspace(
+        edges = np.linspace(
             start = obj['bins']['min'],
             stop = obj['bins']['max'],
             num = len(counts)+1,
             endpoint = True
         )
-        return (counts, bin_edges)
-        
+        return (counts, edges)
+
+    
+    @staticmethod
+    def from_numpy(obj):
+        # BUG: this assumes edges are equidistant
+        counts, edges, *_ = obj
+        hist = Histogram(len(counts), edges[0], edges[-1])
+        hist.counts = counts.tolist()
+        return hist
 
     
 class Histogram2d(DataElement):
@@ -165,6 +173,33 @@ class Histogram2d(DataElement):
         return hist
 
 
+    def to_numpy(self):
+        obj = self.to_json()
+        counts = obj['counts']
+        xedges = np.linspace(
+            start = obj['xbins']['min'],
+            stop = obj['xbins']['max'],
+            num = len(counts[0])+1,
+            endpoint = True
+        )
+        yedges = np.linspace(
+            start = obj['ybins']['min'],
+            stop = obj['ybins']['max'],
+            num = len(counts)+1,
+            endpoint = True
+        )
+        return (counts, xedges, yedges)
+
+    
+    @staticmethod
+    def from_numpy(obj):
+        # BUG: this assumes edges are equidistant
+        counts, xedges, yedges, *_ = obj
+        hist2d = Histogram2d(len(xedges)-1, xedges[0], xedges[-1], len(yedges)-1, yedges[0], yedges[-1])
+        for yk in range(len(yedges)-1):
+            hist2d.counts[yk][:] = counts[yk][:].tolist()
+        return hist2d
+            
 
     
 class HistogramBasicStat:
