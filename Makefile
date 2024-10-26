@@ -1,7 +1,7 @@
 
 SLOWDASH_DIR = $(shell pwd)
-SLOWDASH_BIN = $(SLOWDASH_DIR)/bin/slowdash
-SLOWDASH_ENV = $(SLOWDASH_DIR)/bin/slowdash-bashrc
+SLOWDASH_BIN = "$(SLOWDASH_DIR)/bin/slowdash"
+SLOWDASH_ENV = "$(SLOWDASH_DIR)/bin/slowdash-bashrc"
 PYTHON = $(shell which python3)
 GIT = $(shell which git)
 
@@ -12,13 +12,13 @@ all:
 		exit 255; \
 	fi
 
-	@if [ ! -f $(SLOWDASH_DIR)/main/web/jagaimo/jagaimo.mjs ]; then \
+	@if [ ! -f "$(SLOWDASH_DIR)/main/web/jagaimo/jagaimo.mjs" ]; then \
 		if [ x$(GIT) = x ]; then \
 			echo 'submodules not cloned, git command not available'; \
 			exit 255; \
 		fi; \
 		$(GIT) submodule update --init --recursive; \
-		if [ ! -f $(SLOWDASH_DIR)/main/web/jagaimo/jagaimo.mjs ]; then \
+		if [ ! -f "$(SLOWDASH_DIR)/main/web/jagaimo/jagaimo.mjs" ]; then \
 			echo 'unable obtain to submodules'; \
 			exit 255; \
 		fi; \
@@ -26,7 +26,7 @@ all:
 		echo ""; \
 	fi
 
-	@if [ ! -d $(SLOWDASH_DIR)/bin ]; then mkdir $(SLOWDASH_DIR)/bin; fi
+	@if [ ! -d "$(SLOWDASH_DIR)/bin" ]; then mkdir "$(SLOWDASH_DIR)/bin"; fi
 
 	@echo '#! /bin/bash' > $(SLOWDASH_BIN)
 	@echo '' >> $(SLOWDASH_BIN)
@@ -43,15 +43,15 @@ all:
 	@echo 'if [[ $$use_slowdog = 1 ]];  then' >> $(SLOWDASH_BIN)
 	@echo '    $(PYTHON) $(SLOWDASH_DIR)/utils/slowdog.py $(SLOWDASH_DIR)/main/server/slowdash.py "$${args[@]}"' >> $(SLOWDASH_BIN)
 	@echo 'else' >> $(SLOWDASH_BIN)
-	@echo '    $(PYTHON) $(SLOWDASH_DIR)/main/server/slowdash.py "$${args[@]}"' >> $(SLOWDASH_BIN)
+	@echo '    $(PYTHON) "$(SLOWDASH_DIR)/main/server/slowdash.py" "$${args[@]}"' >> $(SLOWDASH_BIN)
 	@echo 'fi' >> $(SLOWDASH_BIN)
 	@echo '' >> $(SLOWDASH_BIN)
 	@chmod 755 $(SLOWDASH_BIN)
 
-	@echo 'export PATH=$$PATH:$(SLOWDASH_DIR)/bin' > $(SLOWDASH_ENV)
-	@echo 'export PYTHONPATH=$$PYTHONPATH:$(SLOWDASH_DIR)/lib/slowpy' >> $(SLOWDASH_ENV)
+	@echo 'export PATH="$$PATH:$(SLOWDASH_DIR)/bin"' > $(SLOWDASH_ENV)
+	@echo 'export PYTHONPATH="$$PYTHONPATH:$(SLOWDASH_DIR)/lib/slowpy"' >> $(SLOWDASH_ENV)
 
-	@ln -fs $(SLOWDASH_DIR)/docs $(SLOWDASH_DIR)/main/web
+	@ln -fs "$(SLOWDASH_DIR)/docs" "$(SLOWDASH_DIR)/main/web"
 
 	@echo "## Installation successful"
 	@echo ""
