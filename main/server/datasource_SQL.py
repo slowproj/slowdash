@@ -281,7 +281,7 @@ class DataSource_SQL(DataSource_TableStore):
         elif resampling is None or resampling <= 0:
             pass
         else:
-            convtime = _get_timestamp_in_query(time_col)
+            convtime = self._get_timestamp_in_query(time_col)
             
             if reducer in ['first', 'last'] and self.db_has_floor:
                 sql_cte_bucket = ' '.join([
