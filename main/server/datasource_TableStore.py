@@ -31,7 +31,7 @@ class DataSource_TableStore(DataSource):
 
         
     # override this
-    def _execute_query(self, table_name, time_col, time_from, time_to, tag, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
+    def _execute_query(self, table_name, time_col, time_type, time_from, time_to, tag, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
         columns, table = [], []
         return columns, table
 
@@ -231,7 +231,7 @@ class DataSource_TableStore(DataSource):
 
         query_result_columns, query_result_table = self._execute_query(
             schema.table, 
-            time_col, time_from, time_to, 
+            time_col, schema.time_type, time_from, time_to, 
             schema.tag, tag_values, fields,
             resampling=resampling, reducer=reducer, stop=stop,
             lastonly=lastonly

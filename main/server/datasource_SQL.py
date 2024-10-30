@@ -237,13 +237,14 @@ class DataSource_SQL(DataSource_TableStore):
             logging.error(traceback.format_exc())
             return SQLServer(None)
 
-    # The DB-specific syntax to convert the timestamp variable into epoch time in queries
-    # To be overwritten by each plugin if needed
-    def _get_timestamp_in_query(self, var_name):
+    # The DB-specific syntax to get a time difference between time_col and (stop_sec | stop_tstamp) 
+    # Override this if needed
+    def _get_timediffsec_query(self, time_col, time_type, stop_sec, stop_tstamp):
         # Probably this is a common way in PostgreSQL?
-        return 'extract(epoch from ' + var_name + ')'
+        # Doesn't it depend on the time_type? what if {time_col} is already a unix/int?
+        return f"{stop_sec} - extract(epoch from {time_col})"
     
-    def _execute_query(self, table_name, time_col, time_from, time_to, tag_col, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
+    def _execute_query(self, table_name, time_col, time_type, time_from, time_to, tag_col, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
         if self.server is None:
             self.server = self._connect_with_retry()
         if self.server is None:
@@ -281,12 +282,13 @@ class DataSource_SQL(DataSource_TableStore):
         elif resampling is None or resampling <= 0:
             pass
         else:
-            convtime = self._get_timestamp_in_query(time_col)
+            # The syntax to get the time difference may depend on the SQL type
+            tdiff_query = self._get_timediffsec_query(time_col, time_type, stop, time_to)
             
             if reducer in ['first', 'last'] and self.db_has_floor:
                 sql_cte_bucket = ' '.join([
                     f"SELECT",
-                    f"    floor(({stop}-{convtime})/{resampling}) AS bucket, ",
+                    f"    floor(({tdiff_query})/{resampling}) AS bucket, ",
                     f"    %s({time_col}) AS picked_timestamp" % ("max" if reducer == 'last' else 'min'),
                     f"    %s" % ("" if tag_col is None else f", {tag_col}"),
                     f"{sql_from}",
@@ -318,7 +320,7 @@ class DataSource_SQL(DataSource_TableStore):
                     agg_func = reducer
                 sql_cte_bucket = ' '.join([
                     f"SELECT",
-                    f"    floor(({stop}-{convtime})/{resampling}) AS bucket,",
+                    f"    floor(({tdiff_query})/{resampling}) AS bucket,",
                     f"    %s" % ("" if tag_col is None else f"{tag_col},"),
                     f"    %s" % ','.join([f"{agg_func}({field}) as {field}" for field in fields]),
                     f"{sql_from}",

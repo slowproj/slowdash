@@ -50,6 +50,9 @@ class DataSource_MySQL(DataSource_SQL):
         return SQLServer(conn)
 
     # Override
-    def _get_timestamp_in_query(self, var_name):
-        # Should we care the case the variable is not a epoch (integer) value, e.g. TIMESTAMP?
-        return var_name
+    def _get_timediffsec_query(self, time_col, time_type, stop_sec, stop_tstamp):
+        if time_type == 'unix':
+            return f"{stop_sec} - {time_col}"
+        else:
+            return f"TIME_TO_SEC( TIMEDIFF({stop_tstamp}, {time_col}) )"
+        
