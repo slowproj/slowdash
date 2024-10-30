@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 17 May 2024 #
 
 
-import socket, selectors, time
+import sys, socket, selectors, time
 import slowpy.control as spc
 
 
@@ -126,21 +126,29 @@ class EthernetNode(spc.ControlNode):
     
     
 class ScpiNode(spc.ControlNode):
-    def __init__(self, connection, timeout=10, line_terminator='\x0d'):
+    def __init__(self, connection, timeout=10, line_terminator='\x0d', sync=True, append_opc=False, verbose=False):
         self.connection = connection
         self.timeout = timeout
         self.line_terminator = line_terminator
+        self.sync = sync
+        self.append_opc = append_opc
+        self.verbose = verbose
         
         while len(self.connection.do_get_chunk(timeout=0.1)) > 0:
             pass
 
     
     def set(self, value=None):
+        if self.verbose:
+            sys.stderr.write('SCPI SET: [%s]' % value)
         return self.connection.set(value + self.line_terminator)
             
     
     def get(self):
-        return self.connection.do_get_line(timeout=self.timeout)
+        reply = self.connection.do_get_line(timeout=self.timeout)
+        if self.verbose:
+            sys.stderr.write(' --> [%s]\n' % reply)
+        return reply
 
 
     ## child nodes ##
@@ -150,11 +158,10 @@ class ScpiNode(spc.ControlNode):
     
 
 class ScpiCommandNode(spc.ControlVariableNode):
-    def __init__(self, scpi, name, set_format=None, sync=True):
+    def __init__(self, scpi, name, set_format=None):
         self.scpi = scpi
         self.name = name
         self.set_format = set_format
-        self.sync = sync
         
     
     def set(self, value=None):
@@ -168,10 +175,13 @@ class ScpiCommandNode(spc.ControlVariableNode):
                 cmd = self.set_format
             else:
                 cmd = self.set_format.format(value)
+
+        if self.scpi.append_opc:
+            cmd += ';*opc?'
                 
         self.scpi.set(cmd)
                 
-        if self.sync:
+        if self.scpi.sync:
             self.scpi.get()
 
     

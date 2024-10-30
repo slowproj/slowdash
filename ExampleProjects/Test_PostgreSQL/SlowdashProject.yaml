@@ -1,7 +1,7 @@
 slowdash_project:
   name: PostgreSQL_Test
   data_source:
-    url: ${DB_URL:-postgresql://postgres:postgres@localhost:5432/SlowTestData}
+    url: ${DB_URL:-postgresql://slowdash:slowdash@localhost:5432/SlowTestData}
     parameters:
       time_series:
         schema: ts_data [channel] @timestamp(with time zone) = value

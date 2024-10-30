@@ -50,7 +50,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             sys.stderr.write('AUTH\n')
             return
             
-        sys.stderr.write('GET: %s ...' % self.path)
+        #sys.stderr.write('GET: %s ...' % self.path)
         
         url = urlparse(self.path)
         path_split = url.path.split('/')
@@ -58,7 +58,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             path_split.remove('')
         if path_split.count('..'):
             self.send_error(403)
-            sys.stderr.write('ERROR\n')
+            #sys.stderr.write('ERROR\n')
             return
 
         if (len(path_split) == 0):
@@ -76,11 +76,11 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.process_file_get(
                     os.path.join(self.web_path, '/'.join(path_split))
                 )
-            sys.stderr.write('done\n')
+            #sys.stderr.write('done\n')
         except Exception as e:
             logging.warn("slowdash_server: do_GET(): %s" % str(e))
             logging.warn(traceback.format_exc())
-            sys.stderr.write('ERROR\n')
+            #sys.stderr.write('ERROR\n')
 
                          
     def do_POST(self):

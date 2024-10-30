@@ -1,0 +1,14 @@
+<form>
+  <h3>Trigger</h3>
+    Source: <select name="trigger_source"><option>Ch1</option><option>Ch2</option><option>Ext</option></select>, 
+    Edge: <select name="trigger_edge"><option>Positive</option><option>Negative</option></select>,
+    Level: <input type="number" name="trigger_level" value="0.1" style="width:6em"></input> (V)<br>
+  <h3>Time Base</h3>
+    Range: <input type="number" name="timebase_range" value="0.01" step="any" style="width:6em"></input> (s)
+  <h3>Channels</h3>
+    Ch1 Range: <input type="number" name="ch1_range" value="4.0" style="width:6em"></input> (V)<br>
+    Ch2 Range: <input type="number" name="ch2_range" value="4.0" style="width:6em"></input> (V)
+    <p>
+    <span style="margin-left:20em"></span>
+    <input type="submit" name="scope.config_scope()" value="Set" style="font-size:150%"></input>
+</form>

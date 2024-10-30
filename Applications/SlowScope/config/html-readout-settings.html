@@ -1,0 +1,13 @@
+<form>
+  <h3>Readout</h3>
+    Interval: <input type="number" name="readout_interval" value="2" style="width:6em"></input> (s)<br>
+  <h3>Permanent Store</h3>
+    Interval: <input type="number" name="store_interval" value="10" style="width:6em"></input> (s)<br>
+  <h3>Controls</h3>
+    <div style="font-size:150%">
+    <input type="submit" name="scope.start()" value="Start" sd-enabled="scope.config['running']->invert()"></input>    
+    <input type="submit" name="scope.stop()" value="Stop" sd-enabled="scope.config['running']"></input>
+    <span style="margin-left:1em"></span>
+    <input type="submit" name="scope.single()" value="Single"></input>
+    </div>
+</form>
