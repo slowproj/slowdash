@@ -20,7 +20,7 @@ class DataSource_MySQL(DataSource_SQL):
                 self.url = 'mysql://' + self.url
 
             # TODO: the port number should be omittable
-            pattern = r"mysql://(\w+):(\w+)@(\w+):(\d+)/(\w+)"
+            pattern = r"mysql://([\w.-]+):(.+?)@([\w.-]+):(\d+)/([\w.-]+)"
             match = re.match(pattern, self.url)
             if match:
                 self.user     = match.group(1)
