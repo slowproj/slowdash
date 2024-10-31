@@ -1,0 +1,32 @@
+{
+    "control": {
+        "range": { "length": 900 },
+        "reload": 2,
+        "grid": { "rows": "2", "columns": "2" },
+        "mode": "normal"
+    },
+    "style": { },
+    "panels": [
+        {
+            "type": "plot",
+            "plots": [
+                { "type": "graph", "channel": "ch1", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 0, "line_width": 2, "line_type": "connect", "fill_opacity": 0, "fill_baseline": 1e-100 },
+                { "type": "graph", "channel": "ch2", "color": "#dd8000", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 0, "line_width": 2, "line_type": "connect", "fill_opacity": 0, "fill_baseline": 1e-100 }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "xmin": -0.0005, "xmax": 0.02, "ymin": -3, "ymax": 3, "zmin": 0, "zmax": 1 },
+            "legend": { "style": "side" }
+        },
+        {
+            "type": "plot",
+            "plots": [
+                { "type": "graph", "channel": "xy", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 0, "line_width": 2, "line_type": "connect", "fill_opacity": 0, "fill_baseline": 1e-100 }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "xmin": -3, "xmax": 3, "ymin": -2, "ymax": 2, "zmin": 0, "zmax": 1 },
+            "legend": { "style": "side" }
+        },
+        { "type": "html", "location": "project", "file": "scope-settings", "title": "Scope Settings" },
+        { "type": "html", "location": "project", "file": "readout-settings", "title": "Acquisition Control" },
+        { "type": "tree", "channel": "scope.config", "title": "Current Configuration" }
+    ],
+    "meta": { "name": "scope", "title": "", "description": "" }
+}

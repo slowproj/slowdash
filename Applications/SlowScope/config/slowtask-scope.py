@@ -73,8 +73,6 @@ def _loop():
     
 
 def config_scope(**kwargs):
-    print(kwargs)
-
     def update(item, valid=float):
         value = kwargs.get(item, None)
         if value is None:
@@ -148,14 +146,8 @@ def acquire():
     datastore.update(g_x1, tag='ch1')
     datastore.update(g_x2, tag='ch2')
     datastore.update(g_xy, tag='xy')
-    
-    
-    with open("foo.csv", "w") as f:
-        f.write('t,ch1, ch2\n')
-        for k in range(len(x1)):
-            f.write(f'{t[k]},{x1[k]},{x2[k]}\n')
 
-
+    
             
 if __name__ == '__main__':
     _initialize({'ip': '10.95.99.78'})
