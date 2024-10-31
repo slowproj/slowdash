@@ -32,13 +32,14 @@ class Schema:
         self.parse(self.init_description)
 
             
-    def add_channel(self, channel_name, field_type=None):
-        if channel_name not in self.channel_table:
-            self.channel_table[channel_name] = { 'name': channel_name }
+    def add_channel(self, channel_name : str, field_type=None):
+        channel_name_str = str(channel_name)
+        if channel_name_str not in self.channel_table:
+            self.channel_table[channel_name_str] = { 'name': channel_name_str }
         else:
-            self.channel_table[channel_name]['name'] = channel_name
+            self.channel_table[channel_name_str]['name'] = channel_name_str
         if field_type is not None:
-            self.channel_table[channel_name]['type'] = field_type
+            self.channel_table[channel_name_str]['type'] = field_type
 
                     
     def parse(self, schema):

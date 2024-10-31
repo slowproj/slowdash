@@ -5,7 +5,7 @@
 import sys, os, stat, pathlib, pwd, grp, io, time, glob, json, yaml, logging
 import datasource, usermodule, taskmodule
 from slowdash_config import Config
-
+from decimal import Decimal
 
 class App:
     def __init__(self, project_dir=None, project_file=None, is_cgi=False, is_command=False):
@@ -266,7 +266,11 @@ class App:
             if type(result) is str:
                 output.write(result.encode())
             else:
-                output.write(json.dumps(result).encode())
+                # To convert decimal values into numbers that can be handled by JSON
+                def decimal_to_num(obj):
+                    if isinstance(obj, Decimal):
+                        return int(obj) if float(obj).is_integer() else float(obj)
+                output.write(json.dumps(result, default=decimal_to_num).encode())
             
         return content_type
 

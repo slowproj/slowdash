@@ -31,7 +31,7 @@ class DataSource_TableStore(DataSource):
 
         
     # override this
-    def _execute_query(self, table_name, time_col, time_from, time_to, tag, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
+    def _execute_query(self, table_name, time_col, time_type, time_from, time_to, tag, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
         columns, table = [], []
         return columns, table
 
@@ -42,10 +42,11 @@ class DataSource_TableStore(DataSource):
         channels = []
         for schema in self.ts_schemata + self.obj_schemata + self.objts_schemata:
             for ch in schema.channel_table.values():
+                ch_str = str(ch['name'])
                 if 'type' in ch:
-                    channels.append({ 'name': ch['name'] + schema.suffix, 'type': ch['type'] })
+                    channels.append({ 'name': ch_str + schema.suffix, 'type': ch['type'] })
                 else:
-                    channels.append({ 'name': ch['name'] + schema.suffix })
+                    channels.append({ 'name': ch_str + schema.suffix })
                 
         return channels
         
@@ -192,12 +193,13 @@ class DataSource_TableStore(DataSource):
                             channel_name = tag_value
                         else:
                             channel_name = '%s%s%s' % (tag_value, Schema.tag_field_separator, field)
-                        schema.add_channel(channel_name)
-                        field_type = schema.channel_table[channel_name].get('type', None)
+                        channel_name_str = str(channel_name)
+                        schema.add_channel(channel_name_str)
+                        field_type = schema.channel_table[channel_name_str].get('type', None)
                         if (not schema.is_for_ts) and (field_type is None):
                             value = self._get_first_data_value(schema.table, schema.tag, tag_value, field)
                             if value is not None:
-                                schema.add_channel(channel_name, Schema.identify_datatype(value))
+                                schema.add_channel(channel_name_str, Schema.identify_datatype(value))
 
 
     def _get_query_result(self, schema, channels, length, to, resampling=None, reducer=None, lastonly=False):
@@ -213,7 +215,7 @@ class DataSource_TableStore(DataSource):
             if not name.replace('.', '').replace('_', '').replace('-', '').replace(':', '').isalnum():
                 logging.error('bad channel name: %s' % name)
             else:
-                key = name[0:len(name)-len(schema.suffix)]
+                key = str(name[0:len(name)-len(schema.suffix)])
                 if key in schema.channel_table:
                     target_channels.append(key)
         if len(target_channels) == 0:
@@ -229,7 +231,7 @@ class DataSource_TableStore(DataSource):
 
         query_result_columns, query_result_table = self._execute_query(
             schema.table, 
-            time_col, time_from, time_to, 
+            time_col, schema.time_type, time_from, time_to, 
             schema.tag, tag_values, fields,
             resampling=resampling, reducer=reducer, stop=stop,
             lastonly=lastonly
