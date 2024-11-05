@@ -63,7 +63,7 @@
     });
 
 
-    function start(config) {
+    async function start(config) {
         if (config.panels) {
         }
         else {
@@ -152,6 +152,7 @@
         docButton.attr('title', 'Documents');
         frame.appendButton(docButton);
         
+        await layout.load_plugins();
         layout.configure(config, {
             changeDisplayTimeRange: range => {
                 frame.suspend(30);

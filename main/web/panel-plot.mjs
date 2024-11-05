@@ -3,6 +3,8 @@
 // Created on 18 November 2021 //
 // Refactored on 18 June 2022 //
 
+
+export { TimeAxisPlotPanel as Panel1, PlotPanel as Panel2 };
  
 import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
 import { JGTabWidget, JGInvisibleWidget } from './jagaimo/jagawidgets.mjs';
@@ -787,8 +789,6 @@ class TimeseriesPlot extends LineMarkerPlot {
             ts.x = [ ts.x ];
         }
 
-        console.log(ts.x);
-        
         const t0 = dataPacket.data[this.config.channel].start;
         this.graph.x = [];
         this.graph.y = [];
@@ -818,7 +818,7 @@ class TimeseriesPlot extends LineMarkerPlot {
 
 
 
-export class PlotPanel extends Panel {
+class PlotPanel extends Panel {
     static describe() {
         return { type: 'plot', label: 'XY Plot (Histograms and Graphs)' };
     }
@@ -1526,7 +1526,7 @@ export class PlotPanel extends Panel {
 
 
 
-export class TimeAxisPlotPanel extends PlotPanel {
+class TimeAxisPlotPanel extends PlotPanel {
     static describe() {
         return { type: 'timeaxis', label: 'Time-Axis Plot (Time-Series)' };
     }

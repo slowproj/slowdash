@@ -2,6 +2,8 @@
 // Author: Sanshiro Enomoto <sanshiro@uw.edu> //
 // Created on 24 July 2022 //
 
+export { HtmlPanel as Panel1, HrefPanel as Panel2 };
+
  
 import { JG as $ } from './jagaimo/jagaimo.mjs';
 import { JGIndicatorWidget } from './jagaimo/jagawidgets.mjs';
@@ -9,7 +11,7 @@ import { Panel, bindInput } from './panel.mjs';
 import { Transformer } from './transformer.mjs';
 
 
-export class HtmlPanel extends Panel {
+class HtmlPanel extends Panel {
     static describe() {
         return { type: 'html', label: 'HTML Form' };
     }
@@ -289,7 +291,7 @@ export class HtmlPanel extends Panel {
 
 
 
-export class HrefPanel extends Panel {
+class HrefPanel extends Panel {
     static describe() {
         return { type: 'href', label: 'External Web Page' };
     }

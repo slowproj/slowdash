@@ -6,26 +6,7 @@
 
 import { JG as $ } from './jagaimo/jagaimo.mjs';
 import { JGInvisibleWidget, JGDialogWidget } from './jagaimo/jagawidgets.mjs';
-import { PlotPanel, TimeAxisPlotPanel } from './panel-plot.mjs';
-import { TablePanel, TreePanel, BlobPanel } from './panel-table.mjs';
-import { MapPanel } from './panel-map.mjs';
-import { CanvasPanel } from './panel-canvas.mjs';
-import { HtmlPanel, HrefPanel } from './panel-html.mjs';
-import { CatalogPanel, ChannelListPanel } from './panel-catalog.mjs';
-import { DownloadPanel, SlowpyPanel } from './panel-download.mjs';
-import { WelcomePanel, ToolsPanel, CruisePlannerPanel, ConfigEditorPanel, FileManagerPanel, TaskManagerPanel } from './panel-misc.mjs';
-
-let PanelCollection = [
-    TimeAxisPlotPanel, PlotPanel,
-    MapPanel,
-    CanvasPanel,
-    TablePanel, TreePanel, BlobPanel,
-    HtmlPanel, HrefPanel,
-    CatalogPanel, ChannelListPanel,
-    DownloadPanel, SlowpyPanel,
-    WelcomePanel, ToolsPanel, CruisePlannerPanel, ConfigEditorPanel, FileManagerPanel, TaskManagerPanel,
-];
-
+import { PanelPluginLoader } from './panel-plugin-loader.mjs';
 
 
 export class Layout {
@@ -73,6 +54,12 @@ export class Layout {
         setTimeout(()=>{this.beat();}, 1000);
     }
     
+
+    async load_panels() {
+        let loader = new PanelPluginLoader();
+        this.PanelClassList = await loader.load();
+    }
+   
     
     configure(config=null, callbacks={}) {
         const default_callbacks = {
@@ -173,9 +160,9 @@ export class Layout {
             }
 
             let panel = null;
-            for (let panelClass of PanelCollection) {
-                if (entry.type == panelClass.describe().type) {
-                    panel = new panelClass(panelDiv, style);
+            for (let PanelClass of this.PanelClassList) {
+                if (entry.type == PanelClass.describe().type) {
+                    panel = new PanelClass(panelDiv, style);
                 }
             }
             if (panel === null) {
@@ -408,12 +395,12 @@ export class Layout {
         `);
 
         let select = div.find('select');
-        let panelClassTable = {};
-        for (let panelClass of PanelCollection) {
-            const desc = panelClass.describe();
+        let PanelClassTable = {};
+        for (let PanelClass of this.PanelClassList) {
+            const desc = PanelClass.describe();
             if (desc.label) {
                 select.append($('<option>').attr('value', desc.type).attr('label', desc.label).text(desc.label));
-                panelClassTable[desc.type] = panelClass;
+                PanelClassTable[desc.type] = PanelClass;
             }
         }
         
@@ -429,9 +416,9 @@ export class Layout {
         function updateSelection() {
             table.find('tr:not(:first-child)').remove();
             let type = table.find('select').selected().attr('value');
-            let panelClass = panelClassTable[type];
-            if (panelClass) {
-                panelClass.buildConstructRows(table, config => {
+            let PanelClass = PanelClassTable[type];
+            if (PanelClass) {
+                PanelClass.buildConstructRows(table, config => {
                     dialog.close();
                     addPanel(config);
                 });

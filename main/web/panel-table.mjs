@@ -2,11 +2,16 @@
 // Author: Sanshiro Enomoto <sanshiro@uw.edu> //
 // Created on 18 June 2022 //
 
+
+export { TablePanel as Panel1, TreePanel as Panel2, BlobPanel as Panel3 };
+
+
 import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
 import { Panel, bindInput } from './panel.mjs';
 
 
-export class TablePanel extends Panel {
+
+class TablePanel extends Panel {
     static describe() {
         return { type: 'table', label: 'Table (Data-Frame, Summary, Logs)' };
     }
@@ -153,7 +158,7 @@ export class TablePanel extends Panel {
 
 
 
-export class TreePanel extends Panel {
+class TreePanel extends Panel {
     static describe() {
         return { type: 'tree', label: 'Tree (JSON/YAML, Key-Value pairs, ...)' };
     }
@@ -324,7 +329,7 @@ export class TreePanel extends Panel {
 
 
 
-export class BlobPanel extends Panel {
+class BlobPanel extends Panel {
     static describe() {
         return { type: 'blob', label: 'Blob (image, doc, data, ...)' };
     }

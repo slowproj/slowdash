@@ -26,7 +26,7 @@
         boot(defaults, optparse, start);
     });
 
-    function start(config) {
+    async function start(config) {
         config = {
             _project: config._project,
             meta: config.meta,
@@ -77,6 +77,7 @@
         docButton.attr('title', 'Documents');
         frame.appendButton(docButton);
         
+        await layout.load_plugins();
         layout.configure(config);
         layout.load({from:0, to:0}, function(status) {});
 

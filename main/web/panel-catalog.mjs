@@ -204,6 +204,7 @@ export class CatalogPanel extends Panel {
                 <div style="line-height:1.1;margin-bottom:1em;white-space:nowrap">
                   <span style="font-size:150%">${options.back}</span>
                   <span style="font-weight:bold">${entry.title}</span><br>
+                  <span style="font-size:120%">&#x1f58a;</span>
                   <a href="slowedit.html?filename=${entry.file}" style="font-size:80%" target="_blank">${entry.file}</a>
                 </div>
                 ${entry.description}

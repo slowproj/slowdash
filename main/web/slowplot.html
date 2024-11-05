@@ -118,7 +118,7 @@
         window.location.href = url;
     }
 
-    function start(config) {
+    async function start(config) {
         if (config.meta?.name) {
             document.title = 'SlowPlot: ' + config.meta.name;
         }
@@ -139,7 +139,9 @@
         else if ((config.control?.mode??'') == 'display') {
             resetDelay = 1;
         }
+        
         let layout = new Layout($('#sd-layout'), style);
+        
         let frame = new Frame($('#sd-header'), {
             title: title,
             style: style,
@@ -280,6 +282,7 @@
             });
         }
             
+        await layout.load_panels();
         layout.configure(config, {
             changeDisplayTimeRange: range => {
                 currentDisplayTimeRange = range;
