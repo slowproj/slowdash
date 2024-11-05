@@ -152,7 +152,7 @@
         docButton.attr('title', 'Documents');
         frame.appendButton(docButton);
         
-        await layout.load_plugins();
+        await layout.load_panels();
         layout.configure(config, {
             changeDisplayTimeRange: range => {
                 frame.suspend(30);

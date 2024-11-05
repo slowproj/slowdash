@@ -2,13 +2,16 @@
 // Author: Sanshiro Enomoto <sanshiro@uw.edu> //
 // Created on 24 July 2022 //
 
+export { WelcomePanel, ToolsPanel, FileManagerPanel, TaskManagerPanel, CruisePlannerPanel, ConfigEditorPanel };
+
+
 import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
 import { JGIndicatorWidget } from './jagaimo/jagawidgets.mjs';
 import { upload } from './controlframe.mjs';
 import { Panel } from './panel.mjs';
 
 
-export class WelcomePanel extends Panel {
+class WelcomePanel extends Panel {
     static describe() {
         return { type: 'welcome', label: '' };
     }
@@ -63,7 +66,7 @@ export class WelcomePanel extends Panel {
 
 
 
-export class ToolsPanel extends Panel {
+class ToolsPanel extends Panel {
     static describe() {
         return { type: 'tools', label: '' };
     }
@@ -123,7 +126,7 @@ export class ToolsPanel extends Panel {
 
 
 
-export class CruisePlannerPanel extends Panel {
+class CruisePlannerPanel extends Panel {
     static describe() {
         return { type: 'cruise_planner', label: '' };
     }
@@ -210,7 +213,7 @@ pages:
 }
 
 
-export class ConfigEditorPanel extends Panel {
+class ConfigEditorPanel extends Panel {
     static describe() {
         return { type: 'config_editor', label: '' };
     }
@@ -366,7 +369,7 @@ export class ConfigEditorPanel extends Panel {
 
 
 
-export class FileManagerPanel extends Panel {
+class FileManagerPanel extends Panel {
     static describe() {
         return { type: 'filemanager', label: '' };
     }
@@ -676,7 +679,7 @@ export class FileManagerPanel extends Panel {
 
 
 
-export class TaskManagerPanel extends Panel {
+class TaskManagerPanel extends Panel {
     static describe() {
         return { type: 'taskmanager', label: '' };
     }

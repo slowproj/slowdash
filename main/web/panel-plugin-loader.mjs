@@ -1,7 +1,15 @@
+// panel-plugin-loader.mjs //
+// Author: Sanshiro Enomoto <sanshiro@uw.edu> //
+// Created on 4 November 2024 //
+
+
+export { PanelPluginLoader };
+
 
 import { Panel } from './panel.mjs';
 
-export class PanelPluginLoader {
+
+class PanelPluginLoader {
     constructor() {
         this.panels = [];
 
@@ -19,10 +27,12 @@ export class PanelPluginLoader {
         ];
     }
 
+    
     add_plugin(filepath) {
         this.plugin_files.push(filepath);
     }
 
+    
     async load(filepath) {
         this.panels = [];
 
@@ -35,7 +45,7 @@ export class PanelPluginLoader {
             }
         };
         
-        // to keep the order, we do not use Promise.all()
+        // to keep the order in the pull-down menu, load the core modules one by one
         for (const filepath of this.core_files) {
             const module = await import(filepath);
             load_from_module(module);
