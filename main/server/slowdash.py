@@ -3,7 +3,7 @@
 
 
 import sys, os, stat, pathlib, pwd, grp, io, time, glob, json, yaml, logging
-import datasource, usermodule, taskmodule
+import datasource, usermodule, taskmodule, extension
 from slowdash_config import Config
 from decimal import Decimal
 
@@ -17,22 +17,16 @@ class App:
         self.usermodule_list = []
         self.taskmodule_list = []
         self.known_task_list = []
+        self.extension_table = {}
         self.console_stdin = None
         self.console_stdout = None
         self.error_message = ''
 
-        if self.project is None:
-            self.datasource_list = [ datasource.DataSource({}, self.config) ]
-            return
-
+        
         ### Datasources ###
         
-        datasource_node = self.project.get('data_source', None)
-        if datasource_node is None:
-            self.error_message = 'Data Source not defined'
-            logging.warning(self.error_message)
-            datasource_node = []
-        elif not isinstance(datasource_node, list):
+        datasource_node = self.project.get('data_source', [])
+        if not isinstance(datasource_node, list):
             datasource_node = [ datasource_node ]
 
         for node in datasource_node:
@@ -122,6 +116,25 @@ class App:
                 self.taskmodule_list.append(module)
 
                 
+        ### Extension Modules ###
+        
+        extension_node = self.project.get('extension', [])
+        if not isinstance(extension_node, list):
+            extension_node = [ extension_node ]
+
+        for node in extension_node:
+            name = node.get('name', None)
+            params = node.get('parameters', {})
+            if name is None:
+                continue
+            extension_plugin = extension.load(name, self.config, params, slowdash=self)
+            if extension_plugin is None:
+                self.error_message = 'Unable to load API extension: %s' % name
+                logging.error(self.error_message)
+            else:
+                self.extension_table[name] = extension_plugin
+
+                    
         ### Console Redirect ###
         
         self.console_outputs = []
@@ -158,35 +171,47 @@ class App:
             sys.stdout = self.original_stdout
 
         
-    def get(self, params, opts, output):
-        content_type = 'application/json'
+    def get(self, path_list, opts, output):
+        """ GET-request handler
+        Args:
+          path_list & opts: parsed URL
+          doc: posted contents
+          output: file-like object to write response content, if return value is not a dict
+        Returns:
+          either:
+            - contents as Python dict or list, to reply as JSON string with HTTP response 200
+            - content-type (MIME) as string, with reply contents written in output
+            - HTTP response code as int
+            - None for error
+        """
+        
         result = None
         
-        if params[0] == 'config':
-            if (len(params) == 3) and (params[1] == 'file'):
-                return self._get_config_file(params[2], output)
+        if path_list[0] == 'config':
+            if (len(path_list) == 3) and (path_list[1] == 'file'):
+                return self._get_config_file(path_list[2], output)
             
-            elif (len(params) == 3) and (params[1] == 'jsonfile'):
-                return self._get_config_file(params[2], output, to_json=True)
+            elif (len(path_list) == 3) and (path_list[1] == 'jsonfile'):
+                return self._get_config_file(path_list[2], output, to_json=True)
 
-            if len(params) == 1:
+            if len(path_list) == 1:
                 result = self._get_config(with_list=False)
-            elif len(params) == 2:
-                if params[1] == 'list':
+            elif len(path_list) == 2:
+                if path_list[1] == 'list':
                     result = self._get_config(with_list=True,with_content_meta=True)
-                elif params[1] == 'filelist':
+                elif path_list[1] == 'filelist':
                     sortby = opts.get('sortby', 'mtime')
                     reverse = (opts.get('reverse', 'false').upper() != 'FALSE')
                     result = self._get_config_filelist(sortby=sortby, reverse=reverse)
-            elif (len(params) == 3) and (params[1] == 'filemeta'):
-                    result = self._get_config_filemeta(params[2])
+            elif (len(path_list) == 3) and (path_list[1] == 'filemeta'):
+                    result = self._get_config_filemeta(path_list[2])
                 
-        elif params[0] == 'channels':
+        elif path_list[0] == 'channels':
             result = self._get_channels()
                 
-        elif params[0] in ['data'] and len(params) >= 2:
+        elif path_list[0] in ['data'] and len(path_list) >= 2:
             try:
-                channels = params[1].split(',')
+                channels = path_list[1].split(',')
                 length = float(opts.get('length', '3600'))
                 to = float(opts.get('to', int(time.time())+1))
                 resample = float(opts.get('resample', -1))
@@ -198,34 +223,22 @@ class App:
                 resample = None
             result = self._get_data(channels, length, to, resample, reducer)
             
-        elif params[0] in ['blob'] and len(params) >= 3:
+        elif path_list[0] in ['blob'] and len(path_list) >= 3:
             for ds in self.datasource_list:
-                mime_type = ds.get_blob(params[1], params[2:], output=output)
+                mime_type = ds.get_blob(path_list[1], path_list[2:], output=output)
                 if mime_type is not None:
                     return mime_type
             
-        elif params[0] == 'dataframe' and len(params) >= 2:
-            try:
-                channels = params[1].split(',')
-                length = float(opts.get('length', '3600'))
-                to = float(opts.get('to', int(time.time())+1))
-                resample = float(opts.get('resample', -1))
-                reducer = opts.get('reducer', 'last')
-                timezone = opts.get('timezone', 'local')
-            except Exception as e:
-                logging.error(e)
-                return None
-            if resample < 0:
-                resample = None
-            for ds in self.datasource_list:
-                result = ds.get_dataframe(channels, length, to, resample, reducer, timezone)
-                break ##....
-
-        elif params[0] == 'control':
-            if len(params) >= 2 and params[1] == 'task':
-                result = self._get_task_status(params, opts)
+        elif path_list[0] == 'control':
+            if len(path_list) >= 2 and path_list[1] == 'task':
+                result = self._get_task_status(path_list, opts)
             
-        elif params[0] == 'console':
+        elif path_list[0] == 'extension' and len(path_list) > 2:
+            extension = self.extension_table.get(path_list[1], None)
+            if extension is not None:
+                return extension.process_get(path_list[2:], opts, output)
+            
+        elif path_list[0] == 'console':
             if self.console_stdout is not None:
                 self.console_outputs += [ line for line in self.console_stdout.getvalue().split('\n') if len(line)>0 ]
                 self.console_stdout.seek(0)
@@ -240,8 +253,8 @@ class App:
 
             return 'text/plain'
                 
-        elif params[0] == 'authkey' and len(params) >= 2:
-            name = params[1]
+        elif path_list[0] == 'authkey' and len(path_list) >= 2:
+            name = path_list[1]
             word = opts.get('password', '')
             try:
                 import bcrypt
@@ -251,33 +264,49 @@ class App:
             key = bcrypt.hashpw(word.encode("utf-8"), bcrypt.gensalt(rounds=12, prefix=b"2a")).decode("utf-8")
             result = { 'type': 'Basic', 'key':  '%s:%s' % (name, key) }
             
-        if result is None:
-            return None
-        
-        if params[0] == 'dataframe':
-            content_type = 'text/csv'
+        # depreciated
+        elif path_list[0] == 'dataframe' and len(path_list) >= 2:
+            try:
+                channels = path_list[1].split(',')
+                length = float(opts.get('length', '3600'))
+                to = float(opts.get('to', int(time.time())+1))
+                resample = float(opts.get('resample', -1))
+                reducer = opts.get('reducer', 'last')
+                timezone = opts.get('timezone', 'local')
+            except Exception as e:
+                logging.error(e)
+                return None
+            if resample < 0:
+                resample = None
+            for ds in self.datasource_list:
+                result = ds.get_dataframe(channels, length, to, resample, reducer, timezone)
+                break ##....
+
             if type(result) is str:
                 output.write(result.encode())
             else:
                 output.write('\n'.join([
                     ','.join(['NaN' if col is None else col for col in row]) for row in result
                 ]).encode())
-        else:
-            if type(result) is str:
-                output.write(result.encode())
-            else:
-                # To convert decimal values into numbers that can be handled by JSON
-                def decimal_to_num(obj):
-                    if isinstance(obj, Decimal):
-                        return int(obj) if float(obj).is_integer() else float(obj)
-                output.write(json.dumps(result, default=decimal_to_num).encode())
-            
-        return content_type
-
+                
+            return 'text/csv'
+        
+        return result
+        
 
     def post(self, path_list, opts, doc, output):
-        # write a reply to output and return the content-type, or
-        # return a HTTP response code.
+        """ POST-request handler
+        Args:
+          path_list & opts: parsed URL
+          doc: posted contents
+          output: file-like object to write response content, if return value is not a dict
+        Returns:
+          either:
+            - contents as Python dict or list, to reply as JSON string with HTTP response 201
+            - content-type (MIME) as string, with reply contents written in output
+            - HTTP response code as int
+            - None for error
+        """
         
         if path_list[0] == 'update' and len(path_list) > 1:
             target = path_list[1]
@@ -297,6 +326,11 @@ class App:
         elif path_list[0] == 'control':
             return self._dispatch_control(path_list, opts, doc, output)
         
+        elif path_list[0] == 'extension' and len(path_list) > 2:
+            extension = self.extension_table.get(path_list[1], None)
+            if extension is not None:
+                return extenstion.process_post(path_list, opts, doc, output)
+            
         elif path_list[0] == 'console':
             cmd = doc.decode()
             if cmd is None:
@@ -313,6 +347,13 @@ class App:
 
     
     def delete(self, path_list):
+        """ DELETE-request handler
+        Args:
+          path_list: parsed URL
+        Returns:
+          HTTP response code as int
+        """
+        
         if (len(path_list) < 3) or (path_list[1] != 'file'):
             return 403  # Forbidden
         
@@ -612,8 +653,17 @@ class App:
 
     
     def _dispatch_control(self, path_list, opts, doc, output):
-        # write a reply to output and return the content-type, or
-        # return a HTTP response code.
+        """ control request handler
+        Args:
+          path_list & opts: parsed URL
+          doc: posted contents
+          output: file-like object to write response content
+        Returns:
+          either:
+            - content-type (MIME) as string
+            - HTTP response code as int
+            - None for error
+        """
         
         try:
             record = json.loads(doc.decode())
@@ -819,13 +869,21 @@ class WebUI:
                 return Reply(400)
 
         with io.BytesIO() as output:
-            content_type = self.app.get(path_list, opts, output=output)
-
-            if content_type is None:
+            result = self.app.get(path_list, opts, output=output)
+            if type(result) in [ dict, list ]:
+                # To convert decimal values into numbers that can be handled by JSON
+                def decimal_to_num(obj):
+                    if isinstance(obj, Decimal):
+                        return int(obj) if float(obj).is_integer() else float(obj)
+                return Reply(200, 'application/json', json.dumps(result, default=decimal_to_num, indent=4).encode())
+            elif type(result) is int:
+                return Reply(result)
+            elif type(result) is str:
+                return Reply(200, result, output.getvalue())
+            else:
                 logging.error('API error: %s' % url)
-                return Reply(503)
+                return Reply(500)       # Internal Server Error
 
-            return Reply(200, content_type, output.getvalue())
 
 
     def process_post_request(self, url, doc):
@@ -852,7 +910,13 @@ class WebUI:
             
         with io.BytesIO() as output:
             result = self.app.post(path_list, opts, doc, output=output)
-            if type(result) is int:
+            if type(result) in [ dict, list ]:
+                # To convert decimal values into numbers that can be handled by JSON
+                def decimal_to_num(obj):
+                    if isinstance(obj, Decimal):
+                        return int(obj) if float(obj).is_integer() else float(obj)
+                return Reply(200, 'application/json', json.dumps(result, default=decimal_to_num, indent=4).encode())
+            elif type(result) is int:
                 return Reply(result)
             elif type(result) is str:
                 return Reply(201, result, output.getvalue())
