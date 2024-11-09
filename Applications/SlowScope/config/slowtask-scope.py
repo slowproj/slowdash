@@ -2,6 +2,7 @@ import time
 
 from slowpy.control import ControlSystem, ControlNode
 ctrl = ControlSystem()
+ctrl.import_control_module('VISA')
 scope = None
 
 config = {
@@ -33,10 +34,10 @@ datastore = DataStore_Redis('redis://localhost/1')
 
 def _initialize(params):
     global scope
-    ip = params.get('ip', None)
-    if ip is None:
+    visa_addr = params.get('visa', None)
+    if visa_addr is None:
         return
-    scope = ctrl.ethernet(host=ip, port=5025).scpi(line_terminator='\x0a', append_opc=True)
+    scope = ctrl.visa(visa_addr).scpi(append_opc=True)
     print(scope.command('*idn?').get())
     scope.command('*RST').set()
     
@@ -150,6 +151,7 @@ def acquire():
     
             
 if __name__ == '__main__':
-    _initialize({'ip': '10.95.99.78'})
+    _initialize({'visa': 'TCPIP-HISLIP::192.168.42.6::INSTR'})
     acquire()
     
+

@@ -1,15 +1,16 @@
 # Created by Sanshiro Enomoto on 8 November 2024 #
 
 
+import sys
 import pyvisa
 import slowpy.control as spc
-from control_Ethernet import ScpiCommandNode
 
 
 class VisaNode(spc.ControlNode):
-    def __init__(self, address):
+    def __init__(self, resource_name):
         try:
-            self.instr = pyvisa.ResourceManager().open_resource(address)
+            self.rm = pyvisa.ResourceManager()
+            self.instr = self.rm.open_resource(resource_name)
         except Exception as e:
             print('VISA open error: %s' % str(e))
             self.instr = None
@@ -22,8 +23,8 @@ class VisaNode(spc.ControlNode):
         
     @classmethod
     def _node_creator_method(cls):
-        def visa(self, address, **kwargs):
-            return VisaNode(address, **kwargs)
+        def visa(self, resource_name, **kwargs):
+            return VisaNode(resource_name, **kwargs)
 
         return visa
 
@@ -34,17 +35,6 @@ class VisaNode(spc.ControlNode):
     def get(self):
         return self.instr.read()
 
-
-    def do_get_chunk(self, timeout=None):
-        if timeout is None:
-            return self.instr.read()
-        timeout_original = self.instr.timeout
-        return ''
-
-
-    def do_get_line(self, timeout=None):
-
-        
     ## child nodes ##
     def scpi(self, **kwargs):
         return VisaScpiNode(self, **kwargs)
@@ -52,27 +42,35 @@ class VisaNode(spc.ControlNode):
 
     
 class VisaScpiNode(spc.ControlNode):
-    def __init__(self, instr, timeout=10, sync=True, append_opc=False, verbose=False):
-        self.instr = instr
+    def __init__(self, visa, timeout=10, sync=True, append_opc=False, verbose=False):
+        self.visa = visa
         self.sync = sync
         self.append_opc = append_opc
         self.verbose = verbose
         
-        if timeout is not None and timeout > 0:
-            self.instr.timeout = self.timeout
+        if self.visa.instr is not None and timeout is not None and timeout > 0:
+            self.visa.instr.timeout = 1000*timeout
 
-    
+            
     def set(self, value=None):
+        if self.visa.instr is None:
+            return
         if self.verbose:
             sys.stderr.write('SCPI SET: [%s]' % value)
-        return self.instr.write(value)
+        try:
+            return self.visa.instr.write(value)
+        except pyvisa.VisaIOError as e:
+            print('VISA error on write: %s' % str(e))
+            return
             
     
     def get(self):
+        if self.visa.instr is None:
+            return None
         try:
-            reply = self.instr.read()
+            reply = self.visa.instr.read()
         except pyvisa.VisaIOError as e:
-            print('VISA error: %s' % str(e))
+            print('VISA error on read: %s' % str(e))
             return ''
             
         if self.verbose:
@@ -82,5 +80,5 @@ class VisaScpiNode(spc.ControlNode):
 
     ## child nodes ##
     def command(self, name, **kwargs):
-        return ScpiCommandNode(self, name, **kwargs)
+        return spc.ScpiCommandNode(self, name, **kwargs)
     
