@@ -12,10 +12,10 @@ class ExtensionModule:
 
         
     # override this
-    def process_get(self, path_list, opts, output):
+    def process_get(self, path, opts, output):
         """ GET-request handler
         Args:
-          path_list & opts: parsed URL
+          path & opts: parsed URL, as list & dict
           doc: posted contents
           output: file-like object to write response content, if return value is not a dict
         Returns:
@@ -30,10 +30,10 @@ class ExtensionModule:
 
     
     # override this
-    def process_post(self, path_list, opts, doc, output):
+    def process_post(self, path, opts, doc, output):
         """ POST-request handler
         Args:
-          path_list & opts: parsed URL
+          path & opts: parsed URL, as list & dict
           doc: posted contents
           output: file-like object to write response content, if return value is not a dict
         Returns:

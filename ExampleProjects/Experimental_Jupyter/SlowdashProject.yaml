@@ -5,6 +5,9 @@ slowdash_project:
 
   extension:
     - name: jupyter
+      parameters:
+        url: ${JUPYTER_URL:-http://localhost:8888}
+        token: ${JUPYTER_TOKEN:-SlowJupyter}
 
 
   data_source:

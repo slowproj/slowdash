@@ -153,5 +153,3 @@ def acquire():
 if __name__ == '__main__':
     _initialize({'visa': 'TCPIP-HISLIP::192.168.42.6::INSTR'})
     acquire()
-    
-

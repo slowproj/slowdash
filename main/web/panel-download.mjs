@@ -3,6 +3,7 @@
 // Created on 24 July 2022 //
 
 import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
+import { JGIndicatorWidget } from './jagaimo/jagawidgets.mjs';
 import { Panel, bindInput } from './panel.mjs';
 
 
@@ -35,6 +36,7 @@ export class DownloadPanel extends Panel {
         this.frameDiv = $('<div>').appendTo(div);
         this.titleDiv = $('<div>').appendTo(this.frameDiv).text("Data Download");
         this.contentDiv = $('<div>').appendTo(this.frameDiv);
+        this.indicator = new JGIndicatorWidget($('<div>').appendTo(div));
 
         this.frameDiv.css({
             width:'calc(100% - 44px)',
@@ -217,7 +219,10 @@ export class DownloadPanel extends Panel {
           <div>
         `);
         buttonDiv.html(`
-          <button disabled>Download</button>
+          <button disabled>Download Data</button>
+          <button disabled>Download Python</button>
+          <button disabled>Download Notebook</button>
+          <button disabled>Open Jupyter</button>
           <a style="display:none"></a>
         `);
         div.find('input').attr('autocomplete', 'off');
@@ -303,7 +308,7 @@ export class DownloadPanel extends Panel {
 
         //// Download Button ////
         
-        buttonDiv.find('button').at(0).bind('click', e=>{
+        let download_url = () => {
             let channels = [];
             for (let ch of channelTable.find('input').enumerate()) {
                 if (ch.checked()) {
@@ -341,18 +346,48 @@ export class DownloadPanel extends Panel {
                 resample = 0;
             }
             
-            let filename = 'SlowPlotData-' + (new JGDateTime()).asString('%y%m%d-%H%M%S') + "." + thisconfig.format;
             let opts = [ 'length='+length, 'to='+to, 'timezone='+timezone ];
             if ((thisconfig.format == 'csv') || (resample > 0)) {
                 opts.push('resample=' + resample);
                 opts.push('reducer=' + thisconfig.resampling_reducer);
             }
-            
-            let url = 'api/' + (thisconfig.format == 'csv' ? 'dataframe/' : 'data/');
-            url += channels.join(',') + '/' + filename + '?' + opts.join('&');
+
+            return channels.join(',') + '?' + opts.join('&');
+        };
+
+        buttonDiv.find('button').at(0).bind('click', e=>{
+            const url = 'api/' + ((thisconfig.format == 'csv') ? 'dataframe/' : 'data/') + download_url();
+            const filename = 'SlowPlotData-' + (new JGDateTime()).asString('%y%m%d-%H%M%S') + "." + thisconfig.format;
             buttonDiv.find('a').attr('download', filename).attr('href', url).click();
         });
-
+        buttonDiv.find('button').at(1).bind('click', e=>{
+            const url = 'api/extension/jupyter/python/' + download_url();
+            const filename = 'SlowPlot-' + (new JGDateTime()).asString('%y%m%d-%H%M%S') + ".py";
+            buttonDiv.find('a').attr('download', filename).attr('href', url).click();
+        });
+        buttonDiv.find('button').at(2).bind('click', e=>{
+            const url = 'api/extension/jupyter/notebook/' + download_url();
+            const filename = 'SlowPlot-' + (new JGDateTime()).asString('%y%m%d-%H%M%S') + ".ipynb";
+            buttonDiv.find('a').attr('download', filename).attr('href', url).click();
+        });
+        buttonDiv.find('button').at(3).bind('click', async e=>{
+            this.indicator.open("Launching Jupyter...", "&#x23f3;", event?.clientX ?? null, event?.clientY ?? null);
+            const url = 'api/extension/jupyter/jupyter/' + download_url();
+            const filename = 'SlowPlot-' + (new JGDateTime()).asString('%y%m%d-%H%M%S') + ".ipynb";
+            let response = await fetch(url, { method: 'POST', body: '' } );
+            if (response.status != 201) {
+                this.indicator.close("Error on launching Jupyter: " + response.status + " " + response.statusText, "&#x274c;", 5000);
+            }
+            else {
+                const jupyter_url = await response.text();
+                this.indicator.close("Success", "&#x2705;", 1000);
+                if (jupyter_url.substr(0, 4) == 'http') {
+                    window.location.href = jupyter_url;
+                }
+            }
+        });
+            
+        
         
         //// Panel Scaling ////
         

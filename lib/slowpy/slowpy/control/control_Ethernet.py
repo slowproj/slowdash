@@ -139,7 +139,7 @@ class ScpiNode(spc.ControlNode):
             pass
 
     
-    def set(self, value=None):
+    def set(self, value):
         if self.verbose:
             sys.stderr.write('SCPI SET: [%s]' % value)
         return self.connection.set(value + self.line_terminator)

@@ -171,10 +171,10 @@ class App:
             sys.stdout = self.original_stdout
 
         
-    def get(self, path_list, opts, output):
+    def get(self, path, opts, output):
         """ GET-request handler
         Args:
-          path_list & opts: parsed URL
+          path & opts: parsed URL, as list & dict
           doc: posted contents
           output: file-like object to write response content, if return value is not a dict
         Returns:
@@ -187,31 +187,31 @@ class App:
         
         result = None
         
-        if path_list[0] == 'config':
-            if (len(path_list) == 3) and (path_list[1] == 'file'):
-                return self._get_config_file(path_list[2], output)
+        if path[0] == 'config':
+            if (len(path) == 3) and (path[1] == 'file'):
+                return self._get_config_file(path[2], output)
             
-            elif (len(path_list) == 3) and (path_list[1] == 'jsonfile'):
-                return self._get_config_file(path_list[2], output, to_json=True)
+            elif (len(path) == 3) and (path[1] == 'jsonfile'):
+                return self._get_config_file(path[2], output, to_json=True)
 
-            if len(path_list) == 1:
+            if len(path) == 1:
                 result = self._get_config(with_list=False)
-            elif len(path_list) == 2:
-                if path_list[1] == 'list':
+            elif len(path) == 2:
+                if path[1] == 'list':
                     result = self._get_config(with_list=True,with_content_meta=True)
-                elif path_list[1] == 'filelist':
+                elif path[1] == 'filelist':
                     sortby = opts.get('sortby', 'mtime')
                     reverse = (opts.get('reverse', 'false').upper() != 'FALSE')
                     result = self._get_config_filelist(sortby=sortby, reverse=reverse)
-            elif (len(path_list) == 3) and (path_list[1] == 'filemeta'):
-                    result = self._get_config_filemeta(path_list[2])
+            elif (len(path) == 3) and (path[1] == 'filemeta'):
+                    result = self._get_config_filemeta(path[2])
                 
-        elif path_list[0] == 'channels':
+        elif path[0] == 'channels':
             result = self._get_channels()
                 
-        elif path_list[0] in ['data'] and len(path_list) >= 2:
+        elif path[0] in ['data'] and len(path) >= 2:
             try:
-                channels = path_list[1].split(',')
+                channels = path[1].split(',')
                 length = float(opts.get('length', '3600'))
                 to = float(opts.get('to', int(time.time())+1))
                 resample = float(opts.get('resample', -1))
@@ -223,22 +223,22 @@ class App:
                 resample = None
             result = self._get_data(channels, length, to, resample, reducer)
             
-        elif path_list[0] in ['blob'] and len(path_list) >= 3:
+        elif path[0] in ['blob'] and len(path) >= 3:
             for ds in self.datasource_list:
-                mime_type = ds.get_blob(path_list[1], path_list[2:], output=output)
+                mime_type = ds.get_blob(path[1], path[2:], output=output)
                 if mime_type is not None:
                     return mime_type
             
-        elif path_list[0] == 'control':
-            if len(path_list) >= 2 and path_list[1] == 'task':
-                result = self._get_task_status(path_list, opts)
+        elif path[0] == 'control':
+            if len(path) >= 2 and path[1] == 'task':
+                result = self._get_task_status(path, opts)
             
-        elif path_list[0] == 'extension' and len(path_list) > 2:
-            extension = self.extension_table.get(path_list[1], None)
+        elif path[0] == 'extension' and len(path) > 2:
+            extension = self.extension_table.get(path[1], None)
             if extension is not None:
-                return extension.process_get(path_list[2:], opts, output)
+                return extension.process_get(path[2:], opts, output)
             
-        elif path_list[0] == 'console':
+        elif path[0] == 'console':
             if self.console_stdout is not None:
                 self.console_outputs += [ line for line in self.console_stdout.getvalue().split('\n') if len(line)>0 ]
                 self.console_stdout.seek(0)
@@ -253,8 +253,8 @@ class App:
 
             return 'text/plain'
                 
-        elif path_list[0] == 'authkey' and len(path_list) >= 2:
-            name = path_list[1]
+        elif path[0] == 'authkey' and len(path) >= 2:
+            name = path[1]
             word = opts.get('password', '')
             try:
                 import bcrypt
@@ -265,9 +265,9 @@ class App:
             result = { 'type': 'Basic', 'key':  '%s:%s' % (name, key) }
             
         # depreciated
-        elif path_list[0] == 'dataframe' and len(path_list) >= 2:
+        elif path[0] == 'dataframe' and len(path) >= 2:
             try:
-                channels = path_list[1].split(',')
+                channels = path[1].split(',')
                 length = float(opts.get('length', '3600'))
                 to = float(opts.get('to', int(time.time())+1))
                 resample = float(opts.get('resample', -1))
@@ -294,22 +294,22 @@ class App:
         return result
         
 
-    def post(self, path_list, opts, doc, output):
+    def post(self, path, opts, doc, output):
         """ POST-request handler
         Args:
-          path_list & opts: parsed URL
+          path & opts: parsed URL, as list & dict
           doc: posted contents
           output: file-like object to write response content, if return value is not a dict
         Returns:
           either:
-            - contents as Python dict or list, to reply as JSON string with HTTP response 201
+           - contents as Python dict or list, to reply as JSON string with HTTP response 201
             - content-type (MIME) as string, with reply contents written in output
             - HTTP response code as int
             - None for error
         """
         
-        if path_list[0] == 'update' and len(path_list) > 1:
-            target = path_list[1]
+        if path[0] == 'update' and len(path) > 1:
+            target = path[1]
             if target == 'tasklist':
                 if not self.is_cgi:
                     self._scan_task_files()
@@ -317,21 +317,21 @@ class App:
             else:
                 return 400  # Bad Request
             
-        elif path_list[0] == 'config':
-            if (len(path_list) < 3) or (path_list[1] != 'file'):
+        elif path[0] == 'config':
+            if (len(path) < 3) or (path[1] != 'file'):
                 return 403  # Forbidden
             else:
-                return self._save_config_file(path_list[2], doc, opts)
+                return self._save_config_file(path[2], doc, opts)
             
-        elif path_list[0] == 'control':
-            return self._dispatch_control(path_list, opts, doc, output)
+        elif path[0] == 'control':
+            return self._dispatch_control(path, opts, doc, output)
         
-        elif path_list[0] == 'extension' and len(path_list) > 2:
-            extension = self.extension_table.get(path_list[1], None)
+        elif path[0] == 'extension' and len(path) > 2:
+            extension = self.extension_table.get(path[1], None)
             if extension is not None:
-                return extenstion.process_post(path_list, opts, doc, output)
+                return extension.process_post(path[2:], opts, doc, output)
             
-        elif path_list[0] == 'console':
+        elif path[0] == 'console':
             cmd = doc.decode()
             if cmd is None:
                 return 400  # Bad Request
@@ -346,18 +346,18 @@ class App:
         return 400  # Bad Request
 
     
-    def delete(self, path_list):
+    def delete(self, path):
         """ DELETE-request handler
         Args:
-          path_list: parsed URL
+          path: parsed URL
         Returns:
           HTTP response code as int
         """
         
-        if (len(path_list) < 3) or (path_list[1] != 'file'):
+        if (len(path) < 3) or (path[1] != 'file'):
             return 403  # Forbidden
         
-        filename = path_list[2]
+        filename = path[2]
         if (self.project_dir is None):
             return 404  # Not Found
         try:
@@ -652,10 +652,10 @@ class App:
         return result
 
     
-    def _dispatch_control(self, path_list, opts, doc, output):
+    def _dispatch_control(self, path, opts, doc, output):
         """ control request handler
         Args:
-          path_list & opts: parsed URL
+          path & opts: parsed URL, as list & dict
           doc: posted contents
           output: file-like object to write response content
         Returns:
@@ -672,13 +672,13 @@ class App:
             return 400 # Bad Request
         
         result = None
-        if len(path_list) == 1:
+        if len(path) == 1:
             logging.info("DISPATCH: %s" % str(record))
             result = self._dispatch_command(record, opts)
             
-        elif path_list[1] == 'task':
-            if len(path_list) >= 3:
-                name = path_list[2]
+        elif path[1] == 'task':
+            if len(path) >= 3:
+                name = path[2]
             else:
                 name = None
             logging.info("TASK COMMAND: %s.%s" % ('' if name is None else name, str(record)))
@@ -839,10 +839,10 @@ class WebUI:
         if self.app is None:
             return Reply(404)
         u = urlparse(url)
-        path_list = unquote(u.path).split('/')
-        while path_list.count(''):
-            path_list.remove('')
-        if not path_list:
+        path = unquote(u.path).split('/')
+        while path.count(''):
+            path.remove('')
+        if not path:
             logging.error('bad query (empty query): %s' % url)
             return Reply(400)
 
@@ -853,14 +853,14 @@ class WebUI:
                 return Reply(400)
             opts[key] = value
             
-        if path_list[0] == 'ping':            
+        if path[0] == 'ping':            
             result = 'pong'
             return Reply(200, 'application/json', json.dumps(result, indent=4))
-        if path_list[0] == 'echo':
-            result = {'URL': url, 'Path': path_list[1:], 'Opts': opts}
+        if path[0] == 'echo':
+            result = {'URL': url, 'Path': path[1:], 'Opts': opts}
             return Reply(200, 'application/json', json.dumps(result, indent=4))
 
-        for element in path_list:
+        for element in path:
             if (len(element) == 0) or (not element[0].isalnum() and element[0] not in ['_']):
                 logging.error('bad query (invalid first char): %s' % url)
                 return Reply(400)
@@ -869,7 +869,7 @@ class WebUI:
                 return Reply(400)
 
         with io.BytesIO() as output:
-            result = self.app.get(path_list, opts, output=output)
+            result = self.app.get(path, opts, output=output)
             if type(result) in [ dict, list ]:
                 # To convert decimal values into numbers that can be handled by JSON
                 def decimal_to_num(obj):
@@ -890,14 +890,14 @@ class WebUI:
         if self.app is None:
             return Reply(404)
         u = urlparse(url)
-        path_list = unquote(u.path).split('/')
-        while path_list.count(''):
-            path_list.remove('')
-        for element in path_list:
+        path = unquote(u.path).split('/')
+        while path.count(''):
+            path.remove('')
+        for element in path:
             if (len(element) == 0) or not element[0].isalpha():
                 logging.error('bad file name (invalid first char): %s' % url)
                 return Reply(400)
-            if not element.replace('_', '0').replace('-', '0').replace('~', '0').replace('.', '0').replace(' ', '0').isalnum():
+            if not element.replace('_', '0').replace('-', '0').replace('~', '0').replace('.', '0').replace(' ', '0').replace(',', '0').isalnum():
                 logging.error('bad file name (invalid char): %s' % url)
                 return Reply(400)
         
@@ -909,7 +909,7 @@ class WebUI:
             opts[key] = value
             
         with io.BytesIO() as output:
-            result = self.app.post(path_list, opts, doc, output=output)
+            result = self.app.post(path, opts, doc, output=output)
             if type(result) in [ dict, list ]:
                 # To convert decimal values into numbers that can be handled by JSON
                 def decimal_to_num(obj):
@@ -929,10 +929,10 @@ class WebUI:
         if self.app is None:
             return Reply(404)
         u = urlparse(url)
-        path_list = unquote(u.path).split('/')
-        while path_list.count(''):
-            path_list.remove('')
-        for element in path_list:
+        path = unquote(u.path).split('/')
+        while path.count(''):
+            path.remove('')
+        for element in path:
             if (len(element) == 0) or not element[0].isalpha():
                 logging.error('bad file name (invalid first char): %s' % url)
                 return Reply(400)
@@ -940,7 +940,7 @@ class WebUI:
                 logging.error('bad file name (invalid char): %s' % url)
                 return Reply(400)
         
-        result = self.app.delete(path_list)
+        result = self.app.delete(path)
         if type(result) is int:
             return Reply(result)
         else:
