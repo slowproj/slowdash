@@ -519,7 +519,7 @@ def load(ds_type, project_config, datasource_config):
     classname = 'DataSource_%s' % ds_type    
     if classname in module.__dict__:
         datasource = module.__dict__[classname](project_config, datasource_config)
-        datasource.modulename = modulename
+        datasource.name = ds_type
     else:
         logging.error('no entry found in datasource driver: %s' % modulename)
         

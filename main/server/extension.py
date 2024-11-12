@@ -6,7 +6,7 @@ import importlib.machinery
 
 
 class ExtensionModule:
-    def __init__(self, project_config, module_config):
+    def __init__(self, project_config, module_config, slowdash):
         self.project_config = project_config
         self.config = module_config
 

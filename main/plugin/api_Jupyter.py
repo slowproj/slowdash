@@ -5,6 +5,7 @@ import extension
 
 class Extension_Jupyter(extension.ExtensionModule):
     def __init__(self, project_config, module_config, slowdash):
+        super().__init__(project_config, module_config, slowdash)
         self.jupyter_url = module_config.get('url', 'http://localhost:8888')
         self.jupyter_token = module_config.get('token', '')
         self.jupyter_session = None
@@ -25,8 +26,16 @@ class Extension_Jupyter(extension.ExtensionModule):
     
     def process_post(self, path, opts, doc, output):
         if len(path) > 1 and path[0] == 'jupyter':
+            try:
+                record = json.loads(doc.decode())
+            except Exception as e:
+                logging.error('Jupyter post: JSON decoding error: %s' % str(e))
+                return 400 # Bad Request
+            filename = record.get('filename', None)
+            if filename is None or not filename.replace('_', '0').replace('-', '0').replace('.', '0').isalnum():
+                return 400 # Bad Request
             notebook = self.generate_notebook(path[1], opts)
-            return self.post_notebook(notebook, output)
+            return self.post_notebook(filename, notebook, output)
         
         return None
 
@@ -123,11 +132,10 @@ class Extension_Jupyter(extension.ExtensionModule):
         return True
             
             
-    def post_notebook(self, notebook, output):
+    def post_notebook(self, filename, notebook, output):
         if not self.connect_jupyter():
             return { 'status': 'error', 'message': 'unable to connect to Jupyter' }
 
-        filename = 'SlowPlot-' + datetime.datetime.now().strftime('%y%m%d-%H%M%S') + ".ipynb";
         try:
             response = self.jupyter_session.put(
                 f'{self.jupyter_url}/api/contents/{filename}',

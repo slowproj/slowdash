@@ -298,7 +298,7 @@ class App:
         """ POST-request handler
         Args:
           path & opts: parsed URL, as list & dict
-          doc: posted contents
+          doc: posted contents (binary block)
           output: file-like object to write response content, if return value is not a dict
         Returns:
           either:
@@ -390,14 +390,17 @@ class App:
                     'is_secure': self.config.project.get('system', {}).get('is_secure', False)
                 },
                 'data_source_module': [
-                    ds.modulename for ds in self.datasource_list
+                    { 'name': ds.name, 'params': ds.config }  for ds in self.datasource_list
                 ],
                 'task_module': [
-                    module.filepath for module in self.taskmodule_list
+                    { 'name': module.name, 'params': module.params } for module in self.taskmodule_list
                 ],
                 'user_module': [
-                    module.filepath for module in self.usermodule_list
+                    { 'name': module.name, 'params': module.params } for module in self.usermodule_list
                 ],
+                'extension_module': {
+                    name: module.config for name, module in self.extension_table.items() 
+                },
                 'style': self.config.project.get('style', None)
             }
             

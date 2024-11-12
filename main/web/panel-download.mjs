@@ -233,7 +233,8 @@ export class DownloadPanel extends Panel {
             <li> To run the script, the SlowPy library must be installed.
                  See <a href="./docs/index.html#Installation" target="_blank">documentation</a> for installation procedures.<p>
             <li> This feature is experimental. The generated scripts might not be compatible with future releases of SlowDash.<p>
-            <li> To use the direct Jupyter link, the URL and token of a Jupyter process must be given in the SlowDash project configuration.
+            <li> Time-axis plots (time-series) and XY plots (histograms, graphs, etc) cannot be mixed.<p>
+            <li> <b>Jupyter Disabled</b>: to enable the direct Jupyter link, the URL and token of a Jupyter process must be set in the SlowDash project configuration.
           </ul>
         `);
         button2Div.html(`
@@ -246,6 +247,9 @@ export class DownloadPanel extends Panel {
 
         if (config.show_details) {
             rangeDiv.find('details').get().open = true;
+        }
+        if (config.has_jupyter) {
+            scriptDiv.find('li').last().css('display', 'none');
         }
         
         
@@ -287,11 +291,11 @@ export class DownloadPanel extends Panel {
                 button2Div.find('button').enabled(false);
             }
             else {
-                buttonDiv.find('button').enabled(true);
-                button2Div.find('button').enabled(true);
-                if (has_obj) {
-                    buttonDiv.find('button').at(0).enabled(false);
-                }
+                buttonDiv.find('button').at(0).enabled(! has_obj);
+                buttonDiv.find('button').at(1).enabled(true);
+                button2Div.find('button').at(0).enabled(! has_obj);
+                button2Div.find('button').at(1).enabled(! has_obj);
+                button2Div.find('button').at(2).enabled(! has_obj && config.has_jupyter);
             }
         };
         
@@ -446,8 +450,10 @@ export class DownloadPanel extends Panel {
         button2Div.find('button').at(2).bind('click', async e=>{
             const filename = channelDiv.find('input').at(0).val() + ".ipynb";
             const url = 'api/extension/jupyter/jupyter/' + download_url();
+            const headers = { 'Content-Type': 'application/json; charset=utf-8' };
+            const doc = { 'filename': filename };
             this.indicator.open("Launching Jupyter...", "&#x23f3;", event?.clientX ?? null, event?.clientY ?? null);
-            let response = await fetch(url, { method: 'POST', body: '' } );
+            let response = await fetch(url, { method: 'POST', headers: headers, body: JSON.stringify(doc, null, 2) });
             if ((response.status != 200) && (response.status != 201)) {
                 this.indicator.close("Error on launching Jupyter: " + response.status + " " + response.statusText, "&#x274c;", 5000);
             }
