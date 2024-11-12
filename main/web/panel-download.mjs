@@ -34,7 +34,7 @@ export class DownloadPanel extends Panel {
         this.channelList = null;
 
         this.frameDiv = $('<div>').appendTo(div);
-        this.titleDiv = $('<div>').appendTo(this.frameDiv).text("Data Download");
+        this.titleDiv = $('<div>').appendTo(this.frameDiv).text("Data Download / Export");
         this.contentDiv = $('<div>').appendTo(this.frameDiv);
         this.indicator = new JGIndicatorWidget($('<div>').appendTo(div));
 
@@ -119,7 +119,6 @@ export class DownloadPanel extends Panel {
     
     buildDownloadPanel(div, config) {
         const defaults = {
-            format: 'csv',
             use_utc: false,
             to: $.time(),
             length: 3600,
@@ -145,32 +144,37 @@ export class DownloadPanel extends Panel {
         div.html(`
           <div style="display:flex;height:100%;width:calc(100% - 10px);">
             <div style="flex-grow:1;height:100%"></div>
-            <div style="display:flex;flex-direction:column;width:100%;height:100%;margin-left:3em;">
+            <div style="display:flex;flex-direction:column;height:100%;margin-left:5em;">
               <div></div>
               <div style="display:flex;margin-top:auto;">
                 <div class="jaga-dialog-button-pane" style="margin-left:auto;"></div>
               </div>
             </div>
+            <div style="display:flex;flex-direction:column;height:100%;margin-left:5em;">
+              <div></div>
+              <div style="display:flex;margin-top:auto;">
+                <div class="jaga-dialog-button-pane" style="margin-left:auto;"></div>
+              </div>
+            </div>
+            <div style="height:100%;width:100%"></div>
           </div>
         `);
         let channelDiv = div.find('div').at(1);
         let rangeDiv = div.find('div').at(3);
         let buttonDiv = div.find('div').at(5);
+        let scriptDiv = div.find('div').at(7);
+        let button2Div = div.find('div').at(9);
         channelDiv.html(`
-          <span style="white-space:nowrap">Format:
-          <select>
-            <option value="csv">CSV: Time-Series</option>
-            <option value="json">JSON: Time-Series / Objects </option>
-          </select></span><p>
-          Channels:<br><span style="white-space:nowrap"><input style="width:auto"><button>Add</button> <button>Clear</button></span><br>
-          <span style="font-size:small;margin-top:5px;white-space:nowrap">(can use wildcards; examples: <span style="background:gainsboro">*.PS.*.AS</span>, <span style="background:gainsboro">*.Coax</span>)</span>
+          <span style="white-space:nowrap">Name: <input style="width:20em"></span><p>
+          Channels: <br><span stle="white-space:nowrap"><input list="sd-all-datalist" style="width:auto"><button>Add</button> <button>Clear</button></span><br>
+          <span style="font-size:small;margin-top:5px;white-space:nowrap">(can use wildcards; example: <span style="background:gainsboro">adc_ch*</span> )</span>
           <div style="flex-grow:1;width:100%;overflow:auto;border:thin dotted;border-radius:5px">
             <span style="font-size:large;color:gray">No Channels Selected</span>
-            <table style="font-size:small"></table>
+            <table></table>
           </div>
         `);
         rangeDiv.html(`
-          <table>
+          <table style="white-space:nowrap">
             <tr><td>From</td><td><input type="datetime-local"> (browser time)</td></tr>
             <tr><td>To</td><td><input type="datetime-local"> (browser time)</td></tr>
             <tr>
@@ -219,7 +223,20 @@ export class DownloadPanel extends Panel {
           <div>
         `);
         buttonDiv.html(`
-          <button disabled>Download Data</button>
+          <button disabled>Download CSV</button>
+          <button disabled>Download JSON</button>
+          <a style="display:none"></a>
+        `);
+        scriptDiv.html(`
+          <span style="font-size:120%">Plotting Script Generation (Experimental)</span>
+          <ul>
+            <li> To run the script, the SlowPy library must be installed.
+                 See <a href="./docs/index.html#Installation" target="_blank">documentation</a> for installation procedures.<p>
+            <li> This feature is experimental. The generated scripts might not be compatible with future releases of SlowDash.<p>
+            <li> To use the direct Jupyter link, the URL and token of a Jupyter process must be given in the SlowDash project configuration.
+          </ul>
+        `);
+        button2Div.html(`
           <button disabled>Download Python</button>
           <button disabled>Download Notebook</button>
           <button disabled>Open Jupyter</button>
@@ -235,24 +252,15 @@ export class DownloadPanel extends Panel {
         //// Channel List ////
         
         channelDiv.css('position', 'relative');
-        let channelTable = channelDiv.find('table');
-        let channelInput = channelDiv.find('input').at(0);
+        let nameInput = channelDiv.find('input').at(0);
+        let channelInput = channelDiv.find('input').at(1);
+        let channelTable = channelDiv.find('table').at(0);
         let channelTableDiv = channelTable.closest('div');
         let channelTableMessage = channelTableDiv.find('span');
         let channelTableTop = channelTableDiv.get().offsetTop;
         let containerHeight = channelDiv.boundingClientHeight();
         channelTableDiv.css('height', containerHeight - channelTableTop + "px");
-        
-        bindInput(thisconfig, 'format', channelDiv.find('select').at(0));
-        channelDiv.find('select').at(0).bind('change', e => {
-            channelInput.attr('list', (thisconfig.format == 'csv' ? 'sd-timeseries-datalist' : 'sd-all-datalist'));
-            if (false /* switcing to JSON format is always safe... */) {
-                channelTable.empty();
-                channelTableMessage.css('display', 'inline');
-                buttonDiv.find('button').enabled(false);
-            }
-        });
-        channelInput.attr('list', (thisconfig.format == 'csv' ? 'sd-timeseries-datalist' : 'sd-all-datalist'));
+        nameInput.val('SlowDash-' + (new JGDateTime()).asString('%y%m%d-%H%M%S'));
         
         let [tsChannelList, allChannelList] = [[], []];
         for (let entry of (this.channelList ?? [])) {
@@ -262,36 +270,96 @@ export class DownloadPanel extends Panel {
             }    
         }
 
-        let addChannel = function(channel) {
+        let checkState = () => {
+            let is_empty = true, has_obj = false;
+            for (let input of channelTable.find('input').enumerate()) {
+                if (input.checked()) {
+                    is_empty = false;
+                    if (input.data('sd-data-type') != 'timeseries') {
+                        has_obj = true;
+                        break;
+                    }
+                }
+            }
+
+            if (is_empty) {
+                buttonDiv.find('button').enabled(false);
+                button2Div.find('button').enabled(false);
+            }
+            else {
+                buttonDiv.find('button').enabled(true);
+                button2Div.find('button').enabled(true);
+                if (has_obj) {
+                    buttonDiv.find('button').at(0).enabled(false);
+                }
+            }
+        };
+        
+        let addChannel = channel => {
             if (! channel) return;
             if (channel.indexOf('*') >= 0) {
-                let channelList = (thisconfig.format == 'csv' ? tsChannelList : allChannelList);
                 let pattern = new RegExp(channel.split('.').join('\\.').split('*').join('.*'));
-                for (let ch of channelList) {
+                for (let ch of allChannelList) {
                     if (pattern.test(ch)) {
                         addChannel(ch);
                     }
                 }
+                return;
             }
-            else {
-                let label = $('<label>').appendTo($('<td>').appendTo(($('<tr>').appendTo(channelTable))));
-                let input = $('<input>').attr('type', 'checkbox').checked(true).appendTo(label);
-                label.append($('<span>').addClass('sd-channelName').text(channel));
+
+            let already_exists = false;
+            for (let ch of channelTable.find('input').enumerate()) {
+                if (channel == ch.data('sd-channel')) {
+                    ch.checked(true);
+                    already_exists = true;
+                    break;
+                }
+            }
+            if (! already_exists) {
+                let datatype = 'timeseries';
+                if (! tsChannelList.includes(channel)) {
+                    datatype = 'unknown';
+                    for (let entry of (this.channelList ?? [])) {
+                        if (entry.name == channel) {
+                            datatype = entry.type ?? 'timeseries';
+                        }
+                    }
+                }
+                
+                let tr = $('<tr>').appendTo(channelTable);
+                let label = $('<label>').appendTo($('<td>').appendTo(tr));
+                let input = $('<input>').attr('type', 'checkbox').checked(true);
+                input.data('sd-channel', channel).data('sd-data-type', datatype).bind('change', e=> {
+                    checkState();
+                });
+                label.append(input).append($('<span>').text(channel));
+                if (datatype != 'timeseries') {
+                    tr.append($('<td>').css({'font-size': '80%', 'padding-left': '3em'}).text(`(${datatype})`));
+                }
+                else {
+                    tr.append($('<td>'));
+                }
                 channelTableMessage.css('display', 'none');
-                buttonDiv.find('button').enabled(true);
             }
+
+            checkState();
         };
+        
         for (let ch of thisconfig.channels ?? []) {
             addChannel(ch);
         }
-
+        channelInput.bind('change', e=>{
+            addChannel(channelInput.val());
+            channelInput.val('');
+        });
         channelDiv.find('button').at(0).bind('click', e=>{
-            addChannel($(e.target).closest('div').find('input').val());
+            addChannel(channelInput.val());
         });
         channelDiv.find('button').at(1).bind('click', e=>{
             channelTable.empty();
             channelTableMessage.css('display', 'inline');
             buttonDiv.find('button').enabled(false);
+            button2Div.find('button').enabled(false);
         });
         
         
@@ -312,7 +380,7 @@ export class DownloadPanel extends Panel {
             let channels = [];
             for (let ch of channelTable.find('input').enumerate()) {
                 if (ch.checked()) {
-                    channels.push(ch.closest('label').text());
+                    channels.push(ch.data('sd-channel'));
                 }
             }
 
@@ -347,7 +415,7 @@ export class DownloadPanel extends Panel {
             }
             
             let opts = [ 'length='+length, 'to='+to, 'timezone='+timezone ];
-            if ((thisconfig.format == 'csv') || (resample > 0)) {
+            if (resample > 0) {
                 opts.push('resample=' + resample);
                 opts.push('reducer=' + thisconfig.resampling_reducer);
             }
@@ -356,33 +424,43 @@ export class DownloadPanel extends Panel {
         };
 
         buttonDiv.find('button').at(0).bind('click', e=>{
-            const url = 'api/' + ((thisconfig.format == 'csv') ? 'dataframe/' : 'data/') + download_url();
-            const filename = 'SlowPlotData-' + (new JGDateTime()).asString('%y%m%d-%H%M%S') + "." + thisconfig.format;
+            const filename = channelDiv.find('input').at(0).val() + ".csv";
+            const url = 'api/dataframe/' + download_url();
             buttonDiv.find('a').attr('download', filename).attr('href', url).click();
         });
         buttonDiv.find('button').at(1).bind('click', e=>{
+            const filename = channelDiv.find('input').at(0).val() + ".json";
+            const url = 'api/data/' + download_url();
+            buttonDiv.find('a').attr('download', filename).attr('href', url).click();
+        });
+        button2Div.find('button').at(0).bind('click', e=>{
+            const filename = channelDiv.find('input').at(0).val() + ".py";
             const url = 'api/extension/jupyter/python/' + download_url();
-            const filename = 'SlowPlot-' + (new JGDateTime()).asString('%y%m%d-%H%M%S') + ".py";
             buttonDiv.find('a').attr('download', filename).attr('href', url).click();
         });
-        buttonDiv.find('button').at(2).bind('click', e=>{
+        button2Div.find('button').at(1).bind('click', e=>{
+            const filename = channelDiv.find('input').at(0).val() + ".ipynb";
             const url = 'api/extension/jupyter/notebook/' + download_url();
-            const filename = 'SlowPlot-' + (new JGDateTime()).asString('%y%m%d-%H%M%S') + ".ipynb";
             buttonDiv.find('a').attr('download', filename).attr('href', url).click();
         });
-        buttonDiv.find('button').at(3).bind('click', async e=>{
-            this.indicator.open("Launching Jupyter...", "&#x23f3;", event?.clientX ?? null, event?.clientY ?? null);
+        button2Div.find('button').at(2).bind('click', async e=>{
+            const filename = channelDiv.find('input').at(0).val() + ".ipynb";
             const url = 'api/extension/jupyter/jupyter/' + download_url();
-            const filename = 'SlowPlot-' + (new JGDateTime()).asString('%y%m%d-%H%M%S') + ".ipynb";
+            this.indicator.open("Launching Jupyter...", "&#x23f3;", event?.clientX ?? null, event?.clientY ?? null);
             let response = await fetch(url, { method: 'POST', body: '' } );
-            if (response.status != 201) {
+            if ((response.status != 200) && (response.status != 201)) {
                 this.indicator.close("Error on launching Jupyter: " + response.status + " " + response.statusText, "&#x274c;", 5000);
             }
             else {
-                const jupyter_url = await response.text();
-                this.indicator.close("Success", "&#x2705;", 1000);
-                if (jupyter_url.substr(0, 4) == 'http') {
-                    window.location.href = jupyter_url;
+                const reply = await response.json();
+                if ((reply.status??'') != 'ok') {
+                    this.indicator.close("Error on launching Jupyter: " + (reply.message ?? ''), "&#x274c;", 5000);
+                }
+                else {
+                    this.indicator.close("Success", "&#x2705;", 1000);
+                    if (reply.notebook_url.substr(0, 4) == 'http') {
+                        window.location.href = reply.notebook_url;
+                    }
                 }
             }
         });

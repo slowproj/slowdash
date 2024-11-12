@@ -1291,7 +1291,6 @@ class PlotPanel extends Panel {
             'channels=' + channels.join(','),
             'length=' + (this.currentDataTimeRange.to - this.currentDataTimeRange.from),
             'to=' + (this.currentDataTimeRange.to),
-            'format=' + (this.isTimeSeriesPlot ? 'csv' : 'json'),
         ];
         window.open('./slowdown.html?' + opts.join('&'));
     }

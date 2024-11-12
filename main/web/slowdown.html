@@ -21,7 +21,7 @@
     import { boot, Frame } from './controlframe.mjs';
 
     window.addEventListener('DOMContentLoaded', function() {
-        let defaults = { channels: null, length: 86400, to: $.time(), format: 'csv' };
+        let defaults = { channels: null, length: 86400, to: $.time() };
         let optparse = options => options;
         boot(defaults, optparse, start);
     });
@@ -44,7 +44,6 @@
                     channels: config.channels ? config.channels.split(',') : null,
                     length: config.length,
                     to: config.to,
-                    format: config.format,
                     //show_details: true,
                 },
                 {
@@ -53,7 +52,7 @@
                     channels: config.channels ? config.channels.split(',') : null,
                     length: config.length,
                     to: config.to,
-                    format: config.format,
+                    format: 'json'
                 }
             ]
         };

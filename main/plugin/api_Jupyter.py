@@ -1,5 +1,5 @@
 
-import time, datetime, json, re, requests, logging
+import time, datetime, json, uuid, re, requests, logging
 import extension
 
 
@@ -7,14 +7,8 @@ class Extension_Jupyter(extension.ExtensionModule):
     def __init__(self, project_config, module_config, slowdash):
         self.jupyter_url = module_config.get('url', 'http://localhost:8888')
         self.jupyter_token = module_config.get('token', '')
-
-        try:
-            self.jupyter_session = requests.Session()
-            resonse = self.jupyter_session.get(f'{self.jupyter_url}/tree')
-            self.xsrf_token = self.jupyter_session.cookies.get('_xsrf')
-        except Exception as e:
-            logging.error('Jupyter connection: %s' % str(e))
-            self.jupyter_url = None
+        self.jupyter_session = None
+        self.xsrf_token = ''
 
 
     def process_get(self, path, opts, output):
@@ -102,6 +96,7 @@ class Extension_Jupyter(extension.ExtensionModule):
         for src in self.generate_cells(params, opts):
             cell = {
                 'cell_type': 'code',
+                'id': str(uuid.uuid4()),
                 'metadata': {},
                 'execution_count': None,
                 'outputs': [],
@@ -112,9 +107,25 @@ class Extension_Jupyter(extension.ExtensionModule):
         return notebook
 
 
+    def connect_jupyter(self):
+        if self.jupyter_session is not None:
+            return True
+        
+        try:
+            self.jupyter_session = requests.Session()
+            resonse = self.jupyter_session.get(f'{self.jupyter_url}/tree')
+            self.xsrf_token = self.jupyter_session.cookies.get('_xsrf')
+        except Exception as e:
+            logging.error('Jupyter connection: %s' % str(e))
+            self.jupyter_session = None
+            return False
+
+        return True
+            
+            
     def post_notebook(self, notebook, output):
-        if self.jupyter_url is None:
-            return None
+        if not self.connect_jupyter():
+            return { 'status': 'error', 'message': 'unable to connect to Jupyter' }
 
         filename = 'SlowPlot-' + datetime.datetime.now().strftime('%y%m%d-%H%M%S') + ".ipynb";
         try:
@@ -132,8 +143,7 @@ class Extension_Jupyter(extension.ExtensionModule):
                 })
             )
             if response.status_code in [ 200, 201 ]:
-                output.write(f'{self.jupyter_url}/notebooks/{filename}'.encode())
-                return 'text/plain'
+                return { 'status': 'ok', 'notebook_url': f'{self.jupyter_url}/notebooks/{filename}' }
             else:
                 logging.error('Jupyter Notebook posting: %d %s' % (response.status_code, response.text))
                 return { 'status': 'error', 'message': response.text }

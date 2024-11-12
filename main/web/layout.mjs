@@ -37,7 +37,7 @@ export class Layout {
             plotLabelColor: contextColor,
             plotGridColor: plotMiddleColor,
             plotFrameThickness: 2,
-            plotTicksOutwards: false,
+            plotTicksOutwards: true,
             plotGridEnabled: true,
             negatingImages: style.negate,
         };
