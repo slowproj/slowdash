@@ -2,71 +2,138 @@
 
 
 import os, sys, time, json, io, datetime, logging
-import pandas as pd
+from collections import namedtuple
 from urllib import request, parse
+
 from .basetypes import DataElement
+from .histograms import Histogram, Histogram2d
+from .graphs import Graph
 
 
 class SlowFetch:
     def __init__(self, url):
+        """
+        Args:
+          - url: SlowDash Web server URL
+        """
         self.baseurl = url + '/api'
         self.opener = None
 
 
-    def set_user(self, user, passwd):
+    def set_user(self, username, password):
+        """If the SlowDash web server is password protected, set the credentials using this.
+        Args:
+          - username: user name
+          - password: password
+        """
         self.pwd_mgr = request.HTTPPasswordMgrWithPriorAuth()
-        self.pwd_mgr.add_password(None, self.baseurl, user, passwd, is_authenticated=True)
+        self.pwd_mgr.add_password(None, self.baseurl, user, password, is_authenticated=True)
         self.auth_mgr = request.HTTPBasicAuthHandler(self.pwd_mgr)
         self.opener = request.build_opener(self.auth_mgr)
         
         
-    def channels(self):
+    def channels(self, fields=['name','type']):
+        """Obtain a list of channels.
+        Args:
+          - fields: str (e.g., 'name') or list (e.g. ['name','type'])
+        Returns:
+          - list of field values (e.g., ['ch0', 'ch1']), or
+            list of channels where channel is a named-tuple of the fields
+        """
         data = json.loads(self._http_get('%s/channels' % self.baseurl).decode())
-        table = [ [ record['name'], record.get('type', 'timeseries') ] for record in data ]
-        return pd.DataFrame(table, columns=['name', 'type'])
+        table = []
+        if type(fields) == str:
+            table = [
+                record.get(fields, None if fields != 'type' else 'timeseries') for record in data
+            ]
+        elif type(fields) == list:
+            Channel = namedtuple('Channel', fields)
+            for record in data:
+                f = { field: record.get(field, None if field != 'type' else 'timeseries') for field in fields }
+                table.append(Channel(**f))
+        return table
 
 
-    def dataframe(self, channels, start=-3600, stop=0, resample=None, reducer='last', filler=None):
+    def data(self, channels, start=-3600, stop=0, resample=None, reducer='last', filler=None):
+        """Obtain a list of channels.
+        Args:
+          - channels   List of channels
+          - start:     Date-time string, UNIX time, or negative integer for seconds to "stop"
+          - stop:      Date-time string, UNIX time, or non-positive integer for seconds to "now"
+          - resample:  resampling time-backets intervals, zero for auto, None for no-resampling
+          - reducer:   'last' (None), 'mean', or 'median'
+          - filler:    'fillna' (None), 'last', or 'linear': ### NOT YET IMPLEMENTED ###
+        Returns:
+          dict of { channel: (t, x) } where t and x are list of time-series points.
+          x can be a list of scalars (time-series), or list of objects (histogram, graph, etc.)
+        """
         to, length = self._find_time_range(start, stop)
         if to is None:
             df = pd.DataFrame(columns=['DateTime', 'TimeStamp']+channels)
             return df
         
-        url = '%s/dataframe/%s?length=%f&to=%f' % (self.baseurl, ','.join(channels), length, to)
+        url = '%s/data/%s?length=%f&to=%f' % (self.baseurl, ','.join(channels), length, to)
         if resample is not None:
             url += '&resample=%s&reducer=%s' % (resample, reducer)
             if filler is not None:
-                url += 'filler=%s' % filler
+                url += '&filler=%s' % filler
             
-        return pd.read_csv(io.StringIO(self._http_get(url).decode()), parse_dates=['DateTime'])
-    
-        
-    def lastobj(self, channels, start=-3600, stop=None):
-        to, length = self._find_time_range(start, stop)
-        if not (to > 0):
-            return None
-        
-        url = '%s/data/%s?length=%f&to=%f&reducer=last' % (self.baseurl, ','.join(channels), length, to)            
-        data = json.loads(self._http_get(url).decode())
+        reply = json.loads(self._http_get(url).decode())
 
         result = {}
-        for ch in data:
-            x = data[ch].get("x")
-            if isinstance(x, list):
-                if len(x) < 1:
-                    continue
-                x = x[-1]
-            if isinstance(x, str):  # JSON value stored as a string
-                try:
-                    x = json.loads(x)
-                except:
-                    pass
-            result[ch] = DataElement.from_json(ch, x)
+        for ch, data in reply.items():
+            t0 = data.get('start', 0)
+            t = data.get("t", [])
+            x = data.get("x", [])
+            if not isinstance(t, list):
+                t = [t]
+            if not isinstance(x, list):
+                x = [x]
+            if len(t) != len(x) or len(t) == 0:
+                print("ERROR: badly formmatted data: %s" % ch)
+                continue
+
+            result[ch] = (list(), list())
+            for k in range(len(t)):
+                tk, xk = float(t[k]) + t0, x[k]
+                if type(xk) is str:  # JSON value stored as a string
+                    try:
+                        xk = json.loads(xk)
+                    except:
+                        pass
+                if type(xk) is dict:
+                    xk = self._create_object(xk)
+                if xk is not None:
+                    result[ch][0].append(datetime.datetime.fromtimestamp(tk))
+                    result[ch][1].append(xk)
             
         return result
-    
+
         
+    def _create_object(self, data):
+        """INTERNAL USE: creates a SlowPy obects (Histogram/Graph/...) from Python dict
+        """
+        if type(data) is not dict:
+            return data
+    
+        if 'bins' in data:
+            return Histogram.from_json(data)
+        elif 'ybins' in data:
+            return Histogram2d.from_json(data)
+        elif 'y' in data:
+            return Graph.from_json(data)
+        
+        return None
+
+
     def _find_time_range(self, start, stop):
+        """INTERNAL USE: calculates time range in UNIX timestamps
+        Args:
+          - start:     Date-time string, UNIX time, or negative integer for seconds to "stop"
+          - stop:      Date-time string, UNIX time, or non-positive integer for seconds to "now"
+        Returns:
+          a time-range in UNIX time as a pair of (stop, length)
+        """
         now = time.time()
 
         if isinstance(stop, (int, float)):
@@ -100,6 +167,9 @@ class SlowFetch:
 
 
     def _http_get(self, url):
+        """INTERNAL USE: make a HTTP request and receives a reply
+        """
+        print(url)
         if self.opener is not None:
             with self.opener.open(url) as reply:
                 return reply.read()

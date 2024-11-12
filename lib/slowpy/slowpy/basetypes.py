@@ -42,6 +42,9 @@ class DataElement:
     @staticmethod
     def from_json(obj):
         # this assumes that the user has already imported the histogram and graph modules
+        if type(obj) is not dict:
+            return obj
+        
         if 'bins' in obj:
             return Histogram.from_json(obj)
         elif 'ybins' in obj:
