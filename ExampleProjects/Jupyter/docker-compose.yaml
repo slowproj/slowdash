@@ -1,0 +1,26 @@
+version: '3.4'
+
+services:
+  notebook:
+    image: slowpy-notebook
+    command:
+      - start-notebook.sh
+      - --NotebookApp.token=SlowJupyter
+    ports:
+      - 8888:8888
+    volumes:
+      - ./notebook:/home/jovyan
+
+
+  slowdash:
+    image: slowdash
+    volumes:
+      - .:/project
+    ports:
+      - "18881:18881"
+    environment:
+      - JUPYTER_URL=http://localhost:8888
+      - JUPYTER_TOKEN=SlowJupyter
+      - JUPYTER_INTERNAL_URL=http://notebook:8888
+      - SLOWDASH_INTERNAL_URL=http://slowdash:18881
+      
