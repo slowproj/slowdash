@@ -329,10 +329,11 @@ export class DownloadPanel extends Panel {
             if (! already_exists) {
                 let datatype = 'timeseries';
                 if (! tsChannelList.includes(channel)) {
-                    datatype = 'unknown';
+                    //datatype = 'unknown';  // assume unknown is timeseries (happens with Honeybee)
                     for (let entry of (this.channelList ?? [])) {
                         if (entry.name == channel) {
                             datatype = entry.type ?? 'timeseries';
+                            break;
                         }
                     }
                 }
