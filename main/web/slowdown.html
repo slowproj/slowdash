@@ -46,14 +46,6 @@
                     to: config.to,
                     has_jupyter: config._project.extension_module?.jupyter?.url !== undefined
                     //show_details: true,
-                },
-                {
-                    type: 'slowpy',
-                    use_utc: false,
-                    channels: config.channels ? config.channels.split(',') : null,
-                    length: config.length,
-                    to: config.to,
-                    format: 'json'
                 }
             ]
         };
