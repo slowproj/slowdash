@@ -2,14 +2,13 @@
 
 from slowpy import SlowFetch
 from slowpy import slowplot as plt
-#from matplotlib import pyplot as plt
 
 
 sf = SlowFetch('http://localhost:18881')
 #sf.set_user(USER, PASS)                  # set the password if the SlowDash page is protected
 
 
-channels = [ ch.name for ch in sf.channels() if ch.type == 'timeseries' ][0:4]
+channels = [ ch.name for ch in sf.channels() if ch.type in [ 'histogram', 'graph' ] ][0:4]
 print(channels)
 
 data = sf.data(
@@ -22,8 +21,9 @@ data = sf.data(
 )
 
 
+# plot the last object in the time-series of objects
 for ch, (t, x) in data.items():
-    plt.plot(t, x, label=ch)
+    plt.plot(x[-1], label=ch)
 plt.legend()
 
 plt.show()

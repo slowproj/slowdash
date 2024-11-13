@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 21 October 2023 #
 
 
-import sys, os, time, json
+import sys, os, time, datetime, json
 
 import numpy as np
 from matplotlib import pyplot as mpl_plt
@@ -80,7 +80,7 @@ class Axes:
                     
         if len(args) > 0 and type(args[-1]) is str:
             kwargs.update(self._decode_format(args[-1]))
-            
+
         if isinstance(obj, Histogram):
             name = slowplot.create_name(kwargs.get('label', None), 'histogram')
             return self._draw_histogram(obj, name, **kwargs)
@@ -102,7 +102,7 @@ class Axes:
                 graph.x = [ k for k in range(nx) ]
                 graph.y = [ float(xk) for xk in obj ]
             else:
-                graph.x = [ float(xk) for xk in obj ]
+                graph.x = [ (xk if type(xk) is datetime.datetime else float(xk)) for xk in obj ]
                 graph.y = [ float(yk) for yk in args[0] ]
             name = slowplot.create_name(kwargs.get('label', None), 'plot')
             return self._draw_graph(graph, name, **kwargs)

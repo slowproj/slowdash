@@ -11,7 +11,9 @@ class Extension_Jupyter(extension.ExtensionModule):
         self.jupyter_session = None
         self.xsrf_token = ''
 
+        self.public_config['url'] = self.jupyter_url
 
+        
     def process_get(self, path, opts, output):
         if len(path) > 1 and path[0] == 'python':
             output.write(self.generate_python(path[1], opts).encode())
@@ -46,34 +48,64 @@ class Extension_Jupyter(extension.ExtensionModule):
             length = float(opts.get('length', '3600'))
             to = float(opts.get('to', int(time.time())+1))
             resample = float(opts.get('resample', -1))
-            reducer = opts.get('reducer', 'last')
+            reducer = opts.get('reducer', None)
             filler = opts.get('filler', None)
+            slowdash_url = opts.get('slowdash_url', '*')
+            datatype = opts.get('datatype', 'timeseries')
         except Exception as e:
             logging.error(e)
             return None
+
+        if not slowdash_url.replace(':', '0').replace('/', '0').replace('.', '0').replace(':', '0').replace('~', '0').isalnum():
+            slowdash_url = 'http://SLOW.DASH.URL.HERE:PORT'
+            
+        channels = []
+        for ch in params.split(','):
+            if ch.replace('_', '0').replace('-', '0').replace('.', '0').replace(',', '0').replace(':', '0').isalnum():
+                channels.append(ch)
+        start = datetime.datetime.fromtimestamp(to-length).astimezone().isoformat()
+        stop = datetime.datetime.fromtimestamp(to).astimezone().isoformat()
         if resample < 0:
             resample = None
+        if reducer not in [ 'last', 'mean', 'median' ]:
+            reducer = None
+        if filler not in [ 'fillna', 'last', 'linear' ]:
+            filler = None
 
         cells = []
         cells.append(f'''
         |from slowpy import SlowFetch
-        |from matplotlib import pyplot as plt
-        | 
-        |sf = SlowFetch('http://localhost:18881')
+        |slowfetch = SlowFetch({repr(slowdash_url)})
         |#sf.set_user(USER, PASS)                  # set the password if the SlowDash page is protected
         ''')
         cells.append(f'''
-        |df = sf.dataframe(                        ### this returns a Pandas DataFrame
-        |    channels = ['ch0','ch1','ch2'],           
-        |    start = '2024-11-02T19:36:24-07:00',  # Date-time string, UNIX time, or negative integer for seconds to "stop"
-        |    stop = '2024-11-02T19:36:24-07:00',   # Date-time string, UNIX time, or non-positive integer for seconds to "now"
-        |    resample = 0,                         # resampling time-backets intervals, zero for auto
-        |    reducer = 'mean',                     # 'last' (None), 'mean', 'median'
-        |    filler = None)                        # 'fillna' (None), 'last', 'linear'
+        |data = slowfetch.data(
+        |    channels = {repr(channels)},
+        |    start = {repr(start)},  # Date-time string, UNIX time, or negative integer for seconds to "stop"
+        |    stop = {repr(stop)},   # Date-time string, UNIX time, or non-positive integer for seconds to "now"
+        |    resample = {repr(resample)},                      # resampling time-backets intervals, zero for auto, None to disable
+        |    reducer = {repr(reducer)},                       # 'last' (None), 'mean', 'median'
+        |    filler = {repr(filler)},                        # 'fillna' (None), 'last', 'linear'   ### NOT IMPLEMENTED YET ###
+        |)
         ''')
-        cells.append(f'''
-        |df.plot(x='DateTime', y=['ch0','ch1','ch2'])
-        ''')
+        if datatype == 'timeseries':
+            cells.append(f'''
+            |from matplotlib import pyplot as plt
+            | 
+            |for ch, (t, x) in data.items():
+            |    plt.plot(t, x, label=ch)
+            |plt.legend()
+            ''')
+        else:
+            cells.append(f'''
+            |# to plot histogram/graph, we use "slowpy.slowplot" instead of "matplotlib.pyplt"
+            |from slowpy import slowplot as plt
+            | 
+            |# plot the last object in the time-series of objects
+            |for ch, (t, x) in data.items():
+            |    plt.plot(x[-1], label=ch)
+            |plt.legend()
+            ''')
 
         return [ re.sub('^[ ]*\\|', '', cell.strip() + '\n', flags=re.MULTILINE) for cell in cells ]
 

@@ -231,10 +231,11 @@ export class DownloadPanel extends Panel {
           <span style="font-size:120%">Plotting Script Generation (Experimental)</span>
           <ul>
             <li> To run the script, the SlowPy library must be installed.
-                 See <a href="./docs/index.html#Installation" target="_blank">documentation</a> for installation procedures.<p>
+                 See <a href="./docs/index.html#Installation" target="_blank">documentation</a> for installation procedures,
+                 or use the <tt style="white-space:nowrap">slowpy-notebook</tt> container.<p>
             <li> This feature is experimental. The generated scripts might not be compatible with future releases of SlowDash.<p>
             <li> Time-axis plots (time-series) and XY plots (histograms, graphs, etc) cannot be mixed.<p>
-            <li> <b>Jupyter Disabled</b>: to enable the direct Jupyter link, the URL and token of a Jupyter process must be set in the SlowDash project configuration.
+            <li> <b>Jupyter is Disabled</b>: to enable the direct Jupyter link, the URL and token of a Jupyter process must be set in the SlowDash project configuration.
           </ul>
         `);
         button2Div.html(`
@@ -275,27 +276,31 @@ export class DownloadPanel extends Panel {
         }
 
         let checkState = () => {
-            let is_empty = true, has_obj = false;
+            let has_ts = false, has_obj = false;
             for (let input of channelTable.find('input').enumerate()) {
                 if (input.checked()) {
-                    is_empty = false;
-                    if (input.data('sd-data-type') != 'timeseries') {
+                    if (input.data('sd-data-type') == 'timeseries') {
+                        has_ts = true;
+                    }
+                    else {
                         has_obj = true;
-                        break;
                     }
                 }
             }
 
-            if (is_empty) {
-                buttonDiv.find('button').enabled(false);
+            if (has_ts === has_obj) {
+                buttonDiv.find('button').at(0).enabled(false);
+                buttonDiv.find('button').at(1).enabled(has_ts);
                 button2Div.find('button').enabled(false);
             }
+            else if (has_ts) {
+                buttonDiv.find('button').enabled(true);
+                button2Div.data('datatype', 'timeseries').find('button').enabled(true);
+            }
             else {
-                buttonDiv.find('button').at(0).enabled(! has_obj);
+                buttonDiv.find('button').at(0).enabled(false);
                 buttonDiv.find('button').at(1).enabled(true);
-                button2Div.find('button').at(0).enabled(! has_obj);
-                button2Div.find('button').at(1).enabled(! has_obj);
-                button2Div.find('button').at(2).enabled(! has_obj && config.has_jupyter);
+                button2Div.data('datatype', 'obj').find('button').enabled(true);
             }
         };
         
@@ -380,7 +385,7 @@ export class DownloadPanel extends Panel {
 
         //// Download Button ////
         
-        let download_url = () => {
+        let download_url = (opts={}) => {
             let channels = [];
             for (let ch of channelTable.find('input').enumerate()) {
                 if (ch.checked()) {
@@ -418,13 +423,16 @@ export class DownloadPanel extends Panel {
                 resample = 0;
             }
             
-            let opts = [ 'length='+length, 'to='+to, 'timezone='+timezone ];
+            let query_opts = [ 'length='+length, 'to='+to, 'timezone='+timezone ];
             if (resample > 0) {
-                opts.push('resample=' + resample);
-                opts.push('reducer=' + thisconfig.resampling_reducer);
+                query_opts.push('resample=' + resample);
+                query_opts.push('reducer=' + thisconfig.resampling_reducer);
+            }
+            for (let key in opts) {
+                query_opts.push(key + '=' + encodeURIComponent(opts[key]));
             }
 
-            return channels.join(',') + '?' + opts.join('&');
+            return channels.join(',') + '?' + query_opts.join('&');
         };
 
         buttonDiv.find('button').at(0).bind('click', e=>{
@@ -439,17 +447,20 @@ export class DownloadPanel extends Panel {
         });
         button2Div.find('button').at(0).bind('click', e=>{
             const filename = channelDiv.find('input').at(0).val() + ".py";
-            const url = 'api/extension/jupyter/python/' + download_url();
+            const opts = { datatype: button2Div.data('datatype'), slowdash_url: window.location.origin };
+            const url = 'api/extension/jupyter/python/' + download_url(opts);
             buttonDiv.find('a').attr('download', filename).attr('href', url).click();
         });
         button2Div.find('button').at(1).bind('click', e=>{
             const filename = channelDiv.find('input').at(0).val() + ".ipynb";
-            const url = 'api/extension/jupyter/notebook/' + download_url();
+            const opts = { datatype: button2Div.data('datatype'), slowdash_url: window.location.origin };
+            const url = 'api/extension/jupyter/notebook/' + download_url(opts);
             buttonDiv.find('a').attr('download', filename).attr('href', url).click();
         });
         button2Div.find('button').at(2).bind('click', async e=>{
             const filename = channelDiv.find('input').at(0).val() + ".ipynb";
-            const url = 'api/extension/jupyter/jupyter/' + download_url();
+            const opts = { datatype: button2Div.data('datatype'), slowdash_url: window.location.origin };
+            const url = 'api/extension/jupyter/jupyter/' + download_url(opts);
             const headers = { 'Content-Type': 'application/json; charset=utf-8' };
             const doc = { 'filename': filename };
             this.indicator.open("Launching Jupyter...", "&#x23f3;", event?.clientX ?? null, event?.clientY ?? null);

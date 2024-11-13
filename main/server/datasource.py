@@ -354,6 +354,7 @@ class DataSource:
     def __init__(self, project_config, datasource_config):
         self.project_config = project_config
         self.config = datasource_config
+        self.public_config = {}
 
     # this must be implemented by a child class
     def get_channels(self):

@@ -358,7 +358,9 @@ class App:
             return 403  # Forbidden
         
         filename = path[2]
-        if (self.project_dir is None):
+        if self.project_dir is None:
+            return 404  # Not Found
+        if len(filename) < 1:
             return 404  # Not Found
         try:
             os.remove(os.path.join('config', filename))
@@ -389,17 +391,17 @@ class App:
                     'error_message': self.error_message,
                     'is_secure': self.config.project.get('system', {}).get('is_secure', False)
                 },
-                'data_source_module': [
-                    { 'name': ds.name, 'params': ds.config }  for ds in self.datasource_list
-                ],
-                'task_module': [
-                    { 'name': module.name, 'params': module.params } for module in self.taskmodule_list
-                ],
-                'user_module': [
-                    { 'name': module.name, 'params': module.params } for module in self.usermodule_list
-                ],
+                'data_source_module': {
+                    module.name: module.public_config for module in self.datasource_list
+                },
+                'task_module': {
+                    module.name: module.public_config for module in self.taskmodule_list
+                },
+                'user_module': {
+                    module.name: module.public_config for module in self.usermodule_list
+                },
                 'extension_module': {
-                    name: module.config for name, module in self.extension_table.items() 
+                    name: module.public_config for name, module in self.extension_table.items() 
                 },
                 'style': self.config.project.get('style', None)
             }
@@ -832,9 +834,11 @@ class WebUI:
         self.app = None
 
         
-    def check_sanity(self, string):
+    def check_sanity(self, string, accept = []):
         string = string.replace('_', '0').replace('-', '0').replace('.', '0').replace(',', '0').replace(' ', '0')
         string = string.replace(':', '0').replace('[', '0').replace(']', '0')
+        for ch in accept:
+            string = string.replace(ch, '0')
         return string.isalnum()
 
     
@@ -851,8 +855,8 @@ class WebUI:
 
         opts = dict()
         for key, value in parse_qsl(u.query):
-            if not self.check_sanity(key + value):
-                logging.error('bad query (invalid char): %s' % url)
+            if not self.check_sanity(key) or not self.check_sanity(value, accept=['/']):
+                logging.error('bad query (invalid char): {"%s": "%s"} in %s' % (key, value, url))
                 return Reply(400)
             opts[key] = value
             
@@ -906,8 +910,8 @@ class WebUI:
         
         opts = dict()
         for key, value in parse_qsl(u.query):
-            if not self.check_sanity(key + value):
-                logging.error('bad query (invalid char): %s' % url)
+            if not self.check_sanity(key) or not self.check_sanity(value, accept=['/']):
+                logging.error('bad query (invalid char): {"%s": "%s"} in %s' % (key, value, url))
                 return Reply(400)
             opts[key] = value
             

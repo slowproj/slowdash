@@ -69,6 +69,7 @@ class UserModule:
         self.filepath = filepath
         self.name = name
         self.params = params
+        self.public_config = {}
 
         self.module = None
         self.user_thread = None

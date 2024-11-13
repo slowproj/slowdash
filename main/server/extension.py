@@ -9,6 +9,7 @@ class ExtensionModule:
     def __init__(self, project_config, module_config, slowdash):
         self.project_config = project_config
         self.config = module_config
+        self.public_config = {}
 
         
     # override this

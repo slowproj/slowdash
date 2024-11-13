@@ -70,11 +70,6 @@
         }
         let style = config._project.style ?? {};
 
-        if (config.panels[1].channels === null) {
-            config.panels.pop();
-            config.control.grid.rows = 1;
-        }
-        
         $('#sd-layout').css({'width':"100%", 'margin':0, 'padding':0});
         let layout = new Layout($('#sd-layout'), {
             style: style,

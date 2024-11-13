@@ -169,7 +169,6 @@ class SlowFetch:
     def _http_get(self, url):
         """INTERNAL USE: make a HTTP request and receives a reply
         """
-        print(url)
         if self.opener is not None:
             with self.opener.open(url) as reply:
                 return reply.read()
