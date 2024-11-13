@@ -11,6 +11,14 @@ class Extension_Jupyter(extension.ExtensionModule):
         self.jupyter_session = None
         self.xsrf_token = ''
 
+        # in containers, URLs might be different from what external browsers see
+        self.jupyter_internal_url = module_config.get('jupyter_internal_url', '').strip()
+        self.slowdash_internal_url = module_config.get('slowdash_internal_url', '').strip()
+        if len(self.jupyter_internal_url) == 0:
+            self.jupyter_internal_url = self.jupyter_url
+        if len(self.slowdash_internal_url) == 0:
+            self.slowdash_internal_url = None
+        
         self.public_config['url'] = self.jupyter_url
 
         
@@ -56,7 +64,9 @@ class Extension_Jupyter(extension.ExtensionModule):
             logging.error(e)
             return None
 
-        if not slowdash_url.replace(':', '0').replace('/', '0').replace('.', '0').replace(':', '0').replace('~', '0').isalnum():
+        if self.slowdash_internal_url is not None:
+            slowdash_url = self.slowdash_internal_url
+        elif not slowdash_url.replace(':', '0').replace('/', '0').replace('.', '0').replace(':', '0').replace('~', '0').isalnum():
             slowdash_url = 'http://SLOW.DASH.URL.HERE:PORT'
             
         channels = []
@@ -154,7 +164,7 @@ class Extension_Jupyter(extension.ExtensionModule):
         
         try:
             self.jupyter_session = requests.Session()
-            resonse = self.jupyter_session.get(f'{self.jupyter_url}/tree')
+            resonse = self.jupyter_session.get(f'{self.jupyter_internal_url}/tree')
             self.xsrf_token = self.jupyter_session.cookies.get('_xsrf')
         except Exception as e:
             logging.error('Jupyter connection: %s' % str(e))
@@ -170,7 +180,7 @@ class Extension_Jupyter(extension.ExtensionModule):
 
         try:
             response = self.jupyter_session.put(
-                f'{self.jupyter_url}/api/contents/{filename}',
+                f'{self.jupyter_internal_url}/api/contents/{filename}',
                 headers = {
                     'Content-Type': 'application/json',
                     'X-XSRFToken': self.xsrf_token,

@@ -5,10 +5,10 @@ periodically sends a HTTP request and if timeout or an error occurs, terminate t
 '''
 
 
-startup_grace = 60
-terminate_grace = 10
-check_interval = 60
-timeout = 60
+startup_grace = 300
+terminate_grace = 30
+check_interval = 300
+timeout = 300
 
 
 import sys, time, signal, subprocess
