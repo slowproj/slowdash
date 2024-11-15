@@ -6,7 +6,7 @@ import extension
 class Extension_Jupyter(extension.ExtensionModule):
     def __init__(self, project_config, module_config, slowdash):
         super().__init__(project_config, module_config, slowdash)
-        self.jupyter_url = module_config.get('url', 'http://localhost:8888')
+        self.jupyter_url = module_config.get('url', '')
         self.jupyter_token = module_config.get('token', '')
         self.jupyter_session = None
         self.xsrf_token = ''
@@ -161,6 +161,8 @@ class Extension_Jupyter(extension.ExtensionModule):
     def connect_jupyter(self):
         if self.jupyter_session is not None:
             return True
+        if len(self.jupyter_internal_url) == 0:
+            return False
         
         try:
             self.jupyter_session = requests.Session()

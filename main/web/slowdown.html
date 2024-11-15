@@ -44,7 +44,8 @@
                     channels: config.channels ? config.channels.split(',') : null,
                     length: config.length,
                     to: config.to,
-                    has_jupyter: config._project.extension_module?.jupyter?.url !== undefined
+                    has_jupyter: (config._project.extension_module?.jupyter !== undefined),
+                    has_jupyter_server: ((config._project.extension_module?.jupyter?.url ?? '') !== ''),
                     //show_details: true,
                 }
             ]

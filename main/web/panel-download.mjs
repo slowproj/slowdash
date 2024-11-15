@@ -249,7 +249,10 @@ export class DownloadPanel extends Panel {
         if (config.show_details) {
             rangeDiv.find('details').get().open = true;
         }
-        if (config.has_jupyter) {
+        if (! config.has_jupyter) {
+            scriptDiv.find('li').last().html('<b>Script Generation is Not Enabled</b>: to enable this, include the "Jupyter" extension in the SLowDash project configuration.');
+        }
+        if (config.has_jupyter_server) {
             scriptDiv.find('li').last().css('display', 'none');
         }
         
@@ -295,17 +298,17 @@ export class DownloadPanel extends Panel {
             }
             else if (has_ts) {
                 buttonDiv.find('button').enabled(true);
-                button2Div.data('datatype', 'timeseries').find('button').enabled(true);
-                button2Div.find('button').at(2).enabled(config.has_jupyter);
+                button2Div.data('datatype', 'timeseries').find('button').enabled(config.has_jupyter);
+                button2Div.find('button').at(2).enabled(config.has_jupyter_server);
             }
             else {
                 buttonDiv.find('button').at(0).enabled(false);
                 buttonDiv.find('button').at(1).enabled(true);
-                button2Div.data('datatype', 'obj').find('button').enabled(true);
-                button2Div.find('button').at(2).enabled(config.has_jupyter);
+                button2Div.data('datatype', 'obj').find('button').enabled(config.has_jupyter);
+                button2Div.find('button').at(2).enabled(config.has_jupyter_server);
             }
         };
-        
+
         let addChannel = channel => {
             if (! channel) return;
             if (channel.indexOf('*') >= 0) {
