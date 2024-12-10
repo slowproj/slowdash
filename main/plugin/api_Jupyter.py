@@ -86,7 +86,7 @@ class Extension_Jupyter(extension.ExtensionModule):
         cells.append(f'''
         |from slowpy import SlowFetch
         |slowfetch = SlowFetch({repr(slowdash_url)})
-        |#sf.set_user(USER, PASS)                  # set the password if the SlowDash page is protected
+        |#slowfetch.set_user(USER, PASS)           # set the password if the SlowDash page is protected
         ''')
         cells.append(f'''
         |data = slowfetch.data(

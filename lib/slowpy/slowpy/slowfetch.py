@@ -27,7 +27,7 @@ class SlowFetch:
           - password: password
         """
         self.pwd_mgr = request.HTTPPasswordMgrWithPriorAuth()
-        self.pwd_mgr.add_password(None, self.baseurl, user, password, is_authenticated=True)
+        self.pwd_mgr.add_password(None, self.baseurl, username, password, is_authenticated=True)
         self.auth_mgr = request.HTTPBasicAuthHandler(self.pwd_mgr)
         self.opener = request.build_opener(self.auth_mgr)
         

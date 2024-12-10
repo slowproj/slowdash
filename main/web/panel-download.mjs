@@ -250,7 +250,7 @@ export class DownloadPanel extends Panel {
             rangeDiv.find('details').get().open = true;
         }
         if (! config.has_jupyter) {
-            scriptDiv.find('li').last().html('<b>Script Generation is Not Enabled</b>: to enable this, include the "Jupyter" extension in the SLowDash project configuration.');
+            scriptDiv.find('li').last().html('<b>Script Generation is Not Enabled</b>: to enable this, include the "Jupyter" extension in the SlowDash project configuration.');
         }
         if (config.has_jupyter_server) {
             scriptDiv.find('li').last().css('display', 'none');
@@ -391,6 +391,7 @@ export class DownloadPanel extends Panel {
 
         //// Download Button ////
         
+        const slowdash_url = window.location.origin + window.location.pathname.split('/').slice(0,-1).join('/');
         let download_url = (opts={}) => {
             let channels = [];
             for (let ch of channelTable.find('input').enumerate()) {
@@ -453,19 +454,19 @@ export class DownloadPanel extends Panel {
         });
         button2Div.find('button').at(0).bind('click', e=>{
             const filename = channelDiv.find('input').at(0).val() + ".py";
-            const opts = { datatype: button2Div.data('datatype'), slowdash_url: window.location.origin };
+            const opts = { datatype: button2Div.data('datatype'), slowdash_url: slowdash_url };
             const url = 'api/extension/jupyter/python/' + download_url(opts);
             buttonDiv.find('a').attr('download', filename).attr('href', url).click();
         });
         button2Div.find('button').at(1).bind('click', e=>{
             const filename = channelDiv.find('input').at(0).val() + ".ipynb";
-            const opts = { datatype: button2Div.data('datatype'), slowdash_url: window.location.origin };
+            const opts = { datatype: button2Div.data('datatype'), slowdash_url: slowdash_url };
             const url = 'api/extension/jupyter/notebook/' + download_url(opts);
             buttonDiv.find('a').attr('download', filename).attr('href', url).click();
         });
         button2Div.find('button').at(2).bind('click', async e=>{
             const filename = channelDiv.find('input').at(0).val() + ".ipynb";
-            const opts = { datatype: button2Div.data('datatype'), slowdash_url: window.location.origin };
+            const opts = { datatype: button2Div.data('datatype'), slowdash_url: slowdash_url };
             const url = 'api/extension/jupyter/jupyter/' + download_url(opts);
             const headers = { 'Content-Type': 'application/json; charset=utf-8' };
             const doc = { 'filename': filename };

@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 # Created by Sanshiro Enomoto on 3 Sep 2021 #
 
-import sys, os, io, cgi, json
+import sys, os
 
 from slowdash_cgi_config import sys_dir, project_dir
 sys.path.insert(0, os.path.join(sys_dir, 'main', 'server'))
