@@ -846,7 +846,7 @@ class WebUI:
         if self.app is None:
             return Reply(404)
         u = urlparse(url)
-        path = unquote(u.path).split('/')
+        path = [ unquote(p) for p in u.path.split('/') ]
         while path.count(''):
             path.remove('')
         if not path:
@@ -855,7 +855,8 @@ class WebUI:
 
         opts = dict()
         for key, value in parse_qsl(u.query):
-            if not self.check_sanity(key) or not self.check_sanity(value, accept=['/']):
+            key, value = unquote(key), unquote(value)
+            if not self.check_sanity(key) or not self.check_sanity(value, accept=['/', '~']):
                 logging.error('bad query (invalid char): {"%s": "%s"} in %s' % (key, value, url))
                 return Reply(400)
             opts[key] = value
@@ -897,7 +898,7 @@ class WebUI:
         if self.app is None:
             return Reply(404)
         u = urlparse(url)
-        path = unquote(u.path).split('/')
+        path = [ unquote(p) for p in u.path.split('/') ]
         while path.count(''):
             path.remove('')
         for element in path:
@@ -910,7 +911,8 @@ class WebUI:
         
         opts = dict()
         for key, value in parse_qsl(u.query):
-            if not self.check_sanity(key) or not self.check_sanity(value, accept=['/']):
+            key, value = unquote(key), unquote(value)
+            if not self.check_sanity(key) or not self.check_sanity(value, accept=['/', '~']):
                 logging.error('bad query (invalid char): {"%s": "%s"} in %s' % (key, value, url))
                 return Reply(400)
             opts[key] = value
@@ -936,7 +938,7 @@ class WebUI:
         if self.app is None:
             return Reply(404)
         u = urlparse(url)
-        path = unquote(u.path).split('/')
+        path = [ unquote(p) for p in u.path.split('/') ]
         while path.count(''):
             path.remove('')
         for element in path:

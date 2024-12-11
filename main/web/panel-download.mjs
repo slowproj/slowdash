@@ -391,7 +391,10 @@ export class DownloadPanel extends Panel {
 
         //// Download Button ////
         
-        const slowdash_url = window.location.origin + window.location.pathname.split('/').slice(0,-1).join('/');
+        let slowdash_url = encodeURIComponent(
+            window.location.origin +
+            window.location.pathname.split('/').slice(0,-1).join('/')
+        );
         let download_url = (opts={}) => {
             let channels = [];
             for (let ch of channelTable.find('input').enumerate()) {
