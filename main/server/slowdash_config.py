@@ -4,13 +4,6 @@
 import sys, os, subprocess, logging, enum, json, yaml
 from slowdash_version import slowdash_version
 
-logging.basicConfig(
-    level=logging.INFO, 
-    format='%(asctime)s %(levelname)s: %(message)s', 
-    datefmt='%y-%m-%d %H:%M:%S'
-)
-
-
 def find_sys_dir():
     myname = 'slowdash_config.py'
     for path in sys.path:
@@ -89,7 +82,7 @@ class Config:
         if self.project_dir is None:
             db_url = os.environ.get('SLOWDASH_INIT_DATASOURCE_URL', None)
             if db_url is None:
-                logging.warn('unable to find Slowdash Project Dir: specify it with the --project-dir option, set the SLOWDASH_PROJECT environmental variable, or run the slowdash command at a project directory')
+                logging.error('unable to find Slowdash Project Dir: specify it with the --project-dir option, set the SLOWDASH_PROJECT environmental variable, or run the slowdash command at a project directory')
                 return
             project_conf = {
                 'name': 'SlowDash',
@@ -307,10 +300,3 @@ class Config:
     def write(self, output = sys.stdout):
         json.dump(self.get(), output, indent=4)
         output.write('\n')
-
-
-
-if __name__ == '__main__':
-    config = Config()
-    if not config.project_dir:
-        config.write()

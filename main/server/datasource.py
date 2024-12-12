@@ -514,7 +514,7 @@ def load(ds_type, project_config, datasource_config):
         logging.error('unable to load datasource module: %s: %s' % (modulename, str(e)))
         logging.error(traceback.format_exc())
         return None
-    logging.debug('loaded datasource module "%s"' % modulename)
+    logging.info('loaded datasource module "%s"' % modulename)
 
     datasource = None
     classname = 'DataSource_%s' % ds_type    

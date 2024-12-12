@@ -67,7 +67,7 @@ def load(name, project_config, module_config, slowdash):
         logging.error('unable to load API extension plugin: %s: %s' % (plugin_name, str(e)))
         logging.error(traceback.format_exc())
         return None
-    logging.debug('loaded API extension plugin "%s"' % plugin_name)
+    logging.info('loaded API extension plugin "%s"' % plugin_name)
 
     extension = None
     class_name = 'Extension_%s' % plugin_name

@@ -842,6 +842,8 @@ class WebUI:
 
     
     def process_get_request(self, url):
+        logging.debug(f'GET {url}')
+        
         if self.app is None:
             return Reply(404)
         u = urlparse(url)
@@ -894,6 +896,8 @@ class WebUI:
 
 
     def process_post_request(self, url, doc):
+        logging.debug(f'POST {url}')
+        
         if self.app is None:
             return Reply(404)
         u = urlparse(url)
@@ -934,6 +938,8 @@ class WebUI:
 
             
     def process_delete_request(self, url):
+        logging.debug(f'DELETE {url}')
+        
         if self.app is None:
             return Reply(404)
         u = urlparse(url)
@@ -984,7 +990,7 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--logging',
-        action='store', dest='loglevel', default='info', choices=['debug', 'info', 'warn', 'error'],
+        action='store', dest='loglevel', default='info', choices=['debug', 'info', 'warning', 'error'],
         help='logging level'
     )
     args = parser.parse_args()
@@ -993,9 +999,17 @@ if __name__ == '__main__':
         parser.print_help()
         sys.exit(-1)
 
-    logging.basicConfig(level=logging.INFO)
-
-    webui = WebUI(args.project_dir, args.project_file, is_command=(args.COMMAND is not None))
+    loglevel = getattr(logging, args.loglevel.upper(), None)
+    if type(loglevel) != int:
+        loglevel = logging.WARNING
+    logging.basicConfig(
+        level=loglevel,
+        format='%(asctime)s %(levelname)s: %(message)s', 
+        datefmt='%y-%m-%d %H:%M:%S'
+    )
+    logging.basicConfig(level=loglevel)
+        
+    webui = WebUI(args.project_dir, args.project_file, is_command=(args.port<=0))
     if webui.app is None:
         sys.exit(-1)
         
@@ -1009,7 +1023,7 @@ if __name__ == '__main__':
         slowdash_server.start(
             webui,
             port = args.port, 
-            web_path = os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir, 'web'))),
+            web_path = os.path.join(os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))), 'web'),
             cgi_name = 'slowdash.cgi',
             index_file = 'slowhome.html' if webui.app.project is not None else 'welcome.html',
         )

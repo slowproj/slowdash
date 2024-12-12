@@ -47,18 +47,16 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_response(401)
             self.send_header('WWW-Authenticate', 'Basic realm="SlowDash"')
             self.end_headers()
-            sys.stderr.write('AUTH\n')
+            logging.debug(f'SlowDash_Server: AUTH for GET')
             return
             
-        #sys.stderr.write('GET: %s ...' % self.path)
-        
         url = urlparse(self.path)
         path_split = url.path.split('/')
         while path_split.count(''):
             path_split.remove('')
         if path_split.count('..'):
             self.send_error(403)
-            #sys.stderr.write('ERROR\n')
+            logging.warning(f'SlowDash_Server: bad URL: {self.path}')
             return
 
         if (len(path_split) == 0):
@@ -76,20 +74,17 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.process_file_get(
                     os.path.join(self.web_path, '/'.join(path_split))
                 )
-            #sys.stderr.write('done\n')
         except Exception as e:
-            logging.warning("slowdash_server: do_GET(): %s" % str(e))
-            logging.warning(traceback.format_exc())
-            #sys.stderr.write('ERROR\n')
+            logging.warning(f'SlowDash_Server: ERROR: {str(e)}')
+            logging.debug(traceback.format_exc())
 
                          
     def do_POST(self):
-        sys.stderr.write('POST: %s\n' % self.path)
-        
         if not self.check_auth():
             self.send_response(401)
             self.send_header('WWW-Authenticate', 'Basic realm="SlowDash"')
             self.end_headers()
+            logging.debug(f'SlowDash_Server: AUTH for POST')
             return
         
         url = urlparse(self.path)
@@ -137,16 +132,15 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.wfile.flush()
         except Exception as e:
             logging.warning("slowdash_server: do_POST(): %s" % str(e))
-            logging.warning(traceback.format_exc())
+            logging.debug(traceback.format_exc())
 
     
     def do_DELETE(self):
-        sys.stderr.write('DELETE: %s\n' % self.path)
-        
         if not self.check_auth():
             self.send_response(401)
             self.send_header('WWW-Authenticate', 'Basic realm="SlowDash"')
             self.end_headers()
+            logging.debug(f'SlowDash_Server: AUTH for DELETE')
             return
         
         url = urlparse(self.path)
@@ -189,7 +183,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 import bcrypt
                 bcrypt_imported = True
             except:
-                logging.error('install python module "bcrypt"')
+                logging.error('SlowDash_Server: missing python module "bcrypt"')
                 return False
         
         try:
@@ -208,7 +202,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 return True
             
         except Exception as e:
-            sys.stderr.write("Authentication Error: %s" % str(e))
+            logging.warning(f'SlowDash_Server: Authentication Error: {str(e)}')
             
         return False
 
@@ -235,12 +229,14 @@ class RequestHandler(BaseHTTPRequestHandler):
         
     def process_file_get(self, filepath):
         if not os.path.isfile(filepath):
+            logging.warning(f'SlowDash_Server: FILE_GET: not a file: {filepath}')
             self.send_error(404)
             return
         if not os.access(filepath, os.R_OK):
+            logging.warning(f'SlowDash_Server: FILE_GET: permission denied: {filepath}')
             self.send_error(404)
             return
-
+        
         ext = os.path.splitext(filepath)[1]
         if ext == '.html':
             content_type = 'text/html'
@@ -288,68 +284,21 @@ def start(webui, port, cgi_name, web_path, index_file):
         )
     except Exception as e:
         sys.stderr.write('ERROR: %s\n' % str(e))
-        logging.error(traceback.format_exc())
+        sys.stderr.write(traceback.format_exc())
         return -1
 
     sys.stderr.write('listening at port %d\n' % port)
-
     try:
         httpserver.serve_forever()
     except KeyboardInterrupt:
-        sys.stderr.write('Terminated\n')
+        pass
     except InterruptedError:
-        sys.stderr.write('Terminated\n')
+        pass
 
+    sys.stderr.write('Terminated\n')
     try:
         httpserver.shutdown()
     except:
         pass
         
     httpserver.server_close()
-    
-    return 0
-    
-
-
-if __name__ == '__main__':
-    from argparse import ArgumentParser
-    parser = ArgumentParser()
-    parser.add_argument(
-        '-p', '--port',
-        action='store', dest='port', type=int, default=0,
-        help='port number for web connection; command-line mode without this option'
-    )
-    parser.add_argument(
-        '--project-dir',
-        action='store', dest='project_dir', default=None,
-        help='project directory (default: current dir if not specified by SLOWDASH_PROJECT environmental variable)'
-    )
-    parser.add_argument(
-        '--project-file',
-        action='store', dest='project_file', default=None,
-        help='project file (default: SlowdashProject.yaml file at the project directory)'
-    )
-    parser.add_argument(
-        '--logging',
-        action='store', dest='loglevel', default='info', choices=['debug', 'info', 'warn', 'error'],
-        help='logging level'
-    )
-    args = parser.parse_args()
-
-    if args.COMMAND is None and args.port <= 0:
-        parser.print_help()
-        sys.exit(-1)
-
-    logging.basicConfig(level=logging.INFO)
-
-    webui = WebUI(args.project_dir, args.project_file)
-    if webui.app is None:
-        sys.exit(-1)
-        
-    start(
-        webui,
-        port = args.port, 
-        web_path = os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir, 'web'))),
-        cgi_name = 'slowdash.cgi',
-        index_file = 'slowhome.html' if webui.app.project is not None else 'welcome.html',
-    )
