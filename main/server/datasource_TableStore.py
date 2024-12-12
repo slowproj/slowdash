@@ -123,7 +123,7 @@ class DataSource_TableStore(DataSource):
             if schema.time is None:
                 pass
             elif schema.time_type is None:
-                logging.warn('schema: time type not specified: "with timezone" is assumed')
+                logging.warning('schema: time type not specified: "with timezone" is assumed')
                 schema.time_type = 'aware'
             else:
                 schema.time_type = schema.time_type.lower().replace(' ', '')

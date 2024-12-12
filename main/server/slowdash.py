@@ -582,13 +582,13 @@ class App:
         try:
             os.chmod(config_dir, mode)
         except Exception as e:
-            logging.warn('unable to change file mode (%03o): %s: %s' % (mode, config_dir, str(e)))
+            logging.warning('unable to change file mode (%03o): %s: %s' % (mode, config_dir, str(e)))
             
         gid = self.project.get('system', {}).get('file_gid', -1)
         try:
             os.chown(config_dir, -1, gid)
         except Exception as e:
-            logging.warn('unable to change file gid (%d): %s: %s' % (gid, config_dir, str(e)))
+            logging.warning('unable to change file gid (%d): %s: %s' % (gid, config_dir, str(e)))
 
         filepath = os.path.join(config_dir, filename)
         if os.path.exists(filepath):
@@ -608,12 +608,12 @@ class App:
             mode = self.project.get('system', {}).get('file_mode', 0o644)
             os.chmod(filepath, mode)
         except Exception as e:                
-            logging.warn('unable to change file mode (%03o): %s: %s' % (mode, filepath, str(e)))
+            logging.warning('unable to change file mode (%03o): %s: %s' % (mode, filepath, str(e)))
         try:
             gid = self.project.get('system', {}).get('file_gid', -1)
             os.chown(filepath, -1, gid)
         except Exception as e:
-            logging.warn('unable to change file gid (%d): %s: %s' % (gid, config_dir, str(e)))
+            logging.warning('unable to change file gid (%d): %s: %s' % (gid, config_dir, str(e)))
 
         return 201 # Created
     
@@ -812,7 +812,7 @@ class Reply:
                         break
                     
         except Exception as e:
-            logging.warn('error on sending out a reply: %s' % str(e))
+            logging.warning('error on sending out a reply: %s' % str(e))
 
         return self
 

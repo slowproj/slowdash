@@ -78,8 +78,8 @@ class RequestHandler(BaseHTTPRequestHandler):
                 )
             #sys.stderr.write('done\n')
         except Exception as e:
-            logging.warn("slowdash_server: do_GET(): %s" % str(e))
-            logging.warn(traceback.format_exc())
+            logging.warning("slowdash_server: do_GET(): %s" % str(e))
+            logging.warning(traceback.format_exc())
             #sys.stderr.write('ERROR\n')
 
                          
@@ -136,8 +136,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             result.write_to(self.wfile).destroy()
             self.wfile.flush()
         except Exception as e:
-            logging.warn("slowdash_server: do_POST(): %s" % str(e))
-            logging.warn(traceback.format_exc())
+            logging.warning("slowdash_server: do_POST(): %s" % str(e))
+            logging.warning(traceback.format_exc())
 
     
     def do_DELETE(self):

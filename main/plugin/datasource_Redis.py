@@ -181,7 +181,7 @@ class TimeSeriesSource(ObjectSource):
             try:
                 ts = self.redis.ts().range(key, int(1000*start), int(1000*to))
             except Exception as e:
-                logging.warn('Redis: Unable load TS data: %s: %s' % (key, str(e)))
+                logging.warning('Redis: Unable load TS data: %s: %s' % (key, str(e)))
                 continue
                 
             t, x = [],[]
@@ -223,7 +223,7 @@ class ObjectTimeSeriesSource(TimeSeriesSource):
             try:
                 ts = self.redis.ts().range(tsname, int(1000*start), int(1000*to))
             except Exception as e:
-                logging.warn('Redis: Unable load TS data: %s: %s' % (ch, str(e)))
+                logging.warning('Redis: Unable load TS data: %s: %s' % (ch, str(e)))
                 continue
             if len(ts) < 1:
                 record[ch] = {
@@ -245,7 +245,7 @@ class ObjectTimeSeriesSource(TimeSeriesSource):
                 try:
                     obj = self.redis.json().get(objname)
                 except Exception as e:
-                    logging.warn('Redis: error on json().get(): %s: %s' % (objname, str(e)))
+                    logging.warning('Redis: error on json().get(): %s: %s' % (objname, str(e)))
                     continue
 
             record[ch] = {
