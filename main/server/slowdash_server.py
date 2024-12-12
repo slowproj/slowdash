@@ -280,7 +280,7 @@ def signal_handler(signum, frame):
 signal.signal(signal.SIGTERM, signal_handler)
 
 
-def start(port, webui, cgi_name, web_path, index_file):
+def start(webui, port, cgi_name, web_path, index_file):
     try:
         httpserver = HTTPServer(
             ('', port),
@@ -306,31 +306,50 @@ def start(port, webui, cgi_name, web_path, index_file):
         pass
         
     httpserver.server_close()
-    webui.close()
     
     return 0
     
 
 
-from optparse import OptionParser
-
 if __name__ == '__main__':
-    default_web_port = 18881
-    cgi_name = 'slowdash.cgi'
-    index_file = 'slowhome.html'
-    sys_dir = os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir)))
-    web_path = os.path.join(sys_dir, 'web')
-    
-    optionparser = OptionParser()
-    optionparser.add_option(
+    from argparse import ArgumentParser
+    parser = ArgumentParser()
+    parser.add_argument(
         '-p', '--port',
-        action='store', dest='port', type='int', default=default_web_port,
-        help='port number, default default_port'
+        action='store', dest='port', type=int, default=0,
+        help='port number for web connection; command-line mode without this option'
     )
-    (options, args) = optionparser.parse_args()
-    
-    webui = WebUI()
-    if webui.app is None:
+    parser.add_argument(
+        '--project-dir',
+        action='store', dest='project_dir', default=None,
+        help='project directory (default: current dir if not specified by SLOWDASH_PROJECT environmental variable)'
+    )
+    parser.add_argument(
+        '--project-file',
+        action='store', dest='project_file', default=None,
+        help='project file (default: SlowdashProject.yaml file at the project directory)'
+    )
+    parser.add_argument(
+        '--logging',
+        action='store', dest='loglevel', default='info', choices=['debug', 'info', 'warn', 'error'],
+        help='logging level'
+    )
+    args = parser.parse_args()
+
+    if args.COMMAND is None and args.port <= 0:
+        parser.print_help()
         sys.exit(-1)
 
-    start(options.port, webui, cgi_name, web_path, index_file)
+    logging.basicConfig(level=logging.INFO)
+
+    webui = WebUI(args.project_dir, args.project_file)
+    if webui.app is None:
+        sys.exit(-1)
+        
+    start(
+        webui,
+        port = args.port, 
+        web_path = os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir, 'web'))),
+        cgi_name = 'slowdash.cgi',
+        index_file = 'slowhome.html' if webui.app.project is not None else 'welcome.html',
+    )

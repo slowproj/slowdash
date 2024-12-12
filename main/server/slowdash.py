@@ -829,9 +829,8 @@ class WebUI:
         self.auth_list = self.app.config.auth_list
 
         
-    def close(self):
+    def __del__(self):
         del self.app
-        self.app = None
 
         
     def check_sanity(self, string, accept = []):
@@ -956,60 +955,61 @@ class WebUI:
             logging.error('API error: %s' % url)
             return Reply(500)       # Internal Server Error
             
-            
-
-    
-import slowdash_server
-
-from optparse import OptionParser
-
-usage = '''
-  Web-Server Mode:    %prog [Options] --port=PORT
-  Command-line Mode:  %prog [Options] Command'''
 
 
 if __name__ == '__main__':
-    optionparser = OptionParser(usage=usage)
-    optionparser.add_option(
+    from argparse import ArgumentParser
+    parser = ArgumentParser(usage = '\n'
+        + '  Web-Server Mode:      %(prog)s [Options] --port=PORT\n'
+        + '  Command-line Mode:    %(prog)s [Options] COMMAND'
+    )
+    parser.add_argument(
+        'COMMAND', nargs='?',
+        help='API query string. Ex) "config", "channels", "data/CHANNELS?length=LENGTH"'
+    )
+    parser.add_argument(
         '-p', '--port',
-        action='store', dest='port', type='int', default=0,
+        action='store', dest='port', type=int, default=0,
         help='port number for web connection; command-line mode without this option'
     )
-    optionparser.add_option(
+    parser.add_argument(
         '--project-dir',
-        action='store', dest='project_dir', type='string', default=None,
+        action='store', dest='project_dir', default=None,
         help='project directory (default: current dir if not specified by SLOWDASH_PROJECT environmental variable)'
     )
-    optionparser.add_option(
+    parser.add_argument(
         '--project-file',
-        action='store', dest='project_file', type='string', default=None,
+        action='store', dest='project_file', default=None,
         help='project file (default: SlowdashProject.yaml file at the project directory)'
     )
-    optionparser.add_option(
+    parser.add_argument(
         '--logging',
-        action='store', dest='loglevel', type='string', default='info',
-        help='set log level. One of "debug", "info" (default)", "warn", or "error"'
+        action='store', dest='loglevel', default='info', choices=['debug', 'info', 'warn', 'error'],
+        help='logging level'
     )
-    (options, args) = optionparser.parse_args()
+    args = parser.parse_args()
 
-    if (len(args) < 1) and (options.port <= 0):
-        optionparser.print_help()
+    if args.COMMAND is None and args.port <= 0:
+        parser.print_help()
         sys.exit(-1)
 
     logging.basicConfig(level=logging.INFO)
 
-    if options.port <= 0:
-        webui = WebUI(options.project_dir, options.project_file, is_command=True)
-        result = webui.process_get_request(args[0])
-        webui.close()
+    webui = WebUI(args.project_dir, args.project_file, is_command=(args.COMMAND is not None))
+    if webui.app is None:
+        sys.exit(-1)
+        
+    if args.port <= 0:
+        result = webui.process_get_request(args.COMMAND)
         result.write_to(sys.stdout.buffer).destroy()
         sys.stdout.write('\n')
+        
     else:
-        webui = WebUI(options.project_dir, options.project_file)
-        index_file = 'slowhome.html'
-        if webui.app.project is None:
-            index_file = 'welcome.html'
-        cgi_name = 'slowdash.cgi'
-        sys_dir = os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir)))
-        web_path = os.path.join(sys_dir, 'web')
-        slowdash_server.start(options.port, webui, cgi_name, web_path, index_file)
+        import slowdash_server
+        slowdash_server.start(
+            webui,
+            port = args.port, 
+            web_path = os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir, 'web'))),
+            cgi_name = 'slowdash.cgi',
+            index_file = 'slowhome.html' if webui.app.project is not None else 'welcome.html',
+        )
