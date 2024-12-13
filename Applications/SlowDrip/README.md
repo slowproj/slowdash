@@ -8,7 +8,22 @@ This directory contains three docker deployments for different usage levels:
 
 
 ## FirstMesh
-Here the SlowDash container is added to the FirstMesh Walkthrough. The changes to the Dripline Walkthrough are addiion of the `slowdash` entry to the `docker-compose.yaml` file (instead of Grafana), and the SlowDash configuration file placed under the `slowdash.d` subdirectory.
+This is the minimum addittion to the Walkthrough, adding only the data visualization with SlowDash.
+
+### Setup Procedure (already done in the `FirstMesh` directory)
+1. Create a SlowDash directory, `slowdash.d`, under the Dripline working directory.
+2. Create a SlowDash configuration file (`SlowdashProject.yaml`) at the `slowdash.d` directory, with the following contents:
+```yaml
+slowdash_project:
+  name: DriplineFirstMesh
+  title: Dripline First-Mesh Walkthrough
+  data_source:
+    url: postgresql://postgres@postgres:5432/sensor_data
+    parameters:
+      time_series:
+        - schema: numeric_data [sensor_name] @timestamp(aware) = value_raw(default), value_cal
+```
+1. Add SlowDash container entry to the `docker-compose.yaml` file:
 ```yaml
   slowdash:
     image: slowproj/slowdash
@@ -30,7 +45,8 @@ then open a web browser and connect to `http://localhost:18881`
 
 
 ## FirstMeshControl
-A Dripline Python script is placed under `slowdash.d/config` so that it can be used from SlowDash GUI.
+In this example we integrate a Dripline Python script with SlowDash so that functions in the script can be called from the GUI.
+The Dripline Python script must be placed under the `slowdash.d/config` directory with a name like `slowtask-XXX.py`.
 
 This uses a docker image that includes both Dripline and SlowDash. First build the image by running `make` at the `SlowDrip` directory:
 ```
@@ -70,9 +86,14 @@ def set_peaches(value, **kwargs):
     ifc.set('peaches', value)
 ```
 
-To have the script file recognized by SlowDash, the file must be placed under the `config` direcotry and the name must start with `slowtask-`.
+Scripts with a name like `slowtask-XXX.py` at the `config` directory are automatically scanned by SlowDash. For security reasons, the script is not automatically "loaded", and an operator must click `start` manually by default. Auto-loading can be enabled by making an entry in the `SlowdashProject.yaml` configuration file (optional):
+```
+  task:
+    name: control-peaches
+    auto_load: true
+```
 
-The functions in the script can be called from SlowDash GUI. An easy way to do it is to make a HTML form panel with the content like:
+Once the scripot is loaded, the functions in the script can be called from SlowDash GUI. An easy way to do it is to make a HTML form panel with the content like:
 ```html
 <form>
   value: <input type="number" name="value" value="0">
@@ -85,7 +106,7 @@ As all the parameters in the form will be passed to the function call, it would 
 
 
 ## FirstMeshControlSlowpy
-The SlowPy library (Python library part of the SlowDash system) is used to interface with Dripline for full integration.
+In this example the SlowPy library (Python library part of the SlowDash system) is used to interface with Dripline for full integration, such as exporting control variables in the script to the SlowDash GUI, in addition to function calls from GUI. Also some control logics in the SlowDash Python library (`slowpy`) become avaiable, such as ramping the set values at a given rate etc.
 
 This uses a docker image that includes both Dripline and SlowDash. Build the image as described in the FirstMeshControl section if it has not been done.
 

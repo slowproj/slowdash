@@ -8,12 +8,13 @@ import slowdash_wsgi
 slowdash_wsgi.is_cgi = True
 
 def start_response(status, headers):
-    sys.stdout.write(f'Status: {status}\n')
+    sys.stdout.write(f'Status: {status}\r\n')
     for key, value in headers:
-        sys.stdout.write(f'{key}: {value}\n')
-    sys.stdout.write('\n')
+        sys.stdout.write(f'{key}: {value}\r\n')
+    sys.stdout.write('\r\n')
     sys.stdout.flush()
 
-sys.stdout.buffer.write(slowdash_wsgi.application(os.environ, start_response)[0])
-
-
+result = slowdash_wsgi.application(os.environ, start_response)
+for data in result:
+    sys.stdout.buffer.write(data)
+sys.stdout.buffer.flush()

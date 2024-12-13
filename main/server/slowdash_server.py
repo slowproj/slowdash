@@ -35,14 +35,6 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     
     def do_GET(self):        
-        if self.path == '/ping':
-            self.send_response(200)
-            self.send_header('content-type', 'text/plain')
-            self.end_headers()
-            self.wfile.write('pong'.encode())
-            self.wfile.flush()
-            return
-
         if not self.check_auth():
             self.send_response(401)
             self.send_header('WWW-Authenticate', 'Basic realm="SlowDash"')
