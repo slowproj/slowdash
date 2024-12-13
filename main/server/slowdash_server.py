@@ -128,7 +128,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_response(result.response)
             self.send_header('content-type', result.content_type)
             self.end_headers()
-            result.write_to(self.wfile).destroy()
+            result.write_to(self.wfile)
             self.wfile.flush()
         except Exception as e:
             logging.warning("slowdash_server: do_POST(): %s" % str(e))

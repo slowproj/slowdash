@@ -3,6 +3,9 @@
 
 
 import sys, os, stat, glob, shutil, logging
+
+sys_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(sys_dir, 'main', 'server'))
 from slowdash_config import Config
 
 config = Config()
@@ -134,13 +137,13 @@ if user_list is not None:
             f.write('%s:%s\n' % (user, user_list[user]))
 
                     
-filelist = {
-    'slowdash.cgi',
+filelist = [
+    'slowdash.cgi', 'slowdash_wsgi.py',
     '*.html', '*.js', '*.mjs', '*.png', '*.css'
-}
-dirlist = {
+]
+dirlist = [
     'jagaimo', 'autocruise', 'docs', 'extern'
-}
+]
 for fileglob in filelist:
     for src in glob.glob(os.path.join(sys_dir, 'main', 'web', fileglob)):
         name = os.path.basename(src)

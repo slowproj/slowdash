@@ -22,6 +22,9 @@ class App:
         self.console_stdout = None
         self.error_message = ''
 
+        if self.project is None:
+            return
+        
         
         ### Datasources ###
         
@@ -795,42 +798,77 @@ class Reply:
         self.content_readable = None
 
         
-    def write_to(self, output):
-        try:
-            if self.content:
-                if type(self.content) is str:
-                    output.write(self.content.encode())
-                else:
-                    output.write(self.content)
-
-            elif self.content_readable is not None:
-                while True:
-                    content = self.content_readable.read(1024*1024)
-                    if content:
-                        output.write(content)
-                    else:
-                        break
-                    
-        except Exception as e:
-            logging.warning('error on sending out a reply: %s' % str(e))
-
-        return self
-
-    
-    def destroy(self):
+    def __del__(self):
         if self.content_readable:
-            content_readable.close()
-            
+            self.content_readable.close()
 
+            
+    def get_content(self):
+        if self.content_readable is not None:
+            self.content = b''
+            try:
+                while True:
+                    chunk = self.content_readable.read(1024*1024)
+                    if not chunk:
+                        break
+                    self.content += chunk
+            except Exception as e:
+                logging.warning('error on sending out a reply: %s' % str(e))
+
+            try:
+                self.content_readable.close()
+            except:
+                pass
+            self.content_readable = None
+
+        if self.content is None:
+            return b''
+        elif type(self.content) is str:
+            return self.content.encode()
+        else:
+            return self.content
+
+        
+    def write_to(self, output):
+        if self.content_readable is not None:
+            try:
+                while True:
+                    chunk = self.content_readable.read(1024*1024)
+                    if not chunk:
+                        break
+                    output.write(chunk)
+            except Exception as e:
+                logging.warning('error on sending out a reply: %s' % str(e))
+
+            try:
+                self.content_readable.close()
+            except:
+                pass
+            self.content_readable = None
+        
+        else:
+            if self.content is None:
+                pass
+            elif type(self.content) is str:
+                output.write(self.content.encode())
+            else:
+                output.write(self.content)
+            return
+
+        
             
 class WebUI:
     def __init__(self, project_dir=None, project_file=None, is_cgi=False, is_command=False):
+        self.app = None
+        self.is_cgi = is_cgi
+        
         self.app = App(project_dir, project_file, is_cgi, is_command)
         self.auth_list = self.app.config.auth_list
 
         
     def __del__(self):
-        del self.app
+        if self.app:
+            del self.app
 
         
     def check_sanity(self, string, accept = []):
@@ -865,8 +903,10 @@ class WebUI:
         if path[0] == 'ping':            
             result = 'pong'
             return Reply(200, 'application/json', json.dumps(result, indent=4))
-        if path[0] == 'echo':
-            result = {'URL': url, 'Path': path[1:], 'Opts': opts}
+        elif path[0] == 'echo':
+            if self.is_cgi:
+                env = { k:v for k,v in os.environ.items() if k.startswith('HTTP_') or k.startswith('REMOTE_') }
+            result = {'URL': url, 'Path': path[1:], 'Opts': opts, 'Env': env }
             return Reply(200, 'application/json', json.dumps(result, indent=4))
 
         for element in path:
@@ -1015,7 +1055,7 @@ if __name__ == '__main__':
         
     if args.port <= 0:
         result = webui.process_get_request(args.COMMAND)
-        result.write_to(sys.stdout.buffer).destroy()
+        result.write_to(sys.stdout.buffer)
         sys.stdout.write('\n')
         
     else:

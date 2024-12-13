@@ -217,11 +217,11 @@ $ slowdash --project-dir=PROJECT_DIR --port=18881
 - The `slowdash` process must keep running while accepting the Web requests. For this, a terminal multiplexer, such as "tumx" or "GNU Screen" would be useful.
 
 ## Bare Metal, Launching from CGI
-Slowdash can be executed as CGI of a web server such as Apache or Nginx. To setup this, run the script below at the project directory:
+Slowdash can be executed as CGI of the Apache2 web server. To setup this, run the script below at the project directory:
 
 ```console
 $ cd PATH/TO/PROJECT
-$ PATH/TO/SLOWDASH/main/server/slowdash-setup-cgi.py
+$ PATH/TO/SLOWDASH/utils/slowdash-setup-apache.py
 Project: MySlowSystem
 Project directory: /home/sanshiro/MySlowSystem/SlowdashProject
 Web-file directory: /home/sanshiro/public_html/SlowDash/MySlowSystem
