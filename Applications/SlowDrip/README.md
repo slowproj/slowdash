@@ -11,19 +11,20 @@ This directory contains three docker deployments for different usage levels:
 This is the minimum addittion to the Walkthrough, adding only the data visualization with SlowDash.
 
 ### Setup Procedure (already done in the `FirstMesh` directory)
-1. Create a SlowDash directory, `slowdash.d`, under the Dripline working directory.
+1. Create a SlowDash workspace directory, `slowdash.d`, under the Dripline directory.
 2. Create a SlowDash configuration file (`SlowdashProject.yaml`) at the `slowdash.d` directory, with the following contents:
 ```yaml
 slowdash_project:
   name: DriplineFirstMesh
   title: Dripline First-Mesh Walkthrough
+
   data_source:
     url: postgresql://postgres@postgres:5432/sensor_data
     parameters:
       time_series:
-        - schema: numeric_data [sensor_name] @timestamp(aware) = value_raw(default), value_cal
+        - schema: numeric_data [sensor_name] @timestamp(with time zone) = value_raw(default), value_cal
 ```
-1. Add SlowDash container entry to the `docker-compose.yaml` file:
+3. Add SlowDash container entry to the `docker-compose.yaml` file:
 ```yaml
   slowdash:
     image: slowproj/slowdash
@@ -42,6 +43,23 @@ docker compose up -d
 ```
 then open a web browser and connect to `http://localhost:18881`
 
+### How it works
+For data visualization, SlowDash needs to know at least the location of the data (database URL) and the format of the data ("schema"). The `datasorce` section of the SlowDash configuration file describes these.
+
+The schema is basically the names of the table and columns, and describes which columns are for the timestamp, endpoint name, data values, etc.
+The SlowDash time-series data schema of
+```
+  numeric_data [sensor_name] @timestamp(with time zone) = value_raw(default), value_cal
+```
+corresponds to the SQL table of
+```
+CREATE TABLE numeric_data (
+  sensor_name text NOT NULL,
+  "timestamp" timestamp with time zone NOT NULL default now(),
+  value_raw double precision NOT NULL,
+  value_cal double precision
+);
+```
 
 
 ## FirstMeshControl
