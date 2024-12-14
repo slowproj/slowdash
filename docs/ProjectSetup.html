@@ -326,17 +326,22 @@ ssh tunnel.</p>
 <h2 id="running-in-a-docker-container">Running in a Docker
 Container</h2>
 <p>Docker container images are available on DockerHub and GitHub
-Container Registry: - DockerHub: <a
-href="https://hub.docker.com/r/slowproj/slowdash">https://hub.docker.com/r/slowproj/slowdash</a></p>
+Container Registry:</p>
 <ul>
-<li>GitHub Package: <a
-href="https://github.com/slowproj/slowdash/pkgs/container/slowdash">https://github.com/slowproj/slowdash/pkgs/container/slowdash</a></li>
+<li>DockerHub (<a
+href="https://hub.docker.com/r/slowproj/slowdash">https://hub.docker.com/r/slowproj/slowdash</a>):
+<code>slowproj/slowdash:TAG</code></li>
+<li>GitHub Package (<a
+href="https://github.com/slowproj/slowdash/pkgs/container/slowdash">https://github.com/slowproj/slowdash/pkgs/container/slowdash</a>):
+<code>ghcr.io/slowproj/slowdash:TAG</code></li>
 </ul>
-<p>To build a container, run <code>docker build -t slowdash</code> at
-the slowdash source directory, or use <code>make docker</code>:</p>
-<pre><code>git clone https://github.com/slowproj/slowdash.git --recurse-submodules
-cd slowdash
-docker build -t slowdash .     (or &quot;make docker&quot;)</code></pre>
+<p>Or, to build a container locally, run
+<code>docker build -t slowdash</code> at the slowdash source
+directory:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ git clone https://github.com/slowproj/slowdash.git --recurse-submodules</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd slowdash</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker build -t slowdash .</span></span></code></pre></div>
 <p>The SlowDash container image is configured to have a project
 directory at <code>/project</code> and open a port at
 <code>18881</code>. Map the volume and port accordingly.</p>
@@ -501,9 +506,10 @@ is implemented. It is strongly recommended not to expose the system to
 the public internet. External access is assumed to be done <b>through
 VPN or ssh tunnel</b>.</p>
 <h4 id="basic-authentication">Basic Authentication</h4>
-<p>In a case that you cannot trust your internal friends, the “Basic
-Authentication” can be used. Combine the authentication <b>with HTTPS
-using a reverse proxy</b> to encrypt the password and communication.</p>
+<p>In a case that you cannot trust your internal friends, SlowDash
+implements the “Basic Authentication”. Combine this authentication
+<b>with HTTPS using a reverse proxy</b> to encrypt the password and
+communication.</p>
 <p>To use the Basic Authentication, first install the
 <code>bcrypt</code> Python package if it is not yet installed:</p>
 <div class="sourceCode" id="cb18"><pre

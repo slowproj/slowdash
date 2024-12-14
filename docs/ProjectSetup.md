@@ -183,15 +183,15 @@ When the argument includes a special character of the shell (such as `?` and `&`
 ## Running in a Docker Container
 
 Docker container images are available on DockerHub and GitHub Container Registry:
-- DockerHub: [https://hub.docker.com/r/slowproj/slowdash](https://hub.docker.com/r/slowproj/slowdash)
 
-- GitHub Package: [https://github.com/slowproj/slowdash/pkgs/container/slowdash](https://github.com/slowproj/slowdash/pkgs/container/slowdash)
+- DockerHub ([https://hub.docker.com/r/slowproj/slowdash](https://hub.docker.com/r/slowproj/slowdash)): `slowproj/slowdash:TAG`
+- GitHub Package ([https://github.com/slowproj/slowdash/pkgs/container/slowdash](https://github.com/slowproj/slowdash/pkgs/container/slowdash)): `ghcr.io/slowproj/slowdash:TAG`
 
-To build a container, run `docker build -t slowdash` at the slowdash source directory, or use `make docker`:
-```
-git clone https://github.com/slowproj/slowdash.git --recurse-submodules
-cd slowdash
-docker build -t slowdash .     (or "make docker")
+Or, to build a container locally, run `docker build -t slowdash` at the slowdash source directory:
+```console
+$ git clone https://github.com/slowproj/slowdash.git --recurse-submodules
+$ cd slowdash
+$ docker build -t slowdash .
 ```
 
 The SlowDash container image is configured to have a project directory at `/project` and open a port at `18881`. Map the volume and port accordingly.
@@ -336,7 +336,7 @@ Although dedicated daemon is created for this SlowDash project, currently only o
 As already mentioned, <b>SlowDash is designed for internal use only</b> within a secured network and therefore no security protection is implemented. It is strongly recommended not to expose the system to the public internet. External access is assumed to be done <b>through VPN or ssh tunnel</b>.
 
 #### Basic Authentication
-In a case that you cannot trust your internal friends, the "Basic Authentication" can be used. Combine the authentication <b>with HTTPS using a reverse proxy</b> to encrypt the password and communication.
+In a case that you cannot trust your internal friends, SlowDash implements the "Basic Authentication". Combine this authentication <b>with HTTPS using a reverse proxy</b> to encrypt the password and communication.
 
 To use the Basic Authentication, first install the `bcrypt` Python package if it is not yet installed:
 ```console
