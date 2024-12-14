@@ -20,7 +20,7 @@ def application(environ, start_response):
     if webui is None:
         webui = WebUI(project_dir, is_cgi=is_cgi)
     if webui.app is None:
-        start_response('500', [])
+        start_response('500 Internal Server Error', [])
         return [ b'' ]
 
     path = environ.get('PATH_INFO', '/')
@@ -37,10 +37,10 @@ def application(environ, start_response):
         try:
             content_length = int(content_length)
         except:
-            start_response('400', [])
+            start_response('400 Bad Request', [])
             return [ b'' ]
         if content_length > 1024*1024*1024:
-            start_response('507', [])
+            start_response('507 Insufficient Storage', [])
             return [ b'' ]
         doc = sys.stdin.buffer.read(content_length)
         reply = webui.process_post_request(url, doc)
@@ -49,18 +49,25 @@ def application(environ, start_response):
         reply = webui.process_delete_request(url)
             
     else:
-        start_response('500', [])
+        start_response('500 Internal Server Error', [])
         return [ b'' ]
 
     
     if reply is None:
-        start_response('500', [])
+        start_response('500 Internal Server Error', [])
         return [ b'' ]
     elif reply.response >= 400 or reply.content_type is None:
-        status, headers = str(reply.response), []
+        response, headers = reply.response, []
     else:
-        status = str(reply.response)
+        response = reply.response
         headers = [ ('Content-type', reply.content_type) ]
+        
+    response_messages = {
+        200: 'OK', 201: 'Created',
+        400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found',
+        500: 'Internal Server Error', 503: 'Service Unavailable',
+    }
+    status = str(response) + ' ' + response_messages.get(response, 'Unknown Response Code')
 
     start_response(status, headers)
     return [ reply.get_content() ]
