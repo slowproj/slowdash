@@ -4,6 +4,8 @@ services:
   pgsql_db:
     image: postgres:16
     restart: always
+    ports:
+      - "5433:5432"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -15,7 +17,7 @@ services:
       - "18881:18881"
     environment:
       - SLOWDASH_INIT_DATASOURCE_URL=postgresql://postgres:postgres@pgsql_db:5432/SlowTestData
-      - SLOWDASH_INIT_TIMESERIES_SCHEMA=ts_data[channel]@timestamp(unix)=value
+      - SLOWDASH_INIT_TIMESERIES_SCHEMA=ts_data[channel]@timestamp(with time zone)=value
 
   testdata:
     image: slowdash
