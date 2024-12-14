@@ -14,7 +14,11 @@ def start_response(status, headers):
     sys.stdout.write('\r\n')
     sys.stdout.flush()
 
-result = slowdash_wsgi.application(os.environ, start_response)
+environ = { k:v for k,v in os.environ.items() }
+environ['wsgi.input'] = sys.stdin.buffer
+environ['wsgi.errors'] = sys.stderr
+
+result = slowdash_wsgi.application(environ, start_response)
 for data in result:
     sys.stdout.buffer.write(data)
 sys.stdout.buffer.flush()

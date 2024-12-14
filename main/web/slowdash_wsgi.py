@@ -26,10 +26,9 @@ def application(environ, start_response):
     path = environ.get('PATH_INFO', '/')
     query = environ.get('QUERY_STRING', '')
     method = environ.get('REQUEST_METHOD', 'GET')
-    content_length = os.environ.get('CONTENT_LENGTH', '')
+    content_length = environ.get('CONTENT_LENGTH', '')
     url = path + ('?' + query if len(query) > 0 else '')
 
-    
     if method == 'GET':
         reply = webui.process_get_request(url)
             
@@ -37,12 +36,14 @@ def application(environ, start_response):
         try:
             content_length = int(content_length)
         except:
+            logging.error(f'WSGI_POST: bad content length: {content_length}')
             start_response('400 Bad Request', [])
             return [ b'' ]
         if content_length > 1024*1024*1024:
+            logging.error(f'WSGI_POST: content length too large: {content_length}')
             start_response('507 Insufficient Storage', [])
             return [ b'' ]
-        doc = sys.stdin.buffer.read(content_length)
+        doc = environ['wsgi.input'].read(content_length)
         reply = webui.process_post_request(url, doc)
         
     elif method == 'DELETE':
