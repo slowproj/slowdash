@@ -5,13 +5,13 @@
 from argparse import ArgumentParser
 parser = ArgumentParser()
 parser.add_argument(
-    '--method',
-    action='store', dest='method', default='WSGI',
-    choices=['WSGI', 'CGI'],
-    help='specify how Apache connects to SlowDash: WSGI (default) or CGI'
+    '-i', '--interface',
+    action='store', dest='interface', default='CGI',
+    choices=['CGI', 'WSGI'],
+    help='specify gateway interface: CGI (default) or WSGI'
 )
 args = parser.parse_args()
-method = args.method
+interface = args.interface
 
         
 import sys, os, stat, glob, shutil, logging
@@ -87,7 +87,7 @@ else:
 
     
 sys.stdout.write('Project: %s\n' % project_name)
-sys.stdout.write('Method: %s with Apache2\n' % method)
+sys.stdout.write('Interface: %s with Apache2\n' % interface)
 sys.stdout.write('Project directory: %s\n' % project_dir)
 sys.stdout.write('Public HTML directory: %s\n' % html_dir)
 if user_list is not None:
@@ -126,13 +126,13 @@ with open(os.path.join(html_dir, '.htaccess'), 'w') as f:
     f.write('DirectoryIndex slowhome.html\n')
     f.write('AddType text/javascript .mjs\n')
     f.write('Options +ExecCGI\n')
-    if method == 'CGI':
+    if interface == 'CGI':
         f.write('AddHandler cgi-script .cgi\n')
     else:
         f.write('AddHandler wsgi-script .wsgi\n')
     f.write('\n')
     f.write('RewriteEngine On\n')
-    if method == 'CGI':
+    if interface == 'CGI':
         f.write('RewriteRule ^api/(.*)$ slowdash.cgi/$1\n')
     else:
         f.write('RewriteRule ^api/(.*)$ slowdash.wsgi/$1\n')
@@ -174,7 +174,7 @@ for dirname in dirlist:
     if os.path.isdir(dst):
         shutil.rmtree(dst)
     shutil.copytree(src, dst, symlinks=True)
-if method == 'CGI':
+if interface == 'CGI':
     src = os.path.join(sys_dir, 'main', 'web', 'slowdash.cgi')
     dest = os.path.join(html_dir, 'slowdash.cgi')
     shutil.copy(src, dest)
@@ -193,7 +193,7 @@ sys.stdout.write('- Public HTML can be disabled by deleting the HTML directory.\
 sys.stdout.write('- Disabled public HTML can be re-enabled by running this program again.\n')
 sys.stdout.write('\n')
 
-if method == 'CGI':
+if interface == 'CGI':
     sys.stdout.write('=== Apache configuration (CGI) ===\n')
     sys.stdout.write('- Install Apache2.\n')
     sys.stdout.write('- Enable cgi, userdir, rewrite, and headers modules by:\n')

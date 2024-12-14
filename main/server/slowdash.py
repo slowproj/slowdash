@@ -101,7 +101,7 @@ class App:
             self.known_task_list.append(name)
         
         # make task entries from file list of the config dir
-        if not self.is_cgi:
+        if not self.is_cgi and self.project_dir is not None:
             for filepath in glob.glob(os.path.join(self.project_dir, 'config', 'slowtask-*.py')):
                 rootname, ext = os.path.splitext(os.path.basename(filepath))
                 kind, name = rootname.split('-', 1)
@@ -729,6 +729,9 @@ class App:
 
     
     def _scan_task_files(self):
+        if self.project_dir is None:
+            return
+        
         for filepath in glob.glob(os.path.join(self.project_dir, 'config', 'slowtask-*.py')):
             rootname, ext = os.path.splitext(os.path.basename(filepath))
             kind, name = rootname.split('-', 1)
@@ -1041,7 +1044,7 @@ if __name__ == '__main__':
 
     loglevel = getattr(logging, args.loglevel.upper(), None)
     if type(loglevel) != int:
-        loglevel = logging.WARNING
+        loglevel = logging.INFO
     logging.basicConfig(
         level=loglevel,
         format='%(asctime)s %(levelname)s: %(message)s', 

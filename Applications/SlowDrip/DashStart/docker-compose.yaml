@@ -62,5 +62,6 @@ services:
     image: slowproj/slowdash
     ports:
       - "18881:18881"
-    volumes:
-      - ./slowdash.d:/project
+    environment:
+      - SLOWDASH_INIT_DATASOURCE_URL=postgresql://postgres@postgres:5432/sensor_data
+      - SLOWDASH_INIT_TIMESERIES_SCHEMA=numeric_data[sensor_name]@timestamp(aware)=value_raw(default),value_cal

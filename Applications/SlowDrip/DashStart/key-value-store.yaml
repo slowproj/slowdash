@@ -1,0 +1,23 @@
+runtime-config:
+  name: my_store
+  module: Service
+  auth_file: /root/authentications.json
+  endpoints:
+        - name: peaches
+          module: KeyValueStore
+          calibration: '2*{}'
+          initial_value: 0.75
+          log_interval: 10
+          get_on_set: True
+          log_on_set: True
+        - name: chips
+          module: KeyValueStore
+          calibration: 'times3({})'
+          initial_value: 1.75
+        - name: waffles
+          module: KeyValueStore
+          #log_interval: 30
+          #log_on_set: True
+          calibration: '1.*{}'
+          initial_value: 4.00
+

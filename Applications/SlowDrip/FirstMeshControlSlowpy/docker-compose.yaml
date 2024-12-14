@@ -8,25 +8,20 @@ services:
       - RABBITMQ_DEFAULT_USER=dripline
       - RABBITMQ_DEFAULT_PASS=dripline
 
-  postgres:
-    image: postgres:16.0
+  key-value-store:
+    image: ghcr.io/driplineorg/dripline-python:v4.7.1
+    depends_on:
+      - rabbit-broker
     volumes:
-      - ./postgres_init.d:/docker-entrypoint-initdb.d
-    environment:
-      # per the docs, you do *not* want to run with this configuration in production
-      - POSTGRES_HOST_AUTH_METHOD=trust
-
-  slowdash:
-    image: slowdash-dripline    ### make this image by typing "make" at the SlowDrip directory
-    ports:
-      - "18881:18881"
-    volumes:
-      - ./slowdash.d:/project
-      - ./authentications.json:/authentications.json
-
+      - ./authentications.json:/root/authentications.json
+      - ./key-value-store.yaml:/root/key-value-store.yaml
+    command:
+      - dl-serve
+      - -c
+      - /root/key-value-store.yaml
 
   drip-mon:
-    image: driplineorg/dripline-python:v4.5.8
+    image: ghcr.io/driplineorg/dripline-python:v4.7.1
     depends_on:
       - rabbit-broker
     volumes:
@@ -40,20 +35,16 @@ services:
       - -a
       - \#
 
-  key-value-store:
-    image: driplineorg/dripline-python:v4.5.8
-    depends_on:
-      - rabbit-broker
+  postgres:
+    image: postgres:16.0
     volumes:
-      - ./authentications.json:/root/authentications.json
-      - ./key-value-store.yaml:/root/key-value-store.yaml
-    command:
-      - dl-serve
-      - -c
-      - /root/key-value-store.yaml
-
+      - ./postgres_init.d:/docker-entrypoint-initdb.d
+    environment:
+      # per the docs, you do *not* want to run with this configuration in production
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      
   sensor-logger:
-    image: driplineorg/dripline-python:v4.5.8
+    image: ghcr.io/driplineorg/dripline-python:v4.7.1
     depends_on:
       - rabbit-broker
       - postgres
@@ -64,3 +55,13 @@ services:
       - dl-serve
       - -c
       - /root/sensor-logger.yaml
+
+
+
+  slowdash:
+    image: slowdash-dripline    ### make this image by typing "make" at the SlowDrip directory
+    ports:
+      - "18881:18881"
+    volumes:
+      - ./slowdash.d:/project
+      - ./authentications.json:/authentications.json

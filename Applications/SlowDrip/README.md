@@ -7,11 +7,32 @@ This directory contains three docker deployments for different usage levels:
 - FirstMeshControlSlowPy: SlowDash visualization and SlowPy Scripting for full Dripline integration
 
 
+## __Prependix__: DashStart without configuration
+For quick look at existing data on a database, SlowDash can be used without any installation and configuration. 
+Just add a SlowDash container in the `docker-compose.yaml` file as below and run `docker compose up -d`:
+```yaml
+  slowdash:
+    image: slowproj/slowdash
+    ports:
+      - "18881:18881"
+    environment:
+      - SLOWDASH_INIT_DATASOURCE_URL=postgresql://postgres@postgres:5432/sensor_data
+      - SLOWDASH_INIT_TIMESERIES_SCHEMA=numeric_data[sensor_name]@timestamp(aware)=value_raw(default),value_cal
+```
+
+Open a web browser and connect to `http://localhost:18881`. 
+You will see a list of the Dripine endpoints on the top left panel.
+By clicking a endpoint name, a time-series graph will be created.
+
+At this point, there is no persistency. 
+In order to save the created panels, you have to setup a SlowDash project as described below (standard installation procedure).
+
+
 ## FirstMesh
-This is the minimum addition to the Walkthrough, adding only the data visualization with SlowDash.
+This is the minimum addition to the Walkthrough, adding only data visualization with SlowDash.
 
 ### Setup Procedure 
-Here are the steps to add SlowDash to the FirstMesh Walkthrough. This is already done in the `FirstMesh` example directory.
+Here are the steps to add SlowDash to the FirstMesh Walkthrough. This setup is already done in the `FirstMesh` example directory.
 
 1. Create a SlowDash workspace directory, `slowdash.d`, under the Dripline directory.
 2. Create a SlowDash configuration file (`SlowdashProject.yaml`) at the `slowdash.d` directory, with the following contents:
@@ -46,7 +67,7 @@ docker compose up -d
 then open a web browser and connect to `http://localhost:18881`
 
 ### How it works
-For data visualization, SlowDash needs to know at least the location of the data (database URL) and the format of the data ("schema"). The `datasorce` section of the SlowDash configuration file describes these.
+For data visualization, SlowDash needs to know at least the location of the data (database URL) and the format of the data ("schema"). The `data_source` section of the SlowDash configuration file describes these.
 
 The schema is basically the names of the table and columns, and describes which columns are for the timestamp, endpoint name, data values, etc.
 The SlowDash time-series data schema of
