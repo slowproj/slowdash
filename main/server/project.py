@@ -581,7 +581,7 @@ class ProjectComponent(component.Component):
             return False
         if not filename.replace('_', '0').replace('-', '0').replace('.', '0').replace(' ', '0').isalnum():
             return False
-        is_secure = self.project.project.config.get('system', {}).get('is_secure', False)
+        is_secure = self.project.config.get('system', {}).get('is_secure', False)
         ext = os.path.splitext(filename)[1]
         if not is_secure and (ext not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]):
             return False

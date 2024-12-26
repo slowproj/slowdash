@@ -1,0 +1,14 @@
+{
+    "control": {
+        "range": { "length": 3600 },
+        "reload": 60,
+        "grid": { "rows": 1, "columns": 2 },
+        "mode": "normal"
+    },
+    "style": { },
+    "panels": [
+        { "type": "tree", "channel": "WorldClock" },
+        { "type": "html", "location": "project", "file": "WorldClock", "title": "" }
+    ],
+    "meta": { "name": "worldclock", "title": "World Clock", "description": "" }
+}

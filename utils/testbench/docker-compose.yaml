@@ -34,12 +34,12 @@ services:
       - "8001:8001"
 
 
-  notebook:
-    image: slowpy-notebook
-    command:
-      - start-notebook.sh
-      - --NotebookApp.token=SlowJupyter
-    ports:
-      - 8888:8888
-    volumes:
-      - ./notebook:/home/jovyan
+#  notebook:
+#    image: slowproj/slowpy-notebook:latest
+#    command:
+#      - start-notebook.sh
+#      - --NotebookApp.token=SlowJupyter
+#    ports:
+#      - 8888:8888
+#    volumes:
+#      - ./notebook:/home/jovyan

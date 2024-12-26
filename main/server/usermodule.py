@@ -254,6 +254,8 @@ class UserModule:
                 time.time(),
                 'process_command(%s)' % ','.join(['%s=%s' % (k,v) for k,v in params.items()])
             ))
+
+        return result
             
 
     def handle_error(self, message):

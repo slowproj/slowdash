@@ -45,4 +45,4 @@ def _process_command(doc):
 
 # for testing
 if __name__ == '__main__':
-    print(get_data(get_channels()[0]['name']))
+    print(_get_data(_get_channels()[0]['name']))

@@ -52,7 +52,7 @@ def _finalize():
     
 ### Called when web clients need a list of available channels.
 # Return a list of channel struct, e.g.,  [ { "name": NAME1, "type": TYPE1 }, ... ]
-def get_channels():
+def _get_channels():
     ...
     return []
 
@@ -144,7 +144,7 @@ def _get_data(channel):
 
 # for testing
 if __name__ == '__main__':
-    print(_get_data(get_channels()[0]['name']))
+    print(_get_data(_get_channels()[0]['name']))
 ```
 
 ### Testing the module
