@@ -3,15 +3,13 @@
 
 
 import sys, os, stat, pathlib, pwd, grp, io, time, glob, json, yaml, logging
-import datasource, usermodule, taskmodule, extension
-from slowdash_config import Config
-from decimal import Decimal
+import project, datasource, usermodule, taskmodule, extension
+
 
 class App:
     def __init__(self, project_dir=None, project_file=None, is_cgi=False, is_command=False):
-        self.config = Config(project_dir, project_file)
-        self.project = self.config.project
-        self.project_dir = self.config.project_dir
+        self.project = project.Project(project_dir, project_file)
+        self.project_dir = self.project.project_dir
         self.is_cgi = is_cgi
         self.datasource_list = []
         self.usermodule_list = []
@@ -22,13 +20,19 @@ class App:
         self.console_stdout = None
         self.error_message = ''
 
-        if self.project is None:
+        if self.project.config is None:
             return
-        
+        elif self.project.project_dir is not None:
+            try:
+                os.chdir(self.project.project_dir)
+            except Exception as e:
+                logging.error('unable to move to project dir "%s": %s' % (self.project.project_dir, str(e)))            
+                self.project.project_dir = None
+
         
         ### Datasources ###
         
-        datasource_node = self.project.get('data_source', [])
+        datasource_node = self.project.config.get('data_source', [])
         if not isinstance(datasource_node, list):
             datasource_node = [ datasource_node ]
 
@@ -43,7 +47,7 @@ class App:
                 self.error_message = 'no datasource type specified'
                 logging.error(self.error_message)
             else:
-                datasource_plugin = datasource.load(ds_type, self.config, params)
+                datasource_plugin = datasource.load(ds_type, self.project, params)
                 if datasource_plugin is None:
                     self.error_message = 'Unable to load data source: %s' % ds_type
                     logging.error(self.error_message)
@@ -53,7 +57,7 @@ class App:
                     
         ### User Modules ###
         
-        usermodule_node = self.project.get('module', [])
+        usermodule_node = self.project.config.get('module', [])
         if not isinstance(usermodule_node, list):
             usermodule_node = [ usermodule_node ]
             
@@ -77,7 +81,7 @@ class App:
 
         ### Task Modules ###
         
-        taskmodule_node = self.project.get('task', [])
+        taskmodule_node = self.project.config.get('task', [])
         if not isinstance(taskmodule_node, list):
             taskmodule_node = [ taskmodule_node ]
                     
@@ -121,7 +125,7 @@ class App:
                 
         ### Extension Modules ###
         
-        extension_node = self.project.get('extension', [])
+        extension_node = self.project.config.get('extension', [])
         if not isinstance(extension_node, list):
             extension_node = [ extension_node ]
 
@@ -130,7 +134,7 @@ class App:
             params = node.get('parameters', {})
             if name is None:
                 continue
-            extension_plugin = extension.load(name, self.config, params, slowdash=self)
+            extension_plugin = extension.load(name, self.project, params, slowdash=self)
             if extension_plugin is None:
                 self.error_message = 'Unable to load API extension: %s' % name
                 logging.error(self.error_message)
@@ -172,6 +176,8 @@ class App:
             self.console_stdout.close()
             sys.stdin = self.original_stdin
             sys.stdout = self.original_stdout
+            
+        logging.info('cleanup completed')
 
         
     def get(self, path, opts, output):
@@ -182,7 +188,7 @@ class App:
           output: file-like object to write response content, if return value is not a dict
         Returns:
           either:
-            - contents as Python dict or list, to reply as JSON string with HTTP response 200
+            - contents as Python dict or list, to reply as a JSON string with HTTP response 200
             - content-type (MIME) as string, with reply contents written in output
             - HTTP response code as int
             - None for error
@@ -305,7 +311,7 @@ class App:
           output: file-like object to write response content, if return value is not a dict
         Returns:
           either:
-           - contents as Python dict or list, to reply as JSON string with HTTP response 201
+            - contents as Python dict or list, to reply as a JSON string with HTTP response 201
             - content-type (MIME) as string, with reply contents written in output
             - HTTP response code as int
             - None for error
@@ -375,24 +381,24 @@ class App:
         
 
     def _get_config(self, with_list=True, with_content_meta=True):
-        self.config.update()
-        if self.project is None:
+        self.project.update()
+        if self.project.config is None:
             doc = {
                 'slowdash': {
-                    'version': self.config.version
+                    'version': self.project.version
                 },
                 'project': {}
             }
         else:
             doc = {
                 'slowdash': {
-                    'version': self.config.version
+                    'version': self.project.version
                 },
                 'project': {
-                    'name': self.config.project.get('name', 'Untitled Project'),
-                    'title': self.config.project.get('title', ''),
+                    'name': self.project.config.get('name', 'Untitled Project'),
+                    'title': self.project.config.get('title', ''),
                     'error_message': self.error_message,
-                    'is_secure': self.config.project.get('system', {}).get('is_secure', False)
+                    'is_secure': self.project.config.get('system', {}).get('is_secure', False)
                 },
                 'data_source_module': {
                     module.name: module.public_config for module in self.datasource_list
@@ -406,7 +412,7 @@ class App:
                 'extension_module': {
                     name: module.public_config for name, module in self.extension_table.items() 
                 },
-                'style': self.config.project.get('style', None)
+                'style': self.project.config.get('style', None)
             }
             
         if (not with_list) or (self.project_dir is None):
@@ -506,7 +512,7 @@ class App:
     def _get_config_file(self, filename, output, to_json=False):
         if self.project_dir is None:
             return None
-        is_secure = self.project.get('system', {}).get('is_secure', False)
+        is_secure = self.project.config.get('system', {}).get('is_secure', False)
         filepath = os.path.join(self.project_dir, 'config', filename)
         if not (os.path.isfile(filepath) and os.access(filepath, os.R_OK)):
             return None
@@ -564,7 +570,7 @@ class App:
             return 403
         if not filename.replace('_', '0').replace('-', '0').replace('.', '0').replace(' ', '0').isalnum():
             return 403
-        is_secure = self.project.get('system', {}).get('is_secure', False)
+        is_secure = self.project.config.get('system', {}).get('is_secure', False)
         ext = os.path.splitext(filename)[1]
         if not is_secure and (ext not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]):
             return 403
@@ -577,7 +583,7 @@ class App:
                 logging.error('unable to create directory: ' + config_dir)
                 return 500       # Internal Server Error
             
-        mode = self.project.get('system', {}).get('file_mode', 0o644) + 0o100
+        mode = self.project.config.get('system', {}).get('file_mode', 0o644) + 0o100
         if mode & 0o070 != 0:
             mode = mode + 0o010
         if mode & 0o007 != 0:
@@ -587,7 +593,7 @@ class App:
         except Exception as e:
             logging.warning('unable to change file mode (%03o): %s: %s' % (mode, config_dir, str(e)))
             
-        gid = self.project.get('system', {}).get('file_gid', -1)
+        gid = self.project.config.get('system', {}).get('file_gid', -1)
         try:
             os.chown(config_dir, -1, gid)
         except Exception as e:
@@ -608,12 +614,12 @@ class App:
             return 500    # Internal Server Error
 
         try:
-            mode = self.project.get('system', {}).get('file_mode', 0o644)
+            mode = self.project.config.get('system', {}).get('file_mode', 0o644)
             os.chmod(filepath, mode)
         except Exception as e:                
             logging.warning('unable to change file mode (%03o): %s: %s' % (mode, filepath, str(e)))
         try:
-            gid = self.project.get('system', {}).get('file_gid', -1)
+            gid = self.project.config.get('system', {}).get('file_gid', -1)
             os.chown(filepath, -1, gid)
         except Exception as e:
             logging.warning('unable to change file gid (%d): %s: %s' % (gid, config_dir, str(e)))

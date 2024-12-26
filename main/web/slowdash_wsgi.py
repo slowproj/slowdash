@@ -29,7 +29,7 @@ def application(environ, start_response):
     global webui, is_cgi
     if webui is None:
         app = App(project_dir = project_dir, is_cgi = is_cgi)
-        if webui.app.project is None:
+        if webui.app.project_config is None:
             webui = False
             logging.error('unable to create a SlowDash instance')
         else:

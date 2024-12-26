@@ -18,17 +18,17 @@ import sys, os, stat, glob, shutil, logging
 
 sys_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, os.path.join(sys_dir, 'main', 'server'))
-from slowdash_config import Config
+from project import Project
 
-config = Config()
-if config.project is None:
+project = Project()
+if project.config is None:
     exit(-1)
     
 
-sys_dir = os.path.abspath(config.sys_dir)
-project_dir = os.path.abspath(config.project_dir)
-project_name = config.project.get('name', None)
-user_list = config.auth_list
+sys_dir = os.path.abspath(project.sys_dir)
+project_dir = os.path.abspath(project.project_dir)
+project_name = project.config.get('name', None)
+user_list = project.auth_list
 wsgi_pgrp = 'slowdash_%s_wsgi' % project_name
 
 

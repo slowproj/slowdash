@@ -60,7 +60,7 @@ if __name__ == '__main__':
         is_cgi = False,
         is_command = (args.port<=0)
     )
-    if app.project is None:
+    if app.project.config is None:
         sys.exit(-1)
 
     webui = WebUI(app)

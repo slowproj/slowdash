@@ -77,7 +77,7 @@ class Reply:
 class WebUI:
     def __init__(self, app):
         self.app = app
-        self.auth_list = self.app.config.auth_list
+        self.auth_list = self.app.project.auth_list
 
         
     def check_sanity(self, string, accept = []):

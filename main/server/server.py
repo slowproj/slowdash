@@ -2,15 +2,13 @@
 # Created by Sanshiro Enomoto on 2 November 2017 #
 
 
-import sys, os, json, logging, collections, subprocess, functools, socket, traceback
-from urllib.parse import urlparse, parse_qsl
-
+import sys, os, logging, functools, base64, traceback
+from urllib.parse import urlparse
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from socketserver import ThreadingMixIn
 
 from slowdash import WebUI
 
-import base64
+
 bcrypt_imported = False  # modudle not necessary unless authorization is enabled
 
 
@@ -60,7 +58,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                     url_recon = '%s?%s' % (url_recon, url.query)
                 if len(url.fragment) > 0:
                     url_recon = '%s#%s' % (url_recon, url.fragment)
-                self.process_cgi_get(url_recon)
+                self.process_api_get(url_recon)
             else:
                 self.process_file_get(
                     os.path.join(self.web_path, '/'.join(path_split))
@@ -198,7 +196,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         return False
 
         
-    def process_cgi_get(self, url):
+    def process_api_get(self, url):
         result = self.webui.process_get_request(url)
         if (
             (result is None) or
@@ -276,7 +274,7 @@ def start(webui, port, web_path, index_file):
         sys.stderr.write(traceback.format_exc())
         return -1
 
-    sys.stderr.write('listening at port %d\n' % port)
+    sys.stderr.write('Listening at port %d\n' % port)
     try:
         httpserver.serve_forever()
     except KeyboardInterrupt:
