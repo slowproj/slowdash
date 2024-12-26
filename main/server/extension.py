@@ -21,7 +21,7 @@ class ExtensionModule:
           output: file-like object to write response content, if return value is not a dict
         Returns:
           either:
-            - contents as Python dict, to reply as JSON string with HTTP response 200
+            - contents as Python dict, to reply as a JSON string with HTTP response 200
             - content-type (MIME) as string, with reply contents written in output
             - HTTP response code as int
             - None for error
@@ -39,7 +39,7 @@ class ExtensionModule:
           output: file-like object to write response content, if return value is not a dict
         Returns:
           either:
-            - contents as Python dict, to reply as JSON string with HTTP response 201
+            - contents as Python dict, to reply as a JSON string with HTTP response 201
             - content-type (MIME) as string, with reply contents written in output
             - HTTP response code as int
             - None for error

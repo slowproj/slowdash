@@ -121,10 +121,10 @@ class WebUI:
         for element in path:
             if (len(element) == 0) or (not element[0].isalnum() and element[0] not in ['_']):
                 logging.error('bad query (invalid first char): %s' % url)
-                return Reply(400)
+                return Reply(400)       # Bad request
             if not self.check_sanity(element):
                 logging.error('bad query (invalid char): %s' % url)
-                return Reply(400)
+                return Reply(400)       # Bad request
 
         with io.BytesIO() as output:
             result = self.app.get(path, opts, output=output)
@@ -140,7 +140,7 @@ class WebUI:
                 return Reply(200, result, output.getvalue())
             else:
                 logging.error('API error: %s' % url)
-                return Reply(500)       # Internal Server Error
+                return Reply(400)       # Bad request
 
 
     def process_post_request(self, url, doc):
@@ -158,14 +158,14 @@ class WebUI:
                 return Reply(400)
             if not element.replace('_', '0').replace('-', '0').replace('~', '0').replace('.', '0').replace(' ', '0').replace(',', '0').isalnum():
                 logging.error('bad file name (invalid char): %s' % url)
-                return Reply(400)
+                return Reply(400)       # Bad request
         
         opts = dict()
         for key, value in parse_qsl(u.query):
             key, value = unquote(key), unquote(value)
             if not self.check_sanity(key) or not self.check_sanity(value, accept=['/', '~']):
                 logging.error('bad query (invalid char): {"%s": "%s"} in %s' % (key, value, url))
-                return Reply(400)
+                return Reply(400)       # Bad request
             opts[key] = value
             
         with io.BytesIO() as output:
@@ -182,7 +182,7 @@ class WebUI:
                 return Reply(201, result, output.getvalue())
             else:
                 logging.error('API error: %s' % url)
-                return Reply(500)       # Internal Server Error
+                return Reply(400)       # Bad request
 
             
     def process_delete_request(self, url):
