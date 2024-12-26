@@ -235,7 +235,7 @@ export class DownloadPanel extends Panel {
                  or use the <tt style="white-space:nowrap">slowpy-notebook</tt> container.<p>
             <li> This feature is experimental. The generated scripts might not be compatible with future releases of SlowDash.<p>
             <li> Time-axis plots (time-series) and XY plots (histograms, graphs, etc) cannot be mixed.<p>
-            <li> <b>Jupyter is Disabled</b>: to enable the direct Jupyter link, URL and token of a Jupyter process must be set in the SlowDash project configuration.
+            <li> <b>Jupyter is Disabled</b>: to enable direct Jupyter link, set the URL and token of a Jupyter process in the SlowDash project configuration.
           </ul>
         `);
         button2Div.html(`

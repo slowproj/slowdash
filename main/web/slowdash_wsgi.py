@@ -1,20 +1,22 @@
 #! /usr/bin/python3
 # Created by Sanshiro Enomoto on 12 Dec 2024 #
 
-import sys, os
-
-import logging
-logging.basicConfig(level=logging.INFO)
+import sys, os, logging
 
 from slowdash_cgi_config import sys_dir, project_dir
 sys.path.insert(0, os.path.join(sys_dir, 'main', 'server'))
-from slowdash import WebUI
+from app import App
+from webui import WebUI
+
 
 
 # The CGI mode disables launching task processes (user module and slow-task).
 # CGI/WSGI might create multiple SlowDash processes, but staring the tasks multiple times might cause a problem.
 # If WSGI is configured to start only one SlowDash process, the CGI mode can be disabled (e.g., enable SlowDash tasks).
 is_cgi = True
+
+logging.basicConfig(level=logging.INFO)
+
 
 
 webui = None
@@ -26,9 +28,14 @@ def application(environ, start_response):
     
     global webui, is_cgi
     if webui is None:
-        webui = WebUI(project_dir, is_cgi=is_cgi)
-        logging.info('new SlowDash instance created')
-    if webui.app is None:
+        app = App(project_dir = project_dir, is_cgi = is_cgi)
+        if webui.app.project is None:
+            webui = False
+            logging.error('unable to create a SlowDash instance')
+        else:
+            webui = WebUI(app)
+            logging.error('created a SlowDash instance')
+    if webui is False:
         start_response('500 Internal Server Error', [])
         logging.error('unable to connect to a SlowDash instance')
         return [ b'' ]

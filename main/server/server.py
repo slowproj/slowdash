@@ -15,9 +15,8 @@ bcrypt_imported = False  # modudle not necessary unless authorization is enabled
 
 
 class RequestHandler(BaseHTTPRequestHandler):
-    def __init__(self, webui, cgi_name, web_path, index_file, *args, **kwargs):
+    def __init__(self, webui, web_path, index_file, *args, **kwargs):
         self.webui = webui
-        self.cgi_name = cgi_name
         self.web_path = web_path
         self.index_file = index_file
 
@@ -55,7 +54,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             path_split.append(self.index_file)
 
         try:
-            if path_split[0] == self.cgi_name or path_split[0] == 'api':
+            if path_split[0] == 'api':
                 url_recon = '/'.join(path_split[1:])
                 if len(url.query) > 0:
                     url_recon = '%s?%s' % (url_recon, url.query)
@@ -86,7 +85,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         if path_split.count('..'):
             self.send_error(403)
             return
-        if (len(path_split) < 2) or (path_split[0] != self.cgi_name and path_split[0] != 'api'):
+        if (len(path_split) < 2) or (path_split[0] != 'api'):
             self.send_error(403)
             return
         url_recon = '/'.join(path_split[1:])
@@ -142,7 +141,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         if path_split.count('..'):
             self.send_error(403)
             return
-        if (len(path_split) < 2) or (path_split[0] != self.cgi_name and path_split[0] != 'api'):
+        if (len(path_split) < 2) or (path_split[0] != 'api'):
             self.send_error(403)
             return
         url_recon = '/'.join(path_split[1:])
@@ -260,19 +259,17 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 
         
-
-
 import signal
 def signal_handler(signum, frame):
     raise InterruptedError
 signal.signal(signal.SIGTERM, signal_handler)
 
 
-def start(webui, port, cgi_name, web_path, index_file):
+def start(webui, port, web_path, index_file):
     try:
         httpserver = HTTPServer(
             ('', port),
-            functools.partial(RequestHandler, webui, cgi_name, web_path, index_file)
+            functools.partial(RequestHandler, webui, web_path, index_file)
         )
     except Exception as e:
         sys.stderr.write('ERROR: %s\n' % str(e))
