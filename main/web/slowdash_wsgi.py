@@ -29,12 +29,12 @@ def application(environ, start_response):
     global webui, is_cgi
     if webui is None:
         app = App(project_dir = project_dir, is_cgi = is_cgi)
-        if webui.app.project_config is None:
+        if app.project.config is None:
             webui = False
             logging.error('unable to create a SlowDash instance')
         else:
             webui = WebUI(app)
-            logging.error('created a SlowDash instance')
+            logging.info('created a SlowDash instance')
     if webui is False:
         start_response('500 Internal Server Error', [])
         logging.error('unable to connect to a SlowDash instance')

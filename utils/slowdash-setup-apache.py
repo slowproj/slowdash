@@ -178,6 +178,9 @@ if interface == 'CGI':
     src = os.path.join(sys_dir, 'main', 'web', 'slowdash.cgi')
     dest = os.path.join(html_dir, 'slowdash.cgi')
     shutil.copy(src, dest)
+    src = os.path.join(sys_dir, 'main', 'web', 'slowdash_wsgi.py')
+    dest = os.path.join(html_dir, 'slowdash_wsgi.py')
+    shutil.copy(src, dest)
 else:
     src = os.path.join(sys_dir, 'main', 'web', 'slowdash_wsgi.py')
     dest = os.path.join(html_dir, 'slowdash.wsgi')
