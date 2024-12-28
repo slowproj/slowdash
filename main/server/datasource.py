@@ -376,43 +376,6 @@ class DataSource:
         return mime_type  # fill into output and return the mime_type
 
     
-    # this can be overriden by a child class, if more efficient processing is possible
-    def get_dataframe(self, channels, length, to, resampling=None, reducer='last', timezone='local'):
-        if resampling is None:
-            interval = 0
-        else:
-            interval = float(resampling)
-
-        timeseries = self.get_timeseries(channels, length, to, interval, reducer)
-        if timeseries is None:
-            return None
-
-        table = [ ['DateTime', 'TimeStamp'] ]
-        table[0].extend(timeseries.keys())
-        for name, data in timeseries.items():
-            start = data.get('start', 0)
-            tk = data.get('t', [])
-            xk = data.get('x', [])
-            for k in range(len(tk)):
-                if len(table) <= k+1:
-                    t = int(10*(start+tk[k]))/10.0
-                    date_local = datetime.datetime.fromtimestamp(t)
-                    date_utc = datetime.datetime.utcfromtimestamp(t)
-                    if timezone.upper() == 'LOCAL':
-                        date = date_local
-                        timediff = abs((date_local - date_utc).total_seconds())
-                        tz = '+' if date_local > date_utc else '-'
-                        tz = tz + '%02d:%02d' % (int(timediff/3600), int(timediff%3600))
-                    else:
-                        date = date_utc
-                        tz = '+00:00'
-                        
-                    table.append([ date.strftime('%Y-%m-%dT%H:%M:%S') + tz, '%d' % t ])
-                table[k+1].append(str(xk[k]) if xk[k] is not None else 'null')
-
-        return table
-
-    
     # this can be used by a child class
     def resample(self, set_of_timeseries, length, to, interval, reducer):
         if interval is None:

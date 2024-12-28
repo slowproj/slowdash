@@ -22,10 +22,6 @@ slowdash_project:
       plotBackgroundColor: "#101010"
       plotGridColor: lightgray
 
-  export:
-    - type: Notebook
-    - type: Jupyter
-    
 
   data_source:
     - type: Dummy

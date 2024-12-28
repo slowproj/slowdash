@@ -7,7 +7,8 @@ import component
 
 class Export:
     def __init__(self, app, project, **params):
-        pass
+        self.app = app
+        self.project = project
 
     
     # override this
@@ -69,9 +70,9 @@ class ExportComponent(component.Component):
             export_node = [ export_node ]
 
         if len(export_node) == 0:
-            export_node.append({
-                'type': 'notebook'
-            })
+            export_node.append({'type': 'Notebook'})
+        if 'CSV' not in export_node:
+            export_node.append({'type': 'CSV'})
             
         for node in export_node:
             name = node.get('type', None)

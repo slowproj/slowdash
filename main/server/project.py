@@ -420,9 +420,6 @@ class ProjectComponent(component.Component):
                 'user_module': {
                     module.name: module.public_config for module in self.app.usermodule_list
                 },
-                'extension_module': {
-                    name: module.public_config for name, module in self.app.extension_table.items() 
-                },
                 'style': self.project.config.get('style', None)
             }
 

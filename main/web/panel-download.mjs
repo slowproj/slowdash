@@ -249,9 +249,6 @@ export class DownloadPanel extends Panel {
         if (config.show_details) {
             rangeDiv.find('details').get().open = true;
         }
-        if (! config.has_jupyter) {
-            scriptDiv.find('li').last().html('<b>Script Generation is Not Enabled</b>: to enable this, include the "Jupyter" extension in the SlowDash project configuration.');
-        }
         if (config.has_jupyter_server) {
             scriptDiv.find('li').last().css('display', 'none');
         }
@@ -298,13 +295,13 @@ export class DownloadPanel extends Panel {
             }
             else if (has_ts) {
                 buttonDiv.find('button').enabled(true);
-                button2Div.data('datatype', 'timeseries').find('button').enabled(config.has_jupyter);
+                button2Div.data('datatype', 'timeseries').find('button').enabled(true);
                 button2Div.find('button').at(2).enabled(config.has_jupyter_server);
             }
             else {
                 buttonDiv.find('button').at(0).enabled(false);
                 buttonDiv.find('button').at(1).enabled(true);
-                button2Div.data('datatype', 'obj').find('button').enabled(config.has_jupyter);
+                button2Div.data('datatype', 'obj').find('button').enabled(true);
                 button2Div.find('button').at(2).enabled(config.has_jupyter_server);
             }
         };
@@ -447,7 +444,7 @@ export class DownloadPanel extends Panel {
 
         buttonDiv.find('button').at(0).bind('click', e=>{
             const filename = channelDiv.find('input').at(0).val() + ".csv";
-            const url = 'api/dataframe/' + download_url();
+            const url = 'api/export/csv/' + download_url();
             buttonDiv.find('a').attr('download', filename).attr('href', url).click();
         });
         buttonDiv.find('button').at(1).bind('click', e=>{
@@ -458,19 +455,19 @@ export class DownloadPanel extends Panel {
         button2Div.find('button').at(0).bind('click', e=>{
             const filename = channelDiv.find('input').at(0).val() + ".py";
             const opts = { datatype: button2Div.data('datatype'), slowdash_url: slowdash_url };
-            const url = 'api/extension/jupyter/python/' + download_url(opts);
+            const url = 'api/export/python/' + download_url(opts);
             buttonDiv.find('a').attr('download', filename).attr('href', url).click();
         });
         button2Div.find('button').at(1).bind('click', e=>{
             const filename = channelDiv.find('input').at(0).val() + ".ipynb";
             const opts = { datatype: button2Div.data('datatype'), slowdash_url: slowdash_url };
-            const url = 'api/extension/jupyter/notebook/' + download_url(opts);
+            const url = 'api/export/notebook/' + download_url(opts);
             buttonDiv.find('a').attr('download', filename).attr('href', url).click();
         });
         button2Div.find('button').at(2).bind('click', async e=>{
             const filename = channelDiv.find('input').at(0).val() + ".ipynb";
             const opts = { datatype: button2Div.data('datatype'), slowdash_url: slowdash_url };
-            const url = 'api/extension/jupyter/jupyter/' + download_url(opts);
+            const url = 'api/export/jupyter/' + download_url(opts);
             const headers = { 'Content-Type': 'application/json; charset=utf-8' };
             const doc = { 'filename': filename };
             this.indicator.open("Launching Jupyter...", "&#x23f3;", event?.clientX ?? null, event?.clientY ?? null);

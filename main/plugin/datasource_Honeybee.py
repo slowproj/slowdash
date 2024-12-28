@@ -64,21 +64,6 @@ class DataSource_Honeybee(DataSource):
         return result
 
                 
-#    def get_dataframe(self, channels, length, to, resampling=None, reducer='last', timezone='local'):
-#        TODO: implement timezone
-#        cmd = [ os.path.join(self.bin_dir, 'hb-get-data') ]
-#        cmd.extend(channels)
-#        cmd.append('--length=%f' % length)
-#        if to is not None:
-#            cmd.append('--to-ts=%f' % to)
-#        if resampling is not None:
-#            cmd.append('--resample=%s,%s' % (resampling, reducer))
-#        cmd.append('--config=' + self.config_file)
-#        if self.dripline_db is not None:
-#            cmd.append('--dripline-db=' + self.dripline_db)
-#        return self.execute(cmd)
-
-    
     def execute(self, cmd):
         try:
             process = subprocess.run(

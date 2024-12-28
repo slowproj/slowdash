@@ -261,33 +261,6 @@ class App:
             key = bcrypt.hashpw(word.encode("utf-8"), bcrypt.gensalt(rounds=12, prefix=b"2a")).decode("utf-8")
             result = { 'type': 'Basic', 'key':  '%s:%s' % (name, key) }
             
-        # depreciated
-        elif path[0] == 'dataframe' and len(path) >= 2:
-            try:
-                channels = path[1].split(',')
-                length = float(opts.get('length', '3600'))
-                to = float(opts.get('to', int(time.time())+1))
-                resample = float(opts.get('resample', -1))
-                reducer = opts.get('reducer', 'last')
-                timezone = opts.get('timezone', 'local')
-            except Exception as e:
-                logging.error(e)
-                return None
-            if resample < 0:
-                resample = None
-            for ds in self.datasource_list:
-                result = ds.get_dataframe(channels, length, to, resample, reducer, timezone)
-                break ##....
-
-            if type(result) is str:
-                output.write(result.encode())
-            else:
-                output.write('\n'.join([
-                    ','.join(['NaN' if col is None else col for col in row]) for row in result
-                ]).encode())
-                
-            return 'text/csv'
-        
         return result
         
 

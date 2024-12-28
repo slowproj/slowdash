@@ -13,7 +13,7 @@ class Export_Notebook(export.Export):
         
     def public_config(self):
         return {
-            'notbook_format_version': f'{self.nbformat}.{self.nbformat_minor}'
+            'notebook_format_version': f'{self.nbformat}.{self.nbformat_minor}'
         }
 
         

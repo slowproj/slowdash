@@ -101,6 +101,7 @@ class Component:
 
         if name not in module.__dict__:
             logging.error(f'no entry found in plugin: {name}')
+            return None
             
         try:
             instance = module.__dict__[name](self.app, self.project, *args, **kwargs)
@@ -109,6 +110,6 @@ class Component:
             logging.error(traceback.format_exc())
             return None
         
-        logging.info('loaded plugin module "%s"' % name)
+        logging.info('loaded plugin "%s"' % name)
 
         return instance
