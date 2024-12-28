@@ -9,8 +9,16 @@ class Component:
     def __init__(self, app, project):
         self.app = app
         self.project = project
+
         
-        self.public_config = {}
+    # override this
+    def public_config(self):
+        """ returns contents for the "config" API (exposed to users)
+        Note:
+          - Do not include secrets.
+          - Do not put the configuration file contents directly (as it might contain secrets).
+        """
+        return {}
 
         
     # override this
@@ -75,9 +83,9 @@ class Component:
           - None on error
         """
         
-        plugin_dir = os.path.abspath(os.path.join(self.project.config.sys_dir, 'main', 'plugin'))
+        plugin_dir = os.path.abspath(os.path.join(self.project.sys_dir, 'main', 'plugin'))
         for plugin_file in glob.glob(os.path.join(plugin_dir, '*.py')):
-            plugin_name = os.path.basename(plugin_file)
+            plugin_name = os.path.basename(plugin_file)[:-3]
             if plugin_name.lower() == name.lower():
                 break
         else:
@@ -85,7 +93,7 @@ class Component:
             return None
 
         try:
-            module = importlib.machinery.SourceFileLoader(plugin_dir, plugin_name).load_module()
+            module = importlib.machinery.SourceFileLoader(plugin_file, plugin_file).load_module()
         except Exception as e:
             logging.error(f'unable to load plugin: {name}: %s' % str(e))
             logging.error(traceback.format_exc())
@@ -95,10 +103,12 @@ class Component:
             logging.error(f'no entry found in plugin: {name}')
             
         try:
-            instance = module.__dict__[name](*args, **kwargs)
+            instance = module.__dict__[name](self.app, self.project, *args, **kwargs)
         except Exception as e:
             logging.error(f'plugin error: {name}: %s' % str(e))
             logging.error(traceback.format_exc())
             return None
+        
+        logging.info('loaded plugin module "%s"' % name)
 
         return instance

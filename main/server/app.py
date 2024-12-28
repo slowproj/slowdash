@@ -3,8 +3,8 @@
 
 
 import sys, os, io, time, glob, json, logging
-import project, component
-import datasource, usermodule, taskmodule, extension
+import project, component, export
+import datasource, usermodule, taskmodule
 
 
 class App:
@@ -18,24 +18,35 @@ class App:
         self.console_stdin = None
         self.console_stdout = None
         self.error_message = ''
-
+        
+        # Running Environment
         if self.project.config is None:
             return
-        elif self.project.project_dir is not None:
+        
+        if self.project.project_dir is not None:
             try:
                 os.chdir(self.project.project_dir)
             except Exception as e:
                 logging.error('unable to move to project dir "%s": %s' % (self.project.project_dir, str(e)))            
                 self.project.project_dir = None
-                
-        self.components.append(project.ProjectComponent(self, self.project))
+        if self.project.sys_dir is not None:
+            sys.path.insert(1, os.path.join(self.project.sys_dir, 'main', 'plugin'))
+        if self.project.project_dir is not None:
+            sys.path.insert(1, self.project.project_dir)
+            sys.path.insert(1, os.path.join(self.project.project_dir, 'config'))
 
-        #... these will be moved to "components"
+        # API Components
+        self.components.append(project.ProjectComponent(self, self.project))
+        self.components.append(export.ExportComponent(self, self.project))
+
+
+
+        
+        #... WIP: these will be moved to "components"
         self.datasource_list = []
         self.usermodule_list = []
         self.taskmodule_list = []
         self.known_task_list = []
-        self.extension_table = {}
         
 
         
@@ -132,25 +143,6 @@ class App:
                 self.taskmodule_list.append(module)
 
                 
-        ### Extension Modules ###
-        
-        extension_node = self.project.config.get('extension', [])
-        if not isinstance(extension_node, list):
-            extension_node = [ extension_node ]
-
-        for node in extension_node:
-            name = node.get('name', None)
-            params = node.get('parameters', {})
-            if name is None:
-                continue
-            extension_plugin = extension.load(name, self.project, params, slowdash=self)
-            if extension_plugin is None:
-                self.error_message = 'Unable to load API extension: %s' % name
-                logging.error(self.error_message)
-            else:
-                self.extension_table[name] = extension_plugin
-
-                    
         ### Console Redirect ###
         
         self.console_outputs = []
@@ -243,11 +235,6 @@ class App:
             if len(path) >= 2 and path[1] == 'task':
                 result = self._get_task_status(path, opts)
             
-        elif path[0] == 'extension' and len(path) > 2:
-            extension = self.extension_table.get(path[1], None)
-            if extension is not None:
-                return extension.process_get(path[2:], opts, output)
-            
         elif path[0] == 'console':
             if self.console_stdout is not None:
                 self.console_outputs += [ line for line in self.console_stdout.getvalue().split('\n') if len(line)>0 ]
@@ -336,11 +323,6 @@ class App:
         elif path[0] == 'control':
             return self._dispatch_control(path, opts, doc, output)
         
-        elif path[0] == 'extension' and len(path) > 2:
-            extension = self.extension_table.get(path[1], None)
-            if extension is not None:
-                return extension.process_post(path[2:], opts, doc, output)
-            
         elif path[0] == 'console':
             cmd = doc.decode()
             if cmd is None:

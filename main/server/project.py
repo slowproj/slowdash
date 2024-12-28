@@ -425,6 +425,9 @@ class ProjectComponent(component.Component):
                 },
                 'style': self.project.config.get('style', None)
             }
+
+            for components in self.app.components:
+                doc.update(components.public_config())
             
         if (not with_list) or (self.project_dir is None):
             return doc
