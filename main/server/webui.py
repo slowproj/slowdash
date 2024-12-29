@@ -127,7 +127,7 @@ class WebUI:
                 return Reply(400)       # Bad request
 
         with io.BytesIO() as output:
-            result = self.app.get(path, opts, output=output)
+            result = self.app.process_get(path, opts, output=output)
             if type(result) in [ dict, list ]:
                 # To convert decimal values into numbers that can be handled by JSON
                 def decimal_to_num(obj):
@@ -169,7 +169,7 @@ class WebUI:
             opts[key] = value
             
         with io.BytesIO() as output:
-            result = self.app.post(path, opts, doc, output=output)
+            result = self.app.process_post(path, opts, doc, output=output)
             if type(result) in [ dict, list ]:
                 # To convert decimal values into numbers that can be handled by JSON
                 def decimal_to_num(obj):
@@ -202,7 +202,7 @@ class WebUI:
                 logging.error('bad file name (invalid char): %s' % url)
                 return Reply(400)
         
-        result = self.app.delete(path)
+        result = self.app.process_delete(path)
         if type(result) is int:
             return Reply(result)
         else:

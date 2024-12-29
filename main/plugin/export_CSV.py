@@ -1,9 +1,9 @@
 
-import time, datetime, json, uuid, re, logging
-import export
+import time, datetime, json, copy, uuid, re, logging
+import component
 
 
-class Export_CSV(export.Export):
+class Export_CSV(component.ComponentPlugin):
     def __init__(self, app, project, **params):
         super().__init__(app, project, **params)
 
@@ -11,24 +11,15 @@ class Export_CSV(export.Export):
     def process_get(self, path, opts, output):
         if len(path) < 3 or path[1] != 'csv':
             return None
-        
-        try:
-            channels = path[2].split(',')
-            length = float(opts.get('length', '3600'))
-            to = float(opts.get('to', int(time.time())+1))
-            resample = float(opts.get('resample', -1))
-            reducer = opts.get('reducer', 'last')
-            timezone = opts.get('timezone', 'local')
-        except Exception as e:
-            logging.error(e)
-            return False
-        
-        if resample is None or resample < 0:
-            interval = 0
-        else:
-            interval = float(resample)
 
-        timeseries = self.app._get_data(channels, length, to, interval, reducer)
+        timezone = opts.get('timezone', 'local')
+        data_path = ['data'] + path[2:]
+        data_opts = copy.deepcopy(opts)
+        resample = data_opts.get('resample', None)
+        if resample is None or resample < 0:
+            data_opts['resample'] = 0
+
+        timeseries = self.app.process_get(data_path, data_opts, output)
         if timeseries is None:
             return False
 

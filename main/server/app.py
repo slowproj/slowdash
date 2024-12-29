@@ -181,7 +181,7 @@ class App:
         logging.info('cleanup completed')
 
         
-    def get(self, path, opts, output):
+    def process_get(self, path, opts, output):
         """ GET-request handler
         Args:
           path & opts: parsed URL, as list & dict
@@ -264,7 +264,7 @@ class App:
         return result
         
 
-    def post(self, path, opts, doc, output):
+    def process_post(self, path, opts, doc, output):
         """ POST-request handler
         Args:
           path & opts: parsed URL, as list & dict
@@ -300,7 +300,7 @@ class App:
             cmd = doc.decode()
             if cmd is None:
                 return 400  # Bad Request
-            print(cmd)
+            logging.info(f'CMD: {cmd}')
             pos = self.console_stdin.tell()
             self.console_stdin.seek(0, io.SEEK_END)
             self.console_stdin.write('%s\n' % cmd)
@@ -311,7 +311,7 @@ class App:
         return 400  # Bad Request
 
     
-    def delete(self, path):
+    def process_delete(self, path):
         """ DELETE-request handler
         Args:
           path: parsed URL

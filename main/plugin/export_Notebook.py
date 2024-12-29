@@ -1,9 +1,9 @@
 
 import time, datetime, json, uuid, re, logging
-import export
+import component
 
 
-class Export_Notebook(export.Export):
+class Export_Notebook(component.ComponentPlugin):
     def __init__(self, app, project, **params):
         super().__init__(app, project, **params)
 
