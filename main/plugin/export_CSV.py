@@ -1,11 +1,11 @@
 
-import time, datetime, json, copy, uuid, re, logging
+import datetime, copy, logging
 import component
 
 
 class Export_CSV(component.ComponentPlugin):
-    def __init__(self, app, project, **params):
-        super().__init__(app, project, **params)
+    def __init__(self, app, project, params):
+        super().__init__(app, project, params)
 
         
     def process_get(self, path, opts, output):

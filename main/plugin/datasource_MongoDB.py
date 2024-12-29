@@ -8,20 +8,20 @@ import pymongo
 
 
 class DataSource_MongoDB(DataSource):
-    def __init__(self, project_config, config):
-        super().__init__(project_config, config)
+    def __init__(self, app, project, params):
+        super().__init__(app, project, params)
         self.db = None
         self.collection = None
-        host = self.config.get('host', 'localhost')
-        port = self.config.get('port', 27017)
+        host = params.get('host', 'localhost')
+        port = params.get('port', 27017)
         
-        self.db_name = self.config.get('db', None)
-        self.collection_name = self.config.get('collection', None)
+        self.db_name = params.get('db', None)
+        self.collection_name = params.get('collection', None)
         if self.db_name is None or self.collection_name is None:
             logging.error('No DB and Collection names are given')
             return
             
-        self.time_field = config.get('time_field', None)
+        self.time_field = params.get('time_field', None)
         if self.time_field is None:
             logging.error('Not time-field name is given')
             return

@@ -8,12 +8,12 @@ import psycopg2 as db
 
 
 class DataSource_PostgreSQL(DataSource_SQL):
-    def __init__(self, project_config, config):
-        super().__init__(project_config, config)
+    def __init__(self, app, project, params):
+        super().__init__(app, project, params)
         
         self.db_has_floor = True
         
-        self.url = config.get('url', None)
+        self.url = params.get('url', None)
         if self.url is not None and self.url[0:13] != 'postgresql://':
             self.url = 'postgresql://' + self.url
         

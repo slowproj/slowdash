@@ -8,19 +8,19 @@ import sqlite3
 
 
 class DataSource_SQLite(DataSource_SQL):
-    def __init__(self, project_config, config):
-        super().__init__(project_config, config)
+    def __init__(self, app, project, params):
+        super().__init__(app, project, params)
         
         self.time_sep = ' '
         self.db_has_floor = False
         
-        url = config.get('url', '')
+        url = params.get('url', '')
         if url[0:10] == 'sqlite:///':
             filename = url[10:]
         else:
             filename = ''
             
-        filename = config.get('file', filename)
+        filename = params.get('file', filename)
         if filename[-3:] == '.db':
             self.db_name = filename[0:-3]
         else:

@@ -411,9 +411,6 @@ class ProjectComponent(component.Component):
                     'error_message': self.app.error_message,
                     'is_secure': self.project.config.get('system', {}).get('is_secure', False)
                 },
-                'data_source_module': {
-                    module.name: module.public_config for module in self.app.datasource_list
-                },
                 'task_module': {
                     module.name: module.public_config for module in self.app.taskmodule_list
                 },

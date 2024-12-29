@@ -4,8 +4,8 @@ import export_Notebook
 
 
 class Export_Jupyter(export_Notebook.Export_Notebook):
-    def __init__(self, app, project, **params):
-        super().__init__(app, project, **params)
+    def __init__(self, app, project, params):
+        super().__init__(app, project, params)
         
         self.jupyter_url = params.get('url', '')
         self.jupyter_token = params.get('token', '')
@@ -31,7 +31,7 @@ class Export_Jupyter(export_Notebook.Export_Notebook):
 
         
     def process_post(self, path, opts, doc, output):
-        if len(path) > 1 and path[0] == 'jupyter':
+        if len(path) > 2 and path[1] == 'jupyter':
             try:
                 record = json.loads(doc.decode())
             except Exception as e:
@@ -43,7 +43,7 @@ class Export_Jupyter(export_Notebook.Export_Notebook):
 
             if self.slowdash_internal_url is not None:
                 opts['slowdash_url'] = self.slowdash_internal_url
-            notebook = self.generate_notebook(path[1], opts)
+            notebook = self.generate_notebook(path[2], opts)
             
             return self.post_notebook(filename, notebook, output)
         

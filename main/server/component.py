@@ -6,6 +6,9 @@ import importlib.machinery
 
 
 class Component:
+    """ Base class for App components
+    """
+    
     def __init__(self, app, project):
         self.app = app
         self.project = project
@@ -74,7 +77,10 @@ class Component:
 
     
 class ComponentPlugin:
-    def __init__(self, app, project, **params):
+    """ Base class for plugin modules of an App component
+    """
+    
+    def __init__(self, app, project, params):
         self.app = app
         self.project = project
 
@@ -128,36 +134,31 @@ class ComponentPlugin:
 
 
 class PluginComponent(Component):
-    def __init__(self, component_type, app, project):
+    """ App component using plugin modules
+    """
+    
+    def __init__(self, component_type, app, project, plugin_prefix=None, class_prefix=None):
         super().__init__(app, project)
+
         self.component_type = component_type
-        self.plugin_table = {}
-        
-        self.plugin_config = project.config.get(self.component_type, [])
-        if not isinstance(self.plugin_config, list):
-            self.plugin_config = [ self.plugin_config ]
+        self.plugin_prefix = plugin_prefix
+        self.class_prefix = class_prefix
+        self.check_root_node = True
 
-        self.build()
+        if self.plugin_prefix is None:
+            # e.g., data_source -> datasource
+            self.plugin_prefix = ''.join(self.component_type.split('_'))
+        if self.class_prefix is None:
+            # e.g., data_source -> DataSource
+            self.class_prefix = ''.join([n[0].upper() + n[1:] for n in self.component_type.split('_') if len(n) > 0])
         
+        plugin_config = project.config.get(self.component_type, [])
+        if not isinstance(plugin_config, list):
+            plugin_config = [ plugin_config ]
 
-    def build(self):
-        """creates plugin instances based on the config stored in self.plugin_config
-        Note:
-           - this method can be overriden to modify the config contents before building
-        """
-        
         self.plugin_table = {}
+        self.build(plugin_config)
         
-        for node in self.plugin_config:
-            plugin_name = node.get('type', None)
-            if plugin_name is None:
-                continue
-            class_name = f'{self.component_type[0].upper()}{self.component_type[1:]}_{plugin_name}'
-            params = node.get('parameters', {})
-            plugin = self._load_plugin_module(f'{class_name}', **params)
-            if plugin is not None:
-                self.plugin_table[plugin_name] = plugin
-                    
 
     def public_config(self):
         """construct public_config from the member plugins.
@@ -171,23 +172,40 @@ class PluginComponent(Component):
     def process_get(self, path, opts, output):
         """propagates Component.process_get() to Plugin.process_get()
         """
-        
-        if len(path) < 2 or path[0] != self.component_type:
+        if self.check_root_node and (len(path) < 2 or path[0] != self.component_type):
             return None
-        
+
+        result = None
         for name, plugin in self.plugin_table.items():
-            result = plugin.process_get(path, opts, output)
-            if result is not None:
-                return result
-            
-        return None
+            this_result = plugin.process_get(path, opts, output)
+            if type(this_result) is list:
+                if result is None:
+                    result = []
+                elif type(result) != list:
+                    logging.error('%s: incompatible results cannot be combined (list)' % name)
+                    continue
+                result.extend(this_result)
+            elif type(this_result) is dict:
+                if result is None:
+                    result = {}
+                elif type(result) != dict:
+                    logging.error('%s: incompatible results cannot be combined (dict)' % name)
+                    continue
+                result.update(this_result)
+            elif this_result is not None:
+                if result is not None:
+                    logging.error('%s: incompatible results cannot be combined (not list/dict)' % name)
+                    continue
+                return this_result
+        
+        return result
 
 
     def process_post(self, path, opts, doc, output):
         """propagates Component.process_post() to Plugin.process_post()
         """
         
-        if len(path) < 2 or path[0] != self.component_type:
+        if self.check_root_node and (len(path) < 2 or path[0] != self.component_type):
             return None
         
         for name, plugin in self.plugin_table.items():
@@ -198,43 +216,64 @@ class PluginComponent(Component):
         return None
 
 
-    def _load_plugin_module(self, name, *args, **kwargs):
+    def build(self, plugin_config):
+        """creates plugin instances based on the config_config
+        Note:
+           - this method can be overriden to modify the config contents before building
+        """
+        
+        self.plugin_table = {}
+        
+        for node in plugin_config:
+            plugin_type = node.get('type', None)
+            if plugin_type is None:
+                logging.error(f'No plugin type specified: {self.component_type}')
+                continue
+            plugin_name = f'{self.plugin_prefix}_{plugin_type}'
+            class_name = f'{self.class_prefix}_{plugin_type}'
+            params = node.get('parameters', {})
+            plugin = self._load_plugin_module(plugin_name, class_name, params=params)
+            if plugin is not None:
+                self.plugin_table[plugin_name] = plugin
+                    
+
+    def _load_plugin_module(self, plugin_name, class_name, params):
         """load a plugin module and create an instance
         Args:
-          - name: name of the plugin file (case insensitive) and the class
+          - plugin_name: name of the plugin file (case insensitive)
+          - class_name: name of the class in the plugin for which an instance is created
           - *args, **kwargs: parameters to the constructor
         Return:
-          - instance of the class "name"
+          - instance of the class
           - None on error
         """
         
         plugin_dir = os.path.abspath(os.path.join(self.project.sys_dir, 'main', 'plugin'))
         for plugin_file in glob.glob(os.path.join(plugin_dir, '*.py')):
-            plugin_name = os.path.basename(plugin_file)[:-3]
-            if plugin_name.lower() == name.lower():
+            if os.path.basename(plugin_file)[:-3].lower() == plugin_name.lower():
                 break
         else:
-            logging.error(f'unable to find plugin: {name}')
+            logging.error(f'unable to find plugin: {plugin_name}')
             return None
 
         try:
             module = importlib.machinery.SourceFileLoader(plugin_file, plugin_file).load_module()
         except Exception as e:
-            logging.error(f'unable to load plugin: {name}: %s' % str(e))
+            logging.error(f'unable to load plugin: {plugin_name}: %s' % str(e))
             logging.error(traceback.format_exc())
             return None
 
-        if name not in module.__dict__:
-            logging.error(f'no entry found in plugin: {name}')
+        if class_name not in module.__dict__:
+            logging.error(f'no entry found in plugin: {plugin_name}.{class_name}')
             return None
             
         try:
-            instance = module.__dict__[name](self.app, self.project, *args, **kwargs)
+            instance = module.__dict__[class_name](self.app, self.project, params)
         except Exception as e:
-            logging.error(f'plugin error: {name}: %s' % str(e))
+            logging.error(f'plugin error: {plugin_name}.{class_name}: %s' % str(e))
             logging.error(traceback.format_exc())
             return None
         
-        logging.info('loaded plugin "%s"' % name)
+        logging.info(f'loaded plugin {plugin_name}')
 
         return instance

@@ -2,17 +2,18 @@
 
 
 import sys, os, time, glob, logging
-from datasource import DataSource, Schema
+from dataschema import Schema
+from datasource import DataSource
 from datasource_TableStore import DataSource_TableStore
 
     
 class DataSource_CSV(DataSource_TableStore):
-    def __init__(self, project_config, config):
+    def __init__(self, app, project, params):
         self.directory = None
         self.time_sep = 'T'
         
-        dburl = Schema.parse_dburl(config.get('url', ''))
-        directory = config.get('directory', dburl.get('db', None))
+        dburl = Schema.parse_dburl(params.get('url', ''))
+        directory = params.get('directory', dburl.get('db', None))
         if directory is None:
             directory = '.'
         
@@ -27,18 +28,18 @@ class DataSource_CSV(DataSource_TableStore):
             logging.error('invalid CSV directory: %s' % directory)
             return
 
-        super().__init__(project_config, config)
+        super().__init__(app, project, params)
 
         
-    def _configure(self, project_config, config):
+    def _configure(self, params):
         if self.directory is None:
             return
 
-        super()._configure(project_config, config)
+        super()._configure(params)
 
         ### TABLES ###
         self.tables = {}
-        tables = config.get('table', [])
+        tables = params.get('table', [])
         if type(tables) is not list:
             tables = [tables]
         if len(tables) < 1:

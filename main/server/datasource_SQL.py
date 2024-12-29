@@ -2,7 +2,8 @@
 
 
 import sys, os, time, datetime, logging, traceback
-from datasource import DataSource, Schema
+from datasource import DataSource
+from dataschema import Schema
 from datasource_TableStore import DataSource_TableStore
 
 
@@ -65,11 +66,11 @@ class SQLServer():
 
     
 class DataSource_SQL(DataSource_TableStore):
-    def __init__(self, project_config, config):
+    def __init__(self, app, project, params):
         self.server = None
         self.time_sep = 'T'
         self.db_has_floor = False
-        super().__init__(project_config, config)
+        super().__init__(app, project, params)
 
         
     # override this in DB implementation class
@@ -144,11 +145,11 @@ class DataSource_SQL(DataSource_TableStore):
         return result
 
     
-    def _configure(self, project_config, config):
-        super()._configure(project_config, config)
+    def _configure(self, params):
+        super()._configure(params)
         
         self.views = {}
-        views = config.get('view', [])
+        views = params.get('view', [])
         if type(views) is not list:
             views = [views]
         for view in views:

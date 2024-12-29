@@ -4,8 +4,8 @@ import component
 
 
 class Export_Notebook(component.ComponentPlugin):
-    def __init__(self, app, project, **params):
-        super().__init__(app, project, **params)
+    def __init__(self, app, project, params):
+        super().__init__(app, project, params)
 
         self.nbformat = 4
         self.nbformat_minor = 5
@@ -18,12 +18,12 @@ class Export_Notebook(component.ComponentPlugin):
 
         
     def process_get(self, path, opts, output):
-        if len(path) > 1 and path[1] == 'python':
-            output.write(self.generate_python(path[1], opts).encode())
+        if len(path) > 2 and path[1] == 'python':
+            output.write(self.generate_python(path[2], opts).encode())
             return 'text/plain'
         
-        elif len(path) > 1 and path[1] == 'notebook':
-            notebook = self.generate_notebook(path[1], opts)
+        elif len(path) > 2 and path[1] == 'notebook':
+            notebook = self.generate_notebook(path[2], opts)
             output.write(json.dumps(notebook, indent=4).encode())
             return 'text/plain'
 

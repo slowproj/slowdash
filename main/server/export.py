@@ -9,11 +9,11 @@ class ExportComponent(component.PluginComponent):
         super().__init__('export', app, project)
         
 
-    def build(self):
-        export_list = [ export.get('type', None) for export in self.plugin_config ]
+    def build(self, plugin_config):
+        export_list = [ export.get('type', None) for export in plugin_config ]
         if 'CSV' not in export_list:
-            self.plugin_config.append({'type': 'CSV'})
+            plugin_config.append({'type': 'CSV'})
         if ('Notebook' not in export_list) and ('Jupyter' not in export_list):
-            self.plugin_config.append({'type': 'Notebook'})
+            plugin_config.append({'type': 'Notebook'})
 
-        return super().build()
+        return super().build(plugin_config)

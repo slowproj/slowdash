@@ -3,8 +3,8 @@
 
 
 import sys, os, io, time, glob, json, logging
-import project, component, export
-import datasource, usermodule, taskmodule
+import project, component, datasource, export
+import usermodule, taskmodule
 
 
 class App:
@@ -37,44 +37,19 @@ class App:
 
         # API Components
         self.components.append(project.ProjectComponent(self, self.project))
+        self.components.append(datasource.DataSourceComponent(self, self.project))
         self.components.append(export.ExportComponent(self, self.project))
 
 
 
         
         #... WIP: these will be moved to "components"
-        self.datasource_list = []
         self.usermodule_list = []
         self.taskmodule_list = []
         self.known_task_list = []
         
 
         
-        ### Datasources ###
-        
-        datasource_node = self.project.config.get('data_source', [])
-        if not isinstance(datasource_node, list):
-            datasource_node = [ datasource_node ]
-
-        for node in datasource_node:
-            url = node.get('url', '')
-            ds_type = datasource.Schema.parse_dburl(url).get('type', None)
-            ds_type = node.get('type', ds_type)
-            params = node.get('parameters', {})
-            if 'url' not in params:
-                params['url'] = url
-            if ds_type is None or len(ds_type) == 0:
-                self.error_message = 'no datasource type specified'
-                logging.error(self.error_message)
-            else:
-                datasource_plugin = datasource.load(ds_type, self.project, params)
-                if datasource_plugin is None:
-                    self.error_message = 'Unable to load data source: %s' % ds_type
-                    logging.error(self.error_message)
-                else:
-                    self.datasource_list.append(datasource_plugin)
-
-                    
         ### User Modules ###
         
         usermodule_node = self.project.config.get('module', [])
@@ -194,19 +169,35 @@ class App:
             - None or False for error
         """
 
-        has_result, result = False, {}
+        result = None
         for component in self.components:
             this_result = component.process_get(path, opts, output)
-            if type(this_result) is dict:
+            if type(this_result) is list:
+                if result is None:
+                    result = []
+                elif type(result) != list:
+                    logging.error('%s: incompatible results cannot be combined (list)' % name)
+                    continue
+                result.extend(this_result)
+            elif type(this_result) is dict:
+                if result is None:
+                    result = {}
+                elif type(result) != dict:
+                    logging.error('%s: incompatible results cannot be combined (dict)' % name)
+                    continue
                 result.update(this_result)
-                has_result = True
             elif this_result is not None:
+                if result is not None:
+                    logging.error('%s: incompatible results cannot be combined (not list/dict)' % name)
+                    continue
                 return this_result
             
-        if has_result:
+        if result is not None:
             return result
 
         
+
+
         
         if path[0] == 'channels':
             result = self._get_channels()
@@ -224,12 +215,6 @@ class App:
             if resample < 0:
                 resample = None
             result = self._get_data(channels, length, to, resample, reducer)
-            
-        elif path[0] in ['blob'] and len(path) >= 3:
-            for ds in self.datasource_list:
-                mime_type = ds.get_blob(path[1], path[2:], output=output)
-                if mime_type is not None:
-                    return mime_type
             
         elif path[0] == 'control':
             if len(path) >= 2 and path[1] == 'task':
@@ -283,6 +268,8 @@ class App:
             if result is not None:
                 return result
 
+
+
             
         if path[0] == 'update' and len(path) > 1:
             target = path[1]
@@ -329,7 +316,7 @@ class App:
 
     def _get_channels(self):
         result = []
-        for src_list in [ self.datasource_list, self.usermodule_list, self.taskmodule_list ]:
+        for src_list in [ self.usermodule_list, self.taskmodule_list ]:
             for src in src_list:
                 channels = src.get_channels()
                 if channels is not None:
@@ -340,14 +327,6 @@ class App:
     
     def _get_data(self, channels, length, to, resample, reducer):
         result = {}
-        for ds in self.datasource_list:
-            result_ts = ds.get_timeseries(channels, length, to, resample, reducer)
-            if result_ts is not None:
-                result.update(result_ts)
-            result_obj = ds.get_object(channels, length, to)
-            if result_obj is not None:
-                result.update(result_obj)
-
         start = to - length
         t = time.time() - start
         if t >= 0 and t <= length:

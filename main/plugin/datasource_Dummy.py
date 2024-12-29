@@ -9,14 +9,14 @@ import numpy as np
     
     
 class DataSource_Dummy(DataSource):
-    def __init__(self, project_config, config):
-        super().__init__(project_config, config)
-        self.ts_channels = config.get('timeseries', [])
-        self.hist_channels = config.get('histogram', [])
-        self.hist2d_channels = config.get('histogram2d', [])
-        self.graph_channels = config.get('graph', [])
-        self.clock_channel_name = config.get('clock', {}).get('name', None)
-        self.log_channel_name = config.get('log', {}).get('name', None)
+    def __init__(self, app, project, params):
+        super().__init__(app, project, params)
+        self.ts_channels = params.get('timeseries', [])
+        self.hist_channels = params.get('histogram', [])
+        self.hist2d_channels = params.get('histogram2d', [])
+        self.graph_channels = params.get('graph', [])
+        self.clock_channel_name = params.get('clock', {}).get('name', None)
+        self.log_channel_name = params.get('log', {}).get('name', None)
 
         
     def get_channels(self):

@@ -14,10 +14,11 @@ except:
 
 
 class DataSource_SystemResource(DataSource):
-    def __init__(self, project_config, config):
-        super().__init__(project_config, config)
-        self.disk_path = config.get('disk_path', project_config.project_dir)
+    def __init__(self, app, project, params):
+        super().__init__(app, project, params)
+        self.disk_path = params.get('disk_path', project.project_dir)
 
+        
     def get_channels(self):
         return [ { 'name': 'system', 'type': 'tree' } ]
 

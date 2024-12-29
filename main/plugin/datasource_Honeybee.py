@@ -6,15 +6,15 @@ from datasource import DataSource
     
     
 class DataSource_Honeybee(DataSource):
-    def __init__(self, project_config, config):
-        super().__init__(project_config, config)
-        self.bin_dir = self.config.get('bin_dir', None)
-        self.config_file = self.config.get('config', None)
-        self.dripline_db = self.config.get('dripline_db', None)
+    def __init__(self, app, project, params):
+        super().__init__(app, project, params)
+        self.bin_dir = params.get('bin_dir', None)
+        self.config_file = params.get('config', None)
+        self.dripline_db = params.get('dripline_db', None)
         if self.bin_dir is not None:
-            self.bin_dir = os.path.join(project_config.project_dir, self.bin_dir)
+            self.bin_dir = os.path.join(project.project_dir, self.bin_dir)
         if self.config_file is not None:
-            self.config_file = os.path.join(project_config.project_dir, self.config_file)
+            self.config_file = os.path.join(project.project_dir, self.config_file)
 
             
     def get_channels(self):

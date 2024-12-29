@@ -36,12 +36,12 @@ class SQLServer_SQLAlchemy(SQLServer):
 
     
 class DataSource_SQLAlchemy(DataSource_SQL):
-    def __init__(self, project_config, config):
-        super().__init__(project_config, config)
+    def __init__(self, app, project, params):
+        super().__init__(app, project, params)
 
         self.db_has_floor = False
         
-        self.url = config.get('url', None)
+        self.url = params.get('url', None)
         if self.url is None:
             return
         

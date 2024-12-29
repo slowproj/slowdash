@@ -2,7 +2,8 @@
 
 
 import sys, os, time, math, logging
-from datasource import DataSource, Schema
+from dataschema import Schema
+from datasource import DataSource
 
 from redis import Redis
 
@@ -10,8 +11,8 @@ objts_prefix = '__sd_objts'
 
 
 class KeyValueSource:
-    def __init__(self, host, port, db, config):
-        self.suffix = config.get('suffix', '')
+    def __init__(self, host, port, db, params):
+        self.suffix = params.get('suffix', '')
         
         self.channels = {}
         self.redis = None
@@ -75,8 +76,8 @@ class KeyValueSource:
                 
         
 class ObjectSource(KeyValueSource):
-    def __init__(self, host, port, db, config):
-        super().__init__(host, port, db, config)
+    def __init__(self, host, port, db, params):
+        super().__init__(host, port, db, params)
         
         self.channels = {}
         self.json_str_channels = set()
@@ -152,8 +153,8 @@ class ObjectSource(KeyValueSource):
     
         
 class TimeSeriesSource(ObjectSource):
-    def __init__(self, host, port, db, config):
-        super().__init__(host, port, db, config)
+    def __init__(self, host, port, db, params):
+        super().__init__(host, port, db, params)
         if self.redis is None:
             return
 
@@ -199,8 +200,8 @@ class TimeSeriesSource(ObjectSource):
     
                              
 class ObjectTimeSeriesSource(TimeSeriesSource):
-    def __init__(self, host, port, db, config):
-        super().__init__(host, port, db, config)
+    def __init__(self, host, port, db, params):
+        super().__init__(host, port, db, params)
 
         
     def get_timeseries(self, channels, length, to):
@@ -287,26 +288,26 @@ class ObjectTimeSeriesSource(TimeSeriesSource):
                     
 
 class DataSource_Redis(DataSource):
-    def __init__(self, project_config, config):
-        super().__init__(project_config, config)
+    def __init__(self, app, project, params):
+        super().__init__(app, project, params)
 
-        dburl = Schema.parse_dburl(self.config.get('url', ''))
+        dburl = Schema.parse_dburl(params.get('url', ''))
         host = dburl.get('host', 'localhost')
         port = dburl.get('port', '6379')
         default_db = dburl.get('db', None)
 
-        def load_source(config, entrytype, source_class):
+        def load_source(params, entrytype, source_class):
             source_list = []
-            entry_list = config.get(entrytype, [])
+            entry_list = params.get(entrytype, [])
             for entry in entry_list if type(entry_list) is list else [ entry_list ]:
                 db = entry.get('db', default_db)
                 source_list.append(source_class(host, port, db, entry))
             return source_list
         
-        self.kv_sources = load_source(config, 'key_value', KeyValueSource)
-        self.obj_sources = load_source(config, 'object', ObjectSource)
-        self.ts_sources = load_source(config, 'time_series', TimeSeriesSource)
-        self.objts_sources =  load_source(config, 'object_time_series', ObjectTimeSeriesSource)
+        self.kv_sources = load_source(params, 'key_value', KeyValueSource)
+        self.obj_sources = load_source(params, 'object', ObjectSource)
+        self.ts_sources = load_source(params, 'time_series', TimeSeriesSource)
+        self.objts_sources =  load_source(params, 'object_time_series', ObjectTimeSeriesSource)
         self.sources = self.kv_sources + self.obj_sources + self.ts_sources + self.objts_sources
         
         if default_db is not None and len(self.sources) == 0:

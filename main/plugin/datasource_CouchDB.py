@@ -2,27 +2,28 @@
 
 
 import sys, os, time, logging, traceback
-from datasource import DataSource, Schema
+from dataschema import Schema
+from datasource import DataSource
 
 import couchdb
 
 
 class DataSource_CouchDB(DataSource):
-    def __init__(self, project_config, config):
-        super().__init__(project_config, config)
+    def __init__(self, app, project, params):
+        super().__init__(app, project, params)
         
         self.couch = None
         self.db = None
                 
-        dburl = Schema.parse_dburl(self.config.get('url', ''))
+        dburl = Schema.parse_dburl(params.get('url', ''))
         self.server_url = 'http://{user}:{password}@{host}:{port}'.format(**dburl)
         self.db_name = dburl.get('db', None)
         if self.db_name is None:
             logging.error('CouchDB: No database entry found')
 
-        def load_schema(config, entrytype):
+        def load_schema(params, entrytype):
             schema_list = []
-            entry_list = config.get(entrytype, [])
+            entry_list = params.get(entrytype, [])
             for entry in entry_list if type(entry_list) is list else [ entry_list ]:
                 schema_conf = entry.get('schema', None)
                 tag_values = entry.get('tags', {}).get('list', [])
@@ -32,11 +33,11 @@ class DataSource_CouchDB(DataSource):
                 schema_list.append(schema)
             return schema_list
 
-        self.ts_schemata = load_schema(config, 'time_series')
-        self.objts_schemata = load_schema(config, 'object_time_series')
-        self.viewtable_schemata = load_schema(config, 'view_table')
-        self.viewtree_schemata = load_schema(config, 'view_tree')
-        self.dbinfo_schemata = load_schema(config, 'database_info')
+        self.ts_schemata = load_schema(params, 'time_series')
+        self.objts_schemata = load_schema(params, 'object_time_series')
+        self.viewtable_schemata = load_schema(params, 'view_table')
+        self.viewtree_schemata = load_schema(params, 'view_tree')
+        self.dbinfo_schemata = load_schema(params, 'database_info')
 
         self.channels_scaned = False
         self.server_connected = False
