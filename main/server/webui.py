@@ -77,7 +77,14 @@ class Reply:
 class WebUI:
     def __init__(self, app):
         self.app = app
-        self.auth_list = self.app.project.auth_list
+        self.auth_list = self.app.project.auth_list        
+        self.json_kwargs = {}
+
+        # To convert decimal values into numbers that can be handled by JSON
+        def decimal_to_num(obj):
+            if isinstance(obj, Decimal):
+                return int(obj) if float(obj).is_integer() else float(obj)
+        self.json_kwargs['default'] = decimal_to_num
 
         
     def check_sanity(self, string, accept = []):
@@ -111,12 +118,12 @@ class WebUI:
             
         if path[0] == 'ping':            
             result = 'pong'
-            return Reply(200, 'application/json', json.dumps(result, indent=4))
+            return Reply(200, 'application/json', json.dumps(result, **self.json_kwargs))
         elif path[0] == 'echo':
             if self.app.is_cgi:
                 env = { k:v for k,v in os.environ.items() if k.startswith('HTTP_') or k.startswith('REMOTE_') }
             result = {'URL': url, 'Path': path[1:], 'Opts': opts, 'Env': env }
-            return Reply(200, 'application/json', json.dumps(result, indent=4))
+            return Reply(200, 'application/json', json.dumps(result, **self.json_kwargs))
 
         for element in path:
             if (len(element) == 0) or (not element[0].isalnum() and element[0] not in ['_']):
@@ -129,11 +136,7 @@ class WebUI:
         with io.BytesIO() as output:
             result = self.app.process_get(path, opts, output=output)
             if type(result) in [ dict, list ]:
-                # To convert decimal values into numbers that can be handled by JSON
-                def decimal_to_num(obj):
-                    if isinstance(obj, Decimal):
-                        return int(obj) if float(obj).is_integer() else float(obj)
-                return Reply(200, 'application/json', json.dumps(result, default=decimal_to_num, indent=4).encode())
+                return Reply(200, 'application/json', json.dumps(result, **self.json_kwargs).encode())
             elif type(result) is int:
                 return Reply(result)
             elif type(result) is str:
@@ -171,11 +174,7 @@ class WebUI:
         with io.BytesIO() as output:
             result = self.app.process_post(path, opts, doc, output=output)
             if type(result) in [ dict, list ]:
-                # To convert decimal values into numbers that can be handled by JSON
-                def decimal_to_num(obj):
-                    if isinstance(obj, Decimal):
-                        return int(obj) if float(obj).is_integer() else float(obj)
-                return Reply(200, 'application/json', json.dumps(result, default=decimal_to_num, indent=4).encode())
+                return Reply(200, 'application/json', json.dumps(result, **self.json_kwargs).encode())
             elif type(result) is int:
                 return Reply(result)
             elif type(result) is str:

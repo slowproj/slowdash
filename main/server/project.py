@@ -408,16 +408,12 @@ class ProjectComponent(component.Component):
                 'project': {
                     'name': self.project.config.get('name', 'Untitled Project'),
                     'title': self.project.config.get('title', ''),
-                    'error_message': self.app.error_message,
                     'is_secure': self.project.config.get('system', {}).get('is_secure', False)
                 },
+                'style': self.project.config.get('style', None),
                 'task_module': {
                     module.name: module.public_config for module in self.app.taskmodule_list
                 },
-                'user_module': {
-                    module.name: module.public_config for module in self.app.usermodule_list
-                },
-                'style': self.project.config.get('style', None)
             }
 
             for components in self.app.components:

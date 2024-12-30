@@ -122,14 +122,16 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">KEY1</span><span class="kw">:</span><span class="at"> VALUE1</span></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="at">        ...</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">data_suffix</span><span class="kw">:</span><span class="at"> SUFFIX</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">cgi_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">False</span></span></code></pre></div>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled_for_cgi</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled_for_commandline</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div>
 <p>[TODO] implement SUFFIX</p>
 <p>By default, user modules are not enabled if the server program is
-launched by CGI. To enable this, set the <code>cgi_enabled</code>
-parameter <code>True</code>. Be careful for all the side effects,
+launched by CGI (or command-line). To enable this, set the
+<code>enabled_for_cgi</code> (or <code>enabled_for_commandline</code>)
+parameter <code>true</code>. Be careful for all the side effects,
 including performance overhead and security issues. As multiple user
-modules can be loaded in parallel, splitting functions to a CGI-enabled
-module and disabled one might be a good strategy.</p>
+modules can be loaded in parallel, splitting user functions to a
+CGI-enabled module and disabled one might be a good strategy.</p>
 <h3 id="example">Example</h3>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
@@ -256,14 +258,22 @@ the first argument.</p>
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash channels</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>[{ &quot;name&quot;: &quot;WorldClock&quot;, &quot;type&quot;: &quot;tree&quot; }]</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash data/WorldClock</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>{ &quot;WorldClock&quot;: { &quot;start&quot;: 1678801863.0, &quot;length&quot;: 3600.0, &quot;t&quot;: 1678805463.0, &quot;x&quot;: { &quot;tree&quot;: {</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    &quot;UnixTime&quot;: 1678805463.7652955,</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    &quot;UTC&quot;: &quot;2023-03-14T14:51:03.765296+00:00&quot;,</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    &quot;Local&quot;: &quot;2023-03-14T15:51:03.765296+01:00&quot;,</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    &quot;-9h&quot;: &quot;2023-03-14T05:51:03.765296-09:00&quot;</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>}}}}</span></code></pre></div>
-<p>(the output above is reformatted for better readability)</p>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash data/WorldClock --indent=4</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    &quot;WorldClock&quot;: {</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        &quot;start&quot;: 1678801863.0,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        &quot;length&quot;: 3600.0,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        &quot;t&quot;: 1678805463.0,</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        &quot;x&quot;: {</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>            &quot;tree&quot;: {</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>                &quot;UnixTime&quot;: 1678805463.7652955,</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>                &quot;UTC&quot;: &quot;2023-03-14T14:51:03.765296+00:00&quot;,</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>                &quot;Local&quot;: &quot;2023-03-14T15:51:03.765296+01:00&quot;,</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>                &quot;-9h&quot;: &quot;2023-03-14T05:51:03.765296-09:00&quot;</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>            }</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <h3 id="using-it-from-web-browser">Using it from web browser</h3>
 <ul>
 <li>Start slow-dash at the project directory</li>
@@ -299,8 +309,7 @@ project direcotry. Add a new HTML panel with HTML file
 <p>When the <code>Set</code> button is clicked, the form data is sent to
 the user module as a JSON document. On the terminal screen where the
 slowdash command is running, you can see a message like:</p>
-<pre><code>POST: /slowdash.cgi/control
-23-03-14 16:37:46 INFO: DISPATCH: {&#39;set_time_offset&#39;: True, &#39;time_offset&#39;: &#39;3&#39;}</code></pre>
+<pre><code>23-03-14 16:37:46 INFO: DISPATCH: {&#39;set_time_offset&#39;: True, &#39;time_offset&#39;: &#39;3&#39;}</code></pre>
 <h1 id="user-module-threading">User Module Threading</h1>
 <p>A dedicated thread is created for each user module, and the module is
 loaded within the thread. Therefore, all the statements outside a

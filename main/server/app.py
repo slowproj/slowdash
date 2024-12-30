@@ -3,8 +3,8 @@
 
 
 import sys, os, io, time, glob, json, logging
-import project, component, datasource, export
-import usermodule, taskmodule
+import project, component, datasource, usermodule, export
+import taskmodule
 
 
 class App:
@@ -12,14 +12,13 @@ class App:
         self.project = project.Project(project_dir, project_file)
         self.project_dir = self.project.project_dir
         self.is_cgi = is_cgi
+        self.is_command = is_command
 
         self.components = []
-
         self.console_stdin = None
         self.console_stdout = None
-        self.error_message = ''
         
-        # Running Environment
+        # Execution Environment
         if self.project.config is None:
             return
         
@@ -35,44 +34,34 @@ class App:
             sys.path.insert(1, self.project.project_dir)
             sys.path.insert(1, os.path.join(self.project.project_dir, 'config'))
 
+        ### Console Redirect ###
+        self.console_outputs = []
+        self.original_stdin = sys.stdin
+        self.original_stdout = sys.stdout
+        if not is_command and not is_cgi:
+            self.console_stdin = io.StringIO()
+            self.console_stdout = io.StringIO()
+            sys.stdin = self.console_stdin
+            sys.stdout = self.console_stdout
+        else:
+            self.console_stdin = None
+            self.console_stdout = None
+            
         # API Components
         self.components.append(project.ProjectComponent(self, self.project))
         self.components.append(datasource.DataSourceComponent(self, self.project))
         self.components.append(export.ExportComponent(self, self.project))
+        self.components.append(usermodule.UserModuleComponent(self, self.project))
 
 
 
         
         #... WIP: these will be moved to "components"
-        self.usermodule_list = []
         self.taskmodule_list = []
         self.known_task_list = []
         
 
         
-        ### User Modules ###
-        
-        usermodule_node = self.project.config.get('module', [])
-        if not isinstance(usermodule_node, list):
-            usermodule_node = [ usermodule_node ]
-            
-        for node in usermodule_node:
-            if not isinstance(node, dict) or 'file' not in node:
-                self.error_message = 'bad user module configuration'
-                logging.error(self.error_message)
-                continue
-            if self.is_cgi and node.get('cgi_enabled', False) != True:
-                continue
-            filepath = node['file']
-            params = node.get('parameters', {})
-            module = usermodule.UserModule(filepath, filepath, params)
-            if module is None:
-                self.error_message = 'Unable to load user module: %s' % filepath
-                logging.error(self.error_message)
-            else:
-                module.auto_load = node.get('auto_load', True)
-                self.usermodule_list.append(module)
-
 
         ### Task Modules ###
         
@@ -83,14 +72,12 @@ class App:
         task_table = {}
         for node in taskmodule_node:
             if not isinstance(node, dict):
-                self.error_message = 'bad control module configuration'
-                logging.error(self.error_message)
+                logging.error('bad control module configuration')
                 continue
             if self.is_cgi and node.get('cgi_enabled', False) != True:
                 continue
             if 'name' not in node:
-                self.error_message = 'name is required for control module'
-                logging.error(self.error_message)
+                logging.error('name is required for control module')
                 continue
 
             name = node['name']
@@ -111,42 +98,27 @@ class App:
         for name, (filepath, params, opts) in task_table.items():
             module = taskmodule.TaskModule(filepath, name, params)
             if module is None:
-                self.error_message = 'Unable to load control module: %s' % filepath
-                logging.error(self.error_message)
+                logging.error('Unable to load control module: %s' % filepath)
             else:
                 module.auto_load = opts.get('auto_load', False)
                 self.taskmodule_list.append(module)
 
                 
-        ### Console Redirect ###
-        
-        self.console_outputs = []
-        self.original_stdin = sys.stdin
-        self.original_stdout = sys.stdout
-        if not is_command and not self.is_cgi:
-            self.console_stdin = io.StringIO()
-            self.console_stdout = io.StringIO()
-            sys.stdin = self.console_stdin
-            sys.stdout = self.console_stdout
-        else:
-            self.console_stdin = None
-            self.console_stdout = None
-
-            
         ### Starting Modules ###
         
         if not is_command:
-            for module in self.usermodule_list + self.taskmodule_list:
+            for module in self.taskmodule_list:
                 if module.auto_load:
                     module.start()
 
                 
     def __del__(self):
-        for module in self.usermodule_list + self.taskmodule_list:
+        for module in self.taskmodule_list:
             module.stop()
-        self.usermodule_list.clear()
         self.taskmodule_list.clear()
 
+        del self.components
+        
         if self.console_stdout is not None:
             self.console_stdin.close()
             self.console_stdout.close()
@@ -287,7 +259,7 @@ class App:
             cmd = doc.decode()
             if cmd is None:
                 return 400  # Bad Request
-            logging.info(f'CMD: {cmd}')
+            logging.info(f'Console Input: {cmd}')
             pos = self.console_stdin.tell()
             self.console_stdin.seek(0, io.SEEK_END)
             self.console_stdin.write('%s\n' % cmd)
@@ -316,7 +288,7 @@ class App:
 
     def _get_channels(self):
         result = []
-        for src_list in [ self.usermodule_list, self.taskmodule_list ]:
+        for src_list in [ self.taskmodule_list ]:
             for src in src_list:
                 channels = src.get_channels()
                 if channels is not None:
@@ -330,7 +302,7 @@ class App:
         start = to - length
         t = time.time() - start
         if t >= 0 and t <= length + 10:
-            for module_list in [ self.usermodule_list, self.taskmodule_list ]:
+            for module_list in [ self.taskmodule_list ]:
                 for module in module_list:
                     for ch in channels:
                         data = module.get_data(ch)
@@ -399,12 +371,7 @@ class App:
 
         
     def _dispatch_command(self, doc, opts):
-        # user module first, to give the user module a change to modify the command
-        for module in self.usermodule_list:
-            result = module.process_command(doc)
-            if result is not None:
-                return result
-
+        # user module first, to give the user module a chance to modify the command
         for module in self.taskmodule_list:
             result = module.process_command(doc)
             if result is not None:
@@ -426,8 +393,7 @@ class App:
 
             module = taskmodule.TaskModule(filepath, name, {})
             if module is None:
-                self.error_message = 'Unable to load control module: %s' % filepath
-                logging.error(self.error_message)
+                logging.error('Unable to load control module: %s' % filepath)
             else:
                 module.auto_load = False
                 self.taskmodule_list.append(module)

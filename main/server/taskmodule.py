@@ -1,8 +1,7 @@
 #! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 24 May 2024 #
 
-import os, time, logging, traceback
-import threading
+import os, time, threading, logging, traceback
 from usermodule import UserModule
 
 

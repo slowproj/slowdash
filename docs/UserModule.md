@@ -20,12 +20,13 @@ slowdash_project:
         KEY1: VALUE1
         ...
     data_suffix: SUFFIX
-    cgi_enabled: False
+    enabled_for_cgi: false
+    enabled_for_commandline: true
 ```
 
 [TODO] implement SUFFIX
 
-By default, user modules are not enabled if the server program is launched by CGI. To enable this, set the `cgi_enabled` parameter `True`. Be careful for all the side effects, including performance overhead and security issues. As multiple user modules can be loaded in parallel, splitting functions to a CGI-enabled module and disabled one might be a good strategy.
+By default, user modules are not enabled if the server program is launched by CGI (or command-line). To enable this, set the `enabled_for_cgi` (or `enabled_for_commandline`) parameter `true`. Be careful for all the side effects, including performance overhead and security issues. As multiple user modules can be loaded in parallel, splitting user functions to a CGI-enabled module and disabled one might be a good strategy.
 
 ### Example
 ```yaml
@@ -159,18 +160,25 @@ Two queries are useful to test the module:
 $ slowdash channels
 [{ "name": "WorldClock", "type": "tree" }]
 
-$ slowdash data/WorldClock
-{ "WorldClock": { "start": 1678801863.0, "length": 3600.0, "t": 1678805463.0, "x": { "tree": {
-    "UnixTime": 1678805463.7652955,
-    "UTC": "2023-03-14T14:51:03.765296+00:00",
-    "Local": "2023-03-14T15:51:03.765296+01:00",
-    "-9h": "2023-03-14T05:51:03.765296-09:00"
-}}}}
+$ slowdash data/WorldClock --indent=4
+{
+    "WorldClock": {
+        "start": 1678801863.0,
+        "length": 3600.0,
+        "t": 1678805463.0,
+        "x": {
+            "tree": {
+                "UnixTime": 1678805463.7652955,
+                "UTC": "2023-03-14T14:51:03.765296+00:00",
+                "Local": "2023-03-14T15:51:03.765296+01:00",
+                "-9h": "2023-03-14T05:51:03.765296-09:00"
+            }
+        }
+    }
+}
 ```
-(the output above is reformatted for better readability)
 
-
-### Using it from web browser
+### Using it from a web browser
 - Start slow-dash at the project directory
 - Add a new  "Tree" panel, with channel "WorldClock".
 
@@ -210,7 +218,6 @@ Add a new HTML panel with HTML file `WorldClock`.
 
 When the `Set` button is clicked, the form data is sent to the user module as a JSON document. On the terminal screen where the slowdash command is running, you can see a message like:
 ```
-POST: /slowdash.cgi/control
 23-03-14 16:37:46 INFO: DISPATCH: {'set_time_offset': True, 'time_offset': '3'}
 ```
 

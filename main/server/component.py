@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 25 December 2024 #
 
-import sys, os, glob, logging, traceback
+import sys, os, copy, glob, logging, traceback
 import importlib.machinery
 
 
@@ -143,7 +143,9 @@ class PluginComponent(Component):
         self.component_type = component_type
         self.plugin_prefix = plugin_prefix
         self.class_prefix = class_prefix
-        self.check_root_node = True
+        
+        self.merge_config_params = True
+        self.match_api_root = True
 
         if self.plugin_prefix is None:
             # e.g., data_source -> datasource
@@ -172,7 +174,7 @@ class PluginComponent(Component):
     def process_get(self, path, opts, output):
         """propagates Component.process_get() to Plugin.process_get()
         """
-        if self.check_root_node and (len(path) < 2 or path[0] != self.component_type):
+        if self.match_api_root and (len(path) < 2 or path[0] != self.component_type):
             return None
 
         result = None
@@ -205,7 +207,7 @@ class PluginComponent(Component):
         """propagates Component.process_post() to Plugin.process_post()
         """
         
-        if self.check_root_node and (len(path) < 2 or path[0] != self.component_type):
+        if self.match_api_root and (len(path) < 2 or path[0] != self.component_type):
             return None
         
         for name, plugin in self.plugin_table.items():
@@ -231,7 +233,16 @@ class PluginComponent(Component):
                 continue
             plugin_name = f'{self.plugin_prefix}_{plugin_type}'
             class_name = f'{self.class_prefix}_{plugin_type}'
-            params = node.get('parameters', {})
+            
+            if not self.merge_config_params:
+                params = node.get('parameters', {})
+            else:
+                params = copy.deepcopy(node)
+                if 'parameters' in params:
+                    for k,v in params['parameters'].items():
+                        params[k] = v
+                    del params['parameters']
+                
             plugin = self._load_plugin_module(plugin_name, class_name, params=params)
             if plugin is not None:
                 self.plugin_table[plugin_name] = plugin

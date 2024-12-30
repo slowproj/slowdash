@@ -180,10 +180,11 @@ class DataSource(component.ComponentPlugin):
 class DataSourceComponent(component.PluginComponent):
     def __init__(self, app, project):
         super().__init__('data_source', app, project)
-        self.check_root_node = False
         
 
     def build(self, plugin_config):
+        self.match_api_root = False
+        
         for node in plugin_config:
             url = node.get('url', None)
             if url is None:

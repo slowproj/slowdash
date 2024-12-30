@@ -38,6 +38,11 @@ if __name__ == '__main__':
         action='store', dest='loglevel', default='info', choices=['debug', 'info', 'warning', 'error'],
         help='logging level'
     )
+    parser.add_argument(
+        '-i', '--indent',
+        action='store', dest='indent', type=int, default=-1,
+        help='JSON output indenting (default: no indent)'
+    )
     args = parser.parse_args()
 
     if args.COMMAND is None and args.port <= 0:
@@ -65,6 +70,8 @@ if __name__ == '__main__':
 
     webui = WebUI(app)
     if args.port <= 0:
+        if args.indent >= 0:
+            webui.json_kwargs['indent'] = args.indent
         result = webui.process_get_request(args.COMMAND)
         result.write_to(sys.stdout.buffer)
         sys.stdout.write('\n')

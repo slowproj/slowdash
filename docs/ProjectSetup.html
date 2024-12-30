@@ -394,8 +394,8 @@ keep the data accessible after the measurement has been finished.</li>
 <li>User Python scripts (control tasks and user modules) are disabled
 for CGI and WSGI by default, in order to prevent multiple execution of
 user scripts in an unexpected way. To use a module with CGI/WSGI, set
-the <code>cgi_enabled</code> parameter <code>true</code> in the module
-configuration. Be careful for all the side effects, including
+the <code>enabled_for_cgi</code> parameter <code>true</code> in the
+module configuration. Be careful for all the side effects, including
 performance overhead and security concerns.</li>
 <li>CGI starts a SlowDash process for every HTTP request (can be very
 frequent!), therefore,
