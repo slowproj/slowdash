@@ -1,10 +1,10 @@
 #! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 27 December 2024 #
 
-import component
+from component import PluginComponent
 
 
-class ExportComponent(component.PluginComponent):
+class ExportComponent(PluginComponent):
     def __init__(self, app, project):
         super().__init__('export', app, project)
         

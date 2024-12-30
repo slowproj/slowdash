@@ -1,9 +1,9 @@
 #! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 24 October 2022 #
 
-import sys, os, time, io, threading, types, json, logging, traceback
+import sys, os, time, threading, types, json, logging, traceback
 import importlib.machinery
-import component
+from component import Component
 
 
 class UserModuleThread(threading.Thread):
@@ -276,7 +276,7 @@ class UserModule:
 
 
 
-class UserModuleComponent(component.Component):
+class UserModuleComponent(Component):
     def __init__(self, app, project):
         super().__init__(app, project)
 
@@ -284,14 +284,15 @@ class UserModuleComponent(component.Component):
         
         usermodule_node = self.project.config.get('module', [])
         if not isinstance(usermodule_node, list):
-            usermodule_node = [ usermodule_node ]            
+            usermodule_node = [ usermodule_node ]
+            
         for node in usermodule_node:
             if not isinstance(node, dict) or 'file' not in node:
                 logging.error('bad user module configuration')
                 continue
             if app.is_cgi and node.get('enabled_for_cgi', False) != True:
                 continue
-            if app.is_command and node.get('enabled_for_commandline', False) != True:
+            if app.is_command and node.get('enabled_for_commandline', True) != True:
                 continue
             filepath = node['file']
             params = node.get('parameters', {})
@@ -362,7 +363,7 @@ class UserModuleComponent(component.Component):
 
     
     def process_post(self, path, opts, doc, output):
-        if len(path) == 1 and path[0] == 'control':  # control/XXX will be processed somewhere else
+        if len(path) == 1 and path[0] == 'control':
             try:
                 record = json.loads(doc.decode())
             except Exception as e:

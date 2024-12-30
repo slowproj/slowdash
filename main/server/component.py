@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 25 December 2024 #
 
-import sys, os, copy, glob, logging, traceback
+import sys, os, copy, glob, inspect, logging, traceback
 import importlib.machinery
 
 
@@ -68,7 +68,6 @@ class Component:
           path: parsed URL
         Returns:
           - HTTP response code as int
-          - False for error (HTTP response 400 "Bad request")
           - None if the path is not the target (chain of responsibility)
         """
 
@@ -252,7 +251,7 @@ class PluginComponent(Component):
         """load a plugin module and create an instance
         Args:
           - plugin_name: name of the plugin file (case insensitive)
-          - class_name: name of the class in the plugin for which an instance is created
+          - class_name: name of the class in the plugin for which an instance is created (case insensitive)
           - *args, **kwargs: parameters to the constructor
         Return:
           - instance of the class
@@ -274,7 +273,15 @@ class PluginComponent(Component):
             logging.error(traceback.format_exc())
             return None
 
-        if class_name not in module.__dict__:
+        defined_classes = [
+            name for name, obj in inspect.getmembers(module, inspect.isclass)
+            if obj.__module__ == module.__name__
+        ]
+        for cls in defined_classes:
+            if cls.lower() == class_name.lower():
+                class_name = cls
+                break
+        else:
             logging.error(f'no entry found in plugin: {plugin_name}.{class_name}')
             return None
             

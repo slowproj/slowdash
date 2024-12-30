@@ -411,9 +411,6 @@ class ProjectComponent(component.Component):
                     'is_secure': self.project.config.get('system', {}).get('is_secure', False)
                 },
                 'style': self.project.config.get('style', None),
-                'task_module': {
-                    module.name: module.public_config for module in self.app.taskmodule_list
-                },
             }
 
             for components in self.app.components:

@@ -26,7 +26,7 @@ slowdash_project:
 
 [TODO] implement SUFFIX
 
-By default, user modules are not enabled if the server program is launched by CGI (or command-line). To enable this, set the `enabled_for_cgi` (or `enabled_for_commandline`) parameter `true`. Be careful for all the side effects, including performance overhead and security issues. As multiple user modules can be loaded in parallel, splitting user functions to a CGI-enabled module and disabled one might be a good strategy.
+By default, user modules are not enabled if the server program is launched by CGI. To enable this, set the `enabled_for_cgi` parameter `true`. Be careful for all the side effects, including performance overhead and security issues. As multiple user modules can be loaded in parallel, splitting user functions to a CGI-enabled module and disabled one might be a good strategy.
 
 ### Example
 ```yaml

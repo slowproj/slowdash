@@ -1,8 +1,9 @@
 #! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 24 May 2024 #
 
-import os, time, threading, logging, traceback
+import os, time, glob, json, threading, logging
 from usermodule import UserModule
+from component import Component
 
 
 class TaskFunctionThread(threading.Thread):
@@ -33,7 +34,7 @@ class TaskModule(UserModule):
 
         self.control_system = None
         
-        logging.info('user task module loaded')
+        logging.info('task module loaded')
         
         
     def _preset_module(self, module):
@@ -267,3 +268,209 @@ class TaskModule(UserModule):
                 self.command_thread = this_thread
             
         return True
+
+
+
+class TaskModuleComponent(Component):
+    def __init__(self, app, project):
+        super().__init__(app, project)
+
+        self.taskmodule_list = []
+        self.known_task_list = []
+
+        taskmodule_node = self.project.config.get('task', [])
+        if not isinstance(taskmodule_node, list):
+            taskmodule_node = [ taskmodule_node ]
+                    
+        task_table = {}
+        for node in taskmodule_node:
+            if not isinstance(node, dict):
+                logging.error('bad slowtask configuration')
+                continue
+            if app.is_cgi and node.get('enabled_for_cgi', False) != True:
+                continue
+            if app.is_command and node.get('enabled_for_commandline', True) != True:
+                continue
+            if 'name' not in node:
+                logging.error('name is required for slowtask module')
+                continue
+
+            name = node['name']
+            filepath = node.get('file', './config/slowtask-%s.py' % name)
+            params = node.get('parameters', {})
+            task_table[name] = (filepath, params, {'auto_load':node.get('auto_load', False)})
+            self.known_task_list.append(name)
+        
+        # make a task entry list from the file list of the config dir
+        if not app.is_cgi and self.project.project_dir is not None:
+            for filepath in glob.glob(os.path.join(self.project.project_dir, 'config', 'slowtask-*.py')):
+                rootname, ext = os.path.splitext(os.path.basename(filepath))
+                kind, name = rootname.split('-', 1)
+                if name not in self.known_task_list:
+                    task_table[name] = (filepath, {}, {'auto_load':False})
+                    self.known_task_list.append(name)
+
+        for name, (filepath, params, opts) in task_table.items():
+            module = TaskModule(filepath, name, params)
+            if module is None:
+                logging.error('Unable to load slowtask module: %s' % filepath)
+            else:
+                module.auto_load = opts.get('auto_load', False)
+                self.taskmodule_list.append(module)
+                
+        for module in self.taskmodule_list:
+            if module.auto_load:
+                module.start()
+
+                
+    def __del__(self):
+        for module in self.taskmodule_list:
+            module.stop()
+            
+        if len(self.taskmodule_list) > 0:
+            logging.info('slowtask modules stopped')
+        self.taskmodule_list.clear()
+
+
+    def public_config(self):
+        return {
+            'task_module': {
+                module.name: { 'auto_load': module.auto_load } for module in self.taskmodule_list
+            }
+        }
+
+
+    def process_get(self, path, opts, output):
+        if len(path) > 1 and path[0] == 'control' and path[1] == 'task':
+            return self._get_task_status()
+            
+        if len(path) > 0 and path[0] == 'channels':
+            result = []
+            for taskmodule in self.taskmodule_list:
+                channels = taskmodule.get_channels()
+                if channels is not None:
+                    result.extend(channels)
+
+            return result
+
+        if len(path) > 1 and path[0] == 'data':
+            try:
+                channels = path[1].split(',')
+                length = float(opts.get('length', '3600'))
+                to = float(opts.get('to', int(time.time())+1))
+            except Exception as e:
+                logging.error('Bad data URL: %s: %s' % (str(opts), str(e)))
+                return False
+            has_result, result = False, {}
+            start = to - length
+            t = time.time() - start
+            if t >= 0 and t <= length + 10:
+                for taskmodule in self.taskmodule_list:
+                    for ch in channels:
+                        data = taskmodule.get_data(ch)
+                        if data is None:
+                            continue
+                        has_result = True
+                        result[ch] = {
+                            'start': start, 'length': length,
+                            't': t,
+                            'x': data
+                        }
+
+            return result if has_result else None
+
+        return None
+
+
+    def process_post(self, path, opts, doc, output):
+        if len(path) > 1 and path[0] == 'update' and path[1] == 'tasklist':
+            self._scan_task_files()
+            return {'status': 'ok'}
+            
+        if len(path) > 0 and path[0] == 'control':
+            try:
+                record = json.loads(doc.decode())
+            except Exception as e:
+                logging.error('control: JSON decoding error: %s' % str(e))
+                return 400 # Bad Request
+
+            result = None
+            if len(path) == 1:
+                # unlike GET, only one module can process to POST
+                for module in self.usermodule_list:
+                    result = module.process_command(record)
+                    if result is not None:
+                        break
+        
+            elif len(path) >= 2 and path[1] == 'task':
+                taskname = path[2] if len(path) >= 3 else None
+                action = record.get('action', None)
+                logging.info(f'Task Control: {taskname}.{action}()')
+                result = self._control_task(taskname, action)
+        
+            if type(result) is bool:
+                if result:
+                    return {'status': 'ok'}
+                else:
+                    return {'status': 'error'}
+                
+            return result
+
+
+    def _control_task(self, taskname, action):
+        for module in self.taskmodule_list:
+            if module.name != taskname:
+                continue
+            if action == 'start':
+                module.start()
+                return True
+            elif action == 'stop':
+                module.stop()
+                return True
+            else:
+                return { 'status': 'error', 'message': f'unknown command: {action}' }
+                
+        return { 'status': 'error', 'message': f'unknown task: {taskname}' }
+
+
+    def _scan_task_files(self):
+        if self.app.is_cgi or (self.project.project_dir is None):
+            return
+        
+        for filepath in glob.glob(os.path.join(self.project.project_dir, 'config', 'slowtask-*.py')):
+            rootname, ext = os.path.splitext(os.path.basename(filepath))
+            kind, name = rootname.split('-', 1)
+            if name in self.known_task_list:
+                continue
+            self.known_task_list.append(name)
+
+            module = taskmodule.TaskModule(filepath, name, {})
+            if module is None:
+                logging.error('Unable to load control module: %s' % filepath)
+            else:
+                module.auto_load = False
+                self.taskmodule_list.append(module)
+
+    
+    def _get_task_status(self):
+        result = []
+        for module in self.taskmodule_list:
+            last_routine = module.routine_history[-1] if len(module.routine_history) > 0 else None
+            last_command = module.command_history[-1] if len(module.command_history) > 0 else None
+            record = {
+                'name': module.name,
+                'is_loaded': module.is_loaded(),
+                'is_routine_running': module.is_running(),
+                'is_command_running': module.is_command_running(),
+                'is_waiting_input': module.is_waiting_input(),
+                'is_stopped': module.is_stopped(),
+                'last_routine_time': last_routine[0] if last_routine is not None else None,
+                'last_routine': last_routine[1] if last_routine is not None else None,
+                'last_command_time': last_command[0] if last_command is not None else None,
+                'last_command': last_command[1] if last_command is not None else None,
+                'last_log': '',
+                'has_error': module.error is not None
+            }
+            result.append(record)
+
+        return result

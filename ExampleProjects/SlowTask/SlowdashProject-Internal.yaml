@@ -2,9 +2,8 @@ slowdash_project:
   name: Control_Test
   data_source:
     url: sqlite:///SlowTaskTest
-    parameters:
-      time_series:
-        schema: test [channel] @timestamp(unix) = value
+    time_series:
+      schema: test [channel] @timestamp(unix) = value
 
   task:
     name: test
@@ -12,4 +11,3 @@ slowdash_project:
 
   system:
     our_security_is_perfect: true
-    

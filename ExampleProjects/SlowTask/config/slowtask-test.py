@@ -6,8 +6,8 @@ ControlSystem.import_control_module('DummyDevice')
 device = ControlSystem().randomwalk_device()
 print("Random-Walk Device Loaded")
 
-#name = input('who are you?')
-#print('hello, ' + name)
+name = input('who are you?')
+print('hello, ' + name)
 
 
 
