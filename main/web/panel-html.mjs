@@ -242,7 +242,7 @@ class HtmlPanel extends Panel {
 
     
     draw(dataPacket, displayTimeRange) {
-        if (dataPacket.isTransient) {
+        if (dataPacket.isTransitional) {
             return;
         }
 
@@ -454,7 +454,7 @@ class HrefPanel extends Panel {
         if ((this.config.reload === false) && this.iframe.attr('src')) {
             return;
         }
-        if (dataPacket.isTransient) {
+        if (dataPacket.isTransitional) {
             return;
         }
         this.iframe.attr('src', this.config.url); // this will cause reloading

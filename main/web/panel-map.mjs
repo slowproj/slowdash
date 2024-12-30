@@ -343,7 +343,7 @@ export class MapPanel extends Panel {
     
     draw(dataPacket, displayTimeRange) {
         if (dataPacket !== null) {
-            if (dataPacket.isTransient) {
+            if (dataPacket.isTransitional) {
                 return;
             }
             this.currentDataPacket = dataPacket;
@@ -351,7 +351,7 @@ export class MapPanel extends Panel {
         if (this.currentDataPacket === null) {
             return;
         }
-        if ((! this.config.channel) || (this.currentDataPacket.isTransient)) {
+        if ((! this.config.channel) || (this.currentDataPacket.isTransitional)) {
             return;
         }
         if (! this.drawingArea) {

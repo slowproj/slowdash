@@ -395,7 +395,7 @@ class App:
 
         start = to - length
         t = time.time() - start
-        if t >= 0 and t <= length:
+        if t >= 0 and t <= length + 10:
             for module_list in [ self.usermodule_list, self.taskmodule_list ]:
                 for module in module_list:
                     for ch in channels:

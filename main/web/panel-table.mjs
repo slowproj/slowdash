@@ -111,8 +111,9 @@ class TablePanel extends Panel {
     draw(dataPacket, displayTimeRange) {
         let data = dataPacket.data[this.config.channel]?.x;
         if (! data) {
-            if (! dataPacket.isTransient) {
+            if (! dataPacket.isTransitional) {
                 this.table.empty();
+                this.table.html('<tr><td>No Table Data</td></tr>');
             }
             return;
         }
@@ -120,6 +121,7 @@ class TablePanel extends Panel {
         this.table.empty();
         if (Array.isArray(data)) {
             if (data.length < 1) {
+                this.table.html('<tr><td>Empty Table</td></tr>');		
                 return;
             }
             data = data[data.length-1];
@@ -129,10 +131,12 @@ class TablePanel extends Panel {
                 data = JSON.parse(data);
             }
             catch(error) {
+                this.table.html('<tr><td>Table Data Error: ' + error.message + '</td></tr>');		
                 return;
             }
         }
         if (! data.table) {
+            this.table.html('<tr><td>No Table Content</td></tr>');		
             return;
         }
         const table = data;
@@ -250,8 +254,9 @@ class TreePanel extends Panel {
     draw(dataPacket, displayTimeRange) {
         let data = dataPacket.data[this.config.channel]?.x;
         if (! data) {
-            if (! dataPacket.isTransient) {
+            if (! dataPacket.isTransitional) {
                 this.contentDiv.empty();
+                this.contentDiv.html('No Tree Data');
             }
             return;
         }
@@ -259,6 +264,7 @@ class TreePanel extends Panel {
         this.contentDiv.empty();
         if (Array.isArray(data)) {
             if (data.length < 1) {
+                this.contentDiv.html('Empty Tree Data');
                 return;
             }
             data = data[data.length-1];
@@ -268,10 +274,12 @@ class TreePanel extends Panel {
                 data = JSON.parse(data);
             }
             catch(error) {
+                this.contentDiv.html('Tree Data Error: ' + error.message);
                 return;
             }
         }
         if (! data.tree) {
+            this.contentDiv.html('No Tree Content');
             return;
         }
         const tree = data.tree;
@@ -420,8 +428,9 @@ class BlobPanel extends Panel {
     draw(dataPacket, displayTimeRange) {
         let data = dataPacket.data[this.config.channel];
         if (! data) {
-            if (! dataPacket.isTransient) {
+            if (! dataPacket.isTransitional) {
                 this.contentDiv.empty();
+                this.contentDiv.html('No Blob Data');
             }
             return;
         }
@@ -431,6 +440,7 @@ class BlobPanel extends Panel {
         let t = null, x = null;
         if (Array.isArray(data.x)) {
             if (data.x.length < 1) {
+                this.contentDiv.html('Empty Blob Data');
                 return;
             }
             t = data.start + data.t[data.t.length-1];

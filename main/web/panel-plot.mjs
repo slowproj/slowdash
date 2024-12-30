@@ -173,7 +173,7 @@ class HistogramPlot extends Plot {
     draw(dataPacket) {
         let data = dataPacket.data[this.config.channel]?.x;
         if (! data) {
-            if (! dataPacket.isTransient) {
+            if (! dataPacket.isTransitional) {
                 this.histogram.counts = [];
             }
             return;
@@ -252,7 +252,7 @@ class TimeseriesHistogramPlot extends HistogramPlot {
     draw(dataPacket) {
         let ts = dataPacket.data[this.config.channel];
         if (! ts) {
-            if (! dataPacket.isTransient) {
+            if (! dataPacket.isTransitional) {
                 this.setStat('---');
                 this.histogram.counts = [];
             }
@@ -347,7 +347,7 @@ class Histogram2dPlot extends Plot {
     draw(dataPacket) {
         let data = dataPacket.data[this.config.channel]?.x;
         if (! data) {
-            if (! dataPacket.isTransient) {
+            if (! dataPacket.isTransitional) {
                 this.histogram2d.counts = [];
             }
             return;
@@ -434,7 +434,7 @@ class GraphPlot extends Plot {
     draw(dataPacket) {
         let data = dataPacket.data[this.config.channel]?.x;
         if (! data) {
-            if (! dataPacket.isTransient) {
+            if (! dataPacket.isTransitional) {
                 this.graph.y = [];
             }
             return;
@@ -719,7 +719,7 @@ class TimeseriesScatterPlot extends GraphPlot {
         let ts0 = dataPacket.data[this.config.channelX];
         let ts1 = dataPacket.data[this.config.channelY];
         if (! ts0 || ! ts1) {
-            if (! dataPacket.isTransient) {
+            if (! dataPacket.isTransitional) {
                 this.setStat('---');
                 this.graph.x = [];
                 this.graph.y = [];
@@ -773,7 +773,7 @@ class TimeseriesPlot extends LineMarkerPlot {
     draw(dataPacket) {
         let ts = dataPacket.data[this.config.channel];
         if (! ts) {
-            if (! dataPacket.isTransient) {
+            if (! dataPacket.isTransitional) {
                 this.setStat('---');
                 this.graph.x = [];
                 this.graph.y = [];
