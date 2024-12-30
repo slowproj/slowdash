@@ -293,7 +293,7 @@ export class Layout {
     
     load(range=null, on_complete=status=>{}) {
         // If the data range is not specified, use the same range before, and reuse the loaded data.
-        // Even for the identical data range, panels must be updated as a new plot for the same channel might have been added.
+        // Even for the identical data range, panels must be updated because a new plot for the same channel might have been added.
         
         if ((range === null) && (this.currentDataPacket?.isTransitional ?? false)) {
             // update request (by initial configure() with promise etc) while loading
