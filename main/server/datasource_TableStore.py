@@ -2,15 +2,16 @@
 
 
 import sys, os, datetime, logging
-from datasource import DataSource, Schema
+from dataschema import Schema
+from datasource import DataSource
 
 
 class DataSource_TableStore(DataSource):
-    def __init__(self, project_config, config):
-        super().__init__(project_config, config)
+    def __init__(self, app, project, params):
+        super().__init__(app, project, params)
         self.timeseries_table = None
         
-        self._configure(project_config, config)        
+        self._configure(params)        
         self.channels_scanned = False
 
         
@@ -85,10 +86,10 @@ class DataSource_TableStore(DataSource):
         return result
 
     
-    def _configure(self, project_config, config):
-        def load_schema(config, entrytype):
+    def _configure(self, params):
+        def load_schema(params, entrytype):
             schema_list = []
-            entry_list = config.get(entrytype, [])
+            entry_list = params.get(entrytype, [])
             for entry in entry_list if type(entry_list) is list else [ entry_list ]:
                 schema_conf = entry.get('schema', None)
                 if schema_conf is None:
@@ -103,9 +104,9 @@ class DataSource_TableStore(DataSource):
                 schema_list.append(schema)
             return schema_list
 
-        self.ts_schemata = load_schema(config, 'time_series')
-        self.obj_schemata = load_schema(config, 'object')
-        self.objts_schemata = load_schema(config, 'object_time_series')
+        self.ts_schemata = load_schema(params, 'time_series')
+        self.obj_schemata = load_schema(params, 'object')
+        self.objts_schemata = load_schema(params, 'object_time_series')
 
         
     def _scan_channels(self):

@@ -408,23 +408,13 @@ class ProjectComponent(component.Component):
                 'project': {
                     'name': self.project.config.get('name', 'Untitled Project'),
                     'title': self.project.config.get('title', ''),
-                    'error_message': self.app.error_message,
                     'is_secure': self.project.config.get('system', {}).get('is_secure', False)
                 },
-                'data_source_module': {
-                    module.name: module.public_config for module in self.app.datasource_list
-                },
-                'task_module': {
-                    module.name: module.public_config for module in self.app.taskmodule_list
-                },
-                'user_module': {
-                    module.name: module.public_config for module in self.app.usermodule_list
-                },
-                'extension_module': {
-                    name: module.public_config for name, module in self.app.extension_table.items() 
-                },
-                'style': self.project.config.get('style', None)
+                'style': self.project.config.get('style', None),
             }
+
+            for components in self.app.components:
+                doc.update(components.public_config() or {})
             
         if (not with_list) or (self.project_dir is None):
             return doc

@@ -6,15 +6,15 @@ from datasource import DataSource
     
     
 class DataSource_Honeybee(DataSource):
-    def __init__(self, project_config, config):
-        super().__init__(project_config, config)
-        self.bin_dir = self.config.get('bin_dir', None)
-        self.config_file = self.config.get('config', None)
-        self.dripline_db = self.config.get('dripline_db', None)
+    def __init__(self, app, project, params):
+        super().__init__(app, project, params)
+        self.bin_dir = params.get('bin_dir', None)
+        self.config_file = params.get('config', None)
+        self.dripline_db = params.get('dripline_db', None)
         if self.bin_dir is not None:
-            self.bin_dir = os.path.join(project_config.project_dir, self.bin_dir)
+            self.bin_dir = os.path.join(project.project_dir, self.bin_dir)
         if self.config_file is not None:
-            self.config_file = os.path.join(project_config.project_dir, self.config_file)
+            self.config_file = os.path.join(project.project_dir, self.config_file)
 
             
     def get_channels(self):
@@ -64,21 +64,6 @@ class DataSource_Honeybee(DataSource):
         return result
 
                 
-#    def get_dataframe(self, channels, length, to, resampling=None, reducer='last', timezone='local'):
-#        TODO: implement timezone
-#        cmd = [ os.path.join(self.bin_dir, 'hb-get-data') ]
-#        cmd.extend(channels)
-#        cmd.append('--length=%f' % length)
-#        if to is not None:
-#            cmd.append('--to-ts=%f' % to)
-#        if resampling is not None:
-#            cmd.append('--resample=%s,%s' % (resampling, reducer))
-#        cmd.append('--config=' + self.config_file)
-#        if self.dripline_db is not None:
-#            cmd.append('--dripline-db=' + self.dripline_db)
-#        return self.execute(cmd)
-
-    
     def execute(self, cmd):
         try:
             process = subprocess.run(

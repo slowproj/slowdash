@@ -1,52 +1,32 @@
 
-import time, datetime, json, uuid, re, requests, logging
-import extension
+import time, datetime, json, uuid, re, logging
+import component
 
 
-class Extension_Jupyter(extension.ExtensionModule):
-    def __init__(self, project_config, module_config, slowdash):
-        super().__init__(project_config, module_config, slowdash)
-        self.jupyter_url = module_config.get('url', '')
-        self.jupyter_token = module_config.get('token', '')
-        self.jupyter_session = None
-        self.xsrf_token = ''
+class Export_Notebook(component.ComponentPlugin):
+    def __init__(self, app, project, params):
+        super().__init__(app, project, params)
 
-        # in containers, URLs might be different from what external browsers see
-        self.jupyter_internal_url = module_config.get('jupyter_internal_url', '').strip()
-        self.slowdash_internal_url = module_config.get('slowdash_internal_url', '').strip()
-        if len(self.jupyter_internal_url) == 0:
-            self.jupyter_internal_url = self.jupyter_url
-        if len(self.slowdash_internal_url) == 0:
-            self.slowdash_internal_url = None
+        self.nbformat = 4
+        self.nbformat_minor = 5
+
         
-        self.public_config['url'] = self.jupyter_url
+    def public_config(self):
+        return {
+            'notebook_format_version': f'{self.nbformat}.{self.nbformat_minor}'
+        }
 
         
     def process_get(self, path, opts, output):
-        if len(path) > 1 and path[0] == 'python':
-            output.write(self.generate_python(path[1], opts).encode())
+        if len(path) > 2 and path[1] == 'python':
+            output.write(self.generate_python(path[2], opts).encode())
             return 'text/plain'
-        elif len(path) > 1 and path[0] == 'notebook':
-            notebook = self.generate_notebook(path[1], opts)
+        
+        elif len(path) > 2 and path[1] == 'notebook':
+            notebook = self.generate_notebook(path[2], opts)
             output.write(json.dumps(notebook, indent=4).encode())
             return 'text/plain'
 
-        return None
-
-    
-    def process_post(self, path, opts, doc, output):
-        if len(path) > 1 and path[0] == 'jupyter':
-            try:
-                record = json.loads(doc.decode())
-            except Exception as e:
-                logging.error('Jupyter post: JSON decoding error: %s' % str(e))
-                return 400 # Bad Request
-            filename = record.get('filename', None)
-            if filename is None or not filename.replace('_', '0').replace('-', '0').replace('.', '0').isalnum():
-                return 400 # Bad Request
-            notebook = self.generate_notebook(path[1], opts)
-            return self.post_notebook(filename, notebook, output)
-        
         return None
 
     
@@ -64,10 +44,8 @@ class Extension_Jupyter(extension.ExtensionModule):
             logging.error(e)
             return None
 
-        if self.slowdash_internal_url is not None:
-            slowdash_url = self.slowdash_internal_url
-        elif not slowdash_url.replace(':', '0').replace('/', '0').replace('.', '0').replace(':', '0').replace('~', '0').isalnum():
-            slowdash_url = 'http://SLOW.DASH.URL.HERE:PORT'
+        if not slowdash_url.replace(':', '0').replace('/', '0').replace('.', '0').replace(':', '0').replace('~', '0').isalnum():
+            slowdash_url = 'http://SLOW.DASH.URL.HERE'
             
         channels = []
         for ch in params.split(','):
@@ -127,8 +105,8 @@ class Extension_Jupyter(extension.ExtensionModule):
     
     def generate_notebook(self, params, opts):
         notebook = {
-            'nbformat': 4,
-            'nbformat_minor': 5,
+            'nbformat': self.nbformat,
+            'nbformat_minor': self.nbformat_minor,
             'metadata': {
                 'language_info': {
                     'name': 'python',
@@ -156,50 +134,3 @@ class Extension_Jupyter(extension.ExtensionModule):
             notebook['cells'].append(cell)
 
         return notebook
-
-
-    def connect_jupyter(self):
-        if self.jupyter_session is not None:
-            return True
-        if len(self.jupyter_internal_url) == 0:
-            return False
-        
-        try:
-            self.jupyter_session = requests.Session()
-            resonse = self.jupyter_session.get(f'{self.jupyter_internal_url}/tree')
-            self.xsrf_token = self.jupyter_session.cookies.get('_xsrf')
-        except Exception as e:
-            logging.error('Jupyter connection: %s' % str(e))
-            self.jupyter_session = None
-            return False
-
-        return True
-            
-            
-    def post_notebook(self, filename, notebook, output):
-        if not self.connect_jupyter():
-            return { 'status': 'error', 'message': 'unable to connect to Jupyter' }
-
-        try:
-            response = self.jupyter_session.put(
-                f'{self.jupyter_internal_url}/api/contents/{filename}',
-                headers = {
-                    'Content-Type': 'application/json',
-                    'X-XSRFToken': self.xsrf_token,
-                    'Authorization':f'Token {self.jupyter_token}'
-                },
-                data = json.dumps({
-                    'type': 'notebook',
-                    'format': 'json',
-                    'content': notebook
-                })
-            )
-            if response.status_code in [ 200, 201 ]:
-                return { 'status': 'ok', 'notebook_url': f'{self.jupyter_url}/notebooks/{filename}' }
-            else:
-                logging.error('Jupyter Notebook posting: %d %s' % (response.status_code, response.text))
-                return { 'status': 'error', 'message': response.text }
-            
-        except Exception as e:
-            logging.error('Jupyter Notebook posting: %s' % str(e))
-            return { 'status': 'error', 'message': str(e) }

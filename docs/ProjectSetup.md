@@ -238,7 +238,7 @@ SlowDash can be executed as a CGI or WSGI module of the Apache web server.
 - As long as the web server is running, there will be no additional maintenance overhead for this SlowDash project. This is maybe useful to keep the data accessible after the measurement has been finished.
 
 #### Disadvantages
-- User Python scripts (control tasks and user modules) are disabled for CGI and WSGI by default, in order to prevent multiple execution of user scripts in an unexpected way. To use a module with CGI/WSGI, set the `cgi_enabled` parameter `true` in the module configuration. Be careful for all the side effects, including performance overhead and security concerns.
+- User Python scripts (control tasks and user modules) are disabled for CGI and WSGI by default, in order to prevent multiple execution of user scripts in an unexpected way. To use a module with CGI/WSGI, set the `enabled_for_cgi` parameter `true` in the module configuration. Be careful for all the side effects, including performance overhead and security concerns.
 - CGI starts a SlowDash process for every HTTP request (can be very frequent!), therefore,
   - Severe performance overhead exists, and
   - No continuous data processing is possible, such as the ones typically done in user modules.

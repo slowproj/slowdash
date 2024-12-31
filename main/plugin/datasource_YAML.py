@@ -6,10 +6,10 @@ from datasource import DataSource
 
     
 class DataSource_YAML(DataSource):
-    def __init__(self, project_config, config):
-        super().__init__(project_config, config)
-        self.filepath = config.get('file', None)
-        self.name = config.get('name', None)
+    def __init__(self, app, project, params):
+        super().__init__(app, project, params)
+        self.filepath = params.get('file', None)
+        self.name = params.get('name', None)
         self.tree = None
         
         if self.filepath is None:

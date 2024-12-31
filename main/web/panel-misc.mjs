@@ -782,8 +782,8 @@ class TaskManagerPanel extends Panel {
 
         this.inputDiv.html('&gt; <input style="width:calc(100% - 10em)"><button>Send</button>');
         this.inputDiv.find('button').bind('click', e=>{
-            const cmd = $(e.target).closest('div').find('input').val();
-            this._send_command(cmd, e);
+            const line = $(e.target).closest('div').find('input').val();
+            this._send_console(line, e);
         });
 
         this.is_loading = true;  // postpone loading until configure() is completed
@@ -824,14 +824,14 @@ class TaskManagerPanel extends Panel {
     }
 
     
-    async _send_command(cmd, event=null) {
+    async _send_console(line, event=null) {
         const url = './api/console/';
         try {
-            this.indicator.open("Sending Command...", "&#x23f3;", event?.clientX ?? null, event?.clientY ?? null);
+            this.indicator.open("sending command...", "&#x23f3;", event?.clientX ?? null, event?.clientY ?? null);
             let response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json; charset=utf-8' },
-                body: cmd,
+                body: line,
             });
             if (! response.ok) {
                 throw new Error(response.status + " " + response.statusText);
@@ -843,8 +843,27 @@ class TaskManagerPanel extends Panel {
             this.indicator.close("Error: " + e.message, "&#x274c;", 5000);
         }
     }
+
     
+    async _send_control(name, action, event=null) {
+        const url = `./api/control/task/${name}`;
+        try {
+            this.indicator.open("sending command...", "&#x23f3;", event?.clientX ?? null, event?.clientY ?? null);
+            let response = await fetch(url, {
+                method: 'POST',
+                body: `{"action":"${action}"}`
+            });
+            if (! response.ok) {
+                throw new Error(response.status + " " + response.statusText);
+            }
+            this.indicator.close("ok", "&#x2705;", 1000);
+        }
+        catch (e) {
+            this.indicator.close("error: " + e.message, "&#x274c;", 5000);
+        }
+    }
     
+
     _render_task_table(record) {
         this.table.empty();
         let tr = $('<tr>');
@@ -924,26 +943,11 @@ class TaskManagerPanel extends Panel {
             $('<td>').appendTo(tr).text(last_command);
             $('<td>').appendTo(tr).html(status);
             $('<td>').appendTo(tr).attr('align','center').html(control);
-            tr.appendTo(this.table);
-
             tr.find('button').bind('click', e=>{
                 const action = $(e.target).text().toLowerCase();
-                const url = `./api/control/task/${entry.name}`;
-                this.indicator.open("sending command...", "&#x23f3;", event?.clientX ?? null, event?.clientY ?? null);
-                fetch(url, {
-                    method: 'POST',
-                    body: `{"action":"${action}"}`
-                })
-                    .then(response => {
-                        if (! response.ok) {
-                            throw new Error(response.status + " " + response.statusText);
-                        }
-                        this.indicator.close("ok", "&#x2705;", 1000);
-                    })
-                    .catch (e => {
-                        this.indicator.close("error: " + e.message, "&#x274c;", 5000);
-                    });
+                this._send_control(entry.name, action, e);
             });
+            tr.appendTo(this.table);
         }
     }
 

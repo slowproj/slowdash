@@ -4,6 +4,7 @@ import slowpy.store as sls
 
 ControlSystem.import_control_module('DummyDevice')
 device = ControlSystem().randomwalk_device()
+ch0, ch1, ch2, ch3 = [ device.ch(ch) for ch in range(4) ]
 print("Random-Walk Device Loaded")
 
 #name = input('who are you?')
@@ -15,19 +16,19 @@ print("Random-Walk Device Loaded")
 
 def set_V0(V0, **kwargs):
     ramping = kwargs.get('ramping', 10)
-    device.ch(0).ramping(ramping).set(V0)
+    ch0.ramping(ramping).set(V0)
 
 def set_V1(V1, **kwargs):
     ramping = kwargs.get('ramping', 10)
-    device.ch(1).ramping(ramping).set(V1)
+    ch1.ramping(ramping).set(V1)
 
 def set_V2(V2, **kwargs):
     ramping = kwargs.get('ramping', 10)
-    device.ch(2).ramping(ramping).set(V2)
+    ch2.ramping(ramping).set(V2)
 
 def set_V3(V3, **kwargs):
     ramping = kwargs.get('ramping', 10)
-    device.ch(3).ramping(ramping).set(V3)
+    ch3.ramping(ramping).set(V3)
 
 def set_all(**kwargs):
     set_V0(**kwargs)
@@ -36,10 +37,10 @@ def set_all(**kwargs):
     set_V3(**kwargs)
 
 def stop(**kwargs):
-    device.ch(0).ramping().status().set(0)
-    device.ch(1).ramping().status().set(0)
-    device.ch(2).ramping().status().set(0)
-    device.ch(3).ramping().status().set(0)
+    ch0.ramping().status().set(0)
+    ch1.ramping().status().set(0)
+    ch2.ramping().status().set(0)
+    ch3.ramping().status().set(0)
 
 
     
@@ -50,19 +51,19 @@ class StatusNode(ControlNode):
         return {
             'columns': [ 'Channel', 'Value', 'Ramping' ],
             'table': [
-                [ 'Ch0', float(device.ch(0)), 'Yes' if device.ch(0).ramping().status().get() else 'No' ],
-                [ 'Ch1', float(device.ch(1)), 'Yes' if device.ch(1).ramping().status().get() else 'No' ],
-                [ 'Ch2', float(device.ch(2)), 'Yes' if device.ch(2).ramping().status().get() else 'No' ],
-                [ 'Ch3', float(device.ch(3)), 'Yes' if device.ch(3).ramping().status().get() else 'No' ],
+                [ 'Ch0', ch0.get(), 'Yes' if ch0.ramping().status().get() else 'No' ],
+                [ 'Ch1', ch1.get(), 'Yes' if ch1.ramping().status().get() else 'No' ],
+                [ 'Ch2', ch2.get(), 'Yes' if ch2.ramping().status().get() else 'No' ],
+                [ 'Ch3', ch3.get(), 'Yes' if ch3.ramping().status().get() else 'No' ],
             ]
         }
     
 def _export():
     return [
-        ('V0', device.ch(0)),
-        ('V1', device.ch(1)),
-        ('V2', device.ch(2)),
-        ('V3', device.ch(3)),
+        ('V0', ch0),
+        ('V1', ch1),
+        ('V2', ch2),
+        ('V3', ch3),
         ('Status', StatusNode())
     ]
 
@@ -81,8 +82,7 @@ def _initialize(params):
 
 
 def _finalize():
-    global datastore
-    del datastore
+    datastore.close()
 
 
 def _loop():

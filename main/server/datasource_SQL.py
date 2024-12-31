@@ -2,7 +2,8 @@
 
 
 import sys, os, time, datetime, logging, traceback
-from datasource import DataSource, Schema
+from datasource import DataSource
+from dataschema import Schema
 from datasource_TableStore import DataSource_TableStore
 
 
@@ -65,11 +66,11 @@ class SQLServer():
 
     
 class DataSource_SQL(DataSource_TableStore):
-    def __init__(self, project_config, config):
+    def __init__(self, app, project, params):
         self.server = None
         self.time_sep = 'T'
         self.db_has_floor = False
-        super().__init__(project_config, config)
+        super().__init__(app, project, params)
 
         
     # override this in DB implementation class
@@ -144,11 +145,11 @@ class DataSource_SQL(DataSource_TableStore):
         return result
 
     
-    def _configure(self, project_config, config):
-        super()._configure(project_config, config)
+    def _configure(self, params):
+        super()._configure(params)
         
         self.views = {}
-        views = config.get('view', [])
+        views = params.get('view', [])
         if type(views) is not list:
             views = [views]
         for view in views:
@@ -171,11 +172,15 @@ class DataSource_SQL(DataSource_TableStore):
         if schema.tag_value_sql is None:
             # TODO: this is inefficient. Modify not to go though all the DB entries.
             schema.tag_value_sql = 'select distinct %s from %s' % (schema.tag, schema.table)
-            logging.warning('Performing a full scan of the SQL table (%s) for available channels...' % schema.table)
+            
+        start_time = time.time()
+        result = self.server.execute(schema.tag_value_sql)
+        lapse = time.time() - start_time
+        if lapse > 10:
+            logging.warning(f'Full scan of a SQL table ({schema.table}) was performed to obtain a list of available channels. It took {int(lapse)} seconds.')
             logging.warning('  This full-scan can be avoided by either:')
             logging.warning('    - manually list the channels, in "data_source/time_series/tags/list" as an array, or')
             logging.warning('    - provide a SQL that returns the list, in "data_source/time_series/tags/sql" as a string')
-        result = self.server.execute(schema.tag_value_sql)
         if result.is_error:
             logging.error('SQL Error: %s: %s' % (result.error, schema.tag_value_sql))
             return None
@@ -228,21 +233,24 @@ class DataSource_SQL(DataSource_TableStore):
                 logging.info('Unable to connect to SQLDB: %s' % str(e))
                 server = None
             if server is None or server.conn is None:
-                logging.info('retrying in 5 sec...')
+                logging.info(f'retrying in 5 sec... ({i+1}/{repeat})')
                 time.sleep(interval)
             else:
                 return server
         else:
             logging.error('Unable to connect to SQLDB')
-            logging.error(traceback.format_exc())
+            if server is None:
+                logging.error(traceback.format_exc())
             return SQLServer(None)
 
+        
     # The DB-specific syntax to get a time difference between time_col and (stop_sec | stop_tstamp) 
     # Override this if needed
     def _get_timediffsec_query(self, time_col, time_type, stop_sec, stop_tstamp):
         # Probably this is a common way in PostgreSQL?
         # Doesn't it depend on the time_type? what if {time_col} is already a unix/int?
         return f"{stop_sec} - extract(epoch from {time_col})"
+
     
     def _execute_query(self, table_name, time_col, time_type, time_from, time_to, tag_col, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
         if self.server is None:

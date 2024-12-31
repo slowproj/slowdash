@@ -2,7 +2,8 @@
 
 
 import sys, os, time, logging, traceback
-from datasource import DataSource, Schema
+from dataschema import Schema
+from datasource import DataSource
 
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
@@ -10,18 +11,18 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 
 
 class DataSource_InfluxDB2(DataSource):
-    def __init__(self, project_config, config):
-        super().__init__(project_config, config)
+    def __init__(self, app, project, params):
+        super().__init__(app, project, params)
         self.client = None
         self.channels_scanned = False
 
-        dburl = Schema.parse_dburl(self.config.get('url', ''))
-        self.protocol = self.config.get('protocol', 'http')
-        self.host = self.config.get('host', dburl.get('host', 'localhost'))
-        self.port = self.config.get('port', dburl.get('port', '8086'))
-        self.org = self.config.get('organization', dburl.get('user', None))
-        self.token = self.config.get('token', dburl.get('password', None))
-        self.bucket = self.config.get('bucket', dburl.get('db', None))
+        dburl = Schema.parse_dburl(params.get('url', ''))
+        self.protocol = params.get('protocol', 'http')
+        self.host = params.get('host', dburl.get('host', 'localhost'))
+        self.port = params.get('port', dburl.get('port', '8086'))
+        self.org = params.get('organization', dburl.get('user', None))
+        self.token = params.get('token', dburl.get('password', None))
+        self.bucket = params.get('bucket', dburl.get('db', None))
 
         if self.org is None:
             logging.error('"organization" is not specified')
@@ -33,9 +34,9 @@ class DataSource_InfluxDB2(DataSource):
             logging.error('"bucket" is not specified')
             return
             
-        def load_schema(config, entrytype):
+        def load_schema(params, entrytype):
             schema_list = []
-            entry_list = config.get(entrytype, [])
+            entry_list = params.get(entrytype, [])
             for entry in entry_list if type(entry_list) is list else [ entry_list ]:
                 measurement = entry.get('measurement', None)
                 schema_conf = entry.get('schema', None)
@@ -51,8 +52,8 @@ class DataSource_InfluxDB2(DataSource):
                 schema_list.append(schema)
             return schema_list
         
-        self.ts_schemata = load_schema(config, 'time_series')
-        self.objts_schemata = load_schema(config, 'object_time_series')
+        self.ts_schemata = load_schema(params, 'time_series')
+        self.objts_schemata = load_schema(params, 'object_time_series')
 
         # "measurement" in URL
         bucket_and_meas = self.bucket.split('/')
@@ -83,7 +84,8 @@ class DataSource_InfluxDB2(DataSource):
                     self.api.query(test_query, org=self.org)
                     break
                 except Exception as e:
-                    logging.info('Unable to connect to InfluxDB2 "%s", retrying in 5 sec: %s' % (url, str(e)))
+                    logging.info(f'Unable to connect to InfluxDB2: {e}')
+                    logging.info(f'retrying in 5 sec... ({i+1}/12)')
                     time.sleep(5)
             else:
                 logging.error('Unable to connect to InfluxDB2 "%s"' % url)

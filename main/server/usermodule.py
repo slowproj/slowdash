@@ -1,10 +1,9 @@
 #! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 24 October 2022 #
 
-import sys, os, time, io, logging, traceback
+import sys, os, time, threading, types, json, logging, traceback
 import importlib.machinery
-import types
-import threading
+from component import Component
 
 
 class UserModuleThread(threading.Thread):
@@ -14,9 +13,11 @@ class UserModuleThread(threading.Thread):
         self.usermodule = usermodule
         self.params = params
         self.stop_event = stop_event
+        self.initialized_event = threading.Event()
         
         
     def run(self):
+        self.initialized_event.clear()
         self.stop_event.clear()
         if not self.usermodule.load():
             return
@@ -38,6 +39,8 @@ class UserModuleThread(threading.Thread):
             except Exception as e:
                 self.usermodule.handle_error('user module error: _initialize(): %s' % str(e))
             
+        self.initialized_event.set()
+        
         if func_run and not self.stop_event.is_set():
             self.usermodule.routine_history.append((time.time(), '_run()'))
             try:
@@ -69,7 +72,6 @@ class UserModule:
         self.filepath = filepath
         self.name = name
         self.params = params
-        self.public_config = {}
 
         self.module = None
         self.user_thread = None
@@ -120,7 +122,7 @@ class UserModule:
         self.command_history = []
         self.error = None
         
-        if self.module is not None and False:  # ??? it look like just re-doing load() works...
+        if self.module is not None and False:  #??? it looks like just re-doing load() works...
             #??? this reload() does not execute statements outside a function
             print("=== Reloading %s ===" % self.filepath)
             self._preset_module(self.module)
@@ -156,26 +158,29 @@ class UserModule:
         self.func_process_command = self.get_func('_process_command')
         self.func_halt = self.get_func('_halt')
 
-        logging.info('user module loaded: %s' % self.name)
+        logging.debug('user module loaded: %s' % self.name)
         if self.func_get_channels and self.func_get_data:
-            logging.info('loaded user module data interface')
+            logging.debug('loaded user module data interface')
         if self.func_process_command:
-            logging.info('loaded user module command processor')
+            logging.debug('loaded user module command processor')
 
         return True
         
     
     def start(self):
         self.stop()
-        logging.info('starting user module "%s"' % self.name)
         
+        logging.info('starting user module "%s"' % self.name)
         self.stop_event.clear()
         self.user_thread = UserModuleThread(self, self.params, self.stop_event)
         self.user_thread.start()
         
         
     def stop(self):
-        logging.info('stoping user module "%s"' % self.name)
+        if self.module is None or self.user_thread is None or not self.user_thread.is_alive():
+            return
+        
+        logging.info('stopping user module "%s"' % self.name)
         
         if self.func_halt is not None:
             try:
@@ -183,9 +188,6 @@ class UserModule:
             except Exception as e:
                 self.handle_error('user module error: halt(): %s' % str(e))
         self.stop_event.set()
-        
-        if self.module is None or self.user_thread is None or not self.user_thread.is_alive():
-            return
         
         if self.user_thread is not None:
             self.user_thread.join()
@@ -221,6 +223,11 @@ class UserModule:
         if self.module is None or self.func_get_channels is None:
             return None
         
+        if not self.user_thread.initialized_event.is_set():
+            time.sleep(1)
+            if not self.user_thread.initialized_event.is_set():
+                logging.warining('User/Task module not yet initialized')
+                
         try:
             return self.func_get_channels()
         except Exception as e:
@@ -232,6 +239,11 @@ class UserModule:
         if self.module is None or self.func_get_data is None:
             return None
         
+        if not self.user_thread.initialized_event.is_set():
+            time.sleep(1)
+            if not self.user_thread.initialized_event.is_set():
+                logging.warining('User/Task module not yet initialized')
+                
         try:
             return self.func_get_data(channel)
         except Exception as e:
@@ -243,6 +255,11 @@ class UserModule:
         if self.module is None or self.func_process_command is None:
             return None
         
+        if not self.user_thread.initialized_event.is_set():
+            time.sleep(1)
+            if not self.user_thread.initialized_event.is_set():
+                logging.warining('User/Task module not yet initialized')
+                
         try:
             result = self.func_process_command(params)
         except Exception as e:
@@ -263,9 +280,132 @@ class UserModule:
             self.error = message
             logging.error(message)
             logging.error(traceback.format_exc())
+            # for web console
             print(message)
             print(traceback.format_exc())
     
         
     def clear_error(self):
         self.error = None
+
+
+
+class UserModuleComponent(Component):
+    def __init__(self, app, project):
+        super().__init__(app, project)
+
+        self.usermodule_list = []
+        
+        usermodule_node = self.project.config.get('module', [])
+        if not isinstance(usermodule_node, list):
+            usermodule_node = [ usermodule_node ]
+            
+        for node in usermodule_node:
+            if not isinstance(node, dict) or 'file' not in node:
+                logging.error('bad user module configuration')
+                continue
+            if app.is_cgi and node.get('enabled_for_cgi', False) != True:
+                continue
+            if app.is_command and node.get('enabled_for_commandline', True) != True:
+                continue
+            filepath = node['file']
+            params = node.get('parameters', {})
+            module = UserModule(filepath, filepath, params)
+            if module is None:
+                logging.error('Unable to load user module: %s' % filepath)
+            else:
+                self.usermodule_list.append(module)
+
+        for module in self.usermodule_list:
+            module.start()
+
+
+    def __del__(self):
+        self.terminate()
+
+                    
+    def terinate(self):
+        for module in self.usermodule_list:
+            module.stop()
+            
+        if len(self.usermodule_list) > 0:
+            logging.info('user modules terminated')
+            
+    
+    def public_config(self):
+        if len(self.usermodule_list) == 0:
+            return None
+        
+        return {
+            'user_module': {
+                module.name: {} for module in self.usermodule_list
+            }
+        }
+
+
+    def process_get(self, path, opts, output):
+        if len(path) > 0 and path[0] == 'channels':
+            result = []
+            for usermodule in self.usermodule_list:
+                channels = usermodule.get_channels()
+                if channels is not None:
+                    result.extend(channels)
+            return result
+
+        if len(path) > 1 and path[0] == 'data':
+            if len(self.usermodule_list) == 0:
+                return None
+            try:
+                channels = path[1].split(',')
+                length = float(opts.get('length', '3600'))
+                to = float(opts.get('to', int(time.time())+1))
+            except Exception as e:
+                logging.error('Bad data URL: %s: %s' % (str(opts), str(e)))
+                return False
+            has_result, result = False, {}
+            start = to - length
+            t = time.time() - start
+            if t >= 0 and t <= length + 10:
+                for usermodule in self.usermodule_list:
+                    for ch in channels:
+                        data = usermodule.get_data(ch)
+                        if data is None:
+                            continue
+                        has_result = True
+                        result[ch] = {
+                            'start': start, 'length': length,
+                            't': t,
+                            'x': data
+                        }
+
+            return result if has_result else None
+        
+        return None
+
+    
+    def process_post(self, path, opts, doc, output):
+        if len(self.usermodule_list) == 0:
+            return None
+        
+        if len(path) == 1 and path[0] == 'control':
+            try:
+                record = json.loads(doc.decode())
+            except Exception as e:
+                logging.error('control: JSON decoding error: %s' % str(e))
+                return 400 # Bad Request
+            logging.info(f'UserModule Command: {record}')
+
+            # unlike GET, only one module can process to POST
+            for module in self.usermodule_list:
+                result = module.process_command(record)
+                if result is None:
+                    continue
+                if type(result) is bool:
+                    if result:
+                        return {'status': 'ok'}
+                    else:
+                        return {'status': 'error'}
+                else:
+                    return result
+        
+        return None

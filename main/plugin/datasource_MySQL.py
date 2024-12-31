@@ -8,13 +8,13 @@ import MySQLdb as db
 import re
 
 class DataSource_MySQL(DataSource_SQL):
-    def __init__(self, project_config, config):
-        super().__init__(project_config, config)
+    def __init__(self, app, project, params):
+        super().__init__(app, project, params)
         
         self.db_has_floor = True
 
         # Parse the PostgreSQL-style URL into each parameter
-        self.url = config.get('url', None)
+        self.url = params.get('url', None)
         if self.url is not None:
             if self.url[0:8] != 'mysql://':
                 self.url = 'mysql://' + self.url
@@ -30,7 +30,8 @@ class DataSource_MySQL(DataSource_SQL):
                 self.database = match.group(5)
             else:
                 logging.error("Syntax error in the URL: %s" % (self.url))
-            
+
+                
     def connect(self):
         if self.url is None:
             return super().connect()
@@ -49,6 +50,7 @@ class DataSource_MySQL(DataSource_SQL):
         
         return SQLServer(conn)
 
+    
     # Override
     def _get_timediffsec_query(self, time_col, time_type, stop_sec, stop_tstamp):
         if time_type == 'unix':
