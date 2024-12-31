@@ -55,7 +55,6 @@ class App:
 
                 
     def __del__(self):
-        # this will stop user/task module threads
         del self.components
         
         if self.console_stdout is not None:
@@ -66,6 +65,11 @@ class App:
             
         logging.info('cleanup completed')
 
+
+    def terminate(self):
+        for component in reversed(self.components):
+            component.terminate()
+            
         
     def process_get(self, path, opts, output):
         """ GET-request handler

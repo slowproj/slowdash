@@ -5,23 +5,26 @@ import slowpy.control as spc
 
 
 class RandomWalkDeviceNode(spc.ControlNode):
-    def __init__(self, walk, decay):
-        self.device = spc.RandomWalkDevice(n=4, walk=walk, decay=decay, tick=0)
+    def __init__(self, walk, decay, n=4):
+        self.device = spc.RandomWalkDevice(n=n, walk=walk, decay=decay, tick=0)
+        self.ch_node = [ RandomWalkChannelNode(self.device, ch) for ch in range(n) ]
+        self.walk_node = RandomWalkConfigNode(self.device, 'walk')
+        self.decay_node = RandomWalkConfigNode(self.device, 'decay')
         
     ## child nodes ##
     # randomwalk_device().ch(0)
     def ch(self, channel):
-        return RandomWalkChannelNode(self.device, channel)
+        return self.ch_node[channel]
             
     
     # randomwalk_device().walk()
     def walk(self):
-        return RandomWalkConfigNode(self.device, 'walk')
+        return self.walk_node
             
     
     # randomwalk_device().decay()
     def decay(self):
-        return RandomWalkConfigNode(self.device, 'decay')
+        return self.decay_node
             
     
     @classmethod

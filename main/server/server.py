@@ -283,9 +283,11 @@ def start(webui, port, web_path, index_file):
         pass
 
     sys.stderr.write('Terminated\n')
+    webui.app.terminate()
+    
     try:
         httpserver.shutdown()
     except:
         pass
-        
+
     httpserver.server_close()

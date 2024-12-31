@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 24 May 2024 #
 
-import os, time, glob, json, threading, logging
+import sys, os, time, glob, json, threading, logging
 from usermodule import UserModule
 from component import Component
 
@@ -40,7 +40,7 @@ class TaskModule(UserModule):
     def _preset_module(self, module):
         super()._preset_module(module)
 
-        # obtain a reference to the ControlSystem class in the user task module
+        # obtain a reference to the ControlSystem class in the task module
         def register(control_system):
             self.control_system = control_system
             self.control_system._global_stop_event.clear()
@@ -50,7 +50,7 @@ class TaskModule(UserModule):
             exec("from slowpy.control import ControlSystem", module.__dict__)
             exec("_register(ControlSystem())", module.__dict__)
         except Exception as e:
-            self.handle_error('unable to load user module: %s' % str(e))
+            self.handle_error('unable to load task module: %s' % str(e))
 
         
     def load(self):
@@ -61,10 +61,8 @@ class TaskModule(UserModule):
 
             
     def stop(self):
-        super().stop()
-
         if self.control_system is not None:
-            logging.info('calling ControlSystem.stop() in UserTask "%s"' % self.name)
+            logging.debug('calling ControlSystem.stop() in Task-Module "%s"' % self.name)
             self.control_system.stop()
             
         if self.command_thread is not None:
@@ -80,6 +78,8 @@ class TaskModule(UserModule):
                 pass
             thread.join()
         self.async_command_thread_set = set()
+
+        super().stop()
         
         
     def match_namespace(self, name):
@@ -188,7 +188,7 @@ class TaskModule(UserModule):
         try:
             result = self.func_process_command(params)
         except Exception as e:
-            self.handle_error('user module error: process_command(): %s' % str(e))
+            self.handle_error('task module error: process_command(): %s' % str(e))
             return {'status': 'error', 'message': str(e) }
 
         if result is not None:
@@ -324,15 +324,21 @@ class TaskModuleComponent(Component):
 
                 
     def __del__(self):
+        self.terminate()
+
+        
+    def terminate(self):
         for module in self.taskmodule_list:
             module.stop()
             
         if len(self.taskmodule_list) > 0:
-            logging.info('slowtask modules stopped')
-        self.taskmodule_list.clear()
+            logging.info('slowtask modules terminated')
 
 
     def public_config(self):
+        if len(self.taskmodule_list) == 0:
+            return None
+        
         return {
             'task_module': {
                 module.name: { 'auto_load': module.auto_load } for module in self.taskmodule_list
@@ -341,6 +347,9 @@ class TaskModuleComponent(Component):
 
 
     def process_get(self, path, opts, output):
+        if len(self.taskmodule_list) == 0:
+            return None
+        
         if len(path) > 1 and path[0] == 'control' and path[1] == 'task':
             return self._get_task_status()
             
@@ -383,6 +392,9 @@ class TaskModuleComponent(Component):
 
 
     def process_post(self, path, opts, doc, output):
+        if len(self.taskmodule_list) == 0:
+            return None
+        
         if len(path) > 1 and path[0] == 'update' and path[1] == 'tasklist':
             self._scan_task_files()
             return {'status': 'ok'}
@@ -393,11 +405,12 @@ class TaskModuleComponent(Component):
             except Exception as e:
                 logging.error('control: JSON decoding error: %s' % str(e))
                 return 400 # Bad Request
-
+            
             result = None
             if len(path) == 1:
+                logging.info(f'Task Command: {record}')
                 # unlike GET, only one module can process to POST
-                for module in self.usermodule_list:
+                for module in self.taskmodule_list:
                     result = module.process_command(record)
                     if result is not None:
                         break

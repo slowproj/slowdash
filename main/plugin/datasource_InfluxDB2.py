@@ -84,7 +84,8 @@ class DataSource_InfluxDB2(DataSource):
                     self.api.query(test_query, org=self.org)
                     break
                 except Exception as e:
-                    logging.info('Unable to connect to InfluxDB2 "%s", retrying in 5 sec: %s' % (url, str(e)))
+                    logging.info(f'Unable to connect to InfluxDB2: {e}')
+                    logging.info(f'retrying in 5 sec... ({i+1}/12)')
                     time.sleep(5)
             else:
                 logging.error('Unable to connect to InfluxDB2 "%s"' % url)

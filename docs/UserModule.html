@@ -126,8 +126,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled_for_commandline</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div>
 <p>[TODO] implement SUFFIX</p>
 <p>By default, user modules are not enabled if the server program is
-launched by CGI (or command-line). To enable this, set the
-<code>enabled_for_cgi</code> (or <code>enabled_for_commandline</code>)
+launched by CGI. To enable this, set the <code>enabled_for_cgi</code>
 parameter <code>true</code>. Be careful for all the side effects,
 including performance overhead and security issues. As multiple user
 modules can be loaded in parallel, splitting user functions to a
@@ -274,7 +273,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>        }</span>
 <span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    }</span>
 <span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<h3 id="using-it-from-web-browser">Using it from web browser</h3>
+<h3 id="using-it-from-a-web-browser">Using it from a web browser</h3>
 <ul>
 <li>Start slow-dash at the project directory</li>
 <li>Add a new “Tree” panel, with channel “WorldClock”.</li>

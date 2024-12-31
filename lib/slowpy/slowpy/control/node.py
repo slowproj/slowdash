@@ -420,11 +420,15 @@ class RampingStatusNode(ControlNode):
 
         
     def set(self, zero_to_stop):
+        """set(0) to stop ramping
+        """
         if str(zero_to_stop) == '0' or bool(zero_to_stop) == False:
             self.ramping_node.target_value = None
 
     
     def get(self):
+        """returns True if ramping is in progress
+        """
         return self.ramping_node.target_value is not None
 
 

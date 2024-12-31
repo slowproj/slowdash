@@ -414,7 +414,7 @@ class ProjectComponent(component.Component):
             }
 
             for components in self.app.components:
-                doc.update(components.public_config())
+                doc.update(components.public_config() or {})
             
         if (not with_list) or (self.project_dir is None):
             return doc

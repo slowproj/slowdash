@@ -15,6 +15,11 @@ class Component:
 
         
     # override this
+    def terminate(self):
+        pass
+
+    
+    # override this
     def public_config(self):
         """ returns contents for the "config" API (exposed to users)
         Note:
@@ -292,6 +297,6 @@ class PluginComponent(Component):
             logging.error(traceback.format_exc())
             return None
         
-        logging.info(f'loaded plugin {plugin_name}')
+        logging.info(f'loaded plugin {class_name}')
 
         return instance

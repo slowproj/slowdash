@@ -233,21 +233,24 @@ class DataSource_SQL(DataSource_TableStore):
                 logging.info('Unable to connect to SQLDB: %s' % str(e))
                 server = None
             if server is None or server.conn is None:
-                logging.info('retrying in 5 sec...')
+                logging.info(f'retrying in 5 sec... ({i+1}/{repeat})')
                 time.sleep(interval)
             else:
                 return server
         else:
             logging.error('Unable to connect to SQLDB')
-            logging.error(traceback.format_exc())
+            if server is None:
+                logging.error(traceback.format_exc())
             return SQLServer(None)
 
+        
     # The DB-specific syntax to get a time difference between time_col and (stop_sec | stop_tstamp) 
     # Override this if needed
     def _get_timediffsec_query(self, time_col, time_type, stop_sec, stop_tstamp):
         # Probably this is a common way in PostgreSQL?
         # Doesn't it depend on the time_type? what if {time_col} is already a unix/int?
         return f"{stop_sec} - extract(epoch from {time_col})"
+
     
     def _execute_query(self, table_name, time_col, time_type, time_from, time_to, tag_col, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
         if self.server is None:

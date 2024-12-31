@@ -170,11 +170,10 @@ class UserModule:
     def start(self):
         self.stop()
         
+        logging.info('starting user module "%s"' % self.name)
         self.stop_event.clear()
         self.user_thread = UserModuleThread(self, self.params, self.stop_event)
         self.user_thread.start()
-        self.user_thread.initialized_event.wait()
-        logging.info('starting user module "%s"' % self.name)
         
         
     def stop(self):
@@ -224,6 +223,11 @@ class UserModule:
         if self.module is None or self.func_get_channels is None:
             return None
         
+        if not self.user_thread.initialized_event.is_set():
+            time.sleep(1)
+            if not self.user_thread.initialized_event.is_set():
+                logging.warining('User/Task module not yet initialized')
+                
         try:
             return self.func_get_channels()
         except Exception as e:
@@ -235,6 +239,11 @@ class UserModule:
         if self.module is None or self.func_get_data is None:
             return None
         
+        if not self.user_thread.initialized_event.is_set():
+            time.sleep(1)
+            if not self.user_thread.initialized_event.is_set():
+                logging.warining('User/Task module not yet initialized')
+                
         try:
             return self.func_get_data(channel)
         except Exception as e:
@@ -246,6 +255,11 @@ class UserModule:
         if self.module is None or self.func_process_command is None:
             return None
         
+        if not self.user_thread.initialized_event.is_set():
+            time.sleep(1)
+            if not self.user_thread.initialized_event.is_set():
+                logging.warining('User/Task module not yet initialized')
+                
         try:
             result = self.func_process_command(params)
         except Exception as e:
@@ -307,23 +321,32 @@ class UserModuleComponent(Component):
 
 
     def __del__(self):
+        self.terminate()
+
+                    
+    def terinate(self):
         for module in self.usermodule_list:
             module.stop()
             
         if len(self.usermodule_list) > 0:
-            logging.info('user modules stopped')
-        self.usermodule_list.clear()
-
-                    
+            logging.info('user modules terminated')
+            
+    
     def public_config(self):
+        if len(self.usermodule_list) == 0:
+            return None
+        
         return {
             'user_module': {
                 module.name: {} for module in self.usermodule_list
             }
         }
 
-    
+
     def process_get(self, path, opts, output):
+        if len(self.usermodule_list) == 0:
+            return None
+        
         if len(path) > 0 and path[0] == 'channels':
             result = []
             for usermodule in self.usermodule_list:
@@ -363,13 +386,16 @@ class UserModuleComponent(Component):
 
     
     def process_post(self, path, opts, doc, output):
+        if len(self.usermodule_list) == 0:
+            return None
+        
         if len(path) == 1 and path[0] == 'control':
             try:
                 record = json.loads(doc.decode())
             except Exception as e:
                 logging.error('control: JSON decoding error: %s' % str(e))
                 return 400 # Bad Request
-            logging.info("DISPATCH: %s" % str(record))
+            logging.info(f'UserModule Command: {record}')
 
             # unlike GET, only one module can process to POST
             for module in self.usermodule_list:

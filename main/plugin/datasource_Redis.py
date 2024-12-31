@@ -23,13 +23,16 @@ class KeyValueSource:
                 self.redis.keys()
                 break
             except Exception as e:
-                logging.info(e)
-                logging.info('retrying in 5 sec...')
+                logging.info(f'Unable to connect to Redis: {e}')
+                logging.info(f'retrying in 5 sec... ({i+1}/12)')
                 time.sleep(5)
         else:
+            logging.error(f'Unable to connect to Redis: "{host}:{port}/{db}"')
+            logging.error(traceback.format_exc())
             self.redis = None
-            return
-        logging.debug('Redis loaded: %s:%s/%s' % (host, port, db))
+
+        if self.redis is not None:
+            logging.debug('Redis loaded: %s:%s/%s' % (host, port, db))
 
         
     def get_channels(self):

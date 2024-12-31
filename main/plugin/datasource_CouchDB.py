@@ -57,14 +57,16 @@ class DataSource_CouchDB(DataSource):
                 self.db = self.couch[self.db_name]
                 break
             except Exception as e:
-                logging.info('Unable to connect to CouchDB "%s", retrying in 5 sec: %s' % (self.db_name, str(e)))
+                logging.info(f'Unable to connect to CouchDB: {e}')
+                logging.info(f'retrying in 5 sec... ({i+1}/12)')
                 time.sleep(5)
         else:
             logging.error('Unable to connect to CouchDB "%s"' % self.db_name)
             logging.error(traceback.format_exc())
             self.db = None
                 
-        logging.info('connected to CoudhDB, server: %s, db: %s' % (self.server_url, self.db_name))
+        if self.db is not  None:
+            logging.info('connected to CoudhDB, server: %s, db: %s' % (self.server_url, self.db_name))
             
         
     def scan_channels(self):
