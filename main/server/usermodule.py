@@ -344,19 +344,17 @@ class UserModuleComponent(Component):
 
 
     def process_get(self, path, opts, output):
-        if len(self.usermodule_list) == 0:
-            return None
-        
         if len(path) > 0 and path[0] == 'channels':
             result = []
             for usermodule in self.usermodule_list:
                 channels = usermodule.get_channels()
                 if channels is not None:
                     result.extend(channels)
-
             return result
 
         if len(path) > 1 and path[0] == 'data':
+            if len(self.usermodule_list) == 0:
+                return None
             try:
                 channels = path[1].split(',')
                 length = float(opts.get('length', '3600'))

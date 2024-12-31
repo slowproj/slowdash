@@ -142,7 +142,7 @@ class WebUI:
             elif type(result) is str:
                 return Reply(200, result, output.getvalue())
             else:
-                logging.error('API error: %s' % url)
+                logging.error('Bad URL (GET): %s' % url)
                 return Reply(400)       # Bad request
 
 
@@ -180,7 +180,7 @@ class WebUI:
             elif type(result) is str:
                 return Reply(201, result, output.getvalue())
             else:
-                logging.error('API error: %s' % url)
+                logging.error('Bad URL (POST): %s' % url)
                 return Reply(400)       # Bad request
 
             
@@ -205,5 +205,5 @@ class WebUI:
         if type(result) is int:
             return Reply(result)
         else:
-            logging.error('API error: %s' % url)
+            logging.error('Bad URL (DELETE): %s' % url)
             return Reply(500)       # Internal Server Error

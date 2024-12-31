@@ -347,9 +347,6 @@ class TaskModuleComponent(Component):
 
 
     def process_get(self, path, opts, output):
-        if len(self.taskmodule_list) == 0:
-            return None
-        
         if len(path) > 1 and path[0] == 'control' and path[1] == 'task':
             return self._get_task_status()
             
@@ -359,10 +356,11 @@ class TaskModuleComponent(Component):
                 channels = taskmodule.get_channels()
                 if channels is not None:
                     result.extend(channels)
-
             return result
 
         if len(path) > 1 and path[0] == 'data':
+            if len(self.taskmodule_list) == 0:
+                return None
             try:
                 channels = path[1].split(',')
                 length = float(opts.get('length', '3600'))
@@ -392,9 +390,6 @@ class TaskModuleComponent(Component):
 
 
     def process_post(self, path, opts, doc, output):
-        if len(self.taskmodule_list) == 0:
-            return None
-        
         if len(path) > 1 and path[0] == 'update' and path[1] == 'tasklist':
             self._scan_task_files()
             return {'status': 'ok'}
