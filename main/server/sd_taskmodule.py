@@ -61,6 +61,11 @@ class TaskModule(UserModule):
 
             
     def stop(self):
+        if self.user_thread and not self.user_thread.initialized_event.is_set():
+            time.sleep(1)
+            if not self.user_thread.initialized_event.is_set():
+                logging.warining('User/Task module not yet initialized')
+                
         if self.control_system is not None:
             logging.debug('calling ControlSystem.stop() in Task-Module "%s"' % self.name)
             self.control_system.stop()
@@ -330,6 +335,8 @@ class TaskModuleComponent(Component):
         if len(self.taskmodule_list) > 0:
             logging.info('slowtask modules terminated')
 
+        self.taskmodule_list = []
+        
 
     def public_config(self):
         if len(self.taskmodule_list) == 0:

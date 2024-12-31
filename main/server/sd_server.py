@@ -6,7 +6,7 @@ import sys, os, logging, functools, base64, traceback
 from urllib.parse import urlparse
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-from sd_slowdash import WebUI
+from sd_webui import WebUI
 
 
 bcrypt_imported = False  # modudle not necessary unless authorization is enabled
@@ -33,7 +33,7 @@ class RequestHandler(BaseHTTPRequestHandler):
     
     def do_GET(self):        
         if not self.check_auth():
-            self.send_response(401)
+            self.send_response(401)   # Unauthorized
             self.send_header('WWW-Authenticate', 'Basic realm="SlowDash"')
             self.end_headers()
             logging.debug(f'SlowDash_Server: AUTH for GET')
@@ -44,7 +44,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         while path_split.count(''):
             path_split.remove('')
         if path_split.count('..'):
-            self.send_error(403)
+            self.send_error(403)   # Forbidden
             logging.warning(f'SlowDash_Server: bad URL: {self.path}')
             return
 
@@ -70,7 +70,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                          
     def do_POST(self):
         if not self.check_auth():
-            self.send_response(401)
+            self.send_response(401)   # Unauthorized
             self.send_header('WWW-Authenticate', 'Basic realm="SlowDash"')
             self.end_headers()
             logging.debug(f'SlowDash_Server: AUTH for POST')
@@ -81,10 +81,10 @@ class RequestHandler(BaseHTTPRequestHandler):
         while path_split.count(''):
             path_split.remove('')
         if path_split.count('..'):
-            self.send_error(403)
+            self.send_error(403)   # Forbidden
             return
         if (len(path_split) < 2) or (path_split[0] != 'api'):
-            self.send_error(403)
+            self.send_error(403)   # Forbidden
             return
         url_recon = '/'.join(path_split[1:])
         if len(url.query) > 0:
@@ -93,16 +93,16 @@ class RequestHandler(BaseHTTPRequestHandler):
         try:
             content_length = int(self.headers['content-length'])
         except:
-            self.send_error(400)
+            self.send_error(400)  # Bad Request
             return
         if content_length > 1024*1024*1024:
-            self.send_error(507)
+            self.send_error(507)   # Insufficient Storage (WebDAV)
             return
         doc = self.rfile.read(content_length)
         
         result = self.webui.process_post_request(url_recon, doc)
         if (result is None):
-            self.send_error(500)
+            self.send_error(400)  # Bad Request
             return
         if result.response >= 400:
             self.send_error(result.response)
@@ -126,7 +126,7 @@ class RequestHandler(BaseHTTPRequestHandler):
     
     def do_DELETE(self):
         if not self.check_auth():
-            self.send_response(401)
+            self.send_response(401)   # Unauthorized
             self.send_header('WWW-Authenticate', 'Basic realm="SlowDash"')
             self.end_headers()
             logging.debug(f'SlowDash_Server: AUTH for DELETE')
@@ -137,10 +137,10 @@ class RequestHandler(BaseHTTPRequestHandler):
         while path_split.count(''):
             path_split.remove('')
         if path_split.count('..'):
-            self.send_error(403)
+            self.send_error(403)   # Forbidden
             return
         if (len(path_split) < 2) or (path_split[0] != 'api'):
-            self.send_error(403)
+            self.send_error(403)   # Forbidden
             return
         url_recon = '/'.join(path_split[1:])
         if len(url.query) > 0:
@@ -148,7 +148,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         
         result = self.webui.process_delete_request(url_recon)
         if (result is None):
-            self.send_error(500)
+            self.send_error(400)  # Bad Request
             return
         if result.response >= 400:
             self.send_error(result.response)
@@ -203,7 +203,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             (result.content_type is None) or
             ((result.content is None) and (result.content_readable is None))
         ):
-            self.send_error(500)
+            self.send_error(400)  # Bad Request
             return
         if result.response >= 400:
             self.send_error(result.response)
@@ -219,11 +219,11 @@ class RequestHandler(BaseHTTPRequestHandler):
     def process_file_get(self, filepath):
         if not os.path.isfile(filepath):
             logging.warning(f'SlowDash_Server: FILE_GET: not a file: {filepath}')
-            self.send_error(404)
+            self.send_error(404)   # Not Found
             return
         if not os.access(filepath, os.R_OK):
             logging.warning(f'SlowDash_Server: FILE_GET: permission denied: {filepath}')
-            self.send_error(404)
+            self.send_error(404)   # Not Found
             return
         
         ext = os.path.splitext(filepath)[1]
@@ -246,10 +246,10 @@ class RequestHandler(BaseHTTPRequestHandler):
         elif ext == '.txt':
             content_type = 'text/plain'
         else:
-            self.send_error(404)
+            self.send_error(404)   # Not Found
             return
 
-        self.send_response(200)
+        self.send_response(200)   # OK
         self.send_header('content-type', content_type)
         self.end_headers()
         self.wfile.write(open(filepath, 'rb', buffering=0).readall())
@@ -282,9 +282,7 @@ def start(webui, port, web_path, index_file):
     except InterruptedError:
         pass
 
-    sys.stderr.write('Terminated\n')
-    webui.app.terminate()
-    
+    sys.stderr.write('Terminated\n')    
     try:
         httpserver.shutdown()
     except:

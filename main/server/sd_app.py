@@ -5,11 +5,12 @@
 import sys, os, io, json, logging
 
 from sd_project import Project, ProjectComponent
+from sd_console import ConsoleComponent
 from sd_datasource import DataSourceComponent
 from sd_export import ExportComponent
 from sd_usermodule import UserModuleComponent
 from sd_taskmodule import TaskModuleComponent
-
+from sd_misc_api import MiscApiComponent
 
 
 class App:
@@ -39,36 +40,18 @@ class App:
             sys.path.insert(1, self.project.project_dir)
             sys.path.insert(1, os.path.join(self.project.project_dir, 'config'))
 
-        ### Console Redirect ###
-        self.console_outputs = []
-        self.original_stdin = sys.stdin
-        self.original_stdout = sys.stdout
-        if not is_command and not is_cgi:
-            self.console_stdin = io.StringIO()
-            self.console_stdout = io.StringIO()
-            sys.stdin = self.console_stdin
-            sys.stdout = self.console_stdout
-        else:
-            self.console_stdin = None
-            self.console_stdout = None
-            
         # API Components
+        self.components.append(ConsoleComponent(self, self.project))   # this must be the first
         self.components.append(ProjectComponent(self, self.project))
         self.components.append(DataSourceComponent(self, self.project))
-        self.components.append(export.ExportComponent(self, self.project))
-        self.components.append(usermodule.UserModuleComponent(self, self.project))
-        self.components.append(taskmodule.TaskModuleComponent(self, self.project))
+        self.components.append(ExportComponent(self, self.project))
+        self.components.append(UserModuleComponent(self, self.project))
+        self.components.append(TaskModuleComponent(self, self.project))
+        self.components.append(MiscApiComponent(self, self.project))
 
                 
     def __del__(self):
         del self.components
-        
-        if self.console_stdout is not None:
-            self.console_stdin.close()
-            self.console_stdout.close()
-            sys.stdin = self.original_stdin
-            sys.stdout = self.original_stdout
-            
         logging.info('cleanup completed')
 
 
@@ -87,10 +70,11 @@ class App:
           output: file-like object to write response content, if return value is not a dict
         Returns:
           either:
-            - contents as Python dict or list, to reply as a JSON string with HTTP response 200
+            - contents as Python dict or list, to reply as a JSON string with HTTP response 200 (OK)
             - content-type (MIME) as string, with reply contents written in output
             - HTTP response code as int
-            - None or False for error
+            - False for error
+            - None for not-applicable
         """
 
         # Outputs from multiple components are merged
@@ -104,6 +88,7 @@ class App:
                     logging.error('%s: incompatible results cannot be combined (list)' % name)
                     continue
                 result.extend(this_result)
+                
             elif type(this_result) is dict:
                 if result is None:
                     result = {}
@@ -111,39 +96,12 @@ class App:
                     logging.error('%s: incompatible results cannot be combined (dict)' % name)
                     continue
                 result.update(this_result)
+                
             elif this_result is not None:
                 if result is not None:
                     logging.error('%s: incompatible results cannot be combined (not list/dict)' % name)
                     continue
                 return this_result
-            
-        if result is not None:
-            return result
-        
-        if len(path) > 0 and path[0] == 'console':
-            if self.console_stdout is not None:
-                self.console_outputs += [ line for line in self.console_stdout.getvalue().split('\n') if len(line)>0 ]
-                self.console_stdout.seek(0)
-                self.console_stdout.truncate(0)
-                self.console_stdout.seek(0)
-                if len(self.console_outputs) > 10000:
-                    self.console_outputs = self.console_outputs[-10000:]
-                output.write('\n'.join(self.console_outputs[-20:]).encode())
-            else:
-                output.write('[no console output]'.encode())
-            output.flush()
-            return 'text/plain'
-                
-        if len(path) > 1 and path[0] == 'authkey':
-            name = path[1]
-            word = opts.get('password', '')
-            try:
-                import bcrypt
-            except:
-                logging.error('install python module "bcrypt"')
-                return None
-            key = bcrypt.hashpw(word.encode("utf-8"), bcrypt.gensalt(rounds=12, prefix=b"2a")).decode("utf-8")
-            result = { 'type': 'Basic', 'key':  '%s:%s' % (name, key) }
             
         return result
         
@@ -156,10 +114,11 @@ class App:
           output: file-like object to write response content, if return value is not a dict
         Returns:
           either:
-            - contents as Python dict or list, to reply as a JSON string with HTTP response 201
+            - contents as Python dict or list, to reply as a JSON string with HTTP response 201 (Created)
             - content-type (MIME) as string, with reply contents written in output
             - HTTP response code as int
-            - None for error
+            - False for error
+            - None for not-applicable
         """
 
         # Only first output is returned
@@ -168,18 +127,6 @@ class App:
             if result is not None:
                 return result
 
-        if len(path) > 0 and path[0] == 'console':
-            cmd = doc.decode()
-            if cmd is None:
-                return 400  # Bad Request
-            logging.info(f'Console Input: {cmd}')
-            pos = self.console_stdin.tell()
-            self.console_stdin.seek(0, io.SEEK_END)
-            self.console_stdin.write('%s\n' % cmd)
-            self.console_stdin.seek(pos)
-            output.write(json.dumps({'status': 'ok'}).encode())
-            return 'application/json'
-        
         return 400  # Bad Request
 
     
@@ -188,7 +135,10 @@ class App:
         Args:
           path: parsed URL
         Returns:
-          HTTP response code as int
+          either:
+            - HTTP response code as int
+            - False for error
+            - None for not-applicable
         """
         
         # Only first delete is performed

@@ -41,7 +41,7 @@ class Component:
           output: file-like object to write response content, if return value is not a dict
         Returns:
           either:
-            - contents as Python dict, to reply as a JSON string with HTTP response 200
+            - contents as Python dict, to reply as a JSON string with HTTP response 200 (OK)
             - content-type (MIME) as string, with reply contents written in output
             - HTTP response code as int
             - False for error (HTTP response 400 "Bad request")
@@ -60,7 +60,7 @@ class Component:
           output: file-like object to write response content, if return value is not a dict
         Returns:
           either:
-            - contents as Python dict, to reply as a JSON string with HTTP response 201
+            - contents as Python dict, to reply as a JSON string with HTTP response 201 (Created)
             - content-type (MIME) as string, with reply contents written in output
             - HTTP response code as int
             - False for error (HTTP response 400 "Bad request")
@@ -120,7 +120,7 @@ class ComponentPlugin:
           output: file-like object to write response content, if return value is not a dict
         Returns:
           either:
-            - contents as Python dict, to reply as a JSON string with HTTP response 200
+            - contents as Python dict, to reply as a JSON string with HTTP response 200 (OK)
             - content-type (MIME) as string, with reply contents written in output
             - HTTP response code as int
             - False for error (HTTP response 400 "Bad request")
@@ -139,7 +139,7 @@ class ComponentPlugin:
           output: file-like object to write response content, if return value is not a dict
         Returns:
           either:
-            - contents as Python dict, to reply as a JSON string with HTTP response 201
+            - contents as Python dict, to reply as a JSON string with HTTP response 201 (Created)
             - content-type (MIME) as string, with reply contents written in output
             - HTTP response code as int
             - False for error (HTTP response 400 "Bad request")
@@ -182,6 +182,7 @@ class PluginComponent(Component):
     def terminate(self):
         for name, plugin in self.plugin_table.items():
             plugin.terminate()
+        self.plugin_table = {}
 
     
     def public_config(self):

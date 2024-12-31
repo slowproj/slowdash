@@ -343,14 +343,18 @@ To use the Basic Authentication, first install the `bcrypt` Python package if it
 $ pip3 install bcrypt
 ```
 
-Then generate an authentication key by `slowdash authkey/USER?password=PASS`:
+Then generate an authentication key by the `generate-key.py` script in `slowdash/utils`:
 ```console
-$ slowdash authkey/slow?password=dash
+$ python3 PATH/TO/SLOWDASH/utils/generate-key.py slow dash
 {
-    "type": "Basic",
-    "key": "slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS"
+    "authentication": {
+        "type": "Basic",
+        "key": "slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS"
+    }
 }
 ```
+
+Here the first argument is the user name and the second is the password.
 
 Add the key in the project configuration file under the  `authentication` entry:
 ```yaml

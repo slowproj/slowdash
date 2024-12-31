@@ -168,7 +168,8 @@ class UserModule:
         
     
     def start(self):
-        self.stop()
+        if self.module is not None and self.user_thread is not None and self.user_thread.is_alive():
+            self.stop()
         
         logging.info('starting user module "%s"' % self.name)
         self.stop_event.clear()
@@ -182,6 +183,11 @@ class UserModule:
         
         logging.info('stopping user module "%s"' % self.name)
         
+        if not self.user_thread.initialized_event.is_set():
+            time.sleep(1)
+            if not self.user_thread.initialized_event.is_set():
+                logging.warining('User/Task module not yet initialized')
+                
         if self.func_halt is not None:
             try:
                 self.func_halt()
@@ -327,6 +333,8 @@ class UserModuleComponent(Component):
         if len(self.usermodule_list) > 0:
             logging.info('user modules terminated')
             
+        self.usermodule_list = []
+        
     
     def public_config(self):
         if len(self.usermodule_list) == 0:

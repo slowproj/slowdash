@@ -77,10 +77,12 @@ if __name__ == '__main__':
         sys.stdout.write('\n')
         
     else:
-        import server
-        server.start(
+        import sd_server
+        sd_server.start(
             webui,
             port = args.port, 
             web_path = os.path.join(os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))), 'web'),
             index_file = 'slowhome.html' if webui.app.project is not None else 'welcome.html',
         )
+        
+    app.terminate()

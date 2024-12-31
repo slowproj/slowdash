@@ -99,39 +99,30 @@ class WebUI:
         logging.debug(f'GET {url}')
         
         if self.app is None:
-            return Reply(404)
+            return Reply(404)   # Not Found
         u = urlparse(url)
         path = [ unquote(p) for p in u.path.split('/') ]
         while path.count(''):
             path.remove('')
         if not path:
             logging.error('bad query (empty query): %s' % url)
-            return Reply(400)
+            return Reply(400)  # Bad Request
 
         opts = dict()
         for key, value in parse_qsl(u.query):
             key, value = unquote(key), unquote(value)
             if not self.check_sanity(key) or not self.check_sanity(value, accept=['/', '~']):
                 logging.error('bad query (invalid char): {"%s": "%s"} in %s' % (key, value, url))
-                return Reply(400)
+                return Reply(400)   # Bad Request
             opts[key] = value
             
-        if path[0] == 'ping':            
-            result = 'pong'
-            return Reply(200, 'application/json', json.dumps(result, **self.json_kwargs))
-        elif path[0] == 'echo':
-            if self.app.is_cgi:
-                env = { k:v for k,v in os.environ.items() if k.startswith('HTTP_') or k.startswith('REMOTE_') }
-            result = {'URL': url, 'Path': path[1:], 'Opts': opts, 'Env': env }
-            return Reply(200, 'application/json', json.dumps(result, **self.json_kwargs))
-
         for element in path:
             if (len(element) == 0) or (not element[0].isalnum() and element[0] not in ['_']):
                 logging.error('bad query (invalid first char): %s' % url)
-                return Reply(400)       # Bad request
+                return Reply(400)     # Bad Request
             if not self.check_sanity(element):
                 logging.error('bad query (invalid char): %s' % url)
-                return Reply(400)       # Bad request
+                return Reply(400)     # Bad Request
 
         with io.BytesIO() as output:
             result = self.app.process_get(path, opts, output=output)
@@ -141,16 +132,23 @@ class WebUI:
                 return Reply(result)
             elif type(result) is str:
                 return Reply(200, result, output.getvalue())
+            elif type(result) is bool:
+                if result is True:
+                    result = {'status': 'ok'}
+                    return Reply(200, 'application/json', json.dumps(result, **self.json_kwargs).encode())
+                else:
+                    logging.error('Bad request (GET): %s' % url)
+                    return Reply(400)     # Bad Request
             else:
                 logging.error('Bad URL (GET): %s' % url)
-                return Reply(400)       # Bad request
+                return Reply(400)       # Bad Request
 
 
     def process_post_request(self, url, doc):
         logging.debug(f'POST {url}')
         
         if self.app is None:
-            return Reply(404)
+            return Reply(404)   # Not Found
         u = urlparse(url)
         path = [ unquote(p) for p in u.path.split('/') ]
         while path.count(''):
@@ -158,37 +156,44 @@ class WebUI:
         for element in path:
             if (len(element) == 0) or not element[0].isalpha():
                 logging.error('bad file name (invalid first char): %s' % url)
-                return Reply(400)
+                return Reply(400)  # Bad Request
             if not element.replace('_', '0').replace('-', '0').replace('~', '0').replace('.', '0').replace(' ', '0').replace(',', '0').isalnum():
                 logging.error('bad file name (invalid char): %s' % url)
-                return Reply(400)       # Bad request
+                return Reply(400)       # Bad Request
         
         opts = dict()
         for key, value in parse_qsl(u.query):
             key, value = unquote(key), unquote(value)
             if not self.check_sanity(key) or not self.check_sanity(value, accept=['/', '~']):
                 logging.error('bad query (invalid char): {"%s": "%s"} in %s' % (key, value, url))
-                return Reply(400)       # Bad request
+                return Reply(400)       # Bad Request
             opts[key] = value
             
         with io.BytesIO() as output:
             result = self.app.process_post(path, opts, doc, output=output)
             if type(result) in [ dict, list ]:
-                return Reply(200, 'application/json', json.dumps(result, **self.json_kwargs).encode())
+                return Reply(201, 'application/json', json.dumps(result, **self.json_kwargs).encode())
             elif type(result) is int:
                 return Reply(result)
             elif type(result) is str:
                 return Reply(201, result, output.getvalue())
+            elif type(result) is bool:
+                if result is True:
+                    result = {'status': 'ok'}
+                    return Reply(201, 'application/json', json.dumps(result, **self.json_kwargs).encode())
+                else:
+                    logging.error('Bad request (POST): %s' % url)
+                    return Reply(400)       # Bad Request
             else:
                 logging.error('Bad URL (POST): %s' % url)
-                return Reply(400)       # Bad request
+                return Reply(400)       # Bad Request
 
             
     def process_delete_request(self, url):
         logging.debug(f'DELETE {url}')
         
         if self.app is None:
-            return Reply(404)
+            return Reply(404)   # Not Found
         u = urlparse(url)
         path = [ unquote(p) for p in u.path.split('/') ]
         while path.count(''):
@@ -196,14 +201,21 @@ class WebUI:
         for element in path:
             if (len(element) == 0) or not element[0].isalpha():
                 logging.error('bad file name (invalid first char): %s' % url)
-                return Reply(400)
+                return Reply(400)  # Bad Request
             if not element.replace('_', '0').replace('-', '0').replace('~', '0').replace('.', '0').replace(' ', '0').isalnum():
                 logging.error('bad file name (invalid char): %s' % url)
-                return Reply(400)
+                return Reply(400)  # Bad Request
         
         result = self.app.process_delete(path)
         if type(result) is int:
             return Reply(result)
+        elif type(result) is bool:
+            if result is True:
+                result = {'status': 'ok'}
+                return Reply(200, 'application/json', json.dumps(result, **self.json_kwargs).encode())
+            else:
+                logging.error('Bad request (DELETE): %s' % url)
+                return Reply(400)       # Bad Request
         else:
             logging.error('Bad URL (DELETE): %s' % url)
-            return Reply(500)       # Internal Server Error
+            return Reply(400)       # Bad Request

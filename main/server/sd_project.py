@@ -21,7 +21,7 @@ class Project:
 
     @classmethod
     def find_sys_dir(cls):
-        target_name = 'slowdash_version.py'
+        target_name = 'sd_version.py'
         for path in sys.path:
             if os.path.isfile(os.path.join(path, target_name)):
                 mypath = path
@@ -286,9 +286,9 @@ class Project:
 
 
 
-import component
+from sd_component import Component
 
-class ProjectComponent(component.Component):
+class ProjectComponent(Component):
     def __init__(self, app, project):
         super().__init__(app, project)
         self.project_dir = self.project.project_dir
@@ -344,7 +344,7 @@ class ProjectComponent(component.Component):
           output: file-like object to write response content, if return value is not a dict
         Returns:
           either:
-            - contents as Python dict, to reply as a JSON string with HTTP response 201
+            - contents as Python dict, to reply as a JSON string with HTTP response 201 (Created)
             - content-type (MIME) as string, with reply contents written in output
             - HTTP response code as int
             - False for error (HTTP response 400 "Bad request")
