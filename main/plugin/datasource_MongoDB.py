@@ -2,7 +2,7 @@
 
 
 import sys, os, time, logging
-from datasource import DataSource
+from sd_datasource import DataSource
 
 import pymongo
 

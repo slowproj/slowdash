@@ -2,8 +2,8 @@
 
 
 import sys, os, time, logging, traceback
-from dataschema import Schema
-from datasource import DataSource
+from sd_dataschema import Schema
+from sd_datasource import DataSource
 
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS

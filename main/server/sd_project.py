@@ -3,7 +3,7 @@
 
 import sys, os, glob, io, json, logging
 import subprocess, yaml, pathlib, stat, pwd, grp, enum
-from slowdash_version import slowdash_version
+from sd_version import slowdash_version
 
 
 class Project:

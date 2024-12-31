@@ -14,6 +14,10 @@ class Component:
         self.project = project
 
         
+    def __del__(self):
+        self.terminate()
+
+                    
     # override this
     def terminate(self):
         pass
@@ -87,6 +91,15 @@ class ComponentPlugin:
     def __init__(self, app, project, params):
         self.app = app
         self.project = project
+
+    
+    def __del__(self):
+        self.terminate()
+
+        
+    # override this
+    def terminate(self):
+        pass
 
     
     # override this
@@ -166,6 +179,11 @@ class PluginComponent(Component):
         self.build(plugin_config)
         
 
+    def terminate(self):
+        for name, plugin in self.plugin_table.items():
+            plugin.terminate()
+
+    
     def public_config(self):
         """construct public_config from the member plugins.
         """

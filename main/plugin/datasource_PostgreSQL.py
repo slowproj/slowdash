@@ -2,7 +2,7 @@
 
 
 import sys, os, logging
-from datasource_SQL import SQLServer, DataSource_SQL
+from sd_datasource_SQL import SQLServer, DataSource_SQL
 
 import psycopg2 as db
 

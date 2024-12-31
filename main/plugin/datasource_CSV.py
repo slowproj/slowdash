@@ -2,9 +2,9 @@
 
 
 import sys, os, time, glob, logging
-from dataschema import Schema
-from datasource import DataSource
-from datasource_TableStore import DataSource_TableStore
+from sd_dataschema import Schema
+from sd_datasource import DataSource
+from sd_datasource_TableStore import DataSource_TableStore
 
     
 class DataSource_CSV(DataSource_TableStore):

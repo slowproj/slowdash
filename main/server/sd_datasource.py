@@ -3,10 +3,11 @@
 
 import time, math, logging
 import numpy as np
-import component, dataschema
+from sd_component import ComponentPlugin, PluginComponent
+from sd_dataschema import Schema
 
 
-class DataSource(component.ComponentPlugin):
+class DataSource(ComponentPlugin):
     """Base class for DataSource plugin
     """
     
@@ -177,7 +178,7 @@ class DataSource(component.ComponentPlugin):
 
 
     
-class DataSourceComponent(component.PluginComponent):
+class DataSourceComponent(PluginComponent):
     def __init__(self, app, project):
         super().__init__('data_source', app, project)
         
@@ -192,7 +193,7 @@ class DataSourceComponent(component.PluginComponent):
             if 'parameters' not in node:
                 node['parameters'] = {}
             node['parameters']['url'] = url
-            ds_type = dataschema.Schema.parse_dburl(url).get('type', None)
+            ds_type = Schema.parse_dburl(url).get('type', None)
             if ds_type is not None:
                 node['type'] = node.get('type', ds_type)
         

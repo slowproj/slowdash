@@ -3,7 +3,7 @@
 
 import sys, os, time, threading, types, json, logging, traceback
 import importlib.machinery
-from component import Component
+from sd_component import Component
 
 
 class UserModuleThread(threading.Thread):
@@ -320,10 +320,6 @@ class UserModuleComponent(Component):
             module.start()
 
 
-    def __del__(self):
-        self.terminate()
-
-                    
     def terinate(self):
         for module in self.usermodule_list:
             module.stop()

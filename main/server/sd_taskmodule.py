@@ -2,8 +2,8 @@
 # Created by Sanshiro Enomoto on 24 May 2024 #
 
 import sys, os, time, glob, json, threading, logging
-from usermodule import UserModule
-from component import Component
+from sd_usermodule import UserModule
+from sd_component import Component
 
 
 class TaskFunctionThread(threading.Thread):
@@ -323,10 +323,6 @@ class TaskModuleComponent(Component):
                 module.start()
 
                 
-    def __del__(self):
-        self.terminate()
-
-        
     def terminate(self):
         for module in self.taskmodule_list:
             module.stop()

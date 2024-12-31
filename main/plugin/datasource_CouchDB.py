@@ -2,8 +2,8 @@
 
 
 import sys, os, time, logging, traceback
-from dataschema import Schema
-from datasource import DataSource
+from sd_dataschema import Schema
+from sd_datasource import DataSource
 
 import couchdb
 
@@ -394,4 +394,3 @@ class DataSource_CouchDB(DataSource):
         att.close()
         
         return content_type
-    

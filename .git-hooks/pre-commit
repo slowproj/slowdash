@@ -3,7 +3,7 @@
 import os, re, datetime, subprocess
 
 sys_dir = os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir, os.pardir)))
-ver_file = os.path.join(sys_dir, 'main', 'server', 'slowdash_version.py')
+ver_file = os.path.join(sys_dir, 'main', 'server', 'sd_version.py')
 
 with open(ver_file) as f:
     line = f.readline()

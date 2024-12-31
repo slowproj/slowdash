@@ -5,8 +5,8 @@
 import sys, os, logging
 from argparse import ArgumentParser
 
-from app import App
-from webui import WebUI
+from sd_app import App
+from sd_webui import WebUI
 
 
 if __name__ == '__main__':

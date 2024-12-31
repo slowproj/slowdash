@@ -6,7 +6,7 @@ import sys, os, logging, functools, base64, traceback
 from urllib.parse import urlparse
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-from slowdash import WebUI
+from sd_slowdash import WebUI
 
 
 bcrypt_imported = False  # modudle not necessary unless authorization is enabled

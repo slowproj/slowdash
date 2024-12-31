@@ -2,7 +2,7 @@
 
 
 import sys, os, time, logging, yaml
-from datasource import DataSource
+from sd_datasource import DataSource
 
     
 class DataSource_YAML(DataSource):

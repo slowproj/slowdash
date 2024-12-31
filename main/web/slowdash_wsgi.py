@@ -5,8 +5,9 @@ import sys, os, logging
 
 from slowdash_cgi_config import sys_dir, project_dir
 sys.path.insert(0, os.path.join(sys_dir, 'main', 'server'))
-from app import App
-from webui import WebUI
+
+from sd_app import App
+from sd_webui import WebUI
 
 
 
@@ -30,6 +31,7 @@ def application(environ, start_response):
     if webui is None:
         app = App(project_dir = project_dir, is_cgi = is_cgi)
         if app.project.config is None:
+            del app
             webui = False
             logging.error('unable to create a SlowDash instance')
         else:
@@ -89,3 +91,15 @@ def application(environ, start_response):
 
     start_response(status, headers)
     return [ reply.get_content() ]
+
+
+
+def terminate():
+    if webui is not in None and webui is not False:
+        webui.app.terminate()
+        del webui
+        webui = False
+        
+        
+import atexit
+atexit.register(terminate)

@@ -4,7 +4,7 @@
 
 
 import sys, os, time, subprocess, socket, logging, datetime
-from datasource import DataSource
+from sd_datasource import DataSource
 
 try:
     import psutil

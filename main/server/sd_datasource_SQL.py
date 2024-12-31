@@ -2,9 +2,9 @@
 
 
 import sys, os, time, datetime, logging, traceback
-from datasource import DataSource
-from dataschema import Schema
-from datasource_TableStore import DataSource_TableStore
+from sd_datasource import DataSource
+from sd_dataschema import Schema
+from sd_datasource_TableStore import DataSource_TableStore
 
 
 class SQLQueryResult:
@@ -42,10 +42,15 @@ class SQLServer():
 
         
     def __del__(self):
-        if self.conn is not None:
-            self.conn.close()
+        self.terminate()
 
         
+    def terminate(self):
+        if self.conn is not None:
+            self.conn.close()
+            self.conn = None
+
+            
     def execute(self, sql, commit=False):
         if self.conn is None:
             return SQLQueryResult()
@@ -71,6 +76,11 @@ class DataSource_SQL(DataSource_TableStore):
         self.time_sep = 'T'
         self.db_has_floor = False
         super().__init__(app, project, params)
+
+
+    def terminate(self):
+        if self.server is not None:
+            self.server.terminate()
 
         
     # override this in DB implementation class

@@ -2,8 +2,8 @@
 
 
 import sys, os, datetime, logging
-from dataschema import Schema
-from datasource import DataSource
+from sd_dataschema import Schema
+from sd_datasource import DataSource
 
 
 class DataSource_TableStore(DataSource):

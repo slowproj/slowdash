@@ -1,9 +1,9 @@
 
 import datetime, copy, logging
-import component
+from sd_component import ComponentPlugin
 
 
-class Export_CSV(component.ComponentPlugin):
+class Export_CSV(ComponentPlugin):
     def __init__(self, app, project, params):
         super().__init__(app, project, params)
 

@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 27 December 2024 #
 
-from component import PluginComponent
+from sd_component import PluginComponent
 
 
 class ExportComponent(PluginComponent):

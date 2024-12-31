@@ -2,7 +2,7 @@
 
 
 import sys, os, logging, datetime
-from datasource import DataSource
+from sd_datasource import DataSource
 
 from math import *
 import numpy as np

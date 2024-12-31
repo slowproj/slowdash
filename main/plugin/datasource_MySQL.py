@@ -2,7 +2,7 @@
 # Edited by Kou Oishi and Yuto Kageyama on 22 October 2024 #
 
 import sys, os, logging
-from datasource_SQL import SQLServer, DataSource_SQL
+from sd_datasource_SQL import SQLServer, DataSource_SQL
 
 import MySQLdb as db
 import re

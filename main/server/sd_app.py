@@ -3,12 +3,18 @@
 
 
 import sys, os, io, json, logging
-import project, component, datasource, export, usermodule, taskmodule
+
+from sd_project import Project, ProjectComponent
+from sd_datasource import DataSourceComponent
+from sd_export import ExportComponent
+from sd_usermodule import UserModuleComponent
+from sd_taskmodule import TaskModuleComponent
+
 
 
 class App:
     def __init__(self, project_dir=None, project_file=None, is_cgi=False, is_command=False):
-        self.project = project.Project(project_dir, project_file)
+        self.project = Project(project_dir, project_file)
         self.project_dir = self.project.project_dir
         self.is_cgi = is_cgi
         self.is_command = is_command
@@ -47,8 +53,8 @@ class App:
             self.console_stdout = None
             
         # API Components
-        self.components.append(project.ProjectComponent(self, self.project))
-        self.components.append(datasource.DataSourceComponent(self, self.project))
+        self.components.append(ProjectComponent(self, self.project))
+        self.components.append(DataSourceComponent(self, self.project))
         self.components.append(export.ExportComponent(self, self.project))
         self.components.append(usermodule.UserModuleComponent(self, self.project))
         self.components.append(taskmodule.TaskModuleComponent(self, self.project))
@@ -67,6 +73,9 @@ class App:
 
 
     def terminate(self):
+        """graceful terminate
+          - used by components that have a thread (usermodule/taskmodule), to send a stop request etc.
+        """
         for component in reversed(self.components):
             component.terminate()
             

@@ -2,7 +2,7 @@
 
 
 import sys, os, logging
-from datasource_SQL import SQLServer, SQLQueryResult, DataSource_SQL
+from sd_datasource_SQL import SQLServer, SQLQueryResult, DataSource_SQL
 
 import sqlalchemy as sqla
 
