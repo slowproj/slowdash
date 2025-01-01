@@ -91,7 +91,8 @@ def application(environ, start_response):
 
 
 def terminate():
-    if app is not in None and app is not False:
+    global app
+    if app is not None and app is not False:
         app.terminate()
         del app
         app = False
