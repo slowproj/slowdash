@@ -343,9 +343,9 @@ To use the Basic Authentication, first install the `bcrypt` Python package if it
 $ pip3 install bcrypt
 ```
 
-Then generate an authentication key by the `generate-key.py` script in `slowdash/utils`:
+Then generate an authentication key by the `slowdash-generate-key.py` script in `slowdash/utils`:
 ```console
-$ python3 PATH/TO/SLOWDASH/utils/generate-key.py slow dash
+$ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash
 {
     "authentication": {
         "type": "Basic",

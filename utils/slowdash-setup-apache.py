@@ -18,7 +18,7 @@ import sys, os, stat, glob, shutil, logging
 
 sys_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, os.path.join(sys_dir, 'main', 'server'))
-from project import Project
+from sd_project import Project
 
 project = Project()
 if project.config is None:
