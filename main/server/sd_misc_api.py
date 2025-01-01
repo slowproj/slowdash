@@ -1,11 +1,9 @@
 #! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 31 December 2024 #
 
-import sys, os, glob, io, json, logging
-import subprocess, yaml, pathlib, stat, pwd, grp, enum
-
-
+import sys, os, logging
 from sd_component import Component
+
 
 class MiscApiComponent(Component):
     def __init__(self, app, project):

@@ -6,7 +6,6 @@ import sys, os, logging
 from argparse import ArgumentParser
 
 from sd_app import App
-from sd_webui import WebUI
 
 
 if __name__ == '__main__':
@@ -68,21 +67,22 @@ if __name__ == '__main__':
     if app.project.config is None:
         sys.exit(-1)
 
-    webui = WebUI(app)
     if args.port <= 0:
+        # command-line mode
         if args.indent >= 0:
-            webui.json_kwargs['indent'] = args.indent
-        result = webui.process_get_request(args.COMMAND)
-        result.write_to(sys.stdout.buffer)
+            app.json_kwargs['indent'] = args.indent
+        reply = app.process_get_request(args.COMMAND)
+        reply.write_to(sys.stdout.buffer)
         sys.stdout.write('\n')
         
     else:
+        # web-server mode
         import sd_server
         sd_server.start(
-            webui,
+            app,
             port = args.port, 
             web_path = os.path.join(os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))), 'web'),
-            index_file = 'slowhome.html' if webui.app.project is not None else 'welcome.html',
+            index_file = 'slowhome.html' if app.project is not None else 'welcome.html',
         )
         
     app.terminate()

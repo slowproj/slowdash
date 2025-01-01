@@ -7,8 +7,6 @@ from slowdash_cgi_config import sys_dir, project_dir
 sys.path.insert(0, os.path.join(sys_dir, 'main', 'server'))
 
 from sd_app import App
-from sd_webui import WebUI
-
 
 
 # The CGI mode disables launching task processes (user module and slow-task).
@@ -20,24 +18,22 @@ logging.basicConfig(level=logging.INFO)
 
 
 
-webui = None
+app = None
 
 def application(environ, start_response):
     '''Entry point for WSGI. CGI also uses this.
     Args: see the WSGI specification
     '''
     
-    global webui, is_cgi
-    if webui is None:
+    global app, is_cgi
+    if app is None:
         app = App(project_dir = project_dir, is_cgi = is_cgi)
         if app.project.config is None:
-            del app
-            webui = False
+            app = False
             logging.error('unable to create a SlowDash instance')
         else:
-            webui = WebUI(app)
             logging.info('created a SlowDash instance')
-    if webui is False:
+    if app is False:
         start_response('500 Internal Server Error', [])
         logging.error('unable to connect to a SlowDash instance')
         return [ b'' ]
@@ -49,7 +45,7 @@ def application(environ, start_response):
     url = path + ('?' + query if len(query) > 0 else '')
 
     if method == 'GET':
-        reply = webui.process_get_request(url)
+        reply = app.process_get_request(url)
             
     elif method == 'POST':
         try:
@@ -63,10 +59,10 @@ def application(environ, start_response):
             start_response('507 Insufficient Storage', [])
             return [ b'' ]
         doc = environ['wsgi.input'].read(content_length)
-        reply = webui.process_post_request(url, doc)
+        reply = app.process_post_request(url, doc)
         
     elif method == 'DELETE':
-        reply = webui.process_delete_request(url)
+        reply = app.process_delete_request(url)
             
     else:
         start_response('500 Internal Server Error', [])
@@ -95,10 +91,10 @@ def application(environ, start_response):
 
 
 def terminate():
-    if webui is not in None and webui is not False:
-        webui.app.terminate()
-        del webui
-        webui = False
+    if app is not in None and app is not False:
+        app.terminate()
+        del app
+        app = False
         
         
 import atexit

@@ -6,15 +6,12 @@ import sys, os, logging, functools, base64, traceback
 from urllib.parse import urlparse
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-from sd_webui import WebUI
-
-
 bcrypt_imported = False  # modudle not necessary unless authorization is enabled
 
 
 class RequestHandler(BaseHTTPRequestHandler):
-    def __init__(self, webui, web_path, index_file, *args, **kwargs):
-        self.webui = webui
+    def __init__(self, app, web_path, index_file, *args, **kwargs):
+        self.app = app
         self.web_path = web_path
         self.index_file = index_file
 
@@ -64,8 +61,8 @@ class RequestHandler(BaseHTTPRequestHandler):
                     os.path.join(self.web_path, '/'.join(path_split))
                 )
         except Exception as e:
-            logging.warning(f'SlowDash_Server: ERROR: {str(e)}')
-            logging.debug(traceback.format_exc())
+            logging.error(f'SlowDash_Server: ERROR: {str(e)}')
+            logging.error(traceback.format_exc())
 
                          
     def do_POST(self):
@@ -100,7 +97,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             return
         doc = self.rfile.read(content_length)
         
-        result = self.webui.process_post_request(url_recon, doc)
+        result = self.app.process_post_request(url_recon, doc)
         if (result is None):
             self.send_error(400)  # Bad Request
             return
@@ -120,8 +117,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             result.write_to(self.wfile)
             self.wfile.flush()
         except Exception as e:
-            logging.warning("slowdash_server: do_POST(): %s" % str(e))
-            logging.debug(traceback.format_exc())
+            logging.error("slowdash_server: do_POST(): %s" % str(e))
+            logging.error(traceback.format_exc())
 
     
     def do_DELETE(self):
@@ -146,7 +143,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         if len(url.query) > 0:
             url_recon = '%s?%s' % (url_recon, url.query)
         
-        result = self.webui.process_delete_request(url_recon)
+        result = self.app.process_delete_request(url_recon)
         if (result is None):
             self.send_error(400)  # Bad Request
             return
@@ -159,7 +156,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             
     def check_auth(self):
-        if self.webui.auth_list is None:
+        if self.app.auth_list is None:
             return True
         
         auth = self.headers.get('Authorization', None)
@@ -179,7 +176,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             user, word = tuple(base64.b64decode(auth.split(' ')[1]).decode().split(':'))
             if word is None:
                 return False
-            true_key = self.webui.auth_list.get(user, None)
+            true_key = self.app.auth_list.get(user, None)
             if true_key is None:
                 return False
             if word == true_key:
@@ -187,7 +184,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             
             key = bcrypt.hashpw(word.encode("utf-8"), true_key.encode()).decode("utf-8")
             if key == true_key:
-                self.webui.auth_list[user] = word
+                self.app.auth_list[user] = word
                 return True
             
         except Exception as e:
@@ -197,7 +194,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         
     def process_api_get(self, url):
-        result = self.webui.process_get_request(url)
+        result = self.app.process_get_request(url)
         if (
             (result is None) or
             (result.content_type is None) or
@@ -263,11 +260,11 @@ def signal_handler(signum, frame):
 signal.signal(signal.SIGTERM, signal_handler)
 
 
-def start(webui, port, web_path, index_file):
+def start(app, port, web_path, index_file):
     try:
         httpserver = HTTPServer(
             ('', port),
-            functools.partial(RequestHandler, webui, web_path, index_file)
+            functools.partial(RequestHandler, app, web_path, index_file)
         )
     except Exception as e:
         sys.stderr.write('ERROR: %s\n' % str(e))

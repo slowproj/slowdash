@@ -71,10 +71,10 @@ class Component:
 
 
     # override this
-    def process_delete(self, path):
+    def process_delete(self, path, opts):
         """ DELETE-request handler
         Args:
-          path: parsed URL
+          path & opts: parsed URL, as list & dict
         Returns:
           - HTTP response code as int
           - None if the path is not the target (chain of responsibility)

@@ -295,19 +295,6 @@ class ProjectComponent(Component):
         
 
     def process_get(self, path, opts, output):
-        """ GET-request handler
-        Args:
-          path & opts: parsed URL, as list & dict
-          output: file-like object to write response content, if return value is not a dict
-        Returns:
-          either:
-            - contents as Python dict, to reply as a JSON string with HTTP response 200
-            - content-type (MIME) as string, with reply contents written in output
-            - HTTP response code as int
-            - False for error (HTTP response 400 "Bad request")
-            - None if the path is not the target (chain of responsibility)
-        """
-
         if path[0] != 'config':
             return None
 
@@ -337,20 +324,6 @@ class ProjectComponent(Component):
 
 
     def process_post(self, path, opts, doc, output):
-        """ POST-request handler
-        Args:
-          path & opts: parsed URL, as list & dict
-          doc: posted contents
-          output: file-like object to write response content, if return value is not a dict
-        Returns:
-          either:
-            - contents as Python dict, to reply as a JSON string with HTTP response 201 (Created)
-            - content-type (MIME) as string, with reply contents written in output
-            - HTTP response code as int
-            - False for error (HTTP response 400 "Bad request")
-            - None if the path is not the target (chain of responsibility)
-        """
-        
         if path[0] != 'config':
             return None
         
@@ -363,16 +336,7 @@ class ProjectComponent(Component):
         return False
 
             
-    def process_delete(self, path):
-        """ DELETE-request handler
-        Args:
-          path: parsed URL
-        Returns:
-          - HTTP response code as int
-          - False for error (HTTP response 400 "Bad request")
-          - None if the path is not the target (chain of responsibility)
-        """
-
+    def process_delete(self, path, opts):
         if (len(path) < 3) or (path[0] != 'config') or (path[1] != 'file'):
             return 403  # Forbidden
         if self.project_dir is None:
