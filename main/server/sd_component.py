@@ -91,6 +91,7 @@ class ComponentPlugin:
     def __init__(self, app, project, params):
         self.app = app
         self.project = project
+        self.class_name = None
 
     
     def __del__(self):
@@ -110,7 +111,7 @@ class ComponentPlugin:
           - Do not put the configuration file contents directly (as it might contain secrets).
         """
         return {}
-
+    
         
     # override this
     def process_get(self, path, opts, output):
@@ -268,7 +269,13 @@ class PluginComponent(Component):
                 
             plugin = self._load_plugin_module(plugin_name, class_name, params=params)
             if plugin is not None:
-                self.plugin_table[plugin_name] = plugin
+                if plugin.class_name is not None:
+                    name = plugin.class_name # actual name defined in the plugin
+                else:
+                    name = class_name
+                if name.split('_')[0].lower() == self.class_prefix.lower():
+                    name = '_'.join(name.split('_')[1:])
+                self.plugin_table[name] = plugin
                     
 
     def _load_plugin_module(self, plugin_name, class_name, params):
@@ -315,7 +322,8 @@ class PluginComponent(Component):
             logging.error(f'plugin error: {plugin_name}.{class_name}: %s' % str(e))
             logging.error(traceback.format_exc())
             return None
-        
+
+        instance.class_name = class_name
         logging.info(f'loaded plugin {class_name}')
 
         return instance

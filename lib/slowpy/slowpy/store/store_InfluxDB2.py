@@ -12,7 +12,7 @@ class DataStore_InfluxDB2(DataStore):
         - field: name of the value field for the long format, or None for the wide format (fields specified by data)
         Use a different measurement or field for different data types (e.g., numerical values and histograms)
         '''
-    
+        
         from influxdb_client import InfluxDBClient, Point
         from influxdb_client.client.write_api import SYNCHRONOUS, WritePrecision
 
@@ -20,6 +20,7 @@ class DataStore_InfluxDB2(DataStore):
         self.measurement = measurement
         self.tag_column = tag_column
         self.field = field
+        self.client = None
         
         if db_url.startswith('influxdb2://'):
             db_url = db_url[12:]
@@ -46,7 +47,6 @@ class DataStore_InfluxDB2(DataStore):
         self.bucket = bucket
         self.org = org
 
-        self.client = None
         for i in range(12):
             try:
                 self.client = InfluxDBClient(url='http://%s:%s'%(host,port), org=self.org, token=token)
@@ -102,7 +102,7 @@ class DataStore_InfluxDB2(DataStore):
     
     def _write_one(self, measurement, timestamp, tag, fields, values, update):
         if update is True and self.update_error_shown is False:
-            logging.error('InfluxDB2: "update()" is not available for InfluxDB: switched to append()')
+            logging.warning('SlowPy.InfluxDB2: "update()" is not available for InfluxDB: switched to append()')
             self.update_error_shown = True
         
         if self.field is not None:  # long format

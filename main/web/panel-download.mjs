@@ -249,7 +249,7 @@ export class DownloadPanel extends Panel {
         if (config.show_details) {
             rangeDiv.find('details').get().open = true;
         }
-        if (config.has_jupyter_server) {
+        if (config.has_jupyter) {
             scriptDiv.find('li').last().css('display', 'none');
         }
         
@@ -296,13 +296,13 @@ export class DownloadPanel extends Panel {
             else if (has_ts) {
                 buttonDiv.find('button').enabled(true);
                 button2Div.data('datatype', 'timeseries').find('button').enabled(true);
-                button2Div.find('button').at(2).enabled(config.has_jupyter_server);
+                button2Div.find('button').at(2).enabled(config.has_jupyter);
             }
             else {
                 buttonDiv.find('button').at(0).enabled(false);
                 buttonDiv.find('button').at(1).enabled(true);
                 button2Div.data('datatype', 'obj').find('button').enabled(true);
-                button2Div.find('button').at(2).enabled(config.has_jupyter_server);
+                button2Div.find('button').at(2).enabled(config.has_jupyter);
             }
         };
 
@@ -471,7 +471,11 @@ export class DownloadPanel extends Panel {
             const headers = { 'Content-Type': 'application/json; charset=utf-8' };
             const doc = { 'filename': filename };
             this.indicator.open("Launching Jupyter...", "&#x23f3;", event?.clientX ?? null, event?.clientY ?? null);
-            let response = await fetch(url, { method: 'POST', headers: headers, body: JSON.stringify(doc, null, 2) });
+            let response = await fetch(url, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(doc, null, 2)
+            });
             if ((response.status != 200) && (response.status != 201)) {
                 this.indicator.close("Error on launching Jupyter: " + response.status + " " + response.statusText, "&#x274c;", 5000);
             }

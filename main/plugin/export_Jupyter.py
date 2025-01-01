@@ -23,9 +23,20 @@ class Export_Jupyter(export_Notebook.Export_Notebook):
 
         
     def public_config(self):
+        token = self.jupyter_token
+        if len(token) >= 8:
+            token = token[0] + ('*' * (len(token)-2)) + token[-1]
+        elif len(token) >= 4:
+            token = token[0] + ('*' * (len(token)-1))
+        else:
+            token = '???'
+            
         config = super().public_config()
         config.update({
-            "url": self.jupyter_url
+            "url": self.jupyter_url,
+            "token": token,
+            "internal_url": self.jupyter_internal_url,
+            "slowdash_internal_url": self.slowdash_internal_url,
         })
         return config
 

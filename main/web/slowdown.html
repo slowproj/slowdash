@@ -44,7 +44,7 @@
                     channels: config.channels ? config.channels.split(',') : null,
                     length: config.length,
                     to: config.to,
-                    has_jupyter_server: ((config._project.export?.Jupyter?.url ?? '') !== ''),
+                    has_jupyter: ((config._project.export?.Jupyter?.url ?? '') !== ''),
                     //show_details: true,
                 }
             ]

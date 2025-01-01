@@ -3,13 +3,14 @@ slowdash_project:
   title: Jupyter Integration
 
 
-  extension:
-    - name: jupyter
-      parameters:
-        url: ${JUPYTER_URL:-http://localhost:8888}
-        token: ${JUPYTER_TOKEN:-SlowJupyter}
-        jupyter_internal_url: ${JUPYTER_INTERNAL_URL:-}
-        slowdash_internal_url: ${SLOWDASH_INTERNAL_URL:-}
+  export:
+    - type: jupyter
+      url: ${JUPYTER_URL:-http://localhost:8888}
+      token: ${JUPYTER_TOKEN:-SlowJupyter}
+      jupyter_internal_url: ${JUPYTER_INTERNAL_URL:-}
+
+      # if Jupyter is in a Docker container
+      slowdash_internal_url: ${SLOWDASH_INTERNAL_URL:-http://host.docker.internal:18881}
 
 
   data_source:
