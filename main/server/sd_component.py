@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 25 December 2024 #
 
 import sys, os, copy, glob, inspect, logging, traceback

@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 20 March 2022 #
 
 import re, json, enum, datetime, logging

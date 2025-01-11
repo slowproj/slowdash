@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 2 November 2017 #
 
 

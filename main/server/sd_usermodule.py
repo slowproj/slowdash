@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 24 October 2022 #
 
 import sys, os, time, threading, types, json, logging, traceback

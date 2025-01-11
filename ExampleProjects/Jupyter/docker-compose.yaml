@@ -1,6 +1,7 @@
 version: '3.4'
 
 services:
+  # Create "notebook" directory before starting this container.
   notebook:
     image: slowpy-notebook
     command:

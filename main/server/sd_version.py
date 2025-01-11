@@ -1,1 +1,1 @@
-slowdash_version = '241231 "Skykomish"'
+slowdash_version = '250110 "Skykomish"'

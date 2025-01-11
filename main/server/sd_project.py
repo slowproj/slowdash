@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 19 Mar 2022 #
 
 import sys, os, glob, io, json, logging
