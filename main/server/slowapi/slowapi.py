@@ -5,6 +5,8 @@ import typing, json, logging
 from urllib.parse import urlparse, parse_qsl, unquote
 import inspect
 
+import slowapi_server
+
 
 class PathRule:
     def __init__(self, rule:str, func_signature:inspect.Signature, status_code:int=200):
@@ -104,12 +106,14 @@ class Response:
         500: 'Internal Server Error', 503: 'Service Unavailable',
     }
 
-    def __init__(self, status_code:int=200, content_type=None, content=None):
+    def __init__(self, status_code=0, content_type=None, content=None):
         self.status_code = status_code
         self.content_type = content_type
         self.content = None
 
         if content is not None:
+            if status_code == 0:
+                self.status_code = 200
             if content_type is None:
                 self.append(content)
             else:
@@ -125,7 +129,7 @@ class Response:
         elif type(content) is Response:
             # take the content with a larger status_code, or merge the two contents
             response = content
-            if response.status_code > self.status_code:
+            if (response.status_code > self.status_code) or (self.content is None):
                 self.status_code = response.status_code
                 self.content_type = response.content_type
                 self.content = response.content
@@ -169,18 +173,21 @@ class Response:
                 logging.error('SlowAPI: incompatible results cannot be combined (str)')
             
         else:
-            logging.error(f'SlowAPI: invalid content type to append ({type(content)})')
+            if self.content is None:
+                self.content = content
+            else:
+                logging.error(f'SlowAPI: invalid content type to append ({type(content)})')
 
             
     def get_status_code(self):
-        if self.content is None:
+        if self.status_code == 0:
             return 404
         else:
             return self.status_code
             
         
     def get_status(self):
-        if self.content is None:
+        if self.status_code == 0:
             return '404 Not Found'
         else:
             return '%d %s' % (self.status_code, self.status.get(self.status_code, 'Unknown Response'))
@@ -411,3 +418,9 @@ class SlowAPI:
 
         start_response(response.get_status(), response.get_headers())
         return [ response.get_content() ]
+
+
+    def run(self, **kwargs):
+        kwargs['api_path'] = kwargs.get('api_path', None)
+        kwargs['webfile_dir'] = kwargs.get('webfile_dir', None)
+        slowapi_server.run(self, **kwargs)

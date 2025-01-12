@@ -2,4 +2,5 @@ bin/
 __pycache__/
 .vscode/
 *.db
+notebook/
 

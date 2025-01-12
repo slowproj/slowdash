@@ -1,3 +1,3 @@
 
 from .slowapi import SlowAPI, Response
-from .server import start
+from .slowapi_server import run

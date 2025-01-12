@@ -18,7 +18,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.api_path = api_path
         self.webfile_dir = webfile_dir
         self.index_file = index_file
-        self.auth_list = auth
+        self.auth_list = auth_list
 
         if api_path is None and webfile_dir is not None:
             logging.error(f'SlowAPI_Server: "api_path" must not be None if "webfile" is used')
@@ -41,10 +41,10 @@ class RequestHandler(BaseHTTPRequestHandler):
             self._request_auth()
             return
 
-        api_url, file_path = self._parse_url(self.path)
+        api_url, file_path = self._parse_url()
         try:
             if api_url is not None:
-                response = self.api.handle_get_request(api_url)
+                response = self.app.handle_get_request(api_url)
             elif file_path is not None:
                 self._process_file_get(file_path)
                 return
@@ -55,6 +55,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             logging.error(f'SlowAPI_Server: {e}')
             logging.error(traceback.format_exc())
             self.send_error(400)  # Bad Request
+            return
 
         self._reply_response(response)
             
@@ -64,22 +65,23 @@ class RequestHandler(BaseHTTPRequestHandler):
             self._request_auth()
             return
             
-        api_url, file_path = self._parse_url(self.path)
+        api_url, file_path = self._parse_url()
         if api_url is None:
             self.send_error(400)  # Bad Request
             return
         
         try:
-            content_length = int(self.headers['content-length'])
+            content_length = int(self.headers.get('content-length', 0))
             if content_length > 1024*1024*1024:
                 self.send_error(507)   # Insufficient Storage (WebDAV)
                 return
             body = self.rfile.read(content_length)
-            response = self.api.handle_post_request(api_url, body)
+            response = self.app.handle_post_request(api_url, body)
         except Exception as e:
             logging.error(f'SlowAPI_Server: {e}')
             logging.error(traceback.format_exc())
             self.send_error(400)  # Bad Request
+            return
 
         self._reply_response(response)
 
@@ -89,7 +91,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             self._request_auth()
             return
             
-        api_url, file_path = self._parse_url(self.path)
+        api_url, file_path = self._parse_url()
         if api_url is None:
             self.send_error(400)  # Bad Request
             return
@@ -100,6 +102,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             logging.error(f'SlowAPI_Server: {e}')
             logging.error(traceback.format_exc())
             self.send_error(400)  # Bad Request
+            return
 
         self._reply_response(response)
 
@@ -156,7 +159,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         while path.count(''):
             path.remove('')
 
-        api_url, file_path = None
+        api_url, file_path = None, None
         if self.api_path is not None:
             if len(path) > 0 and path[0] == self.api_path:
                 api_url = '/'.join(path[1:])
@@ -168,7 +171,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 api_url += '?' + url.query
             if len(url.fragment) > 0:
                 api_url += '#' + url.fragment
-        else:
+        elif self.webfile_dir is not None:
             if path.count('..'):
                 file_path = None  # invalid
             elif len(path) == 0:
@@ -184,7 +187,15 @@ class RequestHandler(BaseHTTPRequestHandler):
             if self.index_file is not None:
                 path = self.index_file
             else:
-                self.send_error(404)   # Not Found
+                if True:
+                    self.send_response(200)   # OK
+                    self.send_header('content-type', 'text/html')
+                    self.end_headers()
+                    self.wfile.write(b'<!DOCTYPE html>\r\n')
+                    self.wfile.write(b'<html><body><h3>SlowAPI Server</h3></body></html>')
+                    self.wfile.flush()
+                else:
+                    self.send_error(404)   # Not Found
                 return
         
         filepath = os.path.join(self.webfile_dir, path)
@@ -214,11 +225,10 @@ class RequestHandler(BaseHTTPRequestHandler):
             content_type = 'image/jpeg'
         elif ext == '.pdf':
             content_type = 'application/pdf'
-        elif ext == '.txt':
+        elif ext in ['.txt', '.py']:
             content_type = 'text/plain'
         else:
-            logging.error(f'SlowAPI_Server: FILE_GET: unknown file type: {filepath}')
-            self.send_error(404)   # Not Found
+            content_type = 'application/octet-stream'
             return
 
         self.send_response(200)   # OK
@@ -228,7 +238,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.wfile.flush()
 
         
-    def _reply_response(self, resonse):
+    def _reply_response(self, response):
         if response is None:
             self.send_error(404)   # Not Found
             return
@@ -238,14 +248,14 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_error(status_code)
             return
         else:
-            self.send_response(result.response)
+            self.send_response(status_code)
 
         for k, v in response.get_headers():
             self.send_header(k, v)
         self.end_headers()
 
         content = response.get_content()
-        if.content is not None:
+        if content is not None:
             self.wfile.write(content)
             
         self.wfile.flush()
@@ -258,7 +268,7 @@ def signal_handler(signum, frame):
 signal.signal(signal.SIGTERM, signal_handler)
 
 
-def start(app, port, api_path='api', webfile_dir=None, index_file=None, auth_list=None):
+def run(app, port, api_path='api', webfile_dir='.', index_file=None, auth_list=None):
     try:
         httpserver = HTTPServer(
             ('', port),

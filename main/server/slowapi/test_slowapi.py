@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 
 
+import sys
 from slowapi import SlowAPI, Response
 
 
@@ -31,18 +32,27 @@ class MyApp(SlowAPI):
         return Response(content_type='text/plain', content=open('slowapi.py', 'rb').read())
 
 
+    @SlowAPI.delete('/trash')  # example for DELETE
+    def delete_trash(self):
+        sys.stderr.write("Trash Deleted\n")
+        return Response(200)
+
+
     
-application = MyApp()
+app = MyApp()
 
 '''
 to run the app as a WSGI server, run:
-$ gunicorn test_slowapi
+$ gunicorn test_slowapi:app
 '''
 
 if __name__ == '__main__':
-    print(application.handle_get_request('/'))
-    print(application.handle_get_request('/hello'))
-    print(application.handle_get_request('/hello/SlowDash'))
-    print(application.handle_post_request('/message?name=you', "how are you doing?".encode()))
-    print(application.handle_get_request('/home'))
-    #print(application.handle_get_request('/source'))
+    print(app.handle_get_request('/'))
+    print(app.handle_get_request('/hello'))
+    print(app.handle_get_request('/hello/SlowDash'))
+    print(app.handle_post_request('/message?name=you', b"how are you doing?"))
+    print(app.handle_get_request('/home'))
+    #print(app.handle_get_request('/source'))
+    print(app.handle_delete_request('/trash'))
+
+    app.run(port=18881)
