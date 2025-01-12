@@ -5,40 +5,44 @@ from slowapi import SlowAPI, Response
 
 
 class MyApp(SlowAPI):
-    def __init__(self):
-        super().__init__()
-    
         
-    @SlowAPI.get('/')
+    @SlowAPI.get('/')  # example for the simplest GET
     def home(self):
         return "I'm home"
 
 
-    @SlowAPI.get('/hello/{name}')
-    def hello(self, name:str="you"):
+    @SlowAPI.get('/hello/{name}')   # name from path, with default
+    def hello(self, name:str="there"):
         return f"hello {name}"
 
 
-    @SlowAPI.post('/message')
-    def message(self, name:str, doc:bytes):
-        return {'message': f"Dear {name},\n{doc.decode()}"}
+    @SlowAPI.post('/message')  # example for POST
+    def message(self, name:str, doc:bytes):  # name is from options, doc is from request body
+        return {'message1': f"Dear {name},\n{doc.decode()}"}
 
 
-    @SlowAPI.post('/message')
+    @SlowAPI.post('/message')   # multiple responses will be aggregated
     def message2(self, name:str, doc:bytes):
-        return {'message_2nd': "I'm fine."}
+        return {'message2': f"I said to {name}, {doc.decode()}"}
 
 
-    @SlowAPI.get('/source')
+    @SlowAPI.get('/source')  # example to return a blob
     def source(self):
         return Response(content_type='text/plain', content=open('slowapi.py', 'rb').read())
 
 
     
-app = MyApp()
+application = MyApp()
 
-print(app.handle_get_request('/'))
-print(app.handle_get_request('/hello/SlowDash'))
-print(app.handle_post_request('/message?name=you', "how are you doing?".encode()))
-print(app.handle_get_request('/home'))
-#print(app.handle_get_request('/source'))
+'''
+to run the app as a WSGI server, run:
+$ gunicorn test_slowapi
+'''
+
+if __name__ == '__main__':
+    print(application.handle_get_request('/'))
+    print(application.handle_get_request('/hello'))
+    print(application.handle_get_request('/hello/SlowDash'))
+    print(application.handle_post_request('/message?name=you', "how are you doing?".encode()))
+    print(application.handle_get_request('/home'))
+    #print(application.handle_get_request('/source'))

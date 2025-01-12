@@ -17,6 +17,10 @@ def start_response(status, headers):
 environ = { k:v for k,v in os.environ.items() }
 environ['wsgi.input'] = sys.stdin.buffer
 environ['wsgi.errors'] = sys.stderr
+environ['wsgi.version'] = (1, 0)
+environ['wsgi.multitherad'] = False
+environ['wsgi.multiprocess'] = False
+environ['wsgi.run_once'] = True
 
 result = slowdash_wsgi.application(environ, start_response)
 for data in result:

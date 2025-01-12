@@ -6,15 +6,7 @@ from urllib.parse import urlparse, parse_qsl, unquote
 import inspect
 
 
-response_status = {
-    200: 'OK', 201: 'Created',
-    400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found',
-    500: 'Internal Server Error', 503: 'Service Unavailable',
-}
-
-
-
-class Rule:
+class PathRule:
     def __init__(self, rule:str, func_signature:inspect.Signature, status_code:int=200):
         self.rule_str = rule
         self.status_code = status_code
@@ -40,6 +32,8 @@ class Rule:
                 self.body_param = pname
             else:
                 self.param_attributes[pname] = param
+
+        logging.debug(f'PathRule {rule} --> {self.path}, {self.path_params}, {self.param_attributes}')
             
 
     def __str__(self):
@@ -62,7 +56,12 @@ class Rule:
         
     def match(self, path, opts, body: typing.Optional[bytes]=None):
         if len(path) != len(self.path):
-            return None
+            if len(path) > len(self.path):
+                return None
+            # maybe a parameter with a default value
+            for k in range(len(path), len(self.path)):
+                if self.path[k] is not None:
+                    return None
         
         params = {}
         for pos, value in enumerate(path):
@@ -82,10 +81,10 @@ class Rule:
                 value = attr.default
             if value is not None and attr.annotation is not inspect._empty:
                 try:
+                    # BUG: this does not work if the type is "Optional[xxx]"
                     value = attr.annotation(value)
                 except Exception as e:
-                    print(e)
-                    # invalid parameter type
+                    logging.warning(f'SlowAPI: incompatible parameter type: {pname}: {e}')
                     return None
             kwargs[pname] = value
 
@@ -99,6 +98,12 @@ class Rule:
 
 
 class Response:
+    status = {
+        200: 'OK', 201: 'Created',
+        400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found',
+        500: 'Internal Server Error', 503: 'Service Unavailable',
+    }
+
     def __init__(self, status_code:int=200, content_type=None, content=None):
         self.status_code = status_code
         self.content_type = content_type
@@ -108,11 +113,33 @@ class Response:
             if content_type is None:
                 self.append(content)
             else:
-                self.set_content(content_type, content)
+                self.content_type = content_type
+                self.content = content
 
                 
     def append(self, content):
-        if type(content) is list:
+        if content is None:
+            # no content to append
+            pass
+        
+        elif type(content) is Response:
+            # take the content with a larger status_code, or merge the two contents
+            response = content
+            if response.status_code > self.status_code:
+                self.status_code = response.status_code
+                self.content_type = response.content_type
+                self.content = response.content
+            elif self.status_code > response.status_code:
+                pass
+            else:
+                self.append(response.content)
+
+        elif self.status_code >= 400:
+            # current content is in an error status; do not append any others
+            pass
+            
+        elif type(content) is list:
+            # list contents are appended
             if self.content is None:
                 self.content = []
                 self.content_type = 'application/json'
@@ -122,6 +149,7 @@ class Response:
                 logging.error('SlowAPI: incompatible results cannot be combined (list)')
                 
         elif type(content) is dict:
+            # dict contents are merged
             if self.content is None:
                 self.content = {}
                 self.content_type = 'application/json'
@@ -131,25 +159,17 @@ class Response:
                 logging.error('SlowAPI: incompatible results cannot be combined (dict)')
                 
         elif type(content) is str:
+            # string contents are appended after a new line
             if self.content is None:
-                self.content = ''
+                self.content = content
                 self.content_type = 'text/plain'
-            if type(self.content) is str:
-                self.content += content
+            elif type(self.content) is str:
+                self.content += '\r\n' + content
             else:
-                logging.error('SlowAPI: incompatible results cannot be combined (dict)')
+                logging.error('SlowAPI: incompatible results cannot be combined (str)')
             
         else:
-            logging.error('SlowAPI: invalid content type to append')
-
-            
-    def set_content(self, content_type:str, content:bytes):
-        if self.content is not None:
-            logging.error('SlowAPI:Response: reply content already set')
-            return
-
-        self.content_type = content_type
-        self.content = content
+            logging.error(f'SlowAPI: invalid content type to append ({type(content)})')
 
             
     def get_status_code(self):
@@ -163,14 +183,14 @@ class Response:
         if self.content is None:
             return '404 Not Found'
         else:
-            return '%d %s' % (self.status_code, response_status.get(self.status_code, 'Unknown Response'))
+            return '%d %s' % (self.status_code, self.status.get(self.status_code, 'Unknown Response'))
             
         
-    def get_content_type(self):
+    def get_headers(self):
         if self.content_type is None:
-            return ''
+            return []
         else:
-            return self.content_type
+            return [ ('Content-type',  self.content_type) ]
             
         
     def get_content(self, json_kwargs={}):
@@ -188,67 +208,67 @@ class Response:
 
 
     def __str__(self):
-        return f'Status: {self.get_status()}\nContent-type: {self.get_content_type()}\n{self.get_content({"indent":4}).decode()}\n'
+        if self.get_status_code() >= 400:
+            return self.get_status()
+        else:
+            return self.get_content({"indent":4}).decode()
 
     
         
 class SlowAPI:
+    @staticmethod
+    def get(path_rule:str, status_code:int=200):
+        """decorator for a GET-request handler (method of a subclass of SlowAPI)
+        Args:
+          - path_rule: path pattern to match
+          - status_code: default status code for success
+        """
+        def wrapper(func):
+            func.slowapi_get_rule = PathRule(path_rule, inspect.signature(func), status_code=status_code)
+            return func
+        return wrapper
+
+
+    @staticmethod
+    def post(path_rule:str, status_code:int=201):
+        """decorator for a POST-request handler (method of a subclass of SlowAPI)
+        Args:
+          - path_rule: path pattern to match
+          - status_code: default status code for success
+        Note:
+          The request body data is passed to the handler via a "bytes" type parameter.
+          example:
+            @SlowAPI.post('/file/{name}')
+            def upload(name:str, body: bytes):
+        """
+        def wrapper(func):
+            func.slowapi_post_rule = PathRule(path_rule, inspect.signature(func), status_code=status_code)
+            return func
+        return wrapper
+
+
+    @staticmethod
+    def delete(path_rule:str, status_code:int=200):
+        """decorator for a DELETE-request handler (method of a subclass of SlowAPI)
+        Args:
+          - path_rule: path pattern to match
+          - status_code: default status code for success
+        """
+        def wrapper(func):
+            func.slowapi_delete_rule = PathRule(path_rule, inspect.signature(func), status_code=status_code)
+            return func
+        return wrapper
+
+
     def __init__(self):
-        self.get_handlers = None
-        self.post_handlers = None
-        self.delete_handlers = None
-
-    
-    @staticmethod
-    def get(rule:str, status_code:int=200):
-        def decorator(func):
-            func.slowapi_get_rule = Rule(rule, inspect.signature(func), status_code=status_code)
-            return func
-        return decorator
-
-
-    @staticmethod
-    def post(rule:str, status_code:int=201):
-        def decorator(func):
-            func.slowapi_post_rule = Rule(rule, inspect.signature(func), status_code=status_code)
-            return func
-        return decorator
-
-
-    @staticmethod
-    def delete(rule:str, status_code:int=200):
-        def decorator(func):
-            func.slowapi_delete_rule = Rule(rule, inspect.signature(func), status_code=status_code)
-            return func
-        return decorator
-
-
-    def handle_get_request(self, url:str):
-        if self.post_handlers is None:
-            self._build_handler_table()
-
-        return self._handle_request(self.get_handlers, url)
-    
-
-    def handle_post_request(self, url:str, body:bytes):
-        if self.post_handlers is None:
-            self._build_handler_table()
-
-        return self._handle_request(self.post_handlers, url, body)
-    
-
-    def handle_delete_request(self, url:str):
-        if self.delete_handlers is None:
-            self._build_handler_table()
-
-        return self._handle_request(self.delete_handlers, url)
-
-
-    def _build_handler_table(self):
         self.get_handlers = []
         self.post_handlers = []
         self.delete_handlers = []
-        
+
+        self.composite_apis = []
+
+        # Binding URL handlers to the PathRule attached by decorators (@get(PATH) etc).
+        # Note that __init__() is called after all the decorators.
         for name, method in inspect.getmembers(type(self), predicate=inspect.isfunction):
             if hasattr(method, 'slowapi_get_rule'):
                 self.get_handlers.append((method.slowapi_get_rule, method))
@@ -259,10 +279,79 @@ class SlowAPI:
             elif hasattr(method, 'slowapi_delete_rule'):
                 self.delete_handlers.append((method.slowapi_delete_rule, method))
                 logging.debug(f'DELETE {method.slowapi_delete_rule} --> {name}()')
-                
 
-    def _handle_request(self, handlers, url:str, body:bytes=None):
-        path, opts = Rule.decode_url(url)
+
+    def include(api):
+        """append another SlowAPI for the composite
+        Parameters:
+          - api: an instance of SlowAPI
+        """
+        self.composite_apis.append(api)
+        
+
+    def handle_get_request(self, url):
+        """handle GET request
+        Parameters:
+          - url: URL string, or a tuple of (path, opts) by PathRule.decode_url(url)
+        Returns:
+          - Response object
+        """
+        if type(url) is str:
+            url = PathRule.decode_url(url)
+        response = Response()
+        
+        response.append(self._handle_request(self.get_handlers, url))
+        for api in self.composite_apis:
+            response.append(api.handle_get_request(url))
+        return response
+        
+
+    def handle_post_request(self, url, body:bytes):
+        """handle POST request
+        Parameters:
+          - url: URL string, or a tuple of (path, opts) by PathRule.decode_url(url)
+          - body: request body
+        Returns:
+          - Response object
+        """
+        if type(url) is str:
+            url = PathRule.decode_url(url)
+        response = Response()
+        
+        response.append(self._handle_request(self.post_handlers, url, body))
+        for api in self.composite_apis:
+            response.append(api.handle_post_request(url, body))
+        return response
+    
+
+    def handle_delete_request(self, url:str):
+        """handle DELETE request
+        Parameters:
+          - url: URL string, or a tuple of (path, opts) by PathRule.decode_url(url)
+        Returns:
+          - Response object
+        """
+        if type(url) is str:
+            url = PathRule.decode_url(url)
+        response = Response()
+        
+        response.append(self._handle_request(self.delete_handlers, url))
+        for api in self.composite_apis:
+            response.append(api.handle_delete_request(url))
+        return response
+
+
+    def _handle_request(self, handlers, url, body:typing.Optional[bytes]=None):
+        """
+        Args:
+          - handlers: self.XXX_handlers where XXX is "get", "post", or "delete"
+          - url: tuple of (path, opts), which is a return values of PathRule.decode(url)
+          - body: request body
+        Returns:
+          - a Response object, or
+          - None if there is no handler for the URL
+        """
+        path, opts = url
         response = None
         
         for rule, handler in handlers:
@@ -273,15 +362,52 @@ class SlowAPI:
             this_result = handler(self, **params)
             if this_result is None:
                 continue
-            if type(this_result) is Response:
-                return this_result  # no result aggregation
-
+            
             if response is None:
-                response = Response(status_code=rule.status_code, content=this_result)
-            else:
-                response.append(this_result)
+                response = Response(status_code=rule.status_code)
+            response.append(this_result)
 
-        if response is None:
-            return Response(status_code=404)
+        return response
+
+
+    def __call__(self, environ, start_response):
+        """WSGI interface
+        Args: see the WSGI specification
+        """
+        path = environ.get('PATH_INFO', '/')
+        query = environ.get('QUERY_STRING', '')
+        method = environ.get('REQUEST_METHOD', 'GET')
+        content_length = environ.get('CONTENT_LENGTH', '')
+        url = path + ('?' + query if len(query) > 0 else '')
+
+        if method == 'GET':
+            response = self.handle_get_request(url)
+            
+        elif method == 'POST':
+            try:
+                content_length = int(content_length)
+            except:
+                logging.error(f'WSGI_POST: bad content length: {content_length}')
+                start_response('400 Bad Request', [])
+                return [ b'' ]
+            if content_length > 1024*1024*1024:
+                logging.error(f'WSGI_POST: content length too large: {content_length}')
+                start_response('507 Insufficient Storage', [])
+                return [ b'' ]
+            body = environ['wsgi.input'].read(content_length)
+            response = self.handle_post_request(url, body)
+        
+        elif method == 'DELETE':
+            response = self.handle_delete_request(url)
+            
         else:
-            return response
+            start_response('500 Internal Server Error', [])
+            return [ b'' ]
+
+    
+        if response is None:
+            start_response('404 Not Found', [])
+            return [ b'' ]
+
+        start_response(response.get_status(), response.get_headers())
+        return [ response.get_content() ]
