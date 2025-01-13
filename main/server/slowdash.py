@@ -19,7 +19,9 @@ from sd_misc_api import MiscApiComponent
 class App(slowapi.SlowAPI):
     def __init__(self, project_dir=None, project_file=None, is_cgi=False, is_command=False):
         super().__init__()
-        
+
+        if project_dir is not None:
+            project_dir = os.path.abspath(os.path.join(os.getcwd(), project_dir))
         self.project = Project(project_dir, project_file)
         self.project_dir = self.project.project_dir
         self.is_cgi = is_cgi

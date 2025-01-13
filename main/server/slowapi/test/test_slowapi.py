@@ -68,5 +68,5 @@ if __name__ == '__main__':
     print(app.request_delete('/trash'))
     print(app.request_get('/deci?den=3'))
 
-    ### start a HTTP server at a default port 8000 ###
+    ### start a HTTP server at default port 8000 ###
     app.run()
