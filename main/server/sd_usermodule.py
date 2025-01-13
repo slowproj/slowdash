@@ -2,6 +2,8 @@
 
 import sys, os, time, threading, types, json, logging, traceback
 import importlib.machinery
+
+from slowapi import SlowAPI, Response
 from sd_component import Component
 
 
@@ -123,7 +125,7 @@ class UserModule:
         
         if self.module is not None and False:  #??? it looks like just re-doing load() works...
             #??? this reload() does not execute statements outside a function
-            print("=== Reloading %s ===" % self.filepath)
+            logging.debug("=== Reloading %s ===" % self.filepath)
             self._preset_module(self.module)
             try:
                 self.module = importlib.reload(self.module)
@@ -132,7 +134,7 @@ class UserModule:
                 return False
             
         else:
-            print("=== Loading %s ===" % self.filepath)
+            logging.debug("=== Loading %s ===" % self.filepath)
             if not os.path.exists(self.filepath):
                 self.handle_error('unable to find user module: %s' % self.filepath)
                 return False
@@ -346,69 +348,74 @@ class UserModuleComponent(Component):
         }
 
 
-    def process_get(self, path, opts, output):
-        if len(path) > 0 and path[0] == 'channels':
-            result = []
-            for usermodule in self.usermodule_list:
-                channels = usermodule.get_channels()
-                if channels is not None:
-                    result.extend(channels)
-            return result
+    @SlowAPI.get('/channels')
+    def api_channels(self):
+        result = []
+        for usermodule in self.usermodule_list:
+            channels = usermodule.get_channels()
+            if channels is not None:
+                result.extend(channels)
+        return result
 
-        if len(path) > 1 and path[0] == 'data':
-            if len(self.usermodule_list) == 0:
-                return None
-            try:
-                channels = path[1].split(',')
-                length = float(opts.get('length', '3600'))
-                to = float(opts.get('to', int(time.time())+1))
-            except Exception as e:
-                logging.error('Bad data URL: %s: %s' % (str(opts), str(e)))
-                return False
-            has_result, result = False, {}
-            start = to - length
-            t = time.time() - start
-            if t >= 0 and t <= length + 10:
-                for usermodule in self.usermodule_list:
-                    for ch in channels:
-                        data = usermodule.get_data(ch)
-                        if data is None:
-                            continue
-                        has_result = True
-                        result[ch] = {
-                            'start': start, 'length': length,
-                            't': t,
-                            'x': data
-                        }
-
-            return result if has_result else None
         
-        return None
-
-    
-    def process_post(self, path, opts, doc, output):
+    @SlowAPI.get('/data/{channels}')
+    def api_data(self, channels:str, opts:dict):
         if len(self.usermodule_list) == 0:
             return None
         
-        if len(path) == 1 and path[0] == 'control':
-            try:
-                record = json.loads(doc.decode())
-            except Exception as e:
-                logging.error('control: JSON decoding error: %s' % str(e))
-                return 400 # Bad Request
-            logging.info(f'UserModule Command: {record}')
+        try:
+            channels = channels.split(',')
+            length = float(opts.get('length', '3600'))
+            to = float(opts.get('to', int(time.time())+1))
+        except Exception as e:
+            logging.error('Bad data URL: %s: %s' % (str(opts), str(e)))
+            return False
+        
+        has_result, result = False, {}
+        start = to - length
+        t = time.time() - start
+        if t >= 0 and t <= length + 10:
+            for usermodule in self.usermodule_list:
+                for ch in channels:
+                    data = usermodule.get_data(ch)
+                    if data is None:
+                        continue
+                    has_result = True
+                    result[ch] = {
+                        'start': start, 'length': length,
+                        't': t,
+                        'x': data
+                    }
 
-            # unlike GET, only one module can process to POST
-            for module in self.usermodule_list:
-                result = module.process_command(record)
-                if result is None:
-                    continue
-                if type(result) is bool:
-                    if result:
-                        return {'status': 'ok'}
-                    else:
-                        return {'status': 'error'}
+        return result if has_result else None
+
+    
+    @SlowAPI.post('/control')
+    def api_post(self, body:bytes):
+        if len(self.usermodule_list) == 0:
+            return None
+        
+        try:
+            doc = json.loads(body.decode())
+        except Exception as e:
+            logging.error('control: JSON decoding error: %s' % str(e))
+            return Response(400)   # Bad Request
+        
+        logging.info(f'UserModule Command: {doc}')
+
+        # unlike GET, only one module can process to POST
+        for module in self.usermodule_list:
+            result = module.process_command(doc)
+            if result is None:
+                continue
+            if type(result) is bool:
+                if result:
+                    return {'status': 'ok'}
                 else:
-                    return result
+                    return {'status': 'error'}
+            elif type(result) is int:
+                return Response(result)
+            else:
+                return result
         
         return None

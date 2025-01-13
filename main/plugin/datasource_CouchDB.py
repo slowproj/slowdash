@@ -370,27 +370,27 @@ class DataSource_CouchDB(DataSource):
         return result
 
     
-    def get_blob(self, channel, params, output):
+    def get_blob(self, path):
         if not self.server_connected:
             self.connect()
         if self.db is None:
-            return None
+            return (None, None)
 
-        if len(params) < 2:
-            return None
-        doc_id, att_name = params[0], params[1]
+        if len(path) < 2:
+            return (None, None)
+        doc_id, att_name = path[0], path[1]
         
         doc = self.db.get(doc_id)
         if doc is None:
-            return None
+            return (None, None)
         content_type = doc.get('_attachments', {}).get(att_name, {}).get('content_type', None)
         if content_type is None:
-            return None
+            return (None, None)
         att = self.db.get_attachment(doc, att_name, default=None)
         if att is None:
-            return None
+            return (None, None)
 
-        output.write(att.read())
+        content = att.read()
         att.close()
         
-        return content_type
+        return (content_type, content)

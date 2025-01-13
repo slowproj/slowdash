@@ -1,11 +1,11 @@
 # Created by Sanshiro Enomoto on 10 January 2025 #
 
 
-import typing, json, logging
+import typing, json, inspect, logging
 from urllib.parse import urlparse, parse_qsl, unquote
-import inspect
+from decimal import Decimal
 
-import slowapi_server
+from .server import run as run_server
 
 
 class PathRule:
@@ -16,6 +16,8 @@ class PathRule:
         self.path_params = {}  # {pos:int, name:str}
         self.param_attributes = {}  # {name: str, param: inspect.Parameter }
         self.body_param = None
+        self.path_param = None
+        self.opts_param = None
 
         for elem in rule.split('/'):
             if elem is not None and len(elem) > 0:
@@ -30,8 +32,12 @@ class PathRule:
             if index == 0:  # self
                 continue
             param = func_signature.parameters[pname]
-            if param.annotation is bytes:
+            if param.annotation is bytes:   # to store request body
                 self.body_param = pname
+            elif param.annotation is list:  # to store URL path
+                self.path_param = pname
+            elif param.annotation is dict:  # to store URL opts
+                self.opts_param = pname
             else:
                 self.param_attributes[pname] = param
 
@@ -57,17 +63,22 @@ class PathRule:
     
         
     def match(self, path, opts, body: typing.Optional[bytes]=None):
+        # length match
         if len(path) != len(self.path):
-            if len(path) > len(self.path):
+            # longer path: can be stored in the "path" argument
+            if (self.path_param is None) and (len(path) > len(self.path)):
                 return None
-            # maybe a parameter with a default value
+            # shorter path: maybe a parameter with a default value
             for k in range(len(path), len(self.path)):
                 if self.path[k] is not None:
                     return None
         
+        # path name/param match
         params = {}
         for pos, value in enumerate(path):
-            if self.path[pos] is None:
+            if pos >= len(self.path):
+                pass
+            elif self.path[pos] is None:
                 params[self.path_params[pos]] = value
             elif self.path[pos] == value:
                 pass
@@ -76,6 +87,7 @@ class PathRule:
 
         params.update(opts)
 
+        # argument match / import
         kwargs = {}
         for pname, attr in self.param_attributes.items():
             value = params.get(pname, None)
@@ -89,12 +101,15 @@ class PathRule:
                     logging.warning(f'SlowAPI: incompatible parameter type: {pname}: {e}')
                     return None
             kwargs[pname] = value
-
+            
+        # special arguments
         if self.body_param is not None:
             kwargs[self.body_param] = body
+        if self.path_param is not None:
+            kwargs[self.path_param] = path
+        if self.opts_param is not None:
+            kwargs[self.opts_param] = opts
 
-        logging.debug(kwargs)
-            
         return kwargs
     
 
@@ -106,11 +121,18 @@ class Response:
         500: 'Internal Server Error', 503: 'Service Unavailable',
     }
 
+    
+    @staticmethod
+    def json_defaults(obj):
+        if isinstance(obj, Decimal):
+            return int(obj) if float(obj).is_integer() else float(obj)
+
+                
     def __init__(self, status_code=0, content_type=None, content=None):
         self.status_code = status_code
         self.content_type = content_type
         self.content = None
-
+        
         if content is not None:
             if status_code == 0:
                 self.status_code = 200
@@ -126,10 +148,10 @@ class Response:
             # no content to append
             pass
         
-        elif type(content) is Response:
+        elif isinstance(content, Response):
             # take the content with a larger status_code, or merge the two contents
             response = content
-            if (response.status_code > self.status_code) or (self.content is None):
+            if response.status_code > self.status_code:
                 self.status_code = response.status_code
                 self.content_type = response.content_type
                 self.content = response.content
@@ -202,7 +224,7 @@ class Response:
         
     def get_content(self, json_kwargs={}):
         if self.content is None:
-            return ''.encode()
+            return b''
         
         if type(self.content) is bytes:
             return self.content
@@ -211,14 +233,20 @@ class Response:
             return self.content.encode()
             
         else:
-            return json.dumps(self.content, **json_kwargs).encode()
+            kwargs = { 'default': self.json_defaults }
+            kwargs.update(json_kwargs)
+
+            try:
+                return json.dumps(self.content, **kwargs).encode()
+            except:
+                return str(self.content).encode()
 
 
     def __str__(self):
         if self.get_status_code() >= 400:
             return self.get_status()
         else:
-            return self.get_content({"indent":4}).decode()
+            return self.get_content(json_kwargs={"indent":4}).decode()
 
     
         
@@ -231,7 +259,8 @@ class SlowAPI:
           - status_code: default status code for success
         """
         def wrapper(func):
-            func.slowapi_get_rule = PathRule(path_rule, inspect.signature(func), status_code=status_code)
+            if not hasattr(func, 'slowapi_get_rule'):
+                func.slowapi_get_rule = PathRule(path_rule, inspect.signature(func), status_code=status_code)
             return func
         return wrapper
 
@@ -249,7 +278,8 @@ class SlowAPI:
             def upload(name:str, body: bytes):
         """
         def wrapper(func):
-            func.slowapi_post_rule = PathRule(path_rule, inspect.signature(func), status_code=status_code)
+            if not hasattr(func, 'slowapi_post_rule'):
+                func.slowapi_post_rule = PathRule(path_rule, inspect.signature(func), status_code=status_code)
             return func
         return wrapper
 
@@ -262,7 +292,8 @@ class SlowAPI:
           - status_code: default status code for success
         """
         def wrapper(func):
-            func.slowapi_delete_rule = PathRule(path_rule, inspect.signature(func), status_code=status_code)
+            if not hasattr(func, 'slowapi_delete_rule'):
+                func.slowapi_delete_rule = PathRule(path_rule, inspect.signature(func), status_code=status_code)
             return func
         return wrapper
 
@@ -288,32 +319,45 @@ class SlowAPI:
                 logging.debug(f'DELETE {method.slowapi_delete_rule} --> {name}()')
 
 
-    def include(api):
+    def include(self, api):
         """append another SlowAPI for the composite
         Parameters:
           - api: an instance of SlowAPI
         """
+
+        if not hasattr(self, 'composite_apis'):
+            SlowAPI.__init__(self)  # in case this is forgotten in user subclass...
+        
         self.composite_apis.append(api)
         
 
-    def handle_get_request(self, url):
+    def included(self):
+        return self.composite_apis
+        
+
+    def request_get(self, url):
         """handle GET request
         Parameters:
           - url: URL string, or a tuple of (path, opts) by PathRule.decode_url(url)
         Returns:
           - Response object
         """
+        
+        if not hasattr(self, 'get_handlers'):
+            SlowAPI.__init__(self)  # in case this is forgotten in user subclass...
+            
         if type(url) is str:
             url = PathRule.decode_url(url)
         response = Response()
         
         response.append(self._handle_request(self.get_handlers, url))
         for api in self.composite_apis:
-            response.append(api.handle_get_request(url))
+            response.append(api.request_get(url))
+            
         return response
         
 
-    def handle_post_request(self, url, body:bytes):
+    def request_post(self, url, body:bytes):
         """handle POST request
         Parameters:
           - url: URL string, or a tuple of (path, opts) by PathRule.decode_url(url)
@@ -321,30 +365,40 @@ class SlowAPI:
         Returns:
           - Response object
         """
+
+        if not hasattr(self, 'post_handlers'):
+            SlowAPI.__init__(self)  # in case this is forgotten in user subclass...
+        
         if type(url) is str:
             url = PathRule.decode_url(url)
         response = Response()
         
         response.append(self._handle_request(self.post_handlers, url, body))
         for api in self.composite_apis:
-            response.append(api.handle_post_request(url, body))
+            response.append(api.request_post(url, body))
+            
         return response
     
 
-    def handle_delete_request(self, url:str):
+    def request_delete(self, url:str):
         """handle DELETE request
         Parameters:
           - url: URL string, or a tuple of (path, opts) by PathRule.decode_url(url)
         Returns:
           - Response object
         """
+
+        if not hasattr(self, 'delete_handlers'):
+            SlowAPI.__init__(self)  # in case this is forgotten in user subclass...
+        
         if type(url) is str:
             url = PathRule.decode_url(url)
         response = Response()
         
         response.append(self._handle_request(self.delete_handlers, url))
         for api in self.composite_apis:
-            response.append(api.handle_delete_request(url))
+            response.append(api.request_delete(url))
+
         return response
 
 
@@ -388,7 +442,7 @@ class SlowAPI:
         url = path + ('?' + query if len(query) > 0 else '')
 
         if method == 'GET':
-            response = self.handle_get_request(url)
+            response = self.request_get(url)
             
         elif method == 'POST':
             try:
@@ -402,10 +456,10 @@ class SlowAPI:
                 start_response('507 Insufficient Storage', [])
                 return [ b'' ]
             body = environ['wsgi.input'].read(content_length)
-            response = self.handle_post_request(url, body)
+            response = self.request_post(url, body)
         
         elif method == 'DELETE':
-            response = self.handle_delete_request(url)
+            response = self.request_delete(url)
             
         else:
             start_response('500 Internal Server Error', [])
@@ -421,6 +475,7 @@ class SlowAPI:
 
 
     def run(self, **kwargs):
+        kwargs['port'] = kwargs.get('port', 8000)
         kwargs['api_path'] = kwargs.get('api_path', None)
         kwargs['webfile_dir'] = kwargs.get('webfile_dir', None)
-        slowapi_server.run(self, **kwargs)
+        run_server(self, **kwargs)

@@ -2,6 +2,8 @@
 
 
 import sys, io, logging
+
+from slowapi import SlowAPI, Response
 from sd_component import Component
 
 
@@ -12,6 +14,7 @@ class ConsoleComponent(Component):
         self.console_stdin = None
         self.console_stdout = None
         self.console_outputs = []
+        self.max_lines = 10000
         
         self.original_stdin = sys.stdin
         self.original_stdout = sys.stdout
@@ -29,36 +32,38 @@ class ConsoleComponent(Component):
             self.console_stdin.close()
             self.console_stdout.close()
 
+            
+    def public_config(self):
+        return { 'console': {
+            'enabled': self.console_stdin is not None,
+            'max_lines': self.max_lines,
+        }}
 
-    def process_get(self, path, opts, output):
-        if len(path) > 0 and path[0] == 'console':
-            if self.console_stdout is not None:
-                self.console_outputs += [ line for line in self.console_stdout.getvalue().split('\n') if len(line)>0 ]
-                self.console_stdout.seek(0)
-                self.console_stdout.truncate(0)
-                self.console_stdout.seek(0)
-                if len(self.console_outputs) > 10000:
-                    self.console_outputs = self.console_outputs[-10000:]
-                output.write('\n'.join(self.console_outputs[-20:]).encode())
-            else:
-                output.write('[no console output]'.encode())
-            output.flush()
-            return 'text/plain'
-                
-        return None
+    
+    @SlowAPI.get('/console')
+    def read(self, nlines:int=20):
+        if self.console_stdout is None:
+            return '[no console output]'
 
-
-    def process_post(self, path, opts, doc, output):
-        if len(path) > 0 and path[0] == 'console':
-            cmd = doc.decode()
-            if cmd is None:
-                return 400  # Bad Request
-            logging.info(f'Console Input: {cmd}')
-
-            pos = self.console_stdin.tell()
-            self.console_stdin.seek(0, io.SEEK_END)
-            self.console_stdin.write('%s\n' % cmd)
-            self.console_stdin.seek(pos)
-            return True
+        self.console_outputs += [ line for line in self.console_stdout.getvalue().split('\n') if len(line)>0 ]
+        self.console_stdout.seek(0)
+        self.console_stdout.truncate(0)
+        self.console_stdout.seek(0)
         
-        return None
+        if len(self.console_outputs) > self.max_lines:
+            self.console_outputs = self.console_outputs[-max_lines:]
+                
+        return '\n'.join(self.console_outputs[-nlines:])
+
+
+    @SlowAPI.post('/console')
+    def write(self, body:bytes):
+        cmd = body.decode()
+        logging.info(f'Console Input: {cmd}')
+        
+        pos = self.console_stdin.tell()
+        self.console_stdin.seek(0, io.SEEK_END)
+        self.console_stdin.write('%s\n' % cmd)
+        self.console_stdin.seek(pos)
+        
+        return Response(201)

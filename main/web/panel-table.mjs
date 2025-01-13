@@ -457,7 +457,7 @@ class BlobPanel extends Panel {
             return;
         }
 
-        const url = './api/blob/' + this.config.channel + '/' + x.id;
+        const url = './api/blob/' + x.id;
         if (x.mime.split('/')[0].toLowerCase() == 'image') {
             let a = $('<a>').appendTo(this.contentDiv);
             a.attr({'href': url, 'target': '_blank'});

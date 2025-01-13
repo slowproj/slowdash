@@ -1,5 +1,11 @@
+# Created by Sanshiro Enomoto on 11 November 2024 #
+
 
 import time, datetime, json, uuid, re, requests, logging
+
+from slowapi import SlowAPI, Response
+from sd_component import ComponentPlugin
+
 import export_Notebook
 
 
@@ -41,27 +47,27 @@ class Export_Jupyter(export_Notebook.Export_Notebook):
         return config
 
         
-    def process_post(self, path, opts, doc, output):
-        if len(path) > 2 and path[1] == 'jupyter':
-            try:
-                record = json.loads(doc.decode())
-            except Exception as e:
-                logging.error('Jupyter post: JSON decoding error: %s' % str(e))
-                return 400 # Bad Request
-            filename = record.get('filename', None)
-            if filename is None or not filename.replace('_', '0').replace('-', '0').replace('.', '0').isalnum():
-                return 400 # Bad Request
-
-            if self.slowdash_internal_url is not None:
-                opts['slowdash_url'] = self.slowdash_internal_url
-            notebook = self.generate_notebook(path[2], opts)
-            
-            return self.post_notebook(filename, notebook, output)
+    @SlowAPI.post('/export/jupyter/{channels}')
+    def export_jupyter(self, channels:str, opts:dict, body:bytes):
+        try:
+            doc = json.loads(body.decode())
+        except Exception as e:
+            logging.error('Jupyter post: JSON decoding error: %s' % str(e))
+            return Response(400) # Bad Request
         
-        return None
+        filename = doc.get('filename', None)
+        if filename is None or not filename.replace('_', '0').replace('-', '0').replace('.', '0').isalnum():
+            logging.warning(f'Jupyter post: bad file name: {filename}')
+            return Response(400) # Bad Request
+
+        if self.slowdash_internal_url is not None:
+            opts['slowdash_url'] = self.slowdash_internal_url
+        notebook = self.generate_notebook(channels, opts)
+            
+        return self._post_notebook(filename, notebook)
 
 
-    def connect_jupyter(self):
+    def _connect_jupyter(self):
         if self.jupyter_session is not None:
             return True
         if len(self.jupyter_internal_url) == 0:
@@ -79,8 +85,8 @@ class Export_Jupyter(export_Notebook.Export_Notebook):
         return True
             
             
-    def post_notebook(self, filename, notebook, output):
-        if not self.connect_jupyter():
+    def _post_notebook(self, filename, notebook):
+        if not self._connect_jupyter():
             return { 'status': 'error', 'message': 'unable to connect to Jupyter' }
 
         try:

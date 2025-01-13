@@ -1,6 +1,8 @@
 # Created by Sanshiro Enomoto on 24 May 2024 #
 
 import sys, os, time, glob, json, threading, logging
+
+from slowapi import SlowAPI, Response
 from sd_usermodule import UserModule
 from sd_component import Component
 
@@ -33,7 +35,7 @@ class TaskModule(UserModule):
 
         self.control_system = None
         
-        logging.info('task module loaded')
+        logging.info('task module registered')
         
         
     def _preset_module(self, module):
@@ -348,104 +350,49 @@ class TaskModuleComponent(Component):
         }
 
 
-    def process_get(self, path, opts, output):
-        if len(path) > 1 and path[0] == 'control' and path[1] == 'task':
-            return self._get_task_status()
-            
-        if len(path) > 0 and path[0] == 'channels':
-            result = []
+    @SlowAPI.get('/channels')
+    def api_channels(self):
+        result = []
+        for taskmodule in self.taskmodule_list:
+            channels = taskmodule.get_channels()
+            if channels is not None:
+                result.extend(channels)
+        return result
+
+        
+    @SlowAPI.get('/data/{channels}')
+    def api_data(self, channels:str, opts:dict):
+        try:
+            channels = channels.split(',')
+            length = float(opts.get('length', '3600'))
+            to = float(opts.get('to', int(time.time())+1))
+        except Exception as e:
+            logging.error('Bad data URL: %s: %s' % (str(opts), str(e)))
+            return Response(400)
+        
+        has_result, result = False, {}
+        start = to - length
+        t = time.time() - start
+        if t >= 0 and t <= length + 10:
             for taskmodule in self.taskmodule_list:
-                channels = taskmodule.get_channels()
-                if channels is not None:
-                    result.extend(channels)
-            return result
+                for ch in channels:
+                    data = taskmodule.get_data(ch)
+                    if data is None:
+                        continue
+                    has_result = True
+                    result[ch] = {
+                        'start': start, 'length': length,
+                        't': t,
+                        'x': data
+                    }
 
-        if len(path) > 1 and path[0] == 'data':
-            if len(self.taskmodule_list) == 0:
-                return None
-            try:
-                channels = path[1].split(',')
-                length = float(opts.get('length', '3600'))
-                to = float(opts.get('to', int(time.time())+1))
-            except Exception as e:
-                logging.error('Bad data URL: %s: %s' % (str(opts), str(e)))
-                return False
-            has_result, result = False, {}
-            start = to - length
-            t = time.time() - start
-            if t >= 0 and t <= length + 10:
-                for taskmodule in self.taskmodule_list:
-                    for ch in channels:
-                        data = taskmodule.get_data(ch)
-                        if data is None:
-                            continue
-                        has_result = True
-                        result[ch] = {
-                            'start': start, 'length': length,
-                            't': t,
-                            'x': data
-                        }
-
-            return result if has_result else None
-
-        return None
+        return result if has_result else None
 
 
-    def process_post(self, path, opts, doc, output):
-        if len(path) > 1 and path[0] == 'update' and path[1] == 'tasklist':
-            self._scan_task_files()
-            return {'status': 'ok'}
-            
-        if len(path) > 0 and path[0] == 'control':
-            try:
-                record = json.loads(doc.decode())
-            except Exception as e:
-                logging.error('control: JSON decoding error: %s' % str(e))
-                return 400 # Bad Request
-            
-            result = None
-            if len(path) == 1:
-                logging.info(f'Task Command: {record}')
-                # unlike GET, only one module can process to POST
-                for module in self.taskmodule_list:
-                    result = module.process_command(record)
-                    if result is not None:
-                        break
-        
-            elif len(path) >= 2 and path[1] == 'task':
-                taskname = path[2] if len(path) >= 3 else None
-                action = record.get('action', None)
-                logging.info(f'Task Control: {taskname}.{action}()')
-                result = self._control_task(taskname, action)
-        
-            if type(result) is bool:
-                if result:
-                    return {'status': 'ok'}
-                else:
-                    return {'status': 'error'}
-                
-            return result
-
-
-    def _control_task(self, taskname, action):
-        for module in self.taskmodule_list:
-            if module.name != taskname:
-                continue
-            if action == 'start':
-                module.start()
-                return True
-            elif action == 'stop':
-                module.stop()
-                return True
-            else:
-                return { 'status': 'error', 'message': f'unknown command: {action}' }
-                
-        return { 'status': 'error', 'message': f'unknown task: {taskname}' }
-
-
-    def _scan_task_files(self):
+    @SlowAPI.post('/update/tasklist')
+    def update_tasklist(self):
         if self.app.is_cgi or (self.project.project_dir is None):
-            return
+            return Response(200)
         
         for filepath in glob.glob(os.path.join(self.project.project_dir, 'config', 'slowtask-*.py')):
             rootname, ext = os.path.splitext(os.path.basename(filepath))
@@ -454,20 +401,23 @@ class TaskModuleComponent(Component):
                 continue
             self.known_task_list.append(name)
 
-            module = taskmodule.TaskModule(filepath, name, {})
+            module = TaskModule(filepath, name, {})
             if module is None:
                 logging.error('Unable to load control module: %s' % filepath)
             else:
                 module.auto_load = False
                 self.taskmodule_list.append(module)
 
+        return {'status': 'ok'}
+
     
-    def _get_task_status(self):
+    @SlowAPI.get('/control/task')
+    def task_status(self):
         result = []
         for module in self.taskmodule_list:
             last_routine = module.routine_history[-1] if len(module.routine_history) > 0 else None
             last_command = module.command_history[-1] if len(module.command_history) > 0 else None
-            record = {
+            doc = {
                 'name': module.name,
                 'is_loaded': module.is_loaded(),
                 'is_routine_running': module.is_running(),
@@ -481,6 +431,60 @@ class TaskModuleComponent(Component):
                 'last_log': '',
                 'has_error': module.error is not None
             }
-            result.append(record)
+            result.append(doc)
 
         return result
+
+        
+    @SlowAPI.post('/control')
+    def execute_command(self, body:bytes):
+        try:
+            doc = json.loads(body.decode())
+        except Exception as e:
+            logging.error('control: JSON decoding error: %s' % str(e))
+            return Response(400) # Bad Request
+            
+        result = None
+        logging.info(f'Task Command: {doc}')
+        
+        # unlike GET, only one module can process to POST
+        for module in self.taskmodule_list:
+            result = module.process_command(doc)
+            if result is not None:
+                break
+        
+        if type(result) is bool:
+            if result:
+                return {'status': 'ok'}
+            else:
+                return {'status': 'error'}
+        elif type(result) is int:
+            return Response(result)
+                
+        return result
+
+    
+    @SlowAPI.post('/control/task/{taskname}')
+    def control_task(self, taskname:str, body:bytes):
+        try:
+            doc = json.loads(body.decode())
+        except Exception as e:
+            logging.error('control: JSON decoding error: %s' % str(e))
+            return Response(400) # Bad Request
+            
+        action = doc.get('action', None)
+        logging.info(f'Task Control: {taskname}.{action}()')
+        
+        for module in self.taskmodule_list:
+            if module.name != taskname:
+                continue
+            if action == 'start':
+                module.start()
+                return {'status': 'ok'}
+            elif action == 'stop':
+                module.stop()
+                return {'status': 'ok'}
+            else:
+                return { 'status': 'error', 'message': f'unknown command: {action}' }
+            
+        return { 'status': 'error', 'message': f'unknown task: {taskname}' }

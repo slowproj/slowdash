@@ -1,14 +1,70 @@
 #! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 3 Sep 2021 #
+# Restructured to use SlowAPI by Sanshiro Enomoto on 12 January 2025 #
 
 
 import sys, os, logging
-from argparse import ArgumentParser
+import slowapi
+from sd_project import Project
+from sd_config import ConfigComponent
+from sd_console import ConsoleComponent
+from sd_datasource import DataSourceComponent
+from sd_export import ExportComponent
+from sd_usermodule import UserModuleComponent
+from sd_taskmodule import TaskModuleComponent
+from sd_misc_api import MiscApiComponent
 
-from sd_app import App
+
+
+class App(slowapi.SlowAPI):
+    def __init__(self, project_dir=None, project_file=None, is_cgi=False, is_command=False):
+        super().__init__()
+        
+        self.project = Project(project_dir, project_file)
+        self.project_dir = self.project.project_dir
+        self.is_cgi = is_cgi
+        self.is_command = is_command
+
+        self.console_stdin = None
+        self.console_stdout = None
+        
+        # Execution Environment
+        if self.project.config is None:
+            return
+        
+        if self.project.project_dir is not None:
+            try:
+                os.chdir(self.project.project_dir)
+            except Exception as e:
+                logging.error('unable to move to project dir "%s": %s' % (self.project.project_dir, str(e)))            
+                self.project.project_dir = None
+        if self.project.sys_dir is not None:
+            sys.path.insert(1, os.path.join(self.project.sys_dir, 'main', 'plugin'))
+        if self.project.project_dir is not None:
+            sys.path.insert(1, self.project.project_dir)
+            sys.path.insert(1, os.path.join(self.project.project_dir, 'config'))
+            
+        # API Components: see SlowAPI.include() for the mechanism
+        self.include(ConsoleComponent(self, self.project))   # this must be the first
+        self.include(ConfigComponent(self, self.project))
+        self.include(DataSourceComponent(self, self.project))
+        self.include(ExportComponent(self, self.project))
+        self.include(UserModuleComponent(self, self.project))
+        self.include(TaskModuleComponent(self, self.project))
+        self.include(MiscApiComponent(self, self.project))
+
+        
+    def terminate(self):
+        """graceful terminate
+          - used by components that have a thread (usermodule/taskmodule), to send a stop request etc.
+        """
+        for component in reversed(self.included()):
+            component.terminate()
+
 
 
 if __name__ == '__main__':
+    from argparse import ArgumentParser
     parser = ArgumentParser(usage = '\n'
         + '  Web-Server Mode:      %(prog)s [Options] --port=PORT\n'
         + '  Command-line Mode:    %(prog)s [Options] COMMAND'
@@ -39,7 +95,7 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '-i', '--indent',
-        action='store', dest='indent', type=int, default=-1,
+        action='store', dest='indent', type=int, default=None,
         help='JSON output indenting (default: no indent)'
     )
     args = parser.parse_args()
@@ -69,20 +125,19 @@ if __name__ == '__main__':
 
     if args.port <= 0:
         # command-line mode
-        if args.indent >= 0:
-            app.json_kwargs['indent'] = args.indent
-        reply = app.process_get_request(args.COMMAND)
-        reply.write_to(sys.stdout.buffer)
+        json_opts = { 'indent': args.indent }
+        response = app.request_get(args.COMMAND)
+        sys.stdout.write(response.get_content(json_opts).decode())
         sys.stdout.write('\n')
         
     else:
         # web-server mode
-        import sd_server
-        sd_server.start(
-            app,
-            port = args.port, 
-            web_path = os.path.join(os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))), 'web'),
+        app.run(
+            port = args.port,
+            api_path = 'api',
+            webfile_dir = os.path.join(os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))), 'web'),
             index_file = 'slowhome.html' if app.project is not None else 'welcome.html',
+            auth_list = app.project.auth_list
         )
         
     app.terminate()

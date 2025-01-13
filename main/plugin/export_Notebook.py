@@ -1,5 +1,9 @@
+# Created by Sanshiro Enomoto on 11 November 2024 #
+
 
 import time, datetime, json, uuid, re, logging
+
+from slowapi import SlowAPI, Response
 from sd_component import ComponentPlugin
 
 
@@ -16,18 +20,16 @@ class Export_Notebook(ComponentPlugin):
             'notebook_format_version': f'{self.nbformat}.{self.nbformat_minor}'
         }
 
-        
-    def process_get(self, path, opts, output):
-        if len(path) > 2 and path[1] == 'python':
-            output.write(self.generate_python(path[2], opts).encode())
-            return 'text/plain'
-        
-        elif len(path) > 2 and path[1] == 'notebook':
-            notebook = self.generate_notebook(path[2], opts)
-            output.write(json.dumps(notebook, indent=4).encode())
-            return 'text/plain'
 
-        return None
+    @SlowAPI.get('/export/python/{channels}')
+    def expor_python(self, channels:str, opts:dict):
+        return self.generate_python(channels, opts)
+
+    
+    @SlowAPI.get('/export/notebook/{channels}')
+    def export_notebook(self, channels:str, opts:dict):
+        notebook = self.generate_notebook(channels, opts)
+        return json.dumps(notebook, indent=4)
 
     
     def generate_cells(self, params, opts):

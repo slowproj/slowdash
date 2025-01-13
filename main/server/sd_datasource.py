@@ -2,7 +2,10 @@
 
 import time, math, logging
 import numpy as np
+
+from slowapi import SlowAPI, Response
 from sd_component import ComponentPlugin, PluginComponent
+
 from sd_dataschema import Schema
 
 
@@ -11,47 +14,46 @@ class DataSource(ComponentPlugin):
     """
     
     def __init__(self, app, project, params):
-        self.app = app
-        self.project = project
+        super().__init__(app, project, params)
 
         
-    def process_get(self, path, opts, output):
-        """ Component API interface (override)
-        see component.ComponentPlugin.process_get() for interface definitions
-        """
-        
-        if len(path) > 0 and path[0] == 'channels':
-            return  self.get_channels()
+    @SlowAPI.get('/channels')
+    def api_get_channels(self):
+        return self.get_channels()
 
-        if len(path) > 1 and path[0] == 'data':
-            try:
-                channels = path[1].split(',')
-                length = float(opts.get('length', '3600'))
-                to = float(opts.get('to', int(time.time())+1))
-                resample = float(opts.get('resample', -1))
-                reducer = opts.get('reducer', 'last')
-            except Exception as e:
-                logging.error('Bad data URL: %s: %s' % (str(opts), str(e)))
-                return False
-            if resample < 0:
-                resample = None
+    
+    @SlowAPI.get('/data/{channels}')
+    def api_get_data(self, channels:str, opts:dict):
+        try:
+            channels = channels.split(',')
+            length = float(opts.get('length', '3600'))
+            to = float(opts.get('to', int(time.time())+1))
+            resample = float(opts.get('resample', -1))
+            reducer = opts.get('reducer', 'last')
+        except Exception as e:
+            logging.error('Bad data URL: %s: %s' % (str(opts), str(e)))
+            return Response(400)
+        if resample < 0:
+            resample = None
 
-            result = {}
-            result_ts = self.get_timeseries(channels, length, to, resample, reducer)
-            result_obj = self.get_object(channels, length, to)
-            if result_ts is not None:
-                result.update(result_ts)
-            if result_obj is not None:
-                result.update(result_obj)
+        result = {}
+        result_ts = self.get_timeseries(channels, length, to, resample, reducer)
+        result_obj = self.get_object(channels, length, to)
+        if result_ts is not None:
+            result.update(result_ts)
+        if result_obj is not None:
+            result.update(result_obj)
 
-            return result
-            
-        if len(path) > 2 and path[0] == 'blob':
-            mime_type = self.get_blob(path[1], path[2:], output=output)
-            if mime_type is not None:
-                return mime_type
+        return result
 
-        return None
+    
+    @SlowAPI.get('/blob')
+    def api_get_blob(self, channel:str, path:list):
+        mime_type, content = self.get_blob(channel, path[1:])
+        if mime_type is not None:
+            return None
+
+        return Response(content_type=mime_type, content=content)
 
     
     def get_channels(self):
@@ -63,17 +65,18 @@ class DataSource(ComponentPlugin):
     def get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
         return {}
 
+
     
     def get_object(self, channels, length, to):
         """[implement in child class] returns a single-point data object
         """
         return {}
 
-    def get_blob(self, channel, params, output):
-        """[implement in child class] fills the blob data into "output" and returns the MINE type
+    
+    def get_blob(self, channel:str, params:list):
+        """[implement in child class] returns a tuple of content_type (str) and blob (bytes)
         """
-        mime_type = None
-        return mime_type  # fill into output and return the mime_type
+        return None, None
 
 
     @classmethod
@@ -183,8 +186,6 @@ class DataSourceComponent(PluginComponent):
         
 
     def build(self, plugin_config):
-        self.match_api_root = False
-        
         for node in plugin_config:
             url = node.get('url', None)
             if url is None:
@@ -195,5 +196,5 @@ class DataSourceComponent(PluginComponent):
             ds_type = Schema.parse_dburl(url).get('type', None)
             if ds_type is not None:
                 node['type'] = node.get('type', ds_type)
-        
+
         return super().build(plugin_config)

@@ -1,7 +1,11 @@
 #! /usr/bin/python3
 
 
-import sys
+# temporary until SlowAPI becomes a package
+import sys, os
+sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir))
+
+
 from slowapi import SlowAPI, Response
 
 
@@ -38,6 +42,12 @@ class MyApp(SlowAPI):
         return Response(200)
 
 
+    @SlowAPI.get('/deci')   # test to return a non-JSONable type
+    def deci(self, num:float=10, den:float=3):
+        import decimal
+        return { "decimal": decimal.Decimal(num)/decimal.Decimal(den), "float": num/den }
+
+
     
 app = MyApp()
 
@@ -46,13 +56,17 @@ to run the app as a WSGI server, run:
 $ gunicorn test_slowapi:app
 '''
 
-if __name__ == '__main__':
-    print(app.handle_get_request('/'))
-    print(app.handle_get_request('/hello'))
-    print(app.handle_get_request('/hello/SlowDash'))
-    print(app.handle_post_request('/message?name=you', b"how are you doing?"))
-    print(app.handle_get_request('/home'))
-    #print(app.handle_get_request('/source'))
-    print(app.handle_delete_request('/trash'))
 
-    app.run(port=18881)
+if __name__ == '__main__':
+    ### test responses ###
+    print(app.request_get('/'))
+    print(app.request_get('/hello'))
+    print(app.request_get('/hello/SlowDash'))
+    print(app.request_post('/message?name=you', b"how are you doing?"))
+    print(app.request_get('/home'))  # does not exist
+    #print(app.request_get('/source'))
+    print(app.request_delete('/trash'))
+    print(app.request_get('/deci?den=3'))
+
+    ### start a HTTP server at a default port 8000 ###
+    app.run()

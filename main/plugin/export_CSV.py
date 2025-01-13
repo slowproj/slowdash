@@ -1,5 +1,9 @@
+# Created by Sanshiro Enomoto on 28 December 2024 #
+
 
 import datetime, copy, logging
+
+from slowapi import SlowAPI, Response
 from sd_component import ComponentPlugin
 
 
@@ -7,21 +11,22 @@ class Export_CSV(ComponentPlugin):
     def __init__(self, app, project, params):
         super().__init__(app, project, params)
 
-        
-    def process_get(self, path, opts, output):
-        if len(path) < 3 or path[1] != 'csv':
-            return None
 
-        timezone = opts.get('timezone', 'local')
-        data_path = ['data'] + path[2:]
+    @SlowAPI.get('/export/csv/{channels}')
+    def export_csv(self, channels:str, opts:dict, timezone:str='local', resample:float=0):
+        data_path = ['data', channels]
         data_opts = copy.deepcopy(opts)
-        resample = data_opts.get('resample', None)
-        if resample is None or resample < 0:
-            data_opts['resample'] = 0
+        if len(timezone) == 0:
+            timezone = 'local'
+        if resample < 0:  # replace "no resampling" with "auto resampling"
+            resample = 0
+        data_opts['timezone'] = timezone
+        data_opts['resample'] = resample
+        data_url = (data_path, data_opts)
 
-        timeseries = self.app.process_get(data_path, data_opts, output)
+        timeseries = self.app.request_get(data_url).content
         if timeseries is None:
-            return False
+            return None
 
         table = [ ['DateTime', 'TimeStamp'] ]
         table[0].extend(timeseries.keys())
@@ -46,8 +51,8 @@ class Export_CSV(ComponentPlugin):
                     table.append([ date.strftime('%Y-%m-%dT%H:%M:%S') + tz, '%d' % t ])
                 table[k+1].append(str(xk[k]) if xk[k] is not None else 'null')
 
-        output.write('\n'.join([
+        content = '\n'.join([
             ','.join(['NaN' if col is None else col for col in row]) for row in table
-        ]).encode())
+        ]).encode()
                 
-        return 'text/csv'
+        return Response(content_type='text/csv', content=content)

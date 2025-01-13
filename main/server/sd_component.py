@@ -2,21 +2,19 @@
 
 import sys, os, copy, glob, inspect, logging, traceback
 import importlib.machinery
+import slowapi
 
 
-class Component:
+class Component(slowapi.SlowAPI):
     """ Base class for App components
     """
     
     def __init__(self, app, project):
+        super().__init__()
         self.app = app
         self.project = project
 
         
-    def __del__(self):
-        self.terminate()
-
-                    
     # override this
     def terminate(self):
         pass
@@ -32,71 +30,19 @@ class Component:
         return {}
 
         
-    # override this
-    def process_get(self, path, opts, output):
-        """ GET-request handler
-        Args:
-          path & opts: parsed URL, as list & dict
-          output: file-like object to write response content, if return value is not a dict
-        Returns:
-          either:
-            - contents as Python dict, to reply as a JSON string with HTTP response 200 (OK)
-            - content-type (MIME) as string, with reply contents written in output
-            - HTTP response code as int
-            - False for error (HTTP response 400 "Bad request")
-            - None if the path is not the target (chain of responsibility)
-        """
-
-        return None
-
     
-    # override this
-    def process_post(self, path, opts, doc, output):
-        """ POST-request handler
-        Args:
-          path & opts: parsed URL, as list & dict
-          doc: posted contents
-          output: file-like object to write response content, if return value is not a dict
-        Returns:
-          either:
-            - contents as Python dict, to reply as a JSON string with HTTP response 201 (Created)
-            - content-type (MIME) as string, with reply contents written in output
-            - HTTP response code as int
-            - False for error (HTTP response 400 "Bad request")
-            - None if the path is not the target (chain of responsibility)
-        """
-        
-        return None
-
-
-    # override this
-    def process_delete(self, path, opts):
-        """ DELETE-request handler
-        Args:
-          path & opts: parsed URL, as list & dict
-        Returns:
-          - HTTP response code as int
-          - None if the path is not the target (chain of responsibility)
-        """
-
-        return None
-        
-
-    
-class ComponentPlugin:
+class ComponentPlugin(slowapi.SlowAPI):
     """ Base class for plugin modules of an App component
     """
     
     def __init__(self, app, project, params):
+        super().__init__()
         self.app = app
         self.project = project
+        self.plugin_type = None
         self.class_name = None
 
     
-    def __del__(self):
-        self.terminate()
-
-        
     # override this
     def terminate(self):
         pass
@@ -111,43 +57,6 @@ class ComponentPlugin:
         """
         return {}
     
-        
-    # override this
-    def process_get(self, path, opts, output):
-        """ GET-request handler
-        Args:
-          path & opts: parsed URL, as list & dict
-          output: file-like object to write response content, if return value is not a dict
-        Returns:
-          either:
-            - contents as Python dict, to reply as a JSON string with HTTP response 200 (OK)
-            - content-type (MIME) as string, with reply contents written in output
-            - HTTP response code as int
-            - False for error (HTTP response 400 "Bad request")
-            - None if the path is not the target (chain of responsibility)
-        """
-
-        return None
-
-    
-    # override this
-    def process_post(self, path, opts, doc, output):
-        """ POST-request handler
-        Args:
-          path & opts: parsed URL, as list & dict
-          doc: posted contents
-          output: file-like object to write response content, if return value is not a dict
-        Returns:
-          either:
-            - contents as Python dict, to reply as a JSON string with HTTP response 201 (Created)
-            - content-type (MIME) as string, with reply contents written in output
-            - HTTP response code as int
-            - False for error (HTTP response 400 "Bad request")
-            - None if the path is not the target (chain of responsibility)
-        """
-        
-        return None
-
 
 
 class PluginComponent(Component):
@@ -161,8 +70,7 @@ class PluginComponent(Component):
         self.plugin_prefix = plugin_prefix
         self.class_prefix = class_prefix
         
-        self.merge_config_params = True
-        self.match_api_root = True
+        self.merge_config_params = True  # import the parameters under "params" node to the root node
 
         if self.plugin_prefix is None:
             # e.g., data_source -> datasource
@@ -175,79 +83,37 @@ class PluginComponent(Component):
         if not isinstance(plugin_config, list):
             plugin_config = [ plugin_config ]
 
-        self.plugin_table = {}
         self.build(plugin_config)
         
 
     def terminate(self):
-        for name, plugin in self.plugin_table.items():
+        for plugin in self.included():
             plugin.terminate()
-        self.plugin_table = {}
 
     
     def public_config(self):
         """construct public_config from the member plugins.
         """
-        
-        return {
-            self.component_type: { name: plugin.public_config() for name, plugin in self.plugin_table.items() }
-        }
+
+        plugins = {}
+        for plugin in self.included():
+            name = plugin.plugin_type
+            if name in plugins:
+                # multiple plugins of the same type -> array
+                if type(plugins[name]) is not list:
+                    plugins[name] = [ plugins[name] ]
+                plugins[name].append(plugin.public_config())
+            else:
+                plugins[name] = plugin.public_config()
+
+        return { self.component_type: plugins }
 
         
-    def process_get(self, path, opts, output):
-        """propagates Component.process_get() to Plugin.process_get()
-        """
-        if self.match_api_root and (len(path) < 2 or path[0] != self.component_type):
-            return None
-
-        result = None
-        for name, plugin in self.plugin_table.items():
-            this_result = plugin.process_get(path, opts, output)
-            if type(this_result) is list:
-                if result is None:
-                    result = []
-                elif type(result) != list:
-                    logging.error('%s: incompatible results cannot be combined (list)' % name)
-                    continue
-                result.extend(this_result)
-            elif type(this_result) is dict:
-                if result is None:
-                    result = {}
-                elif type(result) != dict:
-                    logging.error('%s: incompatible results cannot be combined (dict)' % name)
-                    continue
-                result.update(this_result)
-            elif this_result is not None:
-                if result is not None:
-                    logging.error('%s: incompatible results cannot be combined (not list/dict)' % name)
-                    continue
-                return this_result
-        
-        return result
-
-
-    def process_post(self, path, opts, doc, output):
-        """propagates Component.process_post() to Plugin.process_post()
-        """
-        
-        if self.match_api_root and (len(path) < 2 or path[0] != self.component_type):
-            return None
-        
-        for name, plugin in self.plugin_table.items():
-            result = plugin.process_post(path, opts, doc, output)
-            if result is not None:
-                return result
-            
-        return None
-
-
     def build(self, plugin_config):
         """creates plugin instances based on the config_config
         Note:
            - this method can be overriden to modify the config contents before building
         """
-        
-        self.plugin_table = {}
         
         for node in plugin_config:
             plugin_type = node.get('type', None)
@@ -268,13 +134,8 @@ class PluginComponent(Component):
                 
             plugin = self._load_plugin_module(plugin_name, class_name, params=params)
             if plugin is not None:
-                if plugin.class_name is not None:
-                    name = plugin.class_name # actual name defined in the plugin
-                else:
-                    name = class_name
-                if name.split('_')[0].lower() == self.class_prefix.lower():
-                    name = '_'.join(name.split('_')[1:])
-                self.plugin_table[name] = plugin
+                plugin.plugin_type = plugin.class_name[len(self.class_prefix)+1:]
+                self.include(plugin)
                     
 
     def _load_plugin_module(self, plugin_name, class_name, params):

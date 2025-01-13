@@ -44,17 +44,17 @@ class RequestHandler(BaseHTTPRequestHandler):
         api_url, file_path = self._parse_url()
         try:
             if api_url is not None:
-                response = self.app.handle_get_request(api_url)
+                response = self.app.request_get(api_url)
             elif file_path is not None:
                 self._process_file_get(file_path)
                 return
             else:
-                self.send_error(400)  # Bad Request
+                self._reply_error(400)  # Bad Request
                 return
         except Exception as e:
             logging.error(f'SlowAPI_Server: {e}')
             logging.error(traceback.format_exc())
-            self.send_error(400)  # Bad Request
+            self._reply_error(400)  # Bad Request
             return
 
         self._reply_response(response)
@@ -67,20 +67,20 @@ class RequestHandler(BaseHTTPRequestHandler):
             
         api_url, file_path = self._parse_url()
         if api_url is None:
-            self.send_error(400)  # Bad Request
+            self._reply_error(400)  # Bad Request
             return
         
         try:
             content_length = int(self.headers.get('content-length', 0))
             if content_length > 1024*1024*1024:
-                self.send_error(507)   # Insufficient Storage (WebDAV)
+                self._reply_error(507)   # Insufficient Storage (WebDAV)
                 return
             body = self.rfile.read(content_length)
-            response = self.app.handle_post_request(api_url, body)
+            response = self.app.request_post(api_url, body)
         except Exception as e:
             logging.error(f'SlowAPI_Server: {e}')
             logging.error(traceback.format_exc())
-            self.send_error(400)  # Bad Request
+            self._reply_error(400)  # Bad Request
             return
 
         self._reply_response(response)
@@ -93,15 +93,15 @@ class RequestHandler(BaseHTTPRequestHandler):
             
         api_url, file_path = self._parse_url()
         if api_url is None:
-            self.send_error(400)  # Bad Request
+            self._reply_error(400)  # Bad Request
             return
         
         try:
-            response = self.app.handle_delete_request(api_url)
+            response = self.app.request_delete(api_url)
         except Exception as e:
             logging.error(f'SlowAPI_Server: {e}')
             logging.error(traceback.format_exc())
-            self.send_error(400)  # Bad Request
+            self._reply_error(400)  # Bad Request
             return
 
         self._reply_response(response)
@@ -238,7 +238,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.wfile.flush()
 
         
-    def _reply_response(self, response):
+    def _send_response(self, response):
         if response is None:
             self.send_error(404)   # Not Found
             return
@@ -256,10 +256,24 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         content = response.get_content()
         if content is not None:
-            self.wfile.write(content)
-            
-        self.wfile.flush()
+                self.wfile.write(content)
+                self.wfile.flush()
 
+                
+    def _reply_response(self, response):
+        try:
+            self._send_response(response)
+        except Exception as e:
+            logging.warning(f'Error on sending a reply (browser closed?): {e}')
+
+        
+    def _reply_error(self, status_code):
+        try:
+            self.send_error(status_code)
+        except Exception as e:
+            logging.warning(f'Error on sending a reply (browser closed?): {e}')
+
+        
 
         
 import signal
