@@ -231,11 +231,14 @@ class RequestHandler(BaseHTTPRequestHandler):
             content_type = 'application/octet-stream'
             return
 
-        self.send_response(200)   # OK
-        self.send_header('content-type', content_type)
-        self.end_headers()
-        self.wfile.write(open(filepath, 'rb', buffering=0).readall())
-        self.wfile.flush()
+        try:
+            self.send_response(200)   # OK
+            self.send_header('content-type', content_type)
+            self.end_headers()
+            self.wfile.write(open(filepath, 'rb', buffering=0).readall())
+            self.wfile.flush()
+        except Exception as e:
+            logging.warning(f'Error on sending a reply (browser closed?): {e}')
 
         
     def _send_response(self, response):

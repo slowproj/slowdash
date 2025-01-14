@@ -56,7 +56,7 @@ class ConfigComponent(Component):
     def get_file(self, filename:str):
         filepath, ext = self._get_filepath_ext(filename, os.R_OK)
         if filepath is None:
-            logging.error(f'GET config/file: {filename}: access denied')
+            logging.warning(f'GET config/file: {filename}: access denied')
             return Response(404)
 
         if ext == '.json':
@@ -110,7 +110,7 @@ class ConfigComponent(Component):
     def post_file(self, filename: str, doc:bytes, overwrite:str='no'):
         filepath, ext = self._get_filepath_ext(filename)
         if filepath is None:
-            logging.error(f'POST config/file: {filename}: access denied')
+            logging.warning(f'POST config/file: {filename}: access denied')
             return Reply(400)
         if not self.project.is_secure:
             if ext not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]:
@@ -171,7 +171,7 @@ class ConfigComponent(Component):
     def delete_file(self, filename: str):
         filepath = self._get_filepath_ext(filename, os.W_OK)[0]
         if filepath is None:
-            logging.error(f'DETETE config/file: {filename}: access denied')
+            logging.warning(f'DETETE config/file: {filename}: access denied')
             return Response(404)  # Not Found
         
         try:
@@ -267,7 +267,7 @@ class ConfigComponent(Component):
     def _get_config_filemeta(self, filename):
         filepath, ext = self._get_filepath_ext(filename, os.R_OK)
         if filepath is None:
-            logging.error(f'GET config/filemeta: {filename}: access denied')
+            logging.warning(f'GET config/filemeta: {filename}: access denied')
             return Response(404)
 
         filemeta = {}        
