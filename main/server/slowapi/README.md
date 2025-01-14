@@ -5,7 +5,7 @@ SlowAPI is a Web-server microframework. Like FastAPI (or Flask), URLs are parsed
 
 
 ## Dependencies
-None
+- Python >=3.8
 
 
 ## Examples
@@ -58,6 +58,13 @@ app = App()
 ```
 
 - FastAPI style parameter binding with types, optionally with a default value
+- If a parameter for an argument without a default value is not in the URL, the URL will not match and the handler (`hello()` method in the example) will not be called.
+- Return value of a handler must be:
+  - `str` for a `text/plain` reply
+  - `list` or `dict` for an `application/json` reply
+  - `None` if the request is not applicable
+  - `slowapi.Response` object for full flexibility
+  - (TODO: `slowapi.File` object; maybe with template substitutions)
 
 
 ### GET with URL query parameters
@@ -167,3 +174,37 @@ curl http://localhost:8000/hello | jq
 - If a response is `None`, it will not be included.
 - If all the responses are `None`, a status of 404 (Not Found) is replied.
 - If one of the responses are error (code >= 400), an error is replied without content; the largest status code is taken.
+
+
+## TODOs
+
+### File Server API
+```python
+class FileServer(SlowAPI):
+    def __init__(self, html_dir, base_path=None, exclude_base_path=None):
+    """
+    Note:
+      - if the base_path is given (e.g., "html"), return files under the path
+      - if the exclude_base_path is given (e.g., "api"), requests staring with it are not handled
+    """
+        ...
+
+    @SlowAPI.get('/'):
+    def get_file(self, path:list):
+        # sanity checks
+        ...
+        return FileResponse(...
+```
+
+### File content response / template processing
+```
+class FileResponse(Response):
+    def __init__(self, path, content_type=None):
+        ....
+        return Response(...
+```
+
+```
+class TemplatedFileResponse(FileResponse):
+    ....
+```
