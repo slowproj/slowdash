@@ -443,7 +443,7 @@ class TaskModuleComponent(Component):
         
         # unlike GET, only one module can process to POST
         for module in self.taskmodule_list:
-            result = module.process_command(doc.json())
+            result = module.process_command(dict(doc))
             if result is not None:
                 break
         

@@ -399,7 +399,7 @@ class UserModuleComponent(Component):
 
         # unlike GET, only one module can process to POST
         for module in self.usermodule_list:
-            result = module.process_command(doc.json())
+            result = module.process_command(dict(doc))
             if result is None:
                 continue
             if type(result) is bool:
