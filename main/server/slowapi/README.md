@@ -25,7 +25,7 @@ if __name__ == '__main__'
 python3 testapp.py
 ```
 ```bash
-curl http://localhost:8000
+curl http://localhost:8000/hello
 ```
 
 ### Running as WSGI
@@ -67,6 +67,7 @@ class App(SlowAPI):
 ### Multiple Handlers
 ```python
 from slowapi import SlowAPI
+
 class Peach(SlowAPI):
     @SlowAPI.get('/hello')
     def hello(self):
@@ -91,8 +92,12 @@ app = App()
 ```
 
 ```bash
-curl http://localhost:8000 | jq
-['Hello.', 'I am a peach', 'I am an orange' ]
+curl http://localhost:8000/hello | jq
+[
+  "Hello.",
+  "I am a peach",
+  "I am an orange"
+]
 ```
 
 - If responses are all `list`, they will be combined with `append()`.
