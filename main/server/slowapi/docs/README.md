@@ -17,6 +17,10 @@ SlowAPI is a Web-server microframework. Like FastAPI (or Flask), URLs are parsed
 from slowapi import SlowAPI
 
 class App(SlowAPI):
+    @SlowAPI.get('/'):
+    def home(self):
+        return 'say hello to "/hello"'
+
     @SlowAPI.get('/hello'):
     def hello(self):
         return 'hello, how are you?'
@@ -103,7 +107,7 @@ from slowapi import SlowAPI
 class App(SlowAPI):
     @SlowAPI.post('/hello/{name}')
     def hello(self, name:str, message:bytes):
-        return f'hello, {name}. You gave me {message.decode()}'
+        return f'hello, {name}. You sent me "{message.decode()}"'
 
 app = App()
 ```
@@ -118,8 +122,8 @@ from slowapi import SlowAPI, JsonDocument
 class App(SlowAPI):
     @SlowAPI.post('/hello/{name}')
     def hello(self, name:str, doc:JsonDocument):
-        message = doc.get('message', 'nothing')
-        return f'hello, {name}. You gave me {message}'
+        item = doc.get('item', 'nothing')
+        return f'hello, {name}. You gave me {item}'
 
 app = App()
 ```
@@ -178,33 +182,45 @@ curl http://localhost:8000/hello | jq
 
 ## TODOs
 
+### File content response / template processing
+```python
+class FileResponse(Response):
+    def __init__(self, path, content_type=None):
+        # maybe the content_type can be inferred from the file extension
+        ....
+        return Response(....
+```
+
+```python
+class TemplateResponse(FileResponse):
+    ....
+```
+
+#### Maybe more
+- SQLResponse
+
+
+
 ### File Server API
 ```python
 class FileServer(SlowAPI):
     def __init__(self, html_dir, base_path=None, exclude_base_path=None):
     """
     Note:
-      - if the base_path is given (e.g., "html"), return files under the path
-      - if the exclude_base_path is given (e.g., "api"), requests staring with it are not handled
+      - If the base_path is given (e.g., "html"), return files under the path.
+      - If the exclude_base_path is given (e.g., "api"), requests staring with it are not handled.
     """
-        ...
+        ....
 
     @SlowAPI.get('/'):
     def get_file(self, path:list):
         # sanity checks
-        ...
-        return FileResponse(...
-```
-
-### File content response / template processing
-```
-class FileResponse(Response):
-    def __init__(self, path, content_type=None):
         ....
-        return Response(...
+        return FileResponse(....
 ```
 
+This can be "included" into a SlowAPI app:
 ```
-class TemplatedFileResponse(FileResponse):
-    ....
+app = MyApp()
+app.include(FileServer(....))
 ```
