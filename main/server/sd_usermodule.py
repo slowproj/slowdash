@@ -1,9 +1,9 @@
 # Created by Sanshiro Enomoto on 24 October 2022 #
 
-import sys, os, time, threading, types, json, logging, traceback
+import sys, os, time, threading, types, logging, traceback
 import importlib.machinery
 
-from slowapi import SlowAPI, Response
+from slowapi import SlowAPI, Response, JsonDocument
 from sd_component import Component
 
 
@@ -349,7 +349,7 @@ class UserModuleComponent(Component):
 
 
     @SlowAPI.get('/channels')
-    def api_channels(self):
+    def get_channels(self):
         result = []
         for usermodule in self.usermodule_list:
             channels = usermodule.get_channels()
@@ -359,7 +359,7 @@ class UserModuleComponent(Component):
 
         
     @SlowAPI.get('/data/{channels}')
-    def api_data(self, channels:str, opts:dict):
+    def get_data(self, channels:str, opts:dict):
         if len(self.usermodule_list) == 0:
             return None
         
@@ -391,21 +391,15 @@ class UserModuleComponent(Component):
 
     
     @SlowAPI.post('/control')
-    def api_post(self, body:bytes):
+    def post_control(self, doc:JsonDocument):
         if len(self.usermodule_list) == 0:
             return None
-        
-        try:
-            doc = json.loads(body.decode())
-        except Exception as e:
-            logging.error('control: JSON decoding error: %s' % str(e))
-            return Response(400)   # Bad Request
         
         logging.info(f'UserModule Command: {doc}')
 
         # unlike GET, only one module can process to POST
         for module in self.usermodule_list:
-            result = module.process_command(doc)
+            result = module.process_command(doc.json())
             if result is None:
                 continue
             if type(result) is bool:

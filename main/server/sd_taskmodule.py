@@ -1,8 +1,8 @@
 # Created by Sanshiro Enomoto on 24 May 2024 #
 
-import sys, os, time, glob, json, threading, logging
+import sys, os, time, glob, threading, logging
 
-from slowapi import SlowAPI, Response
+from slowapi import SlowAPI, Response, JsonDocument
 from sd_usermodule import UserModule
 from sd_component import Component
 
@@ -437,19 +437,13 @@ class TaskModuleComponent(Component):
 
         
     @SlowAPI.post('/control')
-    def execute_command(self, body:bytes):
-        try:
-            doc = json.loads(body.decode())
-        except Exception as e:
-            logging.error('control: JSON decoding error: %s' % str(e))
-            return Response(400) # Bad Request
-            
+    def execute_command(self, doc:JsonDocument):
         result = None
         logging.info(f'Task Command: {doc}')
         
         # unlike GET, only one module can process to POST
         for module in self.taskmodule_list:
-            result = module.process_command(doc)
+            result = module.process_command(doc.json())
             if result is not None:
                 break
         
@@ -465,13 +459,7 @@ class TaskModuleComponent(Component):
 
     
     @SlowAPI.post('/control/task/{taskname}')
-    def control_task(self, taskname:str, body:bytes):
-        try:
-            doc = json.loads(body.decode())
-        except Exception as e:
-            logging.error('control: JSON decoding error: %s' % str(e))
-            return Response(400) # Bad Request
-            
+    def control_task(self, taskname:str, doc:JsonDocument):
         action = doc.get('action', None)
         logging.info(f'Task Control: {taskname}.{action}()')
         

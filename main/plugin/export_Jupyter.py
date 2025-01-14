@@ -1,9 +1,9 @@
 # Created by Sanshiro Enomoto on 11 November 2024 #
 
 
-import time, datetime, json, uuid, re, requests, logging
+import time, datetime, uuid, re, json, requests, logging
 
-from slowapi import SlowAPI, Response
+from slowapi import SlowAPI, Response, JsonDocument
 from sd_component import ComponentPlugin
 
 import export_Notebook
@@ -48,13 +48,7 @@ class Export_Jupyter(export_Notebook.Export_Notebook):
 
         
     @SlowAPI.post('/export/jupyter/{channels}')
-    def export_jupyter(self, channels:str, opts:dict, body:bytes):
-        try:
-            doc = json.loads(body.decode())
-        except Exception as e:
-            logging.error('Jupyter post: JSON decoding error: %s' % str(e))
-            return Response(400) # Bad Request
-        
+    def export_jupyter(self, channels:str, opts:dict, doc:JsonDocument):
         filename = doc.get('filename', None)
         if filename is None or not filename.replace('_', '0').replace('-', '0').replace('.', '0').isalnum():
             logging.warning(f'Jupyter post: bad file name: {filename}')

@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 12 Dec 2024 #
 
-import sys, os, logging
+import sys, os, atexit, logging
 logging.basicConfig(level=logging.INFO)
 
 from slowdash_cgi_config import sys_dir, project_dir
@@ -33,6 +33,4 @@ def terminate():
     if app is not None:
         app.terminate()
         
-        
-import atexit
 atexit.register(terminate)

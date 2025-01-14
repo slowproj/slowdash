@@ -8,6 +8,55 @@ from decimal import Decimal
 from .server import run as run_server
 
 
+
+class JsonDocument:
+    def __init__(self, body:bytes):
+        try:
+            self.doc = json.loads(body.decode())
+        except Exception as e:
+            logging.error('SlowAPI: JSON decoding error: %s' % str(e))
+            self.doc = None
+
+
+    def json(self):
+        return self.doc
+
+
+    def __str__(self):
+        return str(self.doc)
+
+    def __repr__(self):
+        return repr(self.doc)
+
+    def __len__(self):
+        return len(self.doc)
+
+    def __iter__(self):
+        return iter(self.doc)
+
+    def __getitem__(self, index):
+        return self.doc[index]
+
+    def __setitem__(self, index, value):
+        self.doc[index] = value
+
+    def __delitem__(self, index):
+        del self.doc[index]
+
+    def __contains__(self, item):
+        return item in self.doc
+
+    def items(self):
+        # no type check on purpose: letting the error messages (and stack trace) displayed
+        return self.doc.items()
+
+    def get(self, key, default_value=None):
+        # no type check on purpose
+        return self.doc.get(key, default_value)
+
+
+    
+    
 class PathRule:
     def __init__(self, rule:str, func_signature:inspect.Signature, status_code:int=200):
         self.rule_str = rule
@@ -15,7 +64,8 @@ class PathRule:
         self.path = []
         self.path_params = {}  # {pos:int, name:str}
         self.param_attributes = {}  # {name: str, param: inspect.Parameter }
-        self.body_param = None
+        self.bytes_body_param = None
+        self.json_body_param = None
         self.path_param = None
         self.opts_param = None
 
@@ -33,7 +83,9 @@ class PathRule:
                 continue
             param = func_signature.parameters[pname]
             if param.annotation is bytes:   # to store request body
-                self.body_param = pname
+                self.bytes_body_param = pname
+            if param.annotation is JsonDocument:   # to decode request body as JSON
+                self.json_body_param = pname
             elif param.annotation is list:  # to store URL path
                 self.path_param = pname
             elif param.annotation is dict:  # to store URL opts
@@ -103,8 +155,14 @@ class PathRule:
             kwargs[pname] = value
             
         # special arguments
-        if self.body_param is not None:
-            kwargs[self.body_param] = body
+        if self.bytes_body_param is not None:
+            kwargs[self.bytes_body_param] = body
+        if self.json_body_param is not None:
+            doc = JsonDocument(body)
+            if doc.json() is None:
+                return None
+            else:
+                kwargs[self.json_body_param] = doc
         if self.path_param is not None:
             kwargs[self.path_param] = path
         if self.opts_param is not None:

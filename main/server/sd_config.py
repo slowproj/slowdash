@@ -94,10 +94,14 @@ class ConfigComponent(Component):
         try:
             with open(filepath) as f:
                 data = yaml.safe_load(f)
-            pathlib.Path(filepath).touch()
         except Exception as e:
             logging.warn(f'JSON/YAML file loading error: {filepath}: {e}')
             return Response(400)
+        try:
+            # this requires W_OK, might fail from CGI etc.
+            pathlib.Path(filepath).touch()
+        except:
+            pass
             
         return data
 

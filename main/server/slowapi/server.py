@@ -279,10 +279,11 @@ class RequestHandler(BaseHTTPRequestHandler):
 import signal
 def signal_handler(signum, frame):
     raise InterruptedError
-signal.signal(signal.SIGTERM, signal_handler)
 
 
 def run(app, port, api_path='api', webfile_dir='.', index_file=None, auth_list=None):
+    signal.signal(signal.SIGTERM, signal_handler)
+    
     try:
         httpserver = HTTPServer(
             ('', port),
