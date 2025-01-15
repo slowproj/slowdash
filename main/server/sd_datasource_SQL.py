@@ -358,6 +358,7 @@ class DataSource_SQL(DataSource_TableStore):
                     f"    cte_bucket",
                     f"{sql_orderby}"
                 ])
+                
         if sql is None:
             sql = ' '.join([ sql_select, sql_from, sql_where, sql_orderby ])
 

@@ -21,7 +21,7 @@ def create_datastore_from_url(url, *args, **kwargs):
         return DataStore_Redis(db_url=url)
     elif url.startswith('csv:///'):
         table = kwargs['table'] if 'table' in kwargs else (args[0] if len(args) > 0 else 'slow_data')
-        return DataStore_CSV(db_url, table=args[0])
+        return DataStore_CSV(db_url=url, table=table)
     elif url.startswith('dump:///'):
         return DataStore_TextDump()
 

@@ -1,3 +1,4 @@
 #! /bin/bash
 
-python3 ../../../utils/generate-testdata.py --db-url=sqlite:///SlowTestData
+slowdash_dir="$(dirname $(dirname $(command -v slowdash)))"
+python3 $slowdash_dir/utils/generate-testdata.py --db-url=sqlite:///SlowTestData

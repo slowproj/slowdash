@@ -145,7 +145,7 @@ class DataSource_CSV(DataSource_TableStore):
         return value
 
         
-    def _execute_query(self, table_name, time_col, time_from, time_to, tag_col, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
+    def _execute_query(self, table_name, time_col, time_type, time_from, time_to, tag_col, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
         columns, table = [], []
 
         time_from, time_to = int(time_from), int(time_to)
