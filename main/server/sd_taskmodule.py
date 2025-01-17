@@ -2,7 +2,7 @@
 
 import sys, os, time, glob, threading, logging
 
-from slowapi import SlowAPI, Response, JsonDocument
+import slowapi
 from sd_usermodule import UserModule
 from sd_component import Component
 
@@ -350,7 +350,7 @@ class TaskModuleComponent(Component):
         }
 
 
-    @SlowAPI.get('/channels')
+    @slowapi.get('/channels')
     def api_channels(self):
         result = []
         for taskmodule in self.taskmodule_list:
@@ -360,7 +360,7 @@ class TaskModuleComponent(Component):
         return result
 
         
-    @SlowAPI.get('/data/{channels}')
+    @slowapi.get('/data/{channels}')
     def api_data(self, channels:str, opts:dict):
         try:
             channels = channels.split(',')
@@ -368,7 +368,7 @@ class TaskModuleComponent(Component):
             to = float(opts.get('to', int(time.time())+1))
         except Exception as e:
             logging.error('Bad data URL: %s: %s' % (str(opts), str(e)))
-            return Response(400)
+            return slowapi.Response(400)
         
         has_result, result = False, {}
         start = to - length
@@ -389,10 +389,10 @@ class TaskModuleComponent(Component):
         return result if has_result else None
 
 
-    @SlowAPI.post('/update/tasklist')
+    @slowapi.post('/update/tasklist')
     def update_tasklist(self):
         if self.app.is_cgi or (self.project.project_dir is None):
-            return Response(200)
+            return slowapi.Response(200)
         
         for filepath in glob.glob(os.path.join(self.project.project_dir, 'config', 'slowtask-*.py')):
             rootname, ext = os.path.splitext(os.path.basename(filepath))
@@ -411,7 +411,7 @@ class TaskModuleComponent(Component):
         return {'status': 'ok'}
 
     
-    @SlowAPI.get('/control/task')
+    @slowapi.get('/control/task')
     def task_status(self):
         result = []
         for module in self.taskmodule_list:
@@ -436,8 +436,8 @@ class TaskModuleComponent(Component):
         return result
 
         
-    @SlowAPI.post('/control')
-    def execute_command(self, doc:JsonDocument):
+    @slowapi.post('/control')
+    def execute_command(self, doc:slowapi.JSON):
         result = None
         logging.info(f'Task Command: {doc}')
         
@@ -453,13 +453,13 @@ class TaskModuleComponent(Component):
             else:
                 return {'status': 'error'}
         elif type(result) is int:
-            return Response(result)
+            return slowapi.Response(result)
                 
         return result
 
     
-    @SlowAPI.post('/control/task/{taskname}')
-    def control_task(self, taskname:str, doc:JsonDocument):
+    @slowapi.post('/control/task/{taskname}')
+    def control_task(self, taskname:str, doc:slowapi.JSON):
         action = doc.get('action', None)
         logging.info(f'Task Control: {taskname}.{action}()')
         

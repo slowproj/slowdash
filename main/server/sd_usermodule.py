@@ -3,7 +3,7 @@
 import sys, os, time, threading, types, logging, traceback
 import importlib.machinery
 
-from slowapi import SlowAPI, Response, JsonDocument
+import slowapi
 from sd_component import Component
 
 
@@ -348,7 +348,7 @@ class UserModuleComponent(Component):
         }
 
 
-    @SlowAPI.get('/channels')
+    @slowapi.get('/channels')
     def get_channels(self):
         result = []
         for usermodule in self.usermodule_list:
@@ -358,7 +358,7 @@ class UserModuleComponent(Component):
         return result
 
         
-    @SlowAPI.get('/data/{channels}')
+    @slowapi.get('/data/{channels}')
     def get_data(self, channels:str, opts:dict):
         if len(self.usermodule_list) == 0:
             return None
@@ -390,8 +390,8 @@ class UserModuleComponent(Component):
         return result if has_result else None
 
     
-    @SlowAPI.post('/control')
-    def post_control(self, doc:JsonDocument):
+    @slowapi.post('/control')
+    def post_control(self, doc:slowapi.JSON):
         if len(self.usermodule_list) == 0:
             return None
         
@@ -408,7 +408,7 @@ class UserModuleComponent(Component):
                 else:
                     return {'status': 'error'}
             elif type(result) is int:
-                return Response(result)
+                return slowapi.Response(result)
             else:
                 return result
         

@@ -3,7 +3,7 @@
 import time, math, logging
 import numpy as np
 
-from slowapi import SlowAPI, Response
+import slowapi
 from sd_component import ComponentPlugin, PluginComponent
 
 from sd_dataschema import Schema
@@ -17,12 +17,12 @@ class DataSource(ComponentPlugin):
         super().__init__(app, project, params)
 
         
-    @SlowAPI.get('/channels')
+    @slowapi.get('/channels')
     def api_get_channels(self):
         return self.get_channels()
 
     
-    @SlowAPI.get('/data/{channels}')
+    @slowapi.get('/data/{channels}')
     def api_get_data(self, channels:str, opts:dict):
         try:
             channels = channels.split(',')
@@ -32,7 +32,7 @@ class DataSource(ComponentPlugin):
             reducer = opts.get('reducer', 'last')
         except Exception as e:
             logging.error('Bad data URL: %s: %s' % (str(opts), str(e)))
-            return Response(400)
+            return slowapi.Response(400)
         if resample < 0:
             resample = None
 
@@ -47,13 +47,13 @@ class DataSource(ComponentPlugin):
         return result
 
     
-    @SlowAPI.get('/blob')
+    @slowapi.get('/blob')
     def api_get_blob(self, channel:str, path:list):
         mime_type, content = self.get_blob(channel, path[1:])
         if mime_type is not None:
             return None
 
-        return Response(content_type=mime_type, content=content)
+        return slowapi.Response(content_type=mime_type, content=content)
 
     
     def get_channels(self):

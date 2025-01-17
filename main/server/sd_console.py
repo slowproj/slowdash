@@ -3,7 +3,7 @@
 
 import sys, io, logging
 
-from slowapi import SlowAPI, Response
+import slowapi
 from sd_component import Component
 
 
@@ -16,8 +16,6 @@ class ConsoleComponent(Component):
         self.console_outputs = []
         self.max_lines = 10000
         
-        self.original_stdin = sys.stdin
-        self.original_stdout = sys.stdout
         if not app.is_command and not app.is_cgi:
             self.console_stdin = io.StringIO()
             self.console_stdout = io.StringIO()
@@ -27,8 +25,8 @@ class ConsoleComponent(Component):
 
     def __del__(self):
         if self.console_stdin is not None:
-            sys.stdin = self.original_stdin
-            sys.stdout = self.original_stdout
+            sys.stdin = sys.__stdin__
+            sys.stdout = self.__stdout__
             self.console_stdin.close()
             self.console_stdout.close()
 
@@ -40,7 +38,7 @@ class ConsoleComponent(Component):
         }}
 
     
-    @SlowAPI.get('/console')
+    @slowapi.get('/console')
     def read(self, nlines:int=20):
         if self.console_stdout is None:
             return '[no console output]'
@@ -56,7 +54,7 @@ class ConsoleComponent(Component):
         return '\n'.join(self.console_outputs[-nlines:])
 
 
-    @SlowAPI.post('/console')
+    @slowapi.post('/console')
     def write(self, body:bytes):
         cmd = body.decode()
         logging.info(f'Console Input: {cmd}')
@@ -66,4 +64,4 @@ class ConsoleComponent(Component):
         self.console_stdin.write('%s\n' % cmd)
         self.console_stdin.seek(pos)
         
-        return Response(201)
+        return slowapi.Response(201)

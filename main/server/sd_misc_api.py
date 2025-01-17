@@ -2,7 +2,7 @@
 
 import sys, os, logging
 
-from slowapi import SlowAPI, Response
+import slowapi
 from sd_component import Component
 
 
@@ -11,12 +11,12 @@ class MiscApiComponent(Component):
         super().__init__(app, project)
 
 
-    @SlowAPI.get('/ping')
+    @slowapi.get('/ping')
     def ping(self):
         return ['pong']
 
     
-    @SlowAPI.get('/echo')
+    @slowapi.get('/echo')
     def echo(self, path:list, opts:dict):
         if self.app.is_cgi:
             env = { k:v for k,v in os.environ.items() if k.startswith('HTTP_') or k.startswith('REMOTE_') }

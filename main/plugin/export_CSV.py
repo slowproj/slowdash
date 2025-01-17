@@ -3,7 +3,7 @@
 
 import datetime, copy, logging
 
-from slowapi import SlowAPI, Response
+import slowapi
 from sd_component import ComponentPlugin
 
 
@@ -12,7 +12,7 @@ class Export_CSV(ComponentPlugin):
         super().__init__(app, project, params)
 
 
-    @SlowAPI.get('/export/csv/{channels}')
+    @slowapi.get('/export/csv/{channels}')
     def export_csv(self, channels:str, opts:dict, timezone:str='local', resample:float=0):
         data_path = ['data', channels]
         data_opts = copy.deepcopy(opts)
@@ -55,4 +55,4 @@ class Export_CSV(ComponentPlugin):
             ','.join(['NaN' if col is None else col for col in row]) for row in table
         ]).encode()
                 
-        return Response(content_type='text/csv', content=content)
+        return slowapi.Response(content_type='text/csv', content=content)

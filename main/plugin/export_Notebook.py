@@ -3,7 +3,7 @@
 
 import time, datetime, json, uuid, re, logging
 
-from slowapi import SlowAPI, Response
+import slowapi
 from sd_component import ComponentPlugin
 
 
@@ -21,12 +21,12 @@ class Export_Notebook(ComponentPlugin):
         }
 
 
-    @SlowAPI.get('/export/python/{channels}')
+    @slowapi.get('/export/python/{channels}')
     def expor_python(self, channels:str, opts:dict):
         return self.generate_python(channels, opts)
 
     
-    @SlowAPI.get('/export/notebook/{channels}')
+    @slowapi.get('/export/notebook/{channels}')
     def export_notebook(self, channels:str, opts:dict):
         notebook = self.generate_notebook(channels, opts)
         return json.dumps(notebook, indent=4)

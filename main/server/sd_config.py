@@ -3,7 +3,7 @@
 import sys, os, glob, io, json, yaml, logging
 import pathlib, stat, pwd, grp, enum
 
-from slowapi import SlowAPI, Response
+import slowapi
 from sd_component import Component
 
 
@@ -13,17 +13,17 @@ class ConfigComponent(Component):
         self.project_dir = self.project.project_dir
         
 
-    @SlowAPI.get('/config')
+    @slowapi.get('/config')
     def get_config(self):
         return self._get_config(with_list=False)
 
         
-    @SlowAPI.get('/config/list')
+    @slowapi.get('/config/list')
     def get_list(self):
         return self._get_config(with_list=True, with_content_meta=True)
 
         
-    @SlowAPI.get('/config/filelist')
+    @slowapi.get('/config/filelist')
     def get_filelist(self, sortby='mtime', reverse:bool=False):
         if self.project_dir is None:
             return []
@@ -47,17 +47,17 @@ class ConfigComponent(Component):
         return filelist
 
         
-    @SlowAPI.get('/config/filemeta/{filename}')
+    @slowapi.get('/config/filemeta/{filename}')
     def get_filemeta(self, filename:str):
         return self._get_config_filemeta(filename)
 
         
-    @SlowAPI.get('/config/file/{filename}')
+    @slowapi.get('/config/file/{filename}')
     def get_file(self, filename:str):
         filepath, ext = self._get_filepath_ext(filename, os.R_OK)
         if filepath is None:
             logging.warning(f'GET config/file: {filename}: access denied')
-            return Response(404)
+            return slowapi.Response(404)
 
         if ext == '.json':
             content_type = 'application/json'
@@ -78,25 +78,25 @@ class ConfigComponent(Component):
         elif is_secure and (ext == '.js'):
             content_type = 'text/plain'
         else:
-            return Response(400)
+            return slowapi.Response(400)
         
-        return Response(content_type=content_type, content=open(filepath, 'rb').read())
+        return slowapi.Response(content_type=content_type, content=open(filepath, 'rb').read())
 
         
-    @SlowAPI.get('/config/jsonfile/{filename}')
+    @slowapi.get('/config/jsonfile/{filename}')
     def get_jsonfile(self, filename:str):
         filepath, ext = self._get_filepath_ext(filename, os.R_OK)
         if filepath is None:
-            return Response(404)
+            return slowapi.Response(404)
         if ext not in ['.json', '.yaml']:
-            return Response(400)
+            return slowapi.Response(400)
         
         try:
             with open(filepath) as f:
                 data = yaml.safe_load(f)
         except Exception as e:
             logging.warn(f'JSON/YAML file loading error: {filepath}: {e}')
-            return Response(400)
+            return slowapi.Response(400)
         try:
             # this requires W_OK, might fail from CGI etc.
             pathlib.Path(filepath).touch()
@@ -106,7 +106,7 @@ class ConfigComponent(Component):
         return data
 
 
-    @SlowAPI.post('/config/file/{filename}')
+    @slowapi.post('/config/file/{filename}')
     def post_file(self, filename: str, doc:bytes, overwrite:str='no'):
         filepath, ext = self._get_filepath_ext(filename)
         if filepath is None:
@@ -114,7 +114,7 @@ class ConfigComponent(Component):
             return Reply(400)
         if not self.project.is_secure:
             if ext not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]:
-                return Response(403)  # Forbidden
+                return slowapi.Response(403)  # Forbidden
 
         config_dir = os.path.join(self.project_dir, 'config')
         if not os.path.isdir(config_dir):
@@ -122,7 +122,7 @@ class ConfigComponent(Component):
                 os.makedirs(config_dir)
             except:
                 logging.error('unable to create directory: ' + config_dir)
-                return Response(500)       # Internal Server Error
+                return slowapi.Response(500)       # Internal Server Error
             
         mode = self.project.config.get('system', {}).get('file_mode', 0o644) + 0o100
         if mode & 0o070 != 0:
@@ -142,16 +142,16 @@ class ConfigComponent(Component):
 
         if os.path.exists(filepath):
             if not os.access(filepath, os.W_OK):
-                return Response(403)   # Forbidden
+                return slowapi.Response(403)   # Forbidden
             if overwrite != 'yes':
-                return Response(202)   # Accepted: no action made, try with overwrite flag
+                return slowapi.Response(202)   # Accepted: no action made, try with overwrite flag
             
         try:
             with open(filepath, "wb") as f:
                 f.write(doc)
         except Exception as e:
             logging.error(f'unable to write file: {filepath}: %s' % str(e))
-            return Response(500)    # Internal Server Error
+            return slowapi.Response(500)    # Internal Server Error
 
         try:
             mode = self.project.config.get('system', {}).get('file_mode', 0o644)
@@ -164,24 +164,24 @@ class ConfigComponent(Component):
         except Exception as e:
             logging.warning('unable to change file gid (%d): %s: %s' % (gid, config_dir, str(e)))
 
-        return Response(201) # Created
+        return slowapi.Response(201) # Created
 
 
-    @SlowAPI.delete('/config/file/{filename}')
+    @slowapi.delete('/config/file/{filename}')
     def delete_file(self, filename: str):
         filepath = self._get_filepath_ext(filename, os.W_OK)[0]
         if filepath is None:
             logging.warning(f'DETETE config/file: {filename}: access denied')
-            return Response(404)  # Not Found
+            return slowapi.Response(404)  # Not Found
         
         try:
             os.remove(filepath)
             logging.info(f'config file deleted: {filename}')
         except Exception as e:
             logging.error(f'file deletion error: {filename}: {e}')
-            return Response(500)   # Internal Server Error
+            return slowapi.Response(500)   # Internal Server Error
         
-        return Response(200)
+        return slowapi.Response(200)
 
 
     def _get_config(self, with_list=True, with_content_meta=True):
@@ -206,7 +206,7 @@ class ConfigComponent(Component):
                 'style': self.project.config.get('style', None),
             }
 
-            for components in self.app.included():
+            for components in self.app.slowapi_included():
                 doc.update(components.public_config() or {})
             
         if (not with_list) or (self.project_dir is None):
@@ -268,7 +268,7 @@ class ConfigComponent(Component):
         filepath, ext = self._get_filepath_ext(filename, os.R_OK)
         if filepath is None:
             logging.warning(f'GET config/filemeta: {filename}: access denied')
-            return Response(404)
+            return slowapi.Response(404)
 
         filemeta = {}        
         if ext not in [ '.json', '.yaml' ]:

@@ -1,7 +1,6 @@
 # SlowAPI
 
-## Description
-SlowAPI is a Web-server microframework. Like FastAPI (or Flask), URLs are parsed, parameters are extacted, and the requests are routed to user code. In contrast to FastAPI / Flask, requests are bound to class instance methods, instead of funcions. One request can be handled by multiple user handlers, and the responses are aggregated. This design is made for dynamic plug-in systems with the chain-of-responsibility scheme. SlowAPI implements WSGI.
+SlowAPI is a Web-server microframework. Like FastAPI (or Flask), URLs are parsed, parameters are extacted, and the requests are routed to user code. In contrast to FastAPI / Flask, requests are bound to class instance methods, not to functions. One HTTP request can be handled by multiple user handlers, and the responses are aggregated. This design is made for dynamic plug-in systems with the chain-of-responsibility scheme. SlowAPI implements WSGI.
 
 
 ## Dependencies
@@ -9,7 +8,7 @@ SlowAPI is a Web-server microframework. Like FastAPI (or Flask), URLs are parsed
 
 
 ## Examples
-### Complete Web App with Simple GET
+### A Complete Web App with Simple GET
 
 ```python
 # testapp.py
@@ -30,7 +29,9 @@ app = App()
 if __name__ == '__main__'
     app.run()
 ```
+- Very similar to FastAPI, except that URLs are associated to class methods. Unlike FastAPI, the `app` instance is created after the binding is described. (Important for creating multiple handler instances.)
 
+#### Running the example
 ```bash
 python3 testapp.py
 ```
@@ -40,12 +41,12 @@ curl http://localhost:8000/hello
 ```
 
 
-### Running as WSGI
+#### Running via WSGI
 ```bash
 gunicorn testapp:app
 ```
 
-- Like Flask/FastAPI, instance of SlowAPI (or its subclass) is a callable WSGI entry point.
+- Like Flask/FastAPI, an instance of SlowAPI (or its subclass) is a callable WSGI entry point.
 - ASGI is currently not implemented.
 
 
@@ -117,21 +118,21 @@ app = App()
 
 ### POST with JSON data
 ```python
-from slowapi import SlowAPI, JsonDocument
+from slowapi import SlowAPI, JSONDocument
 
 class App(SlowAPI):
     @SlowAPI.post('/hello/{name}')
-    def hello(self, name:str, doc:JsonDocument):
+    def hello(self, name:str, doc:JSONDocument):
         item = doc.get('item', 'nothing')
         return f'hello, {name}. You gave me {item}'
 
 app = App()
 ```
 
-- The request body is parsed as JSON and the value is set to the (last) argument of a type `slowpy.JsonDocument`.
-- Use `JsonDocument.json()` to get a value of the native Python types (`dict`, `list`, `str`, ...).
+- The request body is parsed as JSON and the value is set to the (last) argument of a type `slowpy.JSONDocument`.
+- Use `JSONDocument.json()` to get a value of the native Python types (`dict`, `list`, `str`, ...).
 - Use `dict(doc)` or `list(doc)` to convert to native Python dict or list.
-- If the content is dict (or list), most common dict (list) methods are available in JsonDocument:
+- If the content is dict (or list), most common dict (list) methods are available in JSONDocument:
   - For dict: `doc[key]`, `key in doc`, `for key in doc:`, `doc.get(value, default)`, `doc.items()`, ...
   - For list: `doc[index]`,`len(doc)`, `for v in doc:`, ...
 
@@ -182,23 +183,28 @@ curl http://localhost:8000/hello | jq
 
 ## TODOs
 
+### Request object
+- modifiable -> middleware
+  - URL rewrite
+  - auth
+  - user info
+
 ### File content response / template processing
 ```python
 class FileResponse(Response):
     def __init__(self, path, content_type=None):
         # maybe the content_type can be inferred from the file extension
-        ....
-        return Response(....
+        self.content_type = ....
+        self.content = ....
 ```
 
 ```python
 class TemplateResponse(FileResponse):
-    ....
+    def __init__(self, template_engine, params, path, content_type=None):
+        super().__init__(path, content_type)
+        if self.content is not None:
+            self.content = template_engine.render(self.content, params)
 ```
-
-#### Maybe more
-- SQLResponse
-
 
 
 ### File Server API

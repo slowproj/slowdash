@@ -5,7 +5,7 @@ import importlib.machinery
 import slowapi
 
 
-class Component(slowapi.SlowAPI):
+class Component(slowapi.App):
     """ Base class for App components
     """
     
@@ -31,7 +31,7 @@ class Component(slowapi.SlowAPI):
 
         
     
-class ComponentPlugin(slowapi.SlowAPI):
+class ComponentPlugin(slowapi.App):
     """ Base class for plugin modules of an App component
     """
     
@@ -87,7 +87,7 @@ class PluginComponent(Component):
         
 
     def terminate(self):
-        for plugin in self.included():
+        for plugin in self.slowapi_included():
             plugin.terminate()
 
     
@@ -96,7 +96,7 @@ class PluginComponent(Component):
         """
 
         plugins = {}
-        for plugin in self.included():
+        for plugin in self.slowapi_included():
             name = plugin.plugin_type
             if name in plugins:
                 # multiple plugins of the same type -> array
@@ -135,7 +135,7 @@ class PluginComponent(Component):
             plugin = self._load_plugin_module(plugin_name, class_name, params=params)
             if plugin is not None:
                 plugin.plugin_type = plugin.class_name[len(self.class_prefix)+1:]
-                self.include(plugin)
+                self.slowapi_include(plugin)
                     
 
     def _load_plugin_module(self, plugin_name, class_name, params):

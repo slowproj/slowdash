@@ -16,20 +16,18 @@ from sd_misc_api import MiscApiComponent
 
 
 
-class App(slowapi.SlowAPI):
+class App(slowapi.App):
     def __init__(self, project_dir=None, project_file=None, is_cgi=False, is_command=False):
         super().__init__()
 
+        self.is_cgi = is_cgi
+        self.is_command = is_command
+        
         if project_dir is not None:
             project_dir = os.path.abspath(os.path.join(os.getcwd(), project_dir))
         self.project = Project(project_dir, project_file)
         self.project_dir = self.project.project_dir
-        self.is_cgi = is_cgi
-        self.is_command = is_command
 
-        self.console_stdin = None
-        self.console_stdout = None
-        
         # Execution Environment
         if self.project.config is None:
             return
@@ -46,21 +44,21 @@ class App(slowapi.SlowAPI):
             sys.path.insert(1, self.project.project_dir)
             sys.path.insert(1, os.path.join(self.project.project_dir, 'config'))
             
-        # API Components: see SlowAPI.include() for the mechanism
-        self.include(ConsoleComponent(self, self.project))   # this must be the first
-        self.include(ConfigComponent(self, self.project))
-        self.include(DataSourceComponent(self, self.project))
-        self.include(ExportComponent(self, self.project))
-        self.include(UserModuleComponent(self, self.project))
-        self.include(TaskModuleComponent(self, self.project))
-        self.include(MiscApiComponent(self, self.project))
+        # API Components: see slowapi.Api.slowapi_include() for the mechanism
+        self.slowapi_include(ConsoleComponent(self, self.project))   # this must be the first
+        self.slowapi_include(ConfigComponent(self, self.project))
+        self.slowapi_include(DataSourceComponent(self, self.project))
+        self.slowapi_include(ExportComponent(self, self.project))
+        self.slowapi_include(UserModuleComponent(self, self.project))
+        self.slowapi_include(TaskModuleComponent(self, self.project))
+        self.slowapi_include(MiscApiComponent(self, self.project))
 
         
     def terminate(self):
         """graceful terminate
           - used by components that have a thread (usermodule/taskmodule), to send a stop request etc.
         """
-        for component in reversed(self.included()):
+        for component in reversed(self.slowapi_included()):
             component.terminate()
 
 
@@ -128,7 +126,7 @@ if __name__ == '__main__':
     if args.port <= 0:
         # command-line mode
         json_opts = { 'indent': args.indent }
-        response = app.request_get(args.COMMAND)
+        response = app.slowapi_get(args.COMMAND)
         sys.stdout.write(response.get_content(json_opts).decode())
         sys.stdout.write('\n')
         
