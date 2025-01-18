@@ -198,21 +198,27 @@ class App:
             else:
                 request = Request(request, method='POST', body=body)
 
-        response = Response()
+        # execute handlers from top to bottom, and store the responses in a list
+        response_list = [ Response() ]
         for app in self.slowapi_prepended_apps:
-            response.append(app.slowapi(request))
-            
+            response_list.append(app.slowapi(request))
         for handler in self.slowapi_handlers:
             args = handler.slowapi_path_rule.match(request)
             if args is not None:
-                this_response = Response(status_code=handler.slowapi_path_rule.status_code)
-                this_response.append(handler(self, **args))
-                response.append(this_response)
-            
+                response = handler(self, **args)
+                if not isinstance(response, Response):
+                    status_code = handler.slowapi_path_rule.status_code
+                    response = Response(status_code, content=response)
+                response_list.append(response)
         for app in self.slowapi_appended_apps:
-            response.append(app.slowapi(request))
+            response_list.append(app.slowapi(request))
+
+        # merge responses from bottom to top
+        while len(response_list) > 1:
+            response_list[-2].merge_response(response_list[-1])
+            del response_list[-1]
             
-        return response
+        return response_list[0]
 
 
     def slowapi_prepend(self, app):

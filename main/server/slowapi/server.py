@@ -7,6 +7,7 @@
 import sys, os, logging, functools, base64, traceback
 from urllib.parse import urlparse, unquote
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from .request import Request
 
 bcrypt_imported = False  # modudle not necessary unless authorization is enabled
 
@@ -44,7 +45,9 @@ class RequestHandler(BaseHTTPRequestHandler):
         api_url, file_path = self._parse_url()
         try:
             if api_url is not None:
-                response = self.app.slowapi(api_url)
+                request = Request(api_url)
+                request.headers = {k:v for k,v in self.headers.items()}
+                response = self.app.slowapi(request)
             elif file_path is not None:
                 self._process_file_get(file_path)
                 return
@@ -111,7 +114,7 @@ class RequestHandler(BaseHTTPRequestHandler):
     def _check_auth(self):
         if self.auth_list is None:
             return True
-        
+
         auth = self.headers.get('Authorization', None)
         if auth == '' or auth is None:
             return False
@@ -119,7 +122,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         global bcrypt_imported
         if not bcrypt_imported:
             try:
-                import bcrypt
+                import bcrypt, hmac
                 bcrypt_imported = True
             except:
                 logging.error('SlowAPI_Server: missing python module "bcrypt"')
@@ -136,7 +139,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 return True
             
             key = bcrypt.hashpw(word.encode("utf-8"), true_key.encode()).decode("utf-8")
-            if key == true_key:
+            if hmac.compare_digest(key, true_key):  # to prevent timing attack
                 self.auth_list[user] = word
                 return True
             
@@ -248,11 +251,12 @@ class RequestHandler(BaseHTTPRequestHandler):
             return
 
         status_code = response.get_status_code()
-        if status_code >= 400:
-            self.send_error(status_code)
-            return
-        else:
-            self.send_response(status_code)
+#        if status_code >= 400:
+#            self.send_error(status_code)
+#            return
+#        else:
+#            self.send_response(status_code)
+        self.send_response(status_code)
 
         for k, v in response.get_headers():
             self.send_header(k, v)
@@ -262,6 +266,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         if content is not None:
                 self.wfile.write(content)
                 self.wfile.flush()
+
 
                 
     def _reply_response(self, response):

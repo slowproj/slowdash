@@ -70,7 +70,7 @@ if __name__ == '__main__':
     print(app.slowapi('/echo/hello/SlowDash'))
     print(app.slowapi('/home'))  # does not exist
     #print(app.slowapi_get('/source'))
-    print(app.slowapi('/trash'))
+    print(app.slowapi(slowapi.Request('/trash', method='delete')))
     print(app.slowapi('/deci?den=3'))
 
     ### start a HTTP server at default port 8000 ###
