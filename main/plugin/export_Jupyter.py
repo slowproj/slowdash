@@ -48,7 +48,7 @@ class Export_Jupyter(export_Notebook.Export_Notebook):
 
         
     @slowapi.post('/export/jupyter/{channels}')
-    def export_jupyter(self, channels:str, opts:dict, doc:slowapi.JSON):
+    def export_jupyter(self, channels:str, opts:dict, doc:slowapi.DictJSON):
         filename = doc.get('filename', None)
         if filename is None or not filename.replace('_', '0').replace('-', '0').replace('.', '0').isalnum():
             logging.warning(f'Jupyter post: bad file name: {filename}')

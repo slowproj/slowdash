@@ -21,6 +21,11 @@ class MyApp(slowapi.App):
         return f"hello {name}"
 
 
+    @slowapi.get('/echo/{*}')     # extra path parameters
+    def echo(self, path:list):
+        return path[1:]
+
+    
     @slowapi.post('/message')  # example for POST
     def message(self, name:str, doc:bytes):  # name is from options, doc is from request body
         return {'message1': f"Dear {name},\n{doc.decode()}"}
@@ -48,7 +53,6 @@ class MyApp(slowapi.App):
         return { "decimal": decimal.Decimal(num)/decimal.Decimal(den), "float": num/den }
 
 
-    
 app = MyApp()
 
 '''
@@ -59,14 +63,15 @@ $ gunicorn test_slowapi:app
 
 if __name__ == '__main__':
     ### test responses ###
-    print(app.slowapi_get('/'))
-    print(app.slowapi_get('/hello'))
-    print(app.slowapi_get('/hello/SlowDash'))
-    print(app.slowapi_post('/message?name=you', b"how are you doing?"))
-    print(app.slowapi_get('/home'))  # does not exist
+    print(app.slowapi('/'))
+    print(app.slowapi('/hello'))
+    print(app.slowapi('/hello/SlowDash'))
+    print(app.slowapi('/message?name=you', b"how are you doing?"))
+    print(app.slowapi('/echo/hello/SlowDash'))
+    print(app.slowapi('/home'))  # does not exist
     #print(app.slowapi_get('/source'))
-    print(app.slowapi_delete('/trash'))
-    print(app.slowapi_get('/deci?den=3'))
+    print(app.slowapi('/trash'))
+    print(app.slowapi('/deci?den=3'))
 
     ### start a HTTP server at default port 8000 ###
     app.run()

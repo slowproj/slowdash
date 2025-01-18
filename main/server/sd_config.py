@@ -206,7 +206,7 @@ class ConfigComponent(Component):
                 'style': self.project.config.get('style', None),
             }
 
-            for components in self.app.slowapi_included():
+            for components in self.app.slowapi_apps():
                 doc.update(components.public_config() or {})
             
         if (not with_list) or (self.project_dir is None):

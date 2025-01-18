@@ -437,7 +437,7 @@ class TaskModuleComponent(Component):
 
         
     @slowapi.post('/control')
-    def execute_command(self, doc:slowapi.JSON):
+    def execute_command(self, doc:slowapi.DictJSON):
         result = None
         logging.info(f'Task Command: {doc}')
         
@@ -459,7 +459,7 @@ class TaskModuleComponent(Component):
 
     
     @slowapi.post('/control/task/{taskname}')
-    def control_task(self, taskname:str, doc:slowapi.JSON):
+    def control_task(self, taskname:str, doc:slowapi.DictJSON):
         action = doc.get('action', None)
         logging.info(f'Task Control: {taskname}.{action}()')
         

@@ -391,7 +391,7 @@ class UserModuleComponent(Component):
 
     
     @slowapi.post('/control')
-    def post_control(self, doc:slowapi.JSON):
+    def post_control(self, doc:slowapi.DictJSON):
         if len(self.usermodule_list) == 0:
             return None
         

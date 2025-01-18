@@ -10,12 +10,11 @@ class JSON:
       - If a request-handler parameter is of this type, SlowAPI interprets the body as JSON.
         - Example:
           | @SlowAPI.post('/doc')
-          | def process_doc(doc: JSON):
+          | def process_doc(doc: JsonDocument):
           |   param1 = doc.get('param1', 0)
       - If the parsing fails, it returns response 400 (Bad Request) and the handler will not be called.
-      - If the JSON data is a dict or list, the JSON object can be used as dict or list for common methods,
-      - or dict() or list() can be used to convert into the native types.
-      - Or use the "json()" method to get the native Python type object.
+      - If the content data is a dict or list, JSON object can be used as dict or list for common methods,
+      - Or use the "value()" method to get the native Python type object.
     """
     
     def __init__(self, body:bytes):
@@ -26,7 +25,7 @@ class JSON:
             self.data = None
 
             
-    def json(self):
+    def value(self):
         return self.data
             
 
@@ -60,10 +59,28 @@ class JSON:
     def __contains__(self, item):
         return item in self.data
 
-    def items(self):
+    def get(self, key, default_value=None):
         # no type check on purpose: letting the error messages (and stack trace) displayed
+        return self.data.get(key, default_value)
+    
+    def keys(self):
+        # no type check on purpose
+        return self.data.keys()
+
+    def values(self):
+        # no type check on purpose
+        return self.data.values()
+
+    def items(self):
+        # no type check on purpose
         return self.data.items()
 
-    def get(self, key, default_value=None):
-        # no type check on purpose
-        return self.data.get(key, default_value)
+
+
+class DictJSON(JSON):
+    """same as JSON, but the content must be a valid dict
+    """
+    def __init__(self, body:bytes):
+        super().__init__()
+        if type(self.data) is not dict:
+            self.data = None

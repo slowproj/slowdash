@@ -44,7 +44,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         api_url, file_path = self._parse_url()
         try:
             if api_url is not None:
-                response = self.app.request_get(api_url)
+                response = self.app.slowapi(api_url)
             elif file_path is not None:
                 self._process_file_get(file_path)
                 return
@@ -75,8 +75,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             if content_length > 1024*1024*1024:
                 self._reply_error(507)   # Insufficient Storage (WebDAV)
                 return
-            body = self.rfile.read(content_length)
-            response = self.app.request_post(api_url, body)
+            request = slowapi.Request(api_url, method='POST', body=self.rfile.read(content_length))
+            response = self.app.slowapi(request)
         except Exception as e:
             logging.error(f'SlowAPI_Server: {e}')
             logging.error(traceback.format_exc())
@@ -97,7 +97,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             return
         
         try:
-            response = self.app.request_delete(api_url)
+            request = slowapi.Request(api_url, method='DELETE')
+            response = self.app.slowapi(request)
         except Exception as e:
             logging.error(f'SlowAPI_Server: {e}')
             logging.error(traceback.format_exc())

@@ -3,8 +3,9 @@
 
 import typing, inspect, copy, logging
 from urllib.parse import urlparse, parse_qsl, unquote
+import wsgiref
 
-from .model import JSON
+from .model import JSON, DictJSON
 from .request import Request
 from .response import Response
 from .server import run as run_server
@@ -12,21 +13,31 @@ from .server import run as run_server
 
 
 class PathRule:
-    def __init__(self, rule:str, func_signature:inspect.Signature, status_code:int=200):
+    def __init__(self, rule:str, method:str, func_signature:inspect.Signature, *, status_code:int=200):
         self.rule_str = rule
+        self.method = method.upper()
         self.status_code = status_code
+        
         self.path = []
         self.path_params = {}  # {pos:int, name:str}
         self.param_attributes = {}  # {name: str, param: inspect.Parameter }
+        self.take_extra_path = False
+        
         self.bytes_body_param = None
         self.json_body_param = None
+        self.json_dict_body_param = None
+        self.request_param = None
         self.path_param = None
         self.query_param = None
 
         for elem in rule.split('/'):
             if elem is not None and len(elem) > 0:
                 self.path.append(elem)
-            
+
+        if len(self.path) > 0 and self.path[-1] == '{*}':
+            self.take_extra_path = True
+            del self.path[-1]
+                
         for pos, elem in enumerate(self.path):
             if len(elem) > 2 and elem[0] == '{' and elem[-1] == '}':
                 self.path_params[pos] = elem[1:-1]
@@ -36,9 +47,11 @@ class PathRule:
             if index == 0:  # self
                 continue
             param = func_signature.parameters[pname]
-            if param.annotation is bytes:   # to store request body
+            if param.annotation is Request:   # to store request itself
+                self.request_param = pname
+            elif param.annotation is bytes:   # to store request body
                 self.bytes_body_param = pname
-            if param.annotation is JSON:   # to decode request body as JSON
+            elif param.annotation in [JSON, DictJSON]:   # to decode request body as JSON
                 self.json_body_param = pname
             elif param.annotation is list:  # to store URL path
                 self.path_param = pname
@@ -55,12 +68,19 @@ class PathRule:
     
 
     def match(self, request:Request):
+        # do not process aborted requests
+        if request.aborted:
+            return None
+        
+        # method match
+        if request.method != self.method:
+            return None
+        
         # length match
         if len(request.path) != len(self.path):
-            # longer path: can be stored in the "path" argument
-            if (self.path_param is None) and (len(request.path) > len(self.path)):
+            if (len(request.path) > len(self.path)) and not self.take_extra_path:
                 return None
-            # shorter path: maybe a parameter with a default value
+            # shorter path: maybe a parameter with a default value; check it
             for k in range(len(request.path), len(self.path)):
                 if self.path[k] is not None:
                     return None
@@ -95,11 +115,14 @@ class PathRule:
             kwargs[pname] = value
             
         # special arguments
+        if self.request_param is not None:
+            kwargs[self.request_param] = request
         if self.bytes_body_param is not None:
             kwargs[self.bytes_body_param] = request.body
         if self.json_body_param is not None:
-            doc = JSON(request.body)
-            if doc.json() is None:
+            Type = self.param_attributes[self.json_body_param].annotation
+            doc = Type(request.body)
+            if doc.value() is None:
                 return None
             else:
                 kwargs[self.json_body_param] = doc
@@ -119,8 +142,8 @@ def get(path_rule:str, status_code:int=200):
       - status_code: default status code for success
     """
     def wrapper(func):
-        if not hasattr(func, 'slowapi_get_rule'):
-            func.slowapi_get_rule = PathRule(path_rule, inspect.signature(func), status_code=status_code)
+        if not hasattr(func, 'slowapi_path_rule'):
+            func.slowapi_path_rule = PathRule(path_rule, 'GET', inspect.signature(func), status_code=status_code)
         return func
     return wrapper
 
@@ -132,8 +155,8 @@ def post(path_rule:str, status_code:int=201):
       - status_code: default status code for success
     """
     def wrapper(func):
-        if not hasattr(func, 'slowapi_post_rule'):
-            func.slowapi_post_rule = PathRule(path_rule, inspect.signature(func), status_code=status_code)
+        if not hasattr(func, 'slowapi_path_rule'):
+            func.slowapi_path_rule = PathRule(path_rule, 'POST', inspect.signature(func), status_code=status_code)
         return func
     return wrapper
 
@@ -145,143 +168,85 @@ def delete(path_rule:str, status_code:int=200):
       - status_code: default status code for success
     """
     def wrapper(func):
-        if not hasattr(func, 'slowapi_delete_rule'):
-            func.slowapi_delete_rule = PathRule(path_rule, inspect.signature(func), status_code=status_code)
+        if not hasattr(func, 'slowapi_path_rule'):
+            func.slowapi_path_rule = PathRule(path_rule, 'DELETE', inspect.signature(func), status_code=status_code)
         return func
     return wrapper
 
     
 
 class App:
-    """SlowAPI Application: Base class for user applications
-    Note:
-      - To avoid possible name collisions, all attributes are prefixed with slowapi_,
-      - except for __call__() and run().
-    """
     def __init__(self):
-        self.slowapi_get_handlers = []
-        self.slowapi_post_handlers = []
-        self.slowapi_delete_handlers = []
-
-        self.slowapi_composite_apps = []
+        self.slowapi_handlers = []
+        self.slowapi_prepended_apps = []
+        self.slowapi_appended_apps = []
 
         # Binding URL handlers to the PathRule attached by decorators (@get(PATH) etc).
         # Note that __init__() is called after all the decorators.
         for name, method in inspect.getmembers(type(self), predicate=inspect.isfunction):
-            if hasattr(method, 'slowapi_get_rule'):
-                self.slowapi_get_handlers.append((method.slowapi_get_rule, method))
-                logging.debug(f'GET {method.slowapi_get_rule} --> {name}()')
-            elif hasattr(method, 'slowapi_post_rule'):
-                self.slowapi_post_handlers.append((method.slowapi_post_rule, method))
-                logging.debug(f'POST {method.slowapi_post_rule} --> {name}()')
-            elif hasattr(method, 'slowapi_delete_rule'):
-                self.slowapi_delete_handlers.append((method.slowapi_delete_rule, method))
-                logging.debug(f'DELETE {method.slowapi_delete_rule} --> {name}()')
+            if hasattr(method, 'slowapi_path_rule'):
+                self.slowapi_handlers.append(method)
 
-
-    def _slowapi_handle_request(self, handlers, request:Request) -> typing.Optional[Response]:
-        """
-        Args:
-          - handlers: self.slowapi_XXX_handlers where XXX is "get", "post", or "delete"
-          - request: a Request object (contains path, query, headers, and optionally a body)
-        Returns:
-          - a Response object, or
-          - None if there is no handler for the URL
-        """
-        response = None
         
-        for rule, handler in handlers:
-            params = rule.match(request)
-            if params is None:
-                continue
-            
-            this_result = handler(self, **params)
-            if this_result is None:
-                continue
-            
-            if response is None:
-                response = Response(status_code=rule.status_code)
-            response.append(this_result)
-
-        return response
-
-
-    def slowapi_include(self, app):
-        """append another App for the composite
-        Parameters:
-          - api: an instance of App
-        """
-
-        if not hasattr(self, 'slowapi_composite_apps'):
-            App.__init__(self)  # in case this is forgotten in user subclass...
-        
-        self.slowapi_composite_apps.append(app)
-        
-
-    def slowapi_included(self):
-        return self.slowapi_composite_apps
-        
-
-    def slowapi_get(self, request:Request) -> Response:
-        if not hasattr(self, 'slowapi_get_handlers'):
-            App.__init__(self)  # in case this is forgotten in user subclass...
+    def slowapi(self, request:Request, body:bytes=None) -> Response:
+        if not hasattr(self, 'slowapi_handlers'):
+            # in case the __init__() method is not called by user subclass
+            self.__init__()
         if type(request) is str:
-            request = Request(request)
-            
+            if body is None:
+                request = Request(request, method='GET')
+            else:
+                request = Request(request, method='POST', body=body)
+
         response = Response()
-        response.append(self._slowapi_handle_request(self.slowapi_get_handlers, request))
-        for app in self.slowapi_composite_apps:
-            response.append(app.slowapi_get(request))
+        for app in self.slowapi_prepended_apps:
+            response.append(app.slowapi(request))
+            
+        for handler in self.slowapi_handlers:
+            args = handler.slowapi_path_rule.match(request)
+            if args is not None:
+                this_response = Response(status_code=handler.slowapi_path_rule.status_code)
+                this_response.append(handler(self, **args))
+                response.append(this_response)
+            
+        for app in self.slowapi_appended_apps:
+            response.append(app.slowapi(request))
             
         return response
-        
 
-    def slowapi_post(self, request:Request, body:bytes=None) -> Response:
-        if not hasattr(self, 'slowapi_post_handlers'):
-            App.__init__(self)  # in case this is forgotten in user subclass...
-        if type(request) is str:
-            request = Request(request)
-        if body is not None:
-            request.body = body
-                    
-        response = Response()
-        response.append(self._slowapi_handle_request(self.slowapi_post_handlers, request))
-        for app in self.slowapi_composite_apps:
-            response.append(app.slowapi_post(request))
-            
-        return response
-    
 
-    def slowapi_delete(self, request:Request) -> Response:
-        if not hasattr(self, 'slowapi_delete_handlers'):
-            App.__init__(self)  # in case this is forgotten in user subclass...
-        if type(request) is str:
-            request = Request(request)
-            
-        response = Response()
-        response.append(self._slowapi_handle_request(self.slowapi_delete_handlers, request))
-        for app in self.slowapi_composite_apps:
-            response.append(app.slowapi_delete(request))
+    def slowapi_prepend(self, app):
+        if not hasattr(self, 'slowapi_handlers'):
+            # in case the __init__() method is not called by user subclass
+            self.__init__()
+        self.slowapi_prepended_apps.insert(0, app)
 
-        return response
+
+    def slowapi_append(self, app):
+        if not hasattr(self, 'slowapi_handlers'):
+            # in case the __init__() method is not called by user subclass
+            self.__init__()
+        self.slowapi_appended_apps.append((app))
+
+
+    def slowapi_apps(self):
+        for app in self.slowapi_prepended_apps:
+            yield app
+        for app in self.slowapi_appended_apps:
+            yield app
 
 
     def __call__(self, environ, start_response):
         """WSGI interface
         Args: see the WSGI specification
         """
-        path = environ.get('PATH_INFO', '/')
-        query = environ.get('QUERY_STRING', '')
+        url = wsgiref.util.request_uri(environ)
         method = environ.get('REQUEST_METHOD', 'GET')
-        content_length = environ.get('CONTENT_LENGTH', '')
-        url = path + ('?' + query if len(query) > 0 else '')
 
-        if method == 'GET':
-            response = self.slowapi_get(url)
-            
-        elif method == 'POST':
+        body = None
+        if method == 'POST':
             try:
-                content_length = int(content_length)
+                content_length = int(environ.get('CONTENT_LENGTH', ''))
             except:
                 logging.error(f'WSGI_POST: bad content length: {content_length}')
                 start_response('400 Bad Request', [])
@@ -290,24 +255,14 @@ class App:
                 logging.error(f'WSGI_POST: content length too large: {content_length}')
                 start_response('507 Insufficient Storage', [])
                 return [ b'' ]
-            request.body = environ['wsgi.input'].read(content_length)
-            response = self.slowapi_post(request)
-        
-        elif method == 'DELETE':
-            response = self.slowapi_delete(request)
+            if content_length > 0:
+                body = environ['wsgi.input'].read(content_length)
             
-        else:
-            start_response('500 Internal Server Error', [])
-            return [ b'' ]
-
+        response = self.slowapi(Request(url, method=method, body=body))
     
-        if response is None:
-            start_response('404 Not Found', [])
-            return [ b'' ]
-
         start_response(response.get_status(), response.get_headers())
         return [ response.get_content() ]
-
+    
 
     def run(self, **kwargs):
         kwargs['port'] = kwargs.get('port', 8000)

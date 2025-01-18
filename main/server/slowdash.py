@@ -44,21 +44,21 @@ class App(slowapi.App):
             sys.path.insert(1, self.project.project_dir)
             sys.path.insert(1, os.path.join(self.project.project_dir, 'config'))
             
-        # API Components: see slowapi.Api.slowapi_include() for the mechanism
-        self.slowapi_include(ConsoleComponent(self, self.project))   # this must be the first
-        self.slowapi_include(ConfigComponent(self, self.project))
-        self.slowapi_include(DataSourceComponent(self, self.project))
-        self.slowapi_include(ExportComponent(self, self.project))
-        self.slowapi_include(UserModuleComponent(self, self.project))
-        self.slowapi_include(TaskModuleComponent(self, self.project))
-        self.slowapi_include(MiscApiComponent(self, self.project))
+        # API Components: see slowapi.Api.slowapi_append() for the mechanism
+        self.slowapi_append(ConsoleComponent(self, self.project))   # this must be the first
+        self.slowapi_append(ConfigComponent(self, self.project))
+        self.slowapi_append(DataSourceComponent(self, self.project))
+        self.slowapi_append(ExportComponent(self, self.project))
+        self.slowapi_append(UserModuleComponent(self, self.project))
+        self.slowapi_append(TaskModuleComponent(self, self.project))
+        self.slowapi_append(MiscApiComponent(self, self.project))
 
         
     def terminate(self):
         """graceful terminate
           - used by components that have a thread (usermodule/taskmodule), to send a stop request etc.
         """
-        for component in reversed(self.slowapi_included()):
+        for component in reversed([app for app in self.slowapi_apps()]):
             component.terminate()
 
 
@@ -126,7 +126,7 @@ if __name__ == '__main__':
     if args.port <= 0:
         # command-line mode
         json_opts = { 'indent': args.indent }
-        response = app.slowapi_get(args.COMMAND)
+        response = app.slowapi(args.COMMAND)
         sys.stdout.write(response.get_content(json_opts).decode())
         sys.stdout.write('\n')
         
