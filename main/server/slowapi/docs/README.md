@@ -4,7 +4,7 @@ SlowAPI is a Web-server microframework. Like FastAPI (or Flask), URLs are parsed
 
 
 ## Dependencies
-- Python >=3.8
+- Python >=3.9
 
 
 ## Examples

@@ -1,9 +1,9 @@
 # Created by Sanshiro Enomoto on 10 January 2025 #
 
 
-import typing, inspect, copy, logging
+import sys, typing, inspect, copy, logging
 from urllib.parse import urlparse, parse_qsl, unquote
-import wsgiref
+import wsgiref.util
 
 from .model import JSON, DictJSON
 from .request import Request
@@ -249,6 +249,21 @@ class App:
         url = wsgiref.util.request_uri(environ)
         method = environ.get('REQUEST_METHOD', 'GET')
 
+        headers = {
+            'Content-Type': environ.get('CONTENT_TYPE', None),
+            'Content-Length': environ.get('CONTENT_LENGTH', None),
+            'Authorization': environ.get('HTTP_AUTHORIZATION', None),
+            'Host': environ.get('HTTP_HOST', None),
+            'User-Agent': environ.get('HTTP_USER_AGENT', None),
+            'Accept': environ.get('HTTP_ACCEPT', None),
+            'Referer': environ.get('HTTP_REFERER', None),
+            'X-Forwarded-For': environ.get('HTTP_X_FORWARDED_FOR', None),
+            'X-Forwarded-Proto': environ.get('HTTP_X_FORWARDED_PROT', None),
+            'Cookie': environ.get('HTTP_COOKIE', None),
+            'Cache-Control': environ.get('HTTP_CACHE_CONTROL', None),
+            'If-Modified-Since': environ.get('HTTP_IF_MODIFIED_SINCE', None),
+        }
+        
         body = None
         if method == 'POST':
             try:
@@ -264,14 +279,11 @@ class App:
             if content_length > 0:
                 body = environ['wsgi.input'].read(content_length)
             
-        response = self.slowapi(Request(url, method=method, body=body))
+        response = self.slowapi(Request(url, method=method, headers=headers, body=body))
     
         start_response(response.get_status(), response.get_headers())
         return [ response.get_content() ]
     
 
-    def run(self, **kwargs):
-        kwargs['port'] = kwargs.get('port', 8000)
-        kwargs['api_path'] = kwargs.get('api_path', None)
-        kwargs['webfile_dir'] = kwargs.get('webfile_dir', None)
-        run_server(self, **kwargs)
+    def run(self, port=8000):
+        run_server(self, port)

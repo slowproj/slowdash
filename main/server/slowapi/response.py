@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 10 January 2025 #
 
 
-import copy, json, logging
+import sys, os, copy, json, logging
 from decimal import Decimal
 
 
@@ -148,4 +148,65 @@ class Response:
         if self.get_status_code() >= 400:
             return self.get_status()
         else:
-            return self.get_content(json_kwargs={"indent":4}).decode()
+            try:
+                return self.get_content().decode()
+            except:
+                return '[Binary File]'
+
+
+
+class FileResponse(Response):
+    """SlowAPI Response that returns the content of a file
+    Note:
+      - Sanity checks must be made before using this.
+    """
+        
+    def __init__(self, filepath:str, *, content_type=None):
+        content_type, content = self.read_file(filepath, content_type)
+        if content is None:
+            super().__init__(400)
+        else:
+            super().__init__(200, content_type=content_type, content=content)
+
+
+    @staticmethod
+    def read_file(filepath, content_type):
+        if not os.path.isfile(filepath):
+            logging.warning(f'SlowAPI_FileResponse: not a file: {filepath}')
+            return None, None
+        if not os.access(filepath, os.R_OK):
+            logging.warning(f'SlowAPI_FileResponse: permission denied: {filepath}')
+            return None, None
+
+        content = None
+        try:
+            with open(filepath, 'rb') as f:
+                content = f.read()
+        except Exception as e:
+            logging.warning(f'SlowAPI_FileResponse: system error: {filepath}: {e}')
+            return None, None
+
+        if content_type is None:
+            ext = os.path.splitext(filepath)[1]
+            if ext == '.html':
+                content_type = 'text/html'
+            elif ext in ['.js', '.mjs']:
+                content_type = 'text/javascript'
+            elif ext == '.css':
+                content_type = 'text/css'
+            elif ext == 'json':
+                content_type = 'application/json'
+            elif ext == '.png':
+                content_type = 'image/png'
+            elif ext == '.svg':
+                content_type = 'image/svg+xml'
+            elif ext in ['.jpg', '.jpeg']:
+                content_type = 'image/jpeg'
+            elif ext == '.pdf':
+                content_type = 'application/pdf'
+            elif ext in ['.txt', '.py']:
+                content_type = 'text/plain'
+            else:
+                content_type = 'application/octet-stream'
+
+        return (content_type, content)

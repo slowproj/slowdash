@@ -128,20 +128,10 @@ class Project:
         auth_key = self.config.get('authentication', {}).get('key', None)
         if auth_key is None:
             self.auth_list = None
+        elif type(auth_key) != list:
+            self.auth_list = [ auth_key ]
         else:
-            self.auth_list = {}
-            
-            if type(auth_key) != list:
-                auth_entries = [ auth_key ]
-            else:
-                auth_entries = auth_key
-            for auth in auth_entries:
-                try:
-                    (user, key) = tuple(auth.split(':', 1))
-                except:
-                    logging.error('Bad authentication entry: %s' % auth)
-                    continue
-                self.auth_list[user] = key
+            self.auth_list = auth_key
 
                 
     def process_substitution(self, project_doc):

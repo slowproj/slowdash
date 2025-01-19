@@ -21,9 +21,14 @@ class MyApp(slowapi.App):
         return f"hello {name}"
 
 
-    @slowapi.get('/echo/{*}')     # extra path parameters
+    @slowapi.get('/echo/{*}')     # extra path parameters; a list-type arg receives the request path
     def echo(self, path:list):
         return path[1:]
+
+    
+    @slowapi.get('/headers')     # getting the entire Request
+    def header(self, request:slowapi.Request):
+        return { k:v for k,v in request.headers.items() if v is not None }
 
     
     @slowapi.post('/message')  # example for POST

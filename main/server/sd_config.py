@@ -59,28 +59,11 @@ class ConfigComponent(Component):
             logging.warning(f'GET config/file: {filename}: access denied')
             return slowapi.Response(404)
 
-        if ext == '.json':
-            content_type = 'application/json'
-        elif ext == '.yaml':
-            content_type = 'text/plain'
-        elif ext == '.svg':
-            content_type = 'image/svg+xml'
-        elif ext == '.png':
-            content_type = 'image/png'
-        elif ext in ['.jpg', '.jpeg']:
-            content_type = 'image/jpeg'
-        elif ext == '.html':
-            content_type = 'text/html'
-        elif ext == '.csv':
-            content_type = 'text/plain'
-        elif self.project.is_secure and (ext == '.py'):
-            content_type = 'text/plain'
-        elif is_secure and (ext == '.js'):
-            content_type = 'text/plain'
-        else:
-            return slowapi.Response(400)
-        
-        return slowapi.Response(content_type=content_type, content=open(filepath, 'rb').read())
+        if not self.project.is_secure:
+            if ext not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]:
+                return slowapi.Response(403)  # Forbidden
+                
+        return slowapi.FileResponse(filepath)
 
         
     @slowapi.get('/config/jsonfile/{filename}')
@@ -173,6 +156,9 @@ class ConfigComponent(Component):
         if filepath is None:
             logging.warning(f'DETETE config/file: {filename}: access denied')
             return slowapi.Response(404)  # Not Found
+        if not self.project.is_secure:
+            if ext not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]:
+                return slowapi.Response(403)  # Forbidden
         
         try:
             os.remove(filepath)
@@ -206,8 +192,9 @@ class ConfigComponent(Component):
                 'style': self.project.config.get('style', None),
             }
 
-            for components in self.app.slowapi_apps():
-                doc.update(components.public_config() or {})
+            for component in self.app.slowapi_apps():
+                if isinstance(component, Component):
+                    doc.update(component.public_config() or {})
             
         if (not with_list) or (self.project_dir is None):
             return doc

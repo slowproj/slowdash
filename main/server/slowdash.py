@@ -5,6 +5,8 @@
 
 import sys, os, logging
 import slowapi
+
+from sd_component import Component
 from sd_project import Project
 from sd_config import ConfigComponent
 from sd_console import ConsoleComponent
@@ -59,7 +61,8 @@ class App(slowapi.App):
           - used by components that have a thread (usermodule/taskmodule), to send a stop request etc.
         """
         for component in reversed([app for app in self.slowapi_apps()]):
-            component.terminate()
+            if isinstance(component, Component):
+                component.terminate()
 
 
 
@@ -132,12 +135,14 @@ if __name__ == '__main__':
         
     else:
         # web-server mode
-        app.run(
-            port = args.port,
-            api_path = 'api',
-            webfile_dir = os.path.join(os.path.dirname(os.path.abspath(os.path.join(__file__, os.pardir))), 'web'),
+        app.slowapi_prepend(slowapi.FileServer(
+            filedir = os.path.join(app.project.sys_dir, 'main', 'web'),
             index_file = 'slowhome.html' if app.project is not None else 'welcome.html',
-            auth_list = app.project.auth_list
-        )
+            basepath_exclude='/api',
+            drop_basepath=True
+        ))
+        if app.project.auth_list is not None:
+            app.slowapi_prepend(slowapi.BasicAuthentication(auth_list=app.project.auth_list))
+        app.run(port = args.port)
         
     app.terminate()

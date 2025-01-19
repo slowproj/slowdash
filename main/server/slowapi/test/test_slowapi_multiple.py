@@ -42,13 +42,12 @@ class MyApp(slowapi.App):
     
 app = MyApp()
 
+key = slowapi.BasicAuthentication.generate_key('slow', 'dash')
+#print(key)
+app.slowapi_prepend(slowapi.BasicAuthentication(auth_list=[key]))
 
 
 if __name__ == '__main__':
     print(app.slowapi('/hello'))
 
-    key = slowapi.BasicAuthentication.generate_key('slow', 'dash')
-    print(key)
-    app.slowapi_prepend(slowapi.BasicAuthentication(auth_list=[key]))
-    
     app.run()
