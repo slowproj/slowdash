@@ -93,7 +93,7 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--logging',
-        action='store', dest='loglevel', default='info', choices=['debug', 'info', 'warning', 'error'],
+        action='store', dest='loglevel', default='default', choices=['default', 'debug', 'info', 'warning', 'error'],
         help='logging level'
     )
     parser.add_argument(
@@ -107,16 +107,24 @@ if __name__ == '__main__':
         parser.print_help()
         sys.exit(-1)
 
-    loglevel = getattr(logging, args.loglevel.upper(), None)
+    loglevel_name = args.loglevel.upper()
+    if loglevel_name == 'DEFAULT':
+        if args.port <= 0:
+            loglevel = logging.WARNING
+        else:
+            loglevel = logging.INFO
+    else:
+        loglevel = getattr(logging, loglevel_name, None)
     if type(loglevel) != int:
-        loglevel = logging.INFO
+        loglevel = logging.WARNING
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
     logging.basicConfig(
         level=loglevel,
         format='%(asctime)s %(levelname)s: %(message)s', 
         datefmt='%y-%m-%d %H:%M:%S'
     )
-    logging.basicConfig(level=loglevel)
-        
+    
     app = App(
         project_dir = args.project_dir,
         project_file = args.project_file,
@@ -134,7 +142,7 @@ if __name__ == '__main__':
         sys.stdout.write('\n')
         
     else:
-        # web-server mode
+        # web-server mode: append FileServer and Authentication
         app.slowapi_prepend(slowapi.FileServer(
             filedir = os.path.join(app.project.sys_dir, 'main', 'web'),
             index_file = 'slowhome.html' if app.project is not None else 'welcome.html',
@@ -143,6 +151,7 @@ if __name__ == '__main__':
         ))
         if app.project.auth_list is not None:
             app.slowapi_prepend(slowapi.BasicAuthentication(auth_list=app.project.auth_list))
+            
         app.run(port = args.port)
         
     app.terminate()

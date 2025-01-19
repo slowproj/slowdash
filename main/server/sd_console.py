@@ -26,7 +26,7 @@ class ConsoleComponent(Component):
     def __del__(self):
         if self.console_stdin is not None:
             sys.stdin = sys.__stdin__
-            sys.stdout = self.__stdout__
+            sys.stdout = sys.__stdout__
             self.console_stdin.close()
             self.console_stdout.close()
 

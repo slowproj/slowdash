@@ -395,21 +395,21 @@ class UserModuleComponent(Component):
         if len(self.usermodule_list) == 0:
             return None
         
-        logging.info(f'UserModule Command: {doc}')
-
         # unlike GET, only one module can process to POST
         for module in self.usermodule_list:
             result = module.process_command(dict(doc))
-            if result is None:
-                continue
-            if type(result) is bool:
-                if result:
-                    return {'status': 'ok'}
-                else:
-                    return {'status': 'error'}
-            elif type(result) is int:
-                return slowapi.Response(result)
+            if result is not None:
+                logging.info(f'UserModule Command: {doc}')
+                break
+        else:
+            return None
+
+        if type(result) is bool:
+            if result:
+                return {'status': 'ok'}
             else:
-                return result
-        
-        return None
+                return {'status': 'error'}
+        elif type(result) is int:
+            return slowapi.Response(result)
+
+        return result

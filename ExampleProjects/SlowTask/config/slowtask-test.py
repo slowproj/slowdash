@@ -14,29 +14,25 @@ print("Random-Walk Device Loaded")
 
 ### Accepting Controls ###
 
-def set_V0(V0, **kwargs):
-    ramping = kwargs.get('ramping', 10)
+def set_V0(V0:float, ramping:float=10):
     ch0.ramping(ramping).set(V0)
 
-def set_V1(V1, **kwargs):
-    ramping = kwargs.get('ramping', 10)
+def set_V1(V1:float, ramping:float=10):
     ch1.ramping(ramping).set(V1)
 
-def set_V2(V2, **kwargs):
-    ramping = kwargs.get('ramping', 10)
+def set_V2(V2:float, ramping:float=10):
     ch2.ramping(ramping).set(V2)
 
-def set_V3(V3, **kwargs):
-    ramping = kwargs.get('ramping', 10)
+def set_V3(V3:float, ramping:float=10):
     ch3.ramping(ramping).set(V3)
 
-def set_all(**kwargs):
-    set_V0(**kwargs)
-    set_V1(**kwargs)
-    set_V2(**kwargs)
-    set_V3(**kwargs)
+def set_all(V0:float, V1:float, V2:float, V3:float, ramping:float):
+    set_V0(V0, ramping)
+    set_V1(V1, ramping)
+    set_V2(V2, ramping)
+    set_V3(V3, ramping)
 
-def stop(**kwargs):
+def stop():
     ch0.ramping().status().set(0)
     ch1.ramping().status().set(0)
     ch2.ramping().status().set(0)

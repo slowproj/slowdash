@@ -3,12 +3,11 @@
 
 import sys, typing, inspect, copy, logging
 from urllib.parse import urlparse, parse_qsl, unquote
-import wsgiref.util
 
 from .model import JSON, DictJSON
 from .request import Request
 from .response import Response
-from .server import run as run_server
+from .server import wsgi, run
 
 
 
@@ -51,8 +50,10 @@ class PathRule:
                 self.request_param = pname
             elif param.annotation is bytes:   # to store request body
                 self.bytes_body_param = pname
-            elif param.annotation in [JSON, DictJSON]:   # to decode request body as JSON
+            elif param.annotation is JSON:   # to decode request body as JSON
                 self.json_body_param = pname
+            elif param.annotation is DictJSON:   # to decode request body as dict in JSON
+                self.json_dict_body_param = pname
             elif param.annotation is list:  # to store URL path
                 self.path_param = pname
             elif param.annotation is dict:  # to store URL query
@@ -60,12 +61,6 @@ class PathRule:
             else:
                 self.param_attributes[pname] = param
 
-        logging.debug(f'PathRule {rule} --> {self.path}, {self.path_params}, {self.param_attributes}')
-            
-
-    def __str__(self):
-        return self.rule_str
-    
 
     def match(self, request:Request):
         # do not process aborted requests
@@ -120,12 +115,17 @@ class PathRule:
         if self.bytes_body_param is not None:
             kwargs[self.bytes_body_param] = request.body
         if self.json_body_param is not None:
-            Type = self.param_attributes[self.json_body_param].annotation
-            doc = Type(request.body)
+            doc = JSON(request.body)
             if doc.value() is None:
                 return None
             else:
                 kwargs[self.json_body_param] = doc
+        if self.json_dict_body_param is not None:
+            doc = DictJSON(request.body)
+            if doc.value() is None:
+                return None
+            else:
+                kwargs[self.json_dict_body_param] = doc
         if self.path_param is not None:
             kwargs[self.path_param] = copy.deepcopy(request.path)
         if self.query_param is not None:
@@ -185,6 +185,7 @@ class App:
         # Note that __init__() is called after all the decorators.
         for name, method in inspect.getmembers(type(self), predicate=inspect.isfunction):
             if hasattr(method, 'slowapi_path_rule'):
+                logging.debug(f'SlowAPI Binding: {method.slowapi_path_rule.method} {method.slowapi_path_rule.rule_str} -> {self.__class__.__name__}.{name}{inspect.signature(method)}')
                 self.slowapi_handlers.append(method)
 
         
@@ -243,47 +244,8 @@ class App:
 
 
     def __call__(self, environ, start_response):
-        """WSGI interface
-        Args: see the WSGI specification
-        """
-        url = wsgiref.util.request_uri(environ)
-        method = environ.get('REQUEST_METHOD', 'GET')
-
-        headers = {
-            'Content-Type': environ.get('CONTENT_TYPE', None),
-            'Content-Length': environ.get('CONTENT_LENGTH', None),
-            'Authorization': environ.get('HTTP_AUTHORIZATION', None),
-            'Host': environ.get('HTTP_HOST', None),
-            'User-Agent': environ.get('HTTP_USER_AGENT', None),
-            'Accept': environ.get('HTTP_ACCEPT', None),
-            'Referer': environ.get('HTTP_REFERER', None),
-            'X-Forwarded-For': environ.get('HTTP_X_FORWARDED_FOR', None),
-            'X-Forwarded-Proto': environ.get('HTTP_X_FORWARDED_PROT', None),
-            'Cookie': environ.get('HTTP_COOKIE', None),
-            'Cache-Control': environ.get('HTTP_CACHE_CONTROL', None),
-            'If-Modified-Since': environ.get('HTTP_IF_MODIFIED_SINCE', None),
-        }
-        
-        body = None
-        if method == 'POST':
-            try:
-                content_length = int(environ.get('CONTENT_LENGTH', ''))
-            except:
-                logging.error(f'WSGI_POST: bad content length: {content_length}')
-                start_response('400 Bad Request', [])
-                return [ b'' ]
-            if content_length > 1024*1024*1024:
-                logging.error(f'WSGI_POST: content length too large: {content_length}')
-                start_response('507 Insufficient Storage', [])
-                return [ b'' ]
-            if content_length > 0:
-                body = environ['wsgi.input'].read(content_length)
-            
-        response = self.slowapi(Request(url, method=method, headers=headers, body=body))
-    
-        start_response(response.get_status(), response.get_headers())
-        return [ response.get_content() ]
+        return wsgi(self, environ, start_response)
     
 
     def run(self, port=8000):
-        run_server(self, port)
+        run(self, port)

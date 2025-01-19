@@ -101,10 +101,6 @@ class FileServer(App):
 
         
     def slowapi(self, request:Request, body:bytes=None) -> Response:
-        # responds only to 'GET' requests
-        if request.method != 'GET':
-            return Response()
-            
         # sanity check
         path = []
         is_dirty = False
@@ -139,6 +135,10 @@ class FileServer(App):
                         # no match -> propagate
                         return Response()
 
+        # responds only to 'GET' requests
+        if request.method != 'GET':
+            return Response()
+            
         # matched
         if self.stop_request_propagation:
             request.abort()            
@@ -165,3 +165,4 @@ class FileServer(App):
         logging.debug(f'SlowAPI_FileServer: file request: {filepath}')
 
         return FileResponse(filepath)
+

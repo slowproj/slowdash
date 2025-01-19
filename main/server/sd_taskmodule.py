@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 24 May 2024 #
 
-import sys, os, time, glob, threading, logging
+import sys, os, time, glob, threading, inspect, logging
 
 import slowapi
 from sd_usermodule import UserModule
@@ -186,6 +186,8 @@ class TaskModule(UserModule):
     def process_command(self, params):
         result = self.process_task_command(params)
         if result is not None:
+            if result is not True:
+                logging.warning(f'Task Failed: {params}')
             return result
         
         if self.module is None or self.func_process_command is None:
@@ -198,6 +200,7 @@ class TaskModule(UserModule):
             return {'status': 'error', 'message': str(e) }
 
         if result is not None:
+            logging.info(f'Task: {params}')
             self.command_history.append((
                 time.time(),
                 '_process_command(%s)' % ','.join(['%s=%s' % (k,v) for k,v in params.items()])
@@ -206,11 +209,12 @@ class TaskModule(UserModule):
         return result
     
 
-    def process_task_command(self, params):
-        variable_name, function_name, kwargs = '', '', {}
+    def process_task_command(self, doc):
+        # parse the request
+        variable_name, function_name, params = '', '', {}
         is_await = False  # if True, wait for the command to complete before returning a response
         is_async = False  # if False, the command is rejected if another command is running
-        for key, value in params.items():
+        for key, value in doc.items():
             if len(key) > 2 and key.endswith('()'):
                 function_name = key[:-2]
                 if function_name.startswith('await '):
@@ -222,7 +226,7 @@ class TaskModule(UserModule):
             elif len(key) > 1 and key.startswith('@'):
                 variable_name = key[1:]
             else:
-                kwargs[key] = value
+                params[key] = value
 
         # direct writing to mapped variables
         variable_name = self.match_namespace(variable_name)
@@ -234,6 +238,7 @@ class TaskModule(UserModule):
                 var.set(value)
             except Exception as e:
                 return {'status': 'error', 'message': str(e) }
+            logging.info(f'Task: {variable_name}={repr(value)}')
             return True
 
         # function call
@@ -244,6 +249,32 @@ class TaskModule(UserModule):
         if func is None:
             return {'status': 'error', 'message': 'undefined function: %s' % function_name}
 
+        # paramater binding by names, including types and defaults
+        kwargs = {}
+        var_keyword_param = None
+        signature = inspect.signature(func)
+        for name, attr in signature.parameters.items():
+            if attr.kind == inspect.Parameter.VAR_KEYWORD:
+                var_keyword_param = name
+                continue
+            if name in params:
+                value = params[name]
+            elif attr.default is not inspect._empty:
+                value = attr.default
+            else:
+                logging.warn(f'Task: missing parameter: {name}')
+                return {'status': 'error', 'message': f'missing parameter: {name}'}
+            if attr.annotation in [ int, float, bool, str ]:
+                try:
+                    kwargs[name] = attr.annotation(value)
+                except Exception as e:
+                    logging.warn(f'Task: incompatible parameter value: {name}: {repr(value)}')
+                    return {'status': 'error', 'message': f'incompatible parameter value: {name}: {repr(value)}'}
+            else:
+                kwargs[name] = value
+        if var_keyword_param is not None:
+            kwargs[var_keyword_param] = { k:v for k,v in params.items() if k not in kwargs }
+        
         # task is single-threaded unless "async" is specified, except for loop()
         if not is_async and self.command_thread is not None:
             if self.command_thread.is_alive():
@@ -254,10 +285,7 @@ class TaskModule(UserModule):
             if not thread.is_alive():
                 thread.join()
                 self.async_command_thread_set.remove(thread)
-        
-        cmd = '%s.%s(%s)' % (self.name, function_name, ','.join(['%s=%s'%(key,value) for key,value in kwargs.items()]))
-        self.command_history.append((time.time(), cmd))
-        
+
         # "await" waits for the command to complete before returning a response
         if is_await:
             try:
@@ -272,7 +300,11 @@ class TaskModule(UserModule):
                 self.async_command_thread_set.add(this_thread)
             else:
                 self.command_thread = this_thread
-            
+        
+        cmd = f"{self.name}.{function_name}({','.join(['%s=%s'%(key,repr(value)) for key,value in kwargs.items()])})"
+        self.command_history.append((time.time(), cmd))
+        logging.info(f'Task: {cmd}')
+        
         return True
 
 
@@ -438,15 +470,17 @@ class TaskModuleComponent(Component):
         
     @slowapi.post('/control')
     def execute_command(self, doc:slowapi.DictJSON):
-        result = None
-        logging.info(f'Task Command: {doc}')
+        if len(self.taskmodule_list) == 0:
+            return None
         
         # unlike GET, only one module can process to POST
         for module in self.taskmodule_list:
             result = module.process_command(dict(doc))
             if result is not None:
                 break
-        
+        else:
+            return None
+
         if type(result) is bool:
             if result:
                 return {'status': 'ok'}
