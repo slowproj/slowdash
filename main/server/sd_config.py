@@ -90,7 +90,7 @@ class ConfigComponent(Component):
 
 
     @slowapi.post('/config/file/{filename}')
-    def post_file(self, filename: str, doc:bytes, overwrite:str='no'):
+    def post_file(self, filename: str, body:bytes, overwrite:str='no'):
         filepath, ext = self._get_filepath_ext(filename)
         if filepath is None:
             logging.warning(f'POST config/file: {filename}: access denied')
@@ -131,7 +131,7 @@ class ConfigComponent(Component):
             
         try:
             with open(filepath, "wb") as f:
-                f.write(doc)
+                f.write(body)
         except Exception as e:
             logging.error(f'unable to write file: {filepath}: %s' % str(e))
             return slowapi.Response(500)    # Internal Server Error
@@ -187,7 +187,7 @@ class ConfigComponent(Component):
                 'project': {
                     'name': self.project.config.get('name', 'Untitled Project'),
                     'title': self.project.config.get('title', ''),
-                    'is_secure': self.project.config.get('system', {}).get('is_secure', False)
+                    'is_secure': self.project.is_secure,
                 },
                 'style': self.project.config.get('style', None),
             }

@@ -187,7 +187,7 @@ class UserModule:
         if not self.user_thread.initialized_event.is_set():
             time.sleep(1)
             if not self.user_thread.initialized_event.is_set():
-                logging.warining('User/Task module not yet initialized')
+                logging.warning('User/Task module not yet initialized')
                 
         if self.func_halt is not None:
             try:
@@ -233,7 +233,7 @@ class UserModule:
         if not self.user_thread.initialized_event.is_set():
             time.sleep(1)
             if not self.user_thread.initialized_event.is_set():
-                logging.warining('User/Task module not yet initialized')
+                logging.warning('User/Task module not yet initialized')
                 
         try:
             return self.func_get_channels()
@@ -249,7 +249,7 @@ class UserModule:
         if not self.user_thread.initialized_event.is_set():
             time.sleep(1)
             if not self.user_thread.initialized_event.is_set():
-                logging.warining('User/Task module not yet initialized')
+                logging.warning('User/Task module not yet initialized')
                 
         try:
             return self.func_get_data(channel)
@@ -265,7 +265,7 @@ class UserModule:
         if not self.user_thread.initialized_event.is_set():
             time.sleep(1)
             if not self.user_thread.initialized_event.is_set():
-                logging.warining('User/Task module not yet initialized')
+                logging.warning('User/Task module not yet initialized')
                 
         try:
             result = self.func_process_command(params)
@@ -285,11 +285,16 @@ class UserModule:
     def handle_error(self, message):
         if self.error is None:
             self.error = message
+
+            # print() for web console
             logging.error(message)
-            logging.error(traceback.format_exc())
-            # for web console
             print(message)
-            print(traceback.format_exc())
+
+            if sys.exc_info()[0] is not None:
+                tb = traceback.format_exc()
+                if tb is not None and len(tb.strip()) > 0:
+                    logging.info(tb)
+                    print(tb)
     
         
     def clear_error(self):

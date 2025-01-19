@@ -45,14 +45,14 @@ def wsgi(app, environ, start_response):
             return [ b'' ]
         if content_length > 0:
             body = environ['wsgi.input'].read(content_length)
+        else:
+            body = b''
 
     logging.debug(f'{method}: {url}')
     response = app.slowapi(Request(url, method=method, headers=headers, body=body))
     
     start_response(response.get_status(), response.get_headers())
     return [ response.get_content() ]
-
-
 
 
 

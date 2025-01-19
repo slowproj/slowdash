@@ -10,4 +10,4 @@ slowdash_project:
     auto_load: true
 
   system:
-    our_security_is_perfect: false
+    our_security_is_perfect: true

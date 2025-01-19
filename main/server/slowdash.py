@@ -121,7 +121,7 @@ if __name__ == '__main__':
         logging.root.removeHandler(handler)
     logging.basicConfig(
         level=loglevel,
-        format='%(asctime)s %(levelname)s: %(message)s', 
+        format='%(asctime)s %(levelname)s: %(filename)s %(funcName)s():   %(message)s', 
         datefmt='%y-%m-%d %H:%M:%S'
     )
     

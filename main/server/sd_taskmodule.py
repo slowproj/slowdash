@@ -65,7 +65,7 @@ class TaskModule(UserModule):
         if self.user_thread and not self.user_thread.initialized_event.is_set():
             time.sleep(1)
             if not self.user_thread.initialized_event.is_set():
-                logging.warining('User/Task module not yet initialized')
+                logging.warning('User/Task module not yet initialized')
                 
         if self.control_system is not None:
             logging.debug('calling ControlSystem.stop() in Task-Module "%s"' % self.name)
