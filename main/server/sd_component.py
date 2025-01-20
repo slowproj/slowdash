@@ -87,7 +87,7 @@ class PluginComponent(Component):
         
 
     def terminate(self):
-        for plugin in self.slowapi_apps():
+        for plugin in self.slowapi:
             plugin.terminate()
 
     
@@ -96,7 +96,7 @@ class PluginComponent(Component):
         """
 
         plugins = {}
-        for plugin in self.slowapi_apps():
+        for plugin in self.slowapi:
             name = plugin.plugin_type
             if name in plugins:
                 # multiple plugins of the same type -> array
@@ -135,7 +135,7 @@ class PluginComponent(Component):
             plugin = self._load_plugin_module(plugin_name, class_name, params=params)
             if plugin is not None:
                 plugin.plugin_type = plugin.class_name[len(self.class_prefix)+1:]
-                self.slowapi_append(plugin)
+                self.slowapi.include(plugin)
                     
 
     def _load_plugin_module(self, plugin_name, class_name, params):

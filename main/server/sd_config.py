@@ -192,7 +192,7 @@ class ConfigComponent(Component):
                 'style': self.project.config.get('style', None),
             }
 
-            for component in self.app.slowapi_apps():
+            for component in self.app.slowapi:
                 if isinstance(component, Component):
                     doc.update(component.public_config() or {})
             

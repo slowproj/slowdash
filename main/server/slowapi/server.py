@@ -8,6 +8,9 @@ from wsgiref.simple_server import make_server, WSGIRequestHandler
 from .request import Request
 
 
+def signal_handler(signum, frame):
+    raise KeyboardInterrupt
+
 
 def wsgi(app, environ, start_response):
     """WSGI interface
@@ -56,16 +59,11 @@ def wsgi(app, environ, start_response):
 
 
 
-class RequestHandler(WSGIRequestHandler):
-    def log_message(self, fmt, *args):
-        pass
+def serve_wsgi(app, port):
+    class RequestHandler(WSGIRequestHandler):
+        def log_message(self, fmt, *args):
+            pass
 
-
-def signal_handler(signum, frame):
-    raise KeyboardInterrupt
-
-    
-def run(app, port):
     sys.stderr.write('Listening at port %d\n' % port)
 
     try:

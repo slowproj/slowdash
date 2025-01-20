@@ -9,7 +9,7 @@ sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), os.p
 import slowapi
 
 
-class MyApp(slowapi.App):
+class MyApp:
         
     @slowapi.get('/')  # example for the simplest GET
     def home(self):
@@ -58,7 +58,7 @@ class MyApp(slowapi.App):
         return { "decimal": decimal.Decimal(num)/decimal.Decimal(den), "float": num/den }
 
 
-app = MyApp()
+app = slowapi.App(MyApp())
 
 '''
 to run the app as a WSGI server, run:

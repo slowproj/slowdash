@@ -7,8 +7,6 @@ from urllib.parse import urlparse, parse_qsl, unquote
 from .model import JSON, DictJSON
 from .request import Request
 from .response import Response
-from .server import wsgi, run
-
 
 
 class PathRule:
@@ -68,7 +66,7 @@ class PathRule:
             return None
         
         # method match
-        if request.method != self.method:
+        if (request.method != self.method) and (self.method != '*'):
             return None
         
         # length match
@@ -174,25 +172,36 @@ def delete(path_rule:str, status_code:int=200):
     return wrapper
 
     
+def route(path_rule:str, status_code:int=200):
+    """decorator to make a request handler (method of a subclass of App) for all request methods
+    Args:
+      - path_rule: path pattern to match
+      - status_code: default status code for success
+    """
+    def wrapper(func):
+        if not hasattr(func, 'slowapi_path_rule'):
+            func.slowapi_path_rule = PathRule(path_rule, '*', inspect.signature(func), status_code=status_code)
+        return func
+    return wrapper
 
-class App:
-    def __init__(self):
-        self.slowapi_handlers = []
-        self.slowapi_prepended_apps = []
-        self.slowapi_appended_apps = []
+
+
+class Router:
+    def __init__(self, app):
+        self.app = app
+        self.handlers = []
+        self.subapps = []
+        self.middlewares = []
 
         # Binding URL handlers to the PathRule attached by decorators (@get(PATH) etc).
         # Note that __init__() is called after all the decorators.
-        for name, method in inspect.getmembers(type(self), predicate=inspect.isfunction):
+        for name, method in inspect.getmembers(type(self.app), predicate=inspect.isfunction):
             if hasattr(method, 'slowapi_path_rule'):
-                logging.debug(f'SlowAPI Binding: {method.slowapi_path_rule.method} {method.slowapi_path_rule.rule_str} -> {self.__class__.__name__}.{name}{inspect.signature(method)}')
-                self.slowapi_handlers.append(method)
+                logging.debug(f'SlowAPI Binding: {method.slowapi_path_rule.method} {method.slowapi_path_rule.rule_str} -> {self.app.__class__.__name__}.{name}{inspect.signature(method)}')
+                self.handlers.append(method)
 
         
-    def slowapi(self, request:Request, body:bytes=None) -> Response:
-        if not hasattr(self, 'slowapi_handlers'):
-            # in case the __init__() method is not called by user subclass
-            self.__init__()
+    def dispatch(self, request:Request, body:bytes=None) -> Response:
         if type(request) is str:
             if body is None:
                 request = Request(request, method='GET')
@@ -201,19 +210,29 @@ class App:
 
         # execute handlers from top to bottom, and store the responses in a list
         response_list = [ Response() ]
-        for app in self.slowapi_prepended_apps:
-            response_list.append(app.slowapi(request))
-        for handler in self.slowapi_handlers:
+        for subapp in self.middlewares:
+            response_list.append(subapp.slowapi.dispatch(request))
+        for handler in self.handlers:
             args = handler.slowapi_path_rule.match(request)
             if args is not None:
-                response = handler(self, **args)
+                response = handler(self.app, **args)
                 if not isinstance(response, Response):
                     status_code = handler.slowapi_path_rule.status_code
                     response = Response(status_code, content=response)
+                logging.debug(f'{self.app.__class__.__name__}: {str(request)[:100]} -> Status {response.get_status_code()}: {str(response)[:100]}')
                 response_list.append(response)
-        for app in self.slowapi_appended_apps:
-            response_list.append(app.slowapi(request))
+        for subapp in self.subapps:
+            response_list.append(subapp.slowapi.dispatch(request))
 
+        return self.merge_responses(response_list)
+            
+            
+    def merge_responses(self, response_list):
+        """Response Reducer: this method could be replaced by custom Apps
+        """
+        if len(response_list) == 0:
+            return Response(404)
+        
         # merge responses from bottom to top
         while len(response_list) > 1:
             response_list[-2].merge_response(response_list[-1])
@@ -222,30 +241,24 @@ class App:
         return response_list[0]
 
 
-    def slowapi_prepend(self, app):
-        if not hasattr(self, 'slowapi_handlers'):
+    def include(self, app):
+        if not hasattr(app, 'slowapi'):
             # in case the __init__() method is not called by user subclass
-            self.__init__()
-        self.slowapi_prepended_apps.insert(0, app)
+            app.slowapi = Router(app)
+        self.subapps.append((app))
 
 
-    def slowapi_append(self, app):
-        if not hasattr(self, 'slowapi_handlers'):
+    def add_middleware(self, app):
+        if not hasattr(app, 'slowapi'):
             # in case the __init__() method is not called by user subclass
-            self.__init__()
-        self.slowapi_appended_apps.append((app))
+            app.slowapi = Router(app)
+        self.middlewares.append(app)
 
 
-    def slowapi_apps(self):
-        for app in self.slowapi_prepended_apps:
-            yield app
-        for app in self.slowapi_appended_apps:
-            yield app
+    def __call__(self, request:Request, body:bytes=None) -> Response:
+        return self.dispatch(request, body)
 
-
-    def __call__(self, environ, start_response):
-        return wsgi(self, environ, start_response)
     
-
-    def run(self, port=8000):
-        run(self, port)
+    def __iter__(self):
+        for app in self.subapps:
+            yield app

@@ -16,7 +16,6 @@ class Request:
         u = urlparse(self.url)
         self.path = [ unquote(p) for p in u.path.split('/') ]
         self.query = { unquote(key): unquote(value) for key, value in parse_qsl(u.query) }
-        self.fragment = u.fragment
         
         while self.path.count(''):
             self.path.remove('')
@@ -24,3 +23,7 @@ class Request:
 
     def abort(self):
         self.aborted = True
+
+
+    def __str__(self):
+        return f"{self.method} /{'/'.join(self.path)}{'?' if len(self.query)>0 else ''}{'&'.join(['%s=%s'%(k,v) for k,v in self.query.items()])}"

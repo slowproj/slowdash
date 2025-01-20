@@ -2,13 +2,14 @@
 
 
 import sys, os, base64, logging
-from slowapi import App, Request, Response, FileResponse
+
+from .request import Request
+from .response import Response, FileResponse
+from .router import route
 
 
-class BasicAuthentication(App):
+class BasicAuthentication():
     def __init__(self, realm='SlowAPI', auth_list=[]):
-        super().__init__()
-        
         self.realm = realm
 
         self.auth_list = {}
@@ -36,7 +37,8 @@ class BasicAuthentication(App):
         return response
     
         
-    def slowapi(self, request:Request, body:bytes=None) -> Response:
+    @route('/{*}')
+    def dispatch(self, request:Request, body:bytes=None) -> Response:
         if self.auth_list is None:
             return Response()
 
@@ -67,40 +69,42 @@ class BasicAuthentication(App):
         
 
 
-
-class FileServer(App):
-    def __init__(self, filedir, *, basepath="", basepath_exclude=None, ext_allow=None, ext_deny=None, drop_basepath=False, index_file=None):
+class FileServer():
+    def __init__(self, filedir, *, prefix="", index_file=None, exclude=None, drop_exclude_prefix=False, ext_allow=None, ext_deny=None):
         """File Server App (Middleware)
         Args:
           - filedir (str): path to a filesystem directory
-          - basepath (str): URL path to bind this app (e.g., "/webfile")
-          - basepath_exclude (str): URL path not to use (e.g., basepath="/", basepath_exclude="/api")
+          - prefix (str): URL path to bind this app (e.g., "/webfile")
+          - index_file (str): index file when the path is empty (i.e., '/')
+          - exclude (str): URL path not to be handled
+            (e.g., prefix="/app", exclude="/app/api")
+          - drop_exclude_prefix (bool): if True, the exclude is droppped from the path in the request
+            (e.g., for exclude '/api', the request path of '/api/userlist' becomes '/userlist')
           - ext_allow (list[str]): a list of file extensions to allow accessing
           - ext_deny (list[str]): a list of file extensions not to allow accessing
-          - drop_basepath (bool): if True, the basepath is droppped from the path in the request
         Note:
           - file/dir names are restricted to:
             - start with an alphabet or digit
             - consist of only alphabets, digits, and selected special characters (_, -, +, ., =, ',', ':')
         """
-        super().__init__()
 
         self.filedir = filedir
-        self.basepath = None
+        self.prefix = None
         self.index_file = index_file
-        self.basepath_exclude = None
+        self.exclude = None
         self.ext_allow = ext_allow
         self.ext_deny = ext_deny
-        self.drop_basepath = drop_basepath
-        self.stop_request_propagation = False
+        self.drop_exclude_prefix = drop_exclude_prefix
+        self.stop_request_propagation = True
 
-        if basepath is not None:
-            self.basepath = [ p for p in basepath.split('/') if len(p) > 0 ]
-        if basepath_exclude is not None:
-            self.basepath_exclude = [ p for p in basepath_exclude.split('/') if len(p) > 0 ]
+        if prefix is not None:
+            self.prefix = [ p for p in prefix.split('/') if len(p) > 0 ]
+        if exclude is not None:
+            self.exclude = [ p for p in exclude.split('/') if len(p) > 0 ]
 
-        
-    def slowapi(self, request:Request, body:bytes=None) -> Response:
+
+    @route('/{*}')
+    def dispatch(self, request:Request, body:bytes=None) -> Response:
         # sanity check
         path = []
         is_dirty = False
@@ -113,39 +117,42 @@ class FileServer(App):
                 is_dirty = True
             path.append(p)
                 
-        # exclude path match
-        if self.basepath_exclude is not None:
-            if len(path) >= len(self.basepath_exclude):
-                for i,p in enumerate(self.basepath_exclude):
+        # exclude-path match
+        if self.exclude is not None:
+            if len(path) >= len(self.exclude):
+                for i,p in enumerate(self.exclude):
                     if path[i] != p:
                         break
                 else:
-                    # match to exclusion                    
-                    request.path = path[len(self.basepath_exclude):]
+                    # match to exclusion
+                    if self.drop_exclude_prefix:
+                        request.path = path[len(self.exclude):]
                     return Response()  
 
+        # method match
+        # We apply URL rewriting even for non-GET methods (like POST api/command -> /command),
+        # so this method check must be after the exclusion match.
+        if request.method != 'GET':
+            return Response()  # propagate
+        
         # path match
-        if self.basepath is not None:
-            if len(path) < len(self.basepath):
+        if self.prefix is not None:
+            if len(path) < len(self.prefix):
                 # no match -> propagate
                 return Response()
             else:
-                for i,p in enumerate(self.basepath):
+                for i,p in enumerate(self.prefix):
                     if path[i] != p:
                         # no match -> propagate
                         return Response()
+            path = path[len(self.prefix):]
 
-        # responds only to 'GET' requests
-        if request.method != 'GET':
-            return Response()
-            
-        # matched
+        # matched -> my responsibility (can return an error status) #
+        
         if self.stop_request_propagation:
             request.abort()            
         if is_dirty:
             return Response(403)  # Forbidden
-
-        path = path[len(self.basepath):]
         if len(path) == 0:
             if self.index_file is not None:
                 path = [ self.index_file ]
@@ -161,7 +168,7 @@ class FileServer(App):
             if ext in self.ext_deny:
                 return Response(403)  # Forbidden
 
-        filepath = os.path.join(self.filedir, *(path[len(self.basepath):]))
+        filepath = os.path.join(self.filedir, *(path[len(self.prefix):]))
         logging.debug(f'SlowAPI_FileServer: file request: {filepath}')
 
         return FileResponse(filepath)

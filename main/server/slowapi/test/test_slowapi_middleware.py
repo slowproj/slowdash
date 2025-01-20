@@ -21,10 +21,13 @@ class MyApp(slowapi.App):
 
 
 app = MyApp()
-app.slowapi_prepend(slowapi.FileServer('../../../web', basepath_exclude='/api', drop_basepath=True, index_file="welcome.html"))
 
 key = slowapi.BasicAuthentication.generate_key('slow', 'dash')
-#app.slowapi_prepend(slowapi.BasicAuthentication(auth_list=[key]))
+#app.slowapi.add_middleware(slowapi.BasicAuthentication(auth_list=[key]))
+
+app.slowapi.add_middleware(
+    slowapi.FileServer('../../../web', exclude='/api', drop_exclude_prefix=True, index_file="welcome.html")
+)
 
 
 if __name__ == '__main__':

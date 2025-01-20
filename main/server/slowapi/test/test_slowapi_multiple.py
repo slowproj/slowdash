@@ -9,19 +9,19 @@ sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), os.p
 import slowapi
 
 
-class Peach(slowapi.App):
+class Peach:
     @slowapi.get('/hello')
     def hello(self):
         return ['I am a peach']
 
     
-class Orange(slowapi.App):        
+class Orange:
     @slowapi.get('/hello')
     def hello(self):
         return ['I am an orange']
 
     
-class AbortHello(slowapi.App):        
+class AbortHello:
     @slowapi.get('/hello')
     def hello(self, request:slowapi.Request):
         request.abort()
@@ -30,21 +30,16 @@ class AbortHello(slowapi.App):
 class MyApp(slowapi.App):
     def __init__(self):
         super().__init__()
-        self.slowapi_append(Peach())
-        #self.slowapi_append(AbortHello())
-        self.slowapi_append(Orange())
+        self.slowapi.include(Peach())
+        #self.slowapi.include(AbortHello())
+        self.slowapi.include(Orange())
 
     @slowapi.get('/hello')
     def hello(self):
         return ['Hello.']
 
-
     
 app = MyApp()
-
-key = slowapi.BasicAuthentication.generate_key('slow', 'dash')
-#print(key)
-app.slowapi_prepend(slowapi.BasicAuthentication(auth_list=[key]))
 
 
 if __name__ == '__main__':

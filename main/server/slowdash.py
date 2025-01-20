@@ -47,20 +47,20 @@ class App(slowapi.App):
             sys.path.insert(1, os.path.join(self.project.project_dir, 'config'))
             
         # API Components: see slowapi.Api.slowapi_append() for the mechanism
-        self.slowapi_append(ConsoleComponent(self, self.project))   # this must be the first
-        self.slowapi_append(ConfigComponent(self, self.project))
-        self.slowapi_append(DataSourceComponent(self, self.project))
-        self.slowapi_append(ExportComponent(self, self.project))
-        self.slowapi_append(UserModuleComponent(self, self.project))
-        self.slowapi_append(TaskModuleComponent(self, self.project))
-        self.slowapi_append(MiscApiComponent(self, self.project))
+        self.slowapi.include(ConsoleComponent(self, self.project))   # this must be the first
+        self.slowapi.include(ConfigComponent(self, self.project))
+        self.slowapi.include(DataSourceComponent(self, self.project))
+        self.slowapi.include(ExportComponent(self, self.project))
+        self.slowapi.include(UserModuleComponent(self, self.project))
+        self.slowapi.include(TaskModuleComponent(self, self.project))
+        self.slowapi.include(MiscApiComponent(self, self.project))
 
         
     def terminate(self):
         """graceful terminate
           - used by components that have a thread (usermodule/taskmodule), to send a stop request etc.
         """
-        for component in reversed([app for app in self.slowapi_apps()]):
+        for component in reversed([ app for app in self.slowapi ]):
             if isinstance(component, Component):
                 component.terminate()
 
@@ -142,15 +142,15 @@ if __name__ == '__main__':
         sys.stdout.write('\n')
         
     else:
-        # web-server mode: append FileServer and Authentication
-        app.slowapi_prepend(slowapi.FileServer(
+        # web-server mode: append Authentication and FileServer
+        if app.project.auth_list is not None:
+            app.slowapi.add_middleware(slowapi.BasicAuthentication(auth_list=app.project.auth_list))
+        app.slowapi.add_middleware(slowapi.FileServer(
             filedir = os.path.join(app.project.sys_dir, 'main', 'web'),
             index_file = 'slowhome.html' if app.project is not None else 'welcome.html',
-            basepath_exclude='/api',
-            drop_basepath=True
+            exclude='/api',
+            drop_exclude_prefix=True
         ))
-        if app.project.auth_list is not None:
-            app.slowapi_prepend(slowapi.BasicAuthentication(auth_list=app.project.auth_list))
             
         app.run(port = args.port)
         

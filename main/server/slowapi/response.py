@@ -95,6 +95,8 @@ class Response:
                 self.content += '\r\n' + content
             else:
                 logging.error('SlowAPI: incompatible results cannot be combined (str)')
+                logging.error(f'  dest: {self.content}')
+                logging.error(f'  src: {content}')
             
         else:
             if self.content is None:
@@ -118,10 +120,15 @@ class Response:
             
         
     def get_headers(self):
-        if self.content_type is None:
-            return [ (k,v) for k,v in self.headers.items() ]
-        else:
-            return [ (k,v) for k,v in self.headers.items() ] + [ ('Content-Type',  self.content_type) ]
+        headers = [ (k,v) for k,v in self.headers.items() if k.upper() != 'CONTENT-TYPE' ]
+
+        if self.content_type is not None:
+            headers.append(('Content-Type',  self.content_type))
+            if type(self.content) is bytes:
+                if 'CONTENT_LENGTH' not in [ k.upper() for k in self.headers ]:
+                    headers.append(('Content-Length', str(len(self.content))))
+
+        return headers
             
         
     def get_content(self, json_kwargs={}) -> bytes:
@@ -137,7 +144,6 @@ class Response:
         else:
             kwargs = { 'default': self.json_defaults }
             kwargs.update(json_kwargs)
-
             try:
                 return json.dumps(self.content, **kwargs).encode()
             except:
@@ -151,7 +157,7 @@ class Response:
             try:
                 return self.get_content().decode()
             except:
-                return '[Binary File]'
+                return f'[Binary File ({self.get_headers()})]'
 
 
 
