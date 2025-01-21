@@ -21,5 +21,5 @@ services:
       - DB_URL=postgresql://slowdash:slowdash@pgsql_db:5432/SlowTestData
 
   testdata:
-    image: slowdash
+    image: slowproj/slowdash
     command: python /slowdash/utils/generate-testdata.py --db-url=postgresql://slowdash:slowdash@pgsql_db:5432/SlowTestData

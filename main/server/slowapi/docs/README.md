@@ -1,6 +1,6 @@
 # SlowAPI
 
-SlowAPI is a Web-server microframework. Like FastAPI (or Flask), URLs are parsed, parameters are extacted, and the requests are routed to user code. In contrast to FastAPI / Flask, requests are bound to class instance methods, not to functions. One HTTP request can be handled by multiple user handlers, and the responses are aggregated. This design is made for dynamic plug-in systems with the chain-of-responsibility scheme. SlowAPI implements WSGI.
+SlowAPI is a Web-server microframework in Python. Like FastAPI (or Flask), URLs are parsed, parameters are extacted, and the requests are routed to user code. Unlike FastAPI (or Flask), requests are bound to class instance methods, not to functions. One HTTP request can be handled by multiple user handlers, and the responses are aggregated. This design is made for dynamic plug-in systems with the chain-of-responsibility scheme. SlowAPI implements WSGI.
 
 
 ## Dependencies
@@ -13,14 +13,14 @@ SlowAPI is a Web-server microframework. Like FastAPI (or Flask), URLs are parsed
 ```python
 # testapp.py
 
-from slowapi import SlowAPI
+import slowapi
 
-class App(SlowAPI):
-    @SlowAPI.get('/'):
+class App(slowapi.App):
+    @slowapi.get('/'):
     def home(self):
         return 'say hello to "/hello"'
 
-    @SlowAPI.get('/hello'):
+    @slowapi.get('/hello'):
     def hello(self):
         return 'hello, how are you?'
 
@@ -52,10 +52,10 @@ gunicorn testapp:app
 
 ### GET with URL path parameters
 ```python
-from slowapi import SlowAPI
+import slowapi
 
-class App(SlowAPI):
-    @SlowAPI.get('/hello/{name}')
+class App(slowapi.App):
+    @slowapi.get('/hello/{name}')
     def hello(self, name:str):
         return f'hello, {name}'
 
@@ -74,10 +74,10 @@ app = App()
 
 ### GET with URL query parameters
 ```python
-from slowapi import SlowAPI
+import slowapi
 
-class App(SlowAPI):
-    @SlowAPI.get('/hello/{name}')
+class App(slowapi.App):
+    @slowapi.get('/hello/{name}')
     def hello(self, name:str, message:str='how are you', repeat:int=3):
         return f'hello, {name}.' + f' {message}' * repeat
 
@@ -87,26 +87,46 @@ app = App()
 
 ### Receiving the full path and/or query parameters
 ```python
-from slowapi import SlowAPI
+import slowapi
 
-class App(SlowAPI):
-    @SlowAPI.get('/echo')
+class App(slowapi.App):
+    @slowapi.get('/echo/{*}')
     def hello(self, path:list, query:dict):
         return f'path: {path}, query: {query}'
 
 app = App()
 ```
 
+- `{*}` matches any path elements.
 - A list of decoded URL path is set to the (last; should be only one) argument of a type `list`.
 - A dict of decoded URL query is set to the (last) argument of a type `dict`.
 
 
+### Receiving the entire request
+```python
+import slowapi
+
+class App(slowapi.App):
+    @slowapi.get('/{*}')
+    def hello(self, request:slowpi.Request):
+        return f'header: {request.headers}'
+
+app = App()
+```
+The `Request` object has the following attributes:
+- `method` (str): request method (`GET` etc.)
+- `path` (list[str]): URL path
+- `query` (dict[str,str]): URL query
+- `headers` (dict[str,str]): HTTP request header items
+- `body` (bytes): request body
+
+
 ### Simple POST
 ```python
-from slowapi import SlowAPI
+import slowapi
 
-class App(SlowAPI):
-    @SlowAPI.post('/hello/{name}')
+class App(slowapi.App):
+    @slowapi.post('/hello/{name}')
     def hello(self, name:str, message:bytes):
         return f'hello, {name}. You sent me "{message.decode()}"'
 
@@ -116,48 +136,60 @@ app = App()
 - The request body is set to the (last) argument of a type of `bytes`.
 
 
-### POST with JSON data
+### POST with JSON document body
+#### for dict data
 ```python
-from slowapi import SlowAPI, JSONDocument
+import slowapi
 
-class App(SlowAPI):
-    @SlowAPI.post('/hello/{name}')
-    def hello(self, name:str, doc:JSONDocument):
+class App(slowapi.App):
+    @slowapi.post('/hello/{name}')
+    def hello(self, name:str, doc:DictJSON):  # if body in not a dict in JSON, a response 400 (Bad Request) will be returned
         item = doc.get('item', 'nothing')
         return f'hello, {name}. You gave me {item}'
 
 app = App()
 ```
 
-- The request body is parsed as JSON and the value is set to the (last) argument of a type `slowpy.JSONDocument`.
-- Use `JSONDocument.json()` to get a value of the native Python types (`dict`, `list`, `str`, ...).
+#### for any data in JSON
+```python
+import slowapi
+
+class App(slowapi.App):
+    @slowapi.post('/hello/{name}')
+    def hello(self, name:str, doc:JSON):
+        item = doc.get('item', 'nothing')   # this will make a runtime error if the body is not dict
+        return f'hello, {name}. You gave me {item}'
+
+app = App()
+```
+
+- The request body is parsed as JSON and the value is set to the (last) argument of a type `slowpy.JSON` or `slowpy.DictJSON`.
+- Use `JSON.value()` to get a value of the native Python types (`dict`, `list`, `str`, ...).
 - Use `dict(doc)` or `list(doc)` to convert to native Python dict or list.
-- If the content is dict (or list), most common dict (list) methods are available in JSONDocument:
+- If the content is dict (or list), most common dict (list) methods are available in JSON-type data:
   - For dict: `doc[key]`, `key in doc`, `for key in doc:`, `doc.get(value, default)`, `doc.items()`, ...
   - For list: `doc[index]`,`len(doc)`, `for v in doc:`, ...
 
 
 ### Multiple Handlers
 ```python
-from slowapi import SlowAPI
+import slowapi
 
-class Peach(SlowAPI):
-    @SlowAPI.get('/hello')
+class Fruit():
+    def __init__(self, name:str):
+        self.name = name
+
+    @slowapi.get('/hello')
     def hello(self):
-        return ['I am a peach']
+        return [f'I am a {sefl.name}']
 
-class Orange(SlowAPI):        
-    @SlowAPI.get('/hello')
-    def hello(self):
-        return ['I am an orange']
-
-class App(SlowAPI):
+class App(slowapi.App):
     def __init__(self):
         super().__init__()
-        self.include(Peach())
-        self.include(Orange())
+        self.include(Fruit('peach'))
+        self.include(Fruit('melon'))
 
-    @SlowAPI.get('/hello')
+    @slowapi.get('/hello')
     def hello(self):
         return ['Hello.']
 
@@ -169,7 +201,7 @@ curl http://localhost:8000/hello | jq
 [
   "Hello.",
   "I am a peach",
-  "I am an orange"
+  "I am a melon"
 ]
 ```
 
@@ -180,6 +212,36 @@ curl http://localhost:8000/hello | jq
 - If all the responses are `None`, a status of 404 (Not Found) is replied.
 - If one of the responses are error (code >= 400), an error is replied without content; the largest status code is taken.
 
+The behavior is customizable by providing an useer response aggregator.
+
+
+### Middleware
+```python
+import slowapi
+
+class App(slowapi.App):
+    @slowapi.get('/hello'):
+    def hello(self):
+        return 'hello, how are you?'
+
+# test authentication username and password
+key = slowpy.BasicAuthentication.generate_key(username='api', password='slow')
+
+app = App()
+app.add_middleware(slowpi.BasicAuthentication(auth_list=[key]))
+```
+
+```bash
+curl http://localhost:8000/hello
+```
+(nothing will be shown as the access is denied; add `-v` option to see details)
+
+```bash
+curl http://api:slow@localhost:8000/hello
+```
+(this time a response (`hello, how are you?`) will be shown)
+
+As a SlowAPI app can already have mutiple handlers (sub-app) in a chain, there is no difference between a (sub)app and a middleware; if the (sub)app behaves like a middleware, such as modifying the requests for the subsequent (sub)apps and/or modifying the responses from the (sub)apps, it is a middleware. If a handler is added by `app.add_middleware(subapp)`, the `subapp` handlers are inserted before the `app` handlers, whereas `app.include(subapp)` appends `subapp` to `app`.
 
 ## TODOs
 
@@ -209,7 +271,7 @@ class TemplateResponse(FileResponse):
 
 ### File Server API
 ```python
-class FileServer(SlowAPI):
+class FileServer(slowapi.App):
     def __init__(self, html_dir, base_path=None, exclude_base_path=None):
     """
     Note:
@@ -218,7 +280,7 @@ class FileServer(SlowAPI):
     """
         ....
 
-    @SlowAPI.get('/'):
+    @slowapi.get('/'):
     def get_file(self, path:list):
         # sanity checks
         ....

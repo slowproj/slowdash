@@ -63,9 +63,9 @@ class BasicAuthentication():
 
 
     @staticmethod
-    def generate_key(user:str, word:str) -> str:
+    def generate_key(username:str, password:str) -> str:
         import bcrypt
-        return user + ':' + bcrypt.hashpw(word.encode(), bcrypt.gensalt(rounds=12, prefix=b"2a")).decode()
+        return username + ':' + bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12, prefix=b"2a")).decode()
         
 
 

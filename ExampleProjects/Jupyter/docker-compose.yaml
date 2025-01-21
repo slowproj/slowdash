@@ -14,7 +14,7 @@ services:
 
 
   slowdash:
-    image: slowdash
+    image: slowproj/slowdash
     volumes:
       - .:/project
     ports:

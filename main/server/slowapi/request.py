@@ -6,17 +6,15 @@ from urllib.parse import urlparse, parse_qsl, unquote
 
 class Request:
     def __init__(self, url, method="GET", *, headers={}, body=None):
-        self.url = url
         self.method = method.upper()
         self.headers = copy.deepcopy(headers)
         self.body = body
 
         self.aborted = False
 
-        u = urlparse(self.url)
+        u = urlparse(url)
         self.path = [ unquote(p) for p in u.path.split('/') ]
         self.query = { unquote(key): unquote(value) for key, value in parse_qsl(u.query) }
-        
         while self.path.count(''):
             self.path.remove('')
 

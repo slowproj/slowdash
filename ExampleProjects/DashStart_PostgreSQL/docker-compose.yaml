@@ -20,5 +20,5 @@ services:
       - SLOWDASH_INIT_TIMESERIES_SCHEMA=ts_data[channel]@timestamp(with time zone)=value
 
   testdata:
-    image: slowdash
+    image: slowproj/slowdash
     command: python /slowdash/utils/generate-testdata.py --db-url=postgresql://postgres:postgres@pgsql_db:5432/SlowTestData

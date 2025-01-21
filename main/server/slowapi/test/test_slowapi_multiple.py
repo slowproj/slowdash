@@ -9,18 +9,14 @@ sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), os.p
 import slowapi
 
 
-class Peach:
+class Fruit:
+    def __init__(self, name:str):
+        self.name = name
+        
     @slowapi.get('/hello')
     def hello(self):
-        return ['I am a peach']
+        return [f'I am a {self.name}']
 
-    
-class Orange:
-    @slowapi.get('/hello')
-    def hello(self):
-        return ['I am an orange']
-
-    
 class AbortHello:
     @slowapi.get('/hello')
     def hello(self, request:slowapi.Request):
@@ -30,9 +26,9 @@ class AbortHello:
 class MyApp(slowapi.App):
     def __init__(self):
         super().__init__()
-        self.slowapi.include(Peach())
+        self.slowapi.include(Fruit('peach'))
         #self.slowapi.include(AbortHello())
-        self.slowapi.include(Orange())
+        self.slowapi.include(Fruit('melon'))
 
     @slowapi.get('/hello')
     def hello(self):
