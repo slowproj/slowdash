@@ -18,7 +18,7 @@ import slowapi
 class App(slowapi.App):
     @slowapi.get('/'):
     def home(self):
-        return 'say hello to "/hello"'
+        return 'feel at home'
 
     @slowapi.get('/hello'):
     def say_hello(self):
@@ -52,13 +52,13 @@ gunicorn testapp:app
 
 
 #### Not inheriting from slowapi.App
-The base class, `slowapi.App`, has only the following attributes:
+The base class, `slowapi.App`, has the following only three attributes:
 - `slowapi`: SlowAPI connection point
 - `__call__(environ, start_response)`: WSGI entry point
 - `run()`: Execution start point
 
 Therefore the chance of name conflicts with user classes is minimal.
-However, it is also possible to make an user class independently from SlowAPI, and pass it to SlowAPI later:
+Nevertheless, it is also possible to make an user class independently from SlowAPI, and pass it to SlowAPI later:
 ```python
 import slowapi
 
@@ -73,7 +73,7 @@ if __name__ == '__main__'
     app.run()
 ```
 
-The SlowAPI decorators (such as `@slowpi.get()`) do not modify the function signature, and the decorated user methods can be used as they are defined in the user code. There is no added overhead with this.
+The SlowAPI decorators (such as `@slowapi.get()`) do not modify the function signature, and the decorated user methods can be used as they are defined in the user code. There is no added overhead with this.
 
 Once `app` is made, the rest is the same.
 
@@ -280,10 +280,10 @@ The `@route()` decorator can be used to handle all the request methods, not spec
 
 The middleware example below drops the path prefix of `/api` from all the requests:
 ```python
-import slowpy
+import slowapi
 
 class MyMiddleware_DropApiPrefix:
-    @slowpi.route('/{*}')
+    @slowapi.route('/{*}')
     def handle(request: Request):
         if len(request.path) > 0 and request.path[0] == 'api':
             request.path = request.path[1:]
@@ -301,8 +301,9 @@ A handler can make a user aggregator by returning an instance of a custom Respon
 In addition to that, an user app class can override a method to aggregate all the individual responses from all the handlers within the class. To do this, make a custom `Router` with an overridden `merge_responses()` method:
 
 ```python
-import slowpy
-class MyRouter(slowpi.Router):
+import slowapi
+
+class MyRouter(slowapi.Router):
     def merge_responses(responses: list[Response]) -> Response:
         response = Response()
         for r in responses:
@@ -321,4 +322,6 @@ Calling `super().__init__()` later is a little bit more efficient, as it does no
 
 
 ## TODOs
+- Async API
+- ASGI interface
 - File templates
