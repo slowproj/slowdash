@@ -116,7 +116,6 @@ class FileServer():
             if not p.replace('_','a').replace('-','a').replace('+','a').replace('.','a').replace('=','a').replace(',','a').replace(':','a').isalnum():
                 is_dirty = True
             path.append(p)
-                
         # exclude-path match
         if self.exclude is not None:
             if len(path) >= len(self.exclude):
@@ -168,7 +167,11 @@ class FileServer():
             if ext in self.ext_deny:
                 return Response(403)  # Forbidden
 
-        filepath = os.path.join(self.filedir, *(path[len(self.prefix):]))
+        filepath = os.path.join(*(path[len(self.prefix):]))
+        if len(os.path.splitdrive(filepath)[0]) > 0:  # Windows drive letter :-(
+            return Response(403)  # Forbidden
+                
+        filepath = os.path.join(self.filedir, filepath)
         logging.debug(f'SlowAPI_FileServer: file request: {filepath}')
 
         return FileResponse(filepath)

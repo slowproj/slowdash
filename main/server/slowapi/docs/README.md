@@ -1,6 +1,6 @@
 # SlowAPI
 
-SlowAPI is a Web-server micro-framework in Python. Like FastAPI (or Flask), URLs are parsed, parameters are extracted, and the requests are routed to user code. Unlike FastAPI (or Flask), requests are bound to methods of class instances, not only to functions or single instance of a class, while binding to functions like FastAPI/Flask is also supported. One HTTP request can be handled by multiple user handlers, such as multiple instances of an user class or mixed instances of various classes, and the responses are aggregated in customizable way. This design is made for dynamic plug-in systems with the chain-of-responsibility scheme. SlowAPI implements WSGI.
+SlowAPI is a Web-server micro-framework in Python. Like FastAPI (or Flask), URLs are parsed, parameters are extracted, and the requests are routed to user code. Unlike FastAPI (or Flask), requests are bound to methods of class instances, not only to functions or single instance of a class, while binding to functions like FastAPI/Flask is also supported. One HTTP request can be handled by multiple user handlers, such as multiple instances of an user class or mixed instances of various classes and functions, and the responses are aggregated in customizable way. This design is made for dynamic plug-in systems with the chain-of-responsibility scheme. SlowAPI implements WSGI.
 
 
 ## Dependencies
@@ -109,9 +109,9 @@ app = App()
 - Return value of a handler must be:
   - `str` for a `text/plain` reply
   - `list` or `dict` for an `application/json` reply
-  - `None` if the request is not applicable
+  - `slowapi.FileResponse` object for file fetching
   - `slowapi.Response` object for full flexibility
-  - (TODO: `slowapi.File` object; maybe with template substitutions)
+  - `None` if the request is not applicable
 
 
 ### GET with URL query parameters
@@ -133,7 +133,7 @@ import slowapi
 
 class App(slowapi.App):
     @slowapi.get('/echo/{*}')
-    def hello(self, path:list, query:dict):
+    def echo(self, path:list, query:dict):
         return f'path: {path}, query: {query}'
 
 app = App()
@@ -150,7 +150,7 @@ import slowapi
 
 class App(slowapi.App):
     @slowapi.get('/{*}')
-    def hello(self, request:slowapi.Request):
+    def header(self, request:slowapi.Request):
         return f'header: {request.headers}'
 
 app = App()
@@ -259,7 +259,9 @@ curl http://localhost:8000/hello | jq
 - If all the responses are `None`, a status of 404 (Not Found) is replied.
 - If one of the responses are error (code >= 400), an error is replied without content; the largest status code is taken.
 
-The behavior is customizable by providing an user response aggregator.
+The behavior is customizable by providing an user response aggregator, as explained below.
+
+Instances of `slowapi.SlowAPI` used to bind functions in the example above can also be included or include other sub-apps.
 
 
 ### Middleware
@@ -288,7 +290,9 @@ curl http://api:slow@localhost:8000/hello
 ```
 (this time a response (`hello, how are you?`) will be shown)
 
-As a SlowAPI app can already have multiple handlers (sub-app) in a chain, there is no difference between a (sub)app and a middleware; if the (sub)app behaves like a middleware, such as modifying the requests for the subsequent (sub)apps and/or modifying the responses from the (sub)apps, it is a middleware. If a (sub)app is added by `app.add_middleware(subapp)`, the `subapp` handlers are inserted before the `app` handlers, whereas `app.include(subapp)` appends `subapp` handlers to `app`.
+As a SlowAPI app can already have multiple handlers (sub-app) in a chain, there is no difference between a (sub)app and a middleware; if the (sub)app behaves like a middleware, such as modifying the requests for the subsequent (sub)apps and/or modifying the responses from the (sub)apps, it is a middleware. 
+If a (sub)app is added by `app.add_middleware(subapp)`, the `subapp` handlers are inserted before the `app` handlers, whereas `app.include(subapp)` appends `subapp` handlers to `app`. 
+Multiple middlewares can be appended, and they will be processed in the order of appending, before the main `app` handlers and sub-app handlers are called.
 
 The `@route()` decorator can be used to handle all the request methods, not specific to one such as `@get()`. The path rule of `/{*}` will capture all the URL. 
 
