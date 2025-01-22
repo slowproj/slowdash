@@ -33,5 +33,5 @@ app.slowapi.add_middleware(
 if __name__ == '__main__':
     print(app.slowapi('/Warning.png'))
     print(app.slowapi('/api'))
-    print(app.slowapi('/api/hello/you'))
+    print(app.slowapi('/api/hello/slowy'))
     app.run()

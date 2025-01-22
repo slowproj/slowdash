@@ -1,9 +1,8 @@
 # Created by Sanshiro Enomoto on 19 January 2025 #
 
-import logging
+import inspect, logging
 
-
-from .router import Router
+from .router import Router, PathRule
 from .server import wsgi, serve_wsgi
 
 
@@ -47,3 +46,76 @@ class App:
 class AsyncApp(App):
     # ASGI App: to be implemeted
     pass
+
+
+
+class SlowAPI(App):
+    """SlowAPI App that can assign URL endpoints to functions, instead of class methods
+    """
+    
+    class FunctionAdapter:
+        def __init__(self, func):
+            self.func = func
+        def __call__(self, *args, **kwargs):
+            return self.func(*args, **kwargs)
+
+        
+    def __init__(self):
+        super().__init__()
+        self.slowapi_function_handlers = []
+
+
+    def get(self, path_rule:str, status_code:int=200):
+        """decorator to make a GET-request handler (Python function)
+        Args:
+            - path_rule: path pattern to match
+            - status_code: default status code for success
+        """
+        def wrapper(func):
+            adapter = self.FunctionAdapter(func)
+            adapter.slowapi_path_rule = PathRule(path_rule, 'GET', inspect.signature(func), status_code=status_code)
+            self.slowapi.handlers.append(adapter)
+            return func
+        return wrapper
+
+    
+    def post(self, path_rule:str, status_code:int=200):
+        """decorator to make a POST-request handler (Python function)
+        Args:
+            - path_rule: path pattern to match
+            - status_code: default status code for success
+        """
+        def wrapper(func):
+            adapter = self.FunctionAdapter(func)
+            adapter.slowapi_path_rule = PathRule(path_rule, 'POST', inspect.signature(func), status_code=status_code)
+            self.slowapi.handlers.append(adapter)
+            return func
+        return wrapper
+
+    
+    def delete(self, path_rule:str, status_code:int=200):
+        """decorator to make a DELETE-request handler (Python function)
+        Args:
+            - path_rule: path pattern to match
+            - status_code: default status code for success
+        """
+        def wrapper(func):
+            adapter = self.FunctionAdapter(func)
+            adapter.slowapi_path_rule = PathRule(path_rule, 'DELETE', inspect.signature(func), status_code=status_code)
+            self.slowapi.handlers.append(adapter)
+            return func
+        return wrapper
+
+    
+    def route(self, path_rule:str, status_code:int=200):
+        """decorator to make a request handler (Python function) for all request methods
+        Args:
+            - path_rule: path pattern to match
+            - status_code: default status code for success
+        """
+        def wrapper(func):
+            adapter = self.FunctionAdapter(func)
+            adapter.slowapi_path_rule = PathRule(path_rule, '*', inspect.signature(func), status_code=status_code)
+            self.slowapi.handlers.append(adapter)
+            return func
+        return wrapper

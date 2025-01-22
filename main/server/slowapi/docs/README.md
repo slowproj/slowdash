@@ -1,6 +1,6 @@
 # SlowAPI
 
-SlowAPI is a Web-server micro-framework in Python. Like FastAPI (or Flask), URLs are parsed, parameters are extracted, and the requests are routed to user code. Unlike FastAPI (or Flask), requests are bound to class instance methods, not to functions. One HTTP request can be handled by multiple user handlers, and the responses are aggregated. This design is made for dynamic plug-in systems with the chain-of-responsibility scheme. SlowAPI implements WSGI.
+SlowAPI is a Web-server micro-framework in Python. Like FastAPI (or Flask), URLs are parsed, parameters are extracted, and the requests are routed to user code. Unlike FastAPI (or Flask), requests are bound to methods of class instances, not only to functions or single instance of a class, while binding to functions like FastAPI/Flask is also supported. One HTTP request can be handled by multiple user handlers, such as multiple instances of an user class or mixed instances of various classes, and the responses are aggregated in customizable way. This design is made for dynamic plug-in systems with the chain-of-responsibility scheme. SlowAPI implements WSGI.
 
 
 ## Dependencies
@@ -26,7 +26,7 @@ class App(slowapi.App):
 
 app = App()
 
-if __name__ == '__main__'
+if __name__ == '__main__':
     app.run()
 ```
 - Very similar to FastAPI, except that URLs are associated to class methods. Unlike FastAPI, the `app` instance is created after the binding is described. (Important for creating multiple handler instances.)
@@ -69,13 +69,27 @@ class MyApp:
 
 app = slowapi.App(MyApp())
 
-if __name__ == '__main__'
+if __name__ == '__main__':
     app.run()
 ```
 
-The SlowAPI decorators (such as `@slowapi.get()`) do not modify the function signature, and the decorated user methods can be used as they are defined in the user code. There is no added overhead with this.
+The SlowAPI decorators (such as `@slowapi.get()`) do not modify the function signature, and the decorated user methods can be used as they are defined in the user code. There is no additional overhead with this.
 
 Once `app` is made, the rest is the same.
+
+#### Binding to functions
+```python
+import slowapi
+
+app = slowapi.SlowAPI()
+
+@app.get('/hello'):
+def say_hello(self):
+    return 'hello, how are you?'
+
+if __name__ == '__main__':
+    app.run()
+```
 
 
 ### GET with URL path parameters

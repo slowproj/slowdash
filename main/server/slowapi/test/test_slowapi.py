@@ -70,9 +70,9 @@ if __name__ == '__main__':
     ### test responses ###
     print(app.slowapi('/'))
     print(app.slowapi('/hello'))
-    print(app.slowapi('/hello/SlowDash'))
+    print(app.slowapi('/hello/Slowy'))
     print(app.slowapi('/message?name=you', b"how are you doing?"))
-    print(app.slowapi('/echo/hello/SlowDash'))
+    print(app.slowapi('/echo/hello/Slowy'))
     print(app.slowapi('/home'))  # does not exist
     #print(app.slowapi_get('/source'))
     print(app.slowapi(slowapi.Request('/trash', method='delete')))
