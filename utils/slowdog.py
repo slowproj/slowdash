@@ -29,7 +29,7 @@ for arg in sys.argv[2:]:
     
 import urllib.request
 def is_alive():
-    url = f'http://localhost:{port}/ping'
+    url = f'http://localhost:{port}/api/ping'
     status = None
     try:
         with urllib.request.urlopen(urllib.request.Request(url), timeout=timeout) as response:
