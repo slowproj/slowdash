@@ -114,7 +114,7 @@ class Response:
         
     def get_status(self) -> str:
         if self.status_code == 0:
-            return '404 Not Found'
+            return f'404 {self.status[404]}'
         else:
             return '%d %s' % (self.status_code, self.status.get(self.status_code, 'Unknown Response'))
             

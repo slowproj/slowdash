@@ -103,7 +103,7 @@ class PathRule:
                     # BUG: this does not work if the type is "Optional[xxx]"
                     value = attr.annotation(value)
                 except Exception as e:
-                    logging.warning(f'App: incompatible parameter type: {pname}: {e}')
+                    logging.warning(f'SlowAPI: incompatible parameter type: {pname}: {e}')
                     return None
             kwargs[pname] = value
             
@@ -201,7 +201,7 @@ class Router:
                 self.handlers.append(method)
 
         
-    def dispatch(self, request:Request, body:bytes=None) -> Response:
+    async def dispatch(self, request:Request, body:bytes=None) -> Response:
         if type(request) is str:
             if body is None:
                 request = Request(request, method='GET')
@@ -211,18 +211,21 @@ class Router:
         # execute handlers from top to bottom, and store the responses in a list
         response_list = [ Response() ]
         for subapp in self.middlewares:
-            response_list.append(subapp.slowapi.dispatch(request))
+            response_list.append(await subapp.slowapi.dispatch(request))
         for handler in self.handlers:
             args = handler.slowapi_path_rule.match(request)
             if args is not None:
-                response = handler(self.app, **args)
+                if inspect.iscoroutinefunction(handler):
+                    response = await handler(self.app, **args)
+                else:
+                    response = handler(self.app, **args)
                 if not isinstance(response, Response):
                     status_code = handler.slowapi_path_rule.status_code
                     response = Response(status_code, content=response)
                 logging.debug(f'{self.app.__class__.__name__}: {str(request)[:100]} -> Status {response.get_status_code()}: {str(response)[:100]}')
                 response_list.append(response)
         for subapp in self.subapps:
-            response_list.append(subapp.slowapi.dispatch(request))
+            response_list.append(await subapp.slowapi.dispatch(request))
 
         return self.merge_responses(response_list)
             
@@ -256,6 +259,8 @@ class Router:
 
 
     def __call__(self, request:Request, body:bytes=None) -> Response:
+        """ this is an async function, as self.dispatch is async
+        """
         return self.dispatch(request, body)
 
     

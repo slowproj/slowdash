@@ -3,7 +3,7 @@
 # Restructured to use SlowAPI by Sanshiro Enomoto on 12 January 2025 #
 
 
-import sys, os, logging
+import sys, os, asyncio, logging
 import slowapi
 
 from sd_component import Component
@@ -97,6 +97,11 @@ if __name__ == '__main__':
         help='logging level'
     )
     parser.add_argument(
+        '--asgi',
+        action='store_true', dest='asgi', default=False, 
+        help='use ASGI (otherwise WSGI)'
+    )
+    parser.add_argument(
         '-i', '--indent',
         action='store', dest='indent', type=int, default=None,
         help='JSON output indenting (default: no indent)'
@@ -136,10 +141,12 @@ if __name__ == '__main__':
 
     if args.port <= 0:
         # command-line mode
-        json_opts = { 'indent': args.indent }
-        response = app.slowapi(args.COMMAND)
-        sys.stdout.write(response.get_content(json_opts).decode())
-        sys.stdout.write('\n')
+        async def main():
+            json_opts = { 'indent': args.indent }
+            response = await app.slowapi(args.COMMAND)
+            sys.stdout.write(response.get_content(json_opts).decode())
+            sys.stdout.write('\n')
+        asyncio.run(main())
         
     else:
         # web-server mode: append Authentication and FileServer
@@ -151,7 +158,10 @@ if __name__ == '__main__':
             exclude='/api',
             drop_exclude_prefix=True
         ))
-            
-        app.run(port = args.port)
+
+        if args.asgi:
+            slowapi.serve_asgi(app, port=args.port, log_level=loglevel)
+        else:
+            slowapi.serve_wsgi(app, port=args.port)
         
     app.terminate()

@@ -2,7 +2,7 @@
 
 
 # temporary until SlowAPI becomes a package
-import sys, os
+import sys, os, asyncio
 sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir))
 
 
@@ -37,7 +37,7 @@ class MyApp:
 
 
     @slowapi.post('/message')   # multiple responses will be aggregated
-    def message2(self, name:str, doc:bytes):
+    async def message2(self, name:str, doc:bytes):
         return {'message2': f"I said to {name}, {doc.decode()}"}
 
 
@@ -59,24 +59,46 @@ class MyApp:
 
 
 app = slowapi.App(MyApp())
+'''
+to run the app as a ASGI server, run:
+$ uvicorn test_slowapi:app
+'''
 
+
+wsgi_app = slowapi.to_wsgi(app)
 '''
 to run the app as a WSGI server, run:
-$ gunicorn test_slowapi:app
+$ gunicorn test_slowapi:wsgi_app
 '''
 
 
-if __name__ == '__main__':
-    ### test responses ###
-    print(app.slowapi('/'))
-    print(app.slowapi('/hello'))
-    print(app.slowapi('/hello/Slowy'))
-    print(app.slowapi('/message?name=you', b"how are you doing?"))
-    print(app.slowapi('/echo/hello/Slowy'))
-    print(app.slowapi('/home'))  # does not exist
-    #print(app.slowapi_get('/source'))
-    print(app.slowapi(slowapi.Request('/trash', method='delete')))
-    print(app.slowapi('/deci?den=3'))
 
+async def main():
+    ### test responses ###
+    print(await app.slowapi('/'))
+    print(await app.slowapi('/hello'))
+    print(await app.slowapi('/hello/Slowy'))
+    print(await app.slowapi('/message?name=you', b"how are you doing?"))
+    print(await app.slowapi('/echo/hello/Slowy'))
+    print(await app.slowapi('/home'))  # does not exist
+    #print(await app.slowapi_get('/source'))
+    print(await app.slowapi(slowapi.Request('/trash', method='delete')))
+    print(await app.slowapi('/deci?den=3'))
+
+
+    
+if __name__ == '__main__':
+    asyncio.run(main())
+    
     ### start a HTTP server at default port 8000 ###
-    app.run()
+
+
+    ### HTTP/2:
+    # requres Python package of "httptools" and "h2"
+    # to generate a self-certificates:
+    #   Self-Signed:    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout key.pem -out cert.pem
+    #   Let's Encrypt:  sudo apt install certbot; sudo certbot cetonly --standalone -d yourdomain.com
+    # to check: curl URL -v --http2
+    #app.run(ssl_keyfile='key.pem', ssl_certfile='cert.pem')
+
+    wsgi_app.run()

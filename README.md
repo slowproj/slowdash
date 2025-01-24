@@ -50,7 +50,7 @@ Open a web browser and connect to `http://localhost:18881`.
 To stop, type `ctrl`-`c` in the docker-compose window, or use `docker-compose stop` (or `down` to remove the container)
 </details>
   
-### Building own Docker Image (Raspberry-Pi etc.)
+### Building a Docker Image
 <details>
 
 #### Prerequisites for this trial
@@ -87,7 +87,7 @@ To stop, type `ctrl`-`c` in the docker-compose window, or use `docker-compose st
   
 #### Prerequisites for this trial
 - Git
-- Python3 (>=3.8) and packages:
+- Python3 (>=3.9) and packages:
   - numpy, pyyaml, psutil
 
 The procedure below will create a new directory, `slowdash`. 

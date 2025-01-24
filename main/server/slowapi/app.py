@@ -3,7 +3,7 @@
 import inspect, logging
 
 from .router import Router, PathRule
-from .server import wsgi, serve_wsgi
+from .server import dispatch_asgi, dispatch_wsgi, serve_asgi, serve_wsgi
 
 
 class App:
@@ -27,25 +27,19 @@ class App:
             self.slowapi.include(subapp)
             
             
-    def __call__(self, environ, start_response):
-        """WSGI entry point
+    async def __call__(self, scope, receive, send):
+        """ASGI entry point
         """
         if not hasattr(self, 'slowapi'): # __init__() might not have been called
             self.slowapi = Router(self)
-            
-        return wsgi(self, environ, start_response)
+
+        await dispatch_asgi(self, scope, receive, send)
     
 
-    def run(self, port=8000):
+    def run(self, port=8000, **kwargs):
         """Run HTTP Server
         """
-        serve_wsgi(self, port)
-
-
-
-class AsyncApp(App):
-    # ASGI App: to be implemeted
-    pass
+        serve_asgi(self, port, **kwargs)
 
 
 
@@ -119,3 +113,35 @@ class SlowAPI(App):
             self.slowapi.handlers.append(adapter)
             return func
         return wrapper
+
+
+
+class WsgiApp(App):
+    """WSGI Wrapper: replaces the ASGI interface in App with WSGI
+    """
+    def __init__(self, app):
+        self.app = app
+
+
+    def __call__(self, environ, start_response):
+        """WSGI entry point
+        """
+        if not hasattr(self, 'slowapi'): # __init__() might not have been called
+            self.slowapi = Router(self)
+            
+        return dispatch_wsgi(self.app, environ, start_response)
+
+
+    def run(self, port=8000, **kwargs):
+        """Run HTTP Server
+        """
+        serve_wsgi(self, port, **kwargs)
+
+
+        
+def to_wsgi(app):
+    """WSGI Adapter
+    """
+    wsgi_app = WsgiApp(app)
+    return wsgi_app
+
