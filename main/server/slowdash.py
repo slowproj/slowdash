@@ -97,9 +97,9 @@ if __name__ == '__main__':
         help='logging level'
     )
     parser.add_argument(
-        '--asgi',
-        action='store_true', dest='asgi', default=False, 
-        help='use ASGI (otherwise WSGI)'
+        '--wsgi',
+        action='store_true', dest='wsgi', default=False, 
+        help='use WSGI (otherwise ASGI)'
     )
     parser.add_argument(
         '-i', '--indent',
@@ -159,9 +159,10 @@ if __name__ == '__main__':
             drop_exclude_prefix=True
         ))
 
-        if args.asgi:
-            slowapi.serve_asgi(app, port=args.port, log_level=loglevel)
+        
+        if args.wsgi:
+            slowapi.to_wsgi(app).run(port=args.port)
         else:
-            slowapi.serve_wsgi(app, port=args.port)
+            app.run(port=args.port, log_level=logging.WARNING)
         
     app.terminate()

@@ -23,15 +23,20 @@ class MyApp(slowapi.App):
 app = MyApp()
 
 key = slowapi.BasicAuthentication.generate_key('slow', 'dash')
-#app.slowapi.add_middleware(slowapi.BasicAuthentication(auth_list=[key]))
+app.slowapi.add_middleware(slowapi.BasicAuthentication(auth_list=[key]))
 
 app.slowapi.add_middleware(
     slowapi.FileServer('../../../web', exclude='/api', drop_exclude_prefix=True, index_file="welcome.html")
 )
 
 
+async def main():
+    print(await app.slowapi('/Warning.png'))
+    print(await app.slowapi('/api'))
+    print(await app.slowapi('/api/hello/slowy'))
+
+
 if __name__ == '__main__':
-    print(app.slowapi('/Warning.png'))
-    print(app.slowapi('/api'))
-    print(app.slowapi('/api/hello/slowy'))
+    import asyncio
+    asyncio.run(main())
     app.run()

@@ -18,14 +18,15 @@ async def dispatch_asgi(app, scope, receive, send):
     """
     
     if scope['type'] != 'http':
-        logging.warning(f'ASGI Request not handled: type={scope["type"]}')
+        if scope['type'] != 'lifespan':
+            logging.warning(f'ASGI Request not handled: type={scope["type"]}')
         return
     
     method = scope['method'].upper()
-    url = scope['raw_path'].decode() + '?' + scope['query_string'].decode()
+    url = scope['raw_path'].decode()
     if len(scope['query_string']) > 0:
            url += '?' + scope['query_string'].decode()           
-    headers = { k.decode:v.decode for k,v in scope['headers'] }
+    headers = { k.decode():v.decode() for k,v in scope['headers'] }
 
     logging.info(url)
     
@@ -88,6 +89,8 @@ def dispatch_wsgi(app, environ, start_response):
         'if-modified-since': environ.get('HTTP_IF_MODIFIED_SINCE', None),
     }
         
+    logging.info(url)
+    
     body = None
     if method == 'POST':
         try:
@@ -133,9 +136,6 @@ def serve_asgi(app, port, **kwargs):
 
     
 def serve_wsgi(app, port, **kwargs):
-    if len(kwargs) == 0:
-        return serve_wsgiref(app, port)
-
     try:
         import gunicorn.app.base
     except:

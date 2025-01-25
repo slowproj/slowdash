@@ -152,7 +152,7 @@ class ConfigComponent(Component):
 
     @slowapi.delete('/config/file/{filename}')
     def delete_file(self, filename: str):
-        filepath = self._get_filepath_ext(filename, os.W_OK)[0]
+        filepath, ext = self._get_filepath_ext(filename, os.W_OK)
         if filepath is None:
             logging.warning(f'DETETE config/file: {filename}: access denied')
             return slowapi.Response(404)  # Not Found

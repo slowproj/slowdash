@@ -93,12 +93,16 @@ if __name__ == '__main__':
     ### start a HTTP server at default port 8000 ###
 
 
-    ### HTTP/2:
+    ### ASGI HTTP/2:
     # requres Python package of "httptools" and "h2"
     # to generate a self-certificates:
     #   Self-Signed:    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout key.pem -out cert.pem
     #   Let's Encrypt:  sudo apt install certbot; sudo certbot cetonly --standalone -d yourdomain.com
     # to check: curl URL -v --http2
-    #app.run(ssl_keyfile='key.pem', ssl_certfile='cert.pem')
+    app.run(ssl_keyfile='key.pem', ssl_certfile='cert.pem')
 
-    wsgi_app.run()
+    # WSGI in HTTPS (gunicorn)
+    #wsgi_app.run(ssl_keyfile='key.pem', ssl_certfile='cert.pem')
+
+    # WSGI (wsgiref)
+    #wsgi_app.run()
