@@ -134,7 +134,7 @@ if __name__ == '__main__':
         project_dir = args.project_dir,
         project_file = args.project_file,
         is_cgi = False,
-        is_command = (args.port<=0)
+        is_command = (args.port<=0),
     )
     if app.project.config is None:
         sys.exit(-1)
@@ -159,9 +159,8 @@ if __name__ == '__main__':
             drop_exclude_prefix=True
         ))
 
-        
         if args.wsgi:
-            slowapi.to_wsgi(app).run(port=args.port)
+            slowapi.WSGI(app).run(port=args.port, log_level=logging.WARNING)
         else:
             app.run(port=args.port, log_level=logging.WARNING)
         

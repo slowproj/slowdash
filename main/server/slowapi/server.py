@@ -116,7 +116,7 @@ def dispatch_wsgi(app, environ, start_response):
 
 
 
-def serve_asgi(app, port, **kwargs):
+def serve_asgi_uvicorn(app, port, **kwargs):
     try:
         import uvicorn
     except:
@@ -135,13 +135,13 @@ def serve_asgi(app, port, **kwargs):
 
 
     
-def serve_wsgi(app, port, **kwargs):
+def serve_wsgi_gunicorn(app, port, **kwargs):
     try:
         import gunicorn.app.base
     except:
         logging.info('Unable to import gunicorn Python package: not installed?')
-        logging.info('Falling back to wsgiref')
-        return serve_wsgiref(app, port)
+        logging.info('Falling back to wsgi_ref')
+        return serve_wsgi_ref(app, port, **kwargs)
 
     class GunicornApp(gunicorn.app.base.BaseApplication):
         def __init__(self, app, **kwargs):
@@ -175,7 +175,7 @@ def serve_wsgi(app, port, **kwargs):
 
 
     
-def serve_wsgiref(app, port):
+def serve_wsgi_ref(app, port, **kwargs):
     class RequestHandler(WSGIRequestHandler):
         def log_message(self, fmt, *args):
             pass
@@ -190,3 +190,12 @@ def serve_wsgiref(app, port):
         pass
     
     sys.stderr.write('Terminated\n')    
+
+
+
+    
+def serve_asgi(app, port, **kwargs):
+    return serve_asgi_uvicorn(app, port, **kwargs)
+
+def serve_wsgi(app, port, **kwargs):
+    return serve_wsgi_gunicorn(app, port, **kwargs)

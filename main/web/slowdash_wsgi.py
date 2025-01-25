@@ -16,16 +16,18 @@ is_cgi = True
 # The "is_cgi" variable might be modified after this module is loaded (by CGI that imports this module etc.),
 # so we cannot create a "application" object here. Instead, we create a "application" function and initialze App in it.
 from slowdash import App
+from slowdash.slowapi import WSGI
 app = None
-
+wsgi_app = None
 
 def application(environ, start_response):
     global app, project_dir, is_cgi
     if app is None:
         app = App(project_dir=project_dir, is_cgi=is_cgi)
+        wsgi_app = WSGI(app)
         logging.info('created a SlowDash instance')
 
-    return app(environ, start_response)
+    return wsgi_app(environ, start_response)
 
 
 def terminate():

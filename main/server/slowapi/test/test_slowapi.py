@@ -65,7 +65,7 @@ $ uvicorn test_slowapi:app
 '''
 
 
-wsgi_app = slowapi.to_wsgi(app)
+wsgi_app = slowapi.WSGI(app)
 '''
 to run the app as a WSGI server, run:
 $ gunicorn test_slowapi:wsgi_app

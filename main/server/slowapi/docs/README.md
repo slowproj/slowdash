@@ -430,7 +430,7 @@ class App(slowapi.App):
         return 'hello, how are you?'
 
 app = App()   # ASGI App
-wsgi_app = slowapi.to_wsgi(app)   # WSGI App
+wsgi_app = slowapi.WsgiAdapter(app)
 
 if __name__ == '__main__':
     wagi_app.run()

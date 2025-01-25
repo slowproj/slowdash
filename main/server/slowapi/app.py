@@ -116,8 +116,8 @@ class SlowAPI(App):
 
 
 
-class WsgiApp(App):
-    """WSGI Wrapper: replaces the ASGI interface in App with WSGI
+class WSGI:
+    """WSGI Adapter
     """
     def __init__(self, app):
         self.app = app
@@ -136,12 +136,4 @@ class WsgiApp(App):
         """Run HTTP Server
         """
         serve_wsgi(self, port, **kwargs)
-
-
-        
-def to_wsgi(app):
-    """WSGI Adapter
-    """
-    wsgi_app = WsgiApp(app)
-    return wsgi_app
-
+    
