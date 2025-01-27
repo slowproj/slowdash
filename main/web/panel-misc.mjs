@@ -786,41 +786,76 @@ class TaskManagerPanel extends Panel {
             this._send_console(line, e);
         });
 
-        this.is_loading = true;  // postpone loading until configure() is completed
+        this.is_running = false;
+        this.is_loading_tasklist = false;
+        this.is_loading_console = false;
+        this.tasklist_revision = 0;
+        this.console_revision = 0;
         this.beatCallback = () => { this._load(); };
+    }
+
+    
+    draw(dataPacket) {
+        this.is_running = true;
     }
 
     
     configure(config, callbacks={}, project_config=null) {
         super.configure(config, callbacks);
         this.is_secure = project_config?.project?.is_secure ?? false;
-        this.is_loading = false;
+        this.is_running = false;
+        this.is_loading_tasklist = false;
+        this.is_loading_console = false;
+        this.tasklist_revision = 0;
+        this.console_revision = 0;
     }
 
 
     async _load() {
-        if (this.is_loading) {
+        if (! this.is_running) {
             return;
         }
-        this.is_loading = true;
-        
+
+        this._load_tasklist();
+        this._load_console();
+    }
+
+    
+    async _load_tasklist() {
+        if (this.is_loading_tasklist) {
+            return;
+        }
         try {
-            let response = await fetch('api/control/task');
+            this.is_loading_tasklist = true;
+            let response = await fetch('api/control/task?since='+this.tasklist_revision);
             let record = await response.json();
-            this._render_task_table(record);
+            this._render_task_table(record.tasks);
+            this.tasklist_revision = record.revision;
+            this.is_loading_tasklist = false;
         }
         catch (e) {
-            console.log(e);
+            console.log("Error on fetching tasklist: ", e);
+            this.is_loading_tasklist = false;
+        }
+    }
+        
+
+    async _load_console() {
+        if (this.is_loading_console) {
+            return;
         }
         try {
-            let response = await fetch('api/console');
-            let text = await response.text();
-            this._render_console(text);
+            this.is_loading_console = true;
+            let response = await fetch('api/console?since='+this.console_revision);
+            let record = await response.json();
+            this._render_console(record.text);
+            this.console_revision = record.revision;
+            this.is_loading_console = false;
         }
         catch (e) {
-            console.log(e);
+            console.log("Error on fetching console: ", e);
+            this.is_loading_console = false;
         }
-        this.is_loading = false;
     }
 
     

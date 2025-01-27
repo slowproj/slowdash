@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 10 January 2025 #
 
 
-import sys, os, copy, json, logging
+import sys, os, copy, json, asyncio, logging
 from decimal import Decimal
 
 
@@ -167,52 +167,66 @@ class FileResponse(Response):
       - Sanity checks must be made before using this.
     """
         
-    def __init__(self, filepath:str, *, content_type=None):
-        content_type, content = self.read_file(filepath, content_type)
+    def __init__(self, filepath:str=None, *, content_type=None):
+        """
+        Note: for async load, use await FileResponse().load(filepath)
+        """
+        if filepath is not None:
+            content_type, content = read_file(filepath, content_type)
+            if content is None:
+                super().__init__(400)
+            else:
+                super().__init__(200, content_type=content_type, content=content)
+
+
+    async def load(self, filepath:str, *, content_type=None):
+        content_type, content = await asyncio.to_thread(read_file, filepath, content_type)
         if content is None:
             super().__init__(400)
         else:
             super().__init__(200, content_type=content_type, content=content)
 
+        return self
 
-    @staticmethod
-    def read_file(filepath, content_type):
-        if not os.path.isfile(filepath):
-            logging.warning(f'SlowAPI_FileResponse: not a file: {filepath}')
-            return None, None
-        if not os.access(filepath, os.R_OK):
-            logging.warning(f'SlowAPI_FileResponse: permission denied: {filepath}')
-            return None, None
 
-        content = None
-        try:
-            with open(filepath, 'rb') as f:
-                content = f.read()
-        except Exception as e:
-            logging.warning(f'SlowAPI_FileResponse: system error: {filepath}: {e}')
-            return None, None
+def read_file(filepath, content_type):
+    if not os.path.isfile(filepath):
+        logging.warning(f'SlowAPI_FileResponse: not a file: {filepath}')
+        return None, None
+    if not os.access(filepath, os.R_OK):
+        logging.warning(f'SlowAPI_FileResponse: permission denied: {filepath}')
+        return None, None
 
-        if content_type is None:
-            ext = os.path.splitext(filepath)[1]
-            if ext == '.html':
-                content_type = 'text/html'
-            elif ext in ['.js', '.mjs']:
-                content_type = 'text/javascript'
-            elif ext == '.css':
-                content_type = 'text/css'
-            elif ext == 'json':
-                content_type = 'application/json'
-            elif ext == '.png':
-                content_type = 'image/png'
-            elif ext == '.svg':
-                content_type = 'image/svg+xml'
-            elif ext in ['.jpg', '.jpeg']:
-                content_type = 'image/jpeg'
-            elif ext == '.pdf':
-                content_type = 'application/pdf'
-            elif ext in ['.txt', '.py']:
-                content_type = 'text/plain'
-            else:
-                content_type = 'application/octet-stream'
+    content = None
+    try:
+        with open(filepath, 'rb') as f:
+            content = f.read()
+    except Exception as e:
+        logging.warning(f'SlowAPI_FileResponse: system error: {filepath}: {e}')
+        return None, None
 
-        return (content_type, content)
+    if content_type is None:
+        ext = os.path.splitext(filepath)[1]
+        if ext == '.html':
+            content_type = 'text/html'
+        elif ext in ['.js', '.mjs']:
+            content_type = 'text/javascript'
+        elif ext == '.css':
+            content_type = 'text/css'
+        elif ext == 'json':
+            content_type = 'application/json'
+        elif ext == '.png':
+            content_type = 'image/png'
+        elif ext == '.svg':
+            content_type = 'image/svg+xml'
+        elif ext in ['.jpg', '.jpeg']:
+            content_type = 'image/jpeg'
+        elif ext == '.pdf':
+            content_type = 'application/pdf'
+        elif ext in ['.txt', '.py']:
+            content_type = 'text/plain'
+        else:
+            content_type = 'application/octet-stream'
+
+    return (content_type, content)
+

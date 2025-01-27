@@ -19,11 +19,12 @@ from sd_misc_api import MiscApiComponent
 
 
 class App(slowapi.App):
-    def __init__(self, project_dir=None, project_file=None, is_cgi=False, is_command=False):
+    def __init__(self, project_dir=None, project_file=None, is_cgi=False, is_command=False, is_async=False):
         super().__init__()
 
         self.is_cgi = is_cgi
         self.is_command = is_command
+        self.is_async = is_async
         
         if project_dir is not None:
             project_dir = os.path.abspath(os.path.join(os.getcwd(), project_dir))
@@ -135,6 +136,7 @@ if __name__ == '__main__':
         project_file = args.project_file,
         is_cgi = False,
         is_command = (args.port<=0),
+        is_async = not args.wsgi,
     )
     if app.project.config is None:
         sys.exit(-1)
@@ -160,7 +162,7 @@ if __name__ == '__main__':
         ))
 
         if args.wsgi:
-            slowapi.WSGI(app).run(port=args.port, log_level=logging.WARNING)
+            slowapi.WSGI(app, slowapi.serve_wsgi_ref).run(port=args.port, log_level=logging.WARNING)
         else:
             app.run(port=args.port, log_level=logging.WARNING)
         

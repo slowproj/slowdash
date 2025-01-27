@@ -90,6 +90,9 @@ class UserModule:
         self.command_history = []
         self.error = None
         self.is_waiting = False
+        
+        self.status_revision = 1
+        self.was_running = False
 
         
     def __del__(self):
@@ -102,6 +105,7 @@ class UserModule:
             if prompt:
                 print(prompt)
             self.is_waiting = True
+            self.touch_status()
             while True:
                 if self.stop_event.is_set():
                     line = ''
@@ -113,6 +117,7 @@ class UserModule:
                     time.sleep(0.1)
                     
             self.is_waiting = False
+            self.touch_status()
             return line
 
         module.__dict__['input'] = input_waiting_at_EOF
@@ -122,6 +127,7 @@ class UserModule:
         self.routine_history = []
         self.command_history = []
         self.error = None
+        self.touch_status()
         
         if self.module is not None and False:  #??? it looks like just re-doing load() works...
             #??? this reload() does not execute statements outside a function
@@ -151,6 +157,7 @@ class UserModule:
                 self.handle_error('unable to load user module: %s' % str(e))
                 return False
                 
+        self.touch_status()
         if self.module is None:
             return False
 
@@ -169,12 +176,14 @@ class UserModule:
         
     
     def start(self):
+        self.touch_status()
         if self.module is not None and self.user_thread is not None and self.user_thread.is_alive():
             self.stop()
         
         logging.info('starting user module "%s"' % self.name)
         self.stop_event.clear()
         self.user_thread = UserModuleThread(self, self.params, self.stop_event)
+        self.touch_status()
         self.user_thread.start()
         
         
@@ -183,12 +192,14 @@ class UserModule:
             return
         
         logging.info('stopping user module "%s"' % self.name)
+        self.touch_status()
         
         if not self.user_thread.initialized_event.is_set():
             time.sleep(1)
             if not self.user_thread.initialized_event.is_set():
                 logging.warning('User/Task module not yet initialized')
                 
+        self.touch_status()
         if self.func_halt is not None:
             try:
                 self.func_halt()
@@ -196,9 +207,12 @@ class UserModule:
                 self.handle_error('user module error: halt(): %s' % str(e))
         self.stop_event.set()
         
+        self.touch_status()
         if self.user_thread is not None:
             self.user_thread.join()
             self.user_thread = None
+            
+        self.touch_status()
 
             
     def is_loaded(self):
@@ -206,7 +220,8 @@ class UserModule:
 
         
     def is_running(self):
-        return self.user_thread is not None and self.user_thread.is_alive()
+        self.was_running = self.user_thread is not None and self.user_thread.is_alive()
+        return self.was_running
 
 
     def is_waiting_input(self):
@@ -216,6 +231,10 @@ class UserModule:
     def is_stopped(self):
         return self.stop_event.is_set()
 
+
+    def touch_status(self):
+        self.status_revision += 1  # note: there is no limit on int in Python3
+    
 
     def get_func(self, name):
         if self.module is None:
@@ -268,7 +287,9 @@ class UserModule:
                 logging.warning('User/Task module not yet initialized')
                 
         try:
+            self.touch_status()
             result = self.func_process_command(params)
+            self.touch_status()
         except Exception as e:
             self.handle_error('user module error: process_command(): %s' % str(e))
             return {'status': 'error', 'message': str(e) }

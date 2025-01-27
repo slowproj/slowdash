@@ -104,7 +104,7 @@ class FileServer():
 
 
     @route('/{*}')
-    def dispatch(self, request:Request, body:bytes=None) -> Response:
+    async def dispatch(self, request:Request, body:bytes=None) -> Response:
         # sanity check
         path = []
         is_dirty = False
@@ -174,5 +174,5 @@ class FileServer():
         filepath = os.path.join(self.filedir, filepath)
         logging.debug(f'SlowAPI_FileServer: file request: {filepath}')
 
-        return FileResponse(filepath)
+        return await FileResponse().load(filepath)
 

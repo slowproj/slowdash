@@ -8,11 +8,6 @@ from wsgiref.simple_server import make_server, WSGIRequestHandler
 from .request import Request
 
 
-def signal_handler(signum, frame):
-    raise KeyboardInterrupt
-
-
-
 async def dispatch_asgi(app, scope, receive, send):
     """ASGI interface
     Args: see the ASGI specification
@@ -29,8 +24,6 @@ async def dispatch_asgi(app, scope, receive, send):
            url += '?' + scope['query_string'].decode()           
     headers = { k.decode():v.decode() for k,v in scope['headers'] }
 
-    logging.info(url)
-    
     body = None
     if method == 'POST':
         try:
@@ -53,8 +46,8 @@ async def dispatch_asgi(app, scope, receive, send):
                     if not message.get('more_body',False):
                         break
 
-    logging.debug(f'{method}: {url}')
     response = await app.slowapi(Request(url, method=method, headers=headers, body=body))
+    logging.info(f'{method}: {url} -> {response.status_code}')
 
     await send({
         'type': 'http.response.start',
@@ -90,8 +83,6 @@ def dispatch_wsgi(app, environ, start_response):
         'if-modified-since': environ.get('HTTP_IF_MODIFIED_SINCE', None),
     }
         
-    logging.info(url)
-    
     body = None
     if method == 'POST':
         try:
@@ -110,7 +101,7 @@ def dispatch_wsgi(app, environ, start_response):
             body = b''
 
     response = asyncio.run(app.slowapi(Request(url, method=method, headers=headers, body=body)))
-    logging.debug(f'{method}: {url} -> {response.status_code}')
+    logging.info(f'{method}: {url} -> {response.status_code}')
     
     start_response(response.get_status(), response.get_headers())
     return [ response.get_content() ]
@@ -173,21 +164,17 @@ def serve_wsgi_gunicorn(app, port, **kwargs):
 
         def load(self):
             return self.app
-
+        
     kwargs['bind'] = f'0.0.0.0:{port}'        
     kwargs['workers'] = 1
     if 'ssl_keyfile' in kwargs:
         kwargs['keyfile'] = kwargs['ssl_keyfile']
     if 'ssl_certfile' in kwargs:
         kwargs['certfile'] = kwargs['ssl_certfile']
-        
 
+    # gunicorn SHOULD handle signals... signals cannot stop the App somehow.
     sys.stderr.write(f'Listening at port {port} (gunicorn WSGI)\n')
-    try:
-        signal.signal(signal.SIGTERM, signal_handler)
-        GunicornApp(app, **kwargs).run()
-    except KeyboardInterrupt:
-        pass
+    GunicornApp(app, **kwargs).run()
     sys.stderr.write('Terminated\n')    
 
 
@@ -197,10 +184,13 @@ def serve_wsgi_ref(app, port, **kwargs):
         def log_message(self, fmt, *args):
             pass
 
+    def signal_handler(signum, frame):
+        raise KeyboardInterrupt
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
 
     sys.stderr.write(f'Listening at port {port} (wsgiref WSGI)\n')
     try:
-        signal.signal(signal.SIGTERM, signal_handler)
         with make_server('', port, app, handler_class=RequestHandler) as server:
             server.serve_forever()
     except KeyboardInterrupt:

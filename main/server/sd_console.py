@@ -42,6 +42,7 @@ class ConsoleComponent(Component):
         super().__init__(app, project)
         
         self.enabled = not app.is_command and not app.is_cgi
+        self.revision = 1
         
         self.console_stdin = None
         self.console_stdout = None
@@ -89,28 +90,43 @@ class ConsoleComponent(Component):
 
     
     @slowapi.get('/console')
-    async def read(self, nlines:int=20):
+    async def read(self, nlines:int=20, since:int=0):
         if not self.enabled:
-            return '[no console output]'
+            return {
+                'revision': 0,
+                'text': '[console not enabled]'
+            }
 
-        if  self.console_awaitable_stdout is None:
-            self.build()
+        if self.app.is_async:
+            if  self.console_awaitable_stdout is None:
+                # AwaitableStringIO cannot be used with WSGI, as there is no contineous event loop
+                self.build()
 
-        if self.console_stdout.tell() == 0:
-            await self.console_stdout.wait_for_write()
-            await asyncio.sleep(0.2)
+            if (self.revision <= since) and (self.console_stdout.tell() == 0):
+                await self.console_stdout.wait_for_write()
+                await asyncio.sleep(0.2)
             
-        output = self.console_stdout.getvalue()
-        self.console_stdout.seek(0)
-        self.console_stdout.truncate(0)
-        self.console_stdout.seek(0)
+        if self.console_stdout.tell() > 0:
+            output = self.console_stdout.getvalue()
+            self.console_stdout.seek(0)
+            self.console_stdout.truncate(0)
+            self.console_stdout.seek(0)
+            
+            self.console_outputs += [ line for line in output.split('\n') if len(line)>0 ]
+            if len(self.console_outputs) > self.max_lines:
+                self.console_outputs = self.console_outputs[-max_lines:]
+            self.revision += 1
+
+        if len(self.console_outputs) == 0:
+            return {
+                'revision': self.revision,
+                'text': '[no console output]'
+            }
         
-        self.console_outputs += [ line for line in output.split('\n') if len(line)>0 ]
-        
-        if len(self.console_outputs) > self.max_lines:
-            self.console_outputs = self.console_outputs[-max_lines:]
-                
-        return '\n'.join(self.console_outputs[-nlines:])
+        return {
+            'revision': self.revision,
+            'text': '\n'.join(self.console_outputs[-nlines:])
+        }
 
 
     @slowapi.post('/console')

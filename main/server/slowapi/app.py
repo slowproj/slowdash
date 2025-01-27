@@ -119,8 +119,9 @@ class SlowAPI(App):
 class WSGI:
     """WSGI Adapter
     """
-    def __init__(self, app):
+    def __init__(self, app, serve=serve_wsgi):
         self.app = app
+        self.serve = serve
 
 
     def __call__(self, environ, start_response):
@@ -135,5 +136,5 @@ class WSGI:
     def run(self, port=8000, **kwargs):
         """Run HTTP Server
         """
-        serve_wsgi(self, port, **kwargs)
+        self.serve(self, port, **kwargs)
     

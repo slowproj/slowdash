@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 24 May 2024 #
 
-import sys, os, time, glob, threading, inspect, logging
+import sys, os, time, glob, asyncio, threading, inspect, logging
 
 import slowapi
 from sd_usermodule import UserModule
@@ -62,6 +62,7 @@ class TaskModule(UserModule):
 
             
     def stop(self):
+        self.touch_status()
         if self.user_thread and not self.user_thread.initialized_event.is_set():
             time.sleep(1)
             if not self.user_thread.initialized_event.is_set():
@@ -78,12 +79,14 @@ class TaskModule(UserModule):
             self.command_thread.join()
             self.command_thread = None
 
+        self.touch_status()
         for thread in self.async_command_thread_set:
             if thread.is_alive():
                 #kill
                 pass
             thread.join()
         self.async_command_thread_set = set()
+        self.touch_status()
 
         super().stop()
         
@@ -184,7 +187,9 @@ class TaskModule(UserModule):
 
     
     def process_command(self, params):
+        self.touch_status()
         result = self.process_task_command(params)
+        self.touch_status()
         if result is not None:
             if result is not True:
                 logging.warning(f'Task Failed: {params}')
@@ -195,6 +200,7 @@ class TaskModule(UserModule):
         
         try:
             result = self.func_process_command(params)
+            self.touch_status()
         except Exception as e:
             self.handle_error('task module error: process_command(): %s' % str(e))
             return {'status': 'error', 'message': str(e) }
@@ -315,6 +321,7 @@ class TaskModuleComponent(Component):
 
         self.taskmodule_list = []
         self.known_task_list = []
+        self.status_revision = 1
 
         taskmodule_node = self.project.config.get('task', [])
         if not isinstance(taskmodule_node, list):
@@ -444,8 +451,22 @@ class TaskModuleComponent(Component):
 
     
     @slowapi.get('/control/task')
-    def task_status(self):
-        result = []
+    async def task_status(self, since:int=0):
+        while self.app.is_async and self.status_revision <= since:
+            has_update = False
+            for module in self.taskmodule_list:
+                if module.was_running != module.is_running():
+                    module.touch_status()
+                if module.status_revision > self.status_revision:
+                    self.status_revision = module.status_revision
+                    has_update = True
+            if not has_update:
+                await asyncio.sleep(0.2)
+            
+        result = {
+            'revision': self.status_revision,
+            'tasks': []
+        }
         for module in self.taskmodule_list:
             last_routine = module.routine_history[-1] if len(module.routine_history) > 0 else None
             last_command = module.command_history[-1] if len(module.command_history) > 0 else None
@@ -461,9 +482,9 @@ class TaskModuleComponent(Component):
                 'last_command_time': last_command[0] if last_command is not None else None,
                 'last_command': last_command[1] if last_command is not None else None,
                 'last_log': '',
-                'has_error': module.error is not None
+                'has_error': module.error is not None,
             }
-            result.append(doc)
+            result['tasks'].append(doc)
 
         return result
 
