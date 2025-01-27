@@ -12,6 +12,7 @@ def signal_handler(signum, frame):
     raise KeyboardInterrupt
 
 
+
 async def dispatch_asgi(app, scope, receive, send):
     """ASGI interface
     Args: see the ASGI specification
@@ -122,15 +123,30 @@ def serve_asgi_uvicorn(app, port, **kwargs):
     except:
         logging.error('Unable to import uvicorn Python package: not installed?')
         return
+
+    stop_event = asyncio.Event()
+    def async_signal_handler(signum, frame):
+        stop_event.set()
+    signal.signal(signal.SIGINT, async_signal_handler)
+    signal.signal(signal.SIGTERM, async_signal_handler)
+    
+    async def run_uvicorn():
+        config = uvicorn.Config(app, port=port, workers=1, **kwargs)
+        server = uvicorn.Server(config)
+        #server.install_signal_handlers=False  # this causes the server not working...
+        server_task = asyncio.create_task(server.serve())
+        
+        # overwrite the signal handlers set by uvicorn.Server()
+        await asyncio.sleep(0.1)
+        signal.signal(signal.SIGINT, async_signal_handler)
+        signal.signal(signal.SIGTERM, async_signal_handler)
+        
+        await stop_event.wait()
+        server_task.cancel()
     
     sys.stderr.write(f'Listening at port {port} (ASGI)\n')
-
-    try:
-        signal.signal(signal.SIGTERM, signal_handler)
-        uvicorn.run(app, port=port, workers=1, **kwargs)
-    except KeyboardInterrupt:
-        pass
-    
+    #uvicorn.run(app, port=port, workers=1, **kwargs)
+    asyncio.run(run_uvicorn())
     sys.stderr.write('Terminated\n')    
 
 
@@ -165,6 +181,7 @@ def serve_wsgi_gunicorn(app, port, **kwargs):
     if 'ssl_certfile' in kwargs:
         kwargs['certfile'] = kwargs['ssl_certfile']
         
+
     sys.stderr.write(f'Listening at port {port} (gunicorn WSGI)\n')
     try:
         signal.signal(signal.SIGTERM, signal_handler)
@@ -180,15 +197,14 @@ def serve_wsgi_ref(app, port, **kwargs):
         def log_message(self, fmt, *args):
             pass
 
-    sys.stderr.write(f'Listening at port {port} (wsgiref WSGI)\n')
 
+    sys.stderr.write(f'Listening at port {port} (wsgiref WSGI)\n')
     try:
         signal.signal(signal.SIGTERM, signal_handler)
         with make_server('', port, app, handler_class=RequestHandler) as server:
             server.serve_forever()
     except KeyboardInterrupt:
         pass
-    
     sys.stderr.write('Terminated\n')    
 
 

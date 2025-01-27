@@ -7,6 +7,7 @@ device = ControlSystem().randomwalk_device()
 ch0, ch1, ch2, ch3 = [ device.ch(ch) for ch in range(4) ]
 print("Random-Walk Device Loaded")
 
+
 #name = input('who are you?')
 #print('hello, ' + name)
 

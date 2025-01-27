@@ -46,7 +46,7 @@ class App(slowapi.App):
             sys.path.insert(1, self.project.project_dir)
             sys.path.insert(1, os.path.join(self.project.project_dir, 'config'))
             
-        # API Components: see slowapi.Api.slowapi_append() for the mechanism
+        # API Components: see slowapi.App for the mechanism
         self.slowapi.include(ConsoleComponent(self, self.project))   # this must be the first
         self.slowapi.include(ConfigComponent(self, self.project))
         self.slowapi.include(DataSourceComponent(self, self.project))

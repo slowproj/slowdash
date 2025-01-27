@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 10 January 2025 #
 
 
-import sys, typing, inspect, copy, logging
+import sys, typing, inspect, copy, asyncio, logging
 from urllib.parse import urlparse, parse_qsl, unquote
 
 from .model import JSON, DictJSON
@@ -216,7 +216,10 @@ class Router:
             args = handler.slowapi_path_rule.match(request)
             if args is not None:
                 if inspect.iscoroutinefunction(handler):
-                    response = await handler(self.app, **args)
+                    try:
+                        response = await handler(self.app, **args)
+                    except asyncio.CancelledError:
+                        response = None
                 else:
                     response = handler(self.app, **args)
                 if not isinstance(response, Response):

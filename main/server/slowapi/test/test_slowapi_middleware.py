@@ -22,7 +22,7 @@ class MyApp(slowapi.App):
 
 app = MyApp()
 
-key = slowapi.BasicAuthentication.generate_key('slow', 'dash')
+key = slowapi.BasicAuthentication.generate_key('api', 'slow')
 app.slowapi.add_middleware(slowapi.BasicAuthentication(auth_list=[key]))
 
 app.slowapi.add_middleware(

@@ -78,7 +78,7 @@ class FileServer():
           - index_file (str): index file when the path is empty (i.e., '/')
           - exclude (str): URL path not to be handled
             (e.g., prefix="/app", exclude="/app/api")
-          - drop_exclude_prefix (bool): if True, the exclude is droppped from the path in the request
+          - drop_exclude_prefix (bool): if True, the prefix is removed from the requet path if the request is for an excluded path
             (e.g., for exclude '/api', the request path of '/api/userlist' becomes '/userlist')
           - ext_allow (list[str]): a list of file extensions to allow accessing
           - ext_deny (list[str]): a list of file extensions not to allow accessing
@@ -113,7 +113,7 @@ class FileServer():
                 continue
             if not p[0].isalnum():
                 is_dirty = True
-            if not p.replace('_','a').replace('-','a').replace('+','a').replace('.','a').replace('=','a').replace(',','a').replace(':','a').isalnum():
+            if not p.replace('_','a').replace('-','a').replace('+','a').replace('=','a').replace('.','a').replace(',','a').replace(':','a').isalnum():
                 is_dirty = True
             path.append(p)
         # exclude-path match
