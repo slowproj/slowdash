@@ -4,6 +4,7 @@ import sys, os, atexit, logging
 logging.basicConfig(level=logging.INFO)
 
 from slowdash_cgi_config import sys_dir, project_dir
+sys.path.insert(0, os.path.join(sys_dir, 'app', 'server', 'slowapi'))
 sys.path.insert(0, os.path.join(sys_dir, 'app', 'server'))
 
 
@@ -16,13 +17,13 @@ is_cgi = True
 # The "is_cgi" variable might be modified after this module is loaded (by CGI that imports this module etc.),
 # so we cannot create a "application" object here. Instead, we create a "application" function and initialze App in it.
 from slowdash import App
-from slowdash.slowapi import WSGI
+from slowapi import WSGI
 app = None
 wsgi_app = None
 
 def application(environ, start_response):
-    global app, project_dir, is_cgi
-    if app is None:
+    global app, wsgi_app, project_dir, is_cgi
+    if wsgi_app is None:
         app = App(project_dir=project_dir, is_cgi=is_cgi)
         wsgi_app = WSGI(app)
         logging.info('created a SlowDash instance')

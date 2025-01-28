@@ -21,6 +21,10 @@ environ['wsgi.version'] = (1, 0)
 environ['wsgi.multitherad'] = False
 environ['wsgi.multiprocess'] = False
 environ['wsgi.run_once'] = True
+if environ.get('HTTPS', 'off') in ('on', '1'):
+    environ['wsgi.url_scheme'] = 'https'
+else:
+    environ['wsgi.url_scheme'] = 'http'
 
 result = slowdash_wsgi.application(environ, start_response)
 for data in result:

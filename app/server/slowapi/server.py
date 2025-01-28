@@ -65,7 +65,13 @@ def dispatch_wsgi(app, environ, start_response):
     """WSGI interface
     Args: see the WSGI specification
     """
-    url = request_uri(environ)
+    
+    # URL without application basepath (different from request_uri(environ))
+    url = environ.get('PATH_INFO', '/')
+    query = environ.get('QUERY_STRING', '')
+    if len(query) > 0:
+        url += '?' + query
+    
     method = environ.get('REQUEST_METHOD', 'GET').upper()
 
     headers = {
@@ -100,6 +106,7 @@ def dispatch_wsgi(app, environ, start_response):
         else:
             body = b''
 
+    logging.info(f'{method}: {url} --->')
     response = asyncio.run(app.slowapi(Request(url, method=method, headers=headers, body=body)))
     logging.info(f'{method}: {url} -> {response.status_code}')
     

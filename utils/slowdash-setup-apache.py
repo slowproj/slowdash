@@ -201,7 +201,9 @@ if interface == 'CGI':
     sys.stdout.write('- Install Apache2.\n')
     sys.stdout.write('- Enable cgi, userdir, rewrite, and headers modules by:\n')
     sys.stdout.write('    $ sudo a2enmod cgid userdir rewrite headers\n')
-    sys.stdout.write('- Edit /etc/apache2/mods-enabled/userdir.conf to allow overriding.\n')
+    sys.stdout.write('- Edit /etc/apache2/mods-enabled/userdir.conf to allow overriding and GET/POST/DELETE access:\n')
+    sys.stdout.write('    AllowOverride All')
+    sys.stdout.write('    Require method GET POST OPTIONS')
     sys.stdout.write('- Restart Apache by:\n')
     sys.stdout.write('    $ sudo systemctl restart apache2\n')
 else:
