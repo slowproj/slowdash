@@ -334,6 +334,8 @@ class App(slowapi.App):
 
 app = App()
 ```
+
+In this example, access to `/api/hello/` will be routed to the method bound to `/hello`, after the middleware that drops the `/api` prefix:
 ```bash
 curl http://localhost:8000/api/hello
 ```

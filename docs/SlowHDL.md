@@ -4,7 +4,11 @@ title: "SlowPy HDL (experimental)"
 
 
 # Overview
-SlowPy HDL enables describing control sequences in a Verilog-like style. If you are not familiar with Hardware Description Languages (HDL) such as VHDL and Verilog, you will be confused and will hate this. Please do not use this feature in that case. Some people, however, might find this a straightforward way to build parallel concurrent state machines. This feature was originally designed to replace legacy PLC (Programmable Logic Controller) systems with SlowPy; ladder logic can be directly translated to SlowPy HDL processes.
+SlowPy HDL provides a Verilog-like style for describing control sequences in Python.
+If you are unfamiliar with Hardware Description Languages (HDL) such as VHDL or Verilog, you may find it confusing at first. Consider avoiding this feature if you are not comfortable with HDL concepts.
+
+However, for users experienced with parallel state-machine design, SlowPy HDL offers a straightforward approach.
+It was originally designed to replace legacy PLC (Programmable Logic Controller) systems, allowing ladder logic to be directly translated into SlowPy HDL processes.
 
 
 ### Example
@@ -27,7 +31,7 @@ def _export():
     ]
 ```
 
-We will make a counter with start/stop/clear, the value of which is shown in the display.
+We will build a counter that can be started, stopped, or cleared, and its current value is shown on the display.
 
 If this were to be implemented in FPGA, a Verilog code block (excluding RESET) would look like:
 ```verilog
@@ -130,7 +134,9 @@ class TestModule(Module):
         self.a <= self.b
         self.b <= self.a
 ```
-Here the contents of the variables `self.a` and `self.b` are swapped on every clock cycle, in contrast to the software-like behavior where the contents of both the variables become 'B'.
+In this example, the contents of `self.a` and `self.b` are swapped on every clock cycle.
+If this were standard Python assignment in a single pass (software-like behavior), both variables would simply end up with the value 'B' instead.
+
 
 
 # Construct
@@ -188,6 +194,8 @@ if __name__ == '__main__':
 ```
 
 ## Behavior
+In SlowPy HDL, each user-defined Module is driven by a Clock that runs in its own thread. At the beginning of every clock cycle, the module reads new values from input registers (which are bound to external nodes). Then, all methods marked with the @always decorator are called in sequence. Any assignments made with the `<=` operator are scheduled to update on the next clock cycle, closely mirroring synchronous, non-blocking behavior in HDLs. This design effectively reproduces parallel, clock-driven state machines in Python.
+
 - Module implements the user logic, and clock calls user methods recurrently in a dedicated thread.
 - External control variables (SlowPy control nodes) are assigned to module's internal registers for input, output, or both.
 - The methods in the module decorated with `@always` is called on every clock cycle.
@@ -200,20 +208,28 @@ User modules must be derived from the `Module` class defined in `slowpy.control.
 
 
 ### Clock
-A clock defines the recurrence intervals. An instance of the `Clock` class is passed to `Module` instances. Clocks create a own thread by `start()` for the recurrent calls of the module processes (the methods decorated with `@always`).
+A Clock defines the interval at which the module processes are triggered.
+Each `Clock` instance runs in its own thread, created when you call `start()`.
+A `Clock` object is passed to `Module` instances so it can repeatedly invoke their `@always` methods at the specified frequency.
+
+
 
 It is possible and maybe useful to create multiple clocks at different frequencies. For example, if a device is slow and readout from it takes time, a slow clock can be used to (pre)fetch the data from the device.
 
 ### Registers
 This implements the flip-flop behavior. The value of a register is updated on clock cycles. If the register is bound to an input from a node (by `register = input_reg(node)` or `register = inout_reg(node)`), the `get()` of the bound node is called just before every clock cycle and the value is held until the next cycle. If the register is bound to an output to a node (by `register = output_reg(node)` or `register = inout_reg(node)`), the assigned register value is written to the node by callling `set(value)` right after every clock cycle. If a register is not bound to a node, the assigned value will take effect on the next clock cycle.
 
-The `<=` operator is overloaded for register value assignment. To use the operator in the usual way (numeric comparison), do like `int(reg) <= 31`.
+The `<=` operator is overloaded to handle register assignments.
+If you need to use it for a numeric comparison instead, cast the register to an integer first (e.g., `if int(reg) <= 31:`).
 
 The content of a register is just a Python value, therefore any Python value types can be stored, not limited to numerical types.
 
 
 # Using in SlowTask
-Keep it in mind that each Clock instance has its own thread. Use SlowTask's `_run()` and `_halt()` to control the thread.
+Note that each `Clock` instance runs in its own thread.
+When using in a SlowTask, use the `_run()` and `_halt()` methods to start and stop this thread respectively.
+
+
 
 ```python
 #... Variable Nodes
@@ -243,17 +259,20 @@ if __name__ == '__main__':
    clock.start()
 ```
 
-Note that by the end of `_run()`, the thread must have been completed, otherwise the next start of SlowTask would duplicate the clocking thread.
+Important: `_run()` should finish only after the clock thread has stopped.
+If the thread remains active and you call `_run()` again, you will end up with multiple clock threads running concurrently.
+
+
 
 
 # Internal Implementation
 #### Structure
 - When the `Module` class is initialized with a clock, it registers itself to the clock object, so that the clock object knows all the modules under its control.
 
-- The clock object scans the module contents, for
-  - the register members, by `isinstance(member, Register)`, and
-  - the process methods, by looking for the `@always` decorator signature.
-  
+- During initialization, the clock object scans each module to:
+  - Identify all register members (`isinstance(member, Register)`),
+  - Find all process methods (those with the `@always` decorator).
+
 - Each register has two internal values, one for reading and one for writing, in addition to the bound node.
   - Reading from a register returns the reading value.
   - The overloaded operator `register <= rhs` sets the rhs value to the register writing value.
