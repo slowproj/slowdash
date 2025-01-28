@@ -1,6 +1,6 @@
 # SlowAPI
 
-SlowAPI is a Web-server micro-framework in Python. Like FastAPI (or Flask), URLs are parsed, parameters are extracted, and the requests are routed to user code. Unlike FastAPI (or Flask), requests are bound to methods of class instances, not only to functions or single instance of a class, while binding to functions like FastAPI/Flask is also supported. One HTTP request can be handled by multiple user handlers, such as multiple instances of an user class or mixed instances of various classes and functions, and the responses are aggregated in customizable way. This design is made for dynamic plug-in systems (where each plugin might return partial data) with the chain-of-responsibility scheme. SlowAPI implements both ASGI and WSGI.
+SlowAPI is a Web-server micro-framework in Python. Like FastAPI (or Flask), URLs are parsed, parameters are extracted, and the requests are routed to user code. Unlike FastAPI or Flask, requests in SlowAPI can be bound to methods of multiple class instances, not just to functions or a single instance. However, binding to standalone functions (as in FastAPI/Flask) is also supported. One HTTP request can be handled by multiple user handlers, for example, multiple instances of a user class or a combination of different classes and functions, and the responses are aggregated in a customizable way. This is designed for dynamic plug-in systems (where each plugin might return partial data) with the chain-of-responsibility scheme. SlowAPI implements both ASGI and WSGI.
 
 
 ## Dependencies
@@ -17,11 +17,11 @@ SlowAPI is a Web-server micro-framework in Python. Like FastAPI (or Flask), URLs
 import slowapi
 
 class App(slowapi.App):
-    @slowapi.get('/'):
+    @slowapi.get('/')
     def home(self):
         return 'feel at home'
 
-    @slowapi.get('/hello'):
+    @slowapi.get('/hello')
     def say_hello(self):
         return 'Hello, SlowAPI!'
 
@@ -35,33 +35,36 @@ if __name__ == '__main__':
 #### Running the example
 Like FastAPI/Flask, running the script above will start a HTTP server at port 8000.
 ```bash
-$ python3 testapp.py
+python3 testapp.py
 ```
-
+Now open `http://localhost:8000/hello` in your browser, or run:
 ```bash
-$ curl http://localhost:8000/hello
+curl http://localhost:8000/hello
+```
+And you should see thre response:
+```text
 Hello, SlowAPI.
 ```
 
 #### Running via external ASGI server
 Like FastAPI, SlowAPI App object implements ASGI and any external ASGI server can be used.
 ```bash
-$ uvicorn testapp:app
+uvicorn testapp:app
 ```
 
 #### Not inheriting from slowapi.App
-The base class, `slowapi.App`, has the following only three attributes:
+The base class, `slowapi.App`, has only three attributes, listed below:
 - `slowapi`: SlowAPI connection point
 - `__call__(self, scope, receive, send)`: ASGI entry point
 - `run(self, port, **kwargs)`: Execution start point
 
-Given this small number of attributes, the chance of name conflicts with user classes should be minimal.
-Nevertheless, it is also possible to make an user class independently from SlowAPI, and pass it to SlowAPI later:
+Given this small number of attributes, the likelihood of name conflicts with user classes should be minimal.
+Nevertheless, it is also possible to create a user class independently from SlowAPI and pass it to SlowAPI later.
 ```python
 import slowapi
 
 class MyApp:
-    @slowapi.get('/hello'):
+    @slowapi.get('/hello')
     def say_hello(self):
         return 'hello, how are you?'
 
@@ -70,7 +73,7 @@ app = slowapi.App(MyApp())
 if __name__ == '__main__':
     app.run()
 ```
-Once `app` is made, the rest is the same.
+Once you have created the `app` instance, the usage is essentially the the same as before.
 
 #### Performance overhead
 Whether the user class is inherited from `slowapi.App` or not, the SlowAPI decorators (such as `@slowapi.get()`) do not modify the function signature, and the decorated user methods can be used as they are defined in the user code. There is no additional performance overhead with the SlowAPI decorators.
@@ -83,8 +86,8 @@ import slowapi
 
 app = slowapi.SlowAPI()
 
-@app.get('/hello'):
-def say_hello(self):
+@app.get('/hello')
+def say_hello():
     return 'hello, how are you?'
 
 if __name__ == '__main__':
@@ -246,7 +249,7 @@ class App(slowapi.App):
                 message = await websocket.receive_text()
                 await websocket.send_text(f'Received: {message}')
         except slowapi.ConnectionClosed:
-            logging.info("WebSocket Closed")
+            print("WebSocket Closed")
 
 app = App()
 ```
@@ -278,8 +281,12 @@ class App(slowapi.App):
 app = App()
 ```
 
+By sending a request to the `/hello` endpoint, to which three App instances are bound:
 ```bash
-$ curl http://localhost:8000/hello | jq
+curl http://localhost:8000/hello | jq
+```
+You will get a result of three responses aggregated:
+```text
 [
   "Hello.",
   "I am a peach",
@@ -294,7 +301,7 @@ $ curl http://localhost:8000/hello | jq
 - If all the responses are `None`, a status of 404 (Not Found) is replied.
 - If one of the responses are error (code >= 400), an error is replied without content; the largest status code is taken.
 
-The behavior is customizable by providing an user response aggregator, as explained below.
+The behavior is customizable by providing a user response aggregator, as explained below.
 
 Instances of `slowapi.SlowAPI` used to bind functions in the example above can also be included or include other sub-apps.
 
@@ -328,7 +335,7 @@ class App(slowapi.App):
 app = App()
 ```
 ```bash
-$ curl http://localhost:8000/api/hello
+curl http://localhost:8000/api/hello
 ```
 
 The `@route()` decorator can be used to handle all the request methods, not specific to one such as `@get()`. The path rule of `/{*}` will capture all the URL. 
@@ -340,6 +347,7 @@ If a (sub)app is added by `app.add_middleware(subapp)`, the `subapp` handlers ar
 Multiple middlewares can be appended, and they will be processed in the order of appending, before the main `app` handlers and sub-app handlers are called.
 
 A middleware that modifies responses can be implemented by returning a custom response with an overridden aggregation method (`Response.merge_response(self, response:Response)`).
+
 
 ### Ready-to-use Middlewares
 
@@ -386,7 +394,7 @@ class MyExclusiveApp:
 ```
 This method is useful if the method returns a data structure that requires a certain way to merge other data.
 
-In addition to that, an user app class can override a method to aggregate all the individual responses from all the handlers within the class, to provide the full flexibility. To do this, make a custom `Router` with an overridden `merge_responses()` method:
+In addition to that, a user app class can override a method to aggregate all the individual responses from all the handlers within the class, to provide the full flexibility. To do this, make a custom `Router` with an overridden `merge_responses()` method:
 
 ```python
 import slowapi
@@ -414,7 +422,7 @@ Calling `super().__init__()` later is a little bit more efficient, as it does no
 import slowapi
 
 class App(slowapi.App):
-    @slowapi.get('/hello'):
+    @slowapi.get('/hello')
     def hello(self):
         return 'hello, how are you?'
 
@@ -428,7 +436,9 @@ app.add_middleware(slowapi.BasicAuthentication(auth_list=[key]))
 
 If HTTP is used, nothing will be returned, as the access is denied. (Add `-v` option to see details.)
 ```bash
-$ curl http://localhost:8000/hello -v
+curl http://localhost:8000/hello -v
+```
+```text
 ...
 > GET /hello HTTP/1.1
 > Host: localhost:8000
@@ -439,13 +449,16 @@ $ curl http://localhost:8000/hello -v
 
 Now with the credentials:
 ```bash
-$ curl http://api:slow@localhost:8000/hello
+curl http://api:slow@localhost:8000/hello
+```
+You will get an expected result:
+```text
 hello, how are you?
 ```
 
 
 ### HTTPS and HTTP/2
-HTTP/2 is enabled only with TSL. Provide TSL key files to use HTTPS.
+HTTP/2 is enabled only with TLS. Provide TLS key files to use HTTPS.
 ```python
 if __name__ == '__main__':
     app.run(ssl_keyfile='key.pem', ssl_certfile='cert.pem')
@@ -454,12 +467,12 @@ if __name__ == '__main__':
 #### Memo: Generating a certificate
 ##### Temporary Self-Signed
 ```bash
-$ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout key.pem -out cert.pem
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout key.pem -out cert.pem
 ```
 ##### Let's Encrypt if you have a domain:
 ```bash
-$ sudo apt install certbot
-$ sudo certbot certonly --standalone -d YOUR.DOMAIN.NAME
+sudo apt install certbot
+sudo certbot certonly --standalone -d YOUR.DOMAIN.NAME
 ```
 This will create files under `/etc/letsencript/live/YOUR.DOMAIN.NAME`
 - private key: `privkey.pem`
@@ -474,7 +487,7 @@ In addition to ASGI, WSGI can be used. The `to_wsgi()` function wraps the ASGI A
 import slowapi
 
 class App(slowapi.App):
-    @slowapi.get('/hello'):
+    @slowapi.get('/hello')
     def hello(self):
         return 'hello, how are you?'
 
@@ -482,16 +495,16 @@ app = App()   # ASGI App
 wsgi_app = slowapi.WSGI(app)
 
 if __name__ == '__main__':
-    wagi_app.run()
+    wsgi_app.run()
 ```
 The script can be executed as a HTTP server with WSGI:
 ```bash
-$ python3 ./testapp.py
+python3 ./testapp.py
 ```
 
 Or can be used with any WSGI server:
 ```bash
-$ gunicorn test-app:wsgi_app
+gunicorn testapp:wsgi_app
 ```
 
 Note that with WSGI, every HTTP request is handled sequentially, even with async handlers described below.
