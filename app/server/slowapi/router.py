@@ -7,6 +7,7 @@ from urllib.parse import urlparse, parse_qsl, unquote
 from .model import JSON, DictJSON
 from .request import Request
 from .response import Response
+from .websocket import WebSocket, ConnectionClosed
 
 
 class PathRule:
@@ -24,6 +25,7 @@ class PathRule:
         self.json_body_param = None
         self.json_dict_body_param = None
         self.request_param = None
+        self.websocket_param = None
         self.path_param = None
         self.query_param = None
 
@@ -52,12 +54,21 @@ class PathRule:
                 self.json_body_param = pname
             elif param.annotation is DictJSON:   # to decode request body as dict in JSON
                 self.json_dict_body_param = pname
+            elif param.annotation is WebSocket:   # for websocket; to receive WebSocket connection
+                self.websocket_param = pname
             elif param.annotation is list:  # to store URL path
                 self.path_param = pname
             elif param.annotation is dict:  # to store URL query
                 self.query_param = pname
             else:
                 self.param_attributes[pname] = param
+
+        if self.method == 'WEBSOCKET':
+            if self.websocket_param is None:
+                logging.error('SlowAPI_PathRule: no WebSocket arg for websocket handler')
+        else:
+            if self.websocket_param is not None:
+                logging.error('SlowAPI_PathRule: WebSocket arg for non-websocket handler')
 
 
     def match(self, request:Request):
@@ -66,7 +77,7 @@ class PathRule:
             return None
         
         # method match
-        if (request.method != self.method) and (self.method != '*'):
+        if (request.method != self.method) and ((self.method != '*') or (request.method == 'WEBSOCKET')):
             return None
         
         # length match
@@ -185,6 +196,18 @@ def route(path_rule:str, status_code:int=200):
     return wrapper
 
 
+def websocket(path_rule:str):
+    """decorator to make a websocket entry point
+    Args:
+      - path_rule: path pattern to match
+    """
+    def wrapper(func):
+        if not hasattr(func, 'slowapi_path_rule'):
+            func.slowapi_path_rule = PathRule(path_rule, 'websocket', inspect.signature(func))
+        return func
+    return wrapper
+
+
 
 class Router:
     def __init__(self, app):
@@ -261,6 +284,28 @@ class Router:
         self.middlewares.append(app)
 
 
+    async def websocket(self, request:Request, websocket:WebSocket) -> None:
+        logging.info(f"WEBSOCKET: {request}")
+        for handler in self.handlers:
+            args = handler.slowapi_path_rule.match(request)
+            if args is None:
+                continue
+            request.abort()
+            
+            if not inspect.iscoroutinefunction(handler):
+                logging.error('WebSocket handler must be async')
+                return None
+
+            args[handler.slowapi_path_rule.websocket_param] = websocket
+            try:
+                await handler(self.app, **args)
+            except asyncio.CancelledError:
+                pass
+
+        for subapp in self.subapps:
+            await subapp.slowapi.websocket(request)
+
+        
     def __call__(self, request:Request, body:bytes=None) -> Response:
         """ this is an async function, as self.dispatch is async
         """

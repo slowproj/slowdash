@@ -232,6 +232,27 @@ app = App()
   - For list: `doc[index]`,`len(doc)`, `for v in doc:`, ...
 
 
+### WebSocket
+Basically the same structure as FastAPI:
+```python
+import slowapi
+
+class App(slowapi.App):
+    @slowapi.websocket('/ws')
+    async def ws_echo(self, websocket:slowapi.WebSocket):
+        await websocket.accept()
+        try:
+            while True:
+                message = await websocket.receive_text()
+                await websocket.send_text(f'Received: {message}')
+        except slowapi.ConnectionClosed:
+            logging.info("WebSocket Closed")
+
+app = App()
+```
+- WebSocket is available only with ASGI.
+
+
 ### Multiple Handlers for the same URL
 ```python
 import slowapi
@@ -458,7 +479,7 @@ class App(slowapi.App):
         return 'hello, how are you?'
 
 app = App()   # ASGI App
-wsgi_app = slowapi.WsgiAdapter(app)
+wsgi_app = slowapi.WSGI(app)
 
 if __name__ == '__main__':
     wagi_app.run()
@@ -478,8 +499,7 @@ Note that with WSGI, every HTTP request is handled sequentially, even with async
 
 ## TODOs
 - File templates
-- WebSockets
-- Dependency Injection (FastAPI Depends())
 - App.mount('path', app)
-- GraphQL chain processing (thanks ChatGPT for the suggestion!)
+- OpenAPI document generation
+- GraphQL chain processing (thanks ChatGPT for the idea!)
   

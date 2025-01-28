@@ -6,6 +6,7 @@ from wsgiref.util import request_uri
 from wsgiref.simple_server import make_server, WSGIRequestHandler
 
 from .request import Request
+from .websocket import WebSocket
 
 
 async def dispatch_asgi(app, scope, receive, send):
@@ -13,17 +14,22 @@ async def dispatch_asgi(app, scope, receive, send):
     Args: see the ASGI specification
     """
     
-    if scope['type'] != 'http':
-        if scope['type'] != 'lifespan':
-            logging.warning(f'ASGI Request not handled: type={scope["type"]}')
-        return
-    
-    method = scope['method'].upper()
-    url = scope['raw_path'].decode()
-    if len(scope['query_string']) > 0:
-           url += '?' + scope['query_string'].decode()           
+    method = scope.get('method', '').upper()
+    url = scope.get('raw_path', b'').decode()
+    query = scope.get('query_string', b'')
+    if len(query) > 0:
+        url += '?' + query.decode()           
     headers = { k.decode():v.decode() for k,v in scope['headers'] }
 
+    if scope['type'] == 'lifespan':
+        return
+    elif scope['type'] == 'websocket':
+        logging.info(f'WebSocket: {url}')
+        return await app.slowapi.websocket(Request(url, method='WEBSOCKET', headers=headers), WebSocket(receive, send))
+    elif scope['type'] != 'http':
+        logging.warning(f'ASGI Request not handled: type={scope["type"]}')
+        return
+    
     body = None
     if method == 'POST':
         try:
