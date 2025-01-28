@@ -42,7 +42,7 @@ class App(slowapi.App):
                 logging.error('unable to move to project dir "%s": %s' % (self.project.project_dir, str(e)))            
                 self.project.project_dir = None
         if self.project.sys_dir is not None:
-            sys.path.insert(1, os.path.join(self.project.sys_dir, 'main', 'plugin'))
+            sys.path.insert(1, os.path.join(self.project.sys_dir, 'app', 'plugin'))
         if self.project.project_dir is not None:
             sys.path.insert(1, self.project.project_dir)
             sys.path.insert(1, os.path.join(self.project.project_dir, 'config'))
@@ -155,15 +155,15 @@ if __name__ == '__main__':
         if app.project.auth_list is not None:
             app.slowapi.add_middleware(slowapi.BasicAuthentication(auth_list=app.project.auth_list))
         app.slowapi.add_middleware(slowapi.FileServer(
-            filedir = os.path.join(app.project.sys_dir, 'main', 'web'),
+            filedir = os.path.join(app.project.sys_dir, 'app', 'site'),
             index_file = 'slowhome.html' if app.project is not None else 'welcome.html',
             exclude='/api',
             drop_exclude_prefix=True
         ))
 
         if args.wsgi:
-            slowapi.WSGI(app, slowapi.serve_wsgi_ref).run(port=args.port, log_level=logging.WARNING)
+            slowapi.WSGI(app, slowapi.serve_wsgi_ref).run(port=args.port, host='0.0.0.0', log_level=logging.WARNING)
         else:
-            app.run(port=args.port, log_level=logging.WARNING)
+            app.run(port=args.port, host='0.0.0.0', log_level=logging.WARNING)
         
     app.terminate()

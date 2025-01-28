@@ -149,7 +149,7 @@ class PluginComponent(Component):
           - None on error
         """
         
-        plugin_dir = os.path.abspath(os.path.join(self.project.sys_dir, 'main', 'plugin'))
+        plugin_dir = os.path.abspath(os.path.join(self.project.sys_dir, 'app', 'plugin'))
         for plugin_file in glob.glob(os.path.join(plugin_dir, '*.py')):
             if os.path.basename(plugin_file)[:-3].lower() == plugin_name.lower():
                 break

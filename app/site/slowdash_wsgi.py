@@ -4,7 +4,7 @@ import sys, os, atexit, logging
 logging.basicConfig(level=logging.INFO)
 
 from slowdash_cgi_config import sys_dir, project_dir
-sys.path.insert(0, os.path.join(sys_dir, 'main', 'server'))
+sys.path.insert(0, os.path.join(sys_dir, 'app', 'server'))
 
 
 # The CGI mode disables launching task processes (user module and slow-task).

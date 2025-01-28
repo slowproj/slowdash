@@ -17,7 +17,7 @@ interface = args.interface
 import sys, os, stat, glob, shutil, logging
 
 sys_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.insert(0, os.path.join(sys_dir, 'main', 'server'))
+sys.path.insert(0, os.path.join(sys_dir, 'app', 'server'))
 from sd_project import Project
 
 project = Project()
@@ -164,25 +164,25 @@ dirlist = [
     'jagaimo', 'autocruise', 'docs', 'extern'
 ]
 for fileglob in filelist:
-    for src in glob.glob(os.path.join(sys_dir, 'main', 'web', fileglob)):
+    for src in glob.glob(os.path.join(sys_dir, 'app', 'site', fileglob)):
         name = os.path.basename(src)
         shutil.copy(src, html_dir)
 for dirname in dirlist:
-    src = os.path.join(sys_dir, 'main', 'web', dirname)
+    src = os.path.join(sys_dir, 'app', 'site', dirname)
     name = os.path.basename(src)
     dst = os.path.join(html_dir, name)
     if os.path.isdir(dst):
         shutil.rmtree(dst)
     shutil.copytree(src, dst, symlinks=True)
 if interface == 'CGI':
-    src = os.path.join(sys_dir, 'main', 'web', 'slowdash.cgi')
+    src = os.path.join(sys_dir, 'app', 'site', 'slowdash.cgi')
     dest = os.path.join(html_dir, 'slowdash.cgi')
     shutil.copy(src, dest)
-    src = os.path.join(sys_dir, 'main', 'web', 'slowdash_wsgi.py')
+    src = os.path.join(sys_dir, 'app', 'site', 'slowdash_wsgi.py')
     dest = os.path.join(html_dir, 'slowdash_wsgi.py')
     shutil.copy(src, dest)
 else:
-    src = os.path.join(sys_dir, 'main', 'web', 'slowdash_wsgi.py')
+    src = os.path.join(sys_dir, 'app', 'site', 'slowdash_wsgi.py')
     dest = os.path.join(html_dir, 'slowdash.wsgi')
     shutil.copy(src, dest)
 
