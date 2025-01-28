@@ -30,10 +30,10 @@ app = App()
 if __name__ == '__main__':
     app.run()
 ```
-- Very similar to FastAPI, except that URLs are associated to class methods. Unlike FastAPI, the `app` instance is created after the binding is described. (Important for creating multiple handler instances.)
+- Very similar to FastAPI, except that URLs are associated with class methods. Unlike FastAPI, the `app` instance is created after the binding is described. (Important for creating multiple handler instances.)
 
 #### Running the example
-Like FastAPI/Flask, running the script above will start a HTTP server at port 8000.
+Like FastAPI/Flask, running the script above will start an HTTP server at port 8000.
 ```bash
 python3 testapp.py
 ```
@@ -41,13 +41,13 @@ Now open `http://localhost:8000/hello` in your browser, or run:
 ```bash
 curl http://localhost:8000/hello
 ```
-And you should see thre response:
+And you should see the response:
 ```text
 Hello, SlowAPI.
 ```
 
 #### Running via external ASGI server
-Like FastAPI, SlowAPI App object implements ASGI and any external ASGI server can be used.
+Like FastAPI, SlowAPI App object implements ASGI, and any external ASGI server can be used.
 ```bash
 uvicorn testapp:app
 ```
@@ -73,7 +73,7 @@ app = slowapi.App(MyApp())
 if __name__ == '__main__':
     app.run()
 ```
-Once you have created the `app` instance, the usage is essentially the the same as before.
+Once you have created the `app` instance, the usage is essentially the same as before.
 
 #### Performance overhead
 Whether the user class is inherited from `slowapi.App` or not, the SlowAPI decorators (such as `@slowapi.get()`) do not modify the function signature, and the decorated user methods can be used as they are defined in the user code. There is no additional performance overhead with the SlowAPI decorators.
@@ -209,7 +209,7 @@ class App(slowapi.App):
 app = App()
 ```
 - The request body is parsed as `dict` in JSON and the value is set to the (last) argument of a type `slowapi.DictJSON`.
-- If the content cannot be not parsed as a dict, the handler will not be called and an error response (400) will be returned.
+- If the content cannot be parsed as a dict, the handler will not be called and an error response (400) will be returned.
 - The DictJSON object (`doc`) implements most common dict operations, such as `doc[key]`, `key in doc`, `for key in doc:`, `doc.get(value, default)`, `doc.items()`, ...
 - use `doc.value()` or `dict(doc)` to get a native Python dict object.
 
@@ -227,7 +227,7 @@ app = App()
 ```
 
 - The request body is parsed as JSON and the value is set to the (last) argument of a type `slowapi.JSON`.
-- If the content cannot be not parsed as JSON, the handler will not be called and an error response (400) will be returned.
+- If the content cannot be parsed as JSON, the handler will not be called and an error response (400) will be returned.
 - Use `JSON.value()` to get a value of the native Python types (`dict`, `list`, `str`, ...).
 - Use `dict(doc)` or `list(doc)` to convert to native Python dict or list.
 - If the content is dict (or list), most common dict (list) methods are available in JSON-type data:
@@ -236,7 +236,7 @@ app = App()
 
 
 ### WebSocket
-Basically the same structure as FastAPI:
+The structure is basically the same as FastAPI:
 ```python
 import slowapi
 
@@ -298,8 +298,8 @@ You will get a result of three responses aggregated:
 - If responses are all `dict`, they are combined with `update()`.
 - If responses are all `str`, they are concatenated with a new-line in between.
 - If a response is `None`, it will not be included.
-- If all the responses are `None`, a status of 404 (Not Found) is replied.
-- If one of the responses are error (code >= 400), an error is replied without content; the largest status code is taken.
+- If all the responses are `None`, a 404 status (Not Found) is replied.
+- If one of the responses is an error (code >= 400), an error is replied without content; the largest status code is taken.
 
 The behavior is customizable by providing a user response aggregator, as explained below.
 
@@ -364,7 +364,7 @@ key = slowapi.BasicAuthentication.generate_key('api', 'slow')
 #### File Server
 `FileServer(filedir, *, prefix='', index_file=None, exclude=None, drop_exclude_prefix=False, ext_allow=None, ext_deny=None)`
 
-File Server handles GET requests to send back files stored under `filedir`. The request path, optionally with `prefix` which will be dropped, is the relative path from the `filedir`. For security reasons, file names cannot contain special characters other than a few selected ones (`_`, `-`, `+`, `=`, `,`, `.`, `:`), and the first letter of each path element must be an alphabet or digit. Also, the path cannot start with Windows drive letter (like `c:`), even if SlowAPI runs on non-Windows. POST and DELETE are not implemented.
+The file server handles GET requests to send back files stored in `filedir`. The request path, optionally with `prefix` that will be dropped, is the relative path from the `filedir`. For security reasons, file names cannot contain special characters other than a few selected ones (`_`, `-`, `+`, `=`, `,`, `.`, `:`), and the first letter of each path element must be an alphabet or digit. Also, the path cannot start with a Windows drive letter (like `c:`), even if SlowAPI runs on non-Windows. POST and DELETE are not implemented.
 
 - `filedir` (str): path to a filesystem directory
 - `prefix` (str): URL path to bind this app (e.g., `/webfile`)
@@ -394,7 +394,7 @@ class MyExclusiveApp:
 ```
 This method is useful if the method returns a data structure that requires a certain way to merge other data.
 
-In addition to that, a user app class can override a method to aggregate all the individual responses from all the handlers within the class, to provide the full flexibility. To do this, make a custom `Router` with an overridden `merge_responses()` method:
+In addition to that, a user app class can override a method to aggregate all the individual responses from all the handlers within the class, to provide full flexibility. To do this, make a custom `Router` with an overridden `merge_responses()` method:
 
 ```python
 import slowapi
@@ -451,7 +451,7 @@ Now with the credentials:
 ```bash
 curl http://api:slow@localhost:8000/hello
 ```
-You will get an expected result:
+You will get the expected result:
 ```text
 hello, how are you?
 ```
@@ -497,17 +497,17 @@ wsgi_app = slowapi.WSGI(app)
 if __name__ == '__main__':
     wsgi_app.run()
 ```
-The script can be executed as a HTTP server with WSGI:
+The script can be executed as an HTTP server with WSGI:
 ```bash
 python3 ./testapp.py
 ```
 
-Or can be used with any WSGI server:
+Or it can be used with any WSGI server:
 ```bash
 gunicorn testapp:wsgi_app
 ```
 
-Note that with WSGI, every HTTP request is handled sequentially, even with async handlers described below.
+Note that with WSGI, every HTTP request is handled sequentially, even with async handlers.
 
 
 ## TODOs
