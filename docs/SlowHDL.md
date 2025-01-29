@@ -194,7 +194,7 @@ if __name__ == '__main__':
 ```
 
 ## Behavior
-In SlowPy HDL, each user-defined Module is driven by a Clock that runs in its own thread. At the beginning of every clock cycle, the module reads new values from input registers (which are bound to external nodes). Then, all methods marked with the @always decorator are called in sequence. Any assignments made with the `<=` operator are scheduled to update on the next clock cycle, closely mirroring synchronous, non-blocking behavior in HDLs. This design effectively reproduces parallel, clock-driven state machines in Python.
+In SlowPy HDL, each user-defined Module is driven by a Clock that runs in its own thread. At the beginning of every clock cycle, the module reads new values from input registers (which are bound to external nodes). Then, all methods marked with the `@always` decorator are called in sequence. Any assignments made with the `<=` operator are scheduled to update on the next clock cycle, closely mirroring synchronous, non-blocking behavior in HDLs. This design effectively reproduces parallel, clock-driven state machines in Python.
 
 - Module implements the user logic, and clock calls user methods recurrently in a dedicated thread.
 - External control variables (SlowPy control nodes) are assigned to module's internal registers for input, output, or both.

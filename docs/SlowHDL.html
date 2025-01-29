@@ -103,14 +103,15 @@ id="toc-internal-implementation">Internal Implementation</a></li>
 </header>
 
 <h1 id="overview">Overview</h1>
-<p>SlowPy HDL enables describing control sequences in a Verilog-like
-style. If you are not familiar with Hardware Description Languages (HDL)
-such as VHDL and Verilog, you will be confused and will hate this.
-Please do not use this feature in that case. Some people, however, might
-find this a straightforward way to build parallel concurrent state
-machines. This feature was originally designed to replace legacy PLC
-(Programmable Logic Controller) systems with SlowPy; ladder logic can be
-directly translated to SlowPy HDL processes.</p>
+<p>SlowPy HDL provides a Verilog-like style for describing control
+sequences in Python. If you are unfamiliar with Hardware Description
+Languages (HDL) such as VHDL or Verilog, you may find it confusing at
+first. Consider avoiding this feature if you are not comfortable with
+HDL concepts.</p>
+<p>However, for users experienced with parallel state-machine design,
+SlowPy HDL offers a straightforward approach. It was originally designed
+to replace legacy PLC (Programmable Logic Controller) systems, allowing
+ladder logic to be directly translated into SlowPy HDL processes.</p>
 <h3 id="example">Example</h3>
 <p>For a control system that consists of a counter display and start /
 stop / clear buttons:</p>
@@ -130,8 +131,8 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a hr
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&#39;clear&#39;</span>, clear_btn.writeonly()),</span>
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&#39;display&#39;</span>, display.readonly())</span>
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    ]</span></code></pre></div>
-<p>We will make a counter with start/stop/clear, the value of which is
-shown in the display.</p>
+<p>We will build a counter that can be started, stopped, or cleared, and
+its current value is shown on the display.</p>
 <p>If this were to be implemented in FPGA, a Verilog code block
 (excluding RESET) would look like:</p>
 <div class="sourceCode" id="cb2"><pre
@@ -235,10 +236,10 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a hr
 <span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> swap_ab(<span class="va">self</span>):</span>
 <span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.a <span class="op">&lt;=</span> <span class="va">self</span>.b</span>
 <span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.b <span class="op">&lt;=</span> <span class="va">self</span>.a</span></code></pre></div>
-<p>Here the contents of the variables <code>self.a</code> and
-<code>self.b</code> are swapped on every clock cycle, in contrast to the
-software-like behavior where the contents of both the variables become
-‘B’.</p>
+<p>In this example, the contents of <code>self.a</code> and
+<code>self.b</code> are swapped on every clock cycle. If this were
+standard Python assignment in a single pass (software-like behavior),
+both variables would simply end up with the value ‘B’ instead.</p>
 <h1 id="construct">Construct</h1>
 <h2 id="typical-code-structure">Typical Code Structure</h2>
 <div class="sourceCode" id="cb5"><pre
@@ -291,6 +292,15 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a hr
 <span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
 <span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>   clock.start()</span></code></pre></div>
 <h2 id="behavior">Behavior</h2>
+<p>In SlowPy HDL, each user-defined Module is driven by a Clock that
+runs in its own thread. At the beginning of every clock cycle, the
+module reads new values from input registers (which are bound to
+external nodes). Then, all methods marked with the <code>@always</code>
+decorator are called in sequence. Any assignments made with the
+<code>&lt;=</code> operator are scheduled to update on the next clock
+cycle, closely mirroring synchronous, non-blocking behavior in HDLs.
+This design effectively reproduces parallel, clock-driven state machines
+in Python.</p>
 <ul>
 <li>Module implements the user logic, and clock calls user methods
 recurrently in a dedicated thread.</li>
@@ -310,11 +320,11 @@ argument for an instance of the <code>Clock</code> class described
 below. The user class methods that are decorated with
 <code>@always</code> will be called on each clock cycle.</p>
 <h3 id="clock">Clock</h3>
-<p>A clock defines the recurrence intervals. An instance of the
-<code>Clock</code> class is passed to <code>Module</code> instances.
-Clocks create a own thread by <code>start()</code> for the recurrent
-calls of the module processes (the methods decorated with
-<code>@always</code>).</p>
+<p>A Clock defines the interval at which the module processes are
+triggered. Each <code>Clock</code> instance runs in its own thread,
+created when you call <code>start()</code>. A <code>Clock</code> object
+is passed to <code>Module</code> instances so it can repeatedly invoke
+their <code>@always</code> methods at the specified frequency.</p>
 <p>It is possible and maybe useful to create multiple clocks at
 different frequencies. For example, if a device is slow and readout from
 it takes time, a slow clock can be used to (pre)fetch the data from the
@@ -331,15 +341,17 @@ until the next cycle. If the register is bound to an output to a node
 written to the node by callling <code>set(value)</code> right after
 every clock cycle. If a register is not bound to a node, the assigned
 value will take effect on the next clock cycle.</p>
-<p>The <code>&lt;=</code> operator is overloaded for register value
-assignment. To use the operator in the usual way (numeric comparison),
-do like <code>int(reg) &lt;= 31</code>.</p>
+<p>The <code>&lt;=</code> operator is overloaded to handle register
+assignments. If you need to use it for a numeric comparison instead,
+cast the register to an integer first (e.g.,
+<code>if int(reg) &lt;= 31:</code>).</p>
 <p>The content of a register is just a Python value, therefore any
 Python value types can be stored, not limited to numerical types.</p>
 <h1 id="using-in-slowtask">Using in SlowTask</h1>
-<p>Keep it in mind that each Clock instance has its own thread. Use
-SlowTask’s <code>_run()</code> and <code>_halt()</code> to control the
-thread.</p>
+<p>Note that each <code>Clock</code> instance runs in its own thread.
+When using in a SlowTask, use the <code>_run()</code> and
+<code>_halt()</code> methods to start and stop this thread
+respectively.</p>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">#... Variable Nodes</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -366,21 +378,22 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a hr
 <span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="co"># for standalone execution (not in SlowTask)</span></span>
 <span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
 <span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>   clock.start()</span></code></pre></div>
-<p>Note that by the end of <code>_run()</code>, the thread must have
-been completed, otherwise the next start of SlowTask would duplicate the
-clocking thread.</p>
+<p>Important: <code>_run()</code> should finish only after the clock
+thread has stopped. If the thread remains active and you call
+<code>_run()</code> again, you will end up with multiple clock threads
+running concurrently.</p>
 <h1 id="internal-implementation">Internal Implementation</h1>
 <h4 id="structure">Structure</h4>
 <ul>
 <li><p>When the <code>Module</code> class is initialized with a clock,
 it registers itself to the clock object, so that the clock object knows
 all the modules under its control.</p></li>
-<li><p>The clock object scans the module contents, for</p>
+<li><p>During initialization, the clock object scans each module to:</p>
 <ul>
-<li>the register members, by <code>isinstance(member, Register)</code>,
-and</li>
-<li>the process methods, by looking for the <code>@always</code>
-decorator signature.</li>
+<li>Identify all register members
+(<code>isinstance(member, Register)</code>),</li>
+<li>Find all process methods (those with the <code>@always</code>
+decorator).</li>
 </ul></li>
 <li><p>Each register has two internal values, one for reading and one
 for writing, in addition to the bound node.</p>
