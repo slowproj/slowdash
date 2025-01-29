@@ -150,7 +150,6 @@ def serve_asgi_uvicorn(app, port, **kwargs):
         server_task.cancel()
     
     sys.stderr.write(f'Listening at port {port} (ASGI)\n')
-    #uvicorn.run(app, port=port, workers=1, **kwargs)
     asyncio.run(run_uvicorn())
     sys.stderr.write('Terminated\n')    
 

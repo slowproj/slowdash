@@ -4,7 +4,7 @@
 <html lang="en">
 <head>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-  <title>SlowDash File Manager</title>
+  <title>SD File Manager</title>
   <link rel="icon" href="favicon.png">
   <link rel="stylesheet" type="text/css" href="jagaimo/jagaimo.css">
   <link rel="stylesheet" type="text/css" href="slowdash.css">
@@ -42,12 +42,6 @@
             ]
         };
 
-        if (config.meta?.name) {
-            document.title = 'SlowDash: ' + config.meta.name;
-        }
-        else {
-            document.title = 'SlowDash';
-        }
         let title = config._project.project?.title || config._project.project?.name || "SlowDash";
         if (config.meta?.title) {
             title += " - " + config.meta.title;

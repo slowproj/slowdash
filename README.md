@@ -42,7 +42,7 @@ none
 #### Step 3: Start an example project
 ```
 cd slowdash/ExampleProjects/DummyDataSource
-docker-compose up
+docker compose up
 ```
 
 #### Step 4: Take a look with a browser
@@ -74,7 +74,7 @@ cd slowdash/ExampleProjects/DummyDataSource
 ```
 Edit `docker-compose.yaml` to change `image: slowproj/slowdash` to `image: slowdash`
 ```
-docker-compose up
+docker compose up
 ```
 
 #### Step 4: Take a look with a browser
@@ -88,7 +88,7 @@ To stop, type `ctrl`-`c` in the docker-compose window, or use `docker-compose st
 #### Prerequisites for this trial
 - Git
 - Python3 (>=3.9) and packages:
-  - numpy, pyyaml, psutil
+  - numpy, pyyaml, psutil, uvicorn
 
 The procedure below will create a new directory, `slowdash`. 
 Everything is fully contained under this directory, and nothing in your system (other than this directory) will be modified throughout this trial.

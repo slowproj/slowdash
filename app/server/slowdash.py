@@ -63,6 +63,7 @@ class App(slowapi.App):
         for component in reversed([ app for app in self.slowapi ]):
             if isinstance(component, Component):
                 component.terminate()
+        logging.info('SlowDash has been terminated gracefully')
 
 
 
