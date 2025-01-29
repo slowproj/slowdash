@@ -120,10 +120,10 @@
 
     async function start(config) {
         if (config.meta?.name) {
-            document.title = config.meta.name;
+            document.title = 'SD ' + config.meta.name;
         }
         else {
-            document.title = 'SlowPlot';
+            document.title = 'SD Plots';
         }
 
         let title = config._project.project?.title || config._project.project?.name || "SlowDash";

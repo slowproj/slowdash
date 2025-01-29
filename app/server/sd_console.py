@@ -97,7 +97,7 @@ class ConsoleComponent(Component):
                 'text': '[console not enabled]'
             }
 
-        if self.request.is_async:
+        if request.is_async:
             if  self.console_awaitable_stdout is None:
                 # AwaitableStringIO cannot be used with WSGI, as there is no contineous event loop
                 self.build()

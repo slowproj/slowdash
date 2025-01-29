@@ -85,10 +85,10 @@
         }
     
         if (config.meta?.name) {
-            document.title = config.meta.name;
+            document.title = 'SD ' + config.meta.name;
         }
         else {
-            document.title = 'SlowDash';
+            document.title = 'SD Dashboard';
         }
         
         let title = config._project.project?.title || config._project.project?.name || "SlowDash";
