@@ -5,6 +5,8 @@ from urllib.parse import urlparse, parse_qsl, unquote
 
 
 class Request:
+    is_async = True  # True for ASGI; WSGI will change this directly
+    
     def __init__(self, url, method="GET", *, headers={}, body=None):
         self.method = method.upper()
         self.headers = copy.deepcopy(headers)

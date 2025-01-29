@@ -7,6 +7,7 @@ from wsgiref.simple_server import make_server, WSGIRequestHandler
 
 from .request import Request
 from .websocket import WebSocket
+from .router import Router
 
 
 async def dispatch_asgi(app, scope, receive, send):
@@ -112,7 +113,6 @@ def dispatch_wsgi(app, environ, start_response):
         else:
             body = b''
 
-    logging.info(f'{method}: {url} --->')
     response = asyncio.run(app.slowapi(Request(url, method=method, headers=headers, body=body)))
     logging.info(f'{method}: {url} -> {response.status_code}')
     
@@ -126,7 +126,8 @@ def serve_asgi_uvicorn(app, port, **kwargs):
         import uvicorn
     except:
         logging.error('Unable to import uvicorn Python package: not installed?')
-        return
+        logging.warn('Falling back to WSGI; async requests will be serialized. WebSockets will not be available.')
+        return serve_wsgi_ref(WSGI(app), port, **kwargs)
 
     stop_event = asyncio.Event()
     def async_signal_handler(signum, frame):
@@ -185,6 +186,8 @@ def serve_wsgi_gunicorn(app, port, **kwargs):
     if 'ssl_certfile' in kwargs:
         kwargs['certfile'] = kwargs['ssl_certfile']
 
+    Request.is_async = False
+        
     # gunicorn SHOULD handle signals... signals cannot stop the App somehow.
     sys.stderr.write(f'Listening at port {port} (gunicorn WSGI)\n')
     GunicornApp(app, **kwargs).run()
@@ -201,6 +204,8 @@ def serve_wsgi_ref(app, port, **kwargs):
         raise KeyboardInterrupt
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
+    
+    Request.is_async = False
 
     sys.stderr.write(f'Listening at port {port} (wsgiref WSGI)\n')
     try:
@@ -211,10 +216,33 @@ def serve_wsgi_ref(app, port, **kwargs):
     sys.stderr.write('Terminated\n')    
 
 
-
     
 def serve_asgi(app, port, **kwargs):
     return serve_asgi_uvicorn(app, port, **kwargs)
 
 def serve_wsgi(app, port, **kwargs):
     return serve_wsgi_gunicorn(app, port, **kwargs)
+
+
+
+class WSGI:
+    """ASGI to WSGI Adapter
+    """
+    def __init__(self, app, serve=serve_wsgi):
+        self.app = app
+        self.serve = serve
+
+
+    def __call__(self, environ, start_response):
+        """WSGI entry point
+        """
+        if not hasattr(self, 'slowapi'): # __init__() might not have been called
+            self.slowapi = Router(self)
+            
+        return dispatch_wsgi(self.app, environ, start_response)
+
+
+    def run(self, port=8000, **kwargs):
+        """Run HTTP Server
+        """
+        self.serve(self, port, **kwargs)

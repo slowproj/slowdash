@@ -7,14 +7,14 @@ from .server import dispatch_asgi, dispatch_wsgi, serve_asgi, serve_wsgi
 
 
 class App:
-    """SlowAPI App for WSGI
+    """SlowAPI App for ASIG
     Note:
       - User App can be derived from this class, or can be passed to the constructor parameter:
         - Method 1: class MyApp(slowapi.App)  then  app = MyApp()
         - Method 2: app = slowapi.App(MyApp())
       - In either case,
         - MyApp can use the SlowAPI routing decorators.
-        - The app object implements WSGI.
+        - The app object implements ASGI.
         - Sub-apps can be added by app.slowapi.include(MySubApp()).
         - Middlewares can be added by app.slowapi.add_middleware(...)
     """
@@ -113,28 +113,3 @@ class SlowAPI(App):
             self.slowapi.handlers.append(adapter)
             return func
         return wrapper
-
-
-
-class WSGI:
-    """WSGI Adapter
-    """
-    def __init__(self, app, serve=serve_wsgi):
-        self.app = app
-        self.serve = serve
-
-
-    def __call__(self, environ, start_response):
-        """WSGI entry point
-        """
-        if not hasattr(self, 'slowapi'): # __init__() might not have been called
-            self.slowapi = Router(self)
-            
-        return dispatch_wsgi(self.app, environ, start_response)
-
-
-    def run(self, port=8000, **kwargs):
-        """Run HTTP Server
-        """
-        self.serve(self, port, **kwargs)
-    
