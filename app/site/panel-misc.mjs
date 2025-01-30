@@ -34,7 +34,7 @@ class WelcomePanel extends Panel {
 
         this.contentDiv.html(`
             <h3>To get started, create a new project</h3>
-            See <a href="./docs/index.html">SlowDash Documentation</a> for how to do it.
+            See <a href="./docs/index.html#ProjectSetup">SlowDash Documentation</a> for how to do it.
             <p>
             <h3>Seeing this page unexpectedly?</h3>
             Check the project configuration:

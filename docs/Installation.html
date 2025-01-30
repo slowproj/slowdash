@@ -88,9 +88,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="#docker" id="toc-docker">Docker</a>
 <ul>
 <li><a href="#prerequisite" id="toc-prerequisite">Prerequisite</a></li>
-<li><a href="#using-docker-images-amd64-linux"
-id="toc-using-docker-images-amd64-linux">Using Docker Images
-(amd64-linux)</a></li>
+<li><a href="#using-docker-images-linux-windows-wsl-mac"
+id="toc-using-docker-images-linux-windows-wsl-mac">Using Docker Images
+(Linux, Windows WSL, Mac)</a></li>
 <li><a href="#building-an-image" id="toc-building-an-image">Building an
 Image</a></li>
 </ul></li>
@@ -114,20 +114,26 @@ id="toc-prerequisite-1">Prerequisite</a></li>
 <li><code>git</code></li>
 <li><code>docker</code> and <code>docker compose</code></li>
 </ul>
-<h2 id="using-docker-images-amd64-linux">Using Docker Images
-(amd64-linux)</h2>
+<h2 id="using-docker-images-linux-windows-wsl-mac">Using Docker Images
+(Linux, Windows WSL, Mac)</h2>
 <ul>
 <li>DockerHub: <a
 href="https://hub.docker.com/r/slowproj/slowdash/tags">slowproj/slowdash:TAG</a></li>
 <li>GitHub Container Registry: <a
 href="https://github.com/slowproj/slowdash/pkgs/container/slowdash">ghcr.io/slowproj/slowdash:TAG</a></li>
 </ul>
-<p>Choose a specific tag.</p>
+<p>Choose a specific tag or <code>latest</code>.</p>
 <h2 id="building-an-image">Building an Image</h2>
 <div class="sourceCode" id="cb1"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ git clone https://github.com/slowproj/slowdash.git --recurse-submodules</span></span>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ git clone https://github.com/slowproj/slowdash.git</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd slowdash</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker build -t slowdash .</span></span></code></pre></div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make docker</span></span></code></pre></div>
+<p>Or equivalently, you can run the following commands:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ git clone https://github.com/slowproj/slowdash.git --recurse-submodules</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd slowdash</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker build -t slowdash .</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker build -t slowpy-notebook -f ./lib/Dockerfile ./lib</span></span></code></pre></div>
 <h1 id="standard-bare-metal-installation">Standard (Bare-Metal)
 Installation</h1>
 <h2 id="prerequisite-1">Prerequisite</h2>
@@ -141,17 +147,18 @@ Installation</h1>
 </ul></li>
 <li>Python 3
 <ul>
-<li>Version &gt;= 3.8</li>
-<li>with NumPy and pyyaml</li>
-<li>also Pandas and Matplotlib if SlowDash python library (SlowPy) is
-used
+<li>Version &gt;= 3.9</li>
+<li>with numpy and pyyaml</li>
+<li>optionally (recommanded), uvicorn (Asynchronouns Web Server
+module)</li>
+<li>also matplotlib if SlowDash python library (SlowPy) is used
 <p></li>
 </ul></li>
 <li>Web Browser
 <ul>
-<li>Firefox most tested, Chrome &amp; Edge ok, Safari &amp; Opera never
-tested.</li>
-<li>Also works on mobile devices</li>
+<li>Firefox most tested, Chrome &amp; Edge &amp; Safari ok, DuckDuckGo
+&amp; Opera never tested.</li>
+<li>Also works on mobile devices: tested on iPad</li>
 </ul></li>
 </ul>
 <h3 id="data-backend">Data Backend</h3>
@@ -212,39 +219,39 @@ details.</p>
 <p>This process will not create any files other than the git-cloned
 directory. Installation can be removed completely by deleting this
 directory.</p>
-<div class="sourceCode" id="cb2"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ git clone https://github.com/slowproj/slowdash.git --recurse-submodules</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd slowdash</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ git clone https://github.com/slowproj/slowdash.git --recurse-submodules</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd slowdash</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make</span></span></code></pre></div>
 <p>This will create a bash file to set environmental variables.
 <code>source</code> it to include the settings:</p>
-<div class="sourceCode" id="cb3"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source PATH/TO/SLOWDASH/bin/slowdash-bashrc</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source PATH/TO/SLOWDASH/bin/slowdash-bashrc</span></span></code></pre></div>
 <p>For permanent installation, it might be convenient to include this
 line in the <code>.bashrc</code> file.</p>
 <p>Test the installation by running the command:</p>
-<div class="sourceCode" id="cb4"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>Usage: </span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  Web-Server Mode:    slowdash.py [Options] --port=PORT</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  Command-line Mode:  slowdash.py [Options] Command</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>Options:</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  -h, --help            show this help message and exit</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  -p PORT, --port=PORT  port number for web connection; command-line mode</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>                        without this option</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  --project-dir=PROJECT_DIR</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>                        project directory (default: current dir if not</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>                        specified by SLOWDASH_PROJECT environmental variable)</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>Usage: </span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  Web-Server Mode:    slowdash.py [Options] --port=PORT</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  Command-line Mode:  slowdash.py [Options] Command</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>Options:</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  -h, --help            show this help message and exit</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  -p PORT, --port=PORT  port number for web connection; command-line mode</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>                        without this option</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  --project-dir=PROJECT_DIR</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>                        project directory (default: current dir if not</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>                        specified by SLOWDASH_PROJECT environmental variable)</span></code></pre></div>
 <p>Test the browser connection using an arbitrary port. As we have not
 yet defined a project, a warning message will be shown, but we proceed
 for now.</p>
-<div class="sourceCode" id="cb5"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash --port=18881</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>23-05-15 20:12:35 WARNING: unable to find Slowdash Project Dir: specify it with the --project-dir option, set the SLOWDASH_PROJECT environmental variable, or run the slowdash commands at a project directory</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>listening at port 18881</span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ firefox http://localhost:18881</span></span></code></pre></div>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash --port=18881</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>23-05-15 20:12:35 WARNING: unable to find Slowdash Project Dir: specify it with the --project-dir option, set the SLOWDASH_PROJECT environmental variable, or run the slowdash commands at a project directory</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>listening at port 18881</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ firefox http://localhost:18881</span></span></code></pre></div>
 <p>On success, the error messages below will be shown:</p>
 <p><img src="fig/QuickTour-Welcome.png" style="width:40%"></p>
 <p>Type <code>Ctrl-c</code> to stop slowdash.</p>
@@ -252,10 +259,14 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <h3 id="updating-the-server-bare-metal-installation">Updating the Server
 (Bare-Metal Installation)</h3>
 <p>If slowdash is already running, stop it before updating it.</p>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ git pull --recurse-submodules</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make update</span></span></code></pre></div>
+<p>Or equivalently, run the commands below:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ git pull --recurse-submodules</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make</span></span></code></pre></div>
 <p>Often <code>make</code> does not do anything, but it is safe to run
 it every time.</p>
 <h3 id="refreshing-the-browser-cache-hard-refresh">Refreshing the

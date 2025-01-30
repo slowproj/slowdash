@@ -42,11 +42,7 @@ export function boot(defaults, optparse_func, start_func) {
                 return response.json();
             })
             .catch(e => {
-                $('<div>').appendTo($('body')).html(`
-                    <h3>Project-Configuration Loading Error</h3>
-                    Error: ${e.message}
-                `);
-                return null;
+                return {};
             })
             .then(config => {
                 if (config) {

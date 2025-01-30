@@ -137,8 +137,6 @@ if __name__ == '__main__':
         is_cgi = False,
         is_command = (args.port<=0),
     )
-    if app.project.config is None:
-        sys.exit(-1)
 
     if args.port <= 0:
         # command-line mode
@@ -155,7 +153,7 @@ if __name__ == '__main__':
             app.slowapi.add_middleware(slowapi.BasicAuthentication(auth_list=app.project.auth_list))
         app.slowapi.add_middleware(slowapi.FileServer(
             filedir = os.path.join(app.project.sys_dir, 'app', 'site'),
-            index_file = 'slowhome.html' if app.project is not None else 'welcome.html',
+            index_file = 'slowhome.html' if app.project.config is not None else 'welcome.html',
             exclude='/api',
             drop_exclude_prefix=True
         ))

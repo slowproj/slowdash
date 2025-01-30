@@ -3,7 +3,7 @@ title: SlowDash を使ってみる
 ---
 
 # SlowDash とは
-スローコントロールのモニタを Grafana で作らされた経験に基づいて開発が開始されました．おおまかには，
+スローコントロールのダッシュボードを Grafana で作らされた経験に基づいて開発が開始されました．おおまかには，
 
 - Grafana みたいに，データベース上にあるデータ（主に時系列）をリアルタイムにビジュアライズする
 - LabVIEW UI みたいに，画面上にいろいろ並べて，デバイスの状態を一覧表示したり，マウス等で操作したりする
@@ -15,8 +15,6 @@ title: SlowDash を使ってみる
 もともとはスローコントロール用でしたが，現在では物理実験に関わる全てのデータのビジュアライズと，DAQ を含むシステムコントロールの UI を目指して開発をしています．現時点で，Grafana で行うようなビジュアライゼーションの部分はほぼ実装済みで，解析およびコントロールの部分が開発中です．
 
 データベースアクセス以外は外部ライブラリを使っておらず，ソフトウェアの寿命が外のライブラリの変更等に影響されることはないようになっています．特に，流行り廃れが激しい JavaScript の部分はフレームワークなどは使わず，完全に自己完結です（使っていたけど排除しました）．データベース側および解析モジュールは，全て独立なプラグインとなっており，いつでも切り捨てられます．依存性がないので，インストールがとても楽です．
-
-名前がまだ決まっておらず，SlowDash というのは最初にスローコントロール用のダッシュボードを作ったときからの仮称です．
 
 <img src="fig/Gallery-ATDS-Dashboard.png" style="width:40%;box-shadow:0px 0px 15px -5px rgba(0,0,0,0.7);">
 <img src="fig/Gallery-RGA.png" style="width:40%;box-shadow:0px 0px 15px -5px rgba(0,0,0,0.7);">
@@ -44,6 +42,7 @@ Grafana と違って，物理屋に使いやすいようになっています（
 - 時系列以外のデータも普通に扱える
 - 何も考えずに長期間のデータを表示してもブラウザがデータを溜め込まない
 - 表示範囲のデータを簡単に CSV  等でダウンロードできる
+- 表示プロットを Jypyter にエクスポートして解析を継続できる
 
 さらに，コントロール用の機能も実装しています（８割くらい完成）:
 
@@ -59,14 +58,13 @@ Grafana と違って，物理屋に使いやすいようになっています（
 - ヒストグラムのフィティング等まで含めた埋め込みおよび対話的データ解析
 - メッセージングシステムへの直接接続 (AMQP とか Kafka とか)
 
-Grafana にあって今の SlowDash にないもの：
+Grafana にあって今の SlowDash にないもの（将来は実装されるかも）：
 
 - 柔軟なレイアウト構成
 - 円グラフ，重ね棒グラフ，みんな使ってる丸いゲージ，Excel によくあるチャート，...
 - 地理データ表示（世界地図を塗り分けるとか；SlowDash でもできるけど地図がない）
 - データベース等の設定ファイルのブラウザからの構築
 - ユーザ管理，アクセス管理
-- ロゴ
 
 実験でよく使われるけど，今の SlowDash にないもの：
 
@@ -106,8 +104,9 @@ JSROOT や Bokeh との違い：
 使っているデータベースを読むライブラリが必要な以外は，基本的に Python 3 が動けばすぐ使えます．
 
 - UNIX 風の OS．Ubuntu で開発，macOS とか Windows の WSL でも動いた．WinPython でも動くらしい．
-- Python 3.7 以上．すでに入ってなければ，NumPy と pyyaml も入れる．
-- ブラウザ．Firefox で開発していて，たまに Chrome と Edge でテストしている．Safari はだめかもしれない．
+- Python 3.9 以上．すでに入ってなければ，NumPy と pyyaml も入れる．
+- 非同期ウェブサーバの uvicorn が入っていると動作が速くなるけど，必須ではない（`pip install uvicorn`）．
+- ブラウザ．Firefox で開発していて，たまに Chrome と Edge と Safari ででテストしている．
   - タブレットや携帯などのモバイルデバイス上でもそこそこ動作します．プロットの移動やズームは二本指で行ってください．
 
 使っているデータベースに合わせて，Python のライブラリを別にインストールする必要があります．`pip` ですぐに入ります．
@@ -162,7 +161,11 @@ $ make
 ```console
 $ source PATH/TO/SLOWDASH/bin/slowdash-bashrc
 ```
-SlowDash を継続的に使うなら，上記の行を `.bashrc` などに書いておくと毎回やる必要がなくなります．
+SlowDash を継続的に使うなら，上記の行を `.bashrc` などに書いておくと毎回やる必要がなくなります．ちなみに中身はこんな感じです：
+```bash
+export PATH="$PATH:/home/sanshiro/slowdash/bin"
+export PYTHONPATH="$PYTHONPATH:/home/sanshiro/slowdash/lib/slowpy"
+```
 
 インストールが成功したかは，`slowdash` コマンドを実行してチェックできます．
 (`slowdash` コマンドは `slowdash/bin` の下にあります）
@@ -197,6 +200,20 @@ $ firefox http://localhost:18881
 
 確認したら，`Ctrl-c` で `slowdash` コマンドを終了してください．
 
+### アップデート
+アップデートは，`make` で行うのが簡単です．
+```console
+$ cd PATH/TO/SLOWDASH
+$ make update
+```
+あるいは，以下のように手動で行っても構いませんが，`--recurse-submodules` をつけるのを忘れないようにしてください：
+```console
+$ cd PATH/TO/SLOWDASH
+$ git pull --recurse-submodules
+$ make
+```
+
+アップデート直後は，ブラウザのキャッシュに古いスクリプトが残っていることがあります．動作がおかしい場合は，`Ctrl-F5` など（ブラウザにより微妙に異なる）で強制リロードを行ってください．（状況が許すなら，キャッシュの全削除をするのが確実です．すいません．この問題はいずれちゃんと対応します．）
 
 # ダミーデータで UI を動かしてみる
 ダミーデータを使って SlowDash の UI をテストするプロジェクトがあるので，これを使ってとりあえず動かしてみます．展開した SlowDash ディレクトリの下にある `ExampleProjects` の `DummyDataSource` に `cd` して，そこから `slowdash` を走らせてください．
@@ -208,9 +225,6 @@ $ slowdash --port=18881
 プラウザを立ち上げて `http://localhost:18881` に接続すると作成済みページの一覧が表示されます．右上の SlowPlot にある `demo` をクリックすると，以下のようなプロットのデモページが表示されます．データに意味はなく，更新するたびに中身が変わりますが，SlowDash の表示要素の操作を一通り試してみることができます．
 
 <img src="fig/QuickTour-DummyDataSource.png" style="width:40%">
-
-もし古いバージョンの SlowDash から更新してこの段階で不具合が出る場合は，ブラウザのキャッシュに残っている古いスクリプトが影響している可能性があります．この場合は，`Ctrl`-`F5` などにより強制リロードを試してみてください．
-
 
 # Quick Tour をやってみる
 ここでは，公式ドキュメントの Quick Tour の前半くらい，時系列データのプロットを作るところまでやってみます．
@@ -424,19 +438,18 @@ slowdash_project:
     key: slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS
 ```
 
-パスワードハッシュは，`slowdash authkey/USER?password=PASS` コマンドにより作ることがきます．
+パスワードハッシュは，Apache と同じ形式ですが，`slowdash/utils` にある `slowdash-generate-key.py` プログラムで作ることがきます．
 ```console
-$ slowdash authkey/slow?password=dash
+$ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash
 {
     "type": "Basic",
     "key": "slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS"
 }
 ```
-このパスワードハッシュは Apache でも流用できますが，Apache で今でも広く使われている古いタイプのハッシュは，SlowDash では使えません．
+このプログラムの実行に `bcrypt` パッケージを入れる必要があるかもしれません (`pip install bcrypt`)．
 
 リバースプロキシの設定方法については，大規模言語モデル系の AI が詳しく教えてくれます．もとのポートはちゃんと塞いでおいてください．
 
 ローカルマシン上でパケットダンプができる人からシステムを守る術はありませんが，そういう人は別の方法でもっと簡単に攻撃できるはずです．
-
 
 <div style="margin-bottom:10rem"/>

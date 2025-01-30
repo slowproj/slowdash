@@ -7,17 +7,24 @@ title: Installation
 - `git`
 - `docker` and `docker compose`
 
-## Using Docker Images (amd64-linux)
+## Using Docker Images (Linux, Windows WSL, Mac)
 - DockerHub: [slowproj/slowdash:TAG](https://hub.docker.com/r/slowproj/slowdash/tags)
 - GitHub Container Registry: [ghcr.io/slowproj/slowdash:TAG](https://github.com/slowproj/slowdash/pkgs/container/slowdash)
 
-Choose a specific tag. 
+Choose a specific tag or `latest`.
 
 ## Building an Image
+```console
+$ git clone https://github.com/slowproj/slowdash.git
+$ cd slowdash
+$ make docker
+```
+Or equivalently, you can run the following commands:
 ```console
 $ git clone https://github.com/slowproj/slowdash.git --recurse-submodules
 $ cd slowdash
 $ docker build -t slowdash .
+$ docker build -t slowpy-notebook -f ./lib/Dockerfile ./lib
 ```
 
 # Standard (Bare-Metal) Installation
@@ -28,13 +35,14 @@ $ docker build -t slowdash .
   - macOS and Windows (WSL) seem ok
 <p>
 - Python 3
-  - Version >= 3.8
-  - with NumPy and pyyaml
-  - also Pandas and Matplotlib if SlowDash python library (SlowPy) is used
+  - Version >= 3.9
+  - with numpy and pyyaml
+  - optionally (recommanded), uvicorn (Asynchronouns Web Server module)
+  - also matplotlib if SlowDash python library (SlowPy) is used
 <p>
 - Web Browser
-  - Firefox most tested, Chrome &amp; Edge ok, Safari &amp; Opera never tested.
-  - Also works on mobile devices 
+  - Firefox most tested, Chrome &amp; Edge &amp; Safari ok, DuckDuckGo &amp; Opera never tested.
+  - Also works on mobile devices: tested on iPad
 
 ### Data Backend
 Install standard Python modules for the data storage system being used.
@@ -106,6 +114,11 @@ Type `Ctrl-c` to stop slowdash.
 ## Updating
 ### Updating the Server (Bare-Metal Installation)
 If slowdash is already running, stop it before updating it.
+```console
+$ cd PATH/TO/SLOWDASH
+$ make update
+```
+Or equivalently, run the commands below:
 ```console
 $ cd PATH/TO/SLOWDASH
 $ git pull --recurse-submodules

@@ -65,3 +65,9 @@ docker: all
 	docker rmi -f slowdash slowpy-notebook
 	docker build -t slowdash .
 	docker build -t slowpy-notebook -f ./lib/Dockerfile ./lib
+
+
+update:
+	git pull --recurse-submodules
+	@make
+
