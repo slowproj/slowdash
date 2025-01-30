@@ -203,20 +203,19 @@ In SlowPy HDL, each user-defined Module is driven by a Clock that runs in its ow
 
 
 ## Components
-### Modules
-User modules must be derived from the `Module` class defined in `slowpy.control.hdl`. The constructor (`__init__()`) of the `Module` class takes an argument for an instance of the `Clock` class described below. The user class methods that are decorated with `@always` will be called on each clock cycle.
+In SlowPy HDL, your design is built on three key components: Modules, Clocks, and Registers. A `Module` encapsulates the core logic, while a `Clock` manages timing by triggering the module’s processes on each cycle. `Register`s store and transfer data between cycles, mimicking the behavior of flip-flops in traditional hardware. The sections below explain how these elements interact to form a synchronous, HDL-like environment in Python.
 
+### Module
+User modules must be derived from the `Module` class defined in `slowpy.control.hdl`. The constructor (`__init__()`) of the `Module` class takes an argument for an instance of the `Clock` class described below. The user class methods that are decorated with `@always` will be called on each clock cycle.
 
 ### Clock
 A Clock defines the interval at which the module processes are triggered.
 Each `Clock` instance runs in its own thread, created when you call `start()`.
 A `Clock` object is passed to `Module` instances so it can repeatedly invoke their `@always` methods at the specified frequency.
 
-
-
 It is possible and maybe useful to create multiple clocks at different frequencies. For example, if a device is slow and readout from it takes time, a slow clock can be used to (pre)fetch the data from the device.
 
-### Registers
+### Register
 This implements the flip-flop behavior. The value of a register is updated on clock cycles. If the register is bound to an input from a node (by `register = input_reg(node)` or `register = inout_reg(node)`), the `get()` of the bound node is called just before every clock cycle and the value is held until the next cycle. If the register is bound to an output to a node (by `register = output_reg(node)` or `register = inout_reg(node)`), the assigned register value is written to the node by callling `set(value)` right after every clock cycle. If a register is not bound to a node, the assigned value will take effect on the next clock cycle.
 
 The `<=` operator is overloaded to handle register assignments.
@@ -263,9 +262,12 @@ Important: `_run()` should finish only after the clock thread has stopped.
 If the thread remains active and you call `_run()` again, you will end up with multiple clock threads running concurrently.
 
 
-
-
 # Internal Implementation
+Under the hood, SlowPy HDL uses a dedicated clock thread that coordinates module processes and register updates.
+During initialization, each module is scanned for registers (both input and output) and methods marked with `@always`.
+On every clock cycle, the clock object reads new data into input registers, invokes all `@always` methods, writes updated values to output registers, and finally copies all “next-cycle” assignments into the registers.
+This sequence ensures that SlowPy HDL behaves much like a synchronous hardware description language.
+
 #### Structure
 - When the `Module` class is initialized with a clock, it registers itself to the clock object, so that the clock object knows all the modules under its control.
 

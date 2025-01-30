@@ -312,7 +312,14 @@ called on every clock cycle.</li>
 The assigned value takes effect on the next clock cycle.</li>
 </ul>
 <h2 id="components">Components</h2>
-<h3 id="modules">Modules</h3>
+<p>In SlowPy HDL, your design is built on three key components: Modules,
+Clocks, and Registers. A <code>Module</code> encapsulates the core
+logic, while a <code>Clock</code> manages timing by triggering the
+module’s processes on each cycle. <code>Register</code>s store and
+transfer data between cycles, mimicking the behavior of flip-flops in
+traditional hardware. The sections below explain how these elements
+interact to form a synchronous, HDL-like environment in Python.</p>
+<h3 id="module">Module</h3>
 <p>User modules must be derived from the <code>Module</code> class
 defined in <code>slowpy.control.hdl</code>. The constructor
 (<code>__init__()</code>) of the <code>Module</code> class takes an
@@ -329,7 +336,7 @@ their <code>@always</code> methods at the specified frequency.</p>
 different frequencies. For example, if a device is slow and readout from
 it takes time, a slow clock can be used to (pre)fetch the data from the
 device.</p>
-<h3 id="registers">Registers</h3>
+<h3 id="register">Register</h3>
 <p>This implements the flip-flop behavior. The value of a register is
 updated on clock cycles. If the register is bound to an input from a
 node (by <code>register = input_reg(node)</code> or
@@ -383,6 +390,15 @@ thread has stopped. If the thread remains active and you call
 <code>_run()</code> again, you will end up with multiple clock threads
 running concurrently.</p>
 <h1 id="internal-implementation">Internal Implementation</h1>
+<p>Under the hood, SlowPy HDL uses a dedicated clock thread that
+coordinates module processes and register updates. During
+initialization, each module is scanned for registers (both input and
+output) and methods marked with <code>@always</code>. On every clock
+cycle, the clock object reads new data into input registers, invokes all
+<code>@always</code> methods, writes updated values to output registers,
+and finally copies all “next-cycle” assignments into the registers. This
+sequence ensures that SlowPy HDL behaves much like a synchronous
+hardware description language.</p>
 <h4 id="structure">Structure</h4>
 <ul>
 <li><p>When the <code>Module</code> class is initialized with a clock,
