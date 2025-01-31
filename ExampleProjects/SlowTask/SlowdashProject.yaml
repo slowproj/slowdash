@@ -8,8 +8,6 @@ slowdash_project:
   task:
     - name: test
       auto_load: true
-    - name: foo
-      auto_load: true
 
   system:
     our_security_is_perfect: true

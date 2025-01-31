@@ -71,3 +71,6 @@ update:
 	git pull --recurse-submodules
 	@make
 
+
+docker-update:
+	docker rmi -f slowproj/slowdash slowproj/slowpy-notebook

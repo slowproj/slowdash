@@ -391,7 +391,7 @@ class MyExclusiveApp:
     @slowapi.route('/hello')
     def hello():
         response = MyExclusiveResponse()
-        response.append('hello, here is only me')
+        response.append('hello, there is no one else here.')
         return response
 ```
 This method is useful if the method returns a data structure that requires a certain way to merge other data.

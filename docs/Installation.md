@@ -8,10 +8,13 @@ title: Installation
 - `docker` and `docker compose`
 
 ## Using Docker Images (Linux, Windows WSL, Mac)
+No installation is required. In your docker configuration, pull a SlowDash image from one of the repositories below:
+
 - DockerHub: [slowproj/slowdash:TAG](https://hub.docker.com/r/slowproj/slowdash/tags)
 - GitHub Container Registry: [ghcr.io/slowproj/slowdash:TAG](https://github.com/slowproj/slowdash/pkgs/container/slowdash)
 
-Choose a specific tag or `latest`.
+Choose a specific tag listed in the repository, or use `latest`.
+
 
 ## Building an Image
 ```console
@@ -27,7 +30,19 @@ $ docker build -t slowdash .
 $ docker build -t slowpy-notebook -f ./lib/Dockerfile ./lib
 ```
 
-# Standard (Bare-Metal) Installation
+### Updating
+If you are using the `:latest` images from DockerHub (or GitHub CR), removing the local copy will cause pulling the latest version on the next execution:
+```
+docker rmi -f slowproj/slowdash
+docker rmi -f slowproj/slowpy-notebook
+```
+(You can also do the same by `make docker-update`.)
+
+This will erase the current images. Be careful not to lose your working context. The SlowDash version number is shown in the upper left coner of the home page.
+
+
+
+# Bare-Metal Installation
 ## Prerequisite
 ### Base System
 - UNIX-like OS
@@ -114,6 +129,7 @@ Type `Ctrl-c` to stop slowdash.
 ## Updating
 ### Updating the Server (Bare-Metal Installation)
 If slowdash is already running, stop it before updating it.
+Then do the following:
 ```console
 $ cd PATH/TO/SLOWDASH
 $ make update
@@ -125,6 +141,7 @@ $ git pull --recurse-submodules
 $ make
 ```
 Often `make` does not do anything, but it is safe to run it every time.
+
 
 ### Refreshing the browser cache: Hard Refresh
 SlowDash scripts cached in user web browsers might cause troubles after the SlowDash server is updated. In that case, perform "hard refresh" the browser by clicking the `Reload` button with holding down the `Shift` key at a SlowDash page.

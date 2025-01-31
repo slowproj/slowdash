@@ -6,6 +6,7 @@
 import sys, os, asyncio, logging
 import slowapi
 
+from sd_version import slowdash_version
 from sd_component import Component
 from sd_project import Project
 from sd_config import ConfigComponent
@@ -69,9 +70,12 @@ class App(slowapi.App):
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
-    parser = ArgumentParser(usage = '\n'
-        + '  Web-Server Mode:      %(prog)s [Options] --port=PORT\n'
-        + '  Command-line Mode:    %(prog)s [Options] COMMAND'
+    parser = ArgumentParser(
+        description = f'Slowdash Version {slowdash_version}',
+        usage = ('\n'
+            + '  Web-Server Mode:      %(prog)s [Options] --port=PORT\n'
+            + '  Command-line Mode:    %(prog)s [Options] COMMAND'
+        )
     )
     parser.add_argument(
         'COMMAND', nargs='?',

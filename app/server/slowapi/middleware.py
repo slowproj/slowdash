@@ -113,7 +113,7 @@ class FileServer():
                 continue
             if not p[0].isalnum():
                 is_dirty = True
-            if not p.replace('_','a').replace('-','a').replace('+','a').replace('=','a').replace('.','a').replace(',','a').replace(':','a').isalnum():
+            if not p.replace('_','').replace('-','').replace('+','').replace('=','').replace('.','').replace(',','').replace(':','').isalnum():
                 is_dirty = True
             path.append(p)
         # exclude-path match

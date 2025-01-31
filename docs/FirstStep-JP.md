@@ -163,8 +163,8 @@ $ source PATH/TO/SLOWDASH/bin/slowdash-bashrc
 ```
 SlowDash を継続的に使うなら，上記の行を `.bashrc` などに書いておくと毎回やる必要がなくなります．ちなみに中身はこんな感じです：
 ```bash
-export PATH="$PATH:/home/sanshiro/slowdash/bin"
-export PYTHONPATH="$PYTHONPATH:/home/sanshiro/slowdash/lib/slowpy"
+export PATH="$PATH:/PATH/TO/slowdash/bin"
+export PYTHONPATH="$PYTHONPATH:/PATH/TO/slowdash/lib/slowpy"
 ```
 
 インストールが成功したかは，`slowdash` コマンドを実行してチェックできます．
