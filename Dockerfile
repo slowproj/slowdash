@@ -2,7 +2,7 @@ ARG BASE_IMAGE=python:3.12
 
 FROM ${BASE_IMAGE}
 
-RUN apt-get update && apt-get install -y gosu 
+RUN apt-get update && apt-get install -y gosu libpq-dev
 
 # we install Python packages that might be used by user modules
 RUN pip install uvicorn numpy scipy pandas matplotlib pillow pyyaml psutil bcrypt requests psycopg2 influxdb-client redis pymongo couchdb
