@@ -93,6 +93,8 @@ id="toc-ダミーデータで-ui-を動かしてみる">ダミーデータで UI
 を動かしてみる</a></li>
 <li><a href="#quick-tour-をやってみる"
 id="toc-quick-tour-をやってみる">Quick Tour をやってみる</a></li>
+<li><a href="#docker-コンテナで使う"
+id="toc-docker-コンテナで使う">Docker コンテナで使う</a></li>
 <li><a href="#セキュリティについて"
 id="toc-セキュリティについて">セキュリティについて</a></li>
 </ul>
@@ -106,10 +108,12 @@ id="toc-セキュリティについて">セキュリティについて</a></li>
 <ul>
 <li>Grafana
 みたいに，データベース上にあるデータ（主に時系列）をリアルタイムにビジュアライズする</li>
-<li>LabVIEW UI
-みたいに，画面上にいろいろ並べて，デバイスの状態を一覧表示したり，マウス等で操作したりする</li>
-<li>データ収集中に対話的にデータ解析をする</li>
-<li>解析プログラムを組み込んでリアルタイム処理をする</li>
+<li>LabVIEW
+のパネルみたいに，画面上にいろいろ並べて，デバイスの状態を一覧表示したり，マウス等で操作したりする</li>
+<li>ROOT
+みたいなデータ型（ヒストグラムとか誤差つきグラフとか）を直接扱う</li>
+<li>Jyputer に接続して収集中のデータを対話的に解析する</li>
+<li>Python スクリプトを組み込んで機器制御やリアルタイム処理をする</li>
 </ul>
 <p>ための Web ベースのソフトウェアです．ブラウザ側の JavaScript
 と，サーバー側の Python で構成されています．</p>
@@ -119,7 +123,8 @@ id="toc-セキュリティについて">セキュリティについて</a></li>
 で行うようなビジュアライゼーションの部分はほぼ実装済みで，解析およびコントロールの部分が開発中です．</p>
 <p>データベースアクセス以外は外部ライブラリを使っておらず，ソフトウェアの寿命が外のライブラリの変更等に影響されることはないようになっています．特に，流行り廃れが激しい
 JavaScript
-の部分はフレームワークなどは使わず，完全に自己完結です（使っていたけど排除しました）．データベース側および解析モジュールは，全て独立なプラグインとなっており，いつでも切り捨てられます．依存性がないので，インストールがとても楽です．</p>
+の部分はフレームワークなどは使わず，完全に自己完結です（使っていたけど排除しました）．データベース側および解析モジュールは，全て独立なプラグインとなっており，いつでも切り捨てられます．依存性がないので，インストールがとても楽です．それでもインストールをしたくない人のために，Docker
+コンテナも提供されてます．</p>
 <p><img src="fig/Gallery-ATDS-Dashboard.png" style="width:40%;box-shadow:0px 0px 15px -5px rgba(0,0,0,0.7);">
 <img src="fig/Gallery-RGA.png" style="width:40%;box-shadow:0px 0px 15px -5px rgba(0,0,0,0.7);"></p>
 <h3 id="機能と特長予定を含む">機能と特長（予定を含む）</h3>
@@ -228,9 +233,9 @@ JavaScript
 <li>非同期ウェブサーバの uvicorn
 が入っていると動作が速くなるけど，必須ではない（<code>pip install uvicorn</code>）．</li>
 <li>ブラウザ．Firefox で開発していて，たまに Chrome と Edge と Safari
-ででテストしている．
+でテストしている．
 <ul>
-<li>タブレットや携帯などのモバイルデバイス上でもそこそこ動作します．プロットの移動やズームは二本指で行ってください．</li>
+<li>タブレットや携帯などのモバイルデバイス上でもそこそこ動作する．プロットの移動やズームは二本指で．</li>
 </ul></li>
 </ul>
 <p>使っているデータベースに合わせて，Python
@@ -324,30 +329,37 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 を使っているけれど，基本的にはファイルをコピーしているだけで，一瞬で終わります．</p>
 <p><code>slowdash/bin</code> の下に環境変数を設定するスクリプト
 <code>slowdash-bashrc</code> ができるので，これを <code>source</code>
-してください．これは，新しいターミナルを開くたびに必要です．</p>
+してください．</p>
 <div class="sourceCode" id="cb5"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source PATH/TO/SLOWDASH/bin/slowdash-bashrc</span></span></code></pre></div>
-<p>SlowDash を継続的に使うなら，上記の行を <code>.bashrc</code>
+<p>設定ファイルの <code>source</code>
+は，新しいターミナルを開くたびに毎回必要です． SlowDash
+を継続的に使うなら，上記の行を <code>.bashrc</code>
 などに書いておくと毎回やる必要がなくなります．ちなみに中身はこんな感じです：</p>
 <div class="sourceCode" id="cb6"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PATH</span><span class="st">:/home/sanshiro/slowdash/bin&quot;</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PYTHONPATH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PYTHONPATH</span><span class="st">:/home/sanshiro/slowdash/lib/slowpy&quot;</span></span></code></pre></div>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PATH</span><span class="st">:/PATH/TO/slowdash/bin&quot;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PYTHONPATH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PYTHONPATH</span><span class="st">:/PATH/TO/slowdash/lib/slowpy&quot;</span></span></code></pre></div>
 <p>インストールが成功したかは，<code>slowdash</code>
 コマンドを実行してチェックできます． (<code>slowdash</code> コマンドは
 <code>slowdash/bin</code> の下にあります）</p>
 <div class="sourceCode" id="cb7"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>Usage: </span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  Web-Server Mode:    slowdash.py [Options] --port=PORT</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  Command-line Mode:  slowdash.py [Options] Command</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>usage: </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  Web-Server Mode:      slowdash.py [Options] --port=PORT</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  Command-line Mode:    slowdash.py [Options] COMMAND</span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>Options:</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  -h, --help            show this help message and exit</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  -p PORT, --port=PORT  port number for web connection; command-line mode</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>                        without this option</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  --project-dir=PROJECT_DIR</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>                        project directory (default: current dir if not</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>                        specified by SLOWDASH_PROJECT environmental variable)</span></code></pre></div>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>Slowdash Version 250128 &quot;Skykomish&quot;</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>positional arguments:</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  COMMAND               API query string. Ex) &quot;config&quot;, &quot;channels&quot;, &quot;data/CHANNELS?length=LENGTH&quot;</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>options:</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  -h, --help            show this help message and exit</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  -p PORT, --port PORT  port number for web connection; command-line mode without this option</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  --project-dir PROJECT_DIR</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>                        project directory (default: current dir if not specified by SLOWDASH_PROJECT environmental</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>                        variable)</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
 <p>任意のポート番号を指定して <code>slowdash</code>
 コマンドを実行し，ブラウザとの接続を確認してください．ここで，プロジェクトがないという警告が出ますが，今はこのまま先に進みます．</p>
 <div class="sourceCode" id="cb8"><pre
@@ -639,11 +651,10 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <p>ブラウザ上の青い文字のところをクリックすればいろいろとプロットを作成できます．上部の紫色は，東北大学とワシントン大学の共通テーマカラーなので我慢してください．（プロジェクト設定ファイルで変更できます．<a
 href="ProjectSetup.html#styles">Project Setup
 の章</a>に説明があります．）</p>
-<p>右上の Slow-Plot にある <code>Blank</code> または
-<code>Blank 2x2</code>
-では，新しい空のページを作ります．その中で，<code>Add a New Panel</code>
+<p>右下の Tools にある New Plot Layout
+で新しい空のページを作ります．その中で，<code>Add a New Panel</code>
 を選んで，プロットを作成していきます．たぶん自明です．</p>
-<p>左下の Channel List
+<p>左上の Channel List
 のチャンネル名をクリックすると，直近の時系列データのプロットを含んだページが作成されます．それを元にいろいろ追加していくこともできます．</p>
 <p>ここまでの準備では時系列データしか生成していないので，すぐにできるのは，それを直接プロットする
 <code>Time-Axis Plot (Time-Series)</code> と，値分布のヒストグラムを作る
@@ -651,39 +662,119 @@ href="ProjectSetup.html#styles">Project Setup
 <code>Histogram of Time-Series Values</code>
 です．ここから先は，公式ドキュメントの <a href="Panels.html">UI Panels
 の章</a>などを参照してください．</p>
+<h1 id="docker-コンテナで使う">Docker コンテナで使う</h1>
+<h3 id="基本">基本</h3>
+<p>DockerHub と GitHub に SlowDash
+のコンテナイメージがあります．どちらも同じです．</p>
+<ul>
+<li>DockerHub: <a
+href="https://hub.docker.com/r/slowproj/slowdash/tags">slowproj/slowdash:TAG</a></li>
+<li>GitHub Container Registry: <a
+href="https://github.com/slowproj/slowdash/pkgs/container/slowdash">ghcr.io/slowproj/slowdash:TAG</a></li>
+</ul>
+<p>コンテナ内での SlowDash プロジェクトディレクトリは
+<code>/project</code>
+です．これをボリュームマウントして使ってください．以下は，<code>SlowdashProject.yaml</code>
+ファイルが作ってあるプロジェクトディレクトリからコンテナの SlowDash
+サーバーを実行する例です．</p>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash</span></span></code></pre></div>
+<p>毎回打つのは大変なので，<code>docker-compose.yaml</code>
+を使うのが簡単です．SlowDash の <code>ExampleProjects</code>
+以下にあるプロジェクト例には，すべて <code>docker-compose.yaml</code>
+ファイルが含まれています．</p>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowdash</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> .:/project</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881:18881&quot;</span></span></code></pre></div>
+<p>このファイルがある場所で <code>docker compose up</code>
+とすればイメージがダウンロードされ，実行が開始されます．（初回は少し時間がかかります．）</p>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span></code></pre></div>
+<p>SlowDash のコマンドを使用したい場合，<code>docker run</code> または
+<code>docker compose up</code>
+でコンテナを走らせてから，<code>docker exec</code>
+でコンテナの中から実行してください．</p>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker ps</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>CONTAINER ID   IMAGE         COMMAND                   CREATED          STATUS         PORTS       NAMES</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>70e0b99483ae   slowdash      &quot;/slowdash/app/docke…&quot;   10 seconds ago   Up 9 seconds   18881/tcp   elastic_jackson</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker exec -it 70e    slowdash config -i4       （70e は上の行で表示されているコンテナID； -i4 は整形オプション）</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>    &quot;slowdash&quot;: {</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>        &quot;version&quot;: &quot;250128 \&quot;Skykomish\&quot;&quot;</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
+<h3 id="アップデート-1">アップデート</h3>
+<p>SlowDash をアップデートする際は，使用中のコンテナを “down”
+してから，ダウンロードしてあるイメージを削除してください．次の実行時に自動で新しいイメージがダウンロードされます．（これをするとプロジェクトディレクトリ以外の場所に保存していたものは失われます．独自の拡張をしている場合は注意してください．）</p>
+<div class="sourceCode" id="cb31"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker rmi slowproj/slowdash</span></span></code></pre></div>
+<p>ちなみに，使用中のバージョンは，<code>slowdash config</code>
+で表示される他，SlowDash のホーム画面の左上にも表示されています．</p>
+<h3 id="開発用テストベンチ">開発用テストベンチ</h3>
+<p>SlowDash
+を使用したシステムの開発に本番用のデータベースを使いたくない場合や，開発用サーバのインストールが面倒な場合，データベースとかだけのコンテナが
+<code>slowdash/utils/testbench</code>
+にあります．これを利用すれば，PostgreSQL や InfluxDB
+などのデータベース，Redis や Jupyter
+などが即使えて，使用後にすぐにクリーンアップできます．</p>
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH/utils/testbench</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down   （終了後データを消す）</span></span></code></pre></div>
+<p>SlowDash
+をコンテナ内で使用する場合で，設定ファイルやスクリプトの開発に毎回コンテナを起動するのが面倒なときにも，このテストベンチを走らせるとコンテナ外で作業を行えて便利です．</p>
 <h1 id="セキュリティについて">セキュリティについて</h1>
 <p><b>SlowDash
 は，ファイアウォールの内部で使う目的で作られています．</b>
 このためセキュリティ関係の機能は実装されていません．SlowDash
 のポートを外部からアクセスできるところに開けないようにしてください．外部からは，VPN
 もしくは SSH のトンネルを経由して使用するのが想定です．</p>
+<h3 id="基本認証">基本認証</h3>
 <p>もし内部の人を信用できない場合，最低限として，基本認証を使ってパスワードを設定することはできます．この場合は，リバースプロキシを使って
 HTTPS に乗せ換え，パスワードと通信を暗号化してください．</p>
 <p>基本認証の設定は，<code>SlowdashProject.yaml</code> に
 <code>authentication</code>
 エントリを追加し，パスワードハッシュを指定します．</p>
-<div class="sourceCode" id="cb27"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="at">  ...</span></span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">authentication</span><span class="kw">:</span></span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> Basic</span></span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">key</span><span class="kw">:</span><span class="at"> slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS</span></span></code></pre></div>
-<p>パスワードハッシュは，Apache
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="at">  ...</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">authentication</span><span class="kw">:</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> Basic</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">key</span><span class="kw">:</span><span class="at"> slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS</span></span></code></pre></div>
+<p>パスワードハッシュは，Apache の bcrypt
 と同じ形式ですが，<code>slowdash/utils</code> にある
-<code>slowdash-generate-key.py</code> プログラムで作ることがきます．</p>
-<div class="sourceCode" id="cb28"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    &quot;type&quot;: &quot;Basic&quot;,</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    &quot;key&quot;: &quot;slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS&quot;</span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<code>slowdash-generate-key.py</code>
+プログラムで作ることもできます．</p>
+<div class="sourceCode" id="cb34"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    &quot;type&quot;: &quot;Basic&quot;,</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    &quot;key&quot;: &quot;slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS&quot;</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>このプログラムの実行に <code>bcrypt</code>
 パッケージを入れる必要があるかもしれません
 (<code>pip install bcrypt</code>)．</p>
 <p>リバースプロキシの設定方法については，大規模言語モデル系の AI
 が詳しく教えてくれます．もとのポートはちゃんと塞いでおいてください．</p>
-<p>ローカルマシン上でパケットダンプができる人からシステムを守る術はありませんが，そういう人は別の方法でもっと簡単に攻撃できるはずです．</p>
+<h3 id="https">HTTPS</h3>
+<p>SlowDash を ASGI
+モードで使っている場合，リバースプロキシの代わりに，組み込みの HTTPS
+サーバーを使うこともできます．SSL/TLS 鍵ファイルと認証ファイルを指定して
+<code>slowdash</code> を起動してください．</p>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash  --port=18881  --ssl-keyfile=KEY_FILE  --ssl-certfile=CERT_FILE</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>Listening at port 18881 (ASGI HTTPS)</span></code></pre></div>
+<p>ただし，この機能は将来の SlowDash
+では削除されるかもしれません．長期使用するシステムでは，ちゃんとしたリバースプロキシを使用するのがいいと思います．Docker
+の場合は Compose とかで Nginx コンテナを含めるのが想定です．</p>
 <div style="margin-bottom:10rem"/>
 
 

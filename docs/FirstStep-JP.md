@@ -6,15 +6,16 @@ title: SlowDash を使ってみる
 スローコントロールのダッシュボードを Grafana で作らされた経験に基づいて開発が開始されました．おおまかには，
 
 - Grafana みたいに，データベース上にあるデータ（主に時系列）をリアルタイムにビジュアライズする
-- LabVIEW UI みたいに，画面上にいろいろ並べて，デバイスの状態を一覧表示したり，マウス等で操作したりする
-- データ収集中に対話的にデータ解析をする
-- 解析プログラムを組み込んでリアルタイム処理をする
+- LabVIEW のパネルみたいに，画面上にいろいろ並べて，デバイスの状態を一覧表示したり，マウス等で操作したりする
+- ROOT みたいなデータ型（ヒストグラムとか誤差つきグラフとか）を直接扱う
+- Jyputer に接続して収集中のデータを対話的に解析する
+- Python スクリプトを組み込んで機器制御やリアルタイム処理をする
 
 ための Web ベースのソフトウェアです．ブラウザ側の JavaScript と，サーバー側の Python で構成されています．
 
 もともとはスローコントロール用でしたが，現在では物理実験に関わる全てのデータのビジュアライズと，DAQ を含むシステムコントロールの UI を目指して開発をしています．現時点で，Grafana で行うようなビジュアライゼーションの部分はほぼ実装済みで，解析およびコントロールの部分が開発中です．
 
-データベースアクセス以外は外部ライブラリを使っておらず，ソフトウェアの寿命が外のライブラリの変更等に影響されることはないようになっています．特に，流行り廃れが激しい JavaScript の部分はフレームワークなどは使わず，完全に自己完結です（使っていたけど排除しました）．データベース側および解析モジュールは，全て独立なプラグインとなっており，いつでも切り捨てられます．依存性がないので，インストールがとても楽です．
+データベースアクセス以外は外部ライブラリを使っておらず，ソフトウェアの寿命が外のライブラリの変更等に影響されることはないようになっています．特に，流行り廃れが激しい JavaScript の部分はフレームワークなどは使わず，完全に自己完結です（使っていたけど排除しました）．データベース側および解析モジュールは，全て独立なプラグインとなっており，いつでも切り捨てられます．依存性がないので，インストールがとても楽です．それでもインストールをしたくない人のために，Docker コンテナも提供されてます．
 
 <img src="fig/Gallery-ATDS-Dashboard.png" style="width:40%;box-shadow:0px 0px 15px -5px rgba(0,0,0,0.7);">
 <img src="fig/Gallery-RGA.png" style="width:40%;box-shadow:0px 0px 15px -5px rgba(0,0,0,0.7);">
@@ -106,8 +107,8 @@ JSROOT や Bokeh との違い：
 - UNIX 風の OS．Ubuntu で開発，macOS とか Windows の WSL でも動いた．WinPython でも動くらしい．
 - Python 3.9 以上．すでに入ってなければ，NumPy と pyyaml も入れる．
 - 非同期ウェブサーバの uvicorn が入っていると動作が速くなるけど，必須ではない（`pip install uvicorn`）．
-- ブラウザ．Firefox で開発していて，たまに Chrome と Edge と Safari ででテストしている．
-  - タブレットや携帯などのモバイルデバイス上でもそこそこ動作します．プロットの移動やズームは二本指で行ってください．
+- ブラウザ．Firefox で開発していて，たまに Chrome と Edge と Safari でテストしている．
+  - タブレットや携帯などのモバイルデバイス上でもそこそこ動作する．プロットの移動やズームは二本指で．
 
 使っているデータベースに合わせて，Python のライブラリを別にインストールする必要があります．`pip` ですぐに入ります．
 
@@ -157,10 +158,11 @@ $ make
 ```
 `make` を使っているけれど，基本的にはファイルをコピーしているだけで，一瞬で終わります．
 
-`slowdash/bin`  の下に環境変数を設定するスクリプト `slowdash-bashrc` ができるので，これを `source`  してください．これは，新しいターミナルを開くたびに必要です．
+`slowdash/bin`  の下に環境変数を設定するスクリプト `slowdash-bashrc` ができるので，これを `source`  してください．
 ```console
 $ source PATH/TO/SLOWDASH/bin/slowdash-bashrc
 ```
+設定ファイルの `source` は，新しいターミナルを開くたびに毎回必要です．
 SlowDash を継続的に使うなら，上記の行を `.bashrc` などに書いておくと毎回やる必要がなくなります．ちなみに中身はこんな感じです：
 ```bash
 export PATH="$PATH:/PATH/TO/slowdash/bin"
@@ -171,17 +173,22 @@ export PYTHONPATH="$PYTHONPATH:/PATH/TO/slowdash/lib/slowpy"
 (`slowdash` コマンドは `slowdash/bin` の下にあります）
 ```console
 $ slowdash
-Usage: 
-  Web-Server Mode:    slowdash.py [Options] --port=PORT
-  Command-line Mode:  slowdash.py [Options] Command
+usage: 
+  Web-Server Mode:      slowdash.py [Options] --port=PORT
+  Command-line Mode:    slowdash.py [Options] COMMAND
 
-Options:
+Slowdash Version 250128 "Skykomish"
+
+positional arguments:
+  COMMAND               API query string. Ex) "config", "channels", "data/CHANNELS?length=LENGTH"
+
+options:
   -h, --help            show this help message and exit
-  -p PORT, --port=PORT  port number for web connection; command-line mode
-                        without this option
-  --project-dir=PROJECT_DIR
-                        project directory (default: current dir if not
-                        specified by SLOWDASH_PROJECT environmental variable)
+  -p PORT, --port PORT  port number for web connection; command-line mode without this option
+  --project-dir PROJECT_DIR
+                        project directory (default: current dir if not specified by SLOWDASH_PROJECT environmental
+                        variable)
+...
 ```
 
 任意のポート番号を指定して `slowdash` コマンドを実行し，ブラウザとの接続を確認してください．ここで，プロジェクトがないという警告が出ますが，今はこのまま先に進みます．
@@ -416,15 +423,75 @@ $ python3 ./generate-testdata.py
 ### ブラウザでデータを見る
 ブラウザ上の青い文字のところをクリックすればいろいろとプロットを作成できます．上部の紫色は，東北大学とワシントン大学の共通テーマカラーなので我慢してください．（プロジェクト設定ファイルで変更できます．[Project Setup の章](ProjectSetup.html#styles)に説明があります．）
 
-右上の Slow-Plot にある `Blank` または `Blank 2x2` では，新しい空のページを作ります．その中で，`Add a New Panel` を選んで，プロットを作成していきます．たぶん自明です．
+右下の Tools にある New Plot Layout で新しい空のページを作ります．その中で，`Add a New Panel` を選んで，プロットを作成していきます．たぶん自明です．
 
-左下の Channel List のチャンネル名をクリックすると，直近の時系列データのプロットを含んだページが作成されます．それを元にいろいろ追加していくこともできます．
+左上の Channel List のチャンネル名をクリックすると，直近の時系列データのプロットを含んだページが作成されます．それを元にいろいろ追加していくこともできます．
 
 ここまでの準備では時系列データしか生成していないので，すぐにできるのは，それを直接プロットする `Time-Axis Plot (Time-Series)` と，値分布のヒストグラムを作る `XY Plot (Histograms and Graphs)` &rarr; `Histogram of Time-Series Values` です．ここから先は，公式ドキュメントの [UI Panels の章](Panels.html)などを参照してください．
 
 
+# Docker コンテナで使う
+### 基本
+DockerHub と GitHub に SlowDash のコンテナイメージがあります．どちらも同じです．
+
+- DockerHub: [slowproj/slowdash:TAG](https://hub.docker.com/r/slowproj/slowdash/tags)
+- GitHub Container Registry: [ghcr.io/slowproj/slowdash:TAG](https://github.com/slowproj/slowdash/pkgs/container/slowdash)
+
+コンテナ内での SlowDash プロジェクトディレクトリは `/project` です．これをボリュームマウントして使ってください．以下は，`SlowdashProject.yaml` ファイルが作ってあるプロジェクトディレクトリからコンテナの SlowDash サーバーを実行する例です．
+```console
+$ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash
+```
+
+毎回打つのは大変なので，`docker-compose.yaml` を使うのが簡単です．SlowDash の `ExampleProjects` 以下にあるプロジェクト例には，すべて `docker-compose.yaml` ファイルが含まれています．
+```yaml
+services:
+  slowdash:
+    image: slowproj/slowdash
+    volumes:
+      - .:/project
+    ports:
+      - "18881:18881"
+```
+このファイルがある場所で `docker compose up` とすればイメージがダウンロードされ，実行が開始されます．（初回は少し時間がかかります．）
+```console
+$ docker compose up
+```
+
+SlowDash のコマンドを使用したい場合，`docker run` または `docker compose up` でコンテナを走らせてから，`docker exec` でコンテナの中から実行してください．
+```console
+$ docker ps
+CONTAINER ID   IMAGE         COMMAND                   CREATED          STATUS         PORTS       NAMES
+70e0b99483ae   slowdash      "/slowdash/app/docke…"   10 seconds ago   Up 9 seconds   18881/tcp   elastic_jackson
+$ docker exec -it 70e    slowdash config -i4       （70e は上の行で表示されているコンテナID； -i4 は整形オプション）
+{
+    "slowdash": {
+        "version": "250128 \"Skykomish\""
+...
+```
+
+### アップデート
+SlowDash をアップデートする際は，使用中のコンテナを "down" してから，ダウンロードしてあるイメージを削除してください．次の実行時に自動で新しいイメージがダウンロードされます．（これをするとプロジェクトディレクトリ以外の場所に保存していたものは失われます．独自の拡張をしている場合は注意してください．）
+```console
+$ docker compose down
+$ docker rmi slowproj/slowdash
+```
+ちなみに，使用中のバージョンは，`slowdash config` で表示される他，SlowDash のホーム画面の左上にも表示されています．
+
+### 開発用テストベンチ
+SlowDash を使用したシステムの開発に本番用のデータベースを使いたくない場合や，開発用サーバのインストールが面倒な場合，データベースとかだけのコンテナが `slowdash/utils/testbench` にあります．これを利用すれば，PostgreSQL や InfluxDB などのデータベース，Redis や Jupyter などが即使えて，使用後にすぐにクリーンアップできます．
+```console
+$ cd PATH/TO/SLOWDASH/utils/testbench
+$ docker compose up
+$ docker compose down   （終了後データを消す）
+```
+
+SlowDash をコンテナ内で使用する場合で，設定ファイルやスクリプトの開発に毎回コンテナを起動するのが面倒なときにも，このテストベンチを走らせるとコンテナ外で作業を行えて便利です．
+
 # セキュリティについて
 <b>SlowDash は，ファイアウォールの内部で使う目的で作られています．</b> このためセキュリティ関係の機能は実装されていません．SlowDash のポートを外部からアクセスできるところに開けないようにしてください．外部からは，VPN もしくは SSH のトンネルを経由して使用するのが想定です．
+
+
+### 基本認証
 
 もし内部の人を信用できない場合，最低限として，基本認証を使ってパスワードを設定することはできます．この場合は，リバースプロキシを使って HTTPS に乗せ換え，パスワードと通信を暗号化してください．
 
@@ -438,7 +505,7 @@ slowdash_project:
     key: slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS
 ```
 
-パスワードハッシュは，Apache と同じ形式ですが，`slowdash/utils` にある `slowdash-generate-key.py` プログラムで作ることがきます．
+パスワードハッシュは，Apache の bcrypt と同じ形式ですが，`slowdash/utils` にある `slowdash-generate-key.py` プログラムで作ることもできます．
 ```console
 $ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash
 {
@@ -450,6 +517,13 @@ $ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash
 
 リバースプロキシの設定方法については，大規模言語モデル系の AI が詳しく教えてくれます．もとのポートはちゃんと塞いでおいてください．
 
-ローカルマシン上でパケットダンプができる人からシステムを守る術はありませんが，そういう人は別の方法でもっと簡単に攻撃できるはずです．
+### HTTPS
+SlowDash を ASGI モードで使っている場合，リバースプロキシの代わりに，組み込みの HTTPS サーバーを使うこともできます．SSL/TLS 鍵ファイルと認証ファイルを指定して `slowdash` を起動してください．
+```console
+$ slowdash  --port=18881  --ssl-keyfile=KEY_FILE  --ssl-certfile=CERT_FILE
+...
+Listening at port 18881 (ASGI HTTPS)
+```
+ただし，この機能は将来の SlowDash では削除されるかもしれません．長期使用するシステムでは，ちゃんとしたリバースプロキシを使用するのがいいと思います．Docker の場合は Compose とかで Nginx コンテナを含めるのが想定です．
 
 <div style="margin-bottom:10rem"/>

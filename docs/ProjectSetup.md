@@ -385,7 +385,7 @@ Note that a new line, `User: slow`, is now added.
 ### Built-in HTTPS server (ASGI only)
 If SlowDash runs in the ASGI mode, a built-in HTTPS mode can be used. To use this feature, provide the SSL/TLS key and certification files to the `slowdash` command:
 ```console
-$ slowdash --port=18881 --ssl-keyfile=KEYFILE -ssl-certfile=CERTFILE
+$ slowdash  --port=18881  --ssl-keyfile=KEY_FILE  --ssl-certfile=CERT_FILE
 ```
 
 This feature might be dropped in future SlowDash releases. Using a reverse proxy server is recommended for long-term setups.
