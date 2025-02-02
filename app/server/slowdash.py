@@ -107,6 +107,16 @@ if __name__ == '__main__':
         help='use WSGI (otherwise ASGI)'
     )
     parser.add_argument(
+        '--ssl-keyfile',
+        action='store', dest='ssl_keyfile', default=None, 
+        help='SSL/TLS key file (ASGI only, use with --ssl-certfile)'
+    )
+    parser.add_argument(
+        '--ssl-certfile',
+        action='store', dest='ssl_certfile', default=None, 
+        help='SSL/TLS certification file (ASGI only, use with --ssl-keyfile)'
+    )
+    parser.add_argument(
         '-i', '--indent',
         action='store', dest='indent', type=int, default=None,
         help='JSON output indenting (default: no indent)'
@@ -162,9 +172,20 @@ if __name__ == '__main__':
             drop_exclude_prefix=True
         ))
 
+        kwargs = {
+            'host': '0.0.0.0',
+            'log_level': logging.WARNING,   # log-level for the WSGI/ASGI server
+        }
+        
         if args.wsgi:
-            slowapi.WSGI(app, slowapi.serve_wsgi_ref).run(port=args.port, host='0.0.0.0', log_level=logging.WARNING)
+            if args.ssl_keyfile is not None or args.ssl_certfile is not None:
+                sys.stderr.write('ERROR: HTTPS is not available with WSGI\n')
+                sys.exit(-1)
+            slowapi.WSGI(app, slowapi.serve_wsgi_ref).run(port=args.port, **kwargs)
         else:
-            app.run(port=args.port, host='0.0.0.0', log_level=logging.WARNING)
+            if args.ssl_keyfile is not None and args.ssl_certfile is not None:
+                kwargs['ssl_keyfile'] = args.ssl_keyfile
+                kwargs['ssl_certfile'] = args.ssl_certfile
+            app.run(port=args.port, **kwargs)
         
     app.terminate()

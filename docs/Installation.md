@@ -8,6 +8,8 @@ title: Installation
 - `docker` and `docker compose`
 
 ## Using Docker Images (Linux, Windows WSL, Mac)
+
+### Setup
 No installation is required. In your docker configuration, pull a SlowDash image from one of the repositories below:
 
 - DockerHub: [slowproj/slowdash:TAG](https://hub.docker.com/r/slowproj/slowdash/tags)
@@ -15,13 +17,26 @@ No installation is required. In your docker configuration, pull a SlowDash image
 
 Choose a specific tag listed in the repository, or use `latest`.
 
+### Updating
+If you are using the `:latest` images from DockerHub (or GitHub CR), removing the local copy will cause pulling the latest version on the next execution:
+```console
+docker rmi -f slowproj/slowdash
+docker rmi -f slowproj/slowpy-notebook
+```
+(You can also do the same by `make docker-update` at the SlowDash directory.)
+
+This will erase the current images. Be careful not to lose your working context. The SlowDash version number is shown in the upper left coner of the home page.
+
+
 
 ## Building an Image
+### Initial Setup
 ```console
 $ git clone https://github.com/slowproj/slowdash.git
 $ cd slowdash
 $ make docker
 ```
+
 Or equivalently, you can run the following commands:
 ```console
 $ git clone https://github.com/slowproj/slowdash.git --recurse-submodules
@@ -31,15 +46,20 @@ $ docker build -t slowpy-notebook -f ./lib/Dockerfile ./lib
 ```
 
 ### Updating
-If you are using the `:latest` images from DockerHub (or GitHub CR), removing the local copy will cause pulling the latest version on the next execution:
+```console
+$ cd PATH/TO/SLOWDASH
+$ make update
+$ make docker
 ```
-docker rmi -f slowproj/slowdash
-docker rmi -f slowproj/slowpy-notebook
+
+Or equivalently, run the commands below
+(be careful not to forget `--recurse-submodules`; a very common mistake, and it causes tricky troubles):
+```console
+$ cd PATH/TO/SLOWDASH
+$ git pull --recurse-submodules
+$ docker build -t slowdash .
+$ docker build -t slowpy-notebook -f ./lib/Dockerfile ./lib
 ```
-(You can also do the same by `make docker-update`.)
-
-This will erase the current images. Be careful not to lose your working context. The SlowDash version number is shown in the upper left coner of the home page.
-
 
 
 # Bare-Metal Installation
@@ -79,8 +99,7 @@ Currently supported data backend systems are:
 
 See [Data Binding section](DataBinding.html) for details.
 
-
-## Installing
+## Setup
 This process will not create any files other than the git-cloned directory. Installation can be removed completely by deleting this directory.
 ```console
 $ git clone https://github.com/slowproj/slowdash.git --recurse-submodules
@@ -125,16 +144,14 @@ On success, the error messages below will be shown:
 
 Type `Ctrl-c` to stop slowdash.
 
-
 ## Updating
-### Updating the Server (Bare-Metal Installation)
-If slowdash is already running, stop it before updating it.
-Then do the following:
 ```console
 $ cd PATH/TO/SLOWDASH
 $ make update
 ```
-Or equivalently, run the commands below:
+
+Or equivalently, run the commands below
+(be careful not to forget `--recurse-submodules`; a very common mistake, and it causes tricky troubles):
 ```console
 $ cd PATH/TO/SLOWDASH
 $ git pull --recurse-submodules
@@ -143,5 +160,5 @@ $ make
 Often `make` does not do anything, but it is safe to run it every time.
 
 
-### Refreshing the browser cache: Hard Refresh
+# Refreshing the browser cache: Hard Refresh
 SlowDash scripts cached in user web browsers might cause troubles after the SlowDash server is updated. In that case, perform "hard refresh" the browser by clicking the `Reload` button with holding down the `Shift` key at a SlowDash page.

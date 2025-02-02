@@ -149,7 +149,12 @@ def serve_asgi_uvicorn(app, port, **kwargs):
         await stop_event.wait()
         server_task.cancel()
     
-    sys.stderr.write(f'Listening at port {port} (ASGI)\n')
+    if ('ssl_keyfile' in kwargs) and ('ssl_certfile' in kwargs):
+        is_https = True
+    else:
+        is_https = False
+        
+    sys.stderr.write(f'Listening at port {port} (ASGI {"HTTPS" if is_https else "HTTP"})\n')
     asyncio.run(run_uvicorn())
     sys.stderr.write('Terminated\n')    
 
@@ -180,15 +185,17 @@ def serve_wsgi_gunicorn(app, port, **kwargs):
         
     kwargs['bind'] = f'0.0.0.0:{port}'        
     kwargs['workers'] = 1
-    if 'ssl_keyfile' in kwargs:
+    if ('ssl_keyfile' in kwargs) and ('ssl_certfile' in kwargs):
         kwargs['keyfile'] = kwargs['ssl_keyfile']
-    if 'ssl_certfile' in kwargs:
         kwargs['certfile'] = kwargs['ssl_certfile']
+        is_https = True
+    else:
+        is_https = False
 
     Request.is_async = False
         
     # gunicorn SHOULD handle signals... signals cannot stop the App somehow.
-    sys.stderr.write(f'Listening at port {port} (gunicorn WSGI)\n')
+    sys.stderr.write(f'Listening at port {port} (gunicorn WSGI {"HTTPS" if is_https else "HTTP"})\n')
     GunicornApp(app, **kwargs).run()
     sys.stderr.write('Terminated\n')    
 

@@ -335,7 +335,7 @@ Although dedicated daemon is created for this SlowDash project, currently only o
 # Security Considerations
 As already mentioned, <b>SlowDash is designed for internal use only</b> within a secured network and therefore no security protection is implemented. It is strongly recommended not to expose the system to the public internet. External access is assumed to be done <b>through VPN or ssh tunnel</b>.
 
-#### Basic Authentication
+### Basic Authentication
 In a case that you cannot trust your internal friends, SlowDash implements the "Basic Authentication". Combine this authentication <b>with HTTPS using a reverse proxy</b> to encrypt the password and communication.
 
 To use the Basic Authentication, first install the `bcrypt` Python package if it is not yet installed:
@@ -380,6 +380,15 @@ continue? [Y/n] y
 ...
 ```
 Note that a new line, `User: slow`, is now added.
+
+
+### Built-in HTTPS server (ASGI only)
+If SlowDash runs in the ASGI mode, a built-in HTTPS mode can be used. To use this feature, provide the site key and certification files to the `slowdash` command:
+```console
+$ slowdash --port=18881 --key-file=KEYFILE -certfile=CERTFILE
+```
+
+This feature might be dropped in future SlowDash releases. Using a reverse proxy server is recommended for long-term setups.
 
 
 # SlowDash Watchdog (SlowDog)
