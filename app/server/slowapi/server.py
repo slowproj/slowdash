@@ -129,13 +129,13 @@ def serve_asgi_uvicorn(app, port, **kwargs):
         logging.warn('Falling back to WSGI; async requests will be serialized. WebSockets will not be available.')
         return serve_wsgi_ref(WSGI(app), port, **kwargs)
 
-    stop_event = asyncio.Event()
-    def async_signal_handler(signum, frame):
-        stop_event.set()
-    signal.signal(signal.SIGINT, async_signal_handler)
-    signal.signal(signal.SIGTERM, async_signal_handler)
-    
     async def run_uvicorn():
+        stop_event = asyncio.Event()
+        def async_signal_handler(signum, frame):
+            stop_event.set()
+        signal.signal(signal.SIGINT, async_signal_handler)
+        signal.signal(signal.SIGTERM, async_signal_handler)
+    
         config = uvicorn.Config(app, port=port, workers=1, **kwargs)
         server = uvicorn.Server(config)
         #server.install_signal_handlers=False  # this causes the server not working...
