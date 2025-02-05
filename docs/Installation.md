@@ -106,7 +106,7 @@ This process will not create any files other than the git-cloned directory. Inst
 $ git clone https://github.com/slowproj/slowdash.git --recurse-submodules
 $ cd slowdash
 $ make
-$ make venv     # if you want to use venv (recommended)
+$ make setup-venv     # if you want to use venv (recommended)
 ```
 
 This will create a bash file to set environmental variables. `source` it to include the settings:

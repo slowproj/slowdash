@@ -68,12 +68,11 @@ all:
 	@echo '- To build docker images, run "make docker"'
 
 
-venv: 
+setup-venv:
 	./utils/slowdash-setup-venv.sh
-	@make
 
 
-docker: all
+docker:
 	docker rmi -f slowdash slowpy-notebook
 	docker build -t slowdash .
 	docker build -t slowpy-notebook -f ./lib/Dockerfile ./lib
@@ -84,5 +83,5 @@ update:
 	@make
 
 
-docker-update:
+docker-image-update:
 	docker rmi -f slowproj/slowdash slowproj/slowpy-notebook

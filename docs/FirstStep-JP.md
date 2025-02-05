@@ -165,11 +165,11 @@ $ firefox slowdash/docs/FirstStep-JP.html
 ```console
 $ cd slowdash
 $ make
-$ make venv
+$ make setup-venv
 ```
 これで，Python 周りのセットアップと，作成した venv へのパッケージのインストールを行います．
 
-venv を使わない場合は，最後の `make venv` は必要ありません（ファイルをコピーするだけなので一瞬で終わります）．もし間違えてやってしまった場合は，`slowdash` ディレクトリの下にある `venv` ディレクトリを削除してください．
+venv を使わない場合は，最後の `make setup-venv` は必要ありません．もし間違えてやってしまった場合は，`slowdash` ディレクトリの下にある `venv` ディレクトリを削除してください．
 
 以上により，`slowdash/bin`  の下に環境変数を設定するスクリプト `slowdash-bashrc` ができるので，これを `source`  してください．
 ```console
