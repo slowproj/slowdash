@@ -177,6 +177,15 @@ Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to do some
       - set(value=None): sends `cmd value line_terminator`, consumes echo
       - get(): sends `cmd line_terminator`, consumes echo, and returns a reply until the next prompt
 
+##### Nodes
+- **serial(port='/dev/ttyUSB0',baudrate=9600)**: sends and receives text messages through a serial port
+  - set(value): sends the value as encoded text
+  - get(): receives a chunk of text
+  - do_get_chunk(timeout=None): receives a chunk of text
+  - do_get_line(timeout=None): receives a chunk and returns one line (with reconstruction)
+  - do_flush_input(): empties the receiving buffer
+  - **scpi()** returns the same object as EthernetNode.scpi()
+
 #### HTTP (Web API)
 ##### Loading (already included)
 `ControlSystem.load_control_module('HTTP')`
@@ -250,6 +259,13 @@ Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to do some
       - **lapse()**: 
         - get(): returns the number of seconds since the last time-series point
   
+#### Other Nodes
+- Serial (uses pyserial)
+- VISA (uses pyvisa)
+- LabJack (uses LabJackPython, currently supports only U12)
+- DummyDevice
+
+
 ### Node Functions
 All the control nodes (derived from `slowpy.control.ControlNode`) have the following methods:
 

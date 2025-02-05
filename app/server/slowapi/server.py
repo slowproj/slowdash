@@ -188,6 +188,8 @@ def serve_wsgi_gunicorn(app, port, **kwargs):
     if ('ssl_keyfile' in kwargs) and ('ssl_certfile' in kwargs):
         kwargs['keyfile'] = kwargs['ssl_keyfile']
         kwargs['certfile'] = kwargs['ssl_certfile']
+        # Using HTTP/2 requres Python package of "httptools" and "h2"
+        #kwargs['http'] = kwargs['h2']
         is_https = True
     else:
         is_https = False

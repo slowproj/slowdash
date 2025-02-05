@@ -44,7 +44,7 @@ class EthernetNode(spc.ControlNode):
     ## methods ##    
     def do_get_chunk(self, timeout=None):
         if self.socket is None:
-            return None
+            return ''
     
         events = self.selectors.select(timeout=timeout)
         for key, mask in events:
@@ -56,7 +56,7 @@ class EthernetNode(spc.ControlNode):
 
     def do_get_line(self, timeout=None):
         if self.socket is None:
-            return None
+            return ''
 
         if timeout is not None:
             wait_until = time.time() + timeout
@@ -70,8 +70,7 @@ class EthernetNode(spc.ControlNode):
                 
             if len(self.socket_buffer) == 0:
                 if wait_until is not None and time.time() >= wait_until:
-                    if timeout > 1:
-                        print('do_get_line(): socket timeout')
+                    print('do_get_line(): socket timeout')
                     break
                 else:
                     continue
@@ -127,7 +126,18 @@ class EthernetNode(spc.ControlNode):
     
     
 class ScpiNode(spc.ControlNode):
+    """Node for a SCPI device (typically one physical equipment that has one IP address)"""
+    
     def __init__(self, connection, timeout=10, line_terminator='\x0d', sync=True, append_opc=False, verbose=False):
+        """
+        Parameters:
+          - connection: instance of EthernetNode, SerialNode, etc
+          - timeout: timeout
+          - line_terminator: '\x0d' for CR, '\x0a' for NL
+          - sync: if True, SCPI read is appended to SCPI write in ScpiCommand.set()
+          - appdn_opc: if True, ';*OPC?' is appended to all SCPI commands
+          - verbose: primt SCPI exchanges to sys.stderr
+        """
         self.connection = connection
         self.timeout = timeout
         self.line_terminator = line_terminator
@@ -183,7 +193,7 @@ class ScpiCommandNode(spc.ControlVariableNode):
         self.scpi.set(cmd)
                 
         if self.scpi.sync:
-            self.scpi.get()
+            return self.scpi.get()
 
     
     def get(self):

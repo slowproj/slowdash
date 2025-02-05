@@ -482,7 +482,7 @@ This will create files under `/etc/letsencript/live/YOUR.DOMAIN.NAME`
 - full chain: `fullchain.pem`
 
 ### WSGI
-In addition to ASGI, WSGI can be used. The `to_wsgi()` function wraps the ASGI App (standard SlowAPI App) and replaces the ASGI interface with WSGI:
+In addition to ASGI, WSGI can be used. The `slowapi.WSGI(app)` function wraps the ASGI App (standard SlowAPI App) and returns a WSGI app.
 ```python
 # testapp.py
 

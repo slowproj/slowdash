@@ -267,7 +267,7 @@ without modifying users system. It is also possible to install the
 library in a usual way: you can do
 <code>pip install slowdas/lib/slowpy</code> to install SlowPy into your
 Python environment. You might want to combine this with
-<code>pyenv</code> not to mess up your Python.</p>
+<code>venv</code> not to mess up your Python.</p>
 <h2 id="controls">Controls</h2>
 <p>SlowPy provides an unified interface to connect external software
 systems and hardware devices; everything will be mapped into a single
@@ -405,10 +405,25 @@ returns a reply until the next prompt</li>
 </ul></li>
 </ul></li>
 </ul>
+<h5 id="nodes-1">Nodes</h5>
+<ul>
+<li><strong>serial(port=‘/dev/ttyUSB0’,baudrate=9600)</strong>: sends
+and receives text messages through a serial port
+<ul>
+<li>set(value): sends the value as encoded text</li>
+<li>get(): receives a chunk of text</li>
+<li>do_get_chunk(timeout=None): receives a chunk of text</li>
+<li>do_get_line(timeout=None): receives a chunk and returns one line
+(with reconstruction)</li>
+<li>do_flush_input(): empties the receiving buffer</li>
+<li><strong>scpi()</strong> returns the same object as
+EthernetNode.scpi()</li>
+</ul></li>
+</ul>
 <h4 id="http-web-api">HTTP (Web API)</h4>
 <h5 id="loading-already-included-1">Loading (already included)</h5>
 <p><code>ControlSystem.load_control_module('HTTP')</code></p>
-<h5 id="nodes-1">Nodes</h5>
+<h5 id="nodes-2">Nodes</h5>
 <ul>
 <li><strong>http(base_url)</strong>:
 <ul>
@@ -433,7 +448,7 @@ etc.</li>
 <h4 id="shell-command">Shell Command</h4>
 <h5 id="loading-already-included-2">Loading (already included)</h5>
 <p><code>ControlSystem.load_control_module('Shell')</code></p>
-<h5 id="nodes-2">Nodes</h5>
+<h5 id="nodes-3">Nodes</h5>
 <ul>
 <li><strong>shell(cmd)</strong>: run a shell command.
 <ul>
@@ -453,7 +468,7 @@ etc.</li>
 <h4 id="slowdash-server-control">SlowDash server control</h4>
 <h5 id="loading-already-included-3">Loading (already included)</h5>
 <p><code>ControlSystem.load_control_module('HTTP').load_control_module('Slowdash')</code></p>
-<h5 id="nodes-3">Nodes</h5>
+<h5 id="nodes-4">Nodes</h5>
 <ul>
 <li><strong>http(url).slowdash()</strong>
 <ul>
@@ -471,7 +486,7 @@ file</li>
 <h4 id="redis-interface">Redis Interface</h4>
 <h5 id="loading">Loading</h5>
 <p><code>ControlSystem.load_control_module('Redis')</code></p>
-<h5 id="nodes-4">Nodes</h5>
+<h5 id="nodes-5">Nodes</h5>
 <ul>
 <li><strong>redis(url)</strong>
 <ul>
@@ -530,6 +545,13 @@ point</li>
 </ul></li>
 </ul></li>
 </ul></li>
+</ul>
+<h4 id="other-nodes">Other Nodes</h4>
+<ul>
+<li>Serial (uses pyserial)</li>
+<li>VISA (uses pyvisa)</li>
+<li>LabJack (uses LabJackPython, currently supports only U12)</li>
+<li>DummyDevice</li>
 </ul>
 <h3 id="node-functions">Node Functions</h3>
 <p>All the control nodes (derived from
