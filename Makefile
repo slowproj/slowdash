@@ -30,6 +30,12 @@ all:
 
 	@echo '#! /bin/bash' > $(SLOWDASH_BIN)
 	@echo '' >> $(SLOWDASH_BIN)
+	@echo 'VENV_DIR="$(SLOWDASH_DIR)/venv"' >> $(SLOWDASH_BIN)
+	@echo 'if [ -d "$$VENV_DIR" ]; then' >> $(SLOWDASH_BIN)
+	@echo '   source "$$VENV_DIR/bin/activate"' >> $(SLOWDASH_BIN)
+	@echo '   echo Running in venv at "$$VENV_DIR" >&2' >> $(SLOWDASH_BIN)
+	@echo 'fi' >> $(SLOWDASH_BIN)
+	@echo '' >> $(SLOWDASH_BIN)
 	@echo 'use_slowdog=0' >> $(SLOWDASH_BIN)
 	@echo 'args=()' >> $(SLOWDASH_BIN)
 	@echo 'for arg in "$$@"; do' >> $(SLOWDASH_BIN)
@@ -41,9 +47,9 @@ all:
 	@echo 'done' >> $(SLOWDASH_BIN)
 	@echo '' >> $(SLOWDASH_BIN)
 	@echo 'if [[ $$use_slowdog = 1 ]];  then' >> $(SLOWDASH_BIN)
-	@echo '    $(PYTHON) $(SLOWDASH_DIR)/utils/slowdog.py $(SLOWDASH_DIR)/app/server/slowdash.py "$${args[@]}"' >> $(SLOWDASH_BIN)
+	@echo '    python3 $(SLOWDASH_DIR)/utils/slowdog.py $(SLOWDASH_DIR)/app/server/slowdash.py "$${args[@]}"' >> $(SLOWDASH_BIN)
 	@echo 'else' >> $(SLOWDASH_BIN)
-	@echo '    $(PYTHON) "$(SLOWDASH_DIR)/app/server/slowdash.py" "$${args[@]}"' >> $(SLOWDASH_BIN)
+	@echo '    python3 "$(SLOWDASH_DIR)/app/server/slowdash.py" "$${args[@]}"' >> $(SLOWDASH_BIN)
 	@echo 'fi' >> $(SLOWDASH_BIN)
 	@echo '' >> $(SLOWDASH_BIN)
 	@chmod 755 $(SLOWDASH_BIN)
@@ -59,6 +65,11 @@ all:
 	@echo "- Set enviromnental variables for the slowdash executables and Python modules by: "
 	@echo "  source $(SLOWDASH_DIR)/bin/slowdash-bashrc"
 	@echo '- To build docker images, run "make docker"'
+
+
+venv: 
+	./utils/slowdash-setup-venv.sh
+	@make
 
 
 docker: all

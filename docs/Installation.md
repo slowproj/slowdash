@@ -71,18 +71,20 @@ $ docker build -t slowpy-notebook -f ./lib/Dockerfile ./lib
 <p>
 - Python 3
   - Version >= 3.9
-  - with numpy and pyyaml
-  - optionally (recommanded), uvicorn (Asynchronouns Web Server module)
-  - also matplotlib if SlowDash python library (SlowPy) is used
 <p>
 - Web Browser
   - Firefox most tested, Chrome &amp; Edge &amp; Safari ok, DuckDuckGo &amp; Opera never tested.
   - Also works on mobile devices: tested on iPad
 
-### Data Backend
-Install standard Python modules for the data storage system being used.
+### If not using venv
+In this standard installation procedure, we use Python venv and install all the necessary packages there.
 
-Currently supported data backend systems are:
+If you do not want to use venv, install the packages manually:
+
+  -  numpy, pyyaml, psutil
+  - optionally (recommanded), uvicorn (Asynchronouns Web Server module)
+  - also matplotlib if SlowDash python library (SlowPy) is used
+  - Python packages for the data storage system used in your setup:
 
 |DBMS              |Python Module|
 |------------------|-------------|
@@ -94,10 +96,9 @@ Currently supported data backend systems are:
 | Redis            | redis  |
 | CouchDB            | couchdb  |
 | MongoDB            | pymongo  |
-| System Resource (*) | psutil      |
-*) "System Resource" is a pseudo-database, responding to queries for CPU, memory and disk usage etc.
 
 See [Data Binding section](DataBinding.html) for details.
+
 
 ## Setup
 This process will not create any files other than the git-cloned directory. Installation can be removed completely by deleting this directory.
@@ -105,6 +106,7 @@ This process will not create any files other than the git-cloned directory. Inst
 $ git clone https://github.com/slowproj/slowdash.git --recurse-submodules
 $ cd slowdash
 $ make
+$ make venv     # if you want to use venv (recommended)
 ```
 
 This will create a bash file to set environmental variables. `source` it to include the settings:
@@ -116,17 +118,23 @@ For permanent installation, it might be convenient to include this line in the `
 Test the installation by running the command:
 ```console
 $ slowdash
-Usage: 
-  Web-Server Mode:    slowdash.py [Options] --port=PORT
-  Command-line Mode:  slowdash.py [Options] Command
+Running in venv at /PATH/TO/SLOWDASH/venv
+usage: 
+  Web-Server Mode:      slowdash.py [Options] --port=PORT
+  Command-line Mode:    slowdash.py [Options] COMMAND
 
-Options:
+Slowdash Version 250128 "Skykomish"
+
+positional arguments:
+  COMMAND               API query string. Ex) "config", "channels", "data/CHANNELS?length=LENGTH"
+
+options:
   -h, --help            show this help message and exit
-  -p PORT, --port=PORT  port number for web connection; command-line mode
-                        without this option
-  --project-dir=PROJECT_DIR
-                        project directory (default: current dir if not
-                        specified by SLOWDASH_PROJECT environmental variable)
+  -p PORT, --port PORT  port number for web connection; command-line mode without this option
+  --project-dir PROJECT_DIR
+                        project directory (default: current dir if not specified by SLOWDASH_PROJECT environmental
+                        variable)
+...
 ```
 
 Test the browser connection using an arbitrary port. As we have not yet defined a project, a warning message will be shown, but we proceed for now.

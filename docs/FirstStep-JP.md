@@ -102,31 +102,40 @@ JSROOT や Bokeh との違い：
 
 #  インストール
 ### 動作環境
-使っているデータベースを読むライブラリが必要な以外は，基本的に Python 3 が動けばすぐ使えます．
+#### Docker
+Docker があれば，DockerHub または GitHub CR にある SlowDash のイメージがすぐに利用できます (Linux / Windows WSL / MacOS)．
+
+- Docker Hub: [https://hub.docker.com/r/slowproj/slowdash](https://hub.docker.com/r/slowproj/slowdash)
+- GitHub CR: [https://github.com/slowproj/slowdash/pkgs/container/slowdash](https://github.com/slowproj/slowdash/pkgs/container/slowdash)
+
+ただ，最初から Docker を使うと設定ファイルの扱いなどが面倒だと思います．ここでは，最後に Docker を使う手順を解説します．
+
+#### 標準インストール (bare-metal)
+基本的に Python 3 が動けばすぐ使えます．
 
 - UNIX 風の OS．Ubuntu で開発，macOS とか Windows の WSL でも動いた．WinPython でも動くらしい．
-- Python 3.9 以上．すでに入ってなければ，NumPy と pyyaml も入れる．
-- 非同期ウェブサーバの uvicorn が入っていると動作が速くなるけど，必須ではない（`pip install uvicorn`）．
+- Python 3.9 以上．
 - ブラウザ．Firefox で開発していて，たまに Chrome と Edge と Safari でテストしている．
   - タブレットや携帯などのモバイルデバイス上でもそこそこ動作する．プロットの移動やズームは二本指で．
 
-使っているデータベースに合わせて，Python のライブラリを別にインストールする必要があります．`pip` ですぐに入ります．
+ここでのインストールでは，venv を使用してそこに必要なパッケージをインストールするので，手動で準備をする必要はありません．
 
-| データベース      |Python モジュール|
-|------------------|-------------|
-| PostgreSQL | `psycopg2` |
-| MySQL | `mysqlclient` |
-| SQLite | 追加ライブラリは不要 |
-| InfluxDB | `influxdb-client` |
-| Redis | `redis` |
-| MongoDB | `pymongo` |
-| CouchDB | `couchdb` |
+#### venv を使用しない場合
+もし venv を使用しない場合は，以下のパッケージを手動で入れてください．
 
-疑似データベースとして，CPU やメモリなどのシステムリソースをデータとして返すものもあります．便利なので入れておいていいと思います．
+- NumPy, pyyaml, psutil
+- 非同期ウェブサーバの uvicorn が入っていると動作が速くなるけど，必須ではない（`pip install uvicorn`）．
+- 使っているデータベースの python ライブラリ：
 
-| データソース      |Python モジュール|
-|------------------|-------------|
-| システム情報 | `psutil` |
+| データベース      |Python パッケージ|備考|
+|------------------|-------------|---|
+| PostgreSQL | `psycopg2` | システムライブラリ `libpq` も必要
+| MySQL | `mysqlclient` | |
+| SQLite | | 追加パッケージは不要 | 
+| InfluxDB | `influxdb-client` | |
+| Redis | `redis` | |
+| MongoDB | `pymongo` | |
+| CouchDB | `couchdb` | |
 
 
 
@@ -151,19 +160,23 @@ $ firefox slowdash/docs/index.html
 $ firefox slowdash/docs/FirstStep-JP.html
 ```
 
-### インストール
+### インストール 
+
 ```console
 $ cd slowdash
 $ make
+$ make venv
 ```
-`make` を使っているけれど，基本的にはファイルをコピーしているだけで，一瞬で終わります．
+これで，Python 周りのセットアップと，作成した venv へのパッケージのインストールを行います．
 
-`slowdash/bin`  の下に環境変数を設定するスクリプト `slowdash-bashrc` ができるので，これを `source`  してください．
+venv を使わない場合は，最後の `make venv` は必要ありません（ファイルをコピーするだけなので一瞬で終わります）．もし間違えてやってしまった場合は，`slowdash` ディレクトリの下にある `venv` ディレクトリを削除してください．
+
+以上により，`slowdash/bin`  の下に環境変数を設定するスクリプト `slowdash-bashrc` ができるので，これを `source`  してください．
 ```console
 $ source PATH/TO/SLOWDASH/bin/slowdash-bashrc
 ```
 設定ファイルの `source` は，新しいターミナルを開くたびに毎回必要です．
-SlowDash を継続的に使うなら，上記の行を `.bashrc` などに書いておくと毎回やる必要がなくなります．ちなみに中身はこんな感じです：
+SlowDash を継続的に使うなら，上記の行を `.bashrc` などに書いておくと毎回やる必要がなくなります．ちなみに中身はこんな感じです（この中では venv の設定はしていないので，他の Python と干渉することはないです）：
 ```bash
 export PATH="$PATH:/PATH/TO/slowdash/bin"
 export PYTHONPATH="$PYTHONPATH:/PATH/TO/slowdash/lib/slowpy"
@@ -173,6 +186,7 @@ export PYTHONPATH="$PYTHONPATH:/PATH/TO/slowdash/lib/slowpy"
 (`slowdash` コマンドは `slowdash/bin` の下にあります）
 ```console
 $ slowdash
+Running in venv at /PATH/TO/SLOWDASH/venv
 usage: 
   Web-Server Mode:      slowdash.py [Options] --port=PORT
   Command-line Mode:    slowdash.py [Options] COMMAND

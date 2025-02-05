@@ -11,7 +11,7 @@ class SerialNode(spc.ControlNode):
         kwargs['timeout'] = 1
         
         try:
-            import pyserial
+            import serial
         except Exception as e:
             logging.error('unable to import serial: pyserial not installed?')
             return

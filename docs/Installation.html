@@ -178,11 +178,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 </ul></li>
 <li>Python 3
 <ul>
-<li>Version &gt;= 3.9</li>
-<li>with numpy and pyyaml</li>
-<li>optionally (recommanded), uvicorn (Asynchronouns Web Server
-module)</li>
-<li>also matplotlib if SlowDash python library (SlowPy) is used
+<li>Version &gt;= 3.9
 <p></li>
 </ul></li>
 <li>Web Browser
@@ -192,10 +188,17 @@ module)</li>
 <li>Also works on mobile devices: tested on iPad</li>
 </ul></li>
 </ul>
-<h3 id="data-backend">Data Backend</h3>
-<p>Install standard Python modules for the data storage system being
-used.</p>
-<p>Currently supported data backend systems are:</p>
+<h3 id="if-not-using-venv">If not using venv</h3>
+<p>In this standard installation procedure, we use Python venv and
+install all the necessary packages there.</p>
+<p>If you do not want to use venv, install the packages manually:</p>
+<ul>
+<li>numpy, pyyaml, psutil</li>
+<li>optionally (recommanded), uvicorn (Asynchronouns Web Server
+module)</li>
+<li>also matplotlib if SlowDash python library (SlowPy) is used</li>
+<li>Python packages for the data storage system used in your setup:</li>
+</ul>
 <table>
 <thead>
 <tr class="header">
@@ -236,14 +239,8 @@ used.</p>
 <td>MongoDB</td>
 <td>pymongo</td>
 </tr>
-<tr class="odd">
-<td>System Resource (*)</td>
-<td>psutil</td>
-</tr>
 </tbody>
 </table>
-<p>*) “System Resource” is a pseudo-database, responding to queries for
-CPU, memory and disk usage etc.</p>
 <p>See <a href="DataBinding.html">Data Binding section</a> for
 details.</p>
 <h2 id="setup-1">Setup</h2>
@@ -253,7 +250,8 @@ directory.</p>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ git clone https://github.com/slowproj/slowdash.git --recurse-submodules</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd slowdash</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make</span></span></code></pre></div>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make venv     # if you want to use venv (recommended)</span></span></code></pre></div>
 <p>This will create a bash file to set environmental variables.
 <code>source</code> it to include the settings:</p>
 <div class="sourceCode" id="cb7"><pre
@@ -263,17 +261,23 @@ line in the <code>.bashrc</code> file.</p>
 <p>Test the installation by running the command:</p>
 <div class="sourceCode" id="cb8"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>Usage: </span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  Web-Server Mode:    slowdash.py [Options] --port=PORT</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  Command-line Mode:  slowdash.py [Options] Command</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>Options:</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  -h, --help            show this help message and exit</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  -p PORT, --port=PORT  port number for web connection; command-line mode</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>                        without this option</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  --project-dir=PROJECT_DIR</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>                        project directory (default: current dir if not</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>                        specified by SLOWDASH_PROJECT environmental variable)</span></code></pre></div>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>Running in venv at /PATH/TO/SLOWDASH/venv</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>usage: </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  Web-Server Mode:      slowdash.py [Options] --port=PORT</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  Command-line Mode:    slowdash.py [Options] COMMAND</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>Slowdash Version 250128 &quot;Skykomish&quot;</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>positional arguments:</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  COMMAND               API query string. Ex) &quot;config&quot;, &quot;channels&quot;, &quot;data/CHANNELS?length=LENGTH&quot;</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>options:</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  -h, --help            show this help message and exit</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  -p PORT, --port PORT  port number for web connection; command-line mode without this option</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  --project-dir PROJECT_DIR</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>                        project directory (default: current dir if not specified by SLOWDASH_PROJECT environmental</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>                        variable)</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
 <p>Test the browser connection using an arbitrary port. As we have not
 yet defined a project, a warning message will be shown, but we proceed
 for now.</p>

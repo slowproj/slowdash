@@ -223,75 +223,84 @@ JavaScript
 </ul>
 <h1 id="インストール">インストール</h1>
 <h3 id="動作環境">動作環境</h3>
-<p>使っているデータベースを読むライブラリが必要な以外は，基本的に Python
-3 が動けばすぐ使えます．</p>
+<h4 id="docker">Docker</h4>
+<p>Docker があれば，DockerHub または GitHub CR にある SlowDash
+のイメージがすぐに利用できます (Linux / Windows WSL / MacOS)．</p>
+<ul>
+<li>Docker Hub: <a
+href="https://hub.docker.com/r/slowproj/slowdash">https://hub.docker.com/r/slowproj/slowdash</a></li>
+<li>GitHub CR: <a
+href="https://github.com/slowproj/slowdash/pkgs/container/slowdash">https://github.com/slowproj/slowdash/pkgs/container/slowdash</a></li>
+</ul>
+<p>ただ，最初から Docker
+を使うと設定ファイルの扱いなどが面倒だと思います．ここでは，最後に
+Docker を使う手順を解説します．</p>
+<h4 id="標準インストール-bare-metal">標準インストール (bare-metal)</h4>
+<p>基本的に Python 3 が動けばすぐ使えます．</p>
 <ul>
 <li>UNIX 風の OS．Ubuntu で開発，macOS とか Windows の WSL
 でも動いた．WinPython でも動くらしい．</li>
-<li>Python 3.9 以上．すでに入ってなければ，NumPy と pyyaml
-も入れる．</li>
-<li>非同期ウェブサーバの uvicorn
-が入っていると動作が速くなるけど，必須ではない（<code>pip install uvicorn</code>）．</li>
+<li>Python 3.9 以上．</li>
 <li>ブラウザ．Firefox で開発していて，たまに Chrome と Edge と Safari
 でテストしている．
 <ul>
 <li>タブレットや携帯などのモバイルデバイス上でもそこそこ動作する．プロットの移動やズームは二本指で．</li>
 </ul></li>
 </ul>
-<p>使っているデータベースに合わせて，Python
-のライブラリを別にインストールする必要があります．<code>pip</code>
-ですぐに入ります．</p>
+<p>ここでのインストールでは，venv
+を使用してそこに必要なパッケージをインストールするので，手動で準備をする必要はありません．</p>
+<h4 id="venv-を使用しない場合">venv を使用しない場合</h4>
+<p>もし venv
+を使用しない場合は，以下のパッケージを手動で入れてください．</p>
+<ul>
+<li>NumPy, pyyaml, psutil</li>
+<li>非同期ウェブサーバの uvicorn
+が入っていると動作が速くなるけど，必須ではない（<code>pip install uvicorn</code>）．</li>
+<li>使っているデータベースの python ライブラリ：</li>
+</ul>
 <table>
 <thead>
 <tr class="header">
 <th>データベース</th>
-<th>Python モジュール</th>
+<th>Python パッケージ</th>
+<th>備考</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td>PostgreSQL</td>
 <td><code>psycopg2</code></td>
+<td>システムライブラリ <code>libpq</code> も必要</td>
 </tr>
 <tr class="even">
 <td>MySQL</td>
 <td><code>mysqlclient</code></td>
+<td></td>
 </tr>
 <tr class="odd">
 <td>SQLite</td>
-<td>追加ライブラリは不要</td>
+<td></td>
+<td>追加パッケージは不要</td>
 </tr>
 <tr class="even">
 <td>InfluxDB</td>
 <td><code>influxdb-client</code></td>
+<td></td>
 </tr>
 <tr class="odd">
 <td>Redis</td>
 <td><code>redis</code></td>
+<td></td>
 </tr>
 <tr class="even">
 <td>MongoDB</td>
 <td><code>pymongo</code></td>
+<td></td>
 </tr>
 <tr class="odd">
 <td>CouchDB</td>
 <td><code>couchdb</code></td>
-</tr>
-</tbody>
-</table>
-<p>疑似データベースとして，CPU
-やメモリなどのシステムリソースをデータとして返すものもあります．便利なので入れておいていいと思います．</p>
-<table>
-<thead>
-<tr class="header">
-<th>データソース</th>
-<th>Python モジュール</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>システム情報</td>
-<td><code>psutil</code></td>
+<td></td>
 </tr>
 </tbody>
 </table>
@@ -324,18 +333,25 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <h3 id="インストール-1">インストール</h3>
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd slowdash</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make</span></span></code></pre></div>
-<p><code>make</code>
-を使っているけれど，基本的にはファイルをコピーしているだけで，一瞬で終わります．</p>
-<p><code>slowdash/bin</code> の下に環境変数を設定するスクリプト
-<code>slowdash-bashrc</code> ができるので，これを <code>source</code>
-してください．</p>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make venv</span></span></code></pre></div>
+<p>これで，Python 周りのセットアップと，作成した venv
+へのパッケージのインストールを行います．</p>
+<p>venv を使わない場合は，最後の <code>make venv</code>
+は必要ありません（ファイルをコピーするだけなので一瞬で終わります）．もし間違えてやってしまった場合は，<code>slowdash</code>
+ディレクトリの下にある <code>venv</code>
+ディレクトリを削除してください．</p>
+<p>以上により，<code>slowdash/bin</code>
+の下に環境変数を設定するスクリプト <code>slowdash-bashrc</code>
+ができるので，これを <code>source</code> してください．</p>
 <div class="sourceCode" id="cb5"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source PATH/TO/SLOWDASH/bin/slowdash-bashrc</span></span></code></pre></div>
 <p>設定ファイルの <code>source</code>
 は，新しいターミナルを開くたびに毎回必要です． SlowDash
 を継続的に使うなら，上記の行を <code>.bashrc</code>
-などに書いておくと毎回やる必要がなくなります．ちなみに中身はこんな感じです：</p>
+などに書いておくと毎回やる必要がなくなります．ちなみに中身はこんな感じです（この中では
+venv の設定はしていないので，他の Python
+と干渉することはないです）：</p>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PATH</span><span class="st">:/PATH/TO/slowdash/bin&quot;</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PYTHONPATH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PYTHONPATH</span><span class="st">:/PATH/TO/slowdash/lib/slowpy&quot;</span></span></code></pre></div>
@@ -344,22 +360,23 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="
 <code>slowdash/bin</code> の下にあります）</p>
 <div class="sourceCode" id="cb7"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>usage: </span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  Web-Server Mode:      slowdash.py [Options] --port=PORT</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  Command-line Mode:    slowdash.py [Options] COMMAND</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>Slowdash Version 250128 &quot;Skykomish&quot;</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>positional arguments:</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  COMMAND               API query string. Ex) &quot;config&quot;, &quot;channels&quot;, &quot;data/CHANNELS?length=LENGTH&quot;</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>options:</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  -h, --help            show this help message and exit</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  -p PORT, --port PORT  port number for web connection; command-line mode without this option</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  --project-dir PROJECT_DIR</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>                        project directory (default: current dir if not specified by SLOWDASH_PROJECT environmental</span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>                        variable)</span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>Running in venv at /PATH/TO/SLOWDASH/venv</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>usage: </span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  Web-Server Mode:      slowdash.py [Options] --port=PORT</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  Command-line Mode:    slowdash.py [Options] COMMAND</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>Slowdash Version 250128 &quot;Skykomish&quot;</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>positional arguments:</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  COMMAND               API query string. Ex) &quot;config&quot;, &quot;channels&quot;, &quot;data/CHANNELS?length=LENGTH&quot;</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>options:</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  -h, --help            show this help message and exit</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  -p PORT, --port PORT  port number for web connection; command-line mode without this option</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  --project-dir PROJECT_DIR</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>                        project directory (default: current dir if not specified by SLOWDASH_PROJECT environmental</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>                        variable)</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
 <p>任意のポート番号を指定して <code>slowdash</code>
 コマンドを実行し，ブラウザとの接続を確認してください．ここで，プロジェクトがないという警告が出ますが，今はこのまま先に進みます．</p>
 <div class="sourceCode" id="cb8"><pre
