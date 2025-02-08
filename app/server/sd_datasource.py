@@ -17,13 +17,23 @@ class DataSource(ComponentPlugin):
         super().__init__(app, project, params)
 
         
+    @slowapi.on_event('startup')
+    async def api_initialize(self):
+        return await self.aio_initialize()
+
+    
+    @slowapi.on_event('shutdown')
+    async def api_finalize(self):
+        return await self.aio_finalize()
+
+    
     @slowapi.get('/channels')
-    def api_get_channels(self):
-        return self.get_channels()
+    async def api_get_channels(self):
+        return await self.aio_get_channels()
 
     
     @slowapi.get('/data/{channels}')
-    def api_get_data(self, channels:str, opts:dict):
+    async def api_get_data(self, channels:str, opts:dict):
         try:
             channels = channels.split(',')
             length = float(opts.get('length', '3600'))
@@ -37,8 +47,8 @@ class DataSource(ComponentPlugin):
             resample = None
 
         result = {}
-        result_ts = self.get_timeseries(channels, length, to, resample, reducer)
-        result_obj = self.get_object(channels, length, to)
+        result_ts = await self.aio_get_timeseries(channels, length, to, resample, reducer)
+        result_obj = await self.aio_get_object(channels, length, to)
         if result_ts is not None:
             result.update(result_ts)
         if result_obj is not None:
@@ -48,7 +58,7 @@ class DataSource(ComponentPlugin):
 
     
     @slowapi.get('/blob')
-    def api_get_blob(self, channel:str, path:list):
+    async def api_get_blob(self, channel:str, path:list):
         mime_type, content = self.get_blob(channel, path[1:])
         if mime_type is not None:
             return None
@@ -56,6 +66,46 @@ class DataSource(ComponentPlugin):
         return slowapi.Response(content_type=mime_type, content=content)
 
     
+    async def aio_initialize(self):
+        return self.initialize()
+
+    
+    async def aio_finalize(self):
+        return self.finalize()
+        
+                    
+    async def aio_get_channels(self):
+        """[implement in child class] returns a list of channels (async version)
+        """
+        return self.get_channels()
+
+    
+    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
+        """[implement in child class] returns a time-series data (async version)
+        """
+        return self.get_timeseries(channels, length, to, resampling, reducer)
+
+    
+    async def aio_get_object(self, channels, length, to):
+        """[implement in child class] returns a single-point data object (async version)
+        """
+        return self.get_object(channels, length, to)
+
+    
+    async def aio_get_blob(self, channel:str, params:list):
+        """[implement in child class] returns a tuple of content_type (str) and blob (bytes)  (async version)
+        """
+        return self.get_blob(channel, params)
+
+
+    def initialize(self):
+        pass
+
+    
+    def finalize(self):
+        pass
+        
+                    
     def get_channels(self):
         """[implement in child class] returns a list of channels
         """
@@ -63,8 +113,9 @@ class DataSource(ComponentPlugin):
 
     
     def get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
+        """[implement in child class] returns a time-series data
+        """
         return {}
-
 
     
     def get_object(self, channels, length, to):

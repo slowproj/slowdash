@@ -56,17 +56,12 @@ class App(slowapi.App):
         self.slowapi.include(TaskModuleComponent(self, self.project))
         self.slowapi.include(MiscApiComponent(self, self.project))
 
-        
-    def terminate(self):
-        """graceful terminate
-          - used by components that have a thread (usermodule/taskmodule), to send a stop request etc.
-        """
-        for component in reversed([ app for app in self.slowapi ]):
-            if isinstance(component, Component):
-                component.terminate()
+
+    @slowapi.on_event("shutdown")
+    async def finalize(self):
         logging.info('SlowDash has been terminated gracefully')
-
-
+        
+        
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
@@ -157,8 +152,10 @@ if __name__ == '__main__':
         async def main():
             json_opts = { 'indent': args.indent }
             response = await app.slowapi(args.COMMAND)
+            await app.slowapi.dispatch_event('startup')
             sys.stdout.write(response.get_content(json_opts).decode())
             sys.stdout.write('\n')
+            await app.slowapi.dispatch_event('shutdown')
         asyncio.run(main())
         
     else:
@@ -187,5 +184,3 @@ if __name__ == '__main__':
                 kwargs['ssl_keyfile'] = args.ssl_keyfile
                 kwargs['ssl_certfile'] = args.ssl_certfile
             app.run(port=args.port, **kwargs)
-        
-    app.terminate()

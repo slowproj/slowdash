@@ -235,6 +235,25 @@ app = App()
   - For list: `doc[index]`,`len(doc)`, `for v in doc:`, ...
 
 
+### Event Hook
+The structure is basically the same as FastAPI:
+```python
+import slowapi
+
+class App(slowapi.App):
+    @slowapi.on_event('startup')
+    async def startup(self):
+        print("SlowApp Server started")
+        
+    @slowapi.on_event('shutdown')
+    async def shutdown(self):
+        print("SlowApp Server stopped")
+
+app = App()
+```
+- Currently `startup` and `shutdown` are implemented
+
+
 ### WebSocket
 The structure is basically the same as FastAPI:
 ```python

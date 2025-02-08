@@ -5,45 +5,68 @@ import sys, os, time, math, logging
 from sd_dataschema import Schema
 from sd_datasource import DataSource
 
-from redis import Redis
+from redis import aioredis
 
 objts_prefix = '__sd_objts'
 
 
 class KeyValueSource:
-    def __init__(self, host, port, db, params):
+    def __init__(self, url, params):
+        self.url = url
         self.suffix = params.get('suffix', '')
         
         self.channels = {}
         self.redis = None
+
+        
+    async def connect(self):
+        if self.redis is not None:
+            return
         
         for i in range(12):
             try:
-                self.redis = Redis(host=host, port=port, db=db, decode_responses=True)
-                self.redis.keys()
+                self.redis = aioredis.from_url(self.url, decode_responses=True)
+                await self.redis.keys()
                 break
             except Exception as e:
+                if self.redis is not None:
+                    try:
+                        self.redis.close()
+                    except:
+                        pass
+                    self.redis = None
                 logging.info(f'Unable to connect to Redis: {e}')
                 logging.info(f'retrying in 5 sec... ({i+1}/12)')
                 time.sleep(5)
         else:
+            if self.redis is not None:
+                try:
+                    self.redis.close()
+                except:
+                    pass
+                self.redis = None
             logging.error(f'Unable to connect to Redis: "{host}:{port}/{db}"')
             logging.error(traceback.format_exc())
-            self.redis = None
 
         if self.redis is not None:
             logging.debug('Redis loaded: %s:%s/%s' % (host, port, db))
 
         
-    def get_channels(self):
+    async def close(self):
+        if self.redis is not None:
+            await self.redis.close()
+        self.redis = None
+
+        
+    async def get_channels(self):
         return [ { **{'name': key}, **val } for key, val in self.channels.items() ]
 
     
-    def get_timeseries(self, channels, length, to):
+    async def get_timeseries(self, channels, length, to):
         return {}
 
     
-    def get_object(self, channels, length, to):
+    async def get_object(self, channels, length, to):
         record = {}
         start = to - length
         
@@ -52,7 +75,7 @@ class KeyValueSource:
                 continue
             key = ch[0:len(ch)-len(self.suffix)]
             try:
-                value = self.redis.hgetall(key)
+                value = await self.redis.hgetall(key)
             except Exception as e:
                 logging.error('Redis: error on hgetall(): %s: %s' % (ch, str(e)))
                 continue
@@ -65,28 +88,28 @@ class KeyValueSource:
         return record
 
     
-    def scan_channels(self):
+    async def scan_channels(self):
         self.channels = {}
         if self.redis is None:
             return
         
-        for key in self.redis.keys():
+        async for key in self.redis.keys():
             if key.startswith(objts_prefix):
                 continue
-            if self.redis.type(key) == 'hash':
+            if await self.redis.type(key) == 'hash':
                 self.channels[key+self.suffix] = { 'type': 'tree' }
 
                 
         
 class ObjectSource(KeyValueSource):
-    def __init__(self, host, port, db, params):
-        super().__init__(host, port, db, params)
+    def __init__(self, url, params):
+        super().__init__(url, params)
         
         self.channels = {}
         self.json_str_channels = set()
         
         
-    def get_object(self, channels, length, to):
+    async def get_object(self, channels, length, to):
         record = {}
         start = to - length
         
@@ -96,13 +119,13 @@ class ObjectSource(KeyValueSource):
             key = ch[0:len(ch)-len(self.suffix)]
             if key in self.json_str_channels:
                 try:
-                    obj = self.redis.get(key)
+                    obj = await self.redis.get(key)
                 except Exception as e:
                     logging.error('Redis: error on get(): %s: %s' % (ch, str(e)))
                     continue
             else:
                 try:
-                    obj = self.redis.json().get(key)
+                    obj = await self.redis.json().get(key)
                 except Exception as e:
                     logging.error('Redis: error on json().get(): %s: %s' % (ch, str(e)))
                     continue
@@ -116,35 +139,35 @@ class ObjectSource(KeyValueSource):
         return record
 
     
-    def scan_channels(self):
+    async def scan_channels(self):
         self.channels = {}
         if self.redis is None:
             return
         
-        for key in self.redis.keys():
+        async for key in self.redis.keys():
             if key.startswith(objts_prefix):
                 continue
-            objtype, keytype = self.find_object_type(key)
+            objtype, keytype = await self.find_object_type(key)
             if objtype is not None:
                 self.channels[key+self.suffix] = { 'type': objtype }
                 if keytype == 'string':
                     self.json_str_channels.add(key)
                     
     
-    def find_object_type(self, key):
+    async def find_object_type(self, key):
         if self.redis is None:
             return None
         
-        keytype = self.redis.type(key)
+        keytype = await self.redis.type(key)
         if keytype == 'string':
             try:
-                obj = self.redis.get(key)
+                obj = await self.redis.get(key)
             except Exception as e:
                 logging.error('Redis: error on json().get(): %s' % str(e))
                 obj = None
         elif keytype == 'ReJSON-RL':
             try:
-                obj = self.redis.json().get(key)
+                obj = await self.redis.json().get(key)
             except Exception as e:
                 logging.error('Redis: error on json().get(): %s' % str(e))
                 obj = None
@@ -156,25 +179,25 @@ class ObjectSource(KeyValueSource):
     
         
 class TimeSeriesSource(ObjectSource):
-    def __init__(self, host, port, db, params):
-        super().__init__(host, port, db, params)
+    def __init__(self, url, params):
+        super().__init__(url, params)
         if self.redis is None:
             return
 
             
-    def scan_channels(self):
+    async def scan_channels(self):
         self.channels = {}
         if self.redis is None:
             return
         
-        for key in self.redis.keys():
+        async for key in self.redis.keys():
             if key.startswith(objts_prefix):
                 continue
-            if self.redis.type(key) == 'TSDB-TYPE':
+            if await self.redis.type(key) == 'TSDB-TYPE':
                 self.channels[key+self.suffix] = { 'type': 'timeseries' }
 
 
-    def get_timeseries(self, channels, length, to):
+    async def get_timeseries(self, channels, length, to):
         record = {}
         start = to - length
         
@@ -183,7 +206,7 @@ class TimeSeriesSource(ObjectSource):
                 continue
             key = ch[0:len(ch)-len(self.suffix)]
             try:
-                ts = self.redis.ts().range(key, int(1000*start), int(1000*to))
+                ts = await self.redis.ts().range(key, int(1000*start), int(1000*to))
             except Exception as e:
                 logging.warning('Redis: Unable load TS data: %s: %s' % (key, str(e)))
                 continue
@@ -197,21 +220,21 @@ class TimeSeriesSource(ObjectSource):
         return record
 
     
-    def get_object(self, channels, length, to):
+    async def get_object(self, channels, length, to):
         return {}
 
     
                              
 class ObjectTimeSeriesSource(TimeSeriesSource):
-    def __init__(self, host, port, db, params):
-        super().__init__(host, port, db, params)
+    def __init__(self, url, params):
+        super().__init__(url, params)
 
         
-    def get_timeseries(self, channels, length, to):
+    async def get_timeseries(self, channels, length, to):
         return {}
 
     
-    def get_object(self, channels, length, to):
+    async def get_object(self, channels, length, to):
         if self.redis is None:
             return {}
         
@@ -225,7 +248,7 @@ class ObjectTimeSeriesSource(TimeSeriesSource):
             
             tsname = '%sindex_%s' % (objts_prefix, key)
             try:
-                ts = self.redis.ts().range(tsname, int(1000*start), int(1000*to))
+                ts = await self.redis.ts().range(tsname, int(1000*start), int(1000*to))
             except Exception as e:
                 logging.warning('Redis: Unable load TS data: %s: %s' % (ch, str(e)))
                 continue
@@ -241,13 +264,13 @@ class ObjectTimeSeriesSource(TimeSeriesSource):
             objname = '%s_%s_%d' % (objts_prefix, key, int(index))
             if key in self.json_str_channels:
                 try:
-                    obj = self.redis.get(objname)
+                    obj = await self.redis.get(objname)
                 except Exception as e:
                     logging.error('Redis: error on get(): %s: %s' % (ch, str(e)))
                     continue
             else:
                 try:
-                    obj = self.redis.json().get(objname)
+                    obj = await self.redis.json().get(objname)
                 except Exception as e:
                     logging.warning('Redis: error on json().get(): %s: %s' % (objname, str(e)))
                     continue
@@ -261,32 +284,32 @@ class ObjectTimeSeriesSource(TimeSeriesSource):
         return record
 
     
-    def scan_channels(self):
+    async def scan_channels(self):
         self.channels = {}
         if self.redis is None:
             return
 
-        for key in self.redis.keys():
+        async for key in self.redis.keys():
             if not key.startswith(objts_prefix):
                 continue
-            if self.redis.type(key) != 'TSDB-TYPE':
+            if await self.redis.type(key) != 'TSDB-TYPE':
                 continue
             name = key[len(objts_prefix+'index_'):]
-            objtype, keytype = self.find_object_type(name)
+            objtype, keytype = await self.find_object_type(name)
             if objtype is not None:
                 self.channels[name+self.suffix] = { 'type': objtype }
                 if keytype == 'string':
                     self.json_str_channels.add(name)
         
 
-    def find_object_type(self, name):
+    async def find_object_type(self, name):
         tskey = objts_prefix + 'index_' + name
         try:
-            tk, index = self.redis.ts().get(tskey)
+            tk, index = await self.redis.ts().get(tskey)
         except Exception as e:
             return None, None
 
-        return super().find_object_type('%s_%s_%d' % (objts_prefix, name, int(index)))
+        return await super().find_object_type('%s_%s_%d' % (objts_prefix, name, int(index)))
     
                     
 
@@ -297,14 +320,15 @@ class DataSource_Redis(DataSource):
         dburl = Schema.parse_dburl(params.get('url', ''))
         host = dburl.get('host', 'localhost')
         port = dburl.get('port', '6379')
-        default_db = dburl.get('db', None)
+        default_db = dburl.get('db', '0')
 
-        def load_source(params, entrytype, source_class):
+        def load_source(params, entrytype, SourceClass):
             source_list = []
             entry_list = params.get(entrytype, [])
             for entry in entry_list if type(entry_list) is list else [ entry_list ]:
                 db = entry.get('db', default_db)
-                source_list.append(source_class(host, port, db, entry))
+                url = f'redis://{host}:{port}/{db}'
+                source_list.append(SourceClass(url, entry))
             return source_list
         
         self.kv_sources = load_source(params, 'key_value', KeyValueSource)
@@ -319,26 +343,34 @@ class DataSource_Redis(DataSource):
             self.ts_sources = [ TimeSeriesSource(host, port, default_db, {}) ]
             self.objts_sources = [ ObjectTimeSeriesSource(host, port, default_db, {}) ]
             self.sources = self.kv_sources + self.obj_sources + self.ts_sources + self.objts_sources
+
             
+    async def aio_initialize(self):
         for src in self.sources:
-            src.scan_channels()
+            await src.connect()
         
                     
-    def get_channels(self):
+    async def aio_finalize(self):
         for src in self.sources:
-            src.scan_channels()
+            await src.close()
+        
+                    
+    async def aio_get_channels(self):
+        for src in self.sources:
+            await src.scan_channels()
 
         channels = []
         for src in self.sources:
-            channels.extend([ k for k in src.get_channels() ])
+            this_channels = await src.get_channels()
+            channels.extend([ k for k in this_channels ])
             
         return channels
 
     
-    def get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
+    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
         record = {}
         for src in self.sources:
-            record.update(src.get_timeseries(channels, length, to))
+            record.update(await src.get_timeseries(channels, length, to))
 
         if resampling is None:
             return record
@@ -346,9 +378,9 @@ class DataSource_Redis(DataSource):
         return self.resample(record, length, to, resampling, reducer)
 
                              
-    def get_object(self, channels, length, to):
+    async def aio_get_object(self, channels, length, to):
         record = {}
         for src in self.sources:
-            record.update(src.get_object(channels, length, to))
+            record.update(await src.get_object(channels, length, to))
 
         return record

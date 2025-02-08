@@ -73,7 +73,8 @@ class ConsoleComponent(Component):
         self.console_stdout = self.console_awaitable_stdout
         
 
-    def terminate(self):
+    @slowapi.on_event('shutdown')
+    def finalize(self):
         if self.console_stdin is not None:
             sys.stdin = sys.__stdin__
             self.console_stdin.close()

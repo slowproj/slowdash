@@ -78,7 +78,7 @@ class DataSource_SQL(DataSource_TableStore):
         super().__init__(app, project, params)
 
 
-    def terminate(self):
+    def finalize(self):
         if self.server is not None:
             self.server.terminate()
 

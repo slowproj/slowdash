@@ -15,11 +15,11 @@ class Component(slowapi.App):
         self.project = project
 
         
-    # override this
-    def terminate(self):
-        pass
+    @slowapi.get('/config')
+    def api_config(self):
+        return self.public_config()
 
-    
+
     # override this
     def public_config(self):
         """ returns contents for the "config" API (exposed to users)
@@ -41,11 +41,6 @@ class ComponentPlugin(slowapi.App):
         self.project = project
         self.plugin_type = None
         self.class_name = None
-
-    
-    # override this
-    def terminate(self):
-        pass
 
     
     # override this
@@ -86,11 +81,6 @@ class PluginComponent(Component):
         self.build(plugin_config)
         
 
-    def terminate(self):
-        for plugin in self.slowapi:
-            plugin.terminate()
-
-    
     def public_config(self):
         """construct public_config from the member plugins.
         """

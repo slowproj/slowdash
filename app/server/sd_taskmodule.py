@@ -368,7 +368,8 @@ class TaskModuleComponent(Component):
                 module.start()
 
                 
-    def terminate(self):
+    @slowapi.on_event('shutdown')
+    def finalize(self):
         for module in self.taskmodule_list:
             module.stop()
             
