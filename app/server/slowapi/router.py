@@ -278,7 +278,8 @@ class Router:
                 if not isinstance(response, Response):
                     status_code = handler.slowapi_path_rule.status_code
                     response = Response(status_code, content=response)
-                logging.debug(f'{self.app.__class__.__name__}: {str(request)[:100]} -> Status {response.get_status_code()}: {str(response)[:100]}')
+                if response.status_code > 0:
+                    logging.debug(f'{self.app.__class__.__name__}: {str(request)[:100]} -> Status {response.get_status_code()}: {str(response)[:100]}')
                 response_list.append(response)
         for subapp in self.subapps:
             response_list.append(await subapp.slowapi.dispatch(request))

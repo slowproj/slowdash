@@ -235,7 +235,7 @@ app = App()
   - For list: `doc[index]`,`len(doc)`, `for v in doc:`, ...
 
 
-### Event Hook
+### Lifespan Events
 The structure is basically the same as FastAPI:
 ```python
 import slowapi

@@ -452,8 +452,8 @@ class TaskModuleComponent(Component):
 
     
     @slowapi.get('/control/task')
-    async def task_status(self, request:slowapi.Request, since:int=0):
-        while request.is_async and self.status_revision <= since:
+    async def task_status(self, since:int=0):
+        while self.app.is_async and self.status_revision <= since:
             has_update = False
             for module in self.taskmodule_list:
                 if module.was_running != module.is_running():

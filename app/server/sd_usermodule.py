@@ -353,7 +353,8 @@ class UserModuleComponent(Component):
             module.start()
 
 
-    def terinate(self):
+    @slowapi.on_event('shutdown')
+    def finalize(self):
         for module in self.usermodule_list:
             module.stop()
             

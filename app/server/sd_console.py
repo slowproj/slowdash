@@ -91,14 +91,14 @@ class ConsoleComponent(Component):
 
     
     @slowapi.get('/console')
-    async def read(self, request:slowapi.Request, nlines:int=20, since:int=0):
+    async def read(self, nlines:int=20, since:int=0):
         if not self.enabled:
             return {
                 'revision': 0,
                 'text': '[console not enabled]'
             }
 
-        if request.is_async:
+        if self.app.is_async:
             if  self.console_awaitable_stdout is None:
                 # AwaitableStringIO cannot be used with WSGI, as there is no contineous event loop
                 self.build()

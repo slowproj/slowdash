@@ -21,6 +21,7 @@ class Component(slowapi.App):
 
 
     # override this
+    # TODO: remove this with using SlowAPI response merging (each component/plugin binds '/config')
     def public_config(self):
         """ returns contents for the "config" API (exposed to users)
         Note:
@@ -137,18 +138,30 @@ class PluginComponent(Component):
         Return:
           - instance of the class
           - None on error
+        Note:
+          - If the app is not async, and a plugin with "_NoAsync" suffix exits, it will be used instead.
         """
         
         plugin_dir = os.path.abspath(os.path.join(self.project.sys_dir, 'app', 'plugin'))
+        no_async_plugin_name = plugin_name + '_NoAsync'
+
+        plugin_file_name, no_async_plugin_file_name = None, None
         for plugin_file in glob.glob(os.path.join(plugin_dir, '*.py')):
             if os.path.basename(plugin_file)[:-3].lower() == plugin_name.lower():
-                break
-        else:
+                plugin_file_name = plugin_file
+            if os.path.basename(plugin_file)[:-3].lower() == no_async_plugin_name.lower():
+                no_async_plugin_file_name = plugin_file
+
+        # fallback to NoAsync, if the server is no-async and NoAsync plugin exists
+        if (not self.app.is_async) and (no_async_plugin_file_name is not None):
+            plugin_file_name = no_async_plugin_file_name
+            
+        if plugin_file_name is None:
             logging.error(f'unable to find plugin: {plugin_name}')
             return None
 
         try:
-            module = importlib.machinery.SourceFileLoader(plugin_file, plugin_file).load_module()
+            module = importlib.machinery.SourceFileLoader(plugin_file_name, plugin_file_name).load_module()
         except Exception as e:
             logging.error(f'unable to load plugin: {plugin_name}: %s' % str(e))
             logging.error(traceback.format_exc())

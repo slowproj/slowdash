@@ -15,6 +15,22 @@ async def dispatch_asgi(app, scope, receive, send):
     Args: see the ASGI specification
     """
     
+    if scope['type'] == 'lifespan':
+        while True:
+            try:
+                message = await receive()
+            except asyncio.CancelledError:
+                await app.slowapi.dispatch_event("shutdown")
+                return
+            if message['type'] == 'lifespan.startup':
+                logging.error("ASIG STARTUP")
+                await app.slowapi.dispatch_event("startup")
+                await send({'type': 'lifespan.startup.complete'})
+            elif message['type'] == 'lifespan.shutdown':
+                logging.error("ASIG SHUTDOWN")
+                await app.slowapi.dispatch_event("shutdown")
+                await send({'type': 'lifespan.shutdown.complete'})
+
     method = scope.get('method', '').upper()
     url = scope.get('raw_path', b'').decode()
     query = scope.get('query_string', b'')
@@ -22,9 +38,7 @@ async def dispatch_asgi(app, scope, receive, send):
         url += '?' + query.decode()           
     headers = { k.decode():v.decode() for k,v in scope['headers'] }
 
-    if scope['type'] == 'lifespan':
-        return
-    elif scope['type'] == 'websocket':
+    if scope['type'] == 'websocket':
         logging.info(f'WebSocket: {url}')
         return await app.slowapi.websocket(Request(url, method='WEBSOCKET', headers=headers), WebSocket(receive, send))
     elif scope['type'] != 'http':
@@ -129,15 +143,14 @@ def serve_asgi_uvicorn(app, port, **kwargs):
         logging.warn('Falling back to WSGI; async requests will be serialized. WebSockets will not be available.')
         return serve_wsgi_ref(WSGI(app), port, **kwargs)
 
-    async def run_uvicorn():
+    async def main():
         stop_event = asyncio.Event()
         def async_signal_handler(signum, frame):
             stop_event.set()
         signal.signal(signal.SIGINT, async_signal_handler)
         signal.signal(signal.SIGTERM, async_signal_handler)
 
-        await app.slowapi.dispatch_event("startup")
-        config = uvicorn.Config(app, port=port, workers=1, **kwargs)
+        config = uvicorn.Config(app, port=port, workers=1, lifespan="on", **kwargs)
         server = uvicorn.Server(config)
         #server.install_signal_handlers=False  # this causes the server not working...
         server_task = asyncio.create_task(server.serve())
@@ -149,7 +162,6 @@ def serve_asgi_uvicorn(app, port, **kwargs):
         
         await stop_event.wait()
         server_task.cancel()
-        await app.slowapi.dispatch_event("shutdown")
     
     if ('ssl_keyfile' in kwargs) and ('ssl_certfile' in kwargs):
         is_https = True
@@ -157,7 +169,7 @@ def serve_asgi_uvicorn(app, port, **kwargs):
         is_https = False
         
     sys.stderr.write(f'Listening at port {port} (ASGI {"HTTPS" if is_https else "HTTP"})\n')
-    asyncio.run(run_uvicorn())
+    asyncio.run(main())
     sys.stderr.write('Terminated\n')    
 
 
@@ -197,16 +209,15 @@ def serve_wsgi_gunicorn(app, port, **kwargs):
         is_https = False
 
     Request.is_async = False
-        
+
+    
     # gunicorn SHOULD handle signals... signals cannot stop the App somehow.
     sys.stderr.write(f'Listening at port {port} (gunicorn WSGI {"HTTPS" if is_https else "HTTP"})\n')
     
     asyncio.run(app.slowapi.dispatch_event('startup'))
     GunicornApp(app, **kwargs).run()
-
-    # somehow this code is not reached after Ctrl-c etc.
     asyncio.run(app.slowapi.dispatch_event('shutdown'))
-    sys.stderr.write('Terminated\n')    
+    sys.stderr.write('Terminated\n')
 
 
     
@@ -215,13 +226,13 @@ def serve_wsgi_ref(app, port, **kwargs):
         def log_message(self, fmt, *args):
             pass
 
+    Request.is_async = False
+
     def signal_handler(signum, frame):
         raise KeyboardInterrupt
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
     
-    Request.is_async = False
-
     sys.stderr.write(f'Listening at port {port} (wsgiref WSGI)\n')
     asyncio.run(app.slowapi.dispatch_event('startup'))
     try:
@@ -231,6 +242,7 @@ def serve_wsgi_ref(app, port, **kwargs):
         pass
     asyncio.run(app.slowapi.dispatch_event('shutdown'))
     sys.stderr.write('Terminated\n')    
+
 
 
     

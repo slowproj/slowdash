@@ -20,11 +20,12 @@ from sd_misc_api import MiscApiComponent
 
 
 class App(slowapi.App):
-    def __init__(self, project_dir=None, project_file=None, is_cgi=False, is_command=False):
+    def __init__(self, project_dir=None, project_file=None, is_cgi=False, is_command=False, is_async=True):
         super().__init__()
 
         self.is_cgi = is_cgi
         self.is_command = is_command
+        self.is_async = is_async
         
         if project_dir is not None:
             project_dir = os.path.abspath(os.path.join(os.getcwd(), project_dir))
@@ -145,14 +146,15 @@ if __name__ == '__main__':
         project_file = args.project_file,
         is_cgi = False,
         is_command = (args.port<=0),
+        is_async = not args.wsgi
     )
 
     if args.port <= 0:
         # command-line mode
         async def main():
             json_opts = { 'indent': args.indent }
-            response = await app.slowapi(args.COMMAND)
             await app.slowapi.dispatch_event('startup')
+            response = await app.slowapi(args.COMMAND)
             sys.stdout.write(response.get_content(json_opts).decode())
             sys.stdout.write('\n')
             await app.slowapi.dispatch_event('shutdown')
