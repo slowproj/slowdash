@@ -921,24 +921,21 @@ class TaskManagerPanel extends Panel {
         }
 
         for (let entry of record) {
-            const now = parseInt($.time());
             let last_routine = 'none', last_command = 'none', status = '&#x2615; inactive';
             if (entry.last_routine !== null) {
-                const lapse = now - parseInt(entry.last_routine_time);
+                const since = new JGDateTime(parseInt(entry.last_routine_time)).asString('%a %H:%M');
                 last_routine = (
                     (entry.is_routine_running ? 'running ' : 'completed ') +
                     clip(entry.last_routine ?? '') +
-                    ", " +
-                    (lapse > 3600 ? '>1h' : lapse+"s")
+                    (entry.is_routine_running ? ', since ' : ', at ') + since
                 );
             }
             if (entry.last_command !== null) {
-                const lapse = now - parseInt(entry.last_command_time);
+                const since = new JGDateTime(parseInt(entry.last_command_time)).asString('%a %H:%M');
                 last_command = (
                     (entry.is_command_running ? 'running ' : 'completed ') +
                     clip(entry.last_command.substr(entry.name.length+1) ?? '') +
-                    ", " +
-                    (lapse > 3600 ? '>1h' : lapse+"s")
+                    (entry.is_command_running ? ', since ' : ', at ') + since
                 );
             }
             if (entry.has_error) {

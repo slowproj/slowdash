@@ -60,12 +60,14 @@ all:
 
 	@ln -fs "$(SLOWDASH_DIR)/docs" "$(SLOWDASH_DIR)/app/site"
 
-	@echo "## Installation successful"
+	@echo "## Installation successful ##"
 	@echo ""
 	@echo "- Executable files are copied to $(SLOWDASH_DIR)/bin."
 	@echo "- Set enviromnental variables for the slowdash executables and Python modules by: "
 	@echo "  source $(SLOWDASH_DIR)/bin/slowdash-bashrc"
+	@echo ""
 	@echo '- To build docker images, run "make docker"'
+	@echo '- To setup Python venv for SlowDash, run "make setup-venv"'
 
 
 setup-venv:
@@ -80,7 +82,8 @@ docker:
 
 update:
 	git pull --recurse-submodules
-	@make
+	@echo ''
+	@make --no-print-directory
 
 
 docker-image-update:
