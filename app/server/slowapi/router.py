@@ -196,6 +196,18 @@ def route(path_rule:str, status_code:int=200):
     return wrapper
 
 
+def on_event(name:str):
+    """decorator to make an event handler (method of a subclass of App)
+    Args:
+      - name: name of the event, e.g., "startup", "shutdown"
+    """
+    def wrapper(func):
+        if not hasattr(func, 'slowapi_path_rule'):
+            func.slowapi_path_rule = PathRule(name, 'on_event', inspect.signature(func))
+        return func
+    return wrapper
+
+
 def websocket(path_rule:str):
     """decorator to make a websocket entry point
     Args:
@@ -223,6 +235,24 @@ class Router:
                 logging.debug(f'SlowAPI Binding: {method.slowapi_path_rule.method} {method.slowapi_path_rule.rule_str} -> {self.app.__class__.__name__}.{name}{inspect.signature(method)}')
                 self.handlers.append(method)
 
+        
+    async def dispatch_event(self, name:str):
+        for subapp in self.middlewares:
+            await subapp.slowapi.dispatch_event(name)
+        for handler in self.handlers:
+            request = Request(url=name, method="on_event")
+            args = handler.slowapi_path_rule.match(request)
+            if args is not None:
+                if inspect.iscoroutinefunction(handler):
+                    try:
+                        await handler(self.app, **args)
+                    except asyncio.CancelledError:
+                        pass
+                else:
+                    handler(self.app, **args)
+        for subapp in self.subapps:
+            await subapp.slowapi.dispatch_event(name)
+            
         
     async def dispatch(self, request:Request, body:bytes=None) -> Response:
         if type(request) is str:

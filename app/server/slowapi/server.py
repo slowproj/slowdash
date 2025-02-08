@@ -135,7 +135,8 @@ def serve_asgi_uvicorn(app, port, **kwargs):
             stop_event.set()
         signal.signal(signal.SIGINT, async_signal_handler)
         signal.signal(signal.SIGTERM, async_signal_handler)
-    
+
+        await app.slowapi.dispatch_event("startup")
         config = uvicorn.Config(app, port=port, workers=1, **kwargs)
         server = uvicorn.Server(config)
         #server.install_signal_handlers=False  # this causes the server not working...
@@ -148,6 +149,7 @@ def serve_asgi_uvicorn(app, port, **kwargs):
         
         await stop_event.wait()
         server_task.cancel()
+        await app.slowapi.dispatch_event("shutdown")
     
     if ('ssl_keyfile' in kwargs) and ('ssl_certfile' in kwargs):
         is_https = True
@@ -198,7 +200,12 @@ def serve_wsgi_gunicorn(app, port, **kwargs):
         
     # gunicorn SHOULD handle signals... signals cannot stop the App somehow.
     sys.stderr.write(f'Listening at port {port} (gunicorn WSGI {"HTTPS" if is_https else "HTTP"})\n')
+    
+    asyncio.run(app.slowapi.dispatch_event('startup'))
     GunicornApp(app, **kwargs).run()
+
+    # somehow this code is not reached after Ctrl-c etc.
+    asyncio.run(app.slowapi.dispatch_event('shutdown'))
     sys.stderr.write('Terminated\n')    
 
 
@@ -216,11 +223,13 @@ def serve_wsgi_ref(app, port, **kwargs):
     Request.is_async = False
 
     sys.stderr.write(f'Listening at port {port} (wsgiref WSGI)\n')
+    asyncio.run(app.slowapi.dispatch_event('startup'))
     try:
         with make_server('', port, app, handler_class=RequestHandler) as server:
             server.serve_forever()
     except KeyboardInterrupt:
         pass
+    asyncio.run(app.slowapi.dispatch_event('shutdown'))
     sys.stderr.write('Terminated\n')    
 
 
@@ -239,6 +248,7 @@ class WSGI:
     def __init__(self, app, serve=serve_wsgi):
         self.app = app
         self.serve = serve
+        self.slowapi = app.slowapi
 
 
     def __call__(self, environ, start_response):

@@ -58,6 +58,16 @@ class MyApp:
         return { "decimal": decimal.Decimal(num)/decimal.Decimal(den), "float": num/den }
 
 
+    @slowapi.on_event('startup')
+    def initialize(self):
+        print("INITIALIZED")
+
+        
+    @slowapi.on_event('shutdown')
+    def finalize(self):
+        print("FINALIZED")
+
+    
 app = slowapi.App(MyApp())
 '''
 to run the app as a ASGI server, run:
@@ -103,6 +113,3 @@ if __name__ == '__main__':
 
     # WSGI in HTTPS (gunicorn)
     #wsgi_app.run(ssl_keyfile='key.pem', ssl_certfile='cert.pem')
-
-    # WSGI (wsgiref)
-    #wsgi_app.run()
