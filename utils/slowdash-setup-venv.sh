@@ -8,7 +8,7 @@ python3 -m venv venv
 source venv/bin/activate
 
 # fundamental packages
-pip install uvicorn pyyaml psutil bcrypt requests 
+pip install uvicorn websockets pyyaml psutil bcrypt requests 
 
 # DB interface packages
 if command -v pg_config &> /dev/null; then

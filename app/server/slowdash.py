@@ -26,6 +26,8 @@ class App(slowapi.App):
         self.is_cgi = is_cgi
         self.is_command = is_command
         self.is_async = is_async
+
+        self.websockets = {}
         
         if project_dir is not None:
             project_dir = os.path.abspath(os.path.join(os.getcwd(), project_dir))
@@ -63,7 +65,51 @@ class App(slowapi.App):
         logging.info('Terminating SlowDash gracefully')
         
         
+    @slowapi.websocket('/subscribe/{topic}')
+    async def subscribe(self, topic:str, websocket:slowapi.WebSocket):
+        if topic not in [ 'currentdata' ]:
+            return None
+        
+        try:
+            await websocket.accept()
+            logging.info(f"WebSocket Connected: {topic}")
+        except:
+            return None
 
+        if topic not in self.websockets:
+            self.websockets[topic] = set()
+        self.websockets[topic].add(websocket)
+            
+        try:
+            while True:
+                message = await websocket.receive_text()
+        except slowapi.ConnectionClosed:
+            self.websockets[topic].remove(websocket)
+            logging.info("WebSocket Closed")
+        except Exception as e:
+            self.websockets[topic].remove(websocket)
+            logging.info(f"WebSocket Closed by error: {e}")
+
+            
+    async def publish(self, topic:str, data:str):
+        try:
+            await asyncio.gather(*(ws.send_text(data) for ws in self.websockets.get(topic, [])))
+        except Exception as e:
+            logging.info(f"WebSocket Error: {e}")
+
+        
+    rc = 0
+    @slowapi.get('go')
+    async def go(self):
+        self.rc += 1
+        rc, count = self.rc, 0
+        while True:
+            await self.publish('currentdata', f'{rc}-{count}')
+            await asyncio.sleep(5)
+            count += 5
+            
+
+            
 if __name__ == '__main__':
     from argparse import ArgumentParser
     parser = ArgumentParser(

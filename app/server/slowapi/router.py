@@ -334,7 +334,8 @@ class Router:
                 pass
 
         for subapp in self.subapps:
-            await subapp.slowapi.websocket(request)
+            if not request.aborted:
+                await subapp.slowapi.websocket(request)
 
         
     def __call__(self, request:Request, body:bytes=None) -> Response:

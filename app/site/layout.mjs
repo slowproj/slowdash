@@ -44,6 +44,8 @@ export class Layout {
 
         this.beatCallbacks = [];
         this.beat();
+
+        this.setupStreamingData();
     }
 
 
@@ -259,6 +261,56 @@ export class Layout {
         }
     }
 
+    
+    buildAddNew(div, dialog) {
+        div.css({
+            'font-size': '130%'
+        });
+        div.html(`
+            <span style="font-size:140%">Create a New Panel</span>
+            <table style="margin-top:1em;margin-left:1em">
+              <tr><td>Type</td><td>
+                <select style="font-size:130%">
+                </select></td></tr>
+            </table>
+          </div>
+        `);
+
+        let select = div.find('select');
+        let PanelClassTable = {};
+        for (let PanelClass of this.PanelClassList) {
+            const desc = PanelClass.describe();
+            if (desc.label) {
+                select.append($('<option>').attr('value', desc.type).attr('label', desc.label).text(desc.label));
+                PanelClassTable[desc.type] = PanelClass;
+            }
+        }
+        
+        let table = div.find('table');
+        let addPanel = config => {
+            if (config) {
+                this.config.panels.push(config);
+                this.configure(this.config);
+                this.load();
+            }
+        }
+
+        function updateSelection() {
+            table.find('tr:not(:first-child)').remove();
+            let type = table.find('select').selected().attr('value');
+            let PanelClass = PanelClassTable[type];
+            if (PanelClass) {
+                PanelClass.buildConstructRows(table, config => {
+                    dialog.close();
+                    addPanel(config);
+                });
+            }
+        }
+        updateSelection();
+        div.find('select').bind('change', e=>{updateSelection();});
+    }
+
+    
     setGrid(rows, columns) {
         let [nrows, ncols] = [parseFloat(rows), parseInt(columns)];
         if (!(nrows > 0) || ! (ncols > 0)) {
@@ -270,6 +322,7 @@ export class Layout {
         this.load();
     }
 
+    
     fullscreenPanel(index) {
         let panelDiv = this.layoutDiv.find('.sd-panel').at(index);
         if (panelDiv.boundingClientHeight() > 0.7 * this.layoutDiv.boundingClientHeight()) {
@@ -379,52 +432,25 @@ export class Layout {
                 });
         }
     }
+
     
-    buildAddNew(div, dialog) {
-        div.css({
-            'font-size': '130%'
-        });
-        div.html(`
-            <span style="font-size:140%">Create a New Panel</span>
-            <table style="margin-top:1em;margin-left:1em">
-              <tr><td>Type</td><td>
-                <select style="font-size:130%">
-                </select></td></tr>
-            </table>
-          </div>
-        `);
-
-        let select = div.find('select');
-        let PanelClassTable = {};
-        for (let PanelClass of this.PanelClassList) {
-            const desc = PanelClass.describe();
-            if (desc.label) {
-                select.append($('<option>').attr('value', desc.type).attr('label', desc.label).text(desc.label));
-                PanelClassTable[desc.type] = PanelClass;
-            }
-        }
-        
-        let table = div.find('table');
-        let addPanel = config => {
-            if (config) {
-                this.config.panels.push(config);
-                this.configure(this.config);
-                this.load();
-            }
-        }
-
-        function updateSelection() {
-            table.find('tr:not(:first-child)').remove();
-            let type = table.find('select').selected().attr('value');
-            let PanelClass = PanelClassTable[type];
-            if (PanelClass) {
-                PanelClass.buildConstructRows(table, config => {
-                    dialog.close();
-                    addPanel(config);
-                });
-            }
-        }
-        updateSelection();
-        div.find('select').bind('change', e=>{updateSelection();});
-    }
+    setupStreamingData() {
+        let url = new URL(window.location.href);
+        url.protocol = 'ws:';
+        url.pathname += (url.pathname.endsWith('/') ? '' : '/') + 'subscribe/currentdata';
+        this.socket = new WebSocket(url.toString());
+        this.socket.onopen = () => {
+            console.log("Web Socket Connected");
+        };
+        this.socket.onclose = () => {
+            console.log("Web Socket Closed");
+        };
+        this.socket.onerror = (error) => {
+            console.error("Web Socket Error: " + error);
+        };
+        this.socket.onmessage = (event) => {
+            const record = event.data;
+            console.log("Web Socket Data: " + record);
+        };
+    }    
 };
