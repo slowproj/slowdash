@@ -1,6 +1,9 @@
 bin/
+venv/
 __pycache__/
 .vscode/
-*.db
 notebook/
-
+*.db
+*.pem
+*.key
+*.crt

@@ -1,10 +1,12 @@
 #! /bin/bash
 
-echo removing old venv
-rm -rf venv
+if [ -d venv ]; then
+    echo venv already exists
+else
+    echo setting up venv
+    python3 -m venv venv
+fi
 
-echo setting up venv
-python3 -m venv venv
 source venv/bin/activate
 
 # fundamental packages
