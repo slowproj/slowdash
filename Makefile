@@ -55,8 +55,8 @@ all:
 	@echo '' >> $(SLOWDASH_BIN)
 	@chmod 755 $(SLOWDASH_BIN)
 
-	@echo 'export PATH="$$PATH:$(SLOWDASH_DIR)/bin"' > $(SLOWDASH_ENV)
-	@echo 'export PYTHONPATH="$$PYTHONPATH:$(SLOWDASH_DIR)/lib/slowpy"' >> $(SLOWDASH_ENV)
+	@echo 'export PATH="$(SLOWDASH_DIR)/bin:$$PATH"' > $(SLOWDASH_ENV)
+	@echo 'export PYTHONPATH="$(SLOWDASH_DIR)/lib/slowpy:$$PYTHONPATH"' >> $(SLOWDASH_ENV)
 
 	@ln -fs "$(SLOWDASH_DIR)/docs" "$(SLOWDASH_DIR)/app/site"
 

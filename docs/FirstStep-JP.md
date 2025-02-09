@@ -176,10 +176,10 @@ venv を使わない場合は，最後の `make setup-venv` は必要ありま�
 $ source PATH/TO/SLOWDASH/bin/slowdash-bashrc
 ```
 設定ファイルの `source` は，新しいターミナルを開くたびに毎回必要です．
-SlowDash を継続的に使うなら，上記の行を `.bashrc` などに書いておくと毎回やる必要がなくなります．ちなみに中身はこんな感じです（この中では venv の設定はしていないので，他の Python と干渉することはないです）：
+SlowDash を継続的に使うなら，上記の行を `.bashrc` などに書いておくと毎回やる必要がなくなります．ちなみに中身はこんな感じです．（この中では venv の設定はしていないので，他の Python と干渉することはないです．PATH の先頭に slowdash があるのは，複数の SlowDash を使っている場合に，source により切り替えるのに必要です．）：
 ```bash
-export PATH="$PATH:/PATH/TO/slowdash/bin"
-export PYTHONPATH="$PYTHONPATH:/PATH/TO/slowdash/lib/slowpy"
+export PATH="/PATH/TO/slowdash/bin:$PATH"
+export PYTHONPATH="/PATH/TO/slowdash/lib/slowpy:$PYTHONPATH"
 ```
 
 インストールが成功したかは，`slowdash` コマンドを実行してチェックできます．

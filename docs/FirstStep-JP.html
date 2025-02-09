@@ -337,8 +337,8 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make setup-venv</span></span></code></pre></div>
 <p>これで，Python 周りのセットアップと，作成した venv
 へのパッケージのインストールを行います．</p>
-<p>venv を使わない場合は，最後の <code>make venv</code>
-は必要ありません（ファイルをコピーするだけなので一瞬で終わります）．もし間違えてやってしまった場合は，<code>slowdash</code>
+<p>venv を使わない場合は，最後の <code>make setup-venv</code>
+は必要ありません．もし間違えてやってしまった場合は，<code>slowdash</code>
 ディレクトリの下にある <code>venv</code>
 ディレクトリを削除してください．</p>
 <p>以上により，<code>slowdash/bin</code>
@@ -349,12 +349,13 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <p>設定ファイルの <code>source</code>
 は，新しいターミナルを開くたびに毎回必要です． SlowDash
 を継続的に使うなら，上記の行を <code>.bashrc</code>
-などに書いておくと毎回やる必要がなくなります．ちなみに中身はこんな感じです（この中では
-venv の設定はしていないので，他の Python
-と干渉することはないです）：</p>
+などに書いておくと毎回やる必要がなくなります．ちなみに中身はこんな感じです．（この中では
+venv の設定はしていないので，他の Python と干渉することはないです．PATH
+の先頭に slowdash があるのは，複数の SlowDash を使っている場合に，source
+により切り替えるのに必要です．）：</p>
 <div class="sourceCode" id="cb6"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PATH</span><span class="st">:/PATH/TO/slowdash/bin&quot;</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PYTHONPATH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PYTHONPATH</span><span class="st">:/PATH/TO/slowdash/lib/slowpy&quot;</span></span></code></pre></div>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;/PATH/TO/slowdash/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PYTHONPATH</span><span class="op">=</span><span class="st">&quot;/PATH/TO/slowdash/lib/slowpy:</span><span class="va">$PYTHONPATH</span><span class="st">&quot;</span></span></code></pre></div>
 <p>インストールが成功したかは，<code>slowdash</code>
 コマンドを実行してチェックできます． (<code>slowdash</code> コマンドは
 <code>slowdash/bin</code> の下にあります）</p>
