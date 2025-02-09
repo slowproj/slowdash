@@ -23,11 +23,9 @@ async def dispatch_asgi(app, scope, receive, send):
                 await app.slowapi.dispatch_event("shutdown")
                 return
             if message['type'] == 'lifespan.startup':
-                logging.error("ASIG STARTUP")
                 await app.slowapi.dispatch_event("startup")
                 await send({'type': 'lifespan.startup.complete'})
             elif message['type'] == 'lifespan.shutdown':
-                logging.error("ASIG SHUTDOWN")
                 await app.slowapi.dispatch_event("shutdown")
                 await send({'type': 'lifespan.shutdown.complete'})
 

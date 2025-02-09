@@ -528,7 +528,10 @@ Or it can be used with any WSGI server:
 gunicorn testapp:wsgi_app
 ```
 
-Note that with WSGI, every HTTP request is handled sequentially, even with async handlers.
+Note:
+- Every HTTP request is handled sequentially, even with async handlers.
+- A dedicated async event loop is created for each request.
+  Code that assumes the same event loop among requests (typical in DB connection pool) cannot be used.
 
 
 ## TODOs

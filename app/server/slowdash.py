@@ -60,7 +60,7 @@ class App(slowapi.App):
 
     @slowapi.on_event("shutdown")
     async def finalize(self):
-        logging.info('SlowDash has been terminated gracefully')
+        logging.info('Terminating SlowDash gracefully')
         
         
 
