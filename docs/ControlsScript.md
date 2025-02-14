@@ -519,13 +519,13 @@ It is possible to place multiple buttons in one form:
 <form>
   Ramping: <input type="number" name="ramping" value="1" style="width:5em">/sec
   <p>
-  V0: <input type="number" name="V0" value="0"><input type="submit" name="async test.set_V0()" value="Set"><br>
-  V1: <input type="number" name="V1" value="0"><input type="submit" name="async test.set_V1()" value="Set"><br>
-  V2: <input type="number" name="V2" value="0"><input type="submit" name="async test.set_V2()" value="Set"><br>
-  V3: <input type="number" name="V3" value="0"><input type="submit" name="async test.set_V3()" value="Set"><br>
+  V0: <input type="number" name="V0" value="0"><input type="submit" name="parallel test.set_V0()" value="Set"><br>
+  V1: <input type="number" name="V1" value="0"><input type="submit" name="parallel test.set_V1()" value="Set"><br>
+  V2: <input type="number" name="V2" value="0"><input type="submit" name="parallel test.set_V2()" value="Set"><br>
+  V3: <input type="number" name="V3" value="0"><input type="submit" name="parallel test.set_V3()" value="Set"><br>
   <p>
   <input type="submit" name="test.set_all()" value="Set All">
-  <input type="submit" name="async test.stop()" value="Stop Ramping"><br>    
+  <input type="submit" name="parallel test.stop()" value="Stop Ramping"><br>    
 </form>
 ```
 In that case, some input fields might not be used by some buttons. Since all the input field values are passed to the function parameters, it may cause a Python error of unexpected parameters. To absorb the unused parameters, a best practice is always adding `**kwargs` to the SlowTask function parameters:
@@ -534,7 +534,7 @@ def set_V0(V0, ramping, **kwargs):
   #... do your work here
 ```
 
-In the example above, some functions have the `async` qualifier: by default, if a previous function call is in execution, a next action cannot be accepted to avoid multi-threading issues in the user code. The `async` qualifier indicates that this function call can be run in parallel to others. Another common qualifier is `await`, which instruct the GUI to wait for completion of the function execution before doing any other things (therefore it will look frozen).
+In the example above, some functions have the `parallel` qualifier: by default, if a previous function call is in execution, a next action cannot be accepted to avoid multi-threading issues in the user code. The `parallel` qualifier indicates that this function call can be run in parallel to others. Another common qualifier is `await`, which instruct the GUI to wait for completion of the function execution before doing any other things (therefore it will look frozen).
 
 #### Canvas Panel
 On a canvas panel, a button to call a task can be placed by:
