@@ -9,9 +9,9 @@ from sd_component import Component
 
 
 class AwaitableStringIO(io.StringIO):
-    def __init__(self, async_event_loop):
+    def __init__(self, eventloop):
         super().__init__()
-        self.async_event_loop = async_event_loop
+        self.eventloop = eventloop
         self._condition = asyncio.Condition()
 
         
@@ -23,7 +23,7 @@ class AwaitableStringIO(io.StringIO):
     def write(self, s):
         # this might be called in a different thread from the async event loop
         result = super().write(s)
-        asyncio.run_coroutine_threadsafe(self._schedule_notification(), self.async_event_loop)
+        asyncio.run_coroutine_threadsafe(self._schedule_notification(), self.eventloop)
         return result
 
             
@@ -57,12 +57,12 @@ class ConsoleComponent(Component):
             sys.stdout = self.console_stdout
 
         
-    def build(self):
+    async def build(self):
         # call build() after the event loop is started
         if not self.enabled:
             return
 
-        self.console_awaitable_stdout = AwaitableStringIO(asyncio.get_event_loop())
+        self.console_awaitable_stdout = AwaitableStringIO(asyncio.get_running_loop())
         sys.stdout = self.console_awaitable_stdout
         
         if self.console_stdout is not None:
@@ -101,7 +101,7 @@ class ConsoleComponent(Component):
         if self.app.is_async:
             if  self.console_awaitable_stdout is None:
                 # AwaitableStringIO cannot be used with WSGI, as there is no contineous event loop
-                self.build()
+                await self.build()
 
             if (self.revision <= since) and (self.console_stdout.tell() == 0):
                 await self.console_stdout.wait_for_write()

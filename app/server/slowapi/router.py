@@ -239,6 +239,7 @@ class Router:
     async def dispatch_event(self, name:str):
         for subapp in self.middlewares:
             await subapp.slowapi.dispatch_event(name)
+            
         for handler in self.handlers:
             request = Request(url=name, method="on_event")
             args = handler.slowapi_path_rule.match(request)
@@ -250,7 +251,11 @@ class Router:
                         pass
                 else:
                     handler(self.app, **args)
-        for subapp in self.subapps:
+
+        subapps = self.subapps
+        if name == 'shutdown':
+            subapps = reversed(subapps)
+        for subapp in subapps:
             await subapp.slowapi.dispatch_event(name)
             
         

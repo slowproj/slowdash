@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 24 October 2022 #
 
-import sys, os, time, threading, types, logging, traceback
+import sys, os, time, threading, asyncio, types, inspect, logging, traceback
 import importlib.machinery
 
 import slowapi
@@ -15,9 +15,9 @@ class UserModuleThread(threading.Thread):
         self.params = params
         self.stop_event = stop_event
         self.initialized_event = threading.Event()
+
         
-        
-    def run(self):
+    def run(self):        
         self.initialized_event.clear()
         self.stop_event.clear()
         if not self.usermodule.load():
@@ -25,18 +25,28 @@ class UserModuleThread(threading.Thread):
         if self.stop_event.is_set():
             return
         
+        eventloop = asyncio.new_event_loop()
+        asyncio.set_event_loop(eventloop)
+        eventloop.run_until_complete(self.go())
+        eventloop.close()
+
+        
+    async def go(self):
         func_initialize = self.usermodule.get_func('_initialize')
         func_run = self.usermodule.get_func('_run')
         func_loop = self.usermodule.get_func('_loop')
         func_finalize = self.usermodule.get_func('_finalize')
-        
+
         if func_initialize:
             self.usermodule.routine_history.append((
                 time.time(),
                 '_initialize(%s)' % ','.join(['%s=%s' % (k,v) for k,v in self.params.items()])
             ))
             try:
-                func_initialize(self.params)
+                if inspect.iscoroutinefunction(func_initialize):
+                    await func_initialize(self.params)
+                else:
+                    func_initialize(self.params)
             except Exception as e:
                 self.usermodule.handle_error('user module error: _initialize(): %s' % str(e))
             
@@ -45,24 +55,38 @@ class UserModuleThread(threading.Thread):
         if func_run and not self.stop_event.is_set():
             self.usermodule.routine_history.append((time.time(), '_run()'))
             try:
-                func_run()
+                if inspect.iscoroutinefunction(func_run):
+                    await func_run()
+                else:
+                    func_run()
             except Exception as e:
                 self.usermodule.handle_error('user module error: _run(): %s' % str(e))
                 
         if func_loop and not self.stop_event.is_set():
             self.usermodule.routine_history.append((time.time(), '_loop()'))
-            while not self.stop_event.is_set():
+        while not self.stop_event.is_set():
+            if func_loop:
                 try:
-                    func_loop()
-                    time.sleep(0.01)
+                    if inspect.iscoroutinefunction(func_loop):
+                        await func_loop()
+                    else:
+                        func_loop()
                 except Exception as e:
                     self.usermodule.handle_error('user module error: _loop(): %s' % str(e))
-                    break
-
+                    func_loop = False
+                await asyncio.sleep(0.01)
+            else:
+                # not to proceed to finalize() before a stop_event occurs
+                await asyncio.sleep(0.1)
+                
         if func_finalize:
             self.usermodule.routine_history.append((time.time(), '_finalize()'))
+            logging.info("FINALIZE")
             try:
-                func_finalize()
+                if inspect.iscoroutinefunction(func_finalize):
+                    await func_finalize()
+                else:
+                    func_finalize()
             except Exception as e:
                 self.usermodule.handle_error('user module error: _finalize(): %s' % str(e))
 
@@ -93,10 +117,6 @@ class UserModule:
         
         self.status_revision = 1
         self.was_running = False
-
-        
-    def __del__(self):
-        self.stop()
 
         
     def _preset_module(self, module):
@@ -175,10 +195,10 @@ class UserModule:
         return True
         
     
-    def start(self):
+    async def start(self):
         self.touch_status()
         if self.module is not None and self.user_thread is not None and self.user_thread.is_alive():
-            self.stop()
+            await self.stop()
         
         logging.info('starting user module "%s"' % self.name)
         self.stop_event.clear()
@@ -187,7 +207,7 @@ class UserModule:
         self.user_thread.start()
         
         
-    def stop(self):
+    async def stop(self):
         if self.module is None or self.user_thread is None or not self.user_thread.is_alive():
             return
         
@@ -277,7 +297,7 @@ class UserModule:
             return None
 
     
-    def process_command(self, params):
+    async def process_command(self, params):
         if self.module is None or self.func_process_command is None:
             return None
         
@@ -288,7 +308,10 @@ class UserModule:
                 
         try:
             self.touch_status()
-            result = self.func_process_command(params)
+            if inspect.iscoroutinefunction(self.func_process_command):
+                result = await self.func_process_command(params)
+            else:
+                result = self.func_process_command(params)
             self.touch_status()
         except Exception as e:
             self.handle_error('user module error: process_command(): %s' % str(e))
@@ -349,14 +372,15 @@ class UserModuleComponent(Component):
             else:
                 self.usermodule_list.append(module)
 
-        for module in self.usermodule_list:
-            module.start()
+
+    @slowapi.on_event('startup')
+    async def startup(self):
+        await asyncio.gather(*(module.start() for module in self.usermodule_list))
 
 
     @slowapi.on_event('shutdown')
-    def finalize(self):
-        for module in self.usermodule_list:
-            module.stop()
+    async def shutdown(self):
+        await asyncio.gather(*(module.stop() for module in self.usermodule_list))
             
         if len(self.usermodule_list) > 0:
             logging.info('user modules terminated')
@@ -418,13 +442,13 @@ class UserModuleComponent(Component):
 
     
     @slowapi.post('/control')
-    def post_control(self, doc:slowapi.DictJSON):
+    async def post_control(self, doc:slowapi.DictJSON):
         if len(self.usermodule_list) == 0:
             return None
         
         # unlike GET, only one module can process to POST
         for module in self.usermodule_list:
-            result = module.process_command(dict(doc))
+            result = await module.process_command(dict(doc))
             if result is not None:
                 logging.info(f'UserModule Command: {doc}')
                 break

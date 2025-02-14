@@ -8,6 +8,7 @@ ch0, ch1, ch2, ch3 = [ device.ch(ch) for ch in range(4) ]
 print("Random-Walk Device Loaded")
 
 
+
 #name = input('who are you?')
 #print('hello, ' + name)
 
@@ -76,11 +77,13 @@ datastore = None
 def _initialize(params):
     global datastore
     datastore = sls.create_datastore_from_url('sqlite:///SlowTaskTest.db', 'test')
+    print("Hello from Random-Walk Device")
 
 
 def _finalize():
     datastore.close()
-
+    print("Bye-bye from Random-Walk Device")
+    
 
 def _loop():
     for ch in range(4):

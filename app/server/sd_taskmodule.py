@@ -14,11 +14,23 @@ class TaskFunctionThread(threading.Thread):
         self.func = func
         self.kwargs = kwargs
 
+        
     def run(self):
+        eventloop = asyncio.new_event_loop()
+        asyncio.set_event_loop(eventloop)
+        eventloop.run_until_complete(self.go())
+        eventloop.close()
+
+        
+    async def go(self):
         try:
-            self.func(**self.kwargs)
+            if inspect.iscoroutinefunction(self.func):
+                await self.func(**self.kwargs)
+            else:
+                self.func(**self.kwargs)
         except Exception as e:
             self.taskmodule.handle_error('task function error: %s' % str(e))
+
 
 
         
@@ -61,7 +73,7 @@ class TaskModule(UserModule):
         return super().load()
 
             
-    def stop(self):
+    async def stop(self):
         self.touch_status()
         if self.user_thread and not self.user_thread.initialized_event.is_set():
             time.sleep(1)
@@ -88,7 +100,7 @@ class TaskModule(UserModule):
         self.parallel_command_thread_set = set()
         self.touch_status()
 
-        super().stop()
+        await super().stop()
         
         
     def match_namespace(self, name):
@@ -186,9 +198,9 @@ class TaskModule(UserModule):
             return str(value)
 
     
-    def process_command(self, params):
+    async def process_command(self, params):
         self.touch_status()
-        result = self.process_task_command(params)
+        result = await self.process_task_command(params)
         self.touch_status()
         if result is not None:
             if result is not True:
@@ -215,9 +227,9 @@ class TaskModule(UserModule):
         return result
     
 
-    def process_task_command(self, doc):
+    async def process_task_command(self, doc):
         # parse the request
-        variable_name, function_name, params = '', '', {}
+        function_name, params = '', {}
         is_await = False  # if True, wait for the command to complete before returning a response
         is_parallel = False  # if False, the command is rejected if another command is running
         for key, value in doc.items():
@@ -232,25 +244,10 @@ class TaskModule(UserModule):
                 if function_name.startswith('await '):
                     is_await = True
                     function_name = function_name[5:].lstrip()
-            elif len(key) > 1 and key.startswith('@'):
-                variable_name = key[1:]
             else:
                 params[key] = value
 
-        # direct writing to mapped variables
-        variable_name = self.match_namespace(variable_name)
-        if len(variable_name) > 0:
-            var = self.get_variable(variable_name)
-            if var is None:
-                return {'status': 'error', 'message': 'undefined control variable: "%s"' % variable_name }
-            try:
-                var.set(value)
-            except Exception as e:
-                return {'status': 'error', 'message': str(e) }
-            logging.info(f'Task: {variable_name}={repr(value)}')
-            return True
-
-        # function call
+        # function
         function_name = self.match_namespace(function_name)
         if len(function_name) == 0:
             return None
@@ -296,9 +293,13 @@ class TaskModule(UserModule):
                 self.parallel_command_thread_set.remove(thread)
 
         # "await" waits for the command to complete before returning a response
+        is_async = inspect.iscoroutinefunction(func)
         if is_await:
             try:
-                func(**kwargs)
+                if is_async:
+                    await func(**kwargs)
+                else:
+                    func(**kwargs)
             except Exception as e:
                 self.handle_error('task command error: %s' % str(e))
                 return {'status': 'error', 'message': str(e) }
@@ -365,16 +366,16 @@ class TaskModuleComponent(Component):
             else:
                 module.auto_load = opts.get('auto_load', False)
                 self.taskmodule_list.append(module)
-                
-        for module in self.taskmodule_list:
-            if module.auto_load:
-                module.start()
 
                 
+    @slowapi.on_event('startup')
+    async def startup(self):
+        await asyncio.gather(*(module.start() for module in self.taskmodule_list if module.auto_load))
+
+
     @slowapi.on_event('shutdown')
-    def finalize(self):
-        for module in self.taskmodule_list:
-            module.stop()
+    async def shutdown(self):
+        await asyncio.gather(*(module.stop() for module in self.taskmodule_list))
             
         if len(self.taskmodule_list) > 0:
             logging.info('slowtask modules terminated')
@@ -494,13 +495,13 @@ class TaskModuleComponent(Component):
 
         
     @slowapi.post('/control')
-    def execute_command(self, doc:slowapi.DictJSON):
+    async def execute_command(self, doc:slowapi.DictJSON):
         if len(self.taskmodule_list) == 0:
             return None
         
         # unlike GET, only one module can process to POST
         for module in self.taskmodule_list:
-            result = module.process_command(dict(doc))
+            result = await module.process_command(dict(doc))
             if result is not None:
                 break
         else:
@@ -518,7 +519,7 @@ class TaskModuleComponent(Component):
 
     
     @slowapi.post('/control/task/{taskname}')
-    def control_task(self, taskname:str, doc:slowapi.DictJSON):
+    async def control_task(self, taskname:str, doc:slowapi.DictJSON):
         action = doc.get('action', None)
         logging.info(f'Task Control: {taskname}.{action}()')
         
@@ -526,10 +527,10 @@ class TaskModuleComponent(Component):
             if module.name != taskname:
                 continue
             if action == 'start':
-                module.start()
+                await module.start()
                 return {'status': 'ok'}
             elif action == 'stop':
-                module.stop()
+                await module.stop()
                 return {'status': 'ok'}
             else:
                 return { 'status': 'error', 'message': f'unknown command: {action}' }
