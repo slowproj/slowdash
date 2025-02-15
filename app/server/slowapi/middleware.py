@@ -17,6 +17,7 @@ class BasicAuthentication():
             try:
                 (user, key) = tuple(auth.split(':', 1))
             except:
+                # auth is already encrypted
                 logging.error('Bad authentication entry: %s' % auth)
                 continue
             self.auth_list[user] = key

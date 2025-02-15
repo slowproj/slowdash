@@ -13,6 +13,7 @@ from sd_config import ConfigComponent
 from sd_console import ConsoleComponent
 from sd_datasource import DataSourceComponent
 from sd_export import ExportComponent
+from sd_pubsub import PubsubComponent
 from sd_usermodule import UserModuleComponent
 from sd_taskmodule import TaskModuleComponent
 from sd_misc_api import MiscApiComponent
@@ -27,8 +28,6 @@ class App(slowapi.App):
         self.is_command = is_command
         self.is_async = is_async
 
-        self.websockets = {}
-        
         if project_dir is not None:
             project_dir = os.path.abspath(os.path.join(os.getcwd(), project_dir))
         self.project = Project(project_dir, project_file)
@@ -55,6 +54,7 @@ class App(slowapi.App):
         self.slowapi.include(ConfigComponent(self, self.project))
         self.slowapi.include(DataSourceComponent(self, self.project))
         self.slowapi.include(ExportComponent(self, self.project))
+        self.slowapi.include(PubsubComponent(self, self.project))
         self.slowapi.include(UserModuleComponent(self, self.project))
         self.slowapi.include(TaskModuleComponent(self, self.project))
         self.slowapi.include(MiscApiComponent(self, self.project))
@@ -64,52 +64,9 @@ class App(slowapi.App):
     async def finalize(self):
         logging.info('Terminating SlowDash gracefully')
         
-        
-    @slowapi.websocket('/subscribe/{topic}')
-    async def subscribe(self, topic:str, websocket:slowapi.WebSocket):
-        if topic not in [ 'currentdata' ]:
-            return None
-        
-        try:
-            await websocket.accept()
-            logging.info(f"WebSocket Connected: {topic}")
-        except:
-            return None
 
-        if topic not in self.websockets:
-            self.websockets[topic] = set()
-        self.websockets[topic].add(websocket)
-            
-        try:
-            while True:
-                message = await websocket.receive_text()
-        except slowapi.ConnectionClosed:
-            self.websockets[topic].remove(websocket)
-            logging.info("WebSocket Closed")
-        except Exception as e:
-            self.websockets[topic].remove(websocket)
-            logging.info(f"WebSocket Closed by error: {e}")
-
-            
-    async def publish(self, topic:str, data:str):
-        try:
-            await asyncio.gather(*(ws.send_text(data) for ws in self.websockets.get(topic, [])))
-        except Exception as e:
-            logging.info(f"WebSocket Error: {e}")
 
         
-    rc = 0
-    @slowapi.get('go')
-    async def go(self):
-        self.rc += 1
-        rc, count = self.rc, 0
-        while True:
-            await self.publish('currentdata', f'{rc}-{count}')
-            await asyncio.sleep(5)
-            count += 5
-            
-
-            
 if __name__ == '__main__':
     from argparse import ArgumentParser
     parser = ArgumentParser(

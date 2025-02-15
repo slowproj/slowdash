@@ -437,7 +437,18 @@ export class Layout {
     setupStreamingData() {
         let url = new URL(window.location.href);
         url.protocol = 'ws:';
-        url.pathname += (url.pathname.endsWith('/') ? '' : '/') + 'subscribe/currentdata';
+        url.search = ''
+        url.hash = ''
+        
+        if (url.pathname.match(/\.[a-zA-Z0-9]+$/)) {  
+            // last path element has an extension (file) -> remove the file name
+            url.pathname = url.pathname.replace(/\/[^/]*$/, '/')
+        }
+        else {
+            url.pathname += (url.pathname.endsWith('/') ? '' : '/')
+        }
+        url.pathname += 'subscribe/currentdata';
+
         this.socket = new WebSocket(url.toString());
         this.socket.onopen = () => {
             console.log("Web Socket Connected");

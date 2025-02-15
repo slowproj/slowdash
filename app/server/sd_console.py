@@ -75,6 +75,7 @@ class ConsoleComponent(Component):
 
     @slowapi.on_event('shutdown')
     def finalize(self):
+        self.enabled = False
         if self.console_stdin is not None:
             sys.stdin = sys.__stdin__
             self.console_stdin.close()

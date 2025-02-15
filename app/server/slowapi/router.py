@@ -284,7 +284,12 @@ class Router:
                     status_code = handler.slowapi_path_rule.status_code
                     response = Response(status_code, content=response)
                 if response.status_code > 0:
-                    logging.debug(f'{self.app.__class__.__name__}: {str(request)[:100]} -> Status {response.get_status_code()}: {str(response)[:100]}')
+                    orig = self.app.__class__.__name__
+                    req = str(request)[:48] + (' ...' if len(str(request)) > 48 else '')
+                    stat = response.get_status_code()
+                    cont = str(response.get_content())
+                    resp = cont[:48] + (' ...' if len(str(cont)) > 48 else '')
+                    logging.debug(f'{orig}: {req} -> Status {stat}: {resp}')
                 response_list.append(response)
         for subapp in self.subapps:
             response_list.append(await subapp.slowapi.dispatch(request))
@@ -321,7 +326,6 @@ class Router:
 
 
     async def websocket(self, request:Request, websocket:WebSocket) -> None:
-        logging.info(f"WEBSOCKET: {request}")
         for handler in self.handlers:
             args = handler.slowapi_path_rule.match(request)
             if args is None:

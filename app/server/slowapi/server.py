@@ -37,7 +37,7 @@ async def dispatch_asgi(app, scope, receive, send):
     headers = { k.decode():v.decode() for k,v in scope['headers'] }
 
     if scope['type'] == 'websocket':
-        logging.info(f'WebSocket: {url}')
+        logging.info(f'WEBSOCKET: {url}')
         return await app.slowapi.websocket(Request(url, method='WEBSOCKET', headers=headers), WebSocket(receive, send))
     elif scope['type'] != 'http':
         logging.warning(f'ASGI Request not handled: type={scope["type"]}')

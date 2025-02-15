@@ -502,7 +502,7 @@ Here the parenthesis at the and of the button name indicate that this button is 
 
 SlowTask functions can take parameters:
 ```python
-def set_V0(voltage, ramping):
+def set_V0(voltage:float, ramping:float):
   #... do your work here
 ```
 and these parameter values are taken from the form input values:
@@ -513,6 +513,10 @@ and these parameter values are taken from the form input values:
   <input type="submit" name="test.set_V0()" value="Set">
 </form>
 ```
+
+By using the type notation in the SlowTask function as shown above, the parameter values are converted to the specified types. If the value literal cannot be converted to the specified type, an error response will be returned to the browser and the SlowTask function will not be called.
+
+The SlowTask function can be either the standard `def` or `async def`.
 
 It is possible to place multiple buttons in one form:
 ```html
@@ -528,13 +532,18 @@ It is possible to place multiple buttons in one form:
   <input type="submit" name="parallel test.stop()" value="Stop Ramping"><br>    
 </form>
 ```
-In that case, some input fields might not be used by some buttons. Since all the input field values are passed to the function parameters, it may cause a Python error of unexpected parameters. To absorb the unused parameters, a best practice is always adding `**kwargs` to the SlowTask function parameters:
 ```python
-def set_V0(V0, ramping, **kwargs):
-  #... do your work here
-```
+def set_V0(V0:float, ramping:float):
+  #...
 
-In the example above, some functions have the `parallel` qualifier: by default, if a previous function call is in execution, a next action cannot be accepted to avoid multi-threading issues in the user code. The `parallel` qualifier indicates that this function call can be run in parallel to others. Another common qualifier is `await`, which instruct the GUI to wait for completion of the function execution before doing any other things (therefore it will look frozen).
+def set_V1(V1:float, ramping:float):
+  #...
+
+#...
+```
+The input values on the Web form will be bound to the function parameters based on the names (`<input name="V0">` will be bound to the `V0` parameter).
+
+In the example above, some functions have the `parallel` qualifier: by default, if a previous function call is in execution, a next action cannot be accepted to avoid multi-threading issues in the user code. The `parallel` qualifier indicates that this function can run in parallel to others. Another common qualifier is `await`, which instruct the web browser to wait for completion of the function execution before doing any other things (therefore the browser will look frozen).
 
 #### Canvas Panel
 On a canvas panel, a button to call a task can be placed by:
@@ -578,7 +587,6 @@ For functions with parameters, a form can be used:
     ...
 ```
 
-
 For more details, see the [UI Panels section](Panels.html).
 
 ## Thread Functions (Routine Task)
@@ -590,6 +598,8 @@ If a SlowTask script has functions of `_initialize(params)`, `_finalize()`, `_ru
 | `_run()` | called once after `_initialize()`. If `_run()` is defined, `_halt()` should be also defined to stop the `_run()` function. `_halt()` will be called by SlowDash when the user stops the system. |
 | `_loop()` | called repeatedly after `_initialize()`, until the user stops the system. To control the intervals, the function usually contains `time.sleep()` or equivalent. |
 | `_finalize()` | called once after `_run()` or `_loop()` |
+
+These functions can be either the standard `def` or `async def`.
 
 ## Control Variable Binding
 Control variables (instances of the Control Node classes) can be bound to GUI elements if a SlowTask script exports them with the `_export()` function:

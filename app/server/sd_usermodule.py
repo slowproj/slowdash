@@ -81,7 +81,6 @@ class UserModuleThread(threading.Thread):
                 
         if func_finalize:
             self.usermodule.routine_history.append((time.time(), '_finalize()'))
-            logging.info("FINALIZE")
             try:
                 if inspect.iscoroutinefunction(func_finalize):
                     await func_finalize()
