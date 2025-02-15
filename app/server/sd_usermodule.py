@@ -8,9 +8,10 @@ from sd_component import Component
 
 
 class UserModuleThread(threading.Thread):
-    def __init__(self, usermodule, params, stop_event):
+    def __init__(self, app, usermodule, params, stop_event):
         threading.Thread.__init__(self)
 
+        self.app = app
         self.usermodule = usermodule
         self.params = params
         self.stop_event = stop_event
@@ -32,11 +33,21 @@ class UserModuleThread(threading.Thread):
 
         
     async def go(self):
+        func_setup = self.usermodule.get_func('_setup')
         func_initialize = self.usermodule.get_func('_initialize')
         func_run = self.usermodule.get_func('_run')
         func_loop = self.usermodule.get_func('_loop')
         func_finalize = self.usermodule.get_func('_finalize')
 
+        if func_setup:
+            try:
+                if inspect.iscoroutinefunction(func_setup):
+                    await func_setup(self.app)
+                else:
+                    func_setup(self.app)
+            except Exception as e:
+                self.usermodule.handle_error('user module error: _setup(): %s' % str(e))
+                
         if func_initialize:
             self.usermodule.routine_history.append((
                 time.time(),
@@ -92,7 +103,8 @@ class UserModuleThread(threading.Thread):
 
 
 class UserModule:        
-    def __init__(self, filepath, name, params):
+    def __init__(self, app, filepath, name, params):
+        self.app = app
         self.filepath = filepath
         self.name = name
         self.params = params
@@ -201,7 +213,7 @@ class UserModule:
         
         logging.info('starting user module "%s"' % self.name)
         self.stop_event.clear()
-        self.user_thread = UserModuleThread(self, self.params, self.stop_event)
+        self.user_thread = UserModuleThread(self.app, self, self.params, self.stop_event)
         self.touch_status()
         self.user_thread.start()
         
@@ -365,7 +377,7 @@ class UserModuleComponent(Component):
                 continue
             filepath = node['file']
             params = node.get('parameters', {})
-            module = UserModule(filepath, filepath, params)
+            module = UserModule(self.app, filepath, filepath, params)
             if module is None:
                 logging.error('Unable to load user module: %s' % filepath)
             else:

@@ -35,8 +35,8 @@ class TaskFunctionThread(threading.Thread):
 
         
 class TaskModule(UserModule):
-    def __init__(self, filepath, name, params):
-        super().__init__(filepath, name, params)
+    def __init__(self, app, filepath, name, params):
+        super().__init__(app, filepath, name, params)
         
         self.command_thread = None
         self.parallel_command_thread_set = set()
@@ -360,7 +360,7 @@ class TaskModuleComponent(Component):
                     self.known_task_list.append(name)
 
         for name, (filepath, params, opts) in task_table.items():
-            module = TaskModule(filepath, name, params)
+            module = TaskModule(app, filepath, name, params)
             if module is None:
                 logging.error('Unable to load slowtask module: %s' % filepath)
             else:

@@ -17,11 +17,11 @@ class App(slowapi.App):
     async def ws_echo(self, request:slowapi.Request, websocket:slowapi.WebSocket):
         await websocket.accept()
         logging.info(f"WebSocket Connected: {request}")
-        await websocket.send_text(f'Your request is: {request}')
+        await websocket.send(f'Your request is: {request}')
         try:
             while True:
-                message = await websocket.receive_text()
-                await websocket.send_text(f'Received: {message}')
+                message = await websocket.receive()
+                await websocket.send(f'Received: {message}')
         except slowapi.ConnectionClosed:
             logging.info("WebSocket Closed")
 

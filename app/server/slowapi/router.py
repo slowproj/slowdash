@@ -259,10 +259,12 @@ class Router:
             await subapp.slowapi.dispatch_event(name)
             
         
-    async def dispatch(self, request:Request, body:bytes=None) -> Response:
+    async def dispatch(self, request:Request, body=None) -> Response:
         if type(request) is str:
             if body is None:
                 request = Request(request, method='GET')
+            elif type(body) is str:
+                request = Request(request, method='POST', body=str(body))
             else:
                 request = Request(request, method='POST', body=body)
 
@@ -347,8 +349,8 @@ class Router:
                 await subapp.slowapi.websocket(request, websocket)
 
         
-    def __call__(self, request:Request, body:bytes=None) -> Response:
-        """ this is an async function, as self.dispatch is async
+    def __call__(self, request:Request, body=None) -> Response:
+        """ this returns an asyncio.Task, as self.dispatch() is async
         """
         return self.dispatch(request, body)
 

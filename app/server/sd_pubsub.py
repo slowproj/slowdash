@@ -41,7 +41,7 @@ class PubsubComponent(Component):
             
         try:
             while True:
-                message = await websocket.receive_text()
+                message = await websocket.receive()
         except slowapi.ConnectionClosed:
             self.websockets[topic].remove(websocket)
             logging.info("WebSocket Closed")
@@ -50,19 +50,9 @@ class PubsubComponent(Component):
             logging.info(f"WebSocket Closed by error: {e}")
 
             
-    async def publish(self, topic:str, data:str):
+    @slowapi.post('/publish/{topic}')
+    async def publish(self, topic:str, data:bytes):
         try:
-            await asyncio.gather(*(ws.send_text(data) for ws in self.websockets.get(topic, [])))
+            await asyncio.gather(*(ws.send(str(data)) for ws in self.websockets.get(topic, [])))
         except Exception as e:
             logging.info(f"WebSocket Error: {e}")
-
-        
-    rc = 0
-    @slowapi.get('go')
-    async def go(self):
-        self.rc += 1
-        rc, count = self.rc, 0
-        while True:
-            await self.publish('currentdata', f'{rc}-{count}')
-            await asyncio.sleep(5)
-            count += 5

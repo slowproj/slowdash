@@ -50,7 +50,7 @@ class App(slowapi.App):
             sys.path.insert(1, os.path.join(self.project.project_dir, 'config'))
             
         # API Components: see slowapi.App for the mechanism
-        self.slowapi.include(ConsoleComponent(self, self.project))   # this must be the first
+        self.slowapi.include(ConsoleComponent(self, self.project))   # this must be the first to capture stdout
         self.slowapi.include(ConfigComponent(self, self.project))
         self.slowapi.include(DataSourceComponent(self, self.project))
         self.slowapi.include(ExportComponent(self, self.project))
@@ -65,6 +65,11 @@ class App(slowapi.App):
         logging.info('Terminating SlowDash gracefully')
         
 
+    # to use SlowDash Web API internally
+    async def dispatch(self, request:slowapi.Request, body:bytes=None):
+        response = await self.slowapi(request, body)
+        return response.content
+        
 
         
 if __name__ == '__main__':
