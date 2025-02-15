@@ -85,21 +85,13 @@ def _finalize():
     print("Bye-bye from Random-Walk Device")
     
 
-slowdash = None
-def _setup(app):
-    global slowdash
-    slowdash = app
-    print("I've got the SlowDash App!")
-
-    
 async def _loop():
     for ch in range(4):
         value = float(device.ch(ch))
         datastore.append(value, tag='ch%02d'%ch)
     time.sleep(1)
 
-    if slowdash is not None:
-        await slowdash.dispatch('/api/publish/currentdata', f'Time from SlowTask-Test: {int(time.time())}')
+    await ControlSystem.publish(topic='currentdata', data=f'Time from SlowTask-Test: {int(time.time())}')
 
 
 ### Stand-alone Testing ###

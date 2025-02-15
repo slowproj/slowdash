@@ -56,7 +56,7 @@ class TaskModule(UserModule):
         # obtain a reference to the ControlSystem class in the task module
         def register(control_system):
             self.control_system = control_system
-            self.control_system._global_stop_event.clear()
+            self.control_system._system_stop_event.clear()
 
         module.__dict__['_register'] = register
         try:
@@ -70,7 +70,14 @@ class TaskModule(UserModule):
         self.exports = None
         self.channel_list = None
         
-        return super().load()
+        if not super().load():
+            return False
+
+        self.module.__dict__['_global_slowdash_app'] = self.app
+        exec("from slowpy.control import ControlSystem", self.module.__dict__)
+        exec("ControlSystem._slowdash_app = _global_slowdash_app", self.module.__dict__)
+
+        return True
 
             
     async def stop(self):

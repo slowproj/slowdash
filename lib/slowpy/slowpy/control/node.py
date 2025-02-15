@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 17 May 2024 #
 
 
-import os, time, threading, importlib, traceback, inspect
+import os, time, threading, importlib, traceback, inspect, logging
 
 
 class ControlException(Exception):
@@ -178,14 +178,21 @@ class ControlNode:
         return node_classes[0] if len(node_classes) == 1 else node_classes
 
         
-    _global_stop_event = threading.Event()
+    _system_stop_event = threading.Event()
     def is_stop_requested(self):
-        if self._global_stop_event.is_set():
+        if self._system_stop_event.is_set():
             return True
         if hasattr(self, 'node_thread_stop_event') and self.node_thread_stop_event.is_set():
             return True
         return False
 
+
+    _slowdash_app = None
+    @classmethod
+    async def publish(cls, topic, data):
+        if cls._slowdash_app is not None:
+            await cls._slowdash_app.dispatch(f'/api/publish/{topic}', data)
+    
 
     
 class ControlThreadNode(ControlNode):

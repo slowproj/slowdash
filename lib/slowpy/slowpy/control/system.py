@@ -15,7 +15,7 @@ class ControlSystem(spc.ControlNode):
         
     @classmethod
     def stop(cls):
-        cls._global_stop_event.set()
+        cls._system_stop_event.set()
 
         
     @classmethod
@@ -28,7 +28,7 @@ class ControlSystem(spc.ControlNode):
         
     @classmethod
     def is_stop_requested(cls):
-        return cls._global_stop_event.is_set()
+        return cls._system_stop_event.is_set()
 
         
     # child nodes
