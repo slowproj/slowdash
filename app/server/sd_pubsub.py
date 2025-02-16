@@ -53,6 +53,6 @@ class PubsubComponent(Component):
     @slowapi.post('/publish/{topic}')
     async def publish(self, topic:str, data:bytes):
         try:
-            await asyncio.gather(*(ws.send(str(data)) for ws in self.websockets.get(topic, [])))
+            await asyncio.gather(*(ws.send(data.decode()) for ws in self.websockets.get(topic, [])))
         except Exception as e:
             logging.info(f"WebSocket Error: {e}")

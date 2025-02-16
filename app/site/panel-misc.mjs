@@ -787,6 +787,7 @@ class TaskManagerPanel extends Panel {
         });
 
         this.is_running = false;
+        this.is_error = false;
         this.is_loading_tasklist = false;
         this.is_loading_console = false;
         this.tasklist_revision = 0;
@@ -812,7 +813,7 @@ class TaskManagerPanel extends Panel {
 
 
     async _load() {
-        if (! this.is_running) {
+        if (! this.is_running || this.is_error) {
             return;
         }
 
@@ -836,6 +837,7 @@ class TaskManagerPanel extends Panel {
         catch (e) {
             console.log("Error on fetching tasklist: ", e);
             this.is_loading_tasklist = false;
+            this.is_error = true;
         }
     }
         
@@ -855,6 +857,7 @@ class TaskManagerPanel extends Panel {
         catch (e) {
             console.log("Error on fetching console: ", e);
             this.is_loading_console = false;
+            this.is_error = true;
         }
     }
 

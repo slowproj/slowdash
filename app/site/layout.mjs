@@ -460,8 +460,16 @@ export class Layout {
             console.error("Web Socket Error: " + error);
         };
         this.socket.onmessage = (event) => {
-            const record = event.data;
-            console.log("Web Socket Data: " + record);
+            const record = JSON.parse(event.data);
+            const now = $.time();
+            const dataPacket = {
+                isTransitional: true,
+                range: { from: now - 60, to: now },
+                data: record,
+            };
+            for (let panel of this.panels) {
+                panel.draw(dataPacket, dataPacket.range);
+            }
         };
     }    
 };

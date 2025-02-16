@@ -1,0 +1,12 @@
+slowdash_project:
+  name: Streaming_Test
+  data_source:
+    url: ${DB_URL:-redis://localhost:6379/1}
+
+  task:
+    name: scope
+    auto_load: true
+      
+  system:
+    our_security_is_perfect: true
+    
