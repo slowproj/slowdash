@@ -66,6 +66,11 @@ class TaskModule(UserModule):
             self.handle_error('unable to load task module: %s' % str(e))
 
         
+    def _do_post_initialize(self):
+        # this will call _export(), necessary to start publish()ing
+        self.scan_channels()
+    
+        
     def load(self):
         self.exports = None
         self.channel_list = None
@@ -159,8 +164,12 @@ class TaskModule(UserModule):
         for name, node in exports:
             external_name = '%s%s%s' % (self.namespace_prefix, name, self.namespace_suffix)
             self.exports[external_name] = node
+            if hasattr(node, 'export_name'):
+                if node.export_name in [ None, False ]:
+                    node.export_name = external_name
+                    
             value = node.get()
-            if type(value) == dict:
+            if type(value) is dict:
                 if 'table' in value:
                     self.channel_list.append({'name': external_name, 'type': 'table'})
                 elif 'tree' in value:

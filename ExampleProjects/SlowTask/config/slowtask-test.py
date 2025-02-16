@@ -1,5 +1,5 @@
 import time, logging
-from slowpy.control import ControlSystem, ControlNode
+from slowpy.control import ControlSystem, ControlNode, ValueNode
 import slowpy.store as sls
 
 ControlSystem.import_control_module('DummyDevice')
@@ -55,6 +55,10 @@ class StatusNode(ControlNode):
                 [ 'Ch3', ch3.get(), 'Yes' if ch3.ramping().status().get() else 'No' ],
             ]
         }
+
+
+value = ValueNode()
+
     
 def _export():
     return [
@@ -62,7 +66,8 @@ def _export():
         ('V1', ch1),
         ('V2', ch2),
         ('V3', ch3),
-        ('Status', StatusNode())
+        ('Status', StatusNode()),
+        ('Value', value),
     ]
 
 
@@ -87,11 +92,12 @@ def _finalize():
 
 async def _loop():
     for ch in range(4):
-        value = float(device.ch(ch))
-        datastore.append(value, tag='ch%02d'%ch)
+        x = float(device.ch(ch))
+        datastore.append(x, tag='ch%02d'%ch)
     time.sleep(1)
 
-    await ControlSystem.publish(topic='currentdata', data=f'Time from SlowTask-Test: {int(time.time())}')
+    value <= ch0
+    await value.publish()
 
 
 ### Stand-alone Testing ###

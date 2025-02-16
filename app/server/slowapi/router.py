@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 10 January 2025 #
 
 
-import sys, typing, inspect, copy, asyncio, logging
+import sys, typing, inspect, copy, asyncio, json, logging
 from urllib.parse import urlparse, parse_qsl, unquote
 
 from .model import JSON, DictJSON
@@ -122,7 +122,13 @@ class PathRule:
         if self.request_param is not None:
             kwargs[self.request_param] = request
         if self.bytes_body_param is not None:
-            kwargs[self.bytes_body_param] = request.body
+            # direct calling of the SlowAPI dispatcher might pass the body in a Python type
+            if type(request.body) is bytes:
+                kwargs[self.bytes_body_param] = request.body
+            elif type(request.body) is str:
+                kwargs[self.bytes_body_param] = request.body.encode()
+            else:
+                kwargs[self.bytes_body_param] = json.dumps(request.body).encode()
         if self.json_body_param is not None:
             doc = JSON(request.body)
             if doc.value() is None:
@@ -263,8 +269,6 @@ class Router:
         if type(request) is str:
             if body is None:
                 request = Request(request, method='GET')
-            elif type(body) is str:
-                request = Request(request, method='POST', body=str(body))
             else:
                 request = Request(request, method='POST', body=body)
 

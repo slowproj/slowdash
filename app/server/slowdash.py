@@ -61,12 +61,18 @@ class App(slowapi.App):
 
 
     @slowapi.on_event("shutdown")
-    async def finalize(self):
+    def finalize(self):
         logging.info('Terminating SlowDash gracefully')
         
 
-    # to use SlowDash Web API internally
-    async def dispatch(self, request:slowapi.Request, body:bytes=None):
+    async def dispatch(self, request:slowapi.Request, body=None):
+        """directly calls the services provided by SlowDash Web API, to be used internally
+        Parameters:
+          - request: slowapi.Request, or str for URL. Don't forget to prepend '/api'.
+          - body: bytes, str, or a value to JSON. If the request is a URL string, non-None body will invoke POST.
+        Return:
+          - The response content, in a native Python type (typically a dict)
+        """
         response = await self.slowapi(request, body)
         return response.content
         

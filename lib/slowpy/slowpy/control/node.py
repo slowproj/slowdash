@@ -1,13 +1,14 @@
 # Created by Sanshiro Enomoto on 17 May 2024 #
 
 
-import os, time, threading, importlib, traceback, inspect, logging
+import os, time, threading, importlib, traceback, inspect
 
 
 class ControlException(Exception):
     def __init__(self, message):
         self.message = message
 
+        
     def __str__(self):
         return str(self.message)
 
@@ -28,6 +29,7 @@ class ControlNode:
     def has_data(self):
         raise ControlException('has() method not available')
 
+    
     # to be used in subclasses
     def sleep(self, duration_sec):
         """stoppable-sleep
@@ -84,30 +86,37 @@ class ControlNode:
                 return self.set(value)
         else:
             return self.get()
-    
+
+        
     def __eq__(self, value):
         if isinstance(value, ControlNode):
             return self.get() == value.get()
         else:
             return self.get() == value
+
         
     def __ne__(self, value):
         if isinstance(value, ControlNode):
             return self.get() == value.get()
         else:
             return self.get() == value
+
         
     def __repr__(self):
         return repr(self.get())
+
     
     def __str__(self):
         return str(self.get())
+
     
     def __bool__(self):
         return bool(self.get())
+
     
     def __int__(self):
         return int(self.get())
+
     
     def __float__(self):
         value = self.get()
@@ -121,6 +130,7 @@ class ControlNode:
     def readonly(self):
         return ControlReadOnlyNode(self)
 
+    
     def writeonly(self):
         return ControlWriteOnlyNode(self)
 
@@ -187,13 +197,25 @@ class ControlNode:
         return False
 
 
-    _slowdash_app = None
-    @classmethod
-    async def publish(cls, topic, data):
-        if cls._slowdash_app is not None:
-            await cls._slowdash_app.dispatch(f'/api/publish/{topic}', data)
+    # overriding the "node <= value" operator for node.set(value).
+    def __le__(self, value):
+        if isinstance(value, ControlNode):
+            self.set(value.get())
+        else:
+            self.set(value)
+            
+        return self.error_to_bool
     
+    class ErrorToBool:
+        def __bool__(self):
+            raise ControlException(
+                'node-set operator "<=" is used in bool context; ' +
+                'if this is intended, do like float(node) <= value.'
+            )
+        
+    error_to_bool = ErrorToBool()
 
+        
     
 class ControlThreadNode(ControlNode):
     def __init__(self):
@@ -206,6 +228,17 @@ class ControlThreadNode(ControlNode):
         """if "self" has the "run()" and/or "loop()" methods, this function will create a thread and call it
         """
         
+        class NodeThread(threading.Thread):
+            def __init__(self, node):
+                threading.Thread.__init__(self)
+                self.node = node
+            def run(self):
+                if callable(getattr(self.node, 'run', None)):
+                    self.node.run()
+                if callable(getattr(self.node, 'loop', None)):
+                    while not self.node.is_stop_requested():
+                        self.node.loop()
+    
         if not (callable(getattr(self, 'run', None)) or callable(getattr(self, 'loop', None))):
             raise ControlException('ControlThreadNode.start(): no threading method defined')
 
@@ -228,21 +261,6 @@ class ControlThreadNode(ControlNode):
         
         
         
-class NodeThread(threading.Thread):
-    def __init__(self, node):
-        threading.Thread.__init__(self)
-        self.node = node
-
-    def run(self):
-        if callable(getattr(self.node, 'run', None)):
-            self.node.run()
-            
-        if callable(getattr(self.node, 'loop', None)):
-            while not self.node.is_stop_requested():
-                self.node.loop()
-
-                
-    
 class ControlReadOnlyNode(ControlNode):
     def __init__(self, node):
         self.node = node
@@ -307,18 +325,6 @@ class ControlVariableNode(ControlNode):
             self._node_oneshot = OneshotNode(self, duration, normal)
         return self._node_oneshot
     
-
-    
-class ValueNode(ControlVariableNode):
-    def __init__(self, initial_value=None):
-        self.value = initial_value
-
-    def set(self, value):
-        self.value = value
-
-    def get(self):
-        return self.value
-
 
     
 class SetpointNode(ControlNode):

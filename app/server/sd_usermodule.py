@@ -19,13 +19,6 @@ class UserModuleThread(threading.Thread):
 
         
     def run(self):        
-        self.initialized_event.clear()
-        self.stop_event.clear()
-        if not self.usermodule.load():
-            return
-        if self.stop_event.is_set():
-            return
-        
         eventloop = asyncio.new_event_loop()
         asyncio.set_event_loop(eventloop)
         eventloop.run_until_complete(self.go())
@@ -33,6 +26,13 @@ class UserModuleThread(threading.Thread):
 
         
     async def go(self):
+        self.initialized_event.clear()
+        self.stop_event.clear()
+        if not self.usermodule.load():
+            return
+        if self.stop_event.is_set():
+            return
+        
         func_setup = self.usermodule.get_func('_setup')
         func_initialize = self.usermodule.get_func('_initialize')
         func_run = self.usermodule.get_func('_run')
@@ -61,6 +61,7 @@ class UserModuleThread(threading.Thread):
             except Exception as e:
                 self.usermodule.handle_error('user module error: _initialize(): %s' % str(e))
             
+        self.usermodule._do_post_initialize()
         self.initialized_event.set()
         
         if func_run and not self.stop_event.is_set():
@@ -152,7 +153,11 @@ class UserModule:
             return line
 
         module.__dict__['input'] = input_waiting_at_EOF
+
         
+    def _do_post_initialize(self):
+        pass
+    
         
     def load(self):
         self.routine_history = []

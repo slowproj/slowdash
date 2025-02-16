@@ -22,13 +22,6 @@ class RegisterNode(spc.ControlNode):
         self.has_output = False
 
         
-    def __le__(self, value):
-        if isinstance(value, spc.ControlNode):
-            return self.set(value.get())
-        else:
-            return self.set(value)
-
-        
     def set(self, value):
         if self.set_value is not None:
             raise spc.ControlException('setting a register value from multiple sources')

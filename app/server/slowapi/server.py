@@ -142,25 +142,24 @@ def serve_asgi_uvicorn(app, port, **kwargs):
         return serve_wsgi_ref(WSGI(app), port, **kwargs)
 
     async def main():
-        stop_event = asyncio.Event()
-        def async_signal_handler(signum, frame):
-            stop_event.set()
-        signal.signal(signal.SIGINT, async_signal_handler)
-        signal.signal(signal.SIGTERM, async_signal_handler)
-
         config = uvicorn.Config(app, port=port, workers=1, lifespan="on", **kwargs)
         server = uvicorn.Server(config)
         #server.install_signal_handlers=False  # this causes the server not working...
+        
         server_task = asyncio.create_task(server.serve())
         
-        # overwrite the signal handlers set by uvicorn.Server()
+        # overwrite the signal handlers set by uvicorn.Server()        
         await asyncio.sleep(0.1)
-        signal.signal(signal.SIGINT, async_signal_handler)
-        signal.signal(signal.SIGTERM, async_signal_handler)
+        def signal_handler(signum, frame):
+            server_task.cancel()
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+
+        try:
+            await server_task
+        except asyncio.CancelledError:
+            pass
         
-        await stop_event.wait()
-        server_task.cancel()
-    
     if ('ssl_keyfile' in kwargs) and ('ssl_certfile' in kwargs):
         is_https = True
     else:

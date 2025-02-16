@@ -17,9 +17,12 @@ class JSON:
       - Or use the "value()" method to get the native Python type object.
     """
     
-    def __init__(self, body:bytes):
+    def __init__(self, body):
         try:
-            self.data = json.loads(body.decode())
+            if type(body) is bytes:
+                self.data = json.loads(body.decode())
+            else:
+                self.data = body
         except Exception as e:
             logging.error('SlowAPI: JSON decoding error: %s' % str(e))
             self.data = None

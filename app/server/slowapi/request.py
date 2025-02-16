@@ -11,7 +11,7 @@ class Request:
         self.method = method.upper()
         self.headers = copy.deepcopy(headers)
         self.body = body
-
+        
         self.aborted = False
 
         u = urlparse(url)
