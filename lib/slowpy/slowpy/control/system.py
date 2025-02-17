@@ -35,7 +35,7 @@ class ControlSystem(spc.ControlNode):
 
         
     @classmethod
-    async def publish_message(cls, topic, message):
+    async def publish(cls, topic, message):
         if cls._slowdash_app is not None:
             await cls._slowdash_app.dispatch(f'/api/publish/{topic}', message)
 
@@ -65,9 +65,9 @@ class ValueNode(spc.ControlVariableNode):
         return self.value
 
 
-    async def publish(self):
+    async def deliver(self):
         if self.export_name is None:
-            logging.error('SlowPy.ValueNode.publish(): unable to publish as node is not exported')
+            logging.error('SlowPy.ValueNode.deliver(): unable to deliver as node is not exported')
             self.export_name = False
         if self.export_name is False:
             return
@@ -78,4 +78,4 @@ class ValueNode(spc.ControlVariableNode):
                 'x': self.value,
             }
         }
-        await ControlSystem.publish_message('currentdata', record)
+        await ControlSystem.publish('currentdata', record)

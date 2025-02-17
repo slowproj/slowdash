@@ -47,11 +47,6 @@ class ConfigComponent(Component):
         return filelist
 
         
-    @slowapi.get('/config/filemeta/{filename}')
-    def get_filemeta(self, filename:str):
-        return self._get_config_filemeta(filename)
-
-        
     @slowapi.get('/config/file/{filename}')
     def get_file(self, filename:str):
         filepath, ext = self._get_filepath_ext(filename, os.R_OK)
@@ -89,6 +84,38 @@ class ConfigComponent(Component):
         return data
 
 
+    @slowapi.get('/config/filemeta/{filename}')
+    def get_filemeta(self, filename:str):
+        filepath, ext = self._get_filepath_ext(filename, os.R_OK)
+        if filepath is None:
+            logging.warning(f'GET config/filemeta: {filename}: access denied')
+            return slowapi.Response(404)
+
+        filemeta = {}        
+        if ext not in [ '.json', '.yaml' ]:
+            return filemeta
+
+        if os.path.getsize(filepath) <= 0:
+            filemeta['config_error'] = 'empty file'
+        else:
+            try:
+                with open(filepath) as f:
+                    this_config = yaml.safe_load(f)
+                    if type(this_config) != dict:
+                        filemeta['config_error'] = 'not a dict'
+                    else:
+                        filemeta = this_config.get('meta', {})
+            except yaml.YAMLError as e:
+                if hasattr(e, 'problem_mark'):
+                    line = e.problem_mark.line+1
+                    filemeta['config_error_line'] = line
+                    filemeta['config_error'] = 'Line %d: %s' % (line, e.problem)
+                else:
+                    filemeta['config_error'] = str(e)
+
+        return filemeta
+
+    
     @slowapi.post('/config/file/{filename}')
     def post_file(self, filename: str, body:bytes, overwrite:str='no'):
         filepath, ext = self._get_filepath_ext(filename)
@@ -213,7 +240,7 @@ class ConfigComponent(Component):
 
             meta_info = {}
             if with_content_meta:
-                meta_info = self._get_config_filemeta(filename)
+                meta_info = self.get_filemeta(filename)
 
             contents[config_key].append({
                 'name': name,
@@ -245,34 +272,3 @@ class ConfigComponent(Component):
                 return None, None
 
         return filepath, ext.lower()
-
-
-    def _get_config_filemeta(self, filename):
-        filepath, ext = self._get_filepath_ext(filename, os.R_OK)
-        if filepath is None:
-            logging.warning(f'GET config/filemeta: {filename}: access denied')
-            return slowapi.Response(404)
-
-        filemeta = {}        
-        if ext not in [ '.json', '.yaml' ]:
-            return filemeta
-
-        if os.path.getsize(filepath) <= 0:
-            filemeta['config_error'] = 'empty file'
-        else:
-            try:
-                with open(filepath) as f:
-                    this_config = yaml.safe_load(f)
-                    if type(this_config) != dict:
-                        filemeta['config_error'] = 'not a dict'
-                    else:
-                        filemeta = this_config.get('meta', {})
-            except yaml.YAMLError as e:
-                if hasattr(e, 'problem_mark'):
-                    line = e.problem_mark.line+1
-                    filemeta['config_error_line'] = line
-                    filemeta['config_error'] = 'Line %d: %s' % (line, e.problem)
-                else:
-                    filemeta['config_error'] = str(e)
-
-        return filemeta

@@ -10,7 +10,7 @@ datastore = DataStore_Redis('redis://localhost/1')
 next_store_time = 0
 
 
-fx = 3.0
+fx = 3.2
 fy = 2.0
 x = ValueNode(str(Graph()))
 y = ValueNode(str(Graph()))
@@ -25,10 +25,10 @@ def _export():
 t0 = 0
 async def _loop():
     global t0
-    t0 += 0.01
+    t0 += 0.05
     t = np.linspace(0, 1, 100)
-    x1 = np.random.normal(np.cos((t-t0)*fx*6.28), 0.02)
-    x2 = np.random.normal(np.sin((t-t0)*fy*6.28), 0.02)
+    x1 = np.random.normal(np.cos((t-t0)*fx*6.28), 0.0003)
+    x2 = np.random.normal(np.sin((t-t0)*fy*6.28), 0.0003)
     
     g_x, g_y, g_xy = Graph(), Graph(), Graph()
     g_x.add_point(t, x1)
@@ -39,9 +39,9 @@ async def _loop():
     y <= str(g_y)
     xy <= str(g_xy)
 
-    await x.publish()
-    await y.publish()
-    await xy.publish()
+    await x.deliver()
+    await y.deliver()
+    await xy.deliver()
 
     global next_store_time
     now = time.time()
@@ -51,4 +51,4 @@ async def _loop():
         datastore.update(g_xy, tag='xy')
         next_store_time = now + 5
     
-    time.sleep(0.2)
+    time.sleep(0.5)
