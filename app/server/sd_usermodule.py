@@ -73,6 +73,7 @@ class UserModuleThread(threading.Thread):
                     func_run()
             except Exception as e:
                 self.usermodule.handle_error('user module error: _run(): %s' % str(e))
+            self.usermodule.routine_history.append((time.time(), '_run()'))
                 
         if func_loop and not self.stop_event.is_set():
             self.usermodule.routine_history.append((time.time(), '_loop()'))
@@ -90,6 +91,8 @@ class UserModuleThread(threading.Thread):
             else:
                 # not to proceed to finalize() before a stop_event occurs
                 await asyncio.sleep(0.1)
+        if func_loop:
+            self.usermodule.routine_history.append((time.time(), '_loop()'))
                 
         if func_finalize:
             self.usermodule.routine_history.append((time.time(), '_finalize()'))

@@ -175,6 +175,8 @@ if __name__ == '__main__':
         asyncio.run(main())
         
     else:
+        os.environ['SLOWDASH_URL'] = 'http://localhost:{args.port}'
+        
         # web-server mode: append Authentication and FileServer
         if app.project.auth_list is not None:
             app.slowapi.add_middleware(slowapi.BasicAuthentication(auth_list=app.project.auth_list))
