@@ -167,23 +167,28 @@ class TaskModule(UserModule):
             if hasattr(node, 'export_name'):
                 if node.export_name in [ None, False ]:
                     node.export_name = external_name
-                    
+
             value = node.get()
             if type(value) is dict:
                 if 'table' in value:
-                    self.channel_list.append({'name': external_name, 'type': 'table'})
+                    datatype = 'table'
                 elif 'tree' in value:
-                    self.channel_list.append({'name': external_name, 'type': 'tree'})
+                    datatype = 'tree'
                 elif 'bins' in value:
-                    self.channel_list.append({'name': external_name, 'type': 'histogram'})
+                    datatype = 'histogram'
                 elif 'ybins' in value:
-                    self.channel_list.append({'name': external_name, 'type': 'histogram2d'})
+                    datatype = 'histogram2d'
                 elif 'y' in value:
-                    self.channel_list.append({'name': external_name, 'type': 'graph'})
+                    datatype = 'graph'
                 else:
-                    self.channel_list.append({'name': external_name, 'type': 'tree'})
+                    datatype = 'json'
             else:
-                self.channel_list.append({'name': external_name})
+                datatype = None
+                
+            if datatype is not None:
+                self.channel_list.append({'name': external_name, 'type': datatype, 'current': True})
+            else:
+                self.channel_list.append({'name': external_name, 'current': True})
 
         return self.channel_list
     

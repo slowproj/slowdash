@@ -274,16 +274,16 @@ class Schema:
             return None
         
         if isinstance(value, float) or isinstance(value, int):
-            return 'timeseries'
+            return 'numeric'
         
         if isinstance(value, str):
             json_value = value.strip()
             if not (len(json_value) > 2 and json_value[0] == '{' and json_value[-1] == '}'):
-                return 'timeseries'
+                return 'json'
             try:
                 json_value = json.loads(json_value)
             except Exception as e:
-                return 'timeseries'
+                return 'string'
         else:
             json_value = value
             

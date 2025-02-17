@@ -136,7 +136,7 @@ export function boot(defaults, optparse_func, start_func) {
 
 
 function setupDataList() {
-    let ts_datalist = $('<datalist>').attr('id', 'sd-timeseries-datalist').appendTo(document.body);
+    let numeric_datalist = $('<datalist>').attr('id', 'sd-numeric-datalist').appendTo(document.body);
     let table_datalist = $('<datalist>').attr('id', 'sd-table-datalist').appendTo(document.body);
     let tree_datalist = $('<datalist>').attr('id', 'sd-tree-datalist').appendTo(document.body);
     let blob_datalist = $('<datalist>').attr('id', 'sd-blob-datalist').appendTo(document.body);
@@ -159,8 +159,10 @@ function setupDataList() {
                     continue;
                 }
                 all_datalist.append($('<option>').attr('value', entry.name).text(entry.name));
-                if (((entry.type??'') == '') || (entry.type == 'timeseries')) {
-                    ts_datalist.append($('<option>').attr('value', entry.name).text(entry.name));
+                if (((entry.type??'') == '') || (entry.type == 'numeric')) {
+                    if (! (entry.current??false)) {
+                        numeric_datalist.append($('<option>').attr('value', entry.name).text(entry.name));
+                    }
                 }
                 else if (entry.type == 'table') {
                     table_datalist.append($('<option>').attr('value', entry.name).text(entry.name));

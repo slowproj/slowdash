@@ -12,9 +12,9 @@ next_store_time = 0
 
 fx = 3.2
 fy = 2.0
-x = ValueNode(str(Graph()))
-y = ValueNode(str(Graph()))
-xy = ValueNode(str(Graph()))
+x = ValueNode(Graph().to_json())
+y = ValueNode(Graph().to_json())
+xy = ValueNode(Graph().to_json())
 
 
 def _export():
@@ -35,9 +35,9 @@ async def _loop():
     g_y.add_point(t, x2)
     g_xy.add_point(x1, x2)
 
-    x <= str(g_x)
-    y <= str(g_y)
-    xy <= str(g_xy)
+    x <= g_x.to_json()
+    y <= g_y.to_json()
+    xy <= g_xy.to_json()
 
     await x.deliver()
     await y.deliver()

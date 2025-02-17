@@ -291,11 +291,16 @@ class UserModule:
                 logging.warning('User/Task module not yet initialized')
                 
         try:
-            return self.func_get_channels()
+            channels = self.func_get_channels()
         except Exception as e:
             self.handle_error('user module error: get_channels(): %s' % str(e))
             return None
 
+        for ch in channels:
+            ch['current'] = True
+
+        return channels
+    
     
     def get_data(self, channel):
         if self.module is None or self.func_get_data is None:

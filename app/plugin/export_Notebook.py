@@ -41,7 +41,7 @@ class Export_Notebook(ComponentPlugin):
             reducer = opts.get('reducer', None)
             filler = opts.get('filler', None)
             slowdash_url = opts.get('slowdash_url', '*')
-            datatype = opts.get('datatype', 'timeseries')
+            datatype = opts.get('datatype', 'numeric')
         except Exception as e:
             logging.error(e)
             return None
@@ -78,7 +78,7 @@ class Export_Notebook(ComponentPlugin):
         |    filler = {repr(filler)},                        # 'fillna' (None), 'last', 'linear'   ### NOT IMPLEMENTED YET ###
         |)
         ''')
-        if datatype == 'timeseries':
+        if datatype == 'numeric':
             cells.append(f'''
             |from matplotlib import pyplot as plt
             | 

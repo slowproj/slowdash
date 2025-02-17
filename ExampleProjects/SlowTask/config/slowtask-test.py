@@ -1,5 +1,5 @@
 import time, logging
-from slowpy.control import ControlSystem, ControlNode, ValueNode
+from slowpy.control import ControlSystem, ControlNode
 import slowpy.store as sls
 
 ControlSystem.import_control_module('DummyDevice')
@@ -57,8 +57,6 @@ class StatusNode(ControlNode):
         }
 
 
-value = ValueNode()
-
     
 def _export():
     return [
@@ -67,7 +65,6 @@ def _export():
         ('V2', ch2),
         ('V3', ch3),
         ('Status', StatusNode()),
-        ('Value', value),
     ]
 
 
@@ -90,16 +87,15 @@ def _finalize():
     print("Bye-bye from Random-Walk Device")
     
 
-async def _loop():
+def _loop():
     for ch in range(4):
         x = float(device.ch(ch))
         datastore.append(x, tag='ch%02d'%ch)
     time.sleep(1)
 
-    value <= ch0
-    await value.publish()
 
 
+    
 ### Stand-alone Testing ###
     
 if __name__ == '__main__':

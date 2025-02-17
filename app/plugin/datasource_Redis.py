@@ -200,7 +200,7 @@ class TimeSeriesSource(ObjectSource):
             if key.startswith(objts_prefix):
                 continue
             if await self.redis.type(key) == 'TSDB-TYPE':
-                self.channels[key+self.suffix] = { 'type': 'timeseries' }
+                self.channels[key+self.suffix] = { 'type': 'numeric' }
 
 
     async def get_timeseries(self, channels, length, to):

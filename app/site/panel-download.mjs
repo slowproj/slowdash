@@ -270,7 +270,7 @@ export class DownloadPanel extends Panel {
         let [tsChannelList, allChannelList] = [[], []];
         for (let entry of (this.channelList ?? [])) {
             allChannelList.push(entry.name);
-            if ((entry.type ?? 'timeseries') == 'timeseries') {
+            if ((entry.type ?? 'numeric') == 'numeric') {
                 tsChannelList.push(entry.name);
             }    
         }
@@ -279,7 +279,7 @@ export class DownloadPanel extends Panel {
             let has_ts = false, has_obj = false;
             for (let input of channelTable.find('input').enumerate()) {
                 if (input.checked()) {
-                    if (input.data('sd-data-type') == 'timeseries') {
+                    if (input.data('sd-data-type') == 'numeric') {
                         has_ts = true;
                     }
                     else {
@@ -295,7 +295,7 @@ export class DownloadPanel extends Panel {
             }
             else if (has_ts) {
                 buttonDiv.find('button').enabled(true);
-                button2Div.data('datatype', 'timeseries').find('button').enabled(true);
+                button2Div.data('datatype', 'numeric').find('button').enabled(true);
                 button2Div.find('button').at(2).enabled(config.has_jupyter);
             }
             else {
@@ -327,12 +327,12 @@ export class DownloadPanel extends Panel {
                 }
             }
             if (! already_exists) {
-                let datatype = 'timeseries';
+                let datatype = 'numeric';
                 if (! tsChannelList.includes(channel)) {
-                    //datatype = 'unknown';  // assume unknown is timeseries (happens with Honeybee)
+                    //datatype = 'unknown';  // assume unknown is numeric (happens with Honeybee)
                     for (let entry of (this.channelList ?? [])) {
                         if (entry.name == channel) {
-                            datatype = entry.type ?? 'timeseries';
+                            datatype = entry.type ?? 'numeric';
                             break;
                         }
                     }
@@ -345,7 +345,7 @@ export class DownloadPanel extends Panel {
                     checkState();
                 });
                 label.append(input).append($('<span>').text(channel));
-                if (datatype != 'timeseries') {
+                if (datatype != 'numeric') {
                     tr.append($('<td>').css({'font-size': '80%', 'padding-left': '3em'}).text(`(${datatype})`));
                 }
                 else {
