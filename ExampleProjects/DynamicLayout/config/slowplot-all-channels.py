@@ -1,5 +1,4 @@
-print('''
-{
+config = {
     "panels": [
         {
             "type": "timeaxis",
@@ -12,4 +11,5 @@ print('''
         }
     ]
 }
-''')
+
+print(config)

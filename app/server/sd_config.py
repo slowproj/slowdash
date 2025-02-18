@@ -24,7 +24,7 @@ class ConfigComponent(Component):
 
         
     @slowapi.get('/config/filelist')
-    def get_filelist(self, sortby='mtime', reverse:bool=False):
+    async def get_filelist(self, sortby='mtime', reverse:bool=False):
         if self.project_dir is None:
             return []
         
@@ -47,23 +47,9 @@ class ConfigComponent(Component):
         return filelist
 
         
-    @slowapi.get('/config/file/{filename}')
-    def get_file(self, filename:str):
-        filepath, ext = self._get_filepath_ext(filename, os.R_OK)
-        if filepath is None:
-            logging.warning(f'GET config/file: {filename}: access denied')
-            return slowapi.Response(404)
-
-        if not self.project.is_secure:
-            if ext not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]:
-                return slowapi.Response(403)  # Forbidden
-                
-        return slowapi.FileResponse(filepath)
-
-        
-    @slowapi.get('/config/jsonfile/{filename}')
-    async def get_jsonfile(self, filename:str):
-        meta, content = await self._load_jsonfile(filename)
+    @slowapi.get('/config/json/{filename}')
+    async def get_json(self, filename:str):
+        meta, content = await self._load_json(filename)
         try:
             # this requires W_OK, might fail from CGI etc.
             pathlib.Path(filepath).touch()
@@ -76,16 +62,30 @@ class ConfigComponent(Component):
         return content
 
 
-    @slowapi.get('/config/filemeta/{filename}')
-    async def get_filemeta(self, filename:str):
-        meta, content = await self._load_jsonfile(filename)
+    @slowapi.get('/config/meta/{filename}')
+    async def get_meta(self, filename:str):
+        meta, content = await self._load_json(filename)
         if meta is None:
             return slowapi.Response(400)
         return meta
 
     
+    @slowapi.get('/config/file/{filename}')
+    async def get_file(self, filename:str):
+        filepath, ext = self._get_filepath_ext(filename, os.R_OK)
+        if filepath is None:
+            logging.warning(f'GET config/file: {filename}: access denied')
+            return slowapi.Response(404)
+
+        if not self.project.is_secure:
+            if ext not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]:
+                return slowapi.Response(403)  # Forbidden
+                
+        return slowapi.FileResponse(filepath)
+
+        
     @slowapi.post('/config/file/{filename}')
-    def post_file(self, filename: str, body:bytes, overwrite:str='no'):
+    async def post_file(self, filename: str, body:bytes, overwrite:str='no'):
         filepath, ext = self._get_filepath_ext(filename)
         if filepath is None:
             logging.warning(f'POST config/file: {filename}: access denied')
@@ -146,7 +146,7 @@ class ConfigComponent(Component):
 
 
     @slowapi.delete('/config/file/{filename}')
-    def delete_file(self, filename: str):
+    async def delete_file(self, filename: str):
         filepath, ext = self._get_filepath_ext(filename, os.W_OK)
         if filepath is None:
             logging.warning(f'DETETE config/file: {filename}: access denied')
@@ -208,7 +208,7 @@ class ConfigComponent(Component):
 
             meta_info = {}
             if with_content_meta:
-                meta_info = await self.get_filemeta(filename)
+                meta_info = await self.get_meta(filename)
 
             contents[config_key].append({
                 'name': name,
@@ -224,19 +224,19 @@ class ConfigComponent(Component):
         return doc
 
                 
-    async def _load_jsonfile(self, filename:str):
+    async def _load_json(self, filename:str):
         filepath, ext = self._get_filepath_ext(filename, os.R_OK)
         if filepath is None:
-            logging.warning(f'GET config/filemeta: {filename}: access denied')
+            logging.warning(f'GET config: {filename}: access denied')
             return None, None
 
-        filemeta, content = {}, None
+        meta, content = {}, None
         if ext not in [ '.json', '.yaml', '.py' ]:
-            filemeta['config_error'] = 'bad file type'
-            return filemeta, content
+            meta['config_error'] = 'bad file type'
+            return meta, content
         if os.path.getsize(filepath) <= 0:
-            filemeta['config_error'] = 'empty file'
-            return filemeta, content
+            meta['config_error'] = 'empty file'
+            return meta, content
 
         doc = None
         if ext == '.py':
@@ -254,28 +254,33 @@ class ConfigComponent(Component):
             if returncode != 0:
                 msg = stderr.decode()
                 logging.warn(f'JSON-generator Python error: {filepath}: {msg}')
-                filemeta['config_error'] = f"Python Error: {msg.split('\n')[-2]}"
-                return filemeta, None
+                meta['config_error'] = f"Python Error: {msg.split('\n')[-2]}"
+                return meta, None
         else:
-            with open(filepath) as f:
-                doc = f.read()
+            try:
+                with open(filepath) as f:
+                    doc = f.read()
+            except Exception as e:
+                logging.warn(f'unable to read config file: {filepath}: {e}')
+                meta['config_error'] = f'unagle to read file: {e}'
+                return meta, None
 
         try:
             content = yaml.safe_load(doc)
         except yaml.YAMLError as e:
             if hasattr(e, 'problem_mark'):
                 line = e.problem_mark.line+1
-                filemeta['config_error_line'] = line
-                filemeta['config_error'] = 'Line %d: %s' % (line, e.problem)
+                meta['config_error_line'] = line
+                meta['config_error'] = 'Line %d: %s' % (line, e.problem)
             else:
-                filemeta['config_error'] = str(e)
+                meta['config_error'] = str(e)
         
         if type(content) != dict:
-            filemeta['config_error'] = 'not a dict'
+            meta['config_error'] = 'not a dict'
         else:
-            filemeta = content.get('meta', {})
+            meta = content.get('meta', {})
 
-        return filemeta, content
+        return meta, content
 
             
     def _get_filepath_ext(self, filename, access_flag=None):

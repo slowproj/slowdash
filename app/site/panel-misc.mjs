@@ -345,7 +345,7 @@ class ConfigEditorPanel extends Panel {
 
         let meta = {};
         try {
-            let response = await fetch('./api/config/filemeta/' + filepath);
+            let response = await fetch('./api/config/meta/' + filepath);
             if (! response.ok) {
                 throw new Error(response.status + " " + response.statusText);
             }

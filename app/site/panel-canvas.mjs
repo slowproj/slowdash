@@ -901,7 +901,7 @@ export class CanvasPanel extends Panel {
         
         if (config.config_name && (config.config_name != this.loaded_config_name)) {
             this.loaded_config_name = config.config_name;
-            fetch('./api/config/jsonfile/slowdash-' + config.config_name + '.json')
+            fetch('./api/config/json/slowdash-' + config.config_name + '.json')
                 .then(response => {
                     if (! response.ok) {
                         throw new Error(response.status + " " + response.statusText);

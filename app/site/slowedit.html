@@ -190,7 +190,7 @@
                 return {};
             }
                 
-            let response = await fetch('./api/config/filemeta/' + config.filename);
+            let response = await fetch('./api/config/meta/' + config.filename);
             const meta = await response.json();
 
             if (meta.config_error) {
