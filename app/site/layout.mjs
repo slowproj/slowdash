@@ -78,7 +78,7 @@ export class Layout {
         if (this.config.control === undefined) {
             this.config.control = {};
         }
-        if (this.config.control.grid === undefined) {
+        if ((this.config.control.grid?.columns??0) < 1) {
             this.config.control.grid = { columns: 1, rows: 1 };
         }
         if (this.config.panels === undefined) {

@@ -937,7 +937,7 @@ export class GridPullDown {
     constructor(obj, options={}) {
         const defaults = {
             heading: '&#x1f4c8; ',
-            items: [ '1x1', '2x2', '3x3', '2x1', '3x1', '4x1', 'Other...' ],
+            items: [ '1x1', '1x2', '2x1', '2x2', '2x3', '3x1', '3x2', '3x3', '3x4', '4x1', '4x2', '4x3', '4x4', 'Other...' ],
             initial: 0,
             select: (grid) => {},
         };

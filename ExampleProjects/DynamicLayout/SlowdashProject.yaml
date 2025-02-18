@@ -13,6 +13,12 @@ slowdash_project:
         - { name: ch6, noise: 5, walk: 1, decay: 0.001 }
         - { name: ch7, noise: 5, walk: 1, decay: 0.001 }
 
+      histogram:
+        - name: nhits
+          pdf: np.random.poisson(50, 1)[0]
+          entries: 100
+          bins: { n: 100, min: 0, max: 100 }
+
 
   system:
     our_security_is_perfect: true

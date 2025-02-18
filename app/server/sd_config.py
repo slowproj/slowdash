@@ -249,12 +249,14 @@ class ConfigComponent(Component):
                 stdout, stderr = await process.communicate()
                 returncode = process.returncode
                 doc = stdout.decode().strip()
+                msg = stderr.decode().strip()
+                logging.info(f'{filename}: {msg}')
             except Exception as e:
                 returncode = -1
             if returncode != 0:
-                msg = stderr.decode()
-                logging.warn(f'JSON-generator Python error: {filepath}: {msg}')
-                meta['config_error'] = f"Python Error: {msg.split('\n')[-2]}"
+                err_msg = msg.split('\n')[-1]
+                logging.warn(f'JSON-generator Python error: {filepath}: {err_msg}')
+                meta['config_error'] = f'Python Error: {err_msg}'
                 return meta, None
         else:
             try:
