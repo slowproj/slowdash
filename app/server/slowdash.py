@@ -22,6 +22,15 @@ from sd_misc_api import MiscApiComponent
 
 class App(slowapi.App):
     def __init__(self, project_dir=None, project_file=None, is_cgi=False, is_command=False, is_async=True):
+        """
+        Parameters:
+          - project_dir: if not None, specifies the project directory with disabling the default behavior.
+          - project_file: if not None, specifies the project file with disabling the default behavior.
+          - is_cgi: indicates App is running in CGI. If True, user/task modules are disabled by default.
+          - is_command: indicates App is running in command-line. If True, user/task modules might be disabled by config.
+          - is_async: indicates App is running in ASGI. If True, WebSockets and other features are enabled.
+        """
+        
         super().__init__()
 
         self.is_cgi = is_cgi
@@ -65,11 +74,11 @@ class App(slowapi.App):
         logging.info('Terminating SlowDash gracefully')
         
 
-    async def invoke(self, url:str, doc=None):
+    async def call_api(self, url:str, doc=None):
         """directly calls the services provided by SlowDash Web API, to be used internally
         Parameters:
           - url: SlowDash API URL. No need to prepend '/api'.
-          - doc: bytes, str, or a value for JSON encoding. If doc is not None, invoke() will use POST, otherwise GET.
+          - doc: bytes, str, or a value for JSON encoding. If doc is not None, this will use POST, otherwise GET.
         Return:
           - The response content, in a native Python type (typically a dict)
         """
@@ -77,11 +86,58 @@ class App(slowapi.App):
         if len(path) < 1 or path[0] != 'api':
             path = ['api'] + path
             
-        response = await self.slowapi('/'.join(path), doc)
-        
-        return response.content
-        
+        return await self.slowapi('/'.join(path), doc).content
 
+    
+    async def channels(self):
+        """shortcut for "/api/channels"
+        Returns:
+          - channels as a list of dicts, e.g., [ {"name": name, "type": type, "current": is_current}, ... ].
+            - "type" and "current" are optional, with defaults "numeric" and False.
+        """
+        return await self.slowapi('/api/channels').content
+
+        
+    async def data(self, channels, length:float=None, to:float=None, resample:float=None, reducer:str=None):
+        """shortcut for "/api/data"
+        Parameters:
+          - channels: list or str
+          - length: length of data period
+          - to: timestamp for the end of the query period
+          - resample: resampling buckets size, 0 to auto, -1 to disable
+          - reducer: resampling reducer ("last", "mean", "median", ...)
+        Returns:
+          - data as a dict
+        """
+        if type(channels) is list:
+            url = f"/api/data/{','.join(channels)}"
+        else:
+            url = f"/api/data/{channels}"
+            
+        opts = {}
+        if length is not None:
+            opts['length'] = length
+        if to is not None:
+            opts['to'] = to
+        if resample is not None:
+            opts['resample'] = resample
+        if reducer is not None:
+            opts['reducer'] = reducer
+        if len(opts) > 0:
+            url += '&'.join(['%s=%s'%(k,v) for k,v in opts.items()])}
+        
+        return await self.slowapi(url).content
+
+
+    async def publish(self, topic:str, message):
+        """shortcut for "/api/publish"
+        Parameters:
+          - topic: subscription topic
+          - message: bytes, or data to JSONize.
+        """
+        return await self.slowapi(f'/api/publish/{topic}', message).content
+
+    
         
 if __name__ == '__main__':
     from argparse import ArgumentParser

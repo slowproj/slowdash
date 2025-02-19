@@ -37,12 +37,8 @@ class ControlSystem(spc.ControlNode):
 
         
     @classmethod
-    async def invoke(cls, url, doc=None):
-        """calls SlowDash API
-        """
-        if cls._slowdash_app is None:
-            return None
-        await cls._slowdash_app.invoke(url, doc)
+    def app(cls):
+        return cls._slowdash_app
 
     
     # child nodes
@@ -84,4 +80,4 @@ class ValueNode(spc.ControlVariableNode):
             }
         }
         
-        await ControlSystem.invoke('/publish/currentdata', record)
+        await ControlSystem.app().publish('currentdata', record)

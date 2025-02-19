@@ -14,17 +14,15 @@ class Export_CSV(ComponentPlugin):
 
     @slowapi.get('/export/csv/{channels}')
     async def export_csv(self, channels:str, opts:dict, timezone:str='local', resample:float=0):
-        data_path = ['data', channels]
-        data_opts = copy.deepcopy(opts)
         if len(timezone) == 0:
             timezone = 'local'
-        if resample < 0:  # replace "no resampling" with "auto resampling"
+            
+        data_opts = copy.deepcopy(opts)
+        if resample < 0:  # replace "no resampling" with "auto resampling"; this does not affect single channel request
             resample = 0
-        data_opts['timezone'] = timezone
         data_opts['resample'] = resample
-        data_url = f"/data/{channels}?{'&'.join(['%s=%s'%(k,v) for k,v in data_opts.items()])}"
 
-        timeseries = await self.app.invoke(data_url)
+        timeseries = await self.app.data(channels, data_opts)
         if timeseries is None:
             return None
 

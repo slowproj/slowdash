@@ -28,9 +28,13 @@ class SlowdashNode(spc.ControlNode):
         return self.http.path('/api/channels').json().readonly()
     
     def data(self, channels, length=3600, **options):
+        if type(channels) is list:
+            url = f"/api/data/{','.join(channels)}"
+        else:
+            url = f"/api/data/{channels}"
         opts = { 'length': length }
         opts.update(options)
-        return self.http.path(f'/api/data/{channels}',**opts).json().readonly()
+        return self.http.path(url,**opts).json().readonly()
 
     def config_file(self, name, **options):
         opts = { 'overwrite': 'yes' }
