@@ -8,10 +8,9 @@ from sd_component import Component
 
 
 class UserModuleThread(threading.Thread):
-    def __init__(self, app, usermodule, params, stop_event):
+    def __init__(self, usermodule, params, stop_event):
         threading.Thread.__init__(self)
 
-        self.app = app
         self.usermodule = usermodule
         self.params = params
         self.stop_event = stop_event
@@ -33,21 +32,11 @@ class UserModuleThread(threading.Thread):
         if self.stop_event.is_set():
             return
         
-        func_setup = self.usermodule.get_func('_setup')
         func_initialize = self.usermodule.get_func('_initialize')
         func_run = self.usermodule.get_func('_run')
         func_loop = self.usermodule.get_func('_loop')
         func_finalize = self.usermodule.get_func('_finalize')
 
-        if func_setup:
-            try:
-                if inspect.iscoroutinefunction(func_setup):
-                    await func_setup(self.app)
-                else:
-                    func_setup(self.app)
-            except Exception as e:
-                self.usermodule.handle_error('user module error: _setup(): %s' % str(e))
-                
         if func_initialize:
             self.usermodule.routine_history.append((
                 time.time(),
@@ -154,10 +143,22 @@ class UserModule:
             self.is_waiting = False
             self.touch_status()
             return line
-
         module.__dict__['input'] = input_waiting_at_EOF
 
+        # obtain a reference to the ControlSystem class in the task module
+        def register(control_system):
+            self.control_system = control_system
+            self.control_system._system_stop_event.clear()
+        module.__dict__['_register'] = register
+        module.__dict__['_slowdash_app'] = self.app
         
+        try:
+            exec("from slowpy.control import ControlSystem", module.__dict__)
+            exec("_register(ControlSystem())", module.__dict__)
+        except Exception as e:
+            self.handle_error('unable to load task module: %s' % str(e))
+
+            
     def _do_post_initialize(self):
         pass
     
@@ -221,7 +222,7 @@ class UserModule:
         
         logging.info('starting user module "%s"' % self.name)
         self.stop_event.clear()
-        self.user_thread = UserModuleThread(self.app, self, self.params, self.stop_event)
+        self.user_thread = UserModuleThread(self, self.params, self.stop_event)
         self.touch_status()
         self.user_thread.start()
         

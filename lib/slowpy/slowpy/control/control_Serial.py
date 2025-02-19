@@ -30,7 +30,7 @@ class SerialNode(spc.ControlNode):
             
     @classmethod
     def _node_creator_method(cls):
-        def serial(self, port='/dev/ttyUSB0', baudrate=9600, **kwargs):
+        def serial(self, port='/dev/ttyUSB0', baudrate=115200, **kwargs):
             return SerialNode(port, baudrate, **kwargs)
 
         return serial
@@ -44,8 +44,8 @@ class SerialNode(spc.ControlNode):
             if type(value) == bytes:
                 self.com.write(value)
             else:
-                self.com.write(str(value).encode())
-        except pyvisa.VisaIOError as e:
+                self.com.write(str(value).encode('utf-8'))
+        except Exception as e:
             logging.error('Serial error on write: %s' % str(e))
 
             
@@ -63,9 +63,9 @@ class SerialNode(spc.ControlNode):
 
         line = ''
         while self.com.in_waiting > 0:
-            line += self.com.read(self.com.in_waiting)
+            line += self.com.read(self.com.in_waiting).decode('utf-8', errors='ignore')
 
-        return line.decode('utf-8', errors='ignore')
+        return line
 
 
     def do_get_line(self, timeout=None):
@@ -77,13 +77,13 @@ class SerialNode(spc.ControlNode):
         else:
             wait_until = None
         
-        line = b''
+        line = ''
         while not self.is_stop_requested():
-            ch = self.com.read()
+            ch = self.com.read().decode('utf-8', errors='ignore')
             
             if len(ch) == 0:
                 if wait_until is not None and time.time() >= wait_until:
-                    print('SerialNode.do_get_line(): socket timeout')
+                    print('SerialNode.do_get_line(): timeout')
                     break
 
             if ch not in [ '\x0a', '\x0d' ]:
@@ -91,7 +91,7 @@ class SerialNode(spc.ControlNode):
             else:
                 break
                 
-        return line.decode('utf-8', errors='ignore')
+        return line
 
 
     def do_flush_input(self):

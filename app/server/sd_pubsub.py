@@ -46,7 +46,7 @@ class PubsubComponent(Component):
                     logging.info(f"WS-RCV: {topic}: {repr(message)}");
                     if topic == 'currentdata':
                         await self.app.dispatch('/api/control/currentdata', message.encode())
-                        await self.app.dispatch(f'/api/publish/currentdata', message)
+                        await self.app.dispatch('/api/publish/currentdata', message)
         except slowapi.ConnectionClosed:
             self.websockets[topic].remove(websocket)
             logging.info("WebSocket Closed")

@@ -50,23 +50,6 @@ class TaskModule(UserModule):
         logging.info('task module registered')
         
         
-    def _preset_module(self, module):
-        super()._preset_module(module)
-
-        # obtain a reference to the ControlSystem class in the task module
-        def register(control_system):
-            self.control_system = control_system
-            self.control_system._system_stop_event.clear()
-
-        module.__dict__['_register'] = register
-        module.__dict__['_slowdash_app'] = self.app
-        try:
-            exec("from slowpy.control import ControlSystem", module.__dict__)
-            exec("_register(ControlSystem())", module.__dict__)
-        except Exception as e:
-            self.handle_error('unable to load task module: %s' % str(e))
-
-        
     def _do_post_initialize(self):
         # this will call _export(), necessary to start publish()ing
         self.scan_channels()

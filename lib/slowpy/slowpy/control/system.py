@@ -35,9 +35,10 @@ class ControlSystem(spc.ControlNode):
 
         
     @classmethod
-    async def publish(cls, topic, message):
-        if cls._slowdash_app is not None:
-            await cls._slowdash_app.dispatch(f'/api/publish/{topic}', message)
+    async def dispatch(cls, url, body=None):
+        if cls._slowdash_app is None:
+            return None
+        await cls._slowdash_app.dispatch(url, body)
 
     
     # child nodes
@@ -78,4 +79,5 @@ class ValueNode(spc.ControlVariableNode):
                 'x': self.value,
             }
         }
-        await ControlSystem.publish('currentdata', record)
+        
+        await ControlSystem.dispatch(f'/api/publish/currentdata', record)
