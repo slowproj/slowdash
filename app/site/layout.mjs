@@ -200,6 +200,10 @@ export class Layout {
                             }
                         }
                     },
+                    publish: (topic, message) => {
+                        //console.log("publish", topic, JSON.stringify(message));
+                        this.publish(topic, message);
+                    },
                 };
                 panel.configure(entry, callbacks, this.config._project);
                 this.panels.push(panel);
@@ -467,9 +471,27 @@ export class Layout {
                 range: { from: now - 60, to: now },
                 data: record,
             };
-            for (let panel of this.panels) {
-                panel.draw(dataPacket, dataPacket.range);
+            if (this.panels) {
+                for (let panel of this.panels) {
+                    panel.draw(dataPacket, dataPacket.range);
+                }
             }
         };
-    }    
+    }
+
+    publish(topic, message) {
+        if (topic != 'currentdata') {
+            return;
+        }
+        if ((! this.socket) || (this.socket.readyState != WebSocket.OPEN)) {
+            return;
+        }
+        if (typeof message == 'string') {
+            this.socket.send(message);
+        }
+        else {
+            this.socket.send(JSON.stringify(message));
+        }
+    }
 };
+

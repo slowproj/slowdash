@@ -83,7 +83,8 @@ class JSON:
 class DictJSON(JSON):
     """same as JSON, but the content must be a valid dict
     """
-    def __init__(self, body:bytes):
+    def __init__(self, body):
         super().__init__(body)
         if type(self.data) is not dict:
             self.data = None
+            logging.error('SlowAPI: JSON decoding error: dict is expected')

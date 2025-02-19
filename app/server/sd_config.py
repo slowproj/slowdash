@@ -250,7 +250,8 @@ class ConfigComponent(Component):
                 returncode = process.returncode
                 doc = stdout.decode().strip()
                 msg = stderr.decode().strip()
-                logging.info(f'{filename}: {msg}')
+                if len(msg) > 0:
+                    logging.info(f'{filename}: {msg}')
             except Exception as e:
                 returncode = -1
             if returncode != 0:
@@ -287,17 +288,22 @@ class ConfigComponent(Component):
             
     def _get_filepath_ext(self, filename, access_flag=None):
         if self.project_dir is None:
+            logging.debug(f'ConfigFile: no project dir')
             return None, None
         
         name, ext = os.path.splitext(filename)
 
         # sanity check
         if len(name) == 0 or not name.replace('_', '0').replace('-', '0').isalnum():
+            logging.debug(f'ConfigFile: sanity check failed')
             return None, None
 
         filepath = os.path.join(self.project_dir, 'config', filename)
-        if access_flag is not None:
-            if not os.path.isfile(filepath) or not os.access(filepath, access_flag):
-                return None, None
+        if not os.path.isfile(filepath):
+            logging.debug(f'ConfigFile: not a file')
+            return None, None
+        if (access_flag is not None) and (not os.access(filepath, access_flag)):
+            logging.debug(f'ConfigFile: permission denied by access flag')
+            return None, None
 
         return filepath, ext.lower()

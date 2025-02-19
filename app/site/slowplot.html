@@ -139,7 +139,7 @@
             resetDelay = 1;
         }
 
-        if (config.control.grid?.columns??0 < 1) {
+        if ((config.control.grid?.columns??0) < 1) {
             config.control.grid = { columns: 1, rows: 1 };
             const n = config.panels.length;
             const cols = n<=12 ? [1, 1, 1, 2, 2, /*n=5*/ 3, 3, /*n=7*/3, 3, 3, 4, 4, /*n=12*/ 4][n] : 4;

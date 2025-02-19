@@ -59,6 +59,7 @@ class TaskModule(UserModule):
             self.control_system._system_stop_event.clear()
 
         module.__dict__['_register'] = register
+        module.__dict__['_slowdash_app'] = self.app
         try:
             exec("from slowpy.control import ControlSystem", module.__dict__)
             exec("_register(ControlSystem())", module.__dict__)
@@ -78,9 +79,9 @@ class TaskModule(UserModule):
         if not super().load():
             return False
 
-        self.module.__dict__['_global_slowdash_app'] = self.app
+        # this must be done after loading the module, as ControlSystem._slowdash_app is overwritten by loading
         exec("from slowpy.control import ControlSystem", self.module.__dict__)
-        exec("ControlSystem._slowdash_app = _global_slowdash_app", self.module.__dict__)
+        exec("ControlSystem._slowdash_app = _slowdash_app", self.module.__dict__)
 
         return True
 
@@ -539,6 +540,21 @@ class TaskModuleComponent(Component):
         return result
 
     
+    @slowapi.post('/control/currentdata')
+    async def set_variable(self, doc:slowapi.DictJSON):
+        for name, data in doc:
+            value = data.get('x', None)
+            for module in self.taskmodule_list:
+                variable = module.get_variable(name)
+                if variable is not None:
+                    try:
+                        VariableType = type(variable.value)
+                        variable.set(VariableType(value))
+                    except:
+                        variable.set(value)
+                    logging.info(f"Control Variable: {name} <= {repr(variable.get())}")
+
+        
     @slowapi.post('/control/task/{taskname}')
     async def control_task(self, taskname:str, doc:slowapi.DictJSON):
         action = doc.get('action', None)

@@ -153,6 +153,7 @@ class HtmlPanel extends Panel {
 
 
     render(doc) {
+        //...TODO: remove event handlers
         this.contentDiv.html(doc);  // CSS in <head> works here
 
         this.variables = [];
@@ -164,17 +165,28 @@ class HtmlPanel extends Panel {
                     (element.get().tagName == 'BUTTON') ||
                     (isInput && ((element.attr('type') ?? '').toUpperCase() == 'SUBMIT'))
                 );
+                let isLive = element.attr('sd-live');  // if not live, values are updated only after SUBMIT
+                if (isLive === undefined) {
+                    isLive = ! isInput || isButton;   // <input> and <button> are not live by default
+                }
                 const defaultValue = isInput ? (isButton ? null : element.val()) : element.text();
                 this.variables.push($.extend(
                     {
                         type: type,
                         metric: metric,
-                        live: ! isInput || isButton,   // values in <input> are updated only after SUBMIT
+                        live: !! isLive,
                         waiting: true,
                         defaultValue: defaultValue,
                     },
                     Transformer.decompose(metric)
                 ));
+                if (isLive) {
+                    element.bind('change', e=> {
+                        const record = {};
+                        record[metric] = { 'x': element.val() };
+                        this.callbacks.publish('currentdata', record);
+                    });
+                }
             }
         }
         
@@ -242,20 +254,24 @@ class HtmlPanel extends Panel {
 
     
     draw(dataPacket, displayTimeRange) {
-        if (dataPacket.isTransitional) {
-            return;
-        }
-
         let values = {};
         for (let variable of this.variables) {
             if (! variable.waiting) {
                 continue;
             }
+            let data = null;
+            if (variable.channel) {
+                if (variable.channel in dataPacket.data) {
+                    data = dataPacket.data[variable.channel];
+                }
+                else if (dataPacket.isTransitional) {
+                    continue;
+                }
+            }
             if (! variable.live) {
                 variable.waiting = false;
             }
 
-            const data = variable.channel ? dataPacket.data[variable.channel] : null;
             let value = data?.x ?? null;
             if (variable.transform) {
                 value = variable.transform.apply(value);
