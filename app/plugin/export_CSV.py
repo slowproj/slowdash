@@ -22,9 +22,9 @@ class Export_CSV(ComponentPlugin):
             resample = 0
         data_opts['timezone'] = timezone
         data_opts['resample'] = resample
-        data_url = f"/api/data/{channels}?{'&'.join(['%s=%s'%(k,v) for k,v in data_opts.items()])}"
+        data_url = f"/data/{channels}?{'&'.join(['%s=%s'%(k,v) for k,v in data_opts.items()])}"
 
-        timeseries = await self.app.dispatch(data_url)
+        timeseries = await self.app.invoke(data_url)
         if timeseries is None:
             return None
 

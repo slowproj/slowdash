@@ -479,18 +479,27 @@ export class Layout {
         };
     }
 
-    publish(topic, message) {
+    async publish(topic, doc) {
         if (topic != 'currentdata') {
             return;
         }
-        if ((! this.socket) || (this.socket.readyState != WebSocket.OPEN)) {
-            return;
-        }
-        if (typeof message == 'string') {
+        const message = (typeof doc == 'string') ? doc : JSON.stringify(doc);
+        
+        if (this.socket && (this.socket.readyState == WebSocket.OPEN)) {
             this.socket.send(message);
         }
         else {
-            this.socket.send(JSON.stringify(message));
+            const url = './api/control/currentdata';
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json; charset=utf-8' },
+                body: message,
+            })
+                .then(response => {
+                    this.callbacks.forceUpdate();
+                })
+                .catch(e => {
+                });
         }
     }
 };

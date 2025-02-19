@@ -65,15 +65,20 @@ class App(slowapi.App):
         logging.info('Terminating SlowDash gracefully')
         
 
-    async def dispatch(self, request:slowapi.Request, body=None):
+    async def invoke(self, url:str, doc=None):
         """directly calls the services provided by SlowDash Web API, to be used internally
         Parameters:
-          - request: slowapi.Request, or str for URL. Don't forget to prepend '/api'.
-          - body: bytes, str, or a value to JSON. If the request is a URL string, non-None body will invoke POST.
+          - url: SlowDash API URL. No need to prepend '/api'.
+          - doc: bytes, str, or a value for JSON encoding. If doc is not None, invoke() will use POST, otherwise GET.
         Return:
           - The response content, in a native Python type (typically a dict)
         """
-        response = await self.slowapi(request, body)
+        path = url.split('/')
+        if len(path) < 1 or path[0] != 'api':
+            path = ['api'] + path
+            
+        response = await self.slowapi('/'.join(path), doc)
+        
         return response.content
         
 

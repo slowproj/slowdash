@@ -29,8 +29,8 @@ async def _loop():
     global t0
     t0 += 0.05
     t = np.linspace(0, 1, 100)
-    x1 = np.random.normal(np.cos((t-t0)*float(fx)*6.28), 0.0003)
-    x2 = np.random.normal(np.sin((t-t0)*float(fy)*6.28), 0.0003)
+    x1 = np.random.normal(np.cos((t+t0)*float(fx)*6.28), 0.0003)
+    x2 = np.random.normal(np.sin((t+t0)*float(fy)*6.28), 0.0003)
     
     g_x, g_y, g_xy = Graph(), Graph(), Graph()
     g_x.add_point(t, x1)

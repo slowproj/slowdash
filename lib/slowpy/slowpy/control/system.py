@@ -28,6 +28,8 @@ class ControlSystem(spc.ControlNode):
     
     @classmethod
     def stop_by_signal(cls, signal_number=signal.SIGINT):
+        """enables stopping by a signal (Ctrl-c)
+        """
         def handle_signal(signum, frame):
             logging.info(f'Signal {signum} handled')
             cls.stop()
@@ -35,10 +37,12 @@ class ControlSystem(spc.ControlNode):
 
         
     @classmethod
-    async def dispatch(cls, url, body=None):
+    async def invoke(cls, url, doc=None):
+        """calls SlowDash API
+        """
         if cls._slowdash_app is None:
             return None
-        await cls._slowdash_app.dispatch(url, body)
+        await cls._slowdash_app.invoke(url, doc)
 
     
     # child nodes
@@ -80,4 +84,4 @@ class ValueNode(spc.ControlVariableNode):
             }
         }
         
-        await ControlSystem.dispatch(f'/api/publish/currentdata', record)
+        await ControlSystem.invoke('/publish/currentdata', record)
