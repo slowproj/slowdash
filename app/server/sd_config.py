@@ -1,28 +1,48 @@
 # Created by Sanshiro Enomoto on 19 Mar 2022 #
 
-import sys, os, glob, io, yaml, asyncio, importlib, inspect, logging, traceback
+import sys, os, glob, io, yaml, asyncio, threading, importlib, inspect, logging, traceback
 import pathlib, stat, pwd, grp, enum
 
 import slowapi
 from sd_component import Component
 
 
-class DynamicConfig:
+class ConfigByPython(threading.Thread):
     def __init__(self, app, filepath):
         super().__init__()
         self.app = app
         self.filepath = filepath
         self.name = os.path.splitext(os.path.basename(self.filepath))[0]
 
+        self.meta = None
+        self.result = None
+
         
     async def load(self):
+        # We need this to run async _setup() in a way not to block other async functions.
+        # Note that user-defined _setup() might run for a long time without await-ing.
+        loop = asyncio.get_running_loop()
+        self.start()
+        await loop.run_in_executor(None, self.join)
+        
+        return self.meta, self.result
+
+    
+    def run(self):
+        eventloop = asyncio.new_event_loop()
+        asyncio.set_event_loop(eventloop)
+        eventloop.run_until_complete(self.go())
+        eventloop.close()
+
+        
+    async def go(self):
         try:
             module = importlib.machinery.SourceFileLoader(self.name, self.filepath).load_module()
         except Exception as e:
             msg = f'unable to load config Python module: {self.filepath}: {e}'
             logging.error(msg)
-            return { 'config_error': msg }, None
-
+            self.meta = { 'config_error': msg }
+        
         def get_func(module, name):
             if (name in module.__dict__) and callable(module.__dict__[name]):
                 return module.__dict__[name]
@@ -33,7 +53,7 @@ class DynamicConfig:
         if func_setup is None:
             msg = f'no entry point ({self.name}) in config Python module: {self.filepath}'
             logging.error(msg)
-            return { 'config_error': msg }, None
+            self.meta = { 'config_error': msg }
         else:
             nargs = len(inspect.signature(func_setup).parameters)
             if nargs >= 2:
@@ -45,9 +65,10 @@ class DynamicConfig:
                             
             try:
                 if inspect.iscoroutinefunction(func_setup):
-                    doc = await func_setup(*args)
+                    self.result = await func_setup(*args)
                 else:
-                    doc = await asyncio.to_thread(func_setup, *args)
+                    self.result = await asyncio.to_thread(func_setup, *args)
+                self.meta = {}
             except Exception as e:
                 msg = f'error in config Python module: {self.filepath}: {e}'
                 logging.error(msg)
@@ -55,11 +76,10 @@ class DynamicConfig:
                 if tb is not None and len(tb.strip()) > 0:
                     logging.info(tb)
                     print(tb)
-                return { 'config_error': msg }, None
+                self.meta = { 'config_error': msg }
+                self.result = None
 
-        return {}, doc
-
-    
+                
 
 class ConfigComponent(Component):
     def __init__(self, app, project):
@@ -294,7 +314,7 @@ class ConfigComponent(Component):
 
         doc = None
         if ext == '.py':
-            return await DynamicConfig(self.app, filepath).load()
+            return await ConfigByPython(self.app, filepath).load()
         
         elif content_type != 'json':
             if not self.project.is_secure:
