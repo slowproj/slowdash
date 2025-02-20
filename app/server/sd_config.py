@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 19 Mar 2022 #
 
-import sys, os, glob, io, yaml, asyncio, importlib, inspect, logging, traceback
+import sys, os, glob, io, yaml, asyncio, concurrent, importlib, inspect, logging, traceback
 import pathlib, stat, pwd, grp, enum
 
 import slowapi
@@ -9,11 +9,12 @@ from sd_component import Component
 
 class DynamicConfig:
     def __init__(self, app, filepath):
+        super().__init__()
         self.app = app
         self.filepath = filepath
         self.name = os.path.splitext(os.path.basename(self.filepath))[0]
 
-
+        
     async def load(self):
         try:
             module = importlib.machinery.SourceFileLoader(self.name, self.filepath).load_module()
@@ -35,23 +36,18 @@ class DynamicConfig:
             return { 'config_error': msg }, None
         else:
             nargs = len(inspect.signature(func_setup).parameters)
-            is_async = inspect.iscoroutinefunction(func_setup)
+            if nargs >= 2:
+                args = [ self.app, self.params ]
+            elif nargs >= 1:
+                args = [ self.app ]
+            else:
+                args = []
+                            
             try:
-                if nargs >= 2:
-                    if is_async:
-                        doc = await func_setup(self.app, self.params)
-                    else:
-                        doc = func_setup(self.app, self.params)
-                elif nargs >= 1:
-                    if is_async:
-                        doc = await func_setup(self.app)
-                    else:
-                        doc = func_setup(self.app)
+                if inspect.iscoroutinefunction(func_setup):
+                    doc = await func_setup(*args)
                 else:
-                    if is_async:
-                        doc = await func_setup()
-                    else:
-                        doc = func_setup()
+                    doc = await asyncio.to_thread(func_setup, *args)
             except Exception as e:
                 msg = f'error in config Python module: {self.filepath}: {e}'
                 logging.error(msg)

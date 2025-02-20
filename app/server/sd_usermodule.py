@@ -41,23 +41,17 @@ class UserModuleThread(threading.Thread):
 
         if func_setup:
             nargs = len(inspect.signature(func_setup).parameters)
-            is_async = inspect.iscoroutinefunction(func_setup)
+            if nargs >= 2:
+                args = [ self.app, self.params ]
+            elif nargs >= 1:
+                args = [ self.app ]
+            else:
+                args = []                            
             try:
-                if nargs >= 2:
-                    if is_async:
-                        await func_setup(self.app, self.params)
-                    else:
-                        func_setup(self.app, self.params)
-                elif nargs >= 1:
-                    if is_async:
-                        await func_setup(self.app)
-                    else:
-                        func_setup(self.app)
+                if inspect.iscoroutinefunction(func_setup):
+                    await func_setup(*args)
                 else:
-                    if is_async:
-                        await func_setup()
-                    else:
-                        func_setup()
+                    func_setup(*args)
             except Exception as e:
                 self.usermodule.handle_error('user module error: _setup(): %s' % str(e))
 
@@ -66,19 +60,16 @@ class UserModuleThread(threading.Thread):
                 time.time(),
                 '_initialize(%s)' % ','.join(['%s=%s' % (k,v) for k,v in self.params.items()])
             ))
+            nargs = len(inspect.signature(func_initialize).parameters)
+            if nargs >= 1:
+                args = [ self.params ]
+            else:
+                args = []
             try:
-                nargs = len(inspect.signature(func_initialize).parameters)
-                is_async = inspect.iscoroutinefunction(func_initialize)
-                if nargs >= 1:
-                    if is_async:
-                        await func_initialize(self.params)
-                    else:
-                        func_initialize(self.params)
+                if inspect.iscoroutinefunction(func_initialize):
+                    await func_initialize(*args)
                 else:
-                    if is_async:
-                        await func_initialize()
-                    else:
-                        func_initialize()
+                    func_initialize(*args)
             except Exception as e:
                 self.usermodule.handle_error('user module error: _initialize(): %s' % str(e))
             

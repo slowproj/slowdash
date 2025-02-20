@@ -76,7 +76,7 @@ def _export():
 
 datastore = None
 
-def _initialize(params):
+def _initialize():
     global datastore
     datastore = sls.create_datastore_from_url('sqlite:///SlowTaskTest.db', 'test')
     print("Hello from Random-Walk Device")
