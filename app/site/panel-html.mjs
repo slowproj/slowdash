@@ -86,30 +86,10 @@ class HtmlPanel extends Panel {
         this.titleDiv.text(this.config.title ?? '');
         this.variables = [];
 
-        const base = ((config.location??'') == 'system' ? './' : './api/config/file/');
-        
-        fetch(base + 'html-' + config.file + '.html')
-            .then(response => {
-                if (! response.ok) {
-                    throw new Error(response.status + " " + response.statusText);
-                }
-                return response.text();
-            })
-            .catch(e => {
-                this.contentDiv.html(`
-                    <h3>HTML File Loading Error</h3>
-                    Name: ${config.file}<br>
-                    Error: ${e.message}
-                `);
-                return null;
-            })
-            .then(doc => {
-                if (doc) {
-                    this.render(doc);
-                    this.adjustScaling();
-                    callbacks.reloadData();
-                }
-            });
+        const base = ((this.config.location??'') == 'system' ? './' : './api/config/content/');
+        this.url = base + 'html-' + config.file + '?content_type=html';
+    
+        this.loadPage(true);
     }
 
 
@@ -142,6 +122,7 @@ class HtmlPanel extends Panel {
               <tr><th>HTML File</th><td><input list="sd-html-datalist"></td></tr>
               <tr><th>Title</th><td><input></td></tr>
               <tr><th>Scaling</th><td><input type="number" step="any" placeholder="auto-scale"></td></tr>
+              <tr><th>On Update</th><td><label><input type="checkbox">reload HTML</label></td></tr>
             </table>
         `);
 
@@ -149,8 +130,36 @@ class HtmlPanel extends Panel {
         bindInput(this.config, 'file', inputsDiv.find('input').at(k++).css('width', '20em'));
         bindInput(this.config, 'title', inputsDiv.find('input').at(k++).css('width', '20em'));
         bindInput(this.config, 'scaling', inputsDiv.find('input').at(k++).css('width', '10em'));
+        bindInput(this.config, 'reload', inputsDiv.find('input').at(k++));
     }
 
+
+    loadPage(reloadData) {
+        fetch(this.url)
+            .then(response => {
+                if (! response.ok) {
+                    throw new Error(response.status + " " + response.statusText);
+                }
+                return response.text();
+            })
+            .catch(e => {
+                this.contentDiv.html(`
+                    <h3>HTML File Loading Error</h3>
+                    Name: ${config.file}<br>
+                    Error: ${e.message}
+                `);
+                return null;
+            })
+            .then(doc => {
+                if (doc) {
+                    this.render(doc);
+                    this.adjustScaling();
+                    if (reloadData) {
+                        this.callbacks.reloadData();
+                    }
+                }
+            });
+    }
 
     render(doc) {
         //...TODO: remove event handlers
@@ -254,6 +263,10 @@ class HtmlPanel extends Panel {
 
     
     draw(dataPacket, displayTimeRange) {
+        if (this.config.reload ?? false) {
+            this.loadPage(false);
+        }
+        
         let values = {};
         for (let variable of this.variables) {
             if (! variable.waiting) {

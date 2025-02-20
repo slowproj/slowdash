@@ -1,0 +1,13 @@
+{
+    "control": {
+        "range": { "length": 900 },
+        "reload": 2,
+        "mode": "normal",
+        "grid": { "rows": 1, "columns": 1 }
+    },
+    "style": { },
+    "panels": [
+        { "type": "html", "location": "project", "file": "status", "title": "", "reload": true }
+    ],
+    "meta": { "name": "status", "title": "", "description": "" }
+}

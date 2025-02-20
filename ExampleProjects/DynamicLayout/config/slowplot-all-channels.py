@@ -12,4 +12,3 @@ async def _setup(app):
     }
 
     return layout
-

@@ -106,8 +106,8 @@ class ConfigComponent(Component):
 
         
     @slowapi.get('/config/content/{filename}')
-    async def get_content(self, filename:str):
-        meta, content = await self._load_content(filename)
+    async def get_content(self, filename:str, content_type:str='json'):
+        meta, content = await self._load_content(filename, content_type)
         try:
             # this requires W_OK, might fail from CGI etc.
             pathlib.Path(filepath).touch()
@@ -121,8 +121,8 @@ class ConfigComponent(Component):
 
 
     @slowapi.get('/config/meta/{filename}')
-    async def get_meta(self, filename:str):
-        meta, content = await self._load_content(filename)
+    async def get_meta(self, filename:str, content_type:str='json'):
+        meta, content = await self._load_content(filename, content_type)
         if meta is None:
             return slowapi.Response(400)
         return meta
@@ -147,7 +147,7 @@ class ConfigComponent(Component):
         filepath, ext = self._get_filepath_ext(filename)
         if filepath is None:
             logging.warning(f'POST config/file: {filename}: access denied')
-            return Reply(400)
+            return slowapi.Response(400)
         if not self.project.is_secure:
             if ext not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]:
                 return slowapi.Response(403)  # Forbidden
@@ -282,8 +282,14 @@ class ConfigComponent(Component):
         return doc
 
                 
-    async def _load_content(self, filename:str, is_json=True):
+    async def _load_content(self, filename:str, content_type):
         filepath, ext = self._get_filepath_ext(filename, os.R_OK)
+        if filepath is None:
+            if content_type == 'html' and filename.startswith('html-'):
+                filepath, ext = self._get_filepath_ext(filename+'.py', os.R_OK)
+                if filepath is None:
+                    filepath, ext = self._get_filepath_ext(filename+'.html', os.R_OK)
+            
         if filepath is None:
             logging.warning(f'GET config: {filename}: access denied')
             return None, None
@@ -294,7 +300,7 @@ class ConfigComponent(Component):
         if ext == '.py':
             return await DynamicConfig(self.app, filepath).load()
         
-        elif not is_json:
+        elif content_type != 'json':
             if not self.project.is_secure:
                 if ext not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]:
                     return { 'config_error': 'bad file type' }, None
@@ -351,7 +357,7 @@ class ConfigComponent(Component):
             return None, None
 
         filepath = os.path.join(self.project_dir, 'config', filename)
-        if not os.path.isfile(filepath):
+        if os.path.exists(filepath) and not os.path.isfile(filepath):
             logging.debug(f'ConfigFile: not a file')
             return None, None
         if (access_flag is not None) and (not os.access(filepath, access_flag)):
