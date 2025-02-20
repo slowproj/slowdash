@@ -70,11 +70,11 @@ class App(slowapi.App):
 
 
     @slowapi.on_event("shutdown")
-    def finalize(self):
+    def on_shutdown(self):
         logging.info('Terminating SlowDash gracefully')
         
 
-    async def call_api(self, url:str, doc=None):
+    async def request(self, url:str, doc=None):
         """directly calls the services provided by SlowDash Web API, to be used internally
         Parameters:
           - url: SlowDash API URL. No need to prepend '/api'.
@@ -86,19 +86,27 @@ class App(slowapi.App):
         if len(path) < 1 or path[0] != 'api':
             path = ['api'] + path
             
-        return await self.slowapi('/'.join(path), doc).content
+        return (await self.slowapi('/'.join(path), doc)).content
 
     
-    async def channels(self):
+    async def request_config(self):
+        """shortcut for "/api/config"
+        Returns:
+          - config as a dict
+        """
+        return (await self.slowapi('/api/config')).content
+
+        
+    async def request_channels(self):
         """shortcut for "/api/channels"
         Returns:
           - channels as a list of dicts, e.g., [ {"name": name, "type": type, "current": is_current}, ... ].
             - "type" and "current" are optional, with defaults "numeric" and False.
         """
-        return await self.slowapi('/api/channels').content
+        return (await self.slowapi('/api/channels')).content
 
         
-    async def data(self, channels, length:float=None, to:float=None, resample:float=None, reducer:str=None):
+    async def request_data(self, channels, length:float=None, to:float=None, resample:float=None, reducer:str=None):
         """shortcut for "/api/data"
         Parameters:
           - channels: list or str
@@ -124,18 +132,18 @@ class App(slowapi.App):
         if reducer is not None:
             opts['reducer'] = reducer
         if len(opts) > 0:
-            url += '&'.join(['%s=%s'%(k,v) for k,v in opts.items()])}
+            url += '&'.join(['%s=%s'%(k,v) for k,v in opts.items()])
         
-        return await self.slowapi(url).content
+        return (await self.slowapi(url)).content
 
 
-    async def publish(self, topic:str, message):
+    async def request_publish(self, topic:str, message):
         """shortcut for "/api/publish"
         Parameters:
           - topic: subscription topic
           - message: bytes, or data to JSONize.
         """
-        return await self.slowapi(f'/api/publish/{topic}', message).content
+        return (await self.slowapi(f'/api/publish/{topic}', message)).content
 
     
         
@@ -222,37 +230,34 @@ if __name__ == '__main__':
         is_cgi = False,
         is_command = (args.port<=0),
         is_async = not args.wsgi
-    )
+    )    
+    if (args.port > 0) and (app.project.auth_list is not None):
+        app.slowapi.add_middleware(slowapi.BasicAuthentication(auth_list=app.project.auth_list))
+    app.slowapi.add_middleware(slowapi.FileServer(
+        filedir = os.path.join(app.project.sys_dir, 'app', 'site'),
+        index_file = 'slowhome.html' if app.project.config is not None else 'welcome.html',
+        exclude='/api',
+        drop_exclude_prefix=True
+    ))
 
     if args.port <= 0:
         # command-line mode
         async def main():
             json_opts = { 'indent': args.indent }
             await app.slowapi.dispatch_event('startup')
-            response = await app.slowapi(args.COMMAND)
+            response = await app.slowapi(f'/api/{args.COMMAND}')
             sys.stdout.write(response.get_content(json_opts).decode())
             sys.stdout.write('\n')
             await app.slowapi.dispatch_event('shutdown')
         asyncio.run(main())
         
     else:
+        # Web-server mode
         os.environ['SLOWDASH_URL'] = f'http://localhost:{args.port}'
-        
-        # web-server mode: append Authentication and FileServer
-        if app.project.auth_list is not None:
-            app.slowapi.add_middleware(slowapi.BasicAuthentication(auth_list=app.project.auth_list))
-        app.slowapi.add_middleware(slowapi.FileServer(
-            filedir = os.path.join(app.project.sys_dir, 'app', 'site'),
-            index_file = 'slowhome.html' if app.project.config is not None else 'welcome.html',
-            exclude='/api',
-            drop_exclude_prefix=True
-        ))
-
         kwargs = {
             'host': '0.0.0.0',
             'log_level': logging.WARNING,   # log-level for the WSGI/ASGI server
         }
-        
         if args.wsgi:
             if args.ssl_keyfile is not None or args.ssl_certfile is not None:
                 sys.stderr.write('ERROR: HTTPS is not available with WSGI\n')

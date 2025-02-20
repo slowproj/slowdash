@@ -2,7 +2,7 @@
 
 import os, re, datetime, subprocess
 
-sys_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir))
+sys_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 ver_file = os.path.join(sys_dir, 'app', 'server', 'sd_version.py')
 
 with open(ver_file) as f:

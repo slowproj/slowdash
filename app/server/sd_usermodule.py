@@ -40,11 +40,24 @@ class UserModuleThread(threading.Thread):
         func_finalize = self.usermodule.get_func('_finalize')
 
         if func_setup:
+            nargs = len(inspect.signature(func_setup).parameters)
+            is_async = inspect.iscoroutinefunction(func_setup)
             try:
-                if inspect.iscoroutinefunction(func_setup):
-                    await func_setup(self.app)
+                if nargs >= 2:
+                    if is_async:
+                        await func_setup(self.app, self.params)
+                    else:
+                        func_setup(self.app, self.params)
+                elif nargs >= 1:
+                    if is_async:
+                        await func_setup(self.app)
+                    else:
+                        func_setup(self.app)
                 else:
-                    func_setup(self.app)
+                    if is_async:
+                        await func_setup()
+                    else:
+                        func_setup()
             except Exception as e:
                 self.usermodule.handle_error('user module error: _setup(): %s' % str(e))
 
@@ -54,10 +67,18 @@ class UserModuleThread(threading.Thread):
                 '_initialize(%s)' % ','.join(['%s=%s' % (k,v) for k,v in self.params.items()])
             ))
             try:
-                if inspect.iscoroutinefunction(func_initialize):
-                    await func_initialize(self.params)
+                nargs = len(inspect.signature(func_initialize).parameters)
+                is_async = inspect.iscoroutinefunction(func_initialize)
+                if nargs >= 1:
+                    if is_async:
+                        await func_initialize(self.params)
+                    else:
+                        func_initialize(self.params)
                 else:
-                    func_initialize(self.params)
+                    if is_async:
+                        await func_initialize()
+                    else:
+                        func_initialize()
             except Exception as e:
                 self.usermodule.handle_error('user module error: _initialize(): %s' % str(e))
             

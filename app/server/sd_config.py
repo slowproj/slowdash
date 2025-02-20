@@ -1,11 +1,69 @@
 # Created by Sanshiro Enomoto on 19 Mar 2022 #
 
-import sys, os, glob, io, yaml, asyncio, logging, traceback
+import sys, os, glob, io, yaml, asyncio, importlib, inspect, logging, traceback
 import pathlib, stat, pwd, grp, enum
 
 import slowapi
 from sd_component import Component
 
+
+class DynamicConfig:
+    def __init__(self, app, filepath):
+        self.app = app
+        self.filepath = filepath
+        self.name = os.path.splitext(os.path.basename(self.filepath))[0]
+
+
+    async def load(self):
+        try:
+            module = importlib.machinery.SourceFileLoader(self.name, self.filepath).load_module()
+        except Exception as e:
+            msg = f'unable to load config Python module: {self.filepath}: {e}'
+            logging.error(msg)
+            return { 'config_error': msg }, None
+
+        def get_func(module, name):
+            if (name in module.__dict__) and callable(module.__dict__[name]):
+                return module.__dict__[name]
+            else:
+                return None
+
+        func_setup = get_func(module, '_setup')
+        if func_setup is None:
+            msg = f'no entry point ({self.name}) in config Python module: {self.filepath}'
+            logging.error(msg)
+            return { 'config_error': msg }, None
+        else:
+            nargs = len(inspect.signature(func_setup).parameters)
+            is_async = inspect.iscoroutinefunction(func_setup)
+            try:
+                if nargs >= 2:
+                    if is_async:
+                        doc = await func_setup(self.app, self.params)
+                    else:
+                        doc = func_setup(self.app, self.params)
+                elif nargs >= 1:
+                    if is_async:
+                        doc = await func_setup(self.app)
+                    else:
+                        doc = func_setup(self.app)
+                else:
+                    if is_async:
+                        doc = await func_setup()
+                    else:
+                        doc = func_setup()
+            except Exception as e:
+                msg = f'error in config Python module: {self.filepath}: {e}'
+                logging.error(msg)
+                tb = traceback.format_exc()
+                if tb is not None and len(tb.strip()) > 0:
+                    logging.info(tb)
+                    print(tb)
+                return { 'config_error': msg }, None
+
+        return {}, doc
+
+    
 
 class ConfigComponent(Component):
     def __init__(self, app, project):
@@ -47,9 +105,9 @@ class ConfigComponent(Component):
         return filelist
 
         
-    @slowapi.get('/config/json/{filename}')
-    async def get_json(self, filename:str):
-        meta, content = await self._load_json(filename)
+    @slowapi.get('/config/content/{filename}')
+    async def get_content(self, filename:str):
+        meta, content = await self._load_content(filename)
         try:
             # this requires W_OK, might fail from CGI etc.
             pathlib.Path(filepath).touch()
@@ -64,7 +122,7 @@ class ConfigComponent(Component):
 
     @slowapi.get('/config/meta/{filename}')
     async def get_meta(self, filename:str):
-        meta, content = await self._load_json(filename)
+        meta, content = await self._load_content(filename)
         if meta is None:
             return slowapi.Response(400)
         return meta
@@ -207,7 +265,7 @@ class ConfigComponent(Component):
                 contents[config_key] = []
 
             meta_info = {}
-            if with_content_meta:
+            if with_content_meta and kind in [ 'slowdash', 'slowplot', 'slowcruise' ]:
                 meta_info = await self.get_meta(filename)
 
             contents[config_key].append({
@@ -224,66 +282,60 @@ class ConfigComponent(Component):
         return doc
 
                 
-    async def _load_json(self, filename:str):
+    async def _load_content(self, filename:str, is_json=True):
         filepath, ext = self._get_filepath_ext(filename, os.R_OK)
         if filepath is None:
             logging.warning(f'GET config: {filename}: access denied')
             return None, None
-
-        meta, content = {}, None
-        if ext not in [ '.json', '.yaml', '.py' ]:
-            meta['config_error'] = 'bad file type'
-            return meta, content
         if os.path.getsize(filepath) <= 0:
-            meta['config_error'] = 'empty file'
-            return meta, content
+            return { 'config_error': 'empty file' }, None
 
         doc = None
         if ext == '.py':
+            return await DynamicConfig(self.app, filepath).load()
+        
+        elif not is_json:
+            if not self.project.is_secure:
+                if ext not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]:
+                    return { 'config_error': 'bad file type' }, None
+                
+            content = None
             try:
-                process = await asyncio.create_subprocess_shell(
-                    f'python3 {filepath}',
-                    stdout = asyncio.subprocess.PIPE,
-                    stderr = asyncio.subprocess.PIPE
-                )
-                stdout, stderr = await process.communicate()
-                returncode = process.returncode
-                doc = stdout.decode().strip()
-                msg = stderr.decode().strip()
-                if len(msg) > 0:
-                    logging.info(f'{filename}: {msg}')
+                with open(filepath, 'rb') as f:
+                    content = f.read()
             except Exception as e:
-                returncode = -1
-            if returncode != 0:
-                err_msg = msg.split('\n')[-1]
-                logging.warn(f'JSON-generator Python error: {filepath}: {err_msg}')
-                meta['config_error'] = f'Python Error: {err_msg}'
-                return meta, None
+                msg = f'unable to read config file: {filepath}: {e}'
+                logging.error(msg)
+                return { 'config_error': msg }, None
+            return {}, content
+        
         else:
+            if ext not in [ '.json', '.yaml' ]:
+                return { 'config_error': 'bad file type' }, None
             try:
                 with open(filepath) as f:
                     doc = f.read()
             except Exception as e:
-                logging.warn(f'unable to read config file: {filepath}: {e}')
-                meta['config_error'] = f'unagle to read file: {e}'
-                return meta, None
+                msg = f'unable to read config file: {filepath}: {e}'
+                logging.error(msg)
+                return { 'config_error': msg }, None
 
-        try:
-            content = yaml.safe_load(doc)
-        except yaml.YAMLError as e:
-            if hasattr(e, 'problem_mark'):
-                line = e.problem_mark.line+1
-                meta['config_error_line'] = line
-                meta['config_error'] = 'Line %d: %s' % (line, e.problem)
+            meta, content = {}, None
+            try:
+                content = yaml.safe_load(doc)
+            except yaml.YAMLError as e:
+                if hasattr(e, 'problem_mark'):
+                    line = e.problem_mark.line+1
+                    meta['config_error_line'] = line
+                    meta['config_error'] = 'Line %d: %s' % (line, e.problem)
+                else:
+                    meta['config_error'] = str(e)
+            if type(content) != dict:
+                meta['config_error'] = 'not a dict'
             else:
-                meta['config_error'] = str(e)
-        
-        if type(content) != dict:
-            meta['config_error'] = 'not a dict'
-        else:
-            meta = content.get('meta', {})
+                meta = content.get('meta', {})
 
-        return meta, content
+            return meta, content
 
             
     def _get_filepath_ext(self, filename, access_flag=None):

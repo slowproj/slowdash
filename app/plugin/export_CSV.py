@@ -22,7 +22,7 @@ class Export_CSV(ComponentPlugin):
             resample = 0
         data_opts['resample'] = resample
 
-        timeseries = await self.app.data(channels, data_opts)
+        timeseries = await self.app.request_data(channels, data_opts)
         if timeseries is None:
             return None
 

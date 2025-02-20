@@ -1,9 +1,9 @@
 {
     "control": {
         "range": { "length": 300, "to": null },
-        "reload": 0,
-        "grid": { "rows": "2", "columns": "2" },
-        "mode": "normal"
+        "reload": 2,
+        "mode": "normal",
+        "grid": { "rows": "2", "columns": "2" }
     },
     "style": { },
     "panels": [

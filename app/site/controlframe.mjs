@@ -68,7 +68,7 @@ export function boot(defaults, optparse_func, start_func) {
             load_theme(params);
         }
         else if (params.config_file) {
-            fetch('./api/config/json/' + params.config_file)
+            fetch('./api/config/content/' + params.config_file)
                 .then(response => {
                     if (! response.ok) {
                         throw new Error(response.status + " " + response.statusText);
