@@ -7,12 +7,12 @@ app = slowlette.Slowlette()
 
 
 @app.get('/')
-def home(self):
+def home():
     return "I'm home"
 
 
 @app.get('/hello/{name}')
-def hello(self, name:str="there"):
+def hello(name:str="there"):
     return f"hello {name}"
 
 

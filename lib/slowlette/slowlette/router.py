@@ -11,7 +11,7 @@ from .websocket import WebSocket, ConnectionClosed
 
 
 class PathRule:
-    def __init__(self, rule:str, method:str, func_signature:inspect.Signature, *, status_code:int=200):
+    def __init__(self, rule:str, method:str, func, *, status_code:int=200):
         self.rule_str = rule
         self.method = method.upper()
         self.status_code = status_code
@@ -29,6 +29,9 @@ class PathRule:
         self.path_param = None
         self.query_param = None
 
+        func_signature = inspect.signature(func)
+        is_method = hasattr(func, '__qualname__') and '.' in func.__qualname__
+        
         for elem in rule.split('/'):
             if elem is not None and len(elem) > 0:
                 self.path.append(elem)
@@ -43,7 +46,7 @@ class PathRule:
                 self.path[pos] = None
 
         for index, pname in enumerate(func_signature.parameters):
-            if index == 0:  # self
+            if is_method and (index == 0):  # self
                 continue
             param = func_signature.parameters[pname]
             if param.annotation is Request:   # to store request itself
@@ -158,7 +161,7 @@ def get(path_rule:str, status_code:int=200):
     """
     def wrapper(func):
         if not hasattr(func, 'slowlette_path_rule'):
-            func.slowlette_path_rule = PathRule(path_rule, 'GET', inspect.signature(func), status_code=status_code)
+            func.slowlette_path_rule = PathRule(path_rule, 'GET', func, status_code=status_code)
         return func
     return wrapper
 
@@ -171,7 +174,7 @@ def post(path_rule:str, status_code:int=201):
     """
     def wrapper(func):
         if not hasattr(func, 'slowlette_path_rule'):
-            func.slowlette_path_rule = PathRule(path_rule, 'POST', inspect.signature(func), status_code=status_code)
+            func.slowlette_path_rule = PathRule(path_rule, 'POST', func, status_code=status_code)
         return func
     return wrapper
 
@@ -184,7 +187,7 @@ def delete(path_rule:str, status_code:int=200):
     """
     def wrapper(func):
         if not hasattr(func, 'slowlette_path_rule'):
-            func.slowlette_path_rule = PathRule(path_rule, 'DELETE', inspect.signature(func), status_code=status_code)
+            func.slowlette_path_rule = PathRule(path_rule, 'DELETE', func, status_code=status_code)
         return func
     return wrapper
 
@@ -197,7 +200,7 @@ def route(path_rule:str, status_code:int=200):
     """
     def wrapper(func):
         if not hasattr(func, 'slowlette_path_rule'):
-            func.slowlette_path_rule = PathRule(path_rule, '*', inspect.signature(func), status_code=status_code)
+            func.slowlette_path_rule = PathRule(path_rule, '*', func, status_code=status_code)
         return func
     return wrapper
 
@@ -209,7 +212,7 @@ def on_event(name:str):
     """
     def wrapper(func):
         if not hasattr(func, 'slowlette_path_rule'):
-            func.slowlette_path_rule = PathRule(name, 'on_event', inspect.signature(func))
+            func.slowlette_path_rule = PathRule(name, 'on_event', func)
         return func
     return wrapper
 
@@ -221,7 +224,7 @@ def websocket(path_rule:str):
     """
     def wrapper(func):
         if not hasattr(func, 'slowlette_path_rule'):
-            func.slowlette_path_rule = PathRule(path_rule, 'websocket', inspect.signature(func))
+            func.slowlette_path_rule = PathRule(path_rule, 'websocket', func)
         return func
     return wrapper
 

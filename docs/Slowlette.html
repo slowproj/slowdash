@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Slowlette</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+<header>
+<div class="title">Slowlette</div><p>
+<div class="toc">
+<span class="toc-title">Contents</span>
+<nav id="TOC">
+<ul>
+<li><a href="#slowlette" id="toc-slowlette">Slowlette</a>
+<ul>
+<li><a href="#dependencies" id="toc-dependencies">Dependencies</a></li>
+<li><a href="#usage" id="toc-usage">Usage</a></li>
+<li><a href="#todos" id="toc-todos">TODOs</a></li>
+</ul></li>
+</ul>
+</nav>
+</div>
+</header>
+
+<h1 id="slowlette">Slowlette</h1>
+<p>Slowlette is a Web-server micro-framework in Python. Like FastAPI (or
+Flask), URLs are parsed, parameters are extracted, and the requests are
+routed to user code. Unlike FastAPI or Flask, requests in Slowlette can
+be bound to methods of multiple class instances, not just to functions
+or a single instance. However, binding to standalone functions (as in
+FastAPI/Flask) is also supported. One HTTP request can be handled by
+multiple user handlers, for example, multiple instances of a user class
+or a combination of different classes and functions, and the responses
+are aggregated in a customizable way. This is designed for dynamic
+plug-in systems (where each plugin might return partial data) with the
+chain-of-responsibility scheme. Slowlette implements both ASGI and
+WSGI.</p>
+<h2 id="dependencies">Dependencies</h2>
+<ul>
+<li>Python &gt;=3.9</li>
+<li>uvicorn to use ASGI</li>
+<li>(nothing is necessary for WSGI, though gunicorn can be used)</li>
+</ul>
+<h2 id="usage">Usage</h2>
+<h3 id="a-complete-web-app-with-simple-get">A Complete Web App with
+Simple GET</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># testapp.py</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> App(slowlette.App):</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.get</span>(<span class="st">&#39;/&#39;</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> home(<span class="va">self</span>):</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="st">&#39;feel at home&#39;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.get</span>(<span class="st">&#39;/hello&#39;</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> say_hello(<span class="va">self</span>):</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="st">&#39;Hello, Slowlette!&#39;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App()</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    app.run()</span></code></pre></div>
+<ul>
+<li>Very similar to FastAPI, except that URLs are associated with class
+methods. Unlike FastAPI, the <code>app</code> instance is created after
+the binding is described. (Important for creating multiple handler
+instances.)</li>
+</ul>
+<h4 id="running-the-example">Running the example</h4>
+<p>Like FastAPI/Flask, running the script above will start an HTTP
+server at port 8000.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> testapp.py</span></code></pre></div>
+<p>Now open <code>http://localhost:8000/hello</code> in your browser, or
+run:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> http://localhost:8000/hello</span></code></pre></div>
+<p>And you should see the response:</p>
+<pre class="text"><code>Hello, Slowlette.</code></pre>
+<h4 id="running-via-external-asgi-server">Running via external ASGI
+server</h4>
+<p>Like FastAPI, Slowlette App object implements ASGI, and any external
+ASGI server can be used.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">uvicorn</span> testapp:app</span></code></pre></div>
+<h4 id="not-inheriting-from-slowlette.app">Not inheriting from
+slowlette.App</h4>
+<p>The base class, <code>slowlette.App</code>, has only three
+attributes, listed below: - <code>slowlette</code>: Slowlette connection
+point - <code>__call__(self, scope, receive, send)</code>: ASGI entry
+point - <code>run(self, port, **kwargs)</code>: Execution start
+point</p>
+<p>Given this small number of attributes, the likelihood of name
+conflicts with user classes should be minimal. Nevertheless, it is also
+possible to create a user class independently from Slowlette and pass it
+to Slowlette later.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyApp:</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.get</span>(<span class="st">&#39;/hello&#39;</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> say_hello(<span class="va">self</span>):</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="st">&#39;hello, how are you?&#39;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> slowlette.App(MyApp())</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    app.run()</span></code></pre></div>
+<p>Once you have created the <code>app</code> instance, the usage is
+essentially the same as before.</p>
+<h4 id="performance-overhead">Performance overhead</h4>
+<p>Whether the user class is inherited from <code>slowlette.App</code>
+or not, the Slowlette decorators (such as <code>@slowlette.get()</code>)
+do not modify the function signature, and the decorated user methods can
+be used as they are defined in the user code. There is no additional
+performance overhead with the Slowlette decorators.</p>
+<h3 id="binding-to-functions">Binding to functions</h3>
+<p>By creating an instance of Slowlette, functions, instead of class
+methods, can be bound to URL endpoints, in a very similar way as FastAPI
+and Flask.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> slowlette.Slowlette()</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="at">@app.get</span>(<span class="st">&#39;/hello&#39;</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> say_hello():</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&#39;hello, how are you?&#39;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    app.run()</span></code></pre></div>
+<h3 id="get-with-url-path-parameters">GET with URL path parameters</h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> App(slowlette.App):</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.get</span>(<span class="st">&#39;/hello/</span><span class="sc">{name}</span><span class="st">&#39;</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> hello(<span class="va">self</span>, name:<span class="bu">str</span>):</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ss">f&#39;hello, </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">&#39;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App()</span></code></pre></div>
+<ul>
+<li>FastAPI style parameter binding with types, optionally with a
+default value</li>
+<li>If a parameter for an argument without a default value is not in the
+URL, the URL will not match and the handler (<code>hello()</code> method
+in the example) will not be called.</li>
+<li>Return value of a handler must be:
+<ul>
+<li><code>str</code> for a <code>text/plain</code> reply</li>
+<li><code>list</code> or <code>dict</code> for an
+<code>application/json</code> reply</li>
+<li><code>slowlette.FileResponse</code> object for file fetching</li>
+<li><code>slowlette.Response</code> object for full flexibility</li>
+<li><code>None</code> if the request is not applicable</li>
+</ul></li>
+</ul>
+<h3 id="get-with-url-query-parameters">GET with URL query
+parameters</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> App(slowlette.App):</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.get</span>(<span class="st">&#39;/hello/</span><span class="sc">{name}</span><span class="st">&#39;</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> hello(<span class="va">self</span>, name:<span class="bu">str</span>, message:<span class="bu">str</span><span class="op">=</span><span class="st">&#39;how are you&#39;</span>, repeat:<span class="bu">int</span><span class="op">=</span><span class="dv">3</span>):</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ss">f&#39;hello, </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">.&#39;</span> <span class="op">+</span> <span class="ss">f&#39; </span><span class="sc">{</span>message<span class="sc">}</span><span class="ss">&#39;</span> <span class="op">*</span> repeat</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App()</span></code></pre></div>
+<h3 id="async-handlers">Async handlers</h3>
+<p>With ASGI, if the bound method is <code>async</code>, requests are
+handled asynchronously.</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> App(slowlette.App):</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.get</span>(<span class="st">&#39;/hello&#39;</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">async</span> <span class="kw">def</span> hello(<span class="va">self</span>, delay:<span class="bu">float</span><span class="op">=</span><span class="dv">0</span>):</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> delay <span class="op">&gt;</span> <span class="dv">0</span>:</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">await</span> asyncio.sleep(delay)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ss">f&quot;hello after </span><span class="sc">{</span>delay<span class="sc">}</span><span class="ss"> sleep&quot;</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App()</span></code></pre></div>
+<h3 id="receiving-the-full-path-andor-query-parameters">Receiving the
+full path and/or query parameters</h3>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> App(slowlette.App):</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.get</span>(<span class="st">&#39;/echo/{*}&#39;</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> echo(<span class="va">self</span>, path:<span class="bu">list</span>, query:<span class="bu">dict</span>):</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ss">f&#39;path: </span><span class="sc">{</span>path<span class="sc">}</span><span class="ss">, query: </span><span class="sc">{</span>query<span class="sc">}</span><span class="ss">&#39;</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App()</span></code></pre></div>
+<ul>
+<li><code>{*}</code> matches any path elements.</li>
+<li>A list of decoded URL path is set to the (last; should be only one)
+argument of a type <code>list</code>.</li>
+<li>A dict of decoded URL query is set to the (last) argument of a type
+<code>dict</code>.</li>
+</ul>
+<h3 id="receiving-the-entire-request">Receiving the entire request</h3>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> App(slowlette.App):</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.get</span>(<span class="st">&#39;/{*}&#39;</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> header(<span class="va">self</span>, request:slowlette.Request):</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ss">f&#39;header: </span><span class="sc">{</span>request<span class="sc">.</span>headers<span class="sc">}</span><span class="ss">&#39;</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App()</span></code></pre></div>
+<p>The <code>Request</code> object has the following attributes: -
+<code>method</code> (str): request method (<code>GET</code> etc.) -
+<code>path</code> (list[str]): URL path - <code>query</code>
+(dict[str,str]): URL query - <code>headers</code> (dict[str,str]): HTTP
+request header items - <code>body</code> (bytes): request body</p>
+<h3 id="simple-post">Simple POST</h3>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> App(slowlette.App):</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.post</span>(<span class="st">&#39;/hello/</span><span class="sc">{name}</span><span class="st">&#39;</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> hello(<span class="va">self</span>, name:<span class="bu">str</span>, message:<span class="bu">bytes</span>):</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ss">f&#39;hello, </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">. You sent me &quot;</span><span class="sc">{</span>message<span class="sc">.</span>decode()<span class="sc">}</span><span class="ss">&quot;&#39;</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App()</span></code></pre></div>
+<ul>
+<li>The request body is set to the (last) argument of a type of
+<code>bytes</code>.</li>
+</ul>
+<h3 id="post-with-json-document-body">POST with JSON document body</h3>
+<h4 id="for-dict-data">for dict data</h4>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> App(slowlette.App):</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.post</span>(<span class="st">&#39;/hello/</span><span class="sc">{name}</span><span class="st">&#39;</span>)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> hello(<span class="va">self</span>, name:<span class="bu">str</span>, doc:DictJSON):  <span class="co"># if body in not a dict in JSON, a response 400 (Bad Request) will be returned</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>        item <span class="op">=</span> doc.get(<span class="st">&#39;item&#39;</span>, <span class="st">&#39;nothing&#39;</span>)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ss">f&#39;hello, </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">. You gave me </span><span class="sc">{</span>item<span class="sc">}</span><span class="ss">&#39;</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App()</span></code></pre></div>
+<ul>
+<li>The request body is parsed as <code>dict</code> in JSON and the
+value is set to the (last) argument of a type
+<code>slowlette.DictJSON</code>.</li>
+<li>If the content cannot be parsed as a dict, the handler will not be
+called and an error response (400) will be returned.</li>
+<li>The DictJSON object (<code>doc</code>) implements most common dict
+operations, such as <code>doc[key]</code>, <code>key in doc</code>,
+<code>for key in doc:</code>, <code>doc.get(value, default)</code>,
+<code>doc.items()</code>, …</li>
+<li>use <code>doc.value()</code> or <code>dict(doc)</code> to get a
+native Python dict object.</li>
+</ul>
+<h4 id="for-any-data-in-json">for any data in JSON</h4>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> App(slowlette.App):</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.post</span>(<span class="st">&#39;/hello/</span><span class="sc">{name}</span><span class="st">&#39;</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> hello(<span class="va">self</span>, name:<span class="bu">str</span>, doc:JSON):</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>        item <span class="op">=</span> doc.get(<span class="st">&#39;item&#39;</span>, <span class="st">&#39;nothing&#39;</span>)   <span class="co"># this will make a runtime error if the body is not dict</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ss">f&#39;hello, </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">. You gave me </span><span class="sc">{</span>item<span class="sc">}</span><span class="ss">&#39;</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App()</span></code></pre></div>
+<ul>
+<li>The request body is parsed as JSON and the value is set to the
+(last) argument of a type <code>slowlette.JSON</code>.</li>
+<li>If the content cannot be parsed as JSON, the handler will not be
+called and an error response (400) will be returned.</li>
+<li>Use <code>JSON.value()</code> to get a value of the native Python
+types (<code>dict</code>, <code>list</code>, <code>str</code>, …).</li>
+<li>Use <code>dict(doc)</code> or <code>list(doc)</code> to convert to
+native Python dict or list.</li>
+<li>If the content is dict (or list), most common dict (list) methods
+are available in JSON-type data:
+<ul>
+<li>For dict: <code>doc[key]</code>, <code>key in doc</code>,
+<code>for key in doc:</code>, <code>doc.get(value, default)</code>,
+<code>doc.items()</code>, …</li>
+<li>For list: <code>doc[index]</code>,<code>len(doc)</code>,
+<code>for v in doc:</code>, …</li>
+</ul></li>
+</ul>
+<h3 id="lifespan-events">Lifespan Events</h3>
+<p>The structure is basically the same as FastAPI:</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> App(slowlette.App):</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.on_event</span>(<span class="st">&#39;startup&#39;</span>)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">async</span> <span class="kw">def</span> startup(<span class="va">self</span>):</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">&quot;SlowApp Server started&quot;</span>)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.on_event</span>(<span class="st">&#39;shutdown&#39;</span>)</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">async</span> <span class="kw">def</span> shutdown(<span class="va">self</span>):</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">&quot;SlowApp Server stopped&quot;</span>)</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App()</span></code></pre></div>
+<ul>
+<li>Currently <code>startup</code> and <code>shutdown</code> are
+implemented</li>
+</ul>
+<h3 id="websocket">WebSocket</h3>
+<p>The structure is basically the same as FastAPI:</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> App(slowlette.App):</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.websocket</span>(<span class="st">&#39;/ws&#39;</span>)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">async</span> <span class="kw">def</span> ws_echo(<span class="va">self</span>, websocket:slowlette.WebSocket):</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> websocket.accept()</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>                message <span class="op">=</span> <span class="cf">await</span> websocket.receive_text()</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>                <span class="cf">await</span> websocket.send_text(<span class="ss">f&#39;Received: </span><span class="sc">{</span>message<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> slowlette.ConnectionClosed:</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="st">&quot;WebSocket Closed&quot;</span>)</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App()</span></code></pre></div>
+<ul>
+<li>WebSocket is available only with ASGI.</li>
+</ul>
+<h3 id="multiple-handlers-for-the-same-url">Multiple Handlers for the
+same URL</h3>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Fruit():</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, name:<span class="bu">str</span>):</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.name <span class="op">=</span> name</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.get</span>(<span class="st">&#39;/hello&#39;</span>)</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> hello(<span class="va">self</span>):</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> [<span class="ss">f&#39;I am a </span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>name<span class="sc">}</span><span class="ss">&#39;</span>]</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> App(slowlette.App):</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.slowlette.include(Fruit(<span class="st">&#39;peach&#39;</span>))</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.slowlette.include(Fruit(<span class="st">&#39;melon&#39;</span>))</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.get</span>(<span class="st">&#39;/hello&#39;</span>)</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> hello(<span class="va">self</span>):</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> [<span class="st">&#39;Hello.&#39;</span>]</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App()</span></code></pre></div>
+<p>By sending a request to the <code>/hello</code> endpoint, to which
+three App instances are bound:</p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> http://localhost:8000/hello <span class="kw">|</span> <span class="ex">jq</span></span></code></pre></div>
+<p>You will get a result of three responses aggregated:</p>
+<pre class="text"><code>[
+  &quot;Hello.&quot;,
+  &quot;I am a peach&quot;,
+  &quot;I am a melon&quot;
+]</code></pre>
+<ul>
+<li>If responses are all <code>list</code>, they are combined with
+<code>append()</code>.</li>
+<li>If responses are all <code>dict</code>, they are combined with
+<code>update()</code>.</li>
+<li>If responses are all <code>str</code>, they are concatenated with a
+new-line in between.</li>
+<li>If a response is <code>None</code>, it will not be included.</li>
+<li>If all the responses are <code>None</code>, a 404 status (Not Found)
+is replied.</li>
+<li>If one of the responses is an error (code &gt;= 400), an error is
+replied without content; the largest status code is taken.</li>
+</ul>
+<p>The behavior is customizable by providing a user response aggregator,
+as explained below.</p>
+<p>Instances of <code>slowlette.Slowlette</code> used to bind functions
+in the example above can also be included or include other sub-apps.</p>
+<h3 id="middleware">Middleware</h3>
+<p>As a Slowlette app can already have multiple handlers (sub-app) in a
+chain, there is no difference between a (sub)app and a middleware; if
+the (sub)app behaves like a middleware, such as modifying the requests
+for the subsequent (sub)apps and/or modifying the responses from the
+(sub)apps, it is a middleware.</p>
+<p>The middleware example below drops the path prefix of
+<code>/api</code> from all the requests:</p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DropPrefix:</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, prefix):</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.prefix <span class="op">=</span> <span class="st">&#39;api&#39;</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.route</span>(<span class="st">&#39;/{*}&#39;</span>)</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> handle(request: Request):</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">len</span>(request.path) <span class="op">&gt;</span> <span class="dv">0</span> <span class="kw">and</span> request.path[<span class="dv">0</span>] <span class="op">==</span> <span class="va">self</span>.prefix:</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>            request.path <span class="op">=</span> request.path[<span class="dv">1</span>:]</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Response()</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> App(slowlette.App):</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.slowlette.add_middleware(DropPrefix(<span class="st">&#39;api&#39;</span>))</span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.get</span>(<span class="st">&#39;/hello&#39;</span>)</span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> hello(<span class="va">self</span>):</span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="st">&#39;Hello, Middleware.&#39;</span></span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App()</span></code></pre></div>
+<p>In this example, access to <code>/api/hello/</code> will be routed to
+the method bound to <code>/hello</code>, after the middleware that drops
+the <code>/api</code> prefix:</p>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> http://localhost:8000/api/hello</span></code></pre></div>
+<p>The <code>@route()</code> decorator can be used to handle all the
+request methods, not specific to one such as <code>@get()</code>. The
+path rule of <code>/{*}</code> will capture all the URL.</p>
+<p>The empty response returned here will be replaced with an aggregated
+responses from the subsequent handlers.</p>
+<p>If a (sub)app is added by <code>app.add_middleware(subapp)</code>,
+the <code>subapp</code> handlers are inserted before the
+<code>app</code> handlers, whereas <code>app.include(subapp)</code>
+appends <code>subapp</code> handlers to <code>app</code>.</p>
+<p>Multiple middlewares can be appended, and they will be processed in
+the order of appending, before the main <code>app</code> handlers and
+sub-app handlers are called.</p>
+<p>A middleware that modifies responses can be implemented by returning
+a custom response with an overridden aggregation method
+(<code>Response.merge_response(self, response:Response)</code>).</p>
+<h3 id="ready-to-use-middlewares">Ready-to-use Middlewares</h3>
+<h4 id="http-basic-authentication">HTTP Basic Authentication</h4>
+<p><code>BasicAuthentication(auth_list: list[str])</code></p>
+<p>The <code>auth_list</code> is a list of keys, where each key looks
+like: <code>api:$2a$12$D2.....</code>, which is the same key format used
+by Apache (type “2a”). A key can be generated by:</p>
+<pre><code>key = slowlette.BasicAuthentication.generate_key(&#39;api&#39;, &#39;slow&#39;)</code></pre>
+<h4 id="file-server">File Server</h4>
+<p><code>FileServer(filedir, *, prefix='', index_file=None, exclude=None, drop_exclude_prefix=False, ext_allow=None, ext_deny=None)</code></p>
+<p>The file server handles GET requests to send back files stored in
+<code>filedir</code>. The request path, optionally with
+<code>prefix</code> that will be dropped, is the relative path from the
+<code>filedir</code>. For security reasons, file names cannot contain
+special characters other than a few selected ones (<code>_</code>,
+<code>-</code>, <code>+</code>, <code>=</code>, <code>,</code>,
+<code>.</code>, <code>:</code>), and the first letter of each path
+element must be an alphabet or digit. Also, the path cannot start with a
+Windows drive letter (like <code>c:</code>), even if Slowlette runs on
+non-Windows. POST and DELETE are not implemented.</p>
+<ul>
+<li><code>filedir</code> (str): path to a filesystem directory</li>
+<li><code>prefix</code> (str): URL path to bind this app (e.g.,
+<code>/webfile</code>)</li>
+<li><code>index_file</code> (str): index file when the path is empty
+(i.e., <code>/</code>)</li>
+<li><code>exclude</code> (str): URL path not to be handled (e.g.,
+prefix=<code>/app</code>, exclude=<code>/app/api</code>)</li>
+<li><code>drop_exclude_prefix</code> (bool): if True, the prefix is
+removed from the requet path if the request is for an excluded path
+(e.g., for exclude <code>/api</code>, the request path of
+<code>api/userlist</code> becomes <code>/userlist</code>)</li>
+<li><code>ext_allow</code> (list[str]): a list of file extensions to
+allow accessing</li>
+<li><code>ext_deny</code> (list[str]): a list of file extensions not to
+allow accessing</li>
+</ul>
+<h3 id="custom-response-aggregation">Custom Response Aggregation</h3>
+<p>A handler can make a user aggregator by returning an instance of a
+custom Response class with an overridden <code>merge_response()</code>
+method, as explained above.</p>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyExclusiveApp:</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">class</span> MyExclusiveResponse(Response):</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">def</span> merge_response(<span class="va">self</span>, response:Response)<span class="op">-&gt;</span><span class="va">None</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>            <span class="co"># example: do not merge the responses from the subsequent handlers</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">pass</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.route</span>(<span class="st">&#39;/hello&#39;</span>)</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> hello():</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>        response <span class="op">=</span> MyExclusiveResponse()</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>        response.append(<span class="st">&#39;hello, there is no one else here.&#39;</span>)</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> response</span></code></pre></div>
+<p>This method is useful if the method returns a data structure that
+requires a certain way to merge other data.</p>
+<p>In addition to that, a user app class can override a method to
+aggregate all the individual responses from all the handlers within the
+class, to provide full flexibility. To do this, make a custom
+<code>Router</code> with an overridden <code>merge_responses()</code>
+method:</p>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyRouter(slowlette.Router):</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> merge_responses(responses: <span class="bu">list</span>[Response]) <span class="op">-&gt;</span> Response:</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>        response <span class="op">=</span> Response()</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> r <span class="kw">in</span> responses:</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>            response <span class="op">=</span> ....   <span class="co"># aggregate responses here</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> response</span></code></pre></div>
+<p>Then use this as a <code>slowlette</code> of the user app:</p>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyApp(slowlette.App):</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.slowlette <span class="op">=</span> MyRouter()</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span></code></pre></div>
+<p>Calling <code>super().__init__()</code> later is a little bit more
+efficient, as it does not replace <code>self.slowlette</code> if it is
+already defined.</p>
+<h3 id="basic-authentication">Basic Authentication</h3>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> App(slowlette.App):</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.get</span>(<span class="st">&#39;/hello&#39;</span>)</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> hello(<span class="va">self</span>):</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="st">&#39;hello, how are you?&#39;</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="co"># test authentication username and password</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a><span class="co"># once generated, store the key separately</span></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>key <span class="op">=</span> slowlette.BasicAuthentication.generate_key(username<span class="op">=</span><span class="st">&#39;api&#39;</span>, password<span class="op">=</span><span class="st">&#39;slow&#39;</span>)</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App()</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>app.add_middleware(slowlette.BasicAuthentication(auth_list<span class="op">=</span>[key]))</span></code></pre></div>
+<p>If HTTP is used, nothing will be returned, as the access is denied.
+(Add <code>-v</code> option to see details.)</p>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> http://localhost:8000/hello <span class="at">-v</span></span></code></pre></div>
+<pre class="text"><code>...
+&gt; GET /hello HTTP/1.1
+&gt; Host: localhost:8000
+&gt; User-Agent: curl/8.5.0
+...
+&lt; HTTP/1.1 401 Unauthorized</code></pre>
+<p>Now with the credentials:</p>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> http://api:slow@localhost:8000/hello</span></code></pre></div>
+<p>You will get the expected result:</p>
+<pre class="text"><code>hello, how are you?</code></pre>
+<h3 id="https-and-http2">HTTPS and HTTP/2</h3>
+<p>HTTP/2 is enabled only with TLS. Provide TLS key files to use
+HTTPS.</p>
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    app.run(ssl_keyfile<span class="op">=</span><span class="st">&#39;key.pem&#39;</span>, ssl_certfile<span class="op">=</span><span class="st">&#39;cert.pem&#39;</span>)</span></code></pre></div>
+<h4 id="memo-generating-a-certificate">Memo: Generating a
+certificate</h4>
+<h5 id="temporary-self-signed">Temporary Self-Signed</h5>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> req <span class="at">-x509</span> <span class="at">-nodes</span> <span class="at">-days</span> 365 <span class="at">-newkey</span> rsa:2048 <span class="at">-keyout</span> key.pem <span class="at">-out</span> cert.pem</span></code></pre></div>
+<h5 id="lets-encrypt-if-you-have-a-domain">Let’s Encrypt if you have a
+domain:</h5>
+<div class="sourceCode" id="cb34"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install certbot</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> certbot certonly <span class="at">--standalone</span> <span class="at">-d</span> YOUR.DOMAIN.NAME</span></code></pre></div>
+<p>This will create files under
+<code>/etc/letsencript/live/YOUR.DOMAIN.NAME</code> - private key:
+<code>privkey.pem</code> - server certificate: <code>cert.pem</code> -
+full chain: <code>fullchain.pem</code></p>
+<h3 id="wsgi">WSGI</h3>
+<p>In addition to ASGI, WSGI can be used. The
+<code>slowlette.WSGI(app)</code> function wraps the ASGI App (standard
+Slowlette App) and returns a WSGI app.</p>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># testapp.py</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> App(slowlette.App):</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.get</span>(<span class="st">&#39;/hello&#39;</span>)</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> hello(<span class="va">self</span>):</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="st">&#39;hello, how are you?&#39;</span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App()   <span class="co"># ASGI App</span></span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>wsgi_app <span class="op">=</span> slowlette.WSGI(app)</span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>    wsgi_app.run()</span></code></pre></div>
+<p>The script can be executed as an HTTP server with WSGI:</p>
+<div class="sourceCode" id="cb36"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> ./testapp.py</span></code></pre></div>
+<p>Or it can be used with any WSGI server:</p>
+<div class="sourceCode" id="cb37"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gunicorn</span> testapp:wsgi_app</span></code></pre></div>
+<p>Note: - Every HTTP request is handled sequentially, even with async
+handlers. - A dedicated async event loop is created for each request.
+Code that assumes the same event loop among requests (typical in DB
+connection pool) cannot be used.</p>
+<h2 id="todos">TODOs</h2>
+<ul>
+<li>File templates</li>
+<li>App.mount(‘path’, app)</li>
+<li>OpenAPI document generation</li>
+<li>GraphQL chain processing (thanks ChatGPT for the idea!)</li>
+</ul>
+
+
+</body>
+</html>

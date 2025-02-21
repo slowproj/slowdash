@@ -1,9 +1,14 @@
 #! /bin/bash
 
+if [ ! -d app ]; then
+    echo "ERROR: bad current directory: Run this script at SlowDash base directory"
+    exit
+fi
+    
 if [ -d venv ]; then
-    echo venv already exists
+    echo "venv already exists"
 else
-    echo setting up venv
+    echo "setting up venv"
     python3 -m venv venv
 fi
 
@@ -21,3 +26,5 @@ pip install influxdb-client redis pymongo couchdb
 # Packages that user scripts might use
 pip install numpy matplotlib pillow pyserial pyvisa
 
+# SlowDash package
+pip install -e ./lib/slowlette

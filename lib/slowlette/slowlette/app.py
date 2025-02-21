@@ -50,13 +50,12 @@ class Slowlette(App):
     class FunctionAdapter:
         def __init__(self, func):
             self.func = func
-        def __call__(self, *args, **kwargs):
+        def __call__(self, app, *args, **kwargs):
             return self.func(*args, **kwargs)
 
         
     def __init__(self):
         super().__init__()
-        self.slowlette_function_handlers = []
 
 
     def get(self, path_rule:str, status_code:int=200):
@@ -67,7 +66,7 @@ class Slowlette(App):
         """
         def wrapper(func):
             adapter = self.FunctionAdapter(func)
-            adapter.slowlette_path_rule = PathRule(path_rule, 'GET', inspect.signature(func), status_code=status_code)
+            adapter.slowlette_path_rule = PathRule(path_rule, 'GET', func, status_code=status_code)
             self.slowlette.handlers.append(adapter)
             return func
         return wrapper
@@ -81,7 +80,7 @@ class Slowlette(App):
         """
         def wrapper(func):
             adapter = self.FunctionAdapter(func)
-            adapter.slowlette_path_rule = PathRule(path_rule, 'POST', inspect.signature(func), status_code=status_code)
+            adapter.slowlette_path_rule = PathRule(path_rule, 'POST', func, status_code=status_code)
             self.slowlette.handlers.append(adapter)
             return func
         return wrapper
@@ -95,7 +94,7 @@ class Slowlette(App):
         """
         def wrapper(func):
             adapter = self.FunctionAdapter(func)
-            adapter.slowlette_path_rule = PathRule(path_rule, 'DELETE', inspect.signature(func), status_code=status_code)
+            adapter.slowlette_path_rule = PathRule(path_rule, 'DELETE', func, status_code=status_code)
             self.slowlette.handlers.append(adapter)
             return func
         return wrapper
@@ -109,7 +108,7 @@ class Slowlette(App):
         """
         def wrapper(func):
             adapter = self.FunctionAdapter(func)
-            adapter.slowlette_path_rule = PathRule(path_rule, '*', inspect.signature(func), status_code=status_code)
+            adapter.slowlette_path_rule = PathRule(path_rule, '*', func, status_code=status_code)
             self.slowlette.handlers.append(adapter)
             return func
         return wrapper

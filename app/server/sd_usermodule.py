@@ -235,6 +235,11 @@ class UserModule:
         if self.func_process_command:
             logging.debug('loaded user module command processor')
 
+        for name, obj in self.module.__dict__.items():
+            if isinstance(obj, slowlette.App) and name != '_slowdash_app':
+                logging.info(f'loaded user module Web-API: {self.name}.{name}')
+                self.app.slowlette.include(obj)
+        
         return True
         
     
