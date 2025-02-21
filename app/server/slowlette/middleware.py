@@ -9,7 +9,7 @@ from .router import route
 
 
 class BasicAuthentication():
-    def __init__(self, realm='SlowAPI', auth_list=[]):
+    def __init__(self, realm='Slowlette', auth_list=[]):
         self.realm = realm
 
         self.auth_list = {}
@@ -27,7 +27,7 @@ class BasicAuthentication():
                 global bcrypt
                 import bcrypt
             except:
-                logging.critical('SlowAPI_BasicAuthentication: missing python module "bcrypt"')
+                logging.critical('Slowlette_BasicAuthentication: missing python module "bcrypt"')
                 sys.exit(-1)
         
 
@@ -58,7 +58,7 @@ class BasicAuthentication():
                 request.user = user
                 return Response()
         except Exception as e:
-            logging.warning(f'SlowAPI_BasicAuthentication: Authentication Error: {str(e)}')
+            logging.warning(f'Slowlette_BasicAuthentication: Authentication Error: {str(e)}')
             
         return self.require_auth(request)
 
@@ -173,7 +173,7 @@ class FileServer():
             return Response(403)  # Forbidden
                 
         filepath = os.path.join(self.filedir, filepath)
-        logging.debug(f'SlowAPI_FileServer: file request: {filepath}')
+        logging.debug(f'Slowlette_FileServer: file request: {filepath}')
 
         return await FileResponse().load(filepath)
 

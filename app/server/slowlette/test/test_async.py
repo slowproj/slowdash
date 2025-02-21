@@ -1,16 +1,16 @@
 #! /usr/bin/python3
 
 
-# temporary until SlowAPI becomes a package
+# temporary until Slowlette becomes a package
 import sys, os, asyncio
 sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir))
 
 
-import slowapi
+import slowlette
 
 
-class MyApp(slowapi.App):
-    @slowapi.get('/hello')
+class MyApp(slowlette.App):
+    @slowlette.get('/hello')
     async def hello(self, delay:float=0):
         if delay > 0:
             await asyncio.sleep(delay)
@@ -21,7 +21,7 @@ app = MyApp()
 
 '''
 to run the app as a ASGI server, run:
-$ uvicorn test_slowapi:app
+$ uvicorn test_slowlette:app
 '''
 
     

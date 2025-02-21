@@ -65,10 +65,10 @@ class PathRule:
 
         if self.method == 'WEBSOCKET':
             if self.websocket_param is None:
-                logging.error('SlowAPI_PathRule: no WebSocket arg for websocket handler')
+                logging.error('Slowlette_PathRule: no WebSocket arg for websocket handler')
         else:
             if self.websocket_param is not None:
-                logging.error('SlowAPI_PathRule: WebSocket arg for non-websocket handler')
+                logging.error('Slowlette_PathRule: WebSocket arg for non-websocket handler')
 
 
     def match(self, request:Request):
@@ -114,7 +114,7 @@ class PathRule:
                     # BUG: this does not work if the type is "Optional[xxx]"
                     value = attr.annotation(value)
                 except Exception as e:
-                    logging.warning(f'SlowAPI: incompatible parameter type: {pname}: {e}')
+                    logging.warning(f'Slowlette: incompatible parameter type: {pname}: {e}')
                     return None
             kwargs[pname] = value
             
@@ -122,7 +122,7 @@ class PathRule:
         if self.request_param is not None:
             kwargs[self.request_param] = request
         if self.bytes_body_param is not None:
-            # direct calling of the SlowAPI dispatcher might pass the body in a Python type
+            # direct calling of the Slowlette dispatcher might pass the body in a Python type
             if type(request.body) is bytes:
                 kwargs[self.bytes_body_param] = request.body
             elif type(request.body) is str:
@@ -157,8 +157,8 @@ def get(path_rule:str, status_code:int=200):
       - status_code: default status code for success
     """
     def wrapper(func):
-        if not hasattr(func, 'slowapi_path_rule'):
-            func.slowapi_path_rule = PathRule(path_rule, 'GET', inspect.signature(func), status_code=status_code)
+        if not hasattr(func, 'slowlette_path_rule'):
+            func.slowlette_path_rule = PathRule(path_rule, 'GET', inspect.signature(func), status_code=status_code)
         return func
     return wrapper
 
@@ -170,8 +170,8 @@ def post(path_rule:str, status_code:int=201):
       - status_code: default status code for success
     """
     def wrapper(func):
-        if not hasattr(func, 'slowapi_path_rule'):
-            func.slowapi_path_rule = PathRule(path_rule, 'POST', inspect.signature(func), status_code=status_code)
+        if not hasattr(func, 'slowlette_path_rule'):
+            func.slowlette_path_rule = PathRule(path_rule, 'POST', inspect.signature(func), status_code=status_code)
         return func
     return wrapper
 
@@ -183,8 +183,8 @@ def delete(path_rule:str, status_code:int=200):
       - status_code: default status code for success
     """
     def wrapper(func):
-        if not hasattr(func, 'slowapi_path_rule'):
-            func.slowapi_path_rule = PathRule(path_rule, 'DELETE', inspect.signature(func), status_code=status_code)
+        if not hasattr(func, 'slowlette_path_rule'):
+            func.slowlette_path_rule = PathRule(path_rule, 'DELETE', inspect.signature(func), status_code=status_code)
         return func
     return wrapper
 
@@ -196,8 +196,8 @@ def route(path_rule:str, status_code:int=200):
       - status_code: default status code for success
     """
     def wrapper(func):
-        if not hasattr(func, 'slowapi_path_rule'):
-            func.slowapi_path_rule = PathRule(path_rule, '*', inspect.signature(func), status_code=status_code)
+        if not hasattr(func, 'slowlette_path_rule'):
+            func.slowlette_path_rule = PathRule(path_rule, '*', inspect.signature(func), status_code=status_code)
         return func
     return wrapper
 
@@ -208,8 +208,8 @@ def on_event(name:str):
       - name: name of the event, e.g., "startup", "shutdown"
     """
     def wrapper(func):
-        if not hasattr(func, 'slowapi_path_rule'):
-            func.slowapi_path_rule = PathRule(name, 'on_event', inspect.signature(func))
+        if not hasattr(func, 'slowlette_path_rule'):
+            func.slowlette_path_rule = PathRule(name, 'on_event', inspect.signature(func))
         return func
     return wrapper
 
@@ -220,8 +220,8 @@ def websocket(path_rule:str):
       - path_rule: path pattern to match
     """
     def wrapper(func):
-        if not hasattr(func, 'slowapi_path_rule'):
-            func.slowapi_path_rule = PathRule(path_rule, 'websocket', inspect.signature(func))
+        if not hasattr(func, 'slowlette_path_rule'):
+            func.slowlette_path_rule = PathRule(path_rule, 'websocket', inspect.signature(func))
         return func
     return wrapper
 
@@ -237,18 +237,18 @@ class Router:
         # Binding URL handlers to the PathRule attached by decorators (@get(PATH) etc).
         # Note that __init__() is called after all the decorators.
         for name, method in inspect.getmembers(type(self.app), predicate=inspect.isfunction):
-            if hasattr(method, 'slowapi_path_rule'):
-                logging.debug(f'SlowAPI Binding: {method.slowapi_path_rule.method} {method.slowapi_path_rule.rule_str} -> {self.app.__class__.__name__}.{name}{inspect.signature(method)}')
+            if hasattr(method, 'slowlette_path_rule'):
+                logging.debug(f'Slowlette Binding: {method.slowlette_path_rule.method} {method.slowlette_path_rule.rule_str} -> {self.app.__class__.__name__}.{name}{inspect.signature(method)}')
                 self.handlers.append(method)
 
         
     async def dispatch_event(self, name:str):
         for subapp in self.middlewares:
-            await subapp.slowapi.dispatch_event(name)
+            await subapp.slowlette.dispatch_event(name)
             
         for handler in self.handlers:
             request = Request(url=name, method="on_event")
-            args = handler.slowapi_path_rule.match(request)
+            args = handler.slowlette_path_rule.match(request)
             if args is not None:
                 if inspect.iscoroutinefunction(handler):
                     try:
@@ -262,7 +262,7 @@ class Router:
         if name == 'shutdown':
             subapps = reversed(subapps)
         for subapp in subapps:
-            await subapp.slowapi.dispatch_event(name)
+            await subapp.slowlette.dispatch_event(name)
             
         
     async def dispatch(self, request:Request, body=None) -> Response:
@@ -275,9 +275,9 @@ class Router:
         # execute handlers from top to bottom, and store the responses in a list
         response_list = [ Response() ]
         for subapp in self.middlewares:
-            response_list.append(await subapp.slowapi.dispatch(request))
+            response_list.append(await subapp.slowlette.dispatch(request))
         for handler in self.handlers:
-            args = handler.slowapi_path_rule.match(request)
+            args = handler.slowlette_path_rule.match(request)
             if args is not None:
                 if inspect.iscoroutinefunction(handler):
                     try:
@@ -287,7 +287,7 @@ class Router:
                 else:
                     response = handler(self.app, **args)
                 if not isinstance(response, Response):
-                    status_code = handler.slowapi_path_rule.status_code
+                    status_code = handler.slowlette_path_rule.status_code
                     response = Response(status_code, content=response)
                 if response.status_code > 0:
                     orig = self.app.__class__.__name__
@@ -298,7 +298,7 @@ class Router:
                     logging.debug(f'{orig}: {req} -> Status {stat}: {resp}')
                 response_list.append(response)
         for subapp in self.subapps:
-            response_list.append(await subapp.slowapi.dispatch(request))
+            response_list.append(await subapp.slowlette.dispatch(request))
 
         return self.merge_responses(response_list)
             
@@ -318,22 +318,22 @@ class Router:
 
 
     def include(self, app):
-        if not hasattr(app, 'slowapi'):
+        if not hasattr(app, 'slowlette'):
             # in case the __init__() method is not called by user subclass
-            app.slowapi = Router(app)
+            app.slowlette = Router(app)
         self.subapps.append((app))
 
 
     def add_middleware(self, app):
-        if not hasattr(app, 'slowapi'):
+        if not hasattr(app, 'slowlette'):
             # in case the __init__() method is not called by user subclass
-            app.slowapi = Router(app)
+            app.slowlette = Router(app)
         self.middlewares.append(app)
 
 
     async def websocket(self, request:Request, websocket:WebSocket) -> None:
         for handler in self.handlers:
-            args = handler.slowapi_path_rule.match(request)
+            args = handler.slowlette_path_rule.match(request)
             if args is None:
                 continue
             request.abort()
@@ -342,7 +342,7 @@ class Router:
                 logging.error('WebSocket handler must be async')
                 return None
 
-            args[handler.slowapi_path_rule.websocket_param] = websocket
+            args[handler.slowlette_path_rule.websocket_param] = websocket
             try:
                 await handler(self.app, **args)
             except asyncio.CancelledError:
@@ -350,7 +350,7 @@ class Router:
 
         for subapp in self.subapps:
             if not request.aborted:
-                await subapp.slowapi.websocket(request, websocket)
+                await subapp.slowlette.websocket(request, websocket)
 
         
     def __call__(self, request:Request, body=None) -> Response:

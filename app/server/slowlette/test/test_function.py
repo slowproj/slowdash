@@ -1,13 +1,13 @@
 #! /usr/bin/python3
 
 
-# temporary until SlowAPI becomes a package
-import sys, os
+# temporary until Slowlette becomes a package
+import sys, os, asyncio
 sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir))
 
 
-import slowapi
-app = slowapi.SlowAPI()
+import slowlette
+app = slowlette.Slowlette()
         
 @app.get('/')
 def home(self):
@@ -18,7 +18,13 @@ def hello(self, name:str="there"):
     return f"hello {name}"
 
 
+
+
+async def main():
+    print(await app.slowlette('/'))
+    print(await app.slowlette('/hello/Slowy'))
+
+    
 if __name__ == '__main__':
-    print(app.slowapi('/'))
-    print(app.slowapi('/hello/Slowy'))
+    asyncio.run(main())
     app.run()

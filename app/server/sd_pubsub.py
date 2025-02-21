@@ -3,7 +3,7 @@
 
 import sys, io, asyncio, logging
 
-import slowapi
+import slowlette
 from sd_component import Component
 
 
@@ -24,8 +24,8 @@ class PubsubComponent(Component):
         }}
 
     
-    @slowapi.websocket('/subscribe/{topic}')
-    async def subscribe(self, topic:str, websocket:slowapi.WebSocket):
+    @slowlette.websocket('/subscribe/{topic}')
+    async def subscribe(self, topic:str, websocket:slowlette.WebSocket):
         if topic not in self.topics:
             return None
         
@@ -47,7 +47,7 @@ class PubsubComponent(Component):
                     if topic == 'currentdata':
                         await self.app.api('/control/currentdata', message.encode())
                         await self.app.api('/publish/currentdata', message)
-        except slowapi.ConnectionClosed:
+        except slowlette.ConnectionClosed:
             self.websockets[topic].remove(websocket)
             logging.info("WebSocket Closed")
         except Exception as e:
@@ -55,7 +55,7 @@ class PubsubComponent(Component):
             logging.info(f"WebSocket Closed by error: {e}")
 
             
-    @slowapi.post('/publish/{topic}')
+    @slowlette.post('/publish/{topic}')
     async def publish(self, topic:str, data:bytes):
         try:
             await asyncio.gather(*(ws.send(data.decode()) for ws in self.websockets.get(topic, [])))

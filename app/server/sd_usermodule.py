@@ -3,7 +3,7 @@
 import sys, os, time, threading, asyncio, types, inspect, logging, traceback
 import importlib.machinery
 
-import slowapi
+import slowlette
 from sd_component import Component
 
 
@@ -421,12 +421,12 @@ class UserModuleComponent(Component):
                 self.usermodule_list.append(module)
 
 
-    @slowapi.on_event('startup')
+    @slowlette.on_event('startup')
     async def startup(self):
         await asyncio.gather(*(module.start() for module in self.usermodule_list))
 
 
-    @slowapi.on_event('shutdown')
+    @slowlette.on_event('shutdown')
     async def shutdown(self):
         await asyncio.gather(*(module.stop() for module in self.usermodule_list))
             
@@ -447,7 +447,7 @@ class UserModuleComponent(Component):
         }
 
 
-    @slowapi.get('/channels')
+    @slowlette.get('/channels')
     def get_channels(self):
         result = []
         for usermodule in self.usermodule_list:
@@ -457,7 +457,7 @@ class UserModuleComponent(Component):
         return result
 
         
-    @slowapi.get('/data/{channels}')
+    @slowlette.get('/data/{channels}')
     def get_data(self, channels:str, opts:dict):
         if len(self.usermodule_list) == 0:
             return None
@@ -489,8 +489,8 @@ class UserModuleComponent(Component):
         return result if has_result else None
 
     
-    @slowapi.post('/control')
-    async def post_control(self, doc:slowapi.DictJSON):
+    @slowlette.post('/control')
+    async def post_control(self, doc:slowlette.DictJSON):
         if len(self.usermodule_list) == 0:
             return None
         
@@ -509,6 +509,6 @@ class UserModuleComponent(Component):
             else:
                 return {'status': 'error'}
         elif type(result) is int:
-            return slowapi.Response(result)
+            return slowlette.Response(result)
 
         return result

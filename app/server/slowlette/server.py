@@ -20,13 +20,13 @@ async def dispatch_asgi(app, scope, receive, send):
             try:
                 message = await receive()
             except asyncio.CancelledError:
-                await app.slowapi.dispatch_event("shutdown")
+                await app.slowlette.dispatch_event("shutdown")
                 return
             if message['type'] == 'lifespan.startup':
-                await app.slowapi.dispatch_event("startup")
+                await app.slowlette.dispatch_event("startup")
                 await send({'type': 'lifespan.startup.complete'})
             elif message['type'] == 'lifespan.shutdown':
-                await app.slowapi.dispatch_event("shutdown")
+                await app.slowlette.dispatch_event("shutdown")
                 await send({'type': 'lifespan.shutdown.complete'})
 
     method = scope.get('method', '').upper()
@@ -38,7 +38,7 @@ async def dispatch_asgi(app, scope, receive, send):
 
     if scope['type'] == 'websocket':
         logging.info(f'WEBSOCKET: {url}')
-        return await app.slowapi.websocket(Request(url, method='WEBSOCKET', headers=headers), WebSocket(receive, send))
+        return await app.slowlette.websocket(Request(url, method='WEBSOCKET', headers=headers), WebSocket(receive, send))
     elif scope['type'] != 'http':
         logging.warning(f'ASGI Request not handled: type={scope["type"]}')
         return
@@ -65,7 +65,7 @@ async def dispatch_asgi(app, scope, receive, send):
                     if not message.get('more_body',False):
                         break
 
-    response = await app.slowapi(Request(url, method=method, headers=headers, body=body))
+    response = await app.slowlette(Request(url, method=method, headers=headers, body=body))
     logging.info(f'{method}: {url} -> {response.status_code}')
 
     await send({
@@ -125,7 +125,7 @@ def dispatch_wsgi(app, environ, start_response):
         else:
             body = b''
 
-    response = asyncio.run(app.slowapi(Request(url, method=method, headers=headers, body=body)))
+    response = asyncio.run(app.slowlette(Request(url, method=method, headers=headers, body=body)))
     logging.info(f'{method}: {url} -> {response.status_code}')
     
     start_response(response.get_status(), response.get_headers())
@@ -211,9 +211,9 @@ def serve_wsgi_gunicorn(app, port, **kwargs):
     # gunicorn SHOULD handle signals... signals cannot stop the App somehow.
     sys.stderr.write(f'Listening at port {port} (gunicorn WSGI {"HTTPS" if is_https else "HTTP"})\n')
     
-    asyncio.run(app.slowapi.dispatch_event('startup'))
+    asyncio.run(app.slowlette.dispatch_event('startup'))
     GunicornApp(app, **kwargs).run()
-    asyncio.run(app.slowapi.dispatch_event('shutdown'))
+    asyncio.run(app.slowlette.dispatch_event('shutdown'))
     sys.stderr.write('Terminated\n')
 
 
@@ -231,13 +231,13 @@ def serve_wsgi_ref(app, port, **kwargs):
     signal.signal(signal.SIGTERM, signal_handler)
     
     sys.stderr.write(f'Listening at port {port} (wsgiref WSGI)\n')
-    asyncio.run(app.slowapi.dispatch_event('startup'))
+    asyncio.run(app.slowlette.dispatch_event('startup'))
     try:
         with make_server('', port, app, handler_class=RequestHandler) as server:
             server.serve_forever()
     except KeyboardInterrupt:
         pass
-    asyncio.run(app.slowapi.dispatch_event('shutdown'))
+    asyncio.run(app.slowlette.dispatch_event('shutdown'))
     sys.stderr.write('Terminated\n')    
 
 
@@ -257,14 +257,14 @@ class WSGI:
     def __init__(self, app, serve=serve_wsgi):
         self.app = app
         self.serve = serve
-        self.slowapi = app.slowapi
+        self.slowlette = app.slowlette
 
 
     def __call__(self, environ, start_response):
         """WSGI entry point
         """
-        if not hasattr(self, 'slowapi'): # __init__() might not have been called
-            self.slowapi = Router(self)
+        if not hasattr(self, 'slowlette'): # __init__() might not have been called
+            self.slowlette = Router(self)
             
         return dispatch_wsgi(self.app, environ, start_response)
 

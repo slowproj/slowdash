@@ -7,31 +7,31 @@ from .server import dispatch_asgi, dispatch_wsgi, serve_asgi, serve_wsgi
 
 
 class App:
-    """SlowAPI App for ASIG
+    """Slowlette App for ASIG
     Note:
       - User App can be derived from this class, or can be passed to the constructor parameter:
-        - Method 1: class MyApp(slowapi.App)  then  app = MyApp()
-        - Method 2: app = slowapi.App(MyApp())
+        - Method 1: class MyApp(slowlette.App)  then  app = MyApp()
+        - Method 2: app = slowlette.App(MyApp())
       - In either case,
-        - MyApp can use the SlowAPI routing decorators.
+        - MyApp can use the Slowlette routing decorators.
         - The app object implements ASGI.
-        - Sub-apps can be added by app.slowapi.include(MySubApp()).
-        - Middlewares can be added by app.slowapi.add_middleware(...)
+        - Sub-apps can be added by app.slowlette.include(MySubApp()).
+        - Middlewares can be added by app.slowlette.add_middleware(...)
     """
     
     def __init__(self, subapp=None):
-        if not hasattr(self, 'slowapi'): # subclass might have defnied a custom router
-            self.slowapi = Router(self)
+        if not hasattr(self, 'slowlette'): # subclass might have defnied a custom router
+            self.slowlette = Router(self)
             
         if subapp is not None:
-            self.slowapi.include(subapp)
+            self.slowlette.include(subapp)
             
             
     async def __call__(self, scope, receive, send):
         """ASGI entry point
         """
-        if not hasattr(self, 'slowapi'): # __init__() might not have been called
-            self.slowapi = Router(self)
+        if not hasattr(self, 'slowlette'): # __init__() might not have been called
+            self.slowlette = Router(self)
 
         await dispatch_asgi(self, scope, receive, send)
     
@@ -43,8 +43,8 @@ class App:
 
 
 
-class SlowAPI(App):
-    """SlowAPI App that can assign URL endpoints to functions, instead of class methods
+class Slowlette(App):
+    """Slowlette App that can assign URL endpoints to functions, instead of class methods
     """
     
     class FunctionAdapter:
@@ -56,7 +56,7 @@ class SlowAPI(App):
         
     def __init__(self):
         super().__init__()
-        self.slowapi_function_handlers = []
+        self.slowlette_function_handlers = []
 
 
     def get(self, path_rule:str, status_code:int=200):
@@ -67,8 +67,8 @@ class SlowAPI(App):
         """
         def wrapper(func):
             adapter = self.FunctionAdapter(func)
-            adapter.slowapi_path_rule = PathRule(path_rule, 'GET', inspect.signature(func), status_code=status_code)
-            self.slowapi.handlers.append(adapter)
+            adapter.slowlette_path_rule = PathRule(path_rule, 'GET', inspect.signature(func), status_code=status_code)
+            self.slowlette.handlers.append(adapter)
             return func
         return wrapper
 
@@ -81,8 +81,8 @@ class SlowAPI(App):
         """
         def wrapper(func):
             adapter = self.FunctionAdapter(func)
-            adapter.slowapi_path_rule = PathRule(path_rule, 'POST', inspect.signature(func), status_code=status_code)
-            self.slowapi.handlers.append(adapter)
+            adapter.slowlette_path_rule = PathRule(path_rule, 'POST', inspect.signature(func), status_code=status_code)
+            self.slowlette.handlers.append(adapter)
             return func
         return wrapper
 
@@ -95,8 +95,8 @@ class SlowAPI(App):
         """
         def wrapper(func):
             adapter = self.FunctionAdapter(func)
-            adapter.slowapi_path_rule = PathRule(path_rule, 'DELETE', inspect.signature(func), status_code=status_code)
-            self.slowapi.handlers.append(adapter)
+            adapter.slowlette_path_rule = PathRule(path_rule, 'DELETE', inspect.signature(func), status_code=status_code)
+            self.slowlette.handlers.append(adapter)
             return func
         return wrapper
 
@@ -109,7 +109,7 @@ class SlowAPI(App):
         """
         def wrapper(func):
             adapter = self.FunctionAdapter(func)
-            adapter.slowapi_path_rule = PathRule(path_rule, '*', inspect.signature(func), status_code=status_code)
-            self.slowapi.handlers.append(adapter)
+            adapter.slowlette_path_rule = PathRule(path_rule, '*', inspect.signature(func), status_code=status_code)
+            self.slowlette.handlers.append(adapter)
             return func
         return wrapper

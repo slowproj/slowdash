@@ -3,7 +3,7 @@
 import time, math, logging
 import numpy as np
 
-import slowapi
+import slowlette
 from sd_component import ComponentPlugin, PluginComponent
 
 from sd_dataschema import Schema
@@ -17,22 +17,22 @@ class DataSource(ComponentPlugin):
         super().__init__(app, project, params)
 
         
-    @slowapi.on_event('startup')
+    @slowlette.on_event('startup')
     async def api_initialize(self):
         return await self.aio_initialize()
 
     
-    @slowapi.on_event('shutdown')
+    @slowlette.on_event('shutdown')
     async def api_finalize(self):
         return await self.aio_finalize()
 
     
-    @slowapi.get('/channels')
+    @slowlette.get('/channels')
     async def api_get_channels(self):
         return await self.aio_get_channels()
 
     
-    @slowapi.get('/data/{channels}')
+    @slowlette.get('/data/{channels}')
     async def api_get_data(self, channels:str, opts:dict):
         try:
             channels = channels.split(',')
@@ -42,7 +42,7 @@ class DataSource(ComponentPlugin):
             reducer = opts.get('reducer', 'last')
         except Exception as e:
             logging.error('Bad data URL: %s: %s' % (str(opts), str(e)))
-            return slowapi.Response(400)
+            return slowlette.Response(400)
         if resample < 0:
             resample = None
 
@@ -57,13 +57,13 @@ class DataSource(ComponentPlugin):
         return result
 
     
-    @slowapi.get('/blob')
+    @slowlette.get('/blob')
     async def api_get_blob(self, channel:str, path:list):
         mime_type, content = self.get_blob(channel, path[1:])
         if mime_type is not None:
             return None
 
-        return slowapi.Response(content_type=mime_type, content=content)
+        return slowlette.Response(content_type=mime_type, content=content)
 
     
     async def aio_initialize(self):

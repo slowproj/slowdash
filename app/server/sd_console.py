@@ -3,7 +3,7 @@
 
 import sys, io, asyncio, logging
 
-import slowapi
+import slowlette
 from sd_component import Component
 
 
@@ -73,7 +73,7 @@ class ConsoleComponent(Component):
         self.console_stdout = self.console_awaitable_stdout
         
 
-    @slowapi.on_event('shutdown')
+    @slowlette.on_event('shutdown')
     def finalize(self):
         self.enabled = False
         if self.console_stdin is not None:
@@ -91,7 +91,7 @@ class ConsoleComponent(Component):
         }}
 
     
-    @slowapi.get('/console')
+    @slowlette.get('/console')
     async def read(self, nlines:int=20, since:int=0):
         if not self.enabled:
             return {
@@ -131,7 +131,7 @@ class ConsoleComponent(Component):
         }
 
 
-    @slowapi.post('/console')
+    @slowlette.post('/console')
     def write(self, body:bytes):
         cmd = body.decode()
         logging.info(f'Console Input: {cmd}')
@@ -141,4 +141,4 @@ class ConsoleComponent(Component):
         self.console_stdin.write('%s\n' % cmd)
         self.console_stdin.seek(pos)
         
-        return slowapi.Response(201)
+        return slowlette.Response(201)

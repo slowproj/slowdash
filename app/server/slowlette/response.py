@@ -74,7 +74,7 @@ class Response:
             if type(self.content) is list:
                 self.content.extend(content)
             else:
-                logging.error('SlowAPI: incompatible results cannot be combined (list)')
+                logging.error('Slowlette: incompatible results cannot be combined (list)')
                 
         elif type(content) is dict:
             # dict contents are merged
@@ -84,7 +84,7 @@ class Response:
             if type(self.content) is dict:
                 self.content.update(content)
             else:
-                logging.error('SlowAPI: incompatible results cannot be combined (dict)')
+                logging.error('Slowlette: incompatible results cannot be combined (dict)')
                 
         elif type(content) is str:
             # string contents are appended after a new line
@@ -94,7 +94,7 @@ class Response:
             elif type(self.content) is str:
                 self.content += '\r\n' + content
             else:
-                logging.error('SlowAPI: incompatible results cannot be combined (str)')
+                logging.error('Slowlette: incompatible results cannot be combined (str)')
                 logging.error(f'  dest: {self.content}')
                 logging.error(f'  src: {content}')
             
@@ -102,7 +102,7 @@ class Response:
             if self.content is None:
                 self.content = content
             else:
-                logging.error(f'SlowAPI: invalid content type to append ({type(content)})')
+                logging.error(f'Slowlette: invalid content type to append ({type(content)})')
 
                 
     def get_status_code(self) -> int:
@@ -162,7 +162,7 @@ class Response:
 
 
 class FileResponse(Response):
-    """SlowAPI Response that returns the content of a file
+    """Slowlette Response that returns the content of a file
     Note:
       - Sanity checks must be made before using this.
     """
@@ -191,10 +191,10 @@ class FileResponse(Response):
 
 def read_file(filepath, content_type):
     if not os.path.isfile(filepath):
-        logging.warning(f'SlowAPI_FileResponse: not a file: {filepath}')
+        logging.warning(f'Slowlette_FileResponse: not a file: {filepath}')
         return None, None
     if not os.access(filepath, os.R_OK):
-        logging.warning(f'SlowAPI_FileResponse: permission denied: {filepath}')
+        logging.warning(f'Slowlette_FileResponse: permission denied: {filepath}')
         return None, None
 
     content = None
@@ -202,7 +202,7 @@ def read_file(filepath, content_type):
         with open(filepath, 'rb') as f:
             content = f.read()
     except Exception as e:
-        logging.warning(f'SlowAPI_FileResponse: system error: {filepath}: {e}')
+        logging.warning(f'Slowlette_FileResponse: system error: {filepath}: {e}')
         return None, None
 
     if content_type is None:

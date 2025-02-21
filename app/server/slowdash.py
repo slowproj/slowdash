@@ -1,10 +1,10 @@
 #! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 3 Sep 2021 #
-# Restructured to use SlowAPI by Sanshiro Enomoto on 12 January 2025 #
+# Restructured to use Slowlette by Sanshiro Enomoto on 12 January 2025 #
 
 
 import sys, os, asyncio, logging
-import slowapi
+import slowlette
 
 from sd_version import slowdash_version
 from sd_component import Component
@@ -20,7 +20,7 @@ from sd_misc_api import MiscApiComponent
 
 
 
-class App(slowapi.App):
+class App(slowlette.App):
     def __init__(self, project_dir=None, project_file=None, is_cgi=False, is_command=False, is_async=True):
         """
         Parameters:
@@ -58,18 +58,18 @@ class App(slowapi.App):
             sys.path.insert(1, self.project.project_dir)
             sys.path.insert(1, os.path.join(self.project.project_dir, 'config'))
             
-        # API Components: see slowapi.App for the mechanism
-        self.slowapi.include(ConsoleComponent(self, self.project))   # this must be the first to capture stdout
-        self.slowapi.include(ConfigComponent(self, self.project))
-        self.slowapi.include(DataSourceComponent(self, self.project))
-        self.slowapi.include(ExportComponent(self, self.project))
-        self.slowapi.include(PubsubComponent(self, self.project))
-        self.slowapi.include(UserModuleComponent(self, self.project))
-        self.slowapi.include(TaskModuleComponent(self, self.project))
-        self.slowapi.include(MiscApiComponent(self, self.project))
+        # API Components: see slowlette.App for the mechanism
+        self.slowlette.include(ConsoleComponent(self, self.project))   # this must be the first to capture stdout
+        self.slowlette.include(ConfigComponent(self, self.project))
+        self.slowlette.include(DataSourceComponent(self, self.project))
+        self.slowlette.include(ExportComponent(self, self.project))
+        self.slowlette.include(PubsubComponent(self, self.project))
+        self.slowlette.include(UserModuleComponent(self, self.project))
+        self.slowlette.include(TaskModuleComponent(self, self.project))
+        self.slowlette.include(MiscApiComponent(self, self.project))
 
 
-    @slowapi.on_event("shutdown")
+    @slowlette.on_event("shutdown")
     def on_shutdown(self):
         logging.info('Terminating SlowDash gracefully')
         
@@ -86,7 +86,7 @@ class App(slowapi.App):
         if len(path) < 1 or path[0] != 'api':
             path = ['api'] + path
             
-        return (await self.slowapi('/'.join(path), doc)).content
+        return (await self.slowlette('/'.join(path), doc)).content
 
     
     async def request_config(self):
@@ -94,7 +94,7 @@ class App(slowapi.App):
         Returns:
           - config as a dict
         """
-        return (await self.slowapi('/api/config')).content
+        return (await self.slowlette('/api/config')).content
 
         
     async def request_channels(self):
@@ -103,7 +103,7 @@ class App(slowapi.App):
           - channels as a list of dicts, e.g., [ {"name": name, "type": type, "current": is_current}, ... ].
             - "type" and "current" are optional, with defaults "numeric" and False.
         """
-        return (await self.slowapi('/api/channels')).content
+        return (await self.slowlette('/api/channels')).content
 
         
     async def request_data(self, channels, length:float=None, to:float=None, resample:float=None, reducer:str=None):
@@ -134,7 +134,7 @@ class App(slowapi.App):
         if len(opts) > 0:
             url += '&'.join(['%s=%s'%(k,v) for k,v in opts.items()])
         
-        return (await self.slowapi(url)).content
+        return (await self.slowlette(url)).content
 
 
     async def request_publish(self, topic:str, message):
@@ -143,7 +143,7 @@ class App(slowapi.App):
           - topic: subscription topic
           - message: bytes, or data to JSONize.
         """
-        return (await self.slowapi(f'/api/publish/{topic}', message)).content
+        return (await self.slowlette(f'/api/publish/{topic}', message)).content
 
     
         
@@ -232,8 +232,8 @@ if __name__ == '__main__':
         is_async = not args.wsgi
     )    
     if (args.port > 0) and (app.project.auth_list is not None):
-        app.slowapi.add_middleware(slowapi.BasicAuthentication(auth_list=app.project.auth_list))
-    app.slowapi.add_middleware(slowapi.FileServer(
+        app.slowlette.add_middleware(slowlette.BasicAuthentication(auth_list=app.project.auth_list))
+    app.slowlette.add_middleware(slowlette.FileServer(
         filedir = os.path.join(app.project.sys_dir, 'app', 'site'),
         index_file = 'slowhome.html' if app.project.config is not None else 'welcome.html',
         exclude='/api',
@@ -244,11 +244,11 @@ if __name__ == '__main__':
         # command-line mode
         async def main():
             json_opts = { 'indent': args.indent }
-            await app.slowapi.dispatch_event('startup')
-            response = await app.slowapi(f'/api/{args.COMMAND}')
+            await app.slowlette.dispatch_event('startup')
+            response = await app.slowlette(f'/api/{args.COMMAND}')
             sys.stdout.write(response.get_content(json_opts).decode())
             sys.stdout.write('\n')
-            await app.slowapi.dispatch_event('shutdown')
+            await app.slowlette.dispatch_event('shutdown')
         asyncio.run(main())
         
     else:
@@ -262,7 +262,7 @@ if __name__ == '__main__':
             if args.ssl_keyfile is not None or args.ssl_certfile is not None:
                 sys.stderr.write('ERROR: HTTPS is not available with WSGI\n')
                 sys.exit(-1)
-            slowapi.WSGI(app, slowapi.serve_wsgi_ref).run(port=args.port, **kwargs)
+            slowlette.WSGI(app, slowlette.serve_wsgi_ref).run(port=args.port, **kwargs)
         else:
             if args.ssl_keyfile is not None and args.ssl_certfile is not None:
                 kwargs['ssl_keyfile'] = args.ssl_keyfile

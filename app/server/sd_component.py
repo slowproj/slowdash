@@ -2,10 +2,10 @@
 
 import sys, os, copy, glob, inspect, logging, traceback
 import importlib.machinery
-import slowapi
+import slowlette
 
 
-class Component(slowapi.App):
+class Component(slowlette.App):
     """ Base class for App components
     """
     
@@ -15,13 +15,13 @@ class Component(slowapi.App):
         self.project = project
 
         
-    @slowapi.get('/config')
+    @slowlette.get('/config')
     def api_config(self):
         return self.public_config()
 
 
     # override this
-    # TODO: remove this with using SlowAPI response merging (each component/plugin binds '/config')
+    # TODO: remove this with using Slowlette response merging (each component/plugin binds '/config')
     def public_config(self):
         """ returns contents for the "config" API (exposed to users)
         Note:
@@ -32,7 +32,7 @@ class Component(slowapi.App):
 
         
     
-class ComponentPlugin(slowapi.App):
+class ComponentPlugin(slowlette.App):
     """ Base class for plugin modules of an App component
     """
     
@@ -87,7 +87,7 @@ class PluginComponent(Component):
         """
 
         plugins = {}
-        for plugin in self.slowapi:
+        for plugin in self.slowlette:
             name = plugin.plugin_type
             if name in plugins:
                 # multiple plugins of the same type -> array
@@ -126,7 +126,7 @@ class PluginComponent(Component):
             plugin = self._load_plugin_module(plugin_name, class_name, params=params)
             if plugin is not None:
                 plugin.plugin_type = plugin.class_name[len(self.class_prefix)+1:]
-                self.slowapi.include(plugin)
+                self.slowlette.include(plugin)
                     
 
     def _load_plugin_module(self, plugin_name, class_name, params):

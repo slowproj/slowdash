@@ -3,7 +3,7 @@
 
 import time, datetime, uuid, re, json, requests, logging
 
-import slowapi
+import slowlette
 from sd_component import ComponentPlugin
 
 import export_Notebook
@@ -47,12 +47,12 @@ class Export_Jupyter(export_Notebook.Export_Notebook):
         return config
 
         
-    @slowapi.post('/export/jupyter/{channels}')
-    def export_jupyter(self, channels:str, opts:dict, doc:slowapi.DictJSON):
+    @slowlette.post('/export/jupyter/{channels}')
+    def export_jupyter(self, channels:str, opts:dict, doc:slowlette.DictJSON):
         filename = doc.get('filename', None)
         if filename is None or not filename.replace('_', '0').replace('-', '0').replace('.', '0').isalnum():
             logging.warning(f'Jupyter post: bad file name: {filename}')
-            return slowapi.Response(400) # Bad Request
+            return slowlette.Response(400) # Bad Request
 
         if self.slowdash_internal_url is not None:
             opts['slowdash_url'] = self.slowdash_internal_url

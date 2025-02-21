@@ -1,99 +1,99 @@
 #! /usr/bin/python3
 
 
-# temporary until SlowAPI becomes a package
+# temporary until Slowlette becomes a package
 import sys, os
 sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir))
 
 
-import slowapi, asyncio
+import slowlette, asyncio
 
 
 class MyApp:
         
-    @slowapi.get('/')  # example for the simplest GET
+    @slowlette.get('/')  # example for the simplest GET
     def home(self):
         return "I'm home"
 
 
-    @slowapi.get('/hello/{name}')   # name from path, with default
+    @slowlette.get('/hello/{name}')   # name from path, with default
     def hello(self, name:str="there"):
         return f"hello {name}"
 
 
-    @slowapi.get('/echo/{*}')     # extra path parameters; a list-type arg receives the request path
+    @slowlette.get('/echo/{*}')     # extra path parameters; a list-type arg receives the request path
     def echo(self, path:list):
         return path[1:]
 
     
-    @slowapi.get('/headers')     # getting the entire Request
-    def header(self, request:slowapi.Request):
+    @slowlette.get('/headers')     # getting the entire Request
+    def header(self, request:slowlette.Request):
         return { k:v for k,v in request.headers.items() if v is not None }
 
     
-    @slowapi.post('/message')  # example for POST
+    @slowlette.post('/message')  # example for POST
     def message(self, name:str, doc:bytes):  # name is from options, doc is from request body
         return {'message1': f"Dear {name},\n{doc.decode()}"}
 
 
-    @slowapi.post('/message')   # multiple responses will be aggregated
+    @slowlette.post('/message')   # multiple responses will be aggregated
     async def message2(self, name:str, doc:bytes):
         return {'message2': f"I said to {name}, {doc.decode()}"}
 
 
-    @slowapi.get('/source')  # example to return a blob
+    @slowlette.get('/source')  # example to return a blob
     def source(self):
-        return slowapi.Response(content_type='text/plain', content=open('slowapi.py', 'rb').read())
+        return slowlette.Response(content_type='text/plain', content=open('slowlette.py', 'rb').read())
 
 
-    @slowapi.delete('/trash')  # example for DELETE
+    @slowlette.delete('/trash')  # example for DELETE
     def delete_trash(self):
         sys.stderr.write("Trash Deleted\n")
-        return slowapi.Response(200)
+        return slowlette.Response(200)
 
 
-    @slowapi.get('/deci')   # test to return a non-JSONable type
+    @slowlette.get('/deci')   # test to return a non-JSONable type
     def deci(self, num:float=10, den:float=3):
         import decimal
         return { "decimal": decimal.Decimal(num)/decimal.Decimal(den), "float": num/den }
 
 
-    @slowapi.on_event('startup')
+    @slowlette.on_event('startup')
     def initialize(self):
         print("INITIALIZED")
 
         
-    @slowapi.on_event('shutdown')
+    @slowlette.on_event('shutdown')
     def finalize(self):
         print("FINALIZED")
 
     
-app = slowapi.App(MyApp())
+app = slowlette.App(MyApp())
 '''
 to run the app as a ASGI server, run:
-$ uvicorn test_slowapi:app
+$ uvicorn test_slowlette:app
 '''
 
 
-wsgi_app = slowapi.WSGI(app)
+wsgi_app = slowlette.WSGI(app)
 '''
 to run the app as a WSGI server, run:
-$ gunicorn test_slowapi:wsgi_app
+$ gunicorn test_slowlette:wsgi_app
 '''
 
 
 
 async def main():
     ### test responses ###
-    print(await app.slowapi('/'))
-    print(await app.slowapi('/hello'))
-    print(await app.slowapi('/hello/Slowy'))
-    print(await app.slowapi('/message?name=you', b"how are you doing?"))
-    print(await app.slowapi('/echo/hello/Slowy'))
-    print(await app.slowapi('/home'))  # does not exist
-    #print(await app.slowapi_get('/source'))
-    print(await app.slowapi(slowapi.Request('/trash', method='delete')))
-    print(await app.slowapi('/deci?den=3'))
+    print(await app.slowlette('/'))
+    print(await app.slowlette('/hello'))
+    print(await app.slowlette('/hello/Slowy'))
+    print(await app.slowlette('/message?name=you', b"how are you doing?"))
+    print(await app.slowlette('/echo/hello/Slowy'))
+    print(await app.slowlette('/home'))  # does not exist
+    #print(await app.slowlette_get('/source'))
+    print(await app.slowlette(slowlette.Request('/trash', method='delete')))
+    print(await app.slowlette('/deci?den=3'))
 
 
     

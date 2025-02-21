@@ -1,6 +1,6 @@
-# SlowAPI
+# Slowlette
 
-SlowAPI is a Web-server micro-framework in Python. Like FastAPI (or Flask), URLs are parsed, parameters are extracted, and the requests are routed to user code. Unlike FastAPI or Flask, requests in SlowAPI can be bound to methods of multiple class instances, not just to functions or a single instance. However, binding to standalone functions (as in FastAPI/Flask) is also supported. One HTTP request can be handled by multiple user handlers, for example, multiple instances of a user class or a combination of different classes and functions, and the responses are aggregated in a customizable way. This is designed for dynamic plug-in systems (where each plugin might return partial data) with the chain-of-responsibility scheme. SlowAPI implements both ASGI and WSGI.
+Slowlette is a Web-server micro-framework in Python. Like FastAPI (or Flask), URLs are parsed, parameters are extracted, and the requests are routed to user code. Unlike FastAPI or Flask, requests in Slowlette can be bound to methods of multiple class instances, not just to functions or a single instance. However, binding to standalone functions (as in FastAPI/Flask) is also supported. One HTTP request can be handled by multiple user handlers, for example, multiple instances of a user class or a combination of different classes and functions, and the responses are aggregated in a customizable way. This is designed for dynamic plug-in systems (where each plugin might return partial data) with the chain-of-responsibility scheme. Slowlette implements both ASGI and WSGI.
 
 
 ## Dependencies
@@ -14,16 +14,16 @@ SlowAPI is a Web-server micro-framework in Python. Like FastAPI (or Flask), URLs
 ```python
 # testapp.py
 
-import slowapi
+import slowlette
 
-class App(slowapi.App):
-    @slowapi.get('/')
+class App(slowlette.App):
+    @slowlette.get('/')
     def home(self):
         return 'feel at home'
 
-    @slowapi.get('/hello')
+    @slowlette.get('/hello')
     def say_hello(self):
-        return 'Hello, SlowAPI!'
+        return 'Hello, Slowlette!'
 
 app = App()
 
@@ -43,32 +43,32 @@ curl http://localhost:8000/hello
 ```
 And you should see the response:
 ```text
-Hello, SlowAPI.
+Hello, Slowlette.
 ```
 
 #### Running via external ASGI server
-Like FastAPI, SlowAPI App object implements ASGI, and any external ASGI server can be used.
+Like FastAPI, Slowlette App object implements ASGI, and any external ASGI server can be used.
 ```bash
 uvicorn testapp:app
 ```
 
-#### Not inheriting from slowapi.App
-The base class, `slowapi.App`, has only three attributes, listed below:
-- `slowapi`: SlowAPI connection point
+#### Not inheriting from slowlette.App
+The base class, `slowlette.App`, has only three attributes, listed below:
+- `slowlette`: Slowlette connection point
 - `__call__(self, scope, receive, send)`: ASGI entry point
 - `run(self, port, **kwargs)`: Execution start point
 
 Given this small number of attributes, the likelihood of name conflicts with user classes should be minimal.
-Nevertheless, it is also possible to create a user class independently from SlowAPI and pass it to SlowAPI later.
+Nevertheless, it is also possible to create a user class independently from Slowlette and pass it to Slowlette later.
 ```python
-import slowapi
+import slowlette
 
 class MyApp:
-    @slowapi.get('/hello')
+    @slowlette.get('/hello')
     def say_hello(self):
         return 'hello, how are you?'
 
-app = slowapi.App(MyApp())
+app = slowlette.App(MyApp())
 
 if __name__ == '__main__':
     app.run()
@@ -76,15 +76,15 @@ if __name__ == '__main__':
 Once you have created the `app` instance, the usage is essentially the same as before.
 
 #### Performance overhead
-Whether the user class is inherited from `slowapi.App` or not, the SlowAPI decorators (such as `@slowapi.get()`) do not modify the function signature, and the decorated user methods can be used as they are defined in the user code. There is no additional performance overhead with the SlowAPI decorators.
+Whether the user class is inherited from `slowlette.App` or not, the Slowlette decorators (such as `@slowlette.get()`) do not modify the function signature, and the decorated user methods can be used as they are defined in the user code. There is no additional performance overhead with the Slowlette decorators.
 
 
 ### Binding to functions
-By creating an instance of SlowAPI, functions, instead of class methods, can be bound to URL endpoints, in a very similar way as FastAPI and Flask.
+By creating an instance of Slowlette, functions, instead of class methods, can be bound to URL endpoints, in a very similar way as FastAPI and Flask.
 ```python
-import slowapi
+import slowlette
 
-app = slowapi.SlowAPI()
+app = slowlette.Slowlette()
 
 @app.get('/hello')
 def say_hello():
@@ -96,10 +96,10 @@ if __name__ == '__main__':
 
 ### GET with URL path parameters
 ```python
-import slowapi
+import slowlette
 
-class App(slowapi.App):
-    @slowapi.get('/hello/{name}')
+class App(slowlette.App):
+    @slowlette.get('/hello/{name}')
     def hello(self, name:str):
         return f'hello, {name}'
 
@@ -111,17 +111,17 @@ app = App()
 - Return value of a handler must be:
   - `str` for a `text/plain` reply
   - `list` or `dict` for an `application/json` reply
-  - `slowapi.FileResponse` object for file fetching
-  - `slowapi.Response` object for full flexibility
+  - `slowlette.FileResponse` object for file fetching
+  - `slowlette.Response` object for full flexibility
   - `None` if the request is not applicable
 
 
 ### GET with URL query parameters
 ```python
-import slowapi
+import slowlette
 
-class App(slowapi.App):
-    @slowapi.get('/hello/{name}')
+class App(slowlette.App):
+    @slowlette.get('/hello/{name}')
     def hello(self, name:str, message:str='how are you', repeat:int=3):
         return f'hello, {name}.' + f' {message}' * repeat
 
@@ -131,10 +131,10 @@ app = App()
 ### Async handlers
 With ASGI, if the bound method is `async`, requests are handled asynchronously.
 ```python
-import slowapi
+import slowlette
 
-class App(slowapi.App):
-    @slowapi.get('/hello')
+class App(slowlette.App):
+    @slowlette.get('/hello')
     async def hello(self, delay:float=0):
         if delay > 0:
             await asyncio.sleep(delay)
@@ -146,10 +146,10 @@ app = App()
 
 ### Receiving the full path and/or query parameters
 ```python
-import slowapi
+import slowlette
 
-class App(slowapi.App):
-    @slowapi.get('/echo/{*}')
+class App(slowlette.App):
+    @slowlette.get('/echo/{*}')
     def echo(self, path:list, query:dict):
         return f'path: {path}, query: {query}'
 
@@ -163,11 +163,11 @@ app = App()
 
 ### Receiving the entire request
 ```python
-import slowapi
+import slowlette
 
-class App(slowapi.App):
-    @slowapi.get('/{*}')
-    def header(self, request:slowapi.Request):
+class App(slowlette.App):
+    @slowlette.get('/{*}')
+    def header(self, request:slowlette.Request):
         return f'header: {request.headers}'
 
 app = App()
@@ -182,10 +182,10 @@ The `Request` object has the following attributes:
 
 ### Simple POST
 ```python
-import slowapi
+import slowlette
 
-class App(slowapi.App):
-    @slowapi.post('/hello/{name}')
+class App(slowlette.App):
+    @slowlette.post('/hello/{name}')
     def hello(self, name:str, message:bytes):
         return f'hello, {name}. You sent me "{message.decode()}"'
 
@@ -198,27 +198,27 @@ app = App()
 ### POST with JSON document body
 #### for dict data
 ```python
-import slowapi
+import slowlette
 
-class App(slowapi.App):
-    @slowapi.post('/hello/{name}')
+class App(slowlette.App):
+    @slowlette.post('/hello/{name}')
     def hello(self, name:str, doc:DictJSON):  # if body in not a dict in JSON, a response 400 (Bad Request) will be returned
         item = doc.get('item', 'nothing')
         return f'hello, {name}. You gave me {item}'
 
 app = App()
 ```
-- The request body is parsed as `dict` in JSON and the value is set to the (last) argument of a type `slowapi.DictJSON`.
+- The request body is parsed as `dict` in JSON and the value is set to the (last) argument of a type `slowlette.DictJSON`.
 - If the content cannot be parsed as a dict, the handler will not be called and an error response (400) will be returned.
 - The DictJSON object (`doc`) implements most common dict operations, such as `doc[key]`, `key in doc`, `for key in doc:`, `doc.get(value, default)`, `doc.items()`, ...
 - use `doc.value()` or `dict(doc)` to get a native Python dict object.
 
 #### for any data in JSON
 ```python
-import slowapi
+import slowlette
 
-class App(slowapi.App):
-    @slowapi.post('/hello/{name}')
+class App(slowlette.App):
+    @slowlette.post('/hello/{name}')
     def hello(self, name:str, doc:JSON):
         item = doc.get('item', 'nothing')   # this will make a runtime error if the body is not dict
         return f'hello, {name}. You gave me {item}'
@@ -226,7 +226,7 @@ class App(slowapi.App):
 app = App()
 ```
 
-- The request body is parsed as JSON and the value is set to the (last) argument of a type `slowapi.JSON`.
+- The request body is parsed as JSON and the value is set to the (last) argument of a type `slowlette.JSON`.
 - If the content cannot be parsed as JSON, the handler will not be called and an error response (400) will be returned.
 - Use `JSON.value()` to get a value of the native Python types (`dict`, `list`, `str`, ...).
 - Use `dict(doc)` or `list(doc)` to convert to native Python dict or list.
@@ -238,14 +238,14 @@ app = App()
 ### Lifespan Events
 The structure is basically the same as FastAPI:
 ```python
-import slowapi
+import slowlette
 
-class App(slowapi.App):
-    @slowapi.on_event('startup')
+class App(slowlette.App):
+    @slowlette.on_event('startup')
     async def startup(self):
         print("SlowApp Server started")
         
-    @slowapi.on_event('shutdown')
+    @slowlette.on_event('shutdown')
     async def shutdown(self):
         print("SlowApp Server stopped")
 
@@ -257,17 +257,17 @@ app = App()
 ### WebSocket
 The structure is basically the same as FastAPI:
 ```python
-import slowapi
+import slowlette
 
-class App(slowapi.App):
-    @slowapi.websocket('/ws')
-    async def ws_echo(self, websocket:slowapi.WebSocket):
+class App(slowlette.App):
+    @slowlette.websocket('/ws')
+    async def ws_echo(self, websocket:slowlette.WebSocket):
         await websocket.accept()
         try:
             while True:
                 message = await websocket.receive_text()
                 await websocket.send_text(f'Received: {message}')
-        except slowapi.ConnectionClosed:
+        except slowlette.ConnectionClosed:
             print("WebSocket Closed")
 
 app = App()
@@ -277,23 +277,23 @@ app = App()
 
 ### Multiple Handlers for the same URL
 ```python
-import slowapi
+import slowlette
 
 class Fruit():
     def __init__(self, name:str):
         self.name = name
 
-    @slowapi.get('/hello')
+    @slowlette.get('/hello')
     def hello(self):
         return [f'I am a {self.name}']
 
-class App(slowapi.App):
+class App(slowlette.App):
     def __init__(self):
         super().__init__()
-        self.slowapi.include(Fruit('peach'))
-        self.slowapi.include(Fruit('melon'))
+        self.slowlette.include(Fruit('peach'))
+        self.slowlette.include(Fruit('melon'))
 
-    @slowapi.get('/hello')
+    @slowlette.get('/hello')
     def hello(self):
         return ['Hello.']
 
@@ -322,32 +322,32 @@ You will get a result of three responses aggregated:
 
 The behavior is customizable by providing a user response aggregator, as explained below.
 
-Instances of `slowapi.SlowAPI` used to bind functions in the example above can also be included or include other sub-apps.
+Instances of `slowlette.Slowlette` used to bind functions in the example above can also be included or include other sub-apps.
 
 
 ### Middleware
-As a SlowAPI app can already have multiple handlers (sub-app) in a chain, there is no difference between a (sub)app and a middleware; if the (sub)app behaves like a middleware, such as modifying the requests for the subsequent (sub)apps and/or modifying the responses from the (sub)apps, it is a middleware. 
+As a Slowlette app can already have multiple handlers (sub-app) in a chain, there is no difference between a (sub)app and a middleware; if the (sub)app behaves like a middleware, such as modifying the requests for the subsequent (sub)apps and/or modifying the responses from the (sub)apps, it is a middleware. 
 
 The middleware example below drops the path prefix of `/api` from all the requests:
 ```python
-import slowapi
+import slowlette
 
 class DropPrefix:
     def __init__(self, prefix):
         self.prefix = 'api'
 
-    @slowapi.route('/{*}')
+    @slowlette.route('/{*}')
     def handle(request: Request):
         if len(request.path) > 0 and request.path[0] == self.prefix:
             request.path = request.path[1:]
         return Response()
 
-class App(slowapi.App):
+class App(slowlette.App):
     def __init__(self):
         super().__init__()
-        self.slowapi.add_middleware(DropPrefix('api'))
+        self.slowlette.add_middleware(DropPrefix('api'))
 
-    @slowapi.get('/hello')
+    @slowlette.get('/hello')
     def hello(self):
         return 'Hello, Middleware.'
 
@@ -379,13 +379,13 @@ The `auth_list` is a list of keys, where each key looks like:
 `api:$2a$12$D2.....`, which is the same key format used by Apache (type "2a").
 A key can be generated by:
 ```
-key = slowapi.BasicAuthentication.generate_key('api', 'slow')
+key = slowlette.BasicAuthentication.generate_key('api', 'slow')
 ```
 
 #### File Server
 `FileServer(filedir, *, prefix='', index_file=None, exclude=None, drop_exclude_prefix=False, ext_allow=None, ext_deny=None)`
 
-The file server handles GET requests to send back files stored in `filedir`. The request path, optionally with `prefix` that will be dropped, is the relative path from the `filedir`. For security reasons, file names cannot contain special characters other than a few selected ones (`_`, `-`, `+`, `=`, `,`, `.`, `:`), and the first letter of each path element must be an alphabet or digit. Also, the path cannot start with a Windows drive letter (like `c:`), even if SlowAPI runs on non-Windows. POST and DELETE are not implemented.
+The file server handles GET requests to send back files stored in `filedir`. The request path, optionally with `prefix` that will be dropped, is the relative path from the `filedir`. For security reasons, file names cannot contain special characters other than a few selected ones (`_`, `-`, `+`, `=`, `,`, `.`, `:`), and the first letter of each path element must be an alphabet or digit. Also, the path cannot start with a Windows drive letter (like `c:`), even if Slowlette runs on non-Windows. POST and DELETE are not implemented.
 
 - `filedir` (str): path to a filesystem directory
 - `prefix` (str): URL path to bind this app (e.g., `/webfile`)
@@ -399,7 +399,7 @@ The file server handles GET requests to send back files stored in `filedir`. The
 A handler can make a user aggregator by returning an instance of a custom Response class with an overridden `merge_response()` method, as explained above.
 
 ```python
-import slowapi
+import slowlette
 
 class MyExclusiveApp:
     class MyExclusiveResponse(Response):
@@ -407,7 +407,7 @@ class MyExclusiveApp:
             # example: do not merge the responses from the subsequent handlers
             pass
 
-    @slowapi.route('/hello')
+    @slowlette.route('/hello')
     def hello():
         response = MyExclusiveResponse()
         response.append('hello, there is no one else here.')
@@ -418,9 +418,9 @@ This method is useful if the method returns a data structure that requires a cer
 In addition to that, a user app class can override a method to aggregate all the individual responses from all the handlers within the class, to provide full flexibility. To do this, make a custom `Router` with an overridden `merge_responses()` method:
 
 ```python
-import slowapi
+import slowlette
 
-class MyRouter(slowapi.Router):
+class MyRouter(slowlette.Router):
     def merge_responses(responses: list[Response]) -> Response:
         response = Response()
         for r in responses:
@@ -428,31 +428,31 @@ class MyRouter(slowapi.Router):
         return response
 ```
 
-Then use this as a `slowapi` of the user app:
+Then use this as a `slowlette` of the user app:
 ```python
-class MyApp(slowapi.App):
+class MyApp(slowlette.App):
     def __init__(self):
-        self.slowapi = MyRouter()
+        self.slowlette = MyRouter()
         super().__init__()
 ```
-Calling `super().__init__()` later is a little bit more efficient, as it does not replace `self.slowapi` if it is already defined.
+Calling `super().__init__()` later is a little bit more efficient, as it does not replace `self.slowlette` if it is already defined.
 
 
 ### Basic Authentication
 ```python
-import slowapi
+import slowlette
 
-class App(slowapi.App):
-    @slowapi.get('/hello')
+class App(slowlette.App):
+    @slowlette.get('/hello')
     def hello(self):
         return 'hello, how are you?'
 
 # test authentication username and password
 # once generated, store the key separately
-key = slowapi.BasicAuthentication.generate_key(username='api', password='slow')
+key = slowlette.BasicAuthentication.generate_key(username='api', password='slow')
 
 app = App()
-app.add_middleware(slowapi.BasicAuthentication(auth_list=[key]))
+app.add_middleware(slowlette.BasicAuthentication(auth_list=[key]))
 ```
 
 If HTTP is used, nothing will be returned, as the access is denied. (Add `-v` option to see details.)
@@ -501,19 +501,19 @@ This will create files under `/etc/letsencript/live/YOUR.DOMAIN.NAME`
 - full chain: `fullchain.pem`
 
 ### WSGI
-In addition to ASGI, WSGI can be used. The `slowapi.WSGI(app)` function wraps the ASGI App (standard SlowAPI App) and returns a WSGI app.
+In addition to ASGI, WSGI can be used. The `slowlette.WSGI(app)` function wraps the ASGI App (standard Slowlette App) and returns a WSGI app.
 ```python
 # testapp.py
 
-import slowapi
+import slowlette
 
-class App(slowapi.App):
-    @slowapi.get('/hello')
+class App(slowlette.App):
+    @slowlette.get('/hello')
     def hello(self):
         return 'hello, how are you?'
 
 app = App()   # ASGI App
-wsgi_app = slowapi.WSGI(app)
+wsgi_app = slowlette.WSGI(app)
 
 if __name__ == '__main__':
     wsgi_app.run()

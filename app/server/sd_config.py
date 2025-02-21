@@ -3,7 +3,7 @@
 import sys, os, glob, io, yaml, asyncio, threading, importlib, inspect, logging, traceback
 import pathlib, stat, pwd, grp, enum
 
-import slowapi
+import slowlette
 from sd_component import Component
 
 
@@ -87,17 +87,17 @@ class ConfigComponent(Component):
         self.project_dir = self.project.project_dir
         
 
-    @slowapi.get('/config')
+    @slowlette.get('/config')
     async def get_config(self):
         return await self._get_config(with_list=False)
 
         
-    @slowapi.get('/config/list')
+    @slowlette.get('/config/list')
     async def get_list(self):
         return await self._get_config(with_list=True, with_content_meta=True)
 
         
-    @slowapi.get('/config/filelist')
+    @slowlette.get('/config/filelist')
     async def get_filelist(self, sortby='mtime', reverse:bool=False):
         if self.project_dir is None:
             return []
@@ -121,7 +121,7 @@ class ConfigComponent(Component):
         return filelist
 
         
-    @slowapi.get('/config/content/{filename}')
+    @slowlette.get('/config/content/{filename}')
     async def get_content(self, filename:str, content_type:str='json'):
         meta, content = await self._load_content(filename, content_type)
         try:
@@ -131,42 +131,42 @@ class ConfigComponent(Component):
             pass
             
         if content is None:
-            return slowapi.Response(400)
+            return slowlette.Response(400)
         
         return content
 
 
-    @slowapi.get('/config/meta/{filename}')
+    @slowlette.get('/config/meta/{filename}')
     async def get_meta(self, filename:str, content_type:str='json'):
         meta, content = await self._load_content(filename, content_type)
         if meta is None:
-            return slowapi.Response(400)
+            return slowlette.Response(400)
         return meta
 
     
-    @slowapi.get('/config/file/{filename}')
+    @slowlette.get('/config/file/{filename}')
     async def get_file(self, filename:str):
         filepath, ext = self._get_filepath_ext(filename, os.R_OK)
         if filepath is None:
             logging.warning(f'GET config/file: {filename}: access denied')
-            return slowapi.Response(404)
+            return slowlette.Response(404)
 
         if not self.project.is_secure:
             if ext not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]:
-                return slowapi.Response(403)  # Forbidden
+                return slowlette.Response(403)  # Forbidden
                 
-        return slowapi.FileResponse(filepath)
+        return slowlette.FileResponse(filepath)
 
         
-    @slowapi.post('/config/file/{filename}')
+    @slowlette.post('/config/file/{filename}')
     async def post_file(self, filename: str, body:bytes, overwrite:str='no'):
         filepath, ext = self._get_filepath_ext(filename)
         if filepath is None:
             logging.warning(f'POST config/file: {filename}: access denied')
-            return slowapi.Response(400)
+            return slowlette.Response(400)
         if not self.project.is_secure:
             if ext not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]:
-                return slowapi.Response(403)  # Forbidden
+                return slowlette.Response(403)  # Forbidden
 
         config_dir = os.path.join(self.project_dir, 'config')
         if not os.path.isdir(config_dir):
@@ -174,7 +174,7 @@ class ConfigComponent(Component):
                 os.makedirs(config_dir)
             except:
                 logging.error('unable to create directory: ' + config_dir)
-                return slowapi.Response(500)       # Internal Server Error
+                return slowlette.Response(500)       # Internal Server Error
             
         mode = self.project.config.get('system', {}).get('file_mode', 0o644) + 0o100
         if mode & 0o070 != 0:
@@ -194,16 +194,16 @@ class ConfigComponent(Component):
 
         if os.path.exists(filepath):
             if not os.access(filepath, os.W_OK):
-                return slowapi.Response(403)   # Forbidden
+                return slowlette.Response(403)   # Forbidden
             if overwrite != 'yes':
-                return slowapi.Response(202)   # Accepted: no action made, try with overwrite flag
+                return slowlette.Response(202)   # Accepted: no action made, try with overwrite flag
             
         try:
             with open(filepath, "wb") as f:
                 f.write(body)
         except Exception as e:
             logging.error(f'unable to write file: {filepath}: %s' % str(e))
-            return slowapi.Response(500)    # Internal Server Error
+            return slowlette.Response(500)    # Internal Server Error
 
         try:
             mode = self.project.config.get('system', {}).get('file_mode', 0o644)
@@ -216,27 +216,27 @@ class ConfigComponent(Component):
         except Exception as e:
             logging.warning('unable to change file gid (%d): %s: %s' % (gid, config_dir, str(e)))
 
-        return slowapi.Response(201) # Created
+        return slowlette.Response(201) # Created
 
 
-    @slowapi.delete('/config/file/{filename}')
+    @slowlette.delete('/config/file/{filename}')
     async def delete_file(self, filename: str):
         filepath, ext = self._get_filepath_ext(filename, os.W_OK)
         if filepath is None:
             logging.warning(f'DETETE config/file: {filename}: access denied')
-            return slowapi.Response(404)  # Not Found
+            return slowlette.Response(404)  # Not Found
         if not self.project.is_secure:
             if ext not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]:
-                return slowapi.Response(403)  # Forbidden
+                return slowlette.Response(403)  # Forbidden
         
         try:
             os.remove(filepath)
             logging.info(f'config file deleted: {filename}')
         except Exception as e:
             logging.error(f'file deletion error: {filename}: {e}')
-            return slowapi.Response(500)   # Internal Server Error
+            return slowlette.Response(500)   # Internal Server Error
         
-        return slowapi.Response(200)
+        return slowlette.Response(200)
 
 
     async def _get_config(self, with_list=True, with_content_meta=True):

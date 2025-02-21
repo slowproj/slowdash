@@ -3,7 +3,7 @@
 
 import datetime, copy, logging
 
-import slowapi
+import slowlette
 from sd_component import ComponentPlugin
 
 
@@ -12,7 +12,7 @@ class Export_CSV(ComponentPlugin):
         super().__init__(app, project, params)
 
 
-    @slowapi.get('/export/csv/{channels}')
+    @slowlette.get('/export/csv/{channels}')
     async def export_csv(self, channels:str, opts:dict, timezone:str='local', resample:float=0):
         if len(timezone) == 0:
             timezone = 'local'
@@ -53,4 +53,4 @@ class Export_CSV(ComponentPlugin):
             ','.join(['NaN' if col is None else col for col in row]) for row in table
         ]).encode()
                 
-        return slowapi.Response(content_type='text/csv', content=content)
+        return slowlette.Response(content_type='text/csv', content=content)

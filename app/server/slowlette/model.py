@@ -5,11 +5,11 @@ import json, logging
 
 
 class JSON:
-    """Custom type for SlowAPI to recognize that the request-body is a JSON string
+    """Custom type for Slowlette to recognize that the request-body is a JSON string
     Note:
-      - If a request-handler parameter is of this type, SlowAPI interprets the body as JSON.
+      - If a request-handler parameter is of this type, Slowlette interprets the body as JSON.
         - Example:
-          | @SlowAPI.post('/doc')
+          | @Slowlette.post('/doc')
           | def process_doc(doc: JsonDocument):
           |   param1 = doc.get('param1', 0)
       - If the parsing fails, it returns response 400 (Bad Request) and the handler will not be called.
@@ -24,7 +24,7 @@ class JSON:
             else:
                 self.data = body
         except Exception as e:
-            logging.error('SlowAPI: JSON decoding error: %s' % str(e))
+            logging.error('Slowlette: JSON decoding error: %s' % str(e))
             self.data = None
 
             
@@ -87,4 +87,4 @@ class DictJSON(JSON):
         super().__init__(body)
         if type(self.data) is not dict:
             self.data = None
-            logging.error('SlowAPI: JSON decoding error: dict is expected')
+            logging.error('Slowlette: JSON decoding error: dict is expected')

@@ -2,16 +2,10 @@
 SLOWDASH_DIR = $(shell pwd)
 SLOWDASH_BIN = "$(SLOWDASH_DIR)/bin/slowdash"
 SLOWDASH_ENV = "$(SLOWDASH_DIR)/bin/slowdash-bashrc"
-PYTHON = $(shell which python3)
 GIT = $(shell which git)
 
 
 all:
-	@if [ x$(PYTHON) = x ]; then \
-		echo 'unable to find python3 (`which python3` returned null)'; \
-		exit 255; \
-	fi
-
 	@if [ ! -f "$(SLOWDASH_DIR)/app/site/jagaimo/jagaimo.mjs" ]; then \
 		if [ x$(GIT) = x ]; then \
 			echo 'submodules not cloned, git command not available'; \
@@ -59,6 +53,7 @@ all:
 	@echo 'export PYTHONPATH="$(SLOWDASH_DIR)/lib/slowpy:$$PYTHONPATH"' >> $(SLOWDASH_ENV)
 
 	@ln -fs "$(SLOWDASH_DIR)/docs" "$(SLOWDASH_DIR)/app/site"
+	@if [ -d .git/hooks ]; then ln -fs ../../.git-hooks/pre-commit .git/hooks; fi
 
 	@echo "## Installation successful ##"
 	@echo ""

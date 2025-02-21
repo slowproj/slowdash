@@ -5,16 +5,16 @@ import sys, os, asyncio,logging
 sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir))
 
 
-import slowapi
+import slowlette
 
-class App(slowapi.App):
-    @slowapi.get('/')
+class App(slowlette.App):
+    @slowlette.get('/')
     def index(self):
-        return slowapi.Response(content=index_html, content_type='text/html')
+        return slowlette.Response(content=index_html, content_type='text/html')
 
 
-    @slowapi.websocket('/ws')
-    async def ws_echo(self, request:slowapi.Request, websocket:slowapi.WebSocket):
+    @slowlette.websocket('/ws')
+    async def ws_echo(self, request:slowlette.Request, websocket:slowlette.WebSocket):
         await websocket.accept()
         logging.info(f"WebSocket Connected: {request}")
         await websocket.send(f'Your request is: {request}')
@@ -22,7 +22,7 @@ class App(slowapi.App):
             while True:
                 message = await websocket.receive()
                 await websocket.send(f'Received: {message}')
-        except slowapi.ConnectionClosed:
+        except slowlette.ConnectionClosed:
             logging.info("WebSocket Closed")
 
 

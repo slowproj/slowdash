@@ -2,7 +2,7 @@
 
 import sys, os, time, glob, asyncio, threading, inspect, logging
 
-import slowapi
+import slowlette
 from sd_usermodule import UserModule
 from sd_component import Component
 
@@ -373,12 +373,12 @@ class TaskModuleComponent(Component):
                 self.taskmodule_list.append(module)
 
                 
-    @slowapi.on_event('startup')
+    @slowlette.on_event('startup')
     async def startup(self):
         await asyncio.gather(*(module.start() for module in self.taskmodule_list if module.auto_load))
 
 
-    @slowapi.on_event('shutdown')
+    @slowlette.on_event('shutdown')
     async def shutdown(self):
         await asyncio.gather(*(module.stop() for module in self.taskmodule_list))
             
@@ -399,7 +399,7 @@ class TaskModuleComponent(Component):
         }
 
 
-    @slowapi.get('/channels')
+    @slowlette.get('/channels')
     def api_channels(self):
         result = []
         for taskmodule in self.taskmodule_list:
@@ -409,7 +409,7 @@ class TaskModuleComponent(Component):
         return result
 
         
-    @slowapi.get('/data/{channels}')
+    @slowlette.get('/data/{channels}')
     def api_data(self, channels:str, opts:dict):
         try:
             channels = channels.split(',')
@@ -417,7 +417,7 @@ class TaskModuleComponent(Component):
             to = float(opts.get('to', int(time.time())+1))
         except Exception as e:
             logging.error('Bad data URL: %s: %s' % (str(opts), str(e)))
-            return slowapi.Response(400)
+            return slowlette.Response(400)
         
         has_result, result = False, {}
         start = to - length
@@ -438,10 +438,10 @@ class TaskModuleComponent(Component):
         return result if has_result else None
 
 
-    @slowapi.post('/update/tasklist')
+    @slowlette.post('/update/tasklist')
     def update_tasklist(self):
         if self.app.is_cgi or (self.project.project_dir is None):
-            return slowapi.Response(200)
+            return slowlette.Response(200)
         
         for filepath in glob.glob(os.path.join(self.project.project_dir, 'config', 'slowtask-*.py')):
             rootname, ext = os.path.splitext(os.path.basename(filepath))
@@ -460,7 +460,7 @@ class TaskModuleComponent(Component):
         return {'status': 'ok'}
 
     
-    @slowapi.get('/control/task')
+    @slowlette.get('/control/task')
     async def task_status(self, since:int=0):
         while self.app.is_async and self.status_revision <= since:
             has_update = False
@@ -499,8 +499,8 @@ class TaskModuleComponent(Component):
         return result
 
         
-    @slowapi.post('/control')
-    async def execute_command(self, doc:slowapi.DictJSON):
+    @slowlette.post('/control')
+    async def execute_command(self, doc:slowlette.DictJSON):
         if len(self.taskmodule_list) == 0:
             return None
         
@@ -518,13 +518,13 @@ class TaskModuleComponent(Component):
             else:
                 return {'status': 'error'}
         elif type(result) is int:
-            return slowapi.Response(result)
+            return slowlette.Response(result)
                 
         return result
 
     
-    @slowapi.post('/control/currentdata')
-    async def set_variable(self, doc:slowapi.DictJSON):
+    @slowlette.post('/control/currentdata')
+    async def set_variable(self, doc:slowlette.DictJSON):
         for name, data in doc:
             value = data.get('x', None)
             for module in self.taskmodule_list:
@@ -538,8 +538,8 @@ class TaskModuleComponent(Component):
                     logging.info(f"Control Variable: {name} <= {repr(variable.get())}")
 
         
-    @slowapi.post('/control/task/{taskname}')
-    async def control_task(self, taskname:str, doc:slowapi.DictJSON):
+    @slowlette.post('/control/task/{taskname}')
+    async def control_task(self, taskname:str, doc:slowlette.DictJSON):
         action = doc.get('action', None)
         logging.info(f'Task Control: {taskname}.{action}()')
         
