@@ -171,6 +171,34 @@ def serve_asgi_uvicorn(app, port, **kwargs):
 
 
     
+def serve_asgi_hypercorn(app, port, **kwargs):
+    try:
+        from hypercorn.config import Config
+        from hypercorn.asyncio import serve
+    except:
+        logging.error('Unable to import hypercorn Python package: not installed?')
+        logging.warn('Falling back to WSGI; async requests will be serialized. WebSockets will not be available.')
+        return serve_wsgi_ref(WSGI(app), port, **kwargs)
+
+    async def main():
+        config = Config()
+        config.bind = f'0.0.0.0:{port}'
+        config.alpn_protocols = ['h2', 'h2c', 'http/1.1']
+        config.workers = 1
+        config.threads = 1
+        if 'ssl_keyfile' in kwargs:
+            config.keyfile = kwargs['ssl_keyfile']
+        if 'ssl_certfile' in kwargs:
+            config.certfile = kwargs['ssl_certfile']
+            
+        await serve(app, config)
+        
+    sys.stderr.write(f'Listening at port {port} (ASGI by Hypercorn)\n')
+    asyncio.run(main())
+    sys.stderr.write('Terminated\n')    
+
+
+    
 def serve_wsgi_gunicorn(app, port, **kwargs):
     try:
         import gunicorn.app.base
@@ -245,6 +273,7 @@ def serve_wsgi_ref(app, port, **kwargs):
     
 def serve_asgi(app, port, **kwargs):
     return serve_asgi_uvicorn(app, port, **kwargs)
+    #return serve_asgi_hypercorn(app, port, **kwargs)
 
 def serve_wsgi(app, port, **kwargs):
     return serve_wsgi_gunicorn(app, port, **kwargs)

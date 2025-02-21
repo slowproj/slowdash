@@ -1,9 +1,4 @@
-#! /usr/bin/python3
-
-
-import sys, os, asyncio,logging
-sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir))
-
+# test_websocket.py
 
 import slowlette
 
@@ -16,14 +11,14 @@ class App(slowlette.App):
     @slowlette.websocket('/ws')
     async def ws_echo(self, request:slowlette.Request, websocket:slowlette.WebSocket):
         await websocket.accept()
-        logging.info(f"WebSocket Connected: {request}")
+        print(f"WebSocket Connected: {request}")
         await websocket.send(f'Your request is: {request}')
         try:
             while True:
                 message = await websocket.receive()
                 await websocket.send(f'Received: {message}')
         except slowlette.ConnectionClosed:
-            logging.info("WebSocket Closed")
+            print("WebSocket Closed")
 
 
             
@@ -77,9 +72,8 @@ index_html = """
 </html>
 """
 
-
-
 app = App()
 
+
 if __name__ == '__main__':
-    app.run(log_level=logging.DEBUG)
+    app.run()

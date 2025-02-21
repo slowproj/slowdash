@@ -30,6 +30,7 @@ all:
 	@echo '   source "$$SLOWDASH_DIR/venv/bin/activate"' >> $(SLOWDASH_BIN)
 	@echo '   echo Running in venv at "$$SLOWDASH_DIR/venv" >&2' >> $(SLOWDASH_BIN)
 	@echo 'fi' >> $(SLOWDASH_BIN)
+	@echo 'export PYTHONPATH="$$SLOWDASH_DIR/lib/slowlette:$$PYTHONPATH"' >> $(SLOWDASH_BIN)
 	@echo '' >> $(SLOWDASH_BIN)
 	@echo 'use_slowdog=0' >> $(SLOWDASH_BIN)
 	@echo 'args=()' >> $(SLOWDASH_BIN)

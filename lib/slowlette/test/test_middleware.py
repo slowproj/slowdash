@@ -1,10 +1,4 @@
-#! /usr/bin/python3
-
-
-# temporary until Slowlette becomes a package
-import sys, os
-sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir))
-
+# test_middleware.py
 
 import slowlette
 
@@ -30,13 +24,14 @@ app.slowlette.add_middleware(
 )
 
 
-async def main():
-    print(await app.slowlette('/Warning.png'))
-    print(await app.slowlette('/api'))
-    print(await app.slowlette('/api/hello/slowlette'))
-
 
 if __name__ == '__main__':
-    import asyncio
-    asyncio.run(main())
+    if True:
+        import asyncio
+        async def main():
+            print(await app.slowlette('/Warning.png'))
+            print(await app.slowlette('/api'))
+            print(await app.slowlette('/api/hello/slowlette'))
+        asyncio.run(main())
+    
     app.run()

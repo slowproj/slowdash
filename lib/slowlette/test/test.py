@@ -1,12 +1,6 @@
-#! /usr/bin/python3
+# test.py
 
-
-# temporary until Slowlette becomes a package
-import sys, os
-sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir))
-
-
-import slowlette, asyncio
+import slowlette
 
 
 class MyApp:
@@ -48,7 +42,7 @@ class MyApp:
 
     @slowlette.delete('/trash')  # example for DELETE
     def delete_trash(self):
-        sys.stderr.write("Trash Deleted\n")
+        print("Trash Deleted\n")
         return slowlette.Response(200)
 
 
@@ -67,7 +61,8 @@ class MyApp:
     def finalize(self):
         print("FINALIZED")
 
-    
+
+        
 app = slowlette.App(MyApp())
 '''
 to run the app as a ASGI server, run:
@@ -75,41 +70,23 @@ $ uvicorn test_slowlette:app
 '''
 
 
-wsgi_app = slowlette.WSGI(app)
-'''
-to run the app as a WSGI server, run:
-$ gunicorn test_slowlette:wsgi_app
-'''
 
-
-
-async def main():
-    ### test responses ###
-    print(await app.slowlette('/'))
-    print(await app.slowlette('/hello'))
-    print(await app.slowlette('/hello/Slowy'))
-    print(await app.slowlette('/message?name=you', b"how are you doing?"))
-    print(await app.slowlette('/echo/hello/Slowy'))
-    print(await app.slowlette('/home'))  # does not exist
-    #print(await app.slowlette_get('/source'))
-    print(await app.slowlette(slowlette.Request('/trash', method='delete')))
-    print(await app.slowlette('/deci?den=3'))
-
-
-    
 if __name__ == '__main__':
-    asyncio.run(main())
-    
+    if True:
+        ### test responses ###
+        import asyncio
+        async def main():
+            print(await app.slowlette('/'))
+            print(await app.slowlette('/hello'))
+            print(await app.slowlette('/hello/Slowy'))
+            print(await app.slowlette('/message?name=you', b"how are you doing?"))
+            print(await app.slowlette('/echo/hello/Slowy'))
+            print(await app.slowlette('/home'))  # does not exist
+            #print(await app.slowlette_get('/source'))
+            print(await app.slowlette(slowlette.Request('/trash', method='delete')))
+            print(await app.slowlette('/deci?den=3'))
+            
+        asyncio.run(main())
+
     ### start a HTTP server at default port 8000 ###
-
-
-    ### ASGI HTTP/2:
-    # requres Python package of "httptools" and "h2"
-    # to generate a self-certificates:
-    #   Self-Signed:    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout key.pem -out cert.pem
-    #   Let's Encrypt:  sudo apt install certbot; sudo certbot cetonly --standalone -d yourdomain.com
-    # to check: curl URL -v --http2
-    app.run(ssl_keyfile='key.pem', ssl_certfile='cert.pem')
-
-    # WSGI in HTTPS (gunicorn)
-    #wsgi_app.run(ssl_keyfile='key.pem', ssl_certfile='cert.pem')
+    app.run()

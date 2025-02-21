@@ -1,10 +1,4 @@
-#! /usr/bin/python3
-
-
-# temporary until Slowlette becomes a package
-import sys, os, asyncio
-sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir))
-
+# test_multiple.py
 
 import slowlette
 
@@ -22,7 +16,6 @@ class AbortHello:
     def hello(self, request:slowlette.Request):
         request.abort()
 
-    
 class MyApp(slowlette.App):
     def __init__(self):
         super().__init__()
@@ -38,11 +31,12 @@ class MyApp(slowlette.App):
 app = MyApp()
 
 
-
-async def main():
-    print(await app.slowlette('/hello'))
-
-
+    
 if __name__ == '__main__':
-    asyncio.run(main())
+    if True:
+        import asyncio
+        async def main():
+            print(await app.slowlette('/hello'))
+        asyncio.run(main())
+    
     app.run()

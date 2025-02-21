@@ -1,11 +1,6 @@
-#! /usr/bin/python3
+# test_async.py
 
-
-# temporary until Slowlette becomes a package
-import sys, os, asyncio
-sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir))
-
-
+import asyncio
 import slowlette
 
 
