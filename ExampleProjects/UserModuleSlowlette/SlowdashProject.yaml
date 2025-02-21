@@ -1,0 +1,14 @@
+slowdash_project:
+  name: UserSlowlette
+  
+  module:
+    file: user_api.py
+    enabled_for_commandline: true
+
+  data_source:
+    - type: Dummy
+      timeseries:
+        - { name: ch0, noise: 5, walk: 1, decay: 0.001 }
+        - { name: ch1, noise: 5, walk: 1, decay: 0.001 }
+        - { name: ch2, noise: 5, walk: 1, decay: 0.001 }
+        - { name: ch3, noise: 5, walk: 1, decay: 0.001 }

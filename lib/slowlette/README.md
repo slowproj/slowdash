@@ -43,7 +43,7 @@ curl http://localhost:8000/hello
 ```
 And you should see the response:
 ```text
-Hello, Slowlette.
+Hello, Slowlette!
 ```
 
 #### Running via external ASGI server

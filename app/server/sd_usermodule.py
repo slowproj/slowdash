@@ -16,6 +16,7 @@ class UserModuleThread(threading.Thread):
         self.params = params
         self.stop_event = stop_event
         self.initialized_event = threading.Event()
+        self.loaded_event = threading.Event()
 
         
     def run(self):        
@@ -26,9 +27,13 @@ class UserModuleThread(threading.Thread):
 
         
     async def go(self):
+        self.loaded_event.clear()
         self.initialized_event.clear()
         self.stop_event.clear()
-        if not self.usermodule.load():
+        
+        status = self.usermodule.load()
+        self.loaded_event.set()
+        if not status:
             return
         if self.stop_event.is_set():
             return
@@ -250,9 +255,17 @@ class UserModule:
         
         logging.info('starting user module "%s"' % self.name)
         self.stop_event.clear()
-        self.user_thread = UserModuleThread(self.app, self, self.params, self.stop_event)
+        self.user_thread = UserModuleThread(self.app, self, self.params, self.stop_event)        
         self.touch_status()
         self.user_thread.start()
+        
+        for i in range(10):
+            if not self.user_thread.loaded_event.is_set():
+                time.sleep(0.1)
+            else:
+                break
+        else:
+            logging.warning('User/Task module loading did not complete in one second')
         
         
     async def stop(self):
@@ -263,6 +276,7 @@ class UserModule:
         self.touch_status()
         
         if not self.user_thread.initialized_event.is_set():
+            logging.debug('stop before initialization completed')
             time.sleep(1)
             if not self.user_thread.initialized_event.is_set():
                 logging.warning('User/Task module not yet initialized')
