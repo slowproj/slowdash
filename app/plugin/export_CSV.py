@@ -21,8 +21,10 @@ class Export_CSV(ComponentPlugin):
         if resample < 0:  # replace "no resampling" with "auto resampling"; this does not affect single channel request
             resample = 0
         data_opts['resample'] = resample
+        if 'timezone' in data_opts:
+            del data_opts['timezone']
 
-        timeseries = await self.app.request_data(channels, data_opts)
+        timeseries = await self.app.request_data(channels, **data_opts)
         if timeseries is None:
             return None
 

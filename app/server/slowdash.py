@@ -132,7 +132,8 @@ class App(slowlette.App):
         if reducer is not None:
             opts['reducer'] = reducer
         if len(opts) > 0:
-            url += '&'.join(['%s=%s'%(k,v) for k,v in opts.items()])
+            url += '?' + '&'.join(['%s=%s'%(k,v) for k,v in opts.items()])
+        logging.error(url)
         
         return (await self.slowlette(url)).content
 
