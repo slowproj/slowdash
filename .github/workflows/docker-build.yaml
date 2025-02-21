@@ -54,8 +54,8 @@ jobs:
       - name: Build & Push SlowPy-Notebook Docker image
         uses: docker/build-push-action@v6
         with:
-          context: ./lib
-          file: ./lib/Dockerfile
+          context: ./lib/slowpy
+          file: ./lib/slowpy/Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |

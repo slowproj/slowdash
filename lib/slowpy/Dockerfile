@@ -4,7 +4,7 @@ ARG BASE_IMAGE=quay.io/jupyter/scipy-notebook:python-3.11
 FROM ${BASE_IMAGE}
 
 USER root
-COPY slowpy "/home/${NB_USER}/slowpy"
+COPY . "/home/${NB_USER}/slowpy"
 RUN chown -R ${NB_USER}:${NB_GROUP} "/home/${NB_USER}/slowpy"
 
 USER ${NB_USER}

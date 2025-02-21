@@ -73,7 +73,7 @@ setup-venv:
 docker:
 	docker rmi -f slowdash slowpy-notebook
 	docker build -t slowdash .
-	docker build -t slowpy-notebook -f ./lib/Dockerfile ./lib
+	docker build -t slowpy-notebook -f ./lib/slowpy/Dockerfile ./lib/slowpy
 
 
 update:
