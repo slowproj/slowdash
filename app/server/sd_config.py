@@ -89,14 +89,86 @@ class ConfigComponent(Component):
 
     @slowlette.get('/config')
     async def get_config(self):
-        return await self._get_config(with_list=False)
+        self.project.update()
+        doc = {
+            'slowdash': {
+                'version': self.project.version
+            },
+            'project': {}
+        }
+        
+        if self.project.config is None:
+            return doc
+
+        doc['project'] = {
+            'name': self.project.config.get('name', 'Untitled Project'),
+            'title': self.project.config.get('title', ''),
+            'is_secure': self.project.is_secure,
+        }
+
+        style = self.project.config.get('style', None)
+        if style is not None:
+            doc['style'] = style
+            
+        return doc
 
         
-    @slowlette.get('/config/list')
-    async def get_list(self):
-        return await self._get_config(with_list=True, with_content_meta=True)
+    @slowlette.get('/config/contentlist')
+    async def get_content_list(self):
+        filelist = []
+        for filepath in glob.glob(os.path.join(self.project_dir, 'config', '*-*.*')):
+            filelist.append([filepath, int(os.path.getmtime(filepath))])
+            filelist = sorted(filelist, key=lambda entry: entry[1], reverse=True)
+                
+        doc = []
+        for filepath, mtime in filelist:
+            filename = os.path.basename(filepath)
+            rootname, ext = os.path.splitext(os.path.basename(filepath))
+            kind, name = rootname.split('-', 1)
+            if ext not in [ '.json', '.yaml', '.html', '.py' ]:
+                continue
+
+            meta_info = {}
+            if kind in [ 'slowdash', 'slowplot', 'slowcruise' ]:
+                meta_info = await self.get_content_meta(filename)
+                
+            doc.append({
+                'type': kind,
+                'name': name,
+                'mtime': mtime,
+                'title': meta_info.get('title', ''),
+                'description': meta_info.get('description', ''),
+                'config_file': filename,
+                'config_error': meta_info.get('config_error', ''),
+                'config_error_line': meta_info.get('config_error_line', '')
+            })
+
+        return doc
 
         
+    @slowlette.get('/config/content/{filename}')
+    async def get_content(self, filename:str, content_type:str='json'):
+        meta, content = await self._load_content(filename, content_type)
+        try:
+            # this requires W_OK, might fail from CGI etc.
+            pathlib.Path(filepath).touch()
+        except:
+            pass
+            
+        if content is None:
+            return slowlette.Response(400)
+        
+        return content
+
+
+    @slowlette.get('/config/meta/{filename}')
+    async def get_content_meta(self, filename:str, content_type:str='json'):
+        meta, content = await self._load_content(filename, content_type)
+        if meta is None:
+            return slowlette.Response(400)
+        return meta
+
+    
     @slowlette.get('/config/filelist')
     async def get_filelist(self, sortby='mtime', reverse:bool=False):
         if self.project_dir is None:
@@ -121,29 +193,6 @@ class ConfigComponent(Component):
         return filelist
 
         
-    @slowlette.get('/config/content/{filename}')
-    async def get_content(self, filename:str, content_type:str='json'):
-        meta, content = await self._load_content(filename, content_type)
-        try:
-            # this requires W_OK, might fail from CGI etc.
-            pathlib.Path(filepath).touch()
-        except:
-            pass
-            
-        if content is None:
-            return slowlette.Response(400)
-        
-        return content
-
-
-    @slowlette.get('/config/meta/{filename}')
-    async def get_meta(self, filename:str, content_type:str='json'):
-        meta, content = await self._load_content(filename, content_type)
-        if meta is None:
-            return slowlette.Response(400)
-        return meta
-
-    
     @slowlette.get('/config/file/{filename}')
     async def get_file(self, filename:str):
         filepath, ext = self._get_filepath_ext(filename, os.R_OK)
@@ -237,65 +286,6 @@ class ConfigComponent(Component):
             return slowlette.Response(500)   # Internal Server Error
         
         return slowlette.Response(200)
-
-
-    async def _get_config(self, with_list=True, with_content_meta=True):
-        self.project.update()
-        if self.project.config is None:
-            doc = {
-                'slowdash': {
-                    'version': self.project.version
-                },
-                'project': {}
-            }
-        else:
-            doc = {
-                'slowdash': {
-                    'version': self.project.version
-                },
-                'project': {
-                    'name': self.project.config.get('name', 'Untitled Project'),
-                    'title': self.project.config.get('title', ''),
-                    'is_secure': self.project.is_secure,
-                },
-                'style': self.project.config.get('style', None),
-            }
-
-        if (not with_list) or (self.project_dir is None):
-            return doc
-        
-        filelist = []
-        for filepath in glob.glob(os.path.join(self.project_dir, 'config', '*-*.*')):
-            filelist.append([filepath, int(os.path.getmtime(filepath))])
-            filelist = sorted(filelist, key=lambda entry: entry[1], reverse=True)
-                
-        contents = {}
-        for filepath, mtime in filelist:
-            filename = os.path.basename(filepath)
-            rootname, ext = os.path.splitext(os.path.basename(filepath))
-            kind, name = rootname.split('-', 1)
-            config_key = '%s_config' % kind
-            if ext not in [ '.json', '.yaml', '.html', '.py' ]:
-                continue
-            if config_key not in contents:
-                contents[config_key] = []
-
-            meta_info = {}
-            if with_content_meta and kind in [ 'slowdash', 'slowplot', 'slowcruise' ]:
-                meta_info = await self.get_meta(filename)
-
-            contents[config_key].append({
-                'name': name,
-                'mtime': mtime,
-                'title': meta_info.get('title', ''),
-                'description': meta_info.get('description', ''),
-                'config_file': filename,
-                'config_error': meta_info.get('config_error', ''),
-                'config_error_line': meta_info.get('config_error_line', '')
-            })
-        doc['contents'] = contents
-
-        return doc
 
                 
     async def _load_content(self, filename:str, content_type):

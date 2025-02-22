@@ -76,7 +76,7 @@ export class CatalogPanel extends Panel {
         super.configure(config, callbacks);
 
         if (project_config?.project?.name) {
-            this.cachePath = `slowdash-${project_config.project.name}-Catalog`;
+            this.cachePath = `slowdash-${project_config.project.name}-ContentList`;
         }
         else {
             this.cachePath = null;
@@ -103,10 +103,13 @@ export class CatalogPanel extends Panel {
     _load() {
         this.contentDiv.html("loading catalog...");
         
-        let processDoc = (doc) => {
+        let processContentList = (contentlist) => {
             for (const content_type of this.content_types) {
                 let catalog = [];
-                for (let entry of doc[content_type+'_config'] ?? []) {
+                for (let entry of contentlist) {
+                    if (entry.type != content_type) {
+                        continue;
+                    }
                     if (entry.config_file) {
                         let href = './' + content_type + '.html?config=' + entry.config_file;
                         catalog.push({
@@ -128,7 +131,7 @@ export class CatalogPanel extends Panel {
             let cachedDoc = localStorage.getItem(this.cachePath + '-doc');
             if (cachedDoc) {
                 this.contentDiv.empty();
-                processDoc(JSON.parse(cachedDoc));
+                processContentList(JSON.parse(cachedDoc));
             }
             const cacheTime = localStorage.getItem(this.cachePath + '-cachetime');
             if (parseFloat(cacheTime ?? 0) > $.time() - 10) {
@@ -136,7 +139,7 @@ export class CatalogPanel extends Panel {
             }
         }
 
-        fetch('./api/config/list')
+        fetch('./api/config/contentlist')
             .then(response => {
                 if (! response.ok) {
                     throw new Error(response.status + " " + response.statusText);
@@ -146,19 +149,23 @@ export class CatalogPanel extends Panel {
             .catch(e => {
                 return null;
             })
-            .then(proj_config => {
+            .then(contentlist => {
                 this.contentDiv.empty();
-                if (! proj_config?.contents) {
+                if (contentlist === null) {
                     for (const content_type of this.content_types) {
-                        this._render(content_type, proj_config === null ? null : []);
+                        this._render(content_type, null);
                     }
-                    return;
+                }
+                else if (! contentlist) {
+                    for (const content_type of this.content_types) {
+                        this._render(content_type, []);
+                    }
                 }
                 else {
-                    processDoc(proj_config.contents);
+                    processContentList(contentlist);
                     if (this.cachePath) {
                         localStorage.setItem(this.cachePath + '-cachetime', $.time());
-                        localStorage.setItem(this.cachePath + '-doc', JSON.stringify(proj_config.contents));
+                        localStorage.setItem(this.cachePath + '-doc', JSON.stringify(contentlist));
                     }
                 }
             });

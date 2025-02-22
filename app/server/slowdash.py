@@ -42,7 +42,9 @@ class App(slowlette.App):
         self.project = Project(project_dir, project_file)
         self.project_dir = self.project.project_dir
 
-        # Execution Environment
+        
+        ### Execution Environment ###
+        
         if self.project.config is None:
             return
         
@@ -57,15 +59,23 @@ class App(slowlette.App):
         if self.project.project_dir is not None:
             sys.path.insert(1, self.project.project_dir)
             sys.path.insert(1, os.path.join(self.project.project_dir, 'config'))
+
             
-        # API Components: see slowlette.App for the mechanism
-        self.slowlette.include(ConsoleComponent(self, self.project))   # this must be the first to capture stdout
+        ### API Components: see the Slowette documentation for the mechanism ###
+        
+        # this must be the first to capture stdout
+        self.slowlette.include(ConsoleComponent(self, self.project))
+
+        # this should be the second so that user modules can override the API
+        self.slowlette.include(UserModuleComponent(self, self.project))
+
+        # maybe task modules might want to override the API, too
+        self.slowlette.include(TaskModuleComponent(self, self.project))
+        
         self.slowlette.include(ConfigComponent(self, self.project))
         self.slowlette.include(DataSourceComponent(self, self.project))
         self.slowlette.include(ExportComponent(self, self.project))
         self.slowlette.include(PubsubComponent(self, self.project))
-        self.slowlette.include(UserModuleComponent(self, self.project))
-        self.slowlette.include(TaskModuleComponent(self, self.project))
         self.slowlette.include(MiscApiComponent(self, self.project))
 
 

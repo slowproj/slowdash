@@ -187,24 +187,26 @@ function setupDataList() {
             }
         });
 
-    fetch('./api/config/list')
+    fetch('./api/config/contentlist')
         .then(response => {
             if (response.ok) return response.json();
         })
-        .then(config => {
+        .then(contentlist => {
             let dashboard_dl = $('<datalist>').attr('id', 'sd-dashboard-datalist').appendTo(document.body);
-            for (let entry of config.contents?.slowdash_config ?? []) {
-                dashboard_dl.append($('<option>').attr('value', entry.name).text(entry.name));
-            }
             let map_dl = $('<datalist>').attr('id', 'sd-map-datalist').appendTo(document.body);
-            for (let entry of config.contents?.map_config ?? []) {
-                map_dl.append($('<option>').attr('value', entry.name).text(entry.name));
-            }
             let html_dl = $('<datalist>').attr('id', 'sd-html-datalist').appendTo(document.body);
-            for (let entry of config.contents?.html_config ?? []) {
-                html_dl.append($('<option>').attr('value', entry.name).text(entry.name));
+            for (let entry of contentlist) {
+                if (entry.type == 'slowdash') {
+                    dashboard_dl.append($('<option>').attr('value', entry.name).text(entry.name));
+                }
+                else if (entry.type == 'map') {
+                    map_dl.append($('<option>').attr('value', entry.name).text(entry.name));
+                }
+                else if (entry.type == 'html') {
+                    html_dl.append($('<option>').attr('value', entry.name).text(entry.name));
+                }
             }
-        });    
+        });
 }
 
 
