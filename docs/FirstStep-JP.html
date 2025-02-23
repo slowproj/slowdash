@@ -248,62 +248,8 @@ Docker を使う手順を解説します．</p>
 </ul></li>
 </ul>
 <p>ここでのインストールでは，venv
-を使用してそこに必要なパッケージをインストールするので，手動で準備をする必要はありません．</p>
-<h4 id="venv-を使用しない場合">venv を使用しない場合</h4>
-<p>もし venv
-を使用しない場合は，以下のパッケージを手動で入れてください．</p>
-<ul>
-<li>NumPy, pyyaml, psutil</li>
-<li>非同期ウェブサーバの uvicorn
-が入っていると動作が速くなるけど，必須ではない（<code>pip install uvicorn</code>）．</li>
-<li>使っているデータベースの python ライブラリ：</li>
-</ul>
-<table>
-<thead>
-<tr class="header">
-<th>データベース</th>
-<th>Python パッケージ</th>
-<th>備考</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>PostgreSQL</td>
-<td><code>psycopg2</code></td>
-<td>システムライブラリ <code>libpq</code> も必要</td>
-</tr>
-<tr class="even">
-<td>MySQL</td>
-<td><code>mysqlclient</code></td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>SQLite</td>
-<td></td>
-<td>追加パッケージは不要</td>
-</tr>
-<tr class="even">
-<td>InfluxDB</td>
-<td><code>influxdb-client</code></td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>Redis</td>
-<td><code>redis</code></td>
-<td></td>
-</tr>
-<tr class="even">
-<td>MongoDB</td>
-<td><code>pymongo</code></td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>CouchDB</td>
-<td><code>couchdb</code></td>
-<td></td>
-</tr>
-</tbody>
-</table>
+を使用してそこに必要なパッケージを自動インストールするので，手動で準備をする必要はありません．(venv
+を使わずにインストールすることもできます．)</p>
 <h3 id="ダウンロード">ダウンロード</h3>
 <p>GitHub からダウンロードできます．
 サブモジュールを使っているので，<code>--recurse-submodules</code>
@@ -333,29 +279,30 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <h3 id="インストール-1">インストール</h3>
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd slowdash</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make setup-venv</span></span></code></pre></div>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make</span></span></code></pre></div>
 <p>これで，Python 周りのセットアップと，作成した venv
 へのパッケージのインストールを行います．</p>
-<p>venv を使わない場合は，最後の <code>make setup-venv</code>
-は必要ありません．もし間違えてやってしまった場合は，<code>slowdash</code>
+<p>venv を使わない場合は，最後の <code>make</code> の代わりに
+<code>make without-venv</code> としてください．もし間違えて
+<code>make</code> してしまった場合は，<code>slowdash</code>
 ディレクトリの下にある <code>venv</code>
-ディレクトリを削除してください．</p>
+ディレクトリを削除すれば同じになります．SlowDash
+の実行に必要なパッケージの <code>requirements.txt</code>
+ファイルも自動生成されるので，venv
+を使わない場合はこれを手動でインストールしてください．</p>
 <p>以上により，<code>slowdash/bin</code>
-の下に環境変数を設定するスクリプト <code>slowdash-bashrc</code>
+の下にシェルの設定するスクリプト <code>slowdash-bashrc</code>
 ができるので，これを <code>source</code> してください．</p>
 <div class="sourceCode" id="cb5"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source PATH/TO/SLOWDASH/bin/slowdash-bashrc</span></span></code></pre></div>
+<p>ちなみに中身はこんな感じです．</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> slowdash=/PATH/TO/SLOWDASH/bin/slowdash</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> slowdash-activate-venv=<span class="st">&quot;source /PATH/TO/SLOWDASH/venv/bin/activate&quot;</span></span></code></pre></div>
 <p>設定ファイルの <code>source</code>
 は，新しいターミナルを開くたびに毎回必要です． SlowDash
 を継続的に使うなら，上記の行を <code>.bashrc</code>
-などに書いておくと毎回やる必要がなくなります．ちなみに中身はこんな感じです．（この中では
-venv の設定はしていないので，他の Python と干渉することはないです．PATH
-の先頭に slowdash があるのは，複数の SlowDash を使っている場合に，source
-により切り替えるのに必要です．）：</p>
-<div class="sourceCode" id="cb6"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;/PATH/TO/slowdash/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PYTHONPATH</span><span class="op">=</span><span class="st">&quot;/PATH/TO/slowdash/lib/slowpy:</span><span class="va">$PYTHONPATH</span><span class="st">&quot;</span></span></code></pre></div>
+などに書いておくと毎回やる必要がなくなります．</p>
 <p>インストールが成功したかは，<code>slowdash</code>
 コマンドを実行してチェックできます． (<code>slowdash</code> コマンドは
 <code>slowdash/bin</code> の下にあります）</p>

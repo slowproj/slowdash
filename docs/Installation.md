@@ -7,7 +7,7 @@ title: Installation
 - `git`
 - `docker` and `docker compose`
 
-## Using Docker Images (Linux, Windows WSL, Mac)
+## Using Repository Images (Linux, Windows WSL, Mac)
 
 ### Setup
 No installation is required. In your docker configuration, pull a SlowDash image from one of the repositories below:
@@ -20,16 +20,15 @@ Choose a specific tag listed in the repository, or use `latest`.
 ### Updating
 If you are using the `:latest` images from DockerHub (or GitHub CR), removing the local copy will cause pulling the latest version on the next execution:
 ```console
-docker rmi -f slowproj/slowdash
-docker rmi -f slowproj/slowpy-notebook
+$ docker rmi -f slowproj/slowdash slowproj/slowpy-notebook
 ```
-(You can also do the same by `make docker-update` at the SlowDash directory.)
+(You can also do the same by `make remove-docker-images` at the SlowDash directory; autocomplete by [Tab] will help typing the long name, like `make r[Tab]`.)
 
 This will erase the current images. Be careful not to lose your working context. The SlowDash version number is shown in the upper left coner of the home page.
 
 
 
-## Building an Image
+## Building Local Images
 ### Initial Setup
 ```console
 $ git clone https://github.com/slowproj/slowdash.git
@@ -42,7 +41,7 @@ Or equivalently, you can run the following commands:
 $ git clone https://github.com/slowproj/slowdash.git --recurse-submodules
 $ cd slowdash
 $ docker build -t slowdash .
-$ docker build -t slowpy-notebook -f ./lib/Dockerfile ./lib
+$ docker build -t slowpy-notebook -f ./lib/slowpy/Dockerfile ./lib/slowpy
 ```
 
 ### Updating
@@ -57,8 +56,9 @@ Or equivalently, run the commands below
 ```console
 $ cd PATH/TO/SLOWDASH
 $ git pull --recurse-submodules
+$ docker rmi -f slowdash slowpy-notebook
 $ docker build -t slowdash .
-$ docker build -t slowpy-notebook -f ./lib/Dockerfile ./lib
+$ docker build -t slowpy-notebook -f ./lib/slowpy/Dockerfile ./lib/slowpy
 ```
 
 
@@ -76,37 +76,13 @@ $ docker build -t slowpy-notebook -f ./lib/Dockerfile ./lib
   - Firefox most tested, Chrome &amp; Edge &amp; Safari ok, DuckDuckGo &amp; Opera never tested.
   - Also works on mobile devices: tested on iPad
 
-### If not using venv
-In this standard installation procedure, we use Python venv and install all the necessary packages there.
-
-If you do not want to use venv, install the packages manually:
-
-  -  numpy, pyyaml, psutil
-  - optionally (recommanded), uvicorn (Asynchronouns Web Server module)
-  - also matplotlib if SlowDash python library (SlowPy) is used
-  - Python packages for the data storage system used in your setup:
-
-|DBMS              |Python Module|
-|------------------|-------------|
-| PostgreSQL       | psycopg2    |
-| MySQL            | mysqlclient |
-| SQLite           | (none)      |
-| Other SQL DBs (generic) | sqlalchemy  |
-| InfluxDB         | influxdb-client  |
-| Redis            | redis  |
-| CouchDB            | couchdb  |
-| MongoDB            | pymongo  |
-
-See [Data Binding section](DataBinding.html) for details.
-
-
 ## Setup
+### Using venv
 This process will not create any files other than the git-cloned directory. Installation can be removed completely by deleting this directory.
 ```console
 $ git clone https://github.com/slowproj/slowdash.git --recurse-submodules
 $ cd slowdash
 $ make
-$ make setup-venv     # if you want to use venv (recommended)
 ```
 
 This will create a bash file to set environmental variables. `source` it to include the settings:
@@ -115,6 +91,19 @@ $ source PATH/TO/SLOWDASH/bin/slowdash-bashrc
 ```
 For permanent installation, it might be convenient to include this line in the `.bashrc` file.
 
+### Without venv
+```console
+$ git clone https://github.com/slowproj/slowdash.git --recurse-submodules
+$ cd slowdash
+$ make without-venv
+$ pip install -r requirements.txt
+```
+then
+```console
+$ source bin/slowdash-bashrc
+```
+
+## Testing
 Test the installation by running the command:
 ```console
 $ slowdash

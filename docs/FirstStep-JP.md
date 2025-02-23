@@ -118,25 +118,7 @@ Docker があれば，DockerHub または GitHub CR にある SlowDash のイメ
 - ブラウザ．Firefox で開発していて，たまに Chrome と Edge と Safari でテストしている．
   - タブレットや携帯などのモバイルデバイス上でもそこそこ動作する．プロットの移動やズームは二本指で．
 
-ここでのインストールでは，venv を使用してそこに必要なパッケージをインストールするので，手動で準備をする必要はありません．
-
-#### venv を使用しない場合
-もし venv を使用しない場合は，以下のパッケージを手動で入れてください．
-
-- NumPy, pyyaml, psutil
-- 非同期ウェブサーバの uvicorn が入っていると動作が速くなるけど，必須ではない（`pip install uvicorn`）．
-- 使っているデータベースの python ライブラリ：
-
-| データベース      |Python パッケージ|備考|
-|------------------|-------------|---|
-| PostgreSQL | `psycopg2` | システムライブラリ `libpq` も必要
-| MySQL | `mysqlclient` | |
-| SQLite | | 追加パッケージは不要 | 
-| InfluxDB | `influxdb-client` | |
-| Redis | `redis` | |
-| MongoDB | `pymongo` | |
-| CouchDB | `couchdb` | |
-
+ここでのインストールでは，venv を使用してそこに必要なパッケージを自動インストールするので，手動で準備をする必要はありません．(venv を使わずにインストールすることもできます．) 
 
 
 ### ダウンロード
@@ -165,22 +147,22 @@ $ firefox slowdash/docs/FirstStep-JP.html
 ```console
 $ cd slowdash
 $ make
-$ make setup-venv
 ```
 これで，Python 周りのセットアップと，作成した venv へのパッケージのインストールを行います．
 
-venv を使わない場合は，最後の `make setup-venv` は必要ありません．もし間違えてやってしまった場合は，`slowdash` ディレクトリの下にある `venv` ディレクトリを削除してください．
+venv を使わない場合は，最後の `make` の代わりに `make without-venv` としてください．もし間違えて `make` してしまった場合は，`slowdash` ディレクトリの下にある `venv` ディレクトリを削除すれば同じになります．SlowDash の実行に必要なパッケージの `requirements.txt` ファイルも自動生成されるので，venv を使わない場合はこれを手動でインストールしてください．
 
-以上により，`slowdash/bin`  の下に環境変数を設定するスクリプト `slowdash-bashrc` ができるので，これを `source`  してください．
+以上により，`slowdash/bin`  の下にシェルの設定するスクリプト `slowdash-bashrc` ができるので，これを `source`  してください．
 ```console
 $ source PATH/TO/SLOWDASH/bin/slowdash-bashrc
 ```
-設定ファイルの `source` は，新しいターミナルを開くたびに毎回必要です．
-SlowDash を継続的に使うなら，上記の行を `.bashrc` などに書いておくと毎回やる必要がなくなります．ちなみに中身はこんな感じです．（この中では venv の設定はしていないので，他の Python と干渉することはないです．PATH の先頭に slowdash があるのは，複数の SlowDash を使っている場合に，source により切り替えるのに必要です．）：
+ちなみに中身はこんな感じです．
 ```bash
-export PATH="/PATH/TO/slowdash/bin:$PATH"
-export PYTHONPATH="/PATH/TO/slowdash/lib/slowpy:$PYTHONPATH"
+alias slowdash=/PATH/TO/SLOWDASH/bin/slowdash
+alias slowdash-activate-venv="source /PATH/TO/SLOWDASH/venv/bin/activate"
 ```
+設定ファイルの `source` は，新しいターミナルを開くたびに毎回必要です．
+SlowDash を継続的に使うなら，上記の行を `.bashrc` などに書いておくと毎回やる必要がなくなります．
 
 インストールが成功したかは，`slowdash` コマンドを実行してチェックできます．
 (`slowdash` コマンドは `slowdash/bin` の下にあります）

@@ -22,6 +22,7 @@ def get_data(channels:str, length:float=None, to:float=None, resample:float=None
             'reducer': reducer,
         }
     }}}
+
     return record
 
 

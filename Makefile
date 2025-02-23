@@ -3,9 +3,18 @@ SLOWDASH_DIR = $(shell pwd)
 SLOWDASH_BIN = "$(SLOWDASH_DIR)/bin/slowdash"
 SLOWDASH_ENV = "$(SLOWDASH_DIR)/bin/slowdash-bashrc"
 GIT = $(shell which git)
+PIP_REQS = uvicorn hypercorn websockets pyyaml psutil bcrypt requests 
+PIP_DBS = influxdb-client redis pymongo couchdb
+PIP_OPTS = numpy matplotlib pillow pyserial pyvisa
 
 
-all:
+all: venv main setup-venv success
+
+without-venv: main success
+
+
+
+main:
 	@if [ ! -f "$(SLOWDASH_DIR)/app/site/jagaimo/jagaimo.mjs" ]; then \
 		if [ x$(GIT) = x ]; then \
 			echo 'submodules not cloned, git command not available'; \
@@ -29,8 +38,9 @@ all:
 	@echo 'if [ -d "$$SLOWDASH_DIR/venv" ]; then' >> $(SLOWDASH_BIN)
 	@echo '   source "$$SLOWDASH_DIR/venv/bin/activate"' >> $(SLOWDASH_BIN)
 	@echo '   echo Running in venv at "$$SLOWDASH_DIR/venv" >&2' >> $(SLOWDASH_BIN)
+	@echo 'else' >> $(SLOWDASH_BIN)
+	@echo '   export PYTHONPATH="$$SLOWDASH_DIR/lib/slowlette:$$PYTHONPATH"' >> $(SLOWDASH_BIN)
 	@echo 'fi' >> $(SLOWDASH_BIN)
-	@echo 'export PYTHONPATH="$$SLOWDASH_DIR/lib/slowlette:$$PYTHONPATH"' >> $(SLOWDASH_BIN)
 	@echo '' >> $(SLOWDASH_BIN)
 	@echo 'use_slowdog=0' >> $(SLOWDASH_BIN)
 	@echo 'args=()' >> $(SLOWDASH_BIN)
@@ -50,30 +60,42 @@ all:
 	@echo '' >> $(SLOWDASH_BIN)
 	@chmod 755 $(SLOWDASH_BIN)
 
-	@echo 'export PATH="$(SLOWDASH_DIR)/bin:$$PATH"' > $(SLOWDASH_ENV)
-	@echo 'export PYTHONPATH="$(SLOWDASH_DIR)/lib/slowpy:$$PYTHONPATH"' >> $(SLOWDASH_ENV)
+	@echo 'alias slowdash=$(SLOWDASH_DIR)/bin/slowdash' > $(SLOWDASH_ENV)
+	@echo 'alias slowdash-activate-venv="source $(SLOWDASH_DIR)/venv/bin/activate"' >> $(SLOWDASH_ENV)
 
-	@ln -fs "$(SLOWDASH_DIR)/docs" "$(SLOWDASH_DIR)/app/site"
+	@ln -fs ../../docs ./app/site
 	@if [ -d .git/hooks ]; then ln -fs ../../.git-hooks/pre-commit .git/hooks; fi
 
-	@echo "## Installation successful ##"
-	@echo ""
-	@echo "- Executable files are copied to $(SLOWDASH_DIR)/bin."
-	@echo "- Set enviromnental variables for the slowdash executables and Python modules by: "
-	@echo "  source $(SLOWDASH_DIR)/bin/slowdash-bashrc"
-	@echo ""
-	@echo '- To build docker images, run "make docker"'
-	@echo '- To setup Python venv for SlowDash, run "make setup-venv"'
+	@echo "# SlowDash requirements #" > requirements.txt
+	@for pkg in $(PIP_REQS); do echo $$pkg >> requirements.txt; done
+	@echo "-e ./lib/slowpy" >> requirements.txt
+	@echo "-e ./lib/slowlette" >> requirements.txt
+	@echo "# DB packages #" >> requirements.txt
+	@for pkg in $(PIP_DBS); do echo $$pkg >> requirements.txt; done
+	@if command -v pg_config > /dev/null; then echo psycopg2 >> requirements.txt; fi
+	@echo "# packages users might use #" >> requirements.txt
+	@for pkg in $(PIP_OPTS); do echo $$pkg >> requirements.txt; done
+
+	@make setup-venv --no-print-directory
+
+
+venv:
+	python3 -m venv venv
 
 
 setup-venv:
-	./utils/slowdash-setup-venv.sh
+	@if [ -d ./venv ]; then . venv/bin/activate; pip install -r requirements.txt; deactivate; fi
 
 
-docker:
-	docker rmi -f slowdash slowpy-notebook
-	docker build -t slowdash .
-	docker build -t slowpy-notebook -f ./lib/slowpy/Dockerfile ./lib/slowpy
+success:
+	@echo ""
+	@echo "### SlowDash Installation is successful ###"
+	@echo "- Executable files are copied to $(SLOWDASH_DIR)/bin."
+	@echo "- Python venv is created/updated at $(SLOWDASH_DIR)/venv."
+	@echo '- Run below to enable the "slowdash" command:'
+	@echo "    source $(SLOWDASH_DIR)/bin/slowdash-bashrc"
+	@echo ""
+	@echo '- To build docker images, run "make docker"'
 
 
 update:
@@ -82,5 +104,12 @@ update:
 	@make --no-print-directory
 
 
-docker-image-update:
+docker:
+	docker rmi -f slowdash slowpy-notebook
+	docker build -t slowdash .
+	docker build -t slowpy-notebook -f ./lib/slowpy/Dockerfile ./lib/slowpy
+
+
+remove-docker-images:
+	docker rmi -f slowdash slowpy-notebook
 	docker rmi -f slowproj/slowdash slowproj/slowpy-notebook
