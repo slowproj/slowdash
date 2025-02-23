@@ -314,7 +314,7 @@ You will get a result of three responses aggregated:
 ```
 
 - If responses are all `list`, they are combined with `append()`.
-- If responses are all `dict`, they are combined with `update()`.
+- If responses are all `dict`, they are combined with `update()` (recursively).
 - If responses are all `str`, they are concatenated with a new-line in between.
 - If a response is `None`, it will not be included.
 - If all the responses are `None`, a 404 status (Not Found) is replied.

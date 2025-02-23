@@ -5,6 +5,18 @@ import sys, os, copy, json, asyncio, logging
 from decimal import Decimal
 
 
+from collections.abc import Mapping
+
+def deep_update(target, update):
+    for key, value in update.items():
+        if isinstance(value, Mapping) and isinstance(target.get(key), Mapping):
+            target[key] = deep_update(target[key], value)
+        else:
+            target[key] = value
+
+    return target
+
+
 class Response:
     status = {
         200: 'OK', 201: 'Created',
@@ -82,7 +94,7 @@ class Response:
                 self.content = {}
                 self.content_type = 'application/json'
             if type(self.content) is dict:
-                self.content.update(content)
+                deep_update(self.content, content)
             else:
                 logging.error('Slowlette: incompatible results cannot be combined (dict)')
                 

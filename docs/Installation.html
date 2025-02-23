@@ -85,9 +85,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span class="toc-title">Contents</span>
 <nav id="TOC">
 <ul>
+<li><a href="#prerequisite" id="toc-prerequisite">Prerequisite</a></li>
 <li><a href="#docker" id="toc-docker">Docker</a>
 <ul>
-<li><a href="#prerequisite" id="toc-prerequisite">Prerequisite</a></li>
 <li><a href="#using-repository-images-linux-windows-wsl-mac"
 id="toc-using-repository-images-linux-windows-wsl-mac">Using Repository
 Images (Linux, Windows WSL, Mac)</a></li>
@@ -97,8 +97,6 @@ id="toc-building-local-images">Building Local Images</a></li>
 <li><a href="#bare-metal-installation"
 id="toc-bare-metal-installation">Bare-Metal Installation</a>
 <ul>
-<li><a href="#prerequisite-1"
-id="toc-prerequisite-1">Prerequisite</a></li>
 <li><a href="#setup-1" id="toc-setup-1">Setup</a></li>
 <li><a href="#testing" id="toc-testing">Testing</a></li>
 <li><a href="#updating-2" id="toc-updating-2">Updating</a></li>
@@ -111,12 +109,39 @@ browser cache: Hard Refresh</a></li>
 </div>
 </header>
 
-<h1 id="docker">Docker</h1>
-<h2 id="prerequisite">Prerequisite</h2>
+<h1 id="prerequisite">Prerequisite</h1>
+<h3 id="base-system">Base System</h3>
 <ul>
-<li><code>git</code></li>
-<li><code>docker</code> and <code>docker compose</code></li>
+<li>UNIX-like OS
+<ul>
+<li>Linux most tested</li>
+<li>macOS and Windows (WSL) seem ok
+<p></li>
+</ul></li>
+<li>Web Browser
+<ul>
+<li>Firefox most tested, Chrome &amp; Edge &amp; Safari ok, DuckDuckGo
+&amp; Opera never tested.</li>
+<li>Also works on mobile devices: tested on iPad</li>
+</ul></li>
 </ul>
+<h3 id="for-docker">For Docker</h3>
+<p>
+<ul>
+<li>Git</li>
+<li>Docker and Docker Compose</li>
+</ul>
+<h3 id="for-bare-metal-installation">For Bare-Metal Installation</h3>
+<p>
+<ul>
+<li>Git</li>
+<li>Python 3
+<ul>
+<li>Version &gt;= 3.9</li>
+<li>venv preferred</li>
+</ul></li>
+</ul>
+<h1 id="docker">Docker</h1>
 <h2 id="using-repository-images-linux-windows-wsl-mac">Using Repository
 Images (Linux, Windows WSL, Mac)</h2>
 <h3 id="setup">Setup</h3>
@@ -169,27 +194,6 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker build -t slowdash .</span></span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker build -t slowpy-notebook -f ./lib/slowpy/Dockerfile ./lib/slowpy</span></span></code></pre></div>
 <h1 id="bare-metal-installation">Bare-Metal Installation</h1>
-<h2 id="prerequisite-1">Prerequisite</h2>
-<h3 id="base-system">Base System</h3>
-<ul>
-<li>UNIX-like OS
-<ul>
-<li>Linux most tested</li>
-<li>macOS and Windows (WSL) seem ok
-<p></li>
-</ul></li>
-<li>Python 3
-<ul>
-<li>Version &gt;= 3.9
-<p></li>
-</ul></li>
-<li>Web Browser
-<ul>
-<li>Firefox most tested, Chrome &amp; Edge &amp; Safari ok, DuckDuckGo
-&amp; Opera never tested.</li>
-<li>Also works on mobile devices: tested on iPad</li>
-</ul></li>
-</ul>
 <h2 id="setup-1">Setup</h2>
 <h3 id="using-venv">Using venv</h3>
 <p>This process will not create any files other than the git-cloned

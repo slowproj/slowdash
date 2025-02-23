@@ -128,7 +128,7 @@ class EthernetNode(spc.ControlNode):
 class ScpiNode(spc.ControlNode):
     """Node for a SCPI device (typically one physical equipment that has one IP address)"""
     
-    def __init__(self, connection, timeout=10, line_terminator='\x0d', sync=True, append_opc=False, verbose=False):
+    def __init__(self, connection, timeout=10, line_terminator='\x0d', sync=False, append_opc=False, verbose=False):
         """
         Parameters:
           - connection: instance of EthernetNode, SerialNode, etc

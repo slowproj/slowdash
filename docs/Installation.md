@@ -2,11 +2,30 @@
 title: Installation
 ---
 
-# Docker
-## Prerequisite
-- `git`
-- `docker` and `docker compose`
+# Prerequisite
+### Base System
+- UNIX-like OS
+  - Linux most tested
+  - macOS and Windows (WSL) seem ok
+<p>
+- Web Browser
+  - Firefox most tested, Chrome &amp; Edge &amp; Safari ok, DuckDuckGo &amp; Opera never tested.
+  - Also works on mobile devices: tested on iPad
 
+### For Docker
+<p>
+- Git
+- Docker and Docker Compose
+
+### For Bare-Metal Installation
+<p>
+- Git
+- Python 3
+  - Version >= 3.9
+  - venv preferred
+
+
+# Docker
 ## Using Repository Images (Linux, Windows WSL, Mac)
 
 ### Setup
@@ -63,19 +82,6 @@ $ docker build -t slowpy-notebook -f ./lib/slowpy/Dockerfile ./lib/slowpy
 
 
 # Bare-Metal Installation
-## Prerequisite
-### Base System
-- UNIX-like OS
-  - Linux most tested
-  - macOS and Windows (WSL) seem ok
-<p>
-- Python 3
-  - Version >= 3.9
-<p>
-- Web Browser
-  - Firefox most tested, Chrome &amp; Edge &amp; Safari ok, DuckDuckGo &amp; Opera never tested.
-  - Also works on mobile devices: tested on iPad
-
 ## Setup
 ### Using venv
 This process will not create any files other than the git-cloned directory. Installation can be removed completely by deleting this directory.
