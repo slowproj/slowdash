@@ -141,6 +141,7 @@ class UserModule:
         self.func_get_data = None
         self.func_process_command = None
         self.func_halt = None
+        self.slowlette = None
         
         self.routine_history = []
         self.command_history = []
@@ -195,9 +196,11 @@ class UserModule:
         self.routine_history = []
         self.command_history = []
         self.error = None
+
+        is_reload = self.module is not None
         self.touch_status()
         
-        if self.module is not None and False:  #??? it looks like just re-doing load() works...
+        if is_reload and False:  #??? it looks like just re-doing load() works...
             #??? this reload() does not execute statements outside a function
             logging.debug("=== Reloading %s ===" % self.filepath)
             self._preset_module(self.module)
@@ -240,10 +243,17 @@ class UserModule:
         if self.func_process_command:
             logging.debug('loaded user module command processor')
 
+        # UserModule Web-API
+        # To override SlowDash API, this is added as a middleware.
+        # Note that UserModule.load() is called much later than App.__init__(), and can be called multiple times.
+        if self.slowlette is not None:
+            self.app.slowlette.remove_middleware(self.slowlette)
+            self.slowlette = None
         for name, obj in self.module.__dict__.items():
             if isinstance(obj, slowlette.App) and name != '_slowdash_app':
                 logging.info(f'loaded user module Web-API: {self.name}.{name}')
-                self.app.slowlette.include(obj)
+                self.slowlette = obj
+                self.app.slowlette.add_middleware(obj)
         
         return True
         

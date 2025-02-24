@@ -1,8 +1,8 @@
 # Created by Sanshiro Enomoto on 19 January 2025 #
 
-import inspect, logging
+import asyncio, inspect, logging
 
-from .router import Router, PathRule
+from .router import Router, PathRule, iscoroutinecallable
 from .server import dispatch_asgi, dispatch_wsgi, serve_asgi, serve_wsgi
 
 
@@ -53,6 +53,12 @@ class Slowlette(App):
         def __call__(self, app, *args, **kwargs):
             return self.func(*args, **kwargs)
 
+    class AsyncFunctionAdapter:
+        def __init__(self, func):
+            self.func = func
+        async def __call__(self, app, *args, **kwargs):
+            return await self.func(*args, **kwargs)
+
         
     def __init__(self):
         super().__init__()
@@ -65,7 +71,10 @@ class Slowlette(App):
             - status_code: default status code for success
         """
         def wrapper(func):
-            adapter = self.FunctionAdapter(func)
+            if iscoroutinecallable(func):
+                adapter = self.AsyncFunctionAdapter(func)
+            else:
+                adapter = self.FunctionAdapter(func)
             adapter.slowlette_path_rule = PathRule(path_rule, 'GET', func, status_code=status_code)
             self.slowlette.handlers.append(adapter)
             return func

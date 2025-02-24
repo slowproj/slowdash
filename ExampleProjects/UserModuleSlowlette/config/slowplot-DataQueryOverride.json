@@ -20,5 +20,5 @@
         },
         { "type": "tree", "channel": "data_query", "title": "This Data Query" }
     ],
-    "meta": { "name": "test", "title": "", "description": "" }
+    "meta": { "name": "DataQueryOverride", "title": "", "description": "" }
 }

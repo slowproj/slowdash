@@ -190,18 +190,25 @@
                 return {};
             }
                 
-            let response = await fetch('./api/config/meta/' + config.filename);
-            const meta = await response.json();
+            let response = await fetch('./api/config/contentlist');
+            const contentlist = await response.json();
+            for (const meta of contentlist) {
+                if (meta.config_file != config.filename) {
+                    continue;
+                }
 
-            if (meta.config_error) {
-                config.status = ': ' + meta.config_error;
-            }
-            else {
-                config.status = '';
-            }
-            frame.setStatus(config.filename + config.status);
+                if (meta.config_error) {
+                    config.status = ': ' + meta.config_error;
+                }
+                else {
+                    config.status = '';
+                }
+                frame.setStatus(config.filename + config.status);
             
-            return meta;
+                return meta;
+            }
+            
+            return {}
         };
 
         configureEditor();

@@ -343,25 +343,30 @@ class ConfigEditorPanel extends Panel {
         }
         this.textarea.val(content);
 
-        let meta = {};
+        let contentlist = [];
         try {
-            let response = await fetch('./api/config/meta/' + filepath);
+            let response = await fetch('./api/config/contentlist/');
             if (! response.ok) {
                 throw new Error(response.status + " " + response.statusText);
             }
-            meta = await response.json();
+            contentlist = await response.json();
         }
         catch (error) {
             this.statusDiv.text(`Server Error: ${error.message}`);
         }
-        if (meta.config_error) {
-            this.statusDiv.text(meta.config_error);
-            if (meta.config_error_line > 0) {
-                const lines = content.split('\n');
-                const pos1 = lines.slice(0, meta.config_error_line-1).join('\n').length;
-                const pos2 = pos1 + lines[meta.config_error_line-1].length;
-                this.textarea.focus();
-                this.textarea.get().setSelectionRange(pos1, pos2);
+        for (const meta of contentlist) {
+            if (meta.config_file != filepath) {
+                continue;
+            }
+            if (meta.config_error) {
+                this.statusDiv.text(meta.config_error);
+                if (meta.config_error_line > 0) {
+                    const lines = content.split('\n');
+                    const pos1 = lines.slice(0, meta.config_error_line-1).join('\n').length;
+                    const pos2 = pos1 + lines[meta.config_error_line-1].length;
+                    this.textarea.focus();
+                    this.textarea.get().setSelectionRange(pos1, pos2);
+                }
             }
         }
     }

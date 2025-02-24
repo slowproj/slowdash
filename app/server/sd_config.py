@@ -114,7 +114,7 @@ class ConfigComponent(Component):
 
         
     @slowlette.get('/config/contentlist')
-    async def get_content_list(self):
+    async def get_content_meta(self):
         filelist = []
         for filepath in glob.glob(os.path.join(self.project_dir, 'config', '*-*.*')):
             filelist.append([filepath, int(os.path.getmtime(filepath))])
@@ -122,7 +122,7 @@ class ConfigComponent(Component):
                 
         doc = []
         for filepath, mtime in filelist:
-            filename = os.path.basename(filepath)
+            basename = os.path.basename(filepath)
             rootname, ext = os.path.splitext(os.path.basename(filepath))
             kind, name = rootname.split('-', 1)
             if ext not in [ '.json', '.yaml', '.html', '.py' ]:
@@ -130,7 +130,7 @@ class ConfigComponent(Component):
 
             meta_info = {}
             if kind in [ 'slowdash', 'slowplot', 'slowcruise' ]:
-                meta_info = await self.get_content_meta(filename)
+                meta_info, content = await self._load_content(basename, 'json')
                 
             doc.append({
                 'type': kind,
@@ -138,7 +138,7 @@ class ConfigComponent(Component):
                 'mtime': mtime,
                 'title': meta_info.get('title', ''),
                 'description': meta_info.get('description', ''),
-                'config_file': filename,
+                'config_file': basename,
                 'config_error': meta_info.get('config_error', ''),
                 'config_error_line': meta_info.get('config_error_line', '')
             })
@@ -161,14 +161,6 @@ class ConfigComponent(Component):
         return content
 
 
-    @slowlette.get('/config/meta/{filename}')
-    async def get_content_meta(self, filename:str, content_type:str='json'):
-        meta, content = await self._load_content(filename, content_type)
-        if meta is None:
-            return slowlette.Response(400)
-        return meta
-
-    
     @slowlette.get('/config/filelist')
     async def get_filelist(self, sortby='mtime', reverse:bool=False):
         if self.project_dir is None:

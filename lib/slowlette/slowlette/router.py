@@ -10,6 +10,14 @@ from .response import Response
 from .websocket import WebSocket, ConnectionClosed
 
 
+def iscoroutinecallable(obj):
+    if inspect.iscoroutinefunction(obj):
+        return True
+    if hasattr(obj, '__call__'):
+        return inspect.iscoroutinefunction(obj.__call__)
+    return False
+
+
 class PathRule:
     def __init__(self, rule:str, method:str, func, *, status_code:int=200):
         self.rule_str = rule
@@ -150,8 +158,12 @@ class PathRule:
             kwargs[self.query_param] = copy.deepcopy(request.query)
 
         return kwargs
-    
 
+    
+    def __str__(self):
+        return f"{self.method} {self.rule_str}({','.join([pname for pname in self.param_attributes])})"
+
+    
 
 def get(path_rule:str, status_code:int=200):
     """decorator to make a GET-request handler (method of a subclass of App)
@@ -253,7 +265,7 @@ class Router:
             request = Request(url=name, method="on_event")
             args = handler.slowlette_path_rule.match(request)
             if args is not None:
-                if inspect.iscoroutinefunction(handler):
+                if iscoroutinecallable(handler):
                     try:
                         await handler(self.app, **args)
                     except asyncio.CancelledError:
@@ -261,9 +273,10 @@ class Router:
                 else:
                     handler(self.app, **args)
 
-        subapps = self.subapps
         if name == 'shutdown':
-            subapps = reversed(subapps)
+            subapps = reversed(self.subapps)
+        else:
+            subapps = self.subapps
         for subapp in subapps:
             await subapp.slowlette.dispatch_event(name)
             
@@ -279,27 +292,30 @@ class Router:
         response_list = [ Response() ]
         for subapp in self.middlewares:
             response_list.append(await subapp.slowlette.dispatch(request))
+            
         for handler in self.handlers:
             args = handler.slowlette_path_rule.match(request)
-            if args is not None:
-                if inspect.iscoroutinefunction(handler):
-                    try:
-                        response = await handler(self.app, **args)
-                    except asyncio.CancelledError:
-                        response = None
+            if args is None:
+                continue
+            try:
+                if iscoroutinecallable(handler):
+                    response = await handler(self.app, **args)
                 else:
                     response = handler(self.app, **args)
-                if not isinstance(response, Response):
-                    status_code = handler.slowlette_path_rule.status_code
-                    response = Response(status_code, content=response)
-                if response.status_code > 0:
-                    orig = self.app.__class__.__name__
-                    req = str(request)[:48] + (' ...' if len(str(request)) > 48 else '')
-                    stat = response.get_status_code()
-                    cont = str(response.get_content())
-                    resp = cont[:48] + (' ...' if len(str(cont)) > 48 else '')
-                    logging.debug(f'{orig}: {req} -> Status {stat}: {resp}')
-                response_list.append(response)
+            except asyncio.CancelledError:
+                response = None
+            if not isinstance(response, Response):
+                status_code = handler.slowlette_path_rule.status_code
+                response = Response(status_code, content=response)
+            if response.status_code > 0:
+                orig = self.app.__class__.__name__
+                req = str(request)[:48] + (' ...' if len(str(request)) > 48 else '')
+                stat = response.get_status_code()
+                cont = str(response.get_content())
+                resp = cont[:48] + (' ...' if len(str(cont)) > 48 else '')
+                logging.debug(f'{orig}: {req} -> Status {stat}: {resp}')
+            response_list.append(response)
+            
         for subapp in self.subapps:
             response_list.append(await subapp.slowlette.dispatch(request))
 
@@ -324,7 +340,11 @@ class Router:
         if not hasattr(app, 'slowlette'):
             # in case the __init__() method is not called by user subclass
             app.slowlette = Router(app)
-        self.subapps.append((app))
+        self.subapps.append(app)
+
+
+    def remove(self, app):
+        self.subapps.remove(app)
 
 
     def add_middleware(self, app):
@@ -334,6 +354,10 @@ class Router:
         self.middlewares.append(app)
 
 
+    def remove_middleware(self, app):
+        self.middlewares.remove(app)
+
+
     async def websocket(self, request:Request, websocket:WebSocket) -> None:
         for handler in self.handlers:
             args = handler.slowlette_path_rule.match(request)
@@ -341,7 +365,7 @@ class Router:
                 continue
             request.abort()
             
-            if not inspect.iscoroutinefunction(handler):
+            if not iscoroutinecallable(handler):
                 logging.error('WebSocket handler must be async')
                 return None
 

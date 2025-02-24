@@ -63,19 +63,13 @@ class App(slowlette.App):
             
         ### API Components: see the Slowette documentation for the mechanism ###
         
-        # this must be the first to capture stdout
-        self.slowlette.include(ConsoleComponent(self, self.project))
-
-        # this should be the second so that user modules can override the API
-        self.slowlette.include(UserModuleComponent(self, self.project))
-
-        # maybe task modules might want to override the API, too
-        self.slowlette.include(TaskModuleComponent(self, self.project))
-        
+        self.slowlette.include(ConsoleComponent(self, self.project)) # this must be the first to capture stdout
         self.slowlette.include(ConfigComponent(self, self.project))
         self.slowlette.include(DataSourceComponent(self, self.project))
         self.slowlette.include(ExportComponent(self, self.project))
         self.slowlette.include(PubsubComponent(self, self.project))
+        self.slowlette.include(UserModuleComponent(self, self.project))
+        self.slowlette.include(TaskModuleComponent(self, self.project))
         self.slowlette.include(MiscApiComponent(self, self.project))
 
 
