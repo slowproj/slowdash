@@ -118,8 +118,11 @@ Task)</a></li>
 <li><a href="#thread-functions-routine-task"
 id="toc-thread-functions-routine-task">Thread Functions (Routine
 Task)</a></li>
-<li><a href="#control-variable-binding"
-id="toc-control-variable-binding">Control Variable Binding</a></li>
+<li><a href="#control-variable-exporting"
+id="toc-control-variable-exporting">Control Variable Exporting</a></li>
+<li><a href="#control-variable-binding-streaming-live-updating"
+id="toc-control-variable-binding-streaming-live-updating">Control
+Variable Binding (Streaming / Live Updating)</a></li>
 </ul></li>
 <li><a href="#distributed-system-network-deployment"
 id="toc-distributed-system-network-deployment">Distributed System /
@@ -880,7 +883,7 @@ qualifier: by default, if a previous function call is in execution, a
 next action cannot be accepted to avoid multi-threading issues in the
 user code. The <code>parallel</code> qualifier indicates that this
 function can run in parallel to others. Another common qualifier is
-<code>await</code>, which instruct the web browser to wait for
+<code>await</code>, which instructs the web browser to wait for
 completion of the function execution before doing any other things
 (therefore the browser will look frozen).</p>
 <h4 id="canvas-panel">Canvas Panel</h4>
@@ -967,7 +970,7 @@ contains <code>time.sleep()</code> or equivalent.</td>
 </table>
 <p>These functions can be either the standard <code>def</code> or
 <code>async def</code>.</p>
-<h2 id="control-variable-binding">Control Variable Binding</h2>
+<h2 id="control-variable-exporting">Control Variable Exporting</h2>
 <p>Control variables (instances of the Control Node classes) can be
 bound to GUI elements if a SlowTask script exports them with the
 <code>_export()</code> function:</p>
@@ -1005,6 +1008,49 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb28-1"><a h
 <span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&#39;Status&#39;</span>, StatusNode())</span>
 <span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>    ]</span></code></pre></div>
 <p>Here the new node <code>StatusNode</code> returns a table object.</p>
+<h2 id="control-variable-binding-streaming-live-updating">Control
+Variable Binding (Streaming / Live Updating)</h2>
+<p>If an instance of <code>ValueNode</code> (which typically holds a
+value but not associated to any external device or object) is exported,
+it can push the value to receivers (typically web browsers).</p>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> asyncio</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ValueNode</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> ValueNode(initial_value<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> _loop():</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> V0.get()</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> x.deliver()</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> asyncio.sleep(<span class="dv">1</span>)</span></code></pre></div>
+<p>The <code>deliver()</code> method calls <code>.get()</code> and
+publish the value to receivers. As <code>deliver()</code> is an async
+function, it must be used in an <code>async def</code> and the return
+value must be <code>await</code>ed.</p>
+<p>The exported variables can be “bound” in browser. If a SlowTask
+control variable is bound in SlowDash HTML, changes to the variable on
+the browser calls the <code>.set()</code> method of the SlowTask
+variable.</p>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;range&quot;</span> <span class="er">min</span><span class="ot">=</span><span class="st">&quot;0.1&quot;</span> <span class="er">max</span><span class="ot">=</span><span class="st">&quot;9.9&quot;</span> <span class="er">step</span><span class="ot">=</span><span class="st">&quot;0.1&quot;</span> <span class="er">sd-value</span><span class="ot">=</span><span class="st">&quot;scope.fx&quot;</span> <span class="er">sd-live</span><span class="ot">=</span><span class="st">&quot;true&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">span</span> <span class="er">sd-value</span><span class="ot">=</span><span class="st">&quot;scope.fx&quot;</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;font-size:150%&quot;</span><span class="dt">&gt;&lt;/</span><span class="kw">span</span><span class="dt">&gt;</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  ...</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb31"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># slowtask-scope.py</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>fx <span class="op">=</span> ValueNode(initial_value<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _export():</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> [ (<span class="st">&#39;fx&#39;</span>, fx) ]</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
+<p>In HTML, <code>sd-live="true"</code> indicates that changes of the
+value on the browser will trigger calling the <code>.set()</code> method
+of the bound variable.</p>
+<p>An example can be found in
+<code>ExampleProjects/Streaming</code>.</p>
 <h1 id="distributed-system-network-deployment">Distributed System /
 Network Deployment</h1>
 <h2 id="slowdash-interconnect">SlowDash Interconnect</h2>

@@ -2,7 +2,7 @@
 title: Project Setup
 ---
 
-# Configuration
+# Setup
 
 ## Project Directory
 - Every project has a dedicated project directory. 
@@ -16,7 +16,7 @@ title: Project Setup
 - Under the project directory, `config` directory is automatically created. The web interface posts files only to this directory.
 
 
-## Configuration File
+## Project Configuration File
 Project configuration file describes:
 
 - Name, title of the project
@@ -332,6 +332,17 @@ RewriteRule ^api/(.*)$ slowdash.wsgi/$1
 Although dedicated daemon is created for this SlowDash project, currently only one WSGI can be setup on one host. Other SlowDash project must use CGI.
 
 
+# SlowDash Watchdog (SlowDog)
+SlowDog sends HTTP requests to the SlowDash server periodically and if it does not receive a reply before timeout, the dog kills the server and restarts another one.
+
+To enable SlowDog, add `--slowdog` option:
+```console
+$ slowdash --port=18881 --slowdog
+```
+
+SlowDog is enabled in the SlowDash Docker container.
+
+
 # Security Considerations
 As already mentioned, <b>SlowDash is designed for internal use only</b> within a secured network and therefore no security protection is implemented. It is strongly recommended not to expose the system to the public internet. External access is assumed to be done <b>through VPN or ssh tunnel</b>.
 
@@ -391,12 +402,25 @@ $ slowdash  --port=18881  --ssl-keyfile=KEY_FILE  --ssl-certfile=CERT_FILE
 This feature might be dropped in future SlowDash releases. Using a reverse proxy server is recommended for long-term setups.
 
 
-# SlowDash Watchdog (SlowDog)
-SlowDog sends HTTP requests to the SlowDash server periodically and if it does not receive a reply before timeout, the dog kills the server and restarts another one.
+# Advanced Topics
+## Dynamic Generation of Config Contents
+Configuration of SlowDash contents (dashboard, plot layout, etc.) are described in JSON/YAML files in the project `config` directory, with a name like `slowplot-XXX.json`. These statis JSON/YAML (or any files with a name like `TYPE-XXX.EXT` placed in `config`) can be replaced with a Python script that generates the contents dynamically. To do so, place a Python script with a name like `slowplot-XXX.py` instead of `slowplot-XXX.json`, and define `async _setup(app)` function that returns the config content. The `app` parameter here is the SlowDash App object, with which you can access SlowDash resources such as the channel list.
 
-To enable SlowDog, add `--slowdog` option:
-```console
-$ slowdash --port=18881 --slowdog
+This is an example to dynamically generate a slowplot page that shows all the time-series channels. This example can be found in `ExampleProjects/DynamicLayout`.
+```python
+import logging
+
+async def _setup(app):
+    channels = await app.request_channels()
+    logging.debug(f'Channels: {channels}\n')
+
+    layout = {
+        "panels": [{
+            "type": "timeaxis",
+            "plots": [{ "type": "timeseries", "channel": ch['name'] }]
+        } for ch in channels if ch.get('type', 'numeric') == 'numeric' ]
+    }
+
+    return layout
 ```
-
-SlowDog is enabled in the SlowDash Docker container.
+Most functions of the SlowDash App are `async`, therefore these must be called with `await` in an `async` function, as done in the example above.

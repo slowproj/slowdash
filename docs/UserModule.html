@@ -116,10 +116,15 @@ API</a></li>
 </header>
 
 <h1 id="applications">Applications</h1>
-<p>In Slow-Dash projects, user Python module can be used for:</p>
+<p>User Module is a Python module placed in a SlowDash project
+directory, and can be used for:</p>
 <ul>
 <li>sending data to the web interface (table, tree, etc)</li>
 <li>dispatching “command” from the web interface</li>
+</ul>
+<p>and as an advanced usage,</p>
+<ul>
+<li>override SlowDash Web API to extend or modify it.</li>
 </ul>
 <p>SlowTask is an extension of the user module, and it should be good
 for most simple cases. User module is provided for full flexibility
@@ -434,8 +439,8 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb16-1"><a h
 <span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    slowdash <span class="op">=</span> app</span>
 <span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> _loop():</span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> slowdash.request_publish(topic<span class="op">=</span><span class="st">&#39;user_news&#39;</span>, <span class="st">&#39;I am still alive&#39;</span>)</span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    asyncio.sleep(<span class="dv">1</span>)</span></code></pre></div>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> slowdash.request_publish(topic<span class="op">=</span><span class="st">&#39;user_news&#39;</span>, message<span class="op">=</span><span class="st">&#39;I am still alive&#39;</span>)</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> asyncio.sleep(<span class="dv">1</span>)</span></code></pre></div>
 <p>If defined, <code>_setup(app)</code> is called before
 <code>_initialize(params)</code>. Optionally, <code>_setup()</code> can
 take the second argument, <code>params</code>, which is identical to the
@@ -490,7 +495,7 @@ the request. Slowlette will distribute a web request to all the possible
 The handler for <code>/channel</code> above returns only one channel,
 but the client (web browser) will receive the entire list of channels
 due to this aggregation mechanism.</p>
-<h3 id="config-content-api-extension">Config &amp; Content API
+<h3 id="config-list-content-api-extension">Config List &amp; Content API
 Extension</h3>
 <p>Here is another example, for overriding SlowDash API more
 aggressively. In this example, the handler for

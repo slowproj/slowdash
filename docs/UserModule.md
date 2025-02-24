@@ -3,10 +3,14 @@ title: User Module
 ---
 
 # Applications
-In Slow-Dash projects, user Python module can be used for:
+User Module is a Python module placed in a SlowDash project directory, and can be used for:
 
 - sending data to the web interface (table, tree, etc)
 - dispatching "command" from the web interface
+
+and as an advanced usage,
+
+- override SlowDash Web API to extend or modify it.
 
 SlowTask is an extension of the user module, and it should be good for most simple cases. User module is provided for full flexibility beyond SlowTask.
 
@@ -318,8 +322,8 @@ def _setup(app):
     slowdash = app
 
 async def _loop():
-    await slowdash.request_publish(topic='user_news', 'I am still alive')
-    asyncio.sleep(1)
+    await slowdash.request_publish(topic='user_news', message='I am still alive')
+    await asyncio.sleep(1)
 ```
 If defined, `_setup(app)` is called before `_initialize(params)`. Optionally, `_setup()` can take the second argument, `params`, which is identical to the argument passed to `_initialize()`.
 
@@ -359,7 +363,7 @@ def get_data(channels:str, length:float=None, to:float=None, resample:float=None
 ```
 Directly handling the Web API allows User Module to do anything for the request. Slowlette will distribute a web request to all the possible (matching) handlers in the system, and aggregate the multiple responses. The handler for `/channel` above returns only one channel, but the client (web browser) will receive the entire list of channels due to this aggregation mechanism. 
 
-### Config & Content API Extension
+### Config List & Content API Extension
 Here is another example, for overriding SlowDash API more aggressively. In this example, the handler for `/config/contentlist` (a request to return a list of project `config` directory contents) inserts a slowplot file entry, `slowplot-PlotLayoutOverride.json`, which actually does not exist. Then the handler for the content request (`/config/content/FIELNAME`) returns a dynamically generated content (time-series plots for all the channels, where the channel list is obtained from the SlowDash App in `_setup()`), as if the file existed in the `config` directory with that content. 
 ```python
 import slowlette

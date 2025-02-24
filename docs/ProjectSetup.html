@@ -85,12 +85,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span class="toc-title">Contents</span>
 <nav id="TOC">
 <ul>
-<li><a href="#configuration" id="toc-configuration">Configuration</a>
+<li><a href="#setup" id="toc-setup">Setup</a>
 <ul>
 <li><a href="#project-directory" id="toc-project-directory">Project
 Directory</a></li>
-<li><a href="#configuration-file"
-id="toc-configuration-file">Configuration File</a></li>
+<li><a href="#project-configuration-file"
+id="toc-project-configuration-file">Project Configuration File</a></li>
 <li><a href="#styles" id="toc-styles">Styles</a></li>
 <li><a href="#testing-the-configuration"
 id="toc-testing-the-configuration">Testing the Configuration</a></li>
@@ -108,16 +108,23 @@ User Process</a></li>
 id="toc-launching-from-apache-web-server-cgi-or-wsgi">Launching from
 Apache Web Server (CGI or WSGI)</a></li>
 </ul></li>
-<li><a href="#security-considerations"
-id="toc-security-considerations">Security Considerations</a></li>
 <li><a href="#slowdash-watchdog-slowdog"
 id="toc-slowdash-watchdog-slowdog">SlowDash Watchdog (SlowDog)</a></li>
+<li><a href="#security-considerations"
+id="toc-security-considerations">Security Considerations</a></li>
+<li><a href="#advanced-topics" id="toc-advanced-topics">Advanced
+Topics</a>
+<ul>
+<li><a href="#dynamic-generation-of-config-contents"
+id="toc-dynamic-generation-of-config-contents">Dynamic Generation of
+Config Contents</a></li>
+</ul></li>
 </ul>
 </nav>
 </div>
 </header>
 
-<h1 id="configuration">Configuration</h1>
+<h1 id="setup">Setup</h1>
 <h2 id="project-directory">Project Directory</h2>
 <ul>
 <li><p>Every project has a dedicated project directory.</p></li>
@@ -134,7 +141,7 @@ followings:</p>
 automatically created. The web interface posts files only to this
 directory.</p></li>
 </ul>
-<h2 id="configuration-file">Configuration File</h2>
+<h2 id="project-configuration-file">Project Configuration File</h2>
 <p>Project configuration file describes:</p>
 <ul>
 <li>Name, title of the project</li>
@@ -212,7 +219,7 @@ optional)</h4>
 href="UserModule.html">User Module section</a> for details.</li>
 </ul>
 <h2 id="styles">Styles</h2>
-<h3 id="configuration-1">Configuration</h3>
+<h3 id="configuration">Configuration</h3>
 <ul>
 <li><code>theme</code> (default <code>light</code>): currently
 <code>light</code> or <code>dark</code></li>
@@ -415,7 +422,7 @@ one).</p>
 <li>Apache2 Web Server, with cgi and userdir enabled</li>
 <li>Apache module <code>mod_wsgi</code> for WSGI</li>
 </ul>
-<h3 id="setup">Setup</h3>
+<h3 id="setup-1">Setup</h3>
 <p>There is a setup script in <code>slowdash/utils</code>. Run this
 script at the project directory:</p>
 <div class="sourceCode" id="cb13"><pre
@@ -499,6 +506,14 @@ class="sourceCode apache"><code class="sourceCode apache"><span id="cb17-1"><a h
 <p>Although dedicated daemon is created for this SlowDash project,
 currently only one WSGI can be setup on one host. Other SlowDash project
 must use CGI.</p>
+<h1 id="slowdash-watchdog-slowdog">SlowDash Watchdog (SlowDog)</h1>
+<p>SlowDog sends HTTP requests to the SlowDash server periodically and
+if it does not receive a reply before timeout, the dog kills the server
+and restarts another one.</p>
+<p>To enable SlowDog, add <code>--slowdog</code> option:</p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash --port=18881 --slowdog</span></span></code></pre></div>
+<p>SlowDog is enabled in the SlowDash Docker container.</p>
 <h1 id="security-considerations">Security Considerations</h1>
 <p>As already mentioned, <b>SlowDash is designed for internal use
 only</b> within a secured network and therefore no security protection
@@ -512,62 +527,89 @@ implements the “Basic Authentication”. Combine this authentication
 communication.</p>
 <p>To use the Basic Authentication, first install the
 <code>bcrypt</code> Python package if it is not yet installed:</p>
-<div class="sourceCode" id="cb18"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pip3 install bcrypt</span></span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pip3 install bcrypt</span></span></code></pre></div>
 <p>Then generate an authentication key by the
 <code>slowdash-generate-key.py</code> script in
 <code>slowdash/utils</code>:</p>
-<div class="sourceCode" id="cb19"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    &quot;authentication&quot;: {</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>        &quot;type&quot;: &quot;Basic&quot;,</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>        &quot;key&quot;: &quot;slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS&quot;</span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    &quot;authentication&quot;: {</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>        &quot;type&quot;: &quot;Basic&quot;,</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>        &quot;key&quot;: &quot;slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS&quot;</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>Here the first argument is the user name and the second is the
 password.</p>
 <p>Add the key in the project configuration file under the
 <code>authentication</code> entry:</p>
-<div class="sourceCode" id="cb20"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="at">  ...</span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">authentication</span><span class="kw">:</span></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> Basic</span></span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">key</span><span class="kw">:</span><span class="at"> slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS</span></span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="at">  ...</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">authentication</span><span class="kw">:</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> Basic</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">key</span><span class="kw">:</span><span class="at"> slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS</span></span></code></pre></div>
 <p>This key can also be used for Apache, but some Apache keys,
 especially old ones such as MD5 keys which are still widely used, can
 not be used for SlowDash.</p>
 <h4 id="only-for-the-cgiwsgi-mode">Only for the CGI/WSGI mode</h4>
 <p>Rerun the <code>slowdash-setup-apache.py</code> command to update the
 Web Server configuration.</p>
-<div class="sourceCode" id="cb21"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ PATH/TO/SLOWDASH/utils/slowdash-setup-apache.py --interface=CGI   (or --interface=WSGI)</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>Project: MySlowSystem</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>Project directory: /home/sanshiro/MySlowSystem/SlowdashProject</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>Web-file directory: /home/sanshiro/public_html/SlowDash/MySlowSystem</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>User: slow</span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>continue? [Y/n] y</span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ PATH/TO/SLOWDASH/utils/slowdash-setup-apache.py --interface=CGI   (or --interface=WSGI)</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>Project: MySlowSystem</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>Project directory: /home/sanshiro/MySlowSystem/SlowdashProject</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>Web-file directory: /home/sanshiro/public_html/SlowDash/MySlowSystem</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>User: slow</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>continue? [Y/n] y</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
 <p>Note that a new line, <code>User: slow</code>, is now added.</p>
 <h3 id="built-in-https-server-asgi-only">Built-in HTTPS server (ASGI
 only)</h3>
 <p>If SlowDash runs in the ASGI mode, a built-in HTTPS mode can be used.
 To use this feature, provide the SSL/TLS key and certification files to
 the <code>slowdash</code> command:</p>
-<div class="sourceCode" id="cb22"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash  --port=18881  --ssl-keyfile=KEY_FILE  --ssl-certfile=CERT_FILE</span></span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash  --port=18881  --ssl-keyfile=KEY_FILE  --ssl-certfile=CERT_FILE</span></span></code></pre></div>
 <p>This feature might be dropped in future SlowDash releases. Using a
 reverse proxy server is recommended for long-term setups.</p>
-<h1 id="slowdash-watchdog-slowdog">SlowDash Watchdog (SlowDog)</h1>
-<p>SlowDog sends HTTP requests to the SlowDash server periodically and
-if it does not receive a reply before timeout, the dog kills the server
-and restarts another one.</p>
-<p>To enable SlowDog, add <code>--slowdog</code> option:</p>
-<div class="sourceCode" id="cb23"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash --port=18881 --slowdog</span></span></code></pre></div>
-<p>SlowDog is enabled in the SlowDash Docker container.</p>
+<h1 id="advanced-topics">Advanced Topics</h1>
+<h2 id="dynamic-generation-of-config-contents">Dynamic Generation of
+Config Contents</h2>
+<p>Configuration of SlowDash contents (dashboard, plot layout, etc.) are
+described in JSON/YAML files in the project <code>config</code>
+directory, with a name like <code>slowplot-XXX.json</code>. These statis
+JSON/YAML (or any files with a name like <code>TYPE-XXX.EXT</code>
+placed in <code>config</code>) can be replaced with a Python script that
+generates the contents dynamically. To do so, place a Python script with
+a name like <code>slowplot-XXX.py</code> instead of
+<code>slowplot-XXX.json</code>, and define
+<code>async _setup(app)</code> function that returns the config content.
+The <code>app</code> parameter here is the SlowDash App object, with
+which you can access SlowDash resources such as the channel list.</p>
+<p>This is an example to dynamically generate a slowplot page that shows
+all the time-series channels. This example can be found in
+<code>ExampleProjects/DynamicLayout</code>.</p>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> logging</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> _setup(app):</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    channels <span class="op">=</span> <span class="cf">await</span> app.request_channels()</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    logging.debug(<span class="ss">f&#39;Channels: </span><span class="sc">{</span>channels<span class="sc">}</span><span class="ch">\n</span><span class="ss">&#39;</span>)</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    layout <span class="op">=</span> {</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;panels&quot;</span>: [{</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;type&quot;</span>: <span class="st">&quot;timeaxis&quot;</span>,</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;plots&quot;</span>: [{ <span class="st">&quot;type&quot;</span>: <span class="st">&quot;timeseries&quot;</span>, <span class="st">&quot;channel&quot;</span>: ch[<span class="st">&#39;name&#39;</span>] }]</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>        } <span class="cf">for</span> ch <span class="kw">in</span> channels <span class="cf">if</span> ch.get(<span class="st">&#39;type&#39;</span>, <span class="st">&#39;numeric&#39;</span>) <span class="op">==</span> <span class="st">&#39;numeric&#39;</span> ]</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> layout</span></code></pre></div>
+<p>Most functions of the SlowDash App are <code>async</code>, therefore
+these must be called with <code>await</code> in an <code>async</code>
+function, as done in the example above.</p>
 
 
 </body>

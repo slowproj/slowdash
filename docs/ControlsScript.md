@@ -543,7 +543,7 @@ def set_V1(V1:float, ramping:float):
 ```
 The input values on the Web form will be bound to the function parameters based on the names (`<input name="V0">` will be bound to the `V0` parameter).
 
-In the example above, some functions have the `parallel` qualifier: by default, if a previous function call is in execution, a next action cannot be accepted to avoid multi-threading issues in the user code. The `parallel` qualifier indicates that this function can run in parallel to others. Another common qualifier is `await`, which instruct the web browser to wait for completion of the function execution before doing any other things (therefore the browser will look frozen).
+In the example above, some functions have the `parallel` qualifier: by default, if a previous function call is in execution, a next action cannot be accepted to avoid multi-threading issues in the user code. The `parallel` qualifier indicates that this function can run in parallel to others. Another common qualifier is `await`, which instructs the web browser to wait for completion of the function execution before doing any other things (therefore the browser will look frozen).
 
 #### Canvas Panel
 On a canvas panel, a button to call a task can be placed by:
@@ -601,7 +601,7 @@ If a SlowTask script has functions of `_initialize(params)`, `_finalize()`, `_ru
 
 These functions can be either the standard `def` or `async def`.
 
-## Control Variable Binding
+## Control Variable Exporting
 Control variables (instances of the Control Node classes) can be bound to GUI elements if a SlowTask script exports them with the `_export()` function:
 ```python
 def _export():
@@ -637,6 +637,42 @@ def _export():
 ```
 Here the new node `StatusNode` returns a table object.
 
+## Control Variable Binding (Streaming / Live Updating)
+If an instance of `ValueNode` (which typically holds a value but not associated to any external device or object) is exported, it can push the value to receivers (typically web browsers).
+```python
+import asyncio
+from slowpy.control import ValueNode
+
+x = ValueNode(initial_value=0)
+
+async def _loop():
+    x = V0.get()
+    await x.deliver()
+    await asyncio.sleep(1)
+```
+The `deliver()` method calls `.get()` and publish the value to receivers. As `deliver()` is an async function, it must be used in an `async def` and the return value must be `await`ed.
+
+The exported variables can be "bound" in browser. If a SlowTask control variable is bound in SlowDash HTML, changes to the variable on the browser calls the `.set()` method of the SlowTask variable.
+```html
+<form>
+  <input type="range" min="0.1" max="9.9" step="0.1" sd-value="scope.fx" sd-live="true">
+  <span sd-value="scope.fx" style="font-size:150%"></span>
+  ...
+</form>
+```
+```python
+# slowtask-scope.py
+
+fx = ValueNode(initial_value=0)
+
+def _export():
+  return [ ('fx', fx) ]
+
+...
+```
+In HTML, `sd-live="true"` indicates that changes of the value on the browser will trigger calling the `.set()` method of the bound variable.
+
+An example can be found in `ExampleProjects/Streaming`.
 
 # Distributed System / Network Deployment
 ## SlowDash Interconnect
