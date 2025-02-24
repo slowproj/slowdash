@@ -602,7 +602,7 @@ If a SlowTask script has functions of `_initialize(params)`, `_finalize()`, `_ru
 These functions can be either the standard `def` or `async def`.
 
 ## Control Variable Exporting
-Control variables (instances of the Control Node classes) can be bound to GUI elements if a SlowTask script exports them with the `_export()` function:
+If `_export()` is defined in the SlowTask script, control variables listed in its return value become accessible by other SlowDash components (typically web browsers), in a very simlar way as the data stored in data sources (typically databases), except that only the "curent" values are available.
 ```python
 def _export():
     return [
@@ -612,7 +612,7 @@ def _export():
       ('V3', V3)
     ]
 ```
-Here the return value is a list of tuples of (name, control_node_variable). In the GUI, the exported entries can be used in the same way as data from a database. To export a variable that is not a control node, wrapping it with a control node is easy:
+To export a variable that is not a control node, make a temporary control node variable to wrap it:
 ```python
 class RampingStatusNode(ControlNode):
     def get(self):
@@ -635,7 +635,6 @@ def _export():
         ('Status', StatusNode())
     ]
 ```
-Here the new node `StatusNode` returns a table object.
 
 ## Control Variable Binding (Streaming / Live Updating)
 If an instance of `ValueNode` (which typically holds a value but not associated to any external device or object) is exported, it can push the value to receivers (typically web browsers).

@@ -412,7 +412,7 @@ import logging
 
 async def _setup(app):
     channels = await app.request_channels()
-    logging.debug(f'Channels: {channels}\n')
+    logging.debug(f'Channels: {channels}')
 
     layout = {
         "panels": [{
