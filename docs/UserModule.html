@@ -98,6 +98,18 @@ Dispatcher</a></li>
 <li><a href="#user-module-threading" id="toc-user-module-threading">User
 Module Threading</a></li>
 <li><a href="#tips" id="toc-tips">Tips</a></li>
+<li><a href="#advanced-topics" id="toc-advanced-topics">Advanced
+Topics</a>
+<ul>
+<li><a href="#async-user-functions" id="toc-async-user-functions">Async
+user functions</a></li>
+<li><a href="#using-slowdash-app-functions"
+id="toc-using-slowdash-app-functions">Using SlowDash App
+Functions</a></li>
+<li><a href="#overriding-slowdash-web-api"
+id="toc-overriding-slowdash-web-api">Overriding SlowDash Web
+API</a></li>
+</ul></li>
 </ul>
 </nav>
 </div>
@@ -352,8 +364,9 @@ another thread in user modules, as done in SlowTask which creates a
 dedicated thread for each <code>_process_command()</code> call.</p>
 <h1 id="tips">Tips</h1>
 <h3 id="debug-log-messages">Debug / Log Messages</h3>
-<p>To print debug messages from user modules, use the logging
-module:</p>
+<p>To print debug messages from user modules, use the logging module.
+Direct outputs to <code>logging</code> will be included into SlowDash
+logging. If you do not want this, define a own logger object:</p>
 <div class="sourceCode" id="cb12"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> logging</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>logger <span class="op">=</span> logging.getLogger(name)</span>
@@ -388,7 +401,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb14-1"><a h
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">10</span>):</span>
 <span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>        _loop()</span>
 <span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    _finalize()</span></code></pre></div>
-<p>For contineous execution, signal might be used to stop the
+<p>For continuous execution, signal might be used to stop the
 thread:</p>
 <div class="sourceCode" id="cb15"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> stop(signum, frame):</span>
@@ -400,6 +413,127 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a h
 <span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    _initialize({})</span>
 <span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    _run()</span>
 <span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    _finalize()</span></code></pre></div>
+<h1 id="advanced-topics">Advanced Topics</h1>
+<h2 id="async-user-functions">Async user functions</h2>
+<p>User Module functions can be either the standard (<code>def</code>)
+or async (<code>async def</code>). As User Module functions are executed
+in a dedicated thread, using <code>await</code> in <code>async</code>
+will not improve the overall performance much, but this allows users to
+use async services as described below.</p>
+<h2 id="using-slowdash-app-functions">Using SlowDash App Functions</h2>
+<p>To access services implemented in the SlowDash App, such as invoking
+Web API and publishing streaming data, the instance of the SlowDash App
+can be passed to User Module if it defines the <code>_setup(app)</code>
+function:</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> asyncio</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>slowdash <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _setup(app):</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">global</span> slowdash</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    slowdash <span class="op">=</span> app</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> _loop():</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> slowdash.request_publish(topic<span class="op">=</span><span class="st">&#39;user_news&#39;</span>, <span class="st">&#39;I am still alive&#39;</span>)</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    asyncio.sleep(<span class="dv">1</span>)</span></code></pre></div>
+<p>If defined, <code>_setup(app)</code> is called before
+<code>_initialize(params)</code>. Optionally, <code>_setup()</code> can
+take the second argument, <code>params</code>, which is identical to the
+argument passed to <code>_initialize()</code>.</p>
+<p>Note that most SlowDash App services are async, and these must be
+called with <code>await</code> in a <code>async</code> user function (or
+handle the return values properly, e.g., with
+<code>asyncio.gather()</code>).</p>
+<h2 id="overriding-slowdash-web-api">Overriding SlowDash Web API</h2>
+<p>SlowDash uses the Slowlette Web framework, described in the <a
+href="Slowlette.html">Web Sever section</a>, to handle Web API requests.
+If a Slowlette App instance is defined in a User Module, it will be
+integrated into the SlowDash Web API. This feature can be used to add
+new API, modify or override the existing API, using Slowlette’s response
+aggregation mechanism. Be extremely careful on using this because
+modifying API can easily screw up the entire SlowDash behavior.</p>
+<p>The examples here can be found in
+<code>ExampleProjects/UserModuleSlowlette</code>.</p>
+<h3 id="channel-data-api-extension">Channel &amp; Data API
+Extension</h3>
+<p>Here is an example for enabling User Module to respond to data
+requests with a time-range parameter. (Note that
+<code>_get_data()</code> callback cannot do this, as it is designed to
+return “current” data.)</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>webapi <span class="op">=</span> slowlette.Slowlette()</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="at">@webapi.get</span>(<span class="st">&#39;/channels&#39;</span>)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_channels():</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> [ { <span class="st">&#39;name&#39;</span>: <span class="st">&#39;data_query&#39;</span>, <span class="st">&#39;type&#39;</span>: <span class="st">&#39;tree&#39;</span> } ]</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="at">@webapi.get</span>(<span class="st">&#39;/data/</span><span class="sc">{channels}</span><span class="st">&#39;</span>)</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_data(channels:<span class="bu">str</span>, length:<span class="bu">float</span><span class="op">=</span><span class="va">None</span>, to:<span class="bu">float</span><span class="op">=</span><span class="va">None</span>, resample:<span class="bu">float</span><span class="op">=</span><span class="va">None</span>, reducer:<span class="bu">str</span><span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="st">&#39;data_query&#39;</span> <span class="kw">not</span> <span class="kw">in</span> channels.split(<span class="st">&#39;,&#39;</span>):</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">None</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    record <span class="op">=</span> { <span class="st">&quot;data_query&quot;</span>: { <span class="st">&quot;x&quot;</span>: {</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;tree&#39;</span>: {</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;channels&#39;</span>: channels,</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;length&#39;</span>: length,</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;to&#39;</span>: to,</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;resample&#39;</span>: resample,</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;reducer&#39;</span>: reducer,</span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>    }}}</span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> record</span></code></pre></div>
+<p>Directly handling the Web API allows User Module to do anything for
+the request. Slowlette will distribute a web request to all the possible
+(matching) handlers in the system, and aggregate the multiple responses.
+The handler for <code>/channel</code> above returns only one channel,
+but the client (web browser) will receive the entire list of channels
+due to this aggregation mechanism.</p>
+<h3 id="config-content-api-extension">Config &amp; Content API
+Extension</h3>
+<p>Here is another example, for overriding SlowDash API more
+aggressively. In this example, the handler for
+<code>/config/contentlist</code> (a request to return a list of project
+<code>config</code> directory contents) inserts a slowplot file entry,
+<code>slowplot-PlotLayoutOverride.json</code>, which actually does not
+exist. Then the handler for the content request
+(<code>/config/content/FIELNAME</code>) returns a dynamically generated
+content (time-series plots for all the channels, where the channel list
+is obtained from the SlowDash App in <code>_setup()</code>), as if the
+file existed in the <code>config</code> directory with that content.</p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>webapi <span class="op">=</span> slowlette.Slowlette()</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>channels <span class="op">=</span> []</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> _setup(slowdash):</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">global</span> channels</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    channels <span class="op">=</span> <span class="cf">await</span> slowdash.request_channels()</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="at">@webapi.get</span>(<span class="st">&#39;/config/contentlist&#39;</span>)</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> add_slowplot_PlotLayoutOverride():</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> [{</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;type&quot;</span>: <span class="st">&quot;slowplot&quot;</span>,</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;name&quot;</span>: <span class="st">&quot;PlotLayoutOverride&quot;</span>,</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;config_file&quot;</span>: <span class="st">&quot;slowplot-PlotLayoutOverride.json&quot;</span>,</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;description&quot;</span>: <span class="st">&quot;Dynamically generated by UserModule&quot;</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>    }]</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a><span class="at">@webapi.get</span>(<span class="st">&#39;/config/content/slowplot-PlotLayoutOverride.json&#39;</span>)</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> generate_slowplot_PlotLayoutOverride(request:slowlette.Request):</span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>    request.abort()   <span class="co"># stop propagation, in order not to be handled by SlowDash</span></span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>    layout <span class="op">=</span> {</span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;panels&quot;</span>: [{</span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;type&quot;</span>: <span class="st">&quot;timeaxis&quot;</span>,</span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;plots&quot;</span>: [{ <span class="st">&quot;type&quot;</span>: <span class="st">&quot;timeseries&quot;</span>, <span class="st">&quot;channel&quot;</span>: ch[<span class="st">&#39;name&#39;</span>] }]</span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>        } <span class="cf">for</span> ch <span class="kw">in</span> channels <span class="cf">if</span> ch.get(<span class="st">&#39;type&#39;</span>, <span class="st">&#39;numeric&#39;</span>) <span class="op">==</span> <span class="st">&#39;numeric&#39;</span> ]</span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> layout</span></code></pre></div>
 
 
 </body>
