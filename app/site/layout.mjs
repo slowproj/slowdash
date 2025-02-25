@@ -377,6 +377,7 @@ export class Layout {
         }        
         
         if (Object.keys(channels).length <= 0) {
+            this.currentDataPacket.isTransitional = false;
             on_complete({code:200, text:'OK'});
             for (let panel of this.panels) {
                 panel.draw(this.currentDataPacket, this.currentDataPacket.range);

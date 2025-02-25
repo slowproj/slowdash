@@ -102,6 +102,7 @@ class FileServer():
             self.prefix = [ p for p in prefix.split('/') if len(p) > 0 ]
         if exclude is not None:
             self.exclude = [ p for p in exclude.split('/') if len(p) > 0 ]
+            logging.error(f"FFFFFFF: {self.exclude}")
 
 
     @route('/{*}')
@@ -118,6 +119,7 @@ class FileServer():
                 is_dirty = True
             path.append(p)
         # exclude-path match
+        logging.error(f"{request}, {self.prefix}, {self.exclude}")
         if self.exclude is not None:
             if len(path) >= len(self.exclude):
                 for i,p in enumerate(self.exclude):
@@ -168,7 +170,7 @@ class FileServer():
             if ext in self.ext_deny:
                 return Response(403)  # Forbidden
 
-        filepath = os.path.join(*(path[len(self.prefix):]))
+        filepath = os.path.join(*(path))
         if len(os.path.splitdrive(filepath)[0]) > 0:  # Windows drive letter :-(
             return Response(403)  # Forbidden
                 
