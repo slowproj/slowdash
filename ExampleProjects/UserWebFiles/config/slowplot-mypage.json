@@ -7,7 +7,7 @@
     },
     "style": { },
     "panels": [
-        { "type": "href", "title": "", "url": "api/webfiles/hello.html", "reload": true, "scaling": null, "offset_top": 0, "offset_left": 0 }
+        { "type": "href", "title": "", "url": "api/webfiles/userpage.html", "reload": true, "scaling": null, "offset_top": 0, "offset_left": 0 }
     ],
     "meta": { "name": "mypage", "title": "", "description": "" }
 }
