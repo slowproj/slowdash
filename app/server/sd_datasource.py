@@ -1,7 +1,6 @@
 # Created by Sanshiro Enomoto on 20 March 2022 #
 
-import time, math, logging
-import numpy as np
+import time, math, statistics, logging
 
 import slowlette
 from sd_component import ComponentPlugin, PluginComponent
@@ -152,9 +151,10 @@ class DataSource(ComponentPlugin):
                     continue
                 t = data.get('t', [])
                 if len(t) > 1:
-                    intervals.append(np.median(np.diff(t)))
+                    dt = [ t[k+1]-t[k] for k in range(len(t)-1) ]
+                    intervals.append(statistics.median(dt))
             if len(intervals) > 0:
-                interval = np.median(intervals)
+                interval = statistics.median(intervals)
             else:
                 interval = length / 100
             if interval <= 0:
@@ -186,7 +186,7 @@ class DataSource(ComponentPlugin):
                 buckets[bin].append(x_in[k])
 
             x = [ cls.reduce(xk, reducer) for xk in buckets ]
-            x = np.where(np.isnan(x), None, x).tolist()
+            x = [ None if math.isnan(xk) else xk for xk in x ]
                 
             result[name] = { 'start': start, 'length': length, 't': t, 'x': x }
             
@@ -202,32 +202,37 @@ class DataSource(ComponentPlugin):
         Returns:
           - the calculated scalar value
         """
+        from decimal import Decimal
+        xx = [ xk for xk in x if not math.isnan(xk) ]
+
+        if method == 'count':
+            return len(xx)
         
-        x = np.array(x)
-        x = x[~np.isnan(x)]
-        if method != 'count' and len(x) == 0:
-            return np.nan
+        if len(xx) < 1:
+            return math.nan
         
         if method == 'first':
-            return x.tolist()[0]
+            return xx[0]
         elif method == 'last':
-            return x.tolist()[len(x)-1]
+            return xx[len(xx)-1]
         elif method == 'mean':
-            return np.mean(x)
+            return statistics.mean(xx)
         elif method == 'median':
-            return np.median(x)
+            return statistics.median(xx)
         elif method == 'sum':
-            return np.sum(x)
-        elif method == 'count':
-            return len(x)
-        elif method == 'std':
-            return np.std(x)
+            return sum(xx)
         elif method == 'min':
-            return np.min(x)
+            return min(xx)
         elif method == 'max':
-            return np.max(x)
+            return max(xx)
         
-        return np.nan
+        if len(xx) < 2:
+            return math.nan
+        
+        if method == 'std':
+            return statistics.stdev(xx)
+        
+        return math.nan
 
 
     

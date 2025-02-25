@@ -174,7 +174,7 @@ class DataSource_Dummy(DataSource):
                 yk = float(np.random.poisson(mean, 1)[0])
                 x.append(i)
                 y.append(yk)
-                y_err.append(np.sqrt(yk))
+                y_err.append(round(np.sqrt(yk), 2))
                 
             result[name] = {
                 'start': to-length, 'length': length,
