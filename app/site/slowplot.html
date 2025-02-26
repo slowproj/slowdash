@@ -6,8 +6,8 @@
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
   <title>SlowPlot</title>
   <link rel="icon" href="favicon.png">
-  <link rel="stylesheet" type="text/css" href="jagaimo/jagaimo.css">
-  <link rel="stylesheet" type="text/css" href="slowdash.css">
+  <link rel="stylesheet" type="text/css" href="slowjs/jagaimo/jagaimo.css">
+  <link rel="stylesheet" type="text/css" href="slowjs/slowdash.css">
   <link rel="stylesheet" type="text/css" id="sd-theme-css">
 </head>
 
@@ -16,10 +16,10 @@
   <div id="sd-layout">Loading Configuration...</div>
 
   <script type="module">
-    import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
-    import { JGDialogWidget } from './jagaimo/jagawidgets.mjs';
-    import { Layout } from './layout.mjs';
-    import { boot, Frame, TimeRangePullDown, GridPullDown, SaveConfigDialog, upload } from './controlframe.mjs';
+    import { JG as $, JGDateTime } from './slowjs/jagaimo/jagaimo.mjs';
+    import { JGDialogWidget } from './slowjs/jagaimo/jagawidgets.mjs';
+    import { Layout } from './slowjs/layout.mjs';
+    import { boot, Frame, TimeRangePullDown, GridPullDown, SaveConfigDialog, upload } from './slowjs/controlframe.mjs';
 
     window.addEventListener('DOMContentLoaded', function() {
         let defaults = {
@@ -276,7 +276,7 @@
         homeButton.css('margin-left', '1em'); // this must be after append()
         
         let docButton = $('<button>').html("&#x2753;").bind('click', e=>{
-            window.open('./docs/index.html');
+            window.open('./slowdocs/index.html');
         });
         docButton.attr('title', 'Documents');
         frame.appendButton(docButton);

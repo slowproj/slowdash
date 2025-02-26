@@ -175,14 +175,14 @@ for dirname in dirlist:
         shutil.rmtree(dst)
     shutil.copytree(src, dst, symlinks=True)
 if interface == 'CGI':
-    src = os.path.join(sys_dir, 'app', 'site', 'slowdash.cgi')
+    src = os.path.join(sys_dir, 'app', 'server', 'slowdash.cgi')
     dest = os.path.join(html_dir, 'slowdash.cgi')
     shutil.copy(src, dest)
-    src = os.path.join(sys_dir, 'app', 'site', 'slowdash_wsgi.py')
+    src = os.path.join(sys_dir, 'app', 'server', 'slowdash_wsgi.py')
     dest = os.path.join(html_dir, 'slowdash_wsgi.py')
     shutil.copy(src, dest)
 else:
-    src = os.path.join(sys_dir, 'app', 'site', 'slowdash_wsgi.py')
+    src = os.path.join(sys_dir, 'app', 'server', 'slowdash_wsgi.py')
     dest = os.path.join(html_dir, 'slowdash.wsgi')
     shutil.copy(src, dest)
 

@@ -34,7 +34,7 @@ class WelcomePanel extends Panel {
 
         this.contentDiv.html(`
             <h3>To get started, create a new project</h3>
-            See <a href="./docs/index.html#ProjectSetup">SlowDash Documentation</a> for how to do it.
+            See <a href="./slowdocs/index.html#ProjectSetup">SlowDash Documentation</a> for how to do it.
             <p>
             <h3>Seeing this page unexpectedly?</h3>
             Check the project configuration:
@@ -97,7 +97,7 @@ class ToolsPanel extends Panel {
             </ul>
             <h3>Resources</h3>
             <ul>
-              <li>&#x2753; <a href="./docs/index.html" target="_blank">Documentation</a>
+              <li>&#x2753; <a href="./slowdocs/index.html" target="_blank">Documentation</a>
               <li>&#x1f4f0; <a href="https://github.com/slowproj/slowdash/wiki/Status-and-Updates" target="_blank">Release Note</a>
               <li>&#x1f422; <a href="https://github.com/slowproj/slowdash/" target="_blank">Code Repository</a>
             </ul>
@@ -151,7 +151,7 @@ class CruisePlannerPanel extends Panel {
           <h3>Itinerary Example</h3>
           <div style="margin-left:3em;width:95%">
               <pre style="width:100%;border:thin solid gray;border-radius:5px;padding:0.5em"></pre>
-              See <a href="docs/index.html#AutoCruise" target="_blank">Document</a> for details.
+              See <a href="slowdocs/index.html#AutoCruise" target="_blank">Document</a> for details.
           </div>
           <h3>Write Yours Here</h3>
           <div style="margin-left:3em;width:95%">
@@ -783,7 +783,7 @@ class TaskManagerPanel extends Panel {
             border: 'none',
         });
 
-        $('<span>').appendTo(this.titleDiv).html('SlowTask Status <span style="font-size:80%">(<a href="docs/index.html#ControlsScript" target="_blank">?</a>)</span>');
+        $('<span>').appendTo(this.titleDiv).html('SlowTask Status <span style="font-size:80%">(<a href="slowdocs/index.html#ControlsScript" target="_blank">?</a>)</span>');
 
         this.inputDiv.html('&gt; <input style="width:calc(100% - 10em)"><button>Send</button>');
         this.inputDiv.find('button').bind('click', e=>{

@@ -96,7 +96,6 @@ class FileServer():
         self.ext_allow = ext_allow
         self.ext_deny = ext_deny
         self.drop_exclude_prefix = drop_exclude_prefix
-        self.stop_request_propagation = True
 
         if prefix is not None:
             self.prefix = [ p for p in prefix.split('/') if len(p) > 0 ]
@@ -149,8 +148,6 @@ class FileServer():
 
         # matched -> my responsibility (can return an error status) #
         
-        if self.stop_request_propagation:
-            request.abort()            
         if is_dirty:
             return Response(403)  # Forbidden
         if len(path) == 0:
@@ -173,6 +170,12 @@ class FileServer():
             return Response(403)  # Forbidden
                 
         filepath = os.path.join(self.filedir, filepath)
+
+        if not os.path.isfile(filepath):
+            return Response()  # propagate
+        else:
+            request.abort()            
+        
         logging.debug(f'Slowlette_FileServer: file request: {filepath}')
 
         return await FileResponse().load(filepath)

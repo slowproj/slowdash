@@ -6,10 +6,10 @@
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
   <title>SlowEdit</title>
   <link rel="icon" href="favicon.png">
-  <link rel="stylesheet" type="text/css" href="jagaimo/jagaimo.css">
-  <link rel="stylesheet" type="text/css" href="slowdash.css">
+  <link rel="stylesheet" type="text/css" href="slowjs/jagaimo/jagaimo.css">
+  <link rel="stylesheet" type="text/css" href="slowjs/slowdash.css">
   <link rel="stylesheet" type="text/css" id="sd-theme-css">
-  <script src="extern/ace-builds/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+  <script src="slow-extern/ace-builds/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
 </head>
 
 
@@ -18,8 +18,8 @@
   <div id="editor" style="font-size:130%"></div>
 
   <script type="module">
-    import { JG as $ } from './jagaimo/jagaimo.mjs';
-    import { boot, Frame, upload } from './controlframe.mjs';
+    import { JG as $ } from './slowjs/jagaimo/jagaimo.mjs';
+    import { boot, Frame, upload } from './slowjs/controlframe.mjs';
 
 
     window.addEventListener('DOMContentLoaded', function() {

@@ -3,38 +3,61 @@
 <html lang="en">
 <head>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-  <link rel="stylesheet" type="text/css" href="slowdash/jagaimo/jagaimo.css">
-  <link rel="stylesheet" type="text/css" href="slowdash/slowdash.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="slowjs/jagaimo/jagaimo.css">
+  <link rel="stylesheet" type="text/css" href="slowjs/slowdash.css">
   <style type="text/css">
     #panel {
-        width: 50%;
-        height: 100%;
+        width: 40vw;
+        margin:2rem;
     }
     #src {
-        width: 40%;
+        width: 40vw;
+        overflow: auto;
         white-space: pre;
         font-family: monospace;
-        margin-left:2rem;
+        margin:2rem;
         padding: 1em;
         background: #dddddd;
     }
     body {
         overflow: auto;
+        margin: 1em;
     }
   </style>
 </head>
 
 <body>
   <h3>This is a User HTML Page</h3>
+  This is an example page of a User Web-Files.
+  Files placed under project's "webfiles" directory are accessible
+  though the SlowDash Web API of "/api/webfiles/{filename}".
+  If the file does not exist, then the file is searched for
+  from the SlowDash web directory ("slowdash/app/sites"),
+  in order that the user HTML can use the SlowDash JS library
+  (slowdash/app/sites/slowjs).
+  All the files under the SlowDash web directory starts with "slow",
+  and users should avoid using such names.
 
+  <p>
+  
   <div style="display:flex">
-    <div id="panel"></div>
-    <div id="src"></div>
+    <div>
+      <h4>Source Code of This Page</h4>
+      This source code can be found at "ExampleProjects/Experimental/UserWebFiles".
+      <div id="src"></div>
+    </div>
+    <div>
+      <h4>Example for Embedding a Plot Panel</h4><div id="panel"></div>
+      To embed a panel in your HTML, crate a Panel object with giving a '&lt;div&gt;' element.
+      Then configure it with providing a data structure identical to the one used in the SlowPlot config.
+      Fetch JSON data using SlowDash API, parse it, and call the "draw()" method with the parsed data.
+    </div>
   </div>
 
   <script type="module">
-    import { JG as $ } from './slowdash/jagaimo/jagaimo.mjs';
-    import { TimeAxisPlotPanel } from './slowdash/panel-plot.mjs';
+    import { JG as $ } from './slowjs/jagaimo/jagaimo.mjs';
+    import { TimeAxisPlotPanel } from './slowjs/panel-plot.mjs';
 
     window.addEventListener('DOMContentLoaded', function() {
         main();

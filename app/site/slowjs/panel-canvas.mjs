@@ -276,7 +276,7 @@ class ShapeItem extends CanvasItem {
             let size = 30;
             this.alarm = $('<image>', 'svg').attr({
                 x: this.attr.x - 0.75*size, y: this.attr.y - 0.75*size,
-                href: "Warning.png", height: size, width: size,
+                href: "slowjs/Warning.png", height: size, width: size,
                 visibility: 'visible',
             });
             elem.append(this.alarm);

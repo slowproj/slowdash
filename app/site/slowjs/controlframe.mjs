@@ -110,7 +110,7 @@ export function boot(defaults, optparse_func, start_func) {
         new Promise((resolve, reject) => {
             theme_css.bind('load', () => resolve({}));
             theme_css.bind('error', (e) => reject(e));
-            theme_css.attr('href', 'slowdash-' + theme + '.css');
+            theme_css.attr('href', 'slowjs/slowdash-' + theme + '.css');
         })
             .catch(e => {
                 $('<div>').appendTo($('body')).html(`
