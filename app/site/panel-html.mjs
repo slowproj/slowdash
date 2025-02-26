@@ -404,16 +404,6 @@ class HrefPanel extends Panel {
         });
         
         this.iframe.bind('load', e=>{
-            if (! this.config.title) {
-                try {
-                    // this does not work for external sites
-                    this.titleDiv.text(this.iframe.get().contentDocument?.title ?? this.config.url ?? '');
-                }
-                catch (error) {
-                    this.titleDiv.text(this.config.url ?? '');
-                }
-            }
-
             let scaling = parseFloat(this.config.scaling);
             if (! (scaling > 0)) {
                 try {

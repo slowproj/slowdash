@@ -6,9 +6,9 @@ import slowpy.control as spc
 
 
 class SerialNode(spc.ControlNode):
-    def __init__(self, port='/dev/ttyUSB0', baudrate=115200, **kwargs):
+    def __init__(self, port='/dev/ttyUSB0', baudrate=115200, polling_interval=1, **kwargs):
         self.com = None
-        kwargs['timeout'] = 1
+        kwargs['timeout'] = polling_interval
         
         try:
             import serial

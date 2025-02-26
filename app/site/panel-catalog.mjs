@@ -1,4 +1,4 @@
-// panel-misc.mjs //
+// panel-catalog.mjs //
 // Author: Sanshiro Enomoto <sanshiro@uw.edu> //
 // Created on 24 July 2022 //
 
@@ -111,7 +111,13 @@ export class CatalogPanel extends Panel {
                         continue;
                     }
                     if (entry.config_file) {
-                        let href = './' + content_type + '.html?config=' + entry.config_file;
+                        let href = '';
+                        if (content_type == 'webfile') {
+                            href = './api/webfiles/' + entry.config_file;
+                        }
+                        else {
+                            href = './' + content_type + '.html?config=' + entry.config_file;
+                        }
                         catalog.push({
                             name: entry.name,
                             href: href,
@@ -178,25 +184,31 @@ export class CatalogPanel extends Panel {
             return;
         }
 
-        const type = content_type;
         for (const entry of catalog) {
             let div = $('<div>').text(entry.title).appendTo(this.contentDiv).click(e=>{
                 window.location.href = entry.href;
             });
-            let options = {
-                filetype: content_type[4].toUpperCase() + content_type.substr(5),
+            let options = {}
+            if (content_type == 'webfile') {
+                options['filetype'] = 'HTML';
+            }
+            else {
+                options['filetype'] = content_type[4].toUpperCase() + content_type.substr(5);
             };
             if ((entry.error??'') != '') {
                 //options.badge = "&#x1f4a3;"; // bomb
                 options.badge = "&#x1f6a7;";  // construction fence
             }
-            if (content_type.substr(4) == 'dash') {
+            if (content_type == 'slowdash') {
                 options.back = '&#x1f3a8;';
             }
-            else if (content_type.substr(4) == 'plot') {
+            else if (content_type == 'slowplot') {
                 options.back = '&#x1f4c8;';
             }
-            else if (content_type.substr(4) == 'cruise') {
+            else if (content_type == 'slowcruise') {
+                options.back = '&#x1f6f3';
+            }
+            else if (content_type == 'webfile') {
                 options.back = '&#x1f6f3';
             }
             new JGFileIconWidget(div, options);

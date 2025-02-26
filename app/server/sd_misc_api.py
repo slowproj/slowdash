@@ -10,28 +10,6 @@ class MiscApiComponent(Component):
     def __init__(self, app, project):
         super().__init__(app, project)
 
-        # allow access to SlowDash JS library via "/api/webfiles/slowdash"
-        self.slowlette.add_middleware(slowlette.FileServer(
-            filedir = os.path.join(app.project.sys_dir, 'app', 'site'),
-            prefix = '/webfiles/slowdash',
-            ext_allow = ['.mjs', '.css']
-        ))
-        # allow access to Project user web files
-        self.slowlette.add_middleware(slowlette.FileServer(
-            filedir = os.path.join(app.project_dir, 'webfiles'),
-            prefix = '/webfiles',
-            exclude = '/webfiles/api',
-        ))
-        
-        
-    @slowlette.get('/webfiles/api/{*}')
-    async def api_redirect(self, path:list, opts:dict):
-        url = '/'.join(path[1:])
-        if len(opts):
-            url += '?' + '&'.join([f'{k}={v}' for k,v in opts.items()])
-        return await self.app.request(url)
-
-    
     @slowlette.get('/ping')
     def ping(self):
         return ['pong']
