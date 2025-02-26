@@ -4,7 +4,7 @@
 // Refactored on 18 June 2022 //
 
 
-export { TimeAxisPlotPanel as Panel1, PlotPanel as Panel2 };
+export { TimeAxisPlotPanel, PlotPanel };
  
 import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
 import { JGTabWidget, JGInvisibleWidget } from './jagaimo/jagawidgets.mjs';
@@ -1270,7 +1270,7 @@ class PlotPanel extends Panel {
     }
     
     
-    draw(dataPacket, displayTimeRange) {
+    drawRange(dataPacket, displayTimeRange) {
         if (dataPacket?.range) {
             this.currentDataTimeRange = { from: dataPacket.range.from, to: dataPacket.range.to };
         }
@@ -1651,7 +1651,7 @@ class TimeAxisPlotPanel extends PlotPanel {
     }
 
     
-    draw(dataPacket, displayTimeRange) {
+    drawRange(dataPacket, displayTimeRange) {
         if (dataPacket?.range) {
             this.currentDataTimeRange = { from: dataPacket.range.from, to: dataPacket.range.to };
         }

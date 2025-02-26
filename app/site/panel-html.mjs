@@ -262,7 +262,7 @@ class HtmlPanel extends Panel {
     }
 
     
-    draw(dataPacket, displayTimeRange) {
+    drawRange(dataPacket, displayTimeRange) {
         if (this.config.reload ?? false) {
             this.loadPage(false);
         }
@@ -469,7 +469,7 @@ class HrefPanel extends Panel {
     }
 
     
-    draw(dataPacket, displayTimeRange) {
+    drawRange(dataPacket, displayTimeRange) {
         if ((this.config.reload === false) && this.iframe.attr('src')) {
             return;
         }

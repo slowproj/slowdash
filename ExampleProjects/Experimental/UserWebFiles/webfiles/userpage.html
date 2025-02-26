@@ -3,46 +3,66 @@
 <html lang="en">
 <head>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-  <title>SD Downloader</title>
   <link rel="stylesheet" type="text/css" href="slowdash/jagaimo/jagaimo.css">
   <link rel="stylesheet" type="text/css" href="slowdash/slowdash.css">
+  <style type="text/css">
+    #panel {
+        width: 50%;
+        height: 100%;
+    }
+    #src {
+        width: 40%;
+        white-space: pre;
+        font-family: monospace;
+        margin-left:2rem;
+        padding: 1em;
+        background: #dddddd;
+    }
+    body {
+        overflow: auto;
+    }
+  </style>
 </head>
 
 <body>
+  <h3>This is a User HTML Page</h3>
 
-  <div style="height:30%">This is a User HTML Page.</div>
-  <div id="sd-layout" style="width:500px;height:500px"></div>
+  <div style="display:flex">
+    <div id="panel"></div>
+    <div id="src"></div>
+  </div>
 
   <script type="module">
     import { JG as $ } from './slowdash/jagaimo/jagaimo.mjs';
-    import { Layout } from './slowdash/layout.mjs';
+    import { TimeAxisPlotPanel } from './slowdash/panel-plot.mjs';
 
     window.addEventListener('DOMContentLoaded', function() {
-        start();
+        main();
     });
         
-    async function start() {
+    async function main() {
         let config = {
-            control: {
-                grid: { 'rows': 1, 'columns': 1 },
-                immutable: true,
-            },
-            panels: [
-                {
-                    type: "timeaxis",
-                    plots: [
-                        { type: "timeseries", channel: "ch0" }
-                    ]
-                }
-            ]
+            type: "timeaxis",
+            plots: [
+                { type: "timeseries", channel: "ch0" },
+                { type: "timeseries", channel: "ch1" }
+            ],
+            "legend": { "style": "box" }
         };
+        let style = {};
 
-        let layout = new Layout($('#sd-layout'), {});
-        await layout.load_panels();
-        layout.configure(config);
+        let panel = new TimeAxisPlotPanel($('#panel'), style);
+        panel.configure(config);
+        
+        let data_response = await fetch('./api/data/ch0,ch1');
+        if (data_response.ok) {
+            panel.draw(await data_response.json());
+        }
 
-        const now = $.time()
-        layout.load({from:now-3600, to:now}, function(status) {});
+        let src_response = await fetch('./api/webfiles/userpage.html');
+        if (src_response.ok) {
+            $('#src').text(await src_response.text());
+        }
     }
   </script>    
 </body>

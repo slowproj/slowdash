@@ -801,7 +801,7 @@ class TaskManagerPanel extends Panel {
     }
 
     
-    draw(dataPacket) {
+    drawRange(dataPacket, displayTimeRange) {
         this.is_running = true;
     }
 

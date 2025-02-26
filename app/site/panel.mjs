@@ -153,7 +153,28 @@ export class Panel {
         });
     }
 
+
+    draw(data) {
+        let range = {}; 
+        const keys = Object.keys(data);
+        if (keys.length > 0) {
+            const d0 = data[keys[0]];
+            range = { from: d0.start, to: d0.start + d0.length };
+        }
+        else {
+            now = $.time();
+            range = { from: now - 60, to: now };
+        }
+            
+        this.drawRange({
+            isTransitional: true,
+            range: range,
+            data: data
+        });
+    }
+
+        
     openSettings(div) {}
     fillInputChannels(dataRequest) {}
-    draw(dataPacket, displayTimeRange) {}
+    drawRange(dataPacket, displayTimeRange) {}
 };

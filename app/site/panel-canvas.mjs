@@ -989,7 +989,7 @@ export class CanvasPanel extends Panel {
     }
 
     
-    draw(dataPacket, displayTimeRange) {
+    drawRange(dataPacket, displayTimeRange) {
         if (dataPacket.isTransitional) {
             return;
         }

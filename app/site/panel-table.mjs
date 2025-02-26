@@ -108,7 +108,7 @@ class TablePanel extends Panel {
     }
     
 
-    draw(dataPacket, displayTimeRange) {
+    drawRange(dataPacket, displayTimeRange) {
         let data = dataPacket.data[this.config.channel]?.x;
         if (! data) {
             if (! dataPacket.isTransitional) {
@@ -251,7 +251,7 @@ class TreePanel extends Panel {
     }
     
 
-    draw(dataPacket, displayTimeRange) {
+    drawRange(dataPacket, displayTimeRange) {
         let data = dataPacket.data[this.config.channel]?.x;
         if (! data) {
             if (! dataPacket.isTransitional) {
@@ -425,7 +425,7 @@ class BlobPanel extends Panel {
     }
     
 
-    draw(dataPacket, displayTimeRange) {
+    drawRange(dataPacket, displayTimeRange) {
         let data = dataPacket.data[this.config.channel];
         if (! data) {
             if (! dataPacket.isTransitional) {

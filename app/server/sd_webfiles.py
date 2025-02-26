@@ -14,7 +14,7 @@ class WebFilesComponent(Component):
         self.slowlette.add_middleware(slowlette.FileServer(
             filedir = os.path.join(self.app.project.sys_dir, 'app', 'site'),
             prefix = '/webfiles/slowdash',
-            ext_allow = ['.mjs', '.css']
+            #ext_allow = ['.mjs', '.css']
         ))
         
         # Allowing access to Project user web files        

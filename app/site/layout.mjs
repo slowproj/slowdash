@@ -175,7 +175,7 @@ export class Layout {
                     changeDisplayTimeRange: range => {
                         // range value can be null for a default range
                         for (let panel of this.panels) {
-                            panel.draw(this.currentDataPacket, range);
+                            panel.drawRange(this.currentDataPacket, range);
                         }
                         this.callbacks.changeDisplayTimeRange(range);
                     },
@@ -260,7 +260,7 @@ export class Layout {
             
         if (this.currentDataPacket !== null) {
             for (let panel of this.panels) {
-                panel.draw(this.currentDataPacket, this.currentDataPacket.range);
+                panel.drawRange(this.currentDataPacket, this.currentDataPacket.range);
             }
         }
     }
@@ -380,7 +380,7 @@ export class Layout {
             this.currentDataPacket.isTransitional = false;
             on_complete({code:200, text:'OK'});
             for (let panel of this.panels) {
-                panel.draw(this.currentDataPacket, this.currentDataPacket.range);
+                panel.drawRange(this.currentDataPacket, this.currentDataPacket.range);
             }
             return;
         }
@@ -411,7 +411,7 @@ export class Layout {
                 this.currentDataPacket.data[ch] = packet[ch];
             }
             for (let panel of this.panels) {
-                panel.draw(this.currentDataPacket, this.currentDataPacket.range);
+                panel.drawRange(this.currentDataPacket, this.currentDataPacket.range);
             }
             if (n == 0) {
                 on_complete(status);
@@ -474,7 +474,7 @@ export class Layout {
             };
             if (this.panels) {
                 for (let panel of this.panels) {
-                    panel.draw(dataPacket, dataPacket.range);
+                    panel.drawRange(dataPacket, dataPacket.range);
                 }
             }
         };

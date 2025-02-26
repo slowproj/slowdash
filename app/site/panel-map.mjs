@@ -98,7 +98,7 @@ export class MapPanel extends Panel {
                 if (map) {
                     this.map = map;
                     this.configure2(config, callbacks);
-                    this.draw(null, null);
+                    this.drawRange(null, null);
                 }
             });
     }
@@ -341,7 +341,7 @@ export class MapPanel extends Panel {
     }
 
     
-    draw(dataPacket, displayTimeRange) {
+    drawRange(dataPacket, displayTimeRange) {
         if (dataPacket !== null) {
             if (dataPacket.isTransitional) {
                 return;
