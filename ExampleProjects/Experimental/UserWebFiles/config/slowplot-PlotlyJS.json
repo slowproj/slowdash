@@ -1,0 +1,13 @@
+{
+    "control": {
+        "range": { "length": 900 },
+        "reload": 60,
+        "mode": "normal",
+        "grid": { "rows": 1, "columns": 1 }
+    },
+    "style": { },
+    "panels": [
+        { "type": "href", "title": "", "url": "/api/webfiles/PlotlyJS.html", "reload": true, "scaling": "1.0", "offset_top": 0, "offset_left": 0 }
+    ],
+    "meta": { "name": "PlotlyJS", "title": "", "description": "" }
+}

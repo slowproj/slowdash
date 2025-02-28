@@ -10,7 +10,7 @@ class WebFilesComponent(Component):
     def __init__(self, app, project):
         super().__init__(app, project)
 
-        self.slowlette.add_middleware(slowlette.FileServer(
+        self.slowlette.include(slowlette.FileServer(
             filedir = os.path.join(self.app.project_dir, 'webfiles'),
             prefix = '/webfiles',
             exclude = '/webfiles/api',
@@ -19,7 +19,7 @@ class WebFilesComponent(Component):
         # If the file does not exist in the User Web Dir, search for it at the SlowDash web directory.
         # The slowdash JS library at "/webfiles/slowjs" might make access to "api",
         # which needs to be handled separately.
-        self.slowlette.add_middleware(slowlette.FileServer(
+        self.slowlette.include(slowlette.FileServer(
             filedir = os.path.join(project.sys_dir, 'app', 'site'),
             prefix = '/webfiles',
             exclude = '/webfiles/api',

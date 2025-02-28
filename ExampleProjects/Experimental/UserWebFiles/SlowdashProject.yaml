@@ -4,7 +4,7 @@ slowdash_project:
   data_source:
     - type: Dummy
       timeseries:
-        - { name: ch0, noise: 5, walk: 1, decay: 0.001 }
-        - { name: ch1, noise: 5, walk: 1, decay: 0.001 }
-        - { name: ch2, noise: 5, walk: 1, decay: 0.001 }
-        - { name: ch3, noise: 5, walk: 1, decay: 0.001 }
+        - { name: ch0, noise: 10, walk: 5, decay: 0.005, formula: 180 }
+        - { name: ch1, noise: 10, walk: 5, decay: 0.01, formula: 110 }
+        - { name: ch2, noise: 10, walk: 2, decay: 0.01, formula: 80 }
+        - { name: ch3, noise: 10, walk: 1, decay: 0.1, formula: 50 }

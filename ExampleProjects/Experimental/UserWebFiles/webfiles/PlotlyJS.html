@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="slowjs/slowdash.css">
+  <script src="https://cdn.plot.ly/plotly-2.18.0.min.js"></script>
+  <style type="text/css">
+    body {
+        overflow: auto;
+        margin: 1em;
+    }
+  </style>
+</head>
+
+<body>
+  <h3>Example Using Plotly.js</h3>
+  <p>
+  <div style="display:flex">
+    <div>
+      <h4>SlowJS</h4>
+      <div id="panel" style="width:40vw"></div>
+    </div>
+    <div style="margin-left:3em">
+      <h4>Plotly.js Pie Chart</h4>
+      <div id="chart_pie" style="width:25vw"></div>
+    </div>
+    <div style="margin-left:3em">
+      <h4>Plotly.js Bar Chart</h4>
+      <div id="chart_bar" style="width:25vw"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { JG as $ } from './slowjs/jagaimo/jagaimo.mjs';
+    import { TimeAxisPlotPanel } from './slowjs/panel-plot.mjs';
+        
+    async function main() {
+        let config = {
+            type: "timeaxis",
+            plots: [
+                { type: "timeseries", channel: "ch0" },
+                { type: "timeseries", channel: "ch1" },
+                { type: "timeseries", channel: "ch2" },
+                { type: "timeseries", channel: "ch3" },
+            ],
+            "legend": { "style": "side" }
+        };
+        let style = {};
+
+        let panel = new TimeAxisPlotPanel($('#panel'), style);
+        panel.configure(config);
+
+        let data_response = await fetch('./api/data/ch0,ch1,ch2,ch3?length=86400&resample=300');
+        if (!data_response.ok) {
+            return;
+        }
+        const dataPacket = await data_response.json();
+        
+        panel.draw(dataPacket);
+            
+        const values = [
+            dataPacket.ch0.x.at(-1),
+            dataPacket.ch1.x.at(-1),
+            dataPacket.ch2.x.at(-1),
+            dataPacket.ch3.x.at(-1),
+        ];
+        const labels = ['Ch0', 'Ch1', 'Ch2', 'Ch3'];
+        const colors = [ '#009090', '#dd8000', '#4169e1', '#b030b0' ];
+        const pie_data = {
+            'type': 'pie',
+            'values': values,
+            'labels': labels,
+            'marker': { 'colors': colors },
+            'hole': 0.4,
+        }
+        Plotly.newPlot('chart_pie', [pie_data]);
+        
+        const bar_data = {
+            'type': 'bar',
+            'x': values,
+            'y': labels,
+            'marker': { 'color': colors },
+            'orientation': 'h',
+        }
+        const bar_style = {
+            yaxis: {
+                categoryorder: 'total ascending'
+            }
+        };
+        Plotly.newPlot('chart_bar', [bar_data], bar_style);
+    }
+
+    window.addEventListener('DOMContentLoaded', main);
+  </script>    
+</body>
