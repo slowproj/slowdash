@@ -7,7 +7,7 @@
     },
     "style": { },
     "panels": [
-        { "type": "href", "title": "", "url": "/api/webfiles/ChartJS.html", "reload": true, "scaling": "1.0", "offset_top": 0, "offset_left": 0 }
+        { "type": "href", "title": "", "url": "/api/userhtml/ChartJS.html", "reload": true, "scaling": "1.0", "offset_top": 0, "offset_left": 0 }
     ],
     "meta": { "name": "ChartJS", "title": "", "description": "" }
 }

@@ -112,8 +112,8 @@ export class CatalogPanel extends Panel {
                     }
                     if (entry.config_file) {
                         let href = '';
-                        if (content_type == 'webfile') {
-                            href = './api/webfiles/' + entry.config_file;
+                        if (content_type == 'userhtml') {
+                            href = './api/userhtml/' + entry.config_file;
                         }
                         else {
                             href = './' + content_type + '.html?config=' + entry.config_file;
@@ -189,7 +189,7 @@ export class CatalogPanel extends Panel {
                 window.location.href = entry.href;
             });
             let options = {}
-            if (content_type == 'webfile') {
+            if (content_type == 'userhtml') {
                 options['filetype'] = 'HTML';
             }
             else {
@@ -208,7 +208,7 @@ export class CatalogPanel extends Panel {
             else if (content_type == 'slowcruise') {
                 options.back = '&#x1f6f3';
             }
-            else if (content_type == 'webfile') {
+            else if (content_type == 'userhtml') {
                 options.back = '&#x1f6f3';
             }
             new JGFileIconWidget(div, options);

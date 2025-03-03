@@ -250,6 +250,10 @@ class TimeseriesHistogramPlot extends HistogramPlot {
     }
     
     draw(dataPacket) {
+        if (dataPacket.isCurrent) {
+            return;
+        }
+        
         let ts = dataPacket.data[this.config.channel];
         if (! ts) {
             if (! dataPacket.isTransitional) {
@@ -716,6 +720,10 @@ class TimeseriesScatterPlot extends GraphPlot {
 
     
     draw(dataPacket) {
+        if (dataPacket.isCurrent) {
+            return;
+        }
+        
         let ts0 = dataPacket.data[this.config.channelX];
         let ts1 = dataPacket.data[this.config.channelY];
         if (! ts0 || ! ts1) {
@@ -771,6 +779,10 @@ class TimeseriesPlot extends LineMarkerPlot {
     }
     
     draw(dataPacket) {
+        if (dataPacket.isCurrent) {
+            return;
+        }
+        
         let ts = dataPacket.data[this.config.channel];
         if (! ts) {
             if (! dataPacket.isTransitional) {
@@ -1271,7 +1283,7 @@ class PlotPanel extends Panel {
     
     
     drawRange(dataPacket, displayTimeRange) {
-        if (dataPacket?.range) {
+        if ((! dataPacket.isCurrent) && dataPacket?.range) {
             this.currentDataTimeRange = { from: dataPacket.range.from, to: dataPacket.range.to };
         }
         for (const p of this.plots) {
@@ -1652,6 +1664,9 @@ class TimeAxisPlotPanel extends PlotPanel {
 
     
     drawRange(dataPacket, displayTimeRange) {
+        if (dataPacket.isCurrent) {
+            return;
+        }
         if (dataPacket?.range) {
             this.currentDataTimeRange = { from: dataPacket.range.from, to: dataPacket.range.to };
         }

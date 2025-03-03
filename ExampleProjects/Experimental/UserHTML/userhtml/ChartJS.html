@@ -55,42 +55,42 @@
         panel.configure(config);
 
         let data_response = await fetch('./api/data/ch0,ch1,ch2,ch3?length=86400&resample=300');
-        if (data_response.ok) {
-            const data = await data_response.json();
-            panel.draw(data);
-
-            const values = [
-                data.ch0.x.at(-1),
-                data.ch1.x.at(-1),
-                data.ch2.x.at(-1),
-                data.ch3.x.at(-1),
-            ];
-            new Chart(document.getElementById('chart_pie'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['Ch0', 'Ch1', 'Ch2', 'Ch3'],
-                    datasets: [{
-                        data: values,
-                        backgroundColor: [ '#009090', '#dd8000', '#4169e1', '#b030b0' ]
-                    }],                    
-                },
-            });
-            new Chart(document.getElementById('chart_bar'), {
-                type: 'bar',
-                data: {
-                    labels: ['Ch0', 'Ch1', 'Ch2', 'Ch3'],
-                    datasets: [{
-                        data: values,
-                        backgroundColor: [ '#009090', '#dd8000', '#4169e1', '#b030b0' ],
-                        label: ''
-                    }],                    
-                },
-                options: {
-                    indexAxis: 'y',
-                    plugins: { legend: { display: false } },
-                }
-            });
+        if (! data_response.ok) {
+            return;
         }
+        const dataPacket = await data_response.json();
+            
+        panel.draw(dataPacket);
+        
+        const labels = ['ch0', 'ch1', 'ch2', 'ch3'];
+        const values = Array.from({length:labels.length}, (_,i)=>dataPacket[labels[i]].x.at(-1));
+        const colors = [ '#009090', '#dd8000', '#4169e1', '#b030b0' ];
+        
+        new Chart(document.getElementById('chart_pie'), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors,
+                }],                    
+            },
+        });
+        new Chart(document.getElementById('chart_bar'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors,
+                    label: ''
+                }],                    
+            },
+            options: {
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+            }
+        });
     }
 
     window.addEventListener('DOMContentLoaded', main);

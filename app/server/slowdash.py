@@ -16,7 +16,7 @@ from sd_export import ExportComponent
 from sd_pubsub import PubsubComponent
 from sd_usermodule import UserModuleComponent
 from sd_taskmodule import TaskModuleComponent
-from sd_webfiles import WebFilesComponent
+from sd_userhtml import UserHtmlComponent
 from sd_misc_api import MiscApiComponent
 
 
@@ -71,7 +71,7 @@ class App(slowlette.App):
         self.slowlette.include(PubsubComponent(self, self.project))
         self.slowlette.include(UserModuleComponent(self, self.project))
         self.slowlette.include(TaskModuleComponent(self, self.project))
-        self.slowlette.include(WebFilesComponent(self, self.project))
+        self.slowlette.include(UserHtmlComponent(self, self.project))
         self.slowlette.include(MiscApiComponent(self, self.project))
 
 

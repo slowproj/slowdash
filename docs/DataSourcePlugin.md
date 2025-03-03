@@ -6,12 +6,13 @@ title: Data-Source Plugin
 - Create `datasource_XXX.py` file under `system/plugin`, where `XXX` is the name of the datasource.
 - Derive a plugin class `DataSource_XXX` from `DataSource` in `datasource.py`.
 - Implement:
-  - `__init__()`
-  - `get_channels()`
-  - `get_timeseries()`
-  - `get_object()`
-  - `get_blob()` (usually empty)
-  - `get_dataframe()` (optional)
+  - `__init__()` 
+  - `initialize()` / or async version: `aio_initialize()`
+  - `finalize()` / or async version: `aio_finalize()`
+  - `get_channels()` / or async version: `aio_get_channels()`
+  - `get_timeseries()` / or async version: `aio_get_timeseries()`
+  - `get_object()` / or async version: `aio_get_object()`
+  - `get_blob()`  / or async version: `aio_get_blob()`
 - `Datasource` class provides methods that can be used by plugin:
   - `resample()`
 
@@ -21,8 +22,8 @@ The minimal / empty class will be:
 from datasource import DataSource
 
 class Datasource_XXX(Datasource):
-  def __init__(self, project_config, config):
-    super.__init__(project_config, config)
+  def __init__(self, app, project, params):
+    super.__init__(app, project, params)
 
   def get_channels(self):
     return []
@@ -40,8 +41,8 @@ class Datasource_XXX(Datasource):
 # Method Definitions
 ### User Function `__init___`
 ```python
-  def __init__(self, project_config, config):
-    super.__init__(project_config, config)
+  def __init__(self, app, project, config):
+    super.__init__(app, project, config)
     ...
 ```
 
@@ -102,36 +103,10 @@ class Datasource_XXX(Datasource):
 - Fill the blob content into "output" and return the mime_type
     
 
-### Optional User Function `get_dataframe()`
-- return time-aligned time-series data table
-- implement this only if datasource can do this efficiently
-```python
-def get_dataframe(self, channels, length, to, resampling=None, reducer='last', timezone='local'):
-    result = []
-    ...
-    return result
-```
-- The parameters are same as `get_timeseries()`    
-- Return in JSON or CSV text
-
-The JSON format is
-```json
-[
-  ["DateTime", "TimeStamp", CH0, CH1, ... ],
-  RAW[0],
-  RAW[1],
-  ...
-]
-```
-where `RAW[k]` is:
-```json
-[ DATETIME[k], TIMESTAMP[k], X0[k], X1[k], ... ]
-```
-
-
 ### Utility Function for Users `resample()`
 ```python
-def resample(self, set_of_timeseries, length, to, interval, reducer):
+@classmethod
+def resample(cls, set_of_timeseries, length, to, interval, reducer):
     return RESAMPLED_TIME_SERIES
 ```
 This will be used in user's `get_timeseries()`, if the data source does not efficiently support resampling, typically like:

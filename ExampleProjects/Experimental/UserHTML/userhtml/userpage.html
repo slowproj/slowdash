@@ -28,9 +28,9 @@
 
 <body>
   <h3>This is a User HTML Page</h3>
-  This is an example page of a User Web-Files.
-  Files placed under project's "webfiles" directory are accessible
-  though the SlowDash Web API of "/api/webfiles/{filename}".
+  This is an example page of a User HTML Files.
+  Files placed under project's "userhtml" directory are accessible
+  though the SlowDash Web API of "/api/userhtml/{filename}".
   If the file does not exist, then the file is searched for
   from the SlowDash web directory ("slowdash/app/sites"),
   in order that the user HTML can use the SlowDash JS library
@@ -43,7 +43,7 @@
   <div style="display:flex">
     <div>
       <h4>Source Code of This Page</h4>
-      This source code can be found at "ExampleProjects/Experimental/UserWebFiles".
+      This source code can be found at "ExampleProjects/Experimental/UserHTML".
       <div id="src"></div>
     </div>
     <div>
@@ -77,7 +77,7 @@
             panel.draw(await data_response.json());
         }
 
-        let src_response = await fetch('./api/webfiles/userpage.html');
+        let src_response = await fetch('./api/userhtml/userpage.html');
         if (src_response.ok) {
             $('#src').text(await src_response.text());
         }

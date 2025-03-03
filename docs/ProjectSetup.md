@@ -76,6 +76,25 @@ See [Security Considerations](#security-considerations) below.
 #### Module Entry (`module`, optional)
 - Server-side user modules (user Python script). See the [User Module section](UserModule.html) for details.
 
+## Substitutions
+Values in `SlowdashProject.yaml` can use variable and command substitutions. 
+The syntax is basically the same as docker-compose:
+
+- `${VARIABLE}` for substitution with environmental variable
+- `${VARIABLE:-DEFAULT}` with default when the variable is undefined or the value is empty
+- `${VARIABLE-DEFAULT}` with default when the variable is undefined
+- `$(COMMAND)` for substitution with shell command execution result
+- `$$` for literal `$`
+- `environment` entry to define variables, either as a dict or an array
+
+Example:
+```yaml
+  environment:
+    - BASE=${HOME:-/home/slow}/project
+    - DB=sqlite:///${BASE}/SlowStore.db
+  data_source:
+    url: ${DB}
+```
 
 ## Styles
 ### Configuration
@@ -330,6 +349,60 @@ RewriteEngine On
 RewriteRule ^api/(.*)$ slowdash.wsgi/$1
 ```
 Although dedicated daemon is created for this SlowDash project, currently only one WSGI can be setup on one host. Other SlowDash project must use CGI.
+
+# Jupyter Integration
+By providing Jupyter URL and token in `SlowdashProject.yaml`, SlowDash can export the displayed data to Jupyter Notebook so that users can continue analysis on Jupyter. An example can be found in `ExampleProject/Jupyter`.
+
+## Bare-Metal
+```yaml
+slowdash_project:
+  name: Jupyter Test
+  title: Jupyter Integration
+
+  export:
+    - type: jupyter
+      url: http://localhost:8888
+      token: YOUR_VERY_SECRET_JUPYTER_TOKEN     # consider passing this through environmental variable
+```
+
+## Docker
+A docker image that includes both SlowPy library and the Jupyter server is available on DockerHub and GitHub CR. You can also build the image locally by `make docker`.
+
+Include this image in the `docker-compose.yaml`, with adding environmental variables about the Jupyter settings to the SlowDash container:
+```yaml
+  notebook:
+    image: slowproj/slowpy-notebook
+    command:
+      - start-notebook.sh
+      - --NotebookApp.token=YOUR_VERY_SECRET_JUPYTER_TOKEN
+    ports:
+      - 8888:8888
+    volumes:
+      - ./notebook:/home/jovyan
+
+  slowdash:
+    image: slowproj/slowdash
+    volumes:
+      - .:/project
+    ports:
+      - "18881:18881"
+    environment:
+      - JUPYTER_URL=http://localhost:8888
+      - JUPYTER_TOKEN=YOUR_VERY_SECRET_JUPYTER_TOKEN
+      - JUPYTER_INTERNAL_URL=http://notebook:8888      # Jupyter seen from SlowDash
+      - SLOWDASH_INTERNAL_URL=http://slowdash:18881    # SlowDash seen from Jypyter
+```
+Note that the Jupyter and SlowDash URLs are different if accessed within the container system.
+
+Edit the `SlowdashProject.yaml` file to include the Jupter settings:
+```yaml
+  export:
+    - type: jupyter
+      url: ${JUPYTER_URL}
+      token: ${JUPYTER_TOKEN}
+      jupyter_internal_url: ${JUPYTER_INTERNAL_URL}      # Jupyter seen from SlowDash
+      slowdash_internal_url: ${SLOWDASH_INTERNAL_URL}    # SlowDash seen from Jypyter
+```
 
 
 # SlowDash Watchdog (SlowDog)

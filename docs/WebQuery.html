@@ -106,6 +106,9 @@ id="toc-fetching-blob-data-content">Fetching Blob Data Content</a></li>
 <li><a href="#listing-user-configuration-entries"
 id="toc-listing-user-configuration-entries">Listing User Configuration
 Entries</a></li>
+<li><a href="#fetching-user-configuration-content"
+id="toc-fetching-user-configuration-content">Fetching User Configuration
+Content</a></li>
 <li><a href="#listing-user-configuration-files"
 id="toc-listing-user-configuration-files">Listing User Configuration
 Files</a></li>
@@ -286,14 +289,22 @@ section</a>.</p>
 <h2 id="listing-user-configuration-entries">Listing User Configuration
 Entries</h2>
 <h3 id="request-6">Request</h3>
-<pre><code>GET http://ADDRESS:PORT/api/config/list</code></pre>
+<pre><code>GET http://ADDRESS:PORT/api/config/contentlist</code></pre>
+<h2 id="fetching-user-configuration-content">Fetching User Configuration
+Content</h2>
+<p>This returns the content of the configuration entry. If the file is
+YAML, it is converted into JSON. If the file is a Python script, the
+reply content will be dynamically generated.</p>
+<h3 id="request-7">Request</h3>
+<pre><code>GET http://ADDRESS:PORT/api/config/content/FILENAME</code></pre>
 <h2 id="listing-user-configuration-files">Listing User Configuration
 Files</h2>
-<h3 id="request-7">Request</h3>
+<h3 id="request-8">Request</h3>
 <pre><code>GET http://ADDRESS:PORT/api/config/filelist</code></pre>
 <h2 id="fetching-user-configuration-files">Fetching User Configuration
 Files</h2>
-<h3 id="request-8">Request</h3>
+<p>This returns the raw content of the file</p>
+<h3 id="request-9">Request</h3>
 <pre><code>GET http://ADDRESS:PORT/api/config/file/FILENAME</code></pre>
 <ul>
 <li>The FILENAME must:
@@ -309,7 +320,7 @@ Files</h2>
 </ul>
 <h2 id="uploading-user-configuration-files">Uploading User Configuration
 Files</h2>
-<h3 id="request-9">Request</h3>
+<h3 id="request-10">Request</h3>
 <pre><code>POST http://ADDRESS:PORT/api/config/file/NAME?OPTIONS
 [ with JSON text as contents ]</code></pre>
 <ul>
@@ -343,30 +354,30 @@ overwriting.</li>
 </ul></li>
 </ul>
 <h3 id="javascript-snippet">JavaScript Snippet</h3>
-<div class="sourceCode" id="cb22"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch</span>(url<span class="op">,</span> {</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">method</span><span class="op">:</span> <span class="st">&#39;POST&#39;</span><span class="op">,</span></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">headers</span><span class="op">:</span> { <span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/json; charset=utf-8&#39;</span> }<span class="op">,</span></span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">body</span><span class="op">:</span> <span class="bu">JSON</span><span class="op">.</span><span class="fu">stringify</span>(doc<span class="op">,</span> <span class="kw">null</span><span class="op">,</span> <span class="dv">2</span>)</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="fu">then</span>(response <span class="kw">=&gt;</span> {</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (response<span class="op">.</span><span class="at">status</span> <span class="op">==</span> <span class="dv">202</span>) {</span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>       <span class="co">// file already exists. retry with overwrite=yes to overwrite</span></span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>       <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="op">!</span> response<span class="op">.</span><span class="at">ok</span>) {</span>
-<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">Error</span>(response<span class="op">.</span><span class="at">status</span> <span class="op">+</span> <span class="st">&quot; &quot;</span> <span class="op">+</span> response<span class="op">.</span><span class="at">statusText</span>)<span class="op">;</span></span>
-<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">//// success ////</span></span>
-<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">....</span></span>
-<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="fu">catch</span>(e <span class="kw">=&gt;</span> {</span>
-<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">//// error  ////</span></span>
-<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">....</span></span>
-<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch</span>(url<span class="op">,</span> {</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">method</span><span class="op">:</span> <span class="st">&#39;POST&#39;</span><span class="op">,</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">headers</span><span class="op">:</span> { <span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/json; charset=utf-8&#39;</span> }<span class="op">,</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">body</span><span class="op">:</span> <span class="bu">JSON</span><span class="op">.</span><span class="fu">stringify</span>(doc<span class="op">,</span> <span class="kw">null</span><span class="op">,</span> <span class="dv">2</span>)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="fu">then</span>(response <span class="kw">=&gt;</span> {</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (response<span class="op">.</span><span class="at">status</span> <span class="op">==</span> <span class="dv">202</span>) {</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>       <span class="co">// file already exists. retry with overwrite=yes to overwrite</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>       <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="op">!</span> response<span class="op">.</span><span class="at">ok</span>) {</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">Error</span>(response<span class="op">.</span><span class="at">status</span> <span class="op">+</span> <span class="st">&quot; &quot;</span> <span class="op">+</span> response<span class="op">.</span><span class="at">statusText</span>)<span class="op">;</span></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">//// success ////</span></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">....</span></span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="fu">catch</span>(e <span class="kw">=&gt;</span> {</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">//// error  ////</span></span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">....</span></span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
 <h2 id="sending-commands-to-user-modules">Sending Commands to User
 Modules</h2>
-<h3 id="request-10">Request</h3>
+<h3 id="request-11">Request</h3>
 <pre><code>POST http://ADDRESS:PORT/api/control
 [ with JSON text as contents ]</code></pre>
 <h3 id="response-1">Response</h3>
@@ -384,29 +395,29 @@ contents of:
 </ul>
 <h3 id="javascript-snippet-1">JavaScript Snippet</h3>
 <p>A typical JavaScript would look like:</p>
-<div class="sourceCode" id="cb24"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch</span>(url<span class="op">,</span> {</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">method</span><span class="op">:</span> <span class="st">&#39;POST&#39;</span><span class="op">,</span></span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">headers</span><span class="op">:</span> { <span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/json; charset=utf-8&#39;</span> }<span class="op">,</span></span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">body</span><span class="op">:</span> <span class="bu">JSON</span><span class="op">.</span><span class="fu">stringify</span>(doc<span class="op">,</span> <span class="kw">null</span><span class="op">,</span> <span class="dv">2</span>)</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="fu">then</span>(response <span class="kw">=&gt;</span> {</span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="op">!</span> response<span class="op">.</span><span class="at">ok</span>) {</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">Error</span>(response<span class="op">.</span><span class="at">status</span> <span class="op">+</span> <span class="st">&quot; &quot;</span> <span class="op">+</span> response<span class="op">.</span><span class="at">statusText</span>)<span class="op">;</span></span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> response<span class="op">.</span><span class="fu">json</span>()<span class="op">;</span></span>
-<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="fu">then</span>(doc <span class="kw">=&gt;</span> {</span>
-<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> ((doc<span class="op">.</span><span class="at">status</span> <span class="op">??</span> <span class="st">&#39;&#39;</span>)<span class="op">.</span><span class="fu">toUpperCase</span>() <span class="op">==</span> <span class="st">&#39;ERROR&#39;</span>) {</span>
-<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">Error</span>(doc<span class="op">.</span><span class="at">message</span> <span class="op">??</span> <span class="st">&#39;&#39;</span>)<span class="op">;</span></span>
-<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">//// success ////</span></span>
-<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">....</span></span>
-<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="fu">catch</span>(e <span class="kw">=&gt;</span> {</span>
-<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">//// error ////</span></span>
-<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">....</span></span>
-<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch</span>(url<span class="op">,</span> {</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">method</span><span class="op">:</span> <span class="st">&#39;POST&#39;</span><span class="op">,</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">headers</span><span class="op">:</span> { <span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/json; charset=utf-8&#39;</span> }<span class="op">,</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">body</span><span class="op">:</span> <span class="bu">JSON</span><span class="op">.</span><span class="fu">stringify</span>(doc<span class="op">,</span> <span class="kw">null</span><span class="op">,</span> <span class="dv">2</span>)</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="fu">then</span>(response <span class="kw">=&gt;</span> {</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="op">!</span> response<span class="op">.</span><span class="at">ok</span>) {</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">Error</span>(response<span class="op">.</span><span class="at">status</span> <span class="op">+</span> <span class="st">&quot; &quot;</span> <span class="op">+</span> response<span class="op">.</span><span class="at">statusText</span>)<span class="op">;</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> response<span class="op">.</span><span class="fu">json</span>()<span class="op">;</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="fu">then</span>(doc <span class="kw">=&gt;</span> {</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> ((doc<span class="op">.</span><span class="at">status</span> <span class="op">??</span> <span class="st">&#39;&#39;</span>)<span class="op">.</span><span class="fu">toUpperCase</span>() <span class="op">==</span> <span class="st">&#39;ERROR&#39;</span>) {</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">throw</span> <span class="kw">new</span> <span class="bu">Error</span>(doc<span class="op">.</span><span class="at">message</span> <span class="op">??</span> <span class="st">&#39;&#39;</span>)<span class="op">;</span></span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">//// success ////</span></span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">....</span></span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a><span class="op">.</span><span class="fu">catch</span>(e <span class="kw">=&gt;</span> {</span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">//// error ////</span></span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">....</span></span>
+<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
 
 
 </body>

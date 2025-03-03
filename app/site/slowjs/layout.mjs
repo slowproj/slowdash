@@ -359,6 +359,7 @@ export class Layout {
         if (range !== null) {
             this.currentDataPacket = {
                 isTransitional: true,
+                isCurrent: false,
                 range: range,
                 data: {}
             };
@@ -465,10 +466,18 @@ export class Layout {
             console.error("Web Socket Error: " + error);
         };
         this.socket.onmessage = (event) => {
-            const record = JSON.parse(event.data);
+            const to = this.currentDataPacket?.range?.to ?? null;
+            if ((to === null) || (to < 0)) {
+                return;
+            }
             const now = $.time();
+            if ((to > 0) && (to < now - 10)) {  //... BUG: "10 sec" window is temporary
+                return;
+            }
+            const record = JSON.parse(event.data);
             const dataPacket = {
                 isTransitional: true,
+                isCurrent: true,
                 range: { from: now - 60, to: now },
                 data: record,
             };

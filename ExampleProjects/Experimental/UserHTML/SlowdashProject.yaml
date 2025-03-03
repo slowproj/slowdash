@@ -1,5 +1,6 @@
 slowdash_project:
-  name: UserWebFiles
+  name: UserHTML
+  title: User HTML Examples
       
   data_source:
     - type: Dummy

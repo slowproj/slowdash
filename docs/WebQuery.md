@@ -195,7 +195,15 @@ GET http://ADDRESS:PORT/api/blob/CHANNEL/ID
 ## Listing User Configuration Entries
 ### Request
 ```
-GET http://ADDRESS:PORT/api/config/list
+GET http://ADDRESS:PORT/api/config/contentlist
+```
+
+## Fetching User Configuration Content
+This returns the content of the configuration entry. If the file is YAML, it is converted into JSON. If the file is a Python script, the reply content will be dynamically generated.
+
+### Request
+```
+GET http://ADDRESS:PORT/api/config/content/FILENAME
 ```
 
 ## Listing User Configuration Files
@@ -205,6 +213,8 @@ GET http://ADDRESS:PORT/api/config/filelist
 ```
 
 ## Fetching User Configuration Files
+This returns the raw content of the file
+
 ### Request
 ```
 GET http://ADDRESS:PORT/api/config/file/FILENAME

@@ -175,8 +175,8 @@ class HtmlPanel extends Panel {
                     (isInput && ((element.attr('type') ?? '').toUpperCase() == 'SUBMIT'))
                 );
                 let isLive = element.attr('sd-live');  // if not live, values are updated only after SUBMIT
-                if (isLive === undefined) {
-                    isLive = ! isInput || isButton;   // <input> and <button> are not live by default
+                if ((isLive === undefined) || (isLive === null)) {
+                    isLive = ! (isInput || isButton);   // <input> and <button> are not live by default
                 }
                 const defaultValue = isInput ? (isButton ? null : element.val()) : element.text();
                 this.variables.push($.extend(

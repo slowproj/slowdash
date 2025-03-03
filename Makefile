@@ -5,7 +5,7 @@ SLOWDASH_ENV = "$(SLOWDASH_DIR)/bin/slowdash-bashrc"
 GIT = $(shell which git)
 PIP_REQS = uvicorn hypercorn websockets pyyaml psutil bcrypt requests 
 PIP_DBS = influxdb-client redis pymongo couchdb
-PIP_OPTS = numpy matplotlib pillow pyserial pyvisa
+PIP_OPTS = numpy matplotlib lmfit pillow pyserial pyvisa
 
 
 all: venv main setup-venv success
@@ -15,13 +15,13 @@ without-venv: main success
 
 
 main:
-	@if [ ! -f "$(SLOWDASH_DIR)/app/site/jagaimo/jagaimo.mjs" ]; then \
+	@if [ ! -f "$(SLOWDASH_DIR)/app/site/slowjs/jagaimo/jagaimo.mjs" ]; then \
 		if [ x$(GIT) = x ]; then \
 			echo 'submodules not cloned, git command not available'; \
 			exit 255; \
 		fi; \
 		$(GIT) submodule update --init --recursive; \
-		if [ ! -f "$(SLOWDASH_DIR)/app/site/jagaimo/jagaimo.mjs" ]; then \
+		if [ ! -f "$(SLOWDASH_DIR)/app/site/slowjs/jagaimo/jagaimo.mjs" ]; then \
 			echo 'unable obtain to submodules'; \
 			exit 255; \
 		fi; \
