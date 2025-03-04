@@ -150,7 +150,7 @@ $ make
 ```
 これで，Python 周りのセットアップと，作成した venv へのパッケージのインストールを行います．
 
-venv を使わない場合は，最後の `make` の代わりに `make without-venv` としてください．もし間違えて `make` してしまった場合は，`slowdash` ディレクトリの下にある `venv` ディレクトリを削除すれば同じになります．SlowDash の実行に必要なパッケージの `requirements.txt` ファイルも自動生成されるので，venv を使わない場合はこれを手動でインストールしてください．
+venv を使わない場合は，最後の `make` の代わりに `make without-venv` としてください．もし間違えて `make` してしまった場合は，`slowdash` ディレクトリの下にある `venv` ディレクトリを削除すれば同じになります．SlowDash の実行に必要なパッケージの `requirements.txt` ファイルも自動生成されるので，venv を使わない場合はこれを手動でインストールしてください（`pip install -r requirements.txt`）．
 
 以上により，`slowdash/bin`  の下にシェルの設定するスクリプト `slowdash-bashrc` ができるので，これを `source`  してください．
 ```console
@@ -162,7 +162,7 @@ alias slowdash=/PATH/TO/SLOWDASH/bin/slowdash
 alias slowdash-activate-venv="source /PATH/TO/SLOWDASH/venv/bin/activate"
 ```
 設定ファイルの `source` は，新しいターミナルを開くたびに毎回必要です．
-SlowDash を継続的に使うなら，上記の行を `.bashrc` などに書いておくと毎回やる必要がなくなります．
+SlowDash を継続的に使うなら，上記の source コマンドを `.bashrc` などに書いておくと毎回やる必要がなくなります．なお，複数のバージョンの SlowDash インストールを使い分けるなら，上記の source だけで全てを切り替えることができます．
 
 インストールが成功したかは，`slowdash` コマンドを実行してチェックできます．
 (`slowdash` コマンドは `slowdash/bin` の下にあります）
@@ -241,7 +241,11 @@ $ cd QuickTour
 ```
 
 ### 準備：SlowPy ライブラリを使ってテスト用のデータストアを作る
-SlowPy は，SlowDash に含まれる Python のライブラリです．上記のインストールで，`source slowdash/bin/slowdash-bashrc` をしていれば，SlowPy のパスが環境変数 `PYTHONPATH` に追加れていて，すでに使えるようになっています．
+SlowPy は，SlowDash に含まれる Python のユーザライブラリ部分です．上記のインストールで，`source slowdash/bin/slowdash-bashrc` をしていれば，`slowdash-activate-venv` で SlowDash の venv に入れます（手動で activate しても構いません）．
+```console
+$ slowdash-activate-venv       (または source PATH/TO/SLOWDASH/venv/bin/activate)
+```
+インストール時に venv を使わなかった場合 (`pip install -r requrements.txt`した場合)は，この手順は必要ありません．venv から抜ける場合は，端末を閉じるか，`deactivate` コマンドを使ってください．
 
 SlowPy を使って，一秒ごとに乱数の値を SQLite に書き込むスクリプトを作成します．
 ```python

@@ -72,9 +72,10 @@ class DataSource_Honeybee(DataSource):
                 stderr=asyncio.subprocess.PIPE,
             )
             stdout, stderr = await process.communicate()
-            result = stdout.decode()
+            if process.returncode != 0:
+                logging.error(f'Honeybee: {stderr.decode()}')
+                return None
+            return stdout.decode()
         except Exception as e:
             logging.error(str(e))
             return None
-        
-        return result

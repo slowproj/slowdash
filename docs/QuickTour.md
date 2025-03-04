@@ -28,17 +28,14 @@ To generate test-data, we use the SlowPy Python library that comes with the Slow
 import slowpy.control
 import slowpy.store
 
-
 class TestDataFormat(slowpy.store.LongTableFormat):
     schema_numeric = '(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel))'
     def insert_numeric_data(self, cur, timestamp, channel, value):
         cur.execute(f'INSERT INTO {self.table} VALUES(CURRENT_TIMESTAMP,{int(timestamp)},?,{float(value)})', (str(channel),))
 
-
 ctrl = slowpy.control.ControlSystem()
 device = slowpy.control.RandomWalkDevice(n=4)
 datastore = slowpy.store.DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata", table_format=TestDataFormat())
-
 
 def _loop():
     for ch in range(4):
@@ -46,10 +43,8 @@ def _loop():
         datastore.append(data, tag="ch%02d"%ch)
     ctrl.sleep(1)
     
-
 def _finalize():
     datastore.close()
-    
     
 if __name__ == '__main__':
     ctrl.stop_by_signal()
@@ -58,6 +53,15 @@ if __name__ == '__main__':
     _finalize()
 ```
 Details of the script is described in the [Controls](ControlsScript.html) section. For now just copy-and-past the script and use it to generate some test-data.
+
+If the SlowPy Python package is installed in venv (standard installation), activate it either by:
+```console
+$ slowdash-activate-venv
+```
+or (if `slowdash-bashrc` is not `source`d)
+```console
+$ source PATH/TO/SLOWDASH/venv/bin/activate
+```
 
 Running this script will create a SQLite database file and fill it with dummy time-series data every second.
 ```console
