@@ -203,7 +203,7 @@ class Histogram2d(DataElement):
 
     
 class HistogramBasicStat:
-    def __init__(self, fields=['n', 'underflow', 'overflow', 'mean', 'std'], ndigits=4):
+    def __init__(self, fields=['n', 'underflow', 'overflow', 'mean', 'stdev'], ndigits=4):
         self.fields = fields
         self.ndigits = ndigits
 
@@ -229,9 +229,9 @@ class HistogramBasicStat:
                 result[key] = hist.overflow
             elif key.lower() == 'outliers':
                 result[key] = hist.underflow + hist.overflow
-            elif key.lower() in ['m', 'mean']:
+            elif key.lower() in ['m', 'mean', 'average']:
                 result[key] = (round(mean, self.ndigits) if mean is not None else 'NaN')
-            elif key.lower() in ['sd', 'std', 'rms', 'sigma']:
+            elif key.lower() in ['sd', 'std', 'stdev', 'rms', 'sigma']:
                 result[key] = (round(std, self.ndigits) if std is not None else 'NaN')
             else:
                 result[key] = None
@@ -273,7 +273,7 @@ class HistogramCountStat:
     
 
 class Histogram2dBasicStat:
-    def __init__(self, fields=['n', 'outliers', 'mean', 'sd'], ndigits=4):
+    def __init__(self, fields=['n', 'outliers', 'mean', 'stdev'], ndigits=4):
         self.fields = fields
         self.ndigits = ndigits
 
@@ -303,10 +303,10 @@ class Histogram2dBasicStat:
                 result[key] = n
             elif key.lower() in ['outliers', 'outofrange']:
                 result[key] = hist2d.outliers
-            elif key.lower() in ['m', 'mean']:
+            elif key.lower() in ['m', 'mean', 'average']:
                 result['x_' + key] = round(xmean, self.ndigits)
                 result['y_' + key] = round(ymean, self.ndigits)
-            elif key.lower() in ['sd', 'std', 'rms', 'sigma']:
+            elif key.lower() in ['sd', 'std', 'stdev', 'rms', 'sigma']:
                 result['x_' + key] = round(xstd, self.ndigits)
                 result['y_' + key] = round(ystd, self.ndigits)
             else:

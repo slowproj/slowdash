@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 20 March 2022 #
 
 
-import sys, os, json, logging, subprocess
+import sys, os, asyncio, json, logging
 from sd_datasource import DataSource
     
     
@@ -17,20 +17,20 @@ class DataSource_Honeybee(DataSource):
             self.config_file = os.path.join(project.project_dir, self.config_file)
 
             
-    def get_channels(self):
+    async def aio_get_channels(self):
         cmd = [ os.path.join(self.bin_dir, 'hb-list-sensors') ]
         cmd.append('--config=' + self.config_file)
         if self.dripline_db is not None:
             cmd.append('--dripline-db=' + self.dripline_db)
         cmd.append('--fields=name')
         try:
-            return json.loads(self.execute(cmd))
+            return json.loads(await self.execute(*cmd))
         except Exception as e:
             logging.error('error on parsing JSON: %s' % str(e))
             return []
 
     
-    def get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
+    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
         cmd = [ os.path.join(self.bin_dir, 'hb-get-data') ]
         cmd.extend(channels)
         cmd.append('--series')
@@ -43,7 +43,7 @@ class DataSource_Honeybee(DataSource):
         if self.dripline_db is not None:
             cmd.append('--dripline-db=' + self.dripline_db)
         try:
-            output = self.execute(cmd)
+            output = await self.execute(*cmd)
         except Exception as e:
             logging.error('error on executing honeybee command: %s' % str(e))
             return None
@@ -64,15 +64,15 @@ class DataSource_Honeybee(DataSource):
         return result
 
                 
-    def execute(self, cmd):
+    async def execute(self, *cmd):
         try:
-            process = subprocess.run(
-                cmd,
-                stdout=subprocess.PIPE,
-                check=True,
-                encoding='utf-8'
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
             )
-            result = process.stdout
+            stdout, stderr = await process.communicate()
+            result = stdout.decode()
         except Exception as e:
             logging.error(str(e))
             return None

@@ -101,7 +101,7 @@ class Graph(DataElement):
     
     
 class GraphYStat:
-    def __init__(self, fields=['n', 'y-mean', 'y-std'], ndigits=4):
+    def __init__(self, fields=['n', 'y-mean', 'y-stdev'], ndigits=4):
         self.fields = fields
         self.ndigits = ndigits
 
@@ -112,9 +112,9 @@ class GraphYStat:
             key2 = key[2:] if key[0:2].lower() == 'y-' else key
             if key.lower() in ['n', 'counts', 'entries']:
                 result[key] = len(graph.y)
-            elif key2.lower() in ['m', 'mean']:
+            elif key2.lower() in ['m', 'mean', 'average']:
                 result[key] = round(np.mean(graph.y), self.ndigits)
-            elif key2.lower() in ['sd', 'std', 'rms', 'sigma']:
+            elif key2.lower() in ['sd', 'std', 'stdev', 'rms', 'sigma']:
                 result[key] = round(np.std(graph.y), self.ndigits)
             else:
                 result[key] = None

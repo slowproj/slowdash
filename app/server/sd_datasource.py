@@ -229,7 +229,7 @@ class DataSource(ComponentPlugin):
         if len(xx) < 2:
             return math.nan
         
-        if method == 'std':
+        if method in ['sd','std','stdev','rms','sigma']:
             return statistics.stdev(xx)
         
         return math.nan

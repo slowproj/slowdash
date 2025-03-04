@@ -147,7 +147,7 @@ class Trend(DataElement):
             record['y_min'] = self.min[indexes].tolist()
             record['y_max'] = self.max[indexes].tolist()
             return record
-        elif self.metric.lower() in [ 'rms', 'sd', 'std' ]:
+        elif self.metric.lower() in [ 'rms', 'sd', 'std', 'stdev' ]:
             record['y'] = np.sqrt(variance).tolist()
             return record
         
