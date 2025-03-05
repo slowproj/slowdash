@@ -151,15 +151,15 @@
         docButton.attr('title', 'Documents');
         frame.appendButton(docButton);
         
-        await layout.load_panels();
-        layout.configure(config, {
+        await layout.loadPanelPlugins();
+        await layout.configure(config, {
             changeDisplayTimeRange: range => {
                 frame.suspend(30);
             }
         });
-        $(window).bind('resize', ()=>{
+        $(window).bind('resize', async ()=>{
             if (window.innerWidth > 0) {
-                layout.configure();
+                await layout.configure();
             }
         });
         frame.start();

@@ -193,7 +193,7 @@ class ConfigComponent(Component):
             return slowlette.Response(404)
 
         if not self.project.is_secure:
-            if ext not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]:
+            if ext not in [ '.json', '.yaml', '.html', '.csv', '.svg', '.png', '.jpg', '.jpeg' ]:
                 return slowlette.Response(403)  # Forbidden
                 
         return slowlette.FileResponse(filepath)
@@ -206,7 +206,7 @@ class ConfigComponent(Component):
             logging.warning(f'POST config/file: {filename}: access denied')
             return slowlette.Response(400)
         if not self.project.is_secure:
-            if ext not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]:
+            if ext not in [ '.json', '.yaml', '.html', '.csv', '.svg', '.png', '.jpg', '.jpeg' ]:
                 return slowlette.Response(403)  # Forbidden
 
         config_dir = os.path.join(self.project_dir, 'config')
@@ -267,7 +267,7 @@ class ConfigComponent(Component):
             logging.warning(f'DETETE config/file: {filename}: access denied')
             return slowlette.Response(404)  # Not Found
         if not self.project.is_secure:
-            if ext not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]:
+            if ext not in [ '.json', '.yaml', '.html', '.csv', '.svg', '.png', '.jpg', '.jpeg' ]:
                 return slowlette.Response(403)  # Forbidden
         
         try:
@@ -300,7 +300,7 @@ class ConfigComponent(Component):
         
         elif content_type != 'json':
             if not self.project.is_secure:
-                if ext not in [ '.json', '.yaml', '.html', '.csv', '.svn', '.png', '.jpg', '.jpeg' ]:
+                if ext not in [ '.json', '.yaml', '.html', '.csv', '.svg', '.png', '.jpg', '.jpeg' ]:
                     return { 'config_error': 'bad file type' }, None
                 
             content = None

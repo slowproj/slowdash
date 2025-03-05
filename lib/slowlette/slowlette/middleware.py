@@ -147,26 +147,31 @@ class FileServer():
             path = path[len(self.prefix):]
 
         # matched -> my responsibility (can return an error status) #
-        
+
         if is_dirty:
+            logging.warning(f'Slowlette File GET: Forbidden: sanity check failed')
             return Response(403)  # Forbidden
         if len(path) == 0:
             if self.index_file is not None:
                 path = [ self.index_file ]
             else:
+                logging.warning(f'Slowlette File GET: Forbidden: no directory indexing')
                 return Response(403)  # Forbidden
         
         # file extension check
         ext = os.path.splitext(path[-1])[1]
         if self.ext_allow is not None:
             if ext not in self.ext_allow:
+                logging.warning(f'Slowlette File GET: Forbidden: not allowed file type')
                 return Response(403)  # Forbidden
         elif self.ext_deny is not None:
             if ext in self.ext_deny:
+                logging.warning(f'Slowlette File GET: Forbidden: denied file type')
                 return Response(403)  # Forbidden
 
         filepath = os.path.join(*(path))
         if len(os.path.splitdrive(filepath)[0]) > 0:  # Windows drive letter :-(
+            logging.warning(f'Slowlette File GET: Forbidden: includes Windows drive letter')
             return Response(403)  # Forbidden
                 
         filepath = os.path.join(self.filedir, filepath)

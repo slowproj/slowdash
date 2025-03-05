@@ -67,8 +67,8 @@ export class DownloadPanel extends Panel {
     }
 
     
-    configure(config, callbacks={}, project_config=null) {
-        super.configure(config, callbacks);
+    async configure(config, callbacks={}, project_config=null) {
+        await super.configure(config, callbacks);
 
         this.channelList = null;
         if (project_config?.project?.name) {
@@ -637,8 +637,8 @@ export class SlowpyPanel extends Panel {
     }
 
     
-    configure(config, callbacks={}) {
-        super.configure(config, callbacks);
+    async configure(config, callbacks={}) {
+        await super.configure(config, callbacks);
 
         const defaults = {
             channels: [],

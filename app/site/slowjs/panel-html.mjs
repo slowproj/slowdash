@@ -81,15 +81,15 @@ class HtmlPanel extends Panel {
     }
 
     
-    configure(config, callbacks={}) {
-        super.configure(config, callbacks);
+    async configure(config, callbacks={}) {
+        await super.configure(config, callbacks);
         this.titleDiv.text(this.config.title ?? '');
         this.variables = [];
 
         const base = ((this.config.location??'') == 'system' ? './' : './api/config/content/');
         this.url = base + 'html-' + config.file + '?content_type=html';
     
-        this.loadPage(true);
+        await this._loadPage();
     }
 
 
@@ -134,36 +134,29 @@ class HtmlPanel extends Panel {
     }
 
 
-    loadPage(reloadData) {
-        fetch(this.url)
-            .then(response => {
-                if (! response.ok) {
-                    throw new Error(response.status + " " + response.statusText);
-                }
-                return response.text();
-            })
-            .catch(e => {
-                this.contentDiv.html(`
-                    <h3>HTML File Loading Error</h3>
-                    Name: ${config.file}<br>
-                    Error: ${e.message}
-                `);
-                return null;
-            })
-            .then(doc => {
-                if (doc) {
-                    this.render(doc);
-                    this.adjustScaling();
-                    if (reloadData) {
-                        this.callbacks.reloadData();
-                    }
-                }
-            });
+    async _loadPage() {
+        const response = await fetch(this.url);
+        if (! response.ok) {
+            this.contentDiv.html(`
+                <h3>HTML File Loading Error</h3>
+                Name: ${config.file}<br>
+                <p>
+                URL: ${this.url}<br>
+                Error: ${response.status} ${response.statusText}
+            `);
+            return null;
+        }
+        const html = await response.text();
+        if (html) {
+            this.render(html);
+            this.adjustScaling();
+        }
     }
 
-    render(doc) {
+
+    _render(html) {
         //...TODO: remove event handlers
-        this.contentDiv.html(doc);  // CSS in <head> works here
+        this.contentDiv.html(html);  // CSS in <head> works here
 
         this.variables = [];
         for (let type of [ 'sd-value', 'sd-enabled' ]) {
@@ -201,7 +194,7 @@ class HtmlPanel extends Panel {
         
         this.contentDiv.find('input[type="submit" i]').bind('click', e=>{
             e.preventDefault();
-            this.submit($(e.target).attr('name'), $(e.target).closest('form'));
+            this._submit($(e.target).attr('name'), $(e.target).closest('form'));
         });
         
         this.contentDiv.find('form').bind('submit', e=>{
@@ -210,7 +203,7 @@ class HtmlPanel extends Panel {
     }
 
     
-    submit(submit_name, form) {
+    _submit(submit_name, form) {
         let doc = {};
         if (submit_name) {
             doc[submit_name] = true
@@ -264,9 +257,17 @@ class HtmlPanel extends Panel {
     
     drawRange(dataPacket, displayTimeRange) {
         if (this.config.reload ?? false) {
-            this.loadPage(false);
+            this.loadPage().then(()=>{
+                this._updateContents(dataPacket, displayTimeRange);
+            });
         }
-        
+        else {
+            this._updateContents(dataPacket, displayTimeRange);
+        }
+    }
+
+    
+    _updateContents(dataPacket, displayTimeRange) {
         let values = {};
         for (let variable of this.variables) {
             if (! variable.waiting) {
@@ -394,8 +395,8 @@ class HrefPanel extends Panel {
     }
 
     
-    configure(config, callbacks={}) {
-        super.configure(config, callbacks);
+    async configure(config, callbacks={}) {
+        await super.configure(config, callbacks);
         this.titleDiv.text(this.config.title ?? '');
         
         let openBtn = $('<button>').html('&#x1f517;').prependTo(this.ctrlDiv);

@@ -66,45 +66,37 @@ export class MapPanel extends Panel {
     }
 
     
-    configure(config, callbacks={}) {
-        super.configure(config, callbacks);
+    async configure(config, callbacks={}) {
+        await super.configure(config, callbacks);
         
         // this caching does not work because Layout.configure() recreates all the panels
         if (config.map && (config.map == this.loaded_map)) {
-            this.configure2(config, callbacks);
+            this._build(config, callbacks);
             return;
         }
         
         this.loaded_map = config.map;
-        fetch('./api/config/file/map-' + config.map + '.json')
-            .then(response => {
-                if (! response.ok) {
-                    throw new Error(response.status + " " + response.statusText);
-                }
-                return response.json();
-            })
-            .catch(e => {
-                this.div.html(`
-                    <div>
-                    <h3>Map Loading Error</h3>
-                    <p>
-                    Name: ${config.map}<br>
-                    Error: ${e.message}
-                    </div>
-                `);
-                return null;
-            })
-            .then(map => {
-                if (map) {
-                    this.map = map;
-                    this.configure2(config, callbacks);
-                    this.drawRange(null, null);
-                }
-            });
+        const url = './api/config/ffile/map-' + config.map + '.json';
+        const response = await fetch('./api/config/file/map-m' + config.map + '.json');
+        if (! response.ok) {
+            this.div.html(`
+                <h3>Map Loading Error</h3>
+                <p>
+                Name: ${config.map}<br>
+                URL: ${url}<br>
+                Error: ${response.status} ${response.statusText}
+            `);
+            return null;
+        }
+        let map = await response.json();
+        if (map) {
+            this.map = map;
+            this._build(config, callbacks);
+        }
     }
 
     
-    configure2(config, callbacks) {
+    _build(config, callbacks) {
         if (this.config.legend === undefined) {
             this.config.legend = { style: null };
         }

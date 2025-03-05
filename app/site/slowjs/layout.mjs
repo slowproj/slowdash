@@ -45,40 +45,39 @@ export class Layout {
         this.beatCallbacks = [];
         this.beat();
 
-        this.setupStreamingData();
+        this._setupStreamingData();
     }
 
 
     beat() {
-        for (let f of this.beatCallbacks) {
-            f();
+        for (let callback of this.beatCallbacks) {
+            callback();
         }
-        setTimeout(()=>{this.beat();}, 1000);
+        setTimeout(()=>this.beat(), 1000);
     }
     
 
-    async load_panels() {
-        let loader = new PanelPluginLoader();
+    async loadPanelPlugins() {
+        const loader = new PanelPluginLoader();
         this.PanelClassList = await loader.load();
     }
    
     
-    configure(config=null, callbacks={}) {
+    async configure(config=null, callbacks={}) {
         const default_callbacks = {
-            changeDisplayTimeRange: range => {},
+            changeDisplayTimeRange: (range) => {},
             forceUpdate: () => {},
             suspend: (duration) => {},
             popoutPanel: (index) => {},
         };
         if (config !== null) {
             this.config = config;
-            this.callbacks = $.extend({}, default_callbacks, this.callbacks??{}, callbacks);
+            this.callbacks = $.extend({}, default_callbacks, this.callbacks ?? {}, callbacks);
         }
-        
         if (this.config.control === undefined) {
             this.config.control = {};
         }
-        if ((this.config.control.grid?.columns??0) < 1) {
+        if ((this.config.control.grid?.columns ?? 0) < 1) {
             this.config.control.grid = { columns: 1, rows: 1 };
         }
         if (this.config.panels === undefined) {
@@ -86,178 +85,25 @@ export class Layout {
         }
         else {
             // remove panels marked as "deleted"
-            this.config.panels = this.config.panels.filter(p => !(p.deleted??false));
+            this.config.panels = this.config.panels.filter(p => !(p.deleted ?? false));
         }
-        
-        let layoutWidth = document.documentElement.clientWidth;
-        let layoutHeight = document.documentElement.clientHeight - this.layoutDiv.pageY();
 
-        const scrollBarWidth = 20; // this does not exist yet, so <html>.clientWidth does not include it
-        const layoutInnerWidth = layoutWidth - scrollBarWidth;
-        const layoutInnerHeight = layoutHeight /*- scrollBarWidth */ - 2; // 4 for panel border on hover
-        
-        const ncols = parseInt(this.config.control.grid.columns ?? 1);
-        const nrows = parseInt(this.config.control.grid.rows ?? 1);
-        const cellWidth = Math.floor(layoutInnerWidth / ncols);
-        const cellHeight = Math.floor(layoutInnerHeight / nrows);
-
-        let fontSize = '100%';
-        let fontScaling = 100.0;
-        if (ncols == 3) {
-            fontScaling =80;
-        }
-        else if (ncols > 3) {
-            fontScaling = 100.0 / (ncols-2);
-        }
-        
-        this.layoutDiv.empty().css({
-            'position': 'relative',
-            'width': layoutWidth + 'px',
-            'height': layoutHeight + 'px',
-            'overflow': 'auto',
-            'display': 'flex',
-            'flex-wrap': 'wrap',
-            'font-size': fontSize,
-        });
-        let style = $.extend({}, this.defaultStyle, this.config._project?.style?.panel ?? {});
-        
         this.panels = [];
         this.beatCallbacks = [];
-        for (let entry of this.config.panels) {
-            let panelDiv = $('<div>').addClass('sd-panel').appendTo(this.layoutDiv);
-            panelDiv.css({
-                'width': (cellWidth-12)+'px',
-                'height': (cellHeight-12)+'px',
-                'position': 'relative',
-                'margin': '5px',
-                'padding': 0,
-                'border-radius': '10px',
-                'font-size': fontScaling + '%',
-            });
+        
+        this.style = $.extend({}, this.defaultStyle, this.config._project?.style?.panel ?? {});
+        this.dimension = {
+            layoutWidth: null,
+            layoutHeight: null,
+            panelWidth: null,
+            panelHeight: null,
+            fontScaling: 100.0,
+        };
+        
+        this._setupDimensions();
+        await this._setupPanels();
+        this._setupAddNewPanel();
 
-            if (this.config.layout?.focus_highlight !== false) {
-                panelDiv.bind('pointerenter', e=>{
-                    let target = $(e.target);
-                    target.css('border', '1px solid rgba(128,128,128,0.7)');
-                    let duration = parseInt(this.config.layout?.focus_highlight ?? 10);
-                    if (duration > 0) {
-                        let timeoutId = target.attr('sd-timeoutId');
-                        if (timeoutId) {
-                            clearTimeout(timeoutId);
-                        }
-                        timeoutId = setTimeout(()=>{
-                            target.css('border', '1px solid rgba(128,128,128,0)');
-                        }, duration*1000);
-                        target.attr('sd-timeoutId', timeoutId);
-                    }
-                });
-                panelDiv.bind('mouseleave', e=>{
-                    $(e.target).css('border', '1px solid rgba(128,128,128,0)');
-                });
-            }
-
-            //... backwards compatibility
-            if ((entry.type === undefined) || (entry.type == 'timeseries')) {
-                entry.type = 'timeaxis';
-            }
-
-            let panel = null;
-            for (let PanelClass of this.PanelClassList) {
-                if (entry.type == PanelClass.describe().type) {
-                    panel = new PanelClass(panelDiv, style);
-                }
-            }
-            if (panel === null) {
-                console.log('unable to find panel type: ' + entry.type);
-            }
-            if (panel !== null) {
-                let callbacks = {
-                    changeDisplayTimeRange: range => {
-                        // range value can be null for a default range
-                        for (let panel of this.panels) {
-                            panel.drawRange(this.currentDataPacket, range);
-                        }
-                        this.callbacks.changeDisplayTimeRange(range);
-                    },
-                    reloadData: () => {
-                        this.load(null);
-                    },
-                    updateData: () => {
-                        this.callbacks.forceUpdate();
-                    },
-                    suspendUpdate: (duration) => {
-                        this.callbacks.suspend(duration);
-                    },
-                    reconfigure: () => {
-                        this.configure(null);
-                        this.load(null);
-                    },
-                    popout: (p) => {
-                        for (let i = 0; i < this.panels.length; i++) {
-                            if (this.panels[i] === p) {
-                                //this.fullscreenPanel(i);
-                                this.callbacks.popoutPanel(i);
-                            }
-                        }
-                    },
-                    publish: (topic, message) => {
-                        //console.log("publish", topic, JSON.stringify(message));
-                        this.publish(topic, message);
-                    },
-                };
-                panel.configure(entry, callbacks, this.config._project);
-                this.panels.push(panel);
-                if (panel.beatCallback) {
-                    this.beatCallbacks.push(panel.beatCallback);
-                }
-            }
-        }
-
-        if (this.config.control.immutable || ((this.config.control.mode??'') == 'display')) {
-            for (let panel of this.panels) {
-                panel.ctrlDiv.remove();
-                panel.ctrlDiv = undefined;
-            }
-        }
-        else if ((this.config.control.mode??'') == 'protected') {
-            for (let panel of this.panels) {
-                panel.ctrlDiv.find('.sd-modifying').remove();
-            }
-        }
-        else {
-            const addDivStyle = {
-                'width': (cellWidth-100)+'px',
-                'height': (cellHeight-80)+'px',
-                'border-width': 'thin',
-                'border-style': 'solid',
-                'border-radius': '10px',
-                'padding': '20px',
-                'margin-left': '40px',
-                'margin-top': '20px',
-            };
-            const addButtonStyle = {
-                'font-size': '120%',
-            };
-            let addDiv = $('<div>').addClass('sd-pad').css(addDivStyle).appendTo(this.layoutDiv);
-            if (this.config.panels.length > 0) {
-                new JGInvisibleWidget(addDiv);
-            }
-
-            let addDialogDiv = $('<div>').addClass('sd-pad').css({'display':'none'});
-            // cannot be layoutDiv, as 'position:fiexed' does not work under an element with transform
-            addDialogDiv.appendTo(this.layoutDiv.closest('body'));
-            
-            let addDialog = new JGDialogWidget(addDialogDiv, {
-                title: 'Add a New Panel',
-                closeOnGlobalClick: false,   // keep this false, otherwise not all inputs will be handled
-                closeButton: true,
-            });
-            $('<button>').text('Add a New Panel').css(addButtonStyle).appendTo(addDiv).click(e=>{
-                addDialog.open();
-            });
-            this.buildAddNew(addDialogDiv.find('.jaga-dialog-content'), addDialog);
-        }
-            
         if (this.currentDataPacket !== null) {
             for (let panel of this.panels) {
                 panel.drawRange(this.currentDataPacket, this.currentDataPacket.range);
@@ -265,8 +111,193 @@ export class Layout {
         }
     }
 
+    _setupDimensions() {
+        this.dimension.layoutWidth = document.documentElement.clientWidth;
+        this.dimension.layoutHeight = document.documentElement.clientHeight - this.layoutDiv.pageY();
+
+        const scrollBarWidth = 20; // this does not exist yet, so <html>.clientWidth does not include it
+        const layoutInnerWidth = this.dimension.layoutWidth - scrollBarWidth;
+        const layoutInnerHeight = this.dimension.layoutHeight /*- scrollBarWidth */ - 2; // 4 for panel border on hover
+        
+        const ncols = parseInt(this.config.control.grid.columns ?? 1);
+        const nrows = parseInt(this.config.control.grid.rows ?? 1);
+        this.dimension.panelWidth = Math.floor(layoutInnerWidth / ncols);
+        this.dimension.panelHeight = Math.floor(layoutInnerHeight / nrows);
+
+        if (ncols < 3) {
+            this.dimension.fontScaling = 100.0;
+        }
+        else if (ncols == 3) {
+            this.dimension.fontScaling = 80;
+        }
+        else {
+            this.dimension.fontScaling = 100.0 / (ncols-2);
+        }
+
+        this.layoutDiv.empty().css({
+            'position': 'relative',
+            'width': this.dimension.layoutWidth + 'px',
+            'height': this.dimension.layoutHeight + 'px',
+            'overflow': 'auto',
+            'display': 'flex',
+            'flex-wrap': 'wrap',
+        });
+    }
+
+
+    async _setupPanels() {        
+        for (const entry of this.config.panels) {
+            const panelDiv = this._createPanelDiv();
+            const panel = this._createPanel(panelDiv, entry);
+            if (panel) {
+                await this._configurePanel(panel, entry);
+            }
+        }
+    }
+
     
-    buildAddNew(div, dialog) {
+    _createPanelDiv() {
+        let panelDiv = $('<div>').addClass('sd-panel').appendTo(this.layoutDiv);
+        
+        panelDiv.css({
+            'width': (this.dimension.panelWidth-12)+'px',
+            'height': (this.dimension.panelHeight-12)+'px',
+            'position': 'relative',
+            'margin': '5px',
+            'padding': 0,
+            'border-radius': '10px',
+            'font-size': this.dimension.fontScaling + '%',
+        });
+
+        if (this.config.layout?.focus_highlight !== false) {
+            panelDiv.bind('pointerenter', e => {
+                const target = $(e.target);
+                target.css('border', '1px solid rgba(128,128,128,0.7)');
+                
+                const duration = parseInt(this.config.layout?.focus_highlight ?? 10);
+                if (duration > 0) {
+                    let timeoutId = target.attr('sd-timeoutId');
+                    if (timeoutId) {
+                        clearTimeout(timeoutId);
+                    }
+                    timeoutId = setTimeout(() => {
+                        target.css('border', '1px solid rgba(128,128,128,0)');
+                    }, duration*1000);
+                    target.attr('sd-timeoutId', timeoutId);
+                }
+            });
+            
+            panelDiv.bind('mouseleave', e=>{
+                $(e.target).css('border', '1px solid rgba(128,128,128,0)');
+            });
+        }
+
+        return panelDiv;
+    }
+
+    
+    _createPanel(div, entry) {
+        //... backwards compatibility
+        if ((entry.type === undefined) || (entry.type == 'timeseries')) {
+            entry.type = 'timeaxis';
+        }
+        
+        for (let PanelClass of this.PanelClassList) {
+            if (entry.type == PanelClass.describe().type) {
+                return new PanelClass(div, this.style);
+            }
+        }
+        if (panel === null) {
+            console.log('unable to find panel type: ' + entry.type);
+        }
+    }
+
+    
+    async _configurePanel(panel, entry) {
+        const callbacks = {
+            changeDisplayTimeRange: range => {
+                // range value can be null for a default range
+                for (const panel of this.panels) {
+                    panel.drawRange(this.currentDataPacket, range);
+                }
+                this.callbacks.changeDisplayTimeRange(range);
+            },
+            updateData: () => {
+                this.callbacks.forceUpdate();
+            },
+            suspendUpdate: (duration) => {
+                this.callbacks.suspend(duration);
+            },
+            reconfigure: async () => {
+                await this.configure(null);
+                this.load(null);
+            },
+            popout: (p) => {
+                for (let i = 0; i < this.panels.length; i++) {
+                    if (this.panels[i] === p) {
+                        this.callbacks.popoutPanel(i);
+                    }
+                }
+            },
+            publish: (topic, message) => {
+                //console.log("publish", topic, JSON.stringify(message));
+                this.publish(topic, message);
+            },
+        };
+        
+        await panel.configure(entry, callbacks, this.config._project);
+        
+        if (this.config.control.immutable || ((this.config.control.mode ?? '') == 'display')) {
+            panel.ctrlDiv.remove();
+            panel.ctrlDiv = undefined;
+        }        
+        if ((this.config.control.mode ?? '') == 'protected') {
+            panel.ctrlDiv.find('.sd-modifying').remove();
+        }
+
+        this.panels.push(panel);
+        if (panel.beatCallback) {
+            this.beatCallbacks.push(panel.beatCallback);
+        }
+    }
+
+
+    _setupAddNewPanel() {
+        const addDivStyle = {
+            'width': (this.dimension.panelWidth-100)+'px',
+            'height': (this.dimension.panelHeight-80)+'px',
+            'border-width': 'thin',
+            'border-style': 'solid',
+            'border-radius': '10px',
+            'padding': '20px',
+            'margin-left': '40px',
+            'margin-top': '20px',
+        };
+        const addButtonStyle = {
+            'font-size': '120%',
+        };
+        const addDiv = $('<div>').addClass('sd-pad').css(addDivStyle).appendTo(this.layoutDiv);
+        if (this.config.panels.length > 0) {
+            new JGInvisibleWidget(addDiv);
+        }
+
+        const addDialogDiv = $('<div>').addClass('sd-pad').css({'display':'none'});
+        // cannot be layoutDiv, as 'position:fiexed' does not work under an element with transform
+        addDialogDiv.appendTo(this.layoutDiv.closest('body'));
+        
+        const addDialog = new JGDialogWidget(addDialogDiv, {
+            title: 'Add a New Panel',
+            closeOnGlobalClick: false,   // keep this false, otherwise not all inputs will be handled
+            closeButton: true,
+        });
+        $('<button>').text('Add a New Panel').css(addButtonStyle).appendTo(addDiv).click(e=>{
+            addDialog.open();
+        });
+        this._setupAddNewDialog(addDialogDiv.find('.jaga-dialog-content'), addDialog);
+    }
+
+    
+    _setupAddNewDialog(div, dialog) {
         div.css({
             'font-size': '130%'
         });
@@ -277,12 +308,11 @@ export class Layout {
                 <select style="font-size:130%">
                 </select></td></tr>
             </table>
-          </div>
         `);
 
-        let select = div.find('select');
+        const select = div.find('select');
         let PanelClassTable = {};
-        for (let PanelClass of this.PanelClassList) {
+        for (const PanelClass of this.PanelClassList) {
             const desc = PanelClass.describe();
             if (desc.label) {
                 select.append($('<option>').attr('value', desc.type).attr('label', desc.label).text(desc.label));
@@ -291,10 +321,10 @@ export class Layout {
         }
         
         let table = div.find('table');
-        let addPanel = config => {
+        const addPanel = async config => {
             if (config) {
                 this.config.panels.push(config);
-                this.configure(this.config);
+                await this.configure(this.config);
                 this.load();
             }
         }
@@ -315,41 +345,20 @@ export class Layout {
     }
 
     
-    setGrid(rows, columns) {
+    async setGrid(rows, columns) {
         let [nrows, ncols] = [parseFloat(rows), parseInt(columns)];
         if (!(nrows > 0) || ! (ncols > 0)) {
             return;
         }
         this.config.control.grid.rows = nrows;
         this.config.control.grid.columns = ncols;
-        this.configure(this.config);
+        await this.configure(this.config);
         this.load();
     }
 
     
-    fullscreenPanel(index) {
-        let panelDiv = this.layoutDiv.find('.sd-panel').at(index);
-        if (panelDiv.boundingClientHeight() > 0.7 * this.layoutDiv.boundingClientHeight()) {
-            // pop-in: back to original grid
-            this.configure(this.config);
-            return;
-        }
-        
-        const rows = this.config.control.grid.rows;
-        const cols = this.config.control.grid.columns;
-        this.config.control.grid.rows = 1;
-        this.config.control.grid.columns = 1;
-        this.configure(this.config);
-        this.config.control.grid.rows = rows;
-        this.config.control.grid.columns = cols;
-
-        panelDiv = this.layoutDiv.find('.sd-panel').at(index);
-        this.layoutDiv.get().scrollTop = panelDiv.get().offsetTop - 10;
-    }
-
-    
     load(range=null, on_complete=status=>{}) {
-        // If the data range is not specified, use the same range before, and reuse the loaded data.
+        // If the data range is not specified, use the same range as before, and reuse the loaded data.
         // Even for the identical data range, panels must be updated because a new plot for the same channel might have been added.
         
         if ((range === null) && (this.currentDataPacket?.isTransitional ?? false)) {
@@ -440,11 +449,11 @@ export class Layout {
     }
 
     
-    setupStreamingData() {
+    _setupStreamingData() {
         let url = new URL(window.location.href);
         url.protocol = 'ws:';
-        url.search = ''
-        url.hash = ''
+        url.search = '';
+        url.hash = '';
         
         if (url.pathname.match(/\.[a-zA-Z0-9]+$/)) {  
             // last path element has an extension (file) -> remove the file name
@@ -466,50 +475,52 @@ export class Layout {
             console.error("Web Socket Error: " + error);
         };
         this.socket.onmessage = (event) => {
-            const to = this.currentDataPacket?.range?.to ?? null;
-            if ((to === null) || (to < 0)) {
-                return;
-            }
-            const now = $.time();
-            if ((to > 0) && (to < now - 10)) {  //... BUG: "10 sec" window is temporary
-                return;
-            }
-            const record = JSON.parse(event.data);
-            const dataPacket = {
-                isTransitional: true,
-                isCurrent: true,
-                range: { from: now - 60, to: now },
-                data: record,
-            };
-            if (this.panels) {
-                for (let panel of this.panels) {
-                    panel.drawRange(dataPacket, dataPacket.range);
-                }
-            }
-        };
+            this._processCurrentData(JSON.parse(event.data));
+        }
     }
 
-    async publish(topic, doc) {
-        if (topic != 'currentdata') {
+
+    _processCurrentData(data) {
+        const to = this.currentDataPacket?.range?.to ?? null;
+        if ((to === null) || (to < 0)) {
             return;
         }
-        const message = (typeof doc == 'string') ? doc : JSON.stringify(doc);
+        const now = $.time();
+        if ((to > 0) && (to < now - 10)) {  //... BUG: "10 sec" window is temporary
+            return;
+        }
         
-        if (this.socket && (this.socket.readyState == WebSocket.OPEN)) {
+        const dataPacket = {
+            isTransitional: true,
+            isCurrent: true,
+            range: { from: now - 60, to: now },
+            data: data,
+        };
+        if (this.panels) {
+            for (let panel of this.panels) {
+                panel.drawRange(dataPacket, dataPacket.range);
+            }
+        }
+    }
+
+    
+    async publish(topic, doc) {
+        if (topic !== 'currentdata') {
+            return;
+        }
+        const message = (typeof doc === 'string') ? doc : JSON.stringify(doc);
+        
+        if (this.socket && (this.socket.readyState === WebSocket.OPEN)) {
             this.socket.send(message);
         }
         else {
             const url = './api/control/currentdata';
-            fetch(url, {
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json; charset=utf-8' },
                 body: message,
-            })
-                .then(response => {
-                    this.callbacks.forceUpdate();
-                })
-                .catch(e => {
-                });
+            });
+            this.callbacks.forceUpdate();
         }
     }
 };

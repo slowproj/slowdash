@@ -77,10 +77,9 @@ export class Panel {
         this.beatCallback = null; // if not null, layout will call this on every second
     }
 
-    configure(config, callbacks={}) {
+    async configure(config, callbacks={}) {
         const default_callbacks = {
             changeDisplayTimeRange: range => {},
-            reloadData: () => {},
             updateData: () => {},
             suspendUpdate: (duration) => {},
             reconfigure: () => {},

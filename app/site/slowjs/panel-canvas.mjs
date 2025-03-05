@@ -892,42 +892,41 @@ export class CanvasPanel extends Panel {
     }
 
     
-    configure(config, callbacks={}) {
-        super.configure(config, callbacks);
+    async configure(config, callbacks={}) {
+        await super.configure(config, callbacks);
         
         //let captureBtn = $('<button>').html('&#x1f4f8;').prependTo(this.ctrlDiv);
         //captureBtn.attr('title', 'Save Image');        
         //captureBtn.css('font-size', '1.5rem').bind('click', e=>{this.capture();});
-        
+
+        // if canvas panel is loaded as a panel in a layout (SlowPlot)
         if (config.config_name && (config.config_name != this.loaded_config_name)) {
             this.loaded_config_name = config.config_name;
-            fetch('./api/config/content/slowdash-' + config.config_name + '.json')
-                .then(response => {
-                    if (! response.ok) {
-                        throw new Error(response.status + " " + response.statusText);
-                    }
-                    return response.json();
-                })
-                .catch(e => {
-                    this.div.html(`
-                        <h3>Configuration Loading Error</h3>
-                        Name: ${config.config_name}<br>
-                        Error: ${e.message}
-                    `);
-                    return null;
-                })
-                .then(new_config => {
-                    if (new_config) {
-                        this.configure(new_config, callbacks);
-                        this.config = config;
-                    }
-                    callbacks.reloadData();
-                });
-            
-            return;
+
+            const url ='./api/config/content/slowdash-' + config.config_name + '.json';
+            const response = await fetch(url);
+            if (! response.ok) {
+                this.div.html(`
+                    <h3>Configuration Loading Error</h3>
+                    Name: ${config.config_name}<br>
+                    <p>
+                    URL: ${url}<br>
+                    Error: ${response.status} ${response.statusText}
+                `);
+                return null;
+            }
+            this.canvasConfig = await response.json();
+            console.log(url, "loaded");
         }
-        this.canvasConfig = config;
+        else {
+            this.canvasConfig = config;
+        }
         
+        this._build();
+    }
+
+    
+    _build() {
         this.svg.empty();
         this.svg.attr({
             'width': this.div.get().offsetWidth, 

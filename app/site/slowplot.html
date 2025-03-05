@@ -228,9 +228,9 @@
             let gridSelect = $('<select>');
             frame.appendSelect(gridSelect);
             let gridPulldown = new GridPullDown(gridSelect, {
-                select: (grid) => {
+                select: async (grid) => {
                     let [rows, cols] = grid.split('x');
-                    layout.setGrid(rows, cols);
+                    await layout.setGrid(rows, cols);
                 }
             });
             gridPulldown.set(config.control.grid.rows + 'x' + config.control.grid.columns);
@@ -288,8 +288,8 @@
             });
         }
             
-        await layout.load_panels();
-        layout.configure(config, {
+        await layout.loadPanelPlugins();
+        await layout.configure(config, {
             changeDisplayTimeRange: range => {
                 currentDisplayTimeRange = range;
             },
@@ -305,9 +305,9 @@
             },
         });
         frame.start();
-        $(window).bind('resize', ()=>{
+        $(window).bind('resize', async ()=>{
             if (window.innerWidth > 0) {
-                layout.configure();
+                await layout.configure();
             }
         });
     }

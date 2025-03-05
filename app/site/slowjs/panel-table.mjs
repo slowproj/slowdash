@@ -80,7 +80,7 @@ class TablePanel extends Panel {
     }
 
     
-    configure(config, callbacks={}) {
+    async configure(config, callbacks={}) {
         super.configure(config, callbacks);
         this.titleDiv.text(this.config.title);
     }

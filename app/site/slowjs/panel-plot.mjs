@@ -932,8 +932,8 @@ class PlotPanel extends Panel {
     }
 
     
-    configure(config, callbacks={}) {
-        super.configure(config, callbacks);
+    async configure(config, callbacks={}) {
+        await super.configure(config, callbacks);
         
         // defaults: not to make a copy of 'config', do not use $.extend() here
         if (this.config.plots === undefined) {
@@ -1267,9 +1267,9 @@ class PlotPanel extends Panel {
               <tr><td>Type</td><td>Histograms and Graphs</td></tr>
             </table>
         `);
-        PlotPanel.buildConstructRows(addDiv.find('table'), config=>{
+        PlotPanel.buildConstructRows(addDiv.find('table'), async config=>{
             this.config.plots.push(config.plots[0]);
-            this.configure(this.config, this.callbacks);
+            await this.configure(this.config, this.callbacks);
             this.openSettings(div.empty());
         });
     }
@@ -1575,8 +1575,8 @@ class TimeAxisPlotPanel extends PlotPanel {
     }
 
     
-    configure(config, callbacks={}) {
-        super.configure(config, callbacks);
+    async configure(config, callbacks={}) {
+        await super.configure(config, callbacks);
         this.currentDataTimeRange = null;
         this.currentDisplayTimeRange = null;
     }
@@ -1655,9 +1655,9 @@ class TimeAxisPlotPanel extends PlotPanel {
               <tr><td>Type</td><td>Time-Axes Plot</td></tr>
             </table>
         `);
-        TimeAxisPlotPanel.buildConstructRows(addDiv.find('table'), config=>{
+        TimeAxisPlotPanel.buildConstructRows(addDiv.find('table'), async config=>{
             this.config.plots.push(config.plots[0]);
-            this.configure(this.config, this.callbacks);
+            await this.configure(this.config, this.callbacks);
             this.openSettings(div.empty());
         });
     }
