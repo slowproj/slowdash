@@ -892,13 +892,9 @@ export class CanvasPanel extends Panel {
     }
 
     
-    async configure(config, callbacks={}) {
-        await super.configure(config, callbacks);
+    async configure(config, options, callbacks) {
+        await super.configure(config, options, callbacks);
         
-        //let captureBtn = $('<button>').html('&#x1f4f8;').prependTo(this.ctrlDiv);
-        //captureBtn.attr('title', 'Save Image');        
-        //captureBtn.css('font-size', '1.5rem').bind('click', e=>{this.capture();});
-
         // if canvas panel is loaded as a panel in a layout (SlowPlot)
         if (config.config_name && (config.config_name != this.loaded_config_name)) {
             this.loaded_config_name = config.config_name;
@@ -968,6 +964,15 @@ export class CanvasPanel extends Panel {
     }
 
     
+    addControlButtons(div, is_protected) {
+        super.addControlButtons(div, is_protected);
+
+        //let captureBtn = $('<button>').html('&#x1f4f8;').prependTo(div);
+        //captureBtn.attr('title', 'Save Image');        
+        //captureBtn.css('font-size', '1.5rem').bind('click', e=>{this.capture();});
+    }
+
+    
     openSettings(div) {
         let inputsDiv = $('<div>').appendTo(div);
         inputsDiv.html(`
@@ -998,6 +1003,7 @@ export class CanvasPanel extends Panel {
         }
     }
 
+    
     //... BUG: this does not work (base image will not be included) //
     capture() {
         let download = (href, name) => {
@@ -1039,6 +1045,7 @@ export class CanvasPanel extends Panel {
         img.onerror = e=> console.log(e);
         img.src = svgUrl;
     }
+
     
     submit(doc, form, event=null) {
         if (form) {
@@ -1070,7 +1077,7 @@ export class CanvasPanel extends Panel {
                     throw new Error(doc.message ?? '');
                 }
                 this.indicator.close("Command Processed", "&#x2705;", 1000);
-                this.callbacks.updateData();
+                this.callbacks.forceUpdate();
             })
             .catch(e => {
                 this.indicator.close("Command Failed: " + e.message, "&#x274c;", 5000);

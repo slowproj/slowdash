@@ -341,8 +341,8 @@ export class Frame {
             },
             reloadInterval: 0,
             reloadIntervalSelection: [ 0, -1, 2, 5, 10, 30, 60, 5*60, 15*60, 30*60, 60*60 ],
-            reloadIntervalChange: function(interval) {},
-            reload: function(on_complete) {},
+            reloadIntervalChange: function(interval){},
+            reload: async function(){},
             resetDelay: 0
         };
         this.obj = obj;
@@ -499,7 +499,7 @@ export class Frame {
         }
     }
     
-    update() {            
+    async update() {            
         let now = $.time();
         if (now - this.currentUpdateTime < 60) {
             this.pendingRequests++;
@@ -510,14 +510,13 @@ export class Frame {
         this.pendingRequests = 0;
         this.suspendUntil = 0;
         
-        this.options.reload(status => {
-            this.currentUpdateTime = 0;
-            if (status == null) {
-                let date = (new JGDateTime(this.lastUpdateTime)).asString('%a, %b %d %H:%M');
-                status = 'Update: ' + date;
-            }
-            this.statusSpan.text(status);
-        });
+        let status = await this.options.reload();
+        this.currentUpdateTime = 0;
+        if (status == null) {
+            let date = (new JGDateTime(this.lastUpdateTime)).asString('%a, %b %d %H:%M');
+            status = 'Update: ' + date;
+        }
+        this.statusSpan.text(status);
     }
 
     setStatus(text) {

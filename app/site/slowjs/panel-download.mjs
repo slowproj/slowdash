@@ -67,12 +67,12 @@ export class DownloadPanel extends Panel {
     }
 
     
-    async configure(config, callbacks={}, project_config=null) {
-        await super.configure(config, callbacks);
+    async configure(config, options, callbacks) {
+        await super.configure(config, options, callbacks);
 
         this.channelList = null;
-        if (project_config?.project?.name) {
-            this.cachePath = `slowdash-${project_config.project.name}-ChannelList`;
+        if (options.project_name) {
+            this.cachePath = `slowdash-${options.project_name}-ChannelList`;
         }
         else {
             this.cachePath = null;
@@ -637,8 +637,8 @@ export class SlowpyPanel extends Panel {
     }
 
     
-    async configure(config, callbacks={}) {
-        await super.configure(config, callbacks);
+    async configure(config, options, callbacks) {
+        await super.configure(config, options, callbacks);
 
         const defaults = {
             channels: [],

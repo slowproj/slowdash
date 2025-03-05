@@ -101,7 +101,7 @@
             title: title,
             style: style,
             reloadInterval: config.control.reload,
-            reload: (on_complete) => { return update(layout, config, on_complete); }
+            reload: async (on_complete) => { return update(layout, config, on_complete); }
         });
         
         let timeSelect = $('<select>');
@@ -166,7 +166,7 @@
     }
 
 
-    function update(layout, config, on_complete) {
+    async function update(layout, config, on_complete) {
         let length = config.control?.range?.length ?? 0;
         if (! (length > 0)) {
             length = 3600;
@@ -176,21 +176,21 @@
             to =  $.time();
         }
         let from = to - length;
-        layout.load({from:from, to:to}, function(status) {
-            if (status.code == 200) {
-                on_complete();
+        
+        const status = await layout.load({from:from, to:to});
+        if (status.code == 200) {
+            on_complete();
+        }
+        else {
+            let message = 'Error on ';
+            message += (new JGDateTime()).asString('%a, %b %d %H:%M');
+            message += " [ ";
+            if (status.code >= 0) {
+                message += "Status" + status.code + ", ";
             }
-            else {
-                let message = 'Error on ';
-                message += (new JGDateTime()).asString('%a, %b %d %H:%M');
-                message += " [ ";
-                if (status.code >= 0) {
-                    message += "Status" + status.code + ", ";
-                }
-                message += status.text + " ]";
-                on_complete(message);
-            }
-        });
+            message += status.text + " ]";
+            on_complete(message);
+        }
     }
 
 

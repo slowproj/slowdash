@@ -66,8 +66,8 @@ export class MapPanel extends Panel {
     }
 
     
-    async configure(config, callbacks={}) {
-        await super.configure(config, callbacks);
+    async configure(config, options, callbacks) {
+        await super.configure(config, options, callbacks);
         
         // this caching does not work because Layout.configure() recreates all the panels
         if (config.map && (config.map == this.loaded_map)) {
@@ -77,7 +77,7 @@ export class MapPanel extends Panel {
         
         this.loaded_map = config.map;
         const url = './api/config/ffile/map-' + config.map + '.json';
-        const response = await fetch('./api/config/file/map-m' + config.map + '.json');
+        const response = await fetch('./api/config/file/map-' + config.map + '.json');
         if (! response.ok) {
             this.div.html(`
                 <h3>Map Loading Error</h3>

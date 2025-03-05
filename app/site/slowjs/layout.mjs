@@ -42,20 +42,9 @@ export class Layout {
             negatingImages: style.negate,
         };
 
-        this.beatCallbacks = [];
-        this.beat();
-
         this._setupStreamingData();
     }
 
-
-    beat() {
-        for (let callback of this.beatCallbacks) {
-            callback();
-        }
-        setTimeout(()=>this.beat(), 1000);
-    }
-    
 
     async loadPanelPlugins() {
         const loader = new PanelPluginLoader();
@@ -89,7 +78,6 @@ export class Layout {
         }
 
         this.panels = [];
-        this.beatCallbacks = [];
         
         this.style = $.extend({}, this.defaultStyle, this.config._project?.style?.panel ?? {});
         this.dimension = {
@@ -111,6 +99,104 @@ export class Layout {
         }
     }
 
+    
+    async setGrid(rows, columns) {
+        let [nrows, ncols] = [parseFloat(rows), parseInt(columns)];
+        if (!(nrows > 0) || ! (ncols > 0)) {
+            return;
+        }
+        this.config.control.grid.rows = nrows;
+        this.config.control.grid.columns = ncols;
+        await this.configure(this.config);
+        this.load();
+    }
+
+    
+    async load(range=null) {
+        // If the data range is not specified, use the same range as before, and reuse the loaded data.
+        // Even for the identical data range, panels must be updated because a new plot for the same channel might have been added.
+        
+        if (range !== null) {
+            this.currentDataPacket = {
+                isTransitional: true,
+                isCurrent: false,
+                range: range,
+                data: {}
+            };
+        }
+
+        let channels = {}; {
+            let inputChannels = [];
+            for (let panel of this.panels) {
+                panel.fillInputChannels(inputChannels);
+            }
+            for (let ch of inputChannels) {
+                if (! (ch in this.currentDataPacket.data)) {
+                    channels[ch] = 1;
+                }
+            }
+        }        
+        
+        if (Object.keys(channels).length <= 0) {
+            this._processData({}, false);
+            return {code:200, text:'OK'};
+        }
+        
+        let length = this.currentDataPacket.range.to - this.currentDataPacket.range.from;
+        let opts = [ 'length='+length, 'to='+this.currentDataPacket.range.to ];
+        if (length > 7200) {
+            opts.push('resample='+(length/600).toFixed(1))
+            opts.push('reducer=last');
+        }
+        
+        let url_list = [];
+        if (length < 5*86500) {
+            url_list.push('api/data/' + Object.keys(channels).join(',') + '?' + opts.join('&'))
+        }
+        else {
+            for (let ch in channels) {
+                url_list.push('api/data/' + ch + '?' + opts.join('&'));
+            }
+        }
+                
+        let status = { code:200, text:'OK' };
+        for (let i = 0; i < url_list.length; i++) {
+            const response = await fetch(url_list[i]);
+            if (! response.ok) {
+                status = { code: response.status, text: response.statusText };
+                continue;
+            }
+            const data = await response.json();
+
+            const isTransitional = (i < url_list.length-1);
+            this._processData(data, isTransitional);
+        }
+
+        return status;
+    }
+
+    
+    async publish(topic, doc) {
+        if (topic !== 'currentdata') {
+            return;
+        }
+        const message = (typeof doc === 'string') ? doc : JSON.stringify(doc);
+        
+        if (this.socket && (this.socket.readyState === WebSocket.OPEN)) {
+            this.socket.send(message);
+        }
+        else {
+            const url = './api/control/currentdata';
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json; charset=utf-8' },
+                body: message,
+            });
+            this.callbacks.forceUpdate();
+        }
+    }
+
+    
     _setupDimensions() {
         this.dimension.layoutWidth = document.documentElement.clientWidth;
         this.dimension.layoutHeight = document.documentElement.clientHeight - this.layoutDiv.pageY();
@@ -222,7 +308,7 @@ export class Layout {
                 }
                 this.callbacks.changeDisplayTimeRange(range);
             },
-            updateData: () => {
+            forceUpdate: () => {
                 this.callbacks.forceUpdate();
             },
             suspendUpdate: (duration) => {
@@ -244,21 +330,17 @@ export class Layout {
                 this.publish(topic, message);
             },
         };
-        
-        await panel.configure(entry, callbacks, this.config._project);
-        
-        if (this.config.control.immutable || ((this.config.control.mode ?? '') == 'display')) {
-            panel.ctrlDiv.remove();
-            panel.ctrlDiv = undefined;
-        }        
-        if ((this.config.control.mode ?? '') == 'protected') {
-            panel.ctrlDiv.find('.sd-modifying').remove();
-        }
 
+        const options = {
+            project_name: this.config.project?.project?.name,
+            is_display: this.config.control.immutable || ((this.config.control.mode ?? '') === 'display'),
+            is_protected: (this.config.control.mode ?? '') === 'protected',
+            is_secure: this.config.project?.project?.is_secure ?? false,
+        };
+        
+        await panel.configure(entry, options, callbacks);
+        
         this.panels.push(panel);
-        if (panel.beatCallback) {
-            this.beatCallbacks.push(panel.beatCallback);
-        }
     }
 
 
@@ -345,110 +427,6 @@ export class Layout {
     }
 
     
-    async setGrid(rows, columns) {
-        let [nrows, ncols] = [parseFloat(rows), parseInt(columns)];
-        if (!(nrows > 0) || ! (ncols > 0)) {
-            return;
-        }
-        this.config.control.grid.rows = nrows;
-        this.config.control.grid.columns = ncols;
-        await this.configure(this.config);
-        this.load();
-    }
-
-    
-    load(range=null, on_complete=status=>{}) {
-        // If the data range is not specified, use the same range as before, and reuse the loaded data.
-        // Even for the identical data range, panels must be updated because a new plot for the same channel might have been added.
-        
-        if ((range === null) && (this.currentDataPacket?.isTransitional ?? false)) {
-            // update request (by initial configure() with promise etc) while loading
-            //return;   // instead of uncommenting this, modify the code to make load() called after configure()
-        }
-        if (range !== null) {
-            this.currentDataPacket = {
-                isTransitional: true,
-                isCurrent: false,
-                range: range,
-                data: {}
-            };
-        }
-
-        let channels = {}; {
-            let inputChannels = [];
-            for (let panel of this.panels) {
-                panel.fillInputChannels(inputChannels);
-            }
-            for (let ch of inputChannels) {
-                if (! (ch in this.currentDataPacket.data)) {
-                    channels[ch] = 1;
-                }
-            }
-        }        
-        
-        if (Object.keys(channels).length <= 0) {
-            this.currentDataPacket.isTransitional = false;
-            on_complete({code:200, text:'OK'});
-            for (let panel of this.panels) {
-                panel.drawRange(this.currentDataPacket, this.currentDataPacket.range);
-            }
-            return;
-        }
-        
-        let length = this.currentDataPacket.range.to - this.currentDataPacket.range.from;
-        let opts = [ 'length='+length, 'to='+this.currentDataPacket.range.to ];
-        if (length > 7200) {
-            opts.push('resample='+(length/600).toFixed(1))
-            opts.push('reducer=last');
-        }
-        
-        let url_list = [];
-        if (length < 5*86500) {
-            url_list.push('api/data/' + Object.keys(channels).join(',') + '?' + opts.join('&'))
-        }
-        else {
-            for (let ch in channels) {
-                url_list.push('api/data/' + ch + '?' + opts.join('&'));
-            }
-        }
-                
-        let n = url_list.length;
-        let status = {code:200, text:'OK'};
-        let processPartialPacket = packet => {
-            n--;
-            this.currentDataPacket.isTransitional = (n > 0);
-            for (let ch in packet) {
-                this.currentDataPacket.data[ch] = packet[ch];
-            }
-            for (let panel of this.panels) {
-                panel.drawRange(this.currentDataPacket, this.currentDataPacket.range);
-            }
-            if (n == 0) {
-                on_complete(status);
-            }
-        };
-        for (let url of url_list) {
-            fetch(url)
-                .then(response => {
-                    if (! response.ok) {
-                        status = { code: response.status, text: response.statusText };
-                        throw new Error(response.status);
-                    }
-                    return response.json();
-                })
-                .catch(e => {
-                    if (status.code == 200) {
-                        status = {code: -1, text: e.message};
-                    }
-                    return {};
-                })
-                .then(packet => {
-                    processPartialPacket(packet);
-                });
-        }
-    }
-
-    
     _setupStreamingData() {
         let url = new URL(window.location.href);
         url.protocol = 'ws:';
@@ -479,7 +457,18 @@ export class Layout {
         }
     }
 
+    
+    _processData(data, isTransitional) {
+        this.currentDataPacket.isTransitional = isTransitional;
+        for (let ch in data) {
+            this.currentDataPacket.data[ch] = data[ch];
+        }
+        for (let panel of this.panels) {
+            panel.drawRange(this.currentDataPacket, this.currentDataPacket.range);
+        }
+    }
 
+    
     _processCurrentData(data) {
         const to = this.currentDataPacket?.range?.to ?? null;
         if ((to === null) || (to < 0)) {
@@ -500,27 +489,6 @@ export class Layout {
             for (let panel of this.panels) {
                 panel.drawRange(dataPacket, dataPacket.range);
             }
-        }
-    }
-
-    
-    async publish(topic, doc) {
-        if (topic !== 'currentdata') {
-            return;
-        }
-        const message = (typeof doc === 'string') ? doc : JSON.stringify(doc);
-        
-        if (this.socket && (this.socket.readyState === WebSocket.OPEN)) {
-            this.socket.send(message);
-        }
-        else {
-            const url = './api/control/currentdata';
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json; charset=utf-8' },
-                body: message,
-            });
-            this.callbacks.forceUpdate();
         }
     }
 };

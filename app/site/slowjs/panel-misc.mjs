@@ -59,8 +59,8 @@ class WelcomePanel extends Panel {
     }
 
     
-    async configure(config, callbacks={}) {
-        await super.configure(config, callbacks);
+    async configure(config, options, callbacks) {
+        await super.configure(config, options, callbacks);
     }
 }
 
@@ -119,8 +119,8 @@ class ToolsPanel extends Panel {
     }
 
     
-    configure(config, callbacks={}) {
-        super.configure(config, callbacks);
+    configure(config, options, callbacks) {
+        super.configure(config, options, callbacks);
     }
 }
 
@@ -206,8 +206,8 @@ pages:
     }
 
     
-    configure(config, callbacks={}) {
-        super.configure(config, callbacks);
+    configure(config, options, callbacks) {
+        super.configure(config, options, callbacks);
         this.contentDiv.find('textarea').focus();
     }
 }
@@ -312,8 +312,9 @@ class ConfigEditorPanel extends Panel {
         });
     }
 
-    configure(config, callbacks={}) {
-        super.configure(config, callbacks);
+    
+    configure(config, options, callbacks) {
+        super.configure(config, options, callbacks);
         const defaults = {
             title: 'File Editor',
             file: null,
@@ -329,6 +330,7 @@ class ConfigEditorPanel extends Panel {
         this._load(thisconfig.file);
     }
 
+    
     async _load(filepath) {
         let content = null;
         try {
@@ -494,9 +496,9 @@ class FileManagerPanel extends Panel {
     }
 
     
-    configure(config, callbacks={}, project_config=null) {
-        super.configure(config, callbacks);
-        this.is_secure = project_config?.project?.is_secure ?? false;
+    configure(config, options, callbacks) {
+        super.configure(config, options, callbacks);
+        this.is_secure = options.is_secure;
         
         this._updateFileList();
         if (this.is_secure) {
@@ -792,45 +794,48 @@ class TaskManagerPanel extends Panel {
         });
 
         this.is_running = false;
-        this.is_error = false;
+        this.is_tasklist_error = false;
+        this.is_console_error = false;
         this.is_loading_tasklist = false;
         this.is_loading_console = false;
         this.tasklist_revision = 0;
         this.console_revision = 0;
-        this.beatCallback = () => { this._load(); };
     }
 
     
-    drawRange(dataPacket, displayTimeRange) {
-        this.is_running = true;
-    }
-
-    
-    configure(config, callbacks={}, project_config=null) {
-        super.configure(config, callbacks);
-        this.is_secure = project_config?.project?.is_secure ?? false;
+    configure(config, options, callbacks) {
+        super.configure(config, options, callbacks);
+        this.is_secure = options.is_secure;
         this.is_running = false;
         this.is_loading_tasklist = false;
         this.is_loading_console = false;
         this.tasklist_revision = 0;
         this.console_revision = 0;
+
+        this._load();
     }
 
 
+    drawRange(dataPacket, displayTimeRange) {
+        this.is_running = true;
+    }
+
+    
     async _load() {
-        if (! this.is_running || this.is_error) {
-            return;
+        if (this.is_running) {
+            if (! this.is_loading_tasklist && ! this.is_tasklist_error) {
+                this._load_tasklist();
+            }
+            if (! this.is_loading_console && ! this.is_console_error) {
+                this._load_console();
+            }
         }
 
-        this._load_tasklist();
-        this._load_console();
+        setTimeout(()=>this._load(), 1000);
     }
 
     
     async _load_tasklist() {
-        if (this.is_loading_tasklist) {
-            return;
-        }
         try {
             this.is_loading_tasklist = true;
             let response = await fetch('api/control/task?since='+this.tasklist_revision);
@@ -842,15 +847,12 @@ class TaskManagerPanel extends Panel {
         catch (e) {
             console.log("Error on fetching tasklist: ", e);
             this.is_loading_tasklist = false;
-            this.is_error = true;
+            this.is_tasklist_error = true;
         }
     }
         
 
     async _load_console() {
-        if (this.is_loading_console) {
-            return;
-        }
         try {
             this.is_loading_console = true;
             let response = await fetch('api/console?since='+this.console_revision);
@@ -862,7 +864,7 @@ class TaskManagerPanel extends Panel {
         catch (e) {
             console.log("Error on fetching console: ", e);
             this.is_loading_console = false;
-            this.is_error = true;
+            this.is_console_error = true;
         }
     }
 

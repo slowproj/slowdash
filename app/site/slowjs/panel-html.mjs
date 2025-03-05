@@ -81,8 +81,8 @@ class HtmlPanel extends Panel {
     }
 
     
-    async configure(config, callbacks={}) {
-        await super.configure(config, callbacks);
+    async configure(config, options, callbacks) {
+        await super.configure(config, options, callbacks);
         this.titleDiv.text(this.config.title ?? '');
         this.variables = [];
 
@@ -235,7 +235,7 @@ class HtmlPanel extends Panel {
                     throw new Error(doc.message ?? '');
                 }
                 this.indicator.close("Command Processed", "&#x2705;", 1000);
-                this.callbacks.updateData();
+                this.callbacks.forceUpdate();
                 for (let variable of this.variables) {
                     variable.waiting = true;
                 }
@@ -395,14 +395,9 @@ class HrefPanel extends Panel {
     }
 
     
-    async configure(config, callbacks={}) {
-        await super.configure(config, callbacks);
+    async configure(config, options, callbacks) {
+        await super.configure(config, options, callbacks);
         this.titleDiv.text(this.config.title ?? '');
-        
-        let openBtn = $('<button>').html('&#x1f517;').prependTo(this.ctrlDiv);
-        openBtn.attr('title', 'Open').bind('click', e=>{
-            window.open(this.config.url);
-        });
         
         this.iframe.bind('load', e=>{
             let scaling = parseFloat(this.config.scaling);
@@ -446,6 +441,15 @@ class HrefPanel extends Panel {
     }
 
     
+    addControlButtons(div, is_protected) {
+        super.addControlButtons(div, is_protected);
+        let openBtn = $('<button>').html('&#x1f517;').prependTo(div);
+        openBtn.attr('title', 'Open').bind('click', e=>{
+            window.open(this.config.url);
+        });
+    }
+        
+        
     openSettings(div) {
         let inputsDiv = $('<div>').appendTo(div);
         inputsDiv.html(`

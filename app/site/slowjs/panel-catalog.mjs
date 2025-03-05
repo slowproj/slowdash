@@ -72,10 +72,10 @@ export class CatalogPanel extends Panel {
     }
 
     
-    async configure(config, callbacks={}, project_config=null) {
-        await super.configure(config, callbacks);
+    async configure(config, options, callbacks) {
+        await super.configure(config, options, callbacks);
 
-        if (project_config?.project?.name) {
+        if (options.project_name) {
             this.cachePath = `slowdash-${project_config.project.name}-ContentList`;
         }
         else {
@@ -307,10 +307,10 @@ export class ChannelListPanel extends Panel {
     }
 
     
-    async configure(config, callbacks={}, project_config=null) {
-        await super.configure(config, callbacks);
+    async configure(config, options, callbacks) {
+        await super.configure(config, options, callbacks);
         
-        if (project_config?.project?.name) {
+        if (options.project_name) {
             this.cachePath = `slowdash-${project_config.project.name}-ChanneList`;
         }
         else {

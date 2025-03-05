@@ -153,7 +153,7 @@
             style: style,
             reloadInterval: config.control.reload,
             reloadIntervalChange: (interval) => { config.control.reload = interval; },
-            reload: (on_complete) => { return update(layout, config, on_complete); },
+            reload: async (on_complete) => { return update(layout, config, on_complete); },
             resetDelay: resetDelay,
         });
         
@@ -313,7 +313,7 @@
     }
 
 
-    function update(layout, config, on_complete) {
+    async function update(layout, config, on_complete) {
         let length = config.control?.range?.length ?? 0;
         if (! (length > 0)) {
             length = 3600;
@@ -327,7 +327,9 @@
         if (config.control?.range?.resamplingEnabled) {
             resampling = (config.control?.range?.resamplingInterval ?? 0);
         }
-        layout.load({from:from, to:to, resampling:resampling}, function(status) {
+        
+        const status = await layout.load({from:from, to:to, resampling:resampling});
+        if (on_complete) {
             if (status.code == 200) {
                 on_complete();
             }
@@ -341,7 +343,7 @@
                 message += status.text + " ]";
                 on_complete(message);
             }
-        });
+        }
     }
 
 

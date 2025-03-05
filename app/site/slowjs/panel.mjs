@@ -66,7 +66,8 @@ export function bindInput(object, member, element, isCheckInputNotNagated=true) 
     }
 }
 
-    
+
+
 export class Panel {
     static describe() { return { type: null, label: '' }; }
     static buildConstructRows(table, on_done=config=>{}) {}
@@ -74,67 +75,51 @@ export class Panel {
     constructor(div, style) {
         this.div = div;
         this.style = style;
-        this.beatCallback = null; // if not null, layout will call this on every second
     }
 
-    async configure(config, callbacks={}) {
+    
+    async configure(config, options, callbacks) {
         const default_callbacks = {
             changeDisplayTimeRange: range => {},
-            updateData: () => {},
+            forceUpdate: () => {},
             suspendUpdate: (duration) => {},
             reconfigure: () => {},
             popout: (p) => {},
             publish: (topic, message) => {},
         };
-        
+
         this.config = config;
         this.callbacks = $.extend({}, default_callbacks, callbacks);
+        this.options = $.extend({}, options);
 
-        this.settingsDialogDiv = $('<div>').addClass('sd-pad').css({'display':'none'}).appendTo(this.div);
-        this.settingsDialog = new JGDialogWidget(this.settingsDialogDiv, {
-            title: 'Panel Settings',
-            closeOnGlobalClick: false,   // keep this false, otherwise not all inputs will be handled
-            closeOnEscapeKey: true,
-            close: e => { this.callbacks.reconfigure(); },
-            buttons: { 'Apply & Close': null }
-        });
-        
-        if (this.div.css('position') == '') {
-            this.div.css('position', 'relative');
+        this._setupSettingsDialog();
+        if (! options.is_display) {
+            this._setupControlButtons(options.is_protected);
         }
-        let ctrlDivStyle = {
-            'margin': '0',
-            'padding': '5px',
-            'position': 'absolute',
-            'right': '0',
-            'bottom': '0',
-            'z-index': '+1',
-            'display': 'flex',
-            'flex-wrap': 'wrap',
-            'flex-direction': 'column',
-            'max-height': '100%',
-            'font-size': '1rem',
-            'z-index': '+10',
-        };
-        this.ctrlDiv = $('<div>').addClass('sd-buttonchain').css(ctrlDivStyle).appendTo(this.div);
-        new JGInvisibleWidget(this.ctrlDiv, { sensingObj: this.div, group: 'ctrl', opacity: 1, autoHide: 10 });
+    }
 
-        let popoutBtn = $('<button>').html('&#x2197;').appendTo(this.ctrlDiv);
+    
+    addControlButtons(div, is_protected) {
+        let popoutBtn = $('<button>').html('&#x2197;').appendTo(div);
         popoutBtn.attr('title', 'Pop out').bind('click', e=>{
             this.callbacks.popout(this);
         });
+
+        if (is_protected) {
+            return;
+        }
         
-        let configBtn = $('<button>').html('&#x1f6e0;').addClass('sd-modifying').appendTo(this.ctrlDiv);
+        let configBtn = $('<button>').html('&#x1f6e0;').appendTo(div);
         configBtn.attr('title', 'Configure').bind('click', e=>{
             this.openSettings(this.settingsDialogDiv.find('.jaga-dialog-content').empty());
             this.settingsDialog.open();
         });
 
-        let deleteBtn = $('<button>').html('&#x1f5d1;').addClass('sd-modifying').appendTo(this.ctrlDiv);
+        let deleteBtn = $('<button>').html('&#x1f5d1;').appendTo(div);
         deleteBtn.attr('title', 'Delete').bind('click', e=>{
-            let dialog = this.ctrlDiv.find('dialog');
+            let dialog = div.find('dialog');
             if (dialog.size() == 0) {
-                dialog = $('<dialog>').addClass("sd-pad").appendTo(this.ctrlDiv);
+                dialog = $('<dialog>').addClass("sd-pad").appendTo(div);
                 dialog.html(`
                     <h3>Are you sure to delete this panel?</h3>
                     <div class="jaga-dialog-button-pane"><button>Yes</button><button>No</button></div>
@@ -152,7 +137,7 @@ export class Panel {
         });
     }
 
-
+    
     draw(data) {
         let range = {}; 
         const keys = Object.keys(data);
@@ -172,8 +157,49 @@ export class Panel {
         });
     }
 
-        
+    
     openSettings(div) {}
+
+    
     fillInputChannels(dataRequest) {}
+
+    
     drawRange(dataPacket, displayTimeRange) {}
+
+    
+    _setupSettingsDialog() {
+        this.settingsDialogDiv = $('<div>').addClass('sd-pad').css({'display':'none'}).appendTo(this.div);
+        this.settingsDialog = new JGDialogWidget(this.settingsDialogDiv, {
+            title: 'Panel Settings',
+            closeOnGlobalClick: false,   // keep this false, otherwise not all inputs will be handled
+            closeOnEscapeKey: true,
+            close: e => { this.callbacks.reconfigure(); },
+            buttons: { 'Apply & Close': null }
+        });
+    }
+
+    
+    _setupControlButtons(is_protected) {
+        if (this.div.css('position') == '') {
+            this.div.css('position', 'relative');
+        }
+        const ctrlDivStyle = {
+            'margin': '0',
+            'padding': '5px',
+            'position': 'absolute',
+            'right': '0',
+            'bottom': '0',
+            'z-index': '+1',
+            'display': 'flex',
+            'flex-wrap': 'wrap',
+            'flex-direction': 'column',
+            'max-height': '100%',
+            'font-size': '1rem',
+            'z-index': '+10',
+        };
+        let ctrlDiv = $('<div>').addClass('sd-buttonchain').css(ctrlDivStyle).appendTo(this.div);
+        new JGInvisibleWidget(ctrlDiv, { sensingObj: this.div, group: 'ctrl', opacity: 1, autoHide: 10 });
+ 
+        this.addControlButtons(ctrlDiv, is_protected);
+    }
 };

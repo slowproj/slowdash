@@ -80,8 +80,8 @@ class TablePanel extends Panel {
     }
 
     
-    async configure(config, callbacks={}) {
-        super.configure(config, callbacks);
+    async configure(config, options, callbacks) {
+        super.configure(config, options, callbacks);
         this.titleDiv.text(this.config.title);
     }
 
@@ -223,8 +223,8 @@ class TreePanel extends Panel {
     }
 
     
-    configure(config, callbacks={}) {
-        super.configure(config, callbacks);
+    configure(config, options, callbacks) {
+        super.configure(config, options, callbacks);
         this.titleDiv.text(this.config.title);
     }
 
@@ -397,8 +397,8 @@ class BlobPanel extends Panel {
     }
 
     
-    configure(config, callbacks={}) {
-        super.configure(config, callbacks);
+    configure(config, options, callbacks) {
+        super.configure(config, options, callbacks);
         this.titleDiv.text(this.config.title);
     }
 

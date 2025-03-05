@@ -932,8 +932,8 @@ class PlotPanel extends Panel {
     }
 
     
-    async configure(config, callbacks={}) {
-        await super.configure(config, callbacks);
+    async configure(config, options, callbacks) {
+        await super.configure(config, options, callbacks);
         
         // defaults: not to make a copy of 'config', do not use $.extend() here
         if (this.config.plots === undefined) {
@@ -992,20 +992,7 @@ class PlotPanel extends Panel {
                 'z-index': '+1',
             },
         };
-        
-        let downloadBtn = $('<button>').html('&#x1f4e5;').prependTo(this.ctrlDiv);
-        downloadBtn.attr('title', 'Download').bind('click', e=>{
-            this.download();
-        });
-        let captureBtn = $('<button>').html('&#x1f4f8;').prependTo(this.ctrlDiv);
-        captureBtn.attr('title', 'Save Image').bind('click', e=>{
-            this.capture();
-        });
-        let snapBtn = $('<button>').html('&#x1f504;').prependTo(this.ctrlDiv);
-        snapBtn.attr('title', 'Reset Zoom').bind('click', e=>{
-            this.resetRange();
-        });
-        
+                
         if (this.frameDiv) {
             this.frameDiv.empty();
         }
@@ -1136,6 +1123,24 @@ class PlotPanel extends Panel {
     }
 
 
+    addControlButtons(div, is_protected) {
+        super.addControlButtons(div, is_protected);
+        
+        let downloadBtn = $('<button>').html('&#x1f4e5;').prependTo(div);
+        downloadBtn.attr('title', 'Download').bind('click', e=>{
+            this.download();
+        });
+        let captureBtn = $('<button>').html('&#x1f4f8;').prependTo(div);
+        captureBtn.attr('title', 'Save Image').bind('click', e=>{
+            this.capture();
+        });
+        let snapBtn = $('<button>').html('&#x1f504;').prependTo(div);
+        snapBtn.attr('title', 'Reset Zoom').bind('click', e=>{
+            this.resetRange();
+        });
+    }
+
+    
     openSettings(div) {
         div.css('display', 'flex');
         const boxStyle = {
@@ -1269,7 +1274,7 @@ class PlotPanel extends Panel {
         `);
         PlotPanel.buildConstructRows(addDiv.find('table'), async config=>{
             this.config.plots.push(config.plots[0]);
-            await this.configure(this.config, this.callbacks);
+            await this.configure(this.config, this.options, this.callbacks);
             this.openSettings(div.empty());
         });
     }
@@ -1575,8 +1580,8 @@ class TimeAxisPlotPanel extends PlotPanel {
     }
 
     
-    async configure(config, callbacks={}) {
-        await super.configure(config, callbacks);
+    async configure(config, options, callbacks) {
+        await super.configure(config, options, callbacks);
         this.currentDataTimeRange = null;
         this.currentDisplayTimeRange = null;
     }
@@ -1657,7 +1662,7 @@ class TimeAxisPlotPanel extends PlotPanel {
         `);
         TimeAxisPlotPanel.buildConstructRows(addDiv.find('table'), async config=>{
             this.config.plots.push(config.plots[0]);
-            await this.configure(this.config, this.callbacks);
+            await this.configure(this.config, this.options, this.callbacks);
             this.openSettings(div.empty());
         });
     }
