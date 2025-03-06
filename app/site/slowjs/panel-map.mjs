@@ -67,9 +67,9 @@ export class MapPanel extends Panel {
 
     
     async configure(config, options, callbacks) {
+        this.div.empty();
         await super.configure(config, options, callbacks);
         
-        // this caching does not work because Layout.configure() recreates all the panels
         if (config.map && (config.map == this.loaded_map)) {
             this._build(config, callbacks);
             return;
@@ -257,10 +257,27 @@ export class MapPanel extends Panel {
             labelColor: this.style.plotLabelColor,
             title: this.config.axes?.ytitle ?? this.config.channel,
         });
+
+        
+        //// Data Reading ////
         
         this.dataReadingDiv.data('cursorLabel', '');
-        this.plotDiv.bind('mousemove', e=>{
-            this.dataReadingDiv.text(this.dataReadingDiv.data('cursorLabel'));
+        this.plotDiv.bind('mouseover', e=>{
+            const elem = $(e.target).closest('.sd-map-element');
+            if (elem.size() > 0) {
+                const [x, y] = [elem.data('sd-index'), elem.data('sd-value')];
+                elem.attr('stroke', this.style.plotFrameColor);
+                elem.attr('stroke-width', '0.01');
+                this.dataReadingDiv.text('(' + x + ', ' + y + ')');
+            }
+            else {
+                this.dataReadingDiv.text('');
+            }
+        });
+        this.plotDiv.bind('mouseout', e=>{
+            const elem = $(e.target).closest('.sd-map-element');
+            elem.attr('stroke', elem.data('sd-org-stroke'));
+            elem.attr('stroke-width', elem.data('sd-org-stroke-width'));
         });
     }
 
@@ -289,11 +306,12 @@ export class MapPanel extends Panel {
                   <option value="Viridis">Viridis</option>
                   <option value="Magma">Magma</option>
                   <option value="Rainbow">Rainbow</option>
+                  <option value="Gray">Gray</option>
+                  <hr/>
                   <option value="UWGold">UWGold</option>
                   <option value="UW">UW</option>
                   <option value="MIT">MIT</option>
                   <option value="KIT">KIT</option>
-                  <option value="Gray">Gray</option>
               </select></td></tr>
               <tr><th>No-data Color</th><td><input type="color"></td></tr>
             </table>
@@ -435,21 +453,6 @@ export class MapPanel extends Panel {
                 elem.attr('fill', this.scale.colorNameOf(y));
                 elem.data('sd-value', y);
             }
-        }
-        
-        //// Data Reading ////
-        this.dataReadingDiv.attr('cursorLabel', '-');
-        for (let elem of this.drawingArea.find('.sd-map-element').enumerate()) {
-            elem.bind('mouseover', e=>{
-                var [x, y] = [elem.data('sd-index'), elem.data('sd-value')];
-                this.dataReadingDiv.data('cursorLabel', '(' + x + ', ' + y + ')');
-                elem.attr('stroke', this.style.plotFrameColor).attr('stroke-width', '0.01');
-            });
-            elem.bind('mouseout', e=>{
-                this.dataReadingDiv.data('cursorLabel', '');
-                elem.attr('stroke', elem.data('sd-org-stroke'));
-                elem.attr('stroke-width', elem.data('sd-org-stroke-width'));
-            });
         }
     }
 };

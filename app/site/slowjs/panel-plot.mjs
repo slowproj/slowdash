@@ -849,7 +849,7 @@ class PlotPanel extends Panel {
             </select></td>
        `).appendTo(table);
 
-        function updateSelection() {
+        function updateSelection2() {
             while (table.find('tr').size() > 2) {
                 table.find('tr').at(2).remove();
             }
@@ -922,7 +922,7 @@ class PlotPanel extends Panel {
                 on_done(config);
             });
         }
-        tr1.find('select').bind('change', e=>{ updateSelection(); });
+        tr1.find('select').bind('change', e=>{ updateSelection2(); });
     }
 
     

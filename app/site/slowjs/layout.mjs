@@ -68,11 +68,7 @@ export class Layout {
         if (this.config.panels === undefined) {
             this.config.panels = [];
         }
-        else {
-            // remove panels marked as "deleted"
-            this.config.panels = this.config.panels.filter(p => !(p.deleted ?? false));
-        }
-        
+
         this.style = $.extend({}, this.defaultStyle, this.config._project?.style?.panel ?? {});
         this.dimension = {
             layoutWidth: null,
@@ -87,6 +83,8 @@ export class Layout {
             this.PanelClassList = await loader.load();
         }
 
+        this._purgePanels();
+        
         if (config !== null) {
             this.layoutDiv.empty();
             this.panels = [];
@@ -94,11 +92,15 @@ export class Layout {
             this._setupDimensions();
             this._buildPanels();
             await this._configurePanels();
-            this._setupAddNewPanel();
+
+            if (! this.config.control.immutable) {
+                this._buildAddNewPanel();
+            }
         }
         else {
             this._setupDimensions();
             await this._configurePanels();
+            this._configureAddNewPanel();
         }
     }
 
@@ -155,15 +157,46 @@ export class Layout {
         this.panels = [];
         for (const entry of this.config.panels) {
             const panelDiv = this._createPanelDiv();
-            const panel = this._createPanel(panelDiv, entry);
+            const panel = this._createPanel(panelDiv, entry.type);
             this.panels.push(panel);
         }
         
     }
 
+
+    _purgePanels() {
+        for (let panel of this.panels) {
+            if (panel.config?.deleted ?? false) {
+                panel.deleted = true;
+            }
+        }
+        
+        const removeDeleted = () => {
+            for (let i = 0; i < this.panels.length; i++) {
+                if (this.panels[i].deleted ?? false) {
+                    this.panels[i].div.remove();
+                    this.panels.splice(i, 1);
+                    removeDeleted();
+                    return;
+                }
+            }
+        }
+        removeDeleted();
+
+        this.config.panels = this.config.panels.filter(p => !(p.deleted ?? false));
+    }
     
+        
     _createPanelDiv() {
-        let panelDiv = $('<div>').addClass('sd-panel').appendTo(this.layoutDiv);
+        let panelDiv = $('<div>').addClass('sd-panel');
+        
+        const addnewPanel = this.layoutDiv.find('.sd-addnew-panel');
+        if (addnewPanel.size() > 0) {
+            this.layoutDiv.insertBefore(panelDiv, addnewPanel);
+        }
+        else {
+            this.layoutDiv.append(panelDiv);
+        }
         
         if (this.config.layout?.focus_highlight !== false) {
             panelDiv.bind('pointerenter', e => {
@@ -192,19 +225,19 @@ export class Layout {
     }
 
     
-    _createPanel(div, entry) {
+    _createPanel(div, panelType) {
         //... backwards compatibility
-        if ((entry.type === undefined) || (entry.type == 'timeseries')) {
-            entry.type = 'timeaxis';
+        if ((panelType === undefined) || (panelType == 'timeseries')) {
+            panelType = 'timeaxis';
         }
         
         for (let PanelClass of this.PanelClassList) {
-            if (entry.type == PanelClass.describe().type) {
+            if (panelType == PanelClass.describe().type) {
                 return new PanelClass(div, this.style);
             }
         }
         if (panel === null) {
-            console.log('unable to find panel type: ' + entry.type);
+            console.log('unable to find panel type: ' + panelType);
         }
     }
 
@@ -260,8 +293,8 @@ export class Layout {
     }
 
 
-    _setupAddNewPanel() {
-        const addDivStyle = {
+    _buildAddNewPanel() {
+        const divStyle = {
             'width': (this.dimension.panelWidth-100)+'px',
             'height': (this.dimension.panelHeight-80)+'px',
             'border-width': 'thin',
@@ -271,31 +304,43 @@ export class Layout {
             'margin-left': '40px',
             'margin-top': '20px',
         };
-        const addButtonStyle = {
+        const buttonStyle = {
             'font-size': '120%',
         };
-        const addDiv = $('<div>').addClass('sd-pad').css(addDivStyle).appendTo(this.layoutDiv);
+        const div = $('<div>').addClass('sd-pad').addClass('sd-addnew-panel').css(divStyle).appendTo(this.layoutDiv);
         if (this.config.panels.length > 0) {
-            new JGInvisibleWidget(addDiv);
+            new JGInvisibleWidget(div);
         }
 
-        const addDialogDiv = $('<div>').addClass('sd-pad').css({'display':'none'});
+        const dialogDiv = $('<div>').addClass('sd-pad').css({'display':'none'});
         // cannot be layoutDiv, as 'position:fiexed' does not work under an element with transform
-        addDialogDiv.appendTo(this.layoutDiv.closest('body'));
+        dialogDiv.appendTo(this.layoutDiv.closest('body'));
         
-        const addDialog = new JGDialogWidget(addDialogDiv, {
+        const dialog = new JGDialogWidget(dialogDiv, {
             title: 'Add a New Panel',
             closeOnGlobalClick: false,   // keep this false, otherwise not all inputs will be handled
             closeButton: true,
         });
-        $('<button>').text('Add a New Panel').css(addButtonStyle).appendTo(addDiv).click(e=>{
-            addDialog.open();
+        $('<button>').text('Add a New Panel').css(buttonStyle).appendTo(div).click(e=>{
+            dialog.open();
         });
-        this._setupAddNewDialog(addDialogDiv.find('.jaga-dialog-content'), addDialog);
+
+        this._buildAddNewDialog(dialogDiv.find('.jaga-dialog-content'), dialog);
+        this._configureAddNewPanel();
     }
 
     
-    _setupAddNewDialog(div, dialog) {
+    _configureAddNewPanel() {
+        const divStyle = {
+            'width': (this.dimension.panelWidth-100)+'px',
+            'height': (this.dimension.panelHeight-80)+'px',
+        };
+        let div = this.layoutDiv.find('.sd-addnew-panel');
+        div.css(divStyle);
+    }
+
+    
+    _buildAddNewDialog(div, dialog) {
         div.css({
             'font-size': '130%'
         });
@@ -304,7 +349,9 @@ export class Layout {
             <table style="margin-top:1em;margin-left:1em">
               <tr><td>Type</td><td>
                 <select style="font-size:130%">
-                </select></td></tr>
+                  <option hidden>Select...</option>
+                </select>
+              </td></tr>
             </table>
         `);
 
@@ -322,6 +369,9 @@ export class Layout {
         const addPanel = async config => {
             if (config) {
                 this.config.panels.push(config);
+                const panelDiv = this._createPanelDiv();
+                const panel = this._createPanel(panelDiv, config.type);
+                this.panels.push(panel);
                 this.callbacks.reconfigure();
             }
         }
@@ -338,7 +388,6 @@ export class Layout {
             }
         }
         updateSelection();
-        div.find('select').bind('change', e=>{updateSelection();});
+        select.bind('change', e=>{updateSelection();});
     }
 };
-
