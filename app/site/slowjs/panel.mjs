@@ -73,13 +73,18 @@ export class Panel {
     static describe() { return { type: null, label: '' }; }
     static buildConstructRows(table, on_done=config=>{}) {}
 
-    constructor(div, style) {
+    constructor(div, style={}) {
         this.div = div;
         this.style = style;
     }
 
-    
-    async configure(config, options, callbacks) {
+        
+    async configure(config, options={}, callbacks={}) {
+        const default_options = {
+            inactive: false,   // no control buttons at all
+            immutable: true,   // no settings, no deleting
+            standalone: true,  // no popup
+        }
         const default_callbacks = {
             changeDisplayTimeRange: range => {},
             forceUpdate: () => {},
@@ -91,51 +96,51 @@ export class Panel {
 
         this.config = config;
         this.callbacks = $.extend({}, default_callbacks, callbacks);
-        this.options = $.extend({}, options);
+        this.options = $.extend({}, default_options, options);
 
         this._setupSettingsDialog();
-        if (! options.is_display) {
-            this._setupControlButtons(options.is_protected);
+        if (! this.options.inactive) {
+            this._setupControlButtons();
         }
     }
 
     
-    addControlButtons(div, is_protected) {
-        let popoutBtn = $('<button>').html('&#x2197;').appendTo(div);
-        popoutBtn.attr('title', 'Pop out').bind('click', e=>{
-            this.callbacks.popout(this);
-        });
-
-        if (is_protected) {
-            return;
+    addControlButtons(div) {
+        if (! (this.options.standalone??false)) {
+            let popoutBtn = $('<button>').html('&#x2197;').appendTo(div);
+            popoutBtn.attr('title', 'Pop out').bind('click', e=>{
+                this.callbacks.popout(this);
+            });
         }
-        
-        let configBtn = $('<button>').html('&#x1f6e0;').appendTo(div);
-        configBtn.attr('title', 'Configure').bind('click', e=>{
-            this.openSettings(this.settingsDialogDiv.find('.jaga-dialog-content').empty());
-            this.settingsDialog.open();
-        });
 
-        let deleteBtn = $('<button>').html('&#x1f5d1;').appendTo(div);
-        deleteBtn.attr('title', 'Delete').bind('click', e=>{
-            let dialog = div.find('dialog');
-            if (dialog.size() == 0) {
-                dialog = $('<dialog>').addClass("sd-pad").appendTo(div);
-                dialog.html(`
+        if (! (this.options.immutable??false)) {
+            let configBtn = $('<button>').html('&#x1f6e0;').appendTo(div);
+            configBtn.attr('title', 'Configure').bind('click', e=>{
+                this.openSettings(this.settingsDialogDiv.find('.jaga-dialog-content').empty());
+                this.settingsDialog.open();
+            });
+            
+            let deleteBtn = $('<button>').html('&#x1f5d1;').appendTo(div);
+            deleteBtn.attr('title', 'Delete').bind('click', e=>{
+                let dialog = div.find('dialog');
+                if (dialog.size() == 0) {
+                    dialog = $('<dialog>').addClass("sd-pad").appendTo(div);
+                    dialog.html(`
                     <h3>Are you sure to delete this panel?</h3>
                     <div class="jaga-dialog-button-pane"><button>Yes</button><button>No</button></div>
                 `);
-                dialog.find('button').at(0).click(e=>{
-                    dialog.get().close();
-                    this.config.deleted = true;
-                    this.callbacks.reconfigure();
-                });
-                dialog.find('button').at(1).click(e=>{
-                    dialog.get().close();
-                });
-            }
-            dialog.get().showModal();
-        });
+                    dialog.find('button').at(0).click(e=>{
+                        dialog.get().close();
+                        this.config.deleted = true;
+                        this.callbacks.reconfigure();
+                    });
+                    dialog.find('button').at(1).click(e=>{
+                        dialog.get().close();
+                    });
+                }
+                dialog.get().showModal();
+            });
+        }
     }
 
     
@@ -180,7 +185,7 @@ export class Panel {
     }
 
     
-    _setupControlButtons(is_protected) {
+    _setupControlButtons() {
         if (this.div.css('position') == '') {
             this.div.css('position', 'relative');
         }
@@ -201,6 +206,6 @@ export class Panel {
         let ctrlDiv = $('<div>').addClass('sd-buttonchain').css(ctrlDivStyle).appendTo(this.div);
         new JGInvisibleWidget(ctrlDiv, { sensingObj: this.div, group: 'ctrl', opacity: 1, autoHide: 10 });
  
-        this.addControlButtons(ctrlDiv, is_protected);
+        this.addControlButtons(ctrlDiv);
     }
 };

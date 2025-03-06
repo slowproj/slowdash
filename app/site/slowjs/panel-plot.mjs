@@ -926,13 +926,13 @@ class PlotPanel extends Panel {
     }
 
     
-    constructor(div, style) {
+    constructor(div, style={}) {
         super(div, style);
         this.currentDataTimeRange = null;
     }
 
     
-    async configure(config, options, callbacks) {
+    async configure(config, options={}, callbacks={}) {
         await super.configure(config, options, callbacks);
         
         // defaults: not to make a copy of 'config', do not use $.extend() here
@@ -1123,8 +1123,8 @@ class PlotPanel extends Panel {
     }
 
 
-    addControlButtons(div, is_protected) {
-        super.addControlButtons(div, is_protected);
+    addControlButtons(div) {
+        super.addControlButtons(div);
         
         let downloadBtn = $('<button>').html('&#x1f4e5;').prependTo(div);
         downloadBtn.attr('title', 'Download').bind('click', e=>{
@@ -1580,7 +1580,7 @@ class TimeAxisPlotPanel extends PlotPanel {
     }
 
     
-    async configure(config, options, callbacks) {
+    async configure(config, options={}, callbacks={}) {
         await super.configure(config, options, callbacks);
         this.currentDataTimeRange = null;
         this.currentDisplayTimeRange = null;

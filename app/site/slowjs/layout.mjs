@@ -46,7 +46,7 @@ export class Layout {
     }
 
 
-    async configure(config=null, callbacks={}) {
+    async configure(config=null, options={}, callbacks={}) {
         const default_callbacks = {
             changeDisplayTimeRange: (range) => {},
             reconfigure: () => { this.configure(); },
@@ -93,7 +93,7 @@ export class Layout {
             this._buildPanels();
             await this._configurePanels();
 
-            if (! this.config.control.immutable) {
+            if (! this.config.control.inactive) {
                 this._buildAddNewPanel();
             }
         }
@@ -198,12 +198,12 @@ export class Layout {
             this.layoutDiv.append(panelDiv);
         }
         
-        if (this.config.layout?.focus_highlight !== false) {
+        if (! (this.config.control.inactive??false)) {
             panelDiv.bind('pointerenter', e => {
                 const target = $(e.target);
                 target.css('border', '1px solid rgba(128,128,128,0.7)');
                 
-                const duration = parseInt(this.config.layout?.focus_highlight ?? 10);
+                const duration = 10;
                 if (duration > 0) {
                     let timeoutId = target.attr('sd-timeoutId');
                     if (timeoutId) {
@@ -280,9 +280,10 @@ export class Layout {
 
         const options = {
             project_name: this.config._project?.project?.name,
-            is_display: this.config.control.immutable || ((this.config.control.mode ?? '') === 'display'),
-            is_protected: (this.config.control.mode ?? '') === 'protected',
             is_secure: this.config._project?.project?.is_secure ?? false,
+            inactive: this.config.control.inactive || (this.config.control.mode ?? '') === 'display',  // no control buttons
+            immutable: (this.config.control.mode ?? '') === 'protected',  // no settings, no deleting
+            standalone: false,  // no popup
         };
         
         for (let i = 0; i < this.panels.length; i++) {

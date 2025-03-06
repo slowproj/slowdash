@@ -246,7 +246,7 @@
             frame.appendButton(newButton);
         }
         
-        if (! (config.control?.immutable ?? false)) {
+        if (! (config.control?.inactive ?? false)) {
             if ((config.control?.mode??'') == 'protected') {
                 let unlockButton = $('<button>').html("&#x1f511;").bind('click', e=>{
                     changeMode('normal');
@@ -290,7 +290,7 @@
             });
         }
             
-        await controller.configure(config, {
+        await controller.configure(config, {}, {
             changeDisplayTimeRange: range => {
                 currentDisplayTimeRange = range;
             },

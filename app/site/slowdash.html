@@ -71,9 +71,6 @@
                 _project: config._project,
                 meta: config.meta,
                 control: config.control,
-                layout: {
-                    focus_highlight: false,
-                },
                 panels: [{
                     type: 'canvas',
                     view_box: config.view_box || config.viewBox,
@@ -81,7 +78,7 @@
                     forms: config.forms,
                 }]
             };
-            config.control.immutable = true;
+            config.control.inactive = true;
         }
     
         if (config.meta?.name) {
@@ -154,7 +151,7 @@
         docButton.attr('title', 'Documents');
         frame.appendButton(docButton);
         
-        await controller.configure(config, {
+        await controller.configure(config, {}, {
             changeDisplayTimeRange: range => {
                 frame.suspend(30);
             }

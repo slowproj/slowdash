@@ -39,6 +39,17 @@
     import { TimeAxisPlotPanel } from './slowjs/panel-plot.mjs';
         
     async function main() {
+        // Fetching Data //
+        
+        let response = await fetch('./api/data/ch0,ch1,ch2,ch3?length=86400&resample=300');
+        if (! response.ok) {
+            return;
+        }
+        const data = await response.json();
+
+        
+        // SlowDash Plot //
+        
         let config = {
             type: "timeaxis",
             plots: [
@@ -47,23 +58,18 @@
                 { type: "timeseries", channel: "ch2" },
                 { type: "timeseries", channel: "ch3" },
             ],
-            "legend": { "style": "side" }
+            legend: { style: "side" }
         };
-        let style = {};
+        
+        let panel = new TimeAxisPlotPanel($('#panel'));
+        await panel.configure(config);
+        panel.draw(data);
 
-        let panel = new TimeAxisPlotPanel($('#panel'), style);
-        panel.configure(config);
-
-        let data_response = await fetch('./api/data/ch0,ch1,ch2,ch3?length=86400&resample=300');
-        if (! data_response.ok) {
-            return;
-        }
-        const dataPacket = await data_response.json();
-            
-        panel.draw(dataPacket);
+        
+        // ChartJS Plots //
         
         const labels = ['ch0', 'ch1', 'ch2', 'ch3'];
-        const values = Array.from({length:labels.length}, (_,i)=>dataPacket[labels[i]].x.at(-1));
+        const values = Array.from({length:labels.length}, (_,i)=>data[labels[i]].x.at(-1));
         const colors = [ '#009090', '#dd8000', '#4169e1', '#b030b0' ];
         
         new Chart(document.getElementById('chart_pie'), {

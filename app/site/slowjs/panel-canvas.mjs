@@ -850,7 +850,7 @@ export class CanvasPanel extends Panel {
     }
 
     
-    constructor(div, style) {
+    constructor(div, style={}) {
         super(div, style);
 
         this.svg = $('<svg>', 'svg').appendTo(div).attr({
@@ -892,7 +892,7 @@ export class CanvasPanel extends Panel {
     }
 
     
-    async configure(config, options, callbacks) {
+    async configure(config, options={}, callbacks={}) {
         await super.configure(config, options, callbacks);
         
         // if canvas panel is loaded as a panel in a layout (SlowPlot)
@@ -964,8 +964,8 @@ export class CanvasPanel extends Panel {
     }
 
     
-    addControlButtons(div, is_protected) {
-        super.addControlButtons(div, is_protected);
+    addControlButtons(div) {
+        super.addControlButtons(div);
 
         //let captureBtn = $('<button>').html('&#x1f4f8;').prependTo(div);
         //captureBtn.attr('title', 'Save Image');        

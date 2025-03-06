@@ -80,7 +80,7 @@ export function boot(defaults, optparse_func, start_func) {
                         control: {
                             grid: { 'rows': 1, 'columns': 1 },
                             reload: 0,
-                            immutable: true,
+                            inactive: true,
                         },
                         "panels": [{
                             type: "config_editor",

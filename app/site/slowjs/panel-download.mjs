@@ -28,7 +28,7 @@ export class DownloadPanel extends Panel {
     }
 
     
-    constructor(div, style) {
+    constructor(div, style={}) {
         super(div, style);
 
         this.channelList = null;
@@ -67,7 +67,7 @@ export class DownloadPanel extends Panel {
     }
 
     
-    async configure(config, options, callbacks) {
+    async configure(config, options={}, callbacks={}) {
         await super.configure(config, options, callbacks);
 
         this.channelList = null;
@@ -540,7 +540,7 @@ export class SlowpyPanel extends Panel {
     }
 
     
-    constructor(div, style) {
+    constructor(div, style={}) {
         super(div, style);
         
         this.frameDiv = $('<div>').appendTo(div);
@@ -637,7 +637,7 @@ export class SlowpyPanel extends Panel {
     }
 
     
-    async configure(config, options, callbacks) {
+    async configure(config, options={}, callbacks={}) {
         await super.configure(config, options, callbacks);
 
         const defaults = {

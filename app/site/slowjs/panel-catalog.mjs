@@ -40,7 +40,7 @@ export class CatalogPanel extends Panel {
     }
 
     
-    constructor(div, style) {
+    constructor(div, style={}) {
         super(div, style);        
         
         this.frameDiv = $('<div>').appendTo(div);        
@@ -72,7 +72,7 @@ export class CatalogPanel extends Panel {
     }
 
     
-    async configure(config, options, callbacks) {
+    async configure(config, options={}, callbacks={}) {
         await super.configure(config, options, callbacks);
 
         if (options.project_name) {
@@ -257,7 +257,7 @@ export class ChannelListPanel extends Panel {
     }
 
     
-    constructor(div, style) {
+    constructor(div, style={}) {
         super(div, style);
         
         this.frameDiv = $('<div>').appendTo(div);        
@@ -337,7 +337,7 @@ export class ChannelListPanel extends Panel {
     }
 
     
-    async configure(config, options, callbacks) {
+    async configure(config, options={}, callbacks={}) {
         await super.configure(config, options, callbacks);
         
         if (options.project_name) {

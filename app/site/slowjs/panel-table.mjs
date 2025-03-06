@@ -45,7 +45,7 @@ class TablePanel extends Panel {
     }
 
     
-    constructor(div, style) {
+    constructor(div, style={}) {
         super(div, style);
         
         this.titleDiv = $('<div>').appendTo(div);
@@ -80,7 +80,7 @@ class TablePanel extends Panel {
     }
 
     
-    async configure(config, options, callbacks) {
+    async configure(config, options={}, callbacks={}) {
         super.configure(config, options, callbacks);
         this.titleDiv.text(this.config.title);
     }
@@ -223,7 +223,7 @@ class TreePanel extends Panel {
     }
 
     
-    configure(config, options, callbacks) {
+    configure(config, options={}, callbacks={}) {
         super.configure(config, options, callbacks);
         this.titleDiv.text(this.config.title);
     }
@@ -397,7 +397,7 @@ class BlobPanel extends Panel {
     }
 
     
-    configure(config, options, callbacks) {
+    configure(config, options={}, callbacks={}) {
         super.configure(config, options, callbacks);
         this.titleDiv.text(this.config.title);
     }

@@ -45,7 +45,7 @@ class HtmlPanel extends Panel {
     }
 
     
-    constructor(div, style) {
+    constructor(div, style={}) {
         super(div, style);
 
         this.titleDiv = $('<div>').appendTo(div);
@@ -81,7 +81,7 @@ class HtmlPanel extends Panel {
     }
 
     
-    async configure(config, options, callbacks) {
+    async configure(config, options={}, callbacks={}) {
         await super.configure(config, options, callbacks);
         this.titleDiv.text(this.config.title ?? '');
         this.variables = [];
@@ -93,7 +93,47 @@ class HtmlPanel extends Panel {
     }
 
 
-    adjustScaling() {
+    openSettings(div) {
+        let inputsDiv = $('<div>').appendTo(div);
+        inputsDiv.html(`
+            <table style="margin-top:1em">
+              <tr><th>HTML File</th><td><input list="sd-html-datalist"></td></tr>
+              <tr><th>Title</th><td><input></td></tr>
+              <tr><th>Scaling</th><td><input type="number" step="any" placeholder="auto-scale"></td></tr>
+              <tr><th>On Update</th><td><label><input type="checkbox">reload HTML</label></td></tr>
+            </table>
+        `);
+
+        let k = 0;
+        bindInput(this.config, 'file', inputsDiv.find('input').at(k++).css('width', '20em'));
+        bindInput(this.config, 'title', inputsDiv.find('input').at(k++).css('width', '20em'));
+        bindInput(this.config, 'scaling', inputsDiv.find('input').at(k++).css('width', '10em'));
+        bindInput(this.config, 'reload', inputsDiv.find('input').at(k++));
+    }
+
+
+    fillInputChannels(inputChannels) {
+        for (let variable of this.variables) {
+            if (variable.channel && variable.waiting) {
+                inputChannels.push(variable.channel);
+            }
+        }
+    }
+
+    
+    drawRange(dataPacket, displayTimeRange) {
+        if (this.config.reload ?? false) {
+            this.loadPage().then(()=>{
+                this._updateContents(dataPacket, displayTimeRange);
+            });
+        }
+        else {
+            this._updateContents(dataPacket, displayTimeRange);
+        }
+    }
+
+    
+    _adjustScaling() {
         let scaling = parseFloat(this.config.scaling ?? 0);
         if (! (scaling > 0)) {
             const div = this.contentDiv.get();
@@ -115,25 +155,6 @@ class HtmlPanel extends Panel {
     }
 
     
-    openSettings(div) {
-        let inputsDiv = $('<div>').appendTo(div);
-        inputsDiv.html(`
-            <table style="margin-top:1em">
-              <tr><th>HTML File</th><td><input list="sd-html-datalist"></td></tr>
-              <tr><th>Title</th><td><input></td></tr>
-              <tr><th>Scaling</th><td><input type="number" step="any" placeholder="auto-scale"></td></tr>
-              <tr><th>On Update</th><td><label><input type="checkbox">reload HTML</label></td></tr>
-            </table>
-        `);
-
-        let k = 0;
-        bindInput(this.config, 'file', inputsDiv.find('input').at(k++).css('width', '20em'));
-        bindInput(this.config, 'title', inputsDiv.find('input').at(k++).css('width', '20em'));
-        bindInput(this.config, 'scaling', inputsDiv.find('input').at(k++).css('width', '10em'));
-        bindInput(this.config, 'reload', inputsDiv.find('input').at(k++));
-    }
-
-
     async _loadPage() {
         const response = await fetch(this.url);
         if (! response.ok) {
@@ -148,8 +169,8 @@ class HtmlPanel extends Panel {
         }
         const html = await response.text();
         if (html) {
-            this.render(html);
-            this.adjustScaling();
+            this._render(html);
+            this._adjustScaling();
         }
     }
 
@@ -246,27 +267,6 @@ class HtmlPanel extends Panel {
     }
     
     
-    fillInputChannels(inputChannels) {
-        for (let variable of this.variables) {
-            if (variable.channel && variable.waiting) {
-                inputChannels.push(variable.channel);
-            }
-        }
-    }
-
-    
-    drawRange(dataPacket, displayTimeRange) {
-        if (this.config.reload ?? false) {
-            this.loadPage().then(()=>{
-                this._updateContents(dataPacket, displayTimeRange);
-            });
-        }
-        else {
-            this._updateContents(dataPacket, displayTimeRange);
-        }
-    }
-
-    
     _updateContents(dataPacket, displayTimeRange) {
         let values = {};
         for (let variable of this.variables) {
@@ -359,7 +359,7 @@ class HrefPanel extends Panel {
     }
 
     
-    constructor(div, style) {
+    constructor(div, style={}) {
         super(div, style);
         this.titleDiv = $('<div>').appendTo(div);
         this.contentDiv = $('<div>').appendTo(div);        
@@ -395,7 +395,7 @@ class HrefPanel extends Panel {
     }
 
     
-    async configure(config, options, callbacks) {
+    async configure(config, options={}, callbacks={}) {
         await super.configure(config, options, callbacks);
         this.titleDiv.text(this.config.title ?? '');
         
@@ -441,8 +441,8 @@ class HrefPanel extends Panel {
     }
 
     
-    addControlButtons(div, is_protected) {
-        super.addControlButtons(div, is_protected);
+    addControlButtons(div) {
+        super.addControlButtons(div);
         let openBtn = $('<button>').html('&#x1f517;').prependTo(div);
         openBtn.attr('title', 'Open').bind('click', e=>{
             window.open(this.config.url);

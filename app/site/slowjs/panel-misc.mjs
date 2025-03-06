@@ -20,7 +20,7 @@ class WelcomePanel extends Panel {
     }
 
     
-    constructor(div, style) {
+    constructor(div, style={}) {
         super(div, style);
         this.contentDiv = $('<div>').appendTo(div);        
         this.contentDiv.css({
@@ -59,7 +59,7 @@ class WelcomePanel extends Panel {
     }
 
     
-    async configure(config, options, callbacks) {
+    async configure(config, options={}, callbacks={}) {
         await super.configure(config, options, callbacks);
     }
 }
@@ -75,7 +75,7 @@ class ToolsPanel extends Panel {
     }
 
     
-    constructor(div, style) {
+    constructor(div, style={}) {
         super(div, style);
         this.contentDiv = $('<div>').appendTo(div);        
         this.contentDiv.css({
@@ -119,7 +119,7 @@ class ToolsPanel extends Panel {
     }
 
     
-    configure(config, options, callbacks) {
+    configure(config, options={}, callbacks={}) {
         super.configure(config, options, callbacks);
     }
 }
@@ -135,7 +135,7 @@ class CruisePlannerPanel extends Panel {
     }
 
     
-    constructor(div, style) {
+    constructor(div, style={}) {
         super(div, style);
         this.contentDiv = $('<div>').appendTo(div);        
         this.contentDiv.css({
@@ -206,7 +206,7 @@ pages:
     }
 
     
-    configure(config, options, callbacks) {
+    configure(config, options={}, callbacks={}) {
         super.configure(config, options, callbacks);
         this.contentDiv.find('textarea').focus();
     }
@@ -222,7 +222,7 @@ class ConfigEditorPanel extends Panel {
     }
 
     
-    constructor(div, style) {
+    constructor(div, style={}) {
         super(div, style);
         this.titleDiv = $('<div>').appendTo(div).text('File Editor');
         this.contentDiv = $('<div>').appendTo(div);
@@ -313,7 +313,7 @@ class ConfigEditorPanel extends Panel {
     }
 
     
-    configure(config, options, callbacks) {
+    configure(config, options={}, callbacks={}) {
         super.configure(config, options, callbacks);
         const defaults = {
             title: 'File Editor',
@@ -385,7 +385,7 @@ class FileManagerPanel extends Panel {
     }
 
     
-    constructor(div, style) {
+    constructor(div, style={}) {
         super(div, style);
 
         const css = {
@@ -496,7 +496,7 @@ class FileManagerPanel extends Panel {
     }
 
     
-    configure(config, options, callbacks) {
+    configure(config, options={}, callbacks={}) {
         super.configure(config, options, callbacks);
         this.is_secure = options.is_secure;
         
@@ -696,7 +696,7 @@ class TaskManagerPanel extends Panel {
     }
 
     
-    constructor(div, style) {
+    constructor(div, style={}) {
         super(div, style);
         this.is_secure = false;
         
@@ -802,7 +802,7 @@ class TaskManagerPanel extends Panel {
     }
 
     
-    configure(config, options, callbacks) {
+    configure(config, options={}, callbacks={}) {
         super.configure(config, options, callbacks);
         this.is_secure = options.is_secure;
         

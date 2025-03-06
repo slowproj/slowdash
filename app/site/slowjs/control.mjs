@@ -19,7 +19,7 @@ export class Controller {
     }
 
     
-    async configure(config=null, callbacks={}) {
+    async configure(config=null, options={}, callbacks={}) {
         const default_callbacks = {
             changeDisplayTimeRange: (range) => {
                 // range value can be null for a default range
@@ -39,7 +39,7 @@ export class Controller {
         if (config !== null) {
             this.callbacks = $.extend({}, default_callbacks, this.callbacks ?? {}, callbacks);
         }
-        await this.view.configure(config, this.callbacks);
+        await this.view.configure(config, options, this.callbacks);
         
         if (this.currentDataPacket !== null) {
             this.view.drawRange(this.currentDataPacket, this.currentDataPacket.range);

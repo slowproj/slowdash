@@ -67,10 +67,9 @@
             ],
             "legend": { "style": "box" }
         };
-        let style = {};
 
-        let panel = new TimeAxisPlotPanel($('#panel'), style);
-        panel.configure(config);
+        let panel = new TimeAxisPlotPanel($('#panel'));
+        await panel.configure(config, {inactive:true});
         
         let data_response = await fetch('./api/data/ch0,ch1?length=86400&resample=300');
         if (data_response.ok) {

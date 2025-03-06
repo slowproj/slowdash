@@ -56,7 +56,7 @@ export class MapPanel extends Panel {
     }
 
     
-    constructor(div, style) {
+    constructor(div, style={}) {
         super(div, style);
         
         this.map = null;
@@ -66,7 +66,7 @@ export class MapPanel extends Panel {
     }
 
     
-    async configure(config, options, callbacks) {
+    async configure(config, options={}, callbacks={}) {
         this.div.empty();
         await super.configure(config, options, callbacks);
         
