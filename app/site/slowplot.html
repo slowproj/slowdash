@@ -18,7 +18,8 @@
     import { JG as $, JGDateTime } from './slowjs/jagaimo/jagaimo.mjs';
     import { JGDialogWidget } from './slowjs/jagaimo/jagawidgets.mjs';
     import { Layout } from './slowjs/layout.mjs';
-    import { boot, Frame, TimeRangePullDown, GridPullDown, SaveConfigDialog, upload } from './slowjs/controlframe.mjs';
+    import { boot, Frame, TimeRangePullDown, GridPullDown, SaveConfigDialog, upload } from './slowjs/frame.mjs';
+    import { Controller } from './slowjs/control.mjs';
 
     window.addEventListener('DOMContentLoaded', function() {
         let defaults = {
@@ -147,13 +148,14 @@
         }
         
         let layout = new Layout($('#sd-layout'), style);
+        let controller = new Controller(layout);
         
         let frame = new Frame($('#sd-header'), {
             title: title,
             style: style,
             reloadInterval: config.control.reload,
             reloadIntervalChange: (interval) => { config.control.reload = interval; },
-            reload: async (on_complete) => { return update(layout, config, on_complete); },
+            reload: async (on_complete) => { return update(controller, config, on_complete); },
             resetDelay: resetDelay,
         });
         
@@ -230,7 +232,7 @@
             let gridPulldown = new GridPullDown(gridSelect, {
                 select: async (grid) => {
                     let [rows, cols] = grid.split('x');
-                    await layout.setGrid(rows, cols);
+                    controller.setGrid(rows, cols);
                 }
             });
             gridPulldown.set(config.control.grid.rows + 'x' + config.control.grid.columns);
@@ -288,8 +290,7 @@
             });
         }
             
-        await layout.loadPanelPlugins();
-        await layout.configure(config, {
+        await controller.configure(config, {
             changeDisplayTimeRange: range => {
                 currentDisplayTimeRange = range;
             },
@@ -307,13 +308,13 @@
         frame.start();
         $(window).bind('resize', async ()=>{
             if (window.innerWidth > 0) {
-                await layout.configure();
+                await controller.configure();
             }
         });
     }
 
 
-    async function update(layout, config, on_complete) {
+    async function update(controller, config, on_complete) {
         let length = config.control?.range?.length ?? 0;
         if (! (length > 0)) {
             length = 3600;
@@ -328,7 +329,7 @@
             resampling = (config.control?.range?.resamplingInterval ?? 0);
         }
         
-        const status = await layout.load({from:from, to:to, resampling:resampling});
+        const status = await controller.update({from:from, to:to, resampling:resampling});
         if (on_complete) {
             if (status.code == 200) {
                 on_complete();

@@ -1,4 +1,4 @@
-// controlframe.mjs //
+// frame.mjs //
 // Author: Sanshiro Enomoto <sanshiro@uw.edu> //
 // Created on 3 May 2022 //
 
@@ -192,6 +192,9 @@ function setupDataList() {
             if (response.ok) return response.json();
         })
         .then(contentlist => {
+            if (! contentlist) {
+                return;
+            }
             let dashboard_dl = $('<datalist>').attr('id', 'sd-dashboard-datalist').appendTo(document.body);
             let map_dl = $('<datalist>').attr('id', 'sd-map-datalist').appendTo(document.body);
             let html_dl = $('<datalist>').attr('id', 'sd-html-datalist').appendTo(document.body);

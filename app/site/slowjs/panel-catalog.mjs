@@ -76,7 +76,7 @@ export class CatalogPanel extends Panel {
         await super.configure(config, options, callbacks);
 
         if (options.project_name) {
-            this.cachePath = `slowdash-${project_config.project.name}-ContentList`;
+            this.cachePath = `slowdash-${options.project_name}-ContentList`;
         }
         else {
             this.cachePath = null;
@@ -266,7 +266,6 @@ export class ChannelListPanel extends Panel {
         this.contentDiv = $('<div>').appendTo(this.frameDiv);
         
         this.table = $('<table>').appendTo(this.contentDiv);
-        this.table.html('<tr><td></td></tr><tr><td>loading channel list...</td></tr>');
 
         this.frameDiv.css({
             width:'calc(100% - 44px)',
@@ -304,19 +303,7 @@ export class ChannelListPanel extends Panel {
             padding: 0,
             border: 'none',
         });
-    }
 
-    
-    async configure(config, options, callbacks) {
-        await super.configure(config, options, callbacks);
-        
-        if (options.project_name) {
-            this.cachePath = `slowdash-${project_config.project.name}-ChanneList`;
-        }
-        else {
-            this.cachePath = null;
-        }
-        
         this.titleDiv.css('display','flex');
         $('<span>').appendTo(this.titleDiv).text('Data Channels');
         let updateButton = $('<span>').html('&#x1f504;').appendTo(this.titleDiv).css({
@@ -329,26 +316,41 @@ export class ChannelListPanel extends Panel {
             localStorage.removeItem(this.cachePath + '-cachetime');
             localStorage.removeItem(this.cachePath + '-doc');
             this.table.html('<tr><td></td></tr><tr><td>loading channel list...</td></tr>');
-            this._load(config);
+            this._load();
         });
-        
         this.searchDiv.html(`
             <span style="white-space:nowrap">
             Channel Filter: <input style="width:50%"></input>
             <label><input type="checkbox">case sensitive</label>
             </span>
         `);
+        this.table.html('<tr><td></td></tr><tr><td>loading channel list...</td></tr>');
 
-        let filterInput = this.searchDiv.find('input').at(0).val(config.default_filter);;
-        let caseSensitiveInput = this.searchDiv.find('input').at(1).val(config.case_sensitive);
+        let filterInput = this.searchDiv.find('input').at(0);
+        let caseSensitiveInput = this.searchDiv.find('input').at(1);
         filterInput.bind(/**/'keyup'/*/'change'/**/, e=>{
             this._applyFilter(this.table, filterInput.val(), caseSensitiveInput.val());
         });
         caseSensitiveInput.bind('change', e=>{
             this._applyFilter(this.table, filterInput.val(), caseSensitiveInput.val());
         });
+    }
 
-        this._load(config);
+    
+    async configure(config, options, callbacks) {
+        await super.configure(config, options, callbacks);
+        
+        if (options.project_name) {
+            this.cachePath = `slowdash-${options.project_name}-ChanneList`;
+        }
+        else {
+            this.cachePath = null;
+        }
+        
+        let filterInput = this.searchDiv.find('input').at(0).val(this.config.default_filter);;
+        let caseSensitiveInput = this.searchDiv.find('input').at(1).val(this.config.case_sensitive);
+
+        this._load();
     }
 
 
@@ -365,11 +367,11 @@ export class ChannelListPanel extends Panel {
     }
 
 
-    _load(config) {
+    _load() {
         if (this.cachePath) {
             let cachedDoc = localStorage.getItem(this.cachePath + '-doc');
             if (cachedDoc) {
-                this._render(config, JSON.parse(cachedDoc));
+                this._render(JSON.parse(cachedDoc));
             }
             const cacheTime = localStorage.getItem(this.cachePath + '-cachetime');
             if (parseFloat(cacheTime ?? 0) > $.time() - 60) {
@@ -383,7 +385,7 @@ export class ChannelListPanel extends Panel {
             })
             .then(record => {
                 if (record) {
-                    this._render(config, record);
+                    this._render(record);
                     if (this.cachePath) {
                         localStorage.setItem(this.cachePath + '-cachetime', $.time());
                         localStorage.setItem(this.cachePath + '-doc', JSON.stringify(record));
@@ -414,7 +416,7 @@ export class ChannelListPanel extends Panel {
     }
 
     
-    _render(config, record) {
+    _render(record) {
         this.table.empty();
         let tr = $('<tr>').appendTo(this.table);
         $('<th>').text("Channel Name").css({'width':'30%'}).appendTo(tr);
@@ -458,6 +460,6 @@ export class ChannelListPanel extends Panel {
             $('<td>').text(entry.label ?? '').appendTo(tr);
         }
         
-        this._applyFilter(this.table, config.default_filter);
+        this._applyFilter(this.table, this.config.default_filter);
     }
 }

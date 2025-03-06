@@ -2,6 +2,7 @@
 // Author: Sanshiro Enomoto <sanshiro@uw.edu> //
 // Created on 18 November 2021 //
 // Refactored on 18 June 2022 //
+// Refactored on 5 March 2025 //
 
 
 import { JG as $ } from './jagaimo/jagaimo.mjs';
@@ -12,8 +13,9 @@ import { PanelPluginLoader } from './panel-plugin-loader.mjs';
 export class Layout {
     constructor(div, style={}) {
         this.layoutDiv = div;
-        this.currentDataPacket = null;
-
+        this.PanelClassList = null;
+        this.panels = [];
+        
         const dummyPlotDiv = $('<div>').addClass('sd-plot').appendTo(div);
         const contextColor = getComputedStyle(div.get()).color;
         const contextBackgroundColor = getComputedStyle(div.get()).backgroundColor;
@@ -41,23 +43,17 @@ export class Layout {
             plotGridEnabled: true,
             negatingImages: style.negate,
         };
-
-        this._setupStreamingData();
     }
 
 
-    async loadPanelPlugins() {
-        const loader = new PanelPluginLoader();
-        this.PanelClassList = await loader.load();
-    }
-   
-    
     async configure(config=null, callbacks={}) {
         const default_callbacks = {
             changeDisplayTimeRange: (range) => {},
+            reconfigure: () => { this.configure(); },
             forceUpdate: () => {},
             suspend: (duration) => {},
             popoutPanel: (index) => {},
+            publish: (topic, message) => {},
         };
         if (config !== null) {
             this.config = config;
@@ -76,8 +72,6 @@ export class Layout {
             // remove panels marked as "deleted"
             this.config.panels = this.config.panels.filter(p => !(p.deleted ?? false));
         }
-
-        this.panels = [];
         
         this.style = $.extend({}, this.defaultStyle, this.config._project?.style?.panel ?? {});
         this.dimension = {
@@ -87,116 +81,42 @@ export class Layout {
             panelHeight: null,
             fontScaling: 100.0,
         };
-        
-        this._setupDimensions();
-        await this._setupPanels();
-        this._setupAddNewPanel();
 
-        if (this.currentDataPacket !== null) {
-            for (let panel of this.panels) {
-                panel.drawRange(this.currentDataPacket, this.currentDataPacket.range);
-            }
-        }
-    }
-
-    
-    async setGrid(rows, columns) {
-        let [nrows, ncols] = [parseFloat(rows), parseInt(columns)];
-        if (!(nrows > 0) || ! (ncols > 0)) {
-            return;
-        }
-        this.config.control.grid.rows = nrows;
-        this.config.control.grid.columns = ncols;
-        await this.configure(this.config);
-        this.load();
-    }
-
-    
-    async load(range=null) {
-        // If the data range is not specified, use the same range as before, and reuse the loaded data.
-        // Even for the identical data range, panels must be updated because a new plot for the same channel might have been added.
-        
-        if (range !== null) {
-            this.currentDataPacket = {
-                isTransitional: true,
-                isCurrent: false,
-                range: range,
-                data: {}
-            };
+        if (! this.PanelClassList) {
+            const loader = new PanelPluginLoader();
+            this.PanelClassList = await loader.load();
         }
 
-        let channels = {}; {
-            let inputChannels = [];
-            for (let panel of this.panels) {
-                panel.fillInputChannels(inputChannels);
-            }
-            for (let ch of inputChannels) {
-                if (! (ch in this.currentDataPacket.data)) {
-                    channels[ch] = 1;
-                }
-            }
-        }        
-        
-        if (Object.keys(channels).length <= 0) {
-            this._processData({}, false);
-            return {code:200, text:'OK'};
-        }
-        
-        let length = this.currentDataPacket.range.to - this.currentDataPacket.range.from;
-        let opts = [ 'length='+length, 'to='+this.currentDataPacket.range.to ];
-        if (length > 7200) {
-            opts.push('resample='+(length/600).toFixed(1))
-            opts.push('reducer=last');
-        }
-        
-        let url_list = [];
-        if (length < 5*86500) {
-            url_list.push('api/data/' + Object.keys(channels).join(',') + '?' + opts.join('&'))
+        if (config !== null) {
+            this.layoutDiv.empty();
+            this.panels = [];
+
+            this._setupDimensions();
+            this._buildPanels();
+            await this._configurePanels();
+            this._setupAddNewPanel();
         }
         else {
-            for (let ch in channels) {
-                url_list.push('api/data/' + ch + '?' + opts.join('&'));
-            }
-        }
-                
-        let status = { code:200, text:'OK' };
-        for (let i = 0; i < url_list.length; i++) {
-            const response = await fetch(url_list[i]);
-            if (! response.ok) {
-                status = { code: response.status, text: response.statusText };
-                continue;
-            }
-            const data = await response.json();
-
-            const isTransitional = (i < url_list.length-1);
-            this._processData(data, isTransitional);
-        }
-
-        return status;
-    }
-
-    
-    async publish(topic, doc) {
-        if (topic !== 'currentdata') {
-            return;
-        }
-        const message = (typeof doc === 'string') ? doc : JSON.stringify(doc);
-        
-        if (this.socket && (this.socket.readyState === WebSocket.OPEN)) {
-            this.socket.send(message);
-        }
-        else {
-            const url = './api/control/currentdata';
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json; charset=utf-8' },
-                body: message,
-            });
-            this.callbacks.forceUpdate();
+            this._setupDimensions();
+            await this._configurePanels();
         }
     }
 
+
+    fillInputChannels(inputChannels) {
+        for (let panel of this.panels) {
+            panel.fillInputChannels(inputChannels);
+        }
+    }
+
+
+    drawRange(dataPacket, displayTimeRange) {
+        for (let panel of this.panels) {
+            panel.drawRange(dataPacket, displayTimeRange);
+        }
+    }
     
+
     _setupDimensions() {
         this.dimension.layoutWidth = document.documentElement.clientWidth;
         this.dimension.layoutHeight = document.documentElement.clientHeight - this.layoutDiv.pageY();
@@ -220,7 +140,7 @@ export class Layout {
             this.dimension.fontScaling = 100.0 / (ncols-2);
         }
 
-        this.layoutDiv.empty().css({
+        this.layoutDiv.css({
             'position': 'relative',
             'width': this.dimension.layoutWidth + 'px',
             'height': this.dimension.layoutHeight + 'px',
@@ -231,30 +151,20 @@ export class Layout {
     }
 
 
-    async _setupPanels() {        
+    async _buildPanels() {        
+        this.panels = [];
         for (const entry of this.config.panels) {
             const panelDiv = this._createPanelDiv();
             const panel = this._createPanel(panelDiv, entry);
-            if (panel) {
-                await this._configurePanel(panel, entry);
-            }
+            this.panels.push(panel);
         }
+        
     }
 
     
     _createPanelDiv() {
         let panelDiv = $('<div>').addClass('sd-panel').appendTo(this.layoutDiv);
         
-        panelDiv.css({
-            'width': (this.dimension.panelWidth-12)+'px',
-            'height': (this.dimension.panelHeight-12)+'px',
-            'position': 'relative',
-            'margin': '5px',
-            'padding': 0,
-            'border-radius': '10px',
-            'font-size': this.dimension.fontScaling + '%',
-        });
-
         if (this.config.layout?.focus_highlight !== false) {
             panelDiv.bind('pointerenter', e => {
                 const target = $(e.target);
@@ -299,24 +209,29 @@ export class Layout {
     }
 
     
-    async _configurePanel(panel, entry) {
+    async _configurePanels() {
+        $('.sd-panel').css({
+            'width': (this.dimension.panelWidth-12)+'px',
+            'height': (this.dimension.panelHeight-12)+'px',
+            'position': 'relative',
+            'margin': '5px',
+            'padding': 0,
+            'border-radius': '10px',
+            'font-size': this.dimension.fontScaling + '%',
+        });
+
         const callbacks = {
             changeDisplayTimeRange: range => {
-                // range value can be null for a default range
-                for (const panel of this.panels) {
-                    panel.drawRange(this.currentDataPacket, range);
-                }
                 this.callbacks.changeDisplayTimeRange(range);
+            },
+            reconfigure: () => {
+                this.callbacks.reconfigure();
             },
             forceUpdate: () => {
                 this.callbacks.forceUpdate();
             },
             suspendUpdate: (duration) => {
                 this.callbacks.suspend(duration);
-            },
-            reconfigure: async () => {
-                await this.configure(null);
-                this.load(null);
             },
             popout: (p) => {
                 for (let i = 0; i < this.panels.length; i++) {
@@ -326,21 +241,22 @@ export class Layout {
                 }
             },
             publish: (topic, message) => {
-                //console.log("publish", topic, JSON.stringify(message));
-                this.publish(topic, message);
+                this.callbacks.publish(topic, message);
             },
         };
 
         const options = {
-            project_name: this.config.project?.project?.name,
+            project_name: this.config._project?.project?.name,
             is_display: this.config.control.immutable || ((this.config.control.mode ?? '') === 'display'),
             is_protected: (this.config.control.mode ?? '') === 'protected',
-            is_secure: this.config.project?.project?.is_secure ?? false,
+            is_secure: this.config._project?.project?.is_secure ?? false,
         };
         
-        await panel.configure(entry, options, callbacks);
-        
-        this.panels.push(panel);
+        for (let i = 0; i < this.panels.length; i++) {
+            if (this.panels[i]) {
+                await this.panels[i].configure(this.config.panels[i], options, callbacks);
+            }
+        }
     }
 
 
@@ -406,8 +322,7 @@ export class Layout {
         const addPanel = async config => {
             if (config) {
                 this.config.panels.push(config);
-                await this.configure(this.config);
-                this.load();
+                this.callbacks.reconfigure();
             }
         }
 
@@ -424,72 +339,6 @@ export class Layout {
         }
         updateSelection();
         div.find('select').bind('change', e=>{updateSelection();});
-    }
-
-    
-    _setupStreamingData() {
-        let url = new URL(window.location.href);
-        url.protocol = 'ws:';
-        url.search = '';
-        url.hash = '';
-        
-        if (url.pathname.match(/\.[a-zA-Z0-9]+$/)) {  
-            // last path element has an extension (file) -> remove the file name
-            url.pathname = url.pathname.replace(/\/[^/]*$/, '/')
-        }
-        else {
-            url.pathname += (url.pathname.endsWith('/') ? '' : '/')
-        }
-        url.pathname += 'subscribe/currentdata';
-
-        this.socket = new WebSocket(url.toString());
-        this.socket.onopen = () => {
-            console.log("Web Socket Connected");
-        };
-        this.socket.onclose = () => {
-            console.log("Web Socket Closed");
-        };
-        this.socket.onerror = (error) => {
-            console.error("Web Socket Error: " + error);
-        };
-        this.socket.onmessage = (event) => {
-            this._processCurrentData(JSON.parse(event.data));
-        }
-    }
-
-    
-    _processData(data, isTransitional) {
-        this.currentDataPacket.isTransitional = isTransitional;
-        for (let ch in data) {
-            this.currentDataPacket.data[ch] = data[ch];
-        }
-        for (let panel of this.panels) {
-            panel.drawRange(this.currentDataPacket, this.currentDataPacket.range);
-        }
-    }
-
-    
-    _processCurrentData(data) {
-        const to = this.currentDataPacket?.range?.to ?? null;
-        if ((to === null) || (to < 0)) {
-            return;
-        }
-        const now = $.time();
-        if ((to > 0) && (to < now - 10)) {  //... BUG: "10 sec" window is temporary
-            return;
-        }
-        
-        const dataPacket = {
-            isTransitional: true,
-            isCurrent: true,
-            range: { from: now - 60, to: now },
-            data: data,
-        };
-        if (this.panels) {
-            for (let panel of this.panels) {
-                panel.drawRange(dataPacket, dataPacket.range);
-            }
-        }
     }
 };
 

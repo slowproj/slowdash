@@ -17,7 +17,7 @@
   <script type="module">
     import { JG as $ } from './slowjs/jagaimo/jagaimo.mjs';
     import { Layout } from './slowjs/layout.mjs';
-    import { boot, Frame } from './slowjs/controlframe.mjs';
+    import { boot, Frame } from './slowjs/frame.mjs';
 
     window.addEventListener('DOMContentLoaded', function() {
         let defaults = {};
@@ -101,9 +101,7 @@
 
         update_server();
 
-        await layout.loadPanelPlugins();
         await layout.configure(config);
-        layout.load({from:0, to:0});
 
         $(window).bind('resize', async ()=>{
             if (window.innerWidth > 0) {

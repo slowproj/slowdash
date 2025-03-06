@@ -7,7 +7,7 @@ export { WelcomePanel, ToolsPanel, FileManagerPanel, TaskManagerPanel, CruisePla
 
 import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
 import { JGIndicatorWidget } from './jagaimo/jagawidgets.mjs';
-import { upload } from './controlframe.mjs';
+import { upload } from './frame.mjs';
 import { Panel } from './panel.mjs';
 
 
@@ -793,78 +793,65 @@ class TaskManagerPanel extends Panel {
             this._send_console(line, e);
         });
 
-        this.is_running = false;
-        this.is_tasklist_error = false;
-        this.is_console_error = false;
-        this.is_loading_tasklist = false;
-        this.is_loading_console = false;
         this.tasklist_revision = 0;
         this.console_revision = 0;
+        this.is_tasklist_loading = false;
+        this.is_console_loading = false;
+        this.is_tasklist_error = false;
+        this.is_console_error = false;
     }
 
     
     configure(config, options, callbacks) {
         super.configure(config, options, callbacks);
         this.is_secure = options.is_secure;
-        this.is_running = false;
-        this.is_loading_tasklist = false;
-        this.is_loading_console = false;
+        
         this.tasklist_revision = 0;
         this.console_revision = 0;
+        this.is_tasklist_error = false;
+        this.is_console_error = false;
 
-        this._load();
-    }
-
-
-    drawRange(dataPacket, displayTimeRange) {
-        this.is_running = true;
-    }
-
-    
-    async _load() {
-        if (this.is_running) {
-            if (! this.is_loading_tasklist && ! this.is_tasklist_error) {
-                this._load_tasklist();
-            }
-            if (! this.is_loading_console && ! this.is_console_error) {
-                this._load_console();
-            }
+        if (! this.is_tasklist_loading) {
+            this.is_tasklist_loading = true;
+            this._load_tasklist();
         }
-
-        setTimeout(()=>this._load(), 1000);
+        if (! this.is_console_loading) {
+            this.is_console_loading = true;
+            this._load_console();
+        }
     }
 
-    
+
     async _load_tasklist() {
         try {
-            this.is_loading_tasklist = true;
             let response = await fetch('api/control/task?since='+this.tasklist_revision);
             let record = await response.json();
             this._render_task_table(record.tasks);
             this.tasklist_revision = record.revision;
-            this.is_loading_tasklist = false;
         }
         catch (e) {
             console.log("Error on fetching tasklist: ", e);
-            this.is_loading_tasklist = false;
             this.is_tasklist_error = true;
+        }
+        if (! this.is_tasklist_error) {
+            setTimeout(()=>this._load_tasklist(), 1000);
         }
     }
         
 
     async _load_console() {
         try {
-            this.is_loading_console = true;
             let response = await fetch('api/console?since='+this.console_revision);
             let record = await response.json();
             this._render_console(record.text);
             this.console_revision = record.revision;
-            this.is_loading_console = false;
         }
         catch (e) {
             console.log("Error on fetching console: ", e);
-            this.is_loading_console = false;
             this.is_console_error = true;
+        }
+        if (! this.is_console_error) {
+            setTimeout(()=>this._load_console(), 1000);
         }
     }
 
