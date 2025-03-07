@@ -49,7 +49,7 @@
     import { Layout } from './slowjs/layout.mjs';
         
     async function main() {
-        let config = {
+        const config = {
             panels: [{
                 type: "timeaxis",
                 plots: [
@@ -59,18 +59,17 @@
                 legend: { style: "box" }
             }]
         };
-
         let layout = new Layout('#layout');
         await layout.configure(config);
         
-        let data_response = await fetch('./api/data/ch0,ch1?length=86400&resample=300');
-        if (data_response.ok) {
-            layout.draw(await data_response.json());
+        const response = await fetch('./api/data/ch0,ch1?length=86400&resample=300');
+        if (response.ok) {
+            layout.draw(await response.json());
         }
 
-        let src_response = await fetch('./api/userhtml/userpage.html');
-        if (src_response.ok) {
-            document.querySelector('#src').textContent = await src_response.text();
+        const responseSrc = await fetch('./api/userhtml/userpage.html');
+        if (responseSrc.ok) {
+            document.querySelector('#src').textContent = await responseSrc.text();
         }
     }
 

@@ -43,7 +43,6 @@ export class Controller {
             },
             reconfigure: async () => {
                 await this.configure();
-                this.update();  // channnels might have been added by the reconfigure
             },
             popout: (panel) => {
                 this._popoutPanel(panel);
@@ -55,10 +54,9 @@ export class Controller {
             suspend: this.callbacks.suspend,
         };
         await this.view.configure(config, this.options, view_callbacks);
-        
-        
+
         if (this.currentData !== null) {
-            this.view.draw(this.currentData);
+            this.update();
         }
     }
 
@@ -82,7 +80,7 @@ export class Controller {
             this.currentData = {
                 __meta: {
                     range: range,
-                    isPartial: true,
+                    isPartial: false,
                     isCurrent: false,
                 }
             };
@@ -102,6 +100,7 @@ export class Controller {
             this.view.draw(this.currentData);
             return {code:200, text:'OK'};
         }
+        this.currentData.__meta.isPartial = true;
         
         let length = this.currentData.__meta.range.to - this.currentData.__meta.range.from;
         let opts = [ 'length='+length, 'to='+this.currentData.__meta.range.to ];

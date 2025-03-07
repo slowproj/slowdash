@@ -188,4 +188,22 @@ export class Panel {
  
         this.addControlButtons(ctrlDiv);
     }
+
+    
+    _findDataTimeRange(data, displayTimeRange=null) {
+        if (displayTimeRange) {
+            return displayTimeRange;
+        }
+        if (data?.__meta?.range) {
+            return data.__meta.range;
+        }
+        if (data) {
+            for (const ch in data) {
+                if (data[ch].start && data[ch].length) {
+                    return { from: data[ch].start, to: data[ch].start + data[ch].length };
+                }
+            }
+        }
+        return null;
+    }
 };

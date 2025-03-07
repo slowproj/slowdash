@@ -11,7 +11,7 @@ in this way, user HTML can use the SlowDash API and Javascript library (SlowJS) 
 This, on the other hand, may cause name conflicts. All names starting with "slow" are reserved, and should not be used in user HTML.
 
 # Examles
-Some examples can be found at `ExampleProjects/Experimental/UserHTML`.
+Some examples can be found at `ExampleProjects/UserHTML`.
 
 ### Using an External Javascript Library (Chart.js)
 This examples fetches data using the SlowDash Web API and makes a pie chart using the Chart.js library.
@@ -23,11 +23,12 @@ This examples fetches data using the SlowDash Web API and makes a pie chart usin
 </head>
 
 <body>
+  <h3>This is an example of using a JavaScript library with SlowDash data</h3>
   <canvas id="chart_pie"></canvas>
   
   <script type="module">
     async function main() {
-        let response = await fetch('./api/data/ch0,ch1,ch2,ch3?length=60');
+        const response = await fetch('./api/data/ch0,ch1,ch2,ch3?length=60');
         if (! response.ok) {
             return;
         }
@@ -66,7 +67,7 @@ This examples fetches data using the SlowDash Web API and makes a pie chart usin
     import { Layout } from './slowjs/layout.mjs';
         
     async function main() {
-        let config = {
+        const config = {
             panels: [{
                 type: "timeaxis",
                 plots: [
@@ -79,7 +80,7 @@ This examples fetches data using the SlowDash Web API and makes a pie chart usin
         let layout = new Layout('#layout');
         await layout.configure(config);
         
-        let response = await fetch('./api/data/ch0,ch1,ch2,ch3?length=86400&resample=300');
+        const response = await fetch('./api/data/ch0,ch1,ch2,ch3?length=86400&resample=300');
         if (! response.ok) {
             return;
         }

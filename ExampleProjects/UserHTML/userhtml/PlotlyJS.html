@@ -32,7 +32,7 @@
     async function main() {
         // Fetching Data //
         
-        let response = await fetch('./api/data/ch0,ch1,ch2,ch3?length=86400&resample=300');
+        const response = await fetch('./api/data/ch0,ch1,ch2,ch3?length=86400&resample=300');
         if (! response.ok) {
             return;
         }
@@ -41,7 +41,7 @@
         
         // SlowDash Plot //
         
-        let config = {
+        const config = {
             type: "timeaxis",
             plots: [
                 { type: "timeseries", channel: "ch0" },
@@ -63,28 +63,28 @@
         const values = Array.from({length:labels.length}, (_,i)=>data[labels[i]].x.at(-1));
         const colors = [ '#009090', '#dd8000', '#4169e1', '#b030b0' ];
         
-        const pie_data = {
+        const dataPie = {
             type: 'pie',
             values: values,
             labels: labels,
             marker: { 'colors': colors },
             hole: 0.4,
         }
-        Plotly.newPlot('chart_pie', [pie_data]);
+        Plotly.newPlot('chart_pie', [dataPie]);
         
-        const bar_data = {
+        const dataBar = {
             type: 'bar',
             x: values,
             y: labels,
             marker: { 'color': colors },
             orientation: 'h',
         }
-        const bar_style = {
+        const styleBar = {
             yaxis: {
                 categoryorder: 'total ascending'
             }
         };
-        Plotly.newPlot('chart_bar', [bar_data], bar_style);
+        Plotly.newPlot('chart_bar', [dataBar], styleBar);
     }
 
     window.addEventListener('DOMContentLoaded', main);

@@ -323,12 +323,18 @@ class HtmlPanel extends Panel {
 
 class HrefPanel extends Panel {
     static describe() {
-        return { type: 'href', label: 'External Web Page' };
+        return { type: 'href', label: 'User/External Web Page' };
     }
     
     static buildConstructRows(table, on_done=config=>{}) {
         let tr1 = $('<tr>').html(`
             <td>URL</td><td><input style="width:30em"></td>
+        `).appendTo(table);
+        $('<tr>').html(`
+            <td></td><td>For User-HTML, prepend "./api/userhtml/" before the HTML file name.</td>
+        `).appendTo(table);
+        $('<tr>').html(`
+            <td></td><td>For external page, start with "https://".</td>
         `).appendTo(table);
         let tr2 = $('<tr>').html(`
             <td style="padding-top:1em"><button hidden style="font-size:x-large">Create</button></td><td></td>
@@ -350,6 +356,7 @@ class HrefPanel extends Panel {
                 title: '',
                 url: table.find('input').val(),
                 reload: true,
+                query_range: false,
                 scaling: null,
                 offset_top: 0,
                 offset_left: 0,
@@ -428,16 +435,14 @@ class HrefPanel extends Panel {
             const top = parseFloat(this.config.offset_top ?? 0);
             const left = parseFloat(this.config.offset_left ?? 0);
             if ((top > 0) || (left > 0)) {
-                this.iframe.bind('load', e=>{
-                    try {
-                        this.iframe.get().contentWindow.scrollTo(top, left);
-                    }
-                    catch (error) {
-                        console.log(error);
-                    }
-                });
+                try {
+                    this.iframe.get().contentWindow.scrollTo(top, left);
+                }
+                catch (error) {
+                    console.log(error);
+                }
             }
-        });        
+        });
     }
 
     
@@ -445,7 +450,7 @@ class HrefPanel extends Panel {
         super.addControlButtons(div);
         let openBtn = $('<button>').html('&#x1f517;').prependTo(div);
         openBtn.attr('title', 'Open').bind('click', e=>{
-            window.open(this.config.url);
+            window.open(this.iframe.attr('src'));
         });
     }
         
@@ -456,18 +461,26 @@ class HrefPanel extends Panel {
             <table style="margin-top:1em">
               <tr><th>Title</th><td><input></td></tr>
               <tr><th>URL</th><td><input></td></tr>
-              <tr><th>Reload</th><td><input type="checkbox"></td></tr>
+              <tr><th>Reload</th><td><label><input type="checkbox">Reload the page on data update</label></td></tr>
+              <tr><th></th><td><label><input type="checkbox">Append time range parameters to URL</label></td></tr>
               <tr><th>Scaling</th><td><input placeholder="auto-scale"></td></tr>
               <tr><th>Offset</th><td>Top: <input> px, Left: <input> px</td></tr>
             </table>
             <p>
-            <span font="small">Auto-scale and Offset do not work for external sites.</span>
+            <div font="small">
+               <ul>
+                 <li>For User-HTML page, prepend "./api/userhtml/" before the file name.
+                 <li>For external page, start with "https://".
+                 <li>Auto-scale and Offset do not work for external pages.
+               </ul>
+            </div>
         `);
 
         let k = 0;
         bindInput(this.config, 'title', inputsDiv.find('input').at(k++).css('width', '30em'));
         bindInput(this.config, 'url', inputsDiv.find('input').at(k++).css('width', '30em'));
         bindInput(this.config, 'reload', inputsDiv.find('input').at(k++));
+        bindInput(this.config, 'query_range', inputsDiv.find('input').at(k++));
         bindInput(this.config, 'scaling', inputsDiv.find('input').at(k++).css('width', '10em'));
         bindInput(this.config, 'offset_top', inputsDiv.find('input').at(k++).css('width', '7em'));
         bindInput(this.config, 'offset_left', inputsDiv.find('input').at(k++).css('width', '7em'));
@@ -481,6 +494,19 @@ class HrefPanel extends Panel {
         if (data && (data?.__meta?.isPartial ?? false)) {
             return;
         }
-        this.iframe.attr('src', this.config.url); // this will cause reloading
+
+        let this_url = this.config.url;
+        if (this.config.query_range === true) {
+            const range = this._findDataTimeRange(data, displayTimeRange);
+            if (this_url.indexOf('?') > 0) {
+                this_url += '&';
+            }
+            else {
+                this_url += '?';
+            }
+            this_url += `sd-from=${range.from}&sd-to=${range.to}`;
+        }
+        console.log(this_url);
+        this.iframe.attr('src', this_url); // this will cause reloading
     }
 }

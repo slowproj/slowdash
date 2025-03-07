@@ -329,12 +329,7 @@
             to =  $.time() + 3;
         }
         let from = to - length;
-        let resampling = null;
-        if (config.control?.range?.resamplingEnabled) {
-            resampling = (config.control?.range?.resamplingInterval ?? 0);
-        }
-        
-        const status = await controller.update({from:from, to:to, resampling:resampling});
+        const status = await controller.update({from:from, to:to});
         if (status.code == 200) {
             return null;
         }

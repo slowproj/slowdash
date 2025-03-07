@@ -1292,7 +1292,11 @@ class PlotPanel extends Panel {
         const isPartial = data.__meta?.isPartial ?? false;
         
         if (! isCurrent) {
-            this.initialDisplayTimeRange = this.findDataTimeRange(data, displayTimeRange);
+            this.initialDisplayTimeRange = this._findDataTimeRange(data, displayTimeRange);
+            if (! this.initialDisplayTimeRange) {
+                const now = $.time();
+                this.initialDisplayTimeRange = { from: now-3600, to: now };
+            }
         }
 
         if (data) {
@@ -1394,26 +1398,6 @@ class PlotPanel extends Panel {
         }
         img.onerror = e=> console.log(e);
         img.src = svgUrl;
-    }
-
-    
-    findDataTimeRange(data, displayTimeRange=null) {
-        if (displayTimeRange) {
-            return displayTimeRange;
-        }
-        if (data?.__meta?.range) {
-            return data.__meta.range;
-        }
-        if (data) {
-            for (const ch in data) {
-                if (data[ch].start && data[ch].length) {
-                    return { from: data[ch].start, to: data[ch].start + data[ch].length };
-                }
-            }
-        }
-
-        const now = $.time();
-        return { from: now-3600, to: now };
     }
 
     
@@ -1700,7 +1684,12 @@ class TimeAxisPlotPanel extends PlotPanel {
             return;
         }
         
-        this.initialDisplayTimeRange = this.findDataTimeRange(data, displayTimeRange);
+        this.initialDisplayTimeRange = this._findDataTimeRange(data, displayTimeRange);
+        if (! this.initialDisplayTimeRange) {
+            const now = $.time();
+            this.initialDisplayTimeRange = { from: now-3600, to: now };
+        }
+        
         this.currentDisplayTimeRange = this.initialDisplayTimeRange;
         this.adjustXRange();
 

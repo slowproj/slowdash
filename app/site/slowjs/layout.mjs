@@ -65,10 +65,10 @@ export class Layout {
             this.config = config;
             this.options = $.extend({}, default_options, this.options ?? {}, options);
             this.callbacks = $.extend({}, default_callbacks, this.callbacks ?? {}, callbacks);
-            if ((this.config.control.mode ?? '') === 'display') {
+            if ((this.config.control?.mode ?? '') === 'display') {
                 this.options.inactive = true;
             }
-            if ((this.config.control.mode ?? '') === 'protected') {
+            if ((this.config.control?.mode ?? '') === 'protected') {
                 this.options.immutable = true;
             }
         }

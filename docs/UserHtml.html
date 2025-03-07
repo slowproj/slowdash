@@ -110,7 +110,7 @@ hand, may cause name conflicts. All names starting with “slow” are
 reserved, and should not be used in user HTML.</p>
 <h1 id="examles">Examles</h1>
 <p>Some examples can be found at
-<code>ExampleProjects/Experimental/UserHTML</code>.</p>
+<code>ExampleProjects/UserHTML</code>.</p>
 <h3 id="using-an-external-javascript-library-chart.js">Using an External
 Javascript Library (Chart.js)</h3>
 <p>This examples fetches data using the SlowDash Web API and makes a pie
@@ -123,29 +123,30 @@ class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;/</span>head<span class="op">&gt;</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;</span>body<span class="op">&gt;</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">&lt;</span>canvas id<span class="op">=</span><span class="st">&quot;chart_pie&quot;</span><span class="op">&gt;&lt;/</span>canvas<span class="op">&gt;</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="op">&lt;</span>script type<span class="op">=</span><span class="st">&quot;module&quot;</span><span class="op">&gt;</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">function</span> <span class="fu">main</span>() {</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> response <span class="op">=</span> <span class="cf">await</span> <span class="fu">fetch</span>(<span class="st">&#39;./api/data/ch0,ch1,ch2,ch3?length=60&#39;</span>)<span class="op">;</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (<span class="op">!</span> response<span class="op">.</span><span class="at">ok</span>) {</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        }</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> data <span class="op">=</span> <span class="cf">await</span> response<span class="op">.</span><span class="fu">json</span>()<span class="op">;</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> labels <span class="op">=</span> [<span class="st">&#39;ch0&#39;</span><span class="op">,</span> <span class="st">&#39;ch1&#39;</span><span class="op">,</span> <span class="st">&#39;ch2&#39;</span><span class="op">,</span> <span class="st">&#39;ch3&#39;</span>]<span class="op">;</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> values <span class="op">=</span> <span class="bu">Array</span><span class="op">.</span><span class="fu">from</span>({<span class="dt">length</span><span class="op">:</span>labels<span class="op">.</span><span class="at">length</span>}<span class="op">,</span> (_<span class="op">,</span>i)<span class="kw">=&gt;</span>data[labels[i]]<span class="op">.</span><span class="at">x</span><span class="op">.</span><span class="fu">at</span>(<span class="op">-</span><span class="dv">1</span>))<span class="op">;</span></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>        <span class="kw">new</span> <span class="fu">Chart</span>(<span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;chart_pie&#39;</span>)<span class="op">,</span> {</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>            <span class="dt">type</span><span class="op">:</span> <span class="st">&#39;pie&#39;</span><span class="op">,</span></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>            <span class="dt">data</span><span class="op">:</span> {</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>                <span class="dt">labels</span><span class="op">:</span> labels<span class="op">,</span></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>                <span class="dt">datasets</span><span class="op">:</span> [{ <span class="dt">data</span><span class="op">:</span> values }]</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>            }<span class="op">,</span></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>        })<span class="op">;</span></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    <span class="bu">window</span><span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;DOMContentLoaded&#39;</span><span class="op">,</span> main)<span class="op">;</span></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  <span class="op">&lt;/</span>script<span class="op">&gt;</span>    </span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;/</span>body<span class="op">&gt;</span></span></code></pre></div>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">&lt;</span>h3<span class="op">&gt;</span>This is an example <span class="kw">of</span> using a JavaScript library <span class="cf">with</span> SlowDash data<span class="op">&lt;/</span>h3<span class="op">&gt;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="op">&lt;</span>canvas id<span class="op">=</span><span class="st">&quot;chart_pie&quot;</span><span class="op">&gt;&lt;/</span>canvas<span class="op">&gt;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="op">&lt;</span>script type<span class="op">=</span><span class="st">&quot;module&quot;</span><span class="op">&gt;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">function</span> <span class="fu">main</span>() {</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> response <span class="op">=</span> <span class="cf">await</span> <span class="fu">fetch</span>(<span class="st">&#39;./api/data/ch0,ch1,ch2,ch3?length=60&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (<span class="op">!</span> response<span class="op">.</span><span class="at">ok</span>) {</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> data <span class="op">=</span> <span class="cf">await</span> response<span class="op">.</span><span class="fu">json</span>()<span class="op">;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> labels <span class="op">=</span> [<span class="st">&#39;ch0&#39;</span><span class="op">,</span> <span class="st">&#39;ch1&#39;</span><span class="op">,</span> <span class="st">&#39;ch2&#39;</span><span class="op">,</span> <span class="st">&#39;ch3&#39;</span>]<span class="op">;</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> values <span class="op">=</span> <span class="bu">Array</span><span class="op">.</span><span class="fu">from</span>({<span class="dt">length</span><span class="op">:</span>labels<span class="op">.</span><span class="at">length</span>}<span class="op">,</span> (_<span class="op">,</span>i)<span class="kw">=&gt;</span>data[labels[i]]<span class="op">.</span><span class="at">x</span><span class="op">.</span><span class="fu">at</span>(<span class="op">-</span><span class="dv">1</span>))<span class="op">;</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>        <span class="kw">new</span> <span class="fu">Chart</span>(<span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;chart_pie&#39;</span>)<span class="op">,</span> {</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>            <span class="dt">type</span><span class="op">:</span> <span class="st">&#39;pie&#39;</span><span class="op">,</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>            <span class="dt">data</span><span class="op">:</span> {</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>                <span class="dt">labels</span><span class="op">:</span> labels<span class="op">,</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>                <span class="dt">datasets</span><span class="op">:</span> [{ <span class="dt">data</span><span class="op">:</span> values }]</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>            }<span class="op">,</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>        })<span class="op">;</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    <span class="bu">window</span><span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;DOMContentLoaded&#39;</span><span class="op">,</span> main)<span class="op">;</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>  <span class="op">&lt;/</span>script<span class="op">&gt;</span>    </span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;/</span>body<span class="op">&gt;</span></span></code></pre></div>
 <h3 id="embedding-slowdash-layout">Embedding SlowDash Layout</h3>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;!</span>DOCTYPE HTML<span class="op">&gt;</span></span>
@@ -158,13 +159,13 @@ class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;</span>body style<span class="op">=</span><span class="st">&quot;overflow:auto&quot;</span><span class="op">&gt;</span></span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="op">&lt;</span>h3<span class="op">&gt;</span>This is an example <span class="kw">of</span> embedding SlowDash layout<span class="op">&lt;/</span>h3<span class="op">&gt;</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="op">&lt;</span>div id<span class="op">=</span><span class="st">&quot;layout&quot;</span> style<span class="op">=</span><span class="st">&quot;width:50vw;margin:2rem&quot;</span><span class="op">&gt;&lt;/</span>div<span class="op">&gt;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="op">&lt;</span>div id<span class="op">=</span><span class="st">&quot;layout&quot;</span> style<span class="op">=</span><span class="st">&quot;width:50vw;height:30vw;margin:2rem&quot;</span><span class="op">&gt;&lt;/</span>div<span class="op">&gt;</span></span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="op">&lt;</span>script type<span class="op">=</span><span class="st">&quot;module&quot;</span><span class="op">&gt;</span></span>
 <span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="im">import</span> { Layout } <span class="im">from</span> <span class="st">&#39;./slowjs/layout.mjs&#39;</span><span class="op">;</span></span>
 <span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        </span>
 <span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">function</span> <span class="fu">main</span>() {</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> config <span class="op">=</span> {</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> config <span class="op">=</span> {</span>
 <span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>            <span class="dt">panels</span><span class="op">:</span> [{</span>
 <span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>                <span class="dt">type</span><span class="op">:</span> <span class="st">&quot;timeaxis&quot;</span><span class="op">,</span></span>
 <span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>                <span class="dt">plots</span><span class="op">:</span> [</span>
@@ -177,7 +178,7 @@ class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-
 <span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> layout <span class="op">=</span> <span class="kw">new</span> <span class="fu">Layout</span>(<span class="st">&#39;#layout&#39;</span>)<span class="op">;</span></span>
 <span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> layout<span class="op">.</span><span class="fu">configure</span>(config)<span class="op">;</span></span>
 <span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> response <span class="op">=</span> <span class="cf">await</span> <span class="fu">fetch</span>(<span class="st">&#39;./api/data/ch0,ch1,ch2,ch3?length=86400&amp;resample=300&#39;</span>)<span class="op">;</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> response <span class="op">=</span> <span class="cf">await</span> <span class="fu">fetch</span>(<span class="st">&#39;./api/data/ch0,ch1,ch2,ch3?length=86400&amp;resample=300&#39;</span>)<span class="op">;</span></span>
 <span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (<span class="op">!</span> response<span class="op">.</span><span class="at">ok</span>) {</span>
 <span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span><span class="op">;</span></span>
 <span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>        }</span>
