@@ -381,7 +381,7 @@ Example 2:
 ```
 
 ### Creator Tool
-- For simple cases where shapes are only circles, `system/server/slowdash-xy2map.py` can be used to create a JSON map file from a CSV of `index, x, y`.
+- For simple cases where shapes are only circles, `utils/xy2map.py` can be used to create a JSON map file from a CSV of `index, x, y`.
 ```csv
 index,x,y
 24,0.485,0.915
@@ -391,7 +391,7 @@ index,x,y
 ```
 
 ```console
-$ slowdash-xy2map.py NAME.csv > map-NAME.json
+$ PATH/TO/SLOWDASH/xy2map.py NAME.csv > map-NAME.json
 ```
 - [TODO] This utility will be further improved. Currently hard-coded values are:
   - `width` and `height` are both 1.0.

@@ -96,8 +96,9 @@ $ source PATH/TO/SLOWDASH/bin/slowdash-bashrc
 ```
 The contents of the file look like this:
 ```bash
-alias slowdash=/PATH/TO/SLOWDASH/bin/slowdash
-alias slowdash-activate-venv="source /PATH/TO/SLOWDASH/venv/bin/activate"
+export SLOWDASH_DIR=/PATH/TO/SLOWDASH
+alias slowdash="$SLOWDASH_DIR/bin/slowdash"
+alias slowdash-activate-venv="source $SLOWDASH_DIR/venv/bin/activate"
 ```
 For permanent installation, it might be convenient to include the `source` command in the `.bashrc` (or `.zshrc on Mac) file at your home directory.
 

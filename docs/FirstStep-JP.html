@@ -297,8 +297,9 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source PATH/TO/SLOWDASH/bin/slowdash-bashrc</span></span></code></pre></div>
 <p>ちなみに中身はこんな感じです．</p>
 <div class="sourceCode" id="cb6"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> slowdash=/PATH/TO/SLOWDASH/bin/slowdash</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> slowdash-activate-venv=<span class="st">&quot;source /PATH/TO/SLOWDASH/venv/bin/activate&quot;</span></span></code></pre></div>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SLOWDASH_DIR</span><span class="op">=</span>/PATH/TO/SLOWDASH</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> slowdash=<span class="st">&quot;</span><span class="va">$SLOWDASH_DIR</span><span class="st">/bin/slowdash&quot;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> slowdash-activate-venv=<span class="st">&quot;source </span><span class="va">$SLOWDASH_DIR</span><span class="st">/venv/bin/activate&quot;</span></span></code></pre></div>
 <p>設定ファイルの <code>source</code>
 は，新しいターミナルを開くたびに毎回必要です． SlowDash
 を継続的に使うなら，上記の source コマンドを <code>.bashrc</code> (Mac

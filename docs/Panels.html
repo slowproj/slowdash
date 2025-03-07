@@ -543,8 +543,8 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb20-1"><a href=
 <h3 id="creator-tool">Creator Tool</h3>
 <ul>
 <li>For simple cases where shapes are only circles,
-<code>system/server/slowdash-xy2map.py</code> can be used to create a
-JSON map file from a CSV of <code>index, x, y</code>.</li>
+<code>utils/xy2map.py</code> can be used to create a JSON map file from
+a CSV of <code>index, x, y</code>.</li>
 </ul>
 <pre class="csv"><code>index,x,y
 24,0.485,0.915
@@ -552,7 +552,7 @@ JSON map file from a CSV of <code>index, x, y</code>.</li>
 26,0.449,0.915
 ...</code></pre>
 <div class="sourceCode" id="cb22"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-xy2map.py NAME.csv &gt; map-NAME.json</span></span></code></pre></div>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ PATH/TO/SLOWDASH/xy2map.py NAME.csv &gt; map-NAME.json</span></span></code></pre></div>
 <ul>
 <li>[TODO] This utility will be further improved. Currently hard-coded
 values are:
