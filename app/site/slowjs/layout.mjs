@@ -12,16 +12,16 @@ import { PanelPluginLoader } from './panel-plugin-loader.mjs';
 
 export class Layout {
     constructor(div, style={}) {
-        this.layoutDiv = div;
+        this.layoutDiv = $(div);
         this.PanelClassList = null;
         this.panels = [];
         
-        const dummyPlotDiv = $('<div>').addClass('sd-plot').appendTo(div);
-        const contextColor = getComputedStyle(div.get()).color;
-        const contextBackgroundColor = getComputedStyle(div.get()).backgroundColor;
+        const dummyPlotDiv = $('<div>').addClass('sd-plot').appendTo(this.layoutDiv);
+        const contextColor = getComputedStyle(this.layoutDiv.get()).color;
+        const contextBackgroundColor = getComputedStyle(this.layoutDiv.get()).backgroundColor;
         const plotColor = getComputedStyle(dummyPlotDiv.get()).color;
         const plotBackgroundColor = getComputedStyle(dummyPlotDiv.get()).backgroundColor;
-        const pageBackgroundColor = getComputedStyle(div.closest('body').get()).backgroundColor;
+        const pageBackgroundColor = getComputedStyle(this.layoutDiv.closest('body').get()).backgroundColor;
 
         let plotMiddleColor = 'gray';
         const colorPattern = /rgb.*\( *([0-9\.]+), *([0-9\.]+), *([0-9\.]+)/;
@@ -45,19 +45,32 @@ export class Layout {
         };
     }
 
+    
 
     async configure(config=null, options={}, callbacks={}) {
+        const default_options = {
+            inactive: config?.control?.inactive ?? false,   // no control buttons at all
+            immutable: config?.control?.immutable ?? true,   // no settings, no deleting
+            standalone: true,  // no popup
+        }
         const default_callbacks = {
             changeDisplayTimeRange: (range) => {},
             reconfigure: () => { this.configure(); },
             forceUpdate: () => {},
             suspend: (duration) => {},
-            popoutPanel: (index) => {},
+            popout: (panel) => {},
             publish: (topic, message) => {},
         };
         if (config !== null) {
             this.config = config;
+            this.options = $.extend({}, default_options, this.options ?? {}, options);
             this.callbacks = $.extend({}, default_callbacks, this.callbacks ?? {}, callbacks);
+            if ((this.config.control.mode ?? '') === 'display') {
+                this.options.inactive = true;
+            }
+            if ((this.config.control.mode ?? '') === 'protected') {
+                this.options.immutable = true;
+            }
         }
         if (this.config.control === undefined) {
             this.config.control = {};
@@ -70,6 +83,7 @@ export class Layout {
         }
 
         this.style = $.extend({}, this.defaultStyle, this.config._project?.style?.panel ?? {});
+        
         this.dimension = {
             layoutWidth: null,
             layoutHeight: null,
@@ -93,7 +107,7 @@ export class Layout {
             this._buildPanels();
             await this._configurePanels();
 
-            if (! this.config.control.inactive) {
+            if (! (this.options.inactive || this.options.immutable)) {
                 this._buildAddNewPanel();
             }
         }
@@ -112,16 +126,26 @@ export class Layout {
     }
 
 
-    drawRange(dataPacket, displayTimeRange) {
+    draw(data, displayTimeRange=null) {
         for (let panel of this.panels) {
-            panel.drawRange(dataPacket, displayTimeRange);
+            panel.draw(data, displayTimeRange);
         }
     }
     
 
     _setupDimensions() {
-        this.dimension.layoutWidth = document.documentElement.clientWidth;
-        this.dimension.layoutHeight = document.documentElement.clientHeight - this.layoutDiv.pageY();
+        if (this.layoutDiv.css('width')) {
+            this.dimension.layoutWidth = this.layoutDiv.boundingClientWidth();
+        }
+        else {
+            this.dimension.layoutWidth = document.documentElement.clientWidth;
+        }
+        if (this.layoutDiv.css('height')) {
+            this.dimension.layoutHeight = this.layoutDiv.boundingClientHeight();
+        }
+        else {
+            this.dimension.layoutHeight = document.documentElement.clientHeight - this.layoutDiv.pageY();
+        }
 
         const scrollBarWidth = 20; // this does not exist yet, so <html>.clientWidth does not include it
         const layoutInnerWidth = this.dimension.layoutWidth - scrollBarWidth;
@@ -198,7 +222,7 @@ export class Layout {
             this.layoutDiv.append(panelDiv);
         }
         
-        if (! (this.config.control.inactive??false)) {
+        if (! this.options.inactive) {
             panelDiv.bind('pointerenter', e => {
                 const target = $(e.target);
                 target.css('border', '1px solid rgba(128,128,128,0.7)');
@@ -253,8 +277,16 @@ export class Layout {
             'font-size': this.dimension.fontScaling + '%',
         });
 
+        const options = {
+            project_name: this.config._project?.project?.name,
+            is_secure: this.config._project?.project?.is_secure ?? false,
+            inactive: this.options.inactive,
+            immutable: this.options.immutable,
+            standalone: this.options.standalone,
+        };
+        
         const callbacks = {
-            changeDisplayTimeRange: range => {
+            changeDisplayTimeRange: (range) => {
                 this.callbacks.changeDisplayTimeRange(range);
             },
             reconfigure: () => {
@@ -267,25 +299,13 @@ export class Layout {
                 this.callbacks.suspend(duration);
             },
             popout: (p) => {
-                for (let i = 0; i < this.panels.length; i++) {
-                    if (this.panels[i] === p) {
-                        this.callbacks.popoutPanel(i);
-                    }
-                }
+                this.callbacks.popout(p);
             },
             publish: (topic, message) => {
                 this.callbacks.publish(topic, message);
             },
         };
 
-        const options = {
-            project_name: this.config._project?.project?.name,
-            is_secure: this.config._project?.project?.is_secure ?? false,
-            inactive: this.config.control.inactive || (this.config.control.mode ?? '') === 'display',  // no control buttons
-            immutable: (this.config.control.mode ?? '') === 'protected',  // no settings, no deleting
-            standalone: false,  // no popup
-        };
-        
         for (let i = 0; i < this.panels.length; i++) {
             if (this.panels[i]) {
                 await this.panels[i].configure(this.config.panels[i], options, callbacks);

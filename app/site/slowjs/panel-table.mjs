@@ -108,10 +108,10 @@ class TablePanel extends Panel {
     }
     
 
-    drawRange(dataPacket, displayTimeRange) {
-        let data = dataPacket.data[this.config.channel]?.x;
+    draw(dataPacket, displayTimeRange=null) {
+        let data = dataPacket[this.config.channel]?.x;
         if (! data) {
-            if (! dataPacket.isTransitional) {
+            if (! (dataPacket.__meta?.isPartial ?? false)) {
                 this.table.empty();
                 this.table.html('<tr><td>No Table Data</td></tr>');
             }
@@ -251,10 +251,10 @@ class TreePanel extends Panel {
     }
     
 
-    drawRange(dataPacket, displayTimeRange) {
-        let data = dataPacket.data[this.config.channel]?.x;
+    draw(dataPacket, displayTimeRange=null) {
+        let data = dataPacket[this.config.channel]?.x;
         if (! data) {
-            if (! dataPacket.isTransitional) {
+            if (! (dataPacket.__meta?.isPartial ?? false)) {
                 this.contentDiv.empty();
                 this.contentDiv.html('No Tree Data');
             }
@@ -425,10 +425,10 @@ class BlobPanel extends Panel {
     }
     
 
-    drawRange(dataPacket, displayTimeRange) {
-        let data = dataPacket.data[this.config.channel];
+    draw(dataPacket, displayTimeRange=null) {
+        let data = dataPacket[this.config.channel];
         if (! data) {
-            if (! dataPacket.isTransitional) {
+            if (! (dataPacket.__meta?.isPartial ?? false)) {
                 this.contentDiv.empty();
                 this.contentDiv.html('No Blob Data');
             }

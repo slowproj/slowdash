@@ -6,12 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" type="text/css" href="slowjs/slowdash.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style type="text/css">
-    body {
-        overflow: auto;
-        margin: 1em;
-    }
-  </style>
 </head>
 
 <body>
@@ -35,7 +29,6 @@
   </div>
 
   <script type="module">
-    import { JG as $ } from './slowjs/jagaimo/jagaimo.mjs';
     import { TimeAxisPlotPanel } from './slowjs/panel-plot.mjs';
         
     async function main() {
@@ -61,7 +54,7 @@
             legend: { style: "side" }
         };
         
-        let panel = new TimeAxisPlotPanel($('#panel'));
+        let panel = new TimeAxisPlotPanel(document.getElementById('panel'));
         await panel.configure(config);
         panel.draw(data);
 
@@ -102,4 +95,3 @@
     window.addEventListener('DOMContentLoaded', main);
   </script>    
 </body>
-    

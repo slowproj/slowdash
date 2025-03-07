@@ -344,8 +344,8 @@ export class Frame {
             },
             reloadInterval: 0,
             reloadIntervalSelection: [ 0, -1, 2, 5, 10, 30, 60, 5*60, 15*60, 30*60, 60*60 ],
-            reloadIntervalChange: function(interval){},
-            reload: async function(){},
+            reloadIntervalChange: (interval) => {},
+            reload: async () => {},
             resetDelay: 0
         };
         this.obj = obj;

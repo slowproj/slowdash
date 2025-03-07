@@ -113,8 +113,8 @@ class Plot {
             }
         }
     }
-    
-    draw(dataPacket) {}
+
+    draw(dataPacket, isCurrent, isPartial) {}
 
     getLabel() {
         if ((this.config.label ?? '') !== '') {
@@ -170,10 +170,10 @@ class HistogramPlot extends Plot {
         }
     }
 
-    draw(dataPacket) {
-        let data = dataPacket.data[this.config.channel]?.x;
+    draw(dataPacket, isCurrent, isPartial) {
+        let data = dataPacket[this.config.channel]?.x;
         if (! data) {
-            if (! dataPacket.isTransitional) {
+            if (! isPartial) {
                 this.histogram.counts = [];
             }
             return;
@@ -249,14 +249,14 @@ class TimeseriesHistogramPlot extends HistogramPlot {
         bindInput(this.config.bins, 'max', binmaxInput.css('width', '5em'));
     }
     
-    draw(dataPacket) {
-        if (dataPacket.isCurrent) {
+    draw(dataPacket, isCurrent, isPartial) {
+        if (isCurrent) {
             return;
         }
         
-        let ts = dataPacket.data[this.config.channel];
+        let ts = dataPacket[this.config.channel];
         if (! ts) {
-            if (! dataPacket.isTransitional) {
+            if (! isPartial) {
                 this.setStat('---');
                 this.histogram.counts = [];
             }
@@ -348,10 +348,10 @@ class Histogram2dPlot extends Plot {
         super.setStyle(style);
     }
 
-    draw(dataPacket) {
-        let data = dataPacket.data[this.config.channel]?.x;
+    draw(dataPacket, isCurrent, isPartial) {
+        let data = dataPacket[this.config.channel]?.x;
         if (! data) {
-            if (! dataPacket.isTransitional) {
+            if (! isPartial) {
                 this.histogram2d.counts = [];
             }
             return;
@@ -435,10 +435,10 @@ class GraphPlot extends Plot {
         super.openSettings(div);
     }
     
-    draw(dataPacket) {
-        let data = dataPacket.data[this.config.channel]?.x;
+    draw(dataPacket, isCurrent, isPartial) {
+        let data = dataPacket[this.config.channel]?.x;
         if (! data) {
-            if (! dataPacket.isTransitional) {
+            if (! isPartial) {
                 this.graph.y = [];
             }
             return;
@@ -719,15 +719,15 @@ class TimeseriesScatterPlot extends GraphPlot {
 
 
     
-    draw(dataPacket) {
-        if (dataPacket.isCurrent) {
+    draw(dataPacket, isCurrent, isPartial) {
+        if (isCurrent) {
             return;
         }
         
-        let ts0 = dataPacket.data[this.config.channelX];
-        let ts1 = dataPacket.data[this.config.channelY];
+        let ts0 = dataPacket[this.config.channelX];
+        let ts1 = dataPacket[this.config.channelY];
         if (! ts0 || ! ts1) {
-            if (! dataPacket.isTransitional) {
+            if (! isPartial) {
                 this.setStat('---');
                 this.graph.x = [];
                 this.graph.y = [];
@@ -778,14 +778,14 @@ class TimeseriesPlot extends LineMarkerPlot {
         super.configure(config, axes, legend, panel);
     }
     
-    draw(dataPacket) {
-        if (dataPacket.isCurrent) {
+    draw(dataPacket, isCurrent, isPartial) {
+        if (isCurrent) {
             return;
         }
         
-        let ts = dataPacket.data[this.config.channel];
+        let ts = dataPacket[this.config.channel];
         if (! ts) {
-            if (! dataPacket.isTransitional) {
+            if (! isPartial) {
                 this.setStat('---');
                 this.graph.x = [];
                 this.graph.y = [];
@@ -801,7 +801,7 @@ class TimeseriesPlot extends LineMarkerPlot {
             ts.x = [ ts.x ];
         }
 
-        const t0 = dataPacket.data[this.config.channel].start;
+        const t0 = dataPacket[this.config.channel].start;
         this.graph.x = [];
         this.graph.y = [];
 
@@ -928,7 +928,7 @@ class PlotPanel extends Panel {
     
     constructor(div, style={}) {
         super(div, style);
-        this.currentDataTimeRange = null;
+        this.initialDisplayTimeRange = null;
     }
 
     
@@ -1037,7 +1037,7 @@ class PlotPanel extends Panel {
         const sizeRatio = Math.min(w / referencePlotWidth, h / referencePlotHeight);
         const plotScaling = sizeRatio > 0.7 ? 1 : sizeRatio / 0.7;
 
-        this.currentDataTimeRange = null;
+        this.initialDisplayTimeRange = null;
         this.isTimeSeriesPlot = true;
         this.isQuadMeshPlot = false;
         
@@ -1287,13 +1287,20 @@ class PlotPanel extends Panel {
     }
     
     
-    drawRange(dataPacket, displayTimeRange) {
-        if ((! dataPacket.isCurrent) && dataPacket?.range) {
-            this.currentDataTimeRange = { from: dataPacket.range.from, to: dataPacket.range.to };
+    draw(data, displayTimeRange=null) {
+        const isCurrent = data?.__meta?.isCurrent ?? false;
+        const isPartial = data.__meta?.isPartial ?? false;
+        
+        if (! isCurrent) {
+            this.initialDisplayTimeRange = this.findDataTimeRange(data, displayTimeRange);
         }
-        for (const p of this.plots) {
-            p.draw(dataPacket);
+
+        if (data) {
+            for (const p of this.plots) {
+                p.draw(data, isCurrent, isPartial);
+            }
         }
+        
         const [xmin, xmax] = this.adjustXRange(false);
         const [ymin, ymax] = this.adjustYRange(false);
         const [zmin, zmax] = this.adjustZRange(false);
@@ -1306,8 +1313,8 @@ class PlotPanel extends Panel {
         this.fillInputChannels(channels);
         let opts = [
             'channels=' + channels.join(','),
-            'length=' + (this.currentDataTimeRange.to - this.currentDataTimeRange.from),
-            'to=' + (this.currentDataTimeRange.to),
+            'length=' + (this.initialDisplayTimeRange.to - this.initialDisplayTimeRange.from),
+            'to=' + (this.initialDisplayTimeRange.to),
         ];
         window.open('./slowdown.html?' + opts.join('&'));
     }
@@ -1387,6 +1394,26 @@ class PlotPanel extends Panel {
         }
         img.onerror = e=> console.log(e);
         img.src = svgUrl;
+    }
+
+    
+    findDataTimeRange(data, displayTimeRange=null) {
+        if (displayTimeRange) {
+            return displayTimeRange;
+        }
+        if (data?.__meta?.range) {
+            return data.__meta.range;
+        }
+        if (data) {
+            for (const ch in data) {
+                if (data[ch].start && data[ch].length) {
+                    return { from: data[ch].start, to: data[ch].start + data[ch].length };
+                }
+            }
+        }
+
+        const now = $.time();
+        return { from: now-3600, to: now };
     }
 
     
@@ -1582,7 +1609,7 @@ class TimeAxisPlotPanel extends PlotPanel {
     
     async configure(config, options={}, callbacks={}) {
         await super.configure(config, options, callbacks);
-        this.currentDataTimeRange = null;
+        this.initialDisplayTimeRange = null;
         this.currentDisplayTimeRange = null;
     }
 
@@ -1668,23 +1695,23 @@ class TimeAxisPlotPanel extends PlotPanel {
     }
 
     
-    drawRange(dataPacket, displayTimeRange) {
-        if (dataPacket.isCurrent) {
+    draw(data, displayTimeRange=null) {
+        if (data?.__meta?.isCurrent ?? false) {
             return;
         }
-        if (dataPacket?.range) {
-            this.currentDataTimeRange = { from: dataPacket.range.from, to: dataPacket.range.to };
-        }
-        this.currentDisplayTimeRange = displayTimeRange ?? this.currentDataTimeRange ?? null;
-        if (this.currentDisplayTimeRange === null) {
-            let currentAxesRange = this.axes.getRange();
-            this.currentDisplayTimeRange = { from:currentAxesRange.xmin, to:currentAxesRange.xmax };
-        }
-        this.adjustXRange();
         
-        for (const p of this.plots) {
-            p.draw(dataPacket);
+        this.initialDisplayTimeRange = this.findDataTimeRange(data, displayTimeRange);
+        this.currentDisplayTimeRange = this.initialDisplayTimeRange;
+        this.adjustXRange();
+
+        if (data) {
+            const isCurrent = false;
+            const isPartial = data.__meta?.isPartial ?? false;
+            for (const p of this.plots) {
+                p.draw(data, isCurrent, isPartial);
+            }
         }
+        
         this.adjustYRange();
     }
 
@@ -1736,7 +1763,7 @@ class TimeAxisPlotPanel extends PlotPanel {
     }
     
     resetRange() {
-        this.currentDisplayTimeRange = this.currentDataTimeRange;
+        this.currentDisplayTimeRange = this.initialDisplayTimeRange;
         const [xmin, xmax] = this.adjustXRange(false);
         const [ymin, ymax] = this.adjustYRange(false);
         this.axes.setRange(xmin, xmax, ymin, ymax);

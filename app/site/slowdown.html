@@ -4,10 +4,17 @@
 <html lang="en">
 <head>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SD Downloader</title>
   <link rel="icon" href="favicon.png">
   <link rel="stylesheet" type="text/css" href="slowjs/slowdash.css">
   <link rel="stylesheet" type="text/css" id="sd-theme-css">
+  <style type="text/css">
+    body {
+        margin: 0;
+        overflow: hidden;
+    }
+  </style>
 </head>
 
 <body>
@@ -77,9 +84,10 @@
         
         await layout.configure(config);
 
-        $(window).bind('resize', async ()=>{
+        $(window).bind('resize', ()=>{
             if (window.innerWidth > 0) {
-                await layout.configure();
+                $('#sd-layout').css('width', '').css('height', '');
+                layout.configure();
             }
         });
     }

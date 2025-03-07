@@ -121,14 +121,14 @@ class HtmlPanel extends Panel {
     }
 
     
-    drawRange(dataPacket, displayTimeRange) {
+    draw(data, displayTimeRange=null) {
         if (this.config.reload ?? false) {
             this.loadPage().then(()=>{
-                this._updateContents(dataPacket, displayTimeRange);
+                this._updateContents(data, displayTimeRange);
             });
         }
         else {
-            this._updateContents(dataPacket, displayTimeRange);
+            this._updateContents(data, displayTimeRange);
         }
     }
 
@@ -278,7 +278,7 @@ class HtmlPanel extends Panel {
                 if (variable.channel in dataPacket.data) {
                     data = dataPacket.data[variable.channel];
                 }
-                else if (dataPacket.isTransitional) {
+                else if (dataPacket.isPartial) {
                     continue;
                 }
             }
@@ -474,11 +474,11 @@ class HrefPanel extends Panel {
     }
 
     
-    drawRange(dataPacket, displayTimeRange) {
+    draw(data, displayTimeRange=null) {
         if ((this.config.reload === false) && this.iframe.attr('src')) {
             return;
         }
-        if (dataPacket.isTransitional) {
+        if (data && (data?.__meta?.isPartial ?? false)) {
             return;
         }
         this.iframe.attr('src', this.config.url); // this will cause reloading

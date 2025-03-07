@@ -74,7 +74,7 @@ export class Panel {
     static buildConstructRows(table, on_done=config=>{}) {}
 
     constructor(div, style={}) {
-        this.div = div;
+        this.div = $(div);
         this.style = style;
     }
 
@@ -95,8 +95,8 @@ export class Panel {
         };
 
         this.config = config;
-        this.callbacks = $.extend({}, default_callbacks, callbacks);
         this.options = $.extend({}, default_options, options);
+        this.callbacks = $.extend({}, default_callbacks, callbacks);
 
         this._setupSettingsDialog();
         if (! this.options.inactive) {
@@ -144,33 +144,13 @@ export class Panel {
     }
 
     
-    draw(data) {
-        let range = {}; 
-        const keys = Object.keys(data);
-        if (keys.length > 0) {
-            const d0 = data[keys[0]];
-            range = { from: d0.start, to: d0.start + d0.length };
-        }
-        else {
-            now = $.time();
-            range = { from: now - 60, to: now };
-        }
-            
-        this.drawRange({
-            isTransitional: true,
-            range: range,
-            data: data
-        });
-    }
-
-    
     openSettings(div) {}
 
     
     fillInputChannels(dataRequest) {}
 
     
-    drawRange(dataPacket, displayTimeRange) {}
+    draw(dataPacket, displayTimeRange=null) {}
 
     
     _setupSettingsDialog() {

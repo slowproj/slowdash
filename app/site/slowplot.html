@@ -4,10 +4,17 @@
 <html lang="en">
 <head>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SlowPlot</title>
   <link rel="icon" href="favicon.png">
   <link rel="stylesheet" type="text/css" href="slowjs/slowdash.css">
   <link rel="stylesheet" type="text/css" id="sd-theme-css">
+  <style type="text/css">
+    body {
+        margin: 0;
+        overflow: hidden;
+    }
+  </style>
 </head>
 
 <body>
@@ -155,7 +162,7 @@
             style: style,
             reloadInterval: config.control.reload,
             reloadIntervalChange: (interval) => { config.control.reload = interval; },
-            reload: async (on_complete) => { return update(controller, config, on_complete); },
+            reload: async () => { return await update(controller, config); },
             resetDelay: resetDelay,
         });
         
@@ -301,20 +308,18 @@
                 frame.suspend(duration);
                 frame.scheduleReset();
             },
-            popoutPanel: (index) => {
-                popoutPanel(config, index, currentDisplayTimeRange);
-            },
         });
         frame.start();
-        $(window).bind('resize', async ()=>{
+        $(window).bind('resize', ()=>{
             if (window.innerWidth > 0) {
-                await controller.configure();
+                $('#sd-layout').css('width', '').css('height', '');
+                controller.configure();
             }
         });
     }
 
 
-    async function update(controller, config, on_complete) {
+    async function update(controller, config) {
         let length = config.control?.range?.length ?? 0;
         if (! (length > 0)) {
             length = 3600;
@@ -330,48 +335,22 @@
         }
         
         const status = await controller.update({from:from, to:to, resampling:resampling});
-        if (on_complete) {
-            if (status.code == 200) {
-                on_complete();
-            }
-            else {
-                let message = 'Error on ';
-                message += (new JGDateTime()).asString('%a, %b %d %H:%M');
-                message += " [ ";
-                if (status.code >= 0) {
-                    message += "Status" + status.code + ", ";
-                }
-                message += status.text + " ]";
-                on_complete(message);
-            }
-        }
-    }
-
-
-    function popoutPanel(config, index, currentDisplayTimeRange) {
-        let popout_config = JSON.parse(JSON.stringify(config));
-        delete popout_config._project;
-        delete popout_config.meta;
-        popout_config.panels = [ JSON.parse(JSON.stringify( config.panels[index])) ];
-        popout_config.control.grid = { 'rows': 1, 'columns': 1 };
-        popout_config.control.reload = 0;
-        if (currentDisplayTimeRange !== null) {
-            const [from, to] = [currentDisplayTimeRange.from, currentDisplayTimeRange.to];
-            popout_config.control.range = {
-                "length": Math.round(to-from),
-                "to": Math.round(to)
-            };
+        if (status.code == 200) {
+            return null;
         }
         else {
-            popout_config.control.range.to = $.time();
+            let message = 'Error on ';
+            message += (new JGDateTime()).asString('%a, %b %d %H:%M');
+            message += " [ ";
+            if (status.code >= 0) {
+                message += "Status" + status.code + ", ";
+            }
+            message += status.text + " ]";
+            return message;
         }
-
-        let url = window.location.origin + window.location.pathname;
-        url += '?configdata=' + btoa(JSON.stringify(popout_config));
-        window.open(url);
     }
 
-    
+
     function openConfigUrlDialog(dialog, config, currentDisplayTimeRange) {
         const updated_config = JSON.parse(JSON.stringify(config));
         if (currentDisplayTimeRange !== null) {

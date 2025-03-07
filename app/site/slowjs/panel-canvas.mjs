@@ -86,7 +86,7 @@ class CanvasItem {
         }
         let value; {
             const tolerable_gap = this.metric['tolerable-gap'] ?? 60;
-            let ts = dataPacket.data[this.metric.channel];
+            let ts = dataPacket[this.metric.channel];
             let n = ts?.t?.length || 0;
             if ((n <= 0) || (ts.t[n-1] < ts.length-tolerable_gap)) {
                 value = null;
@@ -565,9 +565,12 @@ class PlotItem extends CanvasItem {
         if (this.metric?.channel === undefined) {
             return;
         }
-        let ts = dataPacket.data[this.metric.channel];
-        let xmax = dataPacket.range.to;
-        let xmin = (this.attr.length > 0) ? (xmax - this.attr.length) : dataPacket.range.from;
+        let ts = dataPacket[this.metric.channel];
+        let to = dataPacket?.__meta?.range?.to ?? $.time();
+        let from = dataPacket?.__meta?.range?.from ?? (to - 3600);
+        
+        let xmax = to;
+        let xmin = (this.attr.length > 0) ? (xmax - this.attr.length) : from;
         const marginFraction = parseFloat(this.attr['timerange-margin-percent'])*0.01;
         let xmargin = (marginFraction > 0 && marginFraction < 1) ? marginFraction*(xmax - xmin) : 0;
         this.plot.setRange(xmin-xmargin, xmax+xmargin);
@@ -716,8 +719,8 @@ class Viewlet {
         this.plotDiv.css('display', 'block');
         this.plotDiv.find('div').at(0).text(channel);
 
-        let to = dataPacket?.range?.to ?? $.time();
-        let from = dataPacket?.range?.from ?? (to - 3600);
+        let to = dataPacket?.__meta?.range?.to ?? $.time();
+        let from = dataPacket?.__meta?.range?.from ?? (to - 3600);
         let slowplotUrl = './slowplot.html?';
         slowplotUrl += [
             'channel=' + channel,
@@ -731,7 +734,7 @@ class Viewlet {
         const xmargin = 0.03*(xmax - xmin);
         this.miniplot.setRange(xmin-xmargin, xmax+xmargin);
         
-        let ts = dataPacket?.data[channel];
+        let ts = dataPacket ? dataPacket[channel] : null;
         if ((ts === undefined) || (ts === null) || (ts.t.length <= 0)) {
             this.miniplot.clear(false);
             return;
@@ -993,13 +996,13 @@ export class CanvasPanel extends Panel {
     }
 
     
-    drawRange(dataPacket, displayTimeRange) {
-        if (dataPacket.isTransitional) {
+    draw(data, displayTimeRange=null) {
+        if (data?.__meta?.isPartial ?? false) {
             return;
         }
-        this.currentDataPacket = dataPacket;
+        this.currentDataPacket = data;
         for (let item of this.items) {
-            item.update(dataPacket);
+            item.update(data);
         }
     }
 

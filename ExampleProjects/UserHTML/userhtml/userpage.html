@@ -6,22 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" type="text/css" href="slowjs/slowdash.css">
   <style type="text/css">
-    #panel {
-        width: 40vw;
-        margin:2rem;
-    }
     #src {
-        width: 40vw;
         overflow: auto;
         white-space: pre;
         font-family: monospace;
-        margin:2rem;
         padding: 1em;
         background: #dddddd;
-    }
-    body {
-        overflow: auto;
-        margin: 1em;
     }
   </style>
 </head>
@@ -29,7 +19,7 @@
 <body>
   <h3>This is a User HTML Page</h3>
   This is an example page of a User HTML Files.
-  Files placed under project's "userhtml" directory are accessible
+  Files placed under project "userhtml" directory are accessible
   though the SlowDash Web API of "/api/userhtml/{filename}".
   If the file does not exist, then the file is searched for
   from the SlowDash web directory ("slowdash/app/sites"),
@@ -44,41 +34,43 @@
     <div>
       <h4>Source Code of This Page</h4>
       This source code can be found at "ExampleProjects/Experimental/UserHTML".
-      <div id="src"></div>
+      <div id="src" style="width:40vw;margin:2rem"></div>
     </div>
     <div>
-      <h4>Example for Embedding a Plot Panel</h4><div id="panel"></div>
-      To embed a panel in your HTML, crate a Panel object with giving a '&lt;div&gt;' element.
+      <h4>Example for Embedding a SlowJS Layout</h4>
+      <div id="layout" style="width:35vw;height:25vw;margin:2rem"></div>
+      To embed a layout in your HTML, crate a Layout object with giving a '&lt;div&gt;' element.
       Then configure it with a data structure identical to the one used in the SlowPlot config.
       Fetch JSON data using SlowDash API, parse it, and call the "draw()" method with the parsed data.
     </div>
   </div>
 
   <script type="module">
-    import { JG as $ } from './slowjs/jagaimo/jagaimo.mjs';
-    import { TimeAxisPlotPanel } from './slowjs/panel-plot.mjs';
+    import { Layout } from './slowjs/layout.mjs';
         
     async function main() {
         let config = {
-            type: "timeaxis",
-            plots: [
-                { type: "timeseries", channel: "ch0" },
-                { type: "timeseries", channel: "ch1" }
-            ],
-            "legend": { "style": "box" }
+            panels: [{
+                type: "timeaxis",
+                plots: [
+                    { type: "timeseries", channel: "ch0" },
+                    { type: "timeseries", channel: "ch1" }
+                ],
+                legend: { style: "box" }
+            }]
         };
 
-        let panel = new TimeAxisPlotPanel($('#panel'));
-        await panel.configure(config, {inactive:true});
+        let layout = new Layout('#layout');
+        await layout.configure(config);
         
         let data_response = await fetch('./api/data/ch0,ch1?length=86400&resample=300');
         if (data_response.ok) {
-            panel.draw(await data_response.json());
+            layout.draw(await data_response.json());
         }
 
         let src_response = await fetch('./api/userhtml/userpage.html');
         if (src_response.ok) {
-            $('#src').text(await src_response.text());
+            document.querySelector('#src').textContent = await src_response.text();
         }
     }
 

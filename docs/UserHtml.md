@@ -1,5 +1,5 @@
 ---
-title: User HTML (experimental)
+title: User HTML
 ---
 
 # Overview
@@ -25,14 +25,14 @@ This examples fetches data using the SlowDash Web API and makes a pie chart usin
   <canvas id="chart_pie"></canvas>
   <script type="module">
     async function main() {
-        let data_response = await fetch('./api/data/ch0,ch1,ch2,ch3?length=60');
-        if (! data_response.ok) {
+        let response = await fetch('./api/data/ch0,ch1,ch2,ch3?length=60');
+        if (! response.ok) {
             return;
         }
-        const dataPacket = await data_response.json();
+        const data = await response.json();
         
         const labels = ['ch0', 'ch1', 'ch2', 'ch3'];
-        const values = Array.from({length:labels.length}, (_,i)=>dataPacket[labels[i]].x.at(-1));
+        const values = Array.from({length:labels.length}, (_,i)=>data[labels[i]].x.at(-1));
         new Chart(document.getElementById('chart_pie'), {
             type: 'pie',
             data: {
@@ -58,33 +58,32 @@ This examples fetches data using the SlowDash Web API and makes a pie chart usin
 
 <body style="overflow:auto">
   <h3>This is an example of embedding SlowDash layout</h3>
-  <div id="panel" style="width:50vw;margin:2rem"></div>
+  <div id="layout" style="width:50vw;margin:2rem"></div>
 
   <script type="module">
-    import { JG as $ } from './slowjs/jagaimo/jagaimo.mjs';
-    import { TimeAxisPlotPanel } from './slowjs/panel-plot.mjs';
+    import { Layout } from './slowjs/layout.mjs';
         
     async function main() {
         let config = {
-            type: "timeaxis",
-            plots: [
-                { type: "timeseries", channel: "ch0" },
-                { type: "timeseries", channel: "ch1" }
-            ],
-            "legend": { "style": "box" }
+            panels: [{
+                type: "timeaxis",
+                plots: [
+                    { type: "timeseries", channel: "ch0" },
+                    { type: "timeseries", channel: "ch1" }
+                ],
+                legend: { style: "box" }
+            }]
         };
-        let style = {};
 
-        let panel = new TimeAxisPlotPanel($('#panel'), style);
-        panel.configure(config);
+        let layout = new Layout('#layout');
+        await layout.configure(config);
         
-        let data_response = await fetch('./api/data/ch0,ch1?length=86400&resample=300');
-        if (! data_response.ok) {
-            return
+        let response = await fetch('./api/data/ch0,ch1,ch2,ch3?length=86400&resample=300');
+        if (! response.ok) {
+            return;
         }
-        data = await data_response.json();
-
-        panel.draw(data);
+        const data = await response.json();
+        layout.draw(data);
     }
 
     window.addEventListener('DOMContentLoaded', main);

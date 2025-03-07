@@ -61,7 +61,6 @@ export class MapPanel extends Panel {
         
         this.map = null;
         this.scale = null;
-        this.currentDataPacket = null;
         this.loaded_map = null;
     }
 
@@ -351,24 +350,18 @@ export class MapPanel extends Panel {
     }
 
     
-    drawRange(dataPacket, displayTimeRange) {
-        if (dataPacket !== null) {
-            if (dataPacket.isTransitional) {
-                return;
-            }
-            this.currentDataPacket = dataPacket;
-        }
-        if (this.currentDataPacket === null) {
+    draw(dataPacket, displayTimeRange=null) {
+        if ((dataPacket === null) || (dataPacket.__meta?.isPartial ?? false)) {
             return;
         }
-        if ((! this.config.channel) || (this.currentDataPacket.isTransitional)) {
+        if (! this.config.channel) {
             return;
         }
         if (! this.drawingArea) {
-            return;
-        }
+            return; 
+       }
         
-        let data = this.currentDataPacket.data[this.config.channel]?.x;
+        let data = dataPacket[this.config.channel]?.x;
         if (! data) {
             data = { 'x': [], 'y': [] };
         }
