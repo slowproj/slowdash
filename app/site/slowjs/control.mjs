@@ -56,6 +56,7 @@ export class Controller {
         };
         await this.view.configure(config, this.options, view_callbacks);
         
+        
         if (this.currentData !== null) {
             this.view.draw(this.currentData);
         }
@@ -95,10 +96,10 @@ export class Controller {
                     channels[ch] = 1;
                 }
             }
-        }        
+        }
         
         if (Object.keys(channels).length <= 0) {
-            this.view.draw({}, this.currentData?.__meta?.range ?? null);
+            this.view.draw(this.currentData);
             return {code:200, text:'OK'};
         }
         

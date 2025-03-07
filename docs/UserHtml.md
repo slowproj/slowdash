@@ -21,8 +21,10 @@ This examples fetches data using the SlowDash Web API and makes a pie chart usin
 <head>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
   <canvas id="chart_pie"></canvas>
+  
   <script type="module">
     async function main() {
         let response = await fetch('./api/data/ch0,ch1,ch2,ch3?length=60');
@@ -58,7 +60,7 @@ This examples fetches data using the SlowDash Web API and makes a pie chart usin
 
 <body style="overflow:auto">
   <h3>This is an example of embedding SlowDash layout</h3>
-  <div id="layout" style="width:50vw;margin:2rem"></div>
+  <div id="layout" style="width:50vw;height:30vw;margin:2rem"></div>
 
   <script type="module">
     import { Layout } from './slowjs/layout.mjs';
@@ -74,7 +76,6 @@ This examples fetches data using the SlowDash Web API and makes a pie chart usin
                 legend: { style: "box" }
             }]
         };
-
         let layout = new Layout('#layout');
         await layout.configure(config);
         

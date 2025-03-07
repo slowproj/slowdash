@@ -275,10 +275,10 @@ class HtmlPanel extends Panel {
             }
             let data = null;
             if (variable.channel) {
-                if (variable.channel in dataPacket.data) {
-                    data = dataPacket.data[variable.channel];
+                if (variable.channel in dataPacket) {
+                    data = dataPacket[variable.channel];
                 }
-                else if (dataPacket.isPartial) {
+                else if (dataPacket.__meta?.isPartial || false) {
                     continue;
                 }
             }
