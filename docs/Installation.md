@@ -94,7 +94,12 @@ This will create a bash file to set environmental variables. `source` it to incl
 ```console
 $ source PATH/TO/SLOWDASH/bin/slowdash-bashrc
 ```
-For permanent installation, it might be convenient to add this line to your `.bashrc` (or `.zshrc` on Mac) file at your home directory.
+The contents of the file look like this:
+```bash
+alias slowdash=/PATH/TO/SLOWDASH/bin/slowdash
+alias slowdash-activate-venv="source /PATH/TO/SLOWDASH/venv/bin/activate"
+```
+For permanent installation, it might be convenient to include the `source` command in the `.bashrc` (or `.zshrc on Mac) file at your home directory.
 
 ### System-wide Installation
 ```console

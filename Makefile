@@ -8,13 +8,13 @@ PIP_DBS = influxdb-client redis pymongo couchdb
 PIP_OPTS = numpy matplotlib lmfit pillow pyserial pyvisa
 
 
-all: venv main setup-venv success
+all: venv slowdash setup-venv success
 
-without-venv: main success
+without-venv: slowdash success
 
 
 
-main:
+slowdash:
 	@if [ ! -f "$(SLOWDASH_DIR)/app/site/slowjs/jagaimo/jagaimo.mjs" ]; then \
 		if [ x$(GIT) = x ]; then \
 			echo 'submodules not cloned, git command not available'; \
@@ -68,6 +68,7 @@ main:
 	@ln -fs ../../docs ./app/site
 	@if [ -d .git/hooks ]; then ln -fs ../../.git-hooks/pre-commit .git/hooks; fi
 
+	@echo "generating requirements.txt..."
 	@echo "# SlowDash requirements #" > requirements.txt
 	@for pkg in $(PIP_REQS); do echo $$pkg >> requirements.txt; done
 	@echo "-e ./lib/slowpy" >> requirements.txt
@@ -78,14 +79,13 @@ main:
 	@echo "# packages users might use #" >> requirements.txt
 	@for pkg in $(PIP_OPTS); do echo $$pkg >> requirements.txt; done
 
-	@make setup-venv --no-print-directory
-
 
 venv:
 	python3 -m venv venv
 
 
 setup-venv:
+	@echo "setting up venv..."
 	@if [ -d ./venv ]; then . venv/bin/activate; pip install -r requirements.txt; deactivate; fi
 
 

@@ -87,14 +87,16 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <ul>
 <li><a href="#course-overview" id="toc-course-overview">Course
 Overview</a></li>
-<li><a href="#test-data-generation"
-id="toc-test-data-generation">Test-Data Generation</a></li>
+<li><a href="#test-data-generation" id="toc-test-data-generation">Test
+Data Generation</a></li>
 <li><a href="#basic-usage" id="toc-basic-usage">Basic Usage</a>
 <ul>
 <li><a href="#project-configuration"
 id="toc-project-configuration">Project Configuration</a></li>
-<li><a href="#running" id="toc-running">Running</a></li>
-<li><a href="#making-plots" id="toc-making-plots">Making Plots</a></li>
+<li><a href="#running-the-application"
+id="toc-running-the-application">Running the Application</a></li>
+<li><a href="#creating-plots" id="toc-creating-plots">Creating
+Plots</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -102,32 +104,33 @@ id="toc-project-configuration">Project Configuration</a></li>
 </header>
 
 <h1 id="course-overview">Course Overview</h1>
-<p>In this tour we will use SQLite for data backend which does not
-require server setup. All the files created during the tour are confined
-under a project directory, and can be removed completely and safely by
-just deleting the directory.</p>
+<p>This tour demonstrates how to use SlowDash with SQLite as the data
+backend, which requires no server setup. All files created during this
+tour are contained within a single project directory and can be
+completely removed by simply deleting that directory.</p>
 <h3 id="menu">Menu</h3>
 <ul>
-<li>Configuring a project, with describing the user data schema</li>
-<li>Running Slow-Dash</li>
-<li>Creating several plots on a Web-browser</li>
-<li><del>Running user code on the server-side</del> (preparing)</li>
-<li><del>Sending commands to the user code</del> (preparing)</li>
+<li>Configure a project by defining the user data schema</li>
+<li>Run Slow-Dash</li>
+<li>Create interactive plots through the web interface</li>
+<li><del>Execute user code on the server-side</del> (coming soon)</li>
+<li><del>Send commands to user code</del> (coming soon)</li>
 </ul>
-<h3 id="first-thing-first">First thing first</h3>
-<p>To get started, prepare a place:</p>
+<h3 id="getting-started">Getting Started</h3>
+<p>First, create and navigate to a new project directory:</p>
 <div class="sourceCode" id="cb1"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ mkdir QuickTour</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd QuickTour</span></span></code></pre></div>
-<h3 id="using-docker">Using Docker?</h3>
-<p>The directory just created will be mapped into the container as a
-volume. You can work either inside the container (by
-<code>docker exec ...  /bin/bash</code>) or outside, but working outside
-should be easier in the beginning.</p>
-<h1 id="test-data-generation">Test-Data Generation</h1>
-<p>To generate test-data, we use the SlowPy Python library that comes
-with the SlowDash package. Write the code below and save it as
-<code>generate-testdata.py</code> at your project directory:</p>
+<h3 id="docker-users">Docker Users</h3>
+<p>If you’re using Docker, the directory you just created will be
+mounted as a volume in the container. You can work either inside the
+container (using <code>docker exec ... /bin/bash</code>) or outside. In
+the beginning, we recommend working outside the container.</p>
+<h1 id="test-data-generation">Test Data Generation</h1>
+<p>We’ll use the SlowPy Python library, included with the SlowDash
+package, to generate test data. Create a file named
+<code>generate-testdata.py</code> in your project directory with the
+following code:</p>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy.control</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy.store</span>
@@ -158,27 +161,27 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a hr
 <p>Details of the script is described in the <a
 href="ControlsScript.html">Controls</a> section. For now just
 copy-and-past the script and use it to generate some test-data.</p>
-<p>If the SlowPy Python package is installed in venv (standard
-installation), activate it either by:</p>
+<p>If you installed SlowPy in a virtual environment (the standard
+installation method), activate it using either:</p>
 <div class="sourceCode" id="cb3"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span></code></pre></div>
-<p>or (if <code>slowdash-bashrc</code> is not <code>source</code>d)</p>
+<p>or (if <code>slowdash-bashrc</code> hasn’t been sourced):</p>
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source PATH/TO/SLOWDASH/venv/bin/activate</span></span></code></pre></div>
-<p>Running this script will create a SQLite database file and fill it
-with dummy time-series data every second.</p>
+<p>Running this script will create a SQLite database file and populate
+it with simulated time-series data every second:</p>
 <div class="sourceCode" id="cb5"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 generate-testdata.py</span></span></code></pre></div>
-<p>Stop the script by <kbd>ctrl</kbd>-<kbd>C</kbd> after a minute and
-look at the created file:</p>
+<p>After letting it run for about a minute, stop the script using
+<kbd>Ctrl</kbd>+<kbd>C</kbd> and examine the created files:</p>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ ls -l</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>-rw-r--r-- 1 sanshiro sanshiro 24576 Apr 11 16:52 QuickTourTestData.db</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>-rwxr-xr-x 1 sanshiro sanshiro  3562 Apr 11 16:51 generate-testdata.py</span></code></pre></div>
-<p>The contents can be viewed with the SQLite command-line program,
-<code>sqlite3</code>. If this program is not available on your system,
-just skip this step; you will see the contents with Slow-Dash in the
-next step.</p>
+<p>You can inspect the database contents using the SQLite command-line
+program, <code>sqlite3</code>. If this program isn’t available on your
+system, you can skip this step and view the data through Slow-Dash in
+the next section.</p>
 <div class="sourceCode" id="cb7"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sqlite3 QuickTourTestData.db </span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>SQLite version 3.31.1 2020-01-27 19:55:54</span>
@@ -244,22 +247,24 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 </tr>
 </tbody>
 </table>
-<p>(In SQLite, DATETIME is TEXT. Here the time-zone is UTC although it
-is not specified explicitly.)</p>
-<p>For demonstration purpose, this table has two timestamp columns, one
-for (emulated) hardware data time in the UNIX time type, and the other
-for database writing time in the date-time type. An actual system might
-have only one of them in either types.</p>
-<p>Other forms of data tables also can be handled by Slow-Dash. See the
-<a href="DataBinding.html">Data Binding section</a> for details.</p>
+<p>(Note: In SQLite, DATETIME is stored as TEXT. Times are in UTC,
+though not explicitly specified.)</p>
+<p>For demonstration purposes, this table includes two timestamp
+columns: one for (emulated) hardware data time in UNIX timestamp format,
+and another for database writing time in datetime format. In a real
+system, you might use just one of these formats.</p>
+<p>For information about other supported data table formats, please
+refer to the <a href="DataBinding.html">Data Binding section</a>.</p>
 <h1 id="basic-usage">Basic Usage</h1>
 <h2 id="project-configuration">Project Configuration</h2>
-<p>Project configuration file describes which database to read, which
-column is for the time-stamps and which column is for the data values,
-etc. Each Slow-Dash project has one project configuration file, named
-<code>SlowdashProject.yaml</code>, located at the project directory.</p>
-<h3 id="writing-a-configuration-file">Writing a Configuration File</h3>
-<p>Create <code>SlowdashProject.yaml</code> with the contents below:</p>
+<p>Each Slow-Dash project requires a configuration file named
+<code>SlowdashProject.yaml</code> in the project directory. This file
+specifies which database to read, which columns contain timestamps and
+data values, and other essential settings.</p>
+<h3 id="creating-the-configuration-file">Creating the Configuration
+File</h3>
+<p>Create <code>SlowdashProject.yaml</code> with the following
+content:</p>
 <div class="sourceCode" id="cb9"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> QuickTour</span></span>
@@ -270,24 +275,23 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb9-1"><a href="
 <span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">parameters</span><span class="kw">:</span></span>
 <span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
 <span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> testdata [channel] @timestamp(unix) = value</span></span></code></pre></div>
-<p>To use the <code>datetime</code> column for the timestamps, the
-schema part of the configuration file would look like this:</p>
+<p>To use the <code>datetime</code> column for timestamps instead,
+modify the schema section as follows:</p>
 <div class="sourceCode" id="cb10"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> testdata[channel]@datetime(unspecified utc)=value</span></span></code></pre></div>
-<p>The timestamp type is indicated after the time column name. Other
-common values of timestamp type are: <code>aware</code> (or
-<code>with time zone</code>) for time data with explicit time zone, and
+<p>The timestamp type is specified after the time column name. Common
+timestamp types include: - <code>aware</code> (or
+<code>with time zone</code>): for time data with explicit time zones -
 <code>naive</code> (or <code>without time zone</code> or
-<code>local</code>) for implied “local” time zone (often a bad idea).
-The <code>unspecified utc</code> is a special one that the time data
-does not have explicit time zone, which looks like “local”, but the
-times are actually in UTC.</p>
-<h3 id="testing-the-configuration">Testing the Configuration</h3>
-<p>(If you are using Docker, first get into the container by
+<code>local</code>): for implied “local” time zone (generally not
+recommended) - <code>unspecified utc</code>: for time data without
+explicit time zones but known to be in UTC</p>
+<h3 id="verifying-the-configuration">Verifying the Configuration</h3>
+<p>(Docker users should first enter the container using
 <code>docker exec -it CONTAINER_ID /bin/bash</code>.)</p>
-<p>To test the configuration, run the <code>slowdash config</code>
-command at the project directory:</p>
+<p>Test your configuration using the <code>slowdash config</code>
+command in the project directory:</p>
 <div class="sourceCode" id="cb11"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash config</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>{</span>
@@ -329,11 +333,11 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    &quot;x&quot;: [5.180761, 5.92074, 5.515459, 4.883299, 5.650556, 4.284527, 3.884656, 3.223627, 2.06343]</span>
 <span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<h2 id="running">Running</h2>
-<h3 id="step-1-starting-the-slowdash-server">Step 1: Starting the
-SlowDash Server</h3>
-<p>This step will start a SlowDash server and open a port at 18881. To
-stop it, type <code>ctrl</code>-<code>c</code> on the terminal.</p>
+<h2 id="running-the-application">Running the Application</h2>
+<h3 id="step-1-launch-the-slowdash-server">Step 1: Launch the SlowDash
+Server</h3>
+<p>This step starts a SlowDash server on port 18881. To stop the server,
+press <code>Ctrl</code>-<code>c</code>.</p>
 <h4 id="bare-metal">Bare-Metal</h4>
 <div class="sourceCode" id="cb14"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash --port=18881</span></span></code></pre></div>
@@ -378,37 +382,33 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 is not running. Once the file is deleted, run
 <code>generate-testdata.py</code> again before starting Slow-Dash next
 time.</p>
-<h2 id="making-plots">Making Plots</h2>
-<h3 id="interactive-building">Interactive Building</h3>
-<p>Probably just playing with the GUI would be easier than reading this
-section…</p>
+<h2 id="creating-plots">Creating Plots</h2>
+<h3 id="interactive-plot-building">Interactive Plot Building</h3>
+<p>The easiest way to get started is to explore the GUI:</p>
 <ul>
-<li>Click one of the channels in the “Channel List” panel to make a
-time-series plot of the channel.</li>
-<li>Or, click “New Plot Layout” in the “Tools” panel to start a new
-empty layout.
-<p></li>
-<li>Putting mouse pointer on blank space will show a “Add New Panel”
-button. Click it and then select “Time-Axis Plot” to make a new
-plot.</li>
-<li>Putting mouse pointer on a plot shows a set of control buttons.
-Click the 🛠 button to configure the plot axes and styles, and to add a
-new time-series.</li>
+<li>Click any channel in the “Channel List” panel to create a
+time-series plot</li>
+<li>Or click “New Plot Layout” in the “Tools” panel to start with an
+empty layout</li>
+<li>Hover over empty space to reveal the “Add New Panel” button</li>
+<li>Click it and select “Time-Axis Plot” to create a new plot</li>
+<li>Hover over any plot to access control buttons</li>
+<li>Click the 🛠 (wrench) icon to configure axes, styles, and add new
+time series</li>
 </ul>
-<p>So far we have only time-series data in the test database, so only
-time-series plots can be created at the moment.</p>
-<h3 id="saving">Saving</h3>
-<p>Created plots (called SlowPlot Layout) can be saved and shared. Click
-the 💾 button on the top right corner. Saved layouts are listed in the
-SlowDash home page.</p>
-<h3 id="panel-building-from-url">Panel Building from URL</h3>
-<h4 id="by-configuration-file">By configuration file</h4>
-<p>A URL can be used to open a saved layout with a specified time
-range:</p>
+<p>Currently, only time-series plots are available since our test
+database contains only time-series data.</p>
+<h3 id="saving-your-work">Saving Your Work</h3>
+<p>You can save and share your plot layouts (called SlowPlot Layouts) by
+clicking the 💾 (save) button in the top-right corner. Saved layouts
+appear on the SlowDash home page.</p>
+<h3 id="creating-panels-via-url">Creating Panels via URL</h3>
+<h4 id="using-configuration-files">Using Configuration Files</h4>
+<p>Open a saved layout with a specific time range using a URL:</p>
 <pre><code>http://localhost:18881/slowplot.html?config=slowplot-QuickTour.json&amp;time=2023-03-30T18:00:00&amp;reload=0</code></pre>
-<h4 id="by-channels-and-plot-types">By channels and plot types</h4>
-<p>A layout can be created by URL only, with specifying the channel(s)
-and time range:</p>
+<h4 id="using-channel-specifications">Using Channel Specifications</h4>
+<p>Create a new layout directly through a URL by specifying channels and
+plot types:</p>
 <pre><code>http://localhost:18881/slowplot.html?channel=ch00;ch00/ts-histogram&amp;length=360&amp;reload=60&amp;grid=2x1</code></pre>
 
 

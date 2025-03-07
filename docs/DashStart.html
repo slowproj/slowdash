@@ -95,13 +95,13 @@ Time-Series</a></li>
 </header>
 
 <div style="font-size:120%">
-<p>If you already have:</p>
+<p>If you have:</p>
 <ul>
-<li>time-series data stored on a database, and</li>
-<li><code>docker compose</code> command available on your system,</li>
+<li>Time-series data in an existing database</li>
+<li>Docker Compose installed on your system</li>
 </ul>
-<p>then visualization can be done instantly (without creating a project
-etc.).</p>
+<p>You can start visualizing your data immediately, without any
+additional setup.</p>
 </div>
 <p><img src="fig/Top-InitialPlot.png" width="50%" style="box-shadow:gray 2px 2px;margin-bottom:3em"></p>
 <h1 id="postgresql">PostgreSQL</h1>
@@ -214,7 +214,7 @@ etc.).</p>
 <h3 id="write-a-docker-compose.yaml-file-like-this">Write a
 docker-compose.yaml file like this:</h3>
 <p>(modify the last two lines according to your setup)</p>
-<h5 id="for-long-format">For “long format”</h5>
+<h5 id="for-long-format-data">For Long Format Data</h5>
 <div class="sourceCode" id="cb1"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;3&#39;</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -226,13 +226,14 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;SLOWDASH_INIT_DATASOURCE_URL=postgresql://db_user:db_pass@db_host:5432/my_db&quot;</span></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;SLOWDASH_INIT_TIMESERIES_SCHEMA=my_data_table[channel]@timestamp(aware)=value&quot;</span></span></code></pre></div>
-<h5 id="for-wide-format">For “wide format”</h5>
-<p>replace the last line with:</p>
+<h5 id="for-wide-format-data">For Wide Format Data</h5>
+<p>Use this schema configuration instead (last line):</p>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;SLOWDASH_INIT_TIMESERIES_SCHEMA=my_data_table@timestamp(aware)&quot;</span></span></code></pre></div>
 <h3 id="and-run-it">And run it:</h3>
 <div class="sourceCode" id="cb3"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span></code></pre></div>
+<p>Then open in your browser:</p>
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ firefox http://localhost:18881</span></span></code></pre></div>
 <h1 id="influxdb">InfluxDB</h1>
@@ -267,8 +268,8 @@ this:</h3>
 <li>all the data in a single “measurement”</li>
 <li>channel name as a “tag”</li>
 </ul>
-<p>(for other table structures, refer to <a href="DataBinding.html">Data
-Binding section</a>)</p>
+<p>For alternative data structures, please refer to the <a
+href="DataBinding.html">Data Binding section</a>.</p>
 <h3 id="write-a-docker-compose.yaml-file-like-this-1">Write a
 docker-compose.yaml file like this:</h3>
 <p>(modify the last two lines according to your setup)</p>
@@ -286,6 +287,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="
 <h3 id="and-run-it-1">And run it:</h3>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span></code></pre></div>
+<p>Then open in your browser:</p>
 <div class="sourceCode" id="cb7"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ firefox http://localhost:18881</span></span></code></pre></div>
 <h1 id="redis-time-series">Redis Time-Series</h1>
@@ -328,6 +330,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb8-1"><a href="
 <h3 id="and-run-it-2">And run it:</h3>
 <div class="sourceCode" id="cb9"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span></code></pre></div>
+<p>Then open in your browser:</p>
 <div class="sourceCode" id="cb10"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ firefox http://localhost:18881</span></span></code></pre></div>
 

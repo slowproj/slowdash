@@ -162,7 +162,7 @@ alias slowdash=/PATH/TO/SLOWDASH/bin/slowdash
 alias slowdash-activate-venv="source /PATH/TO/SLOWDASH/venv/bin/activate"
 ```
 設定ファイルの `source` は，新しいターミナルを開くたびに毎回必要です．
-SlowDash を継続的に使うなら，上記の source コマンドを `.bashrc` などに書いておくと毎回やる必要がなくなります．なお，複数のバージョンの SlowDash インストールを使い分けるなら，上記の source だけで全てを切り替えることができます．
+SlowDash を継続的に使うなら，上記の source コマンドを `.bashrc` (Mac では `.zshrc`) などに書いておくと毎回やる必要がなくなります．なお，複数のバージョンの SlowDash インストールを使い分けるなら，上記の source だけで全てを切り替えることができます．
 
 インストールが成功したかは，`slowdash` コマンドを実行してチェックできます．
 (`slowdash` コマンドは `slowdash/bin` の下にあります）
