@@ -15,7 +15,7 @@ COPY lib /slowdash/lib
 COPY docs /slowdash/docs
 COPY utils /slowdash/utils
 COPY Makefile /slowdash
-RUN cd /slowdash && make main && ln -s /slowdash/bin/slowdash /bin
+RUN cd /slowdash && make slowdash && ln -s /slowdash/bin/slowdash /bin
 RUN cd /slowdash && pip install -r requirements.txt
 
 VOLUME /project
