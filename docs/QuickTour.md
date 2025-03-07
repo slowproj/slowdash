@@ -7,7 +7,7 @@ This tour demonstrates how to use SlowDash with SQLite as the data backend, whic
 
 ### Menu
 - Configure a project by defining the user data schema
-- Run Slow-Dash
+- Run SlowDash
 - Create interactive plots through the web interface
 - ~~Execute user code on the server-side~~ (coming soon)
 - ~~Send commands to user code~~ (coming soon)
@@ -68,14 +68,14 @@ Running this script will create a SQLite database file and populate it with simu
 $ python3 generate-testdata.py
 ```
 
-After letting it run for about a minute, stop the script using <kbd>Ctrl</kbd>+<kbd>C</kbd> and examine the created files:
+After letting it run for about a minute, stop the script using `Ctrl`-`c`</kbd> and examine the created files:
 ```console
 $ ls -l
 -rw-r--r-- 1 sanshiro sanshiro 24576 Apr 11 16:52 QuickTourTestData.db
 -rwxr-xr-x 1 sanshiro sanshiro  3562 Apr 11 16:51 generate-testdata.py
 ```
 
-You can inspect the database contents using the SQLite command-line program, `sqlite3`. If this program isn't available on your system, you can skip this step and view the data through Slow-Dash in the next section.
+You can inspect the database contents using the SQLite command-line program, `sqlite3`. If this program isn't available on your system, you can skip this step and view the data through SlowDash in the next section.
 ```console
 $ sqlite3 QuickTourTestData.db 
 SQLite version 3.31.1 2020-01-27 19:55:54
@@ -116,7 +116,7 @@ For information about other supported data table formats, please refer to the [D
 # Basic Usage
 
 ## Project Configuration
-Each Slow-Dash project requires a configuration file named `SlowdashProject.yaml` in the project directory. This file specifies which database to read, which columns contain timestamps and data values, and other essential settings.
+Each SlowDash project requires a configuration file named `SlowdashProject.yaml` in the project directory. This file specifies which database to read, which columns contain timestamps and data values, and other essential settings.
 
 ### Creating the Configuration File
 
@@ -124,7 +124,7 @@ Create `SlowdashProject.yaml` with the following content:
 ```yaml
 slowdash_project:
   name: QuickTour
-  title: Slow-Dash Quick Tour
+  title: SlowDash Quick Tour
 
   data_source:
     url: sqlite:///QuickTourTestData.db
@@ -153,7 +153,7 @@ $ slowdash config
 {
     "project": {
         "name": "QuickTour",
-        "title": "Slow-Dash Quick Tour",
+        "title": "SlowDash Quick Tour",
         "error_message": ""
     },
     "data_source": {
@@ -248,7 +248,7 @@ In order to continuously fill the data while plotting, run the test-data generat
 $ python3 generate-testdata.py
 ```
 The data file size is roughly 5 MB per hour. The test data file, `QuickTourTestData.db`, can be deleted safely when SlowDash is not running.
-Once the file is deleted, run `generate-testdata.py` again before starting Slow-Dash next time.
+Once the file is deleted, run `generate-testdata.py` again before starting SlowDash next time.
 
 
 

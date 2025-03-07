@@ -48,7 +48,7 @@ docker compose up
 Open your web browser and navigate to `http://localhost:18881`
 
 To stop the service:
-- Press `Ctrl-c` in the terminal, or
+- Press `Ctrl`-`c` in the terminal, or
 - Run `docker compose stop` (or `down` to remove the container)
 </details>
   
@@ -83,7 +83,7 @@ docker compose up
 Open your web browser and navigate to `http://localhost:18881`
 
 To stop the service:
-- Press `Ctrl-c` in the terminal, or
+- Press `Ctrl`-`c` in the terminal, or
 - Run `docker compose stop` (or `down` to remove the container)
 </details>
 
@@ -118,7 +118,7 @@ slowdash --port=18881
 #### 4. Access the Interface
 Open your web browser and navigate to `http://localhost:18881`
 
-To stop the service, press `Ctrl-c` `in the terminal.
+To stop the service, press `Ctrl`-`c` `in the terminal.
 
 </details>
 

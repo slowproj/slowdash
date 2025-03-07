@@ -149,7 +149,7 @@ If successful, you'll see this configuration notice:
 
 <img src="fig/QuickTour-Welcome.png" style="width:40%">
 
-Press `Ctrl-c` to stop stop the server.
+Press `Ctrl`-`c` to stop stop the server.
 
 ## Updating Installation
 ```console

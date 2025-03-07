@@ -482,5 +482,5 @@ Temperature: <span sd-value="ch1->last()->format('%.1f degC')">---</span>
   - display offset
   - mouse click detection (for Autocruise etc.)
 
-## External User Page with Slow-Dash data and controls
+## External User Page with SlowDash data and controls
 [ WRITE THIS ]

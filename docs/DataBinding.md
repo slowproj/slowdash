@@ -48,7 +48,7 @@ slowdash_project:
 
 ## Data Model
 ###  Time-Series Data
-- All data used by Slow-Dash is time-series
+- All data used by SlowDash is time-series
   - Data can be a time-series of scalars
   - Data can be a time-series of histograms, graphs, tables, or trees
 <p>
@@ -78,7 +78,7 @@ slowdash_project:
   - UNIX timestamp, the number of seconds since the UNIX epoch
   - ISO date time string, with explicit time-zone
   - ISO date time string, without explicit time-zone (not recommended)
-    - Slow-Dash configuration file can specify the time-zone of the data.
+    - SlowDash configuration file can specify the time-zone of the data.
     - Even if the used time-zone is UTC, it should be specified explicitly.
     - Otherwise the time-zone of the data server is used for most cases, but not guaranteed (not recommended)
   

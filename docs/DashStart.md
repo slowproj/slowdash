@@ -45,8 +45,6 @@ You can start visualizing your data immediately, without any additional setup.
 
 ##### For Long Format Data
 ```yaml
-version: '3'
-
 services:
   slowdash:
     image: slowproj/slowdash
@@ -92,8 +90,6 @@ For alternative data structures, please refer to the [Data Binding section](Data
 ### Write a docker-compose.yaml file like this:
 (modify the last two lines according to your setup)
 ```yaml
-version: '3'
-
 services:
   slowdash:
     image: slowproj/slowdash
@@ -128,8 +124,6 @@ $ firefox http://localhost:18881
 ### Write a docker-compose.yaml file like this:
 (modify the last line according to your setup)
 ```yaml
-version: '3'
-
 services:
   slowdash:
     image: slowproj/slowdash
