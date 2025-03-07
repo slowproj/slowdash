@@ -2,52 +2,51 @@
 title: Installation
 ---
 
-# Prerequisite
-### Base System
-- UNIX-like OS
-  - Linux most tested
-  - macOS and Windows (WSL) seem ok
+# Prerequisites
+### System Requirements
+- UNIX-like Operating System
+  - Linux (most extensively tested)
+  - macOS and Windows (WSL) are supported
 <p>
 - Web Browser
   - Firefox most tested, Chrome &amp; Edge &amp; Safari ok, DuckDuckGo &amp; Opera never tested.
   - Also works on mobile devices: tested on iPad
 
-### For Docker
+### Docker Installation Requirements
 <p>
 - Git
 - Docker and Docker Compose
 
-### For Bare-Metal Installation
+### Bare-Metal Installation Requirements
 <p>
 - Git
 - Python 3
-  - Version >= 3.9
-  - venv preferred
+  - Version 3.9 or higher
+  - Virtual environment (venv) recommended
 
 
-# Docker
-## Using Repository Images (Linux, Windows WSL, Mac)
+# Docker Installation
+## Using Pre-built Images (Linux, Windows WSL, Mac)
 
-### Setup
-No installation is required. In your docker configuration, pull a SlowDash image from one of the repositories below:
+### Initial Setup
+No local installation is required. Simply pull a SlowDash image from one of these official repositories:
 
 - DockerHub: [slowproj/slowdash:TAG](https://hub.docker.com/r/slowproj/slowdash/tags)
 - GitHub Container Registry: [ghcr.io/slowproj/slowdash:TAG](https://github.com/slowproj/slowdash/pkgs/container/slowdash)
 
-Choose a specific tag listed in the repository, or use `latest`.
+Select either a specific version tag from the repository or use `latest` for the most recent stable release.
 
-### Updating
-If you are using the `:latest` images from DockerHub (or GitHub CR), removing the local copy will cause pulling the latest version on the next execution:
+### Updating Docker Images
+For users of the `:latest` tag from DockerHub or GitHub Container Registry, update to the newest version by removing the local images:
 ```console
 $ docker rmi -f slowproj/slowdash slowproj/slowpy-notebook
 ```
-(You can also do the same by `make remove-docker-images` at the SlowDash directory; autocomplete by [Tab] will help typing the long name, like `make r[Tab]`.)
+(Alternative: Use `make remove-docker-images` in the SlowDash directory. You can use tab completion for convenience: `make r[Tab]`.)
 
-This will erase the current images. Be careful not to lose your working context. The SlowDash version number is shown in the upper left coner of the home page.
+Note: This operation removes your current images. Be careful not to lose your working context inside the images. The SlowDash version number is shown in the upper left coner of the home page.
 
 
-
-## Building Local Images
+## Building Images Locally
 ### Initial Setup
 ```console
 $ git clone https://github.com/slowproj/slowdash.git
@@ -55,7 +54,7 @@ $ cd slowdash
 $ make docker
 ```
 
-Or equivalently, you can run the following commands:
+Alternatively, you can execute these commands manually:
 ```console
 $ git clone https://github.com/slowproj/slowdash.git --recurse-submodules
 $ cd slowdash
@@ -63,15 +62,15 @@ $ docker build -t slowdash .
 $ docker build -t slowpy-notebook -f ./lib/slowpy/Dockerfile ./lib/slowpy
 ```
 
-### Updating
+### Updating Local Images
 ```console
 $ cd PATH/TO/SLOWDASH
 $ make update
 $ make docker
 ```
 
-Or equivalently, run the commands below
-(be careful not to forget `--recurse-submodules`; a very common mistake, and it causes tricky troubles):
+Or execute these commands manually
+(Important: Always include `--recurse-submodules` to avoid common integration issues):
 ```console
 $ cd PATH/TO/SLOWDASH
 $ git pull --recurse-submodules
@@ -83,8 +82,8 @@ $ docker build -t slowpy-notebook -f ./lib/slowpy/Dockerfile ./lib/slowpy
 
 # Bare-Metal Installation
 ## Setup
-### Using venv
-This process will not create any files other than the git-cloned directory. Installation can be removed completely by deleting this directory.
+### Using Virtual Environment (Recommended)
+This installation method keeps all files contained within the git-cloned directory. You can completely remove the installation by deleting this directory.
 ```console
 $ git clone https://github.com/slowproj/slowdash.git --recurse-submodules
 $ cd slowdash
@@ -95,22 +94,22 @@ This will create a bash file to set environmental variables. `source` it to incl
 ```console
 $ source PATH/TO/SLOWDASH/bin/slowdash-bashrc
 ```
-For permanent installation, it might be convenient to include this line in the `.bashrc` file.
+For permanent installation, it might be convenient to add this line to your `.bashrc` (or `.zshrc` on Mac) file at your home directory.
 
-### Without venv
+### System-wide Installation
 ```console
 $ git clone https://github.com/slowproj/slowdash.git --recurse-submodules
 $ cd slowdash
 $ make without-venv
 $ pip install -r requirements.txt
 ```
-then
+Then activate the environment:
 ```console
 $ source bin/slowdash-bashrc
 ```
 
-## Testing
-Test the installation by running the command:
+## Verifying Installation
+Verify your installation by running:
 ```console
 $ slowdash
 Running in venv at /PATH/TO/SLOWDASH/venv
@@ -132,7 +131,7 @@ options:
 ...
 ```
 
-Test the browser connection using an arbitrary port. As we have not yet defined a project, a warning message will be shown, but we proceed for now.
+Test the web interface by starting the server on a test port. You'll see a warning about undefined project settings, which is expected at this stage:
 ```console
 $ slowdash --port=18881
 23-05-15 20:12:35 WARNING: unable to find Slowdash Project Dir: specify it with the --project-dir option, set the SLOWDASH_PROJECT environmental variable, or run the slowdash commands at a project directory
@@ -141,27 +140,26 @@ listening at port 18881
 ```console
 $ firefox http://localhost:18881
 ```
-On success, the error messages below will be shown:
+If successful, you'll see this configuration notice:
 
 <img src="fig/QuickTour-Welcome.png" style="width:40%">
 
-Type `Ctrl-c` to stop slowdash.
+Press `Ctrl-c` to stop stop the server.
 
-## Updating
+## Updating Installation
 ```console
 $ cd PATH/TO/SLOWDASH
 $ make update
 ```
 
-Or equivalently, run the commands below
-(be careful not to forget `--recurse-submodules`; a very common mistake, and it causes tricky troubles):
+Or manually execute:
 ```console
 $ cd PATH/TO/SLOWDASH
 $ git pull --recurse-submodules
 $ make
 ```
-Often `make` does not do anything, but it is safe to run it every time.
+Running `make` is always safe, even if no updates are needed.
 
 
-# Refreshing the browser cache: Hard Refresh
-SlowDash scripts cached in user web browsers might cause troubles after the SlowDash server is updated. In that case, perform "hard refresh" the browser by clicking the `Reload` button with holding down the `Shift` key at a SlowDash page.
+# Browser Cache Management
+After updating the SlowDash server, you may need to clear your browser's cached scripts. To force a cache refresh, hold down the `Shift` key while clicking the reload button on any SlowDash page ("hard refresh": the procedure might be different depending on the browsers).

@@ -3,27 +3,27 @@ title: Quick Tour
 ---
 
 # Course Overview
-In this tour we will use SQLite for data backend which does not require server setup. All the files created during the tour are confined under a project directory, and can be removed completely and safely by just deleting the directory.
+This tour demonstrates how to use SlowDash with SQLite as the data backend, which requires no server setup. All files created during this tour are contained within a single project directory and can be completely removed by simply deleting that directory.
 
 ### Menu
-- Configuring a project, with describing the user data schema
-- Running Slow-Dash
-- Creating several plots on a Web-browser
-- ~~Running user code on the server-side~~ (preparing)
-- ~~Sending commands to the user code~~ (preparing)
+- Configure a project by defining the user data schema
+- Run Slow-Dash
+- Create interactive plots through the web interface
+- ~~Execute user code on the server-side~~ (coming soon)
+- ~~Send commands to user code~~ (coming soon)
 
-### First thing first
-To get started, prepare a place:
+### Getting Started
+First, create and navigate to a new project directory:
 ```console
 $ mkdir QuickTour
 $ cd QuickTour
 ```
 
-### Using Docker?
-The directory just created will be mapped into the container as a volume. You can work either inside the container (by `docker exec ...  /bin/bash`) or outside, but working outside should be easier in the beginning.
+### Docker Users
+If you're using Docker, the directory you just created will be mounted as a volume in the container. You can work either inside the container (using `docker exec ... /bin/bash`) or outside. In the beginning, we recommend working outside the container.
 
-# Test-Data Generation
-To generate test-data, we use the SlowPy Python library that comes with the SlowDash package. Write the code below and save it as `generate-testdata.py` at your project directory:
+# Test Data Generation
+We'll use the SlowPy Python library, included with the SlowDash package, to generate test data. Create a file named `generate-testdata.py` in your project directory with the following code:
 ```python
 import slowpy.control
 import slowpy.store
@@ -54,28 +54,28 @@ if __name__ == '__main__':
 ```
 Details of the script is described in the [Controls](ControlsScript.html) section. For now just copy-and-past the script and use it to generate some test-data.
 
-If the SlowPy Python package is installed in venv (standard installation), activate it either by:
+If you installed SlowPy in a virtual environment (the standard installation method), activate it using either:
 ```console
 $ slowdash-activate-venv
 ```
-or (if `slowdash-bashrc` is not `source`d)
+or (if `slowdash-bashrc` hasn't been sourced):
 ```console
 $ source PATH/TO/SLOWDASH/venv/bin/activate
 ```
 
-Running this script will create a SQLite database file and fill it with dummy time-series data every second.
+Running this script will create a SQLite database file and populate it with simulated time-series data every second:
 ```console
 $ python3 generate-testdata.py
 ```
 
-Stop the script by <kbd>ctrl</kbd>-<kbd>C</kbd> after a minute and look at the created file:
+After letting it run for about a minute, stop the script using <kbd>Ctrl</kbd>+<kbd>C</kbd> and examine the created files:
 ```console
 $ ls -l
 -rw-r--r-- 1 sanshiro sanshiro 24576 Apr 11 16:52 QuickTourTestData.db
 -rwxr-xr-x 1 sanshiro sanshiro  3562 Apr 11 16:51 generate-testdata.py
 ```
 
-The contents can be viewed with the SQLite command-line program, `sqlite3`. If this program is not available on your system, just skip this step; you will see the contents with Slow-Dash in the next step.
+You can inspect the database contents using the SQLite command-line program, `sqlite3`. If this program isn't available on your system, you can skip this step and view the data through Slow-Dash in the next section.
 ```console
 $ sqlite3 QuickTourTestData.db 
 SQLite version 3.31.1 2020-01-27 19:55:54
@@ -107,20 +107,20 @@ and the table contents are:
 |2023-04-11 23:52:13|1681257133|ch03|1.733749|
 |...||||
 
-(In SQLite, DATETIME is TEXT. Here the time-zone is UTC although it is not specified explicitly.)
+(Note: In SQLite, DATETIME is stored as TEXT. Times are in UTC, though not explicitly specified.)
 
-For demonstration purpose, this table has two timestamp columns, one for (emulated) hardware data time in the UNIX time type, and the other for database writing time in the date-time type. An actual system might have only one of them in either types.
+For demonstration purposes, this table includes two timestamp columns: one for (emulated) hardware data time in UNIX timestamp format, and another for database writing time in datetime format. In a real system, you might use just one of these formats.
 
-Other forms of data tables also can be handled by Slow-Dash. See the [Data Binding section](DataBinding.html) for details.
+For information about other supported data table formats, please refer to the [Data Binding section](DataBinding.html).
 
 # Basic Usage
 
 ## Project Configuration
-Project configuration file describes which database to read, which column is for the time-stamps and which column is for the data values, etc. Each Slow-Dash project has one project configuration file, named `SlowdashProject.yaml`, located at the project directory.
+Each Slow-Dash project requires a configuration file named `SlowdashProject.yaml` in the project directory. This file specifies which database to read, which columns contain timestamps and data values, and other essential settings.
 
-### Writing a Configuration File
+### Creating the Configuration File
 
-Create `SlowdashProject.yaml` with the contents below:
+Create `SlowdashProject.yaml` with the following content:
 ```yaml
 slowdash_project:
   name: QuickTour
@@ -133,18 +133,21 @@ slowdash_project:
         schema: testdata [channel] @timestamp(unix) = value
 ```
 
-To use the `datetime` column for the timestamps, the schema part of the configuration file would look like this:
+To use the `datetime` column for timestamps instead, modify the schema section as follows:
 ```yaml
       time_series:
           schema: testdata[channel]@datetime(unspecified utc)=value
 ```
-The timestamp type is indicated after the time column name. Other common values of timestamp type are: `aware` (or `with time zone`) for time data with explicit time zone, and `naive` (or `without time zone` or `local`) for implied "local" time zone (often a bad idea). The `unspecified utc` is a special one that the time data does not have explicit time zone, which looks like "local", but the times are actually in UTC.
+The timestamp type is specified after the time column name. Common timestamp types include:
+- `aware` (or `with time zone`): for time data with explicit time zones
+- `naive` (or `without time zone` or `local`): for implied "local" time zone (generally not recommended)
+- `unspecified utc`: for time data without explicit time zones but known to be in UTC
 
-### Testing the Configuration
+### Verifying the Configuration
 
-(If you are using Docker, first get into the container by `docker exec -it CONTAINER_ID /bin/bash`.)
+(Docker users should first enter the container using `docker exec -it CONTAINER_ID /bin/bash`.)
 
-To test the configuration, run the `slowdash config` command at the project directory:
+Test your configuration using the `slowdash config` command in the project directory:
 ```console
 $ slowdash config
 {
@@ -190,9 +193,9 @@ $ slowdash "data/ch00?length=10"
 }
 ```
 
-## Running
-### Step 1: Starting the SlowDash Server
-This step will start a SlowDash server and open a port at 18881. To stop it, type `ctrl`-`c` on the terminal.
+## Running the Application
+### Step 1: Launch the SlowDash Server
+This step starts a SlowDash server on port 18881. To stop the server, press `Ctrl`-`c`.
 
 #### Bare-Metal
 ```console
@@ -249,31 +252,32 @@ Once the file is deleted, run `generate-testdata.py` again before starting Slow-
 
 
 
-## Making Plots
-### Interactive Building
-Probably just playing with the GUI would be easier than reading this section...
+## Creating Plots
+### Interactive Plot Building
+The easiest way to get started is to explore the GUI:
 
-- Click one of the channels in the "Channel List" panel to make a time-series  plot of the channel.
-- Or, click "New Plot Layout" in the "Tools" panel to start a new empty layout.
-<p>
-- Putting mouse pointer on blank space will show a "Add New Panel" button. Click it and then select "Time-Axis Plot" to make a new plot.
-- Putting mouse pointer on a plot shows a set of control buttons. Click the &#x1f6e0; button to configure the plot axes and styles, and to add a new time-series.
-  
-So far we have only time-series data in the test database, so only time-series plots can be created at the moment.
+- Click any channel in the "Channel List" panel to create a time-series plot
+- Or click "New Plot Layout" in the "Tools" panel to start with an empty layout
+- Hover over empty space to reveal the "Add New Panel" button
+- Click it and select "Time-Axis Plot" to create a new plot
+- Hover over any plot to access control buttons
+- Click the &#x1f6e0; (wrench) icon to configure axes, styles, and add new time series
 
-### Saving
-Created plots (called SlowPlot Layout) can be saved and shared. Click the &#x1f4be; button on the top right corner.
-Saved layouts are listed in the SlowDash home page.
+Currently, only time-series plots are available since our test database contains only time-series data.
 
-### Panel Building from URL
-#### By configuration file
-A URL can be used to open a saved layout with a specified time range:
+### Saving Your Work
+You can save and share your plot layouts (called SlowPlot Layouts) by clicking the &#x1f4be; (save) button in the top-right corner.
+Saved layouts appear on the SlowDash home page.
+
+### Creating Panels via URL
+#### Using Configuration Files
+Open a saved layout with a specific time range using a URL:
 ```
 http://localhost:18881/slowplot.html?config=slowplot-QuickTour.json&time=2023-03-30T18:00:00&reload=0
 ```
 
-#### By channels and plot types
-A layout can be created by URL only, with specifying the channel(s) and time range:
+#### Using Channel Specifications
+Create a new layout directly through a URL by specifying channels and plot types:
 ```
 http://localhost:18881/slowplot.html?channel=ch00;ch00/ts-histogram&length=360&reload=60&grid=2x1
 ```

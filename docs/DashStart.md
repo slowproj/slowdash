@@ -3,12 +3,12 @@ title: Dash Start
 ---
 
 <div style="font-size:120%">
-If you already have:
+If you have:
 
-- time-series data stored on a database, and
-- `docker compose` command available on your system,
+- Time-series data in an existing database
+- Docker Compose installed on your system
 
-then visualization can be done instantly (without creating a project etc.).
+You can start visualizing your data immediately, without any additional setup.
 </div>
 
 <img src="fig/Top-InitialPlot.png" width="50%" style="box-shadow:gray 2px 2px;margin-bottom:3em">
@@ -43,7 +43,7 @@ then visualization can be done instantly (without creating a project etc.).
 ### Write a docker-compose.yaml file like this:
 (modify the last two lines according to your setup)
 
-##### For "long format"
+##### For Long Format Data
 ```yaml
 version: '3'
 
@@ -57,8 +57,8 @@ services:
       - "SLOWDASH_INIT_TIMESERIES_SCHEMA=my_data_table[channel]@timestamp(aware)=value"
 ```
 
-##### For "wide format"
-replace the last line with:
+##### For Wide Format Data
+Use this schema configuration instead (last line):
 ```yaml
       - "SLOWDASH_INIT_TIMESERIES_SCHEMA=my_data_table@timestamp(aware)"
 ```
@@ -67,6 +67,7 @@ replace the last line with:
 ```console
 $ docker compose up
 ```
+Then open in your browser:
 ```console
 $ firefox http://localhost:18881
 ```
@@ -86,7 +87,7 @@ InfluxDB version: 2
 - all the data in a single "measurement"
 - channel name as a "tag"
 
-(for other table structures, refer to [Data Binding section](DataBinding.html))
+For alternative data structures, please refer to the [Data Binding section](DataBinding.html).
 
 ### Write a docker-compose.yaml file like this:
 (modify the last two lines according to your setup)
@@ -107,6 +108,7 @@ services:
 ```console
 $ docker compose up
 ```
+Then open in your browser:
 ```console
 $ firefox http://localhost:18881
 ```
@@ -141,6 +143,7 @@ services:
 ```console
 $ docker compose up
 ```
+Then open in your browser:
 ```console
 $ firefox http://localhost:18881
 ```

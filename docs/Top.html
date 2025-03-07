@@ -2,14 +2,14 @@
 <html lang="en">
   <head>
     <style type="text/css">
-      html,body {
+      html, body {
         height: calc(100% - 10px);
       }
       body {
         margin: 0;
         padding: 0;
         font-family: sans-serif;
-        font-size:large;
+        font-size: large;
         background: #ffffff;
       }
       .head {
@@ -18,7 +18,7 @@
         padding: 20px;      
       }
       .head:nth-child(n+2) {
-        margin-top:50px;
+        margin-top: 50px;
       }
       .cell {
         width: calc(33.3% - 50px);
@@ -30,7 +30,7 @@
       .cell img {
         box-shadow: 0px 0px 15px -5px rgba(0, 0, 0, 0.7);
         align-self: flex-start;
-        width:100%;
+        width: 100%;
       }
     </style>
   </head>
@@ -38,52 +38,52 @@
     <div class="head">Originally for Slow-controls Dashboard. Now it can do much more.</div>
     <div style="display:flex;flex-wrap:wrap; margin:10px 50px 0px 50px">
       <div class="cell">
-        <img src="fig/Gallery-ATDS-Dashboard.png">
-        <br><b>Dashboard (Canvas):</b> current status is summarized with color, digits and history plots, on user base image. Control boxes can be added. Configuration by a user YAML file.
+        <img src="fig/Gallery-ATDS-Dashboard.png" alt="Dashboard Canvas Example">
+        <br><b>Interactive Dashboard:</b> Monitor system status through color-coded indicators, numerical displays, and historical trends. Add control interfaces as needed. Fully customizable through YAML configuration.
       </div>
       <div class="cell">
-        <img src="fig/Gallery-SlowPlot-Dark.png">
-        <br><b>Plot Panels, in Dark Theme:</b> plots for time-series data stored on user database (SQL, InfluxDB, MongoDB, ...) can be quickly visualized with mouse clicks.
+        <img src="fig/Gallery-SlowPlot-Dark.png" alt="Dark Theme Plot Panels">
+        <br><b>Data Visualization:</b> Instantly create interactive plots from time-series data stored in various databases (SQL, InfluxDB, MongoDB, etc.) with an intuitive point-and-click interface. Example of a dark theme plot.
       </div>
       <div class="cell">
-        <img src="fig/Gallery-RGA.png">
-        <br><b>RGA Control System:</b> Server-side user Python module is used to propagate Slow-Dash user operations to the RGA device. Spectrum data is stored in CouchDB.
+        <img src="fig/Gallery-RGA.png" alt="RGA Control System">
+        <br><b>Device Integration:</b> Example of a custom Python module for RGA control. Operations are seamlessly handled between the UI and hardware through user Python modules, with spectrum data stored in CouchDB.
       </div>
       <div class="cell">
-        <img src="fig/Gallery-HitMap.png">
-        <br><b>Map View</b> is a visualization of a graph object in a schematic way. Data element shapes are described by a user CSV file of x,y,r (simple) or a user SVG file with mapping keys in SVG elements (fully flexible).
+        <img src="fig/Gallery-HitMap.png" alt="Map View Visualization">
+        <br><b>Interactive Map Views:</b> Visualize graph data in schematic layouts. Define elements using simple CSV coordinates (x,y,r) or create complex layouts with SVG files and mapping keys for maximum flexibility.
       </div>
       <div class="cell">
-        <img src="fig/Gallery-WFDAQ.png">
-        <br><b>Waveform Digitizer DAQ: </b> Server-side user Python module connects SlowDash to a DAQ system, for run controls, configuration and status monitoring, with real-time visualization of streaming data (histograms etc) through Redis.
+        <img src="fig/Gallery-WFDAQ.png" alt="Waveform Digitizer DAQ">
+        <br><b>Real-time Data Acquisition:</b> Interface with DAQ systems through custom Python modules. Manage run controls, configuration, and monitoring while visualizing streaming data (histograms, etc.) via Redis.
       </div>
       <div class="cell">
-        <img src="fig/Gallery-RPiCam.png">
-        <br><b>Camera control and image store: </b> Small user Python module takes pictures regularly and stores them onto CouchDB. Time-series of photos can be browsed as a blob data.
+        <img src="fig/Gallery-RPiCam.png" alt="Camera Control System">
+        <br><b>Media Management:</b> Implement automated image capture and storage with a lightweight Python module. Browse time-series photo collections stored in CouchDB as blob data.
       </div>
     </div>
 
-    <div class="head">Connects to Various User Data Storage Systems</div>
-    <img src="fig/Top-DataSources.png" style="margin-left:10ex;width:calc(60% - 10ex)">
+    <div class="head">Universal Database Connectivity</div>
+    <img src="fig/Top-DataSources.png" style="margin-left: 10ex; width: calc(60% - 10ex)" alt="Supported Data Sources">
 
-    <div class="head">Creates Various Types of Plots</div>
-    <img src="fig/Top-PlotTypes.png" style="margin-left:10ex;width:calc(90% - 10ex)">
+    <div class="head">Comprehensive Visualization Options</div>
+    <img src="fig/Top-PlotTypes.png" style="margin-left: 10ex; width: calc(90% - 10ex)" alt="Available Plot Types">
 
-    <div class="head">Displays Status and Sends Control Commands</div>
-    <img src="fig/Top-Canvas.png" style="margin-left:10ex;width:calc(70% - 10ex)">
+    <div class="head">Integrated Monitoring and Control</div>
+    <img src="fig/Top-Canvas.png" style="margin-left: 10ex; width: calc(70% - 10ex)" alt="Control Interface">
 
-    <div class="head">Handles Various Data Types</div>
-    <img src="fig/Top-DataTypes.png" style="margin-left:10ex;width:calc(70% - 10ex)">
+    <div class="head">Support for Multiple Data Types</div>
+    <img src="fig/Top-DataTypes.png" style="margin-left: 10ex; width: calc(70% - 10ex)" alt="Supported Data Types">
 
-    <div class="head">Eliminates Up-Start Hassle</div>
-    <img src="fig/Top-InitialPlot.png" style="margin-left:10ex;width:calc(70% - 10ex)">
+    <div class="head">Rapid Deployment</div>
+    <img src="fig/Top-InitialPlot.png" style="margin-left: 10ex; width: calc(70% - 10ex)" alt="Quick Setup Example">
     
-    <div class="head">Lets End-Users Create a Dashboard and Share It</div>
-    <img src="fig/Top-SavingLayout.png" style="margin-left:10ex;width:calc(70% - 10ex)">
+    <div class="head">Collaborative Dashboard Creation</div>
+    <img src="fig/Top-SavingLayout.png" style="margin-left: 10ex; width: calc(70% - 10ex)" alt="Layout Sharing">
     
-    <div class="head">Integrates RealTime/NearTime Analysis with Jupyter
-    <br><span style="font-weight:normal;font-size:70%">(experimental)</span></div>
-    <img src="fig/Top-JupyterIntegration.png" style="margin-left:10ex;width:calc(70% - 10ex)">
+    <div class="head">Jupyter Integration for Real-time/Near-time Analysis
+    <br><span style="font-weight: normal; font-size: 70%">(experimental)</span></div>
+    <img src="fig/Top-JupyterIntegration.png" style="margin-left: 10ex; width: calc(70% - 10ex)" alt="Jupyter Integration">
 
     <div class="head">Designed for Long Life (&gt;25 years)</div>
     <img src="fig/Top-NoLibraryUsed.png" style="margin-left:10ex;width:calc(60% - 10ex)">
@@ -100,15 +100,15 @@
 
     <script type="text/javascript">
       window.addEventListener('DOMContentLoaded', e => {
-          for (let cell of document.querySelectorAll('.cell')) {
-            const img = cell.querySelector('img');
-            if (img) {
-              cell.addEventListener('click', e => {
-                window.open(img.getAttribute('src'));
-              });
-            }
+        document.querySelectorAll('.cell').forEach(cell => {
+          const img = cell.querySelector('img');
+          if (img) {
+            cell.addEventListener('click', e => {
+              window.open(img.getAttribute('src'));
+            });
           }
+        });
       });
-  </script>
-</body>
+    </script>
+  </body>
 </html>
