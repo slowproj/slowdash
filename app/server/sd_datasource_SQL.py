@@ -11,16 +11,19 @@ class SQLQueryResult:
     def __init__(self, cursor=None):
         self.cursor = cursor
         self.is_error = False
+
         
     def __del__(self):
         if self.cursor is not None:
             self.cursor.close()
-        
+
+            
     def get_column_names(self):
         if self.cursor is None:
             return []
         return [ col[0] for col in self.cursor.description ]
 
+    
     def get_table(self):
         if self.cursor is None:
             return []

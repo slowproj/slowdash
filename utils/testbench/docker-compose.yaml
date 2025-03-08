@@ -12,6 +12,18 @@ services:
       - POSTGRES_DB=SlowTestData
 
 
+  mysql_db:
+    image: mysql:8
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_USER=slowdash
+      - MYSQL_PASSWORD=slowdash
+      - MYSQL_ROOT_PASSWORD=slowdash
+      - MYSQL_DATABASE=SlowTestData
+
+
   influxdb:
     image: influxdb:2
     restart: always

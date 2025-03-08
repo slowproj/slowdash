@@ -1,0 +1,28 @@
+version: '3'
+
+services:
+  mysql_db:
+    image: mysql:8
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_USER=slowdash
+      - MYSQL_PASSWORD=slowdash
+      - MYSQL_ROOT_PASSWORD=slowdash
+      - MYSQL_DATABASE=SlowTestData
+
+
+  slowdash:
+    image: slowproj/slowdash
+    volumes:
+      - .:/project
+    ports:
+      - "18881:18881"
+    environment:
+      - DB_URL=mysql://slowdash:slowdash@mysql_db:3306/SlowTestData
+
+
+  testdata:
+    image: slowproj/slowdash
+    command: python /slowdash/utils/generate-testdata.py --db-url=mysql://slowdash:slowdash@mysql_db:3306/SlowTestData

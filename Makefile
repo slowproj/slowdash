@@ -4,7 +4,7 @@ SLOWDASH_BIN = "$(SLOWDASH_DIR)/bin/slowdash"
 SLOWDASH_ENV = "$(SLOWDASH_DIR)/bin/slowdash-bashrc"
 GIT = $(shell which git)
 PIP_REQS = uvicorn hypercorn websockets pyyaml psutil bcrypt requests 
-PIP_DBS = influxdb-client redis pymongo couchdb
+PIP_DBS = pymysql aiomysql influxdb-client redis pymongo couchdb cryptography  # cryptography is used by MySQL
 PIP_OPTS = numpy matplotlib lmfit pillow pyserial pyvisa
 
 
@@ -76,7 +76,10 @@ slowdash:
 	@echo "-e ./lib/slowlette" >> requirements.txt
 	@echo "# DB packages #" >> requirements.txt
 	@for pkg in $(PIP_DBS); do echo $$pkg >> requirements.txt; done
-	@if command -v pg_config > /dev/null; then echo psycopg2 >> requirements.txt; fi
+	@if command -v pg_config > /dev/null; then \
+		echo psycopg2 >> requirements.txt; \
+		echo asyncpg >> requirements.txt; \
+	fi
 	@echo "# packages users might use #" >> requirements.txt
 	@for pkg in $(PIP_OPTS); do echo $$pkg >> requirements.txt; done
 

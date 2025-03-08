@@ -2,6 +2,7 @@
 
 
 import os, sys, time, logging, traceback
+from urllib.parse import urlparse
 from .base import DataStore
 
 
@@ -334,3 +335,83 @@ class DataStore_PostgreSQL(DataStore_SQL):
         except Exception as e:
             logging.error('SQL commit(): %s' % str(e))
         del cur
+
+
+        
+class DataStore_MySQL(DataStore_SQL):
+    placeholder = '%s'
+        
+    def __init__(self, db_url, table, table_format=None):
+        if table_format is None:
+            table_format = LongTableFormat()
+        super().__init__(db_url, table, table_format)
+
+        
+    def another(self, table, table_format=None):
+        if table_format is None:
+            table_format = type(self.table_format)()
+            
+        return DataStore_MySQL(self.db_url, table, table_format)
+        
+        
+    def construct(self):
+        db_url = self.db_url
+        if not db_url.startswith('mysql://'):
+            db_url = 'mysql://' + db_url
+
+        parsed = urlparse(db_url)
+        user = parsed.username
+        password = parsed.password
+        host = parsed.hostname
+        port = parsed.port or 3306
+        db = parsed.path.lstrip('/')
+            
+        logging.info('connecting to %s...' % db_url)
+        import pymysql
+        for i in range(12):
+            try:
+                self.conn = pymysql.connect(host=host, port=port, user=user, password=password, db=db)
+                break
+            except Exception as e:
+                logging.warn(e)
+                logging.warn('Unable to connect to the Db server. Retrying in 5 sec...')
+                time.sleep(5)
+        else:
+            self.conn = None
+            logging.error('Unable to connect to PostgreSQL')
+            logging.error(traceback.format_exc())
+            return
+
+        logging.info('DB "%s" is connnected.' % self.db_url)
+        return self.conn
+
+        
+    def get_table_list(self):
+        if self.conn is None:
+            return []
+        
+        cur = self.conn.cursor()
+        try:
+            cur.execute("SHOW TABLES")
+            result = [ table_name[0] for table_name in cur.fetchall() ]
+        except Exception as e:
+            logging.error('MySQL: unable to get table list: %s: %s' % (self.db_url, str(e)))
+            result = []
+        cur.close()
+        
+        return result
+    
+
+    def _open_transaction(self):
+        if self.conn is None:
+            return None
+        return self.conn.cursor()
+        
+    
+    def _close_transaction(self, cur):
+        try:
+            self.conn.commit()
+        except Exception as e:
+            logging.error('SQL commit(): %s' % str(e))
+        del cur
+        
