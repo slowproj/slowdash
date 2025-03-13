@@ -5,8 +5,8 @@ from slowpy import Histogram
 from slowpy.control import RandomWalkDevice
 from slowpy.store import DataStore_MySQL
 
-datastore = DataStore_MySQL('mysql://slowdash:slowdash@localhost:3306/SlowTestData', table="Test")
-datastore_obj = datastore.another(table="Test2")
+datastore = DataStore_MySQL('mysql://slowdash:slowdash@localhost:3306/SlowTestData', table="ts_data")
+datastore_obj = datastore.another(table="obj_data")
 device = RandomWalkDevice(n=4)
 histogram = Histogram(nbins=20, range_min=-10, range_max=10)
 

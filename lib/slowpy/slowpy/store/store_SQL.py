@@ -32,11 +32,13 @@ class TableFormat:
             result = False
 
         return result
-        
+
+    
     # to be implemented in a subclass    
     def create_numeric_table(self, cur):
         return False
 
+    
     # to be implemented in a subclass    
     def create_text_table(self, cur):
         return False
@@ -50,23 +52,32 @@ class TableFormat:
                 self.write_single(cur, timestamp, channels[i], values[i], update)
         except Exception as e:
             logging.error('SQL Error: %s' % str(e))
+
             
     # override as needed
     def write_single(self, cur, timestamp, channel, value, update):
         if update is True:
-            sql = f"DELETE FROM {self.table} WHERE channel={self.db.placeholder} "
-            sql += f"AND EXISTS (SELECT 1 FROM {self.table} WHERE channel={self.db.placeholder});"
-            cur.execute(sql, (channel, channel))
+            # this works with PostgreSQL and SQLite, but not with MySQL
+            #sql = f"DELETE FROM {self.table} WHERE channel={self.db.placeholder} "
+            #sql += f"AND EXISTS (SELECT 1 FROM {self.table} WHERE channel={self.db.placeholder});"
+            
+            # this works with MySQL
+            sql = f"WITH existing AS ("
+            sql += f"  SELECT channel FROM {self.table} WHERE channel={self.db.placeholder}"
+            sql += f") DELETE FROM {self.table} WHERE channel IN (SELECT channel FROM existing)"
+            cur.execute(sql, (channel,))
             
         if type(value) in [int, float]:
             self.insert_numeric_data(cur, timestamp, channel, value)
         else:
             self.insert_text_data(cur, timestamp, channel, value)
-    
+
+            
     # to be implemented in a subclass
     def insert_numeric_data(self, cur, timestamp, channel, value):
         pass
 
+    
     # to be implemented in a subclass
     def insert_text_data(self, cur, timestamp, channel, value):
         pass
@@ -75,8 +86,8 @@ class TableFormat:
     
 class LongTableFormat(TableFormat):
     # these can be overriden. Set None to disable table creation
-    schema_numeric = '(timestamp REAL, channel TEXT, value REAL, PRIMARY KEY(timestamp,channel))'
-    schema_text = '(timestamp REAL, channel TEXT, value TEXT, PRIMARY KEY(timestamp,channel))'
+    schema_numeric = '(timestamp REAL, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp,channel))'
+    schema_text = '(timestamp REAL, channel VARCHAR(100), value TEXT, PRIMARY KEY(timestamp,channel))'
 
     def create_numeric_table(self, cur):
         if self.schema_numeric is None:
@@ -110,19 +121,38 @@ class LongTableFormat(TableFormat):
             
 
 class LongTableFormat_DateTime_PostgreSQL(LongTableFormat):
-    schema_numeric = '("timestamp" timestamp with time zone , channel TEXT, value REAL, PRIMARY KEY(timestamp,channel))'
-    schema_text = '("timestamp" timestamp with time zone, channel TEXT, value TEXT, PRIMARY KEY(timestamp,channel))'
+    schema_numeric = '("timestamp" TIMESTAMP WITH TIME ZONE , channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp,channel))'
+    schema_text = '("timestamp" TIMESTAMP WITH TIME ZONE, channel VARCHAR(100), value TEXT, PRIMARY KEY(timestamp,channel))'
 
     def insert_numeric_data(self, cur, timestamp, channel, value):
         sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
-        sql += f"VALUES(to_timestamp(%.3f),%s,%f);" % (timestamp, self.db.placeholder, value)
+        sql += f"VALUES(TO_TIMESTAMP(%.3f),%s,%f);" % (timestamp, self.db.placeholder, value)
         params = (channel,)
         cur.execute(sql, params)
 
         
     def insert_text_data(self, cur, timestamp, channel, value):
         sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
-        sql += f"VALUES(to_timestamp(%.3f),%s,%s);" % (timestamp, self.db.placeholder, self.db.placeholder)
+        sql += f"VALUES(TO_TIMESTAMP(%.3f),%s,%s);" % (timestamp, self.db.placeholder, self.db.placeholder)
+        params = (channel, str(value))
+        cur.execute(sql, params)
+        
+
+
+class LongTableFormat_DateTime_MySQL(LongTableFormat):
+    schema_numeric = '(timestamp TIMESTAMP , channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp,channel))'
+    schema_text = '(timestamp TIMESTAMP, channel VARCHAR(100), value TEXT, PRIMARY KEY(timestamp,channel))'
+
+    def insert_numeric_data(self, cur, timestamp, channel, value):
+        sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
+        sql += f"VALUES(FROM_UNIXTIME(%.3f),%s,%f);" % (timestamp, self.db.placeholder, value)
+        params = (channel,)
+        cur.execute(sql, params)
+
+        
+    def insert_text_data(self, cur, timestamp, channel, value):
+        sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
+        sql += f"VALUES(FROM_UNIXTIME(%.3f),%s,%s);" % (timestamp, self.db.placeholder, self.db.placeholder)
         params = (channel, str(value))
         cur.execute(sql, params)
         
@@ -344,6 +374,7 @@ class DataStore_MySQL(DataStore_SQL):
     def __init__(self, db_url, table, table_format=None):
         if table_format is None:
             table_format = LongTableFormat()
+            #table_format = LongTableFormat_DateTime_MySQL()
         super().__init__(db_url, table, table_format)
 
         
@@ -414,4 +445,3 @@ class DataStore_MySQL(DataStore_SQL):
         except Exception as e:
             logging.error('SQL commit(): %s' % str(e))
         del cur
-        

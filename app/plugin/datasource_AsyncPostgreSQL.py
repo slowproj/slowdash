@@ -7,7 +7,7 @@ from sd_datasource_SQL import SQLServer, SQLQueryResult, DataSource_SQL
 import asyncpg
 
 
-class AsyncSQLQueryResult(SQLQueryResult):
+class AsyncPostgresQueryResult(SQLQueryResult):
     def __init__(self, rows=None):
         self.rows = rows
         self.is_error = False
@@ -41,7 +41,7 @@ class AyncSQLServer(SQLServer):
             
     async def execute(self, sql, *params):
         if self.pool is None:
-            return AsyncSQLQueryResult()
+            return AsyncPostgresQueryResult()
 
         logging.debug(f'Async SQL Execute: {sql}({params})')
         async with self.pool.actuire() as conn:
@@ -50,7 +50,7 @@ class AyncSQLServer(SQLServer):
         
     async def fetch(self, sql, *params):
         if self.pool is None:
-            return AsyncSQLQueryResult()
+            return AsyncPostgresQueryResult()
         
         logging.debug(f'Async SQL Fetch: {sql}({params})')
         async with self.pool.actuire() as conn:
@@ -66,12 +66,12 @@ class AyncSQLServer(SQLServer):
             logging.error(traceback.format_exc())
             return SQLQueryErrorResult(str(e))
             
-        return SQLQueryResult(cursor)
+        return AsyncPostgresQueryResult(cursor)
 
 
     
     
-class DataSource_PostgreSQL(DataSource_SQL):
+class DataSource_AsyncPostgreSQL(DataSource_SQL):
     def __init__(self, app, project, params):
         super().__init__(app, project, params)
         

@@ -5,8 +5,8 @@ slowdash_project:
     url: ${DB_URL:-mysql://slowdash:slowdash@localhost:3306/SlowTestData}
     parameters:
       time_series:
-        schema: ts_data [channel] @timestamp(with time zone) = value
+        schema: ts_data [channel] @timestamp(unix) = value
       object:
         schema: obj_data [channel] = value
       object_time_series:
-        schema: objts_data [channel] @timestamp(with time zone) = value
+        schema: objts_data [channel] @timestamp(unix) = value
