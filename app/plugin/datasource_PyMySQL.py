@@ -34,7 +34,7 @@ class DataSource_PyMySQL(DataSource_SQL):
                 
     async def connect(self):
         if self.url is None:
-            return super().connect()
+            return await super().connect()
         
         try:
             conn = db.connect(host=self.host, port=self.port, user=self.user,
@@ -42,9 +42,9 @@ class DataSource_PyMySQL(DataSource_SQL):
                               autocommit=True)
         except Exception as e:
             logging.error("MySQL: %s: %s" % (self.url, str(e)))
-            return super().connect()
+            return await super().connect()
         if conn is None:
-            return super().connect()
+            return await super().connect()
         
         logging.info('MySQL: DB connected: "%s"' % self.url)
         

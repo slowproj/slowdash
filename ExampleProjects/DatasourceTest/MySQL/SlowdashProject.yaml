@@ -3,7 +3,7 @@ slowdash_project:
   data_source:
     type2: pymysql
     type3: asyncmysql
-    url: ${DB_URL:-mysql://slowdash:slowdash@localhost:3306/SlowTestData}
+    url: ${DB_URL:-mysql://slowdash:slowdash@127.0.0.1:3306/SlowTestData}
     time_series:
       schema: ts_data [channel] @timestamp(unix) = value
     object:

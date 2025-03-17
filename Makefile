@@ -75,11 +75,14 @@ slowdash:
 	@echo "-e ./lib/slowpy" >> requirements.txt
 	@echo "-e ./lib/slowlette" >> requirements.txt
 	@echo "# DB packages #" >> requirements.txt
-	@for pkg in $(PIP_DBS); do echo $$pkg >> requirements.txt; done
 	@if command -v pg_config > /dev/null; then \
 		echo psycopg2 >> requirements.txt; \
 		echo asyncpg >> requirements.txt; \
 	fi
+	@if command -v mysql_config > /dev/null; then \
+		echo mysqlclient >> requirements.txt; \
+	fi
+	@for pkg in $(PIP_DBS); do echo $$pkg >> requirements.txt; done
 	@echo "# packages users might use #" >> requirements.txt
 	@for pkg in $(PIP_OPTS); do echo $$pkg >> requirements.txt; done
 

@@ -1,12 +1,10 @@
 slowdash_project:
   name: PostgreSQL_Test
   data_source:
-    type2: asyncpostgresql
     url: ${DB_URL:-postgresql://slowdash:slowdash@localhost:5432/SlowTestData}
-    parameters:
-      time_series:
-        schema: ts_data [channel] @timestamp(with time zone) = value
-      object:
-        schema: obj_data [channel] = value
-      object_time_series:
-        schema: objts_data [channel] @timestamp(with time zone) = value
+    time_series:
+      schema: ts_data [channel] @timestamp(with time zone) = value
+    object:
+      schema: obj_data [channel] = value
+    object_time_series:
+      schema: objts_data [channel] @timestamp(with time zone) = value

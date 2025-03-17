@@ -110,9 +110,9 @@ class DataSource_AsyncMySQL(DataSource_SQL):
             )
         except Exception as e:
             logging.error(f'AsyncMySQL: {self.url}: {e}')
-            return None
+            return await super().connect()
         if pool is None:
-            return None
+            return await super().connect()
         
         logging.info(f'AsyncMySQL: DB connected: {self.url}')
         

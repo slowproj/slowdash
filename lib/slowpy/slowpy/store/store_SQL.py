@@ -86,6 +86,7 @@ class TableFormat:
     
 class LongTableFormat(TableFormat):
     # these can be overriden. Set None to disable table creation
+    # Note: REAL is 64 bit in MySQL and SQLite. For PostgreSQL, timestamp will be DateTime with TimeZone.
     schema_numeric = '(timestamp REAL, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp,channel))'
     schema_text = '(timestamp REAL, channel VARCHAR(100), value TEXT, PRIMARY KEY(timestamp,channel))'
 
@@ -140,6 +141,8 @@ class LongTableFormat_DateTime_PostgreSQL(LongTableFormat):
 
 
 class LongTableFormat_DateTime_MySQL(LongTableFormat):
+    # timestamp in MySQL is stored in UTC. As of Mar 2025, pymysql and aiomysql cannot handle this properly
+    # (treated as "naive"), so if this format is used, use "unspecified utc" time type in SlowDash.
     schema_numeric = '(timestamp TIMESTAMP , channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp,channel))'
     schema_text = '(timestamp TIMESTAMP, channel VARCHAR(100), value TEXT, PRIMARY KEY(timestamp,channel))'
 

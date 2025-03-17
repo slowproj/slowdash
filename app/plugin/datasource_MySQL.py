@@ -42,9 +42,9 @@ class DataSource_MySQL(DataSource_SQL):
                               autocommit=True)
         except Exception as e:
             logging.error("MySQL: %s: %s" % (self.url, str(e)))
-            return super().connect()
+            return await super().connect()
         if conn is None:
-            return super().connect()
+            return await super().connect()
         
         logging.info('MySQL: DB connected: "%s"' % self.url)
         
