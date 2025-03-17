@@ -1,14 +1,15 @@
-# Created by Sanshiro Enomoto on 10 April 2023 #
+# Created by Sanshiro Enomoto on 7 March 2025 #
 
 
-import sys, os, logging
-from sd_datasource_SQL import SQLServer, SQLQueryResult, DataSource_SQL
+import logging, traceback
+from sd_datasource_SQL import SQLBaseServer, SQLQueryResult, SQLQueryErrorResult, DataSource_SQL
 
 import asyncpg
 
 
-class AsyncPostgresQueryResult(SQLQueryResult):
+class AsyncPostgreSQLQueryResult(SQLQueryResult):
     def __init__(self, rows=None):
+        super().__init__()
         self.rows = rows
         self.is_error = False
 
@@ -21,18 +22,23 @@ class AsyncPostgresQueryResult(SQLQueryResult):
 
     
     def get_table(self):
-        if self.rows is None:
+        if self.rows:
+            return [ [ v for v in dict(row).values() ] for row in self.rows ]
+        else:
             return []
-        return [ [ v for k,v in dict(row) ] for row in self.rows ]
 
 
     
-class AyncSQLServer(SQLServer):
+class AsyncPostgreSQLServer(SQLBaseServer):
     def __init__(self, pool):
-        super().__init__(None)
+        super().__init__()
         self.pool = pool
 
         
+    def is_connected(self):
+        return self.pool is not None
+    
+    
     async def terminate(self):
         if self.pool is not None:
             await self.pool.close()
@@ -41,34 +47,32 @@ class AyncSQLServer(SQLServer):
             
     async def execute(self, sql, *params):
         if self.pool is None:
-            return AsyncPostgresQueryResult()
+            return AsyncPostgreSQLQueryResult()
 
-        logging.debug(f'Async SQL Execute: {sql}({params})')
-        async with self.pool.actuire() as conn:
-            await conn.execute(sql, *params)
+        logging.debug(f'SQL Async Execute: {sql}; params={params}')
+        async with self.pool.acquire() as conn:
+            try:
+                await conn.execute(sql, *params)
+                await conn.commit()
+            except Exception as e:
+                logging.error(f'SQL Async Execute Error: {e}')
+                logging.error(traceback.format_exc())
             
         
     async def fetch(self, sql, *params):
         if self.pool is None:
-            return AsyncPostgresQueryResult()
+            return AsyncPostgreSQLQueryResult()
         
-        logging.debug(f'Async SQL Fetch: {sql}({params})')
-        async with self.pool.actuire() as conn:
-            rows = await conn.fetch(sql)
-            
+        logging.debug(f'SQL Async Fetch: {sql}; params={params}')
+        async with self.pool.acquire() as conn:
             try:
-                cursor = conn.cursor()
-                cursor.execute(sql)
-            if commit:
-                self.conn.commit()
-        except Exception as e:
-            logging.error('SQL Query Error: %s' % str(e))
-            logging.error(traceback.format_exc())
-            return SQLQueryErrorResult(str(e))
+                rows = await conn.fetch(sql, *params)
+                return AsyncPostgreSQLQueryResult(rows)
+            except Exception as e:
+                logging.error(f'SQL Async Fetch Error: {e}')
+                logging.error(traceback.format_exc())
+                return SQLQueryErrorResult(str(e))
             
-        return AsyncPostgresQueryResult(cursor)
-
-
     
     
 class DataSource_AsyncPostgreSQL(DataSource_SQL):
@@ -84,16 +88,16 @@ class DataSource_AsyncPostgreSQL(DataSource_SQL):
 
     async def connect(self):
         if self.url is None:
-            return super().connect()
+            return await super().connect()
         
         try:
             pool = await asyncpg.create_pool(self.url)
         except Exception as e:
-            logging.error("PostgreSQL: %s: %s" % (self.url, str(e)))
+            logging.error(f'AsyncPostgreSQL: {self.url}: {e}')
             return None
-        if conn is None:
+        if pool is None:
             return None
 
-        logging.info('PostgreSQL: DB connected: "%s"' % self.url)
+        logging.info(f'AsyncPostgreSQL: DB connected: {self.url}')
         
-        return AsyncSQLServer(pool)
+        return AsyncPostgreSQLServer(pool)

@@ -533,10 +533,9 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb20-1"><a href=
 <span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span></span>
 <span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
 <span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> SQLite</span></span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">parameters</span><span class="kw">:</span></span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">file</span><span class="kw">:</span><span class="at"> QuickTourTestData.db</span></span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> testdata[channel]@timestamp(unix)=value</span></span></code></pre></div>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">file</span><span class="kw">:</span><span class="at"> QuickTourTestData.db</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> testdata[channel]@timestamp(unix)=value</span></span></code></pre></div>
 <p><code>schema</code>
 のところで，データのテーブル名と，どの情報がどのカラムに書かれているかを記述しています．フォーマットは，<code>テーブル名 [チャンネル情報のカラム名] @ 時刻情報のカラム名（時刻の表現形式）= データ値のカラム名</code>
 みたいな感じです．詳しくは，<a href="DataBinding.html">DataBinding</a>

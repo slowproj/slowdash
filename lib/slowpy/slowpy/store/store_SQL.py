@@ -373,6 +373,7 @@ class DataStore_MySQL(DataStore_SQL):
         
     def __init__(self, db_url, table, table_format=None):
         if table_format is None:
+            # MySQL TIMESTAMP uses UTC, but pymysql cannot handle timezone (treat the time as "native")
             table_format = LongTableFormat()
             #table_format = LongTableFormat_DateTime_MySQL()
         super().__init__(db_url, table, table_format)

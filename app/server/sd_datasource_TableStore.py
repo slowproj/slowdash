@@ -16,29 +16,29 @@ class DataSource_TableStore(DataSource):
 
         
     # override this
-    def _get_tag_values_from_data(self, schema):
+    async def _get_tag_values_from_data(self, schema):
         return None
 
     
     # override this
-    def _get_first_data_row(self, schema):
+    async def _get_first_data_row(self, schema):
         columns, record = None, []
         return columns, record
 
     
     # override this
-    def _get_first_data_value(self, table_name, tag_name, tag_value, field):
+    async def _get_first_data_value(self, table_name, tag_name, tag_value, field):
         return None
 
         
     # override this
-    def _execute_query(self, table_name, time_col, time_type, time_from, time_to, tag, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
+    async def _execute_query(self, table_name, time_col, time_type, time_from, time_to, tag, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
         columns, table = [], []
         return columns, table
 
         
-    def get_channels(self):
-        self._scan_channels()
+    async def aio_get_channels(self):
+        await self._scan_channels()
             
         channels = []
         for schema in self.ts_schemata + self.obj_schemata + self.objts_schemata:
@@ -52,13 +52,13 @@ class DataSource_TableStore(DataSource):
         return channels
         
     
-    def get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
+    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
         if not self.channels_scanned:
-            self._scan_channels()
+            await self._scan_channels()
         
         result = {}
         for schema in self.ts_schemata:
-            result.update(self._get_query_result(
+            result.update(await self._get_query_result(
                 schema, channels, length, to, resampling=resampling, reducer=reducer, lastonly=False
             ))
             
@@ -68,17 +68,17 @@ class DataSource_TableStore(DataSource):
         return self.resample(result, length, to, resampling, reducer)
 
     
-    def get_object(self, channels, length, to):
+    async def aio_get_object(self, channels, length, to):
         result = {}
         for schema in self.obj_schemata + self.objts_schemata:
             if schema.tag is None:
-                result.update(self._get_query_result(
+                result.update(await self._get_query_result(
                     schema, channels, length, to, resampling=None, reducer=None, lastonly=True
                 ))
             else:
                 # to make use of "limit 1"
                 for ch in channels:  
-                    result.update(self._get_query_result(
+                    result.update(await self._get_query_result(
                         schema, [ch], length, to, resampling=None, reducer=None, lastonly=True
                     ))
             # retry if the value is null?
@@ -109,7 +109,7 @@ class DataSource_TableStore(DataSource):
         self.objts_schemata = load_schema(params, 'object_time_series')
 
         
-    def _scan_channels(self):
+    async def _scan_channels(self):
         if self.channels_scanned:
             return
         self.channels_scanned = True
@@ -140,7 +140,7 @@ class DataSource_TableStore(DataSource):
 
             # scan for tag values #
             if schema.tag is not None and len(schema.tag_values) == 0:
-                tag_values = self._get_tag_values_from_data(schema)
+                tag_values = await self._get_tag_values_from_data(schema)
                 if tag_values is None: # error
                     continue
                 else:
@@ -154,7 +154,7 @@ class DataSource_TableStore(DataSource):
                         all_fields_have_types = False
                         break
             if len(schema.fields) == 0 or not all_fields_have_types:
-                columns, record = self._get_first_data_row(schema)
+                columns, record = await self._get_first_data_row(schema)
                 if columns is None:
                     self.channels_scanned = False  # maybe the table is not created yet. Try again later
                     continue
@@ -198,12 +198,12 @@ class DataSource_TableStore(DataSource):
                         schema.add_channel(channel_name_str)
                         field_type = schema.channel_table[channel_name_str].get('type', None)
                         if (not schema.is_for_ts) and (field_type is None):
-                            value = self._get_first_data_value(schema.table, schema.tag, tag_value, field)
+                            value = await self._get_first_data_value(schema.table, schema.tag, tag_value, field)
                             if value is not None:
                                 schema.add_channel(channel_name_str, Schema.identify_datatype(value))
 
 
-    def _get_query_result(self, schema, channels, length, to, resampling=None, reducer=None, lastonly=False):
+    async def _get_query_result(self, schema, channels, length, to, resampling=None, reducer=None, lastonly=False):
         result = {}
         stop = int(to)
         start = int(stop - float(length))
@@ -230,7 +230,7 @@ class DataSource_TableStore(DataSource):
         if len(fields) < 1:
             return result
 
-        query_result_columns, query_result_table = self._execute_query(
+        query_result_columns, query_result_table = await self._execute_query(
             schema.table, 
             time_col, schema.time_type, time_from, time_to, 
             schema.tag, tag_values, fields,

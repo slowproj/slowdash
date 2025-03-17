@@ -34,10 +34,9 @@ slowdash_project:
 
   data_source:
     type: PostgreSQL
-    parameters:
-      url: p8_db_user:****@localhost:5432/p8_sc_db
-      time_series:
-        schema: data_table[channel]@timestamp=value
+    url: p8_db_user:****@localhost:5432/p8_sc_db
+    time_series:
+      schema: data_table[channel]@timestamp=value
 
   style:
     theme: light
@@ -57,7 +56,7 @@ slowdash_project:
   - `MongoDB`
   - `CouchDB`
   - `YAML`
-- `parameters`: defined by each data source. See the [Data Binding section](DataBinding.html) for details.
+- other parameters: defined by each data source. See the [Data Binding section](DataBinding.html) for details.
 
 #### TaskEntry (`task`, optional)
 - Server-side control tasks (user Python script). See the [Controls section](ControlScript.html) for details.

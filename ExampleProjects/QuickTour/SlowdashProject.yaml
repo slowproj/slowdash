@@ -4,9 +4,8 @@ slowdash_project:
   
   data_source:
     url: sqlite:///QuickTourTestData.db
-    parameters:
-      time_series:
-        schema: testdata [channel] @timestamp(unix) = value
+    time_series:
+      schema: testdata [channel] @timestamp(unix) = value
 
   task:
     name: testdata

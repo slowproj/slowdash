@@ -32,9 +32,9 @@ class DataSource_MySQL(DataSource_SQL):
                 logging.error("Syntax error in the URL: %s" % (self.url))
 
                 
-    def connect(self):
+    async def connect(self):
         if self.url is None:
-            return super().connect()
+            return await super().connect()
         
         try:
             conn = db.connect(host=self.host, port=self.port, user=self.user,

@@ -1,6 +1,7 @@
 slowdash_project:
   name: PostgreSQL_Test
   data_source:
+    type2: asyncpostgresql
     url: ${DB_URL:-postgresql://slowdash:slowdash@localhost:5432/SlowTestData}
     parameters:
       time_series:

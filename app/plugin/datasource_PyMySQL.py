@@ -32,7 +32,7 @@ class DataSource_PyMySQL(DataSource_SQL):
                 logging.error("Syntax error in the URL: %s" % (self.url))
 
                 
-    def connect(self):
+    async def connect(self):
         if self.url is None:
             return super().connect()
         

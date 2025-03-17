@@ -4,7 +4,7 @@ title: Data Binding
 
 # Simple Cases
 ### SQL DB
-If the time-series data is stored in a table `data_table` with the contents like this:
+If the time-series data is stored in a table `data_table` with the contents like this ("long format"):
 
 |       channel       |           timestamp           |    value    |
 |---------------------|-------------------------------|-------------|
@@ -19,9 +19,8 @@ Then the `data source` part of the configuration looks like:
 slowdash_project:
   data_source:
     url: postgresql://USER:PASS@localhost:5432/DBNAME
-    parameters:
-      time_series:
-        schema: data_table[channel]@timestamp=value
+    time_series:
+      schema: data_table[channel]@timestamp=value
 ```
 Change `PostgreSQL` to `MySQL` or `SQLite` for other SQL DB systems.
 
@@ -31,8 +30,7 @@ If only one tag is used for the channel names and one field for data values (`ME
 slowdash_project:
   data_source:
     url: influxdb://ORGANIZATION@localhost:8086/BUCKET/MEASUREMENT
-    parameters:
-      token: TOKEN
+    token: TOKEN
 ```
 
 ### Redis
@@ -229,74 +227,43 @@ Note that the numeric data values shown here can be of any other scalar types (s
 # RDBMS (SQL Database)
 
 ## Supported Database Systems
-|DBMS              |Python Module|Server-side <br>down sampling |
-|------------------|-------------|--------------------------|
-| PostgreSQL       | psycopg2    | yes |
-| MySQL            | mysqlclient | yes |
-| SQLite           | (none)      | no |
-| Others (generic) | sqlalchemy  | no |
+|DBMS              |Python Module|Async | Server-side <br>down sampling |
+|------------------|-------------|------|--------------------|
+| PostgreSQL       | psycopg2    |   no | yes |
+| PostgreSQL (Async access)      | asyncpg     |  yes | yes |
+| MySQL            | pymysql     |   no | yes |
+| MySQL   (Async access)         | aiomysql    |  yes | yes |
+| SQLite           | (none)      |   no | no |
+| Others (generic) | sqlalchemy  |   no | no |
 
 
-## Preparation
+## Configuration
 
 #### PostgreSQL
-- Install Python3 module "psycopg2": `pip3 install psycopg2`.
-- The project configuration would look like:
-```yaml
-slowdash_project:
-  data_source:
-    type: PostgreSQL
-    parameters:
-      url: USER:PASS@HOST:PORT/DB
-      schema: TABLE [ TAG_COLUMN ] @ TIME_COLUMN
-```
-or, with putting the URL with `postgres://` prefix, the `type` can be omitted:
+Write SlowDash project configuration file (`SlowdashProject.yaml`) like below.
 ```yaml
 slowdash_project:
   data_source:
     url: postgresql://USER:PASS@HOST:PORT/DB
-    parameters:
-      schema: TABLE [ TAG_COLUMN ] @ TIME_COLUMN
+    schema: TABLE [ TAG_COLUMN ] @ TIME_COLUMN
 ```
 
 #### MySQL
-- Install Python3 module "mysqlclient": `pip3 install mysqlclient`.
-- The project configuration would look like:
-```yaml
-slowdash_project:
-  data_source:
-    type: MySQL
-    parameters:
-      url: USER:PASS@HOST:PORT/DB
-      schema: TABLE [ TAG_COLUMN ] @ TIME_COLUMN
-```
-or
+Write SlowDash project configuration file (`SlowdashProject.yaml`) like below.
 ```yaml
 slowdash_project:
   data_source:
     url: mysql://USER:PASS@HOST:PORT/DB
-    parameters:
-      schema: TABLE [ TAG_COLUMN ] @ TIME_COLUMN
+    schema: TABLE [ TAG_COLUMN ] @ TIME_COLUMN
 ```
 
 #### SQLite
-- No additional package is necesssary.
-- SQLite DB file path is relative to the project directory.
-- The project configuration would look like:
-```yaml
-slowdash_project:
-  data_source:
-    type: SQLite
-    parameters:
-      file: FILENAME
-```
-or
+Write SlowDash project configuration file (`SlowdashProject.yaml`) like below. The SQLite DB file path is relative to the project directory.
 ```yaml
 slowdash_project:
   data_source:
     url: sqlite:///FILENAME
-    parameters:
-      schema: TABLE [ TAG_COLUMN ] @ TIME_COLUMN
+    schema: TABLE [ TAG_COLUMN ] @ TIME_COLUMN
 ```
 
 #### Other SQL DBMS
@@ -306,8 +273,7 @@ slowdash_project:
 slowdash_project:
   data_source:
     type: SQLAlchemy
-    parameters:
-      url: DBTYPE://USER:PASS@HOST:PORT/DB
+    url: DBTYPE://USER:PASS@HOST:PORT/DB
 ```
 
 ### Avoiding Channel Scanning Overhead
@@ -329,16 +295,52 @@ If the database has a channel table, separately from the data table:
            sql: "select name from endpoint_table"
 ```
 
+### Time-stamp Considerations
+SlowDash can handle several different data time-stamp types:
+
+- UNIX timestamp (`unix`): number of seconds since the UNIX epoch, always safe
+- DateTime type with time-zone (`aware` or `with time zone`): maybe useful
+- DateTime type without time-zone (`naive` or `without time zone`): strongly discouraged
+- DateTime type in UTC (`unspecified utc`): sometimes necessary
+
+#### PostgreSQL
+PostgreSQL supports several different time types:
+
+- UNIX timestamp: as `INTERGER`/`BIGINT` (32/64 bit), or `REAL`/`DOUBLE PRECISION` (32/64 bit)
+- DateTime with time-zone: `TIMESTAMP WITH TIME ZONE` / `TIMESTAMPTZ`
+- DateTime without time-zone (DISCOURAGED): `TIMESTAMP`
+
+`TIMESTAMP WITH TIME ZONE` is recommended for use with SlowDash.
+
+#### MySQL
+MySQL supports several different time types:
+
+- UNIX timestamp: as `INTERGER`/`BIGINT` (32/64 bit) or `FLOAT`/`REAL`/`DOUBLE` (32/64/64 bit)
+- DateTime without time-zone (DISCOURAGED): `DATETIME`
+- DateTime in UTC: `TIMESTAMP`
+
+The MySQL libraries used in SlowDash (pymysql / aiomysql) cannot handle time-zone with the TIMESTAMP type, therefore if the `TIMESTAMP` type is used, it must be specified in SlowDash configuration file as `unspeficied utc`. Using the UNIX timestamps is always safe.
+
+UNIX timestamps as `REAL` is recommended for use with SlowDash.
+
+#### SQLite
+SQLite does not have dedicated date-time type, and time information can be stored in time-string as TEXT or UNIX timestamps as INTEGER/REAL. If a field is declared as `DATETIME`, it uses TEXT for time string in UTC.
+
+- UNIX timestamp: as `INTERGER` (64 bit) or `REAL` (64 bit)
+- DateTime string in UTC: `DATETIME`
+
+If the time string in TEXT (or `DATETIME`) is used, it must be specified in SlowDash configuration file as `unspeficied utc`. Using the UNIX timestamps is always safe.
+
+UNIX timestamps as `REAL` is recommended for use with SlowDash.
+
 ## Time-Series of Scalar Values
 To access a table containing time-series data, write the schema in the `time_series` entry:
 ```yaml
 slowdash_project:
   data_source:
-    type: PostgreSQL
-    parameters:
-      url: postgresql://p8_db_user:****@localhost:5432/p8_sc_db
-      time_series:
-        schema: numeric_data[endpoint]@timestamp(with timezone)=value_raw
+    url: postgresql://p8_db_user:****@localhost:5432/p8_sc_db
+    time_series:
+      schema: numeric_data[endpoint]@timestamp(with timezone)=value_raw
 ```
 
 #### Case 1: Tag Values for Channel
@@ -374,11 +376,9 @@ slowdash_project:
 ```yaml
 slowdash_project:
   data_source:
-    type: PostgreSQL
-    parameters:
-      url: postgresql://p8_db_user:****@localhost:5432/p8_sc_db
-      object_time_series:
-        schema: histograms[channel]@timestamp(unix)=json
+    url: postgresql://p8_db_user:****@localhost:5432/p8_sc_db
+    object_time_series:
+      schema: histograms[channel]@timestamp(unix)=json
 ```
 
 ##  Time-Series of Blobs
@@ -388,12 +388,10 @@ slowdash_project:
 ```yaml
 slowdash_project:
   data_source:
-    type: SQLite
-    parameters:
-      file: RunTable.db
-      view:
-        name: RunTable
-        sql: select * from RunTable where TimeStamp >= ${FROM_UNIXTIME} and TimeStamp < ${TO_UNIXTIME}
+    url: sqlite:///RunTable.db
+    view:
+      name: RunTable
+      sql: select * from RunTable where TimeStamp >= ${FROM_UNIXTIME} and TimeStamp < ${TO_UNIXTIME}
 ```
 - The channel "RunTable" will return a single table object with time-stamp of "current".
 <p>
@@ -414,20 +412,17 @@ For simple cases, just specify the Measurement name in the `time_series` entry:
 ```yaml
 slowdash_project:
   data_source:
-    type: InfluxDB
-    parameters:
-      url: influxdb://SlowDash@localhost:8086/TestData
-      token: MY_TOKEN_HERE
-      time_series:
-        - measurement: TestTimeSeries
+    url: influxdb://SlowDash@localhost:8086/TestData
+    token: MY_TOKEN_HERE
+    time_series:
+      - measurement: TestTimeSeries
 ```
 or in a short form:
 ```yaml
 slowdash_project:
   data_source:
     url: influxdb://SlowDash@localhost:8086/TestData/TestTimeSeries
-    parameters:
-      token: MY_TOKEN_HERE
+    token: MY_TOKEN_HERE
 ```
 
 
@@ -459,12 +454,10 @@ Use `schema` to describe which tag and fields are used:
 ```yaml
 slowdash_project:
   data_source:
-    type: InfluxDB
-    parameters:
-      url: influxdb://SlowDash@localhost:8086/TestData
-      token: MY_TOKEN_HERE
-      object_time_series:
-        - measurement: TestTimeSeriesOfObjects
+    url: influxdb://SlowDash@localhost:8086/TestData
+    token: MY_TOKEN_HERE
+    object_time_series:
+      - measurement: TestTimeSeriesOfObjects
 ```
 
 - In InfluxDB, time-series of scalars and time-series of objects cannot live together in a same "measurement". Use a dedicated measurement name for a time-series of objects.
@@ -494,10 +487,8 @@ slowdash_project:
 ```yaml
 slowdash_project:
   data_source:
-    type: RedisTS
-    parameters:
-      url: redis://localhost:6379
-      time_series: { db: 1 }
+    url: redis://localhost:6379
+    time_series: { db: 1 }
 ```
 or in a short form:
 ```yaml
@@ -521,10 +512,8 @@ slowdash_project:
 ```yaml
 slowdash_project:
   data_source:
-    type: RedisTS
-    parameters:
-      url: redis://localhost:6379
-      object_time_series: { db: 2 }
+    url: redis://localhost:6379
+    object_time_series: { db: 2 }
 ```
 - The `db` parameter of the `object_time_series` indicates the database number for the time-series of objects. All the Redis-TS and Redis-JSON entries in this database will be interpreted in a specific way.
 
@@ -632,9 +621,8 @@ Write the schema in the project configuration file:
 slowdash_project:
   data_source:
     url: couchdb://USER:PASS@localhost:5984/MyDB
-    parameters:
-      time_series: 
-        schema: MyDesignDoc/MyIndex
+    time_series: 
+      schema: MyDesignDoc/MyIndex
 ```
 
 channels are scanned from the data, but old channels that do not appear in a last segment of data might not be found. In that case, explicitly list the channel names:
@@ -688,11 +676,9 @@ Then specify the schema in `object_time_series`:
 ```yaml
 slowdash_project:
   data_source:
-    type: CouchDB
-    parameters:
-      url: couchdb://USER:PASS@localhost:5984/MyDB
-      object_time_series: 
-        schema: MyDesignDoc/MyIndex
+    url: couchdb://USER:PASS@localhost:5984/MyDB
+    object_time_series: 
+      schema: MyDesignDoc/MyIndex
 ```
 
 ## Time-Series of Blobs
@@ -717,12 +703,10 @@ A CouchDB view can be accessed as a table object with `view_table`:
 ```yaml
 slowdash_project:
   data_source:
-    type: CouchDB
-    parameters:
-      url: couchdb://USER:PASS@localhost:5984/MyDB
-      view_table: 
-        name: DataTable
-        schema: MyDesignDoc/MyIndex = Field01, Field02, ..
+    url: couchdb://USER:PASS@localhost:5984/MyDB
+    view_table: 
+      name: DataTable
+      schema: MyDesignDoc/MyIndex = Field01, Field02, ..
 ```
 
 ## View-Row as a Tree
@@ -730,12 +714,10 @@ A row of a CouchDB view can be accessed as a tree object with `view_tree`:
 ```yaml
 slowdash_project:
   data_source:
-    type: CouchDB
-    parameters:
-      url: couchdb://USER:PASS@localhost:5984/MyDB
-      view_tree: 
-        name: DataRecord
-        schema: MyDesignDoc/MyIndex = Field01, Field02, ..
+    url: couchdb://USER:PASS@localhost:5984/MyDB
+    view_tree: 
+      name: DataRecord
+      schema: MyDesignDoc/MyIndex = Field01, Field02, ..
 ```
 
 ## Database information as a Tree
@@ -743,11 +725,9 @@ Current database information such as the file size can be obtained as a tree dat
 ```yaml
 slowdash_project:
   data_source:
-    type: CouchDB
-    parameters:
-      url: couchdb://USER:PASS@localhost:5984/MyDB
-      database_info: 
-        name: DBInfo
+    url: couchdb://USER:PASS@localhost:5984/MyDB
+    database_info: 
+      name: DBInfo
 ```
 
 
@@ -761,9 +741,8 @@ To access a table containing time-series data, write the schema in the `time_ser
 slowdash_project:
   data_source:
     url: csv:///PATH/TO/DIRECTORY
-    parameters:
-      time_series:
-        schema: FILE_ROOT_NAME [ TAG_COLUMN ] @ TIME_COLUMN
+    time_series:
+      schema: FILE_ROOT_NAME [ TAG_COLUMN ] @ TIME_COLUMN
 ```
 
 ##  Time-Series of Histograms, Graphs, Tables & Trees
@@ -773,10 +752,9 @@ slowdash_project:
 ```yaml
 slowdash_project:
   data_source:
-    parameters:
-      url: csv:///PATH/TO/DIRECTORY
-      object_time_series:
-        schema: histograms[channel]@timestamp(unix)=value
+    url: csv:///PATH/TO/DIRECTORY
+    object_time_series:
+      schema: histograms[channel]@timestamp(unix)=value
 ```
 
 ##  "Current" Histograms, Graphs, Tables & Trees
@@ -785,10 +763,9 @@ slowdash_project:
 ```yaml
 slowdash_project:
   data_source:
-    parameters:
-      url: csv:///PATH/TO/DIRECTORY
-      object_time_series:
-        schema: histograms[channel]=value
+    url: csv:///PATH/TO/DIRECTORY
+    object_time_series:
+      schema: histograms[channel]=value
 ```
 
 
@@ -800,10 +777,9 @@ slowdash_project:
 slowdash_project:
   data_source:
     type: YAML
-    parameters:
-      name: RunConfig
-      file: RunConfig.yaml
-      valid_from: now
+    name: RunConfig
+    file: RunConfig.yaml
+    valid_from: now
 ```
   
 

@@ -27,7 +27,7 @@ class DataSource_SQLite(DataSource_SQL):
             self.db_name = filename
 
 
-    def connect(self):
+    async def connect(self):
         if self.db_name is None:
             return super().connect()
 

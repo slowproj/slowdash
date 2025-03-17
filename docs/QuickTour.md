@@ -128,9 +128,8 @@ slowdash_project:
 
   data_source:
     url: sqlite:///QuickTourTestData.db
-    parameters:
-      time_series:
-        schema: testdata [channel] @timestamp(unix) = value
+    time_series:
+      schema: testdata [channel] @timestamp(unix) = value
 ```
 
 To use the `datetime` column for timestamps instead, modify the schema section as follows:

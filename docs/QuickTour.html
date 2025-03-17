@@ -111,7 +111,7 @@ completely removed by simply deleting that directory.</p>
 <h3 id="menu">Menu</h3>
 <ul>
 <li>Configure a project by defining the user data schema</li>
-<li>Run Slow-Dash</li>
+<li>Run SlowDash</li>
 <li>Create interactive plots through the web interface</li>
 <li><del>Execute user code on the server-side</del> (coming soon)</li>
 <li><del>Send commands to user code</del> (coming soon)</li>
@@ -181,8 +181,8 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>-rwxr-xr-x 1 sanshiro sanshiro  3562 Apr 11 16:51 generate-testdata.py</span></code></pre></div>
 <p>You can inspect the database contents using the SQLite command-line
 program, <code>sqlite3</code>. If this program isn’t available on your
-system, you can skip this step and view the data through Slow-Dash in
-the next section.</p>
+system, you can skip this step and view the data through SlowDash in the
+next section.</p>
 <div class="sourceCode" id="cb7"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sqlite3 QuickTourTestData.db </span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>SQLite version 3.31.1 2020-01-27 19:55:54</span>
@@ -258,7 +258,7 @@ system, you might use just one of these formats.</p>
 refer to the <a href="DataBinding.html">Data Binding section</a>.</p>
 <h1 id="basic-usage">Basic Usage</h1>
 <h2 id="project-configuration">Project Configuration</h2>
-<p>Each Slow-Dash project requires a configuration file named
+<p>Each SlowDash project requires a configuration file named
 <code>SlowdashProject.yaml</code> in the project directory. This file
 specifies which database to read, which columns contain timestamps and
 data values, and other essential settings.</p>
@@ -269,13 +269,12 @@ content:</p>
 <div class="sourceCode" id="cb9"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> QuickTour</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">title</span><span class="kw">:</span><span class="at"> Slow-Dash Quick Tour</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">title</span><span class="kw">:</span><span class="at"> SlowDash Quick Tour</span></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
 <span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> sqlite:///QuickTourTestData.db</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">parameters</span><span class="kw">:</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> testdata [channel] @timestamp(unix) = value</span></span></code></pre></div>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> testdata [channel] @timestamp(unix) = value</span></span></code></pre></div>
 <p>To use the <code>datetime</code> column for timestamps instead,
 modify the schema section as follows:</p>
 <div class="sourceCode" id="cb10"><pre
@@ -298,7 +297,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>{</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    &quot;project&quot;: {</span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>        &quot;name&quot;: &quot;QuickTour&quot;,</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>        &quot;title&quot;: &quot;Slow-Dash Quick Tour&quot;,</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>        &quot;title&quot;: &quot;SlowDash Quick Tour&quot;,</span>
 <span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>        &quot;error_message&quot;: &quot;&quot;</span>
 <span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    },</span>
 <span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    &quot;data_source&quot;: {</span>
@@ -381,7 +380,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <p>The data file size is roughly 5 MB per hour. The test data file,
 <code>QuickTourTestData.db</code>, can be deleted safely when SlowDash
 is not running. Once the file is deleted, run
-<code>generate-testdata.py</code> again before starting Slow-Dash next
+<code>generate-testdata.py</code> again before starting SlowDash next
 time.</p>
 <h2 id="creating-plots">Creating Plots</h2>
 <h3 id="interactive-plot-building">Interactive Plot Building</h3>

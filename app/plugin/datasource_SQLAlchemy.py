@@ -19,14 +19,13 @@ class SQLQueryResult_SQLAlchemy(SQLQueryResult):
 
 
 class SQLServer_SQLAlchemy(SQLServer):
-    def execute(self, sql, commit=False):
+    async def execute(self, sql, *params):
         if self.conn is None:
             return SQLQueryResult()
         
         try:
-            cursor = self.conn.execute(sqla.text(sql))
-            if commit:
-                self.conn.commit()
+            cursor = self.conn.execute(sqla.text(sql), params)
+            self.conn.commit()
         except Exception as e:
             logging.error(e)
             return SQLQueryErrorResult(str(e))
@@ -34,6 +33,19 @@ class SQLServer_SQLAlchemy(SQLServer):
         return SQLQueryResult_SQLAlchemy(cursor)
 
 
+    async def fetch(self, sql, *params):
+        if self.conn is None:
+            return SQLQueryResult()
+        
+        try:
+            cursor = self.conn.execute(sqla.text(sql), params)
+        except Exception as e:
+            logging.error(e)
+            return SQLQueryErrorResult(str(e))
+            
+        return SQLQueryResult_SQLAlchemy(cursor)
+
+    
     
 class DataSource_SQLAlchemy(DataSource_SQL):
     def __init__(self, app, project, params):
@@ -50,9 +62,9 @@ class DataSource_SQLAlchemy(DataSource_SQL):
             self.time_sep = ' '
             
             
-    def connect(self):
+    async def connect(self):
         if self.url is None:
-            return super().connect()
+            return await super().connect()
 
         try:
             engine = sqla.create_engine(self.url)

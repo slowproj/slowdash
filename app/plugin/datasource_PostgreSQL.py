@@ -18,9 +18,9 @@ class DataSource_PostgreSQL(DataSource_SQL):
             self.url = 'postgresql://' + self.url
         
 
-    def connect(self):
+    async def connect(self):
         if self.url is None:
-            return super().connect()
+            return await super().connect()
         
         try:
             conn = db.connect(self.url)

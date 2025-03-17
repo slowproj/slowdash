@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 10 April 2023 #
 
 
-import sys, os, time, datetime, logging, traceback
+import sys, os, asyncio, time, datetime, logging, traceback
 from sd_datasource import DataSource
 from sd_dataschema import Schema
 from sd_datasource_TableStore import DataSource_TableStore
@@ -19,15 +19,17 @@ class SQLQueryResult:
 
             
     def get_column_names(self):
-        if self.cursor is None:
+        if self.cursor:
+            return [ col[0] for col in self.cursor.description ]
+        else:
             return []
-        return [ col[0] for col in self.cursor.description ]
 
     
     def get_table(self):
-        if self.cursor is None:
+        if self.cursor:
+            return self.cursor.fetchall()
+        else:
             return []
-        return self.cursor.fetchall()
 
     
 
@@ -39,33 +41,72 @@ class SQLQueryErrorResult(SQLQueryResult):
 
         
 
-class SQLServer():
+class SQLBaseServer:
+    def __init__(self):
+        pass
+
+    
+    def is_connected(self):
+        return False
+    
+    
+    async def terminate(self):
+        pass
+    
+
+    async def execute(self, sql, *params):
+        return SQLQueryResult()
+            
+        
+    async def fetch(self, sql, *params):
+        return SQLQueryResult()
+
+    
+    
+class SQLServer(SQLBaseServer):
     def __init__(self, conn):
+        super().__init__()
         self.conn = conn
 
         
-    def __del__(self):
-        self.terminate()
-
-        
-    def terminate(self):
+    def is_connected(self):
+        return self.conn is not None
+    
+    
+    async def terminate(self):
         if self.conn is not None:
             self.conn.close()
             self.conn = None
 
             
-    def execute(self, sql, commit=False):
+    async def execute(self, sql, *params):
         if self.conn is None:
             return SQLQueryResult()
 
-        logging.debug("SQL Execute: %s" % sql)
+        logging.debug(f'SQL Execute: {sql}; params={params}')
         try:
             cursor = self.conn.cursor()
-            cursor.execute(sql)
-            if commit:
-                self.conn.commit()
+            cursor.execute(sql, params)
+            self.conn.commit()
         except Exception as e:
-            logging.error('SQL Query Error: %s' % str(e))
+            logging.error(f'SQL Fetch Error: {e}')
+            logging.error(traceback.format_exc())
+            return SQLQueryErrorResult(str(e))
+            
+        return SQLQueryResult(cursor)
+            
+        
+    async def fetch(self, sql, *params):
+        if self.conn is None:
+            return SQLQueryResult()
+
+        logging.debug(f'SQL Fetch: {sql}; params={params}')
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute(sql, params)
+            self.conn.commit()
+        except Exception as e:
+            logging.error(f'SQL Fetch Error: {e}')
             logging.error(traceback.format_exc())
             return SQLQueryErrorResult(str(e))
             
@@ -81,42 +122,42 @@ class DataSource_SQL(DataSource_TableStore):
         super().__init__(app, project, params)
 
 
-    def finalize(self):
+    async def aio_finalize(self):
         if self.server is not None:
-            self.server.terminate()
+            await self.server.terminate()
 
         
     # override this in DB implementation class
-    def connect(self):
+    async def connect(self):
         if self.server is not None:
             return self.server
-        return SQLServer(None)
+        return SQLBaseServer()
     
 
-    def get_channels(self):
+    async def aio_get_channels(self):
         self.channels_scanned = False  # forced scan; efficient for existing channels
-        channels = super().get_channels()
+        channels = await super().aio_get_channels()
         channels += [ {'name': view, 'type': 'table'} for view in self.views ]
 
         return channels
         
     
-    def get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
+    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
         if self.server is None:
-            self.server = self._connect_with_retry()
+            self.server = await self._connect_with_retry()
         if self.server is None:
             return {}
         
-        return super().get_timeseries(channels, length, to, resampling, reducer)
+        return await super().aio_get_timeseries(channels, length, to, resampling, reducer)
 
         
-    def get_object(self, channels, length, to):
+    async def aio_get_object(self, channels, length, to):
         if self.server is None:
-            self.server = self._connect_with_retry()
+            self.server = await self._connect_with_retry()
         if self.server is None:
             return {}
         
-        result = super().get_object(channels, length, to)
+        result = await super().aio_get_object(channels, length, to)
         
         ### VIEW ###
         start = to - length
@@ -137,7 +178,7 @@ class DataSource_SQL(DataSource_TableStore):
             sql = sql.replace('${TO_DATETIME_NAIVE}', to_datetime_naive.isoformat(sep=self.time_sep))
             sql = sql.replace('${TO_DATETIME_UTC}', to_datetime_utc.isoformat(sep=self.time_sep))
             
-            query_result = self.server.execute(sql)
+            query_result = await self.server.fetch(sql)
             if query_result.is_error:
                 logging.error('SQL Query Error: %s: %s' % (query_result.error, sql))
                 continue
@@ -172,22 +213,22 @@ class DataSource_SQL(DataSource_TableStore):
             self.views[view['name']] = view['sql']
             
 
-    def _scan_channels(self):
+    async def _scan_channels(self):
         if self.server is None:
-            self.server = self._connect_with_retry()
+            self.server = await self._connect_with_retry()
         if self.server is None:
             return
             
-        super()._scan_channels()
+        await super()._scan_channels()
 
         
-    def _get_tag_values_from_data(self, schema):
+    async def _get_tag_values_from_data(self, schema):
         if schema.tag_value_sql is None:
             # TODO: this is inefficient. Modify not to go though all the DB entries.
-            schema.tag_value_sql = 'select distinct %s from %s' % (schema.tag, schema.table)
+            schema.tag_value_sql = 'SELECT DISTINCT %s FROM %s' % (schema.tag, schema.table)
             
         start_time = time.time()
-        result = self.server.execute(schema.tag_value_sql)
+        result = await self.server.fetch(schema.tag_value_sql)
         lapse = time.time() - start_time
         if lapse > 10:
             logging.warning(f'Full scan of a SQL table ({schema.table}) was performed to obtain a list of available channels. It took {int(lapse)} seconds.')
@@ -201,9 +242,9 @@ class DataSource_SQL(DataSource_TableStore):
         return sorted([ row[0] for row in result.get_table() ])
 
 
-    def _get_first_data_row(self, schema):
-        sql = 'select * from %s limit 1' % schema.table
-        result = self.server.execute(sql)
+    async def _get_first_data_row(self, schema):
+        sql = 'SELECT * FROM %s LIMIT 1' % schema.table
+        result = await self.server.fetch(sql)
         if result.is_error:
             logging.error('SQL Error: %s: %s' % (result.error, sql))
             return None, []
@@ -217,12 +258,12 @@ class DataSource_SQL(DataSource_TableStore):
         return columns, record
 
                 
-    def _get_first_data_value(self, table_name, tag_name, tag_value, field):
+    async def _get_first_data_value(self, table_name, tag_name, tag_value, field):
         if tag_name is not None:
-            sql = "select %s from %s where %s='%s' limit 1" % (field, table_name, tag_name, tag_value)
+            sql = "SELECT %s FROM %s WHERE %s='%s' LIMIT 1" % (field, table_name, tag_name, tag_value)
         else:
-            sql = "select %s from %s limit 1" % (field, table_name)
-        result = self.server.execute(sql)
+            sql = "SELECT %s FROM %s LIMIT 1" % (field, table_name)
+        result = await self.server.fetch(sql)
         if result.is_error:
             logging.error('SQL Error: %s: %s' % (result.error, sql))
             return None
@@ -235,26 +276,26 @@ class DataSource_SQL(DataSource_TableStore):
         return value
 
         
-    def _connect_with_retry(self, repeat=12, interval=5):
+    async def _connect_with_retry(self, repeat=12, interval=5):
         if self.server is not None:
             return self.server
         
         for i in range(repeat):
             try:
-                server = self.connect()
+                server = await self.connect()
             except Exception as e:
                 logging.info('Unable to connect to SQLDB: %s' % str(e))
                 server = None
-            if server is None or server.conn is None:
+            if (server is None) or (not server.is_connected()):
                 logging.info(f'retrying in 5 sec... ({i+1}/{repeat})')
-                time.sleep(interval)
+                await asyncio.sleep(interval)
             else:
                 return server
         else:
             logging.error('Unable to connect to SQLDB')
             if server is None:
                 logging.error(traceback.format_exc())
-            return SQLServer(None)
+            return SQLBaseServer()
 
         
     # The DB-specific syntax to get a time difference between time_col and (stop_sec | stop_tstamp) 
@@ -265,9 +306,9 @@ class DataSource_SQL(DataSource_TableStore):
         return f"{stop_sec} - extract(epoch from {time_col})"
 
     
-    def _execute_query(self, table_name, time_col, time_type, time_from, time_to, tag_col, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
+    async def _execute_query(self, table_name, time_col, time_type, time_from, time_to, tag_col, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
         if self.server is None:
-            self.server = self._connect_with_retry()
+            self.server = await self._connect_with_retry()
         if self.server is None:
             return [], []
 
@@ -285,7 +326,7 @@ class DataSource_SQL(DataSource_TableStore):
         else:
             sql_where_list = []
         if len(tag_values) > 0:
-            sql_where_list += [ '%s in (%s)' % (tag_col, ','.join([ "'%s'" % val for val in tag_values ])) ]
+            sql_where_list += [ '%s IN (%s)' % (tag_col, ','.join([ "'%s'" % val for val in tag_values ])) ]
         sql_where = 'WHERE ' + ' AND '.join(sql_where_list)
         
         if time_col is None:
@@ -309,7 +350,7 @@ class DataSource_SQL(DataSource_TableStore):
             if reducer in ['first', 'last'] and self.db_has_floor:
                 sql_cte_bucket = ' '.join([
                     f"SELECT",
-                    f"    floor(({tdiff_query})/{resampling}) AS bucket, ",
+                    f"    FLOOR(({tdiff_query})/{resampling}) AS bucket, ",
                     f"    %s({time_col}) AS picked_timestamp" % ("max" if reducer == 'last' else 'min'),
                     f"    %s" % ("" if tag_col is None else f", {tag_col}"),
                     f"{sql_from}",
@@ -341,7 +382,7 @@ class DataSource_SQL(DataSource_TableStore):
                     agg_func = reducer
                 sql_cte_bucket = ' '.join([
                     f"SELECT",
-                    f"    floor(({tdiff_query})/{resampling}) AS bucket,",
+                    f"    FLOOR(({tdiff_query})/{resampling}) AS bucket,",
                     f"    %s" % ("" if tag_col is None else f"{tag_col},"),
                     f"    %s" % ','.join([f"{agg_func}({field}) as {field}" for field in fields]),
                     f"{sql_from}",
@@ -365,7 +406,7 @@ class DataSource_SQL(DataSource_TableStore):
         if sql is None:
             sql = ' '.join([ sql_select, sql_from, sql_where, sql_orderby ])
 
-        query_result = self.server.execute(sql)
+        query_result = await self.server.fetch(sql)
         if query_result.is_error:
             logging.error('SQL Query Error: %s: %s' % (query_result.error, sql))
             return [], []

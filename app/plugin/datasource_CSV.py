@@ -58,7 +58,7 @@ class DataSource_CSV(DataSource_TableStore):
             }
 
 
-    def _get_tag_values_from_data(self, schema):
+    async def _get_tag_values_from_data(self, schema):
         if self.directory is None:
             return None
         
@@ -88,7 +88,7 @@ class DataSource_CSV(DataSource_TableStore):
         return sorted([ tag for tag in tag_value_set ])
 
     
-    def _get_first_data_row(self, schema):
+    async def _get_first_data_row(self, schema):
         if self.directory is None:
             return None, []
         
@@ -110,7 +110,7 @@ class DataSource_CSV(DataSource_TableStore):
         return columns, record
 
     
-    def _get_first_data_value(self, table_name, tag_name, tag_value, field):
+    async def _get_first_data_value(self, table_name, tag_name, tag_value, field):
         if self.directory is None:
             return None
 
@@ -145,7 +145,7 @@ class DataSource_CSV(DataSource_TableStore):
         return value
 
         
-    def _execute_query(self, table_name, time_col, time_type, time_from, time_to, tag_col, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
+    async def _execute_query(self, table_name, time_col, time_type, time_from, time_to, tag_col, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
         columns, table = [], []
 
         time_from, time_to = int(time_from), int(time_to)
@@ -188,15 +188,15 @@ class DataSource_CSV(DataSource_TableStore):
         return columns, table
 
     
-    def get_channels(self):
-        channels = super().get_channels()
+    async def aio_get_channels(self):
+        channels = await super().aio_get_channels()
         channels += [ {'name': name, 'type': 'table'} for name in self.tables ]
 
         return channels
         
     
-    def get_object(self, channels, length, to):
-        result = super().get_object(channels, length, to)
+    async def aio_get_object(self, channels, length, to):
+        result = await super().aio_get_object(channels, length, to)
 
         ### TABLES ###
         for ch in channels:

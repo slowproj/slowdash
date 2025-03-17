@@ -343,10 +343,9 @@ slowdash_project:
   
   data_source:
     type: SQLite
-    parameters:
-      file: QuickTourTestData.db
-      time_series:
-        schema: testdata[channel]@timestamp(unix)=value
+    file: QuickTourTestData.db
+    time_series:
+      schema: testdata[channel]@timestamp(unix)=value
 ```
 
 `schema` のところで，データのテーブル名と，どの情報がどのカラムに書かれているかを記述しています．フォーマットは，`テーブル名 [チャンネル情報のカラム名] @ 時刻情報のカラム名（時刻の表現形式）= データ値のカラム名` みたいな感じです．詳しくは，[DataBinding](DataBinding.html) の章を参照してください．
