@@ -4,7 +4,7 @@ slowdash_project:
   data_source:
     #type: MySQL          # default: Async version, uses aiomysql
     #type: MySQL_NoAsync  # No-Async default: enable this to enforce this No-Async version (mysqlclient)
-    #type: PyMySQL        # No-Async alternative, uses pymysql
+    #type: MySQL_PyMySQL  # No-Async alternative, uses pymysql
     
     url: ${DB_URL:-mysql://slowdash:slowdash@127.0.0.1:3306/SlowTestData}
     
