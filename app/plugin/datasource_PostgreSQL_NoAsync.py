@@ -7,7 +7,7 @@ from sd_datasource_SQL import SQLServer, DataSource_SQL
 import psycopg2 as db
 
 
-class DataSource_PostgreSQL(DataSource_SQL):
+class DataSource_PostgreSQL_NoAsync(DataSource_SQL):
     def __init__(self, app, project, params):
         super().__init__(app, project, params)
         

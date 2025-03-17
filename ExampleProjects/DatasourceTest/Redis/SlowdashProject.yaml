@@ -1,4 +1,8 @@
 slowdash_project:
   name: Redis_Test
+  
   data_source:
+    #type: Redis           # default: Async version (redis.asyncio)
+    #type: Redis_NoAsync   # No-Async fallback: enable this to enforce this No-Async version (redis)
+    
     url: ${DB_URL:-redis://localhost:6379/12}

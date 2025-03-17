@@ -290,7 +290,7 @@ class ObjectTimeSeriesSource(TimeSeriesSource):
     
                     
 
-class DataSource_Redis(DataSource):
+class DataSource_Redis_NoAsync(DataSource):
     def __init__(self, app, project, params):
         super().__init__(app, project, params)
 

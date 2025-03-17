@@ -155,6 +155,7 @@ class PluginComponent(Component):
         # fallback to NoAsync, if the server is no-async and NoAsync plugin exists
         if (not self.app.is_async) and (no_async_plugin_file_name is not None):
             plugin_file_name = no_async_plugin_file_name
+            class_name += '_NoAsync'
             
         if plugin_file_name is None:
             logging.error(f'unable to find plugin: {plugin_name}')

@@ -1,7 +1,12 @@
 slowdash_project:
   name: PostgreSQL_Test
+  
   data_source:
+    #type: PostgreSQL           # default: Async version, uses asyncpg
+    #type: PostgreSQL_NoAsync   # No-Async default: enable this to enforce this No-Async version (psycopg2)
+    
     url: ${DB_URL:-postgresql://slowdash:slowdash@localhost:5432/SlowTestData}
+    
     time_series:
       schema: ts_data [channel] @timestamp(with time zone) = value
     object:
