@@ -301,9 +301,10 @@ class DataSource_SQL(DataSource_TableStore):
     # The DB-specific syntax to get a time difference between time_col and (stop_sec | stop_tstamp) 
     # Override this if needed
     def _get_timediffsec_query(self, time_col, time_type, stop_sec, stop_tstamp):
-        # Probably this is a common way in PostgreSQL?
-        # Doesn't it depend on the time_type? what if {time_col} is already a unix/int?
-        return f"{stop_sec} - extract(epoch from {time_col})"
+        if time_type == 'unix':
+            return f"{stop_sec} - {time_col}"
+        else:
+            return None
 
     
     async def _execute_query(self, table_name, time_col, time_type, time_from, time_to, tag_col, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
@@ -343,11 +344,15 @@ class DataSource_SQL(DataSource_TableStore):
             pass
         elif resampling is None or resampling <= 0:
             pass
+        elif not self.db_has_floor:
+            pass  # no server-side resampling -> resampling in Python        
         else:
             # The syntax to get the time difference may depend on the SQL type
             tdiff_query = self._get_timediffsec_query(time_col, time_type, stop, time_to)
+            if tdiff_query is None:
+                pass  # no server-side resampling -> resampling in Python
             
-            if reducer in ['first', 'last'] and self.db_has_floor:
+            elif reducer in ['first', 'last']:
                 sql_cte_bucket = ' '.join([
                     f"SELECT",
                     f"    FLOOR(({tdiff_query})/{resampling}) AS bucket, ",
@@ -375,7 +380,8 @@ class DataSource_SQL(DataSource_TableStore):
                     f"    %s" % ("" if tag_col is None else f"AND t.{tag_col} = b.{tag_col}"),
                     f"{sql_orderby}"
                 ])
-            elif reducer in ['mean', 'sum', 'min', 'max'] and self.db_has_floor:  # "count" cannot be applied twice
+                
+            elif reducer in ['mean', 'sum', 'min', 'max']:  # "count" cannot be applied twice
                 if reducer == 'mean':
                     agg_func = 'avg'
                 else:

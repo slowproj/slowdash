@@ -101,3 +101,10 @@ class DataSource_PostgreSQL(DataSource_SQL):
         logging.info(f'AsyncPostgreSQL: DB connected: {self.url}')
         
         return AsyncPostgreSQLServer(pool)
+
+    
+    def _get_timediffsec_query(self, time_col, time_type, stop_sec, stop_tstamp):
+        if time_type == 'unix':
+            return f"{stop_sec} - {time_col}"
+        else:
+            return f"{stop_sec} - EXTRACT(epoch FROM {time_col})"

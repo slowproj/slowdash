@@ -33,3 +33,10 @@ class DataSource_PostgreSQL_NoAsync(DataSource_SQL):
         logging.info('PostgreSQL: DB connected: "%s"' % self.url)
         
         return SQLServer(conn)
+
+    
+    def _get_timediffsec_query(self, time_col, time_type, stop_sec, stop_tstamp):
+        if time_type == 'unix':
+            return f"{stop_sec} - {time_col}"
+        else:
+            return f"{stop_sec} - EXTRACT(epoch FROM {time_col})"
