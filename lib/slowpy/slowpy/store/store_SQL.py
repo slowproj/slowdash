@@ -401,11 +401,13 @@ class DataStore_MySQL(DataStore_SQL):
         port = parsed.port or 3306
         db = parsed.path.lstrip('/')
             
+        #import pymysql as mysql
+        import mysql.connector as mysql
+        
         logging.info('connecting to %s...' % db_url)
-        import pymysql
         for i in range(12):
             try:
-                self.conn = pymysql.connect(host=host, port=port, user=user, password=password, db=db)
+                self.conn = mysql.connect(host=host, port=port, user=user, password=password, db=db)
                 break
             except Exception as e:
                 logging.warn(e)

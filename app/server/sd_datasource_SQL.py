@@ -104,7 +104,6 @@ class SQLServer(SQLBaseServer):
         try:
             cursor = self.conn.cursor()
             cursor.execute(sql, params)
-            self.conn.commit()
         except Exception as e:
             logging.error(f'SQL Fetch Error: {e}')
             logging.error(traceback.format_exc())

@@ -2,11 +2,11 @@ slowdash_project:
   name: MySQL_Test
   
   data_source:
-    #type: MySQL          # default: Async version, uses aiomysql
-    #type: MySQL_NoAsync  # No-Async default: enable this to enforce this No-Async version (mysqlclient)
-    #type: MySQL_PyMySQL  # No-Async alternative, uses pymysql
-    
-    url: ${DB_URL:-mysql://slowdash:slowdash@127.0.0.1:3306/SlowTestData}
+    #type: MySQL              # default: Async version, uses aiomysql
+    #type: MySQL_NoAsync      # No-Async default: enable this to enforce this No-Async version (mysql-connector)
+    #type: MySQL_mysqlclient  # No-Async alternative, uses mysqlclient
+
+    url: ${DB_URL:-mysql://slowdash:slowdash@localhost:3306/SlowTestData}
     
     time_series:
       schema: ts_data [channel] @timestamp(unix) = value

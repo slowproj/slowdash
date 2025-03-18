@@ -4,10 +4,10 @@
 import sys, os, logging
 from sd_datasource_SQL import SQLServer, DataSource_SQL
 
-import pymysql as db
+import MySQLdb as db
 import re
 
-class DataSource_MySQL_PyMySQL(DataSource_SQL):
+class DataSource_MySQL_mysqlclient(DataSource_SQL):
     def __init__(self, app, project, params):
         super().__init__(app, project, params)
         

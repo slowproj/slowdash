@@ -1,11 +1,15 @@
 # Created by Sanshiro Enomoto on 10 April 2023 #
 # Edited by Kou Oishi and Yuto Kageyama on 22 October 2024 #
+# Edited by Sanshiro Enomoto on 18 March 2025 #
 
-import sys, os, logging
+import sys, logging
+from sd_dataschema import Schema
 from sd_datasource_SQL import SQLServer, DataSource_SQL
 
-import MySQLdb as db
-import re
+# either below should work
+#import pymysql as mysql    # this requires "pip install mypysql cryptography"
+import mysql.connector as mysql
+
 
 class DataSource_MySQL_NoAsync(DataSource_SQL):
     def __init__(self, app, project, params):
@@ -19,17 +23,12 @@ class DataSource_MySQL_NoAsync(DataSource_SQL):
             if self.url[0:8] != 'mysql://':
                 self.url = 'mysql://' + self.url
 
-            # TODO: the port number should be omittable
-            pattern = r"mysql://([\w.-]+):(.+?)@([\w.-]+):(\d+)/([\w.-]+)"
-            match = re.match(pattern, self.url)
-            if match:
-                self.user     = match.group(1)
-                self.password = match.group(2)
-                self.host     = match.group(3)
-                self.port     = int(match.group(4))
-                self.database = match.group(5)
-            else:
-                logging.error("Syntax error in the URL: %s" % (self.url))
+            dburl = Schema.parse_dburl(self.url)
+            self.host = params.get('host', dburl.get('host', 'localhost'))
+            self.port = int(params.get('port', dburl.get('port', '3306')))
+            self.user = params.get('user', dburl.get('user', None))
+            self.password = params.get('password', dburl.get('password', None))
+            self.database = params.get('db', dburl.get('db', None))
 
                 
     async def connect(self):
@@ -37,7 +36,7 @@ class DataSource_MySQL_NoAsync(DataSource_SQL):
             return await super().connect()
         
         try:
-            conn = db.connect(host=self.host, port=self.port, user=self.user,
+            conn = mysql.connect(host=self.host, port=self.port, user=self.user,
                               password=self.password, database=self.database,
                               autocommit=True)
         except Exception as e:

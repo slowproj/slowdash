@@ -4,7 +4,7 @@ SLOWDASH_BIN = "$(SLOWDASH_DIR)/bin/slowdash"
 SLOWDASH_ENV = "$(SLOWDASH_DIR)/bin/slowdash-bashrc"
 GIT = $(shell which git)
 PIP_REQS = uvicorn hypercorn websockets pyyaml psutil bcrypt requests 
-PIP_DBS = pymysql aiomysql influxdb-client redis pymongo couchdb cryptography  # cryptography is used by MySQL
+PIP_DBS = mysql-connector-python aiomysql influxdb-client redis pymongo couchdb 
 PIP_OPTS = numpy matplotlib lmfit pillow pyserial pyvisa
 
 
@@ -119,6 +119,6 @@ docker:
 	docker build -t slowpy-notebook -f ./lib/slowpy/Dockerfile ./lib/slowpy
 
 
-remove-docker-images:
+docker-remove-images:
 	docker rmi -f slowdash slowpy-notebook
 	docker rmi -f slowproj/slowdash slowproj/slowpy-notebook

@@ -231,7 +231,7 @@ Note that the numeric data values shown here can be of any other scalar types (s
 |------------------|-------------|------|--------------------|
 | PostgreSQL       | psycopg2    |   no | yes |
 | PostgreSQL (Async access)      | asyncpg     |  yes | yes |
-| MySQL            | pymysql     |   no | yes |
+| MySQL            | mysql-connector-python |   no | yes |
 | MySQL   (Async access)         | aiomysql    |  yes | yes |
 | SQLite           | (none)      |   no | no |
 | Others (generic) | sqlalchemy  |   no | no |
@@ -319,7 +319,7 @@ MySQL supports several different time types:
 - DateTime without time-zone (DISCOURAGED): `DATETIME`
 - DateTime in UTC: `TIMESTAMP`
 
-The MySQL libraries used in SlowDash (pymysql / aiomysql) cannot handle time-zone with the TIMESTAMP type, therefore if the `TIMESTAMP` type is used, it must be specified in SlowDash configuration file as `unspeficied utc`. Using the UNIX timestamps is always safe.
+The MySQL libraries used in SlowDash (aiomysql) cannot handle time-zone with the TIMESTAMP type, therefore if the `TIMESTAMP` type is used, it must be specified in SlowDash configuration file as `unspeficied utc`. Using the UNIX timestamps is always safe.
 
 UNIX timestamps as `REAL` is recommended for use with SlowDash.
 
