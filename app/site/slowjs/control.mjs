@@ -201,7 +201,17 @@ export class Controller {
         }
         url.pathname += 'subscribe/currentdata';
 
-        this.socket = new WebSocket(url.toString());
+        // if HTTPS is used and WebSocket is not WSS, an error occurs here
+        try {
+            this.socket = new WebSocket(url.toString());
+        }
+        catch(error) {
+            this.socket = null;
+            console.log("WebSocket setup error: " + error);
+            console.log("data streaming is disabled");
+            return;
+        }
+        
         this.socket.onopen = () => {
             console.log("Web Socket Connected");
         };
