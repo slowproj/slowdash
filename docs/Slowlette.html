@@ -162,10 +162,13 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="
 <h4 id="not-inheriting-from-slowlette.app">Not inheriting from
 slowlette.App</h4>
 <p>The base class, <code>slowlette.App</code>, has only three
-attributes, listed below: - <code>slowlette</code>: Slowlette connection
-point - <code>__call__(self, scope, receive, send)</code>: ASGI entry
-point - <code>run(self, port, **kwargs)</code>: Execution start
-point</p>
+attributes, listed below:</p>
+<ul>
+<li><code>slowlette</code>: Slowlette connection point</li>
+<li><code>__call__(self, scope, receive, send)</code>: ASGI entry
+point</li>
+<li><code>run(self, port, **kwargs)</code>: Execution start point</li>
+</ul>
 <p>Given this small number of attributes, the likelihood of name
 conflicts with user classes should be minimal. Nevertheless, it is also
 possible to create a user class independently from Slowlette and pass it
@@ -284,11 +287,15 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb12-1"><a h
 <span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ss">f&#39;header: </span><span class="sc">{</span>request<span class="sc">.</span>headers<span class="sc">}</span><span class="ss">&#39;</span></span>
 <span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App()</span></code></pre></div>
-<p>The <code>Request</code> object has the following attributes: -
-<code>method</code> (str): request method (<code>GET</code> etc.) -
-<code>path</code> (list[str]): URL path - <code>query</code>
-(dict[str,str]): URL query - <code>headers</code> (dict[str,str]): HTTP
-request header items - <code>body</code> (bytes): request body</p>
+<p>The <code>Request</code> object has the following attributes:</p>
+<ul>
+<li><code>method</code> (str): request method (<code>GET</code>
+etc.)</li>
+<li><code>path</code> (list[str]): URL path</li>
+<li><code>query</code> (dict[str,str]): URL query</li>
+<li><code>headers</code> (dict[str,str]): HTTP request header items</li>
+<li><code>body</code> (bytes): request body</li>
+</ul>
 <h3 id="simple-post">Simple POST</h3>
 <div class="sourceCode" id="cb13"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
@@ -626,9 +633,12 @@ domain:</h5>
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install certbot</span>
 <span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> certbot certonly <span class="at">--standalone</span> <span class="at">-d</span> YOUR.DOMAIN.NAME</span></code></pre></div>
 <p>This will create files under
-<code>/etc/letsencript/live/YOUR.DOMAIN.NAME</code> - private key:
-<code>privkey.pem</code> - server certificate: <code>cert.pem</code> -
-full chain: <code>fullchain.pem</code></p>
+<code>/etc/letsencript/live/YOUR.DOMAIN.NAME</code></p>
+<ul>
+<li>private key: <code>privkey.pem</code></li>
+<li>server certificate: <code>cert.pem</code></li>
+<li>full chain: <code>fullchain.pem</code></li>
+</ul>
 <h3 id="wsgi">WSGI</h3>
 <p>In addition to ASGI, WSGI can be used. The
 <code>slowlette.WSGI(app)</code> function wraps the ASGI App (standard
@@ -654,10 +664,14 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb36-1"><a href=
 <p>Or it can be used with any WSGI server:</p>
 <div class="sourceCode" id="cb37"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gunicorn</span> testapp:wsgi_app</span></code></pre></div>
-<p>Note: - Every HTTP request is handled sequentially, even with async
-handlers. - A dedicated async event loop is created for each request.
-Code that assumes the same event loop among requests (typical in DB
-connection pool) cannot be used.</p>
+<p>Note:</p>
+<ul>
+<li>Every HTTP request is handled sequentially, even with async
+handlers.</li>
+<li>A dedicated async event loop is created for each request. Code that
+assumes the same event loop among requests (typical in DB connection
+pool) cannot be used.</li>
+</ul>
 <h2 id="todos">TODOs</h2>
 <ul>
 <li>File templates</li>

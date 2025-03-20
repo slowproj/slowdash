@@ -199,7 +199,7 @@ export class Controller {
         else {
             url.pathname += (url.pathname.endsWith('/') ? '' : '/')
         }
-        url.pathname += 'subscribe/currentdata';
+        url.pathname += 'ws/subscribe/currentdata';
 
         // if HTTPS is used and WebSocket is not WSS, an error occurs here
         try {

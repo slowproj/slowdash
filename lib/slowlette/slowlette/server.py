@@ -164,7 +164,7 @@ def serve_asgi_uvicorn(app, port, **kwargs):
         is_https = True
     else:
         is_https = False
-        
+
     sys.stderr.write(f'Listening at port {port} (ASGI {"HTTPS" if is_https else "HTTP"})\n')
     asyncio.run(main())
     sys.stderr.write('Terminated\n')    

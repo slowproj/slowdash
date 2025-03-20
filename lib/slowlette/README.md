@@ -54,6 +54,7 @@ uvicorn testapp:app
 
 #### Not inheriting from slowlette.App
 The base class, `slowlette.App`, has only three attributes, listed below:
+
 - `slowlette`: Slowlette connection point
 - `__call__(self, scope, receive, send)`: ASGI entry point
 - `run(self, port, **kwargs)`: Execution start point
@@ -173,6 +174,7 @@ class App(slowlette.App):
 app = App()
 ```
 The `Request` object has the following attributes:
+
 - `method` (str): request method (`GET` etc.)
 - `path` (list[str]): URL path
 - `query` (dict[str,str]): URL query
@@ -496,6 +498,7 @@ sudo apt install certbot
 sudo certbot certonly --standalone -d YOUR.DOMAIN.NAME
 ```
 This will create files under `/etc/letsencript/live/YOUR.DOMAIN.NAME`
+
 - private key: `privkey.pem`
 - server certificate: `cert.pem`
 - full chain: `fullchain.pem`
@@ -529,6 +532,7 @@ gunicorn testapp:wsgi_app
 ```
 
 Note:
+
 - Every HTTP request is handled sequentially, even with async handlers.
 - A dedicated async event loop is created for each request.
   Code that assumes the same event loop among requests (typical in DB connection pool) cannot be used.

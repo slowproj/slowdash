@@ -24,7 +24,7 @@ class PubsubComponent(Component):
         }}
 
     
-    @slowlette.websocket('/subscribe/{topic}')
+    @slowlette.websocket('/ws/subscribe/{topic}')
     async def subscribe(self, topic:str, websocket:slowlette.WebSocket):
         if topic not in self.topics:
             return None
