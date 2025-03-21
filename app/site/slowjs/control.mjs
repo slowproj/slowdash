@@ -102,7 +102,17 @@ export class Controller {
         }
         this.currentData.__meta.isPartial = true;
         
-        let length = this.currentData.__meta.range.to - this.currentData.__meta.range.from;
+        let length;
+        if (this.currentData.__meta.range.from <= 0) {
+            length = -this.currentData.__meta.range.from;
+        }
+        else if (this.currentData.__meta.range.to <= 0) {
+            const now = $.time();
+            length = (now + this.currentData.__meta.range.to) - this.currentData.__meta.range.from;
+        }
+        else {
+            length = this.currentData.__meta.range.to - this.currentData.__meta.range.from;
+        }
         let opts = [ 'length='+length, 'to='+this.currentData.__meta.range.to ];
         if (length > 7200) {
             opts.push('resample='+(length/600).toFixed(1))
@@ -224,12 +234,13 @@ export class Controller {
         };
         this.socket.onmessage = (event) => {
             const to = this.currentData?.__meta?.range?.to ?? null;
-            if ((to === null) || (to < 0)) {
-                return;
-            }
-            const now = $.time();
-            if ((to > 0) && (to < now - 10)) {  //... BUG: "10 sec" window is temporary
-                return;
+            if (to !== 0) {
+                if ((to === null) || (to < 0)) {
+                    return;
+                }
+                if (to < $.time()-1) {
+                    return;
+                }
             }
             
             let data = JSON.parse(event.data);

@@ -326,7 +326,7 @@
         }
         let to = config.control?.range?.to ?? 0;
         if (! (to > 0)) {
-            to =  $.time() + 3;
+            to = 0;
         }
         let from = to - length;
         const status = await controller.update({from:from, to:to});
@@ -356,7 +356,7 @@
             };
         }
         else {
-            updated_config.control.range.to = $.time();
+            updated_config.control.range.to = 0;
         }
         updated_config.control.reload = 0;
         

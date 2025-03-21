@@ -167,11 +167,11 @@ class FileServer():
         ext = os.path.splitext(path[-1])[1]
         if self.ext_allow is not None:
             if ext not in self.ext_allow:
-                logging.warning(f'Slowlette File GET: Forbidden: not allowed file type')
+                logging.warning(f'Slowlette File GET: Forbidden: file type not allowed')
                 return Response(403)  # Forbidden
         elif self.ext_deny is not None:
             if ext in self.ext_deny:
-                logging.warning(f'Slowlette File GET: Forbidden: denied file type')
+                logging.warning(f'Slowlette File GET: Forbidden: file type denied')
                 return Response(403)  # Forbidden
 
         filepath = os.path.join(*(path))
@@ -182,11 +182,10 @@ class FileServer():
         filepath = os.path.join(self.filedir, filepath)
 
         if not os.path.isfile(filepath):
+            logging.warning(f'Slowlette File GET: file not found: {filepath} in {self.filedir}')
             if self.not_found_is_error:
-                logging.warning(f'Slowlette File GET: file not found: {filepath} in {self.filedir}')
                 return Response(404)  # Not found
             else:
-                logging.warning(f'Slowlette File GET: file not found, propagete: {filepath} in {self.filedir}')
                 return Response()  # propagate
         
         logging.debug(f'Slowlette_FileServer: file request: {filepath}')

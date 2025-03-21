@@ -194,14 +194,21 @@ export class Panel {
         if (displayTimeRange) {
             return displayTimeRange;
         }
-        if (data?.__meta?.range) {
-            return data.__meta.range;
-        }
         if (data) {
             for (const ch in data) {
                 if (data[ch].start && data[ch].length) {
                     return { from: data[ch].start, to: data[ch].start + data[ch].length };
                 }
+            }
+            if (data?.__meta?.range) {
+                let [ from, to ] = [ data.__meta.range.from, data.__meta.range.to ];
+                if (to < 0) {
+                    to = $.time() + to;
+                }
+                if (from < 0) {
+                    from = to + from;
+                }
+                return { from: from, to: to };
             }
         }
         return null;

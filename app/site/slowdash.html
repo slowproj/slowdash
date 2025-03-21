@@ -181,7 +181,7 @@
         }
         let to = config.control?.range?.to ?? 0;
         if (! (to > 0)) {
-            to =  $.time();
+            to = 0;
         }
         let from = to - length;
         

@@ -10,21 +10,21 @@ class UserHtmlComponent(Component):
     def __init__(self, app, project):
         super().__init__(app, project)
 
+        # userhtml files
         self.slowlette.include(slowlette.FileServer(
             filedir = os.path.join(self.app.project_dir, 'userhtml'),
             prefix = '/userhtml',
-            exclude = '/userhtml/api',
+            exclude = ['/userhtml/api', '/userhtml/slowjs'],
         ))
 
-        # If the file does not exist in the User Web Dir, search for it at the SlowDash web directory.
-        # The slowdash JS library at "/userhtml/slowjs" might make access to "api",
-        # which needs to be handled separately.
+        # make slowjs accessble at /userhtml/slowjs
         self.slowlette.include(slowlette.FileServer(
             filedir = os.path.join(project.sys_dir, 'app', 'site', 'slowjs'),
             prefix = '/userhtml/slowjs',
         ))
         
         
+    # make api accessble at /userhtml/api
     @slowlette.get('/userhtml/api/{*}')
     async def api_redirect(self, path:list, opts:dict):
         url = '/'.join(path[1:])

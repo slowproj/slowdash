@@ -493,15 +493,20 @@ class UserModuleComponent(Component):
         
         try:
             channels = channels.split(',')
-            length = float(opts.get('length', '3600'))
-            to = float(opts.get('to', int(time.time())+1))
+            length = float(opts.get('length', 3600))
+            to = float(opts.get('to', 0))
         except Exception as e:
             logging.error('Bad data URL: %s: %s' % (str(opts), str(e)))
             return False
-        
+
+        now = time.time()
+        if to > 0:
+            start = to - length
+        else:
+            start = (now + to) - length
+        t = now - start
+            
         has_result, result = False, {}
-        start = to - length
-        t = time.time() - start
         if t >= 0 and t <= length + 10:
             for usermodule in self.usermodule_list:
                 for ch in channels:

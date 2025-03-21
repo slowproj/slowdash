@@ -123,19 +123,6 @@ CH0_Mean: {
 }
 ```
 
-### Receiving Results in CSV
-[Depreciated]
-- Currently only time-series data is supported. All the other data types are skipped.
-```
-http://CGI/table/CHANNEL_LIST?OPTIONS
-```
-
-[TODO]
-```
-http://CGI/table/(CH0,CH1,CH2)->align()->table()?OPTIONS
-```
-
-
 # Value Types and JSON Representation
 ### Scalar
 ```json

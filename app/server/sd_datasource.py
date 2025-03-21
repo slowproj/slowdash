@@ -35,16 +35,19 @@ class DataSource(ComponentPlugin):
     async def api_get_data(self, channels:str, opts:dict):
         try:
             channels = channels.split(',')
-            length = float(opts.get('length', '3600'))
-            to = float(opts.get('to', int(time.time())+1))
+            length = float(opts.get('length', 3600))
+            to = float(opts.get('to', 0))
             resample = float(opts.get('resample', -1))
             reducer = opts.get('reducer', 'last')
         except Exception as e:
             logging.error('Bad data URL: %s: %s' % (str(opts), str(e)))
             return slowlette.Response(400)
+        
+        if to <= 0:
+            to = to + time.time()
         if resample < 0:
             resample = None
-
+                                
         result = {}
         result_ts = await self.aio_get_timeseries(channels, length, to, resample, reducer)
         result_obj = await self.aio_get_object(channels, length, to)
