@@ -1,3 +1,4 @@
+
 services:
   apache:
     build: .
@@ -6,10 +7,6 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./ssl:/etc/apache2/ssl
-    networks:
-      - slownet
-
-networks:
-  slownet:
-    driver: bridge
+      - ./ssl:/usr/local/apache2/conf/ssl
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

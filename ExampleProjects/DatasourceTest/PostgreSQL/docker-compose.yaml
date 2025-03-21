@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   pgsql_db:
     image: postgres:16
@@ -11,6 +9,11 @@ services:
       - POSTGRES_PASSWORD=slowdash
       - POSTGRES_DB=SlowTestData
 
+    # store the database files outside the container
+    #volumes:
+    #  - ./postgres_data.d:/var/lib/postgresql/data
+
+
   slowdash:
     image: slowproj/slowdash
     volumes:
@@ -19,6 +22,7 @@ services:
       - "18881:18881"
     environment:
       - DB_URL=postgresql://slowdash:slowdash@pgsql_db:5432/SlowTestData
+
 
   testdata:
     image: slowproj/slowdash

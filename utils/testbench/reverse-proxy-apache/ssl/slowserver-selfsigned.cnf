@@ -16,7 +16,3 @@ CN = slowserver
 basicConstraints = CA:FALSE
 keyUsage = nonRepudiation, digitalSignature, keyEncipherment
 extendedKeyUsage = serverAuth
-subjectAltName = @alt_names
-
-[ alt_names ]
-IP.1  = 172.17.0.1

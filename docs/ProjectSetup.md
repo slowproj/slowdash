@@ -478,7 +478,7 @@ This feature might be dropped in future SlowDash releases. Using a reverse proxy
 ## Dynamic Generation of Config Contents
 Configuration of SlowDash contents (dashboard, plot layout, etc.) are described in JSON/YAML files in the project `config` directory, with a name like `slowplot-XXX.json`. These statis JSON/YAML (or any files with a name like `TYPE-XXX.EXT` placed in `config`) can be replaced with a Python script that generates the contents dynamically. To do so, place a Python script with a name like `slowplot-XXX.py` instead of `slowplot-XXX.json`, and define `async _setup(app)` function that returns the config content. The `app` parameter here is the SlowDash App object, with which you can access SlowDash resources such as the channel list.
 
-This is an example to dynamically generate a slowplot page that shows all the time-series channels. This example can be found in `ExampleProjects/DynamicLayout`.
+This is an example to dynamically generate a slowplot page that shows all the time-series channels. This example can be found in `ExampleProjects/Advanced/DynamicLayout`.
 ```python
 import logging
 

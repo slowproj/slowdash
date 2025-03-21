@@ -11,7 +11,7 @@ in this way, user HTML can use the SlowDash API and Javascript library (SlowJS) 
 This, on the other hand, may cause name conflicts. All names starting with "slow" are reserved, and should not be used in user HTML.
 
 # Examles
-Some examples can be found at `ExampleProjects/UserHTML`.
+Some examples can be found at `ExampleProjects/Advanced/UserHTML`.
 
 ### Using an External Javascript Library (Chart.js)
 This examples fetches data using the SlowDash Web API and makes a pie chart using the Chart.js library.

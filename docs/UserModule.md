@@ -332,7 +332,7 @@ Note that most SlowDash App services are async, and these must be called with `a
 ## Overriding SlowDash Web API
 SlowDash uses the Slowlette Web framework, described in the [Web Sever section](Slowlette.html), to handle Web API requests. If a Slowlette App instance is defined in a User Module, it will be integrated into the SlowDash Web API. This feature can be used to add new API, modify or override the existing API, using Slowlette's response aggregation mechanism. Be extremely careful on using this because modifying API can easily screw up the entire SlowDash behavior.
 
-The examples here can be found in `ExampleProjects/UserModuleSlowlette`.
+The examples here can be found in `ExampleProjects/Advanced/UserModuleSlowlette`.
 
 ### Channel & Data API Extension
 Here is an example for enabling User Module to respond to data requests with a time-range  parameter. (Note that `_get_data()` callback cannot do this, as it is designed to return "current" data.)

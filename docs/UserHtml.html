@@ -110,7 +110,7 @@ hand, may cause name conflicts. All names starting with “slow” are
 reserved, and should not be used in user HTML.</p>
 <h1 id="examles">Examles</h1>
 <p>Some examples can be found at
-<code>ExampleProjects/UserHTML</code>.</p>
+<code>ExampleProjects/Advanced/UserHTML</code>.</p>
 <h3 id="using-an-external-javascript-library-chart.js">Using an External
 Javascript Library (Chart.js)</h3>
 <p>This examples fetches data using the SlowDash Web API and makes a pie
@@ -128,7 +128,7 @@ class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="op">&lt;</span>script type<span class="op">=</span><span class="st">&quot;module&quot;</span><span class="op">&gt;</span></span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">async</span> <span class="kw">function</span> <span class="fu">main</span>() {</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> response <span class="op">=</span> <span class="cf">await</span> <span class="fu">fetch</span>(<span class="st">&#39;./api/data/ch0,ch1,ch2,ch3?length=60&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> response <span class="op">=</span> <span class="cf">await</span> <span class="fu">fetch</span>(<span class="st">&#39;./api/data/ch0,ch1,ch2,ch3?length=60&#39;</span>)<span class="op">;</span></span>
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (<span class="op">!</span> response<span class="op">.</span><span class="at">ok</span>) {</span>
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span><span class="op">;</span></span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        }</span>
