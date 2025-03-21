@@ -399,7 +399,7 @@ class TaskModuleComponent(Component):
         }
 
 
-    @slowlette.get('/channels')
+    @slowlette.get('/api/channels')
     def api_channels(self):
         result = []
         for taskmodule in self.taskmodule_list:
@@ -409,7 +409,7 @@ class TaskModuleComponent(Component):
         return result
 
         
-    @slowlette.get('/data/{channels}')
+    @slowlette.get('/api/data/{channels}')
     def api_data(self, channels:str, opts:dict):
         try:
             channels = channels.split(',')
@@ -438,7 +438,7 @@ class TaskModuleComponent(Component):
         return result if has_result else None
 
 
-    @slowlette.post('/update/tasklist')
+    @slowlette.post('/api/update/tasklist')
     def update_tasklist(self):
         if self.app.is_cgi or (self.project.project_dir is None):
             return slowlette.Response(200)
@@ -460,7 +460,7 @@ class TaskModuleComponent(Component):
         return {'status': 'ok'}
 
     
-    @slowlette.get('/control/task')
+    @slowlette.get('/api/control/task')
     async def task_status(self, since:int=0):
         while self.app.is_async and self.status_revision <= since:
             has_update = False
@@ -499,7 +499,7 @@ class TaskModuleComponent(Component):
         return result
 
         
-    @slowlette.post('/control')
+    @slowlette.post('/api/control')
     async def execute_command(self, doc:slowlette.DictJSON):
         if len(self.taskmodule_list) == 0:
             return None
@@ -523,7 +523,7 @@ class TaskModuleComponent(Component):
         return result
 
     
-    @slowlette.post('/control/currentdata')
+    @slowlette.post('/api/control/currentdata')
     async def set_variable(self, doc:slowlette.DictJSON):
         for name, data in doc:
             value = data.get('x', None)
@@ -538,7 +538,7 @@ class TaskModuleComponent(Component):
                     logging.info(f"Control Variable: {name} <= {repr(variable.get())}")
 
         
-    @slowlette.post('/control/task/{taskname}')
+    @slowlette.post('/api/control/task/{taskname}')
     async def control_task(self, taskname:str, doc:slowlette.DictJSON):
         action = doc.get('action', None)
         logging.info(f'Task Control: {taskname}.{action}()')

@@ -476,7 +476,7 @@ class UserModuleComponent(Component):
         }
 
 
-    @slowlette.get('/channels')
+    @slowlette.get('/api/channels')
     def get_channels(self):
         result = []
         for usermodule in self.usermodule_list:
@@ -486,7 +486,7 @@ class UserModuleComponent(Component):
         return result
 
         
-    @slowlette.get('/data/{channels}')
+    @slowlette.get('/api/data/{channels}')
     def get_data(self, channels:str, opts:dict):
         if len(self.usermodule_list) == 0:
             return None
@@ -518,7 +518,7 @@ class UserModuleComponent(Component):
         return result if has_result else None
 
     
-    @slowlette.post('/control')
+    @slowlette.post('/api/control')
     async def post_control(self, doc:slowlette.DictJSON):
         if len(self.usermodule_list) == 0:
             return None

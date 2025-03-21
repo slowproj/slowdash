@@ -15,7 +15,7 @@ class Component(slowlette.App):
         self.project = project
 
         
-    @slowlette.get('/config')
+    @slowlette.get('/api/config')
     def api_config(self):
         return self.public_config()
 

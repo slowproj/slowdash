@@ -208,7 +208,8 @@ export class Controller {
         catch(error) {
             this.socket = null;
             console.log("WebSocket setup error: " + error);
-            console.log("data streaming is disabled");
+            console.log("Maybe web-socket entry (/ws) is not forwarded by reverse proxy?");
+            console.log("Data streaming is disabled.");
             return;
         }
         

@@ -21,12 +21,12 @@ class Export_Notebook(ComponentPlugin):
         }
 
 
-    @slowlette.get('/export/python/{channels}')
+    @slowlette.get('/api/export/python/{channels}')
     def expor_python(self, channels:str, opts:dict):
         return self.generate_python(channels, opts)
 
     
-    @slowlette.get('/export/notebook/{channels}')
+    @slowlette.get('/api/export/notebook/{channels}')
     def export_notebook(self, channels:str, opts:dict):
         notebook = self.generate_notebook(channels, opts)
         return json.dumps(notebook, indent=4)

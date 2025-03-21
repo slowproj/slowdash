@@ -506,7 +506,6 @@ class HrefPanel extends Panel {
             }
             this_url += `sd-from=${range.from}&sd-to=${range.to}`;
         }
-        console.log(this_url);
         this.iframe.attr('src', this_url); // this will cause reloading
     }
 }

@@ -113,7 +113,7 @@ export class CatalogPanel extends Panel {
                     if (entry.config_file) {
                         let href = '';
                         if (content_type == 'userhtml') {
-                            href = './api/userhtml/' + entry.config_file;
+                            href = './userhtml/' + entry.config_file;
                         }
                         else {
                             href = './' + content_type + '.html?config=' + entry.config_file;

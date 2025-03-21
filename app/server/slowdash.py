@@ -243,8 +243,7 @@ if __name__ == '__main__':
     app.slowlette.add_middleware(slowlette.FileServer(
         filedir = os.path.join(app.project.sys_dir, 'app', 'site'),
         index_file = 'slowhome.html' if app.project.config is not None else 'welcome.html',
-        exclude='/api',
-        drop_exclude_prefix=True
+        exclude=['/api', '/usermodule'],
     ))
 
     if args.port <= 0:

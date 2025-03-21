@@ -20,9 +20,8 @@ class UserHtmlComponent(Component):
         # The slowdash JS library at "/userhtml/slowjs" might make access to "api",
         # which needs to be handled separately.
         self.slowlette.include(slowlette.FileServer(
-            filedir = os.path.join(project.sys_dir, 'app', 'site'),
-            prefix = '/userhtml',
-            exclude = '/userhtml/api',
+            filedir = os.path.join(project.sys_dir, 'app', 'site', 'slowjs'),
+            prefix = '/userhtml/slowjs',
         ))
         
         
@@ -34,7 +33,7 @@ class UserHtmlComponent(Component):
         return await self.app.request(url)
 
 
-    @slowlette.get('/config/contentlist')
+    @slowlette.get('/api/config/contentlist')
     async def get_content_meta(self):
         filelist = []
         for filepath in glob.glob(os.path.join(self.app.project_dir, 'userhtml', '*.html')):

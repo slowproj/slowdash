@@ -26,12 +26,12 @@ class DataSource(ComponentPlugin):
         return await self.aio_finalize()
 
     
-    @slowlette.get('/channels')
+    @slowlette.get('/api/channels')
     async def api_get_channels(self):
         return await self.aio_get_channels()
 
     
-    @slowlette.get('/data/{channels}')
+    @slowlette.get('/api/data/{channels}')
     async def api_get_data(self, channels:str, opts:dict):
         try:
             channels = channels.split(',')
@@ -56,7 +56,7 @@ class DataSource(ComponentPlugin):
         return result
 
     
-    @slowlette.get('/blob')
+    @slowlette.get('/api/blob')
     async def api_get_blob(self, channel:str, path:list):
         mime_type, content = self.get_blob(channel, path[1:])
         if mime_type is not None:
