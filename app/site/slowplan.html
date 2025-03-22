@@ -9,42 +9,32 @@
   <link rel="icon" href="favicon.png">
   <link rel="stylesheet" type="text/css" href="slowjs/slowdash.css">
   <link rel="stylesheet" type="text/css" id="sd-theme-css">
-  <style type="text/css">
-    body {
-        margin: 0;
-        overflow: hidden;
-    }
-  </style>
 </head>
 
-<body>
+
+<body style="margin:0">
   <div id="sd-header"></div>
   <div id="sd-layout">Loading Configuration...</div>
 
   <script type="module">
     import { JG as $ } from './slowjs/jagaimo/jagaimo.mjs';
     import { Layout } from './slowjs/layout.mjs';
-    import { boot, Frame } from './slowjs/frame.mjs';
+    import { Frame } from './slowjs/frame.mjs';
+    import { Platform } from './slowjs/platform.mjs';
 
-    window.addEventListener('DOMContentLoaded', function() {
-        let defaults = {};
-        let optparse = options => options;
-        boot(defaults, optparse, start);
-    });
+    let config = {
+        control: {
+            grid: { 'rows': 1, 'columns': 1 },
+            inactive: true,
+        },
+        panels: [
+            { type: 'cruise_planner' }
+        ]
+    };
 
-    async function start(config) {
-        config = {
-            _project: config._project,
-            meta: config.meta,
-            control: {
-                grid: { 'rows': 1, 'columns': 1 },
-                inactive: true,
-            },
-            panels: [
-                { type: 'cruise_planner' }
-            ]
-        };
 
+    async function main() {
+        config = await Platform.initialize(config);
         let title = config._project.project?.title || config._project.project?.name || "SlowDash";
         if (config.meta?.title) {
             title += " - " + config.meta.title;
@@ -83,5 +73,7 @@
             }
         });
     }
+
+    window.addEventListener('DOMContentLoaded', main);
   </script>    
 </body>

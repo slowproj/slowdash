@@ -9,15 +9,10 @@
   <link rel="icon" href="favicon.png">
   <link rel="stylesheet" type="text/css" href="slowjs/slowdash.css">
   <link rel="stylesheet" type="text/css" id="sd-theme-css">
-  <style type="text/css">
-    body {
-        margin: 0;
-        overflow: hidden;
-    }
-  </style>
 </head>
 
-<body>
+
+<body style="margin:0">
   <div id="sd-header"></div>
   <div id="sd-layout">Loading Configuration...</div>
 
@@ -25,52 +20,55 @@
     import { JG as $, JGDateTime } from './slowjs/jagaimo/jagaimo.mjs';
     import { JGPullDownWidget, JGDialogWidget } from './slowjs/jagaimo/jagawidgets.mjs';
     import { Layout } from './slowjs/layout.mjs';
-    import { boot, Frame, TimePullDown } from './slowjs/frame.mjs';
+    import { Frame, TimePullDown } from './slowjs/frame.mjs';
     import { Controller } from './slowjs/control.mjs';
+    import { Platform } from './slowjs/platform.mjs';
 
-    window.addEventListener('DOMContentLoaded', function() {
-        let defaults = {
+
+    // takes urlOptions, returns [ defaults, args ]
+    // urlOptions: key-value pairs in the URL query string
+    // defaults: used when not specified elsewhere
+    // args: overwrite values specified elsewhere
+    function buildSettings(urlOptions) {
+        const defaults = {
             control: {
                 range: {length: 3600, to: 0},
                 reload: 60
             },
         };
+        const args = {
+            control: {
+                range: {}
+            },
+        };
 
-        function optparse(options) {
-            if (! options.config) {
-                window.location.href = './';
+        if (urlOptions.time) {
+            let to = (new JGDateTime(urlOptions.time)).asInt();
+            if (to > 0) {
+                args.control.range.to = to;
             }
-            let args = {
-                control: {
-                    range: {}
-                },
-            };
-            if (options.time) {
-                let to = (new JGDateTime(options.time)).asInt();
-                if (to > 0) {
-                    args.control.range.to = to;
-                }
-            }
-            if (options.length && parseFloat(options.length) > 60) {
-                args.control.range.length = parseFloat(options.length);
-            }
-            if (options.reload) {
-                if (parseFloat(options.reload) > 10) {
-                    args.control.reload = Math.max(30, parseFloat(options.reload));
-                }
-                else {
-                    args.control.reload = parseFloat(0);
-                }
-            }
-
-            return args;
         }
+        if (urlOptions.length && parseFloat(urlOptions.length) > 60) {
+            args.control.range.length = parseFloat(urlOptions.length);
+        }
+        if (urlOptions.reload) {
+            if (parseFloat(urlOptions.reload) > 10) {
+                args.control.reload = Math.max(30, parseFloat(urlOptions.reload));
+            }
+            else {
+                args.control.reload = parseFloat(0);
+            }
+        }
+        
+        return [ defaults, args ];
+    }
 
-        boot(defaults, optparse, start);
-    });
 
+    async function main() {
+        const options = Platform.getUrlOptions();
+        const [ defaults, args ] = buildSettings(options);
+        let config = await Platform.initialize(defaults, options, args);
 
-    async function start(config) {
         if (config.panels) {
         }
         else {
@@ -160,8 +158,15 @@
         
         await controller.configure(config, {}, {
             changeDisplayTimeRange: range => {
-                frame.suspend(30);
-            }
+                config.control.range.to = range.to;
+            },
+            forceUpdate: () => {
+                frame.update();
+            },
+            suspend: (duration=300) => {
+                frame.suspend(duration);
+                frame.scheduleReset();
+            },
         });
         
         $(window).bind('resize', ()=>{
@@ -255,5 +260,7 @@
         
         dialog.open();
     }
+
+    window.addEventListener('DOMContentLoaded', main);
   </script>
 </body>

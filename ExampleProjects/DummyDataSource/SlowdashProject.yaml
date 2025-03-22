@@ -35,7 +35,7 @@ slowdash_project:
           noise: 10
           walk: 1
           decay: 0.001
-          intervals: 600
+          intervals: 60
           
       histogram:
         - name: nhits

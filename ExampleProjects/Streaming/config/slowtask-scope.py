@@ -27,6 +27,7 @@ def _export():
 t0 = 0
 async def _loop():
     global t0
+
     t0 += 0.05
     t = np.linspace(0, 1, 100)
     x1 = np.random.normal(np.cos((t+t0)*float(fx)*6.28), 0.0003)
@@ -52,5 +53,9 @@ async def _loop():
         datastore.update(g_y, tag='y')
         datastore.update(g_xy, tag='xy')
         next_store_time = now + 5
+        
+        await fx.deliver()
+        await fy.deliver()
+    
     
     ctrl.sleep(0.2)

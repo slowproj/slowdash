@@ -10,54 +10,30 @@
   <link rel="stylesheet" type="text/css" href="slowjs/slowdash.css">
   <link rel="stylesheet" type="text/css" id="sd-theme-css">
   <script src="slow-extern/ace-builds/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
-  <style type="text/css">
-    body {
-        margin: 0;
-        overflow: hidden;
-    }
-  </style>
 </head>
 
 
-<body>
+<body style="margin:0">
   <div id="sd-header"></div>
   <div id="editor" style="font-size:130%"></div>
 
   <script type="module">
     import { JG as $ } from './slowjs/jagaimo/jagaimo.mjs';
-    import { boot, Frame, upload } from './slowjs/frame.mjs';
+    import { Frame, upload } from './slowjs/frame.mjs';
+    import { Platform } from './slowjs/platform.mjs';
 
 
-    window.addEventListener('DOMContentLoaded', function() {
-        let defaults = {};
-        function optparse(options) {
-            let args = {
-                filename: options.filename ?? '',
-                status: options.status ?? null,
-                mode: options.mode ?? null,
-                theme: options.theme ?? 'github_dark',
-            };
-            return args;
-        }
-        boot(defaults, optparse, start);
-    });
-
-
-    function layout() {
-        let editorDiv = $('#editor');
-        const editorHeight = document.documentElement.clientHeight - editorDiv.pageY();
-        editorDiv.css({ 
-            position: 'relative',
-            width: '100%',
-            height: editorHeight + 'px',
-            margin: 0,
-            padding: 0,
-        });
-    }
-    $(window).bind('resize', layout);
-
-
-    function start(config) {
+    async function main() {
+        const options = Platform.getUrlOptions();
+        const defaults = {};
+        const args = {
+            filename: options.filename ?? '',
+            status: options.status ?? null,
+            mode: options.mode ?? null,
+            theme: options.theme ?? 'github_dark',
+        };
+        let config = await Platform.initialize(defaults, options, args);
+        
         const title = config._project.project?.title || config._project.project?.name || "SlowEdit";
         const style = config._project.style ?? {};
         document.title = 'SlowEdit: ' + config.filename;
@@ -221,6 +197,21 @@
         loadContents();
     }
 
+
+    function layout() {
+        let editorDiv = $('#editor');
+        const editorHeight = document.documentElement.clientHeight - editorDiv.pageY();
+        editorDiv.css({ 
+            position: 'relative',
+            width: '100%',
+            height: editorHeight + 'px',
+            margin: 0,
+            padding: 0,
+        });
+    }
+    $(window).bind('resize', layout);
+
+    window.addEventListener('DOMContentLoaded', main);
   </script>    
 </body>
 </html>

@@ -6,8 +6,6 @@
 
 
 import { JG as $ } from './jagaimo/jagaimo.mjs';
-import { JGInvisibleWidget, JGDialogWidget } from './jagaimo/jagawidgets.mjs';
-
 
 
 export class Controller {
