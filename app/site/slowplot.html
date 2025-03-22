@@ -19,7 +19,7 @@
     import { JG as $, JGDateTime } from './slowjs/jagaimo/jagaimo.mjs';
     import { JGDialogWidget } from './slowjs/jagaimo/jagawidgets.mjs';
     import { Layout } from './slowjs/layout.mjs';
-    import { Frame, TimeRangePullDown, GridPullDown, SaveConfigDialog, upload } from './slowjs/frame.mjs';
+    import { Frame, TimeRangePullDown, GridPullDown, SaveConfigDialog } from './slowjs/frame.mjs';
     import { Controller } from './slowjs/control.mjs';
     import { Platform } from './slowjs/platform.mjs';
 
@@ -166,7 +166,7 @@
                 if (doc.control?.range?.to) {
                     delete doc.control.range.to;
                 }
-                upload(savePopup, filename, $.JSON_stringify(doc, {expandAll: false}), {
+                Platform.upload(savePopup, filename, $.JSON_stringify(doc, {expandAll: false}), {
                     contentType: 'application/json; charset=utf-8',
                     on_success: ()=> {
                         let url = window.location.origin + window.location.pathname;

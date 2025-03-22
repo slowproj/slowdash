@@ -19,7 +19,7 @@
 
   <script type="module">
     import { JG as $ } from './slowjs/jagaimo/jagaimo.mjs';
-    import { Frame, upload } from './slowjs/frame.mjs';
+    import { Frame } from './slowjs/frame.mjs';
     import { Platform } from './slowjs/platform.mjs';
 
 
@@ -52,7 +52,7 @@
         });
         let savePopup = $('<dialog>').addClass('sd-pad').appendTo($('body'));
         let saveButton = $('<button>').html("&#x1f4be;").bind('click', e=>{
-            upload(savePopup, 'config/file/' + config.filename, editor.getValue(), {
+            Platform.upload(savePopup, 'config/file/' + config.filename, editor.getValue(), {
                 contentType: 'text/plain; charset=utf-8',
                 overwritable: true,
                 quietOnSuccess: true,

@@ -81,17 +81,27 @@ export class Platform {
             catch (error) {
                 $('<div>').appendTo($('body')).html(`
                     <h3>Configuration Loading Error</h3>
-                        Error: ${error.message}
+                    Error: ${error.message}
                 `);
                 return;
             }
         }
         
         else if (params.config_file) {
-            let config = null;
             const response = await fetch('./api/config/content/' + params.config_file);
-            if (response.ok) {
+            if (! response.ok) {
+                $('<div>').appendTo($('body')).html(`
+                    <h3>Configuration Loading Error</h3>
+                    Error Resonse: ${esponse.status} ${response.statusText}
+                `);
+                return;
+            }
+            let config = null;
+            try {
                 config = await response.json();
+            }
+            catch (error) {
+                ;
             }
             if (config) {
                 params.page_config = config;
@@ -204,6 +214,85 @@ export class Platform {
                     html_dl.append($('<option>').attr('value', entry.name).text(entry.name));
                 }
             }
+        }
+    }
+
+
+    static async upload(dialog, filename, content, options={}) {
+        const defaults = {
+            contentType: 'text/plain',
+            overwritable: false,
+            quietOnSuccess: false,
+            on_success: () => {},
+            on_cancel: () => {},
+            on_error: (e) => {},
+        };
+        let opts = $.extend({}, defaults, options);
+    
+        let url = './api/' + filename;
+        if (opts.overwritable) {
+            url += '?overwrite=yes';
+        }
+
+        let headers = {};
+        if (opts.contentType) {
+            headers['Content-Type'] = opts.contentType;
+        }
+    
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: headers,
+            body: content,
+        });
+        
+        if (! response.ok) {
+            dialog.html(`
+                <h3>File uploading Failed</h3>
+                <h4>${filename}</h4>
+                ${e.message}
+                <div class="jaga-dialog-button-pane"><button>Close</button></div>
+            `);
+            dialog.find('button').at(0).click(e=>{
+                dialog.get().close();
+                opts.on_error(e);
+            });
+            dialog.get().showModal();
+            return;
+        }
+        
+        if (response.status == 202) {
+            dialog.html(`
+                <h3>File already exists. Overwrite?</h3>
+                <h4>${filename}</h4>
+                <div class="jaga-dialog-button-pane"><button>Yes</button><button>No</button></div>
+            `);
+            dialog.find('button').at(0).click(e=>{
+                dialog.get().close();
+                opts.overwritable = true;
+                Platform.upload(dialog, filename, content, opts);
+            });
+            dialog.find('button').at(1).click(e=>{
+                dialog.get().close();
+                opts.on_cancel();
+            });
+            dialog.get().showModal();
+            return;
+        }
+        
+        if (! options.quietOnSuccess) {
+            dialog.html(`
+                <h3>File uploaded</h3>
+                <h4>${filename}</h4>
+                <div class="jaga-dialog-button-pane"><button>Ok</button></div>
+            `);
+            dialog.find('button').at(0).click(e=>{
+                dialog.get().close();
+                opts.on_success();
+            });
+            dialog.get().showModal();
+        }
+        else {
+            opts.on_success();
         }
     }
 }
