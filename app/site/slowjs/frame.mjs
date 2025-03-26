@@ -12,7 +12,7 @@ export class Frame {
         const defaults = {
             title: "SlowDash",
             initialStatus: "loading...",
-            initialBeat: "",
+            initialProgress: "",
             initialReloadInterval: 60,
             style: {
                 theme: 'light',
@@ -51,7 +51,7 @@ export class Frame {
             selectSpan: {},
             select: { "font-size": "1vw", "margin-right": "5px", "padding": "3px", "border-radius": "7px" },
             statusSpan: { "font-size": "1vw", 'margin-right': "0.5vw" },
-            beatSpan: { "font-size": "0.7vw", "margin-right": "0.5vw" },
+            progressSpan: { "font-size": "0.7vw", "margin-right": "0.5vw" },
             buttonDiv: { "margin-top": "5px", "display": "flex" },
             button: { "font-size": "1.2vw", "margin-left": "5px" }
         };
@@ -66,7 +66,7 @@ export class Frame {
         let controlDiv = $('<div>').css(style.controlDiv).appendTo(leftDiv);
         this.selectSpan = $('<span>').css(style.selectSpan).appendTo(controlDiv);
         this.statusSpan = $('<span>').css(style.statusSpan).appendTo(controlDiv);
-        this.beatSpan = $('<span>').css(style.beatSpan).appendTo(controlDiv);
+        this.progressSpan = $('<span>').css(style.progressSpan).appendTo(controlDiv);
         this.clockDiv = $('<div>').css(style.clockDiv).appendTo(rightDiv);
         this.buttonDiv = $('<div>').css(style.buttonDiv).appendTo(rightDiv);
         this.style = style;
@@ -83,7 +83,7 @@ export class Frame {
         
         titleDiv.text(this.options.title);
         this.statusSpan.text(this.options.initialStatus);
-        this.beatSpan.text(this.options.initialBeat);
+        this.progressSpan.text(this.options.initialProgress);
         this.clockDiv.text((new JGDateTime()).asString('%a, %b %d %H:%M %Z'));
         
         this.reloadInterval = this.options.initialReloadInterval;
@@ -170,11 +170,11 @@ export class Frame {
         this.statusSpan.html(html);
     }
     
-    setBeatText(text) {
-        this.beatSpan.text(text);
+    setProgress(html) {
+        this.progressSpan.html(html);
     }
     
-    setBeatTime(time) {
+    setClockTime(time) {
         this.clockDiv.text((new JGDateTime(time)).asString('%a, %b %d %H:%M %Z'));
     }
 };

@@ -261,7 +261,7 @@ export class Scheduler {
             resetDelay: 0,
             update: async () => {},
             setStatus: (statusText) => {},
-            setBeatText: (beatText) => {},
+            setProgress: (progress) => {},
             setBeatTime: (time) => {},
         };
         this.options = $.extend({}, defaults, options);
@@ -382,7 +382,7 @@ export class Scheduler {
         else {
             text2 = '';
         }
-        this.options.setBeatText('(' + text1 + text2 + ')');
+        this.options.setProgress('(' + text1 + text2 + ')');
         
         if (togo <= 0) {
             this.update();

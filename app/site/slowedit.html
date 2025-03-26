@@ -19,8 +19,9 @@
 
   <script type="module">
     import { JG as $ } from './slowjs/jagaimo/jagaimo.mjs';
-    import { Frame } from './slowjs/frame.mjs';
+    import { Scheduler } from './slowjs/control.mjs';
     import { Platform } from './slowjs/platform.mjs';
+    import { Frame } from './slowjs/frame.mjs';
 
 
     async function main() {
@@ -43,6 +44,11 @@
             initialStatus: config.filename + (config.status ? ': ' + config.status : ''),
             style: style,
             reloadIntervalSelection: null,
+        });
+        let scheduler = new Scheduler({
+            setBeatTime: (time) => {
+                frame.setClockTime(time);
+            },
         });
 
         layout();
@@ -195,6 +201,8 @@
 
         configureEditor();
         loadContents();
+
+        scheduler.start();
     }
 
 
@@ -210,6 +218,7 @@
         });
     }
     $(window).bind('resize', layout);
+
 
     window.addEventListener('DOMContentLoaded', main);
   </script>    

@@ -19,8 +19,9 @@
   <script type="module">
     import { JG as $ } from './slowjs/jagaimo/jagaimo.mjs';
     import { Layout } from './slowjs/layout.mjs';
-    import { Frame } from './slowjs/frame.mjs';
+    import { Scheduler } from './slowjs/control.mjs';
     import { Platform } from './slowjs/platform.mjs';
+    import { Frame } from './slowjs/frame.mjs';
 
 
     async function main() {
@@ -63,6 +64,11 @@
             style: style,
             reloadIntervalSelection: null
         });
+        let scheduler = new Scheduler({
+            setBeatTime: (time) => {
+                frame.setClockTime(time);
+            },
+        });
 
         let homeButton = $('<button>').html("&#x1f3e0;").bind('click', e=>{
             window.location.href = './';
@@ -83,6 +89,8 @@
                 layout.configure();
             }
         });
+
+        scheduler.start();
     }
 
     window.addEventListener('DOMContentLoaded', main);
