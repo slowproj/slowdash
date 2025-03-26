@@ -4,35 +4,7 @@
 
 import { JG as $, JGDateTime,  } from './jagaimo/jagaimo.mjs';
 import { JGPullDownWidget, JGDialogWidget } from './jagaimo/jagawidgets.mjs';
-
-
-function lengthString(lapse, shortForm=true, transform=x=>parseFloat(x.toFixed(1))) {
-    let t = parseFloat(lapse);
-    if (isNaN(t)) return lapse;
-    let sign = (t < 0) ? '-' : '';
-    t = Math.abs(t);
-    if (t < 60) {
-        return transform(t) + (shortForm ? ' s' : ' seconds');
-    }
-    else if (t < 120.1) {
-        return transform(t/60) + (shortForm ? ' min' : ' minute');
-    }
-    else if (t < 3600.1) {
-        return transform(t/60) + (shortForm ? ' min' : ' minutes');
-    }
-    else if (t < 7200.1) {
-        return transform(t/3600) + (shortForm ? ' h' : ' hour');
-    }
-    else if (t < 86400.1) {
-        return transform(t/3600) + (shortForm ? ' h' : ' hours');
-    }
-    else if (t < 2*86400.1) {
-        return transform(t/86400) + (shortForm ? ' d' : ' day');
-    }
-    else {
-        return transform(t/86400) + (shortForm ? ' d' : ' days');
-    }
-}
+import { lengthString } from './control.mjs';
 
 
 export class Frame {
@@ -41,6 +13,7 @@ export class Frame {
             title: "SlowDash",
             initialStatus: "loading...",
             initialBeat: "",
+            initialReloadInterval: 60,
             style: {
                 theme: 'light',
                 title: {
@@ -54,11 +27,8 @@ export class Frame {
                     link: undefined,
                 },
             },
-            reloadInterval: 0,
             reloadIntervalSelection: [ 0, -1, 2, 5, 10, 30, 60, 5*60, 15*60, 30*60, 60*60 ],
             reloadIntervalChange: (interval) => {},
-            reload: async () => {},
-            resetDelay: 0
         };
         this.obj = obj;
         this.options = $.extend(true, {}, defaults, options);
@@ -116,7 +86,7 @@ export class Frame {
         this.beatSpan.text(this.options.initialBeat);
         this.clockDiv.text((new JGDateTime()).asString('%a, %b %d %H:%M %Z'));
         
-        this.reloadInterval = this.options.reloadInterval;
+        this.reloadInterval = this.options.initialReloadInterval;
         if (this.options.reloadIntervalSelection?.length ?? 0 > 0) {
             let heading = '&#x1f680; ';
             let pulldownItems = [];
@@ -147,20 +117,20 @@ export class Frame {
                 select: (event, value, obj) => {
                     let length = parseFloat(value);
                     if (length == 0) {
-                        this.update();
+                        // reload now, w/o changing the settings
                         setReloadLabel(this.reloadPulldown, this.reloadInterval);
                     }
                     else if (length < 0) {
-                        this.reloadInterval = 0;
+                        // suspend auto reloading
+                        this.reloadInterval = -1;
                         this.reloadPulldown.setLabel(heading + 'Auto Reload Off');
-                        this.options.reloadIntervalChange(this.reloadInterval);
                     }
                     else {
+                        // reload periodically
                         this.reloadInterval = length;
-                        this.options.reloadIntervalChange(this.reloadInterval);
                     }
                     this.suspendUntil = 0;
-                    this.scheduleReset();
+                    this.options.reloadIntervalChange(length);
                 }
             });
             setReloadLabel(this.reloadPulldown, this.reloadInterval);
@@ -195,94 +165,17 @@ export class Frame {
         button.css(this.style.button).appendTo(this.buttonDiv);
     }
 
-    start() {
-        this.lastUpdateTime = 0;
-        this.currentUpdateTime = 0;
-        this.pendingRequests = 0;
-        this.suspendUntil = 0;
-        this.resetAt = 0;
-        this._beat();
+    
+    setStatus(html) {
+        this.statusSpan.html(html);
     }
     
-    suspend(len) {
-        this.suspendUntil = $.time() + len;
+    setBeatText(text) {
+        this.beatSpan.text(text);
     }
     
-    scheduleReset() {
-        if (this.options.resetDelay > 0) {
-            this.resetAt = $.time() + this.options.resetDelay;
-        }
-    }
-    
-    async update() {            
-        let now = $.time();
-        if (now - this.currentUpdateTime < 60) {
-            this.pendingRequests++;
-            return;
-        }
-        this.lastUpdateTime = now;
-        this.currentUpdateTime = now;
-        this.pendingRequests = 0;
-        this.suspendUntil = 0;
-        
-        let status = await this.options.reload();
-        this.currentUpdateTime = 0;
-        if (status == null) {
-            let date = (new JGDateTime(this.lastUpdateTime)).asString('%a, %b %d %H:%M');
-            status = 'Update: ' + date;
-        }
-        this.statusSpan.text(status);
-    }
-
-    setStatus(text) {
-        this.statusSpan.html(text);
-    }
-    
-    _beat() {
-        const now = $.time();
-        if ((this.resetAt > 0) && (now > this.resetAt)) {
-            window.location.reload(false);
-        }
-        
-        this.clockDiv.text((new JGDateTime(now)).asString('%a, %b %d %H:%M %Z'));
-
-        let lapse = now - this.lastUpdateTime;
-        let suspend = this.suspendUntil - now;
-        let togo = (this.reloadInterval > 0 ? this.reloadInterval - lapse : 1e10);
-        if ((this.lastUpdateTime == 0) || (this.pendingRequests > 0)) {
-            togo = 0;
-        }
-        if (suspend > togo) {
-            togo = suspend;
-        }
-
-        let text;
-        if (this.lastUpdateTime == 0) {
-            text = 'initial loading';
-        }
-        else {
-            text = lengthString(lapse, false, parseInt) + ' ago';
-        }
-        if (this.currentUpdateTime > 0) {
-            text += ', receiving data... ' + parseInt(now - this.currentUpdateTime) + ' s';
-        }
-        else {
-            if (suspend >= togo-1) {
-                text += ', update suspended for next ' + parseInt(togo) + ' s';
-            }
-            else if (
-                ((this.reloadInterval > 60) && (togo < 10)) ||
-                    ((this.reloadInterval > 1800) && (togo < 60))
-            ){
-                text += ', reload in ' + parseInt(togo) + ' s';
-            }
-        }
-        this.beatSpan.text('(' + text + ')');
-        
-        if (togo <= 0) {
-            this.update();
-        }
-        setTimeout(()=>{this._beat();}, 1000);
+    setBeatTime(time) {
+        this.clockDiv.text((new JGDateTime(time)).asString('%a, %b %d %H:%M %Z'));
     }
 };
 
@@ -695,129 +588,3 @@ export class GridPullDown {
         this.lastValue = grid;
     }        
 };
-
-
-
-export class SaveConfigDialog {
-    constructor(obj, options={}) {
-        const defaults = {
-            title: 'Save Configuration',
-            saveConfig: (name, doc) => {}
-        };
-        this.obj = obj;
-        this.options = $.extend(true, {}, defaults, options);
-
-        this.dialog = new JGDialogWidget(this.obj, {
-            title: this.options.title,
-            y: 50,
-        });
-    }
-
-    open(config) {
-        let div = this.obj.find('.jaga-dialog-content');
-        div.html(`
-            <table style="margin-top:1em;margin-left:1em">
-              <tr><td>Name</td><td><input pattern="^[a-zA-Z][a-zA-Z0-9_\\-]*$" required="true" placeholder="use only alphabets or digits, do not use space" style="width:30em"></td></tr>
-              <tr><td>Title</td><td><input placeholder="optional" style="width:30em"></td></tr>
-              <tr><td>Description</td><td><textarea rows="3" cols="60" placeholder="optional"></textarea></td></tr>
-              <tr><td>---</td><td></td></tr>
-              <tr><td>Control Mode</td><td>
-                <label><input type="radio" name="mode" value="normal" checked>Normal</label>
-              </td></tr>
-              <tr><td></td><td>
-                <label><input type="radio" name="mode" value="protedted">Protected
-                <span font-size="60%">(layout cannot be modified)</span></label>
-              </td></tr>
-              <tr><td></td><td>
-                <label><input type="radio" name="mode" value="display">Display
-                <span font-size="60%">(no interaction, simple header)</span></label>
-              </td></tr>
-            </table>
-            <div style="display:flex;justify-content:flex-end;padding-right:10px;margin:1em" class="jaga-dialog-button-pane">
-                <button>Save &amp; Reload</button><button>Cancel</button>
-            </div>
-            <hr>
-            <details>
-              <summary>See the content</summary>
-              <textarea rows="30" style="width:calc(100% - 10px)" autocomplete="off" spellcheck="false" wrap="off">
-            </details>
-        `);
-
-        let orgName = '';
-        let validNamePattern = new RegExp('^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$');
-        if (config.meta?.name?.length>0 && validNamePattern.test(config.meta?.name)) {
-            orgName = config.meta.name;
-        }
-        else {
-            orgName = '';
-        }
-        let prevName = orgName;
-
-        let record = JSON.parse(JSON.stringify(config));
-        for (let key in record) {
-            if ((key.length > 0) && ((key[0] == '_') || (key == 'meta'))) {
-                delete record[key];
-            }
-        }
-        
-        div.find('input').at(0).val(prevName);
-        div.find('input').at(1).val(config.meta?.title ?? '');
-        div.find('textarea').at(0).val(config.meta?.description ?? '');
-        div.find('textarea').at(1).val($.JSON_stringify(record, {expandAll:false}));
-        if (div.find('input').at(0).val().length == 0) {
-            div.find('button').at(0).enabled(false);
-        }
-            
-        // name input
-        div.find('input').at(0).bind('input', e=>{
-            let name = $(e.target).val();
-            if (validNamePattern.test(name) || name == '') {
-                prevName = name;
-            }
-            else {
-                $(e.target).val(prevName);
-            }
-            div.find('button').at(0).enabled(e.target.validity.valid);
-        });
-        
-        // buttons
-        div.find('button').bind('click', e=>{
-            const cmd = $(e.target).closest('button').text();
-            if (cmd == "Cancel") {
-                this.dialog.close();
-                return;
-            }
-            
-            if (config.meta === undefined) {
-                config.meta = {};
-            }
-            config.meta.name = div.find('input').at(0).val();
-            config.meta.title = div.find('input').at(1).val();
-            config.meta.description = div.find('textarea').at(0).val();
-            
-            let updated_config = JSON.parse(div.find('textarea').at(1).val());
-            if (updated_config.meta === undefined) {
-                updated_config.meta = {};
-            }
-            updated_config.meta.name = div.find('input').at(0).val();
-            updated_config.meta.title = div.find('input').at(1).val();
-            updated_config.meta.description = div.find('textarea').at(0).get().value;
-            if (div.find('input').at(3).checked()) {
-                updated_config.control.mode = 'protected';
-            }
-            else if (div.find('input').at(4).checked()) {
-                updated_config.control.mode = 'display';
-            }
-            else {
-                updated_config.control.mode = 'normal';
-            }
-            
-            this.options.saveConfig(updated_config.meta.name, updated_config);
-            
-            this.dialog.close();
-        });
-
-        this.dialog.open();
-    }
-};
-

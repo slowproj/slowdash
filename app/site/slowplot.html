@@ -19,9 +19,9 @@
     import { JG as $, JGDateTime } from './slowjs/jagaimo/jagaimo.mjs';
     import { JGDialogWidget } from './slowjs/jagaimo/jagawidgets.mjs';
     import { Layout } from './slowjs/layout.mjs';
-    import { Frame, TimeRangePullDown, GridPullDown, SaveConfigDialog } from './slowjs/frame.mjs';
-    import { Controller } from './slowjs/control.mjs';
-    import { Platform } from './slowjs/platform.mjs';
+    import { Controller, Scheduler } from './slowjs/control.mjs';
+    import { Platform, SaveConfigDialog } from './slowjs/platform.mjs';
+    import { Frame, TimeRangePullDown, GridPullDown } from './slowjs/frame.mjs';
 
 
     // takes urlOptions, returns [ defaults, args ]
@@ -147,14 +147,30 @@
         
         let layout = new Layout($('#sd-layout'), style);
         let controller = new Controller(layout);
-        
+        let scheduler;
         let frame = new Frame($('#sd-header'), {
             title: title,
             style: style,
-            reloadInterval: config.control.reload,
-            reloadIntervalChange: (interval) => { config.control.reload = interval; },
-            reload: async () => { return await update(controller, config); },
+            initialReloadInterval: config.control.reload,
+            reloadIntervalChange: (interval) => {
+                config.control.reload = interval;
+                scheduler.start({updateInterval: interval});
+                scheduler.scheduleReset();
+            },
+        });
+        scheduler = new Scheduler({
+            updateInterval: config.control.reload,
             resetDelay: resetDelay,
+            update: async () => { return await update(controller, config); },
+            setStatus: (statusText) => {
+                frame.setStatus(statusText);
+            },
+            setBeatText: (beatText) => {
+                frame.setBeatText(beatText);
+            },
+            setBeatTime: (time) => {
+                frame.setBeatTime(time);
+            },
         });
         
         let saveDiv = $('<div>').appendTo($('body'));
@@ -192,8 +208,8 @@
                 config.control.range.length = Math.round(length);
                 config.control.range.to = (to === null) ? null : Math.round(to);
                 currentDisplayTimeRange = null;
-                frame.scheduleReset();
-                frame.update();
+                scheduler.scheduleReset();
+                scheduler.update();
             },
             select_custom_item: key => {
                 if (currentDisplayTimeRange) {
@@ -201,7 +217,7 @@
                     config.control.range.length = Math.round(to-from);
                     config.control.range.to = Math.round(to);
                     rangePullDown.set(config.control.range.length, config.control.range.to);
-                    frame.update();
+                    scheduler.update();
                 }
                 else {
                     rangePullDown.set(config.control.range.length, config.control.range.to);
@@ -280,29 +296,35 @@
             });
         }
             
-        await controller.configure(config, {}, {
-            changeDisplayTimeRange: range => {
-                currentDisplayTimeRange = range;
-            },
-            forceUpdate: () => {
-                frame.update();
-            },
-            suspend: (duration=300) => {
-                frame.suspend(duration);
-                frame.scheduleReset();
-            },
-        });
-
         $(window).bind('resize', ()=>{
             if (window.innerWidth > 0) {
                 $('#sd-layout').css('width', '').css('height', '');
                 controller.configure();
             }
         });
-        frame.start();
+        
+        await controller.configure(config, {}, {
+            changeDisplayTimeRange: range => {
+                currentDisplayTimeRange = range;
+            },
+            forceUpdate: () => {
+                scheduler.update();
+            },
+            suspend: (duration=300) => {
+                scheduler.suspend(duration);
+                scheduler.scheduleReset();
+            },
+        });
+
+        scheduler.start();
     }
 
 
+    // This will be called by scheduler.update()
+    //   which can be called by the frame.reloadIntervalChange() callabcks,
+    //   or by the controller.forceUpdate() callback.
+    // This will call controller.update().
+    // By going through the scheduler, the next update will be re-scheduled properly.
     async function update(controller, config) {
         let length = config.control?.range?.length ?? 0;
         if (! (length > 0)) {

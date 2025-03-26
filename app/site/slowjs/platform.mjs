@@ -1,11 +1,12 @@
-// control.mjs //
+// platfrom.mjs //
 // Author: Sanshiro Enomoto <sanshiro@uw.edu> //
 // Created on 18 November 2021 //
 // Refactored on 18 June 2022 //
-// Refactored on 5 March 2025 //
+// Refactored on 22 March 2025 //
 
 
 import { JG as $ } from './jagaimo/jagaimo.mjs';
+import { JGDialogWidget } from './jagaimo/jagawidgets.mjs';
 
 
 export class Platform {
@@ -296,3 +297,128 @@ export class Platform {
         }
     }
 }
+
+
+
+export class SaveConfigDialog {
+    constructor(obj, options={}) {
+        const defaults = {
+            title: 'Save Configuration',
+            saveConfig: (name, doc) => {}
+        };
+        this.obj = obj;
+        this.options = $.extend(true, {}, defaults, options);
+
+        this.dialog = new JGDialogWidget(this.obj, {
+            title: this.options.title,
+            y: 50,
+        });
+    }
+
+    open(config) {
+        let div = this.obj.find('.jaga-dialog-content');
+        div.html(`
+            <table style="margin-top:1em;margin-left:1em">
+              <tr><td>Name</td><td><input pattern="^[a-zA-Z][a-zA-Z0-9_\\-]*$" required="true" placeholder="use only alphabets or digits, do not use space" style="width:30em"></td></tr>
+              <tr><td>Title</td><td><input placeholder="optional" style="width:30em"></td></tr>
+              <tr><td>Description</td><td><textarea rows="3" cols="60" placeholder="optional"></textarea></td></tr>
+              <tr><td>---</td><td></td></tr>
+              <tr><td>Control Mode</td><td>
+                <label><input type="radio" name="mode" value="normal" checked>Normal</label>
+              </td></tr>
+              <tr><td></td><td>
+                <label><input type="radio" name="mode" value="protedted">Protected
+                <span font-size="60%">(layout cannot be modified)</span></label>
+              </td></tr>
+              <tr><td></td><td>
+                <label><input type="radio" name="mode" value="display">Display
+                <span font-size="60%">(no interaction, simple header)</span></label>
+              </td></tr>
+            </table>
+            <div style="display:flex;justify-content:flex-end;padding-right:10px;margin:1em" class="jaga-dialog-button-pane">
+                <button>Save &amp; Reload</button><button>Cancel</button>
+            </div>
+            <hr>
+            <details>
+              <summary>See the content</summary>
+              <textarea rows="30" style="width:calc(100% - 10px)" autocomplete="off" spellcheck="false" wrap="off">
+            </details>
+        `);
+
+        let orgName = '';
+        let validNamePattern = new RegExp('^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$');
+        if (config.meta?.name?.length>0 && validNamePattern.test(config.meta?.name)) {
+            orgName = config.meta.name;
+        }
+        else {
+            orgName = '';
+        }
+        let prevName = orgName;
+
+        let record = JSON.parse(JSON.stringify(config));
+        for (let key in record) {
+            if ((key.length > 0) && ((key[0] == '_') || (key == 'meta'))) {
+                delete record[key];
+            }
+        }
+        
+        div.find('input').at(0).val(prevName);
+        div.find('input').at(1).val(config.meta?.title ?? '');
+        div.find('textarea').at(0).val(config.meta?.description ?? '');
+        div.find('textarea').at(1).val($.JSON_stringify(record, {expandAll:false}));
+        if (div.find('input').at(0).val().length == 0) {
+            div.find('button').at(0).enabled(false);
+        }
+            
+        // name input
+        div.find('input').at(0).bind('input', e=>{
+            let name = $(e.target).val();
+            if (validNamePattern.test(name) || name == '') {
+                prevName = name;
+            }
+            else {
+                $(e.target).val(prevName);
+            }
+            div.find('button').at(0).enabled(e.target.validity.valid);
+        });
+        
+        // buttons
+        div.find('button').bind('click', e=>{
+            const cmd = $(e.target).closest('button').text();
+            if (cmd == "Cancel") {
+                this.dialog.close();
+                return;
+            }
+            
+            if (config.meta === undefined) {
+                config.meta = {};
+            }
+            config.meta.name = div.find('input').at(0).val();
+            config.meta.title = div.find('input').at(1).val();
+            config.meta.description = div.find('textarea').at(0).val();
+            
+            let updated_config = JSON.parse(div.find('textarea').at(1).val());
+            if (updated_config.meta === undefined) {
+                updated_config.meta = {};
+            }
+            updated_config.meta.name = div.find('input').at(0).val();
+            updated_config.meta.title = div.find('input').at(1).val();
+            updated_config.meta.description = div.find('textarea').at(0).get().value;
+            if (div.find('input').at(3).checked()) {
+                updated_config.control.mode = 'protected';
+            }
+            else if (div.find('input').at(4).checked()) {
+                updated_config.control.mode = 'display';
+            }
+            else {
+                updated_config.control.mode = 'normal';
+            }
+            
+            this.options.saveConfig(updated_config.meta.name, updated_config);
+            
+            this.dialog.close();
+        });
+
+        this.dialog.open();
+    }
+};

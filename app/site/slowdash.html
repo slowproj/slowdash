@@ -20,9 +20,9 @@
     import { JG as $, JGDateTime } from './slowjs/jagaimo/jagaimo.mjs';
     import { JGPullDownWidget, JGDialogWidget } from './slowjs/jagaimo/jagawidgets.mjs';
     import { Layout } from './slowjs/layout.mjs';
-    import { Frame, TimePullDown } from './slowjs/frame.mjs';
-    import { Controller } from './slowjs/control.mjs';
+    import { Controller, Scheduler } from './slowjs/control.mjs';
     import { Platform } from './slowjs/platform.mjs';
+    import { Frame, TimePullDown } from './slowjs/frame.mjs';
 
 
     // takes urlOptions, returns [ defaults, args ]
@@ -101,12 +101,30 @@
 
         let layout = new Layout($('#sd-layout'), style);
         let controller = new Controller(layout);
-        
+        let scheduler;
         let frame = new Frame($('#sd-header'), {
             title: title,
             style: style,
-            reloadInterval: config.control.reload,
-            reload: async () => { return await update(controller, config); }
+            initialReloadInterval: config.control.reload,
+            reloadIntervalChange: (interval) => {
+                config.control.reload = interval;
+                scheduler.start({updateInterval: interval});
+                scheduler.scheduleReset();
+            },
+        });
+        scheduler = new Scheduler({
+            updateInterval: config.control.reload,
+            resetDelay: 0,
+            update: async () => { return await update(controller, config); },
+            setStatus: (statusText) => {
+                frame.setStatus(statusText);
+            },
+            setBeatText: (beatText) => {
+                frame.setBeatText(beatText);
+            },
+            setBeatTime: (time) => {
+                frame.setBeatTime(time);
+            },
         });
         
         let timeSelect = $('<select>');
@@ -114,7 +132,7 @@
         let timePullDown = new TimePullDown(timeSelect, {
             select: (selectedDataTime) => {
                 config.control.range.to = selectedDataTime;
-                frame.update();
+                scheduler.update();
             },
         });
         if (config.control.range.to > 0) {
@@ -127,7 +145,7 @@
             items: [ 'Normal Mode', 'Stand-by Mode' ],
             initial: 0,
             select: (event, value, obj) => {
-                frame.update();
+                scheduler.update();
             }
         });
 
@@ -161,11 +179,11 @@
                 config.control.range.to = range.to;
             },
             forceUpdate: () => {
-                frame.update();
+                schduler.update();
             },
             suspend: (duration=300) => {
-                frame.suspend(duration);
-                frame.scheduleReset();
+                scheduler.suspend(duration);
+                scheduler.scheduleReset();
             },
         });
         
@@ -175,7 +193,7 @@
                 controller.configure();
             }
         });
-        frame.start();
+        scheduler.start();
     }
 
 
