@@ -170,12 +170,20 @@ class ConfigComponent(Component):
         for filepath in glob.glob(os.path.join(self.project_dir, 'config', '*.*')):
             filestat = os.lstat(filepath)
             mtime = int(os.path.getmtime(filepath))
+            try:
+                owner = pwd.getpwuid(filestat.st_uid)[0]
+            except:
+                owner = filestat.st_uid
+            try:
+                group = grp.getgrgid(filestat.st_gid)[0]
+            except:
+                group = filestat.st_gid
             filelist.append({
                 'name': os.path.basename(filepath),
                 'size': os.path.getsize(filepath),
                 'mode': stat.filemode(filestat.st_mode),
-                'owner': pwd.getpwuid(filestat.st_uid)[0],
-                'group': grp.getgrgid(filestat.st_gid)[0],
+                'owner': owner,
+                'group': group,
                 'mtime': mtime
             })
 
