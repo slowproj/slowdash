@@ -55,7 +55,7 @@ class PubsubComponent(Component):
             logging.info(f"WebSocket Closed by error: {e}")
 
             
-    @slowlette.post('/publish/{topic}')
+    @slowlette.post('/api/publish/{topic}')
     async def publish(self, topic:str, data:bytes):
         try:
             await asyncio.gather(*(ws.send(data.decode()) for ws in self.websockets.get(topic, [])))

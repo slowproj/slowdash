@@ -476,7 +476,7 @@ class UserModuleComponent(Component):
         }
 
 
-    @slowlette.get('/channels')
+    @slowlette.get('/api/channels')
     def get_channels(self):
         result = []
         for usermodule in self.usermodule_list:
@@ -486,22 +486,27 @@ class UserModuleComponent(Component):
         return result
 
         
-    @slowlette.get('/data/{channels}')
+    @slowlette.get('/api/data/{channels}')
     def get_data(self, channels:str, opts:dict):
         if len(self.usermodule_list) == 0:
             return None
         
         try:
             channels = channels.split(',')
-            length = float(opts.get('length', '3600'))
-            to = float(opts.get('to', int(time.time())+1))
+            length = float(opts.get('length', 3600))
+            to = float(opts.get('to', 0))
         except Exception as e:
             logging.error('Bad data URL: %s: %s' % (str(opts), str(e)))
             return False
-        
+
+        now = time.time()
+        if to > 0:
+            start = to - length
+        else:
+            start = (now + to) - length
+        t = now - start
+            
         has_result, result = False, {}
-        start = to - length
-        t = time.time() - start
         if t >= 0 and t <= length + 10:
             for usermodule in self.usermodule_list:
                 for ch in channels:
@@ -518,7 +523,7 @@ class UserModuleComponent(Component):
         return result if has_result else None
 
     
-    @slowlette.post('/control')
+    @slowlette.post('/api/control')
     async def post_control(self, doc:slowlette.DictJSON):
         if len(self.usermodule_list) == 0:
             return None

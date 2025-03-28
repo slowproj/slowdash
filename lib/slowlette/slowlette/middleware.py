@@ -71,16 +71,15 @@ class BasicAuthentication():
 
 
 class FileServer():
-    def __init__(self, filedir, *, prefix="", index_file=None, exclude=None, drop_exclude_prefix=False, ext_allow=None, ext_deny=None):
+    def __init__(self, filedir, *, prefix="", index_file=None, exclude=None, not_found_is_error=True, ext_allow=None, ext_deny=None):
         """File Server App (Middleware)
         Args:
           - filedir (str): path to a filesystem directory
           - prefix (str): URL path to bind this app (e.g., "/webfile")
           - index_file (str): index file when the path is empty (i.e., '/')
-          - exclude (str): URL path not to be handled
+          - exclude (str or list[str]): URL path(s) not to be handled
             (e.g., prefix="/app", exclude="/app/api")
-          - drop_exclude_prefix (bool): if True, the prefix is removed from the requet path if the request is for an excluded path
-            (e.g., for exclude '/api', the request path of '/api/userlist' becomes '/userlist')
+          - not_found_is_error (bool): if true return an error response (404) if file does not exist, otherwise propagate
           - ext_allow (list[str]): a list of file extensions to allow accessing
           - ext_deny (list[str]): a list of file extensions not to allow accessing
         Note:
@@ -93,14 +92,19 @@ class FileServer():
         self.prefix = None
         self.index_file = index_file
         self.exclude = None
+        self.not_found_is_error = not_found_is_error
         self.ext_allow = ext_allow
         self.ext_deny = ext_deny
-        self.drop_exclude_prefix = drop_exclude_prefix
 
         if prefix is not None:
             self.prefix = [ p for p in prefix.split('/') if len(p) > 0 ]
-        if exclude is not None:
-            self.exclude = [ p for p in exclude.split('/') if len(p) > 0 ]
+        if exclude is None:
+            self.excludes = []
+        else:
+            self.excludes = [
+                [ p for p in entry.split('/') if len(p) > 0 ]
+                for entry in (exclude if type(exclude) is list else [ exclude ])
+            ]
 
 
     @route('/{*}')
@@ -117,15 +121,13 @@ class FileServer():
                 is_dirty = True
             path.append(p)
         # exclude-path match
-        if self.exclude is not None:
-            if len(path) >= len(self.exclude):
-                for i,p in enumerate(self.exclude):
+        for exclude in self.excludes:
+            if len(path) >= len(exclude):
+                for i,p in enumerate(exclude):
                     if path[i] != p:
                         break
                 else:
                     # match to exclusion
-                    if self.drop_exclude_prefix:
-                        request.path = path[len(self.exclude):]
                     return Response()  
 
         # method match
@@ -148,6 +150,9 @@ class FileServer():
 
         # matched -> my responsibility (can return an error status) #
 
+        if self.not_found_is_error:
+            request.abort()            
+            
         if is_dirty:
             logging.warning(f'Slowlette File GET: Forbidden: sanity check failed')
             return Response(403)  # Forbidden
@@ -162,11 +167,11 @@ class FileServer():
         ext = os.path.splitext(path[-1])[1]
         if self.ext_allow is not None:
             if ext not in self.ext_allow:
-                logging.warning(f'Slowlette File GET: Forbidden: not allowed file type')
+                logging.warning(f'Slowlette File GET: Forbidden: file type not allowed')
                 return Response(403)  # Forbidden
         elif self.ext_deny is not None:
             if ext in self.ext_deny:
-                logging.warning(f'Slowlette File GET: Forbidden: denied file type')
+                logging.warning(f'Slowlette File GET: Forbidden: file type denied')
                 return Response(403)  # Forbidden
 
         filepath = os.path.join(*(path))
@@ -177,9 +182,11 @@ class FileServer():
         filepath = os.path.join(self.filedir, filepath)
 
         if not os.path.isfile(filepath):
-            return Response()  # propagate
-        else:
-            request.abort()            
+            logging.warning(f'Slowlette File GET: file not found: {filepath} in {self.filedir}')
+            if self.not_found_is_error:
+                return Response(404)  # Not found
+            else:
+                return Response()  # propagate
         
         logging.debug(f'Slowlette_FileServer: file request: {filepath}')
 

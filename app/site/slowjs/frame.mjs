@@ -4,323 +4,7 @@
 
 import { JG as $, JGDateTime,  } from './jagaimo/jagaimo.mjs';
 import { JGPullDownWidget, JGDialogWidget } from './jagaimo/jagawidgets.mjs';
-
-
-export function boot(defaults, optparse_func, start_func) {
-    let options = {};
-    let search = window.location.search.split('?')[1];
-    if (search) {
-        for(let kv of search.split('&')) {
-            let [key, value] = kv.split('=');
-            options[key] = decodeURIComponent(value);
-        }
-    }
-    
-    let params = {
-        config_file: options.config,
-        config_data: options.configdata,
-        defaults: defaults,
-        page_config: {},
-        args: optparse_func(options),
-        start_func: start_func
-    };
-    
-    function initiate(params) {
-        load_project_config(params);
-    }
-    
-    function load_project_config(params) {
-        let project_config = {
-            project: { name: null, title: "New Project" },
-            style: { theme: 'light' }
-        };
-        fetch('./api/config')
-            .then(response => {
-                if (! response.ok) {
-                    throw new Error(response.status + " " + response.statusText);
-                }
-                return response.json();
-            })
-            .catch(e => {
-                return {};
-            })
-            .then(config => {
-                if (config) {
-                    params.args._project = $.extend(true, {}, project_config, config);
-                    params.defaults.meta = { name: null, title: params.args._project.title };
-                    load_page_config(params);
-                }
-            });
-    }
-    
-    function load_page_config(params) {
-        if (params.config_data) {
-            try {
-                params.page_config = JSON.parse(atob(params.config_data));
-            }
-            catch (error) {
-                $('<div>').appendTo($('body')).html(`
-                    <h3>Configuration Loading Error</h3>
-                        Error: ${error.message}
-                `);
-                return;
-            }
-            load_theme(params);
-        }
-        else if (params.config_file) {
-            fetch('./api/config/content/' + params.config_file)
-                .then(response => {
-                    if (! response.ok) {
-                        throw new Error(response.status + " " + response.statusText);
-                    }
-                    return response.json();
-                })
-                .catch(e => {
-                    params.page_config = {
-                        control: {
-                            grid: { 'rows': 1, 'columns': 1 },
-                            reload: 0,
-                            inactive: true,
-                        },
-                        "panels": [{
-                            type: "config_editor",
-                            title: "Configuration File Error",
-                            file: params.config_file,
-                        }]
-                    };
-                    load_theme(params);
-                })
-                .then(config => {
-                    if (config) {
-                        params.page_config = config;
-                        load_theme(params);
-                    }
-                });
-        }
-        else {
-            load_theme(params);
-        }
-    }
-
-    
-    function load_theme(params) {
-        const style = $.extend({}, params.args._project?.style??{}, params.page_config.style??{}, params.args.style??{});
-        const theme = style.theme ?? 'light';
-        let theme_css = $('#sd-theme-css');
-        new Promise((resolve, reject) => {
-            theme_css.bind('load', () => resolve({}));
-            theme_css.bind('error', (e) => reject(e));
-            theme_css.attr('href', 'slowjs/slowdash-' + theme + '.css');
-        })
-            .catch(e => {
-                $('<div>').appendTo($('body')).html(`
-                    <h3>Theme-CSS Loading Error</h3>
-                    Name: slowdash-${theme}.css<br>
-                    Error: ${e.message}
-                `);
-            })
-            .then((x) => {
-                start(params);
-            });
-    }
-
-
-    function start(params) {
-        let config = $.extend(true, {}, params.defaults, params.page_config, params.args);
-        setTimeout(()=>{setupDataList();}, 3000);
-        params.start_func(config);
-    }
-
-    initiate(params);
-}
-
-
-function setupDataList() {
-    let numeric_datalist = $('<datalist>').attr('id', 'sd-numeric-datalist').appendTo(document.body);
-    let table_datalist = $('<datalist>').attr('id', 'sd-table-datalist').appendTo(document.body);
-    let tree_datalist = $('<datalist>').attr('id', 'sd-tree-datalist').appendTo(document.body);
-    let blob_datalist = $('<datalist>').attr('id', 'sd-blob-datalist').appendTo(document.body);
-    let hist_datalist = $('<datalist>').attr('id', 'sd-histogram-datalist').appendTo(document.body);
-    let hist2d_datalist = $('<datalist>').attr('id', 'sd-histogram2d-datalist').appendTo(document.body);
-    let graph_datalist = $('<datalist>').attr('id', 'sd-graph-datalist').appendTo(document.body);
-    let histgraph_datalist = $('<datalist>').attr('id', 'sd-histgraph-datalist').appendTo(document.body);
-    let all_datalist = $('<datalist>').attr('id', 'sd-all-datalist').appendTo(document.body);
-    
-    fetch('api/channels?fields=name')
-        .then(response => {
-            if (response.ok) return response.json();
-        })
-        .then(record => {
-            if (! record || Object.keys(record).length == 0) {
-                return;
-            }
-            for (let entry of record) {
-                if (! entry.name) {
-                    continue;
-                }
-                all_datalist.append($('<option>').attr('value', entry.name).text(entry.name));
-                if (((entry.type??'') == '') || (entry.type == 'numeric')) {
-                    if (! (entry.current??false)) {
-                        numeric_datalist.append($('<option>').attr('value', entry.name).text(entry.name));
-                    }
-                }
-                else if (entry.type == 'table') {
-                    table_datalist.append($('<option>').attr('value', entry.name).text(entry.name));
-                }
-                else if (entry.type == 'tree') {
-                    tree_datalist.append($('<option>').attr('value', entry.name).text(entry.name));
-                }
-                else if (entry.type == 'blob') {
-                    blob_datalist.append($('<option>').attr('value', entry.name).text(entry.name));
-                }
-                else if (entry.type == 'histogram') {
-                    hist_datalist.append($('<option>').attr('value', entry.name).text(entry.name));
-                    histgraph_datalist.append($('<option>').attr('value', entry.name).text(entry.name));
-                }
-                else if (entry.type == 'histogram2d') {
-                    hist2d_datalist.append($('<option>').attr('value', entry.name).text(entry.name));
-                }
-                else if (entry.type == 'graph') {
-                    graph_datalist.append($('<option>').attr('value', entry.name).text(entry.name));
-                    histgraph_datalist.append($('<option>').attr('value', entry.name).text(entry.name));
-                }
-            }
-        });
-
-    fetch('./api/config/contentlist')
-        .then(response => {
-            if (response.ok) return response.json();
-        })
-        .then(contentlist => {
-            if (! contentlist) {
-                return;
-            }
-            let dashboard_dl = $('<datalist>').attr('id', 'sd-dashboard-datalist').appendTo(document.body);
-            let map_dl = $('<datalist>').attr('id', 'sd-map-datalist').appendTo(document.body);
-            let html_dl = $('<datalist>').attr('id', 'sd-html-datalist').appendTo(document.body);
-            for (let entry of contentlist) {
-                if (entry.type == 'slowdash') {
-                    dashboard_dl.append($('<option>').attr('value', entry.name).text(entry.name));
-                }
-                else if (entry.type == 'map') {
-                    map_dl.append($('<option>').attr('value', entry.name).text(entry.name));
-                }
-                else if (entry.type == 'html') {
-                    html_dl.append($('<option>').attr('value', entry.name).text(entry.name));
-                }
-            }
-        });
-}
-
-
-export function upload(dialog, filename, content, options={}) {
-    const defaults = {
-        contentType: 'text/plain',
-        overwritable: false,
-        quietOnSuccess: false,
-        on_success: () => {},
-        on_cancel: () => {},
-        on_error: (e) => {},
-    };
-    let opts = $.extend({}, defaults, options);
-    
-    let url = './api/' + filename;
-    if (opts.overwritable) {
-        url += '?overwrite=yes';
-    }
-
-    let headers = {};
-    if (opts.contentType) {
-        headers['Content-Type'] = opts.contentType;
-    }
-    
-    fetch(url, {
-        method: 'POST',
-        headers: headers,
-        body: content,
-    })
-        .then(response => {
-            if (response.status == 202) {
-                dialog.html(`
-                    <h3>File already exists. Overwrite?</h3>
-                    <h4>${filename}</h4>
-                    <div class="jaga-dialog-button-pane"><button>Yes</button><button>No</button></div>
-                `);
-                dialog.find('button').at(0).click(e=>{
-                    dialog.get().close();
-                    opts.overwritable = true;
-                    upload(dialog, filename, content, opts);
-                });
-                dialog.find('button').at(1).click(e=>{
-                    dialog.get().close();
-                    opts.on_cancel();
-                });
-                dialog.get().showModal();
-                return;
-            }
-            if (! response.ok) {
-                throw new Error(response.status + " " + response.statusText);
-            }
-            if (! options.quietOnSuccess) {
-                dialog.html(`
-                    <h3>File uploaded</h3>
-                    <h4>${filename}</h4>
-                    <div class="jaga-dialog-button-pane"><button>Ok</button></div>
-                `);
-                dialog.find('button').at(0).click(e=>{
-                    dialog.get().close();
-                    opts.on_success();
-                });
-                dialog.get().showModal();
-            }
-            else {
-                opts.on_success();
-            }
-        })
-        .catch(e => {
-            dialog.html(`
-                <h3>File uploading Failed</h3>
-                <h4>${filename}</h4>
-                ${e.message}
-                <div class="jaga-dialog-button-pane"><button>Close</button></div>
-            `);
-            dialog.find('button').at(0).click(e=>{
-                dialog.get().close();
-                opts.on_error(e);
-            });
-            dialog.get().showModal();
-        });
-}
-
-
-
-function lengthString(lapse, shortForm=true, transform=x=>parseFloat(x.toFixed(1))) {
-    let t = parseFloat(lapse);
-    if (isNaN(t)) return lapse;
-    let sign = (t < 0) ? '-' : '';
-    t = Math.abs(t);
-    if (t < 60) {
-        return transform(t) + (shortForm ? ' s' : ' seconds');
-    }
-    else if (t < 120.1) {
-        return transform(t/60) + (shortForm ? ' min' : ' minute');
-    }
-    else if (t < 3600.1) {
-        return transform(t/60) + (shortForm ? ' min' : ' minutes');
-    }
-    else if (t < 7200.1) {
-        return transform(t/3600) + (shortForm ? ' h' : ' hour');
-    }
-    else if (t < 86400.1) {
-        return transform(t/3600) + (shortForm ? ' h' : ' hours');
-    }
-    else if (t < 2*86400.1) {
-        return transform(t/86400) + (shortForm ? ' d' : ' day');
-    }
-    else {
-        return transform(t/86400) + (shortForm ? ' d' : ' days');
-    }
-}
+import { lengthString } from './control.mjs';
 
 
 export class Frame {
@@ -328,7 +12,8 @@ export class Frame {
         const defaults = {
             title: "SlowDash",
             initialStatus: "loading...",
-            initialBeat: "",
+            initialProgress: "",
+            initialReloadInterval: 60,
             style: {
                 theme: 'light',
                 title: {
@@ -342,11 +27,8 @@ export class Frame {
                     link: undefined,
                 },
             },
-            reloadInterval: 0,
             reloadIntervalSelection: [ 0, -1, 2, 5, 10, 30, 60, 5*60, 15*60, 30*60, 60*60 ],
             reloadIntervalChange: (interval) => {},
-            reload: async () => {},
-            resetDelay: 0
         };
         this.obj = obj;
         this.options = $.extend(true, {}, defaults, options);
@@ -369,7 +51,7 @@ export class Frame {
             selectSpan: {},
             select: { "font-size": "1vw", "margin-right": "5px", "padding": "3px", "border-radius": "7px" },
             statusSpan: { "font-size": "1vw", 'margin-right': "0.5vw" },
-            beatSpan: { "font-size": "0.7vw", "margin-right": "0.5vw" },
+            progressSpan: { "font-size": "0.7vw", "margin-right": "0.5vw" },
             buttonDiv: { "margin-top": "5px", "display": "flex" },
             button: { "font-size": "1.2vw", "margin-left": "5px" }
         };
@@ -384,7 +66,7 @@ export class Frame {
         let controlDiv = $('<div>').css(style.controlDiv).appendTo(leftDiv);
         this.selectSpan = $('<span>').css(style.selectSpan).appendTo(controlDiv);
         this.statusSpan = $('<span>').css(style.statusSpan).appendTo(controlDiv);
-        this.beatSpan = $('<span>').css(style.beatSpan).appendTo(controlDiv);
+        this.progressSpan = $('<span>').css(style.progressSpan).appendTo(controlDiv);
         this.clockDiv = $('<div>').css(style.clockDiv).appendTo(rightDiv);
         this.buttonDiv = $('<div>').css(style.buttonDiv).appendTo(rightDiv);
         this.style = style;
@@ -401,10 +83,10 @@ export class Frame {
         
         titleDiv.text(this.options.title);
         this.statusSpan.text(this.options.initialStatus);
-        this.beatSpan.text(this.options.initialBeat);
+        this.progressSpan.text(this.options.initialProgress);
         this.clockDiv.text((new JGDateTime()).asString('%a, %b %d %H:%M %Z'));
         
-        this.reloadInterval = this.options.reloadInterval;
+        this.reloadInterval = this.options.initialReloadInterval;
         if (this.options.reloadIntervalSelection?.length ?? 0 > 0) {
             let heading = '&#x1f680; ';
             let pulldownItems = [];
@@ -435,20 +117,20 @@ export class Frame {
                 select: (event, value, obj) => {
                     let length = parseFloat(value);
                     if (length == 0) {
-                        this.update();
+                        // reload now, w/o changing the settings
                         setReloadLabel(this.reloadPulldown, this.reloadInterval);
                     }
                     else if (length < 0) {
-                        this.reloadInterval = 0;
+                        // suspend auto reloading
+                        this.reloadInterval = -1;
                         this.reloadPulldown.setLabel(heading + 'Auto Reload Off');
-                        this.options.reloadIntervalChange(this.reloadInterval);
                     }
                     else {
+                        // reload periodically
                         this.reloadInterval = length;
-                        this.options.reloadIntervalChange(this.reloadInterval);
                     }
                     this.suspendUntil = 0;
-                    this.scheduleReset();
+                    this.options.reloadIntervalChange(length);
                 }
             });
             setReloadLabel(this.reloadPulldown, this.reloadInterval);
@@ -483,94 +165,17 @@ export class Frame {
         button.css(this.style.button).appendTo(this.buttonDiv);
     }
 
-    start() {
-        this.lastUpdateTime = 0;
-        this.currentUpdateTime = 0;
-        this.pendingRequests = 0;
-        this.suspendUntil = 0;
-        this.resetAt = 0;
-        this._beat();
+    
+    setStatus(html) {
+        this.statusSpan.html(html);
     }
     
-    suspend(len) {
-        this.suspendUntil = $.time() + len;
+    setProgress(html) {
+        this.progressSpan.html(html);
     }
     
-    scheduleReset() {
-        if (this.options.resetDelay > 0) {
-            this.resetAt = $.time() + this.options.resetDelay;
-        }
-    }
-    
-    async update() {            
-        let now = $.time();
-        if (now - this.currentUpdateTime < 60) {
-            this.pendingRequests++;
-            return;
-        }
-        this.lastUpdateTime = now;
-        this.currentUpdateTime = now;
-        this.pendingRequests = 0;
-        this.suspendUntil = 0;
-        
-        let status = await this.options.reload();
-        this.currentUpdateTime = 0;
-        if (status == null) {
-            let date = (new JGDateTime(this.lastUpdateTime)).asString('%a, %b %d %H:%M');
-            status = 'Update: ' + date;
-        }
-        this.statusSpan.text(status);
-    }
-
-    setStatus(text) {
-        this.statusSpan.html(text);
-    }
-    
-    _beat() {
-        const now = $.time();
-        if ((this.resetAt > 0) && (now > this.resetAt)) {
-            window.location.reload(false);
-        }
-        
-        this.clockDiv.text((new JGDateTime(now)).asString('%a, %b %d %H:%M %Z'));
-
-        let lapse = now - this.lastUpdateTime;
-        let suspend = this.suspendUntil - now;
-        let togo = (this.reloadInterval > 0 ? this.reloadInterval - lapse : 1e10);
-        if ((this.lastUpdateTime == 0) || (this.pendingRequests > 0)) {
-            togo = 0;
-        }
-        if (suspend > togo) {
-            togo = suspend;
-        }
-
-        let text;
-        if (this.lastUpdateTime == 0) {
-            text = 'initial loading';
-        }
-        else {
-            text = lengthString(lapse, false, parseInt) + ' ago';
-        }
-        if (this.currentUpdateTime > 0) {
-            text += ', receiving data... ' + parseInt(now - this.currentUpdateTime) + ' s';
-        }
-        else {
-            if (suspend >= togo-1) {
-                text += ', update suspended for next ' + parseInt(togo) + ' s';
-            }
-            else if (
-                ((this.reloadInterval > 60) && (togo < 10)) ||
-                    ((this.reloadInterval > 1800) && (togo < 60))
-            ){
-                text += ', reload in ' + parseInt(togo) + ' s';
-            }
-        }
-        this.beatSpan.text('(' + text + ')');
-        
-        if (togo <= 0) {
-            this.update();
-        }
-        setTimeout(()=>{this._beat();}, 1000);
+    setClockTime(time) {
+        this.clockDiv.text((new JGDateTime(time)).asString('%a, %b %d %H:%M %Z'));
     }
 };
 
@@ -983,129 +588,3 @@ export class GridPullDown {
         this.lastValue = grid;
     }        
 };
-
-
-
-export class SaveConfigDialog {
-    constructor(obj, options={}) {
-        const defaults = {
-            title: 'Save Configuration',
-            saveConfig: (name, doc) => {}
-        };
-        this.obj = obj;
-        this.options = $.extend(true, {}, defaults, options);
-
-        this.dialog = new JGDialogWidget(this.obj, {
-            title: this.options.title,
-            y: 50,
-        });
-    }
-
-    open(config) {
-        let div = this.obj.find('.jaga-dialog-content');
-        div.html(`
-            <table style="margin-top:1em;margin-left:1em">
-              <tr><td>Name</td><td><input pattern="^[a-zA-Z][a-zA-Z0-9_\\-]*$" required="true" placeholder="use only alphabets or digits, do not use space" style="width:30em"></td></tr>
-              <tr><td>Title</td><td><input placeholder="optional" style="width:30em"></td></tr>
-              <tr><td>Description</td><td><textarea rows="3" cols="60" placeholder="optional"></textarea></td></tr>
-              <tr><td>---</td><td></td></tr>
-              <tr><td>Control Mode</td><td>
-                <label><input type="radio" name="mode" value="normal" checked>Normal</label>
-              </td></tr>
-              <tr><td></td><td>
-                <label><input type="radio" name="mode" value="protedted">Protected
-                <span font-size="60%">(layout cannot be modified)</span></label>
-              </td></tr>
-              <tr><td></td><td>
-                <label><input type="radio" name="mode" value="display">Display
-                <span font-size="60%">(no interaction, simple header)</span></label>
-              </td></tr>
-            </table>
-            <div style="display:flex;justify-content:flex-end;padding-right:10px;margin:1em" class="jaga-dialog-button-pane">
-                <button>Save &amp; Reload</button><button>Cancel</button>
-            </div>
-            <hr>
-            <details>
-              <summary>See the content</summary>
-              <textarea rows="30" style="width:calc(100% - 10px)" autocomplete="off" spellcheck="false" wrap="off">
-            </details>
-        `);
-
-        let orgName = '';
-        let validNamePattern = new RegExp('^[a-zA-Z0-9][a-zA-Z0-9_\\-]*$');
-        if (config.meta?.name?.length>0 && validNamePattern.test(config.meta?.name)) {
-            orgName = config.meta.name;
-        }
-        else {
-            orgName = '';
-        }
-        let prevName = orgName;
-
-        let record = JSON.parse(JSON.stringify(config));
-        for (let key in record) {
-            if ((key.length > 0) && ((key[0] == '_') || (key == 'meta'))) {
-                delete record[key];
-            }
-        }
-        
-        div.find('input').at(0).val(prevName);
-        div.find('input').at(1).val(config.meta?.title ?? '');
-        div.find('textarea').at(0).val(config.meta?.description ?? '');
-        div.find('textarea').at(1).val($.JSON_stringify(record, {expandAll:false}));
-        if (div.find('input').at(0).val().length == 0) {
-            div.find('button').at(0).enabled(false);
-        }
-            
-        // name input
-        div.find('input').at(0).bind('input', e=>{
-            let name = $(e.target).val();
-            if (validNamePattern.test(name) || name == '') {
-                prevName = name;
-            }
-            else {
-                $(e.target).val(prevName);
-            }
-            div.find('button').at(0).enabled(e.target.validity.valid);
-        });
-        
-        // buttons
-        div.find('button').bind('click', e=>{
-            const cmd = $(e.target).closest('button').text();
-            if (cmd == "Cancel") {
-                this.dialog.close();
-                return;
-            }
-            
-            if (config.meta === undefined) {
-                config.meta = {};
-            }
-            config.meta.name = div.find('input').at(0).val();
-            config.meta.title = div.find('input').at(1).val();
-            config.meta.description = div.find('textarea').at(0).val();
-            
-            let updated_config = JSON.parse(div.find('textarea').at(1).val());
-            if (updated_config.meta === undefined) {
-                updated_config.meta = {};
-            }
-            updated_config.meta.name = div.find('input').at(0).val();
-            updated_config.meta.title = div.find('input').at(1).val();
-            updated_config.meta.description = div.find('textarea').at(0).get().value;
-            if (div.find('input').at(3).checked()) {
-                updated_config.control.mode = 'protected';
-            }
-            else if (div.find('input').at(4).checked()) {
-                updated_config.control.mode = 'display';
-            }
-            else {
-                updated_config.control.mode = 'normal';
-            }
-            
-            this.options.saveConfig(updated_config.meta.name, updated_config);
-            
-            this.dialog.close();
-        });
-
-        this.dialog.open();
-    }
-};
-

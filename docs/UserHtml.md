@@ -3,12 +3,10 @@ title: User HTML
 ---
 
 # Overview
-Files placed under project's `userhtml` directory are accessible though the SlowDash Web API of `/api/userhtml/{filename}`.
+Files placed under project's `userhtml` directory are accessible though the SlowDash Web API of `/userhtml/{filename}`.
 If a HTML file is placed, it can use the full functionality of HTML, such as applying user CSS, embedding Javascript, and importing external JavaScript libraries. HTML files immediately under the `userhtml` directory will be listed on the SlowDash catalog panel, together with the SlowDash standard dashboards and plot layouts.
 
-If a requested file does not exist, then the file is searched for from the SlowDash web directory (`slowdash/app/sites`); 
-in this way, user HTML can use the SlowDash API and Javascript library (SlowJS) as if they exist under the user HTML directory (therefore those are accessible with relative URL in user pages).
-This, on the other hand, may cause name conflicts. All names starting with "slow" are reserved, and should not be used in user HTML.
+The SlowDash Javascript library, SlowJS, can be accessed at `/userhtml/slowjs`, as if the `slowjs` directory exists under the User HTML directory, allowing the user HTML scripts to use the SlowDash functionality. The user HTML directory cannot contain a file named `slowjs`.
 
 # Examles
 Some examples can be found at `ExampleProjects/Advanced/UserHTML`.

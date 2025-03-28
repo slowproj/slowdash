@@ -340,11 +340,11 @@ Here is an example for enabling User Module to respond to data requests with a t
 import slowlette
 webapi = slowlette.Slowlette()
 
-@webapi.get('/channels')
+@webapi.get('/api/channels')
 def get_channels():
     return [ { 'name': 'data_query', 'type': 'tree' } ]
 
-@webapi.get('/data/{channels}')
+@webapi.get('/api/data/{channels}')
 def get_data(channels:str, length:float=None, to:float=None, resample:float=None, reducer:str=None):
     if 'data_query' not in channels.split(','):
         return None
@@ -375,7 +375,7 @@ async def _setup(slowdash):
     channels = await slowdash.request_channels()
 
     
-@webapi.get('/config/contentlist')
+@webapi.get('/api/config/contentlist')
 def add_slowplot_PlotLayoutOverride():
     # this entry will be "injected" into the list, through Slowlette's response aggregation
     entries = [{
@@ -388,7 +388,7 @@ def add_slowplot_PlotLayoutOverride():
     return entries
 
 
-@webapi.get('/config/content/slowplot-PlotLayoutOverride.json')
+@webapi.get('/api/config/content/slowplot-PlotLayoutOverride.json')
 def generate_slowplot_PlotLayoutOverride(request:slowlette.Request):
     request.abort()   # stop propagation, in order not to be handled by SlowDash (no aggregation)
 

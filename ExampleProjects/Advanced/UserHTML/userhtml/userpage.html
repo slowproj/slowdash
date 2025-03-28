@@ -62,12 +62,12 @@
         let layout = new Layout('#layout');
         await layout.configure(config);
         
-        const response = await fetch('./api/data/ch0,ch1?length=86400&resample=300');
+        const response = await fetch('/api/data/ch0,ch1?length=86400&resample=300');
         if (response.ok) {
             layout.draw(await response.json());
         }
 
-        const responseSrc = await fetch('./api/userhtml/userpage.html');
+        const responseSrc = await fetch('userpage.html');
         if (responseSrc.ok) {
             document.querySelector('#src').textContent = await responseSrc.text();
         }

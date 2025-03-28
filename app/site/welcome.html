@@ -9,39 +9,32 @@
   <link rel="icon" href="favicon.png">
   <link rel="stylesheet" type="text/css" href="slowjs/slowdash.css">
   <link rel="stylesheet" type="text/css" id="sd-theme-css">
-  <style type="text/css">
-    body {
-        margin: 0;
-        overflow: hidden;
-    }
-  </style>
 </head>
 
-<body>
+
+<body style="margin:0">
   <div id="sd-header"></div>
   <div id="sd-layout"></div>
 
   <script type="module">
     import { JG as $ } from './slowjs/jagaimo/jagaimo.mjs';
     import { Layout } from './slowjs/layout.mjs';
-    import { boot, Frame } from './slowjs/frame.mjs';
+    import { Frame } from './slowjs/frame.mjs';
+    import { Platform } from './slowjs/platform.mjs';
 
-    window.addEventListener('DOMContentLoaded', function() {
-        let defaults = {};
-        let optparse = options => options;
-        boot(defaults, optparse, start);
-    });
+    let config = {
+        control: {
+            grid: { 'rows': 1, 'columns': 1 },
+            inactive: true,
+        },
+        panels: [
+            { type: 'welcome' }
+        ]
+    };
 
-    async function start(config) {
-        config = {
-            control: {
-                grid: { 'rows': 1, 'columns': 1 },
-                inactive: true,
-            },
-            panels: [
-                { type: 'welcome' }
-            ]
-        };
+
+    async function main() {
+        config = await Platform.initialize(config);
 
         $('#sd-layout').css({'width':"100%", 'margin':0, 'padding':0});
         let layout = new Layout($('#sd-layout'), {});
@@ -62,5 +55,6 @@
         });
     }
 
+    window.addEventListener('DOMContentLoaded', main);
   </script>
 </body>

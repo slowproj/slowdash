@@ -192,14 +192,12 @@ class HtmlPanel extends Panel {
                 if ((isLive === undefined) || (isLive === null)) {
                     isLive = ! (isInput || isButton);   // <input> and <button> are not live by default
                 }
-                const defaultValue = isInput ? (isButton ? null : element.val()) : element.text();
                 this.variables.push($.extend(
                     {
                         type: type,
                         metric: metric,
                         live: !! isLive,
                         waiting: true,
-                        defaultValue: defaultValue,
                     },
                     Transformer.decompose(metric)
                 ));
@@ -287,13 +285,12 @@ class HtmlPanel extends Panel {
             }
 
             let value = data?.x ?? null;
-            if (variable.transform) {
-                value = variable.transform.apply(value);
+            if (value) {
+                if (variable.transform) {
+                    value = variable.transform.apply(value);
+                }
+                values[variable.metric] = value;
             }
-            if ((value == undefined) || (value == null)) {
-                value = variable.defaultValue;
-            }
-            values[variable.metric] = value;
         }
         
         for (let type of [ 'sd-value', 'sd-enabled' ]) {
@@ -506,7 +503,6 @@ class HrefPanel extends Panel {
             }
             this_url += `sd-from=${range.from}&sd-to=${range.to}`;
         }
-        console.log(this_url);
         this.iframe.attr('src', this_url); // this will cause reloading
     }
 }

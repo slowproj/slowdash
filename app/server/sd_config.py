@@ -87,7 +87,7 @@ class ConfigComponent(Component):
         self.project_dir = self.project.project_dir
         
 
-    @slowlette.get('/config')
+    @slowlette.get('/api/config')
     async def get_config(self):
         self.project.update()
         doc = {
@@ -113,7 +113,7 @@ class ConfigComponent(Component):
         return doc
 
         
-    @slowlette.get('/config/contentlist')
+    @slowlette.get('/api/config/contentlist')
     async def get_content_meta(self):
         filelist = []
         for filepath in glob.glob(os.path.join(self.project_dir, 'config', '*-*.*')):
@@ -146,7 +146,7 @@ class ConfigComponent(Component):
         return doc
 
         
-    @slowlette.get('/config/content/{filename}')
+    @slowlette.get('/api/config/content/{filename}')
     async def get_content(self, filename:str, content_type:str='json'):
         meta, content = await self._load_content(filename, content_type)
         try:
@@ -161,7 +161,7 @@ class ConfigComponent(Component):
         return content
 
 
-    @slowlette.get('/config/filelist')
+    @slowlette.get('/api/config/filelist')
     async def get_filelist(self, sortby='mtime', reverse:bool=False):
         if self.project_dir is None:
             return []
@@ -193,7 +193,7 @@ class ConfigComponent(Component):
         return filelist
 
         
-    @slowlette.get('/config/file/{filename}')
+    @slowlette.get('/api/config/file/{filename}')
     async def get_file(self, filename:str):
         filepath, ext = self._get_filepath_ext(filename, os.R_OK)
         if filepath is None:
@@ -207,7 +207,7 @@ class ConfigComponent(Component):
         return slowlette.FileResponse(filepath)
 
         
-    @slowlette.post('/config/file/{filename}')
+    @slowlette.post('/api/config/file/{filename}')
     async def post_file(self, filename: str, body:bytes, overwrite:str='no'):
         filepath, ext = self._get_filepath_ext(filename)
         if filepath is None:
@@ -268,7 +268,7 @@ class ConfigComponent(Component):
         return slowlette.Response(201) # Created
 
 
-    @slowlette.delete('/config/file/{filename}')
+    @slowlette.delete('/api/config/file/{filename}')
     async def delete_file(self, filename: str):
         filepath, ext = self._get_filepath_ext(filename, os.W_OK)
         if filepath is None:

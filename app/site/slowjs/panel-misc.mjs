@@ -7,7 +7,7 @@ export { WelcomePanel, ToolsPanel, FileManagerPanel, TaskManagerPanel, CruisePla
 
 import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
 import { JGIndicatorWidget } from './jagaimo/jagawidgets.mjs';
-import { upload } from './frame.mjs';
+import { Platform } from './platform.mjs';
 import { Panel } from './panel.mjs';
 
 
@@ -201,7 +201,7 @@ pages:
             e.preventDefault();
             const filename = 'slowcruise-' + nameInput.val() + '.yaml';
             const content = this.contentDiv.find('textarea').val();
-            upload(this.savePopup, 'config/file/' + filename, content);
+            Platform.upload(this.savePopup, 'config/file/' + filename, content);
         });
     }
 
@@ -301,7 +301,7 @@ class ConfigEditorPanel extends Panel {
             if (filename && filename.length < 3) {
                 return;
             }
-            upload(this.buttonDiv.find('dialog'), 'config/file/' + filename, this.textarea.val(), {
+            Platform.upload(this.buttonDiv.find('dialog'), 'config/file/' + filename, this.textarea.val(), {
                 contentType: 'text/plain; charset=utf-8',
                 overwritable: true,
                 quietOnSuccess: true,
@@ -546,7 +546,7 @@ class FileManagerPanel extends Panel {
             const reader = new FileReader();
             reader.onload = (e) => {
                 const content = e.target.result;
-                upload(this.savePopup, 'config/file/' + file.name, content, {
+                Platform.upload(this.savePopup, 'config/file/' + file.name, content, {
                     contentType: 'application/octet-stream',
                     overwritable: this.overwritable.val(),
                     quietOnSuccess: true,

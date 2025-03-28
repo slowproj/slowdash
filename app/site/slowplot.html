@@ -9,15 +9,9 @@
   <link rel="icon" href="favicon.png">
   <link rel="stylesheet" type="text/css" href="slowjs/slowdash.css">
   <link rel="stylesheet" type="text/css" id="sd-theme-css">
-  <style type="text/css">
-    body {
-        margin: 0;
-        overflow: hidden;
-    }
-  </style>
 </head>
 
-<body>
+<body style="margin:0">
   <div id="sd-header"></div>
   <div id="sd-layout">Loading Configuration...</div>
 
@@ -25,11 +19,17 @@
     import { JG as $, JGDateTime } from './slowjs/jagaimo/jagaimo.mjs';
     import { JGDialogWidget } from './slowjs/jagaimo/jagawidgets.mjs';
     import { Layout } from './slowjs/layout.mjs';
-    import { boot, Frame, TimeRangePullDown, GridPullDown, SaveConfigDialog, upload } from './slowjs/frame.mjs';
-    import { Controller } from './slowjs/control.mjs';
+    import { Controller, Scheduler } from './slowjs/control.mjs';
+    import { Platform, SaveConfigDialog } from './slowjs/platform.mjs';
+    import { Frame, TimeRangePullDown, GridPullDown } from './slowjs/frame.mjs';
 
-    window.addEventListener('DOMContentLoaded', function() {
-        let defaults = {
+
+    // takes urlOptions, returns [ defaults, args ]
+    // urlOptions: key-value pairs in the URL query string
+    // defaults: used when not specified elsewhere
+    // args: overwrite values specified elsewhere
+    function buildSettings(urlOptions) {
+        const defaults = {
             control: {
                 range: {length: 900},
                 reload: 300,
@@ -38,93 +38,84 @@
             style: {},
             panels: []
         };
-
-        function optparse(options) {
-            let args = {
-                control: {
-                    range: {},
-                    grid: {},
-                },
-            };
-            if (options.mode) {
-                args.control.mode = options.mode;
-            }
-            if (options.theme) {
-                args.style = { theme: options.theme };
-            }
-            if (options.time) {
-                let to = (new JGDateTime(options.time)).asInt();
-                if (to > 0) {
-                    args.control.range.to = to;
-                }
-            }
-            if (options.to) {
-                let to = (new JGDateTime(options.to)).asInt();
-                if (to > 0) {
-                    args.control.range.to = to;
-                }
-            }
-            if (options.length && parseFloat(options.length) > 10) {
-                args.control.range.length = parseFloat(options.length);
-            }
-            if (options.reload) {
-                if (parseFloat(options.reload) >= 1) {
-                    args.control.reload = Math.max(1, parseFloat(options.reload));
-                }
-                else {
-                    args.control.reload = parseFloat(0);
-                }
-            }
-            if (options.grid) {
-                let [rows, cols] = options.grid.split('x');
-                args.control.grid = { rows: rows, columns: cols };
-            }
-            if (options.channel) {
-                args.panels = [];
-                for (const item of options.channel.split(';')) {
-                    const [channels, type] = item.split('/');
-                    if ((type ?? 'timeseries') == 'timeseries') {
-                        let panel = { type: 'timeseries', plots: [] };
-                        for (const ch of channels.split(',')) {
-                            panel.plots.push({ type: 'timeseries', channel: ch });
-                        }
-                        args.panels.push(panel);
-                    }
-                    else if (['histogram', 'ts-histogram', 'histogram2d', 'graph'].includes(type)) {
-                        let panel = { type: 'plot', axes: {}, plots: [] };
-                        if (type == 'histogram2d') {
-                            panel['axes']['colorscale'] = 'Parula';
-                        }
-                        for (const ch of channels.split(',')) {
-                            panel.plots.push({ type: type, channel: ch });
-                        }
-                        args.panels.push(panel);
-                    }
-                    else if (['table', 'tree', 'blob'].includes(type)) {
-                        for (const ch of channels.split(',')) {
-                            args.panels.push({ type: type, channel: ch });
-                        }
-                    }
-                }
-            }
-            return args;
-        }
+        const args = {
+            control: {
+                range: {},
+                grid: {},
+            },
+        };
         
-        boot(defaults, optparse, start);
-    });
+        if (urlOptions.mode) {
+            args.control.mode = urlOptions.mode;
+        }
+        if (urlOptions.theme) {
+            args.style = { theme: urlOptions.theme };
+        }
+        if (urlOptions.time) {
+            let to = (new JGDateTime(urlOptions.time)).asInt();
+            if (to > 0) {
+                args.control.range.to = to;
+            }
+        }
+        if (urlOptions.to) {
+            let to = (new JGDateTime(urlOptions.to)).asInt();
+            if (to > 0) {
+                args.control.range.to = to;
+            }
+        }
+        if (urlOptions.length && parseFloat(urlOptions.length) > 10) {
+            args.control.range.length = parseFloat(urlOptions.length);
+        }
+        if (urlOptions.reload) {
+            if (parseFloat(urlOptions.reload) >= 1) {
+                args.control.reload = Math.max(1, parseFloat(urlOptions.reload));
+            }
+            else {
+                args.control.reload = parseFloat(0);
+            }
+        }
+        if (urlOptions.grid) {
+            let [rows, cols] = urlOptions.grid.split('x');
+            args.control.grid = { rows: rows, columns: cols };
+        }
+        if (urlOptions.channel) {
+            args.panels = [];
+            for (const item of urlOptions.channel.split(';')) {
+                const [channels, type] = item.split('/');
+                if ((type ?? 'timeseries') == 'timeseries') {
+                    let panel = { type: 'timeseries', plots: [] };
+                    for (const ch of channels.split(',')) {
+                        panel.plots.push({ type: 'timeseries', channel: ch });
+                    }
+                    args.panels.push(panel);
+                }
+                else if (['histogram', 'ts-histogram', 'histogram2d', 'graph'].includes(type)) {
+                    let panel = { type: 'plot', axes: {}, plots: [] };
+                    if (type == 'histogram2d') {
+                        panel['axes']['colorscale'] = 'Parula';
+                    }
+                    for (const ch of channels.split(',')) {
+                        panel.plots.push({ type: type, channel: ch });
+                    }
+                    args.panels.push(panel);
+                }
+                else if (['table', 'tree', 'blob'].includes(type)) {
+                    for (const ch of channels.split(',')) {
+                        args.panels.push({ type: type, channel: ch });
+                    }
+                }
+            }
+        }
 
-    function changeMode(mode) {
-        let url = window.location.href;
-        if (window.location.search.match(/(\?|&)?mode(=[a-zA-Z0-9]*)?/)) {
-            url = url.replace(/mode(=[a-zA-Z0-9]*)?/, 'mode=' + mode);
-        }
-        else {
-            url += ((url.indexOf('?') > 0) ? '&' : '?') + 'mode=' + mode;
-        }
-        window.location.href = url;
+        return [ defaults, args ];
     }
 
-    async function start(config) {
+
+    async function main() {
+        const options = Platform.getUrlOptions();
+        const [ defaults, args ] = buildSettings(options);
+        let config = await Platform.initialize(defaults, options, args);
+
         if (config.meta?.name) {
             document.title = 'SD ' + config.meta.name;
         }
@@ -156,14 +147,30 @@
         
         let layout = new Layout($('#sd-layout'), style);
         let controller = new Controller(layout);
-        
+        let scheduler;
         let frame = new Frame($('#sd-header'), {
             title: title,
             style: style,
-            reloadInterval: config.control.reload,
-            reloadIntervalChange: (interval) => { config.control.reload = interval; },
-            reload: async () => { return await update(controller, config); },
+            initialReloadInterval: config.control.reload,
+            reloadIntervalChange: (interval) => {
+                config.control.reload = interval;
+                scheduler.start({updateInterval: interval});
+                scheduler.scheduleReset();
+            },
+        });
+        scheduler = new Scheduler({
+            updateInterval: config.control.reload,
             resetDelay: resetDelay,
+            update: async () => { return await update(controller, config); },
+            setStatus: (statusText) => {
+                frame.setStatus(statusText);
+            },
+            setProgress: (progressText) => {
+                frame.setProgress(progressText);
+            },
+            setBeatTime: (time) => {
+                frame.setClockTime(time);
+            },
         });
         
         let saveDiv = $('<div>').appendTo($('body'));
@@ -175,7 +182,7 @@
                 if (doc.control?.range?.to) {
                     delete doc.control.range.to;
                 }
-                upload(savePopup, filename, $.JSON_stringify(doc, {expandAll: false}), {
+                Platform.upload(savePopup, filename, $.JSON_stringify(doc, {expandAll: false}), {
                     contentType: 'application/json; charset=utf-8',
                     on_success: ()=> {
                         let url = window.location.origin + window.location.pathname;
@@ -201,8 +208,8 @@
                 config.control.range.length = Math.round(length);
                 config.control.range.to = (to === null) ? null : Math.round(to);
                 currentDisplayTimeRange = null;
-                frame.scheduleReset();
-                frame.update();
+                scheduler.scheduleReset();
+                scheduler.update();
             },
             select_custom_item: key => {
                 if (currentDisplayTimeRange) {
@@ -210,7 +217,7 @@
                     config.control.range.length = Math.round(to-from);
                     config.control.range.to = Math.round(to);
                     rangePullDown.set(config.control.range.length, config.control.range.to);
-                    frame.update();
+                    scheduler.update();
                 }
                 else {
                     rangePullDown.set(config.control.range.length, config.control.range.to);
@@ -245,14 +252,6 @@
             gridPulldown.set(config.control.grid.rows + 'x' + config.control.grid.columns);
         }
 
-        if (false) {
-            let newButton = $('<button>').html("&#x1f4dd;").bind('click', e=>{
-                window.open('./slowplot.html?grid=2x1');
-            });
-            newButton.attr('title', 'New');
-            frame.appendButton(newButton);
-        }
-        
         if (! (config.control?.inactive ?? false)) {
             if ((config.control?.mode??'') == 'protected') {
                 let unlockButton = $('<button>').html("&#x1f511;").bind('click', e=>{
@@ -297,28 +296,35 @@
             });
         }
             
-        await controller.configure(config, {}, {
-            changeDisplayTimeRange: range => {
-                currentDisplayTimeRange = range;
-            },
-            forceUpdate: () => {
-                frame.update();
-            },
-            suspend: (duration=300) => {
-                frame.suspend(duration);
-                frame.scheduleReset();
-            },
-        });
-        frame.start();
         $(window).bind('resize', ()=>{
             if (window.innerWidth > 0) {
                 $('#sd-layout').css('width', '').css('height', '');
                 controller.configure();
             }
         });
+        
+        await controller.configure(config, {}, {
+            changeDisplayTimeRange: range => {
+                currentDisplayTimeRange = range;
+            },
+            forceUpdate: () => {
+                scheduler.update();
+            },
+            suspend: (duration=300) => {
+                scheduler.suspend(duration);
+                scheduler.scheduleReset();
+            },
+        });
+
+        scheduler.start();
     }
 
 
+    // This will be called by scheduler.update()
+    //   which can be called by the frame.reloadIntervalChange() callabcks,
+    //   or by the controller.forceUpdate() callback.
+    // This will call controller.update().
+    // By going through the scheduler, the next update will be re-scheduled properly.
     async function update(controller, config) {
         let length = config.control?.range?.length ?? 0;
         if (! (length > 0)) {
@@ -326,9 +332,10 @@
         }
         let to = config.control?.range?.to ?? 0;
         if (! (to > 0)) {
-            to =  $.time() + 3;
+            to = 0;
         }
         let from = to - length;
+        
         const status = await controller.update({from:from, to:to});
         if (status.code == 200) {
             return null;
@@ -346,6 +353,18 @@
     }
 
 
+    function changeMode(mode) {
+        let url = window.location.href;
+        if (window.location.search.match(/(\?|&)?mode(=[a-zA-Z0-9]*)?/)) {
+            url = url.replace(/mode(=[a-zA-Z0-9]*)?/, 'mode=' + mode);
+        }
+        else {
+            url += ((url.indexOf('?') > 0) ? '&' : '?') + 'mode=' + mode;
+        }
+        window.location.href = url;
+    }
+
+
     function openConfigUrlDialog(dialog, config, currentDisplayTimeRange) {
         const updated_config = JSON.parse(JSON.stringify(config));
         if (currentDisplayTimeRange !== null) {
@@ -356,7 +375,7 @@
             };
         }
         else {
-            updated_config.control.range.to = $.time();
+            updated_config.control.range.to = 0;
         }
         updated_config.control.reload = 0;
         
@@ -461,5 +480,7 @@
         dialog.open();
     }
 
+
+    window.addEventListener('DOMContentLoaded', main);
   </script>    
 </body>

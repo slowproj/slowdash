@@ -133,9 +133,11 @@ with open(os.path.join(html_dir, '.htaccess'), 'w') as f:
     f.write('\n')
     f.write('RewriteEngine On\n')
     if interface == 'CGI':
-        f.write('RewriteRule ^api/(.*)$ slowdash.cgi/$1\n')
+        f.write('RewriteRule ^api/(.*)$ slowdash.cgi/api/$1\n')
+        f.write('RewriteRule ^usermodule/(.*)$ slowdash.cgi/usermodule/$1\n')
     else:
-        f.write('RewriteRule ^api/(.*)$ slowdash.wsgi/$1\n')
+        f.write('RewriteRule ^api/(.*)$ slowdash.wsgi/api/$1\n')
+        f.write('RewriteRule ^usermodule/(.*)$ slowdash.wsgi/usermodule/$1\n')
     f.write('\n')
     if user_list is not None:
         f.write('AuthType Basic\n')

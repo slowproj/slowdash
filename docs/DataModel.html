@@ -211,58 +211,52 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb12-1"><a href=
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;t&quot;</span><span class="er">:</span> <span class="ot">[</span><span class="er">T0</span><span class="ot">,</span> <span class="er">T1</span><span class="ot">,</span> <span class="er">T2</span><span class="ot">,</span> <span class="er">...</span><span class="ot">]</span><span class="fu">,</span> </span>
 <span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="er">X0</span><span class="ot">,</span> <span class="er">X1</span><span class="ot">,</span> <span class="er">X2</span><span class="ot">,</span> <span class="er">...</span><span class="ot">]</span><span class="fu">,</span></span>
 <span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
-<h3 id="receiving-results-in-csv">Receiving Results in CSV</h3>
-<p>[Depreciated] - Currently only time-series data is supported. All the
-other data types are skipped.</p>
-<pre><code>http://CGI/table/CHANNEL_LIST?OPTIONS</code></pre>
-<p>[TODO]</p>
-<pre><code>http://CGI/table/(CH0,CH1,CH2)-&gt;align()-&gt;table()?OPTIONS</code></pre>
 <h1 id="value-types-and-json-representation">Value Types and JSON
 Representation</h1>
 <h3 id="scalar">Scalar</h3>
-<div class="sourceCode" id="cb15"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="er">X</span></span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="er">X</span></span></code></pre></div>
 <ul>
 <li><code>X</code> can be a number, string, bool, or
 <code>null</code>.</li>
 </ul>
 <h3 id="histogram">Histogram</h3>
-<div class="sourceCode" id="cb16"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> </span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;bins&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;min&quot;</span><span class="fu">:</span> <span class="er">MIN</span><span class="fu">,</span> <span class="dt">&quot;max&quot;</span><span class="fu">:</span> <span class="er">MAX</span> <span class="fu">},</span> </span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;counts&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">C0</span><span class="ot">,</span> <span class="er">C1</span><span class="ot">,</span> <span class="er">C2</span><span class="ot">,</span> <span class="er">...</span> <span class="ot">]</span> </span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;bins&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;min&quot;</span><span class="fu">:</span> <span class="er">MIN</span><span class="fu">,</span> <span class="dt">&quot;max&quot;</span><span class="fu">:</span> <span class="er">MAX</span> <span class="fu">},</span> </span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;counts&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">C0</span><span class="ot">,</span> <span class="er">C1</span><span class="ot">,</span> <span class="er">C2</span><span class="ot">,</span> <span class="er">...</span> <span class="ot">]</span> </span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <ul>
 <li>Having <code>bins</code> identifies the object as a Histogram.</li>
 <li>Number-of-bins is the length of the <code>counts</code> array.</li>
 </ul>
 <h3 id="d-histogram">2D Histogram</h3>
-<div class="sourceCode" id="cb17"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> </span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;xbins&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;min&quot;</span><span class="fu">:</span> <span class="er">MIN</span><span class="fu">,</span> <span class="dt">&quot;max&quot;</span><span class="fu">:</span> <span class="er">MAX</span> <span class="fu">},</span> </span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;ybins&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;min&quot;</span><span class="fu">:</span> <span class="er">MIN</span><span class="fu">,</span> <span class="dt">&quot;max&quot;</span><span class="fu">:</span> <span class="er">MAX</span> <span class="fu">},</span> </span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;counts&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>        <span class="ot">[</span> <span class="er">C00</span><span class="ot">,</span> <span class="er">C01</span><span class="ot">,</span> <span class="er">C02</span><span class="ot">,</span> <span class="er">...</span> <span class="ot">],</span></span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>        <span class="ot">[</span> <span class="er">C10</span><span class="ot">,</span> <span class="er">C11</span><span class="ot">,</span> <span class="er">C12</span><span class="ot">,</span> <span class="er">...</span> <span class="ot">],</span></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>        <span class="er">...</span></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span></span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> </span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;xbins&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;min&quot;</span><span class="fu">:</span> <span class="er">MIN</span><span class="fu">,</span> <span class="dt">&quot;max&quot;</span><span class="fu">:</span> <span class="er">MAX</span> <span class="fu">},</span> </span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;ybins&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;min&quot;</span><span class="fu">:</span> <span class="er">MIN</span><span class="fu">,</span> <span class="dt">&quot;max&quot;</span><span class="fu">:</span> <span class="er">MAX</span> <span class="fu">},</span> </span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;counts&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>        <span class="ot">[</span> <span class="er">C00</span><span class="ot">,</span> <span class="er">C01</span><span class="ot">,</span> <span class="er">C02</span><span class="ot">,</span> <span class="er">...</span> <span class="ot">],</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>        <span class="ot">[</span> <span class="er">C10</span><span class="ot">,</span> <span class="er">C11</span><span class="ot">,</span> <span class="er">C12</span><span class="ot">,</span> <span class="er">...</span> <span class="ot">],</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>        <span class="er">...</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <ul>
 <li>Having <code>ybins</code> identifies the object as a 2D
 Histogram.</li>
 <li>Number-of-bins is the length of the <code>counts</code> array.</li>
 </ul>
 <h3 id="graph">Graph</h3>
-<div class="sourceCode" id="cb18"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> </span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;labels&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">XLABEL</span><span class="ot">,</span> <span class="er">YLABEL</span><span class="ot">,</span> <span class="er">ZLABEL</span> <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">x0</span><span class="ot">,</span> <span class="er">x1</span><span class="ot">,</span> <span class="er">x2</span><span class="ot">,</span> <span class="er">...</span> <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">y0</span><span class="ot">,</span> <span class="er">y1</span><span class="ot">,</span> <span class="er">y2</span><span class="ot">,</span> <span class="er">...</span> <span class="ot">]</span><span class="fu">,</span>    </span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;z&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">z0</span><span class="ot">,</span> <span class="er">z1</span><span class="ot">,</span> <span class="er">z2</span><span class="ot">,</span> <span class="er">...</span> <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;x_err&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">ex0</span><span class="ot">,</span> <span class="er">ex1</span><span class="ot">,</span> <span class="er">ex2</span><span class="ot">,</span> <span class="er">...</span> <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;y_err&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">ey0</span><span class="ot">,</span> <span class="er">ey1</span><span class="ot">,</span> <span class="er">ey2</span><span class="ot">,</span> <span class="er">...</span> <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;z_err&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">ez0</span><span class="ot">,</span> <span class="er">ez1</span><span class="ot">,</span> <span class="er">ez2</span><span class="ot">,</span> <span class="er">...</span> <span class="ot">]</span></span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> </span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;labels&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">XLABEL</span><span class="ot">,</span> <span class="er">YLABEL</span><span class="ot">,</span> <span class="er">ZLABEL</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">x0</span><span class="ot">,</span> <span class="er">x1</span><span class="ot">,</span> <span class="er">x2</span><span class="ot">,</span> <span class="er">...</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">y0</span><span class="ot">,</span> <span class="er">y1</span><span class="ot">,</span> <span class="er">y2</span><span class="ot">,</span> <span class="er">...</span> <span class="ot">]</span><span class="fu">,</span>    </span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;z&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">z0</span><span class="ot">,</span> <span class="er">z1</span><span class="ot">,</span> <span class="er">z2</span><span class="ot">,</span> <span class="er">...</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;x_err&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">ex0</span><span class="ot">,</span> <span class="er">ex1</span><span class="ot">,</span> <span class="er">ex2</span><span class="ot">,</span> <span class="er">...</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;y_err&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">ey0</span><span class="ot">,</span> <span class="er">ey1</span><span class="ot">,</span> <span class="er">ey2</span><span class="ot">,</span> <span class="er">...</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;z_err&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="er">ez0</span><span class="ot">,</span> <span class="er">ez1</span><span class="ot">,</span> <span class="er">ez2</span><span class="ot">,</span> <span class="er">...</span> <span class="ot">]</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <ul>
 <li>Having <code>y</code> identifies the object as a Graph.</li>
 <li>All the other fields are optional.</li>
@@ -270,20 +264,20 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb18-1"><a href=
 <code>[0:len(y)]</code>.</li>
 </ul>
 <h3 id="table">Table</h3>
-<div class="sourceCode" id="cb19"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;columns&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="er">COLUMN0</span><span class="ot">,</span> <span class="er">COLUMN1</span><span class="ot">,</span> <span class="er">...</span><span class="ot">]</span><span class="fu">,</span> </span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;table&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>        <span class="ot">[</span> <span class="er">X00</span><span class="ot">,</span> <span class="er">X01</span><span class="ot">,</span> <span class="er">...</span><span class="ot">],</span> </span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>        <span class="ot">[</span> <span class="er">X10</span><span class="ot">,</span> <span class="er">X11</span><span class="ot">,</span> <span class="er">...</span><span class="ot">],</span> </span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>        <span class="er">...</span></span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;attr&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>        <span class="ot">[</span> <span class="er">A00</span><span class="ot">,</span> <span class="er">A01</span><span class="ot">,</span> <span class="er">...</span><span class="ot">],</span> </span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>        <span class="ot">[</span> <span class="er">A10</span><span class="ot">,</span> <span class="er">A11</span><span class="ot">,</span> <span class="er">...</span><span class="ot">],</span> </span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>        <span class="er">...</span></span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span></span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;columns&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="er">COLUMN0</span><span class="ot">,</span> <span class="er">COLUMN1</span><span class="ot">,</span> <span class="er">...</span><span class="ot">]</span><span class="fu">,</span> </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;table&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>        <span class="ot">[</span> <span class="er">X00</span><span class="ot">,</span> <span class="er">X01</span><span class="ot">,</span> <span class="er">...</span><span class="ot">],</span> </span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>        <span class="ot">[</span> <span class="er">X10</span><span class="ot">,</span> <span class="er">X11</span><span class="ot">,</span> <span class="er">...</span><span class="ot">],</span> </span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>        <span class="er">...</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;attr&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>        <span class="ot">[</span> <span class="er">A00</span><span class="ot">,</span> <span class="er">A01</span><span class="ot">,</span> <span class="er">...</span><span class="ot">],</span> </span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>        <span class="ot">[</span> <span class="er">A10</span><span class="ot">,</span> <span class="er">A11</span><span class="ot">,</span> <span class="er">...</span><span class="ot">],</span> </span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>        <span class="er">...</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <ul>
 <li>Having <code>table</code> identifies the object as a Table.</li>
 <li><code>columns</code> is optional.</li>
@@ -295,11 +289,11 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb19-1"><a href=
 <li>[TODO] <code>row_attr</code> and <code>column_attr</code>???</li>
 </ul>
 <h3 id="tree">Tree</h3>
-<div class="sourceCode" id="cb20"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;tree&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="er">...</span><span class="fu">},</span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;attr&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="er">...</span><span class="fu">}</span></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;tree&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="er">...</span><span class="fu">},</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;attr&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="er">...</span><span class="fu">}</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <ul>
 <li>Having <code>tree</code> identifies the object as a Tree.</li>
 <li><code>attr</code> is optional. The tree structure of
@@ -310,12 +304,12 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb20-1"><a href=
 </ul></li>
 </ul>
 <h3 id="blob">Blob</h3>
-<div class="sourceCode" id="cb21"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;mime&quot;</span><span class="fu">:</span> <span class="er">MIME_TYPE</span><span class="fu">,</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="er">ID</span><span class="fu">,</span></span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;meta&quot;</span><span class="fu">:</span> <span class="er">META_INFO</span></span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;mime&quot;</span><span class="fu">:</span> <span class="er">MIME_TYPE</span><span class="fu">,</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="er">ID</span><span class="fu">,</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;meta&quot;</span><span class="fu">:</span> <span class="er">META_INFO</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <ul>
 <li>Having <code>mime</code> identifies the object as a Blob.</li>
 <li>The <code>id</code> is required. Others are optional.</li>

@@ -9,33 +9,27 @@
   <link rel="icon" href="favicon.png">
   <link rel="stylesheet" type="text/css" href="slowjs/slowdash.css">
   <link rel="stylesheet" type="text/css" id="sd-theme-css">
-  <style type="text/css">
-    body {
-        margin: 0;
-        overflow: hidden;
-    }
-  </style>
 </head>
 
-<body>
+
+<body style="margin:0">
   <div id="sd-header"></div>
   <div id="sd-layout">Loading Configuration...</div>
 
   <script type="module">
     import { JG as $ } from './slowjs/jagaimo/jagaimo.mjs';
     import { Layout } from './slowjs/layout.mjs';
-    import { boot, Frame } from './slowjs/frame.mjs';
+    import { Scheduler } from './slowjs/control.mjs';
+    import { Platform } from './slowjs/platform.mjs';
+    import { Frame } from './slowjs/frame.mjs';
 
-    window.addEventListener('DOMContentLoaded', function() {
-        let defaults = { channels: null, length: 86400, to: $.time() };
-        let optparse = options => options;
-        boot(defaults, optparse, start);
-    });
 
-    async function start(config) {
-        config = {
-            _project: config._project,
-            meta: config.meta,
+    async function main() {
+        const options = Platform.getUrlOptions();
+        let proj_config = await Platform.initialize();
+        let config = {
+            _project: proj_config._project,
+            meta: proj_config.meta,
             control: {
                 grid: { 'rows': 1, 'columns': 1 },
                 inactive: true,
@@ -44,10 +38,10 @@
                 {
                     type: 'download',
                     use_utc: false,
-                    channels: config.channels ? config.channels.split(',') : null,
-                    length: config.length,
-                    to: config.to,
-                    has_jupyter: ((config._project.export?.Jupyter?.url ?? '') !== ''),
+                    channels: options.channels ? options.channels.split(',') : null,
+                    length: options.length ?? 86400,
+                    to: options.to ?? $.time(),
+                    has_jupyter: ((proj_config._project.export?.Jupyter?.url ?? '') !== ''),
                     //show_details: true,
                 }
             ]
@@ -70,6 +64,11 @@
             style: style,
             reloadIntervalSelection: null
         });
+        let scheduler = new Scheduler({
+            setBeatTime: (time) => {
+                frame.setClockTime(time);
+            },
+        });
 
         let homeButton = $('<button>').html("&#x1f3e0;").bind('click', e=>{
             window.location.href = './';
@@ -90,6 +89,10 @@
                 layout.configure();
             }
         });
+
+        scheduler.start();
     }
+
+    window.addEventListener('DOMContentLoaded', main);
   </script>    
 </body>

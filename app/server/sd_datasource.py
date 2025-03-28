@@ -26,25 +26,28 @@ class DataSource(ComponentPlugin):
         return await self.aio_finalize()
 
     
-    @slowlette.get('/channels')
+    @slowlette.get('/api/channels')
     async def api_get_channels(self):
         return await self.aio_get_channels()
 
     
-    @slowlette.get('/data/{channels}')
+    @slowlette.get('/api/data/{channels}')
     async def api_get_data(self, channels:str, opts:dict):
         try:
             channels = channels.split(',')
-            length = float(opts.get('length', '3600'))
-            to = float(opts.get('to', int(time.time())+1))
+            length = float(opts.get('length', 3600))
+            to = float(opts.get('to', 0))
             resample = float(opts.get('resample', -1))
             reducer = opts.get('reducer', 'last')
         except Exception as e:
             logging.error('Bad data URL: %s: %s' % (str(opts), str(e)))
             return slowlette.Response(400)
+        
+        if to <= 0:
+            to = to + time.time()
         if resample < 0:
             resample = None
-
+                                
         result = {}
         result_ts = await self.aio_get_timeseries(channels, length, to, resample, reducer)
         result_obj = await self.aio_get_object(channels, length, to)
@@ -56,7 +59,7 @@ class DataSource(ComponentPlugin):
         return result
 
     
-    @slowlette.get('/blob')
+    @slowlette.get('/api/blob')
     async def api_get_blob(self, channel:str, path:list):
         mime_type, content = self.get_blob(channel, path[1:])
         if mime_type is not None:

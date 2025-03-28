@@ -180,7 +180,7 @@ options are:
 ```
 length=LENGTH [default 3600]
 to=TO [default 0 (now)]
-resample=RESAMPLE [default 0 (auto)]
+resample=RESAMPLE [default -1 (no resampling), 0 for auto]
 reducer=REDUCER [default "last"]
 ```
 

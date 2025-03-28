@@ -5,9 +5,7 @@
 // Refactored on 5 March 2025 //
 
 
-import { JG as $ } from './jagaimo/jagaimo.mjs';
-import { JGInvisibleWidget, JGDialogWidget } from './jagaimo/jagawidgets.mjs';
-
+import { JG as $, JGDateTime,  } from './jagaimo/jagaimo.mjs';
 
 
 export class Controller {
@@ -102,7 +100,17 @@ export class Controller {
         }
         this.currentData.__meta.isPartial = true;
         
-        let length = this.currentData.__meta.range.to - this.currentData.__meta.range.from;
+        let length;
+        if (this.currentData.__meta.range.from <= 0) {
+            length = -this.currentData.__meta.range.from;
+        }
+        else if (this.currentData.__meta.range.to <= 0) {
+            const now = $.time();
+            length = (now + this.currentData.__meta.range.to) - this.currentData.__meta.range.from;
+        }
+        else {
+            length = this.currentData.__meta.range.to - this.currentData.__meta.range.from;
+        }
         let opts = [ 'length='+length, 'to='+this.currentData.__meta.range.to ];
         if (length > 7200) {
             opts.push('resample='+(length/600).toFixed(1))
@@ -208,7 +216,8 @@ export class Controller {
         catch(error) {
             this.socket = null;
             console.log("WebSocket setup error: " + error);
-            console.log("data streaming is disabled");
+            console.log("Maybe web-socket entry (/ws) is not forwarded by reverse proxy?");
+            console.log("Data streaming is disabled.");
             return;
         }
         
@@ -223,12 +232,13 @@ export class Controller {
         };
         this.socket.onmessage = (event) => {
             const to = this.currentData?.__meta?.range?.to ?? null;
-            if ((to === null) || (to < 0)) {
-                return;
-            }
-            const now = $.time();
-            if ((to > 0) && (to < now - 10)) {  //... BUG: "10 sec" window is temporary
-                return;
+            if (to !== 0) {
+                if ((to === null) || (to < 0)) {
+                    return;
+                }
+                if (to < $.time()-1) {
+                    return;
+                }
             }
             
             let data = JSON.parse(event.data);
@@ -242,3 +252,171 @@ export class Controller {
     }
 };
 
+
+
+export class Scheduler {
+    constructor(options={}) {
+        const defaults = {
+            updateInterval: 0,   // >0: interval, ==0: once, <0: no auto updates
+            resetDelay: 0,
+            update: async () => {},
+            setStatus: (statusText) => {},
+            setProgress: (progress) => {},
+            setBeatTime: (time) => {},
+        };
+        this.options = $.extend({}, defaults, options);
+        
+        this.updateInterval = this.options.updateInterval;
+        this.resetDelay = this.options.resetDelay;
+
+        this.lastUpdateTime = 0;
+        this.currentUpdateTime = 0;
+        this.pendingRequests = 0;
+        this.suspendUntil = 0;
+        this.resetAt = 0;
+        
+        this.isBeating = false;
+    }
+
+    
+    start(options={}) {
+        if (options.updateInterval === 0) {
+            // update now, w/o changing the configuration
+        }
+        else {
+            $.extend(this.options, options);
+        }
+        this.updateInterval = this.options.updateInterval;
+        this.resetDelay = this.options.resetDelay;
+        
+        this.pendingRequests = 1;
+        this.suspendUntil = 0;
+        this.resetAt = 0;
+        
+        if (! this.isBeating) {
+            this.isBeating = true;
+            this._beat();
+        }
+    }
+
+    
+    suspend(duration) {
+        this.suspendUntil = $.time() + duration;
+    }
+
+    
+    scheduleReset() {
+        if (this.resetDelay > 0) {
+            this.resetAt = $.time() + this.resetDelay;
+        }
+    }
+
+
+    async update() {
+        const now = $.time();
+        if (now - this.currentUpdateTime < 60) {
+            this.pendingRequests++;
+            return;
+        }
+        
+        this.lastUpdateTime = now;
+        this.currentUpdateTime = now;
+        this.pendingRequests = 0;
+        this.suspendUntil = 0;
+        
+        let status = await this.options.update();
+        this.currentUpdateTime = 0;
+        if (status === null) {
+            let date = (new JGDateTime(this.lastUpdateTime)).asString('%a, %b %d %H:%M');
+            status = 'Update: ' + date;
+        }
+        this.options.setStatus(status);
+    }
+
+    
+    _beat() {
+        const now = $.time();
+        if ((this.resetAt > 0) && (now > this.resetAt)) {
+            window.location.reload(false);
+        }
+        this.options.setBeatTime(now);
+
+        let lapse = now - this.lastUpdateTime;
+        let suspend = this.suspendUntil - now;
+        let togo;
+        if (this.updateInterval < 0) {
+            togo = 1e10;
+        }
+        else if ((this.lastUpdateTime == 0) || (this.pendingRequests > 0)) {
+            togo = 0;
+        }
+        else {
+            togo = this.updateInterval - lapse;
+        }
+        if (suspend > togo) {
+            togo = suspend;
+        }
+        if (togo < 0) {
+            togo = 0;
+        }
+
+        let text1, text2;
+        if (this.lastUpdateTime == 0) {
+            text1 = 'initial loading';
+        }
+        else {
+            text1 = lengthString(lapse, false, parseInt) + ' ago';
+        }
+        if (this.currentUpdateTime > 0) {
+            text2 = ', receiving data... ' + parseInt(now - this.currentUpdateTime) + ' s';
+        }
+        else if (suspend >= togo-1) {
+            text2 = ', update suspended for next ' + parseInt(togo) + ' s';
+        }
+        else if (
+            ((this.updateInterval >= 60) && (togo < 10)) ||
+            ((this.updateInterval > 1800) && (togo < 60))
+        ){
+            text2 = ', update in ' + parseInt(togo) + ' s';
+        }
+        else {
+            text2 = '';
+        }
+        this.options.setProgress('(' + text1 + text2 + ')');
+        
+        if (togo <= 0) {
+            this.update();
+        }
+        setTimeout(()=>{this._beat();}, 1000);
+    }
+};
+
+
+
+export function lengthString(lapse, shortForm=true, transform=x=>parseFloat(x.toFixed(1))) {
+    let t = parseFloat(lapse);
+    if (isNaN(t)) return lapse;
+    let sign = (t < 0) ? '-' : '';
+    t = Math.abs(t);
+    if (t < 60) {
+        return transform(t) + (shortForm ? ' s' : ' seconds');
+    }
+    else if (t < 120.1) {
+        return transform(t/60) + (shortForm ? ' min' : ' minute');
+    }
+    else if (t < 3600.1) {
+        return transform(t/60) + (shortForm ? ' min' : ' minutes');
+    }
+    else if (t < 7200.1) {
+        return transform(t/3600) + (shortForm ? ' h' : ' hour');
+    }
+    else if (t < 86400.1) {
+        return transform(t/3600) + (shortForm ? ' h' : ' hours');
+    }
+    else if (t < 2*86400.1) {
+        return transform(t/86400) + (shortForm ? ' d' : ' day');
+    }
+    else {
+        return transform(t/86400) + (shortForm ? ' d' : ' days');
+    }
+}

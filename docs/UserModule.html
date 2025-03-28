@@ -469,11 +469,11 @@ return “current” data.)</p>
 class="sourceCode python"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>webapi <span class="op">=</span> slowlette.Slowlette()</span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="at">@webapi.get</span>(<span class="st">&#39;/channels&#39;</span>)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="at">@webapi.get</span>(<span class="st">&#39;/api/channels&#39;</span>)</span>
 <span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_channels():</span>
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> [ { <span class="st">&#39;name&#39;</span>: <span class="st">&#39;data_query&#39;</span>, <span class="st">&#39;type&#39;</span>: <span class="st">&#39;tree&#39;</span> } ]</span>
 <span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="at">@webapi.get</span>(<span class="st">&#39;/data/</span><span class="sc">{channels}</span><span class="st">&#39;</span>)</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="at">@webapi.get</span>(<span class="st">&#39;/api/data/</span><span class="sc">{channels}</span><span class="st">&#39;</span>)</span>
 <span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_data(channels:<span class="bu">str</span>, length:<span class="bu">float</span><span class="op">=</span><span class="va">None</span>, to:<span class="bu">float</span><span class="op">=</span><span class="va">None</span>, resample:<span class="bu">float</span><span class="op">=</span><span class="va">None</span>, reducer:<span class="bu">str</span><span class="op">=</span><span class="va">None</span>):</span>
 <span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="st">&#39;data_query&#39;</span> <span class="kw">not</span> <span class="kw">in</span> channels.split(<span class="st">&#39;,&#39;</span>):</span>
 <span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">None</span></span>
@@ -517,7 +517,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb18-1"><a h
 <span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    channels <span class="op">=</span> <span class="cf">await</span> slowdash.request_channels()</span>
 <span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="at">@webapi.get</span>(<span class="st">&#39;/config/contentlist&#39;</span>)</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="at">@webapi.get</span>(<span class="st">&#39;/api/config/contentlist&#39;</span>)</span>
 <span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> add_slowplot_PlotLayoutOverride():</span>
 <span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># this entry will be &quot;injected&quot; into the list, through Slowlette&#39;s response aggregation</span></span>
 <span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    entries <span class="op">=</span> [{</span>
@@ -530,7 +530,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb18-1"><a h
 <span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> entries</span>
 <span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a><span class="at">@webapi.get</span>(<span class="st">&#39;/config/content/slowplot-PlotLayoutOverride.json&#39;</span>)</span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a><span class="at">@webapi.get</span>(<span class="st">&#39;/api/config/content/slowplot-PlotLayoutOverride.json&#39;</span>)</span>
 <span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> generate_slowplot_PlotLayoutOverride(request:slowlette.Request):</span>
 <span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>    request.abort()   <span class="co"># stop propagation, in order not to be handled by SlowDash (no aggregation)</span></span>
 <span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a></span>

@@ -9,74 +9,47 @@
   <link rel="icon" href="favicon.png">
   <link rel="stylesheet" type="text/css" href="slowjs/slowdash.css">
   <link rel="stylesheet" type="text/css" id="sd-theme-css">
-  <style type="text/css">
-    body {
-        margin: 0;
-        overflow: hidden;
-    }
-  </style>
 </head>
 
-<body>
+
+<body style="margin:0">
   <div id="sd-header"></div>
   <div id="sd-layout">Loading Configuration...</div>
 
   <script type="module">
     import { JG as $ } from './slowjs/jagaimo/jagaimo.mjs';
     import { Layout } from './slowjs/layout.mjs';
-    import { boot, Frame } from './slowjs/frame.mjs';
+    import { Scheduler } from './slowjs/control.mjs';
+    import { Platform } from './slowjs/platform.mjs';
+    import { Frame } from './slowjs/frame.mjs';
 
-    window.addEventListener('DOMContentLoaded', function() {
-        let defaults = {};
-        let optparse = options => options;
-        boot(defaults, optparse, start);
-    });
-
-
-    async function update_server() {
-        try {
-            let response = await fetch('./api/update/tasklist', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json; charset=utf-8' },
-                body: '',
-            });
-            if (! response.ok) {
-                throw new Error(response.status + " " + response.statusText);
-            }
-        }
-        catch (e) {
-            console.log(e);
-        }
-    }
-
-
-    async function start(config_arg) {
-        let config = {
-            _project: config_arg._project,
-            meta: config_arg.meta,
-            control: {
-                grid: { 'rows': 2, 'columns': 2 },
-                inactive: true,
+    let config = {
+        control: {
+            grid: { 'rows': 2, 'columns': 2 },
+            inactive: true,
+        },
+        panels: [
+            {
+                type: 'channellist',
+                default_filter: '',
+                case_sensitive: false,
             },
-            panels: [
-                {
-                    type: 'channellist',
-                    default_filter: '',
-                    case_sensitive: false,
-                },
-                {
-                    type: 'catalog',
-                    catalog_type: 'slowdash,slowplot,slowcruise,userhtml'
-                },
-                {
-                    type: 'taskmanager',
-                },
-                {
-                    type: 'tools',
-                }
-            ]
-        };
+            {
+                type: 'catalog',
+                catalog_type: 'slowdash,slowplot,slowcruise,userhtml'
+            },
+            {
+                type: 'taskmanager',
+            },
+            {
+                type: 'tools',
+            }
+        ]
+    };
 
+
+    async function main() {
+        config = await Platform.initialize(config);
         if (config.meta?.name) {
             document.title = 'SlowDash: ' + config.meta.name;
         }
@@ -96,15 +69,17 @@
 
         let frame = new Frame($('#sd-header'), {
             title: title,
-//            initialStatus: "SlowDash",
-//            initialBeat: "Version " + config._project.slowdash.version,
             initialStatus: "SlowDash - Version " + config._project.slowdash.version,
             style: style,
             reloadIntervalSelection: null
         });
+        let scheduler = new Scheduler({
+            setBeatTime: (time) => {
+                frame.setClockTime(time);
+            },
+        });
 
-        update_server();
-
+        await update_server();
         await layout.configure(config);
 
         $(window).bind('resize', ()=>{
@@ -113,7 +88,28 @@
                 layout.configure();
             }
         });
+
+        scheduler.start();
     }
 
+
+    async function update_server() {
+        try {
+            let response = await fetch('./api/update/tasklist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json; charset=utf-8' },
+                body: '',
+            });
+            if (! response.ok) {
+                throw new Error(response.status + " " + response.statusText);
+            }
+        }
+        catch (e) {
+            console.log(e);
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', main);
   </script>    
 </body>
+

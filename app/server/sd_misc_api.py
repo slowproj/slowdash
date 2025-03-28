@@ -10,12 +10,12 @@ class MiscApiComponent(Component):
     def __init__(self, app, project):
         super().__init__(app, project)
 
-    @slowlette.get('/ping')
+    @slowlette.get('/api/ping')
     def ping(self):
         return ['pong']
 
     
-    @slowlette.get('/echo')
+    @slowlette.get('/api/echo')
     def echo(self, path:list, opts:dict):
         if self.app.is_cgi:
             env = { k:v for k,v in os.environ.items() if k.startswith('HTTP_') or k.startswith('REMOTE_') }

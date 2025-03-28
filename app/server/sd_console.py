@@ -91,7 +91,7 @@ class ConsoleComponent(Component):
         }}
 
     
-    @slowlette.get('/console')
+    @slowlette.get('/api/console')
     async def read(self, nlines:int=20, since:int=0):
         if not self.enabled:
             return {
@@ -131,7 +131,7 @@ class ConsoleComponent(Component):
         }
 
 
-    @slowlette.post('/console')
+    @slowlette.post('/api/console')
     def write(self, body:bytes):
         cmd = body.decode()
         logging.info(f'Console Input: {cmd}')
