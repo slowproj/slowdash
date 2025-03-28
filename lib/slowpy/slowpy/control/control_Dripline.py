@@ -5,9 +5,9 @@ import slowpy.control as spc
 
 
 class DriplineNode(spc.ControlNode):
-    def __init__(self, dripline_config):
+    def __init__(self, *dl_args, **dl_kwargs):
         import dripline
-        self.interface = dripline.core.Interface(dripline_config)
+        self.interface = dripline.core.Interface(*dl_args, **dl_kwargs)
         
     ## child nodes ##
     # dripline().endpoint(name)
@@ -16,11 +16,11 @@ class DriplineNode(spc.ControlNode):
     
     @classmethod
     def _node_creator_method(cls):
-        def dripline(self, dripline_config={}):
+        def dripline(self, *dl_args, **dl_kwargs):
             try:
                 self.dripline_node
             except:
-                self.dripline_node = DriplineNode(dripline_config)
+                self.dripline_node = DriplineNode(*dl_args, **dl_kwargs)
 
             return self.dripline_node
 
