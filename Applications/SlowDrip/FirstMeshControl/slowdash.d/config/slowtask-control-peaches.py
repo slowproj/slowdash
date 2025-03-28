@@ -1,6 +1,6 @@
 
 import dripline
-ifc = dripline.core.Interface(dripline_config={'auth-file':'/authentications.json'})
+ifc = dripline.core.Interface(username="dripline", password='dripline')
 
 def set_peaches(value, **kwargs):
     print(f'setting peaches to {value}')
