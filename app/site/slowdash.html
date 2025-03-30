@@ -18,104 +18,31 @@
 
   <script type="module">
     import { JG as $, JGDateTime } from './slowjs/jagaimo/jagaimo.mjs';
+    import { SlowDash } from './slowjs/slowdash.mjs';
+    import { lengthString } from './slowjs/control.mjs';
     import { JGPullDownWidget, JGDialogWidget } from './slowjs/jagaimo/jagawidgets.mjs';
-    import { Layout } from './slowjs/layout.mjs';
-    import { Controller, Scheduler } from './slowjs/control.mjs';
-    import { Platform } from './slowjs/platform.mjs';
-    import { Frame, TimePullDown } from './slowjs/frame.mjs';
-
-
-    // takes urlOptions, returns [ defaults, args ]
-    // urlOptions: key-value pairs in the URL query string
-    // defaults: used when not specified elsewhere
-    // args: overwrite values specified elsewhere
-    function buildSettings(urlOptions) {
-        const defaults = {
-            control: {
-                range: {length: 3600, to: 0},
-                reload: 60
-            },
-        };
-        const args = {
-            control: {
-                range: {}
-            },
-        };
-
-        if (urlOptions.time) {
-            let to = (new JGDateTime(urlOptions.time)).asInt();
-            if (to > 0) {
-                args.control.range.to = to;
-            }
-        }
-        if (urlOptions.length && parseFloat(urlOptions.length) > 60) {
-            args.control.range.length = parseFloat(urlOptions.length);
-        }
-        if (urlOptions.reload) {
-            if (parseFloat(urlOptions.reload) > 10) {
-                args.control.reload = Math.max(30, parseFloat(urlOptions.reload));
-            }
-            else {
-                args.control.reload = parseFloat(0);
-            }
-        }
-        
-        return [ defaults, args ];
-    }
+    import { SaveConfigDialog } from './slowjs/platform.mjs';
+    import { Frame, TimePullDown, GridPullDown } from './slowjs/frame.mjs';
 
 
     async function main() {
-        const options = Platform.getUrlOptions();
-        const [ defaults, args ] = buildSettings(options);
-        let config = await Platform.initialize(defaults, options, args);
-
-        if (config.panels) {
-        }
-        else {
-            config = {
-                _project: config._project,
-                meta: config.meta,
-                control: config.control,
-                panels: [{
-                    type: 'canvas',
-                    view_box: config.view_box || config.viewBox,
-                    items: config.items,
-                    forms: config.forms,
-                }]
-            };
-            config.control.inactive = true;
-        }
-    
-        if (config.meta?.name) {
-            document.title = 'SD ' + config.meta.name;
-        }
-        else {
-            document.title = 'SD Dashboard';
+        let slowdash = new SlowDash($('#sd-layout'));
+        const config = await slowdash.configure(window.location.search.split('?')[1]);
+        if (config === null) {
+            return;
         }
         
         let title = config._project.project?.title || config._project.project?.name || "SlowDash";
         if (config.meta?.title) {
             title += " - " + config.meta.title;
         }
-        let style = config._project.style ?? {};
+        document.title = 'SD ' + (config.meta?.title || config.meta?.name || 'Canvas');
 
-        let layout = new Layout($('#sd-layout'), style);
-        let controller = new Controller(layout);
-        let scheduler;
         let frame = new Frame($('#sd-header'), {
             title: title,
-            style: style,
-            initialReloadInterval: config.control.reload,
-            reloadIntervalChange: (interval) => {
-                config.control.reload = interval;
-                scheduler.start({updateInterval: interval});
-                scheduler.scheduleReset();
-            },
+            style: config._project.style ?? {},
         });
-        scheduler = new Scheduler({
-            updateInterval: config.control.reload,
-            resetDelay: 0,
-            update: async () => { return await update(controller, config); },
+        slowdash.setCallbacks({
             setStatus: (statusText) => {
                 frame.setStatus(statusText);
             },
@@ -126,29 +53,88 @@
                 frame.setClockTime(time);
             },
         });
+
+        setupTimeSelect(config, slowdash, frame);
+        setupReloadSelect(config, slowdash, frame);
+        setupSnapshotButton(config, slowdash, frame);
+        setupCommonButtons(config, slowdash, frame);
+
         
+        $(window).bind('resize', ()=>{
+            if (window.innerWidth > 0) {
+                $('#sd-layout').css('width', '').css('height', '');
+                slowdash.redraw();
+            }
+        });
+        
+        slowdash.start();
+    }
+
+
+    function setupTimeSelect(config, slowdash, frame) {
         let timeSelect = $('<select>');
-        frame.prependSelect(timeSelect);
+        frame.appendSelect(timeSelect);
         let timePullDown = new TimePullDown(timeSelect, {
             select: (selectedDataTime) => {
                 config.control.range.to = selectedDataTime;
-                scheduler.update();
+                slowdash.setRange(config.control.range.length, config.control.range.to);
+                slowdash.scheduleReset();
             },
         });
         if (config.control.range.to > 0) {
             timePullDown.set(config.control.range.to);
         }
+    }
+
+
+    function setupReloadSelect(config, slowdash, frame) {        
+        const heading = '&#x1f680; ';
+        const reloadIntervalSelections = [ 0, -1, 2, 5, 10, 30, 60, 5*60, 15*60, 30*60, 60*60 ];
         
-        let modeSelect = $('<select>');
-        frame.appendSelect(modeSelect);
-        let modePulldown = new JGPullDownWidget(modeSelect, {
-            items: [ 'Normal Mode', 'Stand-by Mode' ],
+        let pulldownItems = [];
+        for (let interval of reloadIntervalSelections) {
+            let value = parseInt(interval);
+            let label = 'Every ' + lengthString(interval, false);
+            if (value < 0) {
+                label = 'Auto Reload Off';
+            }
+            else if (value == 0) {
+                label = 'Reload Now';
+            }
+            pulldownItems.push({ value: value, label: label });
+        }
+        
+        let reloadSel = $('<select>');
+        frame.appendSelect(reloadSel);
+        
+        let reloadPulldown = new JGPullDownWidget(reloadSel, {
+            heading: heading,
+            items: pulldownItems,
             initial: 0,
             select: (event, value, obj) => {
-                scheduler.update();
+                const length = parseFloat(value); // >0: periodical, ==0: now, <0: off
+                const currentLength = slowdash.setUpdateInterval(length);
+                if (length !== 0) {
+                    slowdash.scheduleReset();
+                }
+                setLabel(currentLength);
             }
         });
 
+        let setLabel = (interval) => {
+            if (interval > 0) {
+                reloadPulldown.setLabel(heading + ' Every ' + lengthString(interval, false));
+            }
+            else {
+                reloadPulldown.setLabel(heading + ' Auto Reload Off');
+            }
+        };
+        
+        setLabel(config.control?.reload);
+    }
+
+
+    function setupSnapshotButton(config, slowdash, frame) {
         let configUrlDiv = $('<div>').appendTo($('body'));
         let configUrlDialog = new JGDialogWidget(configUrlDiv, {
             title: 'Snapshot Link',
@@ -160,68 +146,22 @@
         });
         configUrlButton.attr('title', 'Create Snapshot Link');
         frame.appendButton(configUrlButton);
+    }
         
+
+    function setupCommonButtons(config, slowdash, frame) {
         let homeButton = $('<button>').html("&#x1f3e0;").bind('click', e=>{
             window.open('./');
         });
         homeButton.attr('title', 'Home');
         frame.appendButton(homeButton);
         homeButton.css('margin-left', '1em'); // this must be after append()
-
+        
         let docButton = $('<button>').html("&#x2753;").bind('click', e=>{
             window.open('./slowdocs/index.html');
         });
         docButton.attr('title', 'Documents');
         frame.appendButton(docButton);
-        
-        await controller.configure(config, {}, {
-            changeDisplayTimeRange: range => {
-                config.control.range.to = range.to;
-            },
-            forceUpdate: () => {
-                schduler.update();
-            },
-            suspend: (duration=300) => {
-                scheduler.suspend(duration);
-                scheduler.scheduleReset();
-            },
-        });
-        
-        $(window).bind('resize', ()=>{
-            if (window.innerWidth > 0) {
-                $('#sd-layout').css('width', '').css('height', '');
-                controller.configure();
-            }
-        });
-        scheduler.start();
-    }
-
-
-    async function update(controller, config) {
-        let length = config.control?.range?.length ?? 0;
-        if (! (length > 0)) {
-            length = 3600;
-        }
-        let to = config.control?.range?.to ?? 0;
-        if (! (to > 0)) {
-            to = 0;
-        }
-        let from = to - length;
-        
-        const status = await controller.update({from:from, to:to});
-        if (status.code == 200) {
-            return null;
-        }
-        else {
-            let message = 'Error on ';
-            message += (new JGDateTime()).asString('%a, %b %d %H:%M');
-            message += " [ ";
-            if (status.code >= 0) {
-                message += "Status" + status.code + ", ";
-            }
-            message += status.text + " ]";
-            return message;
-        }
     }
 
 

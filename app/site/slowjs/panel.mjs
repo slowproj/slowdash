@@ -80,10 +80,10 @@ export class Panel {
 
         
     async configure(config, options={}, callbacks={}) {
-        const default_options = {
+        const default_options = {  // defaults when Panel is created directly (e.g., by user HTML)
             inactive: false,   // no control buttons at all
             immutable: true,   // no settings, no deleting
-            standalone: true,  // no popup
+            standalone: true,  // no popout
         }
         const default_callbacks = {
             changeDisplayTimeRange: range => {},

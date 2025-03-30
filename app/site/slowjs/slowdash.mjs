@@ -48,6 +48,32 @@ export class SlowDash {
             this.config = await Platform.initialize(defaults, options, config);
         }
 
+        if (! this.config) {
+            return null;
+        }
+        
+        if (this.config.panels) {
+            ;
+        }
+        else if (this.config.items) {
+            // config is for Canvas -> wrap it with a Panel.
+            this.config = {
+                _project: this.config._project,
+                meta: this.config.meta,
+                control: this.config.control,
+                panels: [{
+                    type: 'canvas',
+                    view_box: this.config.view_box || this.config.viewBox,
+                    items: this.config.items,
+                    forms:this. config.forms,
+                }]
+            };
+            this.config.control.inactive = true;
+        }
+        else {
+            this.config.panels = [];
+        }
+        
         if ((this.config.control.grid?.columns??0) < 1) {
             this.config.control.grid = { columns: 1, rows: 1 };
             const n = this.config.panels.length;
@@ -199,7 +225,6 @@ export class SlowDash {
                 mode: 'normal',
             },
             style: {},
-            panels: []
         };
         const args = {
             control: {

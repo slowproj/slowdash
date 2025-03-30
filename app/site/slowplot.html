@@ -20,19 +20,22 @@
     import { SlowDash } from './slowjs/slowdash.mjs';
     import { lengthString } from './slowjs/control.mjs';
     import { JGPullDownWidget, JGDialogWidget } from './slowjs/jagaimo/jagawidgets.mjs';
-    import { SaveConfigDialog } from './slowjs/platform.mjs';
+    import { Platform, SaveConfigDialog } from './slowjs/platform.mjs';
     import { Frame, TimeRangePullDown, GridPullDown } from './slowjs/frame.mjs';
 
 
     async function main() {
         let slowdash = new SlowDash($('#sd-layout'));
         const config = await slowdash.configure(window.location.search.split('?')[1]);
+        if (config === null) {
+            return;
+        }
         
         let title = config._project.project?.title || config._project.project?.name || "SlowDash";
         if (config.meta?.title) {
             title += " - " + config.meta.title;
         }
-        document.title = 'SD ' + (config.meta?.title ?? config.meta?.name ?? 'Plots');
+        document.title = 'SD ' + (config.meta?.title || config.meta?.name || 'Plots');
 
         
         let frame = new Frame($('#sd-header'), {
@@ -57,7 +60,7 @@
         setupSaveButton(config, slowdash, frame);
         setupUnlockButton(config, slowdash, frame);
         setupSnapshotButton(config, slowdash, frame);
-        setupCommonButton(config, slowdash, frame);
+        setupCommonButtons(config, slowdash, frame);
 
         
         $(window).bind('resize', ()=>{
@@ -258,7 +261,7 @@
     }
 
 
-    function setupCommonButton(config, slowdash, frame) {
+    function setupCommonButtons(config, slowdash, frame) {
         let homeButton = $('<button>').html("&#x1f3e0;").bind('click', e=>{
             window.open('./');
         });

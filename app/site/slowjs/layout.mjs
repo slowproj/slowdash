@@ -20,10 +20,10 @@ export class Layout {
     
 
     async configure(config=null, options={}, callbacks={}) {
-        const default_options = {
+        const default_options = {  // defaults when Layout is created directly (e.g., by user HTML)
             inactive: config?.control?.inactive ?? false,   // no control buttons at all
             immutable: config?.control?.immutable ?? true,   // no settings, no deleting
-            standalone: true,  // no popup
+            standalone: true,  // no popout
         }
         const default_callbacks = {
             changeDisplayTimeRange: (range) => {},

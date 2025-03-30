@@ -50,20 +50,30 @@ export class Platform {
         params = await Platform._load_project_config(params);
         params = await Platform._load_page_config(params);
         params = await Platform._load_theme(params);
-
+        if (params === null) {
+            return null;
+        }
+        
         return $.extend(true, {}, params.defaults, params.page_config, params.args);
     }
 
     
     static async _load_project_config(params) {
+        if (params === null) {
+            return null;
+        }
+        
         const defaults = {
             project: { name: null, title: "New Project" },
             style: { theme: 'light' }
         };
         const response = await fetch('./api/config');
         if (! response.ok) {
-            console.error("ERROR: fetching proect config: " + response.status + " " + response.statusText);
-            return params;
+            $('body').html(`
+                <h3>Project Configuration Loading Error</h3>
+                Error Resonse: ${response.status} ${response.statusText}
+            `);
+            return null;
         }
         const config = await response.json();
         if (config) {
@@ -75,28 +85,24 @@ export class Platform {
     
 
     static async _load_page_config(params) {
-        if (params.config_data) {
+        if (params === null) {
+            return null;
+        }
+        else if (params.config_data) {
             try {
                 params.page_config = JSON.parse(atob(params.config_data));
             }
             catch (error) {
-                $('<div>').appendTo($('body')).html(`
-                    <h3>Configuration Loading Error</h3>
+                $('body').html(`
+                    <h3>Page Configuration Loading Error (config data)</h3>
                     Error: ${error.message}
                 `);
-                return;
+                return null;
             }
         }
         
         else if (params.config_file) {
             const response = await fetch('./api/config/content/' + params.config_file);
-            if (! response.ok) {
-                $('<div>').appendTo($('body')).html(`
-                    <h3>Configuration Loading Error</h3>
-                    Error Resonse: ${esponse.status} ${response.statusText}
-                `);
-                return;
-            }
             let config = null;
             try {
                 config = await response.json();
@@ -128,6 +134,10 @@ export class Platform {
 
     
     static async _load_theme(params) {
+        if (params === null) {
+            return null;
+        }
+        
         const style = $.extend({}, params.args._project?.style??{}, params.page_config.style??{}, params.args.style??{});
         const theme = style.theme ?? 'light';
         let theme_css = $('#sd-theme-css');
@@ -144,6 +154,7 @@ export class Platform {
                 Name: slowdash-${theme}.css<br>
                 Error: ${e.message}
             `);
+            return null;
         }
         
         return params;

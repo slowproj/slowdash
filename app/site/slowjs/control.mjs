@@ -30,9 +30,9 @@ export class Controller {
     
     async configure(config, options={}) {
         const default_options = {
-            inactive: false,   // no control buttons at all
-            immutable: false,   // no settings, no deleting
-            standalone: false,  // no popup
+            inactive: config?.control?.inactive ?? false,   // no control buttons at all
+            immutable: config?.control?.immutable ?? false,   // no settings, no deleting
+            standalone: false,  // no popout
         }
         if (config !== null) {
             this.options = $.extend({}, default_options, this.options ?? {}, options);
