@@ -29,7 +29,10 @@
         let proj_config = await Platform.initialize();
         let config = {
             _project: proj_config._project,
-            meta: proj_config.meta,
+            meta: {
+                name: 'SlowDown',
+                title: 'Data Downloader',
+            },
             control: {
                 grid: { 'rows': 1, 'columns': 1 },
                 inactive: true,
@@ -60,9 +63,8 @@
 
         let frame = new Frame($('#sd-header'), {
             title: title,
-            initialStatus: "SlowDash Downloader",
             style: style,
-            reloadIntervalSelection: null
+            initialStatus: "SlowDash - Version " + config._project.slowdash.version,
         });
         let scheduler = new Scheduler({
             setBeatTime: (time) => {

@@ -35,15 +35,15 @@
         };
         let config = await Platform.initialize(defaults, options, args);
         
-        const title = config._project.project?.title || config._project.project?.name || "SlowEdit";
+        let title = config._project.project?.title || config._project.project?.name || "SlowDash";
+        title += " - Config File Editor";
         const style = config._project.style ?? {};
         document.title = 'SlowEdit: ' + config.filename;
 
         let frame = new Frame($('#sd-header'), {
             title: title,
-            initialStatus: config.filename + (config.status ? ': ' + config.status : ''),
             style: style,
-            reloadIntervalSelection: null,
+            initialStatus: config.filename + (config.status ? ': ' + config.status : ''),
         });
         let scheduler = new Scheduler({
             setBeatTime: (time) => {

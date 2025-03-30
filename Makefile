@@ -8,7 +8,7 @@ PIP_DBS = mysql-connector-python aiomysql influxdb-client redis pymongo couchdb
 PIP_OPTS = numpy matplotlib lmfit pillow pyserial pyvisa
 
 
-all: venv slowdash setup-venv success
+all: venv-install slowdash venv-setup success
 
 without-venv: slowdash success
 
@@ -30,6 +30,7 @@ slowdash:
 	fi
 
 	@if [ ! -d "$(SLOWDASH_DIR)/bin" ]; then mkdir "$(SLOWDASH_DIR)/bin"; fi
+	@if [ -d .git/hooks ]; then ln -fs ../../.git-hooks/pre-commit .git/hooks; fi
 
 	@echo '#! /bin/bash' > $(SLOWDASH_BIN)
 	@echo '' >> $(SLOWDASH_BIN)
@@ -66,9 +67,6 @@ slowdash:
 	@echo 'alias slowdash="$$SLOWDASH_DIR/bin/slowdash"' >> $(SLOWDASH_ENV)
 	@echo 'alias slowdash-activate-venv="source $$SLOWDASH_DIR/venv/bin/activate"' >> $(SLOWDASH_ENV)
 
-	@ln -fs ../../docs ./app/site
-	@if [ -d .git/hooks ]; then ln -fs ../../.git-hooks/pre-commit .git/hooks; fi
-
 	@echo "generating requirements.txt..."
 	@echo "# SlowDash requirements #" > requirements.txt
 	@for pkg in $(PIP_REQS); do echo $$pkg >> requirements.txt; done
@@ -87,16 +85,17 @@ slowdash:
 	@for pkg in $(PIP_OPTS); do echo $$pkg >> requirements.txt; done
 
 
-venv:
+venv-install:
 	python3 -m venv venv
 
 
-setup-venv:
+venv-setup:
 	@echo "setting up venv..."
 	@if [ -d ./venv ]; then . venv/bin/activate; pip install -r requirements.txt; deactivate; fi
 
 
 success:
+	@echo ""
 	@echo ""
 	@echo "### SlowDash Installation is successful ###"
 	@echo "- Executable files are copied to $(SLOWDASH_DIR)/bin."
@@ -104,6 +103,7 @@ success:
 	@echo '- Run below to enable the "slowdash" command:'
 	@echo "    source $(SLOWDASH_DIR)/bin/slowdash-bashrc"
 	@echo ""
+	@echo '- To activate SlowDash venv, run "slowdash-activate-venv"'
 	@echo '- To build docker images, run "make docker"'
 
 

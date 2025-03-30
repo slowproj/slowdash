@@ -11,38 +11,10 @@ import { PanelPluginLoader } from './panel-plugin-loader.mjs';
 
 
 export class Layout {
-    constructor(div, style={}) {
+    constructor(div) {
         this.layoutDiv = $(div);
         this.PanelClassList = null;
         this.panels = [];
-        
-        const dummyPlotDiv = $('<div>').addClass('sd-plot').appendTo(this.layoutDiv);
-        const contextColor = getComputedStyle(this.layoutDiv.get()).color;
-        const contextBackgroundColor = getComputedStyle(this.layoutDiv.get()).backgroundColor;
-        const plotColor = getComputedStyle(dummyPlotDiv.get()).color;
-        const plotBackgroundColor = getComputedStyle(dummyPlotDiv.get()).backgroundColor;
-        const pageBackgroundColor = getComputedStyle(this.layoutDiv.closest('body').get()).backgroundColor;
-
-        let plotMiddleColor = 'gray';
-        const colorPattern = /rgb.*\( *([0-9\.]+), *([0-9\.]+), *([0-9\.]+)/;
-        const c = plotColor.match(colorPattern);
-        if (c) {
-            plotMiddleColor = `rgba(${c[1]},${c[2]},${c[3]},0.4)`;
-        }
-        
-        this.defaultStyle = {
-            strokeColor: contextColor,
-            pageBackgroundColor: pageBackgroundColor,
-            plotBackgroundColor: plotBackgroundColor,
-            plotMarginColor: contextBackgroundColor,
-            plotFrameColor: plotColor,
-            plotLabelColor: contextColor,
-            plotGridColor: plotMiddleColor,
-            plotFrameThickness: 2,
-            plotTicksOutwards: true,
-            plotGridEnabled: true,
-            negatingImages: style.negate,
-        };
     }
 
     
@@ -82,8 +54,6 @@ export class Layout {
             this.config.panels = [];
         }
 
-        this.style = $.extend({}, this.defaultStyle, this.config._project?.style?.panel ?? {});
-        
         this.dimension = {
             layoutWidth: null,
             layoutHeight: null,
@@ -103,6 +73,7 @@ export class Layout {
             this.layoutDiv.empty();
             this.panels = [];
 
+            this._setupStyle();
             this._setupDimensions();
             this._buildPanels();
             await this._configurePanels();
@@ -133,6 +104,41 @@ export class Layout {
     }
     
 
+    _setupStyle() {
+        const style = this.config._project?.style ?? {};
+        
+        const dummyPlotDiv = $('<div>').addClass('sd-plot').appendTo(this.layoutDiv);
+        const contextColor = getComputedStyle(this.layoutDiv.get()).color;
+        const contextBackgroundColor = getComputedStyle(this.layoutDiv.get()).backgroundColor;
+        const plotColor = getComputedStyle(dummyPlotDiv.get()).color;
+        const plotBackgroundColor = getComputedStyle(dummyPlotDiv.get()).backgroundColor;
+        const pageBackgroundColor = getComputedStyle(this.layoutDiv.closest('body').get()).backgroundColor;
+
+        let plotMiddleColor = 'gray';
+        const colorPattern = /rgb.*\( *([0-9\.]+), *([0-9\.]+), *([0-9\.]+)/;
+        const c = plotColor.match(colorPattern);
+        if (c) {
+            plotMiddleColor = `rgba(${c[1]},${c[2]},${c[3]},0.4)`;
+        }
+        
+        const defaultStyle = {
+            strokeColor: contextColor,
+            pageBackgroundColor: pageBackgroundColor,
+            plotBackgroundColor: plotBackgroundColor,
+            plotMarginColor: contextBackgroundColor,
+            plotFrameColor: plotColor,
+            plotLabelColor: contextColor,
+            plotGridColor: plotMiddleColor,
+            plotFrameThickness: 2,
+            plotTicksOutwards: true,
+            plotGridEnabled: true,
+            negatingImages: style.negate,
+        };
+
+        this.style = $.extend({}, defaultStyle, style.panel ?? {});
+    }
+
+    
     _setupDimensions() {
         if (this.layoutDiv.css('width')) {
             this.dimension.layoutWidth = this.layoutDiv.boundingClientWidth();

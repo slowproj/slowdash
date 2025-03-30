@@ -13,7 +13,6 @@ export class Frame {
             title: "SlowDash",
             initialStatus: "loading...",
             initialProgress: "",
-            initialReloadInterval: 60,
             style: {
                 theme: 'light',
                 title: {
@@ -27,8 +26,6 @@ export class Frame {
                     link: undefined,
                 },
             },
-            reloadIntervalSelection: [ 0, -1, 2, 5, 10, 30, 60, 5*60, 15*60, 30*60, 60*60 ],
-            reloadIntervalChange: (interval) => {},
         };
         this.obj = obj;
         this.options = $.extend(true, {}, defaults, options);
@@ -86,56 +83,6 @@ export class Frame {
         this.progressSpan.text(this.options.initialProgress);
         this.clockDiv.text((new JGDateTime()).asString('%a, %b %d %H:%M %Z'));
         
-        this.reloadInterval = this.options.initialReloadInterval;
-        if (this.options.reloadIntervalSelection?.length ?? 0 > 0) {
-            let heading = '&#x1f680; ';
-            let pulldownItems = [];
-            for (let interval of this.options.reloadIntervalSelection) {
-                let value = parseInt(interval);
-                let label = 'Every ' + lengthString(interval, false);
-                if (value < 0) {
-                    label = 'Auto Reload Off';
-                }
-                else if (value == 0) {
-                    label = 'Reload Now';
-                }
-                pulldownItems.push({ value: value, label: label });
-            }
-            function setReloadLabel(obj, length) {
-                if (length > 0) {
-                    obj.setLabel(heading + ' Every ' + lengthString(length));
-                }
-                else {
-                    obj.setLabel(heading + ' Auto Reload Off');
-                }
-            }
-            let reloadSel = $('<select>').css(style.select).prependTo(this.selectSpan);
-            this.reloadPulldown = new JGPullDownWidget(reloadSel, {
-                heading: heading,
-                items: pulldownItems,
-                initial: 0,
-                select: (event, value, obj) => {
-                    let length = parseFloat(value);
-                    if (length == 0) {
-                        // reload now, w/o changing the settings
-                        setReloadLabel(this.reloadPulldown, this.reloadInterval);
-                    }
-                    else if (length < 0) {
-                        // suspend auto reloading
-                        this.reloadInterval = -1;
-                        this.reloadPulldown.setLabel(heading + 'Auto Reload Off');
-                    }
-                    else {
-                        // reload periodically
-                        this.reloadInterval = length;
-                    }
-                    this.suspendUntil = 0;
-                    this.options.reloadIntervalChange(length);
-                }
-            });
-            setReloadLabel(this.reloadPulldown, this.reloadInterval);
-        }
-
         if (this.options.style.logo?.file) {
             const file = './api/config/file/' + this.options.style.logo.file;
             const img = $('<img>').attr('src', file).css({'width': '100%', 'border': 'none'});
@@ -153,10 +100,6 @@ export class Frame {
         }
     }
     
-    prependSelect(select) {
-        select.css(this.style.select).prependTo(this.selectSpan);
-    }
-    
     appendSelect(select) {
         select.css(this.style.select).appendTo(this.selectSpan);
     }
@@ -165,7 +108,6 @@ export class Frame {
         button.css(this.style.button).appendTo(this.buttonDiv);
     }
 
-    
     setStatus(html) {
         this.statusSpan.html(html);
     }
@@ -418,9 +360,9 @@ export class TimePullDown {
         this.pulldown = new JGPullDownWidget(this.obj, {
             heading: this.options.heading,
             items: items,
-            initial: 0,
+            initial: this.options.initial,
             select: (event, value, obj) => {
-                let past = parseFloat(value);
+                const past = parseFloat(value);
                 if (past > 0) {
                     let time = $.time() - past;
                     let date = (new JGDateTime(time)).asString('%Y-%m-%d, %H:%M:%S');
@@ -459,7 +401,7 @@ export class TimeRangePullDown {
             ],
             custom_items: [],
             heading: '&#x1f558; ',
-            initial: 3600,
+            initial: 0,
             select: (from, to) => {},
             select_custom_item: (key) => {},
         };
@@ -472,12 +414,11 @@ export class TimeRangePullDown {
         this.dialog = new TimeRangeDialog(this.dialogDiv, {
             title: 'Data Time Range',
             apply: range => {
-                console.log("APPLY");
                 this.range = range;
                 this.options.select(this.range.length, this.range.to);
             },
             close: () => {
-                this.pulldown.setLabel(this._getRangeLabel());
+                this.pulldown.setLabel(this.options.heading + this._getLabel());
             }
         });
         
@@ -499,9 +440,9 @@ export class TimeRangePullDown {
         this.pulldown = new JGPullDownWidget(this.obj, {
             heading: this.options.heading,
             items: items,
-            initial: 0,
+            initial: this.options.initial,
             select: (event, value, obj) => {
-                let length = parseFloat(value);
+                const length = parseFloat(value);
                 if (length > 0) {
                     this.range.length = length;
                     this.range.to = null;
@@ -515,25 +456,24 @@ export class TimeRangePullDown {
                 }
             }
         });
-        this.pulldown.setLabel(this._getRangeLabel());
+        this.pulldown.setLabel(this.options.heading + this._getLabel());
     }
 
     set(length, to=null) {
         this.range.length = length;
         this.range.to = to;
-        this.pulldown.setLabel(this._getRangeLabel());
+        this.pulldown.setLabel(this.options.heading + this._getLabel());
     }
         
-    _getRangeLabel() {
+    _getLabel() {
         if (! (this.range.length > 0)) {
-            return this.options.heading + 'Undefined';
+            return 'Undefined';
         }
-        if (this.range.to === null) {
-            return this.options.heading + 'Last ' + lengthString(this.range.length, false);
+        if ((this.range.to === null) || (this.range.to === 0)) {
+            return 'Last ' + lengthString(this.range.length, false);
         }
         let dateFormat = (this.range.length < 90*86400) ? '%b%d,%H:%M' : '%b%d,%Y';
         return (
-            this.options.heading +
             (new JGDateTime(this.range.to - this.range.length).asString(dateFormat)) +
             ' - ' +
             (new JGDateTime(this.range.to).asString(dateFormat))

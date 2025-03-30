@@ -10,6 +10,12 @@ import { JG as $, JGDateTime,  } from './jagaimo/jagaimo.mjs';
 
 export class Controller {
     constructor(view) {  // "view" is an instance of "Layout" or "Panel"
+        this.callbacks = {
+            changeDisplayTimeRange: (displayRange) => {},
+            forceUpdate: () => {},
+            suspend: (duration) => {},
+        };
+        
         this.view = view;
         this.currentData = null;
 
@@ -17,20 +23,19 @@ export class Controller {
     }
 
     
-    async configure(config=null, options={}, callbacks={}) {
+    setCallbacks(callbacks) {
+        $.extend(this.callbacks, callbacks);
+    }
+
+    
+    async configure(config, options={}) {
         const default_options = {
             inactive: false,   // no control buttons at all
             immutable: false,   // no settings, no deleting
             standalone: false,  // no popup
         }
-        const default_callbacks = {
-            changeDisplayTimeRange: (displayRange) => {},
-            forceUpdate: () => {},
-            suspend: (duration) => {},
-        };
         if (config !== null) {
             this.options = $.extend({}, default_options, this.options ?? {}, options);
-            this.callbacks = $.extend({}, default_callbacks, this.callbacks ?? {}, callbacks);
         }
         
         const view_callbacks = {
@@ -53,6 +58,14 @@ export class Controller {
         };
         await this.view.configure(config, this.options, view_callbacks);
 
+        if (this.currentData !== null) {
+            this.update();
+        }
+    }
+
+    
+    async redraw() {
+        await this.view.configure();
         if (this.currentData !== null) {
             this.update();
         }
@@ -256,19 +269,8 @@ export class Controller {
 
 export class Scheduler {
     constructor(options={}) {
-        const defaults = {
-            updateInterval: 0,   // >0: interval, ==0: once, <0: no auto updates
-            resetDelay: 0,
-            update: async () => {},
-            setStatus: (statusText) => {},
-            setProgress: (progress) => {},
-            setBeatTime: (time) => {},
-        };
-        this.options = $.extend({}, defaults, options);
+        this.initialize(options);
         
-        this.updateInterval = this.options.updateInterval;
-        this.resetDelay = this.options.resetDelay;
-
         this.lastUpdateTime = 0;
         this.currentUpdateTime = 0;
         this.pendingRequests = 0;
@@ -279,19 +281,26 @@ export class Scheduler {
     }
 
     
-    start(options={}) {
-        if (options.updateInterval === 0) {
-            // update now, w/o changing the configuration
-        }
-        else {
-            $.extend(this.options, options);
-        }
+    initialize(options={}) {
+        const defaults = {
+            updateInterval: 0,   // >0: interval, ==0: once, <0: no auto updates
+            resetDelay: 0,
+            update: async () => {},
+            setStatus: (statusText) => {},
+            setProgress: (progress) => {},
+            setBeatTime: (time) => {},
+        };
+        this.options = $.extend({}, defaults, options);
+
         this.updateInterval = this.options.updateInterval;
         this.resetDelay = this.options.resetDelay;
-        
-        this.pendingRequests = 1;
+    }
+    
+
+    start() {
+        this.lastUpdateTime = 0;
+        this.pendingRequests = 0;
         this.suspendUntil = 0;
-        this.resetAt = 0;
         
         if (! this.isBeating) {
             this.isBeating = true;
@@ -299,12 +308,17 @@ export class Scheduler {
         }
     }
 
+
+    setUpdateInterval(interval) {
+        this.updateInterval = interval;
+    }
+
     
     suspend(duration) {
         this.suspendUntil = $.time() + duration;
     }
 
-    
+
     scheduleReset() {
         if (this.resetDelay > 0) {
             this.resetAt = $.time() + this.resetDelay;
@@ -344,11 +358,11 @@ export class Scheduler {
         let lapse = now - this.lastUpdateTime;
         let suspend = this.suspendUntil - now;
         let togo;
-        if (this.updateInterval < 0) {
-            togo = 1e10;
-        }
-        else if ((this.lastUpdateTime == 0) || (this.pendingRequests > 0)) {
+        if ((this.lastUpdateTime == 0) || (this.pendingRequests > 0)) {
             togo = 0;
+        }
+        else if (this.updateInterval <= 0) {
+            togo = 1e10;
         }
         else {
             togo = this.updateInterval - lapse;

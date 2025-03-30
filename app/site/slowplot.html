@@ -17,151 +17,29 @@
 
   <script type="module">
     import { JG as $, JGDateTime } from './slowjs/jagaimo/jagaimo.mjs';
-    import { JGDialogWidget } from './slowjs/jagaimo/jagawidgets.mjs';
-    import { Layout } from './slowjs/layout.mjs';
-    import { Controller, Scheduler } from './slowjs/control.mjs';
-    import { Platform, SaveConfigDialog } from './slowjs/platform.mjs';
+    import { SlowDash } from './slowjs/slowdash.mjs';
+    import { lengthString } from './slowjs/control.mjs';
+    import { JGPullDownWidget, JGDialogWidget } from './slowjs/jagaimo/jagawidgets.mjs';
+    import { SaveConfigDialog } from './slowjs/platform.mjs';
     import { Frame, TimeRangePullDown, GridPullDown } from './slowjs/frame.mjs';
 
 
-    // takes urlOptions, returns [ defaults, args ]
-    // urlOptions: key-value pairs in the URL query string
-    // defaults: used when not specified elsewhere
-    // args: overwrite values specified elsewhere
-    function buildSettings(urlOptions) {
-        const defaults = {
-            control: {
-                range: {length: 900},
-                reload: 300,
-                mode: 'normal',
-            },
-            style: {},
-            panels: []
-        };
-        const args = {
-            control: {
-                range: {},
-                grid: {},
-            },
-        };
-        
-        if (urlOptions.mode) {
-            args.control.mode = urlOptions.mode;
-        }
-        if (urlOptions.theme) {
-            args.style = { theme: urlOptions.theme };
-        }
-        if (urlOptions.time) {
-            let to = (new JGDateTime(urlOptions.time)).asInt();
-            if (to > 0) {
-                args.control.range.to = to;
-            }
-        }
-        if (urlOptions.to) {
-            let to = (new JGDateTime(urlOptions.to)).asInt();
-            if (to > 0) {
-                args.control.range.to = to;
-            }
-        }
-        if (urlOptions.length && parseFloat(urlOptions.length) > 10) {
-            args.control.range.length = parseFloat(urlOptions.length);
-        }
-        if (urlOptions.reload) {
-            if (parseFloat(urlOptions.reload) >= 1) {
-                args.control.reload = Math.max(1, parseFloat(urlOptions.reload));
-            }
-            else {
-                args.control.reload = parseFloat(0);
-            }
-        }
-        if (urlOptions.grid) {
-            let [rows, cols] = urlOptions.grid.split('x');
-            args.control.grid = { rows: rows, columns: cols };
-        }
-        if (urlOptions.channel) {
-            args.panels = [];
-            for (const item of urlOptions.channel.split(';')) {
-                const [channels, type] = item.split('/');
-                if ((type ?? 'timeseries') == 'timeseries') {
-                    let panel = { type: 'timeseries', plots: [] };
-                    for (const ch of channels.split(',')) {
-                        panel.plots.push({ type: 'timeseries', channel: ch });
-                    }
-                    args.panels.push(panel);
-                }
-                else if (['histogram', 'ts-histogram', 'histogram2d', 'graph'].includes(type)) {
-                    let panel = { type: 'plot', axes: {}, plots: [] };
-                    if (type == 'histogram2d') {
-                        panel['axes']['colorscale'] = 'Parula';
-                    }
-                    for (const ch of channels.split(',')) {
-                        panel.plots.push({ type: type, channel: ch });
-                    }
-                    args.panels.push(panel);
-                }
-                else if (['table', 'tree', 'blob'].includes(type)) {
-                    for (const ch of channels.split(',')) {
-                        args.panels.push({ type: type, channel: ch });
-                    }
-                }
-            }
-        }
-
-        return [ defaults, args ];
-    }
-
-
     async function main() {
-        const options = Platform.getUrlOptions();
-        const [ defaults, args ] = buildSettings(options);
-        let config = await Platform.initialize(defaults, options, args);
-
-        if (config.meta?.name) {
-            document.title = 'SD ' + config.meta.name;
-        }
-        else {
-            document.title = 'SD Plots';
-        }
-
+        let slowdash = new SlowDash($('#sd-layout'));
+        const config = await slowdash.configure(window.location.search.split('?')[1]);
+        
         let title = config._project.project?.title || config._project.project?.name || "SlowDash";
         if (config.meta?.title) {
             title += " - " + config.meta.title;
         }
-        let style = config._project.style ?? {};
+        document.title = 'SD ' + (config.meta?.title ?? config.meta?.name ?? 'Plots');
 
-        let resetDelay = 0;
-        if ((config.control?.mode??'') == 'protected') {
-            resetDelay = 300;
-        }
-        else if ((config.control?.mode??'') == 'display') {
-            resetDelay = 1;
-        }
-
-        if ((config.control.grid?.columns??0) < 1) {
-            config.control.grid = { columns: 1, rows: 1 };
-            const n = config.panels.length;
-            const cols = n<=12 ? [1, 1, 1, 2, 2, /*n=5*/ 3, 3, /*n=7*/3, 3, 3, 4, 4, /*n=12*/ 4][n] : 4;
-            const rows = n<=12 ? [1, 1, 2, 2, 2, /*n=5*/ 2, 2, /*n=7*/3, 3, 3, 3, 3, /*n=12*/ 3][n] : 4;
-            config.control.grid = { columns: cols, rows: rows };
-        }
         
-        let layout = new Layout($('#sd-layout'), style);
-        let controller = new Controller(layout);
-        let scheduler;
         let frame = new Frame($('#sd-header'), {
             title: title,
-            style: style,
-            initialReloadInterval: config.control.reload,
-            reloadIntervalChange: (interval) => {
-                config.control.reload = interval;
-                scheduler.start({updateInterval: interval});
-                scheduler.scheduleReset();
-            },
+            style: config._project.style ?? {},
         });
-        scheduler = new Scheduler({
-            updateInterval: config.control.reload,
-            resetDelay: resetDelay,
-            update: async () => { return await update(controller, config); },
+        slowdash.setCallbacks({
             setStatus: (statusText) => {
                 frame.setStatus(statusText);
             },
@@ -172,7 +50,133 @@
                 frame.setClockTime(time);
             },
         });
+
+        setupRangeSelect(config, slowdash, frame);
+        setupReloadSelect(config, slowdash, frame);
+        setupGridSelect(config, slowdash, frame);
+        setupSaveButton(config, slowdash, frame);
+        setupUnlockButton(config, slowdash, frame);
+        setupSnapshotButton(config, slowdash, frame);
+        setupCommonButton(config, slowdash, frame);
+
         
+        $(window).bind('resize', ()=>{
+            if (window.innerWidth > 0) {
+                $('#sd-layout').css('width', '').css('height', '');
+                slowdash.redraw();
+            }
+        });
+        
+        slowdash.start();
+    }
+
+
+    function setupRangeSelect(config, slowdash, frame) {
+        let rangeSelect = $('<select>');
+        frame.appendSelect(rangeSelect);
+        
+        let rangePullDown = new TimeRangePullDown(rangeSelect, {
+            custom_items: [ "Current Display Range" ],
+            select: (length, to) => {
+                slowdash.setRange(length, to);
+                slowdash.scheduleReset();
+            },
+            select_custom_item: key => {
+                const currentDisplayRange = slowdash.getCurrentDisplayTimeRange();
+                if (currentDisplayRange) {
+                    const [from, to] = [currentDisplayRange.from, currentDisplayRange.to];
+                    config.control.range.to = Math.round(to);
+                    if (from <= 0) {
+                        config.control.range.length = -from;
+                    }
+                    else {
+                        config.control.range.length = Math.round(to-from);
+                    }
+                    rangePullDown.set(config.control.range.length, config.control.range.to);
+                    slowdash.setRange(length, to);
+                    slowdash.scheduleReset();
+                }
+            }
+        });
+        if (config.control?.range?.length > 0) {
+            if (config.control?.range?.to > 0) {
+                rangePullDown.set(config.control.range.length, config.control.range.to);
+            }
+            else {
+                rangePullDown.set(config.control.range.length, null);
+            }
+        }
+    }
+
+
+    function setupReloadSelect(config, slowdash, frame) {        
+        const heading = '&#x1f680; ';
+        const reloadIntervalSelections = [ 0, -1, 2, 5, 10, 30, 60, 5*60, 15*60, 30*60, 60*60 ];
+        
+        let pulldownItems = [];
+        for (let interval of reloadIntervalSelections) {
+            let value = parseInt(interval);
+            let label = 'Every ' + lengthString(interval, false);
+            if (value < 0) {
+                label = 'Auto Reload Off';
+            }
+            else if (value == 0) {
+                label = 'Reload Now';
+            }
+            pulldownItems.push({ value: value, label: label });
+        }
+        
+        let reloadSel = $('<select>');
+        frame.appendSelect(reloadSel);
+        
+        let reloadPulldown = new JGPullDownWidget(reloadSel, {
+            heading: heading,
+            items: pulldownItems,
+            initial: 0,
+            select: (event, value, obj) => {
+                const length = parseFloat(value); // >0: periodical, ==0: now, <0: off
+                const currentLength = slowdash.setUpdateInterval(length);
+                if (length !== 0) {
+                    slowdash.scheduleReset();
+                }
+                setLabel(currentLength);
+            }
+        });
+
+        let setLabel = (interval) => {
+            if (interval > 0) {
+                reloadPulldown.setLabel(heading + ' Every ' + lengthString(interval, false));
+            }
+            else {
+                reloadPulldown.setLabel(heading + ' Auto Reload Off');
+            }
+        };
+        
+        setLabel(config.control?.reload);
+    }
+
+
+    function setupGridSelect(config, slowdash, frame) {
+        if ((config.control?.mode??'') == 'protected') {
+            frame.appendSelect($('<span>').html("&#x1f512;"));
+        }
+        else {
+            let gridSelect = $('<select>');
+            frame.appendSelect(gridSelect);
+            let gridPulldown = new GridPullDown(gridSelect, {
+                select: async (grid) => {
+                    let [rows, cols] = grid.split('x');
+                    slowdash.setGrid(rows, cols);
+                    slowdash.scheduleReset();
+                }
+            });
+            gridPulldown.set(config.control.grid.rows + 'x' + config.control.grid.columns);
+        }
+    }
+
+
+    function setupSaveButton(config, slowdash, frame) {
+        // dialog //
         let saveDiv = $('<div>').appendTo($('body'));
         let savePopup = $('<dialog>').addClass('sd-pad').appendTo($('body'));
         let saveDialog = new SaveConfigDialog(saveDiv, {
@@ -192,66 +196,31 @@
                 });
             }
         });
-        
-        let configUrlDiv = $('<div>').appendTo($('body'));
-        let configUrlDialog = new JGDialogWidget(configUrlDiv, {
-            title: 'Snapshot Link',
-            buttons: { 'Close': e=> {}, }
-        });
 
-        let currentDisplayTimeRange = null;
-        let rangeSelect = $('<select>');
-        frame.prependSelect(rangeSelect);
-        let rangePullDown = new TimeRangePullDown(rangeSelect, {
-            custom_items: [ "Current Display Range" ],
-            select: (length, to) => {
-                config.control.range.length = Math.round(length);
-                config.control.range.to = (to === null) ? null : Math.round(to);
-                currentDisplayTimeRange = null;
-                scheduler.scheduleReset();
-                scheduler.update();
-            },
-            select_custom_item: key => {
-                if (currentDisplayTimeRange) {
-                    let [from, to] = [currentDisplayTimeRange.from, currentDisplayTimeRange.to];
-                    config.control.range.length = Math.round(to-from);
-                    config.control.range.to = Math.round(to);
-                    rangePullDown.set(config.control.range.length, config.control.range.to);
-                    scheduler.update();
-                }
-                else {
-                    rangePullDown.set(config.control.range.length, config.control.range.to);
-                }
-            }
-        });
-        if (config.control?.range?.length > 0) {
-            if (config.control?.range?.to > 0) {
-                rangePullDown.set(config.control.range.length, config.control.range.to);
-                currentDisplayTimeRange = {
-                    "to": config.control.range.to,
-                    "from": config.control.range.to - config.control.range.length
-                };
+        // button //
+        if ((! (config.control?.inactive ?? false)) && ((config.control?.mode??'') != 'protected')) {
+            let saveButton = $('<button>').html("&#x1f4be;").bind('click', e=>{
+                saveDialog.open(config);
+            });
+            saveButton.attr('title', 'Save');
+            frame.appendButton(saveButton);
+        }
+    }
+
+
+    function setupUnlockButton(config, slowdash, frame) {
+        function changeMode(mode) {
+            let url = window.location.href;
+            if (window.location.search.match(/(\?|&)?mode(=[a-zA-Z0-9]*)?/)) {
+                url = url.replace(/mode(=[a-zA-Z0-9]*)?/, 'mode=' + mode);
             }
             else {
-                rangePullDown.set(config.control.range.length, null);
+                url += ((url.indexOf('?') > 0) ? '&' : '?') + 'mode=' + mode;
             }
+            window.location.href = url;
         }
 
-        if ((config.control?.mode??'') == 'protected') {
-            frame.appendSelect($('<span>').html("&#x1f512;"));
-        }
-        else {
-            let gridSelect = $('<select>');
-            frame.appendSelect(gridSelect);
-            let gridPulldown = new GridPullDown(gridSelect, {
-                select: async (grid) => {
-                    let [rows, cols] = grid.split('x');
-                    controller.setGrid(rows, cols);
-                }
-            });
-            gridPulldown.set(config.control.grid.rows + 'x' + config.control.grid.columns);
-        }
-
+        // unlock from protected mode (unlock button)
         if (! (config.control?.inactive ?? false)) {
             if ((config.control?.mode??'') == 'protected') {
                 let unlockButton = $('<button>').html("&#x1f511;").bind('click', e=>{
@@ -260,21 +229,36 @@
                 unlockButton.attr('title', 'Unlock layout modification');
                 frame.appendButton(unlockButton);
             }
-            else {
-                let saveButton = $('<button>').html("&#x1f4be;").bind('click', e=>{
-                    saveDialog.open(config);
-                });
-                saveButton.attr('title', 'Save');
-                frame.appendButton(saveButton);
-            }
-        
+        }
+
+        // unlock from display mode (clicking on the header)
+        if ((config.control?.mode??'') == 'display') {
+            frame.selectSpan.css('display', 'none');
+            frame.buttonDiv.css('display', 'none');
+            $('#sd-header').bind('click', e=>{ changeMode('normal'); });
+        }
+    }
+
+
+    function setupSnapshotButton(config, slowdash, frame) {
+        let configUrlDiv = $('<div>').appendTo($('body'));
+        let configUrlDialog = new JGDialogWidget(configUrlDiv, {
+            title: 'Snapshot Link',
+            buttons: { 'Close': e=> {}, }
+        });
+
+        // button //
+        if (! (config.control?.inactive ?? false)) {
             let configUrlButton = $('<button>').html("&#x1f4cd;").bind('click', e=>{
-                openConfigUrlDialog(configUrlDialog, config, currentDisplayTimeRange);
+                openConfigUrlDialog(configUrlDialog, config, slowdash.currentDisplayTimeRange);
             });
             configUrlButton.attr('title', 'Create Snapshot Link');
             frame.appendButton(configUrlButton);
         }
-        
+    }
+
+
+    function setupCommonButton(config, slowdash, frame) {
         let homeButton = $('<button>').html("&#x1f3e0;").bind('click', e=>{
             window.open('./');
         });
@@ -287,81 +271,6 @@
         });
         docButton.attr('title', 'Documents');
         frame.appendButton(docButton);
-        
-        if ((config.control?.mode??'') == 'display') {
-            frame.selectSpan.css('display', 'none');
-            frame.buttonDiv.css('display', 'none');
-            $('#sd-header').bind('click', e=>{
-                changeMode('normal');
-            });
-        }
-            
-        $(window).bind('resize', ()=>{
-            if (window.innerWidth > 0) {
-                $('#sd-layout').css('width', '').css('height', '');
-                controller.configure();
-            }
-        });
-        
-        await controller.configure(config, {}, {
-            changeDisplayTimeRange: range => {
-                currentDisplayTimeRange = range;
-            },
-            forceUpdate: () => {
-                scheduler.update();
-            },
-            suspend: (duration=300) => {
-                scheduler.suspend(duration);
-                scheduler.scheduleReset();
-            },
-        });
-
-        scheduler.start();
-    }
-
-
-    // This will be called by scheduler.update()
-    //   which can be called by the frame.reloadIntervalChange() callabcks,
-    //   or by the controller.forceUpdate() callback.
-    // This will call controller.update().
-    // By going through the scheduler, the next update will be re-scheduled properly.
-    async function update(controller, config) {
-        let length = config.control?.range?.length ?? 0;
-        if (! (length > 0)) {
-            length = 3600;
-        }
-        let to = config.control?.range?.to ?? 0;
-        if (! (to > 0)) {
-            to = 0;
-        }
-        let from = to - length;
-        
-        const status = await controller.update({from:from, to:to});
-        if (status.code == 200) {
-            return null;
-        }
-        else {
-            let message = 'Error on ';
-            message += (new JGDateTime()).asString('%a, %b %d %H:%M');
-            message += " [ ";
-            if (status.code >= 0) {
-                message += "Status" + status.code + ", ";
-            }
-            message += status.text + " ]";
-            return message;
-        }
-    }
-
-
-    function changeMode(mode) {
-        let url = window.location.href;
-        if (window.location.search.match(/(\?|&)?mode(=[a-zA-Z0-9]*)?/)) {
-            url = url.replace(/mode(=[a-zA-Z0-9]*)?/, 'mode=' + mode);
-        }
-        else {
-            url += ((url.indexOf('?') > 0) ? '&' : '?') + 'mode=' + mode;
-        }
-        window.location.href = url;
     }
 
 
@@ -482,5 +391,6 @@
 
 
     window.addEventListener('DOMContentLoaded', main);
+
   </script>    
 </body>

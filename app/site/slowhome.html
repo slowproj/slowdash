@@ -18,12 +18,10 @@
 
   <script type="module">
     import { JG as $ } from './slowjs/jagaimo/jagaimo.mjs';
-    import { Layout } from './slowjs/layout.mjs';
-    import { Scheduler } from './slowjs/control.mjs';
-    import { Platform } from './slowjs/platform.mjs';
+    import { SlowDash } from './slowjs/slowdash.mjs';
     import { Frame } from './slowjs/frame.mjs';
 
-    let config = {
+    let layout_config = {
         control: {
             grid: { 'rows': 2, 'columns': 2 },
             inactive: true,
@@ -49,51 +47,43 @@
 
 
     async function main() {
-        config = await Platform.initialize(config);
-        if (config.meta?.name) {
-            document.title = 'SlowDash: ' + config.meta.name;
-        }
-        else {
-            document.title = 'SlowDash';
-        }
+        $('#sd-layout').css({'width':"100%", 'margin':0, 'padding':0});
+        let slowdash = new SlowDash($('#sd-layout'));
+        const config = await slowdash.configure(layout_config);
+        
         let title = config._project.project?.title || config._project.project?.name || "SlowDash";
         if (config.meta?.title) {
             title += " - " + config.meta.title;
         }
-        let style = config._project.style ?? {};
+        document.title = 'SlowDash ' + config._project.project?.name;
 
-        $('#sd-layout').css({'width':"100%", 'margin':0, 'padding':0});
-        let layout = new Layout($('#sd-layout'), {
-            style: style,
-        });
 
         let frame = new Frame($('#sd-header'), {
             title: title,
+            style: config._project.style ?? {},
             initialStatus: "SlowDash - Version " + config._project.slowdash.version,
-            style: style,
-            reloadIntervalSelection: null
         });
-        let scheduler = new Scheduler({
+        slowdash.setCallbacks({
             setBeatTime: (time) => {
                 frame.setClockTime(time);
             },
         });
 
-        await update_server();
-        await layout.configure(config);
-
+        
         $(window).bind('resize', ()=>{
             if (window.innerWidth > 0) {
                 $('#sd-layout').css('width', '').css('height', '');
-                layout.configure();
+                slowdash.redraw();
             }
         });
 
-        scheduler.start();
+        
+        await triggerServerUpdate();
+        slowdash.start();
     }
 
 
-    async function update_server() {
+    async function triggerServerUpdate() {
         try {
             let response = await fetch('./api/update/tasklist', {
                 method: 'POST',

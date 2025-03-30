@@ -5,7 +5,6 @@
 <head>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SD File Manager</title>
   <link rel="icon" href="favicon.png">
   <link rel="stylesheet" type="text/css" href="slowjs/slowdash.css">
   <link rel="stylesheet" type="text/css" id="sd-theme-css">
@@ -18,12 +17,14 @@
 
   <script type="module">
     import { JG as $ } from './slowjs/jagaimo/jagaimo.mjs';
-    import { Layout } from './slowjs/layout.mjs';
-    import { Scheduler } from './slowjs/control.mjs';
-    import { Platform } from './slowjs/platform.mjs';
+    import { SlowDash } from './slowjs/slowdash.mjs';
     import { Frame } from './slowjs/frame.mjs';
 
-    let config = {
+    const layout_config = {
+        meta: {
+            name: 'SlowFile',
+            title: 'Config File Manager',
+        },
         control: {
             grid: { 'rows': 1, 'columns': 1 },
             inactive: true,
@@ -35,30 +36,42 @@
 
 
     async function main() {
-        config = await Platform.initialize(config);
+        $('#sd-layout').css({'width':"100%", 'margin':0, 'padding':0});
+        let slowdash = new SlowDash($('#sd-layout'));
+        const config = await slowdash.configure(layout_config);
+        
         let title = config._project.project?.title || config._project.project?.name || "SlowDash";
         if (config.meta?.title) {
             title += " - " + config.meta.title;
         }
-        let style = config._project.style ?? {};
+        document.title = layout_config.meta.name;
 
-        $('#sd-layout').css({'width':"100%", 'margin':0, 'padding':0});
-        let layout = new Layout($('#sd-layout'), {
-            style: style,
-        });
 
         let frame = new Frame($('#sd-header'), {
             title: title,
-            initialStatus: "SlowDash File Manager",
-            style: style,
-            reloadIntervalSelection: null
+            style: config._project.style ?? {},
+            initialStatus: "SlowDash - Version " + config._project.slowdash.version,
         });
-        let scheduler = new Scheduler({
+        slowdash.setCallbacks({
             setBeatTime: (time) => {
                 frame.setClockTime(time);
             },
         });
+        setupCommonButtons(config, slowdash, frame);
 
+        
+        $(window).bind('resize', ()=>{
+            if (window.innerWidth > 0) {
+                $('#sd-layout').css('width', '').css('height', '');
+                slowdash.redraw();
+            }
+        });
+
+        slowdash.start();
+    }
+
+
+    function setupCommonButtons(config, slowdash, frame) {
         let homeButton = $('<button>').html("&#x1f3e0;").bind('click', e=>{
             window.location.href = './';
         });
@@ -69,17 +82,6 @@
         });
         docButton.attr('title', 'Documents');
         frame.appendButton(docButton);
-        
-        await layout.configure(config);
-
-        $(window).bind('resize', ()=>{
-            if (window.innerWidth > 0) {
-                $('#sd-layout').css('width', '').css('height', '');
-                layout.configure();
-            }
-        });
-
-        scheduler.start();
     }
 
     window.addEventListener('DOMContentLoaded', main);
