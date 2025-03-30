@@ -1126,10 +1126,13 @@ class PlotPanel extends Panel {
     addControlButtons(div) {
         super.addControlButtons(div);
         
-        let downloadBtn = $('<button>').html('&#x1f4e5;').prependTo(div);
-        downloadBtn.attr('title', 'Download').bind('click', e=>{
-            this.download();
-        });
+        if (! (this.options.standalone??false)) {
+            let downloadBtn = $('<button>').html('&#x1f4e5;').prependTo(div);
+            downloadBtn.attr('title', 'Download').bind('click', e=>{
+                this.download();
+            });
+        }
+        
         let captureBtn = $('<button>').html('&#x1f4f8;').prependTo(div);
         captureBtn.attr('title', 'Save Image').bind('click', e=>{
             this.capture();

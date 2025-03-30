@@ -1,0 +1,52 @@
+{
+    "control": {
+        "range": { "length": 900, "to": 0 },
+        "reload": 5,
+        "mode": "normal",
+        "grid": { "rows": "2", "columns": "2" }
+    },
+    "style": { },
+    "panels": [
+        {
+            "type": "timeseries",
+            "plots": [
+                { "type": "timeseries", "channel": "ch0", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": 1e-100 }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 100, "ymax": 400 },
+            "legend": { "style": "side" }
+        },
+        {
+            "type": "plot",
+            "plots": [
+                { "type": "ts-histogram", "channel": "ch0", "color": "#009090", "opacity": 0.2, "label": "", "format": "%.5g" }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
+            "legend": { "style": "side" }
+        },
+        {
+            "type": "timeseries",
+            "plots": [
+                { "type": "timeseries", "channel": "ch1", "color": "#dd8000", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": 1e-100 }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 70, "ymax": 200 },
+            "legend": { "style": "side" }
+        },
+        {
+            "type": "plot",
+            "plots": [
+                {
+                    "type": "ts-histogram",
+                    "channel": "ch1",
+                    "color": "#dd8000",
+                    "opacity": 0.2,
+                    "label": "",
+                    "format": "%.5g",
+                    "bins": { "n": null, "min": null, "max": null }
+                }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "xmin": 80, "xmax": 200, "ymin": 0, "ymax": 20, "zmin": 0, "zmax": 1 },
+            "legend": { "style": "side" }
+        }
+    ],
+    "meta": { "name": "test", "title": "", "description": "" }
+}

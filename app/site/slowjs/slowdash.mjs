@@ -12,13 +12,16 @@ import { Platform, SaveConfigDialog } from './platform.mjs';
 
 export class SlowDash {
     
-    constructor(div) {
+    constructor(div, config=null, options=null) {
         this.callbacks = {
             setStatus: (statusText) => {},
             setProgress: (progressText) => {},
             setBeatTime: (time) => {},
         };
-        this.config = {};
+        this.init_config = config;
+        this.init_options = options;
+        
+        this.config = null;
         
         this.layout = new Layout(div);
         this.controller = new Controller(this.layout);
@@ -168,7 +171,11 @@ export class SlowDash {
 
     
     async start() {
+        if (this.config === null) {
+            await this.configure(this.init_config, this.init_options);
+        }
         await this.controller.configure(this.config, {});
+        
         this.scheduler.start();
     }
 

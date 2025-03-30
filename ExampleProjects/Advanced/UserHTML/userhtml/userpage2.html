@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="slowjs/slowdash.css">
+  <link rel="stylesheet" type="text/css" id="sd-theme-css">
+  <style type="text/css">
+    #src {
+        overflow: auto;
+        white-space: pre;
+        font-family: monospace;
+        padding: 1em;
+        background: #dddddd;
+    }
+  </style>
+</head>
+
+<body>
+  <h3>This is a User HTML Page</h3>
+  This is an example page of a User HTML Files.
+  Files placed under project "userhtml" directory are accessible
+  though the SlowDash Web API of "/api/userhtml/{filename}".
+  If the file does not exist, then the file is searched for
+  from the SlowDash web directory ("slowdash/app/sites"),
+  in order that the user HTML can use the SlowDash JS library
+  (slowdash/app/sites/slowjs).
+  All the files under the SlowDash web directory starts with "slow",
+  and users should avoid using such names.
+
+  <p>
+  
+  <div style="display:flex">
+    <div>
+      <h4>Source Code of This Page</h4>
+      This source code can be found at "ExampleProjects/Experimental/UserHTML".
+      <div id="src" style="width:40vw;margin:2rem"></div>
+    </div>
+    <div>
+      <h4>Example for Embedding a full SlowDash layout with control capability (updating etc)</h4>
+      <div id="layout" style="width:50vw;height:25vw;margin:2rem"></div>
+      To embed a layout in your HTML, crate a SlowDash object with giving a '&lt;div&gt;' element,
+      then call configure() with a config parameter, which can be a layout configuration in dict,
+      or slowdash/slowplot file name on the Project config directory.
+    </div>
+  </div>
+
+  <script type="module">
+    import { SlowDash } from './slowjs/slowdash.mjs';
+        
+    async function main() {
+        let slowdash = new SlowDash('#layout', 'slowplot-test.json');
+        slowdash.start();
+        
+        const responseSrc = await fetch('userpage2.html');
+        if (responseSrc.ok) {
+            document.querySelector('#src').textContent = await responseSrc.text();
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', main);
+  </script>    
+</body>
