@@ -1,4 +1,14 @@
-# SlowDash + Jupyter behind a Nginx reverse proxy
+# SlowDash + Jupyter/SlowPy behind Nginx, all in Docker Compose
+
+## Ingredients
+- SlowDash
+- Jupyter with SlowPy
+- Nginx reverse proxy for:
+  - URL mapping for SlowDash and Jupyter
+  - Basic authentication
+  - HTTPS encryption
+  - HTTP/2 protocol
+
 
 ## Setting up
 see ExampleProjects/ReverseProxy_Nginx for details
