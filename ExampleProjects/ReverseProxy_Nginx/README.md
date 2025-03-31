@@ -1,10 +1,16 @@
 
 # Reverse Proxy with Nginx in Docker Compose
 
-## Setup
+## Objectives
+Nginx container is added to the SlowDash Docker-Compose for:
+- Faster HTTP/2 protocol
+- Encrypted HTTPS communication between web browsers and the compose
+- Password protection with Basic Authentication
+  - by Nginx: currently `.htpasswd` file is volume-mounted, which affects the performance seriously, or
+  - by SlowDash config: this is also very slow...
 
+## Setting up
 ### Creating SSL/TLS certificate
-
 #### Temporary Self-signed
 ```bash
 $ ./generate-certificates.sh
