@@ -1,0 +1,21 @@
+
+services:
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/htpasswd:/etc/nginx/.htpasswd
+      - ./nginx/certs:/etc/nginx/certs
+    depends_on:
+      - slowdash
+
+
+  slowdash:
+    image: slowdash
+    expose:
+      - "18881"
+    volumes:
+      - .:/project

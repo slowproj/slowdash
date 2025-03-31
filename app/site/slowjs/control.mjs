@@ -209,7 +209,7 @@ export class Controller {
     
     _setupStreaming() {
         let url = new URL(window.location.href);
-        url.protocol = 'ws:';
+        url.protocol = (url.protocol == 'https:' ? 'wss:' : 'ws:');
         url.search = '';
         url.hash = '';
         

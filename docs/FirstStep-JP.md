@@ -515,7 +515,7 @@ $ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash
 ```
 このプログラムの実行に `bcrypt` パッケージを入れる必要があるかもしれません (`pip install bcrypt`)．
 
-リバースプロキシの設定方法については，大規模言語モデル系の AI が詳しく教えてくれます．もとのポートはちゃんと塞いでおいてください．
+リバースプロキシの設定方法については，大規模言語モデル系の AI が詳しく教えてくれます．SlowDash の `ExampleProjects/ReverseProxy_Nginx` に Nginx を Docker Compose でリバースプロキシとして使う例もあります．もとのポートを塞いでおくのを忘れないでください．
 
 ### HTTPS
 SlowDash を ASGI モードで使っている場合，リバースプロキシの代わりに，組み込みの HTTPS サーバーを使うこともできます．SSL/TLS 鍵ファイルと認証ファイルを指定して `slowdash` を起動してください．
@@ -524,6 +524,6 @@ $ slowdash  --port=18881  --ssl-keyfile=KEY_FILE  --ssl-certfile=CERT_FILE
 ...
 Listening at port 18881 (ASGI HTTPS)
 ```
-ただし，この機能は将来の SlowDash では削除されるかもしれません．長期使用するシステムでは，ちゃんとしたリバースプロキシを使用するのがいいと思います．Docker の場合は Compose とかで Nginx コンテナを含めるのが想定です．
+ただし，この機能は将来の SlowDash では削除されるかもしれません．長期使用するシステムでは，ちゃんとしたリバースプロキシを使用するのがいいと思います．
 
 <div style="margin-bottom:10rem"/>

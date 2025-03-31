@@ -166,7 +166,7 @@ export class SlowDash {
 
     
     setGrid(rows, cols) {
-        this.contorller.setGrid(rows, cols);
+        this.controller.setGrid(rows, cols);
     }
 
     

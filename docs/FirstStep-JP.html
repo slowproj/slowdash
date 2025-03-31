@@ -434,7 +434,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <p>（もしコピペに失敗してエラーが出るようであれば，同じ内容のファイルが
 <code>slowdash/ExampleProjects/QuickTour/config/slowtask-testdata.py</code>
 にあります．）</p>
-<p>10 秒くらい経過したら <code>Ctrl-c</code>
+<p>10 秒くらい経過したら <code>Ctrl</code>-<code>c</code>
 で止めて，できたファイルを確認してください．</p>
 <div class="sourceCode" id="cb17"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ ls -l</span></span>
@@ -619,8 +619,8 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 が走ってなければ，いつ消しても構いません．またデータが欲しくなったら，再度
 <code>generate-testdata.py</code>
 を走らせてください．（データファルを削除せずに走らせても問題ありません．複数同時に走らせたら変なことになると思います．）</p>
-<p>プログラムの終了は，全て <code>Ctrl-c</code>
-です．それなりに上品に止まります．だめだったら，<code>Ctrl-\</code>
+<p>プログラムの終了は，全て <code>Ctrl</code>-<code>c</code>
+です．それなりに上品に止まります．だめだったら，<code>Ctrl</code>-<code>\</code>
 を使ってください．</p>
 <h3 id="ブラウザでデータを見る">ブラウザでデータを見る</h3>
 <p>ブラウザ上の青い文字のところをクリックすればいろいろとプロットを作成できます．上部の紫色は，東北大学とワシントン大学の共通テーマカラーなので我慢してください．（プロジェクト設定ファイルで変更できます．<a
@@ -737,7 +737,10 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 パッケージを入れる必要があるかもしれません
 (<code>pip install bcrypt</code>)．</p>
 <p>リバースプロキシの設定方法については，大規模言語モデル系の AI
-が詳しく教えてくれます．もとのポートはちゃんと塞いでおいてください．</p>
+が詳しく教えてくれます．SlowDash の
+<code>ExampleProjects/ReverseProxy_Nginx</code> に Nginx を Docker
+Compose
+でリバースプロキシとして使う例もあります．もとのポートを塞いでおくのを忘れないでください．</p>
 <h3 id="https">HTTPS</h3>
 <p>SlowDash を ASGI
 モードで使っている場合，リバースプロキシの代わりに，組み込みの HTTPS
@@ -748,8 +751,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>...</span>
 <span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>Listening at port 18881 (ASGI HTTPS)</span></code></pre></div>
 <p>ただし，この機能は将来の SlowDash
-では削除されるかもしれません．長期使用するシステムでは，ちゃんとしたリバースプロキシを使用するのがいいと思います．Docker
-の場合は Compose とかで Nginx コンテナを含めるのが想定です．</p>
+では削除されるかもしれません．長期使用するシステムでは，ちゃんとしたリバースプロキシを使用するのがいいと思います．</p>
 <div style="margin-bottom:10rem"/>
 
 

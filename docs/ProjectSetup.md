@@ -419,7 +419,7 @@ SlowDog is enabled in the SlowDash Docker container.
 As already mentioned, <b>SlowDash is designed for internal use only</b> within a secured network and therefore no security protection is implemented. It is strongly recommended not to expose the system to the public internet. External access is assumed to be done <b>through VPN or ssh tunnel</b>.
 
 ### Basic Authentication
-In a case that you cannot trust your internal friends, SlowDash implements the "Basic Authentication". Combine this authentication <b>with HTTPS using a reverse proxy</b> to encrypt the password and communication.
+In a case that you cannot trust your internal friends, SlowDash implements the "Basic Authentication". Combine this authentication <b>with HTTPS using a reverse proxy</b> to encrypt the password and communication. There is an example under `ExampleProjects/ReverseProxy_Nginx'.
 
 To use the Basic Authentication, first install the `bcrypt` Python package if it is not yet installed:
 ```console
@@ -450,6 +450,7 @@ slowdash_project:
 ```
 
 This key can also be used for Apache, but some Apache keys, especially old ones such as MD5 keys which are still widely used, can not be used for SlowDash.
+
 
 #### Only for the CGI/WSGI mode
 Rerun the `slowdash-setup-apache.py` command to update the Web Server configuration.

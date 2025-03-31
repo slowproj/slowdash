@@ -43,7 +43,7 @@ class BasicAuthentication():
         if self.auth_list is None:
             return Response()
 
-        auth = request.headers.get('Authorization', None)        
+        auth = request.headers.get('authorization', request.headers.get('Authorization', None))
         if auth == '' or auth is None:
             return self.require_auth(request)
 
@@ -52,11 +52,13 @@ class BasicAuthentication():
             true_key = self.auth_list.get(user, None)
             if word is None or true_key is None:
                 return self.require_auth(request)
-            
+
+            # key is hashed and this is safe against timing attack; but this is very slow...
             key = bcrypt.hashpw(word.encode("utf-8"), true_key.encode()).decode("utf-8")
-            if key == true_key:    # key is hashed and this is safe against timing attack
+            if key == true_key:    
                 request.user = user
                 return Response()
+                
         except Exception as e:
             logging.warning(f'Slowlette_BasicAuthentication: Authentication Error: {str(e)}')
             

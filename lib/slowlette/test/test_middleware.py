@@ -20,12 +20,18 @@ key = slowlette.BasicAuthentication.generate_key('api', 'slow')
 app.slowlette.add_middleware(slowlette.BasicAuthentication(auth_list=[key]))
 
 app.slowlette.add_middleware(
-    slowlette.FileServer('../../../web', exclude='/api', drop_exclude_prefix=True, index_file="welcome.html")
+    slowlette.FileServer('..', prefix='file', exclude='/slowlette', index_file="welcome.html")
 )
 
 
 
 if __name__ == '__main__':
+    import logging
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+    logging.basicConfig(level=logging.DEBUG)
+
+    
     if True:
         import asyncio
         async def main():
