@@ -136,7 +136,7 @@ class ConfigComponent(Component):
                 'type': kind,
                 'name': name,
                 'mtime': mtime,
-                'title': meta_info.get('title', ''),
+                'title': meta_info.get('title', content.get('title', name)),
                 'description': meta_info.get('description', ''),
                 'config_file': basename,
                 'config_error': meta_info.get('config_error', ''),

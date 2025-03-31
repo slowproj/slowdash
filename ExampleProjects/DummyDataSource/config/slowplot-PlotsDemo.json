@@ -1,9 +1,9 @@
 {
     "control": {
-        "range": { "length": 259200 },
+        "range": { "length": 21600, "to": 0 },
         "reload": 300,
-        "grid": { "rows": 3, "columns": 3 },
-        "mode": "normal"
+        "mode": "normal",
+        "grid": { "rows": 3, "columns": 3 }
     },
     "style": { },
     "panels": [
@@ -94,5 +94,5 @@
             "legend": { "style": "none" }
         }
     ],
-    "meta": { "name": "Demo", "title": "Plots Demo", "description": "Plot Demonstrations" }
+    "meta": { "name": "PlotsDemo", "title": "Plots Demo", "description": "Plot Demonstrations" }
 }
