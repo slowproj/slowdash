@@ -1,0 +1,40 @@
+
+services:
+  juputer:
+    image: slowproj/slowpy-notebook
+    command:
+      - start-notebook.sh
+      - --NotebookApp.base_url=/juputer
+      - --NotebookApp.token=''
+      - --NotebookApp.password=''
+    expose:
+      - "8888"
+    volumes:
+      - ./notebooks:/home/jovyan
+    environment:
+      JUPYTER_BASE_URL: "/juputer"
+
+
+  slowdash:
+    image: slowproj/slowdash
+    volumes:
+      - .:/project
+    expose:
+      - "18881"
+    environment:
+      - JUPYTER_URL=http://localhost/juputer
+      - JUPYTER_TOKEN=""
+      - JUPYTER_INTERNAL_URL=http://juputer:8888/juputer
+      - SLOWDASH_INTERNAL_URL=http://slowdash:18881
+      
+
+  nginx:
+    build: ./nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - slowdash
+      - juputer

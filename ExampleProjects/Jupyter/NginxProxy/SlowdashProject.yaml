@@ -1,0 +1,58 @@
+slowdash_project:
+  name: Jupyter Test
+  title: Jupyter Integration
+
+
+  export:
+    - type: jupyter
+      url: ${JUPYTER_URL:-http://localhost:8888}
+      token: ${JUPYTER_TOKEN:-SlowJupyter}
+      jupyter_internal_url: ${JUPYTER_INTERNAL_URL:-}
+
+      # if Jupyter is in a Docker container
+      slowdash_internal_url: ${SLOWDASH_INTERNAL_URL:-http://host.docker.internal:18881}
+
+
+  data_source:
+    - type: Dummy
+      parameters:
+        timeseries:
+          - name: ch0
+            formula: 10*sin(t/3600) + 80*sin(t/86400) + 100
+            noise: 5
+            walk: 1
+            decay: 0.001
+          - name: ch1
+            formula: 5*sin(t/30) + 20
+            noise: 5
+            walk: 0.1
+            decay: 0.001
+          - name: ch2
+            formula: 30*sin(t/36000) + 10
+            noise: 10
+            walk: 5
+            decay: 0.01
+          - name: ch3
+            formula: 10*sin(t/3600) + 15
+            noise: 10
+            walk: 1
+            decay: 0.001
+            intervals: 600
+          
+        histogram:
+          - name: nhits
+            pdf: np.random.poisson(50, 1)[0]
+            entries: 100
+            bins: { n: 100, min: 0, max: 100 }
+
+        histogram2d:
+          - name: multivariate_normal
+            pdf: np.random.multivariate_normal([7, 60], [[50, 120], [120, 1000]]).tolist()
+            entries: 10000
+            xbins: { n: 30, min: 0, max: 10 }
+            ybins: { n: 30, min: 0, max: 100 }
+
+        graph:
+          - name: hitmap
+            entries: 2300
+            mean: 10

@@ -1,7 +1,6 @@
 
 services:
-  # Create "notebook" directory before starting this container.
-  notebook:
+  jupyter:
     image: slowproj/slowpy-notebook
     command:
       - start-notebook.sh
@@ -9,7 +8,7 @@ services:
     ports:
       - 8888:8888
     volumes:
-      - ./notebook:/home/jovyan
+      - ./notebooks:/home/jovyan
 
 
   slowdash:
@@ -21,6 +20,6 @@ services:
     environment:
       - JUPYTER_URL=http://localhost:8888
       - JUPYTER_TOKEN=SlowJupyter
-      - JUPYTER_INTERNAL_URL=http://notebook:8888
+      - JUPYTER_INTERNAL_URL=http://jupyter:8888
       - SLOWDASH_INTERNAL_URL=http://slowdash:18881
       
