@@ -1,7 +1,7 @@
-# SlowDash + Jupyter behind a Ngynx reverse proxy
+# SlowDash + Jupyter behind a Nginx reverse proxy
 
 ## Setting up
-see ExampleProjects/ReverseProxy_Ngynx for details
+see ExampleProjects/ReverseProxy_Nginx for details
 
 ```bash
 generate-selfsigned-certificate.sh
