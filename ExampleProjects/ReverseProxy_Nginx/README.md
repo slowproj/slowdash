@@ -7,16 +7,16 @@ Nginx container is added to the SlowDash Docker-Compose for:
 - URL path (`/slowdash`) instead of port number (`:18881`)
 - Faster HTTP/2 protocol
 - Encrypted HTTPS communication between web browsers and the compose
-- Password protection with Basic Authentication
-  - by Nginx: currently `.htpasswd` file is volume-mounted, which affects the performance seriously, or
-  - by SlowDash config: this is also very slow...
+- Password protection with Basic Authentication (faster than SlowDash config)
+
+In this setup, to avoid overhead in using Docker volume mount on every HTTP request, the Nginx configuration and credential files are copied in the docker image, rather than using Docker volume mount. Whenever the setting is modified, the container image must be rebuilt (described below).
 
 
 ## Setting up
 ### Creating SSL/TLS certificate
 #### Temporary Self-signed
 ```bash
-./generate-certificates.sh
+./generate-selfsigned-certificates.sh
 ```
 
 This will create certificate files under `nginx/certs`.
@@ -34,14 +34,12 @@ sudo cp /etc/letsencrypt/live/HOSTNAME/privkey.pem ./nginx/certs/
 
 
 ### Creating Basic Authentication file
-In this example, the password file is volume-mounted into the Nginx container, which affects the performance seriously. SlowDash can be configured (in the `SlowdashProject.yaml` file) to use Basic Authentication, but this is also very slow...
 
 #### Using Apache utils
 ```bash
 $ sudo apt install apache2-utils
-$ htpasswd -c nginx/htpasswd USERNAME
+$ htpasswd -bc nginx/htpasswd USERNAME PASSWD
 ```
-
 This will create the `htpasswd` file under `nginx`.
 
 #### Using SlowDash utils
@@ -51,6 +49,8 @@ $ PATH/TO/SLOWDASH/utils/slowdash-generate-key.py USERNAME PASSWORD
 
 Then copy the value of `key` to `nginx/htpasswd` file.
 
+This uses the bcrypt encryption which is quite CPU-intense. If the response is too slow, use the Nginx authentication above, which uses a faster (and less secure) MD5 encryption.
+
 
 ## Running
 ```bash
@@ -59,3 +59,7 @@ docker compose up
 
 Then open a browser and connect to `https://localhost/slowdash`.
 
+When password or Nginx configuration is changed, run the container with `--build` option:
+```bash
+docker compose up --build
+```
