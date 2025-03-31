@@ -3,20 +3,34 @@
 
 ## Objectives
 Nginx container is added to the SlowDash Docker-Compose for:
+
+- URL path (`/slowdash`) instead of port number (`:18881`)
 - Faster HTTP/2 protocol
 - Encrypted HTTPS communication between web browsers and the compose
 - Password protection with Basic Authentication
   - by Nginx: currently `.htpasswd` file is volume-mounted, which affects the performance seriously, or
   - by SlowDash config: this is also very slow...
 
+
 ## Setting up
 ### Creating SSL/TLS certificate
 #### Temporary Self-signed
 ```bash
-$ ./generate-certificates.sh
+./generate-certificates.sh
 ```
 
 This will create certificate files under `nginx/certs`.
+
+#### Let's Encrypt
+```bash
+sudo apt install certbot python3-certbot-nginx
+sudo certbot certonly --standalone -d HOSTNAME
+```
+This will create certificates files under `/etc/letsencrypt/...`. Copy them to `./nginx/certs`:
+```bash
+sudo cp /etc/letsencrypt/live/HOSTNAME/fullchain.pem ./nginx/certs/
+sudo cp /etc/letsencrypt/live/HOSTNAME/privkey.pem ./nginx/certs/
+```
 
 
 ### Creating Basic Authentication file
@@ -38,7 +52,7 @@ $ PATH/TO/SLOWDASH/utils/slowdash-generate-key.py USERNAME PASSWORD
 Then copy the value of `key` to `nginx/htpasswd` file.
 
 
-## Run
+## Running
 ```bash
 docker compose up
 ```
