@@ -1,0 +1,17 @@
+
+services:
+  nginx:
+    build: ./nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - slowdash
+
+
+  slowdash:
+    image: slowproj/slowdash
+    expose:
+      - "18881"
+    volumes:
+      - .:/project

@@ -22,7 +22,7 @@ services:
     expose:
       - "18881"
     environment:
-      - JUPYTER_URL=http://localhost/jupyter
+      - JUPYTER_URL=https://localhost/jupyter
       - JUPYTER_TOKEN=""
       - JUPYTER_INTERNAL_URL=http://jupyter:8888/jupyter
       - SLOWDASH_INTERNAL_URL=http://slowdash:18881

@@ -11,7 +11,7 @@
 
 
 ## Setting up
-see ExampleProjects/ReverseProxy_Nginx for details
+see ExampleProjects/ReverseProxy/Nginx for details
 
 ```bash
 generate-selfsigned-certificate.sh

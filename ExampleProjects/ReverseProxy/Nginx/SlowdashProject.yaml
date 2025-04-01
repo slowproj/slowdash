@@ -1,0 +1,15 @@
+slowdash_project:
+  name: ReverseProxyTest
+
+  # this is very slow...
+  authentication_disabled:
+    type: Basic
+    key: slow:$2a$12$Gr96mCqoXFlIprZv3K1XsuPaMnBP7ELN1ctbumsE4XK2oo1anEAIy
+    
+  data_source:
+    - type: Dummy
+      timeseries:
+        - { name: ch0, noise: 10, walk: 5, decay: 0.005, formula: 180 }
+        - { name: ch1, noise: 10, walk: 5, decay: 0.01, formula: 110 }
+        - { name: ch2, noise: 10, walk: 2, decay: 0.01, formula: 80 }
+        - { name: ch3, noise: 10, walk: 1, decay: 0.1, formula: 50 }

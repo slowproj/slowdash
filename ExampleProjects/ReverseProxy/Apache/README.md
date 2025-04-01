@@ -1,0 +1,65 @@
+
+# Reverse Proxy with Apache in Docker Compose
+
+## Objectives
+Apache container is added to the SlowDash Docker-Compose for:
+
+- URL path (`/slowdash`) instead of port number (`:18881`)
+- Faster HTTP/2 protocol
+- Encrypted HTTPS communication between web browsers and the compose
+- Password protection with Basic Authentication (faster than SlowDash config)
+
+In this setup, to avoid overhead in using Docker volume mount on every HTTP request, the Apache configuration and credential files are copied in the docker image, rather than using Docker volume mount. Whenever the setting is modified, the container image must be rebuilt (described below).
+
+
+## Setting up
+### Creating SSL/TLS certificate
+#### Temporary Self-signed
+```bash
+./generate-selfsigned-certificates.sh
+```
+
+This will create certificate files under `apache2/ssl`.
+
+#### Let's Encrypt
+```bash
+sudo apt install certbot 
+sudo certbot certonly --standalone -d HOSTNAME
+```
+This will create certificates files under `/etc/letsencrypt/...`. Copy them to `./apache/certs`:
+```bash
+sudo cp /etc/letsencrypt/live/HOSTNAME/fullchain.pem ./apache2/ssl/
+sudo cp /etc/letsencrypt/live/HOSTNAME/privkey.pem ./apache2/ssl/
+```
+
+
+### Creating Basic Authentication file
+
+#### Using Apache utils
+```bash
+$ sudo apt install apache2-utils
+$ htpasswd -bc apache2/htpasswd USERNAME PASSWD
+```
+This will create the `htpasswd` file under `apache2`.
+
+#### Using SlowDash utils
+```bash
+$ PATH/TO/SLOWDASH/utils/slowdash-generate-key.py USERNAME PASSWORD
+```
+
+Then copy the value of `key` to `apache2/htpasswd` file.
+
+This uses the bcrypt encryption which is quite CPU-intense. If the response is too slow, use the Apache authentication above, which uses a faster (and less secure) MD5 encryption.
+
+
+## Running
+```bash
+docker compose up
+```
+
+Then open a browser and connect to `https://localhost/slowdash`.
+
+When password or Apache configuration is changed, run the container with `--build` option:
+```bash
+docker compose up --build
+```

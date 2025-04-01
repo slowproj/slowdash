@@ -1,7 +1,7 @@
 
 services:
-  nginx:
-    build: ./nginx
+  apache:
+    build: ./apache2
     ports:
       - "80:80"
       - "443:443"
@@ -10,7 +10,7 @@ services:
 
 
   slowdash:
-    image: slowdash
+    image: slowproj/slowdash
     expose:
       - "18881"
     volumes:
