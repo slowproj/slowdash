@@ -349,8 +349,82 @@ RewriteRule ^api/(.*)$ slowdash.wsgi/$1
 ```
 Although dedicated daemon is created for this SlowDash project, currently only one WSGI can be setup on one host. Other SlowDash project must use CGI.
 
+
+# Using a Reverse Proxy Server
+Having an external Web server such as Nginx or Apache is often useful for:
+
+- using a common URL string instead of a port number (i.e., `/slowdash` instead of `:18881`)
+- using a faster HTTP/2 protocol (SlowDash uses HTTP/1.1)
+- enabling HTTPS encryption
+- adding basic authentication
+
+When setting up a reverse proxy, be aware that
+
+- SlowDash uses WebSocket at `/ws`, which often needs dedicated routing
+- SlowDash uses "long poll", which needs a longer timeout (typically many days)
+
+For a setup with Docker Compose, examples can be found at `ExampleProjects/ReverseProxy`.
+
+### Nginx Setting
+This is the reverse proxy part of Nginx configuration, including WebSocket and considering Long Poll.
+```xorg
+server {
+    location /slowdash/ {
+        proxy_pass http://slowdash:18881/;
+
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_read_timeout 8640000s;  # 1000 days for long polling used in SlowDash
+        proxy_send_timeout 8640000s;  # 1000 days for long polling used in SlowDash
+        proxy_connect_timeout 10s;
+    }
+}
+```
+Full working example in Docker Compose with more features such as HTTPS, HTTP/2, and Basic Authentication can be found in `ExampleProjects/ReverseProxy/Nginx`.
+
+### Apache Setting
+The following Apache modules need to be enabled:
+```console
+$ sudo a2enmod proxy
+$ sudo a2enmod proxy_http
+$ sudo a2enmod proxy_wstunnel
+```
+
+And this is the reverse proxy part of the Apache configuration, including WebSocket and considering Long Poll.
+```apache
+<VirtualHost *:80>
+    ProxyPreserveHost On
+    ProxyRequests Off
+
+    # timeout 100 days, for long polling used in SlowDash
+    Timeout 8640000        
+    ProxyTimeout 8640000
+    
+    ProxyPass /slowdash/ http://slowdash:18881/
+    ProxyPassReverse /slowdash/ http://slowdash:18881/
+
+    # for WebSockets
+    ProxyPass /slowdash/ws/ ws://slowdash:18881/ws/
+    ProxyPassReverse /slowdash/ws/ ws://slowdash:18881/ws/
+    <Location /slowdash/ws/>
+        ProxyPass ws://slowdash:18881/ws/
+        ProxyPreserveHost On
+        RequestHeader set Upgrade "websocket"
+        RequestHeader set Connection "upgrade"
+    </Location>
+</VirtualHost>
+```
+Full working example in Docker Compose with more features such as HTTPS, HTTP/2, and Basic Authentication can be found in `ExampleProjects/ReverseProxy/Apahce`.
+
 # Jupyter Integration
-By providing Jupyter URL and token in `SlowdashProject.yaml`, SlowDash can export the displayed data to Jupyter Notebook so that users can continue analysis on Jupyter. An example can be found in `ExampleProject/Jupyter`.
+By providing Jupyter URL and token in `SlowdashProject.yaml`, SlowDash can export the displayed data to Jupyter Notebook so that users can continue analysis on Jupyter. Two examples, with and without a reverse proxy, can be found in `ExampleProject/Jupyter`.
 
 ## Bare-Metal
 ```yaml
@@ -419,7 +493,7 @@ SlowDog is enabled in the SlowDash Docker container.
 As already mentioned, <b>SlowDash is designed for internal use only</b> within a secured network and therefore no security protection is implemented. It is strongly recommended not to expose the system to the public internet. External access is assumed to be done <b>through VPN or ssh tunnel</b>.
 
 ### Basic Authentication
-In a case that you cannot trust your internal friends, SlowDash implements the "Basic Authentication". Combine this authentication <b>with HTTPS using a reverse proxy</b> to encrypt the password and communication. There is an example under `ExampleProjects/ReverseProxy_Nginx'.
+In a case that you cannot trust your internal friends, SlowDash implements the "Basic Authentication". Combine this authentication <b>with HTTPS using a reverse proxy</b> to encrypt the password and communication. There are examples under `ExampleProjects/ReverseProxy'.
 
 To use the Basic Authentication, first install the `bcrypt` Python package if it is not yet installed:
 ```console

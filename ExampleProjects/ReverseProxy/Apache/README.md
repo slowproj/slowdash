@@ -14,15 +14,15 @@ In this setup, to avoid overhead in using Docker volume mount on every HTTP requ
 
 
 ## Setting up
-### Creating SSL/TLS certificate
-#### Temporary Self-signed
+### Creating SSL/TLS certificate (for temporary use)
+#### Option 1: Temporary Self-signed
 ```bash
 ./generate-selfsigned-certificates.sh
 ```
 
 This will create certificate files under `apache2/ssl`.
 
-#### Let's Encrypt
+#### Option 2: Let's Encrypt (for long-term setups)
 ```bash
 sudo apt install certbot 
 sudo certbot certonly --standalone -d HOSTNAME
@@ -36,16 +36,16 @@ sudo cp /etc/letsencrypt/live/HOSTNAME/privkey.pem ./apache2/ssl/
 
 ### Creating Basic Authentication file
 
-#### Using Apache utils
+#### Option 1: Using Apache utils (recommended)
 ```bash
 $ sudo apt install apache2-utils
 $ htpasswd -bc apache2/htpasswd USERNAME PASSWD
 ```
 This will create the `htpasswd` file under `apache2`.
 
-This uses the MD5 encryption. If you want to use a more secure bcrypt encryption, add option `-B` to the `htpasswd` command. This might affect page loading performance significantly.
+This uses the MD5 encryption. If you want to use a more secure (and somewhat slower) bcrypt encryption, add option `-B` to the `htpasswd` command. This might affect page loading performance significantly.
 
-#### Using SlowDash utils
+#### Option 2: Using SlowDash utils
 ```bash
 $ PATH/TO/SLOWDASH/utils/slowdash-generate-key.py USERNAME PASSWORD
 ```

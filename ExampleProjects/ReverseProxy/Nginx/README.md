@@ -15,14 +15,14 @@ In this setup, to avoid overhead in using Docker volume mount on every HTTP requ
 
 ## Setting up
 ### Creating SSL/TLS certificate
-#### Temporary Self-signed
+#### Option 1: Temporary Self-signed (for temporary use)
 ```bash
 ./generate-selfsigned-certificates.sh
 ```
 
 This will create certificate files under `nginx/certs`.
 
-#### Let's Encrypt
+#### Option 2: Let's Encrypt (for long-term setups)
 ```bash
 sudo apt install certbot python3-certbot-nginx
 sudo certbot certonly --standalone -d HOSTNAME
@@ -36,16 +36,16 @@ sudo cp /etc/letsencrypt/live/HOSTNAME/privkey.pem ./nginx/certs/
 
 ### Creating Basic Authentication file
 
-#### Using Apache utils
+#### Option 1: Using Apache utils (recommended)
 ```bash
 $ sudo apt install apache2-utils
 $ htpasswd -bc nginx/htpasswd USERNAME PASSWD
 ```
 This will create the `htpasswd` file under `nginx`.
 
-This uses the MD5 encryption. If you want to use a more secure bcrypt encryption, add option `-B` to the `htpasswd` command. This might affect page loading performance significantly.
+This uses the MD5 encryption. If you want to use a more secure (and somewhat slower) bcrypt encryption, add option `-B` to the `htpasswd` command. This might affect page loading performance significantly.
 
-#### Using SlowDash utils
+#### Option 2: Using SlowDash utils
 ```bash
 $ PATH/TO/SLOWDASH/utils/slowdash-generate-key.py USERNAME PASSWORD
 ```
