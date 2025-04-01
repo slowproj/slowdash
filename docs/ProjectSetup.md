@@ -370,7 +370,7 @@ This is the reverse proxy part of Nginx configuration, including WebSocket and c
 ```xorg
 server {
     location /slowdash/ {
-        proxy_pass http://slowdash:18881/;
+        proxy_pass http://SLOWDASH_HOST:18881/;
 
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -387,7 +387,8 @@ server {
     }
 }
 ```
-Full working example in Docker Compose with more features such as HTTPS, HTTP/2, and Basic Authentication can be found in `ExampleProjects/ReverseProxy/Nginx`.
+Replace `SLOWDASH_HOST` with your actual SlowDash host name.
+A full working example in Docker Compose with more features such as HTTPS, HTTP/2, and Basic Authentication can be found in `ExampleProjects/ReverseProxy/Nginx`.
 
 ### Apache Setting
 The following Apache modules need to be enabled:
@@ -407,21 +408,22 @@ And this is the reverse proxy part of the Apache configuration, including WebSoc
     Timeout 8640000        
     ProxyTimeout 8640000
     
-    ProxyPass /slowdash/ http://slowdash:18881/
-    ProxyPassReverse /slowdash/ http://slowdash:18881/
+    ProxyPass /slowdash/ http://SLOWDASH_HOST:18881/
+    ProxyPassReverse /slowdash/ http://SLOWDASH_HOST:18881/
 
     # for WebSockets
-    ProxyPass /slowdash/ws/ ws://slowdash:18881/ws/
-    ProxyPassReverse /slowdash/ws/ ws://slowdash:18881/ws/
+    ProxyPass /slowdash/ws/ ws://SLOWDASH_HOST:18881/ws/
+    ProxyPassReverse /slowdash/ws/ ws://SLOWDASH_HOST:18881/ws/
     <Location /slowdash/ws/>
-        ProxyPass ws://slowdash:18881/ws/
+        ProxyPass ws://SLOWDASH_HOST:18881/ws/
         ProxyPreserveHost On
         RequestHeader set Upgrade "websocket"
         RequestHeader set Connection "upgrade"
     </Location>
 </VirtualHost>
 ```
-Full working example in Docker Compose with more features such as HTTPS, HTTP/2, and Basic Authentication can be found in `ExampleProjects/ReverseProxy/Apahce`.
+Replace `SLOWDASH_HOST` with your actual SlowDash host name.
+A full working example in Docker Compose with more features such as HTTPS, HTTP/2, and Basic Authentication can be found in `ExampleProjects/ReverseProxy/Apahce`.
 
 # Jupyter Integration
 By providing Jupyter URL and token in `SlowdashProject.yaml`, SlowDash can export the displayed data to Jupyter Notebook so that users can continue analysis on Jupyter. Two examples, with and without a reverse proxy, can be found in `ExampleProject/Jupyter`.
