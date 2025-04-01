@@ -4,10 +4,11 @@
 ## Objectives
 Nginx container is added to the SlowDash Docker-Compose for:
 
-- URL path (`/slowdash`) instead of port number (`:18881`)
+- URL path (`/slowdash`) instead of a port number (`:18881`)
 - Faster HTTP/2 protocol
 - Encrypted HTTPS communication between web browsers and the compose
-- Password protection with Basic Authentication (faster than SlowDash config)
+- Password protection with Basic Authentication (with MD5; faster than SlowDash config which uses bcrypt)
+- Forwarding HTTP to HTTPS
 
 In this setup, to avoid overhead in using Docker volume mount on every HTTP request, the Nginx configuration and credential files are copied in the docker image, rather than using Docker volume mount. Whenever the setting is modified, the container image must be rebuilt (described below).
 
@@ -41,6 +42,8 @@ $ sudo apt install apache2-utils
 $ htpasswd -bc nginx/htpasswd USERNAME PASSWD
 ```
 This will create the `htpasswd` file under `nginx`.
+
+This uses the MD5 encryption. If you want to use a more secure bcrypt encryption, add option `-B` to the `htpasswd` command. This might affect page loading performance significantly.
 
 #### Using SlowDash utils
 ```bash
