@@ -4,14 +4,14 @@
 - SlowDash
 - Jupyter with SlowPy
 - Nginx reverse proxy for:
-  - URL mapping for SlowDash and Jupyter
-  - Basic authentication
+  - URL mapping for SlowDash and Jupyter (plus a "home" page)
   - HTTPS encryption
+  - Basic authentication
   - HTTP/2 protocol
 
 
 ## Setting up
-see ExampleProjects/ReverseProxy/Nginx for details
+See ExampleProjects/ReverseProxy/Nginx for details.
 
 ```bash
 ./nginx/generate-selfsigned-certificate.sh

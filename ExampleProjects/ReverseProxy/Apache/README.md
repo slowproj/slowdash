@@ -14,8 +14,8 @@ In this setup, to avoid overhead in using Docker volume mount on every HTTP requ
 
 
 ## Setting up
-### Creating SSL/TLS certificate (for temporary use)
-#### Option 1: Temporary Self-signed
+### Creating SSL/TLS certificate
+#### Option 1: Self-signed (for temporary use)
 ```bash
 mkdir -p apache2/ssl
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout apache2/ssl/privkey.pem -out apache2/ssl/fullchain.pem -subj "/CN=localhost"
@@ -50,7 +50,7 @@ $ htpasswd -bc apache2/htpasswd USERNAME PASSWD
 
 or equivalently, use a shell script for the identical command:
 ```bash
-./apache2/generate-password.sh USERNAME PASSWD
+./apache2/generate-htpasswd.sh USERNAME PASSWD
 ```
 
 This will create the `htpasswd` file under `apache2`.
