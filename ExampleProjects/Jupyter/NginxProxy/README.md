@@ -20,7 +20,11 @@ htpasswd -bc nginx/htpasswd USERNAME PASSWD
 
 ## Running
 ```bash
-docker compose up --build
+docker compose up
 ```
 
-Then access to `http://localhost/slowdash`.
+Then access to `http://localhost/`.
+
+
+## Note
+In this example, for simplicity, the credential files as well as the static HTML contents are volume-mounted into the Nginx container, which can slightly affect the performance on every file access (especially on a Windows host). If this becomes a problem, copy these files into the image, as done in the `ExampleProjects/ReverseProxy/Nginx`.
