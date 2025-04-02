@@ -57,16 +57,11 @@ class TableFormat:
     # override as needed
     def write_single(self, cur, timestamp, channel, value, update):
         if update is True:
-            # this works with PostgreSQL and SQLite, but not with MySQL
-            #sql = f"DELETE FROM {self.table} WHERE channel={self.db.placeholder} "
-            #sql += f"AND EXISTS (SELECT 1 FROM {self.table} WHERE channel={self.db.placeholder});"
-            
-            # this works with MySQL
-            sql = f"WITH existing AS ("
-            sql += f"  SELECT channel FROM {self.table} WHERE channel={self.db.placeholder}"
-            sql += f") DELETE FROM {self.table} WHERE channel IN (SELECT channel FROM existing)"
-            cur.execute(sql, (channel,))
-            
+            # DELETE and INSERT (in a transaction):
+            # this is worse than UPSERT, as DELETE/INSERT might trigger re-indexing,
+            # but there is no reliable standard way for UPSERT usable in all RDBMS...
+            sql = f"DELETE FROM {self.table} WHERE channel={self.db.placeholder}"
+            cur.execute(sql, (channel,))            
         if type(value) in [int, float]:
             self.insert_numeric_data(cur, timestamp, channel, value)
         else:
@@ -90,6 +85,7 @@ class LongTableFormat(TableFormat):
     schema_numeric = '(timestamp REAL, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp,channel))'
     schema_text = '(timestamp REAL, channel VARCHAR(100), value TEXT, PRIMARY KEY(timestamp,channel))'
 
+    
     def create_numeric_table(self, cur):
         if self.schema_numeric is None:
             return False
@@ -125,6 +121,7 @@ class LongTableFormat_DateTime_PostgreSQL(LongTableFormat):
     schema_numeric = '("timestamp" TIMESTAMP WITH TIME ZONE , channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp,channel))'
     schema_text = '("timestamp" TIMESTAMP WITH TIME ZONE, channel VARCHAR(100), value TEXT, PRIMARY KEY(timestamp,channel))'
 
+    
     def insert_numeric_data(self, cur, timestamp, channel, value):
         sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
         sql += f"VALUES(TO_TIMESTAMP(%.3f),%s,%f);" % (timestamp, self.db.placeholder, value)
@@ -146,6 +143,7 @@ class LongTableFormat_DateTime_MySQL(LongTableFormat):
     schema_numeric = '(timestamp TIMESTAMP , channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp,channel))'
     schema_text = '(timestamp TIMESTAMP, channel VARCHAR(100), value TEXT, PRIMARY KEY(timestamp,channel))'
 
+    
     def insert_numeric_data(self, cur, timestamp, channel, value):
         sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
         sql += f"VALUES(FROM_UNIXTIME(%.3f),%s,%f);" % (timestamp, self.db.placeholder, value)
