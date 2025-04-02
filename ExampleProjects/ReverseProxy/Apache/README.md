@@ -17,7 +17,13 @@ In this setup, to avoid overhead in using Docker volume mount on every HTTP requ
 ### Creating SSL/TLS certificate (for temporary use)
 #### Option 1: Temporary Self-signed
 ```bash
-./generate-selfsigned-certificates.sh
+mkdir -p apache2/ssl
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout apache2/ssl/privkey.pem -out apache2/ssl/fullchain.pem -subj "/CN=localhost"
+```
+
+or equivalently, use a shell script for the identical command:
+```bash
+./apache2/generate-selfsigned-certificates.sh
 ```
 
 This will create certificate files under `apache2/ssl`.
@@ -41,6 +47,12 @@ sudo cp /etc/letsencrypt/live/HOSTNAME/privkey.pem ./apache2/ssl/
 $ sudo apt install apache2-utils
 $ htpasswd -bc apache2/htpasswd USERNAME PASSWD
 ```
+
+or equivalently, use a shell script for the identical command:
+```bash
+./apache2/generate-password.sh USERNAME PASSWD
+```
+
 This will create the `htpasswd` file under `apache2`.
 
 This uses the MD5 encryption. If you want to use a more secure (and somewhat slower) bcrypt encryption, add option `-B` to the `htpasswd` command. This might affect page loading performance significantly.

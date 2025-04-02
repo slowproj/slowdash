@@ -1,5 +1,18 @@
 
 services:
+  slowdash:
+    image: slowproj/slowdash
+    volumes:
+      - ./slowdash:/project
+    expose:
+      - "18881"
+    environment:
+      - JUPYTER_URL=https://localhost/jupyter
+      - JUPYTER_TOKEN=""
+      - JUPYTER_INTERNAL_URL=http://jupyter:8888/jupyter
+      - SLOWDASH_INTERNAL_URL=http://slowdash:18881
+      
+
   jupyter:
     image: slowproj/slowpy-notebook
     command:
@@ -14,19 +27,6 @@ services:
     environment:
       JUPYTER_BASE_URL: "/jupyter"
 
-
-  slowdash:
-    image: slowproj/slowdash
-    volumes:
-      - .:/project
-    expose:
-      - "18881"
-    environment:
-      - JUPYTER_URL=https://localhost/jupyter
-      - JUPYTER_TOKEN=""
-      - JUPYTER_INTERNAL_URL=http://jupyter:8888/jupyter
-      - SLOWDASH_INTERNAL_URL=http://slowdash:18881
-      
 
   nginx:
     image: nginx:stable

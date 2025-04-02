@@ -14,8 +14,8 @@
 see ExampleProjects/ReverseProxy/Nginx for details
 
 ```bash
-generate-selfsigned-certificate.sh
-htpasswd -bc nginx/htpasswd USERNAME PASSWD
+./nginx/generate-selfsigned-certificate.sh
+./nginx/generate-htpasswd USERNAME PASSWD
 ```
 
 ## Running
@@ -24,7 +24,6 @@ docker compose up
 ```
 
 Then access to `http://localhost/`.
-
 
 ## Note
 In this example, for simplicity, the credential files as well as the static HTML contents are volume-mounted into the Nginx container, which can slightly affect the performance on every file access (especially on a Windows host). If this becomes a problem, copy these files into the image, as done in the `ExampleProjects/ReverseProxy/Nginx`.
