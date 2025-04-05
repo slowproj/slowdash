@@ -81,3 +81,8 @@ services:
     volumes:
       - ./slowdash.d:/project
       - ./dripline_mesh.yaml:/root/.dripline_mesh.yaml
+    depends_on:
+      rabbit-broker:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy

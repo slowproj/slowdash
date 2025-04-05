@@ -437,14 +437,14 @@ export class ChannelListPanel extends Panel {
                 }
                 else {
                     let href = './slowplot.html?channel=' + entry.name;
-                    href += '&length=3600&reload=60&grid=2x1';
+                    href += '&length=300&reload=10&grid=2x1';
                     let a = $('<a>').attr('href', href).text(entry.name).attr('target', '_blank');
                     $('<td>').append(a).appendTo(tr);
                 }
             }
             else if (['histogram', 'ts-histogram', 'histogram2d', 'graph', 'table', 'tree', 'blob'].includes(entry.type)) {
                 let href = './slowplot.html?channel=' + entry.name + '/' + entry.type;
-                href += '&length=3600&reload=60&grid=1x1';
+                href += '&length=300&reload=10&grid=1x1';
                 let a = $('<a>').attr('href', href).text(entry.name).attr('target', '_blank');
                 $('<td>').append(a).appendTo(tr);
             }

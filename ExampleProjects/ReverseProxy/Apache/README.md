@@ -44,8 +44,8 @@ sudo cp /etc/letsencrypt/live/HOSTNAME/privkey.pem ./apache2/ssl/
 
 #### Option 1: Using Apache utils (recommended)
 ```bash
-$ sudo apt install apache2-utils
-$ htpasswd -bc apache2/htpasswd USERNAME PASSWD
+sudo apt install apache2-utils
+htpasswd -bc apache2/htpasswd USERNAME PASSWD
 ```
 
 or equivalently, use a shell script for the identical command:
@@ -59,7 +59,7 @@ This uses the MD5 encryption. If you want to use a more secure (and somewhat slo
 
 #### Option 2: Using SlowDash utils
 ```bash
-$ PATH/TO/SLOWDASH/utils/slowdash-generate-key.py USERNAME PASSWORD
+PATH/TO/SLOWDASH/utils/slowdash-generate-key.py USERNAME PASSWORD
 ```
 
 Then copy the value of `key` to `apache2/htpasswd` file.

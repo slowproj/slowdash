@@ -153,7 +153,7 @@ export class Controller {
                 this.currentData[ch] = data[ch];
             }
             this.currentData.__meta.isPartial = (i < url_list.length-1);
-            
+
             this.view.draw(this.currentData);
         }
 

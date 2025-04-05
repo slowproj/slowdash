@@ -5,6 +5,7 @@ SLOWDASH_ENV = "$(SLOWDASH_DIR)/bin/slowdash-bashrc"
 GIT = $(shell which git)
 PIP_REQS = uvicorn hypercorn websockets pyyaml psutil bcrypt requests 
 PIP_DBS = mysql-connector-python aiomysql influxdb-client redis pymongo couchdb 
+PIP_MSGS = pika aio-pika
 PIP_OPTS = numpy matplotlib lmfit pillow pyserial pyvisa
 
 
@@ -81,6 +82,8 @@ slowdash:
 		echo mysqlclient >> requirements.txt; \
 	fi
 	@for pkg in $(PIP_DBS); do echo $$pkg >> requirements.txt; done
+	@echo "# Messaging system packages #" >> requirements.txt
+	@for pkg in $(PIP_MSGS); do echo $$pkg >> requirements.txt; done
 	@echo "# packages users might use #" >> requirements.txt
 	@for pkg in $(PIP_OPTS); do echo $$pkg >> requirements.txt; done
 
