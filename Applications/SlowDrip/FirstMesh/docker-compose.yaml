@@ -1,7 +1,8 @@
 services:
 
   key-value-store:
-    image: ghcr.io/driplineorg/dripline-python:v5.0.0
+    image: ghcr.io/project8/dragonfly:workshop
+    #image: ghcr.io/driplineorg/dripline-python:v5.0.0
     depends_on:
       rabbit-broker:
         condition: service_healthy
@@ -35,6 +36,7 @@ services:
   rabbit-broker:
     image: rabbitmq:4-management
     ports:
+      - "5672:5672"
       - "15672:15672"
     environment:
       - RABBITMQ_DEFAULT_USER=dripline
@@ -81,3 +83,8 @@ services:
       - "18881:18881"
     volumes:
       - ./slowdash.d:/project
+    depends_on:
+      rabbit-broker:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy

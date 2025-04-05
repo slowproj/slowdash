@@ -128,10 +128,11 @@ class ConfigComponent(Component):
             if ext not in [ '.json', '.yaml', '.html', '.py' ]:
                 continue
 
-            meta_info = {}
             if kind in [ 'slowdash', 'slowplot', 'slowcruise' ]:
                 meta_info, content = await self._load_content(basename, 'json')
-                
+            else:
+                meta_info, content = {}, {}
+
             doc.append({
                 'type': kind,
                 'name': name,

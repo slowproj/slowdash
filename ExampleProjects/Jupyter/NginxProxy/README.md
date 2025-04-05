@@ -15,7 +15,7 @@ See ExampleProjects/ReverseProxy/Nginx for details.
 
 ```bash
 ./nginx/generate-selfsigned-certificate.sh
-./nginx/generate-htpasswd USERNAME PASSWD
+./nginx/generate-htpasswd.sh USERNAME PASSWD
 ```
 
 ## Running

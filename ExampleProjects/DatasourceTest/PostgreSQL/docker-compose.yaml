@@ -8,6 +8,11 @@ services:
       - POSTGRES_USER=slowdash
       - POSTGRES_PASSWORD=slowdash
       - POSTGRES_DB=SlowTestData
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
     # store the database files outside the container
     #volumes:
@@ -22,8 +27,14 @@ services:
       - "18881:18881"
     environment:
       - DB_URL=postgresql://slowdash:slowdash@pgsql_db:5432/SlowTestData
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 
   testdata:
     image: slowproj/slowdash
     command: python /slowdash/utils/generate-testdata.py --db-url=postgresql://slowdash:slowdash@pgsql_db:5432/SlowTestData
+    depends_on:
+      postgres:
+        condition: service_healthy
