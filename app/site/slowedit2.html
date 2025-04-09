@@ -7,7 +7,7 @@
   <link rel="icon" href="favicon.png">
   <link rel="stylesheet" type="text/css" href="slowjs/slowdash.css">
   <link rel="stylesheet" type="text/css" id="sd-theme-css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs/loader.min.js"></script>
+  <script src="https://unpkg.com/monaco-editor/min/vs/loader.js"></script>
 </head>
     
 <body style="margin:0;background-color:#202020">
@@ -22,12 +22,6 @@
     import { Platform } from './slowjs/platform.mjs';
     import { Frame } from './slowjs/frame.mjs';
 
-    function async_require(modules) {
-        return new Promise((resolve, reject) => {
-            require(modules, resolve, reject);
-        });
-    }
-
 
     async function main() {
         const options = Platform.getUrlOptions();
@@ -41,13 +35,11 @@
         let config = await Platform.initialize(defaults, options, args);
         
         let title = config._project.project?.title || config._project.project?.name || "SlowDash";
-        title += " - Config File Editor";
-        const style = config._project.style ?? {};
         document.title = 'SlowEdit: ' + config.filename;
 
         let frame = new Frame($('#sd-header'), {
-            title: title,
-            style: style,
+            title: title + " - Config File Editor",
+            style: config._project.style ?? {},
             initialStatus: config.filename,
         });
         let scheduler = new Scheduler({
@@ -55,23 +47,23 @@
                 frame.setClockTime(time);
             },
         });
-        let editor = null;
 
         
+        let editor = null;
         require.config({ paths: {
-            'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs',
-//            'monaco-vim': 'https://unpkg.com/monaco-vim/dist/monaco-vim.js',
-//            'monaco-emacs': 'https://cdn.jsdelivr.net/npm/monaco-emacs@latest/dist/monaco-emacs.min.js'
+            'vs': 'https://unpkg.com/monaco-editor/min/vs',
+            'monaco-vim': 'https://unpkg.com/monaco-vim/dist/monaco-vim',
+            'monaco-emacs': 'https://unpkg.com/monaco-emacs/dist/monaco-emacs',
         }});
-//        require(["vs/editor/editor.main", 'monaco-vim', 'monaco-emacs'], async (_, MonacoVim, MonacoEmacs) => {
-        require(["vs/editor/editor.main"], () => {
+        require(["vs/editor/editor.main"/*, 'monaco-vim', 'monaco-emacs'*/], (_/*, MonacoVim, MonacoEmacs*/) => {
             editor = monaco.editor.create(document.getElementById('editor'), {
                 theme: "vs-dark",
             });
-//            editor.MonacoVim = MonacoVim;
-//            editor.MonacoEmacs = MonacoEmacs;
+            //editor.MonacoVim = MonacoVim;
+            //editor.MonacoEmacs = MonacoEmacs;
             setupEditor(config, frame, editor);
         });
+
         
         $(window).bind('resize', ()=>{
             layout(editor);
@@ -108,7 +100,7 @@
             editor.revealPositionInCenter(position);
         }
 
-        //setupKeymap(config, frame, editor);
+        setupKeymap(config, frame, editor);
         setupWrapMode(config, frame, editor);
         setupFontSize(config, frame, editor);
         
@@ -174,10 +166,11 @@
                 editor.emacsMode = null;
             }
 
-            if (map === 'vim') {
+            if ((map === 'vim') && editor.MonacoVim) {
                 editor.vimMode = editor.MonacoVim.initVimMode(editor, document.getElementById('statusbar'));
-            } else if (map === 'emacs') {
-                editor.emacsMode = new editor.MonacoEmacs(editor);
+            }
+            else if ((map === 'emacs') && editor.MonacoEmacs) {
+                editor.emacsMode = new editor.MonacoEmacs.EmacsExtension(editor);
             }
 
             localStorage.setItem('EditorKeyBinding', map);
@@ -188,8 +181,12 @@
             editor.focus();
         });
         keymapSelect.append($('<option>').attr('value', 'vscode').text('VSCode'));
-        keymapSelect.append($('<option>').attr('value', 'vim').text('Vim'));
-        keymapSelect.append($('<option>').attr('value', 'emacs').text('Emacs'));
+        if (editor.MonacoVim) {
+            keymapSelect.append($('<option>').attr('value', 'vim').text('Vim'));
+        }
+        if (editor.MonacoEmacs) {
+            keymapSelect.append($('<option>').attr('value', 'emacs').text('Emacs'));
+        }
         frame.appendSelect(keymapSelect);
         
         let map = localStorage.getItem('EditorKeyBinding');
