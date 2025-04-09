@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SlowEdit</title>
+  <link rel="icon" href="favicon.png">
+  <link rel="stylesheet" type="text/css" href="slowjs/slowdash.css">
+  <link rel="stylesheet" type="text/css" id="sd-theme-css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs/loader.min.js"></script>
+</head>
+    
+<body style="margin:0;background-color:#202020">
+<div id="sd-header"></div>
+<div id="editor" style="font-size:130%;"></div>
+<div id="statusbar" style="font-size:80%;"></div>
+
+
+<script type="module">
+    import { JG as $ } from './slowjs/jagaimo/jagaimo.mjs';
+    import { Scheduler } from './slowjs/control.mjs';
+    import { Platform } from './slowjs/platform.mjs';
+    import { Frame } from './slowjs/frame.mjs';
+
+    function async_require(modules) {
+        return new Promise((resolve, reject) => {
+            require(modules, resolve, reject);
+        });
+    }
+
+
+    async function main() {
+        const options = Platform.getUrlOptions();
+        const defaults = {};
+        const args = {
+            filename: options.filename ?? '',
+            status: options.status ?? null,
+            mode: options.mode ?? null,
+            theme: options.theme ?? 'github_dark',
+        };
+        let config = await Platform.initialize(defaults, options, args);
+        
+        let title = config._project.project?.title || config._project.project?.name || "SlowDash";
+        title += " - Config File Editor";
+        const style = config._project.style ?? {};
+        document.title = 'SlowEdit: ' + config.filename;
+
+        let frame = new Frame($('#sd-header'), {
+            title: title,
+            style: style,
+            initialStatus: config.filename,
+        });
+        let scheduler = new Scheduler({
+            setBeatTime: (time) => {
+                frame.setClockTime(time);
+            },
+        });
+        let editor = null;
+
+        
+        require.config({ paths: {
+            'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs',
+//            'monaco-vim': 'https://unpkg.com/monaco-vim/dist/monaco-vim.js',
+//            'monaco-emacs': 'https://cdn.jsdelivr.net/npm/monaco-emacs@latest/dist/monaco-emacs.min.js'
+        }});
+//        require(["vs/editor/editor.main", 'monaco-vim', 'monaco-emacs'], async (_, MonacoVim, MonacoEmacs) => {
+        require(["vs/editor/editor.main"], () => {
+            editor = monaco.editor.create(document.getElementById('editor'), {
+                theme: "vs-dark",
+            });
+//            editor.MonacoVim = MonacoVim;
+//            editor.MonacoEmacs = MonacoEmacs;
+            setupEditor(config, frame, editor);
+        });
+        
+        $(window).bind('resize', ()=>{
+            layout(editor);
+        });
+        $('#editor').bind('keydown', (e)=>{
+            if ((e.ctrlKey || e.metaKey) && ['n', 'p', 'b', 'f', 'a', 'e', 'k', 's'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+        
+        scheduler.start();
+    }
+
+
+    async function setupEditor(config, frame, editor) {
+        if (! config.filename) {
+            return;
+        }
+        const [ content, filetype, meta ] = await loadContents(config.filename);
+        if (! content) {
+            return;
+        }
+        editor.setValue(content);
+ 
+        let model = editor.getModel();
+        monaco.editor.setModelLanguage(model, filetype);
+
+        if (meta.config_error) {
+            frame.setStatus(config.filename  + ': ERROR ' + meta.config_error);
+        }
+        if (meta.config_error_line) {
+            const position = {lineNumber: meta.config_error_line, column:1};
+            editor.setPosition(position);
+            editor.revealPositionInCenter(position);
+        }
+
+        //setupKeymap(config, frame, editor);
+        setupWrapMode(config, frame, editor);
+        setupFontSize(config, frame, editor);
+        
+        let saveButton = setupSaveButton(config, frame, editor);
+        editor.onDidChangeModelContent(() => {
+            if (! saveButton.enabled()) {
+                frame.setStatus(config.filename + ' (<i>modified</i>)<span style="color:gray"></span>');
+                saveButton.enabled(true);
+            }
+        });
+        
+        layout(editor);
+        editor.focus();
+    }
+
+
+    async function loadContents(filename) {
+        let response = await fetch('./api/config/file/' + filename);
+        if (response.status != 200) {
+            const meta = { config_error: response.statusText };
+            return [ null, null, meta ];
+        }
+        const content = await response.text();
+
+        let filetype = '';
+        const dot = filename.lastIndexOf('.');
+        if (dot > 1) {
+            const ext = filename.slice(dot+1).toLowerCase();
+            if (ext == 'js') {
+                filetype = 'javascript';
+            }
+            else if (ext == 'py') {
+                filetype = 'python';
+            }
+            else {
+                filetype = ext;
+            }
+        }
+
+        let meta = {};
+        if (content && (content.length > 0) && ['json', 'yaml'].includes(filetype)) {
+            let response = await fetch('./api/config/contentlist');
+            const contentlist = await response.json();
+            for (const this_meta of contentlist) {
+                if (this_meta.config_file == filename) {
+                    meta = this_meta;
+                }
+            }
+        }
+
+        return [ content, filetype, meta ];
+    }
+
+        
+    async function setupKeymap(config, frame, editor) {
+        let setKeymap = (map) => {
+            if (editor.vimMode) {
+                editor.vimMode.dispose();
+                editor.vimMode = null;
+            }
+            if (editor.emacsMode) {
+                editor.emacsMode.dispose();
+                editor.emacsMode = null;
+            }
+
+            if (map === 'vim') {
+                editor.vimMode = editor.MonacoVim.initVimMode(editor, document.getElementById('statusbar'));
+            } else if (map === 'emacs') {
+                editor.emacsMode = new editor.MonacoEmacs(editor);
+            }
+
+            localStorage.setItem('EditorKeyBinding', map);
+        }
+        
+        let keymapSelect = $('<select>').bind('change', e => {
+            setKeymap($(e.target).val());
+            editor.focus();
+        });
+        keymapSelect.append($('<option>').attr('value', 'vscode').text('VSCode'));
+        keymapSelect.append($('<option>').attr('value', 'vim').text('Vim'));
+        keymapSelect.append($('<option>').attr('value', 'emacs').text('Emacs'));
+        frame.appendSelect(keymapSelect);
+        
+        let map = localStorage.getItem('EditorKeyBinding');
+        if (! map) {
+            map = 'vscode';
+        }
+        keymapSelect.val(map);
+        setKeymap(map);
+    }
+
+            
+    async function setupWrapMode(config, frame, editor) {
+        let setWrapMode = (val) => {
+            if (val == 'on') {
+                editor.updateOptions({wordWrap: 'on'});
+            }
+            else {
+                editor.updateOptions({wordWrap: 'off'});
+            }
+            localStorage.setItem('EditorWrapMode', val);
+        }
+        
+        let wrapModeSelect = $('<select>').bind('change', e => {
+            setWrapMode($(e.target).val());
+            editor.focus();
+        });
+        wrapModeSelect.append($('<option>').attr('value', 'off').text('Warp: off'));
+        wrapModeSelect.append($('<option>').attr('value', 'on').text('Warp: on'));
+        frame.appendSelect(wrapModeSelect);
+        
+        const wrapMode = localStorage.getItem('EditorWrapMode');
+        if (wrapMode ?? false) {
+            wrapModeSelect.val(wrapMode);
+            setWrapMode(wrapMode);
+        }
+    }
+
+
+    async function setupFontSize(config, frame, editor) {
+        let setFontSize = (val) => {
+            editor.updateOptions({fontSize: val});
+            localStorage.setItem('EditorFontSize', val);
+        }
+        
+        let fontSizeSelect = $('<select>').bind('change', e => {
+            setFontSize($(e.target).val());
+            editor.focus();
+        });
+        for (const size of [ 10, 12, 14, 16, 18, 20, 22, 24 ]) {
+            fontSizeSelect.append($('<option>').attr('value', size).text(size + 'pt'));
+        }
+        frame.appendSelect(fontSizeSelect);
+        
+        const fontSize = localStorage.getItem('EditorFontSize');
+        if (fontSize > 0) {
+            fontSizeSelect.val(fontSize);
+            setFontSize(fontSize);
+        }
+    }
+
+
+    function setupSaveButton(config, frame, editor) {
+        let savePopup = $('<dialog>').addClass('sd-pad').appendTo($('body'));
+        let saveButton = $('<button>').html("&#x1f4be;").bind('click', e=>{
+            Platform.upload(savePopup, 'config/file/' + config.filename, editor.getValue(), {
+                contentType: 'text/plain; charset=utf-8',
+                overwritable: true,
+                quietOnSuccess: true,
+                on_success: () => {
+                    saveButton.enabled(false);
+                    editor.focus();
+                }
+            });
+        });
+        saveButton.attr('title', 'Save');
+        frame.appendButton(saveButton);
+        saveButton.enabled(false);
+
+        return saveButton;
+    }
+
+
+    function layout(editor) {
+        let editorDiv = $('#editor');
+        const editorHeight = document.documentElement.clientHeight - editorDiv.pageY();
+        editorDiv.css({ 
+            position: 'relative',
+            width: '100%',
+            height: editorHeight + 'px',
+            margin: 0,
+            padding: 0,
+        });
+        editor.layout();
+    }
+
+    window.addEventListener('DOMContentLoaded', main);
+</script>
+</body>
+</html>
