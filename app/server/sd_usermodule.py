@@ -294,7 +294,10 @@ class UserModule:
         self.touch_status()
         if self.func_halt is not None:
             try:
-                self.func_halt()
+                if inspect.iscoroutinefunction(self.func_halt):
+                    await self.func_halt()
+                else:
+                    self.func_halt()
             except Exception as e:
                 self.handle_error('user module error: halt(): %s' % str(e))
         self.stop_event.set()

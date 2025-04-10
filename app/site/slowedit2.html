@@ -35,12 +35,12 @@
         let config = await Platform.initialize(defaults, options, args);
         
         let title = config._project.project?.title || config._project.project?.name || "SlowDash";
-        document.title = 'SlowEdit: ' + config.filename;
+        document.title = 'SD Edit: ' + config.filename;
 
         let frame = new Frame($('#sd-header'), {
-            title: title + " - Config File Editor",
+            title: title + ' - ' + config.filename,
             style: config._project.style ?? {},
-            initialStatus: config.filename,
+            initialStatus: config.status,
         });
         let scheduler = new Scheduler({
             setBeatTime: (time) => {
@@ -92,7 +92,7 @@
         monaco.editor.setModelLanguage(model, filetype);
 
         if (meta.config_error) {
-            frame.setStatus(config.filename  + ': ERROR ' + meta.config_error);
+            frame.setStatus('ERROR ' + meta.config_error);
         }
         if (meta.config_error_line) {
             const position = {lineNumber: meta.config_error_line, column:1};
@@ -107,7 +107,7 @@
         let saveButton = setupSaveButton(config, frame, editor);
         editor.onDidChangeModelContent(() => {
             if (! saveButton.enabled()) {
-                frame.setStatus(config.filename + ' (<i>modified</i>)<span style="color:gray"></span>');
+                frame.setStatus(' <i>modified</i>');
                 saveButton.enabled(true);
             }
         });

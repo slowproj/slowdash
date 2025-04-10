@@ -14,7 +14,7 @@ class ConfigByPython(threading.Thread):
         self.filepath = filepath
         self.name = os.path.splitext(os.path.basename(self.filepath))[0]
 
-        self.meta = None
+        self.meta = { 'config_error': 'not configured' }
         self.result = None
 
         
@@ -137,7 +137,7 @@ class ConfigComponent(Component):
                 'type': kind,
                 'name': name,
                 'mtime': mtime,
-                'title': meta_info.get('title', content.get('title', name)),
+                'title': meta_info.get('title', ((content and content.get('title', name)) or '')),
                 'description': meta_info.get('description', ''),
                 'config_file': basename,
                 'config_error': meta_info.get('config_error', ''),
@@ -299,7 +299,7 @@ class ConfigComponent(Component):
             
         if filepath is None:
             logging.warning(f'GET config: {filename}: access denied')
-            return None, None
+            return { 'config_error': 'file' }, None
         if os.path.getsize(filepath) <= 0:
             return { 'config_error': 'empty file' }, None
 

@@ -8,7 +8,7 @@ slowdash_project:
       - schema: numeric_data [sensor_name] @timestamp(aware) = value_raw(default), value_cal
       
   task:
-    - name: sensors
+    - name: DriplineMesh
       auto_load: true
 
   system:

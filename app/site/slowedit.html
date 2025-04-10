@@ -36,14 +36,12 @@
         let config = await Platform.initialize(defaults, options, args);
         
         let title = config._project.project?.title || config._project.project?.name || "SlowDash";
-        title += " - Config File Editor";
-        const style = config._project.style ?? {};
-        document.title = 'SlowEdit: ' + config.filename;
+        document.title = 'SD Edit: ' + config.filename;
 
         let frame = new Frame($('#sd-header'), {
-            title: title,
-            style: style,
-            initialStatus: config.filename + (config.status ? ': ' + config.status : ''),
+            title: title + ' - ' + config.filename,
+            style: config._project.style ?? {},
+            initialStatus: config.status,
         });
         let scheduler = new Scheduler({
             setBeatTime: (time) => {
@@ -123,7 +121,7 @@
             }
             let response = await fetch('./api/config/file/' + config.filename);
             if (response.status != 200) {
-                frame.setStatus(config.filename + ": " + response.statusText);
+                frame.setStatus(response.statusText);
                 return;
             }
             const content = await response.text();
@@ -164,7 +162,7 @@
             
             editor.session.on('change', e => {
                 if (! saveButton.enabled()) {
-                    frame.setStatus(config.filename + ' (<i>modified</i>)<span style="color:gray">' + config.status + '</span>');
+                    frame.setStatus('(<i>modified</i>)<span style="color:gray">' + config.status + '</span>');
                     saveButton.enabled(true);
                 }
             });

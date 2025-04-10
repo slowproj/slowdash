@@ -80,7 +80,7 @@ class FileServer():
           - prefix (str): URL path to bind this app (e.g., "/webfile")
           - index_file (str): index file when the path is empty (i.e., '/')
           - exclude (str or list[str]): URL path(s) not to be handled
-            (e.g., prefix="/app", exclude="/app/api")
+            (e.g., prefix="/app" and exclude="/api" to exclude "/app/api")
           - not_found_is_error (bool): if true return an error response (404) if file does not exist, otherwise propagate
           - ext_allow (list[str]): a list of file extensions to allow accessing
           - ext_deny (list[str]): a list of file extensions not to allow accessing
@@ -122,23 +122,8 @@ class FileServer():
             if not p.replace('_','').replace('-','').replace('+','').replace('=','').replace('.','').replace(',','').replace(':','').isalnum():
                 is_dirty = True
             path.append(p)
-        # exclude-path match
-        for exclude in self.excludes:
-            if len(path) >= len(exclude):
-                for i,p in enumerate(exclude):
-                    if path[i] != p:
-                        break
-                else:
-                    # match to exclusion
-                    return Response()  
 
-        # method match
-        # We apply URL rewriting even for non-GET methods (like POST api/command -> /command),
-        # so this method check must be after the exclusion match.
-        if request.method != 'GET':
-            return Response()  # propagate
-        
-        # path match
+        # prefix match
         if self.prefix is not None:
             if len(path) < len(self.prefix):
                 # no match -> propagate
@@ -149,7 +134,23 @@ class FileServer():
                         # no match -> propagate
                         return Response()
             path = path[len(self.prefix):]
-
+            
+        # exclude-path match
+        for exclude in self.excludes:
+            if len(path) >= len(exclude):
+                for i,p in enumerate(exclude):
+                    if path[i] != p:
+                        break
+                else:
+                    # match to exclusion
+                    return Response()
+                
+        # method match
+        # We apply URL rewriting even for non-GET methods (like POST api/command -> /command),
+        # so this method check must be after the exclusion match.
+        if request.method != 'GET':
+            return Response()  # propagate
+        
         # matched -> my responsibility (can return an error status) #
 
         if self.not_found_is_error:

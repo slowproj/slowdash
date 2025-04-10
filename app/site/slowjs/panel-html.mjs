@@ -87,7 +87,8 @@ class HtmlPanel extends Panel {
         this.variables = [];
 
         const base = ((this.config.location??'') == 'system' ? './' : './api/config/content/');
-        this.url = base + 'html-' + config.file + '?content_type=html';
+        this.url = base + 'html-' + config.file;
+        this.url += '?content_type=html';
     
         await this._loadPage();
     }
@@ -123,7 +124,7 @@ class HtmlPanel extends Panel {
     
     draw(data, displayTimeRange=null) {
         if (this.config.reload ?? false) {
-            this.loadPage().then(()=>{
+            this._loadPage().then(()=>{
                 this._updateContents(data, displayTimeRange);
             });
         }
@@ -160,7 +161,7 @@ class HtmlPanel extends Panel {
         if (! response.ok) {
             this.contentDiv.html(`
                 <h3>HTML File Loading Error</h3>
-                Name: ${config.file}<br>
+                Name: ${this.config.file}<br>
                 <p>
                 URL: ${this.url}<br>
                 Error: ${response.status} ${response.statusText}

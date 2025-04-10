@@ -5,7 +5,7 @@
         "mode": "normal",
         "grid": { "rows": 3, "columns": 3 }
     },
-    "style": { },
+    "style": {},
     "panels": [
         {
             "type": "timeaxis",
