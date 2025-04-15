@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 26 May 2022 #
 
 
-import sys, os, time, logging, traceback
+import sys, os, time, datetime, logging, traceback
 from sd_dataschema import Schema
 from sd_datasource import DataSource
 
@@ -47,6 +47,8 @@ class DataSource_InfluxDB2(DataSource):
                     schema_conf = measurement
                 tag_value_list = entry.get('tags', {}).get('list', [])
                 schema = Schema(schema_conf, tag_value_list)
+                schema.tag_scan_date = entry.get('tags', {}).get('scan_date', None)
+                schema.tag_scan_length = entry.get('tags', {}).get('scan_length', None)
                 schema.is_for_objts = (entrytype == 'object_time_series')
                 schema.suffix = entry.get('suffix', '')
                 schema_list.append(schema)
@@ -99,13 +101,53 @@ class DataSource_InfluxDB2(DataSource):
                 logging.error('InfluxDB2: measurement not specified')
                 continue
 
+            # time range to scan for tag values
+            if schema.tag_scan_date is None:
+                tag_scan_stop = 0
+            elif type(schema.tag_scan_date) is datetime.datetime:
+                tag_scan_stop = schema.tag_scan_date.timestamp()
+            elif type(schema.tag_scan_date) is datetime.date:
+                tag_scan_stop = datetime.datetime.combine(schema.tag_scan_date, datetime.time(0,0,0)).timestamp()
+            else:
+                try:
+                    tag_scan_stop = float(schema.tag_scan_date)
+                except:
+                    try:
+                        tag_scan_stop = datetime.datetime.fromisoformat(schema.tag_scan_date).timestamp()
+                    except Exception as e:
+                        logging.error(e)
+                        tag_scan_stop = 0
+            if tag_scan_stop <= 0:
+                tag_scan_stop += time.time()
+                
+            if schema.tag_scan_length is None:
+                tag_scan_start = tag_scan_stop - 864000
+            else:
+                units = { 's': 1, 'm': 60, 'h': 3600, 'd': 86400, 'w': 7*86400, 'y': 365.25*86400 }
+                if schema.tag_scan_length[-1:] in units:
+                    length = schema.tag_scan_length[:-1]
+                    factor = units[schema.tag_scan_length[-1:]]
+                else:
+                    length = schema.tag_scan_length
+                    factor = 1
+                try:
+                    tag_scan_start = tag_scan_stop - float(length) * factor
+                except:
+                    logging.error(f'Invalid tag_scan_length: {schema.tag_scan_length}')
+                    tag_scan_start = tag_scan_stop - 864000
+                
             # no "tag" and "fields" specified -> find a tag in data schema
             if schema.tag is None and len(schema.fields) < 1:
                 query = '''
                     import "influxdata/influxdb/schema"
-                    schema.measurementTagKeys(bucket: "%s", measurement: "%s")
-                ''' % (self.bucket, schema.table)
-                table = self.api.query(query, org=self.org)[0]
+                    schema.measurementTagKeys(bucket: "%s", measurement: "%s", start: %.0f, stop: %.0f)
+                ''' % (self.bucket, schema.table, tag_scan_start, tag_scan_stop)
+                try:
+                    table = self.api.query(query, org=self.org)[0]
+                except Exception as e:
+                    logging.error(f'Query: {query}')
+                    logging.error(e)
+                    table = []
                 for record in table:
                     tag = record.get_value()
                     if len(tag) > 0 and tag[0] != '_':
@@ -116,18 +158,28 @@ class DataSource_InfluxDB2(DataSource):
             if schema.tag is not None and len(schema.tag_values) == 0:
                 query = '''
                     import "influxdata/influxdb/schema"
-                    schema.measurementTagValues(bucket: "%s", measurement: "%s", tag: "%s")
-                ''' % (self.bucket, schema.table, schema.tag)
-                table = self.api.query(query, org=self.org)[0]
+                    schema.measurementTagValues(bucket: "%s", measurement: "%s", tag: "%s", start: %.0f, stop: %.0f)
+                ''' % (self.bucket, schema.table, schema.tag, tag_scan_start, tag_scan_stop)
+                try:
+                    table = self.api.query(query, org=self.org)[0]
+                except Exception as e:
+                    logging.error(f'Query: {query}')
+                    logging.error(e)
+                    table = []
                 schema.tag_values = [record.get_value() for record in table]
 
             # no "fields" specified -> find fields in data schema
             if len(schema.fields) == 0:
                 query = '''
                     import "influxdata/influxdb/schema"
-                    schema.measurementFieldKeys(bucket: "%s", measurement: "%s")
-                ''' % (self.bucket, schema.table)
-                table = self.api.query(query, org=self.org)[0]
+                    schema.measurementFieldKeys(bucket: "%s", measurement: "%s", start: %.0f, stop: %.0f)
+                ''' % (self.bucket, schema.table, tag_scan_start, tag_scan_stop)
+                try:
+                    table = self.api.query(query, org=self.org)[0]
+                except Exception as e:
+                    logging.error(f'Query: {query}')
+                    logging.error(e)
+                    table = []
                 schema.fields = [record.get_value() for record in table]
                 schema.field_types = [None] * len(schema.fields)
                 if len(schema.fields) == 1:
