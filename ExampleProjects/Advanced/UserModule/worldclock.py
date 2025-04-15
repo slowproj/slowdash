@@ -43,14 +43,6 @@ def _process_command(doc):
 
 
 
-import slowlette
-app = slowlette.Slowlette()
-@app.get('/hello/{name}')
-def hello(name:str='stranger'):
-    return f"Hello {name}, I'm a WorldClock"
-
-
-
 # for testing
 if __name__ == '__main__':
     print(_get_data(_get_channels()[0]['name']))

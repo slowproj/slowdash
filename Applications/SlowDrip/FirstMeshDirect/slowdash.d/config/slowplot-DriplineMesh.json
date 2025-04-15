@@ -8,7 +8,7 @@
     "style": { },
     "panels": [
         { "type": "table", "channel": "DriplineMesh.CurrentEndpointValues", "reversed": false, "title": "Endpoint Values" },
-        { "type": "html", "location": "project", "file": "EndpointSet", "title": "Endpoint Writing", "reload": false },
+        { "type": "html", "location": "project", "file": "EndpointSet", "title": "Endpoint Control", "reload": false },
         { "type": "table", "channel": "DriplineMesh.HeartBeats", "reversed": false, "title": "Heartbeats" },
         { "type": "table", "channel": "DriplineMesh.Alarms", "reversed": false, "title": "Alarms" }
     ],

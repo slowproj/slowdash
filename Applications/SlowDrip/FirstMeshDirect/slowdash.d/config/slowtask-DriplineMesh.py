@@ -32,13 +32,14 @@ def html_EndpointSet(request:slowlette.Request):
     |     <tr><td>Value/Command</td><td><input name="value" style="width:32em"></td></tr>
     |     <tr><td></td><td>
     |       <input type="submit" name="set_endpoint" value="Set Value">
-    |       <input type="submit" name="cmd_endpoint" value="Command">
+    |       <input type="submit" name="cmd_endpoint" value="Send Command">
     |     </td></tr>
     |   </table>
     | </form>
     '''
-    
-    return slowlette.Response(200, content_type='text/html', content=re.sub('^[ ]*\\|', '', html, flags=re.MULTILINE))
+    html = re.sub('^[ ]*\\|', '', html, flags=re.MULTILINE)
+
+    return slowlette.Response(200, content_type='text/html', content=html)
 
 
 
@@ -103,8 +104,111 @@ def _export():
 
 
 
+def _process_command(doc):
+    if doc.get('set_endpoint', False):
+        endpoint = doc.get('endpoint', None)
+        value = doc.get('endpoint', None)
+        if (endpoint is None) or (value is None):
+            return False
+        send_set_request(endpoint, value)
+        
+    elif doc.get('cmd_endpoint', False):
+        endpoint = doc.get('endpoint', None)
+        value = doc.get('endpoint', None)
+        if (endpoint is None) or (value is None):
+            return False
+        send_cmd_request(endpoint, value)
+        
+    else:
+        return None
+
+    
+    return True
 
 
+
+connection, channel, queue = None, None, None
+
+        
+async def _initialize(params):
+    global connection, channel, queue
+    connection = await aio_pika.connect_robust('amqp://dripline:dripline@localhost')
+    channel = await connection.channel()
+    
+    alerts_exchange = await channel.declare_exchange('alerts', aio_pika.ExchangeType.TOPIC)
+    requests_exchange = await channel.declare_exchange('requests', aio_pika.ExchangeType.TOPIC)
+    queue = await channel.declare_queue(name='slowdash', exclusive=True)
+    await queue.bind(alerts_exchange, routing_key='sensor_value.*')
+    await queue.bind(alerts_exchange, routing_key='heartbeat.*')
+
+
+async def _finalize():
+    global connection, channel, queue
+    if connection:
+        await connectin.close()
+        connection = None
+    
+        
+async def _run():
+    global connection, channel, queue
+
+    while not ctrl.is_stop_requested():
+        try:
+            message = await queue.get()
+            async with message.process():
+                on_message(message)
+        except aio_pika.exceptions.QueueEmpty:
+            await asyncio.sleep(0.5)
+
+
+            
+def send_set_request(endpoint, value):
+    message_id = f'{uuid.uuid4()}/0/1'
+    channel.basic_publish(
+        routing_key='peaches',
+        exchange='requests',
+        properties=pika.BasicProperties(
+            message_id = message_id,
+            reply_to = 'slowdash',
+            content_encoding = 'application/json',
+            correlation_id = message_id,
+            timestamp = int(time.time()),
+            headers={
+                'message_type': 3,  # 2: Reply, 3: Request, 4: Alert
+                'message_operation': 1,  # 0: Set, 1: Get, 9: Command
+                
+                'specifier': '',
+                'timestamp': '2025-04-04T05:46:19.937387Z',
+                'sender_info': {
+                    'exe': '/usr/local/bin/python3.12',
+                    'hostname': '16cfe7cb4ded',
+                    'service_name': 'unknown',
+                    'username': 'root',
+                    'versions': {
+                        'dripline': {
+                            'version': '3.0.0'
+                        },
+                        'dripline-cpp': {
+                            'commit': '5ee205622d6ba8ce5da9e1cfb52b726a99b3cc49',
+                            'package': 'driplineorg/dripline-cpp',
+                            'version': '2.10.0'
+                        },
+                        'dripline-python': {
+                            'commit': 'na',
+                            'package': 'driplineorg/dripline-python',
+                            'version': '5.0.0'
+                        }
+                    }
+                },
+            },
+        ),
+        body=b'{"values":[10.0]}'
+    )
+
+    
+def send_cmd_request(endpoint, value):
+    pass
+    
 
 def on_message(message):
     global endpoint_values, heartbeat_values
@@ -123,30 +227,14 @@ def on_message(message):
         heartbeat_values[name] = record
     else:
         return
+
     
-
-
-        
-async def _run():
-    connection = await aio_pika.connect_robust('amqp://dripline:dripline@localhost')
-    async with connection:
-        channel = await connection.channel()
-        alerts_exchange = await channel.declare_exchange('alerts', aio_pika.ExchangeType.TOPIC)
-        requests_exchange = await channel.declare_exchange('requests', aio_pika.ExchangeType.TOPIC)
-        queue = await channel.declare_queue(name='slowdash', exclusive=True)
-        await queue.bind(alerts_exchange, routing_key='sensor_value.*')
-        await queue.bind(alerts_exchange, routing_key='heartbeat.*')
-
-        while not ctrl.is_stop_requested():
-            try:
-                message = await queue.get()
-                async with message.process():
-                    on_message(message)
-            except aio_pika.exceptions.QueueEmpty:
-                await asyncio.sleep(0.5)
-
-
                 
-if __name__ == '__main__':                    
+if __name__ == '__main__':
+    async def main():
+        _initialize({})
+        _run()
+        _finalize()
+
     ControlSystem.stop_by_signal()
-    asyncio.run(_run())
+    asyncio.run(main())
