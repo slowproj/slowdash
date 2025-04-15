@@ -38,7 +38,7 @@ All the time-series entries will be taken from a database:
 ```yaml
 slowdash_project:
   data_source:
-    url: redis://localhost:6739/1
+    url: redis://localhost:6739/DB
 ```
 
 
@@ -227,12 +227,12 @@ Note that the numeric data values shown here can be of any other scalar types (s
 # RDBMS (SQL Database)
 
 ## Supported Database Systems
-|DBMS              |Python Module|Async | Server-side <br>down sampling |
+|DBMS              |Python Module Used|Async | Server-side <br>down sampling |
 |------------------|-------------|------|--------------------|
 | PostgreSQL       | psycopg2    |   no | yes |
-| PostgreSQL (Async access)      | asyncpg     |  yes | yes |
+| PostgreSQL - Async access      | asyncpg     |  yes | yes |
 | MySQL            | mysql-connector-python |   no | yes |
-| MySQL   (Async access)         | aiomysql    |  yes | yes |
+| MySQL   - Async access         | aiomysql    |  yes | yes |
 | SQLite           | (none)      |   no | no |
 | Others (generic) | sqlalchemy  |   no | no |
 
@@ -404,9 +404,6 @@ slowdash_project:
 
 
 # InfluxDB
-## Preparation
-- Install Python3 module "influxdb-client"
-
 ## Time-Series of Scalar Values
 For simple cases, just specify the Measurement name in the `time_series` entry:
 ```yaml
@@ -425,6 +422,7 @@ slowdash_project:
     token: MY_TOKEN_HERE
 ```
 
+### Non-minimal Configuration
 
 #### Case 1: Tag Values for Channel (`meas,channel=CH1 value=VAL1 TIME`)
 If there is only one Tag for channels and one Field for data values, the simle configuration above works. For data containing multiple tags and/or fields, specify the names using `schema`:
@@ -446,6 +444,17 @@ Use `schema` to describe which tag and fields are used:
       time_series:
         schema: meas[channel]=value_raw(default),value_cal
 ```
+
+### Specifying Data Period
+Channel names (tag values and fields) are obtained through InfluxDB queries; however InfluxDB defaults do not extend back to a long range. The data time range for channel scan can be specified in the configuration:
+```yaml
+      time_series:
+        schema: meas
+        tags:
+          scan_date: 2025-01-01
+          scan_length: 100d
+```
+The tag values and fields are scanned for the time range `scan_date - scan_length` to `scan_date`. Default `scan_date` is `now()` and default `scan_length` is `10d`. For the scan length, the following length units are available: `s` (seconds: default), `m` (minutes), `h` (hours), `d` (days), `w` (weeks), and `y` (years).
 
 
 ##  Time-Series of Histograms, Graphs, Tables & Trees
@@ -469,9 +478,6 @@ slowdash_project:
 
 
 # Redis
-## Preparation
-- `pip3 install redis`
-
 ## Data Binding
 - RedisTS data can be accessed as a time-series data.
 - Hash values in simple key-value stores can be accessed as "current" tree data.
@@ -575,9 +581,6 @@ r.json().set('hist00', '$', hist)
 
 
 # MongoDB
-## Preparation
-- Install Python3 module "pymongo"
-
 ##  Time-Series of Scalars
 [TODO] implement schema-based binding
 
@@ -590,9 +593,6 @@ r.json().set('hist00', '$', hist)
 
 
 # CouchDB
-## Preparation
-- Install Python3 module "couchdb"
-
 ## Schema
 Create a CouchDB view with the key being the time-stamp, e.g.:
 ```javascript

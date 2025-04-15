@@ -1,6 +1,6 @@
 
 
-import asyncio, json, re, datetime, time, logging
+import asyncio, json, re, datetime, time, socket, getpass, logging
 import aio_pika
 
 from slowpy.control import ControlSystem, ControlNode
@@ -127,7 +127,7 @@ def _process_command(doc):
 
 
 
-connection, channel, queue = None, None, None
+connection, channel, queue, reply_queue = None, None, None, None
 
         
 async def _initialize(params):
@@ -137,9 +137,11 @@ async def _initialize(params):
     
     alerts_exchange = await channel.declare_exchange('alerts', aio_pika.ExchangeType.TOPIC)
     requests_exchange = await channel.declare_exchange('requests', aio_pika.ExchangeType.TOPIC)
-    queue = await channel.declare_queue(name='slowdash', exclusive=True)
+    queue = await channel.declare_queue(name='slowdash_sub', exclusive=True)
+    reply_queue = await channel.declare_queue(name='slowdash', exclusive=True)
     await queue.bind(alerts_exchange, routing_key='sensor_value.*')
     await queue.bind(alerts_exchange, routing_key='heartbeat.*')
+    await reply_queue.bind(requests_exchange, routing_key='slowdash')
 
 
 async def _finalize():
@@ -162,49 +164,54 @@ async def _run():
 
 
             
+
 def send_set_request(endpoint, value):
     message_id = f'{uuid.uuid4()}/0/1'
+    correlation_id = f'{uuid.uuid4()}'
     channel.basic_publish(
-        routing_key='peaches',
+        routing_key=endpoint,
         exchange='requests',
         properties=pika.BasicProperties(
-            message_id = message_id,
-            reply_to = 'slowdash',
             content_encoding = 'application/json',
-            correlation_id = message_id,
-            timestamp = int(time.time()),
-            headers={
+            message_id = message_id,
+            correlation_id = correlation_id,
+            reply_to = reply_queue.name,
+            headers = {
+                'message_operation': 0,  # 0: Set, 1: Get, 9: Command
                 'message_type': 3,  # 2: Reply, 3: Request, 4: Alert
-                'message_operation': 1,  # 0: Set, 1: Get, 9: Command
-                
+                'lockout_key': '00000000-0000-0000-0000-000000000000',
                 'specifier': '',
-                'timestamp': '2025-04-04T05:46:19.937387Z',
+                'timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat().replace('+00:00', 'Z'),
                 'sender_info': {
-                    'exe': '/usr/local/bin/python3.12',
-                    'hostname': '16cfe7cb4ded',
-                    'service_name': 'unknown',
-                    'username': 'root',
+                    'exe': __file__,
+                    'hostname': socket.gethostname(),
+                    'service_name': 'slowdash',
+                    'username': getpass.getuser(),
                     'versions': {
-                        'dripline': {
-                            'version': '3.0.0'
-                        },
-                        'dripline-cpp': {
-                            'commit': '5ee205622d6ba8ce5da9e1cfb52b726a99b3cc49',
-                            'package': 'driplineorg/dripline-cpp',
-                            'version': '2.10.0'
-                        },
-                        'dripline-python': {
-                            'commit': 'na',
-                            'package': 'driplineorg/dripline-python',
-                            'version': '5.0.0'
+                        'slowdash': {
+                            'version': '0.8.0'
                         }
                     }
-                },
-            },
+                }
+            }
         ),
-        body=b'{"values":[10.0]}'
+        body = ('{"values":[%s]}' % str(value)).encode()
     )
 
+    start_time = time.time()
+    while True:
+        try:
+            message = await reply_queue.get()
+            async with message.process():
+                print("REPLY RECEIVED")
+                break
+        except aio_pika.exceptions.QueueEmpty:
+            await asyncio.sleep(0.5)
+        if time.time() - start_time > 5:
+            print("REPLY TIMEOUT")
+            break
+
+            
     
 def send_cmd_request(endpoint, value):
     pass
