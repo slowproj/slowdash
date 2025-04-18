@@ -16,16 +16,13 @@ class TaskFunctionThread(threading.Thread):
 
         
     def run(self):
-        eventloop = asyncio.new_event_loop()
-        asyncio.set_event_loop(eventloop)
-        eventloop.run_until_complete(self.go())
-        eventloop.close()
-
-        
-    async def go(self):
         try:
             if inspect.iscoroutinefunction(self.func):
-                await self.func(**self.kwargs)
+                future = asyncio.run_coroutine_threadsafe(
+                    self.func(**self.kwargs),
+                    self.taskmodule.user_thread.eventloop
+                )
+                future.result()
             else:
                 self.func(**self.kwargs)
         except Exception as e:
@@ -212,24 +209,7 @@ class TaskModule(UserModule):
                 logging.warning(f'Task Failed: {params}')
             return result
         
-        if self.module is None or self.func_process_command is None:
-            return None
-        
-        try:
-            result = self.func_process_command(params)
-            self.touch_status()
-        except Exception as e:
-            self.handle_error('task module error: process_command(): %s' % str(e))
-            return {'status': 'error', 'message': str(e) }
-
-        if result is not None:
-            logging.info(f'Task: {params}')
-            self.command_history.append((
-                time.time(),
-                '_process_command(%s)' % ','.join(['%s=%s' % (k,v) for k,v in params.items()])
-            ))
-        
-        return result
+        return await super().process_command(params)
     
 
     async def process_task_command(self, doc):

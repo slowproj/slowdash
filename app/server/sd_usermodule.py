@@ -17,13 +17,15 @@ class UserModuleThread(threading.Thread):
         self.stop_event = stop_event
         self.initialized_event = threading.Event()
         self.loaded_event = threading.Event()
+        self.eventloop = None
 
         
     def run(self):        
-        eventloop = asyncio.new_event_loop()
-        asyncio.set_event_loop(eventloop)
-        eventloop.run_until_complete(self.go())
-        eventloop.close()
+        self.eventloop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.eventloop)
+        self.eventloop.run_until_complete(self.go())
+        self.eventloop.close()
+        self.eventloop = None
 
         
     async def go(self):
@@ -295,7 +297,14 @@ class UserModule:
         if self.func_halt is not None:
             try:
                 if inspect.iscoroutinefunction(self.func_halt):
-                    await self.func_halt()
+                    if self.user_thread.eventloop is not None:
+                        future = asyncio.run_coroutine_threadsafe(
+                            self.func_halt(),
+                            self.user_thread.eventloop
+                        )
+                        result = future.result()
+                    else:
+                        await self.func_halt()
                 else:
                     self.func_halt()
             except Exception as e:
@@ -389,7 +398,14 @@ class UserModule:
         try:
             self.touch_status()
             if inspect.iscoroutinefunction(self.func_process_command):
-                result = await self.func_process_command(params)
+                if self.user_thread.eventloop is not None:
+                    future = asyncio.run_coroutine_threadsafe(
+                        self.func_process_command(params),
+                        self.user_thread.eventloop
+                    )
+                    result = future.result()
+                else:
+                    result = await self.func_process_command(params)
             else:
                 result = self.func_process_command(params)
             self.touch_status()
