@@ -8,7 +8,25 @@ ctrl = ControlSystem()
 
 endpoint_values = {}
 heartbeat_values = {}
+status_messages = []
+requests = []
 replies = []
+
+
+sender_info = {
+    'exe': __file__,
+    'hostname': socket.gethostname(),
+    'service_name': 'slowdash',
+    'username': getpass.getuser(),
+    'versions': {
+        'slowdash': {
+            'package': 'slowdash',
+            'version': '0',
+            'commit': '0',
+        }
+    }
+}
+
 
 
 import slowlette
@@ -104,6 +122,23 @@ class HeartbeatsNode(ControlNode):
         }
 
     
+class StatusMessagesNode(ControlNode):
+    def get(self):
+        return {
+            'columns': ['Timestamp', 'Service Name', 'Severity', 'Message'],
+            'table': status_messages,
+        }
+
+
+    
+class RequestsNode(ControlNode):
+    def get(self):
+        return {
+            'columns': ['Timestamp', 'Sender Name', 'Request'],
+            'table': requests,
+        }
+
+    
 class RepliesNode(ControlNode):
     def get(self):
         return {
@@ -116,6 +151,8 @@ def _export():
     return [
         ('CurrentEndpointValues', EndpointsNode()),
         ('HeartBeats', HeartbeatsNode()),
+        ('StatusMessages', StatusMessagesNode()),
+        ('Requests', RequestsNode()),
         ('Replies', RepliesNode()),
     ]
 
@@ -140,7 +177,16 @@ async def _process_command(doc):
         value = doc.get('value', None)
         if (endpoint is None) or (value is None):
             return False
-        await send_cmd_request(endpoint, value)
+        
+        ordered_args, keyed_args = [], {}
+        for v in value.split(','):
+            vv = v.split('=')
+            if len(vv) == 1:
+                ordered_args.append(vv[0].strip())
+            elif len(vv) == 2:
+                keyed_args[vv[0].strip()] = vv[1].strip()
+            
+        await send_cmd_request(endpoint, ordered_args, keyed_args)
         
     else:
         return None
@@ -152,20 +198,26 @@ async def _process_command(doc):
 
 connection, channel = None, None
 alerts_exchange, requests_exchange = None, None
-queue, reply_queue = None, None
+request_queue, reply_queue, alert_queue = None, None, None
         
 async def _initialize(params):
-    global connection, channel, alerts_exchange, requests_exchange, queue, reply_queue
+    global connection, channel
+    global alerts_exchange, requests_exchange
+    global request_queue, reply_queue, alert_queue
+    
     connection = await aio_pika.connect_robust('amqp://dripline:dripline@localhost')
     channel = await connection.channel()
     
     alerts_exchange = await channel.declare_exchange('alerts', aio_pika.ExchangeType.TOPIC)
-    queue = await channel.declare_queue(name='slowdash_sub', exclusive=True)
-    await queue.bind(alerts_exchange, routing_key='sensor_value.*')
-    await queue.bind(alerts_exchange, routing_key='heartbeat.*')
+    alert_queue = await channel.declare_queue(name='slowdash_subscribe', exclusive=True)
+    await alert_queue.bind(alerts_exchange, routing_key='sensor_value.*')
+    await alert_queue.bind(alerts_exchange, routing_key='heartbeat.*')
+    await alert_queue.bind(alerts_exchange, routing_key='status_message.*.*')
     
     requests_exchange = await channel.declare_exchange('requests', aio_pika.ExchangeType.TOPIC)
-    reply_queue = await channel.declare_queue(name='', exclusive=True)
+    request_queue = await channel.declare_queue(name='slowdash', exclusive=True)
+    reply_queue = await channel.declare_queue(name='slowdash_reply', exclusive=True)
+    await request_queue.bind(requests_exchange, routing_key=request_queue.name)
     await reply_queue.bind(requests_exchange, routing_key=reply_queue.name)
 
 
@@ -177,15 +229,84 @@ async def _finalize():
     
         
 async def _run():
+    requests_task = asyncio.create_task(handle_requests())
+    alerts_task = asyncio.create_task(handle_alerts())
+    await asyncio.gather(requests_task, alerts_task)
+
+    
+async def handle_requests():
     while not ctrl.is_stop_requested():
         try:
-            message = await queue.get()
+            message = await request_queue.get()
             async with message.process():
-                on_message(message)
+                await on_request_message(message)
         except aio_pika.exceptions.QueueEmpty:
             await asyncio.sleep(0.5)
 
 
+async def handle_alerts():
+    while not ctrl.is_stop_requested():
+        try:
+            message = await alert_queue.get()
+            async with message.process():
+                await on_alert_message(message)
+        except aio_pika.exceptions.QueueEmpty:
+            await asyncio.sleep(0.5)
+
+            
+
+async def on_request_message(message):
+    request_time = time.time()
+    message_id = f'{uuid.uuid4()}/0/1'
+    timestamp = datetime.datetime.fromtimestamp(request_time, tz=datetime.timezone.utc).isoformat().replace('+00:00', 'Z')
+    op_name = {'0':'SET', '1':'GET', '9':'CMD'}.get(str(message.headers.get('message_operation', 2)), 'INVALID')
+    sender = message.headers.get('sender_info', {}).get('service_name', None) or message.reply_to
+    
+    requests.append([timestamp, sender, f'{op_name}: {message.body.decode()}'])
+    
+    await requests_exchange.publish(
+        aio_pika.Message(
+            correlation_id = message.correlation_id,
+            content_encoding = 'application/json',
+            message_id = message_id,
+            headers = {
+                'message_type': 2,  # 2: Reply, 3: Request, 4: Alert
+                'timestamp': timestamp,
+                'sender_info': sender_info,
+                'return_code': 0,
+                'return_message': 'Success',
+            },
+            body = b'{"message": "request received"}',
+        ),
+        routing_key = message.reply_to
+    )
+    
+    
+async def on_alert_message(message):
+    name = message.routing_key
+    record = {
+        'timestamp': message.headers.get("timestamp", None),
+    }
+    record.update(json.loads(message.body.decode()))
+
+    if name.startswith('sensor_value.'):
+        name = name[13:]
+        endpoint_values[name] = record
+    elif name.startswith('heartbeat.'):
+        name = name[10:]
+        heartbeat_values[name] = record
+    elif name.startswith('status_message.'):
+        keys = name.split('.')
+        status_messages.append([
+            message.headers.get("timestamp", None),
+            keys[1], keys[2],
+            message.body.decode()
+        ])
+    else:
+        return
+
+    
+                
             
 
 async def send_get_request(endpoint, **kwargs):
@@ -194,8 +315,10 @@ async def send_get_request(endpoint, **kwargs):
 async def send_set_request(endpoint, value, **kwargs):
     return await send_request(0, routing_key=endpoint, body='{"values":[%s]}'%str(value), **kwargs)
 
-async def send_cmd_request(endpoint, value, **kwargs):
-    return await send_request(9, routing_jey=endpoint, body=value, **kwargs)
+async def send_cmd_request(endpoint, ordered_args=None, keyed_args=None, **kwargs):
+    payload = {'values': [] if ordered_args is None else ordered_args}
+    payload.update({} if keyed_args is None else keyed_args)
+    return await send_request(9, routing_key=endpoint, body=json.dumps(payload), **kwargs)
     
 
 async def send_request(operation, routing_key, body, *, specifier=None, lockout_key=None):
@@ -221,17 +344,7 @@ async def send_request(operation, routing_key, body, *, specifier=None, lockout_
                 'lockout_key': lockout_key,
                 'specifier': specifier,
                 'timestamp': timestamp,
-                'sender_info': {
-                    'exe': __file__,
-                    'hostname': socket.gethostname(),
-                    'service_name': 'slowdash',
-                    'username': getpass.getuser(),
-                    'versions': {
-                        'slowdash': {
-                            'version': '0.8.0'
-                        }
-                    }
-                }
+                'sender_info': sender_info,
             },
             body = body.encode()
         ),
@@ -255,29 +368,11 @@ async def send_request(operation, routing_key, body, *, specifier=None, lockout_
 
             
     
-def on_message(message):
-    name = message.routing_key
-    record = {
-        'timestamp': message.headers.get("timestamp", None),
-    }
-    record.update(json.loads(message.body.decode()))
-
-    if name.startswith('sensor_value.'):
-        name = name[13:]
-        endpoint_values[name] = record
-    elif name.startswith('heartbeat.'):
-        name = name[10:]
-        heartbeat_values[name] = record
-    else:
-        return
-
-    
-                
 if __name__ == '__main__':
     async def main():
-        _initialize({})
-        _run()
-        _finalize()
+        await _initialize({})
+        await _run()
+        await _finalize()
 
     ControlSystem.stop_by_signal()
     asyncio.run(main())
