@@ -1,7 +1,7 @@
 services:
 
   key-value-store:
-    image: ghcr.io/project8/dragonfly:workshop
+    image: mydl
     #image: ghcr.io/driplineorg/dripline-python:v5.0.0
     depends_on:
       rabbit-broker:

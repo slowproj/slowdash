@@ -7,10 +7,10 @@
     },
     "style": { },
     "panels": [
-        { "type": "table", "channel": "DriplineMesh.CurrentEndpointValues", "reversed": false, "title": "Endpoint Values" },
         { "type": "html", "location": "project", "file": "EndpointSet", "title": "Endpoint Control", "reload": false },
-        { "type": "table", "channel": "DriplineMesh.HeartBeats", "reversed": false, "title": "Heartbeats" },
-        { "type": "table", "channel": "DriplineMesh.Alarms", "reversed": false, "title": "Alarms" }
+        { "type": "table", "channel": "DriplineMesh.Replies", "reversed": false, "title": "Replies" },
+        { "type": "table", "channel": "DriplineMesh.CurrentEndpointValues", "reversed": false, "title": "Endpoint Values (sensor_value.* on alert exchange)" },
+        { "type": "table", "channel": "DriplineMesh.HeartBeats", "reversed": false, "title": "Heartbeats (heartbeat.* on alert exchange)" }
     ],
     "meta": { "name": "DriplineMesh", "title": "Dripline Mesh", "description": "" }
 }
