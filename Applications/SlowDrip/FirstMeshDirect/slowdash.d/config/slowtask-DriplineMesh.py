@@ -6,7 +6,7 @@ import aio_pika
 from slowpy.control import ControlSystem, ControlNode
 ctrl = ControlSystem()
 
-endpoint_values = {}
+sensor_values = {}
 heartbeat_values = {}
 status_messages = []
 requests = []
@@ -26,6 +26,7 @@ sender_info = {
         }
     }
 }
+sender_id = uuid.uuid4()
 
 
 
@@ -34,22 +35,22 @@ webapi = slowlette.Slowlette()
 
 @webapi.get('/api/config/contentlist')
 def add_slowplot_PlotLayoutOverride():
-    return [ { "type": "html", "name": "EndpointSet" } ]
+    return [ { "type": "html", "name": "EndpointControl" } ]
 
 
-@webapi.get('/api/config/content/html-EndpointSet')
-def html_EndpointSet(request:slowlette.Request):
+@webapi.get('/api/config/content/html-EndpointControl')
+def html_EndpointControl(request:slowlette.Request):
     request.abort()
 
     html = f'''
     | <form>
     |   <datalist id="dripline_endpoints">
-    |     {'\n'.join(['<option value="'+name+'">' for name in endpoint_values])}
+    |     {'\n'.join(['<option value="'+name+'">' for name in sensor_values])}
     |   </datalist>
     |   <table>
     |     <tr><td>Endpoint</td><td><input name="endpoint" list="dripline_endpoints" style="width:32em"></td></tr>
-    |     <tr><td>Value/Command</td><td><input name="value" style="width:32em"></td></tr>
-    |     <tr><td>Specifier</td><td><input name="specifier" style="width:32em"></td></tr>
+    |     <tr><td>Specifier/Method</td><td><input name="specifier" style="width:32em"></td></tr>
+    |     <tr><td>Value(s)</td><td><input name="value" style="width:32em"></td></tr>
     |     <tr><td>Lockout Key</td><td><input name="lockout_key" style="width:32em"></td></tr>
     |     <tr><td></td><td>
     |       <input type="submit" name="get_endpoint" value="Get Value">
@@ -89,12 +90,12 @@ def timestr(timestamp, now):
 
 
 
-class EndpointsNode(ControlNode):
+class SensorValuesNode(ControlNode):
     def get(self):
         now = time.time()
         
         table = []
-        for name, entry in endpoint_values.items():
+        for name, entry in sensor_values.items():
             timestamp = entry.get('timestamp', None)
             value_raw = entry.get('value_raw', '-')
             value_cal = entry.get('value_cal', '-')        
@@ -107,21 +108,6 @@ class EndpointsNode(ControlNode):
 
     
 
-class HeartbeatsNode(ControlNode):
-    def get(self):
-        now = time.time()
-        
-        table = []
-        for name, entry in heartbeat_values.items():
-            timestamp = entry.get('timestamp', None)
-            table.append([name, timestr(timestamp, now)])
-            
-        return {
-            'columns': [ 'Name', 'Timestamp' ],
-            'table': table,
-        }
-
-    
 class StatusMessagesNode(ControlNode):
     def get(self):
         return {
@@ -129,6 +115,22 @@ class StatusMessagesNode(ControlNode):
             'table': status_messages,
         }
 
+
+    
+class HeartbeatsNode(ControlNode):
+    def get(self):
+        now = time.time()
+        
+        table = []
+        for key, entry in heartbeat_values.items():
+            timestamp = entry.get('timestamp', None)
+            name = entry.get('name', key)
+            table.append([name, timestr(timestamp, now)])
+            
+        return {
+            'columns': [ 'Name', 'Timestamp' ],
+            'table': table,
+        }
 
     
 class RequestsNode(ControlNode):
@@ -149,9 +151,9 @@ class RepliesNode(ControlNode):
     
 def _export():
     return [
-        ('CurrentEndpointValues', EndpointsNode()),
-        ('HeartBeats', HeartbeatsNode()),
+        ('SensorValues', SensorValuesNode()),
         ('StatusMessages', StatusMessagesNode()),
+        ('HeartBeats', HeartbeatsNode()),
         ('Requests', RequestsNode()),
         ('Replies', RepliesNode()),
     ]
@@ -159,23 +161,23 @@ def _export():
 
 
 async def _process_command(doc):
+    endpoint = doc.get('endpoint', None)
+    specifier = doc.get('specifier', None)
+    value = doc.get('value', None)
+    lockout_key = doc.get('lockout_key', None)
+        
     if doc.get('get_endpoint', False):
-        endpoint = doc.get('endpoint', None)
         if (endpoint is None):
             return False
-        await send_get_request(endpoint)
+        await send_get_request(endpoint, specifier=specifier, lockout_key=lockout_key)
         
     elif doc.get('set_endpoint', False):
-        endpoint = doc.get('endpoint', None)
-        value = doc.get('value', None)
         if (endpoint is None) or (value is None):
             return False
-        await send_set_request(endpoint, value)
+        await send_set_request(endpoint, value, specifier=specifier, lockout_key=lockout_key)
         
     elif doc.get('cmd_endpoint', False):
-        endpoint = doc.get('endpoint', None)
-        value = doc.get('value', None)
-        if (endpoint is None) or (value is None):
+        if (endpoint is None) or (specifier is None):
             return False
         
         ordered_args, keyed_args = [], {}
@@ -186,7 +188,7 @@ async def _process_command(doc):
             elif len(vv) == 2:
                 keyed_args[vv[0].strip()] = vv[1].strip()
             
-        await send_cmd_request(endpoint, ordered_args, keyed_args)
+        await send_cmd_request(endpoint, specifier, ordered_args, keyed_args, lockout_key=lockout_key)
         
     else:
         return None
@@ -231,6 +233,7 @@ async def _finalize():
 async def _run():
     requests_task = asyncio.create_task(handle_requests())
     alerts_task = asyncio.create_task(handle_alerts())
+    heartbeat_task = asyncio.create_task(send_heartbeats())
     await asyncio.gather(requests_task, alerts_task)
 
     
@@ -253,16 +256,55 @@ async def handle_alerts():
         except aio_pika.exceptions.QueueEmpty:
             await asyncio.sleep(0.5)
 
+
+            
+async def send_heartbeats():
+    while not ctrl.is_stop_requested():
+        request_time = time.time()
+        message_id = f'{uuid.uuid4()}/0/1'
+        timestamp = datetime.datetime.fromtimestamp(request_time, tz=datetime.timezone.utc).isoformat().replace('+00:00', 'Z')
+    
+        await alerts_exchange.publish(
+            aio_pika.Message(
+                content_encoding = 'application/json',
+                message_id = message_id,
+                headers = {
+                    'message_type': 4,  # 2: Reply, 3: Request, 4: Alert
+                    'timestamp': timestamp,
+                    'sender_info': sender_info,
+                },
+                body = ('{"id": "%s", "name":"slowdash"}' % sender_id).encode(),
+            ),
+            routing_key = 'heartbeat.slowdash'
+        )
+
+        await alerts_exchange.publish(
+            aio_pika.Message(
+                content_encoding = 'application/json',
+                message_id = f'{uuid.uuid4()}/0/1',
+                headers = {
+                    'message_type': 4,  # 2: Reply, 3: Request, 4: Alert
+                    'timestamp': timestamp,
+                    'sender_info': sender_info,
+                },
+                body = '{"message": "I am happy."}'.encode(),
+            ),
+            routing_key = 'status_message.slowdash.notice'
+        )
+        
+        await asyncio.sleep(30)
+
             
 
 async def on_request_message(message):
     request_time = time.time()
     message_id = f'{uuid.uuid4()}/0/1'
+    specifier = message.headers.get('specifier', '')
     timestamp = datetime.datetime.fromtimestamp(request_time, tz=datetime.timezone.utc).isoformat().replace('+00:00', 'Z')
     op_name = {'0':'SET', '1':'GET', '9':'CMD'}.get(str(message.headers.get('message_operation', 2)), 'INVALID')
     sender = message.headers.get('sender_info', {}).get('service_name', None) or message.reply_to
     
-    requests.append([timestamp, sender, f'{op_name}: {message.body.decode()}'])
+    requests.append([timestamp, sender, f'{op_name} {specifier}: {message.body.decode()}'])
     
     await requests_exchange.publish(
         aio_pika.Message(
@@ -291,11 +333,12 @@ async def on_alert_message(message):
 
     if name.startswith('sensor_value.'):
         name = name[13:]
-        endpoint_values[name] = record
+        sensor_values[name] = record
     elif name.startswith('heartbeat.'):
         name = name[10:]
         heartbeat_values[name] = record
     elif name.startswith('status_message.'):
+        print("STATUS", message)
         keys = name.split('.')
         status_messages.append([
             message.headers.get("timestamp", None),
@@ -315,10 +358,10 @@ async def send_get_request(endpoint, **kwargs):
 async def send_set_request(endpoint, value, **kwargs):
     return await send_request(0, routing_key=endpoint, body='{"values":[%s]}'%str(value), **kwargs)
 
-async def send_cmd_request(endpoint, ordered_args=None, keyed_args=None, **kwargs):
+async def send_cmd_request(endpoint, specifier, ordered_args=None, keyed_args=None, **kwargs):
     payload = {'values': [] if ordered_args is None else ordered_args}
     payload.update({} if keyed_args is None else keyed_args)
-    return await send_request(9, routing_key=endpoint, body=json.dumps(payload), **kwargs)
+    return await send_request(9, routing_key=endpoint, body=json.dumps(payload), specifier=specifier, **kwargs)
     
 
 async def send_request(operation, routing_key, body, *, specifier=None, lockout_key=None):
@@ -358,12 +401,12 @@ async def send_request(operation, routing_key, body, *, specifier=None, lockout_
             message = await reply_queue.get()
             async with message.process():
                 reply = message.body.decode()
-                replies.append([date, routing_key, f'{op_name}: {body}', reply])
+                replies.append([date, routing_key, f'{op_name} {specifier}: {body}', reply])
                 return reply
         except aio_pika.exceptions.QueueEmpty:
             await asyncio.sleep(0.5)
         if time.time() - request_time > 5:
-            replies.append([date, routing_key, f'{op_name}: {body}', '**TIMEOUT**'])
+            replies.append([date, routing_key, f'{op_name} {specifier}: {body}', '**TIMEOUT**'])
             return None
 
             

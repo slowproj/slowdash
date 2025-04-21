@@ -54,7 +54,8 @@ class DataStore_InfluxDB2(DataStore):
                 break
             except Exception as e:
                 logging.warn(e)
-                logging.warn('Unable to connect to the Db server. Retrying in 5 sec...')
+                logging.warn(f'Unable to connect to the Db server: http://{host}:{port}')
+                logging.warn('Retrying in 5 sec...')
                 time.sleep(5)
         else:
             self.client = None
@@ -66,6 +67,7 @@ class DataStore_InfluxDB2(DataStore):
         self.Point = Point
         self.write_precision = WritePrecision.S
         self.update_error_shown = False
+        logging.info(f'InfluxDB connected: http://{host}:{port}')
 
         
     def __del__(self):
@@ -90,7 +92,7 @@ class DataStore_InfluxDB2(DataStore):
     
         
     def _open_transaction(self):
-        if self.measurement is None or self.write_api is None:
+        if self.client is None or self.measurement is None or self.write_api is None:
             return False
         
         return self.measurement
