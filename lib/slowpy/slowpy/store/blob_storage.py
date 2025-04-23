@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 21 April 2025 #
 
-import sys, os, time, json, datetime
+import sys, os, time, re, json, datetime, logging
 from string import Template
 import hashlib, uuid
 
@@ -51,6 +51,7 @@ class BlobStorage_File(BlobStorage):
              - ${timestamp}: UNIX timestamp
              - ${uuid}: UUID
              - ${md5}: File MD5
+             - ${md5[N:M]}: File MD5 slice (e.g., ${md5[0:2]} for the first two hex digits)
         - After parameter substitution, only alphabets, digits, '_', '-', '+', and '.' are allowed for a name
         """
         
@@ -87,15 +88,20 @@ class BlobStorage_File(BlobStorage):
         
         now = int(timestamp if timestamp is not None else time.time())
         date = datetime.datetime.fromtimestamp(now).astimezone()
+        uuid4 = uuid.uuid4()
+        md5 = hashlib.md5(blob).hexdigest()
         params = {
             'timestamp': now,
-            'uuid': uuid.uuid4(),
-            'md5': hashlib.md5(blob).hexdigest(),
+            'uuid': uuid4,
+            'md5': md5,
         }
-        
+
         this_names = []
         for name_k in self.names:
             this_name_k = date.strftime(Template(name_k).safe_substitute(**params))
+            for N,M in re.findall(r'\$\{md5\[(\d+):(\d+)\]\}', name_k):
+                this_name_k = this_name_k.replace('${md5[%s]}'%f'{N}:{M}', md5[int(N):int(M)])
+                
             if not this_name_k.replace('_','').replace('-','').replace('+','').replace('.','').isalnum():
                 logging.error(f'BlobStorage_File.write(): bad file name: {this_name_k}')
                 return None
@@ -140,6 +146,6 @@ class BlobStorage_File(BlobStorage):
 
     
 if __name__ == '__main__':
-    storage = BlobStorage_File(ext='txt')
+    storage = BlobStorage_File(names=['${md5[0:2]}-${md5[2:4]}', '${md5}'], ext='txt')
     filepath = storage.write(b'hello, this is a sample blob.\n')
     print(filepath)
