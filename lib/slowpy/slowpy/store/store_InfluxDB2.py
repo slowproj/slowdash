@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 14 June 2023 #
 
 import time, datetime, traceback, logging
-from .base import DataStore
+from .store import DataStore
 
 
 class DataStore_InfluxDB2(DataStore):

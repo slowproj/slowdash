@@ -2,7 +2,7 @@
 
 
 import sys, os, time, json, logging
-from .base import DataStore
+from .store import DataStore
 
 objts_prefix = '__sd_objts'
 

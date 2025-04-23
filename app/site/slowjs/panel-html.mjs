@@ -329,7 +329,7 @@ class HrefPanel extends Panel {
             <td>URL</td><td><input style="width:30em"></td>
         `).appendTo(table);
         $('<tr>').html(`
-            <td></td><td>For User-HTML, prepend "./api/userhtml/" before the HTML file name.</td>
+            <td></td><td>For User-HTML, prepend "./userhtml/" before the HTML file name.</td>
         `).appendTo(table);
         $('<tr>').html(`
             <td></td><td>For external page, start with "https://".</td>

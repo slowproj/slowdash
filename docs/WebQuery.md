@@ -189,7 +189,7 @@ For details see the [Data Model section](DataModel.html).
 ## Fetching Blob Data Content
 ### Request
 ```
-GET http://ADDRESS:PORT/api/blob/CHANNEL/ID
+GET http://ADDRESS:PORT/api/blob/CHANNEL?id=ID
 ```
 
 ## Listing User Configuration Entries

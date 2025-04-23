@@ -59,9 +59,9 @@ class DataSource(ComponentPlugin):
         return result
 
     
-    @slowlette.get('/api/blob')
-    async def api_get_blob(self, channel:str, path:list):
-        mime_type, content = self.get_blob(channel, path[1:])
+    @slowlette.get('/api/blob/{channel}')
+    async def api_get_blob(self, channel:str, id:str):
+        mime_type, content = self.get_blob(channel, id)
         if mime_type is not None:
             return None
 
@@ -94,10 +94,10 @@ class DataSource(ComponentPlugin):
         return self.get_object(channels, length, to)
 
     
-    async def aio_get_blob(self, channel:str, params:list):
+    async def aio_get_blob(self, channel:str, blob_id:str):
         """[implement in child class] returns a tuple of content_type (str) and blob (bytes)  (async version)
         """
-        return self.get_blob(channel, params)
+        return self.get_blob(channel, blob_id)
 
 
     def initialize(self):
@@ -126,7 +126,7 @@ class DataSource(ComponentPlugin):
         return {}
 
     
-    def get_blob(self, channel:str, params:list):
+    def get_blob(self, channel:str, blob_id:str):
         """[implement in child class] returns a tuple of content_type (str) and blob (bytes)
         """
         return None, None

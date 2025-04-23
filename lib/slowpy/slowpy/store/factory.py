@@ -1,6 +1,6 @@
 import logging
 
-from .base import DataStore, DataStore_Null
+from .store import DataStore, DataStore_Null
 from .store_SQL import DataStore_PostgreSQL, DataStore_MySQL, DataStore_SQLite
 from .store_InfluxDB2 import DataStore_InfluxDB2
 from .store_Redis import DataStore_Redis

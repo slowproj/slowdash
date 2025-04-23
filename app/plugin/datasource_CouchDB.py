@@ -370,12 +370,16 @@ class DataSource_CouchDB(DataSource):
         return result
 
     
-    def get_blob(self, path):
+    def get_blob(self, channel, blob_id):
         if not self.server_connected:
             self.connect()
         if self.db is None:
             return (None, None)
-
+        
+        if channel not in [ch.get('name', ' ') for ch in self.get_channels()]:
+            return (None, None)
+        
+        path = blob_id.split('/')
         if len(path) < 2:
             return (None, None)
         doc_id, att_name = path[0], path[1]

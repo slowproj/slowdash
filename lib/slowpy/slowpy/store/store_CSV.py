@@ -2,7 +2,7 @@
 
 
 import os, sys, time, logging
-from .base import DataStore
+from .store import DataStore
 
 
 class DataStore_CSV(DataStore):

@@ -3,7 +3,7 @@
 
 import os, sys, time, logging, traceback
 from urllib.parse import urlparse
-from .base import DataStore
+from .store import DataStore
 
 
 class TableFormat:
