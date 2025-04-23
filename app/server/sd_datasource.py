@@ -1,11 +1,12 @@
 # Created by Sanshiro Enomoto on 20 March 2022 #
 
-import time, math, statistics, logging
+import os, time, math, statistics, logging
 
 import slowlette
 from sd_component import ComponentPlugin, PluginComponent
 
 from sd_dataschema import Schema
+import sd_blobstorage
 
 
 class DataSource(ComponentPlugin):
@@ -15,6 +16,12 @@ class DataSource(ComponentPlugin):
     def __init__(self, app, project, params):
         super().__init__(app, project, params)
 
+        self.blob_storage = None
+        if 'blob_storage' in params:
+            blob_params = params.get('blob_storage')
+            if blob_params.get('type', '') == 'file':
+                self.blob_storage = sd_blobstorage.BlobStorage_File(app, project, blob_params)
+        
         
     @slowlette.on_event('startup')
     async def api_initialize(self):
@@ -61,10 +68,13 @@ class DataSource(ComponentPlugin):
     
     @slowlette.get('/api/blob/{channel}')
     async def api_get_blob(self, channel:str, id:str):
-        mime_type, content = self.get_blob(channel, id)
-        if mime_type is not None:
-            return None
-
+        mime_type, content = await self.aio_get_blob(channel, id)
+        
+        if content is None:
+            if self.blob_storage is not None:
+                if channel in [entry['name'] for entry in self.get_channels()]:
+                    mime_type, content = await self.blob_storage.get_blob(id)
+                
         return slowlette.Response(content_type=mime_type, content=content)
 
     
@@ -127,10 +137,10 @@ class DataSource(ComponentPlugin):
 
     
     def get_blob(self, channel:str, blob_id:str):
-        """[implement in child class] returns a tuple of content_type (str) and blob (bytes)
+        """[override in child class as needed] returns a tuple of content_type (str) and blob (bytes)
         """
         return None, None
-
+            
 
     @classmethod
     def resample(cls, set_of_timeseries, length, to, interval, reducer):
@@ -237,7 +247,7 @@ class DataSource(ComponentPlugin):
         
         return math.nan
 
-
+    
     
 class DataSourceComponent(PluginComponent):
     def __init__(self, app, project):

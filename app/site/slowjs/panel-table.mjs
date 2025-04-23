@@ -430,17 +430,15 @@ class BlobPanel extends Panel {
         if (! data) {
             if (! (dataPacket.__meta?.isPartial ?? false)) {
                 this.contentDiv.empty();
-                this.contentDiv.html('No Blob Data');
+                this.contentDiv.text('No Blob Data');
             }
             return;
         }
 
-        this.contentDiv.empty();
-        
         let t = null, x = null;
         if (Array.isArray(data.x)) {
             if (data.x.length < 1) {
-                this.contentDiv.html('Empty Blob Data');
+                this.contentDiv.text('Empty Blob Data');
                 return;
             }
             t = data.start + data.t[data.t.length-1];
@@ -450,14 +448,24 @@ class BlobPanel extends Panel {
             t = data.start + data.t;
             x = data.x;
         }
+        if (typeof(x) == "string") {
+            try {
+                x = JSON.parse(x);
+            }
+            catch(error) {
+                this.contentDiv.text(x);
+            }
+        }
 
         this.titleDiv.text(new JGDateTime(t).asString(this.config.title));
+        this.contentDiv.empty();
+        
         if (! x?.mime || ! x?.id) {
             this.contentDiv.text(JSON.stringify(x));
             return;
         }
 
-        const url = './api/blob/' + this.config.channel + '?id=' + encodeURIComponent(x.id);
+        const url = './api/blob/' + this.config.channel + '?id=' + x.id;
         if (x.mime.split('/')[0].toLowerCase() == 'image') {
             let a = $('<a>').appendTo(this.contentDiv);
             a.attr({'href': url, 'target': '_blank'});

@@ -252,8 +252,13 @@ if __name__ == '__main__':
             json_opts = { 'indent': args.indent }
             await app.slowlette.dispatch_event('startup')
             response = await app.slowlette(f'/api/{args.COMMAND}')
-            sys.stdout.write(response.get_content(json_opts).decode())
-            sys.stdout.write('\n')
+            if response.content_type is None:
+                pass
+            elif response.content_type == 'application/json' or response.content_type.startswith('text/'):
+                sys.stdout.write(response.get_content(json_opts).decode())
+                sys.stdout.write('\n')
+            else:
+                sys.stdout.buffer.write(response.content)
             await app.slowlette.dispatch_event('shutdown')
         asyncio.run(main())
         

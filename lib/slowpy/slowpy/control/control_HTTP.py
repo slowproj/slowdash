@@ -42,7 +42,7 @@ class HttpNode(spc.ControlNode):
         if response.status_code != 200:
             raise spc.ControlException('unable to fetch URL resource "%s": status %d' % (url, response.status_code))
 
-        return response.content.decode()
+        return response.content
     
         
     def do_post_request(self, path, content):
@@ -108,7 +108,7 @@ class HttpValuePathNode(spc.ControlVariableNode):
         return self.path_node.set(value)
             
     def get(self):
-        return self.path_node.get()
+        return self.path_node.get().decode()
             
     
     
@@ -124,6 +124,6 @@ class HttpJsonPathNode(spc.ControlNode):
     def get(self):
         content = self.path_node.get()
         try:
-            return json.loads(content)
+            return json.loads(content.decode())
         except Exception as e:
             raise spc.ControlException('bad JSON document: %s' % str(e))

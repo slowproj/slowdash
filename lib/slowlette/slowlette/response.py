@@ -38,7 +38,7 @@ class Response:
         self.content_type = content_type
         self.content = None
         self.headers = {}
-        
+
         if content is not None:
             if status_code == 0:
                 self.status_code = 200
@@ -202,6 +202,9 @@ class FileResponse(Response):
 
 
 def read_file(filepath, content_type):
+    if not os.path.exists(filepath):
+        logging.warning(f'Slowlette_FileResponse: file not found: {filepath}')
+        return None, None
     if not os.path.isfile(filepath):
         logging.warning(f'Slowlette_FileResponse: not a file: {filepath}')
         return None, None
@@ -227,6 +230,8 @@ def read_file(filepath, content_type):
             content_type = 'text/css'
         elif ext == 'json':
             content_type = 'application/json'
+        elif ext == 'yaml':
+            content_type = 'application/yaml'
         elif ext == '.png':
             content_type = 'image/png'
         elif ext == '.svg':

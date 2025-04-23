@@ -337,7 +337,8 @@ class DataSource_InfluxDB2(DataSource):
                         result[channel] = {
                             'start': start, 'length': int(length), 't': [], 'x': []
                         }
+                    value = record.get_value()
                     result[channel]['t'].append(int(1000*(record.get_time().timestamp()-start))/1000.0)
-                    result[channel]['x'].append(record.get_value())
+                    result[channel]['x'].append(value)
 
         return result
