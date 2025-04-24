@@ -36,8 +36,9 @@ class BlobStorage:
         return mime
 
 
+    
 class BlobStorage_File(BlobStorage):
-    def __init__(self, *, basedir='.', names=['blob', '%Y', '%m', '%y%m%d-%H%M%S-%Z'], prefix='', ext='', mime=None):
+    def __init__(self, *, basedir='data/blob', names=['%Y', '%m', '%y%m%d-%H%M%S-%Z'], prefix='', ext='', mime=None):
         """
         - The file location and name to be created depend on whether a file name is given in write() or not:
             - If file name is given:
@@ -102,8 +103,11 @@ class BlobStorage_File(BlobStorage):
             for N,M in re.findall(r'\$\{md5\[(\d+):(\d+)\]\}', name_k):
                 this_name_k = this_name_k.replace('${md5[%s]}'%f'{N}:{M}', md5[int(N):int(M)])
                 
-            if not this_name_k.replace('_','').replace('-','').replace('+','').replace('.','').isalnum():
-                logging.error(f'BlobStorage_File.write(): bad file name: {this_name_k}')
+            if (
+                (len(this_name_k) == 0) or this_name_k.startswith('.') or
+                (not this_name_k.replace('_','').replace('-','').replace('+','').replace('.','').isalnum())
+            ):
+                logging.error(f'BlobStorage_File.write(): bad file name: "{this_name_k}" from template "{name_k}"')
                 return None
             this_names.append(this_name_k)
 
@@ -146,6 +150,6 @@ class BlobStorage_File(BlobStorage):
 
     
 if __name__ == '__main__':
-    storage = BlobStorage_File(names=['${md5[0:2]}-${md5[2:4]}', '${md5}'], ext='txt')
+    storage = BlobStorage_File(ext='txt')
     filepath = storage.write(b'hello, this is a sample blob.\n')
     print(filepath)

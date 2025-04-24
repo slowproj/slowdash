@@ -18,14 +18,23 @@ class BlobStorage:
 class BlobStorage_File(BlobStorage):
     def __init__(self, app, project, params):
         super().__init__(app, project, params)
-        self.basedir = params.get('base_directory', '.')
+        self.basedir = params.get('base_directory', 'data/blob')
 
 
     async def get_blob(self, blob_id:str):
         if not blob_id.startswith('file:'):
             return None, None
-        
-        filepath = os.path.join(self.basedir, blob_id[5:])
+
+        filepath = blob_id[5:]
+        for p in filepath.split(os.path.sep):
+            if (
+                (len(p) == 0) or p.startswith('.') or
+                (not p.replace('_','').replace('-','').replace('+','').replace('.','').isalnum())
+            ):
+                logging.warning(f'get_blob(): invalid file path: {filepath}')
+                return None, None
+            
+        filepath = os.path.join(self.basedir, filepath)
         if not os.path.exists(filepath):
             logging.warning(f'get_blob(): file not found: {filepath}')
             return None, None
