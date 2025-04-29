@@ -324,7 +324,7 @@ export class TimePullDown {
         this.options = $.extend(true, {}, defaults, options);
         this.lastValue = 0;
 
-        this.dialogDiv = $('<div>').css({color:'black'}).appendTo(obj.closest('div'));
+        this.dialogDiv = $('<div>').addClass('sd-pad').appendTo(obj.closest('div'));
         this.dialog = new TimeDialog(this.dialogDiv, {
             title: 'Data Time',
             apply: time => {
@@ -410,7 +410,7 @@ export class TimeRangePullDown {
 
         this.range = { length: parseFloat(this.options.initial), to: null };
         
-        this.dialogDiv = $('<div>').css({color:'black'}).appendTo(obj.closest('div'));
+        this.dialogDiv = $('<div>').addClass('sd-pad').appendTo(obj.closest('div'));
         this.dialog = new TimeRangeDialog(this.dialogDiv, {
             title: 'Data Time Range',
             apply: range => {
@@ -494,7 +494,7 @@ export class GridPullDown {
         this.options = $.extend(true, {}, defaults, options);
         this.lastValue = '1x1';
 
-        this.dialogDiv = $('<div>').css({color:'black'}).appendTo(obj.closest('div'));
+        this.dialogDiv = $('<div>').addClass('sd-pad').appendTo(obj.closest('div'));
         this.dialog = new GridDialog(this.dialogDiv, {
             title: 'Grid Layout',
             apply: grid => {

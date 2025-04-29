@@ -5,6 +5,7 @@
 body {
     font-family: sans-serif;
     background-color: white;
+    color: black;
 }
 
 a {
@@ -40,6 +41,7 @@ summary {
 
 .sd-pad {
     background: lightgray;
+    color: black;
 }
 
 .sd-popup {
@@ -102,6 +104,12 @@ summary {
 .jaga-tabPage {
     background: lightgray;
 }
+
+.jaga-fileicon-icon {
+    background: #f8f8f8;
+}
+
+
 
 .forcusible {
     border: none;
