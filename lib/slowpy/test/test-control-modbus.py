@@ -2,8 +2,7 @@
 host = '192.168.50.63'
 
 from slowpy.control import control_system as ctrl
-ctrl.import_control_module('Modbus')
-modbus = ctrl.modbus(host)
+modbus = ctrl.import_control_module('Modbus').modbus(host)
 
 interval = modbus.holding_register(0)
 dout0 = modbus.holding_register(1)

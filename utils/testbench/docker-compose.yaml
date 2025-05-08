@@ -47,8 +47,7 @@ services:
 
   # for Jupyter export #
   notebook:
-    #image: slowproj/slowpy-notebook:latest
-    image: slowpy-notebook:latest
+    image: slowproj/slowpy-notebook:latest
     command:
       - start-notebook.sh
       - --NotebookApp.token=SlowJupyter

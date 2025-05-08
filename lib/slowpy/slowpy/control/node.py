@@ -4,6 +4,22 @@
 import os, time, threading, importlib, traceback, inspect
 
 
+class dualmethod:
+    '''decorator for hybrid of object-method(self) and class-method(cls)
+    '''
+    def __init__(self, func):
+        self.func = func
+
+    def __get__(self, instance, owner):
+        def wrapper(*args, **kwargs):
+            if instance is not None:
+                return self.func(instance, *args, **kwargs)
+            else:
+                return self.func(owner, *args, **kwargs)
+        return wrapper
+
+
+    
 class ControlException(Exception):
     def __init__(self, message):
         self.message = message
@@ -151,8 +167,8 @@ class ControlNode:
         setattr(cls, name, method)
 
         
-    @classmethod
-    def import_control_module(cls, module_name, search_dirs=[]):
+    @dualmethod
+    def import_control_module(this, module_name, search_dirs=[]):
         filename = 'control_%s.py' % module_name
         this_search_dirs = search_dirs + [
             os.path.abspath(os.getcwd()),
@@ -182,10 +198,10 @@ class ControlNode:
             raise ControlException('unable to identify Node class: %s' % module_name)
         
         for NodeClass in node_classes:
-            cls.add_node(NodeClass)
+            this.add_node(NodeClass)
             #print(f'Control: importing {str(NodeClass)}')
                 
-        return node_classes[0] if len(node_classes) == 1 else node_classes
+        return this
 
         
     _system_stop_event = threading.Event()

@@ -5,6 +5,7 @@ import time, signal, logging
 import slowpy.control as spc
 
 
+
 class ControlSystem(spc.ControlNode):
     # this will be set by sd_taskmodule.py when a module that imports this is loaded to SlowDash App
     _slowdash_app = None

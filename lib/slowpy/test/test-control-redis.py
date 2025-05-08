@@ -1,8 +1,6 @@
 
-from slowpy.control import ControlSystem
-ControlSystem.import_control_module('Redis')
-
-redis = ControlSystem().redis('redis://localhost:6379/12')
+from slowpy.control import control_system as ctrl
+redis = ctrl.import_control_module('Redis').redis('redis://localhost:6379/12')
 
 
 # string

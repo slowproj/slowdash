@@ -1,9 +1,6 @@
 
-from slowpy.control import ControlSystem
-ControlSystem.import_control_module('DummyDevice')
-ctrl = ControlSystem()
-
-device = ctrl.randomwalk_device()
+from slowpy.control import control_system as ctrl
+device = ctrl.import_control_module('DummyDevice').randomwalk_device()
 store = ctrl.data_store(url='sqlite:///TestHdlDummyStore.db', table='slow_data')
 
 

@@ -1,10 +1,9 @@
 
 import time
 
-from slowpy.control import ControlSystem
-ControlSystem.import_control_module('DummyDevice')
+from slowpy.control import control_system as ctrl
+device = ctrl.import_control_module('DummyDevice').randomwalk_device()
 
-device = ControlSystem().randomwalk_device()
 ch0 = device.ch(0)
 ch1 = device.ch(1)
 print(f"Walk: {device.walk()}, Decay: {device.decay()}");

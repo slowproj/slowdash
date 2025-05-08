@@ -1,8 +1,7 @@
 
-from slowpy.control import ControlSystem
-ControlSystem.import_control_module('Dripline')
+from slowpy.control import control_system as ctrl
+dripline = ctrl.import_control_module('Dripline').dripline(dripline_config={'auth-file':'/home/slowuser/authentications.json'})
 
-dripline = ControlSystem().dripline(dripline_config={'auth-file':'/home/slowuser/authentications.json'})
 peaches = dripline.endpoint('peaches')
 
 print(peaches)
