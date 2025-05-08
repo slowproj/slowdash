@@ -6,7 +6,7 @@ import logging
 
 
 class ModbusNode(spc.ControlNode):
-    def __init__(self, host:str, port:int):
+    def __init__(self, host:str, port:int=502):
         from pymodbus.client import ModbusTcpClient
         self.client = ModbusTcpClient(host, port=port)
         try:
@@ -30,7 +30,7 @@ class ModbusNode(spc.ControlNode):
     
     @classmethod
     def _node_creator_method(cls):
-        def modbus(self, host:str, port:int):
+        def modbus(self, host:str, port:int=502):
             name = '%s:%s' % (host, str(port))
             try:
                 self._modbus_nodes.keys()

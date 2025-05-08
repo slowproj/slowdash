@@ -10,9 +10,9 @@ PIP_DEVS = pyserial pyvisa pymodbus
 PIP_OPTS = numpy matplotlib lmfit pillow 
 
 
-all: venv-install slowdash venv-setup success
+all: venv-install slowdash venv-setup print-success
 
-without-venv: slowdash success
+without-venv: slowdash print-success
 
 
 
@@ -100,7 +100,7 @@ venv-setup:
 	@if [ -d ./venv ]; then . venv/bin/activate; pip install -r requirements.txt; deactivate; fi
 
 
-success:
+print-success:
 	@echo ""
 	@echo ""
 	@echo "### SlowDash Installation is successful ###"
