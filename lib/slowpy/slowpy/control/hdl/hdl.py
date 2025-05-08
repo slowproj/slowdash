@@ -131,7 +131,9 @@ class Clock(threading.Thread):
             self.initialize()
             
         now = time.time()
-        if self.next_time < now:
+        togo = self.next_time - now
+        
+        if togo <= 0:
             self.ticks = int((now - self.start_time) / self.interval) + 1
             self.next_time = self.start_time + self.ticks * self.interval
 
@@ -142,8 +144,8 @@ class Clock(threading.Thread):
             for reg in self.registers:
                 reg._update_output()
 
-        elif self.next_time - now < 2:
-            time.sleep(self.next_time - now < 2)
+        elif togo < 1:
+            time.sleep(togo)
         else:
             time.sleep(1)
 
