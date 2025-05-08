@@ -1,4 +1,3 @@
-#! /usr/bin/env python3        
 
 import time, json
 from slowpy import Histogram

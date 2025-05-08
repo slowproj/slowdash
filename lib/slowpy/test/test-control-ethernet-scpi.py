@@ -1,5 +1,3 @@
-#! /bin/env python3
-
 
 from slowpy.control import ControlSystem
 ctrl = ControlSystem()

@@ -1,4 +1,3 @@
-#! /usr/bin/env python3        
 
 import slowpy as slp
 graph = slp.Graph(labels=['ch', 'value', 'error'])

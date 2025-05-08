@@ -1,4 +1,3 @@
-#! /bin/env python3
 
 import slowpy.control as spc
 from slowpy.control.hdl import *

@@ -1,4 +1,3 @@
-#! /usr/bin/env python3        
 
 from slowpy import SlowFetch
 from slowpy import slowplot as plt

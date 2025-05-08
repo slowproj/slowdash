@@ -81,3 +81,7 @@ class ValueNode(spc.ControlVariableNode):
         }
         
         await ControlSystem.app().request_publish('currentdata', record)
+
+
+control_system = ControlSystem()
+

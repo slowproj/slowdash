@@ -1,4 +1,3 @@
-#! /usr/bin/env python3        
 
 from slowpy import slowplot as plt
 plt.set_datastore('sqlite:///SlowStore.db', table='SlowData')

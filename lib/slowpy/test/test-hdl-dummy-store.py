@@ -1,4 +1,3 @@
-#! /bin/env python3
 
 from slowpy.control import ControlSystem
 ControlSystem.import_control_module('DummyDevice')
