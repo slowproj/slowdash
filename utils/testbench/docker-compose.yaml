@@ -45,6 +45,17 @@ services:
       - "8001:8001"
 
 
+  mqtt:
+    image: eclipse-mosquitto:latest
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/log:/mosquitto/log
+      - ./mosquitto/data:/mosquitto/data
+
+
   # for Jupyter export #
   notebook:
     image: slowproj/slowpy-notebook:latest

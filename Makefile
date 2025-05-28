@@ -3,11 +3,12 @@ SLOWDASH_DIR = $(shell pwd)
 SLOWDASH_BIN = "$(SLOWDASH_DIR)/bin/slowdash"
 SLOWDASH_ENV = "$(SLOWDASH_DIR)/bin/slowdash-bashrc"
 GIT = $(shell which git)
+
 PIP_REQS = uvicorn hypercorn websockets pyyaml psutil bcrypt requests 
-PIP_DBS = mysql-connector-python aiomysql influxdb-client redis pymongo couchdb 
-PIP_MSGS = pika aio-pika
-PIP_DEVS = pyserial pyvisa pymodbus
-PIP_OPTS = numpy matplotlib lmfit pillow 
+PIP_OPTIONAL_DBS = mysql-connector-python aiomysql influxdb-client redis pymongo couchdb 
+PIP_OPTIONAL_MSGS = pika aio-pika paho-mqtt aiomqtt
+PIP_OPTIONAL_DEVS = pyserial pyvisa pymodbus
+PIP_OPTIONAL_DATA = numpy matplotlib lmfit pillow 
 
 
 all: venv-install slowdash venv-setup print-success
@@ -74,7 +75,8 @@ slowdash:
 	@for pkg in $(PIP_REQS); do echo $$pkg >> requirements.txt; done
 	@echo "-e ./lib/slowpy" >> requirements.txt
 	@echo "-e ./lib/slowlette" >> requirements.txt
-	@echo "# DB packages #" >> requirements.txt
+	@echo "" >> requirements.txt
+	@echo "### OPTIONAL Database packages, necessary only when used ###" >> requirements.txt
 	@if command -v pg_config > /dev/null; then \
 		echo psycopg2 >> requirements.txt; \
 		echo asyncpg >> requirements.txt; \
@@ -82,13 +84,16 @@ slowdash:
 	@if command -v mysql_config > /dev/null; then \
 		echo mysqlclient >> requirements.txt; \
 	fi
-	@for pkg in $(PIP_DBS); do echo $$pkg >> requirements.txt; done
-	@echo "# Messaging system packages #" >> requirements.txt
-	@for pkg in $(PIP_MSGS); do echo $$pkg >> requirements.txt; done
-	@echo "# Device access packages #" >> requirements.txt
-	@for pkg in $(PIP_DEVS); do echo $$pkg >> requirements.txt; done
-	@echo "# analysis packages users might use #" >> requirements.txt
-	@for pkg in $(PIP_OPTS); do echo $$pkg >> requirements.txt; done
+	@for pkg in $(PIP_OPTIONAL_DBS); do echo $$pkg >> requirements.txt; done
+	@echo "" >> requirements.txt
+	@echo "### OPTIONAL Messaging system packages, necessary only when used ###" >> requirements.txt
+	@for pkg in $(PIP_OPTIONAL_MSGS); do echo $$pkg >> requirements.txt; done
+	@echo "" >> requirements.txt
+	@echo "### OPTIONAL Device access packages, necessary only when used ###" >> requirements.txt
+	@for pkg in $(PIP_OPTIONAL_DEVS); do echo $$pkg >> requirements.txt; done
+	@echo "" >> requirements.txt
+	@echo "### OPTIONAL data analysis/processing packages users might use ###" >> requirements.txt
+	@for pkg in $(PIP_OPTIONAL_DATA); do echo $$pkg >> requirements.txt; done
 
 
 venv-install:

@@ -544,6 +544,7 @@ class UserModuleComponent(Component):
     
     @slowlette.post('/api/control')
     async def post_control(self, doc:slowlette.DictJSON):
+        logging.info(f'Command: {doc}')
         if len(self.usermodule_list) == 0:
             return None
         
@@ -551,7 +552,6 @@ class UserModuleComponent(Component):
         for module in self.usermodule_list:
             result = await module.process_command(dict(doc))
             if result is not None:
-                logging.info(f'UserModule Command: {doc}')
                 break
         else:
             return None
