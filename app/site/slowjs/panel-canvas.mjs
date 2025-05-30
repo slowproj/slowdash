@@ -1050,7 +1050,7 @@ export class CanvasPanel extends Panel {
     }
 
     
-    submit(doc, form, event=null) {
+    async submit(doc, form, event=null) {
         if (form) {
             for (let input of form.find('input,select').enumerate()) {
                 if (input.attr('type') != 'submit') {
@@ -1061,29 +1061,33 @@ export class CanvasPanel extends Panel {
                 }
             }
         }
-        
+
         const url = './api/control';
         this.indicator.open("Sending Command...", "&#x23f3;", event?.clientX ?? null, event?.clientY ?? null);
-        fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json; charset=utf-8' },
-            body: JSON.stringify(doc, null, 2)
-        })
-            .then(response => {
-                if (! response.ok) {
-                    throw new Error(response.status + " " + response.statusText);
-                }
-                return response.json();
-            })
-            .then(doc => {
-                if ((doc.status ?? '').toUpperCase() == 'ERROR') {
-                    throw new Error(doc.message ?? '');
-                }
-                this.indicator.close("Command Processed", "&#x2705;", 1000);
-                this.callbacks.forceUpdate();
-            })
-            .catch(e => {
-                this.indicator.close("Command Failed: " + e.message, "&#x274c;", 5000);
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json; charset=utf-8' },
+                body: JSON.stringify(doc, null, 2)
             });
+            if (! response.ok) {
+                throw new Error(response.status + ' ' + response.statusText);
+            }
+            const reply = await response.text();
+            if (reply.length == 0) {
+                throw new Error('empty response');
+            }
+            const reply_doc = JSON.parse(reply);
+            if ((reply_doc.status ?? '').toUpperCase() == 'ERROR') {
+                throw new Error(reply_doc.message ?? '');
+            }
+            this.indicator.close("Command Processed", "&#x2705;", 1000);
+            
+            this.callbacks.forceUpdate();
+        }
+        catch (e) {
+            this.indicator.close("Command Failed: " + e.message, "&#x274c;", 5000);
+            console.error("Command Failed: " + e.message);
+        }
     }
 };

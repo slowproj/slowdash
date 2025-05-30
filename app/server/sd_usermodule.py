@@ -8,12 +8,12 @@ from sd_component import Component
 
 
 class UserModuleThread(threading.Thread):
-    def __init__(self, app, usermodule, params, stop_event):
+    def __init__(self, app, usermodule, user_params, stop_event):
         threading.Thread.__init__(self)
 
         self.app = app
         self.usermodule = usermodule
-        self.params = params
+        self.user_params = user_params
         self.stop_event = stop_event
         self.initialized_event = threading.Event()
         self.loaded_event = threading.Event()
@@ -49,7 +49,7 @@ class UserModuleThread(threading.Thread):
         if func_setup:
             nargs = len(inspect.signature(func_setup).parameters)
             if nargs >= 2:
-                args = [ self.app, self.params ]
+                args = [ self.app, self.user_params ]
             elif nargs >= 1:
                 args = [ self.app ]
             else:
@@ -65,11 +65,11 @@ class UserModuleThread(threading.Thread):
         if func_initialize:
             self.usermodule.routine_history.append((
                 time.time(),
-                '_initialize(%s)' % ','.join(['%s=%s' % (k,v) for k,v in self.params.items()])
+                '_initialize(%s)' % ','.join(['%s=%s' % (k,v) for k,v in self.user_params.items()])
             ))
             nargs = len(inspect.signature(func_initialize).parameters)
             if nargs >= 1:
-                args = [ self.params ]
+                args = [ self.user_params ]
             else:
                 args = []
             try:
@@ -126,11 +126,11 @@ class UserModuleThread(threading.Thread):
 
 
 class UserModule:        
-    def __init__(self, app, filepath, name, params):
+    def __init__(self, app, filepath, name, params, user_params):
         self.app = app
         self.filepath = filepath
         self.name = name
-        self.params = params
+        self.user_params = user_params
 
         self.module = None
         self.user_thread = None
@@ -267,7 +267,7 @@ class UserModule:
         
         logging.info('starting user module "%s"' % self.name)
         self.stop_event.clear()
-        self.user_thread = UserModuleThread(self.app, self, self.params, self.stop_event)        
+        self.user_thread = UserModuleThread(self.app, self, self.user_params, self.stop_event)        
         self.touch_status()
         self.user_thread.start()
         
@@ -461,8 +461,8 @@ class UserModuleComponent(Component):
             if app.is_command and node.get('enabled_for_commandline', True) != True:
                 continue
             filepath = node['file']
-            params = node.get('parameters', {})
-            module = UserModule(self.app, filepath, filepath, params)
+            user_params = node.get('parameters', {})
+            module = UserModule(self.app, filepath, filepath, node, user_params)
             if module is None:
                 logging.error('Unable to load user module: %s' % filepath)
             else:

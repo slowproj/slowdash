@@ -32,15 +32,15 @@ class TaskFunctionThread(threading.Thread):
 
         
 class TaskModule(UserModule):
-    def __init__(self, app, filepath, name, params):
-        super().__init__(app, filepath, name, params)
-        
+    def __init__(self, app, filepath, name, params, user_params):
+        super().__init__(app, filepath, name, params, user_params)
+
         self.command_thread = None
         self.parallel_command_thread_set = set()
         self.exports = None
         self.channel_list = None
-        self.namespace_prefix = params.get('namespace_prefix', '%s.' % name)
-        self.namespace_suffix = params.get('namespace_suffix', '')
+        self.namespace_prefix = params.get('namespace', {}).get('prefix', '%s.' % name.replace('-','_'))
+        self.namespace_suffix = params.get('namespace', {}).get('suffix', '')
 
         self.control_system = None
         
@@ -331,8 +331,7 @@ class TaskModuleComponent(Component):
 
             name = node['name']
             filepath = node.get('file', './config/slowtask-%s.py' % name)
-            params = node.get('parameters', {})
-            task_table[name] = (filepath, params, {'auto_load':node.get('auto_load', False)})
+            task_table[name] = (filepath, node)
             self.known_task_list.append(name)
         
         # make a task entry list from the file list of the config dir
@@ -341,15 +340,16 @@ class TaskModuleComponent(Component):
                 rootname, ext = os.path.splitext(os.path.basename(filepath))
                 kind, name = rootname.split('-', 1)
                 if name not in self.known_task_list:
-                    task_table[name] = (filepath, {}, {'auto_load':False})
+                    task_table[name] = (filepath, {})
                     self.known_task_list.append(name)
 
-        for name, (filepath, params, opts) in task_table.items():
-            module = TaskModule(app, filepath, name, params)
+        for name, (filepath, params) in task_table.items():
+            user_params = params.get('parameters', {})
+            module = TaskModule(app, filepath, name, params, user_params)
             if module is None:
                 logging.error('Unable to load slowtask module: %s' % filepath)
             else:
-                module.auto_load = opts.get('auto_load', False)
+                module.auto_load = params.get('auto_load', False)
                 self.taskmodule_list.append(module)
 
                 

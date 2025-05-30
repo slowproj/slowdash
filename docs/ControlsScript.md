@@ -500,6 +500,15 @@ From a HTML form panel in SlowPlot, clicking a `<button>` with a name of the tas
 ```
 Here the parenthesis at the and of the button name indicate that this button is bound to a SlowTask function.
 
+The prefix (`test.` in this example) is the module name, which is taken from the module file name with stripping the begging 'slowtask-'. If the module name includes `-`, those will be replaced with `_`. The prefix can be explicitly specified in the `SlowdashProject.yaml` configuration file as:
+```yaml
+  task:
+    name: another_test
+    namespace:
+      prefix: test.
+```
+Note that the dot is a part of the prefix.
+
 SlowTask functions can take parameters:
 ```python
 def set_V0(voltage:float, ramping:float):

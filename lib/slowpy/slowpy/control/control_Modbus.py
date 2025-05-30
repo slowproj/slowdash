@@ -67,6 +67,8 @@ class ModbusHoldingRegisterNode(spc.ControlVariableNode):
         
         try:
             reply = self.modbus.read_holding_registers(self.address)
+            if reply.isError():
+                raise Exception(f'address: {self.address}')
         except Exception as e:
             logging.error(f'Modbus Error: read_holding_registers(): {e}')
             return None
@@ -87,6 +89,8 @@ class ModbusInputRegisterNode(spc.ControlVariableNode):
         
         try:
             reply = self.modbus.read_input_registers(self.address)
+            if reply.isError():
+                raise Exception(f'address: {self.address}')
         except Exception as e:
             logging.error(f'Modbus Error: read_input_registers(): {e}')
             return None
