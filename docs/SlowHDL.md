@@ -14,9 +14,8 @@ It was originally designed to replace legacy PLC (Programmable Logic Controller)
 ### Example
 For a control system that consists of a counter display and start / stop / clear buttons:
 ```python
-import slowpy.control as spc
+from slowpy.control import control_system as ctrl
 
-ctrl = spc.ControlSystem()    
 start_btn = ctrl.value(initial_value=False).oneshot()
 stop_btn = ctrl.value(initial_value=False).oneshot()
 clear_btn = ctrl.value(initial_value=False).oneshot()
@@ -145,8 +144,7 @@ If this were standard Python assignment in a single pass (software-like behavior
 ```python
 
 # SlowPy Control Nodes to control (external devices etc.)
-from slowpy.control import ControlSystem
-ctrl = ControlSystem()
+from slowpy.control import control_system as ctrl
 node1 = ctrl.whatever()....
 node2 = ctrl.whatever()....
 ...

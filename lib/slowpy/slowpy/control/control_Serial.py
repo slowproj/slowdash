@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 4 February 2025 #
 
 
-import sys, time, serial, logging
+import sys, time, logging
 import slowpy.control as spc
 
 
