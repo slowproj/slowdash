@@ -253,7 +253,8 @@ class App(slowlette.App):
 
 app = App()
 ```
-- Currently `startup` and `shutdown` are implemented
+- Currently only `startup` and `shutdown` are implemented.
+- HTTP request handling starts after `await`-ing the startup coroutine. If you want to start a task here, use `asyncio.create_task()` or similar not to block this.
 
 
 ### WebSocket

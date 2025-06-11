@@ -260,9 +260,12 @@ Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to do some
         - get(): returns the number of seconds since the last time-series point
   
 #### Other Nodes
-- Serial (uses pyserial)
-- VISA (uses pyvisa)
-- LabJack (uses LabJackPython, currently supports only U12)
+- RabbitMQ (using pika and aio-pika)
+- MQTT (using paho-mqtt and aio-mqtt)
+- Serial (using pyserial)
+- VISA (using pyvisa)
+- Modbus (using pymodbus)
+- LabJack (using LabJackPython, currently supports only U12)
 - DummyDevice
 
 

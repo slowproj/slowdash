@@ -126,13 +126,13 @@ export class Controller {
         }
         let opts = [ 'length='+length, 'to='+this.currentData.__meta.range.to ];
         if (length > 7200) {
-            opts.push('resample='+(length/600).toFixed(1))
+            opts.push('resample='+(length/600).toFixed(1));
             opts.push('reducer=last');
         }
         
         let url_list = [];
         if (length < 5*86500) {
-            url_list.push('api/data/' + Object.keys(channels).join(',') + '?' + opts.join('&'))
+            url_list.push('api/data/' + Object.keys(channels).join(',') + '?' + opts.join('&'));
         }
         else {
             for (let ch in channels) {
@@ -215,10 +215,10 @@ export class Controller {
         
         if (url.pathname.match(/\.[a-zA-Z0-9]+$/)) {  
             // last path element has an extension (file) -> remove the file name
-            url.pathname = url.pathname.replace(/\/[^/]*$/, '/')
+            url.pathname = url.pathname.replace(/\/[^/]*$/, '/');
         }
         else {
-            url.pathname += (url.pathname.endsWith('/') ? '' : '/')
+            url.pathname += (url.pathname.endsWith('/') ? '' : '/');
         }
         url.pathname += 'ws/subscribe/currentdata';
 

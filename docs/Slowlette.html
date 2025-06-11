@@ -381,8 +381,11 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb16-1"><a h
 <span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App()</span></code></pre></div>
 <ul>
-<li>Currently <code>startup</code> and <code>shutdown</code> are
-implemented</li>
+<li>Currently only <code>startup</code> and <code>shutdown</code> are
+implemented.</li>
+<li>HTTP request handling starts after <code>await</code>-ing the
+startup coroutine. If you want to start a task here, use
+<code>asyncio.create_task()</code> or similar not to block this.</li>
 </ul>
 <h3 id="websocket">WebSocket</h3>
 <p>The structure is basically the same as FastAPI:</p>
