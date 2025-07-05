@@ -19,6 +19,7 @@ export class Controller {
         this.view = view;
         this.currentData = null;
 
+        this.socket = null;
         this._setupStreaming();
     }
 
@@ -153,7 +154,7 @@ export class Controller {
                 }
             }
             catch (err) {
-                status = { code: -1, text: err.message };
+                status = { code: -1, text: 'SlowDash server not reachable' };
             }
 
             for (let ch in data) {
@@ -164,6 +165,11 @@ export class Controller {
             this.view.draw(this.currentData);
         }
 
+        // re-establishing web-socket after server-recovery
+        if ((this.socket === null) && (status.code > 0)) {
+            this._setupStreaming();
+        }
+        
         return status;
     }
 
@@ -215,6 +221,10 @@ export class Controller {
 
     
     _setupStreaming() {
+        if (this.socket !== null) {
+            return;
+        }
+
         let url = new URL(window.location.href);
         url.protocol = (url.protocol == 'https:' ? 'wss:' : 'ws:');
         url.search = '';
@@ -246,6 +256,7 @@ export class Controller {
         };
         this.socket.onclose = () => {
             console.log("Web Socket Closed");
+            this.socket = null;
         };
         this.socket.onerror = (error) => {
             console.error("Web Socket Error: " + error);
