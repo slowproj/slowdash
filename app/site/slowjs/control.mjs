@@ -142,12 +142,19 @@ export class Controller {
                 
         let status = { code:200, text:'OK' };
         for (let i = 0; i < url_list.length; i++) {
-            const response = await fetch(url_list[i]);
-            if (! response.ok) {
-                status = { code: response.status, text: response.statusText };
-                continue;
+            let data = {};
+            try {
+                const response = await fetch(url_list[i]);
+                if (! response.ok) {
+                    status = { code: response.status, text: response.statusText };
+                }
+                else {
+                    data = await response.json();
+                }
             }
-            const data = await response.json();
+            catch (err) {
+                status = { code: -1, text: err.message };
+            }
 
             for (let ch in data) {
                 this.currentData[ch] = data[ch];
@@ -337,7 +344,7 @@ export class Scheduler {
         this.currentUpdateTime = now;
         this.pendingRequests = 0;
         this.suspendUntil = 0;
-        
+
         let status = await this.options.update();
         this.currentUpdateTime = 0;
         if (status === null) {

@@ -5,7 +5,7 @@ SLOWDASH_ENV = "$(SLOWDASH_DIR)/bin/slowdash-bashrc"
 GIT = $(shell which git)
 
 PIP_REQS = uvicorn hypercorn websockets pyyaml psutil bcrypt requests 
-PIP_OPTIONAL_DBS = mysql-connector-python aiomysql influxdb-client redis pymongo couchdb 
+PIP_OPTIONAL_DBS = mysql-connector-python aiomysql influxdb-client redis pymongo couchdb elasticsearch
 PIP_OPTIONAL_MSGS = pika aio-pika paho-mqtt aiomqtt
 PIP_OPTIONAL_DEVS = pyserial pyvisa pymodbus
 PIP_OPTIONAL_DATA = numpy matplotlib lmfit pillow 
