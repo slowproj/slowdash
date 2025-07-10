@@ -139,21 +139,21 @@ Config Contents</a></li>
 <h2 id="project-directory">Project Directory</h2>
 <ul>
 <li><p>Every project has a dedicated project directory.</p></li>
-<li><p>Configuration file is <code>SlowdashProject.yaml</code>, placed
-at the project directory.</p></li>
+<li><p>The configuration file is <code>SlowdashProject.yaml</code>,
+placed at the project directory.</p></li>
 <li><p>Project directory is specified at run time by one of the
-followings:</p>
+following:</p>
 <ul>
 <li><code>--project-dir</code> option</li>
 <li><code>SLOWDASH_PROJECT</code> environmental variable</li>
 <li>current working directory</li>
 </ul></li>
-<li><p>Under the project directory, <code>config</code> directory is
+<li><p>Under the project directory, the <code>config</code> directory is
 automatically created. The web interface posts files only to this
 directory.</p></li>
 </ul>
 <h2 id="project-configuration-file">Project Configuration File</h2>
-<p>Project configuration file describes:</p>
+<p>The project configuration file describes:</p>
 <ul>
 <li>Name, title of the project</li>
 <li>Data source type and location</li>
@@ -299,8 +299,8 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb3-1"><a href="
 expressions. See, e.g.,
 <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/background" target="_blank">a
 Mozilla document</a> for some examples.</p>
-<p>The logo file(s) must be placed under the project <code>config</code>
-directory.</p>
+<p>The logo file(s) must be placed under the project’s
+<code>config</code> directory.</p>
 <h3 id="plot-style-examples">Plot Style Examples</h3>
 <h4 id="default-style">Default Style</h4>
 <p><img src="fig/ProjectSetup-Styles-Default.png" style="width:50%;margin-left:2em;border:thin solid gray"></p>
@@ -360,10 +360,10 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <code>?</code> and <code>&amp;</code>), quote the entire argument.</p>
 <h1 id="running-the-server">Running the Server</h1>
 <p><strong>WARNING</strong>: SlowDash is designed for internal use
-within a secured network and therefore no security protection is
-implemented. It is strongly recommended not to expose the system to the
-public internet. External access is assumed to be done through VPN or
-ssh tunnel.</p>
+within a secured network, and therefore, no security protection is
+implemented. It is strongly recommended that you do not expose the
+system to the public internet. External access is assumed to be done
+through VPN or ssh tunnel.</p>
 <h2 id="running-in-a-docker-container">Running in a Docker
 Container</h2>
 <p>Docker container images are available on DockerHub and GitHub
@@ -427,27 +427,27 @@ server.</p>
 <h4 id="advantages">Advantages</h4>
 <ul>
 <li>As long as the web server is running, there will be no additional
-maintenance overhead for this SlowDash project. This is maybe useful to
-keep the data accessible after the measurement has been finished.</li>
+maintenance overhead for this SlowDash project. This may be useful to
+keep the data accessible after the measurement has been completed.</li>
 </ul>
 <h4 id="disadvantages">Disadvantages</h4>
 <ul>
 <li>User Python scripts (control tasks and user modules) are disabled
-for CGI and WSGI by default, in order to prevent multiple execution of
+for CGI and WSGI by default, in order to prevent multiple executions of
 user scripts in an unexpected way. To use a module with CGI/WSGI, set
 the <code>enabled_for_cgi</code> parameter <code>true</code> in the
-module configuration. Be careful for all the side effects, including
+module configuration. Be careful of all the side effects, including
 performance overhead and security concerns.</li>
 <li>CGI starts a SlowDash process for every HTTP request (can be very
 frequent!), therefore,
 <ul>
 <li>Severe performance overhead exists, and</li>
-<li>No continuous data processing is possible, such as the ones
-typically done in user modules.</li>
+<li>No continuous data processing is possible, such as the one typically
+done in user modules.</li>
 </ul></li>
 </ul>
-<p>WSGI does not have these issues, but be careful for the number of
-processes that WSGI would launch. If user modules are used, setting the
+<p>WSGI does not have these issues, but be cautious with the number of
+processes that WSGI launches. If user modules are used, setting the
 number of WSGI processes to one would be safe. Do not use
 multi-threading in WSGI processes (set the number of threads to
 one).</p>
@@ -463,10 +463,10 @@ script at the project directory:</p>
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/PROJECT</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ PATH/TO/SLOWDASH/utils/slowdash-setup-apache.py --interface=CGI   (or --interface=WSGI)</span></span></code></pre></div>
 <h4 id="cgi">CGI</h4>
-<p>To setup CGI, run the script with the <code>--interface=CGI</code>
-option. It will install a set of files under user’s public web directory
-(typically <code>/home/USER/public_html</code>), and display messages
-like:</p>
+<p>To set up CGI, run the script with the <code>--interface=CGI</code>
+option. It will install a set of files under the user’s public web
+directory (typically <code>/home/USER/public_html</code>), and display
+messages like:</p>
 <div class="sourceCode" id="cb15"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>=== INSTALLATION IS SUCCESSFUL ===</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>- To setup SLOWDASH CGI for another project, set SLOWDASH_PROJECT and run this program.</span>
@@ -498,10 +498,10 @@ class="sourceCode apache"><code class="sourceCode apache"><span id="cb16-1"><a h
 <p>For a SlowDash CGI setup in a different way, mind that it requires
 URL rewriting.</p>
 <h4 id="wsgi-daemon">WSGI (Daemon)</h4>
-<p>To setup WSGI, run the script with the <code>--interface=WSGI</code>
-option. It will install a set of files under user’s public web directory
-(typically <code>/home/USER/public_html</code>), and display messages
-like:</p>
+<p>To set up WSGI, run the script with the <code>--interface=WSGI</code>
+option. It will install a set of files under the user’s public web
+directory (typically <code>/home/USER/public_html</code>), and display
+messages like:</p>
 <div class="sourceCode" id="cb17"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>=== INSTALLATION IS SUCCESSFUL ===</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>Public HTML directory for this project is: /home/sanshiro/public_html/SlowDash/MySlowSystem</span>
@@ -537,14 +537,14 @@ class="sourceCode apache"><code class="sourceCode apache"><span id="cb18-1"><a h
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="ex">RewriteEngine</span><span class="ch"> </span><span class="kw">On</span></span>
 <span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>RewriteRule<span class="st"> ^api/(.*)$ slowdash.wsgi/$1</span></span></code></pre></div>
-<p>Although dedicated daemon is created for this SlowDash project,
-currently only one WSGI can be setup on one host. Other SlowDash project
-must use CGI.</p>
+<p>Although a dedicated daemon is created for this SlowDash project,
+currently only one WSGI can be set up on one host. The other SlowDash
+project must use CGI.</p>
 <h1 id="using-a-reverse-proxy-server">Using a Reverse Proxy Server</h1>
-<p>Having an external Web server such as Nginx or Apache is often useful
-for:</p>
+<p>Having an external Web server, such as Nginx or Apache, is often
+useful for:</p>
 <ul>
-<li>using a common URL string instead of a port number (i.e.,
+<li>using a standard URL string instead of a port number (i.e.,
 <code>/slowdash</code> instead of <code>:18881</code>)</li>
 <li>using a faster HTTP/2 protocol (SlowDash uses HTTP/1.1)</li>
 <li>enabling HTTPS encryption</li>
@@ -557,15 +557,15 @@ dedicated routing</li>
 <li>SlowDash uses “long poll”, which needs a longer timeout (typically
 many days)</li>
 </ul>
-<p>For a setup with Docker Compose, examples can be found at
-<code>ExampleProjects/ReverseProxy</code>.</p>
+<p>For a setup with Docker Compose, examples can be found in the
+<code>ExampleProjects/ReverseProxy</code> directory.</p>
 <h3 id="nginx-setting">Nginx Setting</h3>
 <p>This is the reverse proxy part of Nginx configuration, including
 WebSocket and considering Long Poll.</p>
 <div class="sourceCode" id="cb19"><pre
 class="sourceCode xorg"><code class="sourceCode xorg"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>server {</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    location /slowdash/ {</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>        proxy_pass http://slowdash:18881/;</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>        proxy_pass http://SLOWDASH_HOST:18881/;</span>
 <span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>        proxy_http_version 1.1;</span>
 <span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>        proxy_set_header Upgrade $http_upgrade;</span>
@@ -581,8 +581,9 @@ class="sourceCode xorg"><code class="sourceCode xorg"><span id="cb19-1"><a href=
 <span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>        proxy_connect_timeout 10s;</span>
 <span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>    }</span>
 <span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<p>Full working example in Docker Compose with more features such as
-HTTPS, HTTP/2, and Basic Authentication can be found in
+<p>Replace <code>SLOWDASH_HOST</code> with your actual SlowDash host
+name. A full working example in Docker Compose with more features such
+as HTTPS, HTTP/2, and Basic Authentication can be found in
 <code>ExampleProjects/ReverseProxy/Nginx</code>.</p>
 <h3 id="apache-setting">Apache Setting</h3>
 <p>The following Apache modules need to be enabled:</p>
@@ -590,8 +591,8 @@ HTTPS, HTTP/2, and Basic Authentication can be found in
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo a2enmod proxy</span></span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo a2enmod proxy_http</span></span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo a2enmod proxy_wstunnel</span></span></code></pre></div>
-<p>And this is the reverse proxy part of the Apache configuration,
-including WebSocket and considering Long Poll.</p>
+<p>This is the reverse proxy part of the Apache configuration, which
+includes WebSocket and long polling.</p>
 <div class="sourceCode" id="cb21"><pre
 class="sourceCode apache"><code class="sourceCode apache"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">&lt;VirtualHost</span><span class="at"> *:80</span><span class="fu">&gt;</span></span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">ProxyPreserveHost</span><span class="ch"> </span><span class="kw">On</span></span>
@@ -601,21 +602,22 @@ class="sourceCode apache"><code class="sourceCode apache"><span id="cb21-1"><a h
 <span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Timeout</span><span class="ch"> </span><span class="fl">8640000</span><span class="ch">        </span></span>
 <span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="ch">    ProxyTimeout </span><span class="fl">8640000</span></span>
 <span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="ch">    </span></span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    ProxyPass<span class="st"> /slowdash/ http://slowdash:18881/</span></span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    ProxyPassReverse<span class="st"> /slowdash/ http://slowdash:18881/</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    ProxyPass<span class="st"> /slowdash/ http://SLOWDASH_HOST:18881/</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    ProxyPassReverse<span class="st"> /slowdash/ http://SLOWDASH_HOST:18881/</span></span>
 <span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># for WebSockets</span></span>
-<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>    ProxyPass<span class="st"> /slowdash/ws/ ws://slowdash:18881/ws/</span></span>
-<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>    ProxyPassReverse<span class="st"> /slowdash/ws/ ws://slowdash:18881/ws/</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>    ProxyPass<span class="st"> /slowdash/ws/ ws://SLOWDASH_HOST:18881/ws/</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>    ProxyPassReverse<span class="st"> /slowdash/ws/ ws://SLOWDASH_HOST:18881/ws/</span></span>
 <span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">&lt;Location</span><span class="at"> /slowdash/ws/</span><span class="fu">&gt;</span></span>
-<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>        ProxyPass<span class="st"> ws://slowdash:18881/ws/</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>        ProxyPass<span class="st"> ws://SLOWDASH_HOST:18881/ws/</span></span>
 <span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>        <span class="ex">ProxyPreserveHost</span><span class="ch"> </span><span class="kw">On</span></span>
 <span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>        RequestHeader<span class="st"> set Upgrade &quot;websocket&quot;</span></span>
 <span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>        RequestHeader<span class="st"> set Connection &quot;upgrade&quot;</span></span>
 <span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">&lt;/Location&gt;</span></span>
 <span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a><span class="fu">&lt;/VirtualHost&gt;</span></span></code></pre></div>
-<p>Full working example in Docker Compose with more features such as
-HTTPS, HTTP/2, and Basic Authentication can be found in
+<p>Replace <code>SLOWDASH_HOST</code> with your actual SlowDash host
+name. A full working example in Docker Compose with more features such
+as HTTPS, HTTP/2, and Basic Authentication can be found in
 <code>ExampleProjects/ReverseProxy/Apahce</code>.</p>
 <h1 id="jupyter-integration">Jupyter Integration</h1>
 <p>By providing Jupyter URL and token in
@@ -632,14 +634,14 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb22-1"><a href=
 <span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">export</span><span class="kw">:</span></span>
 <span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> jupyter</span></span>
 <span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">url</span><span class="kw">:</span><span class="at"> http://localhost:8888</span></span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">token</span><span class="kw">:</span><span class="at"> YOUR_VERY_SECRET_JUPYTER_TOKEN</span><span class="co">     # consider passing this through environmental variable</span></span></code></pre></div>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">token</span><span class="kw">:</span><span class="at"> YOUR_VERY_SECRET_JUPYTER_TOKEN</span><span class="co">     # consider passing this through an environmental variable</span></span></code></pre></div>
 <h2 id="docker">Docker</h2>
-<p>A docker image that includes both SlowPy library and the Jupyter
+<p>A Docker image that includes both the SlowPy library and the Jupyter
 server is available on DockerHub and GitHub CR. You can also build the
 image locally by <code>make docker</code>.</p>
-<p>Include this image in the <code>docker-compose.yaml</code>, with
-adding environmental variables about the Jupyter settings to the
-SlowDash container:</p>
+<p>Include this image in the <code>docker-compose.yaml</code>, by adding
+environmental variables about the Jupyter settings to the SlowDash
+container:</p>
 <div class="sourceCode" id="cb23"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">notebook</span><span class="kw">:</span></span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowpy-notebook</span></span>
@@ -662,10 +664,10 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb23-1"><a href=
 <span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> JUPYTER_TOKEN=YOUR_VERY_SECRET_JUPYTER_TOKEN</span></span>
 <span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> JUPYTER_INTERNAL_URL=http://notebook:8888</span><span class="co">      # Jupyter seen from SlowDash</span></span>
 <span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> SLOWDASH_INTERNAL_URL=http://slowdash:18881</span><span class="co">    # SlowDash seen from Jypyter</span></span></code></pre></div>
-<p>Note that the Jupyter and SlowDash URLs are different if accessed
+<p>Note that the Jupyter and SlowDash URLs are different when accessed
 within the container system.</p>
-<p>Edit the <code>SlowdashProject.yaml</code> file to include the Jupter
-settings:</p>
+<p>Edit the <code>SlowdashProject.yaml</code> file to include the
+Jupyter settings:</p>
 <div class="sourceCode" id="cb24"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">export</span><span class="kw">:</span></span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> jupyter</span></span>
@@ -674,30 +676,30 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb24-1"><a href=
 <span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">jupyter_internal_url</span><span class="kw">:</span><span class="at"> ${JUPYTER_INTERNAL_URL}</span><span class="co">      # Jupyter seen from SlowDash</span></span>
 <span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">slowdash_internal_url</span><span class="kw">:</span><span class="at"> ${SLOWDASH_INTERNAL_URL}</span><span class="co">    # SlowDash seen from Jypyter</span></span></code></pre></div>
 <h1 id="slowdash-watchdog-slowdog">SlowDash Watchdog (SlowDog)</h1>
-<p>SlowDog sends HTTP requests to the SlowDash server periodically and
-if it does not receive a reply before timeout, the dog kills the server
-and restarts another one.</p>
+<p>SlowDog sends HTTP requests to the SlowDash server periodically, and
+if it does not receive a reply before the timeout, the dog kills the
+server and restarts another one.</p>
 <p>To enable SlowDog, add <code>--slowdog</code> option:</p>
 <div class="sourceCode" id="cb25"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash --port=18881 --slowdog</span></span></code></pre></div>
 <p>SlowDog is enabled in the SlowDash Docker container.</p>
 <h1 id="security-considerations">Security Considerations</h1>
 <p>As already mentioned, <b>SlowDash is designed for internal use
-only</b> within a secured network and therefore no security protection
-is implemented. It is strongly recommended not to expose the system to
-the public internet. External access is assumed to be done <b>through
-VPN or ssh tunnel</b>.</p>
+only</b> within a secured network, and therefore, no security protection
+is implemented. It is strongly recommended that you do not expose the
+system to the public internet. External access is assumed to be done
+<b>through VPN or ssh tunnel</b>.</p>
 <h3 id="basic-authentication">Basic Authentication</h3>
-<p>In a case that you cannot trust your internal friends, SlowDash
+<p>In a case where you cannot trust your internal friends, SlowDash
 implements the “Basic Authentication”. Combine this authentication
 <b>with HTTPS using a reverse proxy</b> to encrypt the password and
-communication. There are examples under
-`ExampleProjects/ReverseProxy’.</p>
-<p>To use the Basic Authentication, first install the
-<code>bcrypt</code> Python package if it is not yet installed:</p>
+communication. There are examples in the `ExampleProjects/ReverseProxy’
+directory.</p>
+<p>To use Basic Authentication, first install the <code>bcrypt</code>
+Python package if it is not yet installed:</p>
 <div class="sourceCode" id="cb26"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pip3 install bcrypt</span></span></code></pre></div>
-<p>Then generate an authentication key by the
+<p>Then generate an authentication key using the
 <code>slowdash-generate-key.py</code> script in
 <code>slowdash/utils</code>:</p>
 <div class="sourceCode" id="cb27"><pre
@@ -708,7 +710,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>        &quot;key&quot;: &quot;slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS&quot;</span>
 <span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    }</span>
 <span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<p>Here the first argument is the user name and the second is the
+<p>Here, the first argument is the user name and the second is the
 password.</p>
 <p>Add the key in the project configuration file under the
 <code>authentication</code> entry:</p>
@@ -720,7 +722,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb28-1"><a href=
 <span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> Basic</span></span>
 <span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">key</span><span class="kw">:</span><span class="at"> slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS</span></span></code></pre></div>
 <p>This key can also be used for Apache, but some Apache keys,
-especially old ones such as MD5 keys which are still widely used, can
+especially old ones such as MD5 keys, which are still widely used, can
 not be used for SlowDash.</p>
 <h4 id="only-for-the-cgiwsgi-mode">Only for the CGI/WSGI mode</h4>
 <p>Rerun the <code>slowdash-setup-apache.py</code> command to update the
@@ -733,12 +735,12 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>User: slow</span>
 <span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>continue? [Y/n] y</span>
 <span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
-<p>Note that a new line, <code>User: slow</code>, is now added.</p>
+<p>Note that a new line, <code>User: slow</code>, has been added.</p>
 <h3 id="built-in-https-server-asgi-only">Built-in HTTPS server (ASGI
 only)</h3>
-<p>If SlowDash runs in the ASGI mode, a built-in HTTPS mode can be used.
-To use this feature, provide the SSL/TLS key and certification files to
-the <code>slowdash</code> command:</p>
+<p>If SlowDash runs in ASGI mode, a built-in HTTPS mode is available. To
+use this feature, provide the SSL/TLS key and certification files to the
+<code>slowdash</code> command:</p>
 <div class="sourceCode" id="cb30"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash  --port=18881  --ssl-keyfile=KEY_FILE  --ssl-certfile=CERT_FILE</span></span></code></pre></div>
 <p>This feature might be dropped in future SlowDash releases. Using a
@@ -746,19 +748,19 @@ reverse proxy server is recommended for long-term setups.</p>
 <h1 id="advanced-topics">Advanced Topics</h1>
 <h2 id="dynamic-generation-of-config-contents">Dynamic Generation of
 Config Contents</h2>
-<p>Configuration of SlowDash contents (dashboard, plot layout, etc.) are
+<p>Configuration of SlowDash contents (dashboard, plot layout, etc.) is
 described in JSON/YAML files in the project <code>config</code>
-directory, with a name like <code>slowplot-XXX.json</code>. These statis
+directory, with a name like <code>slowplot-XXX.json</code>. These static
 JSON/YAML (or any files with a name like <code>TYPE-XXX.EXT</code>
 placed in <code>config</code>) can be replaced with a Python script that
-generates the contents dynamically. To do so, place a Python script with
-a name like <code>slowplot-XXX.py</code> instead of
-<code>slowplot-XXX.json</code>, and define
+generates the contents dynamically. To do so, put a Python script with a
+name like <code>slowplot-XXX.py</code> instead of
+<code>slowplot-XXX.json</code>, and define an
 <code>async _setup(app)</code> function that returns the config content.
 The <code>app</code> parameter here is the SlowDash App object, with
 which you can access SlowDash resources such as the channel list.</p>
-<p>This is an example to dynamically generate a slowplot page that shows
-all the time-series channels. This example can be found in
+<p>This is an example of dynamically generating a slowplot page that
+shows all the time-series channels. This example can be found in
 <code>ExampleProjects/Advanced/DynamicLayout</code>.</p>
 <div class="sourceCode" id="cb31"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> logging</span>

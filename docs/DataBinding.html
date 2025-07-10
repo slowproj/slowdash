@@ -273,7 +273,7 @@ can contain a single element with a time-stamp of “neutral” or
 intervals.</li>
 <li>The “current” timestamp matches only if the data request includes
 the current time.</li>
-<li>Therefore data storages can contain data without time-stamps.
+<li>Therefore, data storage can contain data without time stamps.
 Examples are:
 <ul>
 <li>CSV file as a table</li>
@@ -328,14 +328,14 @@ but not guaranteed (not recommended)</li>
 </ul>
 <h3 id="data-indexing-channels">Data Indexing (Channels)</h3>
 <ul>
-<li>Each time-series has an unique name, “channel”.</li>
-<li>Single data element can be uniquely identified by a pair of
+<li>Each time-series has a unique name, “channel”.</li>
+<li>A single data element can be uniquely identified by a pair of
 “channel” and “time-stamp”.</li>
 <li>A data element can be a numerical scalar value (typical), a scalar
 value of boolean or string, or an object such as a histogram, graph,
 table, tree, or blob (image etc).</li>
 <li>[TODO] Using an array (vector of scalars) as a data element is under
-consideration. A table can be always used for an array.
+consideration. A table can always be used for an array.
 <p></li>
 <li>In a data table, if channel names are stored as a value of a column
 (case 1 below), this is called a “tag”.</li>
@@ -343,15 +343,15 @@ consideration. A table can be always used for an array.
 “field”(s).
 <p></li>
 <li>Depending on the structure of the data table, “channel” can be a
-“tag” (case 1), “field” (case 2), or combination of them (case 3).
+“tag” (case 1), “field” (case 2), or a combination of them (case 3).
 <p></li>
 <li>Depending on the structure of the data table, there might exist
-multiple tags (case 4); the additional tag(s) is/are called (a)
-“flag”(s).</li>
+multiple tags (case 4); the additional tag(s) is/are called
+“flags”.</li>
 </ul>
 <h3 id="schema-descriptor">Schema Descriptor</h3>
 <p>For a table storing time-series data, a “schema descriptor” describes
-which columns are for timestamps, tas(s) and field(s).</p>
+which columns are for timestamps, tas(s), and field(s).</p>
 <h4 id="examples">Examples</h4>
 <ul>
 <li><code>data_table[endpoint_name]@timestamp=value</code></li>
@@ -364,12 +364,12 @@ which columns are for timestamps, tas(s) and field(s).</p>
 <li>The first word is the table name.</li>
 <li>Tag names, if exist, come next. Multiple tags are separated by
 <code>,</code>.</li>
-<li>Timestamp column name follows a prefix of <code>@</code>.</li>
+<li>The timestamp column name follows a prefix of <code>@</code>.</li>
 <li>After an <code>=</code>, field column names are listed.
 <p></li>
 <li>If the timestamp column is inferrable, it can be omitted.</li>
 <li>Timestamp may have a type specifier in <code>()</code>. Type
-specifier is case insensitive.</li>
+specifier is case-insensitive.</li>
 <li>Empty field list implies that all the columns other than the
 timestamp and tags are fields.
 <p></li>
@@ -874,10 +874,10 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb7-1"><a href="
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> DBTYPE://USER:PASS@HOST:PORT/DB</span></span></code></pre></div>
 <h3 id="avoiding-channel-scanning-overhead">Avoiding Channel Scanning
 Overhead</h3>
-<p>In order to obtain a list of channels, SlowDash makes a query like
+<p>To obtain a list of channels, SlowDash executes a query like
 <code>SELECT DISTINCT tag FROM table</code>, which can be slow if the
 table is large. This can be avoided either by manually listing the
-channels or providing an efficient SQL statement:</p>
+channels or by providing an efficient SQL statement:</p>
 <h4 id="by-a-manual-list">By a manual list</h4>
 <div class="sourceCode" id="cb8"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
@@ -934,10 +934,10 @@ timestamps is always safe.</p>
 <p>UNIX timestamps as <code>REAL</code> is recommended for use with
 SlowDash.</p>
 <h4 id="sqlite-1">SQLite</h4>
-<p>SQLite does not have dedicated date-time type, and time information
-can be stored in time-string as TEXT or UNIX timestamps as INTEGER/REAL.
-If a field is declared as <code>DATETIME</code>, it uses TEXT for time
-string in UTC.</p>
+<p>SQLite does not have a dedicated date-time type, and time information
+can be stored in a time-string as TEXT or UNIX timestamps as
+INTEGER/REAL. If a field is declared as <code>DATETIME</code>, it uses
+TEXT for time string in UTC.</p>
 <ul>
 <li>UNIX timestamp: as <code>INTERGER</code> (64 bit) or
 <code>REAL</code> (64 bit)</li>
@@ -947,7 +947,7 @@ string in UTC.</p>
 must be specified in SlowDash configuration file as
 <code>unspeficied utc</code>. Using the UNIX timestamps is always
 safe.</p>
-<p>UNIX timestamps as <code>REAL</code> is recommended for use with
+<p>UNIX timestamps as <code>REAL</code> are recommended for use with
 SlowDash.</p>
 <h2 id="time-series-of-scalar-values">Time-Series of Scalar Values</h2>
 <p>To access a table containing time-series data, write the schema in
@@ -972,7 +972,7 @@ Channel</h4>
 <div class="sourceCode" id="cb13"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> numeric_data[endpoint]@timestamp(with timezone)=value_raw(default),value_cal</span></span></code></pre></div>
-<h4 id="case-4-tag-flags-and-fields-for-channel">Case 4: Tag, Flags and
+<h4 id="case-4-tag-flags-and-fields-for-channel">Case 4: Tag, Flags, and
 Fields for Channel</h4>
 <p>[TODO] Flags are currently not supported. To use the case 4 schemata,
 use the <code>where</code> and <code>suffix</code> options.</p>
@@ -1041,15 +1041,15 @@ id="case-1-tag-values-for-channel-measchannelch1-valueval1-time">Case 1:
 Tag Values for Channel
 (<code>meas,channel=CH1 value=VAL1 TIME</code>)</h4>
 <p>If there is only one Tag for channels and one Field for data values,
-the simle configuration above works. For data containing multiple tags
+the simple configuration above works. For data containing multiple tags
 and/or fields, specify the names using <code>schema</code>:</p>
 <div class="sourceCode" id="cb19"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> meas[channel]=value</span></span></code></pre></div>
 <h4 id="case-2-fields-for-channel-meas-ch1val1ch2val2-time">Case 2:
 Fields for Channel (<code>meas ch1=VAL1,ch2=VAL2 TIME</code>)</h4>
-<p>If the data does not have any Tag and all the Fields are used, the
-simle configuration above works. For data containing multiple tags
+<p>If the data does not have any Tags and all the Fields are used, the
+simple configuration above works. For data containing multiple tags
 and/or fields, specify the names using <code>schema</code>:</p>
 <div class="sourceCode" id="cb20"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
@@ -1096,7 +1096,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb23-1"><a href=
 <span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">measurement</span><span class="kw">:</span><span class="at"> TestTimeSeriesOfObjects</span></span></code></pre></div>
 <ul>
 <li>In InfluxDB, time-series of scalars and time-series of objects
-cannot live together in a same “measurement”. Use a dedicated
+cannot live together in the same “measurement”. Use a dedicated
 measurement name for a time-series of objects.</li>
 <li>InfluxDB has a limitation on the length of the object stored as a
 string: this must be less than 64 kB (as of InfluxDB version 2.6)</li>
@@ -1139,9 +1139,12 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb25-1"><a href=
 Histograms, Graphs, Tables &amp; Trees</h2>
 <h3 id="implementation">Implementation</h3>
 <ul>
-<li>Time-Series of objects (histograms, graphs, tables and trees) are
-implemented by combination of RedisTS and RedisJSON.</li>
-<li>Each object makes one RedisJSON entry, with a dedicated key.</li>
+<li>Object data is stored as a JSON object in RedisJSON or as a JSON
+text</li>
+<li>Time-Series of objects (histograms, graphs, tables, and trees) are
+implemented by a combination of RedisTS and JSON store (RedisJSON or
+text).</li>
+<li>Each object makes one JSON entry, with a dedicated key.</li>
 <li>RedisTS holds a series of object keys.</li>
 <li>Keys are formatted as <code>{Channel}_{Index}</code>, unless
 specified in user configuration.</li>
@@ -1203,9 +1206,8 @@ channel name equal to the key (optionally with a suffix).</li>
 <h2 id="current-histograms-graphs-tables-trees">“Current” Histograms,
 Graphs, Tables &amp; Trees</h2>
 <ul>
-<li>With RedisJSON, JSON representation of histograms, graphs, tables
-and trees can be stored as a value of the Redis key-value store, in
-either as a Redis-JSON object or as a JSON string.</li>
+<li>stored in Redis key-value store, either as a Redis-JSON object or as
+a JSON string.</li>
 <li>See <a
 href="DataModel.html#value-types-and-json-representation">Data Model
 section</a> for the JSON structures.</li>
@@ -1213,7 +1215,7 @@ section</a> for the JSON structures.</li>
 <p>
 <ul>
 <li>As the values are not assigned to time-stamps, those are treated as
-“time neutral”.</li>
+“time-neutral”.</li>
 <li>All the RedisJSON key-value pairs in the <code>key_value</code>
 section will be automatically taken.
 <p>
@@ -1228,17 +1230,19 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb28-1"><a h
 <span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>r.json().<span class="bu">set</span>(<span class="st">&#39;hist00&#39;</span>, <span class="st">&#39;$&#39;</span>, hist)</span></code></pre></div>
 <ul>
-<li>The SlowPy utility can also be used to write the JSON objects: just
+<li>The SlowPy utility can also be used to write the JSON objects:
 replace <code>write_object_timeseries()</code> with
 <code>write.object()</code>.</li>
 </ul>
 <h1 id="mongodb">MongoDB</h1>
 <h2 id="time-series-of-scalars">Time-Series of Scalars</h2>
-<p>[TODO] implement schema-based binding</p>
+<ul>
+<li>[TODO] implement schema-based binding</li>
+</ul>
 <h2 id="time-series-of-histograms-graphs-tables-trees-3">Time-Series of
 Histograms, Graphs, Tables &amp; Trees</h2>
 <ul>
-<li>[TODO] Just store JSON objects</li>
+<li>[TODO] store JSON objects</li>
 </ul>
 <h2 id="time-series-of-blobs-3">Time-Series of Blobs</h2>
 <ul>
@@ -1257,8 +1261,8 @@ class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb29
 <span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>    }</span>
 <span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">emit</span>(doc<span class="op">.</span><span class="at">timestamp</span><span class="op">,</span> record)<span class="op">;</span></span>
 <span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<p>Here the record fields can be scalars, JSON, or Blob-ID. Tags are
-optional. Multiple views can be created. Currently only the UNIX
+<p>Here, the record fields can be scalars, JSON, or Blob-ID. Tags are
+optional. Multiple views can be created. Currently, only the UNIX
 timestamp is accepted for the key.</p>
 <p>The SlowDash schema description for CouchDB is similar to that of SQL
 DB, except that a view is used instead of a table. As timestamps are
@@ -1267,8 +1271,9 @@ the schema description.</p>
 <pre><code>VIEW_NAME [TAG] = FIELD1, FIELD2, ...</code></pre>
 <p><code>VIEW_NAME</code> is
 <code>DESIGN_DOCUMENT_NAME/INDEX_NAME</code>.</p>
-<p>If a view contains only data fields, and all the data fields are
-taken into channels, the schema description can be a just view name.</p>
+<p>If a view contains only data fields and all the data fields are
+mapped to channels, the schema description can be simply the view
+name.</p>
 <p>Write the schema in the project configuration file:</p>
 <div class="sourceCode" id="cb31"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
@@ -1276,8 +1281,8 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb31-1"><a href=
 <span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> couchdb://USER:PASS@localhost:5984/MyDB</span></span>
 <span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span><span class="at"> </span></span>
 <span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> MyDesignDoc/MyIndex</span></span></code></pre></div>
-<p>channels are scanned from the data, but old channels that do not
-appear in a last segment of data might not be found. In that case,
+<p>Channels are scanned from the data, but old channels that do not
+appear in the last segment of data might not be found. In that case,
 explicitly list the channel names:</p>
 <div class="sourceCode" id="cb32"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span><span class="at"> </span></span>
@@ -1299,7 +1304,7 @@ Channel</h4>
 <div class="sourceCode" id="cb35"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span><span class="at"> </span></span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> MyDesigDoc/MyIndex[Tag] = Field01(default), Field02, ...</span></span></code></pre></div>
-<h4 id="case-4-tag-flags-and-fields-for-channel-1">Case 4: Tag, Flags
+<h4 id="case-4-tag-flags-and-fields-for-channel-1">Case 4: Tag, Flags,
 and Fields for Channel</h4>
 <p>Flags are currently not supported. Modify the CouchDB view definition
 in a way that a tag includes flags.</p>
@@ -1367,9 +1372,9 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb40-1"><a href=
 <span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> MyDesignDoc/MyIndex = Field01, Field02, ..</span></span></code></pre></div>
 <h2 id="database-information-as-a-tree">Database information as a
 Tree</h2>
-<p>Current database information such as the file size can be obtained as
-a tree data object. Just make a <code>database_info</code> entry in the
-<code>data_source</code> definition with a name:</p>
+<p>Current database information, such as the file size, can be obtained
+as a tree data object. Just make a <code>database_info</code> entry in
+the <code>data_source</code> definition with a name:</p>
 <div class="sourceCode" id="cb41"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
 <span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
@@ -1379,8 +1384,8 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb41-1"><a href=
 <h1 id="local-csv-files">Local CSV Files</h1>
 <ul>
 <li>A directory containing CSV files can be used as a data store, in a
-very similar way as tables in the RDBMS (no SQL queries, though).</li>
-<li>One CSV file corresponds to one table, each CSV file must have a
+very similar way to tables in the RDBMS (no SQL queries, though).</li>
+<li>One CSV file corresponds to one table; each CSV file must have a
 header line for its first line.</li>
 </ul>
 <h2 id="time-series-of-scalar-values-3">Time-Series of Scalar

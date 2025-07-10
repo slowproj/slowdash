@@ -86,32 +86,32 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <nav id="TOC">
 <ul>
 <li><a href="#overview" id="toc-overview">Overview</a></li>
-<li><a href="#examles" id="toc-examles">Examles</a></li>
+<li><a href="#examples" id="toc-examples">Examples</a></li>
 </ul>
 </nav>
 </div>
 </header>
 
 <h1 id="overview">Overview</h1>
-<p>Files placed under project’s <code>userhtml</code> directory are
-accessible though the SlowDash Web API of
-<code>/userhtml/{filename}</code>. If a HTML file is placed, it can use
+<p>Files placed under the project’s <code>userhtml</code> directory are
+accessible through the SlowDash Web API of
+<code>/userhtml/{filename}</code>. If an HTML file is placed, it can use
 the full functionality of HTML, such as applying user CSS, embedding
-Javascript, and importing external JavaScript libraries. HTML files
-immediately under the <code>userhtml</code> directory will be listed on
-the SlowDash catalog panel, together with the SlowDash standard
+JavaScript, and importing external JavaScript libraries. HTML files
+located immediately under the <code>userhtml</code> directory will be
+listed on the SlowDash catalog panel, alongside the SlowDash standard
 dashboards and plot layouts.</p>
-<p>The SlowDash Javascript library, SlowJS, can be accessed at
+<p>The SlowDash JavaScript library, SlowJS, can be accessed at
 <code>/userhtml/slowjs</code>, as if the <code>slowjs</code> directory
 exists under the User HTML directory, allowing the user HTML scripts to
 use the SlowDash functionality. The user HTML directory cannot contain a
 file named <code>slowjs</code>.</p>
-<h1 id="examles">Examles</h1>
-<p>Some examples can be found at
-<code>ExampleProjects/Advanced/UserHTML</code>.</p>
+<h1 id="examples">Examples</h1>
+<p>Some examples can be found in the
+<code>ExampleProjects/Advanced/UserHTML</code> directory.</p>
 <h3 id="using-an-external-javascript-library-chart.js">Using an External
-Javascript Library (Chart.js)</h3>
-<p>This examples fetches data using the SlowDash Web API and makes a pie
+JavaScript Library (Chart.js)</h3>
+<p>This example fetches data using the SlowDash Web API and makes a pie
 chart using the Chart.js library.</p>
 <div class="sourceCode" id="cb1"><pre
 class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;!</span>DOCTYPE HTML<span class="op">&gt;</span></span>

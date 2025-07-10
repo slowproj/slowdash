@@ -129,16 +129,17 @@ Graphs)</h1>
 <p><img src="fig/Panel-Canvas-Simple.png" style="width:40%;margin-left:2em;border:thin solid gray"></p>
 <ul>
 <li>Canvas = Base_Image + Items (although base image is an item).</li>
-<li>Items are graphical element on the base image.</li>
+<li>Items are graphical elements on the base image.</li>
 <li>Most items are bound to data values (metric).</li>
-<li>Most items (can) show data values by text next to it.</li>
+<li>Most items can show data values by text next to them.</li>
 <li>“Shape Items” (can) show active/non-active status based on data
 values.</li>
 </ul>
 <h2 id="user-canvas-configuration-file">User Canvas Configuration
 File</h2>
 <ul>
-<li>User configuration file describes the base image and elements.</li>
+<li>The user configuration file describes the base image and
+elements.</li>
 <li>The file is located under <code>PROJECT/config</code>, and the name
 must be <code>slowdash-NAME.json</code>.</li>
 <li>Example from <code>Projects/ATDS/Config</code>:</li>
@@ -194,7 +195,7 @@ server-side scripts (typically to control the device).</li>
 </ul>
 <h3 id="item-attributes">Item Attributes</h3>
 <ul>
-<li>Attributes describes how the items appear on the canvas.</li>
+<li>Attributes describe how the items appear on the canvas.</li>
 <li>Attributes are mostly identical to SVG attributes for the
 corresponding shape, with some additions.</li>
 <li>Commonly used SVG attributes are:
@@ -239,15 +240,15 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="
 <li><code>active-above</code> and/or <code>active-below</code> defines
 the active range. The color of the item changes accordingly.</li>
 <li><code>format</code> is used for data indicator text.</li>
-<li><code>tolerable-gap</code> can be specified for gap in time-series
-before alarm icon is shown. Default is 60 sec.</li>
+<li><code>tolerable-gap</code> can be specified for the gap in
+time-series before the alarm icon is shown. The default is 60 sec.</li>
 </ul>
 <h3 id="action-binding">Action Binding</h3>
 <ul>
 <li>Items can have associated actions.</li>
 <li>Actions can be:
 <ul>
-<li>sending commands to a server-side user scripts (see <a
+<li>sending commands to a server-side user script (see <a
 href="UserModule.html">UserModule</a>)</li>
 <li>opening a web page</li>
 </ul></li>
@@ -258,16 +259,17 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;open&quot;</span><span class="fu">:</span> <span class="st">&quot;./slowplot.html?config=slowplot-ATDS.json&quot;</span> <span class="fu">},</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="er">...</span></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
-<h5 id="example-sending-a-command-to-server-side-user-module">Example:
-Sending a command to server-side User Module</h5>
+<h5
+id="example-sending-a-command-to-the-server-side-user-module">Example:
+Sending a command to the server-side User Module</h5>
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;submit&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;restart_IG&quot;</span> <span class="fu">}</span> <span class="fu">},</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="er">...</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h5
-id="example-sending-a-command-to-server-side-user-module-with-parameters-form">Example:
-Sending a command to server-side User Module with parameters
+id="example-sending-a-command-to-the-server-side-user-module-with-parameters-form">Example:
+Sending a command to the server-side User Module with parameters
 (“form”)</h5>
 <div class="sourceCode" id="cb5"><pre
 class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
@@ -320,7 +322,8 @@ a convenient alignment.</li>
 <h3 id="grid">Grid</h3>
 <ul>
 <li>type: <code>grid</code></li>
-<li>draws coordinate grids. Useful when placing elements on base image.
+<li>draws coordinate grids. Useful when placing elements on the base
+image.
 <p></li>
 <li>Tips: change <code>type: grid</code> to <code>_type: grid</code> to
 disable the grid once item placement is completed.</li>
@@ -341,8 +344,8 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb8-1"><a href="
 <p><img src="fig/Panel-Canvas-Grid.png" style="width:40%;border:thin solid gray"></p>
 <ul>
 <li>Here the image file size is 1003x553. The <code>width</code> and
-<code>height</code> attributes are set to match the image dimension.
-Changing these values scales the image.</li>
+<code>height</code> attributes are set to match the image dimensions.
+Changing these values will scale the image.</li>
 <li>The <code>x</code> and <code>y</code> attributes are adjusted to
 align the image component nicely on the grid.</li>
 <li>The global <code>view_box</code> defines the overall coordinate, in
@@ -429,7 +432,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb14-1"><a href=
 <li>Text with static attributes only creates a static text label.</li>
 <li>Text with <code>"action": {"open": URL}</code> creates a
 hyperlink.</li>
-<li>Text with <code>metric</code> shows only the data values. (the
+<li>Text with <code>metric</code> shows only the data values. (The
 <code>text</code> attribute will have no effect.)</li>
 </ul>
 <p>Mandatory attributes and default values are:</p>
@@ -490,8 +493,8 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb18-1"><a href=
 <ul>
 <li>Map is a schematic representation of a graph of
 <code>(x,y)</code>.</li>
-<li>The graph value of <code>x</code> is used for index of elements, and
-<code>y</code> is used for color.</li>
+<li>The graph value of <code>x</code> is used for the index of elements,
+and <code>y</code> is used for color.</li>
 <li>Element shapes are described in a user configuration file.</li>
 </ul>
 <p><img src="fig/Panel-Map-KL.png" style="width:30%;margin-left:2em;border:thin solid gray">
@@ -565,7 +568,7 @@ also created, which is convenient to test the map file.</li>
 </ul>
 <h1 id="html-form">HTML / Form</h1>
 <ul>
-<li>Displays a HTML page described in an user HTML file stored under the
+<li>Displays an HTML page described in a user HTML file stored under the
 user configuration directory.</li>
 <li>The user configuration file can contain a <code>&lt;form&gt;</code>
 to send commands to the server-side user script.</li>
@@ -610,7 +613,7 @@ class="sourceCode html"><code class="sourceCode html"><span id="cb23-1"><a href=
 <ul>
 <li>Either full or partial HTML can be used. CSS in
 <code>&lt;head&gt;</code> works.</li>
-<li>Use <code>&lt;form&gt;</code> to submit command to the server-side
+<li>Use <code>&lt;form&gt;</code> to submit a command to the server-side
 user code.</li>
 </ul>
 <h4 id="data-binding">Data Binding</h4>
@@ -649,7 +652,7 @@ Transform section</a>.</li>
 <ul>
 <li>Primarily intended for image data, but can be used for many
 others.</li>
-<li>Data must have a MIME type and URL.</li>
+<li>Data must have a MIME type and a URL.</li>
 </ul>
 <h5 id="implementation-1">Implementation</h5>
 <ul>
