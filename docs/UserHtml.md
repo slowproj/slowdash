@@ -3,16 +3,16 @@ title: User HTML
 ---
 
 # Overview
-Files placed under project's `userhtml` directory are accessible though the SlowDash Web API of `/userhtml/{filename}`.
-If a HTML file is placed, it can use the full functionality of HTML, such as applying user CSS, embedding Javascript, and importing external JavaScript libraries. HTML files immediately under the `userhtml` directory will be listed on the SlowDash catalog panel, together with the SlowDash standard dashboards and plot layouts.
+Files placed under the project's `userhtml` directory are accessible through the SlowDash Web API of `/userhtml/{filename}`.
+If an HTML file is placed, it can use the full functionality of HTML, such as applying user CSS, embedding JavaScript, and importing external JavaScript libraries. HTML files located immediately under the `userhtml` directory will be listed on the SlowDash catalog panel, alongside the SlowDash standard dashboards and plot layouts.
 
-The SlowDash Javascript library, SlowJS, can be accessed at `/userhtml/slowjs`, as if the `slowjs` directory exists under the User HTML directory, allowing the user HTML scripts to use the SlowDash functionality. The user HTML directory cannot contain a file named `slowjs`.
+The SlowDash JavaScript library, SlowJS, can be accessed at `/userhtml/slowjs`, as if the `slowjs` directory exists under the User HTML directory, allowing the user HTML scripts to use the SlowDash functionality. The user HTML directory cannot contain a file named `slowjs`.
 
-# Examles
-Some examples can be found at `ExampleProjects/Advanced/UserHTML`.
+# Examples
+Some examples can be found in the `ExampleProjects/Advanced/UserHTML` directory.
 
-### Using an External Javascript Library (Chart.js)
-This examples fetches data using the SlowDash Web API and makes a pie chart using the Chart.js library.
+### Using an External JavaScript Library (Chart.js)
+This example fetches data using the SlowDash Web API and makes a pie chart using the Chart.js library.
 ```javascript
 <!DOCTYPE HTML>
 <html lang="en">
