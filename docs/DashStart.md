@@ -65,7 +65,7 @@ Use this schema configuration instead (last line):
 ```console
 $ docker compose up
 ```
-Then open in your browser:
+Then open it in your browser:
 ```console
 $ firefox http://localhost:18881
 ```
@@ -137,7 +137,7 @@ services:
 ```console
 $ docker compose up
 ```
-Then open in your browser:
+Then open it in your browser:
 ```console
 $ firefox http://localhost:18881
 ```
