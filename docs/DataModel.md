@@ -4,12 +4,12 @@ title: Data Model
 
 # Concepts / Terminologies
 - Each "channel" produces a series of values.
-- Query is made for a set of channels for a period of time.
+- A query is made for a set of channels for a period of time.
 - Query result is a set of channel data, indexed by the channel names.
-- Each channel data consists of an array of values (i.e., series). 
+- Each channel's data consists of an array of values (i.e., series). 
 - If the length of the array is one, it could be represented as a single value instead of an array.
 - Every value has an associated time-stamp (which does not have to be unique).
-- A value can be a "scalar" (number, string or bool) or an "object" (histogram, table, tree, ...).
+- A value can be a "scalar" (number, string, or bool) or an "object" (histogram, table, tree, ...).
 
 
 # Query Syntax and Reply Format
@@ -84,7 +84,7 @@ If the data is time-neutral, the value of `T` is `0`. If the data time is "curre
 Instead of having multiple fields (such as `y` in addition to `x`), multiple time-series with the identical time points are indicated by the `aligned` property. This is used for:
 
 - Multiple channels read at the same time
-- Multiple channels alined by resampling
+- Multiple channels aligned by resampling
 - Vectors, e.g., (x, y, z)
 - Tuples, e.g., (mean, rms, min, max, n)
 - Errors, e.g., (x, x_err)
