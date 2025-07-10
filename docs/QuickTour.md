@@ -212,7 +212,7 @@ $ docker run --rm -p 18881:18881 -v $(pwd):/project slowdash
 ```
 
 #### Docker-Compose
-Create a `docker-compose.yaml` file at the project directory
+Create a `docker-compose.yaml` file in the project directory
 ```yaml
 version: '3'
 
@@ -232,7 +232,7 @@ $ docker compose up
 
 
 ### Step 2: Opening a Web Browser
-Launch a web browser, access to `http://localhost:18881`.
+Launch a web browser and access `http://localhost:18881`.
 ```console
 $ firefox http://localhost:18881
 ```
