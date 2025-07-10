@@ -150,6 +150,9 @@ class ConfigComponent(Component):
     @slowlette.get('/api/config/content/{filename}')
     async def get_content(self, filename:str, content_type:str='json'):
         meta, content = await self._load_content(filename, content_type)
+        if meta is None:
+            return None   # not in my list -> use Slowlette aggregation
+        
         try:
             # this requires W_OK, might fail from CGI etc.
             pathlib.Path(filepath).touch()
@@ -158,7 +161,7 @@ class ConfigComponent(Component):
             
         if content is None:
             return slowlette.Response(400)
-        
+
         return content
 
 
@@ -298,8 +301,7 @@ class ConfigComponent(Component):
                     filepath, ext = self._get_filepath_ext(filename+'.html', os.R_OK)
             
         if filepath is None:
-            logging.warning(f'GET config: {filename}: access denied')
-            return { 'config_error': 'file' }, None
+            return None, None  # no such file (at the accessible locations)
         if os.path.getsize(filepath) <= 0:
             return { 'config_error': 'empty file' }, None
 

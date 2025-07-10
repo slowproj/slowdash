@@ -797,8 +797,6 @@ class TaskManagerPanel extends Panel {
         this.console_revision = 0;
         this.is_tasklist_loading = false;
         this.is_console_loading = false;
-        this.is_tasklist_error = false;
-        this.is_console_error = false;
     }
 
     
@@ -808,8 +806,6 @@ class TaskManagerPanel extends Panel {
         
         this.tasklist_revision = 0;
         this.console_revision = 0;
-        this.is_tasklist_error = false;
-        this.is_console_error = false;
 
         if (! this.is_tasklist_loading) {
             this.is_tasklist_loading = true;
@@ -824,34 +820,32 @@ class TaskManagerPanel extends Panel {
 
     async _load_tasklist() {
         try {
+            // this is a long poll (if the SlowDash server is ASGI)
             let response = await fetch('api/control/task?since='+this.tasklist_revision);
             let record = await response.json();
             this._render_task_table(record.tasks);
             this.tasklist_revision = record.revision;
+            setTimeout(()=>this._load_tasklist(), 1000);
         }
         catch (e) {
+            // if an error occurs (by server restart etc.), updating stops -> needs page reloading
             console.log("Error on fetching tasklist: ", e);
-            this.is_tasklist_error = true;
-        }
-        if (! this.is_tasklist_error) {
-            setTimeout(()=>this._load_tasklist(), 1000);
         }
     }
         
 
     async _load_console() {
         try {
+            // this is a long poll (if the SlowDash server is ASGI)
             let response = await fetch('api/console?since='+this.console_revision);
             let record = await response.json();
             this._render_console(record.text);
             this.console_revision = record.revision;
+            setTimeout(()=>this._load_console(), 1000);
         }
         catch (e) {
+            // if an error occurs (by server restart etc.), updating stops -> needs page reloading
             console.log("Error on fetching console: ", e);
-            this.is_console_error = true;
-        }
-        if (! this.is_console_error) {
-            setTimeout(()=>this._load_console(), 1000);
         }
     }
 

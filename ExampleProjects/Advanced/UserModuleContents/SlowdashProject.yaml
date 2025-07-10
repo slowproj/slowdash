@@ -1,0 +1,8 @@
+slowdash_project:
+  name: WorldClock
+  module:
+    file: worldclock.py
+    enabled_for_commandline: true
+    parameters:
+        timeoffset: -9
+

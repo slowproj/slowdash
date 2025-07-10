@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 24 October 2022 #
 
-import sys, os, time, threading, asyncio, types, inspect, logging, traceback
+import sys, os, time, re, threading, asyncio, types, inspect, logging, traceback
 import importlib.machinery
 
 import slowlette
@@ -136,21 +136,23 @@ class UserModule:
         self.user_thread = None
         self.stop_event = threading.Event()
 
-        if self.name is None:
-            self.name = os.path.splitext(os.path.basename(self.filepath))[0]
-
         self.func_get_channels = None
         self.func_get_data = None
         self.func_process_command = None
         self.func_halt = None
         self.slowlette = None
+
+        self.func_get_html = None
+        self.func_get_layout = None
+        self.html_list = []
+        self.layout_list = []
         
         self.routine_history = []
         self.command_history = []
         self.error = None
         self.is_waiting = False
         
-        self.status_revision = 1
+        self.status_revision = int(time.time())
         self.was_running = False
 
         
@@ -234,18 +236,40 @@ class UserModule:
         if self.module is None:
             return False
 
+        
+        ### UserModule callbacks ###
+        
         self.func_get_channels = self.get_func('_get_channels')
         self.func_get_data = self.get_func('_get_data')
         self.func_process_command = self.get_func('_process_command')
         self.func_halt = self.get_func('_halt')
 
-        logging.debug('user module loaded: %s' % self.name)
-        if self.func_get_channels and self.func_get_data:
-            logging.debug('loaded user module data interface')
-        if self.func_process_command:
-            logging.debug('loaded user module command processor')
+        
+        ### UserModule dynamic contents (layout & HTML) ###
+        
+        self.func_get_html = self.get_func('_get_html')
+        self.func_get_layout = self.get_func('_get_layout')
+        
+        if self.func_get_html is None:
+            self.html_list = []
+        else:
+            func_get_html_list = self.get_func('_get_html_list')
+            if func_get_html_list is None:
+                self.html_list = [ self.name ]
+            else:
+                self.html_list = func_get_html_list()
 
-        # UserModule Web-API
+        if self.func_get_layout is None:
+            self.layout_layout = []
+        else:
+            func_get_layout_list = self.get_func('_get_layout_list')
+            if func_get_layout_list is None:
+                self.layout_list = [ self.name ]
+            else:
+                self.layout_list = func_get_layout_list()
+
+                
+        ### UserModule Web-API ###
         # To override SlowDash API, this is added as a middleware.
         # Note that UserModule.load() is called much later than App.__init__(), and can be called multiple times.
         if self.slowlette is not None:
@@ -256,7 +280,14 @@ class UserModule:
                 logging.info(f'loaded user module Web-API: {self.name}.{name}')
                 self.slowlette = obj
                 self.app.slowlette.add_middleware(obj)
-        
+
+                
+        logging.debug('user module loaded: %s' % self.name)
+        if self.func_get_channels and self.func_get_data:
+            logging.debug('loaded user module data interface')
+        if self.func_process_command:
+            logging.debug('loaded user module command processor')
+
         return True
         
     
@@ -337,7 +368,7 @@ class UserModule:
 
 
     def touch_status(self):
-        self.status_revision += 1  # note: there is no limit on int in Python3
+        self.status_revision = int(time.time())
     
 
     def get_func(self, name):
@@ -349,7 +380,7 @@ class UserModule:
             return None
 
         
-    def get_channels(self):
+    async def get_channels(self):
         if self.module is None or self.func_get_channels is None:
             return None
         
@@ -359,7 +390,10 @@ class UserModule:
                 logging.warning('User/Task module not yet initialized')
                 
         try:
-            channels = self.func_get_channels()
+            if inspect.iscoroutinefunction(self.func_get_channels):
+                channels = await self.func_get_channels()
+            else:
+                channels = self.func_get_channels()
         except Exception as e:
             self.handle_error('user module error: get_channels(): %s' % str(e))
             return None
@@ -370,7 +404,7 @@ class UserModule:
         return channels
     
     
-    def get_data(self, channel):
+    async def get_data(self, channel):
         if self.module is None or self.func_get_data is None:
             return None
         
@@ -380,7 +414,10 @@ class UserModule:
                 logging.warning('User/Task module not yet initialized')
                 
         try:
-            return self.func_get_data(channel)
+            if inspect.iscoroutinefunction(self.func_get_data):
+                return await self.func_get_data(channel)
+            else:
+                return self.func_get_data(channel)
         except Exception as e:
             self.handle_error('user module error: get_data(): %s' % str(e))
             return None
@@ -422,6 +459,47 @@ class UserModule:
         return result
             
 
+    async def get_content_list(self, func_get_content_list, func_get_content):
+        if self.module is None or func_get_content is None:
+            return []
+
+        if func_get_content_list is None:
+            return [ self.module.name ]
+        
+        try:
+            if inspect.iscoroutinefunction(func_get_content_list):
+                content_list = await func_get_content_list()
+            else:
+                content_list = func_get_content_list()
+        except Exception as e:
+            self.handle_error('user module error: get_content_list(): %s' % str(e))
+            content_list = []
+
+        return content_list
+
+    
+    async def get_content(self, content_name, func_get_content):
+        if self.module is None or func_get_content is None:
+            return None
+
+        nargs = len(inspect.signature(func_get_content).parameters)
+        if nargs >= 1:
+            args = [ content_name ]
+        else:
+            args = []
+            
+        try:
+            if inspect.iscoroutinefunction(func_get_content):
+                content = await func_get_content(*args)
+            else:
+                content = func_get_content(*args)
+        except Exception as e:
+            self.handle_error('user module error: get_content(): %s' % str(e))
+            content = None
+
+        return content
+    
+
     def handle_error(self, message):
         if self.error is None:
             self.error = message
@@ -461,8 +539,9 @@ class UserModuleComponent(Component):
             if app.is_command and node.get('enabled_for_commandline', True) != True:
                 continue
             filepath = node['file']
+            name = os.path.splitext(os.path.basename(filepath))[0]
             user_params = node.get('parameters', {})
-            module = UserModule(self.app, filepath, filepath, node, user_params)
+            module = UserModule(self.app, filepath, name, node, user_params)
             if module is None:
                 logging.error('Unable to load user module: %s' % filepath)
             else:
@@ -496,17 +575,17 @@ class UserModuleComponent(Component):
 
 
     @slowlette.get('/api/channels')
-    def get_channels(self):
+    async def get_channels(self):
         result = []
         for usermodule in self.usermodule_list:
-            channels = usermodule.get_channels()
+            channels = await usermodule.get_channels()
             if channels is not None:
                 result.extend(channels)
         return result
 
         
     @slowlette.get('/api/data/{channels}')
-    def get_data(self, channels:str, opts:dict):
+    async def get_data(self, channels:str, opts:dict):
         if len(self.usermodule_list) == 0:
             return None
         
@@ -529,7 +608,7 @@ class UserModuleComponent(Component):
         if t >= 0 and t <= length + 10:
             for usermodule in self.usermodule_list:
                 for ch in channels:
-                    data = usermodule.get_data(ch)
+                    data = await usermodule.get_data(ch)
                     if data is None:
                         continue
                     has_result = True
@@ -565,3 +644,63 @@ class UserModuleComponent(Component):
             return slowlette.Response(result)
 
         return result
+
+
+    @slowlette.get('/api/config/contentlist')
+    async def get_usermodule_contentlist(self):
+        result = []
+        
+        for usermodule in self.usermodule_list:
+            for content_type, file_ext, content_list in [
+                ('html', 'html', usermodule.html_list),
+                ('slowplot', 'json', usermodule.layout_list),
+            ]:
+                for name in content_list:
+                    entry = {
+                        'type': content_type,
+                        'name': name,
+                        'config_file': f'{content_type}-{name}.{file_ext}',
+                        'description': f'dynamic {content_type} from UserModule {usermodule.name}',
+                    }
+                    result.append(entry)
+                
+        return result
+
+        
+    @slowlette.get('/api/config/content/{filename}')
+    async def get_usermodule_content(self, filename:str):
+        if filename.startswith('html-'):
+            pattern = r'html-([a-zA-Z0-9_\-]+)(\.html)?'
+            content_type = 'text/html'
+            is_html = True
+        elif filename.startswith('slowplot-'):
+            pattern = r'slowplot-([a-zA-Z0-9_\-]+)(\.json)?'
+            content_type = 'text/json'
+            is_html = False
+        else:
+            return None
+        
+        match = re.fullmatch(pattern, filename)
+        if not match:
+            return None
+        name = match.group(1)
+
+        content = None
+        for usermodule in self.usermodule_list:
+            get_func = None
+            if is_html:
+                if name in usermodule.html_list:
+                    get_func = usermodule.func_get_html
+            else:
+                if name in usermodule.layout_list:
+                    get_func = usermodule.func_get_layout
+            if get_func:
+                content = await usermodule.get_content(name, get_func)
+                break
+            
+        if content is None:
+            return None
+        elif is_html:
+            return slowlette.Response(200, content_type='text/html', content=content)
+        else:
+            return content

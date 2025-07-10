@@ -174,11 +174,11 @@ class TaskModule(UserModule):
         return self.channel_list
     
                 
-    def get_channels(self):
+    async def get_channels(self):
         return self.scan_channels()
 
     
-    def get_data(self, channel):
+    async def get_data(self, channel):
         if self.channel_list is None:
             self.scan_channels()
             
@@ -380,17 +380,17 @@ class TaskModuleComponent(Component):
 
 
     @slowlette.get('/api/channels')
-    def api_channels(self):
+    async def api_channels(self):
         result = []
         for taskmodule in self.taskmodule_list:
-            channels = taskmodule.get_channels()
+            channels = await taskmodule.get_channels()
             if channels is not None:
                 result.extend(channels)
         return result
 
         
     @slowlette.get('/api/data/{channels}')
-    def api_data(self, channels:str, opts:dict):
+    async def api_data(self, channels:str, opts:dict):
         try:
             channels = channels.split(',')
             length = float(opts.get('length', 3600))
@@ -410,7 +410,7 @@ class TaskModuleComponent(Component):
         if t >= 0 and t <= length + 10:
             for taskmodule in self.taskmodule_list:
                 for ch in channels:
-                    data = taskmodule.get_data(ch)
+                    data = await taskmodule.get_data(ch)
                     if data is None:
                         continue
                     has_result = True
@@ -424,7 +424,7 @@ class TaskModuleComponent(Component):
 
 
     @slowlette.post('/api/update/tasklist')
-    def update_tasklist(self):
+    async def update_tasklist(self):
         if self.app.is_cgi or (self.project.project_dir is None):
             return slowlette.Response(200)
         
