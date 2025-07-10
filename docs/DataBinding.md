@@ -53,7 +53,7 @@ slowdash_project:
 - For data not explicitly bound for time-stamps, the time-series data can contain a single element with a time-stamp of "neutral" or "current".
   - The "neutral" timestamp matches with any data request time intervals. 
   - The "current" timestamp matches only if the data request includes the current time.
-  - Therefore data storages can contain data without time-stamps. Examples are:
+  - Therefore, data storage can contain data without time stamps. Examples are:
     - CSV file as a table
     - ROOT files containing histograms and graphs
     - JSON / YAML file containing parameters as a tree object
@@ -81,21 +81,21 @@ slowdash_project:
     - Otherwise the time-zone of the data server is used for most cases, but not guaranteed (not recommended)
   
 ### Data Indexing (Channels)
-- Each time-series has an unique name, "channel".
-- Single data element can be uniquely identified by a pair of "channel" and "time-stamp".
+- Each time-series has a unique name, "channel".
+- A single data element can be uniquely identified by a pair of "channel" and "time-stamp".
 - A data element can be a numerical scalar value (typical), a scalar value of boolean or string, or an object such as a histogram, graph, table, tree, or blob (image etc).
-- [TODO] Using an array (vector of scalars) as a data element is under consideration. A table can be always used for an array.
+- [TODO] Using an array (vector of scalars) as a data element is under consideration. A table can always be used for an array.
 <p>
 - In a data table, if channel names are stored as a value of a column (case 1 below), this is called a "tag".
 - In a data table, column(s) that contain(s) data values is/are called "field"(s).
 <p>
-- Depending on the structure of the data table, "channel" can be a "tag" (case 1), "field" (case 2), or combination of them (case 3).
+- Depending on the structure of the data table, "channel" can be a "tag" (case 1), "field" (case 2), or a combination of them (case 3).
 <p>
-- Depending on the structure of the data table, there might exist multiple tags (case 4); the additional tag(s) is/are called (a) "flag"(s).
+- Depending on the structure of the data table, there might exist multiple tags (case 4); the additional tag(s) is/are called "flags".
 
 
 ### Schema Descriptor
-For a table storing time-series data, a "schema descriptor" describes which columns are for timestamps, tas(s) and field(s).
+For a table storing time-series data, a "schema descriptor" describes which columns are for timestamps, tas(s), and field(s).
 
 #### Examples
 - `data_table[endpoint_name]@timestamp=value`
@@ -106,11 +106,11 @@ For a table storing time-series data, a "schema descriptor" describes which colu
 #### Syntax
 - The first word is the table name. 
 - Tag names, if exist, come next. Multiple tags are separated by `,`.
-- Timestamp column name follows a prefix of `@`.
+- The timestamp column name follows a prefix of `@`.
 - After an `=`, field column names are listed.
 <p>
 - If the timestamp column is inferrable, it can be omitted.
-- Timestamp may have a type specifier in `()`. Type specifier is case insensitive.
+- Timestamp may have a type specifier in `()`. Type specifier is case-insensitive.
 - Empty field list implies that all the columns other than the timestamp and tags are fields.
 <p>
 - All spaces are skipped.
@@ -277,7 +277,7 @@ slowdash_project:
 ```
 
 ### Avoiding Channel Scanning Overhead
-In order to obtain a list of channels, SlowDash makes a query like `SELECT DISTINCT tag FROM table`, which can be slow if the table is large. This can be avoided either by manually listing the channels or providing an efficient SQL statement:
+To obtain a list of channels, SlowDash executes a query like `SELECT DISTINCT tag FROM table`, which can be slow if the table is large. This can be avoided either by manually listing the channels or by providing an efficient SQL statement:
 
 #### By a manual list
 ```yaml
@@ -324,14 +324,14 @@ The MySQL libraries used in SlowDash (aiomysql) cannot handle time-zone with the
 UNIX timestamps as `REAL` is recommended for use with SlowDash.
 
 #### SQLite
-SQLite does not have dedicated date-time type, and time information can be stored in time-string as TEXT or UNIX timestamps as INTEGER/REAL. If a field is declared as `DATETIME`, it uses TEXT for time string in UTC.
+SQLite does not have a dedicated date-time type, and time information can be stored in a time-string as TEXT or UNIX timestamps as INTEGER/REAL. If a field is declared as `DATETIME`, it uses TEXT for time string in UTC.
 
 - UNIX timestamp: as `INTERGER` (64 bit) or `REAL` (64 bit)
 - DateTime string in UTC: `DATETIME`
 
 If the time string in TEXT (or `DATETIME`) is used, it must be specified in SlowDash configuration file as `unspeficied utc`. Using the UNIX timestamps is always safe.
 
-UNIX timestamps as `REAL` is recommended for use with SlowDash.
+UNIX timestamps as `REAL` are recommended for use with SlowDash.
 
 ## Time-Series of Scalar Values
 To access a table containing time-series data, write the schema in the `time_series` entry:
@@ -361,7 +361,7 @@ slowdash_project:
         schema: numeric_data[endpoint]@timestamp(with timezone)=value_raw(default),value_cal
 ```
 
-#### Case 4: Tag, Flags and Fields for Channel 
+#### Case 4: Tag, Flags, and Fields for Channel 
 [TODO] Flags are currently not supported. To use the case 4 schemata, use the `where` and `suffix` options.
 ```yaml
       time_series:
@@ -425,14 +425,14 @@ slowdash_project:
 ### Non-minimal Configuration
 
 #### Case 1: Tag Values for Channel (`meas,channel=CH1 value=VAL1 TIME`)
-If there is only one Tag for channels and one Field for data values, the simle configuration above works. For data containing multiple tags and/or fields, specify the names using `schema`:
+If there is only one Tag for channels and one Field for data values, the simple configuration above works. For data containing multiple tags and/or fields, specify the names using `schema`:
 ```yaml
       time_series:
         schema: meas[channel]=value
 ```
 
 #### Case 2: Fields for Channel  (`meas ch1=VAL1,ch2=VAL2 TIME`) 
-If the data does not have any Tag and all the Fields are used, the simle configuration above works. For data containing multiple tags and/or fields, specify the names using `schema`:
+If the data does not have any Tags and all the Fields are used, the simple configuration above works. For data containing multiple tags and/or fields, specify the names using `schema`:
 ```yaml
       time_series:
         schema: meas=ch1,ch2
@@ -469,7 +469,7 @@ slowdash_project:
       - measurement: TestTimeSeriesOfObjects
 ```
 
-- In InfluxDB, time-series of scalars and time-series of objects cannot live together in a same "measurement". Use a dedicated measurement name for a time-series of objects.
+- In InfluxDB, time-series of scalars and time-series of objects cannot live together in the same "measurement". Use a dedicated measurement name for a time-series of objects.
 - InfluxDB has a limitation on the length of the object stored as a string: this must be less than 64 kB (as of InfluxDB version 2.6)
 
 ## Time-Series of Blobs
@@ -506,8 +506,9 @@ slowdash_project:
 ##  Time-Series of Histograms, Graphs, Tables & Trees
 
 ### Implementation
-- Time-Series of objects (histograms, graphs, tables and trees) are implemented by combination of RedisTS and RedisJSON.
-- Each object makes one RedisJSON entry, with a dedicated key.
+- Object data is stored as a JSON object in RedisJSON or as a JSON text
+- Time-Series of objects (histograms, graphs, tables, and trees) are implemented by a combination of RedisTS and JSON store (RedisJSON or text).
+- Each object makes one JSON entry, with a dedicated key.
 - RedisTS holds a series of object keys.
 - Keys are formatted as `{Channel}_{Index}`, unless specified in user configuration.
 - Time-Series of objects are stored in a dedicated 'db'.
@@ -559,11 +560,11 @@ while True:
 - Hash values can be accessed as "current" tree objects, with a channel name equal to the key (optionally with a suffix).
 
 ##  "Current" Histograms, Graphs, Tables & Trees
-- With RedisJSON, JSON representation of histograms, graphs, tables and trees can be stored as a value of the Redis key-value store, in either as a Redis-JSON object or as a JSON string.
+- stored in Redis key-value store, either as a Redis-JSON object or as a JSON string.
 - See [Data Model section](DataModel.html#value-types-and-json-representation) for the JSON structures.
 
 <p>
-- As the values are not assigned to time-stamps, those are treated as "time neutral".
+- As the values are not assigned to time-stamps, those are treated as "time-neutral".
 - All the RedisJSON key-value pairs in the `key_value` section will be automatically taken.
 <p>
 Example of a Python script to write a "current" histogram:
@@ -577,15 +578,15 @@ hist = {
 r.json().set('hist00', '$', hist)
 ```
 
-- The SlowPy utility can also be used to write the JSON objects: just replace `write_object_timeseries()` with `write.object()`.
+- The SlowPy utility can also be used to write the JSON objects: replace `write_object_timeseries()` with `write.object()`.
 
 
 # MongoDB
 ##  Time-Series of Scalars
-[TODO] implement schema-based binding
+- [TODO] implement schema-based binding
 
 ##  Time-Series of Histograms, Graphs, Tables & Trees
-- [TODO] Just store JSON objects
+- [TODO] store JSON objects
 
 ## Time-Series of Blobs
 - [TODO] use GridFS
@@ -606,7 +607,7 @@ function (doc) {
     emit(doc.timestamp, record);
 }
 ```
-Here the record fields can be scalars, JSON, or Blob-ID. Tags are optional. Multiple views can be created. Currently only the UNIX timestamp is accepted for the key.
+Here, the record fields can be scalars, JSON, or Blob-ID. Tags are optional. Multiple views can be created. Currently, only the UNIX timestamp is accepted for the key.
 
 The SlowDash schema description for CouchDB is similar to that of SQL DB, except that a view is used instead of a table. As timestamps are used for the keys of the view, the time information is not necessary in the schema description.
 ```
@@ -614,7 +615,7 @@ VIEW_NAME [TAG] = FIELD1, FIELD2, ...
 ```
 `VIEW_NAME` is `DESIGN_DOCUMENT_NAME/INDEX_NAME`.
 
-If a view contains only data fields, and all the data fields are taken into channels, the schema description can be a just view name.
+If a view contains only data fields and all the data fields are mapped to channels, the schema description can be simply the view name.
 
 Write the schema in the project configuration file:
 ```yaml
@@ -625,7 +626,7 @@ slowdash_project:
       schema: MyDesignDoc/MyIndex
 ```
 
-channels are scanned from the data, but old channels that do not appear in a last segment of data might not be found. In that case, explicitly list the channel names:
+Channels are scanned from the data, but old channels that do not appear in the last segment of data might not be found. In that case, explicitly list the channel names:
 ```yaml
       time_series: 
         schema: MyDesignDoc/MyIndex[Tag] = Field01, Field02, ...
@@ -651,7 +652,7 @@ channels are scanned from the data, but old channels that do not appear in a las
         schema: MyDesigDoc/MyIndex[Tag] = Field01(default), Field02, ...
 ```
 
-#### Case 4: Tag, Flags and Fields for Channel 
+#### Case 4: Tag, Flags, and Fields for Channel 
 Flags are currently not supported. Modify the CouchDB view definition in a way that a tag includes flags.
 
 ##  Time-Series of Histograms, Graphs, Tables & Trees
@@ -721,7 +722,7 @@ slowdash_project:
 ```
 
 ## Database information as a Tree
-Current database information such as the file size can be obtained as a tree data object. Just make a `database_info` entry in the `data_source` definition with a name:
+Current database information, such as the file size, can be obtained as a tree data object. Just make a `database_info` entry in the `data_source` definition with a name:
 ```yaml
 slowdash_project:
   data_source:
@@ -732,8 +733,8 @@ slowdash_project:
 
 
 # Local CSV Files
-- A directory containing CSV files can be used as a data store, in a very similar way as tables in the RDBMS (no SQL queries, though).
-- One CSV file corresponds to one table, each CSV file must have a header line for its first line.
+- A directory containing CSV files can be used as a data store, in a very similar way to tables in the RDBMS (no SQL queries, though).
+- One CSV file corresponds to one table; each CSV file must have a header line for its first line.
 
 ## Time-Series of Scalar Values
 To access a table containing time-series data, write the schema in the `time_series` entry:
