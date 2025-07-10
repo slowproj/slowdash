@@ -43,7 +43,7 @@ $ docker rmi -f slowproj/slowdash slowproj/slowpy-notebook
 ```
 (Alternative: Use `make remove-docker-images` in the SlowDash directory. You can use tab completion for convenience: `make r[Tab]`.)
 
-Note: This operation removes your current images. Be careful not to lose your working context inside the images. The SlowDash version number is shown in the upper left coner of the home page.
+Note: This operation removes your current images. Be careful not to lose your working context inside the images. The SlowDash version number is shown in the upper left corner of the home page.
 
 
 ## Building Images Locally
@@ -132,8 +132,7 @@ options:
   -h, --help            show this help message and exit
   -p PORT, --port PORT  port number for web connection; command-line mode without this option
   --project-dir PROJECT_DIR
-                        project directory (default: current dir if not specified by SLOWDASH_PROJECT environmental
-                        variable)
+                        project directory (default: current dir if not specified by SLOWDASH_PROJECT environmental variable)
 ...
 ```
 
@@ -150,7 +149,7 @@ If successful, you'll see this configuration notice:
 
 <img src="fig/QuickTour-Welcome.png" style="width:40%">
 
-Press `Ctrl`-`c` to stop stop the server.
+Press `Ctrl`-`c` to stop the server.
 
 ## Updating Installation
 ```console
@@ -168,4 +167,4 @@ Running `make` is always safe, even if no updates are needed.
 
 
 # Browser Cache Management
-After updating the SlowDash server, you may need to clear your browser's cached scripts. To force a cache refresh, hold down the `Shift` key while clicking the reload button on any SlowDash page ("hard refresh": the procedure might be different depending on the browsers).
+After updating the SlowDash server, you may need to clear your browser's cached scripts. To force a cache refresh, hold down the `Shift` key while clicking the reload button on any SlowDash page ("hard refresh": the procedure might be different depending on the browser).
