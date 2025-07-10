@@ -6,18 +6,18 @@ title: Project Setup
 
 ## Project Directory
 - Every project has a dedicated project directory. 
-- Configuration file is `SlowdashProject.yaml`, placed at the project directory.
+- The configuration file is `SlowdashProject.yaml`, placed at the project directory.
 
-- Project directory is specified at run time by one of the followings:
+- Project directory is specified at run time by one of the following:
   - `--project-dir` option
   - `SLOWDASH_PROJECT` environmental variable
   - current working directory
 
-- Under the project directory, `config` directory is automatically created. The web interface posts files only to this directory.
+- Under the project directory, the `config` directory is automatically created. The web interface posts files only to this directory.
 
 
 ## Project Configuration File
-Project configuration file describes:
+The project configuration file describes:
 
 - Name, title of the project
 - Data source type and location
@@ -126,7 +126,7 @@ Example:
 
 The `background` property takes CSS "background" values / expressions. See, e.g., <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/background" target="_blank">a Mozilla document</a> for some examples.
 
-The logo file(s) must be placed under the project `config` directory.
+The logo file(s) must be placed under the project's `config` directory.
 
 ### Plot Style Examples
 #### Default Style
@@ -196,7 +196,7 @@ When the argument includes a special character of the shell (such as `?` and `&`
 
 # Running the Server
 
-<strong>WARNING</strong>: SlowDash is designed for internal use within a secured network and therefore no security protection is implemented. It is strongly recommended not to expose the system to the public internet. External access is assumed to be done through VPN or ssh tunnel.
+<strong>WARNING</strong>: SlowDash is designed for internal use within a secured network, and therefore, no security protection is implemented. It is strongly recommended that you do not expose the system to the public internet. External access is assumed to be done through VPN or ssh tunnel.
 
 ## Running in a Docker Container
 
@@ -253,15 +253,15 @@ $ slowdash --project-dir=PROJECT_DIR --port=18881
 SlowDash can be executed as a CGI or WSGI module of the Apache web server. 
 
 #### Advantages
-- As long as the web server is running, there will be no additional maintenance overhead for this SlowDash project. This is maybe useful to keep the data accessible after the measurement has been finished.
+- As long as the web server is running, there will be no additional maintenance overhead for this SlowDash project. This may be useful to keep the data accessible after the measurement has been completed.
 
 #### Disadvantages
-- User Python scripts (control tasks and user modules) are disabled for CGI and WSGI by default, in order to prevent multiple execution of user scripts in an unexpected way. To use a module with CGI/WSGI, set the `enabled_for_cgi` parameter `true` in the module configuration. Be careful for all the side effects, including performance overhead and security concerns.
+- User Python scripts (control tasks and user modules) are disabled for CGI and WSGI by default, in order to prevent multiple executions of user scripts in an unexpected way. To use a module with CGI/WSGI, set the `enabled_for_cgi` parameter `true` in the module configuration. Be careful of all the side effects, including performance overhead and security concerns.
 - CGI starts a SlowDash process for every HTTP request (can be very frequent!), therefore,
   - Severe performance overhead exists, and
-  - No continuous data processing is possible, such as the ones typically done in user modules.
+  - No continuous data processing is possible, such as the one typically done in user modules.
 
-WSGI does not have these issues, but be careful for the number of processes that WSGI would launch. If user modules are used, setting the number of WSGI processes to one would be safe. Do not use multi-threading in WSGI processes (set the number of threads to one).
+WSGI does not have these issues, but be cautious with the number of processes that WSGI launches. If user modules are used, setting the number of WSGI processes to one would be safe. Do not use multi-threading in WSGI processes (set the number of threads to one).
 
 ### Prerequisite
 - Apache2 Web Server, with cgi and userdir enabled
@@ -275,7 +275,7 @@ $ PATH/TO/SLOWDASH/utils/slowdash-setup-apache.py --interface=CGI   (or --interf
 ```
 
 #### CGI
-To setup CGI, run the script with the `--interface=CGI` option. It will install a set of files under user's public web directory (typically `/home/USER/public_html`), and display messages like:
+To set up CGI, run the script with the `--interface=CGI` option. It will install a set of files under the user's public web directory (typically `/home/USER/public_html`), and display messages like:
 
 ```console
 === INSTALLATION IS SUCCESSFUL ===
@@ -309,7 +309,7 @@ RewriteRule ^api/(.*)$ slowdash.cgi/$1
 For a SlowDash CGI setup in a different way, mind that it requires URL rewriting.
 
 #### WSGI (Daemon)
-To setup WSGI, run the script with the `--interface=WSGI` option. It will install a set of files under user's public web directory (typically `/home/USER/public_html`), and display messages like:
+To set up WSGI, run the script with the `--interface=WSGI` option. It will install a set of files under the user's public web directory (typically `/home/USER/public_html`), and display messages like:
 
 ```console
 === INSTALLATION IS SUCCESSFUL ===
@@ -347,13 +347,13 @@ AddHandler wsgi-script .wsgi
 RewriteEngine On
 RewriteRule ^api/(.*)$ slowdash.wsgi/$1
 ```
-Although dedicated daemon is created for this SlowDash project, currently only one WSGI can be setup on one host. Other SlowDash project must use CGI.
+Although a dedicated daemon is created for this SlowDash project, currently only one WSGI can be set up on one host. The other SlowDash project must use CGI.
 
 
 # Using a Reverse Proxy Server
-Having an external Web server such as Nginx or Apache is often useful for:
+Having an external Web server, such as Nginx or Apache, is often useful for:
 
-- using a common URL string instead of a port number (i.e., `/slowdash` instead of `:18881`)
+- using a standard URL string instead of a port number (i.e., `/slowdash` instead of `:18881`)
 - using a faster HTTP/2 protocol (SlowDash uses HTTP/1.1)
 - enabling HTTPS encryption
 - adding basic authentication
@@ -363,7 +363,7 @@ When setting up a reverse proxy, be aware that
 - SlowDash uses WebSocket at `/ws`, which often needs dedicated routing
 - SlowDash uses "long poll", which needs a longer timeout (typically many days)
 
-For a setup with Docker Compose, examples can be found at `ExampleProjects/ReverseProxy`.
+For a setup with Docker Compose, examples can be found in the `ExampleProjects/ReverseProxy` directory.
 
 ### Nginx Setting
 This is the reverse proxy part of Nginx configuration, including WebSocket and considering Long Poll.
@@ -398,7 +398,7 @@ $ sudo a2enmod proxy_http
 $ sudo a2enmod proxy_wstunnel
 ```
 
-And this is the reverse proxy part of the Apache configuration, including WebSocket and considering Long Poll.
+This is the reverse proxy part of the Apache configuration, which includes WebSocket and long polling.
 ```apache
 <VirtualHost *:80>
     ProxyPreserveHost On
@@ -437,13 +437,13 @@ slowdash_project:
   export:
     - type: jupyter
       url: http://localhost:8888
-      token: YOUR_VERY_SECRET_JUPYTER_TOKEN     # consider passing this through environmental variable
+      token: YOUR_VERY_SECRET_JUPYTER_TOKEN     # consider passing this through an environmental variable
 ```
 
 ## Docker
-A docker image that includes both SlowPy library and the Jupyter server is available on DockerHub and GitHub CR. You can also build the image locally by `make docker`.
+A Docker image that includes both the SlowPy library and the Jupyter server is available on DockerHub and GitHub CR. You can also build the image locally by `make docker`.
 
-Include this image in the `docker-compose.yaml`, with adding environmental variables about the Jupyter settings to the SlowDash container:
+Include this image in the `docker-compose.yaml`, by adding environmental variables about the Jupyter settings to the SlowDash container:
 ```yaml
   notebook:
     image: slowproj/slowpy-notebook
@@ -467,9 +467,9 @@ Include this image in the `docker-compose.yaml`, with adding environmental varia
       - JUPYTER_INTERNAL_URL=http://notebook:8888      # Jupyter seen from SlowDash
       - SLOWDASH_INTERNAL_URL=http://slowdash:18881    # SlowDash seen from Jypyter
 ```
-Note that the Jupyter and SlowDash URLs are different if accessed within the container system.
+Note that the Jupyter and SlowDash URLs are different when accessed within the container system.
 
-Edit the `SlowdashProject.yaml` file to include the Jupter settings:
+Edit the `SlowdashProject.yaml` file to include the Jupyter settings:
 ```yaml
   export:
     - type: jupyter
@@ -481,7 +481,7 @@ Edit the `SlowdashProject.yaml` file to include the Jupter settings:
 
 
 # SlowDash Watchdog (SlowDog)
-SlowDog sends HTTP requests to the SlowDash server periodically and if it does not receive a reply before timeout, the dog kills the server and restarts another one.
+SlowDog sends HTTP requests to the SlowDash server periodically, and if it does not receive a reply before the timeout, the dog kills the server and restarts another one.
 
 To enable SlowDog, add `--slowdog` option:
 ```console
@@ -492,17 +492,17 @@ SlowDog is enabled in the SlowDash Docker container.
 
 
 # Security Considerations
-As already mentioned, <b>SlowDash is designed for internal use only</b> within a secured network and therefore no security protection is implemented. It is strongly recommended not to expose the system to the public internet. External access is assumed to be done <b>through VPN or ssh tunnel</b>.
+As already mentioned, <b>SlowDash is designed for internal use only</b> within a secured network, and therefore, no security protection is implemented. It is strongly recommended that you do not expose the system to the public internet. External access is assumed to be done <b>through VPN or ssh tunnel</b>.
 
 ### Basic Authentication
-In a case that you cannot trust your internal friends, SlowDash implements the "Basic Authentication". Combine this authentication <b>with HTTPS using a reverse proxy</b> to encrypt the password and communication. There are examples under `ExampleProjects/ReverseProxy'.
+In a case where you cannot trust your internal friends, SlowDash implements the "Basic Authentication". Combine this authentication <b>with HTTPS using a reverse proxy</b> to encrypt the password and communication. There are examples in the `ExampleProjects/ReverseProxy' directory.
 
-To use the Basic Authentication, first install the `bcrypt` Python package if it is not yet installed:
+To use Basic Authentication, first install the `bcrypt` Python package if it is not yet installed:
 ```console
 $ pip3 install bcrypt
 ```
 
-Then generate an authentication key by the `slowdash-generate-key.py` script in `slowdash/utils`:
+Then generate an authentication key using the `slowdash-generate-key.py` script in `slowdash/utils`:
 ```console
 $ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash
 {
@@ -513,7 +513,7 @@ $ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash
 }
 ```
 
-Here the first argument is the user name and the second is the password.
+Here, the first argument is the user name and the second is the password.
 
 Add the key in the project configuration file under the  `authentication` entry:
 ```yaml
@@ -525,7 +525,7 @@ slowdash_project:
     key: slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS
 ```
 
-This key can also be used for Apache, but some Apache keys, especially old ones such as MD5 keys which are still widely used, can not be used for SlowDash.
+This key can also be used for Apache, but some Apache keys, especially old ones such as MD5 keys, which are still widely used, can not be used for SlowDash.
 
 
 #### Only for the CGI/WSGI mode
@@ -539,11 +539,11 @@ User: slow
 continue? [Y/n] y
 ...
 ```
-Note that a new line, `User: slow`, is now added.
+Note that a new line, `User: slow`, has been added.
 
 
 ### Built-in HTTPS server (ASGI only)
-If SlowDash runs in the ASGI mode, a built-in HTTPS mode can be used. To use this feature, provide the SSL/TLS key and certification files to the `slowdash` command:
+If SlowDash runs in ASGI mode, a built-in HTTPS mode is available. To use this feature, provide the SSL/TLS key and certification files to the `slowdash` command:
 ```console
 $ slowdash  --port=18881  --ssl-keyfile=KEY_FILE  --ssl-certfile=CERT_FILE
 ```
@@ -553,9 +553,9 @@ This feature might be dropped in future SlowDash releases. Using a reverse proxy
 
 # Advanced Topics
 ## Dynamic Generation of Config Contents
-Configuration of SlowDash contents (dashboard, plot layout, etc.) are described in JSON/YAML files in the project `config` directory, with a name like `slowplot-XXX.json`. These statis JSON/YAML (or any files with a name like `TYPE-XXX.EXT` placed in `config`) can be replaced with a Python script that generates the contents dynamically. To do so, place a Python script with a name like `slowplot-XXX.py` instead of `slowplot-XXX.json`, and define `async _setup(app)` function that returns the config content. The `app` parameter here is the SlowDash App object, with which you can access SlowDash resources such as the channel list.
+Configuration of SlowDash contents (dashboard, plot layout, etc.) is described in JSON/YAML files in the project `config` directory, with a name like `slowplot-XXX.json`. These static JSON/YAML (or any files with a name like `TYPE-XXX.EXT` placed in `config`) can be replaced with a Python script that generates the contents dynamically. To do so, put a Python script with a name like `slowplot-XXX.py` instead of `slowplot-XXX.json`, and define an `async _setup(app)` function that returns the config content. The `app` parameter here is the SlowDash App object, with which you can access SlowDash resources such as the channel list.
 
-This is an example to dynamically generate a slowplot page that shows all the time-series channels. This example can be found in `ExampleProjects/Advanced/DynamicLayout`.
+This is an example of dynamically generating a slowplot page that shows all the time-series channels. This example can be found in `ExampleProjects/Advanced/DynamicLayout`.
 ```python
 import logging
 
