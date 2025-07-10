@@ -34,7 +34,7 @@ slowdash_project:
 
 By default, user modules are not enabled when the server program is launched via CGI. 
 To enable this, set the `enabled_for_cgi` parameter to `true`. 
-Be careful of all side effects, including performance overhead and security issues. 
+Be cautious of all potential side effects, including performance overhead and security risks. 
 As multiple user modules can be loaded in parallel, splitting user functions between a CGI-enabled module and a disabled one might be a good strategy.
 
 ### Example
@@ -76,7 +76,7 @@ def _get_data(channel):
 
 
 ### Called when web clients send a command.
-# If command is not recognized, return None
+# If the command is not recognized, return None
 # elif command is executed successfully, return True
 # else return False or { "status": "error", "message": ... }
 def _process_command(doc):
@@ -163,7 +163,7 @@ if __name__ == '__main__':
 ### Testing the Module
 Running the `slowdash` command without the port number option displays the query result on screen. The query string is provided as the first argument.
 
-The following two queries are useful for testing a data source module:
+The following two queries help test a data source module:
 
 - `channels`: query for a channel list
 - `data/CHANNEL`: query for data from the channel
@@ -244,7 +244,7 @@ def _loop():
     time.sleep(0.1)
 ```
 
-If the `_run()` function is defined, a dedicated thread is created and the function will be started immediately after `_initialize()`. 
+If the `_run()` function is defined, a dedicated thread is created, and the function will be started immediately after `_initialize()`. 
 When `_run()` is used, a terminator function, `_halt()`, should also be defined in the user module to stop the thread. 
 The `_halt()` function is called just before `_finalize()`. 
 A typical construction of `_run()` and `_halt()` looks like:
@@ -348,7 +348,7 @@ Optionally, `_setup()` can take a second argument, `params`, which is identical 
 Note that most SlowDash App services are async and must be called with `await` in an `async` user function (or handle the return values properly, e.g., with `asyncio.gather()`).
 
 ## Dynamic Generation of HTML Content
-HTML forms associated with a user module (`html-WorldClock.html` in the example above) can be created from the user module instead of placing a separate HTML file in the `config` directory. 
+HTML forms associated with a user module (`html-WorldClock.html` in the example above) can be created directly from the user module, eliminating the need for a separate HTML file in the `config` directory. 
 For this, define the `_get_html()` callback function and return the HTML text:
 ```python
 def _get_html():
@@ -361,10 +361,10 @@ def _get_html():
 ```
 This will insert an HTML element as if a file named `html-UserModuleName.html` existed in the `config` directory.
 
-When an HTML panel is placed on a layout, there is an "On Update" option with a "reload HTML" checkbox. 
-If this is checked, the HTML content is reloaded on every data update, enabling a user module to dynamically generate data content.
-The HTML does not have to be a form but can be any valid HTML elements. 
-A table with live values would be a typical example for this kind of application.
+When an HTML panel is placed on a layout, an "On Update" option is available, which includes a "reload HTML" checkbox. 
+If this option is checked, the HTML content is reloaded with every data update, enabling a user module to generate dynamic data content.
+The HTML does not have to be a form; it can be any valid HTML element. 
+A table with live values would be a typical example of this kind of application.
 
 To create multiple HTML forms, define the `_get_html_list()` callback function that returns a list of names. 
 A name from the list will be passed to the `_get_html(name)` callback.
@@ -415,7 +415,7 @@ def _get_layout(name):
 
 ## Overriding SlowDash Web API
 SlowDash uses the Slowlette Web framework, described in the [Web Server section](Slowlette.html), to handle Web API requests. 
-If a Slowlette App instance is defined in a User Module, it will be integrated into the SlowDash Web API based on the aggregation mechanism of Slowlette. 
+If a Slowlette App instance is defined in a User Module, it will be integrated into the SlowDash Web API using the Slowlette aggregation mechanism. 
 This feature can be used to add new APIs or modify existing APIs. 
 Be extremely careful when using this because modifying APIs can easily disrupt the entire SlowDash behavior.
 
@@ -449,7 +449,7 @@ def get_data(channels:str, length:float=None, to:float=None, resample:float=None
 
     return record
 ```
-Directly handling the Web API allows User Modules to do anything for the request. 
+Directly handling the Web API allows User Modules to perform any action for the request. 
 Slowlette will distribute a web request to all possible (matching) handlers in the system and aggregate the multiple responses. 
 The handler for `/channels` above returns only one channel, but the client (web browser) will receive the entire list of channels due to this aggregation mechanism. 
 
