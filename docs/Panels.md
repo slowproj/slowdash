@@ -10,13 +10,13 @@ title: UI Panels
 <img src="fig/Panel-Canvas-Simple.png" style="width:40%;margin-left:2em;border:thin solid gray">
 
 - Canvas = Base_Image + Items (although base image is an item).
-- Items are graphical element on the base image.
+- Items are graphical elements on the base image.
 - Most items are bound to data values (metric).
-- Most items (can) show data values by text next to it.
+- Most items can show data values by text next to them.
 - "Shape Items" (can) show active/non-active status based on data values.
 
 ## User Canvas Configuration File
-- User configuration file describes the base image and elements.
+- The user configuration file describes the base image and elements.
 - The file is located under `PROJECT/config`, and the name must be `slowdash-NAME.json`.
 - Example from `Projects/ATDS/Config`:
 ```json
@@ -66,7 +66,7 @@ title: UI Panels
 - `forms` is for a mini control panel to send commands to server-side scripts (typically to control the device).
 
 ### Item Attributes
-- Attributes describes how the items appear on the canvas.
+- Attributes describe how the items appear on the canvas.
 - Attributes are mostly identical to SVG attributes for the corresponding shape, with some additions.
 - Commonly used SVG attributes are:
   - `x`, `y`, `width`, `height`: position and size of the item on the canvas
@@ -97,12 +97,12 @@ title: UI Panels
 
 - `active-above` and/or `active-below` defines the active range. The color of the item changes accordingly.
 - `format` is used for data indicator text.
-- `tolerable-gap` can be specified for gap in time-series before alarm icon is shown. Default is 60 sec.
+- `tolerable-gap` can be specified for the gap in time-series before the alarm icon is shown. The default is 60 sec.
 
 ### Action Binding
 - Items can have associated actions. 
 - Actions can be:
-  - sending commands to a server-side user scripts (see [UserModule](UserModule.html))
+  - sending commands to a server-side user script (see [UserModule](UserModule.html))
   - opening a web page
  
 ##### Example: Opening a web page
@@ -112,14 +112,14 @@ title: UI Panels
     ...
 }
 ```
-##### Example: Sending a command to server-side User Module
+##### Example: Sending a command to the server-side User Module
 ```json
 {
     "action": { "submit": { "action": "restart_IG" } },
     ...
 }
 ```
-##### Example: Sending a command to server-side User Module with parameters ("form")
+##### Example: Sending a command to the server-side User Module with parameters ("form")
 ```json
 {
     "action": { "form": "AlicatFlow" },
@@ -168,7 +168,7 @@ The configuration above creates a form like this (bottom part of the panel):
 
 ### Grid
 - type: `grid`
-- draws coordinate grids. Useful when placing elements on base image.
+- draws coordinate grids. Useful when placing elements on the base image.
 <p>
 - Tips: change `type: grid` to `_type: grid` to disable the grid once item placement is completed.
 
@@ -187,7 +187,7 @@ The configuration above creates a form like this (bottom part of the panel):
 ```
 <img src="fig/Panel-Canvas-Grid.png" style="width:40%;border:thin solid gray">
 
-- Here the image file size is 1003x553. The `width` and `height` attributes are set to match the image dimension. Changing these values scales the image.
+- Here the image file size is 1003x553. The `width` and `height` attributes are set to match the image dimensions. Changing these values will scale the image.
 - The `x` and `y` attributes are adjusted to align the image component nicely on the grid.
 - The global `view_box` defines the overall coordinate, in (xmin, ymin, xmax, ymax). Non-zero min values are often useful to adjust the margin.
 
@@ -267,7 +267,7 @@ Mandatory attributes and default values are:
 <p>
 - Text with static attributes only creates a static text label.
 - Text with `"action": {"open": URL}` creates a hyperlink.
-- Text with `metric` shows only the data values. (the `text` attribute will have no effect.)
+- Text with `metric` shows only the data values. (The `text` attribute will have no effect.)
 
 Mandatory attributes and default values are:
 ```json
@@ -329,7 +329,7 @@ Mandatory attributes and default values for a `plot` are:
 
 # Map
 - Map is a schematic representation of a graph of `(x,y)`.
-- The graph value of `x` is used for index of elements, and `y` is used for color.
+- The graph value of `x` is used for the index of elements, and `y` is used for color.
 - Element shapes are described in a user configuration file.
 
 <img src="fig/Panel-Map-KL.png" style="width:30%;margin-left:2em;border:thin solid gray">
@@ -400,7 +400,7 @@ $ PATH/TO/SLOWDASH/xy2map.py NAME.csv > map-NAME.json
   
 
 # HTML / Form
-- Displays a HTML page described in an user HTML file stored under the user configuration directory.
+- Displays an HTML page described in a user HTML file stored under the user configuration directory.
 - The user configuration file can contain a `<form>` to send commands to the server-side user script.
 - When the form is submitted, a function in the user script (dispatcher) is called with the form data as a JSON object (see the [User Module section](UserModule.html)).
 <p>
@@ -436,7 +436,7 @@ Temperature: <span sd-value="ch1->last()->format('%.1f degC')">---</span>
 ```
 
 - Either full or partial HTML can be used. CSS in `<head>` works.
-- Use `<form>` to submit command to the server-side user code.
+- Use `<form>` to submit a command to the server-side user code.
 
 #### Data Binding
 - `<span>` and `<div>` can have a binding to data: use the `sd-value=METRIC` attribute.
@@ -461,7 +461,7 @@ Temperature: <span sd-value="ch1->last()->format('%.1f degC')">---</span>
 
 # Blob
 - Primarily intended for image data, but can be used for many others.
-- Data must have a MIME type and URL.
+- Data must have a MIME type and a URL.
 
 ##### Implementation
 - For mime type of `image/*`, `<img src="...">`
