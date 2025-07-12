@@ -115,6 +115,9 @@ class ConfigComponent(Component):
         
     @slowlette.get('/api/config/contentlist')
     async def get_content_meta(self):
+        if self.project_dir is None:
+            return []
+        
         filelist = []
         for filepath in glob.glob(os.path.join(self.project_dir, 'config', '*-*.*')):
             filelist.append([filepath, int(os.path.getmtime(filepath))])
@@ -213,6 +216,9 @@ class ConfigComponent(Component):
         
     @slowlette.post('/api/config/file/{filename}')
     async def post_file(self, filename: str, body:bytes, overwrite:str='no'):
+        if self.project_dir is None:
+            return slowlette.Response(403)   # Forbidden
+        
         filepath, ext = self._get_filepath_ext(filename)
         if filepath is None:
             logging.warning(f'POST config/file: {filename}: access denied')
