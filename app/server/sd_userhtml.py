@@ -10,6 +10,9 @@ class UserHtmlComponent(Component):
     def __init__(self, app, project):
         super().__init__(app, project)
 
+        if self.app.project_dir is None:
+            return
+
         # userhtml files
         self.slowlette.include(slowlette.FileServer(
             filedir = os.path.join(self.app.project_dir, 'userhtml'),
@@ -35,6 +38,9 @@ class UserHtmlComponent(Component):
 
     @slowlette.get('/api/config/contentlist')
     async def get_content_meta(self):
+        if self.app.project_dir is None:
+            return
+
         filelist = []
         for filepath in glob.glob(os.path.join(self.app.project_dir, 'userhtml', '*.html')):
             filelist.append([filepath, int(os.path.getmtime(filepath))])

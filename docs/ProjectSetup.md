@@ -497,10 +497,6 @@ As already mentioned, <b>SlowDash is designed for internal use only</b> within a
 ### Basic Authentication
 In a case where you cannot trust your internal friends, SlowDash implements the "Basic Authentication". Combine this authentication <b>with HTTPS using a reverse proxy</b> to encrypt the password and communication. There are examples in the `ExampleProjects/ReverseProxy' directory.
 
-To use Basic Authentication, first install the `bcrypt` Python package if it is not yet installed:
-```console
-$ pip3 install bcrypt
-```
 
 Then generate an authentication key using the `slowdash-generate-key.py` script in `slowdash/utils`:
 ```console

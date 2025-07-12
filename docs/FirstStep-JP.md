@@ -534,7 +534,6 @@ $ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash
     "key": "slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS"
 }
 ```
-このプログラムの実行に `bcrypt` パッケージを入れる必要があるかもしれません (`pip install bcrypt`)．
 
 リバースプロキシの設定方法については，大規模言語モデル系の AI が詳しく教えてくれます．SlowDash の `ExampleProjects/ReverseProxy_Nginx` に Nginx を Docker Compose でリバースプロキシとして使う例もあります．もとのポートを塞いでおくのを忘れないでください．
 

@@ -103,9 +103,9 @@ the Server</a>
 <li><a href="#running-in-a-docker-container"
 id="toc-running-in-a-docker-container">Running in a Docker
 Container</a></li>
-<li><a href="#running-as-a-bare-metal-user-process"
-id="toc-running-as-a-bare-metal-user-process">Running as a Bare-Metal
-User Process</a></li>
+<li><a href="#running-natively-without-containers"
+id="toc-running-natively-without-containers">Running Natively (without
+Containers)</a></li>
 <li><a href="#launching-from-apache-web-server-cgi-or-wsgi"
 id="toc-launching-from-apache-web-server-cgi-or-wsgi">Launching from
 Apache Web Server (CGI or WSGI)</a></li>
@@ -116,7 +116,8 @@ Server</a></li>
 <li><a href="#jupyter-integration" id="toc-jupyter-integration">Jupyter
 Integration</a>
 <ul>
-<li><a href="#bare-metal" id="toc-bare-metal">Bare-Metal</a></li>
+<li><a href="#native-without-containers"
+id="toc-native-without-containers">Native (without containers)</a></li>
 <li><a href="#docker" id="toc-docker">Docker</a></li>
 </ul></li>
 <li><a href="#slowdash-watchdog-slowdog"
@@ -405,8 +406,8 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb11-1"><a href=
 <span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881:18881&quot;</span></span></code></pre></div>
 <div class="sourceCode" id="cb12"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span></code></pre></div>
-<h2 id="running-as-a-bare-metal-user-process">Running as a Bare-Metal
-User Process</h2>
+<h2 id="running-natively-without-containers">Running Natively (without
+Containers)</h2>
 <div class="sourceCode" id="cb13"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash --project-dir=PROJECT_DIR --port=18881</span></span></code></pre></div>
 <ul>
@@ -417,7 +418,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <p></li>
 </ul></li>
 <li>The <code>slowdash</code> process must keep running while accepting
-the Web requests. For this, a terminal multiplexer, such as “tumx” or
+the Web requests. For this, a terminal multiplexer, such as “tmux” or
 “GNU Screen” would be useful.</li>
 </ul>
 <h2 id="launching-from-apache-web-server-cgi-or-wsgi">Launching from
@@ -618,14 +619,14 @@ class="sourceCode apache"><code class="sourceCode apache"><span id="cb21-1"><a h
 <p>Replace <code>SLOWDASH_HOST</code> with your actual SlowDash host
 name. A full working example in Docker Compose with more features such
 as HTTPS, HTTP/2, and Basic Authentication can be found in
-<code>ExampleProjects/ReverseProxy/Apahce</code>.</p>
+<code>ExampleProjects/ReverseProxy/Apache</code>.</p>
 <h1 id="jupyter-integration">Jupyter Integration</h1>
 <p>By providing Jupyter URL and token in
 <code>SlowdashProject.yaml</code>, SlowDash can export the displayed
 data to Jupyter Notebook so that users can continue analysis on Jupyter.
 Two examples, with and without a reverse proxy, can be found in
 <code>ExampleProject/Jupyter</code>.</p>
-<h2 id="bare-metal">Bare-Metal</h2>
+<h2 id="native-without-containers">Native (without containers)</h2>
 <div class="sourceCode" id="cb22"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Jupyter Test</span></span>
@@ -663,7 +664,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb23-1"><a href=
 <span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> JUPYTER_URL=http://localhost:8888</span></span>
 <span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> JUPYTER_TOKEN=YOUR_VERY_SECRET_JUPYTER_TOKEN</span></span>
 <span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> JUPYTER_INTERNAL_URL=http://notebook:8888</span><span class="co">      # Jupyter seen from SlowDash</span></span>
-<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> SLOWDASH_INTERNAL_URL=http://slowdash:18881</span><span class="co">    # SlowDash seen from Jypyter</span></span></code></pre></div>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> SLOWDASH_INTERNAL_URL=http://slowdash:18881</span><span class="co">    # SlowDash seen from Jupyter</span></span></code></pre></div>
 <p>Note that the Jupyter and SlowDash URLs are different when accessed
 within the container system.</p>
 <p>Edit the <code>SlowdashProject.yaml</code> file to include the
@@ -674,7 +675,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb24-1"><a href=
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">url</span><span class="kw">:</span><span class="at"> ${JUPYTER_URL}</span></span>
 <span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">token</span><span class="kw">:</span><span class="at"> ${JUPYTER_TOKEN}</span></span>
 <span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">jupyter_internal_url</span><span class="kw">:</span><span class="at"> ${JUPYTER_INTERNAL_URL}</span><span class="co">      # Jupyter seen from SlowDash</span></span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">slowdash_internal_url</span><span class="kw">:</span><span class="at"> ${SLOWDASH_INTERNAL_URL}</span><span class="co">    # SlowDash seen from Jypyter</span></span></code></pre></div>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">slowdash_internal_url</span><span class="kw">:</span><span class="at"> ${SLOWDASH_INTERNAL_URL}</span><span class="co">    # SlowDash seen from Jupyter</span></span></code></pre></div>
 <h1 id="slowdash-watchdog-slowdog">SlowDash Watchdog (SlowDog)</h1>
 <p>SlowDog sends HTTP requests to the SlowDash server periodically, and
 if it does not receive a reply before the timeout, the dog kills the
@@ -695,54 +696,50 @@ implements the “Basic Authentication”. Combine this authentication
 <b>with HTTPS using a reverse proxy</b> to encrypt the password and
 communication. There are examples in the `ExampleProjects/ReverseProxy’
 directory.</p>
-<p>To use Basic Authentication, first install the <code>bcrypt</code>
-Python package if it is not yet installed:</p>
-<div class="sourceCode" id="cb26"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pip3 install bcrypt</span></span></code></pre></div>
 <p>Then generate an authentication key using the
 <code>slowdash-generate-key.py</code> script in
 <code>slowdash/utils</code>:</p>
-<div class="sourceCode" id="cb27"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    &quot;authentication&quot;: {</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>        &quot;type&quot;: &quot;Basic&quot;,</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>        &quot;key&quot;: &quot;slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS&quot;</span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    &quot;authentication&quot;: {</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>        &quot;type&quot;: &quot;Basic&quot;,</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>        &quot;key&quot;: &quot;slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS&quot;</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>Here, the first argument is the user name and the second is the
 password.</p>
 <p>Add the key in the project configuration file under the
 <code>authentication</code> entry:</p>
-<div class="sourceCode" id="cb28"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="at">  ...</span></span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">authentication</span><span class="kw">:</span></span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> Basic</span></span>
-<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">key</span><span class="kw">:</span><span class="at"> slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS</span></span></code></pre></div>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="at">  ...</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">authentication</span><span class="kw">:</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> Basic</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">key</span><span class="kw">:</span><span class="at"> slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS</span></span></code></pre></div>
 <p>This key can also be used for Apache, but some Apache keys,
 especially old ones such as MD5 keys, which are still widely used, can
 not be used for SlowDash.</p>
 <h4 id="only-for-the-cgiwsgi-mode">Only for the CGI/WSGI mode</h4>
 <p>Rerun the <code>slowdash-setup-apache.py</code> command to update the
 Web Server configuration.</p>
-<div class="sourceCode" id="cb29"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ PATH/TO/SLOWDASH/utils/slowdash-setup-apache.py --interface=CGI   (or --interface=WSGI)</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>Project: MySlowSystem</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>Project directory: /home/sanshiro/MySlowSystem/SlowdashProject</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>Web-file directory: /home/sanshiro/public_html/SlowDash/MySlowSystem</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>User: slow</span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>continue? [Y/n] y</span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ PATH/TO/SLOWDASH/utils/slowdash-setup-apache.py --interface=CGI   (or --interface=WSGI)</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>Project: MySlowSystem</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>Project directory: /home/sanshiro/MySlowSystem/SlowdashProject</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>Web-file directory: /home/sanshiro/public_html/SlowDash/MySlowSystem</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>User: slow</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>continue? [Y/n] y</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
 <p>Note that a new line, <code>User: slow</code>, has been added.</p>
 <h3 id="built-in-https-server-asgi-only">Built-in HTTPS server (ASGI
 only)</h3>
 <p>If SlowDash runs in ASGI mode, a built-in HTTPS mode is available. To
 use this feature, provide the SSL/TLS key and certification files to the
 <code>slowdash</code> command:</p>
-<div class="sourceCode" id="cb30"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash  --port=18881  --ssl-keyfile=KEY_FILE  --ssl-certfile=CERT_FILE</span></span></code></pre></div>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash  --port=18881  --ssl-keyfile=KEY_FILE  --ssl-certfile=CERT_FILE</span></span></code></pre></div>
 <p>This feature might be dropped in future SlowDash releases. Using a
 reverse proxy server is recommended for long-term setups.</p>
 <h1 id="advanced-topics">Advanced Topics</h1>
@@ -762,21 +759,21 @@ which you can access SlowDash resources such as the channel list.</p>
 <p>This is an example of dynamically generating a slowplot page that
 shows all the time-series channels. This example can be found in
 <code>ExampleProjects/Advanced/DynamicLayout</code>.</p>
-<div class="sourceCode" id="cb31"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> logging</span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> _setup(app):</span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    channels <span class="op">=</span> <span class="cf">await</span> app.request_channels()</span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    logging.debug(<span class="ss">f&#39;Channels: </span><span class="sc">{</span>channels<span class="sc">}</span><span class="ss">&#39;</span>)</span>
-<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>    layout <span class="op">=</span> {</span>
-<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;panels&quot;</span>: [{</span>
-<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;type&quot;</span>: <span class="st">&quot;timeaxis&quot;</span>,</span>
-<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;plots&quot;</span>: [{ <span class="st">&quot;type&quot;</span>: <span class="st">&quot;timeseries&quot;</span>, <span class="st">&quot;channel&quot;</span>: ch[<span class="st">&#39;name&#39;</span>] }]</span>
-<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>        } <span class="cf">for</span> ch <span class="kw">in</span> channels <span class="cf">if</span> ch.get(<span class="st">&#39;type&#39;</span>, <span class="st">&#39;numeric&#39;</span>) <span class="op">==</span> <span class="st">&#39;numeric&#39;</span> ]</span>
-<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> layout</span></code></pre></div>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> logging</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> _setup(app):</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    channels <span class="op">=</span> <span class="cf">await</span> app.request_channels()</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    logging.debug(<span class="ss">f&#39;Channels: </span><span class="sc">{</span>channels<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>    layout <span class="op">=</span> {</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;panels&quot;</span>: [{</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;type&quot;</span>: <span class="st">&quot;timeaxis&quot;</span>,</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;plots&quot;</span>: [{ <span class="st">&quot;type&quot;</span>: <span class="st">&quot;timeseries&quot;</span>, <span class="st">&quot;channel&quot;</span>: ch[<span class="st">&#39;name&#39;</span>] }]</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>        } <span class="cf">for</span> ch <span class="kw">in</span> channels <span class="cf">if</span> ch.get(<span class="st">&#39;type&#39;</span>, <span class="st">&#39;numeric&#39;</span>) <span class="op">==</span> <span class="st">&#39;numeric&#39;</span> ]</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> layout</span></code></pre></div>
 <p>Most functions of the SlowDash App are <code>async</code>, therefore
 these must be called with <code>await</code> in an <code>async</code>
 function, as done in the example above.</p>

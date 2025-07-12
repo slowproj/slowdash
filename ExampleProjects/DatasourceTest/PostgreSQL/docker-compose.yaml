@@ -36,5 +36,5 @@ services:
     image: slowproj/slowdash
     command: python /slowdash/utils/generate-testdata.py --db-url=postgresql://slowdash:slowdash@pgsql_db:5432/SlowTestData
     depends_on:
-      pqsql_db:
+      pgsql_db:
         condition: service_healthy
