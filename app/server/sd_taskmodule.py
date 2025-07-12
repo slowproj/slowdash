@@ -81,7 +81,9 @@ class TaskModule(UserModule):
             if self.command_thread.is_alive():
                 #kill
                 pass
-            self.command_thread.join()
+            self.command_thread.join(timeout=5)
+            if self.command_thread.is_alive():
+                logging.warning('timeout on terminating a task command thread')
             self.command_thread = None
 
         self.touch_status()
@@ -89,7 +91,9 @@ class TaskModule(UserModule):
             if thread.is_alive():
                 #kill
                 pass
-            thread.join()
+            thread.join(timeout=5)
+            if thread.is_alive():
+                logging.warning('timeout on terminating a task thread')
         self.parallel_command_thread_set = set()
         self.touch_status()
 

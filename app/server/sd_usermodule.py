@@ -23,9 +23,12 @@ class UserModuleThread(threading.Thread):
     def run(self):        
         self.eventloop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.eventloop)
-        self.eventloop.run_until_complete(self.go())
-        self.eventloop.close()
-        self.eventloop = None
+        try:
+            self.eventloop.run_until_complete(self.go())
+        finally:
+            # no "catch": propagate the error to make it visible for the user
+            self.eventloop.close()
+            self.eventloop = None
 
         
     async def go(self):
@@ -304,7 +307,7 @@ class UserModule:
         
         for i in range(10):
             if not self.user_thread.loaded_event.is_set():
-                time.sleep(0.1)
+                await asyncio.sleep(0.1)
             else:
                 break
         else:
@@ -320,7 +323,7 @@ class UserModule:
         
         if not self.user_thread.initialized_event.is_set():
             logging.debug('stop before initialization completed')
-            time.sleep(1)
+            await asyncio.sleep(1)
             if not self.user_thread.initialized_event.is_set():
                 logging.warning('User/Task module not yet initialized')
                 
@@ -344,7 +347,9 @@ class UserModule:
         
         self.touch_status()
         if self.user_thread is not None:
-            self.user_thread.join()
+            self.user_thread.join(timeout=5)
+            if self.user_thread.is_alive():
+                self.handle_error('timeout on terminating a user thread')
             self.user_thread = None
             
         self.touch_status()
@@ -385,7 +390,7 @@ class UserModule:
             return None
         
         if not self.user_thread.initialized_event.is_set():
-            time.sleep(1)
+            await asyncio.sleep(1)
             if not self.user_thread.initialized_event.is_set():
                 logging.warning('User/Task module not yet initialized')
                 
@@ -409,7 +414,7 @@ class UserModule:
             return None
         
         if not self.user_thread.initialized_event.is_set():
-            time.sleep(1)
+            await asyncio.sleep(1)
             if not self.user_thread.initialized_event.is_set():
                 logging.warning('User/Task module not yet initialized')
                 
@@ -428,7 +433,7 @@ class UserModule:
             return None
         
         if not self.user_thread.initialized_event.is_set():
-            time.sleep(1)
+            await asyncio.sleep(1)
             if not self.user_thread.initialized_event.is_set():
                 logging.warning('User/Task module not yet initialized')
                 

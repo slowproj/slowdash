@@ -95,6 +95,16 @@ id="toc-ダミーデータで-ui-を動かしてみる">ダミーデータで UI
 id="toc-quick-tour-をやってみる">Quick Tour をやってみる</a></li>
 <li><a href="#docker-コンテナで使う"
 id="toc-docker-コンテナで使う">Docker コンテナで使う</a></li>
+<li><a href="#slowdash-のアップデート"
+id="toc-slowdash-のアップデート">SlowDash のアップデート</a>
+<ul>
+<li><a href="#直接インストール"
+id="toc-直接インストール">直接インストール</a></li>
+<li><a href="#docker-コンテナ" id="toc-docker-コンテナ">Docker
+コンテナ</a></li>
+</ul></li>
+<li><a href="#動作確認用テスト環境"
+id="toc-動作確認用テスト環境">動作確認用テスト環境</a></li>
 <li><a href="#セキュリティについて"
 id="toc-セキュリティについて">セキュリティについて</a></li>
 </ul>
@@ -123,7 +133,7 @@ id="toc-セキュリティについて">セキュリティについて</a></li>
 で行うようなビジュアライゼーションの部分はほぼ実装済みで，解析およびコントロールの部分が開発中です．</p>
 <p>データベースアクセス以外は外部ライブラリを使っておらず，ソフトウェアの寿命が外のライブラリの変更等に影響されることはないようになっています．特に，流行り廃れが激しい
 JavaScript
-の部分はフレームワークなどは使わず，完全に自己完結です（使っていたけど排除しました）．データベース側および解析モジュールは，全て独立なプラグインとなっており，いつでも切り捨てられます．依存性がないので，インストールがとても楽です．それでもインストールをしたくない人のために，Docker
+の部分はフレームワークなどは使わず，完全に自己完結です（使っていたけど排除しました）．データベース側および解析モジュールは，全て独立なプラグインとなっており，いつでも切り捨てられます．依存性がないので，インストールがとても楽で，使用後も痕跡を残さずきれいに削除できます．それでもインストールをしたくない人のために，Docker
 コンテナも提供されています．</p>
 <p><img src="fig/Gallery-ATDS-Dashboard.png" style="width:40%;box-shadow:0px 0px 15px -5px rgba(0,0,0,0.7);">
 <img src="fig/Gallery-RGA.png" style="width:40%;box-shadow:0px 0px 15px -5px rgba(0,0,0,0.7);"></p>
@@ -210,7 +220,7 @@ JavaScript
 </ul></li>
 </ul>
 <h3 id="よくある宣伝">よくある宣伝</h3>
-<p>もはや当たり前だけど，みんな書いているので，いちおう書いておきます．</p>
+<p>みんな書いているので，いちおう書いておきます．</p>
 <ul>
 <li>MVC アーキテクチャに基づいています．</li>
 <li>Web API は全て RESTful です．</li>
@@ -233,14 +243,14 @@ href="https://hub.docker.com/r/slowproj/slowdash">https://hub.docker.com/r/slowp
 href="https://github.com/slowproj/slowdash/pkgs/container/slowdash">https://github.com/slowproj/slowdash/pkgs/container/slowdash</a></li>
 </ul>
 <p>ただ，最初から Docker
-を使うと設定ファイルの扱いなどが面倒だと思います．ここでは，最後に
-Docker を使う手順を解説します．</p>
+を使うと設定ファイルの扱いなどが面倒だと思います．ここでは，Docker
+を使う手順を最後に解説します．</p>
 <h4 id="標準インストール-bare-metal">標準インストール (bare-metal)</h4>
 <p>基本的に Python 3 が動けばすぐ使えます．</p>
 <ul>
 <li>UNIX 風の OS．Ubuntu で開発，macOS とか Windows の WSL
 でも動いた．WinPython でも動くらしい．</li>
-<li>Python 3.9 以上．</li>
+<li>Python 3.9 以上と venv</li>
 <li>ブラウザ．Firefox で開発していて，たまに Chrome と Edge と Safari
 でテストしている．
 <ul>
@@ -683,27 +693,46 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>    &quot;slowdash&quot;: {</span>
 <span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>        &quot;version&quot;: &quot;250128 \&quot;Skykomish\&quot;&quot;</span>
 <span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
-<h3 id="アップデート-1">アップデート</h3>
-<p>SlowDash をアップデートする際は，使用中のコンテナを “down”
-してから，ダウンロードしてあるイメージを削除してください．次の実行時に自動で新しいイメージがダウンロードされます．（これをするとプロジェクトディレクトリ以外の場所に保存していたものは失われます．独自の拡張をしている場合は注意してください．）</p>
+<h1 id="slowdash-のアップデート">SlowDash のアップデート</h1>
+<h2 id="直接インストール">直接インストール</h2>
+<p>Make を使って更新をできます：</p>
 <div class="sourceCode" id="cb32"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down</span></span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker rmi slowproj/slowdash</span></span></code></pre></div>
-<p>ちなみに，使用中のバージョンは，<code>slowdash config</code>
-で表示される他，SlowDash のホーム画面の左上にも表示されています．</p>
-<h3 id="開発用テストベンチ">開発用テストベンチ</h3>
-<p>SlowDash
-を使用したシステムの開発に本番用のデータベースを使いたくない場合や，開発用サーバのインストールが面倒な場合，データベースとかだけのコンテナが
-<code>slowdash/utils/testbench</code>
-にあります．これを利用すれば，PostgreSQL や InfluxDB
-などのデータベース，Redis や Jupyter
-などが即使えて，使用後にすぐにクリーンアップできます．</p>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make update</span></span></code></pre></div>
+<p>手動で行う場合は，<code>git pull</code>
+の際に<code>--recurse-submodule</code>
+を忘れないようにしてください．</p>
 <div class="sourceCode" id="cb33"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH/utils/testbench</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down   （終了後データを消す）</span></span></code></pre></div>
-<p>SlowDash
-をコンテナ内で使用する場合で，設定ファイルやスクリプトの開発に毎回コンテナを起動するのが面倒なときにも，このテストベンチを走らせるとコンテナ外で作業を行えて便利です．</p>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ git pull --recurse-submodules</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make</span></span></code></pre></div>
+<p>この <code>--recurse-submodules</code>
+を忘れることがとても多いです．そして，その場合には，異なるバージョンのソースが混ざるので，それに気づかないとデバッグがとても難しくなります．上記の
+<code>make update</code> を使うのがおすすめです．</p>
+<h2 id="docker-コンテナ">Docker コンテナ</h2>
+<p>SlowDash をアップデートする際は，使用中のコンテナを “down”
+してから，ダウンロードしてあるイメージを削除してください．次の実行時に自動で新しいイメージがダウンロードされます．（これをするとプロジェクトディレクトリ以外の場所に保存していたものは失われます．コンテナ内に直接データを保存している場合や独自の拡張をしている場合は注意してください．）</p>
+<div class="sourceCode" id="cb34"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker rmi slowproj/slowdash</span></span></code></pre></div>
+<p>使用中の SlowDash バージョンが SlowDash
+のホーム画面の左上に表示されているので，ここでちゃんと更新されたかを確認できます．</p>
+<h1 id="動作確認用テスト環境">動作確認用テスト環境</h1>
+<p>SlowDash が頻繁に利用するデータベースや Jupyter
+などを集めたコンテナが <code>slowdash/utils/testbench</code>
+にあります．
+システム開発時に本番用のデータベースを使いたくない場合や，開発用サーバのインストールが面倒な場合に，すぐに使えてすぐに消せて便利です．</p>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH/utils/testbench</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down   （終了後データを消す）</span></span></code></pre></div>
+<p>PostgreSQL, MySQL, InfluxDB, Redis, Jupyter
+などがすべて使えるようになります．
+（これらがすでに走っている場合は，コメントアウトかポート番号の変更が必要です．）</p>
+<p>このテスト環境は，SlowDash
+自体がコンテナに入っていなくても（直接実行でも）使えます． SlowDash
+をコンテナ内で使用する場合でも，設定ファイルやスクリプトの開発はコンテナの外で（SlowDash
+だけはターミナルで直接実行）して，ある程度完成してからコンテナに入れた方が，変更のたびにコンテナの再起動をしなくて済むので楽です．</p>
 <h1 id="セキュリティについて">セキュリティについて</h1>
 <p><b>SlowDash
 は，ファイアウォールの内部で使う目的で作られています．</b>
@@ -716,23 +745,23 @@ HTTPS に乗せ換え，パスワードと通信を暗号化してください�
 <p>基本認証の設定は，<code>SlowdashProject.yaml</code> に
 <code>authentication</code>
 エントリを追加し，パスワードハッシュを指定します．</p>
-<div class="sourceCode" id="cb34"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="at">  ...</span></span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">authentication</span><span class="kw">:</span></span>
-<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> Basic</span></span>
-<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">key</span><span class="kw">:</span><span class="at"> slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS</span></span></code></pre></div>
+<div class="sourceCode" id="cb36"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="at">  ...</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">authentication</span><span class="kw">:</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> Basic</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">key</span><span class="kw">:</span><span class="at"> slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS</span></span></code></pre></div>
 <p>パスワードハッシュは，Apache の bcrypt
 と同じ形式ですが，<code>slowdash/utils</code> にある
 <code>slowdash-generate-key.py</code>
 プログラムで作ることもできます．</p>
-<div class="sourceCode" id="cb35"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    &quot;type&quot;: &quot;Basic&quot;,</span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    &quot;key&quot;: &quot;slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS&quot;</span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    &quot;type&quot;: &quot;Basic&quot;,</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    &quot;key&quot;: &quot;slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS&quot;</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>このプログラムの実行に <code>bcrypt</code>
 パッケージを入れる必要があるかもしれません
 (<code>pip install bcrypt</code>)．</p>
@@ -746,12 +775,14 @@ Compose
 モードで使っている場合，リバースプロキシの代わりに，組み込みの HTTPS
 サーバーを使うこともできます．SSL/TLS 鍵ファイルと認証ファイルを指定して
 <code>slowdash</code> を起動してください．</p>
-<div class="sourceCode" id="cb36"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash  --port=18881  --ssl-keyfile=KEY_FILE  --ssl-certfile=CERT_FILE</span></span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>...</span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>Listening at port 18881 (ASGI HTTPS)</span></code></pre></div>
+<div class="sourceCode" id="cb38"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash  --port=18881  --ssl-keyfile=KEY_FILE  --ssl-certfile=CERT_FILE</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>Listening at port 18881 (ASGI HTTPS)</span></code></pre></div>
 <p>ただし，この機能は将来の SlowDash
-では削除されるかもしれません．長期使用するシステムでは，ちゃんとしたリバースプロキシを使用するのがいいと思います．</p>
+では削除されるかもしれません．長期使用するシステムでは，ちゃんとしたリバースプロキシを使用するのがいいと思います．
+Docker で Nginx または Apache を使った構成例が
+<code>ExampleProjects/ReverseProxy</code> にあります．</p>
 <div style="margin-bottom:10rem"/>
 
 

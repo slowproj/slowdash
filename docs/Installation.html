@@ -96,8 +96,9 @@ Images (Linux, Windows WSL, Mac)</a></li>
 <li><a href="#building-images-locally"
 id="toc-building-images-locally">Building Images Locally</a></li>
 </ul></li>
-<li><a href="#bare-metal-installation"
-id="toc-bare-metal-installation">Bare-Metal Installation</a>
+<li><a href="#native-no-container-installation"
+id="toc-native-no-container-installation">Native (no container)
+Installation</a>
 <ul>
 <li><a href="#setup" id="toc-setup">Setup</a></li>
 <li><a href="#verifying-installation"
@@ -135,8 +136,8 @@ Requirements</h3>
 <li>Git</li>
 <li>Docker and Docker Compose</li>
 </ul>
-<h3 id="bare-metal-installation-requirements">Bare-Metal Installation
-Requirements</h3>
+<h3 id="native-no-container-installation-requirements">Native (no
+container) Installation Requirements</h3>
 <p>
 <ul>
 <li>Git</li>
@@ -198,7 +199,8 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker rmi -f slowdash slowpy-notebook</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker build -t slowdash .</span></span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker build -t slowpy-notebook -f ./lib/slowpy/Dockerfile ./lib/slowpy</span></span></code></pre></div>
-<h1 id="bare-metal-installation">Bare-Metal Installation</h1>
+<h1 id="native-no-container-installation">Native (no container)
+Installation</h1>
 <h2 id="setup">Setup</h2>
 <h3 id="using-virtual-environment-recommended">Using Virtual Environment
 (Recommended)</h3>
@@ -219,8 +221,8 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> slowdash=<span class="st">&quot;</span><span class="va">$SLOWDASH_DIR</span><span class="st">/bin/slowdash&quot;</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> slowdash-activate-venv=<span class="st">&quot;source </span><span class="va">$SLOWDASH_DIR</span><span class="st">/venv/bin/activate&quot;</span></span></code></pre></div>
 <p>For permanent installation, it might be convenient to include the
-<code>source</code> command in the <code>.bashrc</code> (or `.zshrc on
-Mac) file at your home directory.</p>
+<code>source</code> command in the <code>.bashrc</code> (or
+<code>.zshrc</code> on Mac) file at your home directory.</p>
 <h3 id="system-wide-installation">System-wide Installation</h3>
 <div class="sourceCode" id="cb9"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ git clone https://github.com/slowproj/slowdash.git --recurse-submodules</span></span>

@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 31 December 2024 #
 
 
-import sys, io, asyncio, logging
+import sys, io, collections, asyncio, logging
 
 import slowlette
 from sd_component import Component
@@ -47,8 +47,8 @@ class ConsoleComponent(Component):
         self.console_stdin = None
         self.console_stdout = None
         self.console_awaitable_stdout = None
-        self.console_outputs = []
         self.max_lines = 10000
+        self.console_outputs = collections.deque(maxlen=self.max_lines)
 
         if self.enabled:
             self.console_stdin = io.StringIO()
@@ -114,9 +114,7 @@ class ConsoleComponent(Component):
             self.console_stdout.truncate(0)
             self.console_stdout.seek(0)
             
-            self.console_outputs += [ line for line in output.split('\n') if len(line)>0 ]
-            if len(self.console_outputs) > self.max_lines:
-                self.console_outputs = self.console_outputs[-max_lines:]
+            self.console_outputs.extend([ line for line in output.split('\n') if len(line)>0 ])
             self.revision += 1
 
         if len(self.console_outputs) == 0:

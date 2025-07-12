@@ -48,11 +48,11 @@ class PubsubComponent(Component):
                         await self.app.request('/control/currentdata', message.encode())
                         await self.app.request('/publish/currentdata', message)
         except slowlette.ConnectionClosed:
-            self.websockets[topic].remove(websocket)
             logging.info("WebSocket Closed")
         except Exception as e:
-            self.websockets[topic].remove(websocket)
             logging.info(f"WebSocket Closed by error: {e}")
+        finally:
+            self.websockets[topic].remove(websocket)
 
             
     @slowlette.post('/api/publish/{topic}')

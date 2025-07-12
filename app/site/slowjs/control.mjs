@@ -18,6 +18,7 @@ export class Controller {
         
         this.view = view;
         this.currentData = null;
+        this.isUpdateRunning = false;
 
         this.socket = null;
         this._setupStreaming();
@@ -87,6 +88,11 @@ export class Controller {
 
     
     async update(range=null) {
+        if (this.isUpdateRunning) {
+            return;
+        }
+        this.isUpdateRunning = true;
+        
         // If the range is not specified, use the same range as before, and reuse the loaded data.
         if (range !== null) {
             this.currentData = {
@@ -110,6 +116,7 @@ export class Controller {
         
         if (Object.keys(channels).length <= 0) {
             this.view.draw(this.currentData);
+            this.isUpdateRunning = false;
             return {code:200, text:'OK'};
         }
         this.currentData.__meta.isPartial = true;
@@ -169,6 +176,8 @@ export class Controller {
         if ((this.socket === null) && (status.code > 0)) {
             this._setupStreaming();
         }
+        
+        this.isUpdateRunning = false;
         
         return status;
     }

@@ -196,7 +196,7 @@ $ slowdash "data/ch00?length=10"
 ### Step 1: Launch the SlowDash Server
 This step starts a SlowDash server on port 18881. To stop the server, press `Ctrl`-`c`.
 
-#### Bare-Metal
+#### Native (directly on the host, without containers)
 ```console
 $ slowdash --port=18881
 ```

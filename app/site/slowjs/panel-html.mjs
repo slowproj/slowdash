@@ -170,7 +170,7 @@ class HtmlPanel extends Panel {
         }
         const html = await response.text();
         if (html) {
-            this._render(html);
+            this._render(html);  // everything will be rendered; injections, XSS, ..., are accepted by users risk
             this._adjustScaling();
         }
     }

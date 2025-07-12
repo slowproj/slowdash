@@ -238,7 +238,7 @@ services:
 $ docker compose up
 ```
 
-## Running as a Bare-Metal User Process
+## Running Natively (without Containers)
 ```console
 $ slowdash --project-dir=PROJECT_DIR --port=18881
 ```
@@ -246,7 +246,7 @@ $ slowdash --project-dir=PROJECT_DIR --port=18881
   - `SLOWDASH_PROJECT` environment variable is set, or
   - `slowdash` command is launched at the project directory.
 <p>
-- The `slowdash` process must keep running while accepting the Web requests. For this, a terminal multiplexer, such as "tumx" or "GNU Screen" would be useful.
+- The `slowdash` process must keep running while accepting the Web requests. For this, a terminal multiplexer, such as "tmux" or "GNU Screen" would be useful.
 
 ## Launching from Apache Web Server (CGI or WSGI)
 
@@ -423,12 +423,12 @@ This is the reverse proxy part of the Apache configuration, which includes WebSo
 </VirtualHost>
 ```
 Replace `SLOWDASH_HOST` with your actual SlowDash host name.
-A full working example in Docker Compose with more features such as HTTPS, HTTP/2, and Basic Authentication can be found in `ExampleProjects/ReverseProxy/Apahce`.
+A full working example in Docker Compose with more features such as HTTPS, HTTP/2, and Basic Authentication can be found in `ExampleProjects/ReverseProxy/Apache`.
 
 # Jupyter Integration
 By providing Jupyter URL and token in `SlowdashProject.yaml`, SlowDash can export the displayed data to Jupyter Notebook so that users can continue analysis on Jupyter. Two examples, with and without a reverse proxy, can be found in `ExampleProject/Jupyter`.
 
-## Bare-Metal
+## Native (without containers)
 ```yaml
 slowdash_project:
   name: Jupyter Test
@@ -465,7 +465,7 @@ Include this image in the `docker-compose.yaml`, by adding environmental variabl
       - JUPYTER_URL=http://localhost:8888
       - JUPYTER_TOKEN=YOUR_VERY_SECRET_JUPYTER_TOKEN
       - JUPYTER_INTERNAL_URL=http://notebook:8888      # Jupyter seen from SlowDash
-      - SLOWDASH_INTERNAL_URL=http://slowdash:18881    # SlowDash seen from Jypyter
+      - SLOWDASH_INTERNAL_URL=http://slowdash:18881    # SlowDash seen from Jupyter
 ```
 Note that the Jupyter and SlowDash URLs are different when accessed within the container system.
 
@@ -476,7 +476,7 @@ Edit the `SlowdashProject.yaml` file to include the Jupyter settings:
       url: ${JUPYTER_URL}
       token: ${JUPYTER_TOKEN}
       jupyter_internal_url: ${JUPYTER_INTERNAL_URL}      # Jupyter seen from SlowDash
-      slowdash_internal_url: ${SLOWDASH_INTERNAL_URL}    # SlowDash seen from Jypyter
+      slowdash_internal_url: ${SLOWDASH_INTERNAL_URL}    # SlowDash seen from Jupyter
 ```
 
 

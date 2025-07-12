@@ -15,7 +15,7 @@ title: SlowDash を使ってみる
 
 もともとはスローコントロール用でしたが，現在では物理実験に関わる全てのデータのビジュアライズと，DAQ を含むシステムコントロールの UI を目指して開発をしています．現時点で，Grafana で行うようなビジュアライゼーションの部分はほぼ実装済みで，解析およびコントロールの部分が開発中です．
 
-データベースアクセス以外は外部ライブラリを使っておらず，ソフトウェアの寿命が外のライブラリの変更等に影響されることはないようになっています．特に，流行り廃れが激しい JavaScript の部分はフレームワークなどは使わず，完全に自己完結です（使っていたけど排除しました）．データベース側および解析モジュールは，全て独立なプラグインとなっており，いつでも切り捨てられます．依存性がないので，インストールがとても楽です．それでもインストールをしたくない人のために，Docker コンテナも提供されています．
+データベースアクセス以外は外部ライブラリを使っておらず，ソフトウェアの寿命が外のライブラリの変更等に影響されることはないようになっています．特に，流行り廃れが激しい JavaScript の部分はフレームワークなどは使わず，完全に自己完結です（使っていたけど排除しました）．データベース側および解析モジュールは，全て独立なプラグインとなっており，いつでも切り捨てられます．依存性がないので，インストールがとても楽で，使用後も痕跡を残さずきれいに削除できます．それでもインストールをしたくない人のために，Docker コンテナも提供されています．
 
 <img src="fig/Gallery-ATDS-Dashboard.png" style="width:40%;box-shadow:0px 0px 15px -5px rgba(0,0,0,0.7);">
 <img src="fig/Gallery-RGA.png" style="width:40%;box-shadow:0px 0px 15px -5px rgba(0,0,0,0.7);">
@@ -88,7 +88,7 @@ JSROOT や Bokeh との違い：
 
 
 ### よくある宣伝
-もはや当たり前だけど，みんな書いているので，いちおう書いておきます．
+みんな書いているので，いちおう書いておきます．
 
 - MVC アーキテクチャに基づいています．
 - Web API は全て RESTful です．
@@ -108,13 +108,13 @@ Docker があれば，DockerHub または GitHub CR にある SlowDash のイメ
 - Docker Hub: [https://hub.docker.com/r/slowproj/slowdash](https://hub.docker.com/r/slowproj/slowdash)
 - GitHub CR: [https://github.com/slowproj/slowdash/pkgs/container/slowdash](https://github.com/slowproj/slowdash/pkgs/container/slowdash)
 
-ただ，最初から Docker を使うと設定ファイルの扱いなどが面倒だと思います．ここでは，最後に Docker を使う手順を解説します．
+ただ，最初から Docker を使うと設定ファイルの扱いなどが面倒だと思います．ここでは，Docker を使う手順を最後に解説します．
 
 #### 標準インストール (bare-metal)
 基本的に Python 3 が動けばすぐ使えます．
 
 - UNIX 風の OS．Ubuntu で開発，macOS とか Windows の WSL でも動いた．WinPython でも動くらしい．
-- Python 3.9 以上．
+- Python 3.9 以上と venv
 - ブラウザ．Firefox で開発していて，たまに Chrome と Edge と Safari でテストしている．
   - タブレットや携帯などのモバイルデバイス上でもそこそこ動作する．プロットの移動やズームは二本指で．
 
@@ -469,23 +469,44 @@ $ docker exec -it 70e    slowdash config -i4       （70e は上の行で表示�
 ...
 ```
 
-### アップデート
-SlowDash をアップデートする際は，使用中のコンテナを "down" してから，ダウンロードしてあるイメージを削除してください．次の実行時に自動で新しいイメージがダウンロードされます．（これをするとプロジェクトディレクトリ以外の場所に保存していたものは失われます．独自の拡張をしている場合は注意してください．）
+# SlowDash のアップデート
+## 直接インストール
+Make を使って更新をできます：
+```console
+$ cd PATH/TO/SLOWDASH
+$ make update
+```
+
+手動で行う場合は，`git pull` の際に`--recurse-submodule` を忘れないようにしてください．
+```console
+$ cd PATH/TO/SLOWDASH
+$ git pull --recurse-submodules
+$ make
+```
+この `--recurse-submodules` を忘れることがとても多いです．そして，その場合には，異なるバージョンのソースが混ざるので，それに気づかないとデバッグがとても難しくなります．上記の `make update` を使うのがおすすめです．
+
+## Docker コンテナ
+SlowDash をアップデートする際は，使用中のコンテナを "down" してから，ダウンロードしてあるイメージを削除してください．次の実行時に自動で新しいイメージがダウンロードされます．（これをするとプロジェクトディレクトリ以外の場所に保存していたものは失われます．コンテナ内に直接データを保存している場合や独自の拡張をしている場合は注意してください．）
 ```console
 $ docker compose down
 $ docker rmi slowproj/slowdash
 ```
-ちなみに，使用中のバージョンは，`slowdash config` で表示される他，SlowDash のホーム画面の左上にも表示されています．
+使用中の SlowDash バージョンが SlowDash のホーム画面の左上に表示されているので，ここでちゃんと更新されたかを確認できます．
 
-### 開発用テストベンチ
-SlowDash を使用したシステムの開発に本番用のデータベースを使いたくない場合や，開発用サーバのインストールが面倒な場合，データベースとかだけのコンテナが `slowdash/utils/testbench` にあります．これを利用すれば，PostgreSQL や InfluxDB などのデータベース，Redis や Jupyter などが即使えて，使用後にすぐにクリーンアップできます．
+
+# 動作確認用テスト環境
+SlowDash が頻繁に利用するデータベースや Jupyter などを集めたコンテナが `slowdash/utils/testbench` にあります．
+システム開発時に本番用のデータベースを使いたくない場合や，開発用サーバのインストールが面倒な場合に，すぐに使えてすぐに消せて便利です．
 ```console
 $ cd PATH/TO/SLOWDASH/utils/testbench
 $ docker compose up
 $ docker compose down   （終了後データを消す）
 ```
+PostgreSQL, MySQL, InfluxDB, Redis, Jupyter などがすべて使えるようになります．
+（これらがすでに走っている場合は，コメントアウトかポート番号の変更が必要です．）
 
-SlowDash をコンテナ内で使用する場合で，設定ファイルやスクリプトの開発に毎回コンテナを起動するのが面倒なときにも，このテストベンチを走らせるとコンテナ外で作業を行えて便利です．
+このテスト環境は，SlowDash 自体がコンテナに入っていなくても（直接実行でも）使えます．
+SlowDash をコンテナ内で使用する場合でも，設定ファイルやスクリプトの開発はコンテナの外で（SlowDash だけはターミナルで直接実行）して，ある程度完成してからコンテナに入れた方が，変更のたびにコンテナの再起動をしなくて済むので楽です．
 
 # セキュリティについて
 <b>SlowDash は，ファイアウォールの内部で使う目的で作られています．</b> このためセキュリティ関係の機能は実装されていません．SlowDash のポートを外部からアクセスできるところに開けないようにしてください．外部からは，VPN もしくは SSH のトンネルを経由して使用するのが想定です．
@@ -525,5 +546,6 @@ $ slowdash  --port=18881  --ssl-keyfile=KEY_FILE  --ssl-certfile=CERT_FILE
 Listening at port 18881 (ASGI HTTPS)
 ```
 ただし，この機能は将来の SlowDash では削除されるかもしれません．長期使用するシステムでは，ちゃんとしたリバースプロキシを使用するのがいいと思います．
+Docker で Nginx または Apache を使った構成例が `ExampleProjects/ReverseProxy` にあります．
 
 <div style="margin-bottom:10rem"/>

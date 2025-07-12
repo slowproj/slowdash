@@ -17,7 +17,7 @@ title: Installation
 - Git
 - Docker and Docker Compose
 
-### Bare-Metal Installation Requirements
+### Native (no container) Installation Requirements
 <p>
 - Git
 - Python 3
@@ -80,7 +80,7 @@ $ docker build -t slowpy-notebook -f ./lib/slowpy/Dockerfile ./lib/slowpy
 ```
 
 
-# Bare-Metal Installation
+# Native (no container) Installation
 ## Setup
 ### Using Virtual Environment (Recommended)
 This installation method keeps all files contained within the git-cloned directory. You can completely remove the installation by deleting this directory.
@@ -100,7 +100,7 @@ export SLOWDASH_DIR=/PATH/TO/SLOWDASH
 alias slowdash="$SLOWDASH_DIR/bin/slowdash"
 alias slowdash-activate-venv="source $SLOWDASH_DIR/venv/bin/activate"
 ```
-For permanent installation, it might be convenient to include the `source` command in the `.bashrc` (or `.zshrc on Mac) file at your home directory.
+For permanent installation, it might be convenient to include the `source` command in the `.bashrc` (or `.zshrc` on Mac) file at your home directory.
 
 ### System-wide Installation
 ```console
