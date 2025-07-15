@@ -88,7 +88,7 @@ To stop the service:
 </details>
 
 
-### Bare-Metal Installation
+### Native (no container) Installation
 <details>
   
 #### Prerequisites
