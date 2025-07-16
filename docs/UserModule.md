@@ -369,7 +369,7 @@ A table with live values would be a typical example of this kind of application.
 To create multiple HTML forms, define the `_get_html_list()` callback function that returns a list of names. 
 A name from the list will be passed to the `_get_html(name)` callback.
 ```python
-def get_html_list():
+def _get_html_list():
     return ['settings', 'data_table']
 
 def _get_html(name):
@@ -401,7 +401,7 @@ This will insert a SlowPlot layout as if a file named `slowplot-UserModuleName.j
 
 In the same way as HTML forms, multiple layouts can be generated:
 ```python
-def get_layout_list():
+def _get_layout_list():
     return ['WorldClock', 'LocalClock']
 
 def _get_layout(name):

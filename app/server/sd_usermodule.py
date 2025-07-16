@@ -248,7 +248,7 @@ class UserModule:
         self.func_halt = self.get_func('_halt')
 
         
-        ### UserModule dynamic contents (layout & HTML) ###
+        ### UserModule dynamic config contents (layout & HTML) ###
         
         self.func_get_html = self.get_func('_get_html')
         self.func_get_layout = self.get_func('_get_layout')

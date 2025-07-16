@@ -26,9 +26,10 @@ if project.config is None:
     
 
 sys_dir = os.path.abspath(project.sys_dir)
+venv_dir = os.path.join(project.sys_dir, 'venv')
 project_dir = os.path.abspath(project.project_dir)
 project_name = project.config.get('name', None)
-user_list = project.auth_list
+user_list = { u.split(':')[0]: u.split(':')[1] for u in project.auth_list }
 wsgi_pgrp = 'slowdash_%s_wsgi' % project_name
 
 
@@ -159,12 +160,8 @@ if user_list is not None:
             f.write('%s:%s\n' % (user, user_list[user]))
 
                     
-filelist = [
-    '*.html', '*.js', '*.mjs', '*.png', '*.css'
-]
-dirlist = [
-    'jagaimo', 'autocruise', 'docs', 'extern'
-]
+filelist = [ '*.html', '*.png' ]
+dirlist = [ 'slowjs', 'slowdocs' ]
 for fileglob in filelist:
     for src in glob.glob(os.path.join(sys_dir, 'app', 'site', fileglob)):
         name = os.path.basename(src)
@@ -218,7 +215,7 @@ else:
     sys.stdout.write('- Enable wsgi, userdir, rewrite, and headers modules by:\n')
     sys.stdout.write('    $ sudo a2enmod wsgi userdir rewrite headers\n')
     sys.stdout.write('- Add the following lines to /etc/apache2/apache2.conf for WSGI daemon:\n')
-    sys.stdout.write('    WSGIDaemonProcess %s processes=5 threads=1 home=%s\n' % (wsgi_pgrp, html_dir))
+    sys.stdout.write('    WSGIDaemonProcess %s processes=5 threads=1 python-path=%s python-home=%s\n' % (wsgi_pgrp, html_dir, venv_dir))
     sys.stdout.write('    WSGIProcessGroup %s\n' % wsgi_pgrp)
     sys.stdout.write('    WSGIApplicationGroup %{GLOBAL}\n')
     sys.stdout.write('- Restart Apache by:\n')

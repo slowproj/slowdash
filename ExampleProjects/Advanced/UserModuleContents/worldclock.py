@@ -43,13 +43,6 @@ def _process_command(doc):
     return False
 
 
-def x_get_html_list():
-    return ['foo', 'bar']
-
-def x_get_layout_list():
-    return ['fooo', 'baar']
-
-
 def _get_html():
     return f'''
         <form>
