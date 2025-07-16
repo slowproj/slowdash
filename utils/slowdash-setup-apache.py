@@ -29,8 +29,13 @@ sys_dir = os.path.abspath(project.sys_dir)
 venv_dir = os.path.join(project.sys_dir, 'venv')
 project_dir = os.path.abspath(project.project_dir)
 project_name = project.config.get('name', None)
-user_list = { u.split(':')[0]: u.split(':')[1] for u in project.auth_list }
+auth_list = project.auth_list
 wsgi_pgrp = 'slowdash_%s_wsgi' % project_name
+
+if auth_list is None:
+    user_list = None
+else:
+    user_list = { u.split(':')[0]: u.split(':')[1] for u in project.auth_list }
 
 
 def ask_yes_no(question, default="yes"):
@@ -173,17 +178,18 @@ for dirname in dirlist:
     if os.path.isdir(dst):
         shutil.rmtree(dst)
     shutil.copytree(src, dst, symlinks=True)
+
+src = os.path.join(sys_dir, 'app', 'server', 'slowdash_wsgi.py')
+dest = os.path.join(html_dir, 'slowdash_wsgi.py')
+shutil.copy(src, dest)
 if interface == 'CGI':
     src = os.path.join(sys_dir, 'app', 'server', 'slowdash.cgi')
     dest = os.path.join(html_dir, 'slowdash.cgi')
-    shutil.copy(src, dest)
-    src = os.path.join(sys_dir, 'app', 'server', 'slowdash_wsgi.py')
-    dest = os.path.join(html_dir, 'slowdash_wsgi.py')
-    shutil.copy(src, dest)
-else:
-    src = os.path.join(sys_dir, 'app', 'server', 'slowdash_wsgi.py')
-    dest = os.path.join(html_dir, 'slowdash.wsgi')
-    shutil.copy(src, dest)
+    python_bin = os.path.join(venv_dir, 'bin', 'python')
+    with open(dest, 'w') as fd:
+        fd.write(f'#! {python_bin}\n')
+        with open(src) as fs:
+            fd.write(fs.read())
 
     
 sys.stdout.write('\n')
