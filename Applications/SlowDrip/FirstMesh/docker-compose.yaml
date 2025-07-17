@@ -1,8 +1,7 @@
 services:
 
   key-value-store:
-    image: ghcr.io/project8/dragonfly:workshop
-    #image: ghcr.io/driplineorg/dripline-python:v5.0.0
+    image: ghcr.io/driplineorg/dripline-python:v5.0.1
     depends_on:
       rabbit-broker:
         condition: service_healthy
@@ -17,7 +16,7 @@ services:
 
 
   sensor-logger:
-    image: ghcr.io/driplineorg/dripline-python:v5.0.0
+    image: ghcr.io/driplineorg/dripline-python:v5.0.1
     depends_on:
       rabbit-broker:
         condition: service_healthy

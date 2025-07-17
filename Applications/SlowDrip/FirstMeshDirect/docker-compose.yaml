@@ -1,8 +1,7 @@
 services:
 
   key-value-store:
-    image: mydl
-    #image: ghcr.io/driplineorg/dripline-python:v5.0.0
+    image: ghcr.io/driplineorg/dripline-python:v5.0.1
     depends_on:
       rabbit-broker:
         condition: service_healthy
@@ -17,7 +16,7 @@ services:
 
 
   sensor-logger:
-    image: ghcr.io/driplineorg/dripline-python:v5.0.0
+    image: ghcr.io/driplineorg/dripline-python:v5.0.1
     depends_on:
       rabbit-broker:
         condition: service_healthy
@@ -79,16 +78,16 @@ services:
 
 
 
-#  slowdash:
-#    image: slowproj/slowdash
-#    ports:
-#      - "18881:18881"
-#    volumes:
-#      - ./slowdash.d:/project
-#    environment:
-#      - DB_URL=postgresql://postgres:postgres@postgres:5432/sensor_data
-#    depends_on:
-#      rabbit-broker:
-#        condition: service_healthy
-#      postgres:
-#        condition: service_healthy
+  slowdash:
+    image: slowproj/slowdash
+    ports:
+      - "18881:18881"
+    volumes:
+      - ./slowdash.d:/project
+    environment:
+      - DB_URL=postgresql://postgres:postgres@postgres:5432/sensor_data
+    depends_on:
+      rabbit-broker:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy

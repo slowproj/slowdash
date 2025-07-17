@@ -1,8 +1,7 @@
 services:
 
   key-value-store:
-    #image: ghcr.io/driplineorg/dripline-python:develop
-    image: mydl
+    image: ghcr.io/driplineorg/dripline-python:v5.0.1
     depends_on:
       rabbit-broker:
         condition: service_healthy
@@ -17,7 +16,7 @@ services:
 
 
   sensor-logger:
-    image: ghcr.io/driplineorg/dripline-python:v5.0.0
+    image: ghcr.io/driplineorg/dripline-python:v5.0.1
     depends_on:
       rabbit-broker:
         condition: service_healthy
@@ -83,6 +82,9 @@ services:
     volumes:
       - ./slowdash.d:/project
       - ./dripline_mesh.yaml:/root/.dripline_mesh.yaml
+    environment:
+      - DRIPLINE_USER=dripline
+      - DRIPLINE_PASSWORD=dripline
     depends_on:
       rabbit-broker:
         condition: service_healthy

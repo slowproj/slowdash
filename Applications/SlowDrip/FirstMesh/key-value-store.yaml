@@ -1,5 +1,7 @@
 name: my_store
 module: Service
+dripline_mesh:
+  broker: rabbit-broker
   
 endpoints:
   - name: peaches

@@ -1,6 +1,7 @@
 name: sensor_data_logger
 module: PostgresSensorLogger
-
+dripline_mesh:
+  broker: rabbit-broker
 # SensorLogger Inits
 insertion_table_endpoint_name: values_table
 # AlertConsumer Inits
@@ -12,7 +13,6 @@ database_name: sensor_data
 database_server: postgres
 #this is bad... waiting on a scarab update to let us pass
 #               actual details via env vars
-auths_file: "~/authentications.json"
 
 endpoints:
   - name: values_table
