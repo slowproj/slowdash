@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 31 December 2024 #
 
 
-import sys, io, collections, asyncio, logging
+import sys, io, collections, itertools, asyncio, logging
 
 import slowlette
 from sd_component import Component
@@ -122,10 +122,13 @@ class ConsoleComponent(Component):
                 'revision': self.revision,
                 'text': '[no console output]'
             }
-        
+
+        stop = len(self.console_outputs)
+        start = max(0, stop - nlines)
+        lines = list(itertools.islice(self.console_outputs,start, stop))
         return {
             'revision': self.revision,
-            'text': '\n'.join(self.console_outputs[-nlines:])
+            'text': '\n'.join(lines)
         }
 
 
