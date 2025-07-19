@@ -24,10 +24,20 @@ class DataSource_Honeybee(DataSource):
             cmd.append('--dripline-db=' + self.dripline_db)
         cmd.append('--fields=name')
         try:
-            return json.loads(await self.execute(*cmd))
+            output = await self.execute(*cmd)
+        except Exception as e:
+            logging.error('error on executing honeybee command: %s' % str(e))
+            return []
+        try:
+            if len(output) > 0:
+                result = json.loads(output)
+            else:
+                result = []
         except Exception as e:
             logging.error('error on parsing JSON: %s' % str(e))
             return []
+
+        return result
 
     
     async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
@@ -48,7 +58,10 @@ class DataSource_Honeybee(DataSource):
             logging.error('error on executing honeybee command: %s' % str(e))
             return None
         try:
-            result = json.loads(output)
+            if len(output) > 0:
+                result = json.loads(output)
+            else:
+                result = {}
         except Exception as e:
             logging.error('error on parsing JSON: %s' % str(e))
             return None

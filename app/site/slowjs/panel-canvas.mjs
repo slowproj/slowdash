@@ -567,20 +567,27 @@ class PlotItem extends CanvasItem {
         }
         let ts = dataPacket[this.metric.channel];
         let to = dataPacket?.__meta?.range?.to ?? $.time();
-        let from = dataPacket?.__meta?.range?.from ?? (to - 3600);
+        let from = dataPacket?.__meta?.range?.from ?? -3600;
+        if (to <= 0) {
+            to = $.time() + to;
+        }
+        if (from <= 0) {
+            from = to + from;
+        }
         
         let xmax = to;
         let xmin = (this.attr.length > 0) ? (xmax - this.attr.length) : from;
         const marginFraction = parseFloat(this.attr['timerange-margin-percent'])*0.01;
         let xmargin = (marginFraction > 0 && marginFraction < 1) ? marginFraction*(xmax - xmin) : 0;
         this.plot.setRange(xmin-xmargin, xmax+xmargin);
+
+        if (! ts?.t || ! (ts.t.length > 0)) {
+            ts = { t: [], x: [] };
+        }
         
         this.graph.x = [];
         this.graph.y = [];
-        if (! ts?.t || ! (ts.t.length > 0)) {
-            this.plot.clear();
-            return;
-        }
+        this.plot.clear();
             
         let [ ymin, ymax ] = [ null, null ];
         for (let k = 0; k < ts.x.length; k++) {
@@ -721,6 +728,13 @@ class Viewlet {
 
         let to = dataPacket?.__meta?.range?.to ?? $.time();
         let from = dataPacket?.__meta?.range?.from ?? (to - 3600);
+        if (to <= 0) {
+            to = $.time() + to;
+        }
+        if (from <= 0) {
+            from = to + from;
+        }
+        
         let slowplotUrl = './slowplot.html?';
         slowplotUrl += [
             'channel=' + channel,
