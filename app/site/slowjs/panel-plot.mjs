@@ -12,6 +12,20 @@ import { JGPlotWidget, JGPlotAxisScale } from './jagaimo/jagaplot.mjs';
 import { Panel, bindInput, getPaletteColor } from './panel.mjs';
 
 
+const marker_select = (
+  `<select>
+    <option value="circle">circle</option>
+    <option value="square">square</option>
+    <option value="diamond">diamond</option>
+    <option value="triangle">triangle</option>
+    <option value="opencircle">opencircle</option>
+    <option value="opensquare">opensquare</option>
+    <option value="opendiamond">opendiamond</option>
+    <option value="opentriangle">opentriangle</option>
+  </select>`
+);
+
+
 class Plot {
     configure(config, axes, legend, panel) {
         this.config = config;
@@ -569,16 +583,7 @@ class LineMarkerPlot extends GraphPlot {
         let table = div.find('table');
         let k = table.find('input').size();
         table.append($('<tr>').html(`
-            <td>Marker</td><td>type: <select>
-                <option value="circle">circle</option>
-                <option value="square">square</option>
-                <option value="diamond">diamond</option>
-                <option value="triangle">triangle</option>
-                <option value="opencircle">opencircle</option>
-                <option value="opensquare">opensquare</option>
-                <option value="opendiamond">opendiamond</option>
-                <option value="opentriangle">opentriangle</option>
-            </select>,
+            <td>Marker</td><td>type: ${marker_select},
             size: <input type="number" step="any" min="0"></td>
         `));
         table.append($('<tr>').html(`
@@ -660,12 +665,33 @@ class TimeseriesScatterPlot extends GraphPlot {
 
         super.configure(config, axes, legend, panel);
         
+        if (! this.config.lastpoint_type) {
+            this.config.lastpoint_type = this.config.marker_type;
+        }
+        if (! (this.config.lastpoint_size > 0)) {
+            this.config.lastpoint_size = 0;
+        }
+        if (this.config.lastpoint_color === undefined) {
+            this.config.lastpoint_color = this.config.color;
+        }
+        
         this.graph.style = {
             lineWidth: config.line_width, lineColor: config.color, lineOpacity: config.opacity,
             markerType: config.marker_type, markerSize: config.marker_size, 
             markerColor: config.color, markerOpacity: config.opacity,
         };
         this.axes.addGraph(this.graph);
+
+        this.lastpoint_graph = {
+            x: [],
+            y: [],
+            style: {
+                lineWidth: 0, lineColor: '', lineOpacity: 0,
+                markerType: config.lastpoint_type, markerSize: config.lastpoint_size, 
+                markerColor: config.lastpoint_color, markerOpacity: 1.0,
+            }
+        };
+        this.axes.addGraph(this.lastpoint_graph);
     }
 
     setStyle(style) {
@@ -696,25 +722,24 @@ class TimeseriesScatterPlot extends GraphPlot {
         let table = div.find('table');
         let k = table.find('input').size();
         table.append($('<tr>').html(`
-            <td>Marker</td><td>type: <select>
-                <option value="circle">circle</option>
-                <option value="square">square</option>
-                <option value="diamond">diamond</option>
-                <option value="triangle">triangle</option>
-                <option value="opencircle">opencircle</option>
-                <option value="opensquare">opensquare</option>
-                <option value="opendiamond">opendiamond</option>
-                <option value="opentriangle">opentriangle</option>
-            </select>,
+            <td>Marker</td><td>type: ${marker_select},
             size: <input type="number" step="any" min="0"></td>
         `));
         table.append($('<tr>').html(`
             <td>Line</td><td>width: <input type="number" step="any" min="0"></td>
         `));
+        table.append($('<tr>').html(`
+            <td>Last Point</td><td>type: ${marker_select},
+            size: <input type="number" step="any" min="0">,
+            <input type="color"></td>
+        `));
 
         bindInput(this.config, 'marker_type', div.find('select').at(0).css('width', '7em'));
         bindInput(this.config, 'marker_size', div.find('input').at(k++).css('width', '5em'));
         bindInput(this.config, 'line_width', div.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config, 'lastpoint_type', div.find('select').at(1).css('width', '7em'));
+        bindInput(this.config, 'lastpoint_size', div.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config, 'lastpoint_color', div.find('input').at(k++).css('width', '2em'));
     }
 
 
@@ -731,12 +756,16 @@ class TimeseriesScatterPlot extends GraphPlot {
                 this.setStat('---');
                 this.graph.x = [];
                 this.graph.y = [];
+                this.lastpoint_graph.x = [];
+                this.lastpoint_graph.y = [];
             }
             return;
         }
         this.setStat('---');
         this.graph.x = [];
         this.graph.y = [];
+        this.lastpoint_graph.x = [];
+        this.lastpoint_graph.y = [];
         if (
             ((ts0?.x === undefined) || (ts0.x.length <= 0)) ||
             ((ts1?.x === undefined) || (ts1.x.length <= 0))
@@ -767,6 +796,8 @@ class TimeseriesScatterPlot extends GraphPlot {
             const xn = this.graph.x[this.graph.x.length-1];
             const yn = this.graph.y[this.graph.y.length-1];
             this.setStat($.sprintf(this.config.format || '%f, %f', xn, yn));
+            this.lastpoint_graph.x = [xn];
+            this.lastpoint_graph.y = [yn];
         }
     }
 };
