@@ -668,7 +668,7 @@ class TimeseriesScatterPlot extends GraphPlot {
         if (! this.config.lastpoint_type) {
             this.config.lastpoint_type = this.config.marker_type;
         }
-        if (! (this.config.lastpoint_size > 0)) {
+        if (! (this.config.lastpoint_size >= 0)) {
             this.config.lastpoint_size = 0;
         }
         if (this.config.lastpoint_color === undefined) {

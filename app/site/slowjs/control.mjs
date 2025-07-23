@@ -89,7 +89,7 @@ export class Controller {
     
     async update(range=null) {
         if (this.isUpdateRunning) {
-            return;
+            return {code:200, text:'OK'};
         }
         this.isUpdateRunning = true;
         
