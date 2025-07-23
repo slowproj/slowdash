@@ -185,9 +185,13 @@ class HtmlPanel extends Panel {
             for (let element of this.contentDiv.find(`[${type}]`).enumerate()) {
                 const metric = element.attr(`${type}`);
                 const isInput = (['INPUT', 'SELECT'].includes(element.get().tagName));
+                const isButton = (
+                    (element.get().tagName == 'BUTTON') ||
+                    (isInput && ((element.attr('type') ?? '').toUpperCase() == 'SUBMIT'))
+                );                
                 let isLive = element.attr('sd-live');  // if not live, values are updated only after SUBMIT
                 if ((isLive === undefined) || (isLive === null)) {
-                    isLive = ! isInput;   // <input> is not live by default
+                    isLive = isButton || ! isInput;   // <input> is not live by default
                 }
                 this.variables.push($.extend(
                     {
