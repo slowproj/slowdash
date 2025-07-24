@@ -1,8 +1,15 @@
 
 <h3>Run Control</h3>
 <form>
-  Run Number: <input name="run_number" value="Start" sd-value="run_control.context['run_number']" style="width:8em">
-  <br>  
-  <input type="submit" name="run_control.start()" value="Start" sd-enabled="run_control.context['is_running']->invert()">
-  <input type="submit" name="run_control.stop()" value="Stop" sd-enabled="run_control.context['is_running']">
+  Next Run Number: <input name="run_number" value="Start" sd-value="run_control.context['run_number']" style="width:5em">,
+  <input type="checkbox" name="offline" sd-value="run_control.context['offline']"]>offline<br>
+  <input type="checkbox" name="stop_after" sd-value="run_control.context['stop_after']">Stop after
+  <input type="number" name="run_length" style="width:8em" sd-value="run_control.context['run_length']"> s, 
+  <input type="checkbox" name="repeat" sd-value="run_control.context['repeat']"]>then repeat
+  <p>
+  Running: <span sd-value="run_control.context['running']->replace(true, 'Yes')->replace(false,'No')">???</span><br>
+  <div style="font-size:150%">
+  <input type="submit" name="run_control.start()" value="Start" sd-enabled="run_control.context['running']->invert()">
+  <input type="submit" name="run_control.stop()" value="Stop" sd-enabled="run_control.context['running']">
+  </div>
 </form>
