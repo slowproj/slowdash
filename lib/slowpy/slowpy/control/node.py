@@ -131,7 +131,11 @@ class ControlNode:
 
     
     def __int__(self):
-        return int(self.get())
+        value = self.get()
+        try:
+            return int(value)
+        except:
+            return None
 
     
     def __float__(self):
