@@ -19,7 +19,15 @@
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": -3, "ymax": 0.4 },
             "legend": { "style": "side" }
         },
-        { "type": "tree", "channel": "run_control.context" }
+        { "type": "tree", "channel": "run_control.context" },
+        {
+            "type": "plot",
+            "plots": [
+                { "type": "histogram", "channel": "hist", "color": "#009090", "opacity": 0.2, "label": "", "format": "%.5g" }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
+            "legend": { "style": "side" }
+        }
     ],
     "meta": { "name": "run_control", "title": "", "description": "" }
 }

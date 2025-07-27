@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 24 October 2022 #
 
 import sys, os, time, re, threading, asyncio, types, inspect, logging, traceback
-import importlib.machinery
+import importlib
 
 import slowlette
 from sd_component import Component
@@ -181,19 +181,6 @@ class UserModule:
             return line
         module.__dict__['input'] = input_waiting_at_EOF
 
-        # obtain a reference to the ControlSystem class in the task module
-        def register(control_system):
-            self.control_system = control_system
-            self.control_system._system_stop_event.clear()
-        module.__dict__['_register'] = register
-        module.__dict__['_slowdash_app'] = self.app
-        
-        try:
-            exec("from slowpy.control import ControlSystem", module.__dict__)
-            exec("_register(ControlSystem())", module.__dict__)
-        except Exception as e:
-            self.handle_error('unable to load task module: %s' % str(e))
-
             
     def _do_post_initialize(self):
         pass
@@ -204,40 +191,31 @@ class UserModule:
         self.command_history = []
         self.error = None
 
-        is_reload = self.module is not None
+        self.module = None
         self.touch_status()
         
-        if is_reload and False:  #??? it looks like just re-doing load() works...
-            #??? this reload() does not execute statements outside a function
-            logging.debug("=== Reloading %s ===" % self.filepath)
-            self._preset_module(self.module)
-            try:
-                self.module = importlib.reload(self.module)
-            except Exception as e:
-                self.handle_error('unable to reload user module: %s' % str(e))
-                return False
-            
-        else:
-            logging.debug("=== Loading %s ===" % self.filepath)
-            if not os.path.exists(self.filepath):
-                self.handle_error('unable to find user module: %s' % self.filepath)
-                return False
+        logging.debug("=== Loading %s ===" % self.filepath)
+        if not os.path.exists(self.filepath):
+            self.handle_error('unable to find user module: %s' % self.filepath)
+            return False
 
-            # use a dummy module with the same name as the user module:
-            # entries in the dummy modules will remain after loading the user module
-            dummy_module = types.ModuleType(self.name)
-            self._preset_module(dummy_module)
-            sys.modules[self.name] = dummy_module
-            
-            try:
-                self.module = importlib.machinery.SourceFileLoader(self.name, self.filepath).load_module()
-            except Exception as e:
-                self.handle_error('unable to load user module: %s' % str(e))
-                return False
+        try:
+            spec = importlib.util.spec_from_file_location(self.name, self.filepath)
+            self.module = importlib.util.module_from_spec(spec)
+        except Exception as e:
+            self.handle_error('unable to load user module: %s' % str(e))
+            self.module = None
+            return False
+
+        self._preset_module(self.module)
+        
+        try:
+            spec.loader.exec_module(self.module)
+        except Exception as e:
+            self.handle_error('user module error: %s' % str(e))
+            return False
                 
         self.touch_status()
-        if self.module is None:
-            return False
 
         
         ### UserModule callbacks ###
@@ -380,8 +358,10 @@ class UserModule:
         if self.module is None:
             return None
         if (name in self.module.__dict__) and callable(self.module.__dict__[name]):
+            logging.debug(f'UserModule callback {name} found')
             return self.module.__dict__[name]
         else:
+            logging.debug(f'UserModule callback {name} not defined')
             return None
 
         
@@ -580,17 +560,16 @@ class UserModuleComponent(Component):
 
 
     @slowlette.get('/api/channels')
-    async def get_channels(self):
+    async def api_channels(self):
         result = []
         for usermodule in self.usermodule_list:
-            channels = await usermodule.get_channels()
-            if channels is not None:
-                result.extend(channels)
+            result.extend(await usermodule.get_channels() or [])
+            
         return result
 
         
     @slowlette.get('/api/data/{channels}')
-    async def get_data(self, channels:str, opts:dict):
+    async def api_data(self, channels:str, opts:dict):
         if len(self.usermodule_list) == 0:
             return None
         
@@ -603,27 +582,22 @@ class UserModuleComponent(Component):
             return False
 
         now = time.time()
-        if to > 0:
-            start = to - length
-        else:
-            start = (now + to) - length
-        t = now - start
-            
-        has_result, result = False, {}
-        if t >= 0 and t <= length + 10:
-            for usermodule in self.usermodule_list:
-                for ch in channels:
-                    data = await usermodule.get_data(ch)
-                    if data is None:
-                        continue
-                    has_result = True
+        if (to < 0) or (to > 0 and (now > to+1 or now < to - length)):
+            return {}
+        start = to if to > 0 else now + to
+
+        result = {}
+        for usermodule in self.usermodule_list:
+            for ch in channels:
+                data = await usermodule.get_data(ch)
+                if data is not None:
                     result[ch] = {
                         'start': start, 'length': length,
                         't': t,
                         'x': data
                     }
 
-        return result if has_result else None
+        return result
 
     
     @slowlette.post('/api/control')

@@ -37,34 +37,70 @@ class TaskModule(UserModule):
 
         self.command_thread = None
         self.parallel_command_thread_set = set()
-        self.exports = None
-        self.channel_list = None
         self.namespace_prefix = params.get('namespace', {}).get('prefix', '%s.' % name.replace('-','_'))
         self.namespace_suffix = params.get('namespace', {}).get('suffix', '')
 
-        self.control_system = None
-        
         logging.info('task module registered')
         
         
+    def _preset_module(self, module):
+        super()._preset_module(module)
+        
+        # inject SlowdashApp and obtain ControlSystem to/from task module
+        def register(control_system):
+            if self.app.control_system is None:
+                self.app.control_system = control_system
+                self.app.control_system._system_stop_event.clear()
+        module.__dict__['_register'] = register
+        module.__dict__['_slowdash_app'] = self.app        
+        try:
+            exec("from slowpy.control import ControlSystem", module.__dict__)
+            exec("ControlSystem._slowdash_app = _slowdash_app", module.__dict__)
+            exec("_register(ControlSystem())", module.__dict__)
+        except Exception as e:
+            self.handle_error('unable to import ControlSystem from task module: %s' % str(e))
+
+            
     def _do_post_initialize(self):
-        # this will call _export(), necessary to start publish()ing
-        self.scan_channels()
-    
+        super()._do_post_initialize()
         
-    def load(self):
-        self.exports = None
-        self.channel_list = None
+        # DEPRECIATED (July 2025)
+        # _export() callback in slowtask script is depreciated, use ControlSystem.export(obj, name) instead
+        # Putting prefix/suffix for the export names is for the old interface only.
+        if True:
+            func = self.get_func('_export')
+            if func:
+                try:
+                    exports = func() or []
+                except Exception as e:
+                    self.handle_error('task module error: export(): %s' % str(e))
+                    exports = []
+                for name, node in exports:
+                    export_name = '%s%s%s' % (self.namespace_prefix, name, self.namespace_suffix)
+                    node._slowdash_export_name = export_name
+                    self.app.control_system._slowdash_exports.append((export_name, node))
+
+                    value, datatype = node.get(), None
+                    if type(value) is dict:
+                        if 'table' in value:
+                            datatype = 'table'
+                        elif 'tree' in value:
+                            datatype = 'tree'
+                        elif 'bins' in value:
+                            datatype = 'histogram'
+                        elif 'ybins' in value:
+                            datatype = 'histogram2d'
+                        elif 'y' in value:
+                            datatype = 'graph'
+                        else:
+                            datatype = 'json'
+                    if datatype is not None:
+                        channel =  {'name': export_name, 'type': datatype, 'current': True}
+                    else:
+                        channel =  {'name': export_name, 'current': True}
+                    self.app.control_system._slowdash_channels[export_name] = channel
+                    
         
-        if not super().load():
-            return False
-
-        # this must be done after loading the module, as ControlSystem._slowdash_app is overwritten by loading
-        exec("from slowpy.control import ControlSystem", self.module.__dict__)
-        exec("ControlSystem._slowdash_app = _slowdash_app", self.module.__dict__)
-
-        return True
-
             
     async def stop(self):
         self.touch_status()
@@ -73,9 +109,9 @@ class TaskModule(UserModule):
             if not self.user_thread.initialized_event.is_set():
                 logging.warning('User/Task module not yet initialized')
                 
-        if self.control_system is not None:
+        if self.app.control_system is not None:
             logging.debug('calling ControlSystem.stop() in Task-Module "%s"' % self.name)
-            self.control_system.stop()
+            self.app.control_system.stop()
             
         if self.command_thread is not None:
             if self.command_thread.is_alive():
@@ -117,93 +153,10 @@ class TaskModule(UserModule):
         return name
 
             
-    def get_variable(self, name):
-        if name not in self.exports:
-            self.scan_channels()
-            if name not in self.exports:
-                return None
-
-        return self.exports[name]
-
-        
     def is_command_running(self):
         return self.command_thread is not None and self.command_thread.is_alive()
 
 
-    def scan_channels(self):
-        self.channel_list = []
-        self.exports = {}
-        
-        func = self.get_func('_export')
-        if func is None:
-            return
-        
-        try:
-            exports = func()
-        except Exception as e:
-            self.handle_error('task module error: export(): %s' % str(e))
-            return None
-        if exports is None:
-            return
-
-        for name, node in exports:
-            external_name = '%s%s%s' % (self.namespace_prefix, name, self.namespace_suffix)
-            self.exports[external_name] = node
-            if hasattr(node, 'export_name'):
-                if node.export_name in [ None, False ]:
-                    node.export_name = external_name
-
-            value = node.get()
-            if type(value) is dict:
-                if 'table' in value:
-                    datatype = 'table'
-                elif 'tree' in value:
-                    datatype = 'tree'
-                elif 'bins' in value:
-                    datatype = 'histogram'
-                elif 'ybins' in value:
-                    datatype = 'histogram2d'
-                elif 'y' in value:
-                    datatype = 'graph'
-                else:
-                    datatype = 'json'
-            else:
-                datatype = None
-                
-            if datatype is not None:
-                self.channel_list.append({'name': external_name, 'type': datatype, 'current': True})
-            else:
-                self.channel_list.append({'name': external_name, 'current': True})
-
-        return self.channel_list
-    
-                
-    async def get_channels(self):
-        return self.scan_channels()
-
-    
-    async def get_data(self, channel):
-        if self.channel_list is None:
-            self.scan_channels()
-            
-        if channel not in self.exports:
-            self.scan_channels()
-            if channel not in self.exports:
-                return None
-
-        value = self.get_variable(channel).get()
-        
-        if type(value) in [ bool, int, float, str ]:
-            return value
-        elif type(value) == dict:
-            if 'tree' in value or 'table' in value or 'bins' in value or 'ybin' in value or 'y' in value:
-                return value
-            else:
-                return { 'tree': value }
-        else:
-            return str(value)
-
-    
     async def process_command(self, params):
         self.touch_status()
         result = await self.process_task_command(params)
@@ -308,6 +261,54 @@ class TaskModule(UserModule):
 
 
 
+class SlowpyControl:
+    def __init__(self, app):
+        self.app = app
+        
+        self.exports = None
+        self.channel_list = None
+        
+        
+    async def get_channels(self):
+        self.exports = {}
+        self.channel_list = []
+        
+        if self.app.control_system is None:
+            return []
+        
+        for name, node in self.app.control_system._slowdash_exports:
+            self.exports[name] = node
+                
+        for name, channel in self.app.control_system._slowdash_channels.items():
+            self.channel_list.append(channel)
+
+        logging.error(f"SLOWPY EXPORTS_LIST: {self.exports.keys()}")
+        logging.error(f"SLOWPY CHANNEL_LIST: {self.channel_list}")
+                
+        return self.channel_list
+
+    
+    async def get_data(self, channel):
+        if self.exports is None:
+            await self.get_channels()
+        if channel not in self.exports:
+            logging.error(f"{channel} NOT IN {self.channel_list}")
+            return None
+        
+        value = self.exports[channel].get()
+        
+        if type(value) in [ bool, int, float, str ]:
+            return value
+        elif type(value) == dict:
+            if 'tree' in value or 'table' in value or 'bins' in value or 'ybin' in value or 'y' in value:
+                return value
+            else:
+                return { 'tree': value }
+        else:
+            return str(value)
+
+  
+
 class TaskModuleComponent(Component):
     def __init__(self, app, project):
         super().__init__(app, project)
@@ -315,6 +316,10 @@ class TaskModuleComponent(Component):
         self.taskmodule_list = []
         self.known_task_list = []
         self.status_revision = 1
+        
+        if not hasattr(app, 'control_system'):
+            app.control_system = None
+        self.slowpy_control = SlowpyControl(app)
 
         taskmodule_node = self.project.config.get('task', [])
         if not isinstance(taskmodule_node, list):
@@ -385,14 +390,9 @@ class TaskModuleComponent(Component):
 
     @slowlette.get('/api/channels')
     async def api_channels(self):
-        result = []
-        for taskmodule in self.taskmodule_list:
-            channels = await taskmodule.get_channels()
-            if channels is not None:
-                result.extend(channels)
-        return result
+        return await self.slowpy_control.get_channels()
 
-        
+    
     @slowlette.get('/api/data/{channels}')
     async def api_data(self, channels:str, opts:dict):
         try:
@@ -402,29 +402,23 @@ class TaskModuleComponent(Component):
         except Exception as e:
             logging.error('Bad data URL: %s: %s' % (str(opts), str(e)))
             return False
-        
+
         now = time.time()
-        if to > 0:
-            start = to - length
-        else:
-            start = (now + to) - length
-        t = now - start
+        if (to < 0) or (to > 0 and (now > to+1 or now < to - length)):
+            return {}
+        start = to if to > 0 else now + to
 
-        has_result, result = False, {}
-        if t >= 0 and t <= length + 10:
-            for taskmodule in self.taskmodule_list:
-                for ch in channels:
-                    data = await taskmodule.get_data(ch)
-                    if data is None:
-                        continue
-                    has_result = True
-                    result[ch] = {
-                        'start': start, 'length': length,
-                        't': t,
-                        'x': data
-                    }
+        result = {}
+        for ch in channels:
+            data = await self.slowpy_control.get_data(ch)
+            if data is not None:
+                result[ch] = {
+                    'start': start, 'length': length,
+                    't': now,
+                    'x': data
+                }
 
-        return result if has_result else None
+        return result
 
 
     @slowlette.post('/api/update/tasklist')
@@ -512,21 +506,6 @@ class TaskModuleComponent(Component):
         return result
 
     
-    @slowlette.post('/api/control/currentdata')
-    async def set_variable(self, doc:slowlette.DictJSON):
-        for name, data in doc:
-            value = data.get('x', None)
-            for module in self.taskmodule_list:
-                variable = module.get_variable(name)
-                if variable is not None:
-                    try:
-                        VariableType = type(variable.value)
-                        variable.set(VariableType(value))
-                    except:
-                        variable.set(value)
-                    logging.info(f"Control Variable: {name} <= {repr(variable.get())}")
-
-        
     @slowlette.post('/api/control/task/{taskname}')
     async def control_task(self, taskname:str, doc:slowlette.DictJSON):
         action = doc.get('action', None)

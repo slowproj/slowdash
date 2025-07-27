@@ -1,12 +1,15 @@
-import sys, os, time, json, logging
+
+
+import sys, os, asyncio, time, json, logging
 from dataclasses import dataclass, asdict
-from slowpy.control import ControlSystem, ControlNode
+from slowpy.control import control_system as ctrl, ValueNode
 import slowpy.store as sls
 
-ControlSystem.import_control_module('DummyDevice')
-device = ControlSystem().randomwalk_device()
+ctrl.import_control_module('DummyDevice')
+device = ctrl.randomwalk_device()
 ch0, ch1, ch2, ch3 = [ device.ch(ch) for ch in range(4) ]
 
+print("hello from run_control")
 
 @dataclass
 class Context:
@@ -24,34 +27,40 @@ def save_context():
         json.dump(asdict(context), f)
             
 def load_context():
-    global context
-    if os.path.isfile('run_context.json'):
-        try:
-            with open('run_context.json') as f:
-                data = json.load(f)
-                context = Context(**data)
-        except Exception as e:
-            print(e)
+    if not os.path.isfile('run_context.json'):
+        return
+    try:
+        with open('run_context.json') as f:
+            for k,v in json.load(f).items():
+                setattr(context, k, v)
+    except Exception as e:
+        logging.error(e)
 
 
-class DataclassNode(ControlNode):
-    def get(self):
-        return {
-            'tree': {
-                'run_number': context.run_number,
-                'stop_after': context.stop_after,
-                'run_length': context.run_length,
-                'repeat': context.repeat,
-                'offline': context.offline,
-                'running': context.running,
-            }
-        }
+import numpy as np
+import slowpy as slp
+h = slp.Histogram(100, 0, 10)
+h.add_attr('color', 'red')
+h.add_stat(slp.HistogramBasicStat(['Entries', 'Underflow', 'Overflow', 'Mean', 'RMS'], ndigits=3))
+h.add_stat(slp.HistogramCountStat(0, 10))
+for i in range(1000):
+    h.fill(np.random.normal(5, 2))
+ctrl.export(h, 'hist')
 
-def _export():
-    return [
-        ('context', DataclassNode()),
-    ]
 
+a = ctrl.value(0)
+b = ctrl.value(0)
+c = ctrl.value(0)
+d = ctrl.value(0)
+
+xxx = {'name': 'hello', 'value': 3460 }
+
+ctrl.export(a, 'a')
+ctrl.export(b, 'b')
+ctrl.export(c, 'c')
+ctrl.export(d, 'd')
+ctrl.export(context, 'run_control.context')
+ctrl.export(xxx, 'xxx')
 
 
 # SQLite needs to be used from only one thread.
@@ -60,25 +69,38 @@ datastore = None
 
 
 
-def _initialize():
+async def _initialize():
     global context, datastore
     datastore = sls.create_datastore_from_url('sqlite:///SlowTaskTest.db', 'test')
 
     load_context()
     context.running = False
+    xxx['name'] = 'HELLO'
     
 
-def _finalize():
+async def _finalize():
     datastore.close()
     
 
-def _loop():
+async def _loop():
     if context.running:
         for ch in range(4):
             x = float(device.ch(ch))
             datastore.append(x, tag='ch%02d'%ch)
+            if ch == 0:
+                a <= x
+                await ctrl.publish(a, name='aa')
+            if ch == 1:
+                b <= x
+                await ctrl.publish(b)
+            if ch == 2:
+                c <= x
+                await ctrl.publish(c)
+            if ch == 3:
+                d <= x
+                await ctrl.publish(d)
             
-    time.sleep(1)
+    await asyncio.sleep(0.5)
 
 
 def start(run_number:int, stop_after:bool, run_length:float, repeat: bool, offline:bool):
@@ -102,8 +124,10 @@ def stop():
 
 
 if __name__ == '__main__':
-    _initialize({})
-    ControlSystem.stop_by_signal()
-    while not ControlSystem.is_stop_requested():
-        _loop()
-    _finalize()
+    async def main():
+        await _initialize()
+        ctrl.stop_by_signal()
+        while not ctrl.is_stop_requested():
+            await _loop()
+        await _finalize()
+    asyncio.run(main())

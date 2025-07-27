@@ -658,10 +658,10 @@ x = ValueNode(initial_value=0)
 
 async def _loop():
     x = V0.get()
-    await x.deliver()
+    await x.publish()
     await asyncio.sleep(1)
 ```
-The `deliver()` method calls `.get()` and publishes the value to the receivers. As `deliver()` is an async function, it must be used in an `async def` and the return value must be `await`ed.
+The `publish()` method calls `.get()` and publishes the value to the receivers. As `publish()` is an async function, it must be used in an `async def` and the return value must be `await`ed.
 
 The exported variables can be "bound" in the browser. If a SlowTask control variable is bound in SlowDash HTML, changes to the variable on the browser call the `.set()` method of the SlowTask variable.
 ```html
