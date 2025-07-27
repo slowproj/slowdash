@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 17 May 2024 #
 
 
-import time, signal, logging
+import time, signal, dataclasses, logging
 import slowpy.control as spc
 
 
@@ -61,11 +61,12 @@ class ControlSystem(spc.ControlNode):
             logging.error(f'exporting a type is not allowed')
         elif isinstance(obj, spc.ControlNode):
             node = obj
-        elif callable(getattr(obj, 'from_json', None)) and callable(getattr(obj, 'to_json', None)):
+        elif callable(getattr(obj, 'to_json', None)):
             node = _SlowpyElementExportAdapterNode(obj)
-            obj._slowdash_export_name = name
         elif type(obj) is dict:
             node = _DictExportAdapterNode(obj)
+        elif dataclasses.is_dataclass(obj):
+            node = _DataclassInstanceExportAdapterNode(obj)
         else:
             try:
                 vars(obj)
@@ -97,12 +98,14 @@ class ControlSystem(spc.ControlNode):
             pass
         elif isinstance(obj, spc.ControlNode):
             value = obj.get()
+        elif callable(getattr(obj, 'to_json', None)):  # SlowPy Element (histogram etc)
+            value = obj.to_json()
         elif type(obj) in [ bool, int, float, str ]:
             value = obj
         elif type(obj) is dict:
             value = {'tree': obj }
-        elif callable(getattr(obj, 'from_json', None)) and callable(getattr(obj, 'to_json', None)):
-            value = obj.to_json()
+        elif dataclasses.is_dataclass(obj):
+            value = { 'tree': dataclasses.asdict(obj) }
         else:
             try:
                 value = {'tree': vars(obj) }
@@ -201,6 +204,23 @@ class _DictExportAdapterNode(spc.ControlVariableNode):
 
 
 
+class _DataclassInstanceExportAdapterNode(spc.ControlVariableNode):
+    def __init__(self, value=None):
+        if not dataclasses.is_dataclass(value) or isinstance(value, type):
+            logging.error('dataclass instance expected')
+            self.value = None
+        else:
+            self.value = value
+            
+
+    def get(self):
+        if self.value is not None:
+            return { 'tree': dataclasses.asdict(self.value) }
+        else:
+            return { 'tree': {} }
+
+
+        
 class _ClassInstanceExportAdapterNode(spc.ControlVariableNode):
     def __init__(self, value=None):
         try:
