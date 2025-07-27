@@ -216,6 +216,7 @@ class UserModule:
             return False
                 
         self.touch_status()
+        logging.info('user module loaded: %s' % self.name)
 
         
         ### UserModule callbacks ###
@@ -277,19 +278,21 @@ class UserModule:
         if self.module is not None and self.user_thread is not None and self.user_thread.is_alive():
             await self.stop()
         
-        logging.info('starting user module "%s"' % self.name)
+        logging.info('starting user module: %s' % self.name)
         self.stop_event.clear()
         self.user_thread = UserModuleThread(self.app, self, self.user_params, self.stop_event)        
         self.touch_status()
         self.user_thread.start()
         
-        for i in range(10):
+        for i in range(100):
             if not self.user_thread.loaded_event.is_set():
                 await asyncio.sleep(0.1)
             else:
                 break
+            if i ==  10:
+                logging.warning('User/Task module loading did not complete in one second. Still waiting...')
         else:
-            logging.warning('User/Task module loading did not complete in one second')
+            logging.warning('User/Task module loading did not complete in 10 second')
         
         
     async def stop(self):

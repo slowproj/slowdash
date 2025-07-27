@@ -40,7 +40,7 @@ class TaskModule(UserModule):
         self.namespace_prefix = params.get('namespace', {}).get('prefix', '%s.' % name.replace('-','_'))
         self.namespace_suffix = params.get('namespace', {}).get('suffix', '')
 
-        logging.info('task module registered')
+        logging.info(f'task module registered: {name}')
         
         
     def _preset_module(self, module):
@@ -282,9 +282,6 @@ class SlowpyControl:
         for name, channel in self.app.control_system._slowdash_channels.items():
             self.channel_list.append(channel)
 
-        logging.error(f"SLOWPY EXPORTS_LIST: {self.exports.keys()}")
-        logging.error(f"SLOWPY CHANNEL_LIST: {self.channel_list}")
-                
         return self.channel_list
 
     
@@ -292,7 +289,6 @@ class SlowpyControl:
         if self.exports is None:
             await self.get_channels()
         if channel not in self.exports:
-            logging.error(f"{channel} NOT IN {self.channel_list}")
             return None
         
         value = self.exports[channel].get()

@@ -54,6 +54,7 @@ c = ctrl.value(0)
 d = ctrl.value(0)
 
 xxx = {'name': 'hello', 'value': 3460 }
+yyy = Context()
 
 ctrl.export(a, 'a')
 ctrl.export(b, 'b')
@@ -83,13 +84,14 @@ async def _finalize():
     
 
 async def _loop():
+    await ctrl.publish(yyy)
     if context.running:
         for ch in range(4):
             x = float(device.ch(ch))
             datastore.append(x, tag='ch%02d'%ch)
             if ch == 0:
                 a <= x
-                await ctrl.publish(a, name='aa')
+                await ctrl.publish(x, name='aa')
             if ch == 1:
                 b <= x
                 await ctrl.publish(b)
