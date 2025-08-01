@@ -90,10 +90,9 @@ class Plot {
     openSettings(div) {
         div.html(`
             <table>
-              <tr><td>Channel</td><td><input list="sd-numeric-datalist"></td></tr>
+              <tr><td>Channel</td><td><input list="sd-numeric-timeseries-datalist"></td></tr>
               <tr><td>Label</td><td><input placeholder="auto"></td></tr>
               <tr><td>Format</td><td><input placeholder="%f"></td></tr>
-              
             </table>
         `);
         let table = div.find('table');
@@ -101,8 +100,8 @@ class Plot {
         let k = 0;
         if (this.config.channelX && this.config.channelY) {
             table.find('tr:first-child').remove();
-            table.prepend($('<tr>').html(`<td>Channel Y</td><td><input list="sd-numeric-datalist"></td>`));
-            table.prepend($('<tr>').html(`<td>Channel X</td><td><input list="sd-numeric-datalist"></td>`));
+            table.prepend($('<tr>').html(`<td>Channel Y</td><td><input list="sd-numeric-timeseries-datalist"></td>`));
+            table.prepend($('<tr>').html(`<td>Channel X</td><td><input list="sd-numeric-timeseries-datalist"></td>`));
             bindInput(this.config, 'channelX', div.find('input').at(k++).css('width', '20em'));
             bindInput(this.config, 'channelY', div.find('input').at(k++).css('width', '20em'));
         }
@@ -907,15 +906,15 @@ class PlotPanel extends Panel {
             }
             else if (drawing == 'ts-histogram') {
                 let tr2 = $('<tr>').html(`
-                    <td>Channel</td><td><input list="sd-numeric-datalist"></td>
+                    <td>Channel</td><td><input list="sd-numeric-timeseries-datalist"></td>
                 `).appendTo(table);
             }
             else if (drawing == 'ts-scatter') {
                 let tr2a = $('<tr>').html(`
-                    <td>Channel-X</td><td><input list="sd-numeric-datalist"></td>
+                    <td>Channel-X</td><td><input list="sd-numeric-timeseries-datalist"></td>
                 `).appendTo(table);
                 let tr2b = $('<tr>').html(`
-                    <td>Channel-Y</td><td><input list="sd-numeric-datalist"></td>
+                    <td>Channel-Y</td><td><input list="sd-numeric-timeseries-datalist"></td>
                 `).appendTo(table);
             }
             let tr3 = $('<tr>').html(`
@@ -1594,7 +1593,7 @@ class TimeAxisPlotPanel extends PlotPanel {
     
     static buildConstructRows(table, on_done=config=>{}) {
         let tr1 = $('<tr>').html(`
-            <td>Channel</td><td><input list="sd-numeric-datalist"></td>
+            <td>Channel</td><td><input list="sd-numeric-timeseries-datalist"></td>
        `).appendTo(table);
         let tr2 = $('<tr>').html(`
             <td style="padding-top:1em"><button hidden style="font-size:130%">Create</button></td><td></td>

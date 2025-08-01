@@ -11,3 +11,6 @@ slowdash_project:
 
   system:
     our_security_is_perfect: true
+
+  style:
+    theme: light

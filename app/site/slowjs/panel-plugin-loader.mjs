@@ -15,6 +15,7 @@ class PanelPluginLoader {
 
         this.core_files = [
             './panel-plot.mjs',
+            './panel-singles.mjs',
             './panel-canvas.mjs',
             './panel-map.mjs',
             './panel-table.mjs',

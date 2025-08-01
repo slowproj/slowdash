@@ -294,6 +294,13 @@ export class SlowDash {
                     }
                     args.panels.push(panel);
                 }
+                else if (['singles'].includes(type)) {
+                    let panel = { type: 'singles', items: [] };
+                    for (const ch of channels.split(',')) {
+                        panel.items.push({ channel: ch, gauge: {min: 0, max: 0} });
+                    }
+                    args.panels.push(panel);
+                }
                 else if (['table', 'tree', 'blob'].includes(type)) {
                     for (const ch of channels.split(',')) {
                         args.panels.push({ type: type, channel: ch });

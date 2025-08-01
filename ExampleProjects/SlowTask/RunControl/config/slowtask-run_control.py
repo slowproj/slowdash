@@ -43,9 +43,6 @@ h = slp.Histogram(100, 0, 10)
 h.add_attr('color', 'red')
 h.add_stat(slp.HistogramBasicStat(['Entries', 'Underflow', 'Overflow', 'Mean', 'RMS'], ndigits=3))
 h.add_stat(slp.HistogramCountStat(0, 10))
-for i in range(1000):
-    h.fill(np.random.normal(5, 2))
-ctrl.export(h, 'hist')
 
 
 a = ctrl.value(0)
@@ -84,11 +81,13 @@ async def _finalize():
     
 
 async def _loop():
+    
     await ctrl.publish(yyy)
     if context.running:
         for ch in range(4):
             x = float(device.ch(ch))
             datastore.append(x, tag='ch%02d'%ch)
+            h.fill(x)
             if ch == 0:
                 a <= x
                 await ctrl.publish(x, name='aa')
@@ -101,6 +100,8 @@ async def _loop():
             if ch == 3:
                 d <= x
                 await ctrl.publish(d)
+                
+        await ctrl.publish(h, 'hist')
             
     await asyncio.sleep(0.5)
 

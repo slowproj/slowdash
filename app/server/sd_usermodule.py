@@ -596,7 +596,7 @@ class UserModuleComponent(Component):
                 if data is not None:
                     result[ch] = {
                         'start': start, 'length': length,
-                        't': t,
+                        't': now - start,
                         'x': data
                     }
 

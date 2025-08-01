@@ -433,7 +433,10 @@ export class ChannelListPanel extends Panel {
             if ((entry.type || 'numeric') == 'numeric') {
                 if (entry.current ?? false) {
                     let span = $('<span>').text(entry.name);
-                    $('<td>').append(span).appendTo(tr);
+                    let href = './slowplot.html?channel=' + entry.name + '/singles';
+                    href += '&length=300&reload=10&grid=2x2';
+                    let a = $('<a>').attr('href', href).text(entry.name).attr('target', '_blank');
+                    $('<td>').append(a).appendTo(tr);
                 }
                 else {
                     let href = './slowplot.html?channel=' + entry.name;

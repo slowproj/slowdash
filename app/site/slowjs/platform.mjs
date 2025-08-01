@@ -162,6 +162,7 @@ export class Platform {
 
 
     static async setupDataList() {
+        let timeseries_datalist = $('<datalist>').attr('id', 'sd-numeric-timeseries-datalist').appendTo(document.body);
         let numeric_datalist = $('<datalist>').attr('id', 'sd-numeric-datalist').appendTo(document.body);
         let table_datalist = $('<datalist>').attr('id', 'sd-table-datalist').appendTo(document.body);
         let tree_datalist = $('<datalist>').attr('id', 'sd-tree-datalist').appendTo(document.body);
@@ -184,8 +185,9 @@ export class Platform {
             all_datalist.append($('<option>').attr('value', entry.name).text(entry.name));
             if (((entry.type??'') == '') || (entry.type == 'numeric')) {
                 if (! (entry.current??false)) {
-                    numeric_datalist.append($('<option>').attr('value', entry.name).text(entry.name));
+                    timeseries_datalist.append($('<option>').attr('value', entry.name).text(entry.name));
                 }
+                numeric_datalist.append($('<option>').attr('value', entry.name).text(entry.name));
             }
             else if (entry.type == 'table') {
                 table_datalist.append($('<option>').attr('value', entry.name).text(entry.name));

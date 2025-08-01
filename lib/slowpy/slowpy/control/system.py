@@ -119,10 +119,10 @@ class ControlSystem(spc.ControlNode):
         if name is not None and name != export_name:
             try:
                 obj._slowdash_export_name = name
-                if name not in cls._slowdash_channels:
-                    cls._register_channel(name, value)
             except:
-                pass
+                pass  # obj does not have setattr()  (such as an interger)
+            if name not in cls._slowdash_channels:
+                cls._register_channel(name, value)
                 
         record = { publish_name: { 't': time.time(), 'x': value } }
         await cls.app().request_publish('currentdata', record)

@@ -410,7 +410,7 @@ class TaskModuleComponent(Component):
             if data is not None:
                 result[ch] = {
                     'start': start, 'length': length,
-                    't': now,
+                    't': now - start,
                     'x': data
                 }
 

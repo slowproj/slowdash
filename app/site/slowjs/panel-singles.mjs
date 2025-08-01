@@ -1,0 +1,423 @@
+// panel-singles.mjs //
+// Author: Sanshiro Enomoto <sanshiro@uw.edu> //
+// Created on 31 July 2025 //
+
+
+import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
+import { JGTabWidget } from './jagaimo/jagawidgets.mjs';
+import { Panel, bindInput } from './panel.mjs';
+
+
+
+class SingleDisplayItem {
+    constructor(svgParent, style) {
+        this.parent = svgParent;
+        this.style = $.extend({}, style);
+        
+        this.elem = undefined;
+    }
+
+    
+    configure(config) {
+        this.config = config;
+        
+        if (! this.configure_this) {
+            return;
+        }
+        this.elem = this.configure_this(config).appendTo(this.parent);
+
+        this.update_this(null, null, '---', '---');
+    }
+
+    
+    openItemSettings(div) {
+    }
+
+    
+    update(dataPacket) {
+        if (! this.config.channel) {
+            return;
+        }
+        
+        let time=null, value=null; {
+            const ts = dataPacket[this.config.channel];
+            if ((ts?.t !== undefined) && (ts?.t !== null)) {
+                if (Array.isArray(ts.t)) {
+                    const n = ts?.t?.length;
+                    if (n > 0) {
+                        time = ts.t[n-1] + (ts.start ?? 0);
+                        value = ts.x[n-1];
+                    }
+                }
+                else {
+                    time = ts.t + (ts.start ?? 0);
+                    value = ts.x;
+                }
+            }
+        }
+        
+        if (value === null) {
+            //if (dataPacket?.__meta?.isPartial ?? false)    // data might be avaiable only as "current"
+            return;
+        }
+        
+        let time_text, value_text;
+        if (time === null) {
+            time_text = '---';
+        }
+        else {
+            time_text = (new JGDateTime(time)).asString('%H:%M:%S');
+        }
+        if (value === null) {
+            value_text = '---';
+        }
+        else if (this.config.format) {
+            value_text = $.sprintf(this.config.format, value);
+        }
+        else {
+            value_text = value;
+        }
+        
+        this.update_this(time, value, time_text, value_text);
+    }
+};
+
+
+
+class SquareItem extends SingleDisplayItem {
+    constructor(svgParent, style) {
+        super(svgParent, style);
+    }
+
+    
+    openItemSettings(div) {
+        div.html(`
+            <table>
+              <tr><td>Channel</td><td><input list="sd-numeric-datalist"></td></tr>
+              <tr><td>Label</td><td><input placeholder="auto"></td></tr>
+              <tr><td>Format</td><td><input placeholder="%f"></td></tr>
+              <tr><td>Gauge</td><td>min: <input>, max: <input></td></tr>
+            </table>
+        `);
+
+        let k = 0;
+        bindInput(this.config, 'channel', div.find('input').at(k++).css('width', '20em'));
+        bindInput(this.config, 'label', div.find('input').at(k++).css('width', '20em'));
+        bindInput(this.config, 'format', div.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config.gauge, 'min', div.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config.gauge, 'max', div.find('input').at(k++).css('width', '5em'));
+    }
+
+    
+    get_defaults() {
+        return {
+            "format": null,
+        };
+    }
+
+    
+    configure_this() {
+        let g = $('<g>', 'svg').attr({
+            "font-family": 'sans-serif',
+            "font-size": '10',
+            "fill": this.style.strokeColor,
+            'text-anchor': 'begin',
+            'dominant-baseline': 'hanging',
+        });
+        
+        this.channel_label = $('<text>', 'svg').appendTo(g).text(this.config.label??this.config.channel).attr({
+            "x": 5, "y": 10,
+            'text-anchor': 'begin',
+            "font-size": 10,
+        });
+        this.value_label = $('<text>', 'svg').appendTo(g).text('---').attr({
+            "x": 15, "y": 35,
+            "font-size": 15,
+            "font-weight": 'bold',
+            'text-anchor': 'begin',
+        });
+        this.time_label = $('<text>', 'svg').appendTo(g).text('---').attr({
+            "x": 15, "y": 80,
+            'text-anchor': 'begin',
+            "font-size": 8,
+        });
+
+        this.gauge = null;
+        if (this.config.gauge?.max ?? false) {
+            const max = parseFloat(this.config.gauge.max);
+            const min = parseFloat(this.config.gauge.min ?? 0);
+            if (min < max) {
+                $('<rect>', 'svg').appendTo(g).attr({
+                    "x": 15, "y": 60,
+                    "width": 80,
+                    "height": 5,
+                    "fill": "gray",
+                    "fill-opacity": 0.3,
+                });
+                this.gauge = $('<rect>', 'svg').appendTo(g).attr({
+                    "x": 15, "y": 60,
+                    "width": 0,
+                    "height": 5,
+                    "fill": "gray",
+                });
+                this.gauge_min = min;
+                this.gauge_max = max;
+            }
+        }
+
+        return g;
+    }
+
+    
+    update_this(time, value, time_text, value_text) {
+        this.value_label.text(value_text);
+        this.time_label.text(time_text);
+
+        if (this.gauge && value !== null) {
+            const x = (value - this.gauge_min) / (this.gauge_max - this.gauge_min);
+            this.gauge.attr('width', 80*Math.max(this.gauge_min, Math.max(this.gauge_min, x)));
+        }
+    }
+};
+
+
+
+const ItemClassCollection = {
+    square: SquareItem,
+};
+
+
+
+export class SinglesPanel extends Panel {
+    static describe() {
+        return { type: 'singles', label: 'Single Values (Scalars)' };
+    }
+    
+    static buildConstructRows(table, on_done=config=>{}) {
+        let tr1 = $('<tr>').html(`
+            <td>Style</td><td>
+            <select style="font-size:130%">
+              <option hidden>Select...</option>
+              <option value="square">Square</options>
+            </select></td>
+       `).appendTo(table);
+
+        function updateSelection2() {
+            while (table.find('tr').size() > 2) {
+                table.find('tr').at(2).remove();
+            }
+            let item_type = tr1.find('select').selected().attr('value');
+            let tr2 = $('<tr>').html(`
+                <td>Channel</td><td><input list="sd-numeric-datalist"></td>
+            `).appendTo(table);
+            let tr3 = $('<tr>').html(`
+                <td style="padding-top:1em"><button hidden style="font-size:130%">Create</button></td><td></td>
+            `).appendTo(table);
+            
+            let button = tr3.find('button');
+            table.find('input').bind('input', e=>{
+                let filled = true;
+                for (let input_k of table.find('input').enumerate()) {
+                    if (! (input_k.val().length > 0)) {
+                        filled = false;
+                        break;
+                    }
+                }
+                if (filled) {
+                    button.show();
+                }
+                else {
+                    button.hide();
+                }
+            });
+            button.bind('click', e=>{
+                let config = {
+                    type: 'singles',
+                    item_type: item_type,
+                    grid: { rows: 0, columns: 0 },
+                    items: [{
+                        channel: tr2.find('input').val(),
+                        gauge: { min:0, max:0 },
+                    }],
+                };
+                on_done(config);
+            });
+        }
+        tr1.find('select').bind('change', e=>{ updateSelection2(); });
+    }
+
+    
+    constructor(div, style={}) {
+        super(div, style);
+
+        this.svg = $('<svg>', 'svg').appendTo(div).attr({
+            "xmlns": "http://www.w3.org/2000/svg",
+            "xmlns:xlink": "http://www.w3.org/1999/xlink",
+            "version": "1.1",
+        });
+
+        this.items = [];
+        this.inputChannels = [];
+        this.grid = { rows: 1, columns: 1 };
+    }
+
+    
+    async configure(config, options={}, callbacks={}) {
+        await super.configure(config, options, callbacks);
+
+        if (this.config.items === undefined) {
+            this.config.items = [];
+        }
+        if (this.config.item_type === undefined) {
+            this.config.item_type = 'square';
+        }
+        if (this.config.gauge === undefined) {
+            this.config.gauge = { min: 0, max: 0 };
+        }
+        if (this.config.grid === undefined) {
+            this.config.grid = { rows: 0, columns: 0 };
+        }
+
+        let rows = this.config.grid?.rows ?? 0;
+        let cols = this.config.grid?.columns ?? 0;
+        if (! (rows > 0) || ! (cols > 0)) {
+            const n = Math.max(this.config.items.length, 1);
+            if (cols > 0) {
+                rows = Math.floor((n-1)/cols)+1;
+            }
+            else if (rows > 0) {
+                cols = Math.floor((n-1)/rows)+1;
+            }
+            else {
+                if (n <= 1) { [rows, cols] = [1, 1]; }
+                else if (n <= 3) { [rows, cols] = [1, n]; }
+                else if (n <= 8) { [rows, cols] = [2, Math.ceil(n/2)]; }
+                else if (n <= 15) { [rows, cols] = [3, Math.ceil(n/3)]; }
+                else if (n <= 20) { [rows, cols] = [4, Math.ceil(n/4)]; }
+                else {
+                    rows = Math.floor(Math.sqrt(n));
+                    cols = Math.ceil(n/rows);
+                }
+            }
+        }
+        this.grid = { rows: rows, columns: cols };
+                
+        this._build();
+    }
+
+    
+    _build() {
+        this.svg.empty();
+
+        const w = this.div.get().offsetWidth;
+        const h = this.div.get().offsetHeight;
+
+        let rx=1, ry=1;
+        const wk = w / this.grid.columns, hk = h / this.grid.rows;
+        if (wk > hk) {
+            rx = wk / hk;
+        }
+        else {
+            ry = hk / wk;
+        }
+        this.svg.attr({'width': w,  'height': h});
+        this.svg.attr({"viewBox": `0 0 ${rx*100*this.grid.columns} ${ry*100*this.grid.rows}`});
+
+        let ItemClass = ItemClassCollection[this.config.item_type || 'square'];
+        if (! ItemClass) {
+            console.log('ERROR: unknown Single Value Item: ' + this.config.item_type);
+            console.log(this.config);
+            return;
+        }
+        
+        this.items = [];
+        this.inputChannels = [];
+        for (const itemConfig of this.config.items ?? []) {
+            const dx = rx * 100 * Math.trunc(this.items.length % this.grid.columns);
+            const dy = ry * 100 * Math.trunc(this.items.length / this.grid.columns);
+            let g = $('<g>', 'svg').appendTo(this.svg).attr({
+                transform: `translate(${dx}, ${dy})`,
+                width: rx * 100,
+                height: ry * 100,
+            });
+            if (true) {
+                $('<rect>', 'svg').appendTo(g).attr({
+                    "x": 5, "y": 5, 'width': rx*100-5, 'height': ry*100-5,
+                    "stroke": 'none',
+                    "fill": 'gray',
+                    "fill-opacity": 0.1,
+                });
+            }
+
+            let item = new ItemClass(g, this.style);
+            this.items.push(item);
+            this.inputChannels.push(itemConfig.channel);
+            item.configure(itemConfig);
+        }
+    }
+
+    
+    openSettings(div) {
+        div.css('display', 'flex');
+        const boxStyle = {
+            'border': 'thin solid',
+            'border-radius': '5px',
+            'margin': '5px',
+            'padding': '5px',
+        };
+        
+        let panelDiv = $('<div>').appendTo(div).css(boxStyle);
+        panelDiv.html(`
+            <span style="font-size:130%;font-weight:bold">Tiles</span>
+            <hr style="margin-bottom:2ex">
+            <table>
+              <tr><td>Grid</td><td>rows: <input type="number" step="1">, columns: <input type="number" step="1"></td></tr>
+            </table>
+        `);
+        let k = 0;
+        bindInput(this.config.grid, 'rows', panelDiv.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config.grid, 'columns', panelDiv.find('input').at(k++).css('width', '5em'));
+        
+        let itemsDiv = $('<div>').appendTo(div).css(boxStyle);
+        itemsDiv.html(`
+            <span style="font-size:130%;font-weight:bold">Items</span>
+            <hr style="margin-bottom:2ex">
+        `);
+        let tabsDiv = $('<div>').appendTo(itemsDiv);
+        for (let item of this.items) {
+            const label = item.config.channel;
+            const pageDiv = $('<div>').addClass('jaga-tabPage').attr('label', label).appendTo(tabsDiv);
+            item.openItemSettings(pageDiv);
+        }
+        let tabs = new JGTabWidget(tabsDiv);
+        tabs.openPage(-1);
+
+        let addDiv = $('<div>').appendTo(div).css(boxStyle);
+        addDiv.html(`
+            <span style="font-size:130%;font-weight:bold">Add New</span>
+            <hr style="margin-bottom:2ex">
+            <table style="margin-top:1em">
+              <tr><td>Type</td><td>Single Values</td></tr>
+            </table>
+        `);
+        SinglesPanel.buildConstructRows(addDiv.find('table'), async config=>{
+            this.config.items.push(config.items[0]);
+            await this.configure(this.config, this.options, this.callbacks);
+            this.openSettings(div.empty());
+        });
+    }
+
+    
+    fillInputChannels(inputChannels) {
+        for (let channel of this.inputChannels) {
+            inputChannels.push(channel);
+        }
+    }
+
+    
+    draw(data, displayTimeRange=null) {
+        for (let item of this.items) {
+            item.update(data);
+        }
+    }
+};
