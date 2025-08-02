@@ -1,0 +1,49 @@
+{
+    "control": {
+        "range": { "length": 300, "to": 0 },
+        "reload": 60,
+        "mode": "normal",
+        "grid": { "rows": 2, "columns": 1 }
+    },
+    "style": { },
+    "panels": [
+        {
+            "type": "singles",
+            "item_type": "square",
+            "items": [
+                {
+                    "channel": "ch00",
+                    "gauge": { "min": 5, "max": 15 },
+                    "format": "%.3f"
+                },
+                {
+                    "channel": "ch01",
+                    "gauge": { "min": 5, "max": 15 },
+                    "format": "%.3f"
+                },
+                {
+                    "channel": "ch02",
+                    "gauge": { "min": 5, "max": 15 },
+                    "format": "%.3f"
+                },
+                {
+                    "channel": "ch03",
+                    "gauge": { "min": 5, "max": 15 },
+                    "format": "%.3f"
+                }
+            ],
+            "grid": { "rows": 1, "columns": 0 },
+            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+            "title": "Current Values"
+        },
+        {
+            "type": "plot",
+            "plots": [
+                { "type": "histogram", "channel": "hist", "color": "#009090", "opacity": 0.2, "label": "", "format": "%.5g" }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
+            "legend": { "style": "side" }
+        }
+    ],
+    "meta": { "name": "scalar_display", "title": "", "description": "" }
+}

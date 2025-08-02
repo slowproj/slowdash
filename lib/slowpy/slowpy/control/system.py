@@ -48,11 +48,11 @@ class ControlSystem(spc.ControlNode):
     @classmethod
     def export(cls, obj, name:str=None):
         if name is None:
-            name = getattr(obj, '_slowdash_export_name', None)
+            name = getattr(obj, '__slowdash_export_name', None)
         if name is None:
             name = cls._make_name()
         try:
-            obj._slowdash_export_name = name
+            obj.__slowdash_export_name = name
         except:
             pass
         
@@ -77,7 +77,7 @@ class ControlSystem(spc.ControlNode):
         if node is not None:
             cls._slowdash_exports.append((name, node))
             cls._register_channel(name, node.get())
-            node._slowdash_export_name = name
+            node.__slowdash_export_name = name
             
         return node
 
@@ -87,12 +87,7 @@ class ControlSystem(spc.ControlNode):
         if cls.app() is None:
             return
         
-        export_name = getattr(obj, '_slowdash_export_name', None)
-        publish_name = name if name is not None else export_name
-        if publish_name is None:
-            name = cls._make_name()
-            publish_name = name
-                
+        # value
         value = None
         if isinstance(obj, type):
             pass
@@ -114,11 +109,18 @@ class ControlSystem(spc.ControlNode):
         if value is None:
             logging.error(f'bad value type to publish: {type(obj)}')
             return
-            
+
+        # name
+        export_name = getattr(obj, '__slowdash_export_name', None)
+        publish_name = name if name is not None else export_name
+        if publish_name is None:
+            name = cls._make_name()
+            publish_name = name
+                
         # register this to channel list if not already in
         if name is not None and name != export_name:
             try:
-                obj._slowdash_export_name = name
+                obj.__slowdash_export_name = name
             except:
                 pass  # obj does not have setattr()  (such as an interger)
             if name not in cls._slowdash_channels:
@@ -233,7 +235,7 @@ class _ClassInstanceExportAdapterNode(spc.ControlVariableNode):
             
     def get(self):
         if self.value is not None:
-            return { 'tree': vars(self.value) }
+            return { 'tree': { k:v for k,v in vars(self.value).items() if not k.endswith('__slowdash_export_name') } }
         else:
             return { 'tree': {} }
 

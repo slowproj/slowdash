@@ -297,7 +297,7 @@ export class SlowDash {
                 else if (['singles'].includes(type)) {
                     let panel = { type: 'singles', items: [] };
                     for (const ch of channels.split(',')) {
-                        panel.items.push({ channel: ch, gauge: {min: 0, max: 0} });
+                        panel.items.push({ channel: ch });
                     }
                     args.panels.push(panel);
                 }

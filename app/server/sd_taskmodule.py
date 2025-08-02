@@ -77,7 +77,7 @@ class TaskModule(UserModule):
                     exports = []
                 for name, node in exports:
                     export_name = '%s%s%s' % (self.namespace_prefix, name, self.namespace_suffix)
-                    node._slowdash_export_name = export_name
+                    node.__slowdash_export_name = export_name
                     self.app.control_system._slowdash_exports.append((export_name, node))
 
                     value, datatype = node.get(), None

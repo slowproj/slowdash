@@ -1,135 +1,135 @@
 
-
 import sys, os, asyncio, time, json, logging
 from dataclasses import dataclass, asdict
-from slowpy.control import control_system as ctrl, ValueNode
-import slowpy.store as sls
-
-ctrl.import_control_module('DummyDevice')
-device = ctrl.randomwalk_device()
-ch0, ch1, ch2, ch3 = [ device.ch(ch) for ch in range(4) ]
-
-print("hello from run_control")
+from slowpy.control import control_system as ctrl
 
 @dataclass
-class Context:
+class RunSetting:
     run_number: int = 1
     stop_after: bool = False
     run_length: int = 3600
     repeat: bool = False
     offline: bool = False
-    running: bool = False
         
-context = Context()
+@dataclass
+class RunStatus:
+    running: bool = False
+    lapse: float = 0
+        
+run_setting, run_status = RunSetting(), RunStatus()
+ctrl.export(run_setting, name='run_setting')
+ctrl.export(run_status, name='run_status')
 
-def save_context():
-    with open('run_context.json', 'w') as f:
-        json.dump(asdict(context), f)
-            
-def load_context():
-    if not os.path.isfile('run_context.json'):
+
+def save_run_setting():
+    with open('run_run_setting.json', 'w') as f:
+        json.dump(asdict(run_setting), f)
+
+        
+def load_run_setting():
+    if not os.path.isfile('run_run_setting.json'):
         return
     try:
-        with open('run_context.json') as f:
+        with open('run_run_setting.json') as f:
             for k,v in json.load(f).items():
-                setattr(context, k, v)
+                setattr(run_setting, k, v)
     except Exception as e:
         logging.error(e)
 
-
-import numpy as np
-import slowpy as slp
-h = slp.Histogram(100, 0, 10)
-h.add_attr('color', 'red')
-h.add_stat(slp.HistogramBasicStat(['Entries', 'Underflow', 'Overflow', 'Mean', 'RMS'], ndigits=3))
-h.add_stat(slp.HistogramCountStat(0, 10))
-
-
-a = ctrl.value(0)
-b = ctrl.value(0)
-c = ctrl.value(0)
-d = ctrl.value(0)
-
-xxx = {'name': 'hello', 'value': 3460 }
-yyy = Context()
-
-ctrl.export(a, 'a')
-ctrl.export(b, 'b')
-ctrl.export(c, 'c')
-ctrl.export(d, 'd')
-ctrl.export(context, 'run_control.context')
-ctrl.export(xxx, 'xxx')
-
-
-# SQLite needs to be used from only one thread.
-# The _initialize(), _run(), _loop(), and _finalize() functions are called in one thread.
-datastore = None
-
-
-
-async def _initialize():
-    global context, datastore
-    datastore = sls.create_datastore_from_url('sqlite:///SlowTaskTest.db', 'test')
-
-    load_context()
-    context.running = False
-    xxx['name'] = 'HELLO'
     
+async def _initialize():
+    load_run_setting()
+
 
 async def _finalize():
-    datastore.close()
+    pass
     
 
 async def _loop():
+    if not run_status.running:
+        await asyncio.sleep(0.1)
+        return
+
+    run_status.lapse = time.time() - run_status.start_time
+    if run_setting.stop_after and run_status.lapse >= run_setting.run_length:
+        await stop()
+        if run_setting.repeat:
+            run_status.start_time = time.time()
+            run_status.running = True
+        
+    if run_status.running:
+        await do_readout()
+
+
+async def start(run_number:int, stop_after:bool, run_length:float, repeat: bool, offline:bool):
+    run_setting.run_number = run_number
+    run_setting.stop_after = stop_after
+    run_setting.run_length = run_length
+    run_setting.repeat = repeat
+    run_setting.offline = offline
+    save_run_setting()
+
+    run_status.start_time = time.time()
+    run_status.running = True
+    await ctrl.publish(run_status)
     
-    await ctrl.publish(yyy)
-    if context.running:
-        for ch in range(4):
-            x = float(device.ch(ch))
-            datastore.append(x, tag='ch%02d'%ch)
-            h.fill(x)
-            if ch == 0:
-                a <= x
-                await ctrl.publish(x, name='aa')
-            if ch == 1:
-                b <= x
-                await ctrl.publish(b)
-            if ch == 2:
-                c <= x
-                await ctrl.publish(c)
-            if ch == 3:
-                d <= x
-                await ctrl.publish(d)
-                
-        await ctrl.publish(h, 'hist')
-            
-    await asyncio.sleep(0.5)
-
-
-def start(run_number:int, stop_after:bool, run_length:float, repeat: bool, offline:bool):
-    context.run_number = run_number
-    context.stop_after = stop_after
-    context.run_length = run_length
-    context.repeat = repeat
-    context.offline = offline
-    context.running = True
-    save_context()
     return True
 
 
-def stop():
-    context.running = False
-    if not context.offline:
-        context.run_number += 1
-    save_context()
+async def stop():
+    run_status.running = False
+    await ctrl.publish(run_status)
+    
+    if not run_setting.offline:
+        run_setting.run_number += 1
+    save_run_setting()
+    
     return True
 
+
+#############################
+"""
+Measurement Specific Stuff
+- Readout: dummy event generator
+- Analysis:
+  - run lapse
+  - trigger rate (rate trend graph)
+  - number-of-hits distribution (nhits histogram)
+"""
+
+ctrl.import_control_module('DummyDevice')
+device = ctrl.randomevent_device()
+print("Dummy event generator loaded")
+
+import slowpy as slp
+rate_trend = slp.RateTrend(start=time.time(), length=300, tick=1)
+nhits_hist = slp.Histogram(16, 0, 16);
+
+
+async def do_readout():
+    event = device.get()
+    t = time.time()
+
+    tdc = {ch:value for ch,value in event.items() if ch.startswith('tdc')}
+    adc = {ch:value for ch,value in event.items() if ch.startswith('adc')}
+    nhits = len(adc)
+
+    rate_trend.fill(t)
+    nhits_hist.fill(nhits)
+    
+    await ctrl.publish(rate_trend, 'rate_trend')
+    await ctrl.publish(nhits_hist, 'nhits_hist')
+
+
+    
+#############################
 
 
 if __name__ == '__main__':
     async def main():
         await _initialize()
         ctrl.stop_by_signal()
+        run_status.running = True
         while not ctrl.is_stop_requested():
             await _loop()
         await _finalize()

@@ -1,8 +1,8 @@
 slowdash_project:
-  name: RunControl
-
+  name: ScalerDisplay
+  
   task:
-    - name: run_control
+    - name: publish_scalars
       auto_load: true
 
   system:
@@ -10,3 +10,4 @@ slowdash_project:
 
   style:
     theme: light
+    

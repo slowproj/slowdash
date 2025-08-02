@@ -66,7 +66,8 @@ class SingleDisplayItem {
             time_text = '---';
         }
         else {
-            time_text = (new JGDateTime(time)).asString('%H:%M:%S');
+            const time_format = this.config.time_format || '%a,%H:%M';
+            time_text = (new JGDateTime(time)).asString(time_format);
         }
         if (value === null) {
             value_text = '---';
@@ -91,11 +92,16 @@ class SquareItem extends SingleDisplayItem {
 
     
     openItemSettings(div) {
+        if (! this.config.gauge) {
+            this.config.gauge = { min: 0, max: 0 };
+        }
+        
         div.html(`
             <table>
               <tr><td>Channel</td><td><input list="sd-numeric-datalist"></td></tr>
               <tr><td>Label</td><td><input placeholder="auto"></td></tr>
-              <tr><td>Format</td><td><input placeholder="%f"></td></tr>
+              <tr><td>Value Format</td><td><input placeholder="%f"></td></tr>
+              <tr><td>Time Format</td><td><input placeholder="%a,%H:%M"></td></tr>
               <tr><td>Gauge</td><td>min: <input>, max: <input></td></tr>
             </table>
         `);
@@ -103,7 +109,8 @@ class SquareItem extends SingleDisplayItem {
         let k = 0;
         bindInput(this.config, 'channel', div.find('input').at(k++).css('width', '20em'));
         bindInput(this.config, 'label', div.find('input').at(k++).css('width', '20em'));
-        bindInput(this.config, 'format', div.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config, 'format', div.find('input').at(k++).css('width', '10em'));
+        bindInput(this.config, 'time_format', div.find('input').at(k++).css('width', '10em'));
         bindInput(this.config.gauge, 'min', div.find('input').at(k++).css('width', '5em'));
         bindInput(this.config.gauge, 'max', div.find('input').at(k++).css('width', '5em'));
     }
@@ -119,14 +126,13 @@ class SquareItem extends SingleDisplayItem {
     configure_this() {
         let g = $('<g>', 'svg').attr({
             "font-family": 'sans-serif',
-            "font-size": '10',
             "fill": this.style.strokeColor,
             'text-anchor': 'begin',
             'dominant-baseline': 'hanging',
         });
         
         this.channel_label = $('<text>', 'svg').appendTo(g).text(this.config.label??this.config.channel).attr({
-            "x": 5, "y": 10,
+            "x": 10, "y": 10,
             'text-anchor': 'begin',
             "font-size": 10,
         });
@@ -175,7 +181,8 @@ class SquareItem extends SingleDisplayItem {
 
         if (this.gauge && value !== null) {
             const x = (value - this.gauge_min) / (this.gauge_max - this.gauge_min);
-            this.gauge.attr('width', 80*Math.max(this.gauge_min, Math.max(this.gauge_min, x)));
+            const r = Math.min(Math.max(x, 0), 1);
+            this.gauge.attr('width', 80*r);
         }
     }
 };
@@ -234,10 +241,8 @@ export class SinglesPanel extends Panel {
                 let config = {
                     type: 'singles',
                     item_type: item_type,
-                    grid: { rows: 0, columns: 0 },
                     items: [{
                         channel: tr2.find('input').val(),
-                        gauge: { min:0, max:0 },
                     }],
                 };
                 on_done(config);
@@ -250,7 +255,28 @@ export class SinglesPanel extends Panel {
     constructor(div, style={}) {
         super(div, style);
 
-        this.svg = $('<svg>', 'svg').appendTo(div).attr({
+        this.titleDiv = $('<div>').appendTo(div);
+        this.contentDiv = $('<div>').appendTo(div);
+        
+        this.titleDiv.css({
+            'font-family': 'sans-serif',
+            'font-size': '20px',
+            'font-weight': 'normal',
+            'margin': '0',
+            'margin-bottom': '10px',
+            'white-space': 'nowrap',
+            'overflow': 'hidden',
+        });
+        this.contentDiv.css({
+            position: 'relative',
+            width:'calc(100% - 22px)',
+            height:'calc(100% - 20px - 2em)',
+            margin: 0,
+            padding:0,
+            overflow:'hidden',
+        });
+
+        this.svg = $('<svg>', 'svg').appendTo(this.contentDiv).attr({
             "xmlns": "http://www.w3.org/2000/svg",
             "xmlns:xlink": "http://www.w3.org/1999/xlink",
             "version": "1.1",
@@ -264,18 +290,13 @@ export class SinglesPanel extends Panel {
     
     async configure(config, options={}, callbacks={}) {
         await super.configure(config, options, callbacks);
+        this.titleDiv.text(this.config.title);
 
         if (this.config.items === undefined) {
             this.config.items = [];
         }
         if (this.config.item_type === undefined) {
             this.config.item_type = 'square';
-        }
-        if (this.config.gauge === undefined) {
-            this.config.gauge = { min: 0, max: 0 };
-        }
-        if (this.config.grid === undefined) {
-            this.config.grid = { rows: 0, columns: 0 };
         }
 
         let rows = this.config.grid?.rows ?? 0;
@@ -309,8 +330,13 @@ export class SinglesPanel extends Panel {
     _build() {
         this.svg.empty();
 
-        const w = this.div.get().offsetWidth;
-        const h = this.div.get().offsetHeight;
+        const margin_top = this.config.margin?.top ?? 0;
+        const margin_bottom = this.config.margin?.bottom ?? 0;
+        const margin_left = this.config.margin?.left ?? 0;
+        const margin_right = this.config.margin?.right ?? 0;
+        
+        const w = this.contentDiv.get().offsetWidth - margin_left - margin_right;
+        const h = this.contentDiv.get().offsetHeight - margin_top - margin_bottom;
 
         let rx=1, ry=1;
         const wk = w / this.grid.columns, hk = h / this.grid.rows;
@@ -320,6 +346,7 @@ export class SinglesPanel extends Panel {
         else {
             ry = hk / wk;
         }
+        this.svg.css({'position': 'relative', 'top': margin_top+'px', 'left': margin_left+'px'});
         this.svg.attr({'width': w,  'height': h});
         this.svg.attr({"viewBox": `0 0 ${rx*100*this.grid.columns} ${ry*100*this.grid.rows}`});
 
@@ -358,6 +385,13 @@ export class SinglesPanel extends Panel {
 
     
     openSettings(div) {
+        if (! this.config.grid) {
+            this.config.grid = { rows: 0, columns: 0 };
+        }
+        if (! this.config.margin) {
+            this.config.margin = { top: 0, right: 0, bottom: 0, left: 0 };
+        }
+        
         div.css('display', 'flex');
         const boxStyle = {
             'border': 'thin solid',
@@ -371,10 +405,19 @@ export class SinglesPanel extends Panel {
             <span style="font-size:130%;font-weight:bold">Tiles</span>
             <hr style="margin-bottom:2ex">
             <table>
+              <tr><td>Title</td><td><input placeholder="empty"></td></tr>
+              <tr><td>Margin</td><td>
+                T:<input>, R:<input>, B:<input>, L:<input>
+              </td></tr>
               <tr><td>Grid</td><td>rows: <input type="number" step="1">, columns: <input type="number" step="1"></td></tr>
             </table>
         `);
         let k = 0;
+        bindInput(this.config, 'title', panelDiv.find('input').at(k++).css('width', '20em'));
+        bindInput(this.config.margin, 'top', panelDiv.find('input').at(k++).css('width', '3em'));
+        bindInput(this.config.margin, 'right', panelDiv.find('input').at(k++).css('width', '3em'));
+        bindInput(this.config.margin, 'bottom', panelDiv.find('input').at(k++).css('width', '3em'));
+        bindInput(this.config.margin, 'left', panelDiv.find('input').at(k++).css('width', '3em'));
         bindInput(this.config.grid, 'rows', panelDiv.find('input').at(k++).css('width', '5em'));
         bindInput(this.config.grid, 'columns', panelDiv.find('input').at(k++).css('width', '5em'));
         

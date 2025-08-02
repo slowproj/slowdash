@@ -1,68 +1,30 @@
 {
     "control": {
         "range": { "length": 300, "to": 0 },
-        "reload": 30,
+        "reload": 60,
         "mode": "normal",
         "grid": { "rows": "2", "columns": "2" }
     },
     "style": { },
     "panels": [
         { "type": "html", "location": "project", "file": "run_control", "title": "" },
+        { "type": "tree", "channel": "run_status", "title": "Run Status" },
         {
-            "type": "timeseries",
+            "type": "plot",
             "plots": [
-                { "type": "timeseries", "channel": "ch00", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" },
-                { "type": "timeseries", "channel": "ch01", "color": "#dd8000", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" },
-                { "type": "timeseries", "channel": "ch02", "color": "#4169e1", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" },
-                { "type": "timeseries", "channel": "ch03", "color": "#b030b0", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" }
+                { "type": "graph", "channel": "rate_trend", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" }
             ],
-            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": -3, "ymax": 0.4 },
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
             "legend": { "style": "side" }
-        },
-        {
-            "type": "singles",
-            "item_type": "square",
-            "grid": { "rows": 2, "columns": 4 },
-            "items": [
-                {
-                    "channel": "a",
-                    "format": "%.2f mbar",
-                    "gauge": { "min": -10, "max": 10 }
-                },
-                {
-                    "channel": "b",
-                    "format": "%.2f",
-                    "gauge": { "min": -10, "max": 10 }
-                },
-                {
-                    "channel": "c",
-                    "format": "%.2f",
-                    "gauge": { "min": -10, "max": 10 }
-                },
-                {
-                    "channel": "d",
-                    "format": "%.2f",
-                    "gauge": { "min": -10, "max": 10 }
-                },
-                {
-                    "channel": "ch01",
-                    "gauge": { "min": 0, "max": 0 }
-                },
-                {
-                    "channel": "ch02",
-                    "gauge": { "min": 0, "max": 10 }
-                }
-            ]
         },
         {
             "type": "plot",
             "plots": [
-                { "type": "histogram", "channel": "hist", "color": "#009090", "opacity": 0.2, "label": "", "format": "%.5g" }
+                { "type": "histogram", "channel": "nhits_hist", "color": "#009090", "opacity": 0.2, "label": "", "format": "%.5g" }
             ],
-            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "xmin": -0.5, "xmax": 20, "ymin": 0, "ymax": 800, "zmin": 0, "zmax": 1 },
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
             "legend": { "style": "side" }
-        },
-        { "type": "tree", "channel": "run_control.context" }
+        }
     ],
     "meta": { "name": "run_control", "title": "", "description": "" }
 }
