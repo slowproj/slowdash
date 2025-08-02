@@ -42,9 +42,9 @@ async def _loop():
     y <= g_y.to_json()
     xy <= g_xy.to_json()
 
-    await x.publish()
-    await y.publish()
-    await xy.publish()
+    await ctrl.publish(x)
+    await ctrl.publish(y)
+    await ctrl.publish(xy)
 
     global next_store_time
     now = time.time()
@@ -54,8 +54,8 @@ async def _loop():
         datastore.update(g_xy, tag='xy')
         next_store_time = now + 5
         
-        await fx.publish()
-        await fy.publish()
+        await ctrl.publish(fx)
+        await ctrl.publish(fy)
     
     
     ctrl.sleep(0.2)

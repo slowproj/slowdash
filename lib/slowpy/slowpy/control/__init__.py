@@ -8,4 +8,4 @@ from .control_DataStore import DataStoreNode
 
 from .scpi_server import ScpiServer, ScpiAdapter
 
-from .dummy_device import RandomWalkDevice
+from .dummy_device import RandomWalkDevice, RandomHitDevice, RandomChargeDevice, RandomIntervalDevice

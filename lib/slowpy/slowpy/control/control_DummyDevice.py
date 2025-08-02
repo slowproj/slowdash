@@ -1,6 +1,7 @@
 # Created by Sanshiro Enomoto on 24 May 2024 #
 
 
+import time
 import slowpy.control as spc
 
 
@@ -68,3 +69,34 @@ class RandomWalkConfigNode(spc.ControlVariableNode):
         
     def get(self):
         return getattr(self.device, self.param_name)
+
+
+
+class RandomEventDeviceNode(spc.ControlNode):
+    def __init__(self, n=16, rate=10, occupancy=0.5, t_mean=100, q_mean=100, q_sigma=10):
+        self.n = n
+        self.random_trigger_interval = spc.RandomIntervalDevice(n=1, interval=1.0/rate)
+        self.random_hit = spc.RandomHitDevice(n=n, occupancy=occupancy)
+        self.random_charge = spc.RandomChargeDevice(n=n, mean=q_mean, sigma=q_sigma)
+        self.random_interval = spc.RandomIntervalDevice(n=n, interval=t_mean)
+        
+
+    def get(self):
+        dt = self.random_trigger_interval.read(0)
+        time.sleep(dt)
+
+        event = {}
+        hits = [ ch for ch in range(self.n) if self.random_hit.read(ch) ]
+        for ch in hits:
+            event[f'tdc{ch:02d}'] = int(self.random_interval.read(ch))
+        for ch in hits:
+            event[f'adc{ch:02d}'] = int(self.random_charge.read(ch))
+            
+        return event
+
+    
+    @classmethod
+    def _node_creator_method(cls):
+        def randomevent_device(self, n=4, rate=10, occupancy=0.5, t_mean=100, q_mean=100, q_sigma=10):
+            return RandomEventDeviceNode(n=n, rate=rate, occupancy=occupancy, t_mean=t_mean, q_mean=q_mean, q_sigma=q_sigma)
+        return randomevent_device

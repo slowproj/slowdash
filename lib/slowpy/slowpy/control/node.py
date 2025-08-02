@@ -165,7 +165,12 @@ class ControlNode:
     
     @classmethod
     def add_node(cls, NodeClass, name=None):
+        if not hasattr(NodeClass, '_node_creator_method'):
+            raise ControlException('NodeClass does not have _node_creator_method: %s' % str(NodeClass))
         method = NodeClass._node_creator_method()
+        if method is None:
+            raise ControlException('_node_creator_method() returned None: class %s' % str(NodeClass))
+        
         if name is None:
             name = method.__name__
         setattr(cls, name, method)
