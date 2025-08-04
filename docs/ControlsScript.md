@@ -614,17 +614,29 @@ If a SlowTask script has functions of `_initialize(params)`, `_finalize()`, `_ru
 These functions can be either the standard `def` or `async def`.
 
 ## Control Variable Exporting
-If `_export()` is defined in the SlowTask script, control variables listed in its return value become accessible by other SlowDash components (typically web browsers), in a very simlar way as the data stored in data sources (typically databases), except that only the "curent" values are available.
+Control variables can be exported to other SlowDash components (typically web browsers) so that the other components can call `get()` and `set()` of the nodes. The exported nodes are listed in the channel list and can be accessed in the same way as data stored in databases, except that only "current" values are available.
 ```python
-def _export():
-    return [
-      ('V0', V0),
-      ('V1', V1),
-      ('V2', V2),
-      ('V3', V3)
-    ]
+from slowpy.control import control_system as ctrl
+V0 = ctrl.ethernet(host, port).scpi().command("V")
+ctrl.export(V0, 'V0')
 ```
-To export a variable that is not a control node, make a temporary control node variable to wrap it:
+
+Python `dict` and `dataclass` instances can be exported in the same way. Instances of `class` can be also exported, but with some restrictions (e.g., `vars()` must be able to serialize the instance). SlowPy analysis elements, such as histograms and graphs, are also accepted.
+```python
+from slowpy.control import control_system as ctrl
+V0 = ctrl.ethernet(host, port).scpi().command("V")
+ctrl.export(V0, name='V0')
+
+from slowpy import Histogram
+h = Histogram(100, 0, 20)
+ctrl.export(h, name='hist')
+
+def _loop():
+    h.fill(V0.get())
+    ctrl.sleep(1)
+```
+
+To export a variable not of these types, make a temporary control node variable to wrap it:
 ```python
 class RampingStatusNode(ControlNode):
     def get(self):
@@ -638,52 +650,44 @@ class RampingStatusNode(ControlNode):
             ]
         }
     
-def _export():
-    return [
-        ('V0', V0),
-        ('V1', V1),
-        ('V2', V2),
-        ('V3', V3),
-        ('Status', StatusNode())
-    ]
+ctrl.export(StatusNode(), 'Status')
 ```
 
 ## Control Variable Binding (Streaming / Live Updating)
-If an instance of `ValueNode` (which typically holds a value but is not associated with any external device or object) is exported, it can push the value to receivers (typically web browsers).
+The current values of exported variables are "pulled" by the other components. In addition, the values can be "pushed" to the others.
 ```python
-import asyncio
-from slowpy.control import ValueNode
+from slowpy.control import control_system as ctrl
 
-x = ValueNode(initial_value=0)
+V0 = ctrl.ethernet(host, port).scpi().command("V")
+ctrl.export(V0, 'V0')            # exporting to be pulled
 
 async def _loop():
-    x = V0.get()
-    await x.publish()
-    await asyncio.sleep(1)
+    await ctrl.aio_publish(V0)   # publishing (pushing to subscribers)
+    await ctrl.aio_sleep(1)
 ```
-The `publish()` method calls `.get()` and publishes the value to the receivers. As `publish()` is an async function, it must be used in an `async def` and the return value must be `await`ed.
+If the variable is already exported, the same export name is used. Otherwise, the name must be provided as a `name` argument of the `aio_publish()` function. In addition to the export-able variables, `aio_publish()` accepts many other types, including Python numbers.
+```python
+import random
+from slowpy.control import control_system as ctrl
 
-The exported variables can be "bound" in the browser. If a SlowTask control variable is bound in SlowDash HTML, changes to the variable on the browser call the `.set()` method of the SlowTask variable.
+x = 0
+async def _loop():
+    x = x + random.random()
+    await ctrl.aio_publish(x, name="RandomWalk")
+    await ctrl.aio_sleep(1)
+```
+
+In addition to accessing the exported variables in the same way as data in databases, the variables can be directly "bound" in web browsers. If a SlowTask control variable is bound in SlowDash HTML, changes to the variable on the browser call the `.set()` method of the SlowTask variable.
 ```html
 <form>
-  <input type="range" min="0.1" max="9.9" step="0.1" sd-value="scope.fx" sd-live="true">
-  <span sd-value="scope.fx" style="font-size:150%"></span>
+  <input type="range" min="0.1" max="9.9" step="0.1" sd-value="V0" sd-live="true">
   ...
 </form>
 ```
-```python
-# slowtask-scope.py
-
-fx = ValueNode(initial_value=0)
-
-def _export():
-  return [ ('fx', fx) ]
-
-...
-```
 In HTML, `sd-live="true"` indicates that changes of the value on the browser will trigger calling the `.set()` method of the bound variable.
 
-An example can be found in `ExampleProjects/Streaming`.
+More examples can be found in `ExampleProjects/Streaming`.
+
 
 # Distributed System / Network Deployment
 ## SlowDash Interconnect

@@ -988,85 +988,90 @@ contains <code>time.sleep()</code> or equivalent.</td>
 <p>These functions can be either the standard <code>def</code> or
 <code>async def</code>.</p>
 <h2 id="control-variable-exporting">Control Variable Exporting</h2>
-<p>If <code>_export()</code> is defined in the SlowTask script, control
-variables listed in its return value become accessible by other SlowDash
-components (typically web browsers), in a very simlar way as the data
-stored in data sources (typically databases), except that only the
-“curent” values are available.</p>
+<p>Control variables can be exported to other SlowDash components
+(typically web browsers) so that the other components can call
+<code>get()</code> and <code>set()</code> of the nodes. The exported
+nodes are listed in the channel list and can be accessed in the same way
+as data stored in databases, except that only “current” values are
+available.</p>
 <div class="sourceCode" id="cb28"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _export():</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> [</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>      (<span class="st">&#39;V0&#39;</span>, V0),</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>      (<span class="st">&#39;V1&#39;</span>, V1),</span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>      (<span class="st">&#39;V2&#39;</span>, V2),</span>
-<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>      (<span class="st">&#39;V3&#39;</span>, V3)</span>
-<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>    ]</span></code></pre></div>
-<p>To export a variable that is not a control node, make a temporary
-control node variable to wrap it:</p>
+class="sourceCode python"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>V0 <span class="op">=</span> ctrl.ethernet(host, port).scpi().command(<span class="st">&quot;V&quot;</span>)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>ctrl.export(V0, <span class="st">&#39;V0&#39;</span>)</span></code></pre></div>
+<p>Python <code>dict</code> and <code>dataclass</code> instances can be
+exported in the same way. Instances of <code>class</code> can be also
+exported, but with some restrictions (e.g., <code>vars()</code> must be
+able to serialize the instance). SlowPy analysis elements, such as
+histograms and graphs, are also accepted.</p>
 <div class="sourceCode" id="cb29"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RampingStatusNode(ControlNode):</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get(<span class="va">self</span>):</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> {</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;columns&#39;</span>: [ <span class="st">&#39;Channel&#39;</span>, <span class="st">&#39;Value&#39;</span>, <span class="st">&#39;Ramping&#39;</span> ],</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;table&#39;</span>: [</span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>                [ <span class="st">&#39;Ch0&#39;</span>, <span class="bu">float</span>(V0), <span class="st">&#39;Yes&#39;</span> <span class="cf">if</span> V0.ramping().status().get() <span class="cf">else</span> <span class="st">&#39;No&#39;</span> ],</span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>                [ <span class="st">&#39;Ch1&#39;</span>, <span class="bu">float</span>(V1), <span class="st">&#39;Yes&#39;</span> <span class="cf">if</span> V1.ramping().status().get() <span class="cf">else</span> <span class="st">&#39;No&#39;</span> ],</span>
-<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>                [ <span class="st">&#39;Ch2&#39;</span>, <span class="bu">float</span>(V2), <span class="st">&#39;Yes&#39;</span> <span class="cf">if</span> V2.ramping().status().get() <span class="cf">else</span> <span class="st">&#39;No&#39;</span> ],</span>
-<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>                [ <span class="st">&#39;Ch3&#39;</span>, <span class="bu">float</span>(V3), <span class="st">&#39;Yes&#39;</span> <span class="cf">if</span> V3.ramping().status().get() <span class="cf">else</span> <span class="st">&#39;No&#39;</span> ]</span>
-<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>            ]</span>
-<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>        }</span>
-<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _export():</span>
-<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> [</span>
-<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&#39;V0&#39;</span>, V0),</span>
-<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&#39;V1&#39;</span>, V1),</span>
-<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&#39;V2&#39;</span>, V2),</span>
-<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&#39;V3&#39;</span>, V3),</span>
-<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&#39;Status&#39;</span>, StatusNode())</span>
-<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a>    ]</span></code></pre></div>
+class="sourceCode python"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>V0 <span class="op">=</span> ctrl.ethernet(host, port).scpi().command(<span class="st">&quot;V&quot;</span>)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>ctrl.export(V0, name<span class="op">=</span><span class="st">&#39;V0&#39;</span>)</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy <span class="im">import</span> Histogram</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>h <span class="op">=</span> Histogram(<span class="dv">100</span>, <span class="dv">0</span>, <span class="dv">20</span>)</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>ctrl.export(h, name<span class="op">=</span><span class="st">&#39;hist&#39;</span>)</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>    h.fill(V0.get())</span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span></code></pre></div>
+<p>To export a variable not of these types, make a temporary control
+node variable to wrap it:</p>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RampingStatusNode(ControlNode):</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get(<span class="va">self</span>):</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> {</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;columns&#39;</span>: [ <span class="st">&#39;Channel&#39;</span>, <span class="st">&#39;Value&#39;</span>, <span class="st">&#39;Ramping&#39;</span> ],</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;table&#39;</span>: [</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>                [ <span class="st">&#39;Ch0&#39;</span>, <span class="bu">float</span>(V0), <span class="st">&#39;Yes&#39;</span> <span class="cf">if</span> V0.ramping().status().get() <span class="cf">else</span> <span class="st">&#39;No&#39;</span> ],</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>                [ <span class="st">&#39;Ch1&#39;</span>, <span class="bu">float</span>(V1), <span class="st">&#39;Yes&#39;</span> <span class="cf">if</span> V1.ramping().status().get() <span class="cf">else</span> <span class="st">&#39;No&#39;</span> ],</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>                [ <span class="st">&#39;Ch2&#39;</span>, <span class="bu">float</span>(V2), <span class="st">&#39;Yes&#39;</span> <span class="cf">if</span> V2.ramping().status().get() <span class="cf">else</span> <span class="st">&#39;No&#39;</span> ],</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>                [ <span class="st">&#39;Ch3&#39;</span>, <span class="bu">float</span>(V3), <span class="st">&#39;Yes&#39;</span> <span class="cf">if</span> V3.ramping().status().get() <span class="cf">else</span> <span class="st">&#39;No&#39;</span> ]</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>            ]</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>ctrl.export(StatusNode(), <span class="st">&#39;Status&#39;</span>)</span></code></pre></div>
 <h2 id="control-variable-binding-streaming-live-updating">Control
 Variable Binding (Streaming / Live Updating)</h2>
-<p>If an instance of <code>ValueNode</code> (which typically holds a
-value but is not associated with any external device or object) is
-exported, it can push the value to receivers (typically web
-browsers).</p>
-<div class="sourceCode" id="cb30"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> asyncio</span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ValueNode</span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> ValueNode(initial_value<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> _loop():</span>
-<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> V0.get()</span>
-<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> x.deliver()</span>
-<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> asyncio.sleep(<span class="dv">1</span>)</span></code></pre></div>
-<p>The <code>deliver()</code> method calls <code>.get()</code> and
-publishes the value to the receivers. As <code>deliver()</code> is an
-async function, it must be used in an <code>async def</code> and the
-return value must be <code>await</code>ed.</p>
-<p>The exported variables can be “bound” in the browser. If a SlowTask
-control variable is bound in SlowDash HTML, changes to the variable on
-the browser call the <code>.set()</code> method of the SlowTask
-variable.</p>
+<p>The current values of exported variables are “pulled” by the other
+components. In addition, the values can be “pushed” to the others.</p>
 <div class="sourceCode" id="cb31"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;range&quot;</span> <span class="er">min</span><span class="ot">=</span><span class="st">&quot;0.1&quot;</span> <span class="er">max</span><span class="ot">=</span><span class="st">&quot;9.9&quot;</span> <span class="er">step</span><span class="ot">=</span><span class="st">&quot;0.1&quot;</span> <span class="er">sd-value</span><span class="ot">=</span><span class="st">&quot;scope.fx&quot;</span> <span class="er">sd-live</span><span class="ot">=</span><span class="st">&quot;true&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">span</span> <span class="er">sd-value</span><span class="ot">=</span><span class="st">&quot;scope.fx&quot;</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;font-size:150%&quot;</span><span class="dt">&gt;&lt;/</span><span class="kw">span</span><span class="dt">&gt;</span></span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  ...</span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+class="sourceCode python"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>V0 <span class="op">=</span> ctrl.ethernet(host, port).scpi().command(<span class="st">&quot;V&quot;</span>)</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>ctrl.export(V0, <span class="st">&#39;V0&#39;</span>)            <span class="co"># exporting to be pulled</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> _loop():</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_publish(V0)   <span class="co"># publishing (pushing to subscribers)</span></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_sleep(<span class="dv">1</span>)</span></code></pre></div>
+<p>If the variable is already exported, the same export name is used.
+Otherwise, the name must be provided as a <code>name</code> argument of
+the <code>aio_publish()</code> function. In addition to the export-able
+variables, <code>aio_publish()</code> accepts many other types,
+including Python numbers.</p>
 <div class="sourceCode" id="cb32"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># slowtask-scope.py</span></span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>fx <span class="op">=</span> ValueNode(initial_value<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _export():</span>
-<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> [ (<span class="st">&#39;fx&#39;</span>, fx) ]</span>
-<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
+class="sourceCode python"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> _loop():</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> x <span class="op">+</span> random.random()</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_publish(x, name<span class="op">=</span><span class="st">&quot;RandomWalk&quot;</span>)</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_sleep(<span class="dv">1</span>)</span></code></pre></div>
+<p>In addition to accessing the exported variables in the same way as
+data in databases, the variables can be directly “bound” in web
+browsers. If a SlowTask control variable is bound in SlowDash HTML,
+changes to the variable on the browser call the <code>.set()</code>
+method of the SlowTask variable.</p>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;range&quot;</span> <span class="er">min</span><span class="ot">=</span><span class="st">&quot;0.1&quot;</span> <span class="er">max</span><span class="ot">=</span><span class="st">&quot;9.9&quot;</span> <span class="er">step</span><span class="ot">=</span><span class="st">&quot;0.1&quot;</span> <span class="er">sd-value</span><span class="ot">=</span><span class="st">&quot;V0&quot;</span> <span class="er">sd-live</span><span class="ot">=</span><span class="st">&quot;true&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  ...</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>In HTML, <code>sd-live="true"</code> indicates that changes of the
 value on the browser will trigger calling the <code>.set()</code> method
 of the bound variable.</p>
-<p>An example can be found in
+<p>More examples can be found in
 <code>ExampleProjects/Streaming</code>.</p>
 <h1 id="distributed-system-network-deployment">Distributed System /
 Network Deployment</h1>
