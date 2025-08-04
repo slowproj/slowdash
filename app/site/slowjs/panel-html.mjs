@@ -205,7 +205,10 @@ class HtmlPanel extends Panel {
                 if (isLive) {
                     element.bind('change', e=> {
                         const record = {};
-                        record[metric] = { 'x': element.val() };
+                        record[metric] = {
+                            't': $.time(),
+                            'x': element.val(),
+                        };
                         this.callbacks.publish('currentdata', record);
                     });
                 }

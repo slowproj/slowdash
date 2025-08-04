@@ -1,8 +1,10 @@
 import time
 import numpy as np
 
-from slowpy.control import ControlSystem, ValueNode
+from slowpy.control import control_system as ctrl
 ctrl = ControlSystem()
+fx = ctrl.value(3.2)
+fy = ctrl.value(2.0)
 
 from slowpy import Graph
 from slowpy.store import DataStore_Redis
@@ -10,20 +12,11 @@ datastore = DataStore_Redis('redis://localhost/1')
 next_store_time = 0
 
 
-fx = ValueNode(3.2)
-fy = ValueNode(2.0)
-x = ValueNode(Graph().to_json())
-y = ValueNode(Graph().to_json())
-xy = ValueNode(Graph().to_json())
-
-def _export():
-    return [
-        ('fx', fx), ('fy', fy),
-        ('x', x), ('y', y), ('xy', xy), 
-    ]
-
-
-
+async def _initialize():
+    ctrl.export(fx, name='fx.current')
+    ctrl.export(fy, name='fy.current')
+    
+    
 t0 = 0
 async def _loop():
     global t0
@@ -38,13 +31,9 @@ async def _loop():
     g_y.add_point(t, x2)
     g_xy.add_point(x1, x2)
 
-    x <= g_x.to_json()
-    y <= g_y.to_json()
-    xy <= g_xy.to_json()
-
-    await ctrl.aio_publish(x)
-    await ctrl.aio_publish(y)
-    await ctrl.aio_publish(xy)
+    await ctrl.aio_publish(g_x, 'x.current')
+    await ctrl.aio_publish(g_y, 'y.current')
+    await ctrl.aio_publish(g_xy, 'xy.current')
 
     global next_store_time
     now = time.time()
@@ -54,8 +43,4 @@ async def _loop():
         datastore.update(g_xy, tag='xy')
         next_store_time = now + 5
         
-        await ctrl.aio_publish(fx)
-        await ctrl.aio_publish(fy)
-    
-    
     ctrl.sleep(0.5)

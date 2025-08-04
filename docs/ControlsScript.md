@@ -614,11 +614,17 @@ If a SlowTask script has functions of `_initialize(params)`, `_finalize()`, `_ru
 These functions can be either the standard `def` or `async def`.
 
 ## Control Variable Exporting
-Control variables can be exported to other SlowDash components (typically web browsers) so that the other components can call `get()` and `set()` of the nodes. The exported nodes are listed in the channel list and can be accessed in the same way as data stored in databases, except that only "current" values are available.
+Control variables can be exported to other SlowDash components (typically web browsers) so that the other components can call `get()` and `set()` of the nodes. 
 ```python
 from slowpy.control import control_system as ctrl
 V0 = ctrl.ethernet(host, port).scpi().command("V")
 ctrl.export(V0, 'V0')
+```
+The exported nodes are listed in the channel list and can be accessed in the same way as data stored in databases, except that only "current" values are available. Typically these are used in "Single Scalar" display panels, or in HTML panels:
+```html
+<form>
+  V0: <span sd-value="V0"></span>
+</form>
 ```
 
 Python `dict` and `dataclass` instances can be exported in the same way. Instances of `class` can be also exported, but with some restrictions (e.g., `vars()` must be able to serialize the instance). SlowPy analysis elements, such as histograms and graphs, are also accepted.
@@ -680,9 +686,21 @@ async def _loop():
 In addition to accessing the exported variables in the same way as data in databases, the variables can be directly "bound" in web browsers. If a SlowTask control variable is bound in SlowDash HTML, changes to the variable on the browser call the `.set()` method of the SlowTask variable.
 ```html
 <form>
-  <input type="range" min="0.1" max="9.9" step="0.1" sd-value="V0" sd-live="true">
+  Readout Frequency: <input type="number" sd-value="readout_frequency" sd-live="true">
   ...
 </form>
+```
+```python
+from slowpy.control import control_system as ctrl
+
+V0 = ctrl.ethernet(host, port).scpi().command("V")
+readout_frequency = ctrl.value(1.0)
+ctrl.export(V0, 'V0')
+ctrl.export(freq, 'readout_frequency')
+
+async def _loop():
+    await ctrl.aio_publish(V0)
+    await ctrl.aio_sleep(readout_frequency.get())
 ```
 In HTML, `sd-live="true"` indicates that changes of the value on the browser will trigger calling the `.set()` method of the bound variable.
 
