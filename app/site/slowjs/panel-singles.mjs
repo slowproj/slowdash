@@ -15,6 +15,7 @@ class SingleDisplayItem {
         this.style = $.extend({}, style);
         
         this.elem = undefined;
+        this.currentDataTime = -1;
     }
 
     
@@ -26,6 +27,7 @@ class SingleDisplayItem {
         }
         this.elem = this.configure_this(config).appendTo(this.parent);
 
+        this.currentDataTime = -1;
         this.update_this(null, null, '---', '---');
     }
 
@@ -56,9 +58,14 @@ class SingleDisplayItem {
             }
         }
         
+        if (dataPacket.__meta?.isCurrent ?? false) {
+            this.currentDataTime = time;
+        }
         if (value === null) {
-            //if (dataPacket?.__meta?.isPartial ?? false)    // data might be avaiable only as "current"
-            return;
+            if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
+                // keep the current data; otherwise draw blank
+                return;
+            }
         }
         
         let time_text, value_text;

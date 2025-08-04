@@ -92,7 +92,7 @@ class RandomEventDeviceNode(spc.ControlNode):
         self.rate = rate
         self.random_hit = spc.RandomHitDevice(n=n, occupancy=occupancy)
         self.random_charge = spc.RandomChargeDevice(n=n, mean=q_mean, sigma=q_sigma)
-        self.random_interval = spc.RandomIntervalDevice(n=n, interval=t_mean)
+        self.random_interval = spc.RandomTimeDevice(n=n, time_constant=t_mean)
 
         self.last_readout_time = None
         
@@ -139,10 +139,10 @@ class RandomEventDeviceNode(spc.ControlNode):
 class RandomSingleEventDeviceNode(spc.ControlNode):
     def __init__(self, n=16, rate=10, occupancy=0.7, t_mean=100, q_mean=100, q_sigma=10):
         self.n = n
-        self.random_trigger_interval = spc.RandomIntervalDevice(n=1, interval=1.0/rate)
+        self.random_trigger_interval = spc.RandomTimeDevice(n=1, time_constant=1.0/rate)
         self.random_hit = spc.RandomHitDevice(n=n, occupancy=occupancy)
         self.random_charge = spc.RandomChargeDevice(n=n, mean=q_mean, sigma=q_sigma)
-        self.random_interval = spc.RandomIntervalDevice(n=n, interval=t_mean)
+        self.random_interval = spc.RandomTimeDevice(n=n, time_constant=t_mean)
         
 
     def get(self):

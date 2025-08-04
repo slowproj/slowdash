@@ -47,43 +47,47 @@ async def _finalize():
     
 
 async def _loop():
-    await ctrl.publish(run_status)
+    await ctrl.aio_publish(run_status)
     
     if not run_status.running:
-        await asyncio.sleep(0.1)
+        await ctrl.aio_sleep(0.1)
         return
 
     run_status.lapse = round(time.time() - run_status.start_time,3)
     if run_setting.stop_after and run_status.lapse >= run_setting.run_length:
-        stop()
+        await stop()
         if run_setting.repeat:
-            run_status.start_time = round(time.time(),3)
-            run_status.running = True
-            do_run_start()
-            await ctrl.publish(run_setting)
-            await ctrl.publish(run_status)
+            await start()
+            await ctrl.aio_publish(run_setting)
+            await ctrl.aio_publish(run_status)
             
     if run_status.running:
-        await do_readout()
+        await do_run_loop()
 
 
-def start(run_number:int, stop_after:bool, run_length:float, repeat: bool, offline:bool):
-    run_setting.run_number = run_number
-    run_setting.stop_after = stop_after
-    run_setting.run_length = run_length
-    run_setting.repeat = repeat
-    run_setting.offline = offline
+async def start(run_number:int=None, stop_after:bool=None, run_length:float=None, repeat: bool=None, offline:bool=None):
+    if run_number is not None:
+        run_setting.run_number = run_number
+    if stop_after is not None:
+        run_setting.stop_after = stop_after
+    if run_length is not None:
+        run_setting.run_length = run_length
+    if repeat is not None:
+        run_setting.repeat = repeat
+    if offline is not None:
+        run_setting.offline = offline
     save_run_setting()
 
     run_status.start_time = round(time.time(),3)
     run_status.running = True
-    do_run_start()
+    await do_run_start()
     
     return True
 
 
-def stop():
+async def stop():
     run_status.running = False
+    await do_run_stop()
     
     if not run_setting.offline:
         run_setting.run_number += 1
@@ -112,14 +116,19 @@ nhits_hist = slp.Histogram(16, 0, 16);
 nhits_hist.add_stat(slp.HistogramBasicStat(['Entries', 'Underflow', 'Overflow', 'Mean', 'RMS'], ndigits=3))
 
 
-def do_run_start():
-    print("starting a new run")
+async def do_run_start():
+    print(f"starting a new run {run_setting.run_number}")
     rate_trend.clear()
     nhits_hist.clear()
     device.do_start()
 
     
-async def do_readout():
+async def do_run_stop():
+    rate_trend.clear()
+    nhits_hist.clear()
+
+    
+async def do_run_loop():
     events = device.get()
 
     for ev in events:
@@ -132,10 +141,10 @@ async def do_readout():
         rate_trend.fill(t)
         nhits_hist.fill(nhits)
 
-    await ctrl.publish(rate_trend, 'rate_trend')
-    await ctrl.publish(nhits_hist, 'nhits_hist')
+    await ctrl.aio_publish(rate_trend, 'rate_trend')
+    await ctrl.aio_publish(nhits_hist, 'nhits_hist')
 
-    await asyncio.sleep(0.5)
+    await ctrl.aio_sleep(0.5)
 
 
     

@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 17 May 2024 #
 
 
-import os, time, threading, importlib, traceback, inspect
+import os, time, asyncio, threading, importlib, traceback, inspect
 
 
 class dualmethod:
@@ -36,9 +36,19 @@ class ControlNode:
         raise ControlException('set() method not available')
 
     
+    # override this (async version)
+    async def aio_set(self, value):
+        return self.set(value)
+
+    
     # override this
     def get(self):
         raise ControlException('get() method not available')
+
+
+    # override this (async version)
+    async def aio_get(self):
+        return self.get()
 
 
     # override this
@@ -68,6 +78,29 @@ class ControlNode:
         return not self.is_stop_requested()
 
     
+    # to be used in subclasses (async version)
+    async def aio_sleep(self, duration_sec):
+        """stoppable-sleep, async version
+        Returns:
+            False if stop-request is received, unless True
+        """
+        # As a stop request can be sent to a specific node, this method must be implemented here
+        
+        sec10 = int(10*duration_sec)
+        subsec10 = 10*duration_sec - sec10
+        if sec10 > 0:
+            for i in range(sec10):
+                if self.is_stop_requested():
+                    return False
+                else:
+                    await asyncio.sleep(0.1)
+        elif subsec10 > 0:
+            await asyncio.sleep(subsec/10.0)
+
+        return not self.is_stop_requested()
+
+    
+    # to be used in subclasses
     def wait(condition_lambda=None, poll_interval=0.1, timeout=0):
         """stoppable-wait: to be used in subclasses
         Args:
@@ -89,6 +122,32 @@ class ControlNode:
             if timeout > 0 and (time.time() - start > timeout):
                 break
             time.sleep(poll_interval)
+            
+        return None
+        
+            
+    # to be used in subclasses (async version)
+    async def aio_wait(condition_lambda=None, poll_interval=0.1, timeout=0):
+        """stoppable-wait: to be used in subclasses, async version
+        Args:
+            condition_lambda (lambda x): a function that takes a value from self.get() and returns True or False.
+        Returns:
+            True if condition is satisfied, None for timeout, False for stop-request
+        Examples:
+          await node.wait(lambda x: (float(x)>100))
+        """
+        
+        while True:
+            if self.has_data() is not False:
+                if condition_lambda is None:
+                    return True
+                elif condition_lambda(self.get()):
+                    return True
+            if not self.is_stop_requested():
+                return False
+            if timeout > 0 and (time.time() - start > timeout):
+                break
+            asyncio.sleep(poll_interval)
             
         return None
         

@@ -10,8 +10,8 @@ class ControlSystem(spc.ControlNode):
     _slowdash_app = None
     
     # note that these class variables are app-wide: multiple task modules will share these.
-    _slowdash_exports = []   # not including publish()
-    _slowdash_channels = {}  # including export() and publish()
+    _slowdash_exports = []   # not including aio_publish()
+    _slowdash_channels = {}  # including export() and aio_publish()
     
     def __init__(self):
         self.import_control_module('Ethernet')
@@ -83,7 +83,7 @@ class ControlSystem(spc.ControlNode):
 
 
     @classmethod
-    async def publish(cls, obj, name:str=None):
+    async def aio_publish(cls, obj, name:str=None):
         if cls.app() is None:
             return
         
@@ -183,9 +183,9 @@ class ValueNode(spc.ControlVariableNode):
         return self.value
 
 
-    # DEPRECIATED (July 2025): use ControlSystem.publish(obj) instead
+    # DEPRECIATED (July 2025): use ControlSystem.aio_publish(obj) instead
     async def deliver(self):
-        return await ControlSystem.publish(self)
+        return await ControlSystem.aio_publish(self)
 
 
                                          

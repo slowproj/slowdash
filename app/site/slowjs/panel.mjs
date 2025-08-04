@@ -213,4 +213,22 @@ export class Panel {
         }
         return null;
     }
+
+
+    static _dataPacketIncludes(dataPacket, timestamp) {
+        const range = dataPacket.__meta?.range ?? null;
+        if (range === null) {
+            return false;
+        }
+        
+        let [from, to] = [ range.from, range.to ];
+        if (to <= 0) {
+            to += $.time();
+        }
+        if (from <= 0) {
+            from += to;
+        }
+
+        return (from <= timestamp && to >= timestamp);
+    }
 };

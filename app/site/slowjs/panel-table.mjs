@@ -51,6 +51,7 @@ class TablePanel extends Panel {
         this.titleDiv = $('<div>').appendTo(div);
         this.contentDiv = $('<div>').appendTo(div);        
         this.table = $('<table>').appendTo(this.contentDiv);
+        this.currentDataTime = -1;
 
         this.titleDiv.css({
             'font-family': 'sans-serif',
@@ -112,10 +113,19 @@ class TablePanel extends Panel {
         let data = dataPacket[this.config.channel]?.x;
         if (! data) {
             if (! (dataPacket.__meta?.isPartial ?? false)) {
-                this.table.empty();
-                this.table.html('<tr><td>No Table Data</td></tr>');
+                if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
+                    // keep the current data; otherwise draw blank
+                    ;
+                }
+                else {
+                    this.table.empty();
+                    this.table.html('<tr><td>No Table Data</td></tr>');
+                }
             }
             return;
+        }
+        if (dataPacket.__meta?.isCurrent ?? false) {
+            this.currentDataTime = dataPacket.__meta.currentDataTime;
         }
         
         this.table.empty();
@@ -200,6 +210,7 @@ class TreePanel extends Panel {
 
         this.titleDiv = $('<div>').appendTo(div);
         this.contentDiv = $('<div>').appendTo(div);        
+        this.currentDataTime = -1;
 
         this.titleDiv.css({
             'font-family': 'sans-serif',
@@ -255,10 +266,19 @@ class TreePanel extends Panel {
         let data = dataPacket[this.config.channel]?.x;
         if (! data) {
             if (! (dataPacket.__meta?.isPartial ?? false)) {
-                this.contentDiv.empty();
-                this.contentDiv.html('No Tree Data');
+                if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
+                    // keep the current data; otherwise draw blank
+                    ;
+                }
+                else {
+                    this.contentDiv.empty();
+                    this.contentDiv.html('No Tree Data');
+                }
             }
             return;
+        }
+        if (dataPacket.__meta?.isCurrent ?? false) {
+            this.currentDataTime = dataPacket.__meta.currentDataTime;
         }
         
         this.contentDiv.empty();
@@ -375,6 +395,7 @@ class BlobPanel extends Panel {
         
         this.titleDiv = $('<div>').appendTo(div);
         this.contentDiv = $('<div>').appendTo(div);        
+        this.currentDataTime = -1;
 
         this.titleDiv.css({
             'font-family': 'sans-serif',
@@ -427,12 +448,22 @@ class BlobPanel extends Panel {
 
     draw(dataPacket, displayTimeRange=null) {
         let data = dataPacket[this.config.channel];
+        
         if (! data) {
             if (! (dataPacket.__meta?.isPartial ?? false)) {
-                this.contentDiv.empty();
-                this.contentDiv.text('No Blob Data');
+                if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
+                    // keep the current data; otherwise draw blank
+                    ;
+                }
+                else {
+                    this.table.empty();
+                    this.contentDiv.text('No Blob Data');
+                }
             }
             return;
+        }
+        if (dataPacket.__meta?.isCurrent ?? false) {
+            this.currentDataTime = dataPacket.__meta.currentDataTime;
         }
 
         let t = null, x = null;

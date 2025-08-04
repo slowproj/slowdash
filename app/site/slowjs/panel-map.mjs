@@ -62,6 +62,7 @@ export class MapPanel extends Panel {
         this.map = null;
         this.scale = null;
         this.loaded_map = null;
+        this.currentDataTime = -1;
     }
 
     
@@ -360,11 +361,20 @@ export class MapPanel extends Panel {
         if (! this.drawingArea) {
             return; 
        }
-        
+
         let data = dataPacket[this.config.channel]?.x;
         if (! data) {
+            const range = dataPacket.__meta?.range ?? { from:0, to:0 };
+            if (range.from <= this.currentDataTime && range.to >= this.currentDataTime) {
+                // keep the current data; otherwise draw blank
+                return;
+            }
             data = { 'x': [], 'y': [] };
         }
+        if (dataPacket.__meta?.isCurrent ?? false) {
+            this.currentDataTime = dataPacket.__meta.currentDataTime;
+        }
+        
         if (Array.isArray(data)) {
             if (data.length > 0) {
                 data = data[data.length-1];

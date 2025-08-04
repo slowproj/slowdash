@@ -167,6 +167,7 @@ class HistogramPlot extends Plot {
             },
         };
         this.axes.addHistogram(this.histogram);
+        this.currentDataTime = -1;
     }
 
     setStyle(style) {
@@ -187,10 +188,19 @@ class HistogramPlot extends Plot {
         let data = dataPacket[this.config.channel]?.x;
         if (! data) {
             if (! isPartial) {
-                this.histogram.counts = [];
+                if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
+                    ; // keep the drawing
+                }
+                else {
+                    this.histogram.counts = [];
+                }
             }
             return;
         }
+        if (isCurrent) {
+            this.currentDataTime = dataPacket.__meta.currentDataTime;
+        }
+        
         if (Array.isArray(data)) {
             if (data.length < 1) {
                 return;
@@ -351,6 +361,7 @@ class Histogram2dPlot extends Plot {
             style: {},
         };
         this.axes.addHistogram2d(this.histogram2d);
+        this.currentDataTime = -1;
     }
 
     openSettings(div) {
@@ -365,10 +376,19 @@ class Histogram2dPlot extends Plot {
         let data = dataPacket[this.config.channel]?.x;
         if (! data) {
             if (! isPartial) {
-                this.histogram2d.counts = [];
+                if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
+                    ; // keep the drawing
+                }
+                else {
+                    this.histogram2d.counts = [];
+                }
             }
             return;
         }
+        if (isCurrent) {
+            this.currentDataTime = dataPacket.__meta.currentDataTime;
+        }
+
         if (Array.isArray(data)) {
             if (data.length < 1) {
                 return;
@@ -438,6 +458,7 @@ class GraphPlot extends Plot {
         };
 
         this.valueRange = {xmin: 0, xmax: 1, ymin: 0, ymax: 1};
+        this.currentDataTime = -1;
     }
 
     setStyle(style) {
@@ -452,10 +473,19 @@ class GraphPlot extends Plot {
         let data = dataPacket[this.config.channel]?.x;
         if (! data) {
             if (! isPartial) {
-                this.graph.y = [];
+                if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
+                    ; // keep the drawing
+                }
+                else {
+                    this.graph.y = [];
+                }
             }
             return;
         }
+        if (isCurrent) {
+            this.currentDataTime = dataPacket.__meta.currentDataTime;
+        }
+
         if (Array.isArray(data)) {
             if (data.length < 1) {
                 this.graph.y = [];
@@ -1322,7 +1352,7 @@ class PlotPanel extends Panel {
     
     draw(data, displayTimeRange=null) {
         const isCurrent = data?.__meta?.isCurrent ?? false;
-        const isPartial = data.__meta?.isPartial ?? false;
+        const isPartial = data?.__meta?.isPartial ?? false;
         
         if (! isCurrent) {
             this.initialDisplayTimeRange = this._findDataTimeRange(data, displayTimeRange);

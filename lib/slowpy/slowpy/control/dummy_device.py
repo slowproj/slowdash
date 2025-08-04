@@ -115,10 +115,10 @@ class RandomChargeDevice:
 
 
 
-class RandomIntervalDevice:
-    def __init__(self, n=16, interval=0.1):
+class RandomTimeDevice:
+    def __init__(self, n=16, time_constant=0.1):
         self.n = n
-        self.interval = interval
+        self.time_constant = time_constant
 
 
     def channels(self):
@@ -129,4 +129,4 @@ class RandomIntervalDevice:
         if channel >= self.n:
             return None
 
-        return exponential(self.interval)
+        return exponential(self.time_constant)

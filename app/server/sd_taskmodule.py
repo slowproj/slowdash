@@ -17,13 +17,13 @@ class TaskFunctionThread(threading.Thread):
         
     def run(self):
         if True:
-            # some libraries require running in the same loop            
-            return self.run_in_common_eventloop()    
-        else:
             # avoid confusion by using the same loop in differen threads
             return self.run_in_own_eventloop()
+        else:
+            # some libraries require running in the same loop            
+            return self.run_in_common_eventloop()    
 
-        # TODO: implement a away to let users specify which loop to use (e.g., by @slowloop)
+        # TODO: implement a way to let users specify which loop to use (e.g., by @slowpy.mainloop)
 
     
     def run_in_common_eventloop(self):

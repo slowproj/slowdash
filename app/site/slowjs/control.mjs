@@ -100,6 +100,7 @@ export class Controller {
                     range: range,
                     isPartial: false,
                     isCurrent: false,
+                    currentDataTime: null,
                 }
             };
         }
@@ -271,12 +272,13 @@ export class Controller {
             console.error("Web Socket Error: " + error);
         };
         this.socket.onmessage = (event) => {
+            const now = $.time();
             const to = this.currentData?.__meta?.range?.to ?? null;
             if (to !== 0) {
                 if ((to === null) || (to < 0)) {
                     return;
                 }
-                if (to < $.time()-1) {
+                if (to < now-1) {
                     return;
                 }
             }
@@ -285,6 +287,7 @@ export class Controller {
             data['__meta'] = {
                 isCurrent: true,
                 isPartial: true,
+                currentDataTime: now,
             }
             
             this.view.draw(data);
