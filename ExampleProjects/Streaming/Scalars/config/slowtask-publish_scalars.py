@@ -14,9 +14,9 @@ h.add_stat(slp.HistogramBasicStat(['Entries', 'Underflow', 'Overflow', 'Mean', '
 async def _loop():
     for ch in range(4):
         x = float(device.ch(ch))+10
-        await ctrl.publish(x, name=f"ch{ch:02d}")
+        await ctrl.aio_publish(x, name=f"ch{ch:02d}")
 
         h.fill(x)
-        await ctrl.publish(h, name="hist")        
+        await ctrl.aio_publish(h, name="hist")        
         
-    await asyncio.sleep(0.2)
+    await ctrl.aio_sleep(0.2)

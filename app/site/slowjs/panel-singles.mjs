@@ -41,30 +41,32 @@ class SingleDisplayItem {
             return;
         }
         
-        let time=null, value=null; {
-            const ts = dataPacket[this.config.channel];
-            if ((ts?.t !== undefined) && (ts?.t !== null)) {
-                if (Array.isArray(ts.t)) {
-                    const n = ts?.t?.length;
-                    if (n > 0) {
-                        time = ts.t[n-1] + (ts.start ?? 0);
-                        value = ts.x[n-1];
-                    }
-                }
-                else {
-                    time = ts.t + (ts.start ?? 0);
-                    value = ts.x;
-                }
+        const ts = dataPacket[this.config.channel];
+        if (! ts) {
+            if (
+                (dataPacket.__meta?.isPartial ?? false) ||
+                (Panel._dataPacketIncludes(dataPacket, this.currentDataTime))
+            ) {
+                // keep the current data (no update); otherwise draw "---"
+                return;
             }
         }
-        
-        if (dataPacket.__meta?.isCurrent ?? false) {
-            this.currentDataTime = time;
+        else if (dataPacket.__meta?.isCurrent ?? false) {
+            this.currentDataTime = dataPacket.__meta.currentDataTime;
         }
-        if (value === null) {
-            if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
-                // keep the current data; otherwise draw blank
-                return;
+        
+        let time=null, value=null;
+        if ((ts?.t !== undefined) && (ts?.t !== null)) {
+            if (Array.isArray(ts.t)) {
+                const n = ts?.t?.length;
+                if (n > 0) {
+                    time = ts.t[n-1] + (ts.start ?? 0);
+                    value = ts.x[n-1];
+                }
+            }
+            else {
+                time = ts.t + (ts.start ?? 0);
+                value = ts.x;
             }
         }
         

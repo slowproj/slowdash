@@ -109,7 +109,7 @@ class TaskModule(UserModule):
                     exports = []
                 for name, node in exports:
                     export_name = '%s%s%s' % (self.namespace_prefix, name, self.namespace_suffix)
-                    node.__slowdash_export_name = export_name
+                    setattr(node, '__slowdash_export_name', export_name)
                     self.app.control_system._slowdash_exports.append((export_name, node))
 
                     value, datatype = node.get(), None
@@ -184,7 +184,7 @@ class TaskModule(UserModule):
 
         return name
 
-            
+
     def is_command_running(self):
         return self.command_thread is not None and self.command_thread.is_alive()
 
@@ -314,6 +314,8 @@ class SlowpyControl:
         for name, channel in self.app.control_system._slowdash_channels.items():
             self.channel_list.append(channel)
 
+        logging.info(f'Exports: {self.channel_list}')
+            
         return self.channel_list
 
     
@@ -323,7 +325,7 @@ class SlowpyControl:
         if channel not in self.exports:
             return None
         
-        value = self.exports[channel].get()
+        value = await self.exports[channel].aio_get()
         
         if type(value) in [ bool, int, float, str ]:
             return value
@@ -335,6 +337,24 @@ class SlowpyControl:
         else:
             return str(value)
 
+  
+    async def set_variable(self, name, value):
+        logging.info(f'Set Variable: {name}={value}')
+        if self.exports is None:
+            await self.get_channels()
+
+        variable = self.exports.get(name, None)
+        if variable is None:
+            return None
+
+        try:
+            await variable.aio_set(value)
+        except Exception as e:
+            logging.error(f'Error on setting value: channel="{channel}", value="{value}": {e}')
+            return False
+
+        return True
+        
   
 
 class TaskModuleComponent(Component):
@@ -515,7 +535,7 @@ class TaskModuleComponent(Component):
         if len(self.taskmodule_list) == 0:
             return None
         
-        # unlike GET, only one module can process to POST
+        # unlike GET, only one module can process a POST request
         for module in self.taskmodule_list:
             result = await module.process_command(dict(doc))
             if result is not None:
@@ -533,6 +553,18 @@ class TaskModuleComponent(Component):
                 
         return result
 
+
+    @slowlette.post('api/control/currentdata')
+    async def set_variable(self, doc:slowlette.DictJSON):
+        result = None
+        for name, data in doc:
+            value = data.get('x', None)
+            if value is not None:
+                if await self.slowpy_control.set_variable(name, value):
+                    result = True
+
+        return result
+        
     
     @slowlette.post('/api/control/task/{taskname}')
     async def control_task(self, taskname:str, doc:slowlette.DictJSON):

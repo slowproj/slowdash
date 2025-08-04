@@ -1,5 +1,5 @@
 slowdash_project:
-  name: ScalerDisplay
+  name: ScalarDisplay
   
   task:
     - name: publish_scalars

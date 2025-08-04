@@ -174,9 +174,24 @@ class ValueNode(spc.ControlVariableNode):
         else:
             self.value = initial_value
 
+        if self.value is not None:
+            self.VariableType = type(self.value)
+        else:
+            self.VariableType = None
+
         
     def set(self, value):
-        self.value = value
+        if self.VariableType is None:
+            if value is not None:
+                self.VariableType = type(value)
+                
+        if self.VariableType is not None:
+            try:
+                self.value = self.VariableType(value)
+            except:
+                self.value = value
+        else:
+            self.value = value
 
         
     def get(self):
@@ -198,13 +213,29 @@ class _DictExportAdapterNode(spc.ControlVariableNode):
             self.value = value
             
         
+    def set(self, value):
+        if not type(value) is dict:
+            logging.error('dict value expected')
+            return
+        tree = value.get('tree',value)
+        
+        for k, v in tree.items():
+            if k in self.value and self.value[k] is not None:
+                try:
+                    self.value[k] = type(self.value)(v)
+                except:
+                    self.value[k] = v
+            else:
+                self.value[k] = v
+
+            
     def get(self):
         if self.value is not None:
             return { 'tree': self.value }
         else:
             return { 'tree': {} }
 
-
+        
 
 class _DataclassInstanceExportAdapterNode(spc.ControlVariableNode):
     def __init__(self, value=None):
@@ -215,6 +246,23 @@ class _DataclassInstanceExportAdapterNode(spc.ControlVariableNode):
             self.value = value
             
 
+    def set(self, value):
+        if not type(value) is dict:
+            logging.error('dict value expected')
+            return
+        tree = value.get('tree', value)
+
+        ann = type(self.value).__annotations__
+        for k, v in tree.items():
+            if k not in ann:
+                logging.error(f'undefined field "{k}" for dataclass "{type(self.value)}"')
+                continue
+            try:
+                setattr(self.value, k, ann[k](value))
+            except:
+                logging.error(f'unable to assign value "{v}" to field "{k}" of dataclass "{type(self.value)}"')
+        
+            
     def get(self):
         if self.value is not None:
             return { 'tree': dataclasses.asdict(self.value) }
@@ -233,6 +281,22 @@ class _ClassInstanceExportAdapterNode(spc.ControlVariableNode):
             self.value = None
 
             
+    def set(self, value):
+        if not type(value) is dict:
+            logging.error('dict value expected')
+            return
+        tree = value.get('tree', value)
+        
+        for k, v in tree.items():
+            if not hasattr(self.value, k) and getattr(self.value, k) is not None:
+                try:
+                    setattr(self.value, k, type(self.value)(v))
+                except:
+                    setattr(self.value, k, v)
+            else:
+                setattr(self.value, k, v)
+
+            
     def get(self):
         if self.value is not None:
             return { 'tree': { k:v for k,v in vars(self.value).items() if not k.endswith('__slowdash_export_name') } }
@@ -246,6 +310,10 @@ class _SlowpyElementExportAdapterNode(spc.ControlVariableNode):
         self.value = value
 
         
+    def set(self, value):
+        logging.error('SlowPy elements are read-only')
+
+
     def get(self):
         return self.value.to_json()
 

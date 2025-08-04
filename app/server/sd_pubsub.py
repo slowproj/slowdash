@@ -45,8 +45,11 @@ class PubsubComponent(Component):
                 if message is not None and len(message) > 0:
                     logging.info(f"WS-RCV: {topic}: {repr(message)}");
                     if topic == 'currentdata':
-                        await self.app.request('/control/currentdata', message.encode())
-                        await self.app.request('/publish/currentdata', message)
+                        try:
+                            await self.app.request('/control/currentdata', message.encode())
+                            await self.app.request('/publish/currentdata', message)
+                        except Exception as e:
+                            logging.error(f'Error on processing current data request: {e}')
         except slowlette.ConnectionClosed:
             logging.info("WebSocket Closed")
         except Exception as e:

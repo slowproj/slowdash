@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 24 May 2024 #
 
 
-import time, random, math
+import time, random, math, asyncio
 import slowpy.control as spc
 
 def poisson(mean):
@@ -145,10 +145,7 @@ class RandomSingleEventDeviceNode(spc.ControlNode):
         self.random_interval = spc.RandomTimeDevice(n=n, time_constant=t_mean)
         
 
-    def get(self):
-        dt = self.random_trigger_interval.read(0)
-        time.sleep(dt)
-
+    def _get(self):
         event = {}
         hits = [ ch for ch in range(self.n) if self.random_hit.read(ch) ]
         for ch in hits:
@@ -157,6 +154,20 @@ class RandomSingleEventDeviceNode(spc.ControlNode):
             event[f'adc{ch:02d}'] = int(self.random_charge.read(ch))
             
         return event
+
+    
+    def get(self):
+        dt = self.random_trigger_interval.read(0)
+        time.sleep(dt)
+
+        return self._get()
+
+    
+    def aio_get(self):
+        dt = self.random_trigger_interval.read(0)
+        asyncio.sleep(dt)
+
+        return self._get()
 
     
     @classmethod
