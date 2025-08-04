@@ -1,12 +1,26 @@
 # Created by Sanshiro Enomoto on 24 May 2024 #
 
 
-import time
+import time, random, math
 import slowpy.control as spc
+
+def poisson(mean):
+    sum = 0
+    counts = -1
+    
+    while sum < mean:
+        counts += 1
+        step = random.random()
+        if step == 0:
+            break
+        sum += -math.log(step)
+
+    return counts
+
 
 
 class RandomWalkDeviceNode(spc.ControlNode):
-    def __init__(self, walk, decay, n=4):
+    def __init__(self, walk, decay, n=16):
         self.device = spc.RandomWalkDevice(n=n, walk=walk, decay=decay, tick=0)
         self.ch_node = [ RandomWalkChannelNode(self.device, ch) for ch in range(n) ]
         self.walk_node = RandomWalkConfigNode(self.device, 'walk')
@@ -73,7 +87,57 @@ class RandomWalkConfigNode(spc.ControlVariableNode):
 
 
 class RandomEventDeviceNode(spc.ControlNode):
-    def __init__(self, n=16, rate=10, occupancy=0.5, t_mean=100, q_mean=100, q_sigma=10):
+    def __init__(self, n=16, rate=10, occupancy=0.7, t_mean=100, q_mean=100, q_sigma=10):
+        self.n = n
+        self.rate = rate
+        self.random_hit = spc.RandomHitDevice(n=n, occupancy=occupancy)
+        self.random_charge = spc.RandomChargeDevice(n=n, mean=q_mean, sigma=q_sigma)
+        self.random_interval = spc.RandomIntervalDevice(n=n, interval=t_mean)
+
+        self.last_readout_time = None
+        
+
+    def do_start(self):
+        self.last_readout_time = time.time()
+        
+        
+    def get(self):
+        now = time.time()
+        if self.last_readout_time is None:
+            self.last_readout_time = now
+        lapse = now - self.last_readout_time
+
+        m = poisson(self.rate * lapse)
+        time_list = sorted([ lapse * random.random() for m in range(m) ])
+
+        event_list = []
+        for dt in time_list:
+            event = {
+                'timestamp': self.last_readout_time + dt,
+                'hits': {},
+            }
+            hit_list = [ ch for ch in range(self.n) if self.random_hit.read(ch) ]
+            for ch in hit_list:
+                event['hits'][f'tdc{ch:02d}'] = int(self.random_interval.read(ch))
+            for ch in hit_list:
+                event['hits'][f'adc{ch:02d}'] = int(self.random_charge.read(ch))
+            event_list.append(event)
+            
+        self.last_readout_time = now
+        
+        return event_list
+
+    
+    @classmethod
+    def _node_creator_method(cls):
+        def random_event_device(self, n=16, rate=10, occupancy=0.7, t_mean=100, q_mean=100, q_sigma=10):
+            return RandomEventDeviceNode(n=n, rate=rate, occupancy=occupancy, t_mean=t_mean, q_mean=q_mean, q_sigma=q_sigma)
+        return random_event_device
+
+
+
+class RandomSingleEventDeviceNode(spc.ControlNode):
+    def __init__(self, n=16, rate=10, occupancy=0.7, t_mean=100, q_mean=100, q_sigma=10):
         self.n = n
         self.random_trigger_interval = spc.RandomIntervalDevice(n=1, interval=1.0/rate)
         self.random_hit = spc.RandomHitDevice(n=n, occupancy=occupancy)
@@ -97,6 +161,7 @@ class RandomEventDeviceNode(spc.ControlNode):
     
     @classmethod
     def _node_creator_method(cls):
-        def randomevent_device(self, n=4, rate=10, occupancy=0.5, t_mean=100, q_mean=100, q_sigma=10):
-            return RandomEventDeviceNode(n=n, rate=rate, occupancy=occupancy, t_mean=t_mean, q_mean=q_mean, q_sigma=q_sigma)
-        return randomevent_device
+        def random_single_event_device(self, n=16, rate=10, occupancy=0.7, t_mean=100, q_mean=100, q_sigma=10):
+            return RandomSingleEventDeviceNode(n=n, rate=rate, occupancy=occupancy, t_mean=t_mean, q_mean=q_mean, q_sigma=q_sigma)
+        return random_single_event_device
+    

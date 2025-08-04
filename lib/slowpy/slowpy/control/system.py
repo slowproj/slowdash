@@ -52,7 +52,7 @@ class ControlSystem(spc.ControlNode):
         if name is None:
             name = cls._make_name()
         try:
-            obj.__slowdash_export_name = name
+            setattr(obj, '__slowdash_export_name', name)  # using setattr() for dataclass
         except:
             pass
         
@@ -120,12 +120,12 @@ class ControlSystem(spc.ControlNode):
         # register this to channel list if not already in
         if name is not None and name != export_name:
             try:
-                obj.__slowdash_export_name = name
+                setattr(obj, '__slowdash_export_name', name)   # using setattr() for dataclass
             except:
                 pass  # obj does not have setattr()  (such as an interger)
             if name not in cls._slowdash_channels:
                 cls._register_channel(name, value)
-                
+
         record = { publish_name: { 't': time.time(), 'x': value } }
         await cls.app().request_publish('currentdata', record)
 

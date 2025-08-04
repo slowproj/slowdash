@@ -44,7 +44,7 @@ class Histogram(DataElement):
         
     def clear(self):
         super().clear()
-        self.counts[:] = 0
+        self.counts[:] = [0] * len(self.counts)
         self.overflow, self.underflow = 0, 0
 
         
@@ -133,7 +133,7 @@ class Histogram2d(DataElement):
     def clear(self):
         super().clear()
         for yslice in self.counts:
-            yslice[:] = 0
+            yslice[:] = [0] * len(yslice)
         self.outliers = 0
 
         

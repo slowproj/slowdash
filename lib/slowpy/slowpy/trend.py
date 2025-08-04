@@ -10,10 +10,12 @@ class Trend(DataElement):
         super().__init__()
         self.metric = metric
         self.tick = abs(tick)
-        if start is None:
-            self.start = int(time.time())
+        self.start = start
+        
+        if self.start is None:
+            self.start_time = time.time()
         else:
-            self.start = start
+            self.start_time = self.start
         if length < self.tick:
             length = self.tick
         self.nbins = int(abs(length)/self.tick)
@@ -31,13 +33,21 @@ class Trend(DataElement):
     
     def clear(self):
         super().clear()
-        self.start_index = self.current_index
-        k = int(self.current_index % self.nbins)
-        self.count[k] = 0
-        self.sum[k] = 0
-        self.sum2[k] = 0
-        self.min[k] = np.nan
-        self.max[k] = np.nan
+        
+        if self.start is None:
+            self.start_time = time.time()
+        else:
+            self.start_time = self.start
+            
+        self.start_index = 0
+        self.current_index = 0
+        self.has_values = True
+        
+        self.count[0] = 0
+        self.sum[0] = 0
+        self.sum2[0] = 0
+        self.min[0] = np.nan
+        self.max[0] = np.nan
 
 
     def flush(self):
@@ -49,7 +59,7 @@ class Trend(DataElement):
         if time is None:
             time = time.time()
             
-        this_index = int((time - self.start) / self.tick)
+        this_index = int((time - self.start_time) / self.tick)
         if this_index < 0:
             return
 
@@ -90,7 +100,7 @@ class Trend(DataElement):
         ts.fields = []
         
         record = self.to_json()
-        ts.t = [ t + self.start for t in record['x'] ]
+        ts.t = [ t + self.start_time for t in record['x'] ]
         for key in record:
             if key == 'y':
                 field = name
@@ -113,7 +123,7 @@ class Trend(DataElement):
         indexes = [ int((self.current_index - n + k) % self.nbins) for k in range(n) ]
         lapse = [ self.tick/2 + self.tick * (self.current_index - n + k) for k in range(n) ]
         
-        self.attr_values['start_timestamp'] = self.start
+        self.attr_values['start_timestamp'] = self.start_time
         record = { **super().to_json(),  **{
             'labels': [ 'lapse', self.metric ],
             'x': lapse,
@@ -162,7 +172,7 @@ class Trend(DataElement):
     
     def to_numpy(self):
         obj = self.to_json()
-        t = [datetime.datetime.fromtimestamp(self.start+t) for t in obj['x']]
+        t = [datetime.datetime.fromtimestamp(self.start_time+t) for t in obj['x']]
         x = obj['y']
         x_err = obj.get('y_err', None)
         return (t, x, x_err)

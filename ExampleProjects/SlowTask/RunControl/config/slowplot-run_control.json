@@ -24,7 +24,8 @@
             ],
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
             "legend": { "style": "side" }
-        }
+        },
+        { "type": "tree", "channel": "run_setting" }
     ],
     "meta": { "name": "run_control", "title": "", "description": "" }
 }

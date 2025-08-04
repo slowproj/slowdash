@@ -14,6 +14,7 @@ class RunSetting:
 @dataclass
 class RunStatus:
     running: bool = False
+    start_time: float = 0
     lapse: float = 0
         
 run_setting, run_status = RunSetting(), RunStatus()
@@ -46,22 +47,27 @@ async def _finalize():
     
 
 async def _loop():
+    await ctrl.publish(run_status)
+    
     if not run_status.running:
         await asyncio.sleep(0.1)
         return
 
-    run_status.lapse = time.time() - run_status.start_time
+    run_status.lapse = round(time.time() - run_status.start_time,3)
     if run_setting.stop_after and run_status.lapse >= run_setting.run_length:
-        await stop()
+        stop()
         if run_setting.repeat:
-            run_status.start_time = time.time()
+            run_status.start_time = round(time.time(),3)
             run_status.running = True
-        
+            do_run_start()
+            await ctrl.publish(run_setting)
+            await ctrl.publish(run_status)
+            
     if run_status.running:
         await do_readout()
 
 
-async def start(run_number:int, stop_after:bool, run_length:float, repeat: bool, offline:bool):
+def start(run_number:int, stop_after:bool, run_length:float, repeat: bool, offline:bool):
     run_setting.run_number = run_number
     run_setting.stop_after = stop_after
     run_setting.run_length = run_length
@@ -69,16 +75,15 @@ async def start(run_number:int, stop_after:bool, run_length:float, repeat: bool,
     run_setting.offline = offline
     save_run_setting()
 
-    run_status.start_time = time.time()
+    run_status.start_time = round(time.time(),3)
     run_status.running = True
-    await ctrl.publish(run_status)
+    do_run_start()
     
     return True
 
 
-async def stop():
+def stop():
     run_status.running = False
-    await ctrl.publish(run_status)
     
     if not run_setting.offline:
         run_setting.run_number += 1
@@ -98,27 +103,39 @@ Measurement Specific Stuff
 """
 
 ctrl.import_control_module('DummyDevice')
-device = ctrl.randomevent_device()
+device = ctrl.random_event_device(rate=10)
 print("Dummy event generator loaded")
 
 import slowpy as slp
-rate_trend = slp.RateTrend(start=time.time(), length=300, tick=1)
+rate_trend = slp.RateTrend(length=10, tick=0.2)
 nhits_hist = slp.Histogram(16, 0, 16);
+nhits_hist.add_stat(slp.HistogramBasicStat(['Entries', 'Underflow', 'Overflow', 'Mean', 'RMS'], ndigits=3))
 
 
-async def do_readout():
-    event = device.get()
-    t = time.time()
+def do_run_start():
+    print("starting a new run")
+    rate_trend.clear()
+    nhits_hist.clear()
+    device.do_start()
 
-    tdc = {ch:value for ch,value in event.items() if ch.startswith('tdc')}
-    adc = {ch:value for ch,value in event.items() if ch.startswith('adc')}
-    nhits = len(adc)
-
-    rate_trend.fill(t)
-    nhits_hist.fill(nhits)
     
+async def do_readout():
+    events = device.get()
+
+    for ev in events:
+        t = ev['timestamp']
+        hits = ev['hits']
+        tdc = {ch:value for ch,value in hits.items() if ch.startswith('tdc')}
+        adc = {ch:value for ch,value in hits.items() if ch.startswith('adc')}
+        nhits = len(adc)
+
+        rate_trend.fill(t)
+        nhits_hist.fill(nhits)
+
     await ctrl.publish(rate_trend, 'rate_trend')
     await ctrl.publish(nhits_hist, 'nhits_hist')
+
+    await asyncio.sleep(0.5)
 
 
     

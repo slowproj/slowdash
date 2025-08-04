@@ -80,7 +80,7 @@ class RandomWalkDevice:
 
 
 class RandomHitDevice:
-    def __init__(self, n=16, occupancy=0.5):
+    def __init__(self, n=16, occupancy=0.7):
         self.n = n
         self.occupancy = occupancy
 
@@ -90,7 +90,7 @@ class RandomHitDevice:
             
         
     def read(self, channel):
-        return random.random() > self.occupancy
+        return random.random() < self.occupancy
 
 
     

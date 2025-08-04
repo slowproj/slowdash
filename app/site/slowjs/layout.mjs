@@ -17,7 +17,6 @@ export class Layout {
         this.panels = [];
     }
 
-    
 
     async configure(config=null, options={}, callbacks={}) {
         const default_options = {  // defaults when Layout is created directly (e.g., by user HTML)
