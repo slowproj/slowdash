@@ -523,14 +523,22 @@ class GraphPlot extends Plot {
         if (data.y_err?.length == y.length) {
             this.graph.y_err = data.y_err;
         }
+        if (data.y_min?.length == y.length) {
+            this.graph.y_min = data.y_min;
+        }
+        if (data.y_max?.length == y.length) {
+            this.graph.y_max = data.y_max;
+        }
             
         let [xmin, xmax, ymin, ymax] = [null, null, null, null];
         for (let k = 0; k < x.length; k++) {
             const xk_err = this.graph?.x_err ? this.graph.x_err[k] : 0;
             const yk_err = this.graph?.y_err ? this.graph.y_err[k] : 0;
+            const yk_min = this.graph?.y_min ? this.graph.y_min[k] : y[k] - yk_err;
+            const yk_max = this.graph?.y_max ? this.graph.y_max[k] : y[k] + yk_err;
             if (! isNaN(x[k]) && ! isNaN(y[k])) {
                 [ xmin, xmax ] = [ Math.min(xmin??x[k], x[k]-xk_err), Math.max(xmax??x[k], x[k]+xk_err) ];
-                [ ymin, ymax ] = [ Math.min(ymin??y[k], y[k]-yk_err), Math.max(ymax??y[k], y[k]+yk_err) ];
+                [ ymin, ymax ] = [ Math.min(ymin??y[k], yk_min), Math.max(ymax??y[k], yk_max) ];
             }
         }
         if ((xmin === null) || (ymin === null)) {
@@ -566,6 +574,9 @@ class LineMarkerPlot extends GraphPlot {
         if (config.fill_opacity === undefined) {
             config.fill_opacity = 0;
         }
+        if (config.fill_envelope === undefined) {
+            config.fill_envelope = false;
+        }
         if (config.fill_baseline === undefined) {
             config.fill_baseline = 1e-100;
         }
@@ -575,7 +586,8 @@ class LineMarkerPlot extends GraphPlot {
             markerType: config.marker_type, markerSize: config.marker_size, 
             markerColor: config.color, markerOpacity: config.opacity,
             lineType: config.line_type,
-            fillColor: config.color, fillOpacity: config.fill_opacity, fillBaseline: config.fill_baseline,
+            fillColor: config.color, fillOpacity: config.fill_opacity,
+            fillEnvelope: config.fill_envelope, fillBaseline: config.fill_baseline,
         };
         this.axes.addGraph(this.graph);
     }
@@ -612,10 +624,6 @@ class LineMarkerPlot extends GraphPlot {
         let table = div.find('table');
         let k = table.find('input').size();
         table.append($('<tr>').html(`
-            <td>Marker</td><td>type: ${marker_select},
-            size: <input type="number" step="any" min="0"></td>
-        `));
-        table.append($('<tr>').html(`
             <td>Line</td><td>width: <input type="number" step="any" min="0">, 
             type: <select>
                 <option value="connect">connect</option>
@@ -623,15 +631,27 @@ class LineMarkerPlot extends GraphPlot {
             </select></td>
         `));
         table.append($('<tr>').html(`
-            <td>Fill</td><td>opacity: <input type="number" step="0.05" min="0" max="1">, baseline: <input type="number" step="any"></td>
+            <td>Marker</td><td>type: ${marker_select},
+            size: <input type="number" step="any" min="0"></td>
+        `));
+        table.append($('<tr>').html(`
+            <td>Fill</td><td>
+                <label><input type="radio" name="fill_envelope">envelope</label>
+                <label><input type="radio" name="fill_envelope">baseline</label>:
+                <input type="number" step="any"></td>
+        `));
+        table.append($('<tr>').html(`
+            <td></td><td>opacity: <input type="number" step="0.05" min="0" max="1"></td>
         `));
 
-        bindInput(this.config, 'marker_type', div.find('select').at(0).css('width', '7em'));
-        bindInput(this.config, 'marker_size', div.find('input').at(k++).css('width', '5em'));
         bindInput(this.config, 'line_width', div.find('input').at(k++).css('width', '5em'));
         bindInput(this.config, 'line_type', div.find('select').at(1).css('width', '7em'));
-        bindInput(this.config, 'fill_opacity', div.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config, 'marker_type', div.find('select').at(0).css('width', '7em'));
+        bindInput(this.config, 'marker_size', div.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config, 'fill_envelope', div.find('input').at(k++), true);
+        bindInput(this.config, 'fill_envelope', div.find('input').at(k++), false);
         bindInput(this.config, 'fill_baseline', div.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config, 'fill_opacity', div.find('input').at(k++).css('width', '5em'));
     }
 };
 
@@ -751,11 +771,11 @@ class TimeseriesScatterPlot extends GraphPlot {
         let table = div.find('table');
         let k = table.find('input').size();
         table.append($('<tr>').html(`
-            <td>Marker</td><td>type: ${marker_select},
-            size: <input type="number" step="any" min="0"></td>
+            <td>Line</td><td>width: <input type="number" step="any" min="0"></td>
         `));
         table.append($('<tr>').html(`
-            <td>Line</td><td>width: <input type="number" step="any" min="0"></td>
+            <td>Marker</td><td>type: ${marker_select},
+            size: <input type="number" step="any" min="0"></td>
         `));
         table.append($('<tr>').html(`
             <td>Last Point</td><td>type: ${marker_select},
@@ -763,9 +783,9 @@ class TimeseriesScatterPlot extends GraphPlot {
             <input type="color"></td>
         `));
 
+        bindInput(this.config, 'line_width', div.find('input').at(k++).css('width', '5em'));
         bindInput(this.config, 'marker_type', div.find('select').at(0).css('width', '7em'));
         bindInput(this.config, 'marker_size', div.find('input').at(k++).css('width', '5em'));
-        bindInput(this.config, 'line_width', div.find('input').at(k++).css('width', '5em'));
         bindInput(this.config, 'lastpoint_type', div.find('select').at(1).css('width', '7em'));
         bindInput(this.config, 'lastpoint_size', div.find('input').at(k++).css('width', '5em'));
         bindInput(this.config, 'lastpoint_color', div.find('input').at(k++).css('width', '2em'));

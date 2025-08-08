@@ -151,20 +151,27 @@ export class Controller {
                 
         let status = { code:200, text:'OK' };
         for (let i = 0; i < url_list.length; i++) {
-            let data = {};
+            let textdata = '';
             try {
                 const response = await fetch(url_list[i]);
                 if (! response.ok) {
                     status = { code: response.status, text: response.statusText };
                 }
                 else {
-                    data = await response.json();
+                    textdata = await response.text();
                 }
             }
             catch (err) {
                 status = { code: -1, text: 'SlowDash server not reachable' };
             }
 
+            if (textdata.length < 2) {
+                continue;
+            }
+            const data = JSON.parse(textdata.replace(/\bNaN\b/g, '"NaN"'), (k,v) => {
+                if (v === 'NaN') return NaN;
+                return v;
+            });
             for (let ch in data) {
                 this.currentData[ch] = data[ch];
             }
@@ -232,6 +239,7 @@ export class Controller {
         if (this.socket !== null) {
             return;
         }
+        this.socket_error_displayed = false;
 
         let url = new URL(window.location.href);
         url.protocol = (url.protocol == 'https:' ? 'wss:' : 'ws:');
@@ -280,14 +288,29 @@ export class Controller {
                     return;
                 }
             }
-            
-            let data = JSON.parse(event.data);
-            data['__meta'] = {
-                isCurrent: true,
-                isPartial: true,
-                currentDataTime: now,
+
+            let data;
+            try {
+                data = JSON.parse(event.data.replace(/\bNaN\b/g, '"NaN"'), (k,v) => {
+                    if (v === 'NaN') return NaN;
+                    if (v === 'Infinity') return Infinity;
+                    if (v === '-Infinity') return -Infinity;
+                    return v;
+                });
+                data['__meta'] = {
+                    isCurrent: true,
+                    isPartial: true,
+                    currentDataTime: now,
+                }
             }
-            
+            catch (error) {
+                if (! this.socket_error_displayed) {
+                    this.socket_error_displayed = true;
+                    console.error(error);
+                    console.error(event.data);
+                }
+            }
+
             this.view.draw(data);
         }
     }

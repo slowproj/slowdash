@@ -17,9 +17,13 @@ for lapse in range(0, 350, 1):
         x = np.random.normal(10, 3)
         value_trend.fill(t, x)
 
-        
-print(rate_trend)  # as a graph
+# as a graph        
+print(rate_trend)  
 print()
-print(rate_trend.timeseries('rate'))  # as time-series
+print(value_trend)  
+print()
+
+# as time-series
+print(rate_trend.timeseries('rate'))  
 print()
 print(value_trend.timeseries('value'))

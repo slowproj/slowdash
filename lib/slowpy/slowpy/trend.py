@@ -146,6 +146,12 @@ class Trend(DataElement):
         if self.metric.lower() in [ 'sum' ]:
             record['y'] = self.sum[indexes].tolist()
             return record
+        elif self.metric.lower() in [ 'min' ]:
+            record['y'] = self.min[indexes].tolist()
+            return record
+        elif self.metric.lower() in [ 'max' ]:
+            record['y'] = self.max[indexes].tolist()
+            return record
 
         with np.errstate(divide='ignore'):
             mean = self.sum[indexes] / self.count[indexes]
