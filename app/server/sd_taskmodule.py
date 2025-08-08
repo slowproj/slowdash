@@ -554,7 +554,7 @@ class TaskModuleComponent(Component):
         return result
 
 
-    @slowlette.post('api/control/currentdata')
+    @slowlette.post('api/consume/current_data')
     async def set_variable(self, doc:slowlette.DictJSON):
         result = None
         for name, data in doc:

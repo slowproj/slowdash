@@ -1,10 +1,7 @@
 
-import sys, os, asyncio, time, json, logging
 from slowpy.control import control_system as ctrl
-
 ctrl.import_control_module('DummyDevice')
 device = ctrl.randomwalk_device()
-
 
 import slowpy as slp
 h = slp.Histogram(100, 0, 20)

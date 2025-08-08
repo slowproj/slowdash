@@ -43,6 +43,9 @@ export class Layout {
                 this.options.immutable = true;
             }
         }
+        if (this.config.meta === undefined) {
+            this.config.meta = {};
+        }
         if (this.config.control === undefined) {
             this.config.control = {};
         }

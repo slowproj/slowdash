@@ -209,7 +209,7 @@ class HtmlPanel extends Panel {
                             't': $.time(),
                             'x': element.val(),
                         };
-                        this.callbacks.publish('currentdata', record);
+                        this.callbacks.publish('current_data', record);
                     });
                 }
             }

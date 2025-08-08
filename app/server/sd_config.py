@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 19 Mar 2022 #
 
-import sys, os, glob, io, yaml, asyncio, threading, importlib, inspect, logging, traceback
+import sys, os, time, glob, io, json, yaml, asyncio, threading, importlib, inspect, logging, traceback
 import pathlib, stat, pwd, grp, enum
 
 import slowlette
@@ -85,6 +85,7 @@ class ConfigComponent(Component):
     def __init__(self, app, project):
         super().__init__(app, project)
         self.project_dir = self.project.project_dir
+        self.transient_contents = {}
         
 
     @slowlette.get('/api/config')
@@ -114,14 +115,12 @@ class ConfigComponent(Component):
 
         
     @slowlette.get('/api/config/contentlist')
-    async def get_content_meta(self):
-        if self.project_dir is None:
-            return []
-        
+    async def get_contentlist(self):
         filelist = []
-        for filepath in glob.glob(os.path.join(self.project_dir, 'config', '*-*.*')):
-            filelist.append([filepath, int(os.path.getmtime(filepath))])
-            filelist = sorted(filelist, key=lambda entry: entry[1], reverse=True)
+        if self.project_dir is not None:
+            for filepath in glob.glob(os.path.join(self.project_dir, 'config', '*-*.*')):
+                filelist.append([filepath, int(os.path.getmtime(filepath))])
+                filelist = sorted(filelist, key=lambda entry: entry[1], reverse=True)
                 
         doc = []
         for filepath, mtime in filelist:
@@ -147,11 +146,14 @@ class ConfigComponent(Component):
                 'config_error_line': meta_info.get('config_error_line', '')
             })
 
-        return doc
+        return doc + [ v.get('_entry', {}) for v in self.transient_contents.values() ]
 
         
     @slowlette.get('/api/config/content/{filename}')
     async def get_content(self, filename:str, content_type:str='json'):
+        if filename in self.transient_contents:
+            return self.transient_contents[filename].get('_content', {})
+        
         meta, content = await self._load_content(filename, content_type)
         if meta is None:
             return None   # not in my list -> use Slowlette aggregation
@@ -202,6 +204,9 @@ class ConfigComponent(Component):
         
     @slowlette.get('/api/config/file/{filename}')
     async def get_file(self, filename:str):
+        if filename in self.transient_contents:
+            return json.dumps(self.transient_contents[filename].get('_content', ''), indent=4)
+        
         filepath, ext = self._get_filepath_ext(filename, os.R_OK)
         if filepath is None:
             logging.warning(f'GET config/file: {filename}: access denied')
@@ -213,6 +218,22 @@ class ConfigComponent(Component):
                 
         return slowlette.FileResponse(filepath)
 
+        
+    @slowlette.post('/api/config/transient/content/{filetype}/{name}')
+    async def post_transient_content(self, filetype: str, name:str, body:slowlette.DictJSON):
+        filename = f'{filetype}-{name}.json'
+        self.transient_contents[filename] = {
+            '_entry': {
+                'type': filetype,
+                'name': name,
+                'mtime': int(time.time()),
+                'title': name,
+                'description': '',
+                'config_file': filename,
+            },
+            '_content': dict(body)
+        }
+        
         
     @slowlette.post('/api/config/file/{filename}')
     async def post_file(self, filename: str, body:bytes, overwrite:str='no'):

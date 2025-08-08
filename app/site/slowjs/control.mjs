@@ -185,16 +185,14 @@ export class Controller {
 
     
     async publish(topic, doc) {
-        if (topic !== 'currentdata') {
-            return;
-        }
+        const socket_available = (this.socket && (this.socket.readyState === WebSocket.OPEN));
         const message = (typeof doc === 'string') ? doc : JSON.stringify(doc);
         
-        if (this.socket && (this.socket.readyState === WebSocket.OPEN)) {
+        if (socket_available && (topic == 'current_data')) {
             this.socket.send(message);
         }
         else {
-            const url = './api/control/currentdata';
+            const url = './api/control/' + topic;
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json; charset=utf-8' },
@@ -247,7 +245,7 @@ export class Controller {
         else {
             url.pathname += (url.pathname.endsWith('/') ? '' : '/');
         }
-        url.pathname += 'ws/subscribe/currentdata';
+        url.pathname += 'ws/subscribe/current_data';
 
         // if HTTPS is used and WebSocket is not WSS, an error occurs here
         try {

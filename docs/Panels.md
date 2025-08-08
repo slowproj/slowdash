@@ -321,8 +321,8 @@ Mandatory attributes and default values for a `plot` are:
      "marker-opacity": 0, "fill-opacity": 0.3,
      "ticksX": 0, "ticksY": 0, 
      "marginTop": 0, "marginBotton": 0, "marginLeft": 0, "marginRight": 0,
-     "label": ""
-    "timerange-margin-percent": 0,
+     "label": "",
+     "timerange-margin-percent": 0,
 }
 ```
 

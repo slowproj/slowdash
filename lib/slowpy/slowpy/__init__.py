@@ -7,4 +7,5 @@ from .treetable import Tree, Table
 
 from .slowfetch import SlowFetch
 
+from .mpldata import slowdashify
 from .slowplot import slowplot

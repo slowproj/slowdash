@@ -3,6 +3,7 @@
 
 import time, signal, dataclasses, logging
 import slowpy.control as spc
+from slowpy import slowdashify as mpl_slowdashify
 
 
 class ControlSystem(spc.ControlNode):
@@ -86,6 +87,15 @@ class ControlSystem(spc.ControlNode):
     async def aio_publish(cls, obj, name:str=None):
         if cls.app() is None:
             return
+
+        # special handling for Matplotlib figure
+        config, data = mpl_slowdashify(obj, name)
+        if data is not None:
+            now = time.time()
+            packet = { k: { 't': now, 'x': v } for k,v in data.items() }
+            await cls.app().request(f'/config/transient/content/slowplot/{name}', config)
+            await cls.app().request_publish('current_data', packet)
+            return
         
         # value
         value = None
@@ -127,7 +137,7 @@ class ControlSystem(spc.ControlNode):
                 cls._register_channel(name, value)
 
         record = { publish_name: { 't': time.time(), 'x': value } }
-        await cls.app().request_publish('currentdata', record)
+        await cls.app().request_publish('current_data', record)
 
         
     @classmethod

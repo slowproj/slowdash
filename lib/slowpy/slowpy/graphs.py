@@ -30,7 +30,7 @@ class Graph(DataElement):
     def has_y_err(self):
         return any(val is not None for val in self.y_err)
 
-    def has_z_err(self):
+
         return any(val is not None for val in self.z_err)
 
             

@@ -591,16 +591,16 @@ class LineMarkerPlot extends GraphPlot {
             this.label.css('color', color);
         }
         if (style?.line_width) {
-            this.graph.style.lineWidth = line_width;
+            this.graph.style.lineWidth = style.line_width;
         }
         if (style?.marker_type) {
-            this.graph.style.markerType = marker_type;
+            this.graph.style.markerType = style.marker_type;
         }
         if (style?.marker_size) {
-            this.graph.style.markerSize = marker_size;
+            this.graph.style.markerSize = style.marker_size;
         }
         if (style.opacity) {
-            this.graph.style.markerOpacity = style.opacity;
+            this.graph.style.markerOpacity = style.style.opacity;
         }
         if (style.fill_opacity) {
             this.graph.style.fillOpacity = style.fill_opacity;
@@ -654,7 +654,7 @@ class BarChartPlot extends GraphPlot {
             this.graph.style.fillColor = color;
         }
         if (style?.bar_width) {
-            this.graph.style.barWidth = bar_width;
+            this.graph.style.barWidth = style.bar_width;
         }
         if (style.opacity) {
             this.graph.style.fillOpacity = style.opacity;
@@ -733,13 +733,13 @@ class TimeseriesScatterPlot extends GraphPlot {
             this.label.css('color', color);
         }
         if (style?.line_width) {
-            this.graph.style.lineWidth = line_width;
+            this.graph.style.lineWidth = style.line_width;
         }
         if (style?.marker_type) {
-            this.graph.style.markerType = marker_type;
+            this.graph.style.markerType = style.marker_type;
         }
         if (style?.marker_size) {
-            this.graph.style.markerSize = marker_size;
+            this.graph.style.markerSize = style.marker_size;
         }
         if (style.opacity) {
             this.graph.style.markerOpacity = style.opacity;
@@ -996,9 +996,6 @@ class PlotPanel extends Panel {
         await super.configure(config, options, callbacks);
         
         // defaults: not to make a copy of 'config', do not use $.extend() here
-        if (this.config.plots === undefined) {
-            this.config.plots = [];
-        }
         if (this.config.axes === undefined) {
             this.config.axes = {};
         }
@@ -1022,6 +1019,9 @@ class PlotPanel extends Panel {
         }
         if (! ['side', 'box', 'transparent', 'hidden', 'none'].includes(this.config.legend.style)) {
             this.config.legend.style = 'side';
+        }
+        if (this.config.plots === undefined) {
+            this.config.plots = [];
         }
 
         const legendWidthFraction = 0.3;

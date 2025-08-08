@@ -1,0 +1,9 @@
+slowdash_project:
+  name: MatplotlibFigure
+  
+  task:
+    - name: mplfigure
+      auto_load: true
+
+  system:
+    our_security_is_perfect: true

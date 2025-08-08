@@ -8,7 +8,7 @@ from sd_component import Component
 
 
 class PubsubComponent(Component):
-    topics = [ 'currentdata' ]
+    topics = [ 'current_data' ]
     
     def __init__(self, app, project):
         super().__init__(app, project)
@@ -44,12 +44,11 @@ class PubsubComponent(Component):
                 message = await websocket.receive()
                 if message is not None and len(message) > 0:
                     logging.info(f"WS-RCV: {topic}: {repr(message)}");
-                    if topic == 'currentdata':
-                        try:
-                            await self.app.request('/control/currentdata', message.encode())
-                            await self.app.request('/publish/currentdata', message)
-                        except Exception as e:
-                            logging.error(f'Error on processing current data request: {e}')
+                    try:
+                        await self.app.request(f'/consume/{topic}', message.encode())
+                        await self.app.request(f'/publish/{topic}', message)
+                    except Exception as e:
+                        logging.error(f'Error on processing subpub message in topic "{topic}": {e}')
         except slowlette.ConnectionClosed:
             logging.info("WebSocket Closed")
         except Exception as e:

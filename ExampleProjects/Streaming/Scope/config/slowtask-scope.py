@@ -2,7 +2,6 @@ import time
 import numpy as np
 
 from slowpy.control import control_system as ctrl
-ctrl = ControlSystem()
 fx = ctrl.value(3.2)
 fy = ctrl.value(2.0)
 
