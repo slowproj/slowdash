@@ -58,10 +58,13 @@ class SingleDisplayItem {
         let time=null, value=null;
         if ((ts?.t !== undefined) && (ts?.t !== null)) {
             if (Array.isArray(ts.t)) {
-                const n = ts?.t?.length;
-                if (n > 0) {
-                    time = ts.t[n-1] + (ts.start ?? 0);
-                    value = ts.x[n-1];
+                let k = ts.t.length - 1;
+                while ((k >= 0) && isNaN(ts.x[k])) {
+                    k--;
+                }
+                if (k >= 0) {
+                    time = ts.t[k] + (ts.start ?? 0);
+                    value = ts.x[k];
                 }
             }
             else {

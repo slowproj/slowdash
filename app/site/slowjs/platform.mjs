@@ -191,6 +191,7 @@ export class Platform {
             }
             else if (entry.type == 'timeseries') {
                 timeseries_datalist.append($('<option>').attr('value', entry.name).text(entry.name));
+                numeric_datalist.append($('<option>').attr('value', entry.name).text(entry.name));
             }
             else if (entry.type == 'table') {
                 table_datalist.append($('<option>').attr('value', entry.name).text(entry.name));

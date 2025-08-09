@@ -943,26 +943,46 @@ class TimeseriesPlot extends LineMarkerPlot {
         this.graph.x = [];
         this.graph.y = [];
         
+        if (ts.t?.length != ts.x.length) {
+            return true;
+        }
+
         const t0 = dataPacket[this.config.channel].start;
-        let [xmin, xmax, ymin, ymax] = [null, null, null, null];
         for (let k = 0; k < ts.x.length; k++) {
-            const [xk, yk] = [t0 + ts.t[k], parseFloat(ts.x[k])];
-            if (isNaN(yk)) {
+            this.graph.x.push(t0 + ts.t[k]);
+        }
+        this.graph.y = ts.x;
+        if (ts.x_err?.length == ts.x.length) {
+            this.graph.y_err = ts.x_err;
+        }
+        if (ts.x_min?.length == ts.x.length) {
+            this.graph.y_min = ts.x_min;
+        }
+        if (ts.x_max?.length == ts.x.length) {
+            this.graph.y_max = ts.x_max;
+        }
+
+        let [xmin, xmax, ymin, ymax, ylast] = [null, null, null, null, null];
+        for (let k = 0; k < ts.t.length; k++) {
+            const xk = this.graph.x[k];
+            const yk = this.graph.y[k];
+            if (isNaN(xk) || isNaN(yk)) {
                 continue;
             }
-            this.graph.x.push(xk);
-            this.graph.y.push(yk);
+            const yk_err = this.graph.y_err ? this.graph.y_err[k] : 0;
+            const yk_min = this.graph.y_min ? this.graph.y_min[k] : yk - yk_err;
+            const yk_max = this.graph.y_max ? this.graph.y_max[k] : yk + yk_err;
+            ylast = yk;
             [ xmin, xmax ] = [ Math.min(xmin??xk, xk), Math.max(xmax??xk, xk) ];
-            [ ymin, ymax ] = [ Math.min(ymin??yk, yk), Math.max(ymax??yk, yk) ];
+            [ ymin, ymax ] = [ Math.min(ymin??yk, yk_min), Math.max(ymax??yk, yk_max) ];
         }
-        
-        if (this.graph.x.length < 1) {
+        if ((xmin === null) || (ymin === null)) {
             [xmin, xmax, ymin, ymax] = [t0, t0+3600, 0, 1];
         }
         this.valueRange = {xmin: xmin, xmax: xmax, ymin: ymin, ymax: ymax};
 
-        if (this.graph.x.length > 0) {
-            this.setStat($.sprintf(this.config.format || '%f', this.graph.y[this.graph.y.length-1]));
+        if (! isNaN(ylast)) {
+            this.setStat($.sprintf(this.config.format || '%f', ylast));
         }
 
         return true;
