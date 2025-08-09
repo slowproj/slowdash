@@ -1,4 +1,3 @@
-
 services:
   slowdash:
     image: slowproj/slowdash

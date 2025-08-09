@@ -4,26 +4,34 @@ import matplotlib.pyplot as plt
 from slowpy.control import control_system as ctrl
 
 
+# this function is called periodically by SlowDash (if used in SlowDash GUI)
 async def _loop():
-    x = np.linspace(0, 10, 2)
-    y1 = 5*np.sin(x) + 7
-    y2 = 6*np.cos(x) + 7
-    dy = np.random.poisson(5, len(x))
-    
-    fig, [ax1, ax2] = plt.subplots(2, 1)
-    ax1.plot(x, y1, label='plot A')
-    ax1.plot(x, y2)
-    ax2.hist(np.random.randn(100), bins=10, label='hist A')
-    ax2.hist(np.random.randn(100) + 1.5, bins=10, label="hist B")
-    ax1.errorbar(x, y1, yerr=dy, fmt='o', label='errorbar A')
-    ax1.errorbar(x, y2, yerr=dy, fmt='s')
-    ax1.scatter(y1, y2, c='red', label='scatter A')
-    ax1.scatter(y2, x, c='blue')
-    ax1.set_xlabel("X")
-    ax2.set_title("histograms")
-    ax1.set_xlim(-10, 20)
-    ax2.set_ylim(0, 50)
+    x = np.linspace(0, 10, 100)
+    y1 = np.random.normal(7, 3, len(x))
+    y2 = np.random.normal(3, 5, len(x))
+    ey1 = np.random.poisson(7, len(x))
+    ey2 = np.random.poisson(3, len(x))
 
+    fig, axes = plt.subplots(2, 2)
+
+    axes[0,0].plot(x, y1, label='plot A')
+    axes[0,0].plot(x, y2)
+    axes[0,1].errorbar(x, y1, yerr=ey1, fmt='o', label='errorbar A')
+    axes[0,1].errorbar(x, y2, yerr=ey2, fmt='s')
+    axes[1,0].hist(y1, bins=np.linspace(-5, 15, 11), label='hist A')
+    axes[1,0].hist(y2, bins=np.linspace(-5, 15, 11))
+    axes[1,1].scatter(y1, y2, c='red', label='scatter A')
+    axes[1,1].scatter(x, y1, c='blue')
+
+    axes[0,0].set_title("plots")
+    axes[0,1].set_title("errorbars")
+    axes[1,0].set_title("histograms")
+    axes[1,1].set_title("scatters")
+    axes[0,1].set_xlim(-1, 11)
+    axes[0,1].set_ylim(-25, 30)
+    axes[0,0].set_xlabel("X")
+
+    
     # If used from SlowDash (no GUI mode), this prints an error message but it should not be harmful.
     # Remove this line if this script will not be used stand-alone.
     plt.show()

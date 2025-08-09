@@ -1,6 +1,4 @@
 slowdash_project:
-  name: MatplotlibFigure
-  
   task:
     - name: mplfigure
       auto_load: true

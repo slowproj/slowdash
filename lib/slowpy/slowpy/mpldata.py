@@ -188,7 +188,7 @@ def _extract_scatters(ax, legend_labels):
                 'color': color,
                 'marker': 'circle',
                 'marker_size': marker_size,
-                'linewidth': 0,
+                'line_width': 0,
             },
             'x': [], 'y': []
         }
