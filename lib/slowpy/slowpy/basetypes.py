@@ -60,7 +60,9 @@ class DataElement:
 
 
 class TimeSeries:
-    def __init__(self, fields=['']):
+    def __init__(self, fields=[''], start=0, length=None):
+        self.start = start
+        self.length = length
         self.fields = fields if len(fields) > 0 else ['']
         self.t = []
         self.values = []
@@ -74,7 +76,8 @@ class TimeSeries:
         - time: UNIX time-stamp, if None if given, the current time will be used.
         '''
         if time is None:
-            time = time.time()
+            time = time.time() - self.start
+        
         record = [None] * len(self.fields)
         
         if type(values) == dict:
@@ -90,11 +93,25 @@ class TimeSeries:
         self.values.append(record)
 
 
-    def __str__(self):
+    def to_json(self):
+        length = self.length
+        if length is None:
+            if len(self.t) < 2:
+                length = 1
+            else:
+                span = self.t[-1] - self.t[0]
+                length = span + (span / (len(self.t) - 1))
+            
         record = {
+            'start': self.start,
+            'length': length,
             't': self.t,
         }
         for k in range(len(self.fields)):
             record[self.fields[k]] = self.values[k]
         
-        return json.dumps(record)
+        return record
+
+    
+    def __str__(self):
+        return json.dumps(self.to_json())

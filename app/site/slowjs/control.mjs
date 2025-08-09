@@ -301,6 +301,7 @@ export class Controller {
                     isCurrent: true,
                     isPartial: true,
                     currentDataTime: now,
+                    range: { to: to, from: this.currentData.__meta.range.from }
                 }
             }
             catch (error) {

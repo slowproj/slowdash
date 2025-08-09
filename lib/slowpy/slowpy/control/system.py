@@ -2,8 +2,8 @@
 
 
 import time, signal, dataclasses, logging
+import slowpy as slp
 import slowpy.control as spc
-from slowpy import slowdashify as mpl_slowdashify
 
 
 class ControlSystem(spc.ControlNode):
@@ -89,7 +89,7 @@ class ControlSystem(spc.ControlNode):
             return
 
         # special handling for Matplotlib figure
-        config, data = mpl_slowdashify(obj, name)
+        config, data = slp.slowdashify(obj, name)
         if data is not None:
             now = time.time()
             packet = { k: { 't': now, 'x': v } for k,v in data.items() }
@@ -98,13 +98,14 @@ class ControlSystem(spc.ControlNode):
             return
         
         # value
-        value = None
+        value, value_is_ts = None, False
         if isinstance(obj, type):
             pass
         elif isinstance(obj, spc.ControlNode):
             value = obj.get()
         elif callable(getattr(obj, 'to_json', None)):  # SlowPy Element (histogram etc)
             value = obj.to_json()
+            value_is_ts = isinstance(obj, slp.TimeSeries)
         elif type(obj) in [ bool, int, float, str ]:
             value = obj
         elif type(obj) is dict:
@@ -134,19 +135,24 @@ class ControlSystem(spc.ControlNode):
             except:
                 pass  # obj does not have setattr()  (such as an interger)
             if name not in cls._slowdash_channels:
-                cls._register_channel(name, value)
+                cls._register_channel(name, value, value_is_ts)
 
-        record = { publish_name: { 't': time.time(), 'x': value } }
+        if value_is_ts:
+            record = { publish_name: value }
+        else:
+            record = { publish_name: { 't': time.time(), 'x': value } }
         await cls.app().request_publish('current_data', record)
 
         
     @classmethod
-    def _register_channel(cls, name, value):
+    def _register_channel(cls, name, value, value_is_ts=False):
         if type(value) is not dict:
             cls._slowdash_channels[name] = {'name': name, 'current': True}
             return
             
-        if 'table' in value:
+        if value_is_ts:
+            datatype = 'timeseries'
+        elif 'table' in value:
             datatype = 'table'
         elif 'tree' in value:
             datatype = 'tree'

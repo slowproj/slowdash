@@ -4,7 +4,7 @@ import slowpy as slp
 
 from slowpy.control import control_system as ctrl
 ctrl.import_control_module("DummyDevice")
-device = ctrl.randomwalk_device()
+device = ctrl.randomwalk_device(decay=0.01)
 print("Dummy data generator loaded")
 
 from slowpy.store import DataStore_SQLite
@@ -22,8 +22,9 @@ async def _loop():
         trend.fill(t, xk)
         
     await ctrl.aio_publish(trend, name="trend")
+    await ctrl.aio_publish(trend.timeseries(), name="trend_ts")
     
     datastore.append(x[-1], tag='x')
     await ctrl.aio_publish(x[-1], name="value")
         
-    await ctrl.aio_sleep(0.2)
+    await ctrl.aio_sleep(1)

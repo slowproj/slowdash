@@ -94,21 +94,28 @@ class Trend(DataElement):
             self.has_values = False
 
 
-    def timeseries(self, name, flush=False):
+    def timeseries(self, field='x', flush=False):
     # returns a time-series object
-        ts = TimeSeries()
+        length = self.tick * self.nbins
+        if self.current_index < self.nbins:
+            start = self.start_time
+        else:
+            start = self.start_time + self.tick * (self.current_index - self.nbins + 1)
+        start_offset = start - self.start_time
+        
+        ts = TimeSeries(start=start, length=length)
         ts.fields = []
         
         record = self.to_json()
-        ts.t = [ t + self.start_time for t in record['x'] ]
+        ts.t = [ t - start_offset for t in record['x'] ]
         for key in record:
             if key == 'y':
-                field = name
+                this_field = field
             elif key.startswith('y_'):
-                field = f'{key[2:]}.{name}'
+                this_field = f'{field}_{key[2:]}'
             else:
                 continue
-            ts.fields.append(field)
+            ts.fields.append(this_field)
             ts.values.append(record[key])
 
         if flush:

@@ -451,11 +451,22 @@ export class ChannelListPanel extends Panel {
                 let a = $('<a>').attr('href', href).text(entry.name).attr('target', '_blank');
                 $('<td>').append(a).appendTo(tr);
             }
+            else if (entry.type == 'timeseries' && entry.current) {
+                let href = './slowplot.html?channel=' + entry.name;
+                href += '&length=300&reload=10&grid=2x1';
+                let a = $('<a>').attr('href', href).text(entry.name).attr('target', '_blank');
+                $('<td>').append(a).appendTo(tr);
+            }
             else {
                 $('<td>').text(entry.name).appendTo(tr);
             }
             if (entry.current ?? false) {
-                $('<td>').text('current ' + (entry.type ?? 'numeric')).appendTo(tr);
+                if (entry.type == 'timeseries') {
+                    $('<td>').text('current numeric timeseries').appendTo(tr);
+                }
+                else {
+                    $('<td>').text('current ' + (entry.type ?? 'numeric')).appendTo(tr);
+                }
             }
             else {
                 $('<td>').text(entry.type ?? 'numeric').appendTo(tr);

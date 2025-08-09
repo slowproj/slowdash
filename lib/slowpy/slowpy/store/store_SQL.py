@@ -197,14 +197,17 @@ class DataStore_SQL(DataStore):
 
 
     def __del__(self):
-        self.close()
+        try:
+            self.close()
+        except:
+            pass
 
-
+        
     def close(self):
         if self.conn is not None:
             self.conn.close()
-            self.conn = None
-            logging.info('DB "%s" is disconnnected.' % self.db_url)
+        self.conn = None
+        logging.info('DB "%s" is disconnnected.' % self.db_url)
 
             
     def _write(self, values, tag=None, timestamp=None, update=False):

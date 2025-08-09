@@ -37,7 +37,7 @@ class SingleDisplayItem {
 
     
     update(dataPacket) {
-        if (! this.config.channel) {
+        if (! dataPacket || ! this.config.channel) {
             return;
         }
         

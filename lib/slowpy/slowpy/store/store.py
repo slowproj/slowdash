@@ -41,7 +41,7 @@ class DataStore:
                         fields.append(ts.fields[k])
                         values.append(ts.values[k][i])
                 if len(fields) > 0:
-                    records.append((ts.t[i], fields, values))
+                    records.append((ts.start+ts.t[i], fields, values))
                 
             if len(records) > 0:
                 handle = self._open_transaction()

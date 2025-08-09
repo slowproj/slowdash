@@ -24,6 +24,6 @@ print(value_trend)
 print()
 
 # as time-series
-print(rate_trend.timeseries('rate'))  
+print(rate_trend.timeseries())  
 print()
-print(value_trend.timeseries('value'))
+print(value_trend.timeseries())

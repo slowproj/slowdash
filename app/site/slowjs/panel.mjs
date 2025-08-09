@@ -191,27 +191,31 @@ export class Panel {
 
     
     _findDataTimeRange(data, displayTimeRange=null) {
+        let [ from, to ] = [ -3600, 0 ];
+        
         if (displayTimeRange) {
-            return displayTimeRange;
+            [ from, to ] = [ displayTimeRange.from,  displayTimeRange.to ];
         }
-        if (data) {
+        else if (data) {
+            if (data?.__meta?.range) {
+                [ from, to ] = [ data.__meta.range.from, data.__meta.range.to ];
+            }
             for (const ch in data) {
                 if (data[ch].start && data[ch].length) {
-                    return { from: data[ch].start, to: data[ch].start + data[ch].length };
+                    [ from, to ] =  [ data[ch].start, data[ch].start + data[ch].length ];
+                    break;
                 }
-            }
-            if (data?.__meta?.range) {
-                let [ from, to ] = [ data.__meta.range.from, data.__meta.range.to ];
-                if (to < 0) {
-                    to = $.time() + to;
-                }
-                if (from < 0) {
-                    from = to + from;
-                }
-                return { from: from, to: to };
             }
         }
-        return null;
+
+        if (to <= 0) {
+            to = $.time() + to;
+        }
+        if (from <= 0) {
+            from = to + from;
+        }
+        
+        return { from: from, to: to };
     }
 
 

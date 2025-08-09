@@ -127,7 +127,9 @@ class Plot {
         }
     }
 
-    draw(dataPacket, isCurrent, isPartial) {}
+    update(dataPacket, isCurrent, isPartial) {
+        return false;
+    }
 
     getLabel() {
         if ((this.config.label ?? '') !== '') {
@@ -184,26 +186,31 @@ class HistogramPlot extends Plot {
         }
     }
 
-    draw(dataPacket, isCurrent, isPartial) {
+    update(dataPacket, isCurrent, isPartial) {
         let data = dataPacket[this.config.channel]?.x;
         if (! data) {
-            if (! isPartial) {
-                if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
-                    ; // keep the drawing
-                }
-                else {
-                    this.histogram.counts = [];
-                }
+            if (isPartial) {
+                return false;
             }
-            return;
-        }
+            else if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
+                return false; // keep the drawing from the last "current"
+            }
+            this.setStat('---');
+            this.histogram.counts = [];
+            return true;
+        }        
+        
+        // at this point, data is valid for this channel and time-range //
+        
         if (isCurrent) {
             this.currentDataTime = dataPacket.__meta.currentDataTime;
         }
+        this.setStat('---');
+        this.histogram.counts = [];
         
         if (Array.isArray(data)) {
             if (data.length < 1) {
-                return;
+                return true;
             }
             data = data[data.length-1];
         }
@@ -212,9 +219,10 @@ class HistogramPlot extends Plot {
                 data = JSON.parse(data);
             }
             catch(error) {
-                return;
+                return true;
             }
         }
+        
         if (data._attr) {
             this.setStyle(data._attr);
         }
@@ -222,18 +230,20 @@ class HistogramPlot extends Plot {
             this.setStat(data._stat);
         }
         if (! data.bins) {
-            return;
+            return true;
         }
         const histogram = data;
         
         if (histogram.bins.min === undefined || histogram.bins.max == undefined || ! histogram.counts) {
             this.histogram.counts = Array(this.histogram.counts.length).fill(0);
-            return;
+            return true;
         }
 
         this.histogram.bins.min = histogram.bins.min;
         this.histogram.bins.max = histogram.bins.max;
         this.histogram.counts = histogram.counts;
+
+        return true;
     }
 
     getXRange() {
@@ -272,22 +282,34 @@ class TimeseriesHistogramPlot extends HistogramPlot {
         bindInput(this.config.bins, 'max', binmaxInput.css('width', '5em'));
     }
     
-    draw(dataPacket, isCurrent, isPartial) {
-        if (isCurrent) {
-            return;
-        }
-        
+    update(dataPacket, isCurrent, isPartial) {
         let ts = dataPacket[this.config.channel];
         if (! ts) {
-            if (! isPartial) {
-                this.setStat('---');
-                this.histogram.counts = [];
+            if (isPartial) {
+                return false;
             }
-            return;
-        }
-        if ((ts?.x === undefined) || (Array.isArray(ts.x) && (ts.x.length <= 0))) {
+            else if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
+                return false; // keep the drawing from the last "current"
+            }
             this.setStat('---');
-            return;
+            this.histogram.counts = [];
+            return true;
+        }
+        if ((ts.t === undefined) || ! Array.isArray(ts.t)) {
+            // maybe a current numeric scalar of the same channel -> ignore the packet
+            return false;
+        }
+        
+        // at this point, data is valid for this channel and time-range //
+        
+        if (isCurrent) {
+            this.currentDataTime = dataPacket.__meta.currentDataTime;
+        }
+        this.setStat('---');
+        this.histogram.counts = [];
+        
+        if ((ts?.x === undefined) || (Array.isArray(ts.x) && (ts.x.length <= 0))) {
+            return true;
         }
         if (! (Array.isArray(ts.x))) {
             ts.x = [ ts.x ];
@@ -344,6 +366,8 @@ class TimeseriesHistogramPlot extends HistogramPlot {
             }
         }
         this.setStat($.sprintf(this.config.format || '%f', lastValue));
+
+        return true;
     }
 };
 
@@ -372,26 +396,31 @@ class Histogram2dPlot extends Plot {
         super.setStyle(style);
     }
 
-    draw(dataPacket, isCurrent, isPartial) {
+    update(dataPacket, isCurrent, isPartial) {
         let data = dataPacket[this.config.channel]?.x;
         if (! data) {
-            if (! isPartial) {
-                if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
-                    ; // keep the drawing
-                }
-                else {
-                    this.histogram2d.counts = [];
-                }
+            if (isPartial) {
+                return false;
             }
-            return;
+            else if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
+                return false; // keep the drawing from the last "current"
+            }
+            this.setStat('---');
+            this.histogram2d.counts = [];
+            return true;
         }
+
+        // at this point, data is valid for this channel and time-range //
+        
         if (isCurrent) {
             this.currentDataTime = dataPacket.__meta.currentDataTime;
         }
-
+        this.setStat('---');
+        this.histogram2d.counts = [];
+        
         if (Array.isArray(data)) {
             if (data.length < 1) {
-                return;
+                return true;
             }
             data = data[data.length-1];
         }
@@ -400,9 +429,10 @@ class Histogram2dPlot extends Plot {
                 data = JSON.parse(data);
             }
             catch(error) {
-                return;
+                return true;
             }
         }
+        
         if (data._attr) {
             this.setStyle(data._attr);
         }
@@ -410,7 +440,7 @@ class Histogram2dPlot extends Plot {
             this.setStat(data._stat);
         }
         if (! data.xbins || ! data.ybins) {
-            return;
+            return true;
         }
         const histogram = data;
         
@@ -419,7 +449,7 @@ class Histogram2dPlot extends Plot {
             (histogram.ybins.min === undefined || histogram.ybins.max == undefined) || 
             ! histogram.counts
         ){
-            return;
+            return true;
         }
 
         this.histogram2d.xbins.min = histogram.xbins.min;
@@ -427,6 +457,8 @@ class Histogram2dPlot extends Plot {
         this.histogram2d.ybins.min = histogram.ybins.min;
         this.histogram2d.ybins.max = histogram.ybins.max;
         this.histogram2d.counts = histogram.counts;
+
+        return true;
     }
 
     getXRange() {
@@ -469,27 +501,31 @@ class GraphPlot extends Plot {
         super.openSettings(div);
     }
     
-    draw(dataPacket, isCurrent, isPartial) {
+    update(dataPacket, isCurrent, isPartial) {
         let data = dataPacket[this.config.channel]?.x;
         if (! data) {
-            if (! isPartial) {
-                if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
-                    ; // keep the drawing
-                }
-                else {
-                    this.graph.y = [];
-                }
+            if (isPartial) {
+                return false;
             }
-            return;
+            else if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
+                return false; // keep the drawing from the last "current"
+            }
+            this.setStat('---');
+            this.graph.y = [];
+            return true;
         }
+
+        // at this point, data is valid for this channel and time-range //
+        
         if (isCurrent) {
             this.currentDataTime = dataPacket.__meta.currentDataTime;
         }
-
+        this.setStat('---');
+        this.graph.y = [];
+        
         if (Array.isArray(data)) {
             if (data.length < 1) {
-                this.graph.y = [];
-                return;
+                return true;
             }
             data = data[data.length-1];
         }
@@ -498,10 +534,10 @@ class GraphPlot extends Plot {
                 data = JSON.parse(data);
             }
             catch(error) {
-                this.graph.y = [];
-                return;
+                return true;
             }
         }
+        
         if (data._attr) {
             this.setStyle(data._attr);
         }
@@ -510,7 +546,7 @@ class GraphPlot extends Plot {
         }
         if (! (data.y?.length > 0)) {
             this.graph.y = [];
-            return;
+            return true;
         }
         
         const y = data.y ? data.y : []
@@ -545,6 +581,8 @@ class GraphPlot extends Plot {
             [xmin, xmax, ymin, ymax] = [0, 1, 0, 1];
         }
         this.valueRange = {xmin: xmin, xmax: xmax, ymin: ymin, ymax: ymax};
+
+        return true;
     }
 
     getXRange() {
@@ -791,35 +829,48 @@ class TimeseriesScatterPlot extends GraphPlot {
         bindInput(this.config, 'lastpoint_color', div.find('input').at(k++).css('width', '2em'));
     }
 
-
     
-    draw(dataPacket, isCurrent, isPartial) {
-        if (isCurrent) {
-            return;
-        }
-        
+    update(dataPacket, isCurrent, isPartial) {
         let ts0 = dataPacket[this.config.channelX];
         let ts1 = dataPacket[this.config.channelY];
         if (! ts0 || ! ts1) {
-            if (! isPartial) {
-                this.setStat('---');
-                this.graph.x = [];
-                this.graph.y = [];
-                this.lastpoint_graph.x = [];
-                this.lastpoint_graph.y = [];
+            if (isPartial) {
+                return false;
             }
-            return;
+            else if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
+                return false; // keep the drawing from the last "current"
+            }
+            this.setStat('---');
+            this.graph.x = [];
+            this.graph.y = [];
+            this.lastpoint_graph.x = [];
+            this.lastpoint_graph.y = [];
+            return true;
+        }
+        if (
+            ((ts0.t === undefined) || ! Array.isArray(ts0.t)) ||
+            ((ts1.t === undefined) || ! Array.isArray(ts1.t))
+        ){
+            // maybe a current numeric scalar of the same channel -> ignore the packet
+            return false;
+        }
+
+        // at this point, data is valid for this channel and time-range //
+        
+        if (isCurrent) {
+            this.currentDataTime = dataPacket.__meta.currentDataTime;
         }
         this.setStat('---');
         this.graph.x = [];
         this.graph.y = [];
         this.lastpoint_graph.x = [];
         this.lastpoint_graph.y = [];
+        
         if (
             ((ts0?.x === undefined) || (ts0.x.length <= 0)) ||
             ((ts1?.x === undefined) || (ts1.x.length <= 0))
         ){
-            return;
+            return true;
         }
 
         const n = Math.min(ts0.x.length, ts1.x.length);
@@ -848,6 +899,8 @@ class TimeseriesScatterPlot extends GraphPlot {
             this.lastpoint_graph.x = [xn];
             this.lastpoint_graph.y = [yn];
         }
+
+        return true;
     }
 };
 
@@ -858,33 +911,39 @@ class TimeseriesPlot extends LineMarkerPlot {
         super.configure(config, axes, legend, panel);
     }
     
-    draw(dataPacket, isCurrent, isPartial) {
-        if (isCurrent) {
-            return;
-        }
-        
+    update(dataPacket, isCurrent, isPartial) {
         let ts = dataPacket[this.config.channel];
         if (! ts) {
-            if (! isPartial) {
-                this.setStat('---');
-                this.graph.x = [];
-                this.graph.y = [];
+            if (isPartial) {
+                return false;
             }
-            return;
-        }
-        if ((ts?.x === undefined) || (Array.isArray(ts.x) && (ts.x.length <= 0))) {
+            else if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
+                return false; // keep the drawing from the last "current"
+            }
             this.setStat('---');
-            return;
+            this.graph.x = [];
+            this.graph.y = [];
+            return true;
         }
-        if (! (Array.isArray(ts.x))) {
-            ts.t = [ ts.t ];
-            ts.x = [ ts.x ];
+        if (
+            ((ts.t === undefined) || ! Array.isArray(ts.t)) ||
+            ((ts.x === undefined) || ! Array.isArray(ts.x)) ||
+            (ts.t.length != ts.x.length)
+        ){
+            // maybe a current numeric scalar of the same channel -> ignore the packet
+            return false;
         }
 
-        const t0 = dataPacket[this.config.channel].start;
+        // at this point, data is valid for this channel and time-range //
+        
+        if (isCurrent) {
+            this.currentDataTime = dataPacket.__meta.currentDataTime;
+        }
+        this.setStat('---');
         this.graph.x = [];
         this.graph.y = [];
-
+        
+        const t0 = dataPacket[this.config.channel].start;
         let [xmin, xmax, ymin, ymax] = [null, null, null, null];
         for (let k = 0; k < ts.x.length; k++) {
             const [xk, yk] = [t0 + ts.t[k], parseFloat(ts.x[k])];
@@ -905,6 +964,8 @@ class TimeseriesPlot extends LineMarkerPlot {
         if (this.graph.x.length > 0) {
             this.setStat($.sprintf(this.config.format || '%f', this.graph.y[this.graph.y.length-1]));
         }
+
+        return true;
     }
 };
 
@@ -1371,23 +1432,22 @@ class PlotPanel extends Panel {
     
     
     draw(data, displayTimeRange=null) {
-        const isCurrent = data?.__meta?.isCurrent ?? false;
-        const isPartial = data?.__meta?.isPartial ?? false;
-        
-        if (! isCurrent) {
-            this.initialDisplayTimeRange = this._findDataTimeRange(data, displayTimeRange);
-            if (! this.initialDisplayTimeRange) {
-                const now = $.time();
-                this.initialDisplayTimeRange = { from: now-3600, to: now };
-            }
-        }
-
-        if (data) {
-            for (const p of this.plots) {
-                p.draw(data, isCurrent, isPartial);
-            }
+        if (! data) {
+            return;
         }
         
+        const isCurrent = data.__meta?.isCurrent ?? false;
+        const isPartial = data.__meta?.isPartial ?? false;
+        
+        let hasUpdates = false;
+        for (const p of this.plots) {
+            hasUpdates |= p.update(data, isCurrent, isPartial);
+        }
+        if (! hasUpdates) {
+            return;
+        }
+        
+        this.initialDisplayTimeRange = this._findDataTimeRange(data, displayTimeRange);
         const [xmin, xmax] = this.adjustXRange(false);
         const [ymin, ymax] = this.adjustYRange(false);
         const [zmin, zmax] = this.adjustZRange(false);
@@ -1763,28 +1823,27 @@ class TimeAxisPlotPanel extends PlotPanel {
 
     
     draw(data, displayTimeRange=null) {
-        if (data?.__meta?.isCurrent ?? false) {
+        if (! data) {
+            return;
+        }
+            
+        const isCurrent = data.__meta?.isCurrent ?? false;
+        const isPartial = data.__meta?.isPartial ?? false;
+
+        let hasUpdates = false;
+        for (const p of this.plots) {
+            hasUpdates |= p.update(data, isCurrent, isPartial);
+        }
+        if (! hasUpdates) {
             return;
         }
         
         this.initialDisplayTimeRange = this._findDataTimeRange(data, displayTimeRange);
-        if (! this.initialDisplayTimeRange) {
-            const now = $.time();
-            this.initialDisplayTimeRange = { from: now-3600, to: now };
-        }
-        
         this.currentDisplayTimeRange = this.initialDisplayTimeRange;
-        this.adjustXRange();
-
-        if (data) {
-            const isCurrent = false;
-            const isPartial = data.__meta?.isPartial ?? false;
-            for (const p of this.plots) {
-                p.draw(data, isCurrent, isPartial);
-            }
-        }
-        
-        this.adjustYRange();
+        const [xmin, xmax] = this.adjustXRange(false);
+        const [ymin, ymax] = this.adjustYRange(false);
+        const [zmin, zmax] = this.adjustZRange(false);
+        this.axes.setRange(xmin, xmax, ymin, ymax, zmin, zmax);
     }
 
     adjustXRange(updateAxes=true) {
