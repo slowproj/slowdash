@@ -200,10 +200,12 @@ export class Panel {
             if (data?.__meta?.range) {
                 [ from, to ] = [ data.__meta.range.from, data.__meta.range.to ];
             }
-            for (const ch in data) {
-                if (data[ch].start && data[ch].length) {
-                    [ from, to ] =  [ data[ch].start, data[ch].start + data[ch].length ];
-                    break;
+            else {
+                for (const ch in data) {
+                    if (data[ch].start && data[ch].length) {
+                        [ from, to ] =  [ data[ch].start, data[ch].start + data[ch].length ];
+                        break;
+                    }
                 }
             }
         }

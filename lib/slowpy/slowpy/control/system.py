@@ -334,5 +334,4 @@ class _SlowpyElementExportAdapterNode(spc.ControlVariableNode):
         return self.value.to_json()
 
 
-        
 control_system = ControlSystem()

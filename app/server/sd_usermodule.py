@@ -191,7 +191,13 @@ class UserModule:
         self.command_history = []
         self.error = None
 
-        self.module = None
+        # purge previously-loaded module tree (including submodules)
+        if self.module is not None:
+            to_del = [ k for k in sys.modules.keys() if k == self.name or k.startswith(self.name + '.') ]
+            for k in to_del:
+                sys.modules.pop(k, None)
+            self.module = None
+            
         self.touch_status()
         
         logging.debug("=== Loading %s ===" % self.filepath)
@@ -202,6 +208,7 @@ class UserModule:
         try:
             spec = importlib.util.spec_from_file_location(self.name, self.filepath)
             self.module = importlib.util.module_from_spec(spec)
+            sys.modules[self.name] = self.module
         except Exception as e:
             self.handle_error('unable to load user module: %s' % str(e))
             self.module = None
@@ -333,6 +340,7 @@ class UserModule:
                 self.handle_error('timeout on terminating a user thread')
             self.user_thread = None
             
+
         self.touch_status()
 
             

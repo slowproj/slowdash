@@ -297,12 +297,6 @@ export class Controller {
                     if (v === '-Infinity') return -Infinity;
                     return v;
                 });
-                data['__meta'] = {
-                    isCurrent: true,
-                    isPartial: true,
-                    currentDataTime: now,
-                    range: { to: to, from: this.currentData.__meta.range.from }
-                }
             }
             catch (error) {
                 if (! this.socket_error_displayed) {
@@ -310,8 +304,15 @@ export class Controller {
                     console.error(error);
                     console.error(event.data);
                 }
+                return;
             }
 
+            data['__meta'] = {
+                isCurrent: true,
+                isPartial: true,
+                currentDataTime: now,
+                range: { to: to, from: this.currentData?.__meta?.range?.from ?? -10 }
+            }
             this.view.draw(data);
         }
     }

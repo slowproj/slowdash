@@ -195,7 +195,7 @@ class HistogramPlot extends Plot {
             else if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
                 return false; // keep the drawing from the last "current"
             }
-            this.setStat('---');
+            this.setStat('');
             this.histogram.counts = [];
             return true;
         }        
@@ -205,7 +205,7 @@ class HistogramPlot extends Plot {
         if (isCurrent) {
             this.currentDataTime = dataPacket.__meta.currentDataTime;
         }
-        this.setStat('---');
+        this.setStat('');
         this.histogram.counts = [];
         
         if (Array.isArray(data)) {
@@ -291,7 +291,7 @@ class TimeseriesHistogramPlot extends HistogramPlot {
             else if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
                 return false; // keep the drawing from the last "current"
             }
-            this.setStat('---');
+            this.setStat('');
             this.histogram.counts = [];
             return true;
         }
@@ -305,7 +305,7 @@ class TimeseriesHistogramPlot extends HistogramPlot {
         if (isCurrent) {
             this.currentDataTime = dataPacket.__meta.currentDataTime;
         }
-        this.setStat('---');
+        this.setStat('');
         this.histogram.counts = [];
         
         if ((ts?.x === undefined) || (Array.isArray(ts.x) && (ts.x.length <= 0))) {
@@ -405,7 +405,7 @@ class Histogram2dPlot extends Plot {
             else if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
                 return false; // keep the drawing from the last "current"
             }
-            this.setStat('---');
+            this.setStat('');
             this.histogram2d.counts = [];
             return true;
         }
@@ -415,7 +415,7 @@ class Histogram2dPlot extends Plot {
         if (isCurrent) {
             this.currentDataTime = dataPacket.__meta.currentDataTime;
         }
-        this.setStat('---');
+        this.setStat('');
         this.histogram2d.counts = [];
         
         if (Array.isArray(data)) {
@@ -510,7 +510,7 @@ class GraphPlot extends Plot {
             else if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
                 return false; // keep the drawing from the last "current"
             }
-            this.setStat('---');
+            this.setStat('');
             this.graph.y = [];
             return true;
         }
@@ -520,7 +520,7 @@ class GraphPlot extends Plot {
         if (isCurrent) {
             this.currentDataTime = dataPacket.__meta.currentDataTime;
         }
-        this.setStat('---');
+        this.setStat('');
         this.graph.y = [];
         
         if (Array.isArray(data)) {
@@ -840,7 +840,7 @@ class TimeseriesScatterPlot extends GraphPlot {
             else if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
                 return false; // keep the drawing from the last "current"
             }
-            this.setStat('---');
+            this.setStat('');
             this.graph.x = [];
             this.graph.y = [];
             this.lastpoint_graph.x = [];
@@ -860,7 +860,7 @@ class TimeseriesScatterPlot extends GraphPlot {
         if (isCurrent) {
             this.currentDataTime = dataPacket.__meta.currentDataTime;
         }
-        this.setStat('---');
+        this.setStat('');
         this.graph.x = [];
         this.graph.y = [];
         this.lastpoint_graph.x = [];
@@ -920,7 +920,7 @@ class TimeseriesPlot extends LineMarkerPlot {
             else if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
                 return false; // keep the drawing from the last "current"
             }
-            this.setStat('---');
+            this.setStat('');
             this.graph.x = [];
             this.graph.y = [];
             return true;
@@ -939,7 +939,7 @@ class TimeseriesPlot extends LineMarkerPlot {
         if (isCurrent) {
             this.currentDataTime = dataPacket.__meta.currentDataTime;
         }
-        this.setStat('---');
+        this.setStat('');
         this.graph.x = [];
         this.graph.y = [];
         

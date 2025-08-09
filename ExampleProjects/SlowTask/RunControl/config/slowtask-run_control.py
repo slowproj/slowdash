@@ -116,7 +116,7 @@ device = ctrl.random_event_device(rate=10)
 print("Dummy event generator loaded")
 
 import slowpy as slp
-rate_trend = slp.RateTrend(length=10, tick=0.2)
+rate_trend = slp.RateTrend(length=300, tick=1)
 nhits_hist = slp.Histogram(16, 0, 16);
 nhits_hist.add_stat(slp.HistogramBasicStat(['Entries', 'Underflow', 'Overflow', 'Mean', 'RMS'], ndigits=3))
 
@@ -146,10 +146,10 @@ async def do_run_loop():
         rate_trend.fill(t)
         nhits_hist.fill(nhits)
 
-    await ctrl.aio_publish(rate_trend, 'rate_trend')
+    await ctrl.aio_publish(rate_trend.timeseries(), 'rate_trend')
     await ctrl.aio_publish(nhits_hist, 'nhits_hist')
 
-    await ctrl.aio_sleep(0.5)
+    await ctrl.aio_sleep(1)
 
 
     

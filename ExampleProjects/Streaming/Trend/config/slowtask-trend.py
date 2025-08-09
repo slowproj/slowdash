@@ -27,4 +27,4 @@ async def _loop():
     datastore.append(x[-1], tag='x')
     await ctrl.aio_publish(x[-1], name="value")
         
-    await ctrl.aio_sleep(0.2)
+    await ctrl.aio_sleep(0.5)

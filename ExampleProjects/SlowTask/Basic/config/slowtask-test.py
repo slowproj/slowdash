@@ -28,12 +28,6 @@ def set_V2(V2:float, ramping:float=10):
 def set_V3(V3:float, ramping:float=10):
     ch3.ramping(ramping).set(V3)
 
-def set_all(V0:float, V1:float, V2:float, V3:float, ramping:float):
-    set_V0(V0, ramping)
-    set_V1(V1, ramping)
-    set_V2(V2, ramping)
-    set_V3(V3, ramping)
-
 def stop():
     ch0.ramping().status().set(0)
     ch1.ramping().status().set(0)
@@ -99,7 +93,7 @@ def _loop():
 ### Stand-alone Testing ###
     
 if __name__ == '__main__':
-    _initialize({})
+    _initialize()
     ControlSystem.stop_by_signal()
     while not ControlSystem.is_stop_requested():
         _loop()

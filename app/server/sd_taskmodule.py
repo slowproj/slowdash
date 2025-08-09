@@ -80,18 +80,24 @@ class TaskModule(UserModule):
         
         # inject SlowdashApp and obtain ControlSystem to/from task module
         def register(control_system):
-            if self.app.control_system is None:
-                self.app.control_system = control_system
-                self.app.control_system._system_stop_event.clear()
+            self.app.control_system = control_system
+            self.app.control_system._system_stop_event.clear()
         module.__dict__['_register'] = register
         module.__dict__['_slowdash_app'] = self.app        
         try:
-            exec("from slowpy.control import ControlSystem", module.__dict__)
-            exec("ControlSystem._slowdash_app = _slowdash_app", module.__dict__)
-            exec("_register(ControlSystem())", module.__dict__)
+            exec('from slowpy.control import ControlSystem', module.__dict__)
+            exec('ControlSystem._slowdash_app = _slowdash_app', module.__dict__)
+            exec('_register(ControlSystem())', module.__dict__)
         except Exception as e:
             self.handle_error('unable to import ControlSystem from task module: %s' % str(e))
 
+        try:
+            exec('import matplotlib', module.__dict__)
+            exec('matplotlib.use("Agg")', module.__dict__)
+            logging.info('Matplotlib GUI is disabled')
+        except Exception as e:
+            logging.info('Matplotlib not available')
+            
             
     def _do_post_initialize(self):
         super()._do_post_initialize()
@@ -570,17 +576,20 @@ class TaskModuleComponent(Component):
     async def control_task(self, taskname:str, doc:slowlette.DictJSON):
         action = doc.get('action', None)
         logging.info(f'Task Control: {taskname}.{action}()')
-        
+
         for module in self.taskmodule_list:
-            if module.name != taskname:
-                continue
-            if action == 'start':
-                await module.start()
-                return {'status': 'ok'}
-            elif action == 'stop':
-                await module.stop()
-                return {'status': 'ok'}
-            else:
-                return { 'status': 'error', 'message': f'unknown command: {action}' }
-            
-        return { 'status': 'error', 'message': f'unknown task: {taskname}' }
+            if module.name == taskname:
+                break
+        else:
+            return { 'status': 'error', 'message': f'unknown task: {taskname}' }
+
+        if action == 'start':
+            await module.start()
+            await self.slowpy_control.get_channels() # update exports
+        elif action == 'stop':
+            await module.stop()
+        else:
+            return { 'status': 'error', 'message': f'unknown command: {action}' }
+        
+        return {'status': 'ok'}
+    

@@ -4,13 +4,6 @@ import matplotlib.pyplot as plt
 from slowpy.control import control_system as ctrl
 
 
-async def _initialize():
-    # This function is called only when this script is executed in SlowDash.
-    # Here we disable Matplotlib GUI
-    import matplotlib
-    matplotlib.use("Agg")  # Anti-Grain Geometry: no GUI
-
-
 async def _loop():
     x = np.linspace(0, 10, 2)
     y1 = 5*np.sin(x) + 7
@@ -31,19 +24,22 @@ async def _loop():
     ax1.set_xlim(-10, 20)
     ax2.set_ylim(0, 50)
 
-    await ctrl.aio_publish(fig, name='mpl')
-
-    # in Agg (No-GUI), this shows an error message but it should not be harmful
+    # If used from SlowDash (no GUI mode), this prints an error message but it should not be harmful.
+    # Remove this line if this script will not be used stand-alone.
     plt.show()
 
-    # if a figure is created in a loop, it must be closed every time
+    # This will create a SlowDash layout config (slowplot-XXX) and send the content data to SlowDash.
+    await ctrl.aio_publish(fig, name='mpl')
+
+    # If a figure is created in a loop, it must be closed every time.
     plt.close()
 
+    # loop delay
     await ctrl.aio_sleep(0.5)
 
+
     
-    
-# for standalone testing
+# for standalone running
 if __name__ == '__main__':
     import asyncio
     asyncio.run(_loop())
