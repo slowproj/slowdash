@@ -24,10 +24,17 @@ class TableFormat:
 
         result = False
         try:
-            if type(values[0]) in [ int, float ]:
+            vtype = type(values[0])
+            if vtype in [ int, float ]:
                 result = self.create_numeric_table(cur)
-            else:
+            elif vtype in [ str, bool ]:
                 result = self.create_text_table(cur)
+            else:
+                try:
+                    fval = float(values[0])
+                    result = self.create_numeric_table(cur) # Decimal, Fraction, numpy.int64, ...
+                except:
+                    result = self.create_text_table(cur)    # complex goes here, though it is a Number
         except Exception as e:
             result = False
 
@@ -64,9 +71,14 @@ class TableFormat:
             cur.execute(sql, (channel,))            
         if type(value) in [int, float]:
             self.insert_numeric_data(cur, timestamp, channel, value)
-        else:
+        elif type(value) in [str, bool]:
             self.insert_text_data(cur, timestamp, channel, value)
-
+        else:
+            try:
+                fval = float(value)
+                self.insert_numeric_data(cur, timestamp, channel, fval) # Decimal, Fraction, numpy.int64, ...
+            except:
+                self.insert_text_data(cur, timestamp, channel, value)   # complex goes here, though it is a Number
             
     # to be implemented in a subclass
     def insert_numeric_data(self, cur, timestamp, channel, value):
@@ -104,9 +116,10 @@ class LongTableFormat(TableFormat):
 
     def insert_numeric_data(self, cur, timestamp, channel, value):
         sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
-        sql += f"VALUES(%.3f,%s,%f);" % (timestamp, self.db.placeholder, value)
+        sql += f"VALUES(%.3f,%s,{value});" % (timestamp, self.db.placeholder)
         params = (channel,)
         cur.execute(sql, params)
+        print(sql, params)
 
         
     def insert_text_data(self, cur, timestamp, channel, value):
@@ -124,7 +137,7 @@ class LongTableFormat_DateTime_PostgreSQL(LongTableFormat):
     
     def insert_numeric_data(self, cur, timestamp, channel, value):
         sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
-        sql += f"VALUES(TO_TIMESTAMP(%.3f),%s,%f);" % (timestamp, self.db.placeholder, value)
+        sql += f"VALUES(TO_TIMESTAMP(%.3f),%s,{value});" % (timestamp, self.db.placeholder)
         params = (channel,)
         cur.execute(sql, params)
 
@@ -146,7 +159,7 @@ class LongTableFormat_DateTime_MySQL(LongTableFormat):
     
     def insert_numeric_data(self, cur, timestamp, channel, value):
         sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
-        sql += f"VALUES(FROM_UNIXTIME(%.3f),%s,%f);" % (timestamp, self.db.placeholder, value)
+        sql += f"VALUES(FROM_UNIXTIME(%.3f),%s,{value});" % (timestamp, self.db.placeholder)
         params = (channel,)
         cur.execute(sql, params)
 
