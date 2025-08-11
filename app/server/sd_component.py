@@ -75,7 +75,10 @@ class PluginComponent(Component):
             # e.g., data_source -> DataSource
             self.class_prefix = ''.join([n[0].upper() + n[1:] for n in self.component_type.split('_') if len(n) > 0])
         
-        plugin_config = project.config.get(self.component_type, [])
+        plugin_config = project.config.get(self.component_type, None)
+        if plugin_config is None:
+            # suger: also accept a plural name
+            plugin_config = project.config.get(self.component_type + 's', [])
         if not isinstance(plugin_config, list):
             plugin_config = [ plugin_config ]
 

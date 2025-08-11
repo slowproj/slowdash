@@ -522,7 +522,9 @@ class UserModuleComponent(Component):
 
         self.usermodule_list = []
         
-        usermodule_node = self.project.config.get('module', [])
+        usermodule_node = self.project.config.get('module', None)
+        if usermodule_node is None:
+            usermodule_node = self.project.config.get('modules', [])  # suger added...
         if not isinstance(usermodule_node, list):
             usermodule_node = [ usermodule_node ]
             

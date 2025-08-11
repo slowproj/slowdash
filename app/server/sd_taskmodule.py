@@ -375,7 +375,9 @@ class TaskModuleComponent(Component):
             app.control_system = None
         self.slowpy_control = SlowpyControl(app)
 
-        taskmodule_node = self.project.config.get('task', [])
+        taskmodule_node = self.project.config.get('task', None)
+        if taskmodule_node is None:
+            taskmodule_node = self.project.config.get('tasks', [])  # suger added...
         if not isinstance(taskmodule_node, list):
             taskmodule_node = [ taskmodule_node ]
                     
