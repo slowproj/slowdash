@@ -84,16 +84,23 @@ class CanvasItem {
         if ((this.update_this === undefined) || (this.metric?.channel === undefined)) {
             return;
         }
-        let value; {
-            const tolerable_gap = this.metric['tolerable-gap'] ?? 60;
-            let ts = dataPacket[this.metric.channel];
-            let n = ts?.t?.length || 0;
-            if ((n <= 0) || (ts.t[n-1] < ts.length-tolerable_gap)) {
-                value = null;
+
+        const ts = dataPacket[this.metric.channel];
+        const n = ts?.t?.length ?? 0;
+
+        let value;
+        const tolerable_gap = this.metric['tolerable-gap'] ?? 60;
+        if ((n <= 0) || (ts.t[n-1] < ts.length-tolerable_gap)) {
+            if (dataPacket?.__meta?.isCurrent ?? false) {
+                return;
             }
             else {
-                value = ts.x[n-1];
+                value = null;
             }
+            //TODO: also check the case that the last "current" value is still valid
+        }
+        else {
+            value = ts.x[n-1];
         }
         
         let status = 'none';
@@ -566,6 +573,16 @@ class PlotItem extends CanvasItem {
             return;
         }
         let ts = dataPacket[this.metric.channel];
+        if (! ts?.t || ! (ts.t.length > 0)) {
+            if (dataPacket?.__meta?.isCurrent ?? false) {
+                return;
+            }
+            else {
+                ts = { t: [], x: [] };
+            }
+            //TODO: also check the case that the last "current" value is still valid
+        }
+
         let to = dataPacket?.__meta?.range?.to ?? $.time();
         let from = dataPacket?.__meta?.range?.from ?? -3600;
         if (to <= 0) {
@@ -581,10 +598,6 @@ class PlotItem extends CanvasItem {
         let xmargin = (marginFraction > 0 && marginFraction < 1) ? marginFraction*(xmax - xmin) : 0;
         this.plot.setRange(xmin-xmargin, xmax+xmargin);
 
-        if (! ts?.t || ! (ts.t.length > 0)) {
-            ts = { t: [], x: [] };
-        }
-        
         this.graph.x = [];
         this.graph.y = [];
         this.plot.clear();
@@ -1014,6 +1027,7 @@ export class CanvasPanel extends Panel {
         if (data?.__meta?.isPartial ?? false) {
             return;
         }
+        
         this.currentDataPacket = data;
         for (let item of this.items) {
             item.update(data);

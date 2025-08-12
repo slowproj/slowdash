@@ -448,7 +448,6 @@ class BlobPanel extends Panel {
 
     draw(dataPacket, displayTimeRange=null) {
         let data = dataPacket[this.config.channel];
-        
         if (! data) {
             if (! (dataPacket.__meta?.isPartial ?? false)) {
                 if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {

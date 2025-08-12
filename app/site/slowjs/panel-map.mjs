@@ -364,10 +364,8 @@ export class MapPanel extends Panel {
 
         let data = dataPacket[this.config.channel]?.x;
         if (! data) {
-            const range = dataPacket.__meta?.range ?? { from:0, to:0 };
-            if (range.from <= this.currentDataTime && range.to >= this.currentDataTime) {
-                // keep the current data; otherwise draw blank
-                return;
+            if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
+                return; // keep the drawing from the last "current"
             }
             data = { 'x': [], 'y': [] };
         }
@@ -436,7 +434,6 @@ export class MapPanel extends Panel {
             }
         }
 
-        
         //// Draw ////
         this.scaleArea.empty();
         this.scale.setRange(ymin, ymax, this.config.axes?.ylog ?? false);
@@ -447,7 +444,7 @@ export class MapPanel extends Panel {
             if ((index === null) || isNaN(parseInt(index))) {
                 continue;
             }
-            let y = values[index];
+            const y = values[index];
             if ((y === undefined) || (y === null)) {
                 elem.attr('fill', this.config.emptyColor ?? '#ff0000');
                 elem.data('sd-value', '--');

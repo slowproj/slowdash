@@ -1,0 +1,79 @@
+{
+    "control": {
+        "range": { "length": 60, "to": 0 },
+        "reload": 2,
+        "mode": "normal",
+        "grid": { "rows": 3, "columns": 2 }
+    },
+    "style": { },
+    "panels": [
+        {
+            "type": "plot",
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "xmin": 60, "xmax": 80, "ymin": 0.5, "ymax": 3, "zmin": 0, "zmax": 1, "title": "Last 60 sec Trend (streaming)", "xtitle": "lapse from start (s)" },
+            "plots": [
+                { "type": "graph", "channel": "trend", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 3, "line_width": 0, "line_type": "connect", "fill_opacity": 0.2, "fill_baseline": "1e-100", "fill_type": false, "fill_envelope": true }
+            ],
+            "legend": { "style": "none" }
+        },
+        {
+            "type": "singles",
+            "item_type": "square",
+            "items": [
+                {
+                    "channel": "value",
+                    "gauge": { "min": -20, "max": 20 },
+                    "format": "%.2f",
+                    "label": "Raw Value (Streaming)"
+                }
+            ],
+            "grid": { "rows": 0, "columns": 2 },
+            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 }
+        },
+        {
+            "type": "timeseries",
+            "plots": [
+                { "type": "timeseries", "channel": "trend_ts", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 3, "line_width": 0, "line_type": "connect", "fill_opacity": 0.2, "fill_envelope": true, "fill_baseline": "1e-100" }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": -2, "ymax": 10, "title": "Time-Series from Trend (streaming)" },
+            "legend": { "style": "none" }
+        },
+        {
+            "type": "singles",
+            "item_type": "square",
+            "items": [
+                {
+                    "channel": "trend_ts",
+                    "gauge": { "min": -20, "max": 20 },
+                    "format": "%.2f",
+                    "label": "Last Trend Value (bin mean)"
+                }
+            ],
+            "grid": { "rows": 0, "columns": 2 },
+            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+            "title": ""
+        },
+        {
+            "type": "timeseries",
+            "plots": [
+                { "type": "timeseries", "channel": "x", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 3, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100", "fill_type": "baseline", "fill_envelope": false }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": -8, "ymax": 7, "title": "Stored Time-Series" },
+            "legend": { "style": "none" }
+        },
+        {
+            "type": "singles",
+            "item_type": "square",
+            "items": [
+                {
+                    "channel": "x",
+                    "gauge": { "min": -20, "max": 20 },
+                    "format": "%.2f",
+                    "label": "Stored Last Value"
+                }
+            ],
+            "grid": { "rows": 0, "columns": 2 },
+            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 }
+        }
+    ],
+    "meta": { "name": "trend", "title": "", "description": "" }
+}

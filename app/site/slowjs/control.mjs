@@ -22,6 +22,9 @@ export class Controller {
 
         this.socket = null;
         this._setupStreaming();
+
+        this.data_error_displayed = false;
+        this.socket_error_displayed = false;
     }
 
     
@@ -165,13 +168,23 @@ export class Controller {
                 status = { code: -1, text: 'SlowDash server not reachable' };
             }
 
-            if (textdata.length < 2) {
-                continue;
+            let data = {};
+            if (textdata.length > 2) {
+                try {
+                    data = JSON.parse(textdata.replace(/\bNaN\b/g, '"NaN"'), (k,v) => {
+                        if (v === 'NaN') return NaN;
+                        return v;
+                    });
+                }
+                catch (err) {
+                    if (! this.data_error_displayed) {
+                        this.data_error_displayed = true;
+                        console.error('invalid data packet: ', err);
+                        console.log(textdata);
+                    }
+                }
             }
-            const data = JSON.parse(textdata.replace(/\bNaN\b/g, '"NaN"'), (k,v) => {
-                if (v === 'NaN') return NaN;
-                return v;
-            });
+            
             for (let ch in data) {
                 this.currentData[ch] = data[ch];
             }
@@ -239,7 +252,6 @@ export class Controller {
         if (this.socket !== null) {
             return;
         }
-        this.socket_error_displayed = false;
 
         let url = new URL(window.location.href);
         url.protocol = (url.protocol == 'https:' ? 'wss:' : 'ws:');
@@ -261,7 +273,7 @@ export class Controller {
         }
         catch(error) {
             this.socket = null;
-            console.log("WebSocket setup error: " + error);
+            console.error("WebSocket setup error: " + error);
             console.log("Maybe web-socket entry (/ws) is not forwarded by reverse proxy?");
             console.log("Data streaming is disabled.");
             return;
@@ -302,7 +314,7 @@ export class Controller {
                 if (! this.socket_error_displayed) {
                     this.socket_error_displayed = true;
                     console.error(error);
-                    console.error(event.data);
+                    console.log(event.data);
                 }
                 return;
             }

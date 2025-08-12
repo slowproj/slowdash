@@ -119,7 +119,6 @@ class LongTableFormat(TableFormat):
         sql += f"VALUES(%.3f,%s,{value});" % (timestamp, self.db.placeholder)
         params = (channel,)
         cur.execute(sql, params)
-        print(sql, params)
 
         
     def insert_text_data(self, cur, timestamp, channel, value):
