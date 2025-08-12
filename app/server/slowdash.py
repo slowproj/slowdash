@@ -62,16 +62,16 @@ class App(slowlette.App):
             sys.path.insert(1, os.path.join(self.project.project_dir, 'config'))
 
             
-        ### API Components: see the Slowette documentation for the mechanism ###
+        ### API Components: see the Slowlette documentation for the mechanism ###
         
-        self.slowlette.include(ConsoleComponent(self, self.project)) # this must be the first to capture stdout
+        self.slowlette.include(ConsoleComponent(self, self.project))     # this must be the first to capture stdout
         self.slowlette.include(UserModuleComponent(self, self.project))  # user module might want to capture API
-        self.slowlette.include(ConfigComponent(self, self.project))
-        self.slowlette.include(DataSourceComponent(self, self.project))
-        self.slowlette.include(ExportComponent(self, self.project))
-        self.slowlette.include(PubsubComponent(self, self.project))
         self.slowlette.include(TaskModuleComponent(self, self.project))
+        self.slowlette.include(PubsubComponent(self, self.project))      # pubsub-cache override datasoruce replies
+        self.slowlette.include(ConfigComponent(self, self.project))
+        self.slowlette.include(DataSourceComponent(self, self.project))  # user/task modules might create DB
         self.slowlette.include(UserHtmlComponent(self, self.project))
+        self.slowlette.include(ExportComponent(self, self.project))
         self.slowlette.include(MiscApiComponent(self, self.project))
 
 
