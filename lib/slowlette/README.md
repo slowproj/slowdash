@@ -406,13 +406,13 @@ import slowlette
 
 class MyExclusiveApp:
     class MyExclusiveResponse(Response):
-        def merge_response(self, response:Response)->None
+        def merge_response(self, response:Response)->None:
             # example: do not merge the responses from the subsequent handlers
             pass
 
     @slowlette.route('/hello')
-    def hello():
-        response = MyExclusiveResponse()
+    def hello(self):
+        response = self.MyExclusiveResponse()
         response.append('hello, there is no one else here.')
         return response
 ```
@@ -424,7 +424,7 @@ In addition to that, a user app class can override a method to aggregate all the
 import slowlette
 
 class MyRouter(slowlette.Router):
-    def merge_responses(responses: list[Response]) -> Response:
+    def merge_responses(self, responses: list[Response]) -> Response:
         response = Response()
         for r in responses:
             response = ....   # aggregate responses here

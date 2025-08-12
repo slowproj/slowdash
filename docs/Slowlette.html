@@ -555,13 +555,13 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb24-1"><a h
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyExclusiveApp:</span>
 <span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">class</span> MyExclusiveResponse(Response):</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">def</span> merge_response(<span class="va">self</span>, response:Response)<span class="op">-&gt;</span><span class="va">None</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">def</span> merge_response(<span class="va">self</span>, response:Response)<span class="op">-&gt;</span><span class="va">None</span>:</span>
 <span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>            <span class="co"># example: do not merge the responses from the subsequent handlers</span></span>
 <span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">pass</span></span>
 <span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.route</span>(<span class="st">&#39;/hello&#39;</span>)</span>
-<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> hello():</span>
-<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>        response <span class="op">=</span> MyExclusiveResponse()</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> hello(<span class="va">self</span>):</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>        response <span class="op">=</span> <span class="va">self</span>.MyExclusiveResponse()</span>
 <span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>        response.append(<span class="st">&#39;hello, there is no one else here.&#39;</span>)</span>
 <span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> response</span></code></pre></div>
 <p>This method is useful if the method returns a data structure that
@@ -575,7 +575,7 @@ method:</p>
 class="sourceCode python"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyRouter(slowlette.Router):</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> merge_responses(responses: <span class="bu">list</span>[Response]) <span class="op">-&gt;</span> Response:</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> merge_responses(<span class="va">self</span>, responses: <span class="bu">list</span>[Response]) <span class="op">-&gt;</span> Response:</span>
 <span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>        response <span class="op">=</span> Response()</span>
 <span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> r <span class="kw">in</span> responses:</span>
 <span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>            response <span class="op">=</span> ....   <span class="co"># aggregate responses here</span></span>

@@ -288,10 +288,17 @@ class Router:
             else:
                 request = Request(request, method='POST', body=body)
 
-        # execute handlers from top to bottom, and store the responses in a list
+        # from a nestd-tree (sub)apps, create a linear response list before merging them
         response_list = [ Response() ]
+        await self._dispatch_branch(request, response_list)
+        
+        return self.merge_responses(response_list)
+
+        
+    async def _dispatch_branch(self, request:Request, response_list) -> None:
+        # execute handlers from top to bottom, and store the responses in a list
         for subapp in self.middlewares:
-            response_list.append(await subapp.slowlette.dispatch(request))
+            await subapp.slowlette._dispatch_branch(request, response_list)
             
         for handler in self.handlers:
             args = handler.slowlette_path_rule.match(request)
@@ -317,9 +324,7 @@ class Router:
             response_list.append(response)
             
         for subapp in self.subapps:
-            response_list.append(await subapp.slowlette.dispatch(request))
-
-        return self.merge_responses(response_list)
+            await subapp.slowlette._dispatch_branch(request, response_list)
             
             
     def merge_responses(self, response_list):
