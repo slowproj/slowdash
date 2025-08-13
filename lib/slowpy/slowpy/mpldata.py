@@ -272,7 +272,13 @@ def slowdashify(fig, name:str):
         name = f'MPL-{str(uuid.uuid4()).split("-")[1]}'
     
     layout = figure_to_layout(fig)
-    layout_config = { 'panels': [] }
+    layout_config = {
+        'control': {
+            'range': { 'length': 900, 'to': 0 },
+            'reload': 10,
+        },
+        'panels': []
+    }
     data_packet = {}
     
     for panel in layout.get('panels', []):

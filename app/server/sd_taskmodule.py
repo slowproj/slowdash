@@ -345,7 +345,6 @@ class SlowpyControl:
 
   
     async def set_variable(self, name, value):
-        logging.info(f'Set Variable: {name}={value}')
         if self.exports is None:
             await self.get_channels()
 
@@ -355,6 +354,7 @@ class SlowpyControl:
 
         try:
             await variable.aio_set(value)
+            logging.info(f'Set Variable: {name}={value}')
         except Exception as e:
             logging.error(f'Error on setting value: channel="{channel}", value="{value}": {e}')
             return False

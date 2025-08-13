@@ -35,8 +35,8 @@ class Export_Notebook(ComponentPlugin):
     def generate_cells(self, params, opts):
         try:
             channels = params.split(',')
-            length = float(opts.get('length', '3600'))
-            to = float(opts.get('to', int(time.time())+1))
+            length = float(opts.get('length', 3600))
+            to = float(opts.get('to', 0))
             resample = float(opts.get('resample', -1))
             reducer = opts.get('reducer', None)
             filler = opts.get('filler', None)
@@ -53,8 +53,12 @@ class Export_Notebook(ComponentPlugin):
         for ch in params.split(','):
             if ch.replace('_', '0').replace('-', '0').replace('.', '0').replace(',', '0').replace(':', '0').isalnum():
                 channels.append(ch)
-        start = datetime.datetime.fromtimestamp(to-length).astimezone().isoformat()
-        stop = datetime.datetime.fromtimestamp(to).astimezone().isoformat()
+        if to > 0:
+            start = repr(datetime.datetime.fromtimestamp(to-length).astimezone().isoformat())
+            stop = repr(datetime.datetime.fromtimestamp(to).astimezone().isoformat())
+        else:
+            start = f'{-length}'
+            stop = f'{to}'
         if resample < 0:
             resample = None
         if reducer not in [ 'last', 'mean', 'median' ]:
@@ -62,6 +66,9 @@ class Export_Notebook(ComponentPlugin):
         if filler not in [ 'fillna', 'last', 'linear' ]:
             filler = None
 
+        padding_start = ' ' * (27-len(start))
+        padding_stop = ' ' * (27-len(stop))
+        
         cells = []
         cells.append(f'''
         |from slowpy import SlowFetch
@@ -71,8 +78,8 @@ class Export_Notebook(ComponentPlugin):
         cells.append(f'''
         |data = slowfetch.data(
         |    channels = {repr(channels)},
-        |    start = {repr(start)},  # Date-time string, UNIX time, or negative integer for seconds to "stop"
-        |    stop = {repr(stop)},   # Date-time string, UNIX time, or non-positive integer for seconds to "now"
+        |    start = {start},{padding_start}  # Date-time string, UNIX time, or negative value for seconds to "stop"
+        |    stop = {stop},{padding_stop}   # Date-time string, UNIX time, or non-positive value for seconds to "now"
         |    resample = {repr(resample)},                      # resampling time-backets intervals, zero for auto, None to disable
         |    reducer = {repr(reducer)},                       # 'last' (None), 'mean', 'median'
         |    filler = {repr(filler)},                        # 'fillna' (None), 'last', 'linear'   ### NOT IMPLEMENTED YET ###

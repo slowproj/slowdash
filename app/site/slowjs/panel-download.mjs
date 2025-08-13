@@ -119,9 +119,11 @@ export class DownloadPanel extends Panel {
     
     buildDownloadPanel(div, config) {
         const defaults = {
-            use_utc: false,
             to: $.time(),
             length: 3600,
+            from_ago: true,
+            to_now: true,
+            use_utc: false,
             resampling: '',
             resampling_unit: 's',
             resampling_reducer: 'mean',
@@ -175,8 +177,18 @@ export class DownloadPanel extends Panel {
         `);
         rangeDiv.html(`
           <table style="white-space:nowrap">
-            <tr><td>From</td><td><input type="datetime-local"> (browser time)</td></tr>
-            <tr><td>To</td><td><input type="datetime-local"> (browser time)</td></tr>
+            <tr><td>From</td><td>
+                <input type="radio" name="from_type">
+                <input type="number" style="width:5em"> s before end</td></tr>
+            <tr><td>    </td><td>
+                <input type="radio" name="from_type">
+                <input type="datetime-local"> (browser time)</td></tr>
+            <tr><td>To  </td><td>
+                <input type="radio" name="to_type"> Now</td></tr>
+            <tr><td>    </td><td>
+                <input type="radio" name="to_type">
+                <input type="datetime-local"> (browser time)</td></tr>
+            <tr><td>Data Timezone</td><td><label><input type="checkbox">UTC (otherwise server time)</label></td></tr>
             <tr>
               <td>Resampling</td>
               <td>
@@ -199,7 +211,6 @@ export class DownloadPanel extends Panel {
                 </select>
               </td>
             </tr>
-            <tr><td>Data Timezone</td><td><label><input type="checkbox">UTC (otherwise server time)</label></td></tr>
           </table>
           <p>
           <div style="font-size:small;margin-left:1em">
@@ -235,7 +246,7 @@ export class DownloadPanel extends Panel {
                  or use the <tt style="white-space:nowrap">slowpy-notebook</tt> container.<p>
             <li> This feature is experimental. The generated scripts might not be compatible with future releases of SlowDash.<p>
             <li> Time-axis plots (time-series) and XY plots (histograms, graphs, etc) cannot be mixed.<p>
-            <li> <b>Jupyter is Disabled</b>: to enable direct Jupyter link, set the URL and token of a Jupyter process in the SlowDash project configuration.
+            <li> <b>Jupyter is Disabled</b>: to enable direct Jupyter link, set the URL and token of a Jupyter server in the SlowDash project configuration.
           </ul>
         `);
         button2Div.html(`
@@ -329,7 +340,7 @@ export class DownloadPanel extends Panel {
             if (! already_exists) {
                 let datatype = 'numeric';
                 if (! tsChannelList.includes(channel)) {
-                    //datatype = 'unknown';  // assume unknown is numeric (happens with Honeybee)
+                    /**/datatype = 'unknown';  // assume unknown is numeric (happens with Honeybee)
                     for (let entry of (this.channelList ?? [])) {
                         if (entry.name == channel) {
                             datatype = entry.type ?? 'numeric';
@@ -345,12 +356,7 @@ export class DownloadPanel extends Panel {
                     checkState();
                 });
                 label.append(input).append($('<span>').text(channel));
-                if (datatype != 'numeric') {
-                    tr.append($('<td>').css({'font-size': '80%', 'padding-left': '3em'}).text(`(${datatype})`));
-                }
-                else {
-                    tr.append($('<td>'));
-                }
+                tr.append($('<td>').css({'font-size': '80%', 'padding-left': '3em'}).text(`(${datatype})`));
                 channelTableMessage.css('display', 'none');
             }
 
@@ -378,7 +384,12 @@ export class DownloadPanel extends Panel {
         //// Time Range ////
         
         let k = 0;
+        bindInput(thisconfig, 'from_ago', rangeDiv.find('input').at(k++), true);
+        bindInput(thisconfig, 'length', rangeDiv.find('input').at(k++));
+        bindInput(thisconfig, 'from_ago', rangeDiv.find('input').at(k++), false);
         bindInput(thisconfig, 'from', rangeDiv.find('input').at(k++));
+        bindInput(thisconfig, 'to_now', rangeDiv.find('input').at(k++), true);
+        bindInput(thisconfig, 'to_now', rangeDiv.find('input').at(k++), false);
         bindInput(thisconfig, 'to', rangeDiv.find('input').at(k++));
         bindInput(thisconfig, 'resampling', rangeDiv.find('input').at(k++));
         bindInput(thisconfig, 'resampling_unit', rangeDiv.find('select').at(0));
@@ -400,15 +411,27 @@ export class DownloadPanel extends Panel {
                 }
             }
 
-            let to = Number(thisconfig.to);
-            let length = to - Number(thisconfig.from);
-
+            let to, length;
+            if (thisconfig.to_now) {
+                to = 0;
+            }
+            else {
+                to = Number(thisconfig.to);
+            }
+            if (thisconfig.from_ago) {
+                length = thisconfig.length;
+            }
+            else {
+                if (to > 0) {
+                    length = to - Number(thisconfig.from);
+                }
+                else {
+                    length = $.time() - Number(thisconfig.from);
+                }
+            }
+            
             if (channels.length == 0) {
                 alert("Select channels");
-                return;
-            }
-            if (! (to > 0) || ! (length > 0)) {
-                alert("Invalid time range");
                 return;
             }
             
@@ -450,6 +473,7 @@ export class DownloadPanel extends Panel {
         buttonDiv.find('button').at(1).bind('click', e=>{
             const filename = channelDiv.find('input').at(0).val() + ".json";
             const url = 'api/data/' + download_url();
+            console.log(url);
             buttonDiv.find('a').attr('download', filename).attr('href', url).click();
         });
         button2Div.find('button').at(0).bind('click', e=>{

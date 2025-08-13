@@ -89,7 +89,6 @@ class PubsubComponent(Component):
             try:
                 t = float(t) + float(data.get('start_time', 0))
                 self.current_data_cache[name] = (t, data)
-                logging.error(f"CACHE: {data}")
             except:
                 continue
 
@@ -99,8 +98,8 @@ class PubsubComponent(Component):
     class CacheMergerResponse(slowlette.Response):
         def __init__(self, channels, length, to, cache):
             super().__init__(content={})
-            self.channels = channels
-            self.to = to if to > 0 else to + time.time()
+            self.channels = channels.split(',')
+            self.to = to if to > 0 else to + time.time() + 3
             self.frm = self.to - length
             self.cache = cache
 
@@ -110,7 +109,10 @@ class PubsubComponent(Component):
               - The "response" parameter (from datasource) does not include the data for the channel, and
               - the cached data is a single point time-series (e.g., data object or scalar)
             """
-            if type(response.content) is not dict:
+            
+            if response.content is None:
+                response.content = {}
+            elif type(response.content) is not dict:
                 return super().merge_response(response)
 
             self.content = {}
@@ -121,18 +123,29 @@ class PubsubComponent(Component):
                 if t is not None and t >= self.frm and t <= self.to:
                     self.content[ch] = x
 
-            logging.error(f"{response.content} <-- {response}")
-                
             return super().merge_response(response)
 
             
     @slowlette.get('/api/data/{channels}')
-    async def get_pubsub_cache(self, channels:str, opts:dict):
-        try:
-            channels = channels.split(',')
-            length = float(opts.get('length', 3600))
-            to = float(opts.get('to', 0))
-        except Exception as e:
-            return False
-
+    async def get_pubsub_cache(self, channels:str, length:float=3600, to:float=0):
         return self.CacheMergerResponse(channels, length, to, self.current_data_cache)
+
+
+    @slowlette.get('/api/channels')
+    async def get_cache_channels(self):
+        channels = []
+        for ch, (t, data) in self.current_data_cache.items():
+            x = data.get('x', {})
+            if 'y' in x:
+                datatype = 'graph'
+            elif 'bins' in x:
+                datatype = 'histogram'
+            elif 'table' in x:
+                datatype = 'table'
+            elif 'tree' in x:
+                datatype = 'tree'
+            else:
+                datatype = 'unknown'
+            channels.append({ 'name': ch, 'type': datatype, 'current': True })
+
+        return channels

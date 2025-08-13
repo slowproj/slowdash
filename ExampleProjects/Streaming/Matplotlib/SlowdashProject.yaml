@@ -5,3 +5,12 @@ slowdash_project:
 
   system:
     our_security_is_perfect: true
+
+
+  export:
+    - type: jupyter
+      # Jupyter is enabled only with docker compose
+      url: ${JUPYTER_URL:-}
+      token: ${JUPYTER_TOKEN:-}
+      jupyter_internal_url: ${JUPYTER_INTERNAL_URL:-}
+      slowdash_internal_url: ${SLOWDASH_INTERNAL_URL:-}

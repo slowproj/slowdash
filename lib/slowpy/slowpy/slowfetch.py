@@ -134,32 +134,33 @@ class SlowFetch:
         Returns:
           a time-range in UNIX time as a pair of (stop, length)
         """
-        now = time.time()
-
         if isinstance(stop, (int, float)):
-            if stop <= 0:
-                stop = now + stop
+            pass
         elif isinstance(stop, datetime.datetime):
             stop = stop.timestamp()
         else:
-            stop = datetime.datetime.fromisoformat(stop).timestamp()
+            try:
+                stop = datetime.datetime.fromisoformat(stop).timestamp()
+            except Exception as e:
+                logging.error(f'bad stop time: {e}: {stop}')
 
         if isinstance(start, (int, float)):
-            if start <= 0:
-                start = stop + start
+            pass
         elif isinstance(start, datetime.datetime):
             start = start.timestamp()
         else:
-            start = datetime.datetime.fromisoformat(start).timestamp()
+            try:
+                start = datetime.datetime.fromisoformat(start).timestamp()
+            except Exception as e:
+                logging.error(f'bad start time: {e}: {start}')
 
-        if stop < start:
-            length = start - stop
-            stop = start
-        elif stop > start:
-            length = stop - start
+        if start < 0:
+            length = abs(start)
         else:
-            length = 3600
-            
+            if stop > 0:
+                length = abs(stop - start)
+            else:
+                length = min(time.time()+stop - start, 0)
         if length > 315576000: # ten years
             return None, None
         
