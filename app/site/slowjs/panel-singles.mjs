@@ -10,8 +10,9 @@ import { Panel, bindInput } from './panel.mjs';
 
 
 class SingleDisplayItem {
-    constructor(svgParent, style) {
+    constructor(svgParent, panelConfig, style) {
         this.parent = svgParent;
+        this.panelConfig = panelConfig;
         this.style = $.extend({}, style);
         
         this.elem = undefined;
@@ -114,7 +115,7 @@ class SquareItem extends SingleDisplayItem {
               <tr><td>Label</td><td><input placeholder="auto"></td></tr>
               <tr><td>Value Format</td><td><input placeholder="%f"></td></tr>
               <tr><td>Time Format</td><td><input placeholder="%a,%H:%M"></td></tr>
-              <tr><td>Gauge</td><td>min: <input>, max: <input></td></tr>
+              <tr><td>Gauge</td><td>min: <input type="number" step="any">, max: <input type="number" step="any"></td></tr>
             </table>
         `);
 
@@ -150,6 +151,8 @@ class SquareItem extends SingleDisplayItem {
         });
         this.value_label = $('<text>', 'svg').appendTo(g).text('---').attr({
             "x": 15, "y": 35,
+            "fill": this.panelConfig.color?.base ?? this.style.strokeColor,
+            "fill-opacity": this.panelConfig.color?.value_opacity ?? 1.0,
             "font-size": 15,
             "font-weight": 'bold',
             'text-anchor': 'begin',
@@ -162,21 +165,25 @@ class SquareItem extends SingleDisplayItem {
 
         this.gauge = null;
         if (this.config.gauge?.max ?? false) {
-            const max = parseFloat(this.config.gauge.max);
-            const min = parseFloat(this.config.gauge.min ?? 0);
+            const min = parseFloat(this.config.gauge.min) || 0;
+            const max = parseFloat(this.config.gauge.max) || min;
+            const gauge_opacity = parseFloat(this.panelConfig.color?.gauge_opacity) || 0.5;
+            const tile_opacity = parseFloat(this.panelConfig.color?.tile_opacity) || 0.1;
+            const gauge_base_opacity = 0.8 * tile_opacity + 0.2 * gauge_opacity;
             if (min < max) {
                 $('<rect>', 'svg').appendTo(g).attr({
                     "x": 15, "y": 60,
                     "width": 80,
                     "height": 5,
-                    "fill": "gray",
-                    "fill-opacity": 0.3,
+                    "fill": this.panelConfig.color?.base ?? "gray",
+                    "fill-opacity": gauge_base_opacity,
                 });
                 this.gauge = $('<rect>', 'svg').appendTo(g).attr({
                     "x": 15, "y": 60,
                     "width": 0,
                     "height": 5,
-                    "fill": "gray",
+                    "fill": this.panelConfig.color?.base ?? "gray",
+                    "fill-opacity": gauge_opacity,
                 });
                 this.gauge_min = min;
                 this.gauge_max = max;
@@ -383,12 +390,12 @@ export class SinglesPanel extends Panel {
                 $('<rect>', 'svg').appendTo(g).attr({
                     "x": 5, "y": 5, 'width': rx*100-5, 'height': ry*100-5,
                     "stroke": 'none',
-                    "fill": 'gray',
-                    "fill-opacity": 0.1,
+                    "fill": this.config.color?.base ?? this.config.strokeColor,
+                    "fill-opacity": this.config.color?.tile_opacity ?? 0.1,
                 });
             }
 
-            let item = new ItemClass(g, this.style);
+            let item = new ItemClass(g, this.config, this.style);
             this.items.push(item);
             this.inputChannels.push(itemConfig.channel);
             item.configure(itemConfig);
@@ -402,6 +409,19 @@ export class SinglesPanel extends Panel {
         }
         if (! this.config.margin) {
             this.config.margin = { top: 0, right: 0, bottom: 0, left: 0 };
+        }
+        if (! this.config.color) {
+            this.config.color = {
+                base: this.style.stroke_color,
+                value_opacity: 1.0,
+                gauge_opacity: 0.5,
+                tile_opacity: 0.1,
+            };
+        }
+        if (! this.config.color.thresholds) {
+            this.config.thresholds = {
+                apply_to_value: true, apply_to_gauge: true, apply_to_tile: false,
+            };
         }
         
         div.css('display', 'flex');
@@ -418,10 +438,18 @@ export class SinglesPanel extends Panel {
             <hr style="margin-bottom:2ex">
             <table>
               <tr><td>Title</td><td><input placeholder="empty"></td></tr>
-              <tr><td>Margin</td><td>
-                T:<input>, R:<input>, B:<input>, L:<input>
-              </td></tr>
+              <tr><td>Margin</td><td>T:<input>, R:<input>, B:<input>, L:<input></td></tr>
               <tr><td>Grid</td><td>rows: <input type="number" step="1">, columns: <input type="number" step="1"></td></tr>
+              <tr><td valign="top">Color</td><td><table style="margin:0;padding:0">
+                <tr><td>Base</td><td><input type="color"></td></tr>
+                <tr><td>Value</td><td>
+                  opacity: <input type="number" step="any">, <label><input type="checkbox" checked>threshold colors</label>
+                </td></tr><tr><td>Gauge</td><td>
+                  opacity: <input type="number" step="any">, <label><input type="checkbox" checked>threshold colors</label>
+                </td></tr><tr><td>Tile</td><td>
+                  opacity: <input type="number" step="any">, <label><input type="checkbox">threshold colors</label>
+                </td></tr>
+              </table></td></tr>
             </table>
         `);
         let k = 0;
@@ -432,6 +460,13 @@ export class SinglesPanel extends Panel {
         bindInput(this.config.margin, 'left', panelDiv.find('input').at(k++).css('width', '3em'));
         bindInput(this.config.grid, 'rows', panelDiv.find('input').at(k++).css('width', '5em'));
         bindInput(this.config.grid, 'columns', panelDiv.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config.color, 'base', panelDiv.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config.color, 'value_opacity', panelDiv.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config.thresholds, 'apply_to_value', panelDiv.find('input').at(k++));
+        bindInput(this.config.color, 'gauge_opacity', panelDiv.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config.thresholds, 'apply_to_gauge', panelDiv.find('input').at(k++));
+        bindInput(this.config.color, 'tile_opacity', panelDiv.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config.thresholds, 'apply_to_tile', panelDiv.find('input').at(k++));
         
         let itemsDiv = $('<div>').appendTo(div).css(boxStyle);
         itemsDiv.html(`

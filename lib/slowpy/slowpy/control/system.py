@@ -134,8 +134,10 @@ class ControlSystem(spc.ControlNode):
                 setattr(obj, '__slowdash_export_name', name)   # using setattr() for dataclass
             except:
                 pass  # obj does not have setattr()  (such as an interger)
-            if name not in cls._slowdash_channels:
-                cls._register_channel(name, value, value_is_ts)
+
+            # published channels are now handled by subpub cache
+            #if name not in cls._slowdash_channels:
+            #    cls._register_channel(name, value, value_is_ts)
 
         if value_is_ts:
             record = { publish_name: value }

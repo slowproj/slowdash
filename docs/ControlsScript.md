@@ -738,6 +738,9 @@ async def _loop():
 ```
 When a Matplotlib figure is published, a SlowDash layout (usually a `slowplot-XXX.json` file under `config`) is created dynamically for the same axes layout as the figure. The plotting objects in the figure are extracted and converted to SlowDash objects before publishing.
 
+More examples can be found in `ExampleProjects/Streaming/Matplotlib`.
+
+
 # Distributed System / Network Deployment
 ## SlowDash Interconnect
 ## SlowTask Scpization

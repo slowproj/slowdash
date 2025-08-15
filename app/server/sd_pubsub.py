@@ -69,6 +69,8 @@ class PubsubComponent(Component):
         except Exception as e:
             logging.info(f"WebSocket Error: {e}")
 
+        return True
+
 
     @slowlette.post('api/consume/current_data')
     async def cache_current_data(self, doc:slowlette.DictJSON):
@@ -95,7 +97,50 @@ class PubsubComponent(Component):
         return True
 
     
-    class CacheMergerResponse(slowlette.Response):
+    class CacheChannelMergerResponse(slowlette.Response):
+        def __init__(self, cache):
+            super().__init__(content=[])
+            self.cache = cache
+
+            
+        def merge_response(self, response) -> None:
+            if response.content is None:
+                response.content = []
+            elif type(response.content) is not list:
+                return super().merge_response(response)
+            existing_channels = { x.get('name', '__') for x in response.content }
+            
+            self.content = []
+            for ch, (t, data) in self.cache.items():
+                if ch in existing_channels:
+                    continue
+                x = data.get('x', {})
+                if type(x) in [ int, float ]:
+                    datatype = 'numeric'
+                elif type(x) is dict:
+                    if 'y' in x:
+                        datatype = 'graph'
+                    elif 'bins' in x:
+                        datatype = 'histogram'
+                    elif 'table' in x:
+                        datatype = 'table'
+                    elif 'tree' in x:
+                        datatype = 'tree'
+                    else:
+                        datatype = 'unknown'
+                else:
+                    try:
+                        float(x)
+                        datatype = 'numeric'
+                    except:
+                        datatype = 'unknown'
+                    
+                self.content.append({ 'name': ch, 'type': datatype, 'current': True })
+                
+            return super().merge_response(response)
+
+            
+    class CacheDataMergerResponse(slowlette.Response):
         def __init__(self, channels, length, to, cache):
             super().__init__(content={})
             self.channels = channels.split(',')
@@ -126,26 +171,11 @@ class PubsubComponent(Component):
             return super().merge_response(response)
 
             
-    @slowlette.get('/api/data/{channels}')
-    async def get_pubsub_cache(self, channels:str, length:float=3600, to:float=0):
-        return self.CacheMergerResponse(channels, length, to, self.current_data_cache)
-
-
     @slowlette.get('/api/channels')
     async def get_cache_channels(self):
-        channels = []
-        for ch, (t, data) in self.current_data_cache.items():
-            x = data.get('x', {})
-            if 'y' in x:
-                datatype = 'graph'
-            elif 'bins' in x:
-                datatype = 'histogram'
-            elif 'table' in x:
-                datatype = 'table'
-            elif 'tree' in x:
-                datatype = 'tree'
-            else:
-                datatype = 'unknown'
-            channels.append({ 'name': ch, 'type': datatype, 'current': True })
+        return self.CacheChannelMergerResponse(self.current_data_cache)
 
-        return channels
+    
+    @slowlette.get('/api/data/{channels}')
+    async def get_cache_data(self, channels:str, length:float=3600, to:float=0):
+        return self.CacheDataMergerResponse(channels, length, to, self.current_data_cache)
