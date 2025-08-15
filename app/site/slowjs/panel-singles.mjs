@@ -4,6 +4,7 @@
 
 
 import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
+import { JGPlotAxisScale } from './jagaimo/jagaplot.mjs';
 import { JGTabWidget } from './jagaimo/jagawidgets.mjs';
 import { Panel, bindInput } from './panel.mjs';
 
@@ -168,7 +169,7 @@ class SquareItem extends SingleDisplayItem {
             "font-size": 10,
         });
         this.value_label = $('<text>', 'svg').appendTo(g).text('---').attr({
-            "x": 15, "y": 35,
+            "x": 10, "y": 35,
             "fill": this.panelConfig.color?.base ?? this.style.strokeColor,
             "fill-opacity": this.panelConfig.color?.value_opacity ?? 1.0,
             "font-size": 15,
@@ -176,12 +177,13 @@ class SquareItem extends SingleDisplayItem {
             'text-anchor': 'begin',
         });
         this.time_label = $('<text>', 'svg').appendTo(g).text('---').attr({
-            "x": 15, "y": 80,
+            "x": 10, "y": 83,
             'text-anchor': 'begin',
             "font-size": 8,
         });
 
         this.gauge = null;
+        this.gauge_length = 83;
         const gauge_min = parseFloat(this.config.gauge?.min) || 0;
         const gauge_max = parseFloat(this.config.gauge?.max) || gauge_min;
         if (gauge_min < gauge_max) {
@@ -189,23 +191,23 @@ class SquareItem extends SingleDisplayItem {
             const tile_opacity = parseFloat(this.panelConfig.color?.tile_opacity) || 0.1;
             const gauge_base_opacity = Math.max(0, Math.min(1, 0.8 * tile_opacity + 0.2 * gauge_opacity));
             $('<rect>', 'svg').appendTo(g).attr({
-                "x": 15, "y": 55,
-                "width": 80,
-                "height": 8,
+                "x": 12, "y": 55,
+                "width": this.gauge_length,
+                "height": 10,
                 "fill": this.panelConfig.color?.base ?? "gray",
                 "fill-opacity": gauge_base_opacity,
             });
             this.gauge = $('<rect>', 'svg').appendTo(g).attr({
-                "x": 15, "y": 55,
+                "x": 12, "y": 55,
                 "width": 0,
-                "height": 8,
+                "height": 10,
                 "fill": this.panelConfig.color?.base ?? "gray",
                 "fill-opacity": gauge_opacity,
             });
             this.gauge_min = gauge_min;
             this.gauge_max = gauge_max;
             this.gauge_opacity = gauge_opacity;
-            
+
             if (this.config.ranges) {
                 for (let range of [ 'error', 'warn', 'normal' ]) {
                     const range_min = parseFloat(this.config.ranges[range].min) || 0;
@@ -216,8 +218,8 @@ class SquareItem extends SingleDisplayItem {
                         const r0 = Math.min(Math.max(x0, 0), 1);
                         const r1 = Math.min(Math.max(x1, 0), 1);
                         $('<rect>', 'svg').appendTo(g).attr({
-                            "x": 15 + 80*r0, "y": 63,
-                            "width": 80*(r1-r0),
+                            "x": 12 + this.gauge_length*r0, "y": 63,
+                            "width": this.gauge_length*(r1-r0),
                             "height": 2,
                             "fill": this.config.ranges[range].color,
                             "fill-opacity": 1,
@@ -225,6 +227,18 @@ class SquareItem extends SingleDisplayItem {
                     }
                 }
             }
+
+            let scale_g = $('<g>', 'svg').appendTo(g).attr({
+                'transform': `translate(12, 65) scale(0.25)`,
+            });
+            this.scale = new JGPlotAxisScale(this.gauge_min, this.gauge_max, false, {
+                "x": 0, "y": 0, "length": this.gauge_length/0.25,
+                "labelPosition": "bottom",
+                "numberOfTicks": 1,
+                "frameThickness": 0,
+                "frameColor": this.panelConfig.color?.base ?? this.style.strokeColor,
+            });
+            this.scale.draw(scale_g);
         }
 
         return g;
@@ -265,7 +279,7 @@ class SquareItem extends SingleDisplayItem {
         if (this.gauge) {
             const x = (value - this.gauge_min) / (this.gauge_max - this.gauge_min);
             const r = Math.min(Math.max(x, 0), 1);
-            this.gauge.attr('width', 80*r);
+            this.gauge.attr('width', this.gauge_length*r);
             if (this.panelConfig.ranges?.apply_to_gauge) {
                 this.gauge.attr({'fill': range_color});
             }
