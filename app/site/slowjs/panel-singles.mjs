@@ -108,6 +108,13 @@ class SquareItem extends SingleDisplayItem {
         if (! this.config.gauge) {
             this.config.gauge = { min: 0, max: 0 };
         }
+        if (! this.config.ranges) {
+            this.config.ranges = {
+                normal: { min: 0, max: 0, color: '#06b6d4' },
+                warn: { min: 0, max: 0, color: '#f59e0b' },
+                error: { min: 0, max: 0, color: '#d81b60' },
+            };
+        }
         
         div.html(`
             <table>
@@ -116,6 +123,10 @@ class SquareItem extends SingleDisplayItem {
               <tr><td>Value Format</td><td><input placeholder="%f"></td></tr>
               <tr><td>Time Format</td><td><input placeholder="%a,%H:%M"></td></tr>
               <tr><td>Gauge</td><td>min: <input type="number" step="any">, max: <input type="number" step="any"></td></tr>
+              <tr><td>Ranges</td><td><input type="color"> min: <input type="number" step="any">, max: <input type="number" step="any"></td></tr>
+              <tr><td></td><td><input type="color"> min: <input type="number" step="any">, max: <input type="number" step="any"></td></tr>
+              <tr><td></td><td><input type="color"> min: <input type="number" step="any">, max: <input type="number" step="any"></td></tr>
+              <tr><td></td><td style="font-size:70%">overwrapping ok, evaluated from top to bottom<br>(for positive one-sided, only max boundaries can be set)</td></tr>
             </table>
         `);
 
@@ -126,6 +137,15 @@ class SquareItem extends SingleDisplayItem {
         bindInput(this.config, 'time_format', div.find('input').at(k++).css('width', '10em'));
         bindInput(this.config.gauge, 'min', div.find('input').at(k++).css('width', '5em'));
         bindInput(this.config.gauge, 'max', div.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config.ranges.normal, 'color', div.find('input').at(k++));
+        bindInput(this.config.ranges.normal, 'min', div.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config.ranges.normal, 'max', div.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config.ranges.warn, 'color', div.find('input').at(k++));
+        bindInput(this.config.ranges.warn, 'min', div.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config.ranges.warn, 'max', div.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config.ranges.error, 'color', div.find('input').at(k++));
+        bindInput(this.config.ranges.error, 'min', div.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config.ranges.error, 'max', div.find('input').at(k++).css('width', '5em'));
     }
 
     
@@ -164,29 +184,48 @@ class SquareItem extends SingleDisplayItem {
         });
 
         this.gauge = null;
-        if (this.config.gauge?.max ?? false) {
-            const min = parseFloat(this.config.gauge.min) || 0;
-            const max = parseFloat(this.config.gauge.max) || min;
+        const gauge_min = parseFloat(this.config.gauge.min) || 0;
+        const gauge_max = parseFloat(this.config.gauge.max) || min;
+        if (gauge_min < gauge_max) {
             const gauge_opacity = parseFloat(this.panelConfig.color?.gauge_opacity) || 0.5;
             const tile_opacity = parseFloat(this.panelConfig.color?.tile_opacity) || 0.1;
             const gauge_base_opacity = 0.8 * tile_opacity + 0.2 * gauge_opacity;
-            if (min < max) {
-                $('<rect>', 'svg').appendTo(g).attr({
-                    "x": 15, "y": 60,
-                    "width": 80,
-                    "height": 5,
-                    "fill": this.panelConfig.color?.base ?? "gray",
-                    "fill-opacity": gauge_base_opacity,
-                });
-                this.gauge = $('<rect>', 'svg').appendTo(g).attr({
-                    "x": 15, "y": 60,
-                    "width": 0,
-                    "height": 5,
-                    "fill": this.panelConfig.color?.base ?? "gray",
-                    "fill-opacity": gauge_opacity,
-                });
-                this.gauge_min = min;
-                this.gauge_max = max;
+            $('<rect>', 'svg').appendTo(g).attr({
+                "x": 15, "y": 55,
+                "width": 80,
+                "height": 8,
+                "fill": this.panelConfig.color?.base ?? "gray",
+                "fill-opacity": gauge_base_opacity,
+            });
+            this.gauge = $('<rect>', 'svg').appendTo(g).attr({
+                "x": 15, "y": 55,
+                "width": 0,
+                "height": 8,
+                "fill": this.panelConfig.color?.base ?? "gray",
+                "fill-opacity": gauge_opacity,
+            });
+            this.gauge_min = gauge_min;
+            this.gauge_max = gauge_max;
+            this.gauge_opacity = gauge_opacity;
+            
+            if (this.config.ranges) {
+                for (let range of [ 'error', 'warn', 'normal' ]) {
+                    const range_min = parseFloat(this.config.ranges[range].min) || 0;
+                    const range_max = parseFloat(this.config.ranges[range].max) || range_min;
+                    if ((range_min < range_max) && this.config.ranges[range].color) {
+                        const x0 = (range_min - this.gauge_min) / (this.gauge_max - this.gauge_min);
+                        const x1 = (range_max - this.gauge_min) / (this.gauge_max - this.gauge_min);
+                        const r0 = Math.min(Math.max(x0, 0), 1);
+                        const r1 = Math.min(Math.max(x1, 0), 1);
+                        $('<rect>', 'svg').appendTo(g).attr({
+                            "x": 15 + 80*r0, "y": 63,
+                            "width": 80*(r1-r0),
+                            "height": 2,
+                            "fill": this.config.ranges[range].color,
+                            "fill-opacity": 1,
+                        });
+                    }
+                }
             }
         }
 
@@ -197,11 +236,48 @@ class SquareItem extends SingleDisplayItem {
     update_this(time, value, time_text, value_text) {
         this.value_label.text(value_text);
         this.time_label.text(time_text);
-
-        if (this.gauge && value !== null) {
+        if (value === null) {
+            if (this.gauge) {
+                this.gauge.attr({'fill-opacity': 0});
+            }
+            return;
+        }
+        
+        let range_color = null;
+        const range_normal_min = parseFloat(this.config.ranges?.normal.min) || 0;
+        const range_normal_max = parseFloat(this.config.ranges?.normal.max) || range_normal_min;
+        const range_warn_min = parseFloat(this.config.ranges?.warn.min) || 0;
+        const range_warn_max = parseFloat(this.config.ranges?.warn.max) || range_warn_min;
+        const range_error_min = parseFloat(this.config.ranges?.error.min) || 0;
+        const range_error_max = parseFloat(this.config.ranges?.error.max) || range_error_min;
+        if ((value >= range_normal_min) && (value < range_normal_max)) {
+            range_color = this.config.ranges?.normal.color ?? null;
+        }
+        else if ((value >= range_warn_min) && (value < range_warn_max)) {
+            range_color = this.config.ranges?.warn.color ?? null;
+        }
+        else if ((value >= range_error_min) && (value < range_error_max)) {
+            range_color = this.config.ranges?.error.color ?? null;
+        }
+        if (range_color === null) {
+            range_color = this.panelConfig.color?.base ?? 'gray';
+        }
+        
+        if (this.panelConfig.ranges?.apply_to_tile) {
+            this.parent.attr({'fill': range_color});
+        }
+        if (this.panelConfig.ranges?.apply_to_value) {
+            this.value_label.attr({'fill': range_color});
+        }
+        
+        if (this.gauge) {
             const x = (value - this.gauge_min) / (this.gauge_max - this.gauge_min);
             const r = Math.min(Math.max(x, 0), 1);
             this.gauge.attr('width', 80*r);
+            if (this.panelConfig.ranges?.apply_to_gauge) {
+                this.gauge.attr({'fill': range_color});
+            }
+            this.gauge.attr({"fill-opacity": this.gauge_opacity});
         }
     }
 };
@@ -418,9 +494,9 @@ export class SinglesPanel extends Panel {
                 tile_opacity: 0.1,
             };
         }
-        if (! this.config.color.thresholds) {
-            this.config.thresholds = {
-                apply_to_value: true, apply_to_gauge: true, apply_to_tile: false,
+        if (! this.config.ranges) {
+            this.config.ranges = {
+                apply_to_value: false, apply_to_gauge: true, apply_to_tile: false,
             };
         }
         
@@ -443,11 +519,11 @@ export class SinglesPanel extends Panel {
               <tr><td valign="top">Color</td><td><table style="margin:0;padding:0">
                 <tr><td>Base</td><td><input type="color"></td></tr>
                 <tr><td>Value</td><td>
-                  opacity: <input type="number" step="any">, <label><input type="checkbox" checked>threshold colors</label>
+                  opacity: <input type="number" step="any">, <label><input type="checkbox">range colors</label>
                 </td></tr><tr><td>Gauge</td><td>
-                  opacity: <input type="number" step="any">, <label><input type="checkbox" checked>threshold colors</label>
+                  opacity: <input type="number" step="any">, <label><input type="checkbox" checked>range colors</label>
                 </td></tr><tr><td>Tile</td><td>
-                  opacity: <input type="number" step="any">, <label><input type="checkbox">threshold colors</label>
+                  opacity: <input type="number" step="any">, <label><input type="checkbox">range colors</label>
                 </td></tr>
               </table></td></tr>
             </table>
@@ -462,11 +538,11 @@ export class SinglesPanel extends Panel {
         bindInput(this.config.grid, 'columns', panelDiv.find('input').at(k++).css('width', '5em'));
         bindInput(this.config.color, 'base', panelDiv.find('input').at(k++).css('width', '5em'));
         bindInput(this.config.color, 'value_opacity', panelDiv.find('input').at(k++).css('width', '5em'));
-        bindInput(this.config.thresholds, 'apply_to_value', panelDiv.find('input').at(k++));
+        bindInput(this.config.ranges, 'apply_to_value', panelDiv.find('input').at(k++));
         bindInput(this.config.color, 'gauge_opacity', panelDiv.find('input').at(k++).css('width', '5em'));
-        bindInput(this.config.thresholds, 'apply_to_gauge', panelDiv.find('input').at(k++));
+        bindInput(this.config.ranges, 'apply_to_gauge', panelDiv.find('input').at(k++));
         bindInput(this.config.color, 'tile_opacity', panelDiv.find('input').at(k++).css('width', '5em'));
-        bindInput(this.config.thresholds, 'apply_to_tile', panelDiv.find('input').at(k++));
+        bindInput(this.config.ranges, 'apply_to_tile', panelDiv.find('input').at(k++));
         
         let itemsDiv = $('<div>').appendTo(div).css(boxStyle);
         itemsDiv.html(`
