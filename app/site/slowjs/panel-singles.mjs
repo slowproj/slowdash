@@ -158,8 +158,6 @@ class SquareItem extends SingleDisplayItem {
     
     configure_this() {
         let g = $('<g>', 'svg').attr({
-            "font-family": 'sans-serif',
-            "fill": this.style.strokeColor,
             'text-anchor': 'begin',
             'dominant-baseline': 'hanging',
         });
@@ -184,12 +182,12 @@ class SquareItem extends SingleDisplayItem {
         });
 
         this.gauge = null;
-        const gauge_min = parseFloat(this.config.gauge.min) || 0;
-        const gauge_max = parseFloat(this.config.gauge.max) || min;
+        const gauge_min = parseFloat(this.config.gauge?.min) || 0;
+        const gauge_max = parseFloat(this.config.gauge?.max) || gauge_min;
         if (gauge_min < gauge_max) {
             const gauge_opacity = parseFloat(this.panelConfig.color?.gauge_opacity) || 0.5;
             const tile_opacity = parseFloat(this.panelConfig.color?.tile_opacity) || 0.1;
-            const gauge_base_opacity = 0.8 * tile_opacity + 0.2 * gauge_opacity;
+            const gauge_base_opacity = Math.max(0, Math.min(1, 0.8 * tile_opacity + 0.2 * gauge_opacity));
             $('<rect>', 'svg').appendTo(g).attr({
                 "x": 15, "y": 55,
                 "width": 80,
@@ -244,32 +242,26 @@ class SquareItem extends SingleDisplayItem {
         }
         
         let range_color = null;
-        const range_normal_min = parseFloat(this.config.ranges?.normal.min) || 0;
-        const range_normal_max = parseFloat(this.config.ranges?.normal.max) || range_normal_min;
-        const range_warn_min = parseFloat(this.config.ranges?.warn.min) || 0;
-        const range_warn_max = parseFloat(this.config.ranges?.warn.max) || range_warn_min;
-        const range_error_min = parseFloat(this.config.ranges?.error.min) || 0;
-        const range_error_max = parseFloat(this.config.ranges?.error.max) || range_error_min;
-        if ((value >= range_normal_min) && (value < range_normal_max)) {
-            range_color = this.config.ranges?.normal.color ?? null;
-        }
-        else if ((value >= range_warn_min) && (value < range_warn_max)) {
-            range_color = this.config.ranges?.warn.color ?? null;
-        }
-        else if ((value >= range_error_min) && (value < range_error_max)) {
-            range_color = this.config.ranges?.error.color ?? null;
+        if (this.config.ranges) {
+            for (let range of [ 'normal', 'warn', 'error' ]) {
+                const range_min = parseFloat(this.config.ranges[range].min) || 0;
+                const range_max = parseFloat(this.config.ranges[range].max) || range_min;
+                if ((value >= range_min) && (value < range_max)) {
+                    range_color = this.config.ranges[range].color ?? null;
+                    break;
+                }
+            }
         }
         if (range_color === null) {
             range_color = this.panelConfig.color?.base ?? 'gray';
         }
         
         if (this.panelConfig.ranges?.apply_to_tile) {
-            this.parent.attr({'fill': range_color});
+            this.parent.find('.sd-scalarpanel-tile').attr({'fill': range_color});
         }
         if (this.panelConfig.ranges?.apply_to_value) {
             this.value_label.attr({'fill': range_color});
-        }
-        
+        }        
         if (this.gauge) {
             const x = (value - this.gauge_min) / (this.gauge_max - this.gauge_min);
             const r = Math.min(Math.max(x, 0), 1);
@@ -458,18 +450,18 @@ export class SinglesPanel extends Panel {
             const dx = rx * 100 * Math.trunc(this.items.length % this.grid.columns);
             const dy = ry * 100 * Math.trunc(this.items.length / this.grid.columns);
             let g = $('<g>', 'svg').appendTo(this.svg).attr({
-                transform: `translate(${dx}, ${dy})`,
-                width: rx * 100,
-                height: ry * 100,
+                'transform': `translate(${dx}, ${dy})`,
+                'width': rx * 100,
+                'height': ry * 100,
+                "fill": this.style.strokeColor,
             });
-            if (true) {
-                $('<rect>', 'svg').appendTo(g).attr({
-                    "x": 5, "y": 5, 'width': rx*100-5, 'height': ry*100-5,
-                    "stroke": 'none',
-                    "fill": this.config.color?.base ?? this.config.strokeColor,
-                    "fill-opacity": this.config.color?.tile_opacity ?? 0.1,
-                });
-            }
+            $('<rect>', 'svg').appendTo(g).addClass('sd-scalarpanel-tile').attr({
+                "x": 5, "y": 5, 'width': rx*100-5, 'height': ry*100-5,
+                "stroke": 'none',
+                "font-family": 'sans-serif',
+                "fill": this.config.color?.base ?? this.config.strokeColor,
+                "fill-opacity": this.config.color?.tile_opacity ?? 0.1,
+            });
 
             let item = new ItemClass(g, this.config, this.style);
             this.items.push(item);
@@ -488,7 +480,7 @@ export class SinglesPanel extends Panel {
         }
         if (! this.config.color) {
             this.config.color = {
-                base: this.style.stroke_color,
+                base: this.style.strokeColor,
                 value_opacity: 1.0,
                 gauge_opacity: 0.5,
                 tile_opacity: 0.1,
