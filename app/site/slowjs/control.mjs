@@ -171,7 +171,7 @@ export class Controller {
             let data = {};
             if (textdata.length > 2) {
                 try {
-                    data = JSON.parse(textdata.replace(/\bNaN\b/g, '"NaN"'), (k,v) => {
+                    data = JSON.parse(textdata.replace(/(?<!")\bNaN\b(?!")/g, '"NaN"'), (k,v) => {
                         if (v === 'NaN') return NaN;
                         return v;
                     });
@@ -303,10 +303,8 @@ export class Controller {
 
             let data;
             try {
-                data = JSON.parse(event.data.replace(/\bNaN\b/g, '"NaN"'), (k,v) => {
+                data = JSON.parse(event.data.replace(/(?<!")\bNaN\b(?!")/g, '"NaN"'), (k,v) => {
                     if (v === 'NaN') return NaN;
-                    if (v === 'Infinity') return Infinity;
-                    if (v === '-Infinity') return -Infinity;
                     return v;
                 });
             }

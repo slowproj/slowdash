@@ -7,6 +7,7 @@ import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
 import { JGPlotAxisScale } from './jagaimo/jagaplot.mjs';
 import { JGTabWidget } from './jagaimo/jagawidgets.mjs';
 import { Panel, bindInput } from './panel.mjs';
+import { Transformer } from './transformer.mjs';
 
 
 
@@ -18,6 +19,9 @@ class SingleDisplayItem {
         
         this.elem = undefined;
         this.currentDataTime = -1;
+        
+        this.metric = null;
+        this.text_transformer = null;
     }
 
     
@@ -31,10 +35,24 @@ class SingleDisplayItem {
 
         this.currentDataTime = -1;
         this.update_this(null, null, '---', '---');
+
+        if (this.config.channel) {
+            this.metric = Transformer.decompose(this.config.channel);
+        }
+        if (this.config.text_transform) {
+            this.text_transformer = new Transformer(this.config.text_transform);
+        }
     }
 
     
     openItemSettings(div) {
+    }
+
+    
+    fillInputChannels(inputChannels) {
+        if (this.metric) {
+            inputChannels.push(this.metric.channel);
+        }
     }
 
     
@@ -43,7 +61,7 @@ class SingleDisplayItem {
             return;
         }
         
-        const ts = dataPacket[this.config.channel];
+        const ts = dataPacket[this.metric.channel];
         if (! ts) {
             if (
                 (dataPacket.__meta?.isPartial ?? false) ||
@@ -74,20 +92,26 @@ class SingleDisplayItem {
                 value = ts.x;
             }
         }
+        if (this.metric.transform) {
+            value = this.metric.transform.apply(value);
+        }
         
         let time_text, value_text;
         if (time === null) {
             time_text = '---';
         }
         else {
-            const time_format = this.config.time_format || '%a,%H:%M';
+            const time_format = this.panelConfig.time_format || '%a, %H:%M';
             time_text = (new JGDateTime(time)).asString(time_format);
-        }
+        }        
         if (value === null) {
             value_text = '---';
         }
         else if (this.config.format) {
             value_text = $.sprintf(this.config.format, value);
+        }
+        else if (this.text_transformer) {
+            value_text = this.text_transformer.apply(value);
         }
         else {
             value_text = value;
@@ -111,9 +135,9 @@ class SquareItem extends SingleDisplayItem {
         }
         if (! this.config.ranges) {
             this.config.ranges = {
-                normal: { min: 0, max: 0, color: '#06b6d4' },
-                warn: { min: 0, max: 0, color: '#f59e0b' },
-                error: { min: 0, max: 0, color: '#d81b60' },
+                normal: { min: 0, max: 0, },
+                warn: { min: 0, max: 0, },
+                error: { min: 0, max: 0, },
             };
         }
         
@@ -121,12 +145,12 @@ class SquareItem extends SingleDisplayItem {
             <table>
               <tr><td>Channel</td><td><input list="sd-numeric-datalist"></td></tr>
               <tr><td>Label</td><td><input placeholder="auto"></td></tr>
-              <tr><td>Value Format</td><td><input placeholder="%f"></td></tr>
-              <tr><td>Time Format</td><td><input placeholder="%a,%H:%M"></td></tr>
+              <tr><td>Text Transform</td><td><input placeholder="ex) gt(0.5)->replace(true,'ON')->replace(false,'OFF')"></td></tr>
+              <tr><td>Text Format</td><td><input placeholder="%f"></td></tr>
               <tr><td>Gauge</td><td>min: <input type="number" step="any">, max: <input type="number" step="any"></td></tr>
-              <tr><td>Ranges</td><td><input type="color"> min: <input type="number" step="any">, max: <input type="number" step="any"></td></tr>
-              <tr><td></td><td><input type="color"> min: <input type="number" step="any">, max: <input type="number" step="any"></td></tr>
-              <tr><td></td><td><input type="color"> min: <input type="number" step="any">, max: <input type="number" step="any"></td></tr>
+              <tr><td>Ranges</td><td>[1] min: <input type="number" step="any">, max: <input type="number" step="any"></td></tr>
+              <tr><td></td><td>[2] min: <input type="number" step="any">, max: <input type="number" step="any"></td></tr>
+              <tr><td></td><td>[3] min: <input type="number" step="any">, max: <input type="number" step="any"></td></tr>
               <tr><td></td><td style="font-size:70%">overwrapping ok, evaluated from top to bottom<br>(for positive one-sided, only max boundaries can be set)</td></tr>
             </table>
         `);
@@ -134,26 +158,16 @@ class SquareItem extends SingleDisplayItem {
         let k = 0;
         bindInput(this.config, 'channel', div.find('input').at(k++).css('width', '20em'));
         bindInput(this.config, 'label', div.find('input').at(k++).css('width', '20em'));
-        bindInput(this.config, 'format', div.find('input').at(k++).css('width', '10em'));
-        bindInput(this.config, 'time_format', div.find('input').at(k++).css('width', '10em'));
+        bindInput(this.config, 'text_transform', div.find('input').at(k++).css('width', '20em'));
+        bindInput(this.config, 'format', div.find('input').at(k++).css('width', '8em'));
         bindInput(this.config.gauge, 'min', div.find('input').at(k++).css('width', '5em'));
         bindInput(this.config.gauge, 'max', div.find('input').at(k++).css('width', '5em'));
-        bindInput(this.config.ranges.normal, 'color', div.find('input').at(k++));
         bindInput(this.config.ranges.normal, 'min', div.find('input').at(k++).css('width', '5em'));
         bindInput(this.config.ranges.normal, 'max', div.find('input').at(k++).css('width', '5em'));
-        bindInput(this.config.ranges.warn, 'color', div.find('input').at(k++));
         bindInput(this.config.ranges.warn, 'min', div.find('input').at(k++).css('width', '5em'));
         bindInput(this.config.ranges.warn, 'max', div.find('input').at(k++).css('width', '5em'));
-        bindInput(this.config.ranges.error, 'color', div.find('input').at(k++));
         bindInput(this.config.ranges.error, 'min', div.find('input').at(k++).css('width', '5em'));
         bindInput(this.config.ranges.error, 'max', div.find('input').at(k++).css('width', '5em'));
-    }
-
-    
-    get_defaults() {
-        return {
-            "format": null,
-        };
     }
 
     
@@ -172,7 +186,7 @@ class SquareItem extends SingleDisplayItem {
             "x": 10, "y": 35,
             "fill": this.panelConfig.color.base,
             "fill-opacity": this.panelConfig.color?.value_opacity ?? 1.0,
-            "font-size": 15,
+            "font-size": 18,
             "font-weight": 'bold',
             'text-anchor': 'begin',
         });
@@ -189,7 +203,7 @@ class SquareItem extends SingleDisplayItem {
         if (gauge_min < gauge_max) {
             const gauge_opacity = parseFloat(this.panelConfig.color?.gauge_opacity ?? 0.4);
             const tile_opacity = parseFloat(this.panelConfig.color?.tile_opacity ?? 0.1);
-            const gauge_base_opacity = Math.max(0, Math.min(1, 0.8 * tile_opacity + 0.2 * gauge_opacity));
+            const gauge_base_opacity = Math.max(0, Math.min(1, 0.7 * tile_opacity + 0.3 * gauge_opacity));
             $('<rect>', 'svg').appendTo(g).attr({
                 "x": 12, "y": 55,
                 "width": this.gauge_length,
@@ -212,7 +226,8 @@ class SquareItem extends SingleDisplayItem {
                 for (let range of [ 'error', 'warn', 'normal' ]) {
                     const range_min = parseFloat(this.config.ranges[range].min ?? 0);
                     const range_max = parseFloat(this.config.ranges[range].max ?? range_min);
-                    if ((range_min < range_max) && this.config.ranges[range].color) {
+                    const range_color = this.panelConfig.color[range];
+                    if ((range_min < range_max) && range_color) {
                         const x0 = (range_min - this.gauge_min) / (this.gauge_max - this.gauge_min);
                         const x1 = (range_max - this.gauge_min) / (this.gauge_max - this.gauge_min);
                         const r0 = Math.min(Math.max(x0, 0), 1);
@@ -221,7 +236,7 @@ class SquareItem extends SingleDisplayItem {
                             "x": 12 + this.gauge_length*r0, "y": 64,
                             "width": this.gauge_length*(r1-r0),
                             "height": 1,
-                            "fill": this.config.ranges[range].color,
+                            "fill": range_color,
                             "fill-opacity": 1,
                         });
                     }
@@ -261,7 +276,7 @@ class SquareItem extends SingleDisplayItem {
                 const range_min = parseFloat(this.config.ranges[range].min ?? 0);
                 const range_max = parseFloat(this.config.ranges[range].max ?? range_min);
                 if ((value >= range_min) && (value < range_max)) {
-                    range_color = this.config.ranges[range].color ?? null;
+                    range_color = this.panelConfig.color[range] ?? null;
                     break;
                 }
             }
@@ -384,7 +399,6 @@ export class SinglesPanel extends Panel {
         });
 
         this.items = [];
-        this.inputChannels = [];
         this.grid = { rows: 1, columns: 1 };
     }
 
@@ -400,7 +414,12 @@ export class SinglesPanel extends Panel {
             this.config.item_type = 'square';
         }
         if (! this.config.color?.base) {
-            this.config.color = { base: this.style.strokeColor };
+            this.config.color = {
+                base: this.style.strokeColor,
+                normal: '#06b6d4',
+                warn: '#f59e0b',
+                error: '#d81b60',
+            };
         }
 
         let rows = this.config.grid?.rows ?? 0;
@@ -462,7 +481,6 @@ export class SinglesPanel extends Panel {
         }
         
         this.items = [];
-        this.inputChannels = [];
         for (const itemConfig of this.config.items ?? []) {
             const dx = rx * 100 * Math.trunc(this.items.length % this.grid.columns);
             const dy = ry * 100 * Math.trunc(this.items.length / this.grid.columns);
@@ -482,7 +500,6 @@ export class SinglesPanel extends Panel {
 
             let item = new ItemClass(g, this.config, this.style);
             this.items.push(item);
-            this.inputChannels.push(itemConfig.channel);
             item.configure(itemConfig);
         }
     }
@@ -496,12 +513,9 @@ export class SinglesPanel extends Panel {
             this.config.margin = { top: 0, right: 0, bottom: 0, left: 0 };
         }
         if (! this.config.color?.value_opacity) {
-            this.config.color = {
-                base: this.config.color?.base ?? this.style.strokeColor,
-                value_opacity: 1.0,
-                gauge_opacity: 0.4,
-                tile_opacity: 0.1,
-            };
+            this.config.color.value_opacity = 1.0;
+            this.config.color.gauge_opacity = 0.4;
+            this.config.color.tile_opacity = 0.1;
         }
         if (! this.config.ranges) {
             this.config.ranges = {
@@ -525,8 +539,10 @@ export class SinglesPanel extends Panel {
               <tr><td>Title</td><td><input placeholder="empty"></td></tr>
               <tr><td>Margin</td><td>T:<input>, R:<input>, B:<input>, L:<input></td></tr>
               <tr><td>Grid</td><td>rows: <input type="number" step="1">, columns: <input type="number" step="1"></td></tr>
+              <tr><td>Time Format</td><td><input placeholder="%a, %H:%M"></td></tr>
               <tr><td valign="top">Color</td><td><table style="margin:0;padding:0">
                 <tr><td>Base</td><td><input type="color"></td></tr>
+                <tr><td>Ranges</td><td>1: <input type="color">, 2: <input type="color">, 3: <input type="color"></td></tr>
                 <tr><td>Value</td><td>
                   opacity: <input type="number" step="any">, <label><input type="checkbox">range colors</label>
                 </td></tr><tr><td>Gauge</td><td>
@@ -545,7 +561,11 @@ export class SinglesPanel extends Panel {
         bindInput(this.config.margin, 'left', panelDiv.find('input').at(k++).css('width', '3em'));
         bindInput(this.config.grid, 'rows', panelDiv.find('input').at(k++).css('width', '5em'));
         bindInput(this.config.grid, 'columns', panelDiv.find('input').at(k++).css('width', '5em'));
-        bindInput(this.config.color, 'base', panelDiv.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config, 'time_format', div.find('input').at(k++).css('width', '10em'));
+        bindInput(this.config.color, 'base', panelDiv.find('input').at(k++));
+        bindInput(this.config.color, 'normal', div.find('input').at(k++));
+        bindInput(this.config.color, 'warn', div.find('input').at(k++));
+        bindInput(this.config.color, 'error', div.find('input').at(k++));
         bindInput(this.config.color, 'value_opacity', panelDiv.find('input').at(k++).css('width', '5em'));
         bindInput(this.config.ranges, 'apply_to_value', panelDiv.find('input').at(k++));
         bindInput(this.config.color, 'gauge_opacity', panelDiv.find('input').at(k++).css('width', '5em'));
@@ -584,8 +604,8 @@ export class SinglesPanel extends Panel {
 
     
     fillInputChannels(inputChannels) {
-        for (let channel of this.inputChannels) {
-            inputChannels.push(channel);
+        for (const item of this.items) {
+            item.fillInputChannels(inputChannels);
         }
     }
 

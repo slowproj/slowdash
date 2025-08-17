@@ -7,8 +7,50 @@
     },
     "style": { },
     "panels": [
+        {
+            "type": "singles",
+            "item_type": "square",
+            "items": [
+                {
+                    "channel": "run_status['running']->replace(false,0)->replace(true,1)",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0.5 },
+                        "warn": { "min": 0, "max": 1.5 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "label": "Data Taking",
+                    "text_transform": "replace(0,'Idling')->replace(1,'Running')"
+                },
+                {
+                    "channel": "run_setting['offline']->invert()->replace(false,0)->replace(true,1)",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0.5 },
+                        "warn": { "min": 0, "max": 1.5 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "label": "File Recording",
+                    "text_transform": "replace(0,'Recording Off')->replace(1,'Recording On')"
+                },
+                {
+                    "channel": "run_status['lapse']",
+                    "gauge": { "min": 0, "max": 300 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 1000 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "format": "%d s",
+                    "label": "Lapse"
+                }
+            ],
+            "color": { "base": "rgb(0, 0, 0)", "normal": "#9a9996", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.3 },
+            "grid": { "rows": 2, "columns": 3 },
+            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+            "ranges": { "apply_to_value": false, "apply_to_gauge": false, "apply_to_tile": true }
+        },
         { "type": "html", "location": "project", "file": "run_control", "title": "" },
-        { "type": "tree", "channel": "run_status", "title": "Run Status" },
         {
             "type": "timeseries",
             "plots": [
@@ -25,7 +67,8 @@
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
             "legend": { "style": "side" }
         },
-        { "type": "tree", "channel": "run_setting" }
+        { "type": "tree", "channel": "run_setting" },
+        { "type": "tree", "channel": "run_status", "title": "Run Status" }
     ],
     "meta": { "name": "run_control", "title": "", "description": "" }
 }
