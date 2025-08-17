@@ -174,13 +174,15 @@ class SquareItem extends SingleDisplayItem {
     configure_this() {
         let g = $('<g>', 'svg').attr({
             'text-anchor': 'begin',
-            'dominant-baseline': 'hanging',
+            //'dominant-baseline': 'hanging',    // Safari does not like dominant-baseline
+            
         });
         
         this.channel_label = $('<text>', 'svg').appendTo(g).text(this.config.label??this.config.channel).attr({
             "x": 10, "y": 10,
             'text-anchor': 'begin',
             "font-size": 10,
+            'dy': '0.75em',  // instead of dominant-baseline: hanging
         });
         this.value_label = $('<text>', 'svg').appendTo(g).text('---').attr({
             "x": 10, "y": 35,
@@ -189,11 +191,13 @@ class SquareItem extends SingleDisplayItem {
             "font-size": 18,
             "font-weight": 'bold',
             'text-anchor': 'begin',
+            'dy': '0.75em',  // instead of dominant-baseline: hanging
         });
         this.time_label = $('<text>', 'svg').appendTo(g).text('---').attr({
-            "x": 10, "y": 83,
+            "x": 10, "y": 90,
             'text-anchor': 'begin',
-            "font-size": 8,
+            "font-size": 7,
+            'dy': '0.75em',  // instead of dominant-baseline: hanging
         });
 
         this.gauge = null;
