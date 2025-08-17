@@ -580,7 +580,7 @@ export class SinglesPanel extends Panel {
         `);
         let tabsDiv = $('<div>').appendTo(itemsDiv);
         for (let item of this.items) {
-            const label = item.config.channel;
+            const label = item.config.label || item.config.channel;
             const pageDiv = $('<div>').addClass('jaga-tabPage').attr('label', label).appendTo(tabsDiv);
             item.openItemSettings(pageDiv);
         }

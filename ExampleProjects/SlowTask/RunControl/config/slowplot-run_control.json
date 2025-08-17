@@ -43,10 +43,21 @@
                     },
                     "format": "%d s",
                     "label": "Lapse"
+                },
+                {
+                    "channel": "rate_trend",
+                    "gauge": { "min": 0, "max": 20 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 15 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 1000 }
+                    },
+                    "label": "Rate",
+                    "format": "%f cps"
                 }
             ],
             "color": { "base": "rgb(0, 0, 0)", "normal": "#9a9996", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.3 },
-            "grid": { "rows": 2, "columns": 3 },
+            "grid": { "rows": 2, "columns": 2 },
             "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
             "ranges": { "apply_to_value": false, "apply_to_gauge": false, "apply_to_tile": true }
         },
