@@ -101,7 +101,7 @@ JSROOT や Bokeh との違い：
 
 
 #  インストール
-### 動作環境
+### サーバー側動作環境
 #### Docker
 Docker があれば，DockerHub または GitHub CR にある SlowDash のイメージがすぐに利用できます (Linux / Windows WSL / MacOS)．
 
@@ -110,15 +110,16 @@ Docker があれば，DockerHub または GitHub CR にある SlowDash のイメ
 
 ただ，最初から Docker を使うと設定ファイルの扱いなどが面倒だと思います．ここでは，Docker を使う手順を最後に解説します．
 
-#### 標準インストール (bare-metal)
+#### 標準インストール
 基本的に Python 3 が動けばすぐ使えます．
 
 - UNIX 風の OS．Ubuntu で開発，macOS とか Windows の WSL でも動いた．WinPython でも動くらしい．
 - Python 3.9 以上と venv
-- ブラウザ．Firefox で開発していて，たまに Chrome と Edge と Safari でテストしている．
-  - タブレットや携帯などのモバイルデバイス上でもそこそこ動作する．プロットの移動やズームは二本指で．
 
 ここでのインストールでは，venv を使用してそこに必要なパッケージを自動インストールするので，手動で Python のパッケージなどを準備する必要はありません．(venv を使わずにインストールすることもできます．) 
+
+### ウェブブラウザ
+Firefox で開発していて，たまに Chrome と Edge と Safari でテストしています．タブレットや携帯などのモバイルデバイス上でもそこそこ動作します（プロットの移動やズームは二本指です）．
 
 
 ### ダウンロード
@@ -250,32 +251,30 @@ $ slowdash-activate-venv       (または source PATH/TO/SLOWDASH/venv/bin/activ
 
 SlowPy を使って，一秒ごとに乱数の値を SQLite に書き込むスクリプトを作成します．
 ```python
-from slowpy.control import DummyDevice_RandomWalk, ControlSystem
-from slowpy.store import DataStore_SQLite, SimpleLongFormat
+from slowpy.control import ControlSystem, RandomWalkDevice
+from slowpy.store import DataStore_SQLite, LongTableFormat
 
-
-class TestDataFormat(SimpleLongFormat):
-    schema_numeric = '(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel))'
+class TestDataFormat(LongTableFormat):
+    schema_numeric = '(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel))'
     def insert_numeric_data(self, cur, timestamp, channel, value):
-        cur.execute(f'INSERT INTO {self.table} VALUES(CURRENT_TIMESTAMP,%d,"%s",%f)' % (timestamp, channel, value))
+        cur.execute(f'INSERT INTO {self.table} VALUES(CURRENT_TIMESTAMP,%d,?,%f)' % (timestamp, value), (channel,))
 
-datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata", format=TestDataFormat())
-device = DummyDevice_RandomWalk(n=4)
-
+ctrl = ControlSystem()
+device = RandomWalkDevice(n=4)
+datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata", table_format=TestDataFormat())
 
 def _loop():
     for ch in range(4):
         data = device.read(ch)
         datastore.append(data, tag="ch%02d"%ch)
-    ControlSystem.sleep(1)
-
+    ctrl.sleep(1)
+    
 def _finalize():
     datastore.close()
     
-    
 if __name__ == '__main__':
-    ControlSystem.stop_by_signal()
-    while not ControlSystem.is_stop_requested():
+    ctrl.stop_by_signal()
+    while not ctrl.is_stop_requested():
         _loop()
     _finalize()
 ```
@@ -283,7 +282,7 @@ if __name__ == '__main__':
 
 このスクリプトを走らせると，テスト用のデータファイルが生成されます．
 ```console
-$ python3 generate-testdata.py
+$ python generate-testdata.py
 ```
 （もしコピペに失敗してエラーが出るようであれば，同じ内容のファイルが `slowdash/ExampleProjects/QuickTour/config/slowtask-testdata.py` にあります．）
 
@@ -302,7 +301,7 @@ Enter ".help" for usage hints.
 sqlite> .table
 testdata
 sqlite> .schema testdata
-CREATE TABLE testdata(datetime DATETIME, timestamp INTEGER, channel TEXT, value REAL, PRIMARY KEY(timestamp, channel));
+CREATE TABLE testdata(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel));
 sqlite> select * from testdata limit 10;
 2023-04-11 23:52:13|1681257133|ch00|0.187859
 2023-04-11 23:52:13|1681257133|ch01|-0.418021
@@ -313,14 +312,14 @@ sqlite> select * from testdata limit 10;
 
 `sqlite3` の `.schema` コマンド出力にあるとおり，データは `testdata` というテーブルに保存されていて，その構造は以下のようになっています．
 ```
-testdata(datetime DATETIME, timestamp INTEGER, channel TEXT, value REAL, PRIMARY KEY(timestamp, channel))
+testdata(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel))
 ```
 
 テスト目的のために，データのタイムスタンプは日付時刻型（SQLite では ISO 表記の文字列）のものと，整数の UNIX 時間の両方が入っていますが，通常はどちらか一方のことが多いと思います．SQLite では，タイムゾーンの扱いに罠が多いので，UNIX 時間の方がいいかもしれません．
 
 データの中身はこんな感じです:
 
-|datetime (DATETIME/TEXT)|timestamp (INTEGER)|channel (TEXT)|value (REAL)|
+|datetime (DATETIME/TEXT)|timestamp (INTEGER)|channel (VARCHAR(100))|value (REAL)|
 |----|-----|-----|-----|
 |2023-04-11 23:52:13|1681257133|ch00|0.187859|
 |2023-04-11 23:52:13|1681257133|ch01|-0.418021|
@@ -413,7 +412,8 @@ $ firefox http://localhost:18881
 ```console
 (別ターミナルを開く)
 $ cd PATH/TO/MySlowDashProject
-$ python3 ./generate-testdata.py
+$ slowdash-activate-venv
+$ python ./generate-testdata.py
 ```
 データサイズは一時間で 5MB 程度なので，しばらくは走らせ続けて大丈夫です．データファイル（`QuickTourTestData.db`）は，SlowDash が走ってなければ，いつ消しても構いません．またデータが欲しくなったら，再度 `generate-testdata.py` を走らせてください．（データファルを削除せずに走らせても問題ありません．複数同時に走らせたら変なことになると思います．）
 
@@ -421,9 +421,9 @@ $ python3 ./generate-testdata.py
 
 
 ### ブラウザでデータを見る
-ブラウザ上の青い文字のところをクリックすればいろいろとプロットを作成できます．上部の紫色は，東北大学とワシントン大学の共通テーマカラーなので我慢してください．（プロジェクト設定ファイルで変更できます．[Project Setup の章](ProjectSetup.html#styles)に説明があります．）
+ブラウザ上の青い文字のところをクリックすればいろいろとプロットを作成できます．上部の紫色は，東北大学とワシントン大学の共通テーマカラーですが，嫌ならプロジェクト設定ファイルで変更できます．[Project Setup の章](ProjectSetup.html#styles)に説明があります．
 
-右下の Tools にある New Plot Layout で新しい空のページを作ります．その中で，`Add a New Panel` を選んで，プロットを作成していきます．たぶん自明です．
+右下の Tools にある New Plot Layout で新しい空のページを作ります．その中で，`Add a New Panel` を選んで，`Time-Axis Plot` を選んで，プロットを作成していきます．たぶん自明です．
 
 左上の Channel List のチャンネル名をクリックすると，直近の時系列データのプロットを含んだページが作成されます．それを元にいろいろ追加していくこともできます．
 
@@ -486,10 +486,13 @@ $ make
 この `--recurse-submodules` を忘れることがとても多いです．そして，その場合には，異なるバージョンのソースが混ざるので，それに気づかないとデバッグがとても難しくなります．上記の `make update` を使うのがおすすめです．
 
 ## Docker コンテナ
-SlowDash をアップデートする際は，使用中のコンテナを "down" してから，ダウンロードしてあるイメージを削除してください．次の実行時に自動で新しいイメージがダウンロードされます．（これをするとプロジェクトディレクトリ以外の場所に保存していたものは失われます．コンテナ内に直接データを保存している場合や独自の拡張をしている場合は注意してください．）
+latest タグの SlowDash コンテナを使っている場合，`docker pull` コマンドで最新のものに置き換えることができます．
 ```console
-$ docker compose down
-$ docker rmi slowproj/slowdash
+$ docker pull slowproj/slowdash
+```
+または，compose のディレクトリから compose コマンドで行うこともできます．
+```console
+$ docker compose pull
 ```
 使用中の SlowDash バージョンが SlowDash のホーム画面の左上に表示されているので，ここでちゃんと更新されたかを確認できます．
 
@@ -502,8 +505,8 @@ $ cd PATH/TO/SLOWDASH/utils/testbench
 $ docker compose up
 $ docker compose down   （終了後データを消す）
 ```
-PostgreSQL, MySQL, InfluxDB, Redis, Jupyter などがすべて使えるようになります．
-（これらがすでに走っている場合は，コメントアウトかポート番号の変更が必要です．）
+PostgreSQL, MySQL, InfluxDB, Redis, MQTT, Jupyter などがすべて使えるようになります．
+（これらがすでに走っている場合は，ポートが衝突してエラーになるので，コメントアウトかポート番号の変更が必要です．）
 
 このテスト環境は，SlowDash 自体がコンテナに入っていなくても（直接実行でも）使えます．
 SlowDash をコンテナ内で使用する場合でも，設定ファイルやスクリプトの開発はコンテナの外で（SlowDash だけはターミナルで直接実行）して，ある程度完成してからコンテナに入れた方が，変更のたびにコンテナの再起動をしなくて済むので楽です．
@@ -514,9 +517,9 @@ SlowDash をコンテナ内で使用する場合でも，設定ファイルや�
 
 ### 基本認証
 
-もし内部の人を信用できない場合，最低限として，基本認証を使ってパスワードを設定することはできます．この場合は，リバースプロキシを使って HTTPS に乗せ換え，パスワードと通信を暗号化してください．
+もし内部の人を信用できない場合，最低限として，基本認証を使ってパスワードを設定することはできます．
+`SlowdashProject.yaml` に `authentication` エントリを追加し，パスワードハッシュを指定してください．
 
-基本認証の設定は，`SlowdashProject.yaml` に `authentication` エントリを追加し，パスワードハッシュを指定します．
 ```yaml
 slowdash_project:
   ...
@@ -535,16 +538,113 @@ $ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash
 }
 ```
 
-リバースプロキシの設定方法については，大規模言語モデル系の AI が詳しく教えてくれます．SlowDash の `ExampleProjects/ReverseProxy_Nginx` に Nginx を Docker Compose でリバースプロキシとして使う例もあります．もとのポートを塞いでおくのを忘れないでください．
+ここでのパスワードは，暗号化せずにやりとりされるので，基本認証を使う場合は HTTPS を使って通信を暗号化する必要があります．
+これは，外部のリバースプロキシを使って行うことが想定されています．
 
-### HTTPS
-SlowDash を ASGI モードで使っている場合，リバースプロキシの代わりに，組み込みの HTTPS サーバーを使うこともできます．SSL/TLS 鍵ファイルと認証ファイルを指定して `slowdash` を起動してください．
+SlowDash をデフォルトの ASGI モードで使っている場合は，リバースプロキシの代わりに，組み込みの HTTPS サーバーを使うこともできます．SSL/TLS 鍵ファイルと認証ファイルを指定して `slowdash` を起動してください．
 ```console
 $ slowdash  --port=18881  --ssl-keyfile=KEY_FILE  --ssl-certfile=CERT_FILE
 ...
 Listening at port 18881 (ASGI HTTPS)
 ```
 ただし，この機能は将来の SlowDash では削除されるかもしれません．長期使用するシステムでは，ちゃんとしたリバースプロキシを使用するのがいいと思います．
-Docker で Nginx または Apache を使った構成例が `ExampleProjects/ReverseProxy` にあります．
+
+# リバースプロキシ
+SlowDash はデフォルトで暗号化されていない HTTP/1.1 を使用します．これに，Nginx や Apache などの外部のリバースプロキシを接続し，HTTP/2 などに乗せ替えることで，通信を暗号化し，また，ブラウザとの間で HTTP/2 の効率的な通信を使用できるようになります．通常，ここが通信上のボトルネックで，これをするとレスポンスがかなり良くなることが多いです．（SlowDash に HTTP/2 を喋らせることもできますが，広く使われているリバースプロキシを使用する方がトラブルに遭遇したときの対処が楽です．）
+
+### Docker Compose
+SlowDash を Docker Compose で使う場合，その中に Nginx または Apache を含めてリバースプロキシとする例が `ExampleProjects/ReverseProxy` にあります．多くの場合，証明書類を置き換えるだけでそのまま使えるはずです．
+
+```yaml
+services:
+  nginx:
+    build: ./nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - slowdash
+
+  slowdash:
+    image: slowproj/slowdash
+    expose:
+      - "18881"
+    volumes:
+      - .:/project
+```
+
+ここでは SlowDash のポートは外部に接続されていないことに注意してください．
+
+`ExampleProjects/ReverseProxy/Nginx` の下には，`nginx` という名前で Nginx の設定ファイルがあります（Apache の方もほぼ同様です）．
+```console
+$ tree Nginx
+Nginx/
+├── SlowdashProject.yaml
+├── docker-compose.yaml
+└── nginx
+    ├── Dockerfile
+    ├── certs
+    │   ├── fullchain.pem
+    │   └── privkey.pem
+    ├── default.conf
+    ├── generate-htpasswd.sh
+    ├── generate-selfsigned-certificates.sh
+    └── htpasswd
+```
+使用する前に，`nginx` サブディレクトリもコピーし，さらに，その下の `certs` に証明書類を，`htpassword` ファイルにパスワードを設定しておいてください．
+`htpassword` の中身は，基本認証の `"key"` の値の一行です（上記の例で `slow:` から始まる部分）．
+内部使用のためのオレオレ証明書を，`generate-selfsigned-certificates.sh` により作成できます．
+(ホスト名が外部から解決できる場合は Let's Encrypt でちゃんとした証明書を無料で取得できます．その瞬間だけ外部からアクセスできるようにして，SlowDash を走らせる前に閉めるという方法もあるようです．）
+
+準備ができたら，`docker compose up --build` して，ブラウザから `https://localhost/slowdash/` にアクセスしてください．（`--build` オプションは，パスワードや設定ファイルを変更した場合だけ必要です．）
+
+### 直接インストール
+SlowDash にコンテナを使っていない場合でも，リバースプロキシだけを Docker で動かすこともできます．この場合の設定は，すべてを Docker Compose で使う場合とほぼ同じになります (`docker-compose.yaml` の slowdash を削除し，`nginx/defaults.conf` の `proxy_pass` をホストマシンにする)．SlowDash のポートが外部から直接アクセスできないようにファイアーウォールを設定してください．
+
+すべてを Docker でない環境で使う場合の設定方法は，使用している環境に合わせた方法を AI が詳しく教えてくれます．SlowDash では ASGI インターフェースが利用可能で，同じポート番号で WebSockets も使っている旨を伝えれば，設定ファイルを一通り書いてくれます．暗号化していないもとのポートを塞いでおくのを忘れないでください．参考までに，上記の例で Nginx を Docker Compose 内でリバースプロキシとして使用する場合の設定ファイルを示します．だいたい似たような感じになると思います．
+
+```conf
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name localhost;   # これは自分のホスト名に変える
+
+    ssl_certificate /etc/nginx/certs/fullchain.pem;
+    ssl_certificate_key /etc/nginx/certs/privkey.pem;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers EECDH+AESGCM:EDH+AESGCM;
+    ssl_prefer_server_ciphers off;
+
+    auth_basic "SlowDash Password Required";
+    auth_basic_user_file /etc/nginx/.htpasswd;
+
+    location /slowdash/ {
+        proxy_pass http://slowdash:18881/;
+
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # SlowDash では Long Polling を使っているので，タイムアウトは長くする
+        proxy_read_timeout 8640000s;  # 1000 days for long polling used in SlowDash
+        proxy_send_timeout 8640000s;  # 1000 days for long polling used in SlowDash
+        proxy_connect_timeout 10s;
+    }
+}
+
+# HTTP への接続は HTTPS に転送する
+server {
+    listen 80;
+    server_name localhost;
+    return 301 https://$host$request_uri;
+}
+```
+
 
 <div style="margin-bottom:10rem"/>

@@ -128,8 +128,3 @@ docker:
 	docker rmi -f slowdash slowpy-notebook
 	docker build -t slowdash .
 	docker build -t slowpy-notebook -f ./lib/slowpy/Dockerfile ./lib/slowpy
-
-
-docker-remove-images:
-	docker rmi -f slowdash slowpy-notebook
-	docker rmi -f slowproj/slowdash slowproj/slowpy-notebook

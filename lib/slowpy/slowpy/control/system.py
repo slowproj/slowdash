@@ -276,7 +276,11 @@ class _DataclassInstanceExportAdapterNode(spc.ControlVariableNode):
                 logging.error(f'undefined field "{k}" for dataclass "{type(self.value)}"')
                 continue
             try:
-                setattr(self.value, k, ann[k](value))
+                vv = ann[k](v)
+            except:
+                logging.error(f'unable to convert value "{v}" to field "{k}" of dataclass "{type(self.value)}" (type {an[k]})')
+            try:
+                setattr(self.value, k, vv)
             except:
                 logging.error(f'unable to assign value "{v}" to field "{k}" of dataclass "{type(self.value)}"')
         

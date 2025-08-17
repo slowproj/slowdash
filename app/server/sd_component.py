@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 25 December 2024 #
 
 import sys, os, copy, glob, inspect, logging, traceback
-import importlib.machinery
+import importlib
 import slowlette
 
 
@@ -164,13 +164,18 @@ class PluginComponent(Component):
             logging.error(f'unable to find plugin: {plugin_name}')
             return None
 
-        try:
-            module = importlib.machinery.SourceFileLoader(plugin_file_name, plugin_file_name).load_module()
-        except Exception as e:
-            logging.error(f'unable to load plugin: {plugin_name}: %s' % str(e))
-            logging.error(traceback.format_exc())
-            return None
-
+        module = sys.modules.get(plugin_name, None)
+        if module is None:
+            try:
+                spec = importlib.util.spec_from_file_location(plugin_name, plugin_file_name)
+                module = importlib.util.module_from_spec(spec)
+                sys.modules[plugin_name] = module
+                spec.loader.exec_module(module)
+            except Exception as e:
+                logging.error(f'unable to load plugin: {plugin_file_name}: %s' % str(e))
+                logging.error(traceback.format_exc())
+                return None
+        
         defined_classes = [
             name for name, obj in inspect.getmembers(module, inspect.isclass)
             if obj.__module__ == module.__name__

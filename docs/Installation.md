@@ -37,13 +37,10 @@ No local installation is required. Simply pull a SlowDash image from one of thes
 Select either a specific version tag from the repository or use `latest` for the most recent stable release.
 
 ### Updating Docker Images
-For users of the `:latest` tag from DockerHub or GitHub Container Registry, update to the newest version by removing the local images:
+For users of the `:latest` tag from DockerHub or GitHub Container Registry, update to the newest version by running `docker pull`
 ```console
-$ docker rmi -f slowproj/slowdash slowproj/slowpy-notebook
+$ docker pull slowproj/slowdash:latest
 ```
-(Alternative: Use `make remove-docker-images` in the SlowDash directory. You can use tab completion for convenience: `make r[Tab]`.)
-
-Note: This operation removes your current images. Be careful not to lose your working context inside the images. The SlowDash version number is shown in the upper left corner of the home page.
 
 
 ## Building Images Locally

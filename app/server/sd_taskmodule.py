@@ -571,7 +571,7 @@ class TaskModuleComponent(Component):
                 if await self.slowpy_control.set_variable(name, value):
                     result = True
 
-        return result
+        return None if result is None else slowlette.Response(200)
         
     
     @slowlette.post('/api/control/task/{taskname}')

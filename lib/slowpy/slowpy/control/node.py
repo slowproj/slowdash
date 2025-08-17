@@ -237,24 +237,33 @@ class ControlNode:
         
     @dualmethod
     def import_control_module(this, module_name, search_dirs=[]):
-        filename = 'control_%s.py' % module_name
-        this_search_dirs = search_dirs + [
-            os.path.abspath(os.getcwd()),
-            os.path.abspath(os.path.dirname(__file__))
-        ]
-        for module_dir in this_search_dirs:
-            filepath = os.path.join(module_dir, filename)
-            if os.path.isfile(filepath):
-                break
-        else:
-            raise ControlException('unable to find control plugin: %s' % module_name)
+        module = sys.modules.get(module_name, None)
+        if module is None:
+            filename = 'control_%s.py' % module_name
+            this_search_dirs = search_dirs + [
+                os.path.abspath(os.getcwd()),
+                os.path.abspath(os.path.dirname(__file__))
+            ]
+            for module_dir in this_search_dirs:
+                filepath = os.path.join(module_dir, filename)
+                if os.path.isfile(filepath):
+                    break
+            else:
+                raise ControlException('unable to find control plugin: %s' % module_name)
         
-        try:
-            module = importlib.machinery.SourceFileLoader(filename, filepath).load_module()
-        except Exception as e:
-            print(traceback.format_exc())
+            try:
+                spec = importlib.util.spec_from_file_location(module_name, filepath)
+                module = importlib.util.module_from_spec(spec)
+                sys.modules[module_name] = module
+                spec.loader.exec_module(module)
+            except Exception as e:
+                if module_name in sys.modules:
+                    del sys.modules[module_name]
+                print(traceback.format_exc())
+
+        if module is None:
             raise ControlException('unable to load control module: %s: %s' % (module_name, str(e)))
-        
+            
         node_classes = []
         for class_name, NodeClass in module.__dict__.items():
             if not inspect.isclass(NodeClass):

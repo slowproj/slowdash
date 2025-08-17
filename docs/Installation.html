@@ -163,16 +163,10 @@ href="https://github.com/slowproj/slowdash/pkgs/container/slowdash">ghcr.io/slow
 <code>latest</code> for the most recent stable release.</p>
 <h3 id="updating-docker-images">Updating Docker Images</h3>
 <p>For users of the <code>:latest</code> tag from DockerHub or GitHub
-Container Registry, update to the newest version by removing the local
-images:</p>
+Container Registry, update to the newest version by running
+<code>docker pull</code></p>
 <div class="sourceCode" id="cb1"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker rmi -f slowproj/slowdash slowproj/slowpy-notebook</span></span></code></pre></div>
-<p>(Alternative: Use <code>make remove-docker-images</code> in the
-SlowDash directory. You can use tab completion for convenience:
-<code>make r[Tab]</code>.)</p>
-<p>Note: This operation removes your current images. Be careful not to
-lose your working context inside the images. The SlowDash version number
-is shown in the upper left corner of the home page.</p>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker pull slowproj/slowdash:latest</span></span></code></pre></div>
 <h2 id="building-images-locally">Building Images Locally</h2>
 <h3 id="initial-setup-1">Initial Setup</h3>
 <div class="sourceCode" id="cb2"><pre

@@ -13,7 +13,7 @@ class DataSource_TableStore(DataSource):
         
         self._configure(params)        
         self.channels_scanned = False
-
+        
         
     # override this
     async def _get_tag_values_from_data(self, schema):
@@ -86,6 +86,15 @@ class DataSource_TableStore(DataSource):
         return result
 
     
+    def public_config(self):
+        return {
+            'schemata': {
+                'time_series': [ str(s) for s in self.ts_schemata ],
+                'object': [ str(s) for s in self.obj_schemata ],
+                'object_time_series': [ str(s) for s in self.objts_schemata ],
+            },
+        }
+        
     def _configure(self, params):
         def load_schema(params, entrytype):
             schema_list = []
@@ -228,7 +237,7 @@ class DataSource_TableStore(DataSource):
 
         tag_values, fields, name_mapping = schema.get_query_tagvalues_fields(target_channels)
         if len(fields) < 1:
-            return result
+            return result               
 
         query_result_columns, query_result_table = await self._execute_query(
             schema.table, 

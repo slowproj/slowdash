@@ -170,7 +170,7 @@ class SquareItem extends SingleDisplayItem {
         });
         this.value_label = $('<text>', 'svg').appendTo(g).text('---').attr({
             "x": 10, "y": 35,
-            "fill": this.panelConfig.color?.base ?? this.style.strokeColor,
+            "fill": this.panelConfig.color.base,
             "fill-opacity": this.panelConfig.color?.value_opacity ?? 1.0,
             "font-size": 15,
             "font-weight": 'bold',
@@ -184,24 +184,24 @@ class SquareItem extends SingleDisplayItem {
 
         this.gauge = null;
         this.gauge_length = 83;
-        const gauge_min = parseFloat(this.config.gauge?.min) || 0;
-        const gauge_max = parseFloat(this.config.gauge?.max) || gauge_min;
+        const gauge_min = parseFloat(this.config.gauge?.min);
+        const gauge_max = parseFloat(this.config.gauge?.max);
         if (gauge_min < gauge_max) {
-            const gauge_opacity = parseFloat(this.panelConfig.color?.gauge_opacity) || 0.5;
-            const tile_opacity = parseFloat(this.panelConfig.color?.tile_opacity) || 0.1;
+            const gauge_opacity = parseFloat(this.panelConfig.color?.gauge_opacity ?? 0.4);
+            const tile_opacity = parseFloat(this.panelConfig.color?.tile_opacity ?? 0.1);
             const gauge_base_opacity = Math.max(0, Math.min(1, 0.8 * tile_opacity + 0.2 * gauge_opacity));
             $('<rect>', 'svg').appendTo(g).attr({
                 "x": 12, "y": 55,
                 "width": this.gauge_length,
                 "height": 10,
-                "fill": this.panelConfig.color?.base ?? "gray",
+                "fill": this.panelConfig.color.base,
                 "fill-opacity": gauge_base_opacity,
             });
             this.gauge = $('<rect>', 'svg').appendTo(g).attr({
                 "x": 12, "y": 55,
                 "width": 0,
                 "height": 10,
-                "fill": this.panelConfig.color?.base ?? "gray",
+                "fill": this.panelConfig.color.base,
                 "fill-opacity": gauge_opacity,
             });
             this.gauge_min = gauge_min;
@@ -210,17 +210,17 @@ class SquareItem extends SingleDisplayItem {
 
             if (this.config.ranges) {
                 for (let range of [ 'error', 'warn', 'normal' ]) {
-                    const range_min = parseFloat(this.config.ranges[range].min) || 0;
-                    const range_max = parseFloat(this.config.ranges[range].max) || range_min;
+                    const range_min = parseFloat(this.config.ranges[range].min ?? 0);
+                    const range_max = parseFloat(this.config.ranges[range].max ?? range_min);
                     if ((range_min < range_max) && this.config.ranges[range].color) {
                         const x0 = (range_min - this.gauge_min) / (this.gauge_max - this.gauge_min);
                         const x1 = (range_max - this.gauge_min) / (this.gauge_max - this.gauge_min);
                         const r0 = Math.min(Math.max(x0, 0), 1);
                         const r1 = Math.min(Math.max(x1, 0), 1);
                         $('<rect>', 'svg').appendTo(g).attr({
-                            "x": 12 + this.gauge_length*r0, "y": 63,
+                            "x": 12 + this.gauge_length*r0, "y": 64,
                             "width": this.gauge_length*(r1-r0),
-                            "height": 2,
+                            "height": 1,
                             "fill": this.config.ranges[range].color,
                             "fill-opacity": 1,
                         });
@@ -236,7 +236,7 @@ class SquareItem extends SingleDisplayItem {
                 "labelPosition": "bottom",
                 "numberOfTicks": 1,
                 "frameThickness": 0,
-                "frameColor": this.panelConfig.color?.base ?? this.style.strokeColor,
+                "frameColor": this.panelConfig.color.base,
             });
             this.scale.draw(scale_g);
         }
@@ -258,8 +258,8 @@ class SquareItem extends SingleDisplayItem {
         let range_color = null;
         if (this.config.ranges) {
             for (let range of [ 'normal', 'warn', 'error' ]) {
-                const range_min = parseFloat(this.config.ranges[range].min) || 0;
-                const range_max = parseFloat(this.config.ranges[range].max) || range_min;
+                const range_min = parseFloat(this.config.ranges[range].min ?? 0);
+                const range_max = parseFloat(this.config.ranges[range].max ?? range_min);
                 if ((value >= range_min) && (value < range_max)) {
                     range_color = this.config.ranges[range].color ?? null;
                     break;
@@ -267,7 +267,7 @@ class SquareItem extends SingleDisplayItem {
             }
         }
         if (range_color === null) {
-            range_color = this.panelConfig.color?.base ?? 'gray';
+            range_color = this.panelConfig.color.base;
         }
         
         if (this.panelConfig.ranges?.apply_to_tile) {
@@ -399,6 +399,9 @@ export class SinglesPanel extends Panel {
         if (this.config.item_type === undefined) {
             this.config.item_type = 'square';
         }
+        if (! this.config.color?.base) {
+            this.config.color = { base: this.style.strokeColor };
+        }
 
         let rows = this.config.grid?.rows ?? 0;
         let cols = this.config.grid?.columns ?? 0;
@@ -492,11 +495,11 @@ export class SinglesPanel extends Panel {
         if (! this.config.margin) {
             this.config.margin = { top: 0, right: 0, bottom: 0, left: 0 };
         }
-        if (! this.config.color) {
+        if (! this.config.color?.value_opacity) {
             this.config.color = {
-                base: this.style.strokeColor,
+                base: this.config.color?.base ?? this.style.strokeColor,
                 value_opacity: 1.0,
-                gauge_opacity: 0.5,
+                gauge_opacity: 0.4,
                 tile_opacity: 0.1,
             };
         }

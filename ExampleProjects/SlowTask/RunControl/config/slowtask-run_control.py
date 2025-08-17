@@ -10,16 +10,14 @@ class RunSetting:
     run_length: int = 3600
     repeat: bool = False
     offline: bool = False
+run_setting = RunSetting()
         
 @dataclass
 class RunStatus:
     running: bool = False
     start_time: float = 0
     lapse: float = 0
-        
-run_setting, run_status = RunSetting(), RunStatus()
-ctrl.export(run_setting, name='run_setting')
-ctrl.export(run_status, name='run_status')
+run_status = RunStatus()
 
 
 def save_run_setting():
@@ -40,6 +38,8 @@ def load_run_setting():
     
 async def _initialize():
     load_run_setting()
+    ctrl.export(run_setting, name='run_setting')
+    ctrl.export(run_status, name='run_status')
 
 
 async def _finalize():

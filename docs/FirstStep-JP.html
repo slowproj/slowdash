@@ -107,6 +107,8 @@ id="toc-直接インストール">直接インストール</a></li>
 id="toc-動作確認用テスト環境">動作確認用テスト環境</a></li>
 <li><a href="#セキュリティについて"
 id="toc-セキュリティについて">セキュリティについて</a></li>
+<li><a href="#リバースプロキシ"
+id="toc-リバースプロキシ">リバースプロキシ</a></li>
 </ul>
 </nav>
 </div>
@@ -232,7 +234,7 @@ JavaScript
 <li>高度なデータ統合で DX を推進します．</li>
 </ul>
 <h1 id="インストール">インストール</h1>
-<h3 id="動作環境">動作環境</h3>
+<h3 id="サーバー側動作環境">サーバー側動作環境</h3>
 <h4 id="docker">Docker</h4>
 <p>Docker があれば，DockerHub または GitHub CR にある SlowDash
 のイメージがすぐに利用できます (Linux / Windows WSL / MacOS)．</p>
@@ -245,22 +247,20 @@ href="https://github.com/slowproj/slowdash/pkgs/container/slowdash">https://gith
 <p>ただ，最初から Docker
 を使うと設定ファイルの扱いなどが面倒だと思います．ここでは，Docker
 を使う手順を最後に解説します．</p>
-<h4 id="標準インストール-bare-metal">標準インストール (bare-metal)</h4>
+<h4 id="標準インストール">標準インストール</h4>
 <p>基本的に Python 3 が動けばすぐ使えます．</p>
 <ul>
 <li>UNIX 風の OS．Ubuntu で開発，macOS とか Windows の WSL
 でも動いた．WinPython でも動くらしい．</li>
 <li>Python 3.9 以上と venv</li>
-<li>ブラウザ．Firefox で開発していて，たまに Chrome と Edge と Safari
-でテストしている．
-<ul>
-<li>タブレットや携帯などのモバイルデバイス上でもそこそこ動作する．プロットの移動やズームは二本指で．</li>
-</ul></li>
 </ul>
 <p>ここでのインストールでは，venv
 を使用してそこに必要なパッケージを自動インストールするので，手動で
 Python のパッケージなどを準備する必要はありません．(venv
 を使わずにインストールすることもできます．)</p>
+<h3 id="ウェブブラウザ">ウェブブラウザ</h3>
+<p>Firefox で開発していて，たまに Chrome と Edge と Safari
+でテストしています．タブレットや携帯などのモバイルデバイス上でもそこそこ動作します（プロットの移動やズームは二本指です）．</p>
 <h3 id="ダウンロード">ダウンロード</h3>
 <p>GitHub からダウンロードできます．
 サブモジュールを使っているので，<code>--recurse-submodules</code>
@@ -406,41 +406,39 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <p>SlowPy を使って，一秒ごとに乱数の値を SQLite
 に書き込むスクリプトを作成します．</p>
 <div class="sourceCode" id="cb15"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> DummyDevice_RandomWalk, ControlSystem</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_SQLite, SimpleLongFormat</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ControlSystem, RandomWalkDevice</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_SQLite, LongTableFormat</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TestDataFormat(SimpleLongFormat):</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    schema_numeric <span class="op">=</span> <span class="st">&#39;(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel))&#39;</span></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> insert_numeric_data(<span class="va">self</span>, cur, timestamp, channel, value):</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>        cur.execute(<span class="ss">f&#39;INSERT INTO </span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>table<span class="sc">}</span><span class="ss"> VALUES(CURRENT_TIMESTAMP,%d,&quot;%s&quot;,%f)&#39;</span> <span class="op">%</span> (timestamp, channel, value))</span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_SQLite(<span class="st">&#39;sqlite:///QuickTourTestData.db&#39;</span>, table<span class="op">=</span><span class="st">&quot;testdata&quot;</span>, <span class="bu">format</span><span class="op">=</span>TestDataFormat())</span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> DummyDevice_RandomWalk(n<span class="op">=</span><span class="dv">4</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TestDataFormat(LongTableFormat):</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    schema_numeric <span class="op">=</span> <span class="st">&#39;(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel))&#39;</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> insert_numeric_data(<span class="va">self</span>, cur, timestamp, channel, value):</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>        cur.execute(<span class="ss">f&#39;INSERT INTO </span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>table<span class="sc">}</span><span class="ss"> VALUES(CURRENT_TIMESTAMP,%d,?,%f)&#39;</span> <span class="op">%</span> (timestamp, value), (channel,))</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>ctrl <span class="op">=</span> ControlSystem()</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> RandomWalkDevice(n<span class="op">=</span><span class="dv">4</span>)</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_SQLite(<span class="st">&#39;sqlite:///QuickTourTestData.db&#39;</span>, table<span class="op">=</span><span class="st">&quot;testdata&quot;</span>, table_format<span class="op">=</span>TestDataFormat())</span>
 <span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> ch <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">4</span>):</span>
-<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>        data <span class="op">=</span> device.read(ch)</span>
-<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>        datastore.append(data, tag<span class="op">=</span><span class="st">&quot;ch</span><span class="sc">%02d</span><span class="st">&quot;</span><span class="op">%</span>ch)</span>
-<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>    ControlSystem.sleep(<span class="dv">1</span>)</span>
-<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _finalize():</span>
-<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>    datastore.close()</span>
-<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
-<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>    ControlSystem.stop_by_signal()</span>
-<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="kw">not</span> ControlSystem.is_stop_requested():</span>
-<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a>        _loop()</span>
-<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>    _finalize()</span></code></pre></div>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> ch <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">4</span>):</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>        data <span class="op">=</span> device.read(ch)</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>        datastore.append(data, tag<span class="op">=</span><span class="st">&quot;ch</span><span class="sc">%02d</span><span class="st">&quot;</span><span class="op">%</span>ch)</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _finalize():</span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>    datastore.close()</span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>    ctrl.stop_by_signal()</span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="kw">not</span> ctrl.is_stop_requested():</span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>        _loop()</span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>    _finalize()</span></code></pre></div>
 <p>このスクリプトの詳細は公式ドキュメントの <a
 href="ControlsScript.html">Controls
 セクション</a>に説明があります．ここでは，上記の内容をコピペして，<code>generate-testdata.py</code>
 というファイル名でプロジェクトディレクトリに保存してください．</p>
 <p>このスクリプトを走らせると，テスト用のデータファイルが生成されます．</p>
 <div class="sourceCode" id="cb16"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 generate-testdata.py</span></span></code></pre></div>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python generate-testdata.py</span></span></code></pre></div>
 <p>（もしコピペに失敗してエラーが出るようであれば，同じ内容のファイルが
 <code>slowdash/ExampleProjects/QuickTour/config/slowtask-testdata.py</code>
 にあります．）</p>
@@ -459,7 +457,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>sqlite&gt; .table</span>
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>testdata</span>
 <span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>sqlite&gt; .schema testdata</span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>CREATE TABLE testdata(datetime DATETIME, timestamp INTEGER, channel TEXT, value REAL, PRIMARY KEY(timestamp, channel));</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>CREATE TABLE testdata(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel));</span>
 <span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>sqlite&gt; select * from testdata limit 10;</span>
 <span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>2023-04-11 23:52:13|1681257133|ch00|0.187859</span>
 <span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>2023-04-11 23:52:13|1681257133|ch01|-0.418021</span>
@@ -469,7 +467,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <p><code>sqlite3</code> の <code>.schema</code>
 コマンド出力にあるとおり，データは <code>testdata</code>
 というテーブルに保存されていて，その構造は以下のようになっています．</p>
-<pre><code>testdata(datetime DATETIME, timestamp INTEGER, channel TEXT, value REAL, PRIMARY KEY(timestamp, channel))</code></pre>
+<pre><code>testdata(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel))</code></pre>
 <p>テスト目的のために，データのタイムスタンプは日付時刻型（SQLite では
 ISO 表記の文字列）のものと，整数の UNIX
 時間の両方が入っていますが，通常はどちらか一方のことが多いと思います．SQLite
@@ -487,7 +485,7 @@ ISO 表記の文字列）のものと，整数の UNIX
 <tr class="header">
 <th>datetime (DATETIME/TEXT)</th>
 <th>timestamp (INTEGER)</th>
-<th>channel (TEXT)</th>
+<th>channel (VARCHAR(100))</th>
 <th>value (REAL)</th>
 </tr>
 </thead>
@@ -623,7 +621,8 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <div class="sourceCode" id="cb27"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>(別ターミナルを開く)</span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/MySlowDashProject</span></span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 ./generate-testdata.py</span></span></code></pre></div>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python ./generate-testdata.py</span></span></code></pre></div>
 <p>データサイズは一時間で 5MB
 程度なので，しばらくは走らせ続けて大丈夫です．データファイル（<code>QuickTourTestData.db</code>）は，SlowDash
 が走ってなければ，いつ消しても構いません．またデータが欲しくなったら，再度
@@ -633,9 +632,9 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 です．それなりに上品に止まります．だめだったら，<code>Ctrl</code>-<code>\</code>
 を使ってください．</p>
 <h3 id="ブラウザでデータを見る">ブラウザでデータを見る</h3>
-<p>ブラウザ上の青い文字のところをクリックすればいろいろとプロットを作成できます．上部の紫色は，東北大学とワシントン大学の共通テーマカラーなので我慢してください．（プロジェクト設定ファイルで変更できます．<a
+<p>ブラウザ上の青い文字のところをクリックすればいろいろとプロットを作成できます．上部の紫色は，東北大学とワシントン大学の共通テーマカラーですが，嫌ならプロジェクト設定ファイルで変更できます．<a
 href="ProjectSetup.html#styles">Project Setup
-の章</a>に説明があります．）</p>
+の章</a>に説明があります．</p>
 <p>右下の Tools にある New Plot Layout
 で新しい空のページを作ります．その中で，<code>Add a New Panel</code>
 を選んで，プロットを作成していきます．たぶん自明です．</p>
@@ -710,11 +709,15 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 を忘れることがとても多いです．そして，その場合には，異なるバージョンのソースが混ざるので，それに気づかないとデバッグがとても難しくなります．上記の
 <code>make update</code> を使うのがおすすめです．</p>
 <h2 id="docker-コンテナ">Docker コンテナ</h2>
-<p>SlowDash をアップデートする際は，使用中のコンテナを “down”
-してから，ダウンロードしてあるイメージを削除してください．次の実行時に自動で新しいイメージがダウンロードされます．（これをするとプロジェクトディレクトリ以外の場所に保存していたものは失われます．コンテナ内に直接データを保存している場合や独自の拡張をしている場合は注意してください．）</p>
+<p>latest タグの SlowDash
+コンテナを使っている場合，<code>docker pull</code>
+コマンドで最新のものに置き換えることができます．</p>
 <div class="sourceCode" id="cb34"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker rmi slowproj/slowdash</span></span></code></pre></div>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker pull slowproj/slowdash</span></span></code></pre></div>
+<p>または，compose のディレクトリから compose
+コマンドで行うこともできます．</p>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose pull</span></span></code></pre></div>
 <p>使用中の SlowDash バージョンが SlowDash
 のホーム画面の左上に表示されているので，ここでちゃんと更新されたかを確認できます．</p>
 <h1 id="動作確認用テスト環境">動作確認用テスト環境</h1>
@@ -722,13 +725,13 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 などを集めたコンテナが <code>slowdash/utils/testbench</code>
 にあります．
 システム開発時に本番用のデータベースを使いたくない場合や，開発用サーバのインストールが面倒な場合に，すぐに使えてすぐに消せて便利です．</p>
-<div class="sourceCode" id="cb35"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH/utils/testbench</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down   （終了後データを消す）</span></span></code></pre></div>
-<p>PostgreSQL, MySQL, InfluxDB, Redis, Jupyter
+<div class="sourceCode" id="cb36"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH/utils/testbench</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down   （終了後データを消す）</span></span></code></pre></div>
+<p>PostgreSQL, MySQL, InfluxDB, Redis, MQTT, Jupyter
 などがすべて使えるようになります．
-（これらがすでに走っている場合は，コメントアウトかポート番号の変更が必要です．）</p>
+（これらがすでに走っている場合は，ポートが衝突してエラーになるので，コメントアウトかポート番号の変更が必要です．）</p>
 <p>このテスト環境は，SlowDash
 自体がコンテナに入っていなくても（直接実行でも）使えます． SlowDash
 をコンテナ内で使用する場合でも，設定ファイルやスクリプトの開発はコンテナの外で（SlowDash
@@ -740,46 +743,155 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 のポートを外部からアクセスできるところに開けないようにしてください．外部からは，VPN
 もしくは SSH のトンネルを経由して使用するのが想定です．</p>
 <h3 id="基本認証">基本認証</h3>
-<p>もし内部の人を信用できない場合，最低限として，基本認証を使ってパスワードを設定することはできます．この場合は，リバースプロキシを使って
-HTTPS に乗せ換え，パスワードと通信を暗号化してください．</p>
-<p>基本認証の設定は，<code>SlowdashProject.yaml</code> に
-<code>authentication</code>
-エントリを追加し，パスワードハッシュを指定します．</p>
-<div class="sourceCode" id="cb36"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="at">  ...</span></span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">authentication</span><span class="kw">:</span></span>
-<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> Basic</span></span>
-<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">key</span><span class="kw">:</span><span class="at"> slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS</span></span></code></pre></div>
+<p>もし内部の人を信用できない場合，最低限として，基本認証を使ってパスワードを設定することはできます．
+<code>SlowdashProject.yaml</code> に <code>authentication</code>
+エントリを追加し，パスワードハッシュを指定してください．</p>
+<div class="sourceCode" id="cb37"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="at">  ...</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">authentication</span><span class="kw">:</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> Basic</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">key</span><span class="kw">:</span><span class="at"> slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS</span></span></code></pre></div>
 <p>パスワードハッシュは，Apache の bcrypt
 と同じ形式ですが，<code>slowdash/utils</code> にある
 <code>slowdash-generate-key.py</code>
 プログラムで作ることもできます．</p>
-<div class="sourceCode" id="cb37"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash</span></span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    &quot;type&quot;: &quot;Basic&quot;,</span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    &quot;key&quot;: &quot;slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS&quot;</span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<p>リバースプロキシの設定方法については，大規模言語モデル系の AI
-が詳しく教えてくれます．SlowDash の
-<code>ExampleProjects/ReverseProxy_Nginx</code> に Nginx を Docker
-Compose
-でリバースプロキシとして使う例もあります．もとのポートを塞いでおくのを忘れないでください．</p>
-<h3 id="https">HTTPS</h3>
-<p>SlowDash を ASGI
-モードで使っている場合，リバースプロキシの代わりに，組み込みの HTTPS
+<div class="sourceCode" id="cb38"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    &quot;type&quot;: &quot;Basic&quot;,</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    &quot;key&quot;: &quot;slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS&quot;</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>ここでのパスワードは，暗号化せずにやりとりされるので，基本認証を使う場合は
+HTTPS を使って通信を暗号化する必要があります．
+これは，外部のリバースプロキシを使って行うことが想定されています．</p>
+<p>SlowDash をデフォルトの ASGI
+モードで使っている場合は，リバースプロキシの代わりに，組み込みの HTTPS
 サーバーを使うこともできます．SSL/TLS 鍵ファイルと認証ファイルを指定して
 <code>slowdash</code> を起動してください．</p>
-<div class="sourceCode" id="cb38"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash  --port=18881  --ssl-keyfile=KEY_FILE  --ssl-certfile=CERT_FILE</span></span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>...</span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>Listening at port 18881 (ASGI HTTPS)</span></code></pre></div>
+<div class="sourceCode" id="cb39"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash  --port=18881  --ssl-keyfile=KEY_FILE  --ssl-certfile=CERT_FILE</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>Listening at port 18881 (ASGI HTTPS)</span></code></pre></div>
 <p>ただし，この機能は将来の SlowDash
-では削除されるかもしれません．長期使用するシステムでは，ちゃんとしたリバースプロキシを使用するのがいいと思います．
-Docker で Nginx または Apache を使った構成例が
-<code>ExampleProjects/ReverseProxy</code> にあります．</p>
+では削除されるかもしれません．長期使用するシステムでは，ちゃんとしたリバースプロキシを使用するのがいいと思います．</p>
+<h1 id="リバースプロキシ">リバースプロキシ</h1>
+<p>SlowDash はデフォルトで暗号化されていない HTTP/1.1
+を使用します．これに，Nginx や Apache
+などの外部のリバースプロキシを接続し，HTTP/2
+などに乗せ替えることで，通信を暗号化し，また，ブラウザとの間で HTTP/2
+の効率的な通信を使用できるようになります．通常，ここが通信上のボトルネックで，これをするとレスポンスがかなり良くなることが多いです．（SlowDash
+に HTTP/2
+を喋らせることもできますが，広く使われているリバースプロキシを使用する方がトラブルに遭遇したときの対処が楽です．）</p>
+<h3 id="docker-compose">Docker Compose</h3>
+<p>SlowDash を Docker Compose で使う場合，その中に Nginx または Apache
+を含めてリバースプロキシとする例が
+<code>ExampleProjects/ReverseProxy</code>
+にあります．多くの場合，証明書類を置き換えるだけでそのまま使えるはずです．</p>
+<div class="sourceCode" id="cb40"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">nginx</span><span class="kw">:</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">build</span><span class="kw">:</span><span class="at"> ./nginx</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;80:80&quot;</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;443:443&quot;</span></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span></span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> slowdash</span></span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowdash</span></span>
+<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">expose</span><span class="kw">:</span></span>
+<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881&quot;</span></span>
+<span id="cb40-14"><a href="#cb40-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb40-15"><a href="#cb40-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> .:/project</span></span></code></pre></div>
+<p>ここでは SlowDash
+のポートは外部に接続されていないことに注意してください．</p>
+<p><code>ExampleProjects/ReverseProxy/Nginx</code>
+の下には，<code>nginx</code> という名前で Nginx
+の設定ファイルがあります（Apache の方もほぼ同様です）．</p>
+<div class="sourceCode" id="cb41"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ tree Nginx</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>Nginx/</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>├── SlowdashProject.yaml</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>├── docker-compose.yaml</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>└── nginx</span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>    ├── Dockerfile</span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>    ├── certs</span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>    │   ├── fullchain.pem</span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a>    │   └── privkey.pem</span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a>    ├── default.conf</span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a>    ├── generate-htpasswd.sh</span>
+<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a>    ├── generate-selfsigned-certificates.sh</span>
+<span id="cb41-13"><a href="#cb41-13" aria-hidden="true" tabindex="-1"></a>    └── htpasswd</span></code></pre></div>
+<p>使用する前に，<code>nginx</code>
+サブディレクトリもコピーし，さらに，その下の <code>certs</code>
+に証明書類を，<code>htpassword</code>
+ファイルにパスワードを設定しておいてください． <code>htpassword</code>
+の中身は，基本認証の <code>"key"</code> の値の一行です（上記の例で
+<code>slow:</code> から始まる部分）．
+内部使用のためのオレオレ証明書を，<code>generate-selfsigned-certificates.sh</code>
+により作成できます． (ホスト名が外部から解決できる場合は Let’s Encrypt
+でちゃんとした証明書を無料で取得できます．その瞬間だけ外部からアクセスできるようにして，SlowDash
+を走らせる前に閉めるという方法もあるようです．）</p>
+<p>準備ができたら，<code>docker compose up --build</code>
+して，ブラウザから <code>https://localhost/slowdash/</code>
+にアクセスしてください．（<code>--build</code>
+オプションは，パスワードや設定ファイルを変更した場合だけ必要です．）</p>
+<h3 id="直接インストール-1">直接インストール</h3>
+<p>SlowDash にコンテナを使っていない場合でも，リバースプロキシだけを
+Docker で動かすこともできます．この場合の設定は，すべてを Docker Compose
+で使う場合とほぼ同じになります (<code>docker-compose.yaml</code> の
+slowdash を削除し，<code>nginx/defaults.conf</code> の
+<code>proxy_pass</code> をホストマシンにする)．SlowDash
+のポートが外部から直接アクセスできないようにファイアーウォールを設定してください．</p>
+<p>すべてを Docker
+でない環境で使う場合の設定方法は，使用している環境に合わせた方法を AI
+が詳しく教えてくれます．SlowDash では ASGI
+インターフェースが利用可能で，同じポート番号で WebSockets
+も使っている旨を伝えれば，設定ファイルを一通り書いてくれます．暗号化していないもとのポートを塞いでおくのを忘れないでください．参考までに，上記の例で
+Nginx を Docker Compose
+内でリバースプロキシとして使用する場合の設定ファイルを示します．だいたい似たような感じになると思います．</p>
+<pre class="conf"><code>server {
+    listen 443 ssl;
+    http2 on;
+    server_name localhost;   # これは自分のホスト名に変える
+
+    ssl_certificate /etc/nginx/certs/fullchain.pem;
+    ssl_certificate_key /etc/nginx/certs/privkey.pem;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers EECDH+AESGCM:EDH+AESGCM;
+    ssl_prefer_server_ciphers off;
+
+    auth_basic &quot;SlowDash Password Required&quot;;
+    auth_basic_user_file /etc/nginx/.htpasswd;
+
+    location /slowdash/ {
+        proxy_pass http://slowdash:18881/;
+
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection &quot;upgrade&quot;;
+        
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # SlowDash では Long Polling を使っているので，タイムアウトは長くする
+        proxy_read_timeout 8640000s;  # 1000 days for long polling used in SlowDash
+        proxy_send_timeout 8640000s;  # 1000 days for long polling used in SlowDash
+        proxy_connect_timeout 10s;
+    }
+}
+
+# HTTP への接続は HTTPS に転送する
+server {
+    listen 80;
+    server_name localhost;
+    return 301 https://$host$request_uri;
+}</code></pre>
 <div style="margin-bottom:10rem"/>
 
 

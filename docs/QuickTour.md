@@ -25,17 +25,17 @@ If you're using Docker, the directory you just created will be mounted as a volu
 # Test Data Generation
 We'll use the SlowPy Python library, included with the SlowDash package, to generate test data. Create a file named `generate-testdata.py` in your project directory with the following code:
 ```python
-import slowpy.control
-import slowpy.store
+from slowpy.control import ControlSystem, RandomWalkDevice
+from slowpy.store import DataStore_SQLite, LongTableFormat
 
-class TestDataFormat(slowpy.store.LongTableFormat):
-    schema_numeric = '(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel))'
+class TestDataFormat(LongTableFormat):
+    schema_numeric = '(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel))'
     def insert_numeric_data(self, cur, timestamp, channel, value):
-        cur.execute(f'INSERT INTO {self.table} VALUES(CURRENT_TIMESTAMP,{int(timestamp)},?,{float(value)})', (str(channel),))
+        cur.execute(f'INSERT INTO {self.table} VALUES(CURRENT_TIMESTAMP,%d,?,%f)' % (timestamp, value), (channel,))
 
-ctrl = slowpy.control.ControlSystem()
-device = slowpy.control.RandomWalkDevice(n=4)
-datastore = slowpy.store.DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata", table_format=TestDataFormat())
+ctrl = ControlSystem()
+device = RandomWalkDevice(n=4)
+datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata", table_format=TestDataFormat())
 
 def _loop():
     for ch in range(4):
@@ -52,6 +52,7 @@ if __name__ == '__main__':
         _loop()
     _finalize()
 ```
+
 Details of the script is described in the [Controls](ControlsScript.html) section. For now just copy-and-past the script and use it to generate some test-data.
 
 If you installed SlowPy in a virtual environment (the standard installation method), activate it using either:
@@ -83,7 +84,7 @@ Enter ".help" for usage hints.
 sqlite> .table
 testdata
 sqlite> .schema testdata
-CREATE TABLE testdata(datetime DATETIME, timestamp INTEGER, channel TEXT, value REAL, PRIMARY KEY(timestamp, channel));
+CREATE TABLE testdata(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel));
 sqlite> select * from testdata limit 10;
 2023-04-11 23:52:13|1681257133|ch00|0.187859
 2023-04-11 23:52:13|1681257133|ch01|-0.418021
@@ -94,12 +95,12 @@ sqlite> select * from testdata limit 10;
 
 As shown above, the schema of the data table is:
 ```
-testdata(datetime DATETIME, timestamp INTEGER, channel TEXT, value REAL, PRIMARY KEY(timestamp, channel))
+testdata(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel))
 ```
 
 and the table contents are:
 
-|datetime (DATETIME/TEXT)|timestamp (INTEGER)|channel (TEXT)|value (REAL)|
+|datetime (DATETIME/TEXT)|timestamp (INTEGER)|channel (VARCHAR(100))|value (REAL)|
 |----|-----|-----|-----|
 |2023-04-11 23:52:13|1681257133|ch00|0.187859|
 |2023-04-11 23:52:13|1681257133|ch01|-0.418021|

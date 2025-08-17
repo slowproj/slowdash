@@ -132,17 +132,17 @@ package, to generate test data. Create a file named
 <code>generate-testdata.py</code> in your project directory with the
 following code:</p>
 <div class="sourceCode" id="cb2"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy.control</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy.store</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ControlSystem, RandomWalkDevice</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_SQLite, LongTableFormat</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TestDataFormat(slowpy.store.LongTableFormat):</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    schema_numeric <span class="op">=</span> <span class="st">&#39;(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel))&#39;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TestDataFormat(LongTableFormat):</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    schema_numeric <span class="op">=</span> <span class="st">&#39;(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel))&#39;</span></span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> insert_numeric_data(<span class="va">self</span>, cur, timestamp, channel, value):</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        cur.execute(<span class="ss">f&#39;INSERT INTO </span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>table<span class="sc">}</span><span class="ss"> VALUES(CURRENT_TIMESTAMP,</span><span class="sc">{</span><span class="bu">int</span>(timestamp)<span class="sc">}</span><span class="ss">,?,</span><span class="sc">{</span><span class="bu">float</span>(value)<span class="sc">}</span><span class="ss">)&#39;</span>, (<span class="bu">str</span>(channel),))</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        cur.execute(<span class="ss">f&#39;INSERT INTO </span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>table<span class="sc">}</span><span class="ss"> VALUES(CURRENT_TIMESTAMP,%d,?,%f)&#39;</span> <span class="op">%</span> (timestamp, value), (channel,))</span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>ctrl <span class="op">=</span> slowpy.control.ControlSystem()</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> slowpy.control.RandomWalkDevice(n<span class="op">=</span><span class="dv">4</span>)</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> slowpy.store.DataStore_SQLite(<span class="st">&#39;sqlite:///QuickTourTestData.db&#39;</span>, table<span class="op">=</span><span class="st">&quot;testdata&quot;</span>, table_format<span class="op">=</span>TestDataFormat())</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>ctrl <span class="op">=</span> ControlSystem()</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> RandomWalkDevice(n<span class="op">=</span><span class="dv">4</span>)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_SQLite(<span class="st">&#39;sqlite:///QuickTourTestData.db&#39;</span>, table<span class="op">=</span><span class="st">&quot;testdata&quot;</span>, table_format<span class="op">=</span>TestDataFormat())</span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
 <span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> ch <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">4</span>):</span>
@@ -190,7 +190,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>sqlite&gt; .table</span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>testdata</span>
 <span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>sqlite&gt; .schema testdata</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>CREATE TABLE testdata(datetime DATETIME, timestamp INTEGER, channel TEXT, value REAL, PRIMARY KEY(timestamp, channel));</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>CREATE TABLE testdata(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel));</span>
 <span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>sqlite&gt; select * from testdata limit 10;</span>
 <span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>2023-04-11 23:52:13|1681257133|ch00|0.187859</span>
 <span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>2023-04-11 23:52:13|1681257133|ch01|-0.418021</span>
@@ -198,7 +198,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>2023-04-11 23:52:13|1681257133|ch03|1.733749</span>
 <span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
 <p>As shown above, the schema of the data table is:</p>
-<pre><code>testdata(datetime DATETIME, timestamp INTEGER, channel TEXT, value REAL, PRIMARY KEY(timestamp, channel))</code></pre>
+<pre><code>testdata(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel))</code></pre>
 <p>and the table contents are:</p>
 <table>
 <colgroup>
@@ -211,7 +211,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <tr class="header">
 <th>datetime (DATETIME/TEXT)</th>
 <th>timestamp (INTEGER)</th>
-<th>channel (TEXT)</th>
+<th>channel (VARCHAR(100))</th>
 <th>value (REAL)</th>
 </tr>
 </thead>

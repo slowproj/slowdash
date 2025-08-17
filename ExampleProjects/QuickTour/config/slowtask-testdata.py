@@ -4,7 +4,7 @@ from slowpy.store import DataStore_SQLite, LongTableFormat
 
 
 class TestDataFormat(LongTableFormat):
-    schema_numeric = '(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel))'
+    schema_numeric = '(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel))'
     def insert_numeric_data(self, cur, timestamp, channel, value):
         cur.execute(f'INSERT INTO {self.table} VALUES(CURRENT_TIMESTAMP,%d,?,%f)' % (timestamp, value), (channel,))
 

@@ -520,7 +520,7 @@ class UserModuleComponent(Component):
     def __init__(self, app, project):
         super().__init__(app, project)
 
-        self.usermodule_list = []
+        self.usermodule_list = {}
         
         usermodule_node = self.project.config.get('module', None)
         if usermodule_node is None:
@@ -537,28 +537,39 @@ class UserModuleComponent(Component):
             if app.is_command and node.get('enabled_for_commandline', True) != True:
                 continue
             filepath = node['file']
-            name = os.path.splitext(os.path.basename(filepath))[0]
+            name = node.get('name', os.path.splitext(os.path.basename(filepath))[0])
             user_params = node.get('parameters', {})
             module = UserModule(self.app, filepath, name, node, user_params)
             if module is None:
                 logging.error('Unable to load user module: %s' % filepath)
+                continue
+
+            if name not in self.user_module_list:
+                self.usermodule_list[name] = module
             else:
-                self.usermodule_list.append(module)
+                for i in range(2, 100):
+                    new_name = f"{name}__{i}"
+                    if new_name not in self.user_module_list:
+                        self.usermodule_list[new_name] = module
+                        logging.warn(f'Instance {i} of user module "{name}" is renamed to {new_name}')
+                else:
+                    logging.error(f'Too many user modules of the same name: {name}')
+                        
 
 
     @slowlette.on_event('startup')
     async def startup(self):
-        await asyncio.gather(*(module.start() for module in self.usermodule_list))
+        await asyncio.gather(*(module.start() for module in self.usermodule_list.values()))
 
 
     @slowlette.on_event('shutdown')
     async def shutdown(self):
-        await asyncio.gather(*(module.stop() for module in self.usermodule_list))
+        await asyncio.gather(*(module.stop() for module in self.usermodule_list.values()))
             
         if len(self.usermodule_list) > 0:
             logging.info('user modules terminated')
             
-        self.usermodule_list = []
+        self.usermodule_list = {}
         
     
     def public_config(self):
@@ -567,7 +578,7 @@ class UserModuleComponent(Component):
         
         return {
             'user_module': {
-                module.name: {} for module in self.usermodule_list
+                name: {} for name in self.usermodule_list.keys()
             }
         }
 
@@ -575,7 +586,7 @@ class UserModuleComponent(Component):
     @slowlette.get('/api/channels')
     async def api_channels(self):
         result = []
-        for usermodule in self.usermodule_list:
+        for usermodule in self.usermodule_list.values():
             result.extend(await usermodule.get_channels() or [])
             
         return result
@@ -600,7 +611,7 @@ class UserModuleComponent(Component):
         start = to if to > 0 else now + to
 
         result = {}
-        for usermodule in self.usermodule_list:
+        for usermodule in self.usermodule_list.values():
             for ch in channels:
                 data = await usermodule.get_data(ch)
                 if data is not None:
@@ -620,7 +631,7 @@ class UserModuleComponent(Component):
             return None
         
         # unlike GET, only one module can process to POST
-        for module in self.usermodule_list:
+        for module in self.usermodule_list.values():
             result = await module.process_command(dict(doc))
             if result is not None:
                 break
@@ -642,7 +653,7 @@ class UserModuleComponent(Component):
     async def get_usermodule_contentlist(self):
         result = []
         
-        for usermodule in self.usermodule_list:
+        for usermodule in self.usermodule_list.values():
             for content_type, file_ext, content_list in [
                 ('html', 'html', usermodule.html_list),
                 ('slowplot', 'json', usermodule.layout_list),
@@ -678,7 +689,7 @@ class UserModuleComponent(Component):
         name = match.group(1)
 
         content = None
-        for usermodule in self.usermodule_list:
+        for usermodule in self.usermodule_list.values():
             get_func = None
             if is_html:
                 if name in usermodule.html_list:

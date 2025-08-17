@@ -12,6 +12,13 @@ class Schema:
         self.initialize()
 
         
+    def __str__(self):
+        return (''
+            + f'{self.table}<{self.suffix}>[{",".join([self.tag]+self.flags)}]@{self.time}({self.time_type})'
+            + f'={",".join(self.fields)}'
+        )
+
+    
     def initialize(self):
         self.table = None
         self.tag = None
@@ -23,7 +30,8 @@ class Schema:
         
         self.default_field = None
         self.tag_values = self.init_tag_values
-        self.suffix = ''
+        
+        # do not clear suffix or any other additional fields here
 
         self.channel_table = {}
         self.parse(self.init_description)

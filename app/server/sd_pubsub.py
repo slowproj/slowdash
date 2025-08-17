@@ -115,7 +115,16 @@ class PubsubComponent(Component):
                 if ch in existing_channels:
                     continue
                 x = data.get('x', {})
-                if type(x) in [ int, float ]:
+                
+                datatype = 'unknown'
+                if type(x) is list and len(x) > 0:
+                    if type(x[-1]) in [int, float]:
+                        datatype = 'timeseries'
+                    else:
+                        x = x[-1]
+                if type(x) is list:
+                    pass
+                elif type(x) in [ int, float ]:
                     datatype = 'numeric'
                 elif type(x) is dict:
                     if 'y' in x:
@@ -126,14 +135,12 @@ class PubsubComponent(Component):
                         datatype = 'table'
                     elif 'tree' in x:
                         datatype = 'tree'
-                    else:
-                        datatype = 'unknown'
                 else:
                     try:
                         float(x)
                         datatype = 'numeric'
                     except:
-                        datatype = 'unknown'
+                        pass
                     
                 self.content.append({ 'name': ch, 'type': datatype, 'current': True })
                 
