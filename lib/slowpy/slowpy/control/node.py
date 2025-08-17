@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 17 May 2024 #
 
 
-import os, time, asyncio, threading, importlib, traceback, inspect
+import sys, os, time, asyncio, threading, importlib, traceback, inspect
 
 
 class dualmethod:

@@ -544,12 +544,12 @@ class UserModuleComponent(Component):
                 logging.error('Unable to load user module: %s' % filepath)
                 continue
 
-            if name not in self.user_module_list:
+            if name not in self.usermodule_list:
                 self.usermodule_list[name] = module
             else:
                 for i in range(2, 100):
                     new_name = f"{name}__{i}"
-                    if new_name not in self.user_module_list:
+                    if new_name not in self.usermodule_list:
                         self.usermodule_list[new_name] = module
                         logging.warn(f'Instance {i} of user module "{name}" is renamed to {new_name}')
                 else:
