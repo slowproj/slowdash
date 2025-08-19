@@ -1,0 +1,14 @@
+{
+    "control": {
+        "range": { "length": 300, "to": 0 },
+        "reload": 0,
+        "mode": "normal",
+        "grid": { "rows": 1, "columns": 2 }
+    },
+    "style": { },
+    "panels": [
+        { "type": "tree", "channel": "Info.RGA", "title": "Device Information" },
+        { "type": "html", "location": "project", "file": "RGA_command", "title": "RGA Console" }
+    ],
+    "meta": { "name": "RGA_Info", "title": "", "description": "" }
+}

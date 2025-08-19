@@ -1,0 +1,14 @@
+{
+    "control": {
+        "range": { "length": 300, "to": 0 },
+        "reload": 10,
+        "mode": "normal",
+        "grid": { "rows": 2, "columns": 2 }
+    },
+    "style": { },
+    "panels": [
+        { "type": "tree", "channel": "Info.RGA", "title": "Device Information" },
+        { "type": "tree", "channel": "Status.RGA", "title": "Status & Settings" }
+    ],
+    "meta": { "name": "RGA", "title": "", "description": "" }
+}

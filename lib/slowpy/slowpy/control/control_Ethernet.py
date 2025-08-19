@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 17 May 2024 #
 
 
-import sys, socket, selectors, time
+import sys, socket, selectors, time, threading, logging
 import slowpy.control as spc
 
 
@@ -10,11 +10,19 @@ class EthernetNode(spc.ControlNode):
         import socket
         self.host = host
         self.port = port
+
+        if host is None or not int(port) > 0:
+            logging.error(f'bad host or port: {host}:{port}')
+            self.socket = None
+            return
         
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket_buffer = ''
         self.selectors = selectors.DefaultSelector()
         self.selectors.register(self.socket, selectors.EVENT_READ)
+        self.lock = threading.Lock()
+        
+        self.socket_buffer = ''
+        self.terminator = None
 
         try:
             self.socket.connect((self.host, self.port))
@@ -23,7 +31,7 @@ class EthernetNode(spc.ControlNode):
             self.socket = None
             raise spc.ControlException('EthernetNode: unable to connect to %s:%s: %s' % (host, str(port), str(e)))
         
-        print('Ethernet: %s:%s connected' % (host, str(port)))
+        logging.info('Ethernet: %s:%s connected' % (host, str(port)))
             
     
     def __del__(self):
@@ -55,6 +63,12 @@ class EthernetNode(spc.ControlNode):
 
 
     def do_get_line(self, timeout=None):
+        """
+        return value:
+          - received line, without including line terminator (can be empty line)
+          - None if timeout occurs
+        """
+        
         if self.socket is None:
             return ''
 
@@ -64,27 +78,37 @@ class EthernetNode(spc.ControlNode):
             wait_until = None
         
         line = ''
-        while not self.is_stop_requested():
-            if len(self.socket_buffer) == 0:
-                self.socket_buffer = self.do_get_chunk(timeout=0.1)
+        with self.lock:
+            while not self.is_stop_requested():
+                if len(self.socket_buffer) == 0:
+                    self.socket_buffer = self.do_get_chunk(timeout=0.1)
                 
-            if len(self.socket_buffer) == 0:
-                if wait_until is not None and time.time() >= wait_until:
-                    print('do_get_line(): socket timeout')
-                    break
-                else:
-                    continue
+                if len(self.socket_buffer) == 0:
+                    if wait_until is not None and time.time() >= wait_until:
+                        if len(line) > 0:
+                            return line
+                        else:
+                            logging.debug('do_get_line(): socket timeout')
+                            return None
+                    else:
+                        continue
 
-            for k in range(len(self.socket_buffer)):
-                ch = self.socket_buffer[k]
-                if ch not in [ '\x0a', '\x0d' ]:
-                    line += ch
-                else:
-                    if len(line) > 0:
-                        self.socket_buffer = self.socket_buffer[k+1:]
-                        return line
-            self.socket_buffer = ''
-                
+                for k in range(len(self.socket_buffer)):
+                    ch = self.socket_buffer[k]
+                    if ch in [ '\x0a', '\x0d' ]:
+                        if self.terminator is None:
+                            self.terminator = ch
+                        if ch == self.terminator:
+                            self.socket_buffer = self.socket_buffer[k+1:]
+                            return line
+                        else:
+                            # skip <CR> and <LF>
+                            pass
+                    else:
+                        line += ch
+                        
+                self.socket_buffer = ''
+
         return line
 
 
@@ -93,7 +117,7 @@ class EthernetNode(spc.ControlNode):
             text = self.do_get_chunk(timeout=0.01)
             if len(text) == 0:
                 break
-            print(f"dumping [{text.strip()}]")
+            logging.debug(f"dumping [{text.strip()}]")
     
 
     ## child nodes ##
@@ -223,7 +247,7 @@ class TelnetNode(spc.ControlNode):
     def set(self, value):
         self.connection.set(value + self.line_terminator)
         if self.has_echo:
-            self.connection.do_get_line()
+            return self.connection.do_get_line() or ''            
 
     
     def get(self):
@@ -240,7 +264,7 @@ class TelnetNode(spc.ControlNode):
         
         while not self.is_stop_requested():
             line = self.connection.do_get_line(timeout=0.1)
-            if len(line) == 0:
+            if line is None:
                 if time.time() >= wait_until:
                     break
                 else:

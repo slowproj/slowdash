@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 13 August 2025 #
 
-import sys, asyncio, threading, inspect, logging
+import sys, asyncio, threading, inspect, traceback, logging
 from slowpy.control import control_system as ctrl
 
 #logging.basicConfig(level=logging.DEBUG)
@@ -46,7 +46,7 @@ class Tasklet:
                 else:
                     func_setup(*args)
             except Exception as e:
-                logging.error('Tasklet error: _setup(): %s' % str(e))
+                self._handle_error('Tasklet error: _setup(): %s' % str(e))
 
         if func_initialize:
             nargs = len(inspect.signature(func_initialize).parameters)
@@ -60,7 +60,7 @@ class Tasklet:
                 else:
                     func_initialize(*args)
             except Exception as e:
-                logging.error(f'Tasklet error: _initialize(): {e}')
+                self._handle_error(f'Tasklet error: _initialize(): {e}')
             
         if func_run and not ctrl.is_stop_requested():
             try:
@@ -69,7 +69,7 @@ class Tasklet:
                 else:
                     func_run()
             except Exception as e:
-                self.logging.error(f'Tasklet error: _run(): {e}')
+                self._handle_error(f'Tasklet error: _run(): {e}')
                 
         while not ctrl.is_stop_requested():
             if func_loop:
@@ -79,7 +79,7 @@ class Tasklet:
                     else:
                         func_loop()
                 except Exception as e:
-                    self.logging.error(f'Tasklet error: _loop(): {e}')
+                    self._handle_error(f'Tasklet error: _loop(): {e}')
                     func_loop = False
                 await asyncio.sleep(0.01)
             else:
@@ -93,7 +93,7 @@ class Tasklet:
                 else:
                     func_finalize()
             except Exception as e:
-                self.logging.error(f'Tasklet error: _finalize(): {e}')
+                self._handle_error(f'Tasklet error: _finalize(): {e}')
 
 
                 
@@ -106,3 +106,14 @@ class Tasklet:
         else:
             logging.debug(f'Tasklet callback {name} not defined')
             return None
+
+
+    def _handle_error(self, message):
+        logging.error(message)
+        if sys.exc_info()[0] is not None:
+            tb = traceback.format_exc()
+            if tb is not None and len(tb.strip()) > 0:
+                logging.info(tb)
+    
+        
+        

@@ -49,7 +49,7 @@ class TaskFunctionThread(threading.Thread):
             # no "catch": propagate the error to make it visible for the user
             self.eventloop.close()
             self.eventloop = None
-
+            
             
     async def go(self):
         try:
@@ -57,7 +57,7 @@ class TaskFunctionThread(threading.Thread):
                 await self.func(**self.kwargs)
             else:
                 self.func(**self.kwargs)
-        except:
+        except Exception as e:
             self.taskmodule.handle_error('task function error: %s' % str(e))
             
 

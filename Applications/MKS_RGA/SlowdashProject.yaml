@@ -1,0 +1,8 @@
+slowdash_project:
+  name: MKS_RGA
+
+  task:
+    name: RGA
+    auto_load: true
+    parameters:
+      address: localhost

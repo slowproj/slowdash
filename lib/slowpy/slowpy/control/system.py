@@ -165,7 +165,7 @@ class ControlSystem(spc.ControlNode):
         elif 'y' in value:
             datatype = 'graph'
         else:
-            datatype = 'json'
+            datatype = 'tree'
             
         cls._slowdash_channels[name] = {'name': name, 'type': datatype, 'current': True}
 
