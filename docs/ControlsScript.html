@@ -144,40 +144,44 @@ Scpization</a></li>
 <p>SlowDash integrates Python scripts written by users, with features
 including:</p>
 <ul>
-<li>calling user functions from GUI</li>
-<li>reading and writing variable values from GUI</li>
-<li>streaming data from user script to GUI</li>
+<li>calling user functions from the GUI</li>
+<li>reading and writing variable values from the GUI</li>
+<li>streaming data from user scripts to the GUI</li>
 </ul>
-<p>SlowDash provides a Python library, slowpy, to provide functions
-for:</p>
+<p>SlowDash provides a Python library, <code>slowpy</code>, that offers
+functions for:</p>
 <ul>
-<li>control and readout from measurement hardware</li>
-<li>interface to external software systems, especially messaging
+<li>controlling and reading from measurement devices</li>
+<li>interfacing with external software systems, especially messaging
 systems</li>
-<li>unified interface for data stores</li>
+<li>providing a unified interface for data stores</li>
 <li>basic analysis elements such as histograms and graphs</li>
 </ul>
+<p>Although variables and functions can be bound to the GUI, user
+scripts are normal Python scripts and can utilize all Python features,
+including libraries such as NumPy, SciPy, and machine learning
+tools.</p>
 <h2 id="applications">Applications</h2>
 <ul>
 <li>Send commands and receive data to/from external systems (either
 software or hardware), including:
 <ul>
-<li>Another concurrent system (DAQ system, etc.)
+<li>Other concurrent systems (DAQ systems, etc.)
 <ul>
-<li>Through a messaging system, such as Redis, AMQP, Kafka, ZMQ, …</li>
-<li>Through HTTP GET/POST, or Socket messages</li>
-<li>By running a shell command</li>
+<li>Through messaging systems such as Redis, AMQP, Kafka, ZMQ, …</li>
+<li>Through HTTP GET/POST or Socket messages</li>
+<li>By running shell commands</li>
 </ul></li>
 <li>Measurement devices that accept commands
 <ul>
-<li>SCPI measurement devices with Ethernet interface</li>
-<li>Anything that can be used from Python
+<li>SCPI measurement devices with Ethernet interfaces</li>
+<li>Any device that can be controlled from Python
 <ul>
-<li>Raspberry-Pi GPIO, I2C, SPI, …</li>
-<li>USB devices with a vendor library</li>
+<li>Raspberry Pi GPIO, I2C, SPI, …</li>
+<li>USB devices with vendor libraries</li>
 </ul></li>
 </ul></li>
-<li>Another SlowDash instance for distributed systems</li>
+<li>Other SlowDash instances for distributed systems</li>
 </ul></li>
 <li>Analyze data in real-time, construct histograms, etc., and issue
 alarms</li>
@@ -187,18 +191,18 @@ systems</li>
 <h2 id="structure">Structure</h2>
 <p><img src="fig/ContrlScript-UserTask.png" width="40%"></p>
 <ul>
-<li>Controls are implemented as a user task Python script.</li>
-<li>The user task script is a normal Python script. Scripts are
-executable independently from the SlowDash server.</li>
+<li>Controls are implemented as user task Python scripts.</li>
+<li>User task scripts are normal Python scripts that can be executed
+independently from the SlowDash server.</li>
 <li>Panels on the SlowDash GUI, built by users, can call functions
 defined in user task scripts.</li>
 <li>A Python library, <code>slowpy</code>, is provided to be imported by
-the user task scripts, for:
+user task scripts for:
 <ul>
 <li>Simple unified methods to control external systems</li>
 <li>Data classes such as histograms, graphs, time-series, etc.</li>
-<li>Data storage interface to store the data objects, as well as raw
-data from the external systems</li>
+<li>Data storage interface to store data objects as well as raw data
+from external systems</li>
 </ul></li>
 </ul>
 <h2 id="simple-examples">Simple Examples</h2>
@@ -209,11 +213,11 @@ data from a voltmeter with SCPI commands over Ethernet</h4>
 class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ControlSystem</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>ctrl <span class="op">=</span> ControlSystem()</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># make a control node for a SCPI command of &quot;MEAS:V0&quot; on a device at 192.168.1.43</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a control node for SCPI command &quot;MEAS:V0&quot; on a device at 192.168.1.43</span></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>V0 <span class="op">=</span> ctrl.ethernet(host<span class="op">=</span><span class="st">&#39;192.168.1.43&#39;</span>, port<span class="op">=</span><span class="dv">17674</span>).scpi().command(<span class="st">&#39;MEAS:V0&#39;</span>)</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># read a value from the control node, with a SCPI command &quot;MEAS:V?&quot;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Read a value from the control node using SCPI command &quot;MEAS:V?&quot;</span></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  value <span class="op">=</span> V0.get()</span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  ...</span></code></pre></div>
 <h4
@@ -262,7 +266,7 @@ historical values, store the values in a database.</p>
 <h2 id="demonstration-example-project">Demonstration Example
 Project</h2>
 <p>In <code>slowdash/ExampleProjects/SlowTask</code> there is a SlowDash
-project to demonstrate some of the features described here.</p>
+project that demonstrates some of the features described here.</p>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd slowdash/ExampleProjects/SlowTask</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash --port=18881</span></span></code></pre></div>
@@ -274,25 +278,25 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <p>SlowPy is a Python library (module) that provides functions such
 as:</p>
 <ul>
-<li>connecting external concurrent systems and/or measurement
+<li>connecting to external concurrent systems and/or measurement
 hardware</li>
-<li>histograms, graphs, etc.</li>
+<li>creating histograms, graphs, etc.</li>
 <li>storing raw values, time-series, and histograms/graphs to the
-database in a way that SlowDash can easily handle.</li>
+database in a way that SlowDash can easily handle</li>
 </ul>
-<p>The SlowPy library is included in the SlowDash package, under
+<p>The SlowPy library is included in the SlowDash package under
 <code>slowdash/lib/slowpy</code>. By running
 <code>source slowdash/bin/slowdash-bashrc</code>, as instructed in the
-Installation section, this path will be included in the environmental
+Installation section, this path will be included in the environment
 variable <code>PYTHONPATH</code>, so that users can use the library
 without modifying their system. It is also possible to install the
-library in the usual way: you can do
+library in the usual way: you can run
 <code>pip install slowdash/lib/slowpy</code> to install SlowPy into your
 Python environment. You might want to combine this with
-<code>venv</code> to avoid messing up your Python environment.</p>
+<code>venv</code> to avoid affecting your Python environment.</p>
 <h2 id="controls">Controls</h2>
 <p>SlowPy provides a unified interface to connect external software
-systems and hardware devices; everything will be mapped into a single
+systems and hardware devices; everything is mapped into a single
 “ControlTree” where each node has <code>set()</code> and
 <code>get()</code> methods. The tree represents the logical structure of
 the system. For example, a SCPI command of <code>MEAS:V</code> to a
@@ -300,11 +304,11 @@ voltmeter connected via Ethernet would be addressed like
 <code>ControlSystem.ethernet(host, port).scpi().command('MEAS:V')</code>,
 and <code>set(value)</code> on this node will send a SCPI command of
 <code>MEAS:V?</code> to the voltmeter. The <code>get()</code> method
-makes a read access and returns a value.</p>
+performs a read operation and returns a value.</p>
 <p>Plugin modules can dynamically add branches to the control tree. For
 example, the Redis plugin adds the <code>redis()</code> node and several
 sub-branches for functions provided by Redis, such as hash, JSON, and
-time-series. Plugins are loaded to a node, not (necessarily) to the root
+time-series. Plugins are loaded to a node, not necessarily to the root
 ControlSystem; for example, a plugin that uses Ethernet is loaded to an
 Ethernet node, creating a sub-branch under the Ethernet node, and the
 plugin can make use of the functions provided by the Ethernet node such
@@ -317,22 +321,22 @@ a power supply device that accepts SCPI commands through Ethernet.</p>
 class="sourceCode python"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ControlSystem</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>ctrl <span class="op">=</span> ControlSystem()</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># make a control node for a SCPI command of &quot;MEAS:V0&quot; on a device at 192.168.1.43</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a control node for SCPI command &quot;MEAS:V0&quot; on a device at 192.168.1.43</span></span>
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>V0 <span class="op">=</span> ctrl.ethernet(host<span class="op">=</span><span class="st">&#39;192.168.1.43&#39;</span>, port<span class="op">=</span><span class="dv">17674</span>).scpi().command(<span class="st">&#39;MEAS:V0&#39;</span>, set_format<span class="op">=</span><span class="st">&#39;V0 </span><span class="sc">{}</span><span class="st">;*OPC?&#39;</span>)</span>
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># write a value to the control node: this will issue a SCPI command &quot;V0 10;*OPC?&quot;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Write a value to the control node: this will issue SCPI command &quot;V0 10;*OPC?&quot;</span></span>
 <span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>V0.<span class="bu">set</span>(<span class="dv">10</span>)</span>
 <span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># read a value from the control node, with a SCPI command &quot;MEAS:V&quot;</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Read a value from the control node using SCPI command &quot;MEAS:V&quot;</span></span>
 <span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  value <span class="op">=</span> V0.get()</span>
 <span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  ...</span></code></pre></div>
 <p>A common starting point would be importing
-<code>slowpy.control</code>, and then creating an instance of the
+<code>slowpy.control</code> and then creating an instance of the
 <code>ControlSystem</code> class.</p>
 <p>The <code>ControlSystem</code> already includes the
-<code>Ethernet</code> plugin, but if it were not, the plugin loading
-code would have been:</p>
+<code>Ethernet</code> plugin, but if it were not included, the plugin
+loading code would be:</p>
 <div class="sourceCode" id="cb9"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>ctrl.load_control_module(<span class="st">&#39;Ethernet&#39;</span>)</span></code></pre></div>
 <p>This will search for a file named <code>control_Ethernet.py</code>
@@ -342,18 +346,18 @@ ControlSystem in this case). The Ethernet plugin already includes
 sub-branches for SCPI; for specific protocols not already included, a
 plugin would be loaded onto the Ethernet node.</p>
 <p>Each node constructor takes parameters. In this example, the Ethernet
-node, which sends and receives data to/from the Ethernet, takes the
-host/IP and port parameters, and a SCPI command node, which is bound to
-a specific SCPI command, takes the SCPI command parameter with optional
+node, which sends and receives data to/from Ethernet, takes the host/IP
+and port parameters, and a SCPI command node, which is bound to a
+specific SCPI command, takes the SCPI command parameter with optional
 <code>set_format</code> which overrides the default SCPI command for
 writing. (The default SCPI commands to be written/read for
 <code>.scpi().command(CMD)</code> are <code>CMD</code> and
 <code>CMD?</code>, respectively. Often, write operations should wait for
 command completion, and SlowPy expects a return value from each command.
-A technique to do this, regardless of the actual command behaviors of
-the device, is to append <code>OPC?</code> to the command, as done in
+A technique to achieve this, regardless of the actual command behaviors
+of the device, is to append <code>OPC?</code> to the command, as done in
 the example.)</p>
-<p>Once you get the control node object, you can call
+<p>Once you have the control node object, you can call
 <code>node.set(value)</code> to write the value, and call
 <code>value=node.get()</code> to read from it. As a shortcut,
 <code>node(value)</code> is equivalent to <code>node.set(value)</code>,
@@ -385,8 +389,8 @@ request is made. <code>loop()</code> will not be called after a
 stop.</p>
 <h3 id="commonly-used-nodes">Commonly used nodes</h3>
 <p>Naming convention: <code>set()</code>, <code>get()</code>, and
-<code>do_XXX()</code> are usual methods to do something. Methods with a
-noun name return a sub-node.</p>
+<code>do_XXX()</code> are usual methods to perform actions. Methods with
+noun names return sub-nodes.</p>
 <h4 id="ethernet-scpi-and-telnet">Ethernet, SCPI, and Telnet</h4>
 <h5 id="loading-already-included">Loading (already included)</h5>
 <p><code>ControlSystem.load_control_module('Ethernet')</code></p>
@@ -416,7 +420,7 @@ the reply</li>
 <li><strong>telnet()</strong> bridges the parent Ethernet connection and
 holds telnet configurations
 <ul>
-<li><strong>command(cmd)</strong> issues a SCPI command via the parent
+<li><strong>command(cmd)</strong> issues a telnet command via the parent
 Ethernet connection
 <ul>
 <li>set(value=None): sends <code>cmd value line_terminator</code>,
@@ -536,7 +540,7 @@ object
 <ul>
 <li>set(value): writes value to a branch of Redis JSON</li>
 <li>get(): returns a value of a branch of Redis JSON</li>
-<li><strong>node(path)</strong>: can do this node iteration
+<li><strong>node(path)</strong>: can perform this node iteration
 recursively</li>
 </ul></li>
 </ul></li>
@@ -580,7 +584,7 @@ point</li>
 <li>DummyDevice</li>
 </ul>
 <h3 id="node-functions">Node Functions</h3>
-<p>All the control nodes (derived from
+<p>All control nodes (derived from
 <code>slowpy.control.ControlNode</code>) have the following methods:</p>
 <ul>
 <li>[ControlNode]
@@ -601,7 +605,7 @@ received</li>
 <li><strong>readonly()</strong>: makes the node readonly; it returns a
 node that has only <code>get()</code> which calls
 <code>parent_node.get()</code></li>
-<li><strong>writeonly()</strong>: makes the node write only; it returns
+<li><strong>writeonly()</strong>: makes the node write-only; it returns
 a node that has only <code>set()</code> which calls
 <code>parent_node.set()</code></li>
 </ul></li>
@@ -613,7 +617,7 @@ methods:</p>
 <ul>
 <li><strong>setpoint(limits=[None,None])</strong>: holds the setpoint
 <ul>
-<li>set(value): holds the value as a set-point, and calls
+<li>set(value): holds the value as a set-point and calls
 <code>set(value)</code> of the parent node.</li>
 <li>get(): returns the holding set-point value</li>
 </ul></li>
@@ -666,7 +670,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb11-1"><a h
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    datastore.append(record)</span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    time.sleep(<span class="dv">1</span>)</span></code></pre></div>
 <p>For SQL databases, the “long format” with UNIX timestamps is used by
-default. To use other table schemata, specify a user-defined
+default. To use other table schemas, specify a user-defined
 <code>TableFormat</code>:</p>
 <div class="sourceCode" id="cb12"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> QuickTourTestDataFormat(LongTableFormat):</span>
@@ -730,7 +734,7 @@ GPIO, an easy way to integrate it into a SlowDash system is to implement
 the SCPI interface on it. This approach is also useful to integrate
 other non-Ethernet devices (such as USB) connected to a remote
 computer.</p>
-<p>Here is an example to wrap a device with the Ethernet-SCPI
+<p>Here is an example to wrap a device with Ethernet-SCPI
 capability:</p>
 <div class="sourceCode" id="cb16"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ScpiServer, ScpiAdapter, RandomWalkDevice</span>
@@ -776,7 +780,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb16-1"><a h
 <span id="cb16-41"><a href="#cb16-41" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> RandomWalkScpiDevice()</span>
 <span id="cb16-42"><a href="#cb16-42" aria-hidden="true" tabindex="-1"></a>server <span class="op">=</span> ScpiServer(device, port<span class="op">=</span><span class="dv">17674</span>)</span>
 <span id="cb16-43"><a href="#cb16-43" aria-hidden="true" tabindex="-1"></a>server.start()</span></code></pre></div>
-<p>Make this code start automatically on PC boot in your favorite way
+<p>Make this code start automatically on PC boot in your preferred way
 (<code>/etc/rc.local</code>, Docker, …).</p>
 <p>If SlowPy Control Nodes are already available for the device, the
 nodes can be directly mapped to the SCPI interface:</p>
@@ -800,8 +804,8 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb17-1"><a h
 <span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>server.start()</span></code></pre></div>
 <h1 id="slowtask-gui-script-binding">SlowTask: GUI-Script Binding</h1>
 <p>SlowTask is a user Python script placed under the SlowDash config
-directory with a name like <code>slowtask-XXX.py</code>. SlowDash GUI
-can start/stop the script, call functions defined in the script, and
+directory with a name like <code>slowtask-XXX.py</code>. The SlowDash
+GUI can start/stop the script, call functions defined in the script, and
 bind control variables in the script to GUI elements. The SlowPy library
 was designed for use in user task scripts, but this is not a
 requirement.</p>
@@ -870,7 +874,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb21-1"><a href=
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> another_test</span></span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">namespace</span><span class="kw">:</span></span>
 <span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">prefix</span><span class="kw">:</span><span class="at"> test.</span></span></code></pre></div>
-<p>Note that the dot is a part of the prefix.</p>
+<p>Note that the dot is part of the prefix.</p>
 <p>SlowTask functions can take parameters:</p>
 <div class="sourceCode" id="cb22"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V0(voltage:<span class="bu">float</span>, ramping:<span class="bu">float</span>):</span>
@@ -920,7 +924,7 @@ user code. The <code>parallel</code> qualifier indicates that this
 function can run in parallel to others. Another common qualifier is
 <code>await</code>, which instructs the web browser to wait for
 completion of the function execution before doing anything else
-(therefore, the browser will look frozen).</p>
+(therefore, the browser will appear frozen).</p>
 <h4 id="canvas-panel">Canvas Panel</h4>
 <p>On a canvas panel, a button to call a task can be placed by:</p>
 <div class="sourceCode" id="cb26"><pre
@@ -1070,7 +1074,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb32-1"><a h
 <span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_sleep(<span class="dv">1</span>)</span></code></pre></div>
 <p>If the variable is already exported, the same export name is used.
 Otherwise, the name must be provided as a <code>name</code> argument of
-the <code>aio_publish()</code> function. In addition to the export-able
+the <code>aio_publish()</code> function. In addition to the exportable
 variables, <code>aio_publish()</code> accepts many other types,
 including Python numbers.</p>
 <div class="sourceCode" id="cb33"><pre
@@ -1104,7 +1108,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb35-1"><a h
 <span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> _loop():</span>
 <span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_publish(V, name<span class="op">=</span><span class="st">&#39;V&#39;</span>)</span>
 <span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_sleep(readout_frequency.get())</span></code></pre></div>
-<p>In HTML, <code>sd-live="true"</code> indicates that changes of the
+<p>In HTML, <code>sd-live="true"</code> indicates that changes to the
 value on the browser will trigger calling the <code>.set()</code> method
 of the bound variable.</p>
 <p>More examples can be found in

@@ -5,43 +5,44 @@ title: Controls Script
 # Overview
 SlowDash integrates Python scripts written by users, with features including:
 
-- calling user functions from GUI
-- reading and writing variable values from GUI
-- streaming data from user script to GUI
+- calling user functions from the GUI
+- reading and writing variable values from the GUI
+- streaming data from user scripts to the GUI
 
-SlowDash provides a Python library, slowpy, to provide functions for:
+SlowDash provides a Python library, `slowpy`, that offers functions for:
 
-- control and readout from measurement hardware
-- interface to external software systems, especially messaging systems
-- unified interface for data stores
+- controlling and reading from measurement devices
+- interfacing with external software systems, especially messaging systems
+- providing a unified interface for data storages
 - basic analysis elements such as histograms and graphs
 
+Although the GUI can access the variables and functions in user scripts, the scripts themselves are normal Python scripts and can utilize all Python features and libraries, including NumPy, SciPy, scikit-image, and scikit-learn.
 
 ## Applications
 - Send commands and receive data to/from external systems (either software or hardware), including:
-  - Another concurrent system (DAQ system, etc.)
-    - Through a messaging system, such as Redis, AMQP, Kafka, ZMQ, ...
-    - Through HTTP GET/POST, or Socket messages
-    - By running a shell command
+  - Other concurrent systems (DAQ systems, etc.)
+    - Through messaging systems such as Redis, AMQP, Kafka, ZMQ, ...
+    - Through HTTP GET/POST or Socket messages
+    - By running shell commands
   - Measurement devices that accept commands
-    - SCPI measurement devices with Ethernet interface
-    - Anything that can be used from Python
-      - Raspberry-Pi GPIO, I2C, SPI, ...
-      - USB devices with a vendor library
-  - Another SlowDash instance for distributed systems
+    - SCPI measurement devices with Ethernet interfaces
+    - Any device that can be controlled from Python
+      - Raspberry Pi GPIO, I2C, SPI, ...
+      - USB devices with vendor libraries
+  - Other SlowDash instances for distributed systems
 - Analyze data in real-time, construct histograms, etc., and issue alarms
 - Store raw and analyzed values (including histograms) in database systems
 
 ## Structure
 <img src="fig/ContrlScript-UserTask.png" width="40%">
 
-- Controls are implemented as a user task Python script.
-- The user task script is a normal Python script. Scripts are executable independently from the SlowDash server.
+- Controls are implemented as user task Python scripts.
+- User task scripts are normal Python scripts that can be executed independently from the SlowDash server.
 - Panels on the SlowDash GUI, built by users, can call functions defined in user task scripts.
-- A Python library, `slowpy`, is provided to be imported by the user task scripts, for:
+- A Python library, `slowpy`, is provided to be imported by user task scripts for:
   - Simple unified methods to control external systems
   - Data classes such as histograms, graphs, time-series, etc.
-  - Data storage interface to store the data objects, as well as raw data from the external systems
+  - Data storage interface to store data objects as well as raw data from external systems
 
 ## Simple Examples
 #### Reading data from a voltmeter with SCPI commands over Ethernet
@@ -49,11 +50,11 @@ SlowDash provides a Python library, slowpy, to provide functions for:
 from slowpy.control import ControlSystem
 ctrl = ControlSystem()
 
-# make a control node for a SCPI command of "MEAS:V0" on a device at 192.168.1.43
+# Create a control node for SCPI command "MEAS:V0" on a device at 192.168.1.43
 V0 = ctrl.ethernet(host='192.168.1.43', port=17674).scpi().command('MEAS:V0')
 
 while True:
-  # read a value from the control node, with a SCPI command "MEAS:V?"
+  # Read a value from the control node using SCPI command "MEAS:V?"
   value = V0.get()
   ...
 ```
@@ -100,7 +101,7 @@ Only the "current" values are available in this way. If you need historical valu
 
 
 ## Demonstration Example Project
-In `slowdash/ExampleProjects/SlowTask` there is a SlowDash project to demonstrate some of the features described here.
+In `slowdash/ExampleProjects/SlowTask` there is a SlowDash project that demonstrates some of the features described here.
 ```console
 $ cd slowdash/ExampleProjects/SlowTask
 $ slowdash --port=18881
@@ -115,16 +116,16 @@ $ docker compose up
 # SlowPy: Controls Library
 SlowPy is a Python library (module) that provides functions such as:
 
-- connecting external concurrent systems and/or measurement hardware
-- histograms, graphs, etc.
-- storing raw values, time-series, and histograms/graphs to the database in a way that SlowDash can easily handle.
+- connecting to external concurrent systems and/or measurement hardware
+- creating histograms, graphs, etc.
+- storing raw values, time-series, and histograms/graphs to the database in a way that SlowDash can easily handle
 
-The SlowPy library is included in the SlowDash package, under `slowdash/lib/slowpy`. By running `source slowdash/bin/slowdash-bashrc`, as instructed in the Installation section, this path will be included in the environmental variable `PYTHONPATH`, so that users can use the library without modifying their system. It is also possible to install the library in the usual way: you can do `pip install slowdash/lib/slowpy` to install SlowPy into your Python environment. You might want to combine this with `venv` to avoid messing up your Python environment.
+The SlowPy library is included in the SlowDash package under `slowdash/lib/slowpy`. By running `source slowdash/bin/slowdash-bashrc`, as instructed in the Installation section, this path will be included in the environment variable `PYTHONPATH`, so that users can use the library without modifying their system. It is also possible to install the library in the usual way: you can run `pip install slowdash/lib/slowpy` to install SlowPy into your Python environment. You might want to combine this with `venv` to avoid affecting your Python environment.
 
 ## Controls
-SlowPy provides a unified interface to connect external software systems and hardware devices; everything will be mapped into a single "ControlTree" where each node has `set()` and `get()` methods. The tree represents the logical structure of the system. For example, a SCPI command of `MEAS:V` to a voltmeter connected via Ethernet would be addressed like `ControlSystem.ethernet(host, port).scpi().command('MEAS:V')`, and `set(value)` on this node will send a SCPI command of `MEAS:V?` to the voltmeter. The `get()` method makes a read access and returns a value.
+SlowPy provides a unified interface to connect external software systems and hardware devices; everything is mapped into a single "ControlTree" where each node has `set()` and `get()` methods. The tree represents the logical structure of the system. For example, a SCPI command of `MEAS:V` to a voltmeter connected via Ethernet would be addressed like `ControlSystem.ethernet(host, port).scpi().command('MEAS:V')`, and `set(value)` on this node will send a SCPI command of `MEAS:V?` to the voltmeter. The `get()` method performs a read operation and returns a value.
 
-Plugin modules can dynamically add branches to the control tree. For example, the Redis plugin adds the `redis()` node and several sub-branches for functions provided by Redis, such as hash, JSON, and time-series. Plugins are loaded to a node, not (necessarily) to the root ControlSystem; for example, a plugin that uses Ethernet is loaded to an Ethernet node, creating a sub-branch under the Ethernet node, and the plugin can make use of the functions provided by the Ethernet node such as `send()` (which is `set()` of the node) and `receive()` (which is `get()`).
+Plugin modules can dynamically add branches to the control tree. For example, the Redis plugin adds the `redis()` node and several sub-branches for functions provided by Redis, such as hash, JSON, and time-series. Plugins are loaded to a node, not necessarily to the root ControlSystem; for example, a plugin that uses Ethernet is loaded to an Ethernet node, creating a sub-branch under the Ethernet node, and the plugin can make use of the functions provided by the Ethernet node such as `send()` (which is `set()` of the node) and `receive()` (which is `get()`).
 
 ### Example
 Here is an example of using SlowPy Controls. In this example, we use a power supply device that accepts SCPI commands through Ethernet.
@@ -133,28 +134,28 @@ Here is an example of using SlowPy Controls. In this example, we use a power sup
 from slowpy.control import ControlSystem
 ctrl = ControlSystem()
 
-# make a control node for a SCPI command of "MEAS:V0" on a device at 192.168.1.43
+# Create a control node for SCPI command "MEAS:V0" on a device at 192.168.1.43
 V0 = ctrl.ethernet(host='192.168.1.43', port=17674).scpi().command('MEAS:V0', set_format='V0 {};*OPC?')
 
-# write a value to the control node: this will issue a SCPI command "V0 10;*OPC?"
+# Write a value to the control node: this will issue SCPI command "V0 10;*OPC?"
 V0.set(10)
 
 while True:
-  # read a value from the control node, with a SCPI command "MEAS:V"
+  # Read a value from the control node using SCPI command "MEAS:V"
   value = V0.get()
   ...
 ```
-A common starting point would be importing `slowpy.control`, and then creating an instance of the `ControlSystem` class.
+A common starting point would be importing `slowpy.control` and then creating an instance of the `ControlSystem` class.
 
-The `ControlSystem` already includes the `Ethernet` plugin, but if it were not, the plugin loading code would have been:
+The `ControlSystem` already includes the `Ethernet` plugin, but if it were not included, the plugin loading code would be:
 ```python
 ctrl.load_control_module('Ethernet')
 ```
 This will search for a file named `control_Ethernet.py` from search directories, load it, and inject the `ethernet()` Python method to the node class that loaded the plugin (which is ControlSystem in this case). The Ethernet plugin already includes sub-branches for SCPI; for specific protocols not already included, a plugin would be loaded onto the Ethernet node.
 
-Each node constructor takes parameters. In this example, the Ethernet node, which sends and receives data to/from the Ethernet, takes the host/IP and port parameters, and a SCPI command node, which is bound to a specific SCPI command, takes the SCPI command parameter with optional `set_format` which overrides the default SCPI command for writing. (The default SCPI commands to be written/read for `.scpi().command(CMD)` are `CMD` and `CMD?`, respectively. Often, write operations should wait for command completion, and SlowPy expects a return value from each command. A technique to do this, regardless of the actual command behaviors of the device, is to append `OPC?` to the command, as done in the example.)
+Each node constructor takes parameters. In this example, the Ethernet node, which sends and receives data to/from Ethernet, takes the host/IP and port parameters, and a SCPI command node, which is bound to a specific SCPI command, takes the SCPI command parameter with optional `set_format` which overrides the default SCPI command for writing. (The default SCPI commands to be written/read for `.scpi().command(CMD)` are `CMD` and `CMD?`, respectively. Often, write operations should wait for command completion, and SlowPy expects a return value from each command. A technique to achieve this, regardless of the actual command behaviors of the device, is to append `OPC?` to the command, as done in the example.)
 
-Once you get the control node object, you can call `node.set(value)` to write the value, and call `value=node.get()` to read from it. As a shortcut, `node(value)` is equivalent to `node.set(value)`, and `value=node()` is equivalent to `value=node.get()`. Also, control nodes define Python's `__str__()`, `__float__()`, etc., so `print(node)` and `x = float(node)` will implicitly call `node.get()`.
+Once you have the control node object, you can call `node.set(value)` to write the value, and call `value=node.get()` to read from it. As a shortcut, `node(value)` is equivalent to `node.set(value)`, and `value=node()` is equivalent to `value=node.get()`. Also, control nodes define Python's `__str__()`, `__float__()`, etc., so `print(node)` and `x = float(node)` will implicitly call `node.get()`.
 
 
 ### Control Node Threading
@@ -169,7 +170,7 @@ The thread is stopped by calling the `stop()` method of the node, or by a global
 
 
 ### Commonly used nodes
-Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to do something. Methods with a noun name return a sub-node.
+Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to perform actions. Methods with noun names return sub-nodes.
 
 #### Ethernet, SCPI, and Telnet
 ##### Loading (already included)
@@ -187,7 +188,7 @@ Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to do some
       - set(value=None): sends `cmd value` and waits for a reply
       - get(): sends `cmd?` and waits for a reply, then returns the reply
   - **telnet()** bridges the parent Ethernet connection and holds telnet configurations
-    - **command(cmd)** issues a SCPI command via the parent Ethernet connection
+    - **command(cmd)** issues a telnet command via the parent Ethernet connection
       - set(value=None): sends `cmd value line_terminator`, consumes echo
       - get(): sends `cmd line_terminator`, consumes echo, and returns a reply until the next prompt
 
@@ -260,7 +261,7 @@ Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to do some
     - **node(path)**: read and write a branch of a JSON object
       - set(value): writes value to a branch of Redis JSON
       - get(): returns a value of a branch of Redis JSON
-      - **node(path)**: can do this node iteration recursively
+      - **node(path)**: can perform this node iteration recursively
   - **ts(key)**: read and write a time-series, where the value is a list of (t,x) tuples
     - **current()**: 
       - set(value): adds a data point to the parent time-series using the current time
@@ -284,7 +285,7 @@ Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to do some
 
 
 ### Node Functions
-All the control nodes (derived from `slowpy.control.ControlNode`) have the following methods:
+All control nodes (derived from `slowpy.control.ControlNode`) have the following methods:
 
 - [ControlNode]
   - has_data(): returns True if a value is available for `get()`
@@ -292,13 +293,13 @@ All the control nodes (derived from `slowpy.control.ControlNode`) have the follo
   - sleep(duration_sec): blocks for the duration and returns True unless a stop request is received.
   - is_stop_requested(): returns True if a stop request has been received
   - **readonly()**: makes the node readonly; it returns a node that has only `get()` which calls `parent_node.get()`
-  - **writeonly()**: makes the node write only; it returns a node that has only `set()` which calls `parent_node.set()`
+  - **writeonly()**: makes the node write-only; it returns a node that has only `set()` which calls `parent_node.set()`
 
 Nodes derived from `ControlValueNode` have the following methods:
 
 - [ControlValueNode] -> [ControlNode]
   - **setpoint(limits=[None,None])**: holds the setpoint
-    - set(value): holds the value as a set-point, and calls `set(value)` of the parent node.
+    - set(value): holds the value as a set-point and calls `set(value)` of the parent node.
     - get(): returns the holding set-point value
   - **ramping(change_per_sec)**
       - set(value): starts ramping to the target value in the parent node. If the value is not numeric or not within the limits, it raises an exception
@@ -340,7 +341,7 @@ while True:
     time.sleep(1)
 ```
 
-For SQL databases, the "long format" with UNIX timestamps is used by default. To use other table schemata, specify a user-defined `TableFormat`:
+For SQL databases, the "long format" with UNIX timestamps is used by default. To use other table schemas, specify a user-defined `TableFormat`:
 ```python
 class QuickTourTestDataFormat(LongTableFormat):
     schema_numeric = '(datetime DATETIME, timestamp INTEGER, channel STRING, value REAL, PRIMARY KEY(timestamp, channel))'
@@ -403,7 +404,7 @@ while not ControlSystem.is_stop_requested():
 ## Scpizing Your Device
 If your device has some programming capability, such as Raspberry Pi GPIO, an easy way to integrate it into a SlowDash system is to implement the SCPI interface on it. This approach is also useful to integrate other non-Ethernet devices (such as USB) connected to a remote computer.
 
-Here is an example to wrap a device with the Ethernet-SCPI capability:
+Here is an example to wrap a device with Ethernet-SCPI capability:
 
 ```python
 from slowpy.control import ScpiServer, ScpiAdapter, RandomWalkDevice
@@ -451,7 +452,7 @@ server = ScpiServer(device, port=17674)
 server.start()
 ```
 
-Make this code start automatically on PC boot in your favorite way (`/etc/rc.local`, Docker, ...).
+Make this code start automatically on PC boot in your preferred way (`/etc/rc.local`, Docker, ...).
 
 If SlowPy Control Nodes are already available for the device, the nodes can be directly mapped to the SCPI interface:
 ```python
@@ -475,7 +476,7 @@ server.start()
 ```
 
 # SlowTask: GUI-Script Binding
-SlowTask is a user Python script placed under the SlowDash config directory with a name like `slowtask-XXX.py`. SlowDash GUI can start/stop the script, call functions defined in the script, and bind control variables in the script to GUI elements. The SlowPy library was designed for use in user task scripts, but this is not a requirement.
+SlowTask is a user Python script placed under the SlowDash config directory with a name like `slowtask-XXX.py`. The SlowDash GUI can start/stop the script, call functions defined in the script, and bind control variables in the script to GUI elements. The SlowPy library was designed for use in user task scripts, but this is not a requirement.
 
 
 ## Starting, Stopping, and Reloading the Slow-Task Scripts
@@ -524,7 +525,7 @@ The prefix (`test.` in this example) is the module name, which is taken from the
     namespace:
       prefix: test.
 ```
-Note that the dot is a part of the prefix.
+Note that the dot is part of the prefix.
 
 SlowTask functions can take parameters:
 ```python
@@ -569,7 +570,7 @@ def set_V1(V1:float, ramping:float):
 ```
 The input values on the Web form will be bound to the function parameters based on the names (`<input name="V0">` will be bound to the `V0` parameter).
 
-In the example above, some functions have the `parallel` qualifier: by default, if a previous function call is in execution, the next action cannot be accepted to avoid multi-threading issues in the user code. The `parallel` qualifier indicates that this function can run in parallel to others. Another common qualifier is `await`, which instructs the web browser to wait for completion of the function execution before doing anything else (therefore, the browser will look frozen).
+In the example above, some functions have the `parallel` qualifier: by default, if a previous function call is in execution, the next action cannot be accepted to avoid multi-threading issues in the user code. The `parallel` qualifier indicates that this function can run in parallel to others. Another common qualifier is `await`, which instructs the web browser to wait for completion of the function execution before doing anything else (therefore, the browser will appear frozen).
 
 #### Canvas Panel
 On a canvas panel, a button to call a task can be placed by:
@@ -685,7 +686,7 @@ async def _loop():
     await ctrl.aio_publish(V0)   # publishing (pushing to subscribers)
     await ctrl.aio_sleep(1)
 ```
-If the variable is already exported, the same export name is used. Otherwise, the name must be provided as a `name` argument of the `aio_publish()` function. In addition to the export-able variables, `aio_publish()` accepts many other types, including Python numbers.
+If the variable is already exported, the same export name is used. Otherwise, the name must be provided as a `name` argument of the `aio_publish()` function. In addition to the exportable variables, `aio_publish()` accepts many other types, including Python numbers.
 ```python
 import random
 from slowpy.control import control_system as ctrl
@@ -717,7 +718,7 @@ async def _loop():
     await ctrl.aio_publish(V, name='V')
     await ctrl.aio_sleep(readout_frequency.get())
 ```
-In HTML, `sd-live="true"` indicates that changes of the value on the browser will trigger calling the `.set()` method of the bound variable.
+In HTML, `sd-live="true"` indicates that changes to the value on the browser will trigger calling the `.set()` method of the bound variable.
 
 More examples can be found in `ExampleProjects/Streaming`.
 
