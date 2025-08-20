@@ -2,7 +2,7 @@
 # Created by Sanshiro Enomoto on 18 Aug 2025 
 
 
-import threading, logging
+import time, threading, logging
 from slowpy.control import ControlNode, EthernetNode
 
 
@@ -17,7 +17,9 @@ class RGA(ControlNode):
                 break
             logging.info(f'MKS-RGA: {line}')
 
+        self.replies = []
         self.notifications = []
+        
         self.has_control = (self.command('Control SlowDash 0.1').get() is not False)
         if self.has_control:
             logging.info("RGA: taking control")
@@ -61,6 +63,7 @@ class RGA(ControlNode):
     def _communicate(self, command):
         command_name = command.split()[0].lower()
         with self.connection._rga_lock:
+            self.replies = []
             try:
                 self.connection.set(command + '\x0d')
             except Exception as err:
@@ -68,9 +71,12 @@ class RGA(ControlNode):
                 return None
 
             while True:
-                reply = self._receive_reply(timeout=1)
-                if len(reply) == 0:
-                    return None
+                if len(self.replies) > 0:
+                    reply = self.replies.pop(0)
+                else:
+                    reply = self._receive_reply(timeout=1)
+                    if reply is None or len(reply) == 0:
+                        return None
                 if reply[0][0].lower() == command_name:
                     break
                 self.notifications.append(reply)
@@ -89,9 +95,13 @@ class RGA(ControlNode):
         while True:
             line = self.connection.do_get_line(timeout=timeout)
             if line is None:
-                break
+                if len(reply) > 0:
+                    break
+                else:
+                    return None
             if len(line) == 0:
                 if len(reply) == 0:
+                    time.sleep(timeout/100)
                     continue
                 else:
                     break
@@ -145,7 +155,7 @@ class InfoNode(ControlNode):
         
     def get(self):
         record = {}
-        for command in [ 'InletInfo', 'FilamentInfo', 'SourceInfo 0', 'MultiplierInfo', 'DetectorInfo 0', 'Info' ]:
+        for command in [ 'FilamentInfo', 'SourceInfo 0', 'MultiplierInfo', 'DetectorInfo 0', 'Info' ]:
             record[command] = {}
             reply = self.rga.command(command).get()
             if reply is None or reply is False:
@@ -163,10 +173,11 @@ class StatusNode(ControlNode):
         self.rga = rga
 
         self.scan_settings = {
-            'scan_mode': 'Barchart',
+            'scan_mode': 'Barchart',       # 'Barchart' or 'Analog'
             'mass_start': 1,
-            'mass_end': 30,
+            'mass_end': 50,
             'filter_mode': 'PeakAverage',  # "PeakCenter", "PeakMax", "PeakAverage"
+            'points_per_peak': 8,          # (64), 32, 16, 8, 4
             'accuracy': 1,                 # 0..8, 0 is the fastest
             'detector_index': 3,   # 0: Faraday, 1..3: Multipliers
         }
@@ -175,7 +186,7 @@ class StatusNode(ControlNode):
     def get(self):
         record = {
             'System': {
-                'Controlling': 'Yes' if self.rga.has_control else 'No',
+                'controlling': 'Yes' if self.rga.has_control else 'No',
             },
             'ScanSettings': self.scan_settings,
         }
@@ -191,46 +202,49 @@ class ScanNode(ControlNode):
         
     def get(self):
         settings = self.rga.status_node.scan_settings
-        cmd = f'Add{settings["scan_mode"]}'
+        scan_mode = ('Analog' if settings["scan_mode"] == 'Analog' else 'Barchart')
+        cmd = f'Add{scan_mode}'
         args = [
-            f'SlowdashOneTime',
-            f'{settings["mass_start"]} {settings["mass_end"]}',
-            f'{settings["filter_mode"]} {settings["accuracy"]} 0 0 {settings["detector_index"]}'
+            'SlowdashOneTime',   # Measurement Name
+            settings["mass_start"], settings["mass_end"],
+            settings["filter_mode"] if scan_mode == "Barchart" else settings["points_per_peak"],
+            settings["accuracy"],
+            '0',   # EGainIndex
+            '0',   # SourceInde
+            settings["detector_index"],
         ]
         
         if not self.rga.has_control:
             return None
+        
         if self.rga.command('ScanStop').get() is False:
             pass
-
-        while len(self.rga.notifications) > 0:
-            for record in self.rga.notifications.pop(0):
-                logging.warning(f'Leftover notification dropped: {record[0]}')
+        with self.rga.connection._rga_lock:
+            while len(self.rga.notifications) > 0:
+                for record in self.rga.notifications.pop(0):
+                    logging.warning(f'Leftover notification dropped: {record[0]}')
         
         if self.rga.command(cmd).set(args) is False:
             pass
         if self.rga.command('ScanAdd').set('SlowdashOneTime') is False:
             return None
-
-        
         if self.rga.command('ScanStart').set(1) is False:
             return None
-
-        # BUG: there is a tiny chance that another command is started in between "ScanStart" and "with lock"
-        # TODO: implement reply/notification routing
         
-        with self.rga.connection._rga_lock:
-            table = []
-            attr = {}
-            while len(table) < int(settings["mass_end"]) - int(settings["mass_start"]):
+        table = []
+        attr = {}
+        length = int(settings["mass_end"]) - int(settings["mass_start"]) + 1
+        if scan_mode == "Analog":
+            length *= settings["points_per_peak"]
+        while len(table) < length:
+            if len(self.rga.notifications) == 0:
                 reply = self.rga._receive_reply(timeout=1)
                 if reply is None:
                     break
                 self.rga.notifications.extend(reply)
 
-                k = 0
-                while k < len(self.rga.notifications):
-                    record = self.rga.notifications[k]
+            with self.rga.connection._rga_lock:
+                for record in self.rga.notifications:
                     record_name = record[0]
                     if record_name == 'MassReading':
                         if record[1] != 'MultSkipped':
@@ -243,14 +257,13 @@ class ScanNode(ControlNode):
                     elif record_name == 'ZeroReading':
                         attr['zero_reading'] = [ float(x) for x in record[1:] ]
                     else:
-                        k += 1
-                        continue
-                    del self.rga.notifications[k]
+                        self.rga.replies.append(record)
+                self.rga.notifications = []
             
         if self.rga.command('ScanStop').get() is False:
             pass
         if self.rga.command('MeasurementRemove SlowDashOneTime').get() is False:
-            return None
+            pass
         
         return table, attr
 
@@ -260,25 +273,140 @@ class ScanNode(ControlNode):
 # slowtask-RGA.py #
 # Created by Sanshiro Enomoto on 18 Aug 2025 
 
+import time, math
+import slowpy
 from slowpy.control import control_system as ctrl
+from dataclasses import dataclass
 
 
-def _initialize(params):
+@dataclass
+class RunStatus:
+    running: bool = False
+    scan_interval: float = 10
+    next_scan_time: float = 0
+    scanning: bool = False
+run_status = RunStatus()
+
+
+async def _initialize(params):
     global rga
     rga = RGA(ctrl.ethernet(host=params.get('address',None), port=10014))
     ctrl.export(rga.info(), 'Info.RGA')
     ctrl.export(rga.status(), 'Status.RGA')
     
     rga.command('CalibrationOptions').set(['Current', 'Current'])
+    await ctrl.aio_publish(run_status, name="RunStatus.RGA")
+
+    
+
+async def _loop():
+    if not run_status.running:
+        return await ctrl.aio_sleep(1)
+    
+    now = time.time()
+    if run_status.next_scan_time == 0:
+        run_status.next_scan_time = now
+    if now < run_status.next_scan_time:
+        return await ctrl.aio_sleep(run_status.next_scan_time - now)
+    if run_status.next_scan_time <= now:
+        if run_status.scan_interval > 0:
+            ticks = math.floor((now - run_status.next_scan_time) / run_status.scan_interval) + 1
+            run_status.next_scan_time += ticks * run_status.scan_interval
+        else:
+            run_status.next_scan_time = 0
+
+    run_status.scanning = True
+    await ctrl.aio_publish(run_status)
+    result = rga.scan().get()
+    run_status.scanning = False
+    await ctrl.aio_publish(run_status)
+    
+    if run_status.next_scan_time <= 0:
+        run_status.running = False
+        await ctrl.aio_publish(run_status)
+    
+    if result is None:
+        return
+    
+    table, attr = result
+    g = slowpy.Graph()
+    for row in table:
+        g.add_point(row[0], row[1]/100)
+
+    await ctrl.aio_publish(g, name="mass_spectrum")
 
 
-def _run():
-    print(rga.info().get())
-    print(rga.status().get())
-    print(rga.scan().get())
+    
+async def acquire_control():
+    if not rga.has_control:
+        rga.has_control = (rga.command('Control SlowDash 0.1').get() is not False)
+        if rga.has_control:
+            logging.info("RGA: taking control")
+        await ctrl.aio_publish(rga.status())
+
+    return True
+
+            
+async def release_control():
+    if rga.has_control:
+        rga.has_control = not (rga.command('Release').get() is not False)
+        if rga.has_control:
+            logging.info("RGA: control released")
+        await ctrl.aio_publish(rga.status())
+
+    return True
+
+                
+async def filament_on():
+    if rga.command('FilamentControl On').get() is False:
+        pass
+    await ctrl.aio_publish(rga.info())
+    
+    return True
+
+            
+async def filament_off():
+    if rga.command('FilamentControl Off').get() is False:
+        pass
+    await ctrl.aio_publish(rga.info())
+
+    return True
 
 
+    
+async def start(scan_mode:str, filter_mode:str, points_per_peak:int, mass_start:int, mass_end:int, accuracy:int, detector:int, interval:float):
+    rga.status_node.scan_settings = {
+        'scan_mode': ('Analog' if scan_mode == 'Analog' else 'Barchart'),
+        'mass_start': max(0, min(mass_start, mass_end)),
+        'mass_end': min(max(mass_start, mass_end), 200),
+        'filter_mode': filter_mode,
+        'points_per_peak': max(4, min(64, points_per_peak)),
+        'accuracy': accuracy,
+        'detector_index': detector,
+    }
+    run_status.scan_interval = max(0, interval)
+    run_status.next_scan_time = time.time()
+    run_status.running = True
+    await ctrl.aio_publish(run_status, name="RunStatus.RGA")
 
+
+    
+async def stop(scan_mode:str, filter_mode:str, points_per_peak:int, mass_start:int, mass_end:int, accuracy:int, detector:int, interval:float):
+    rga.status_node.scan_settings = {
+        'scan_mode': ('Analog' if scan_mode == 'Analog' else 'Barchart'),
+        'mass_start': max(0, min(mass_start, mass_end)),
+        'mass_end': min(max(mass_start, mass_end), 200),
+        'filter_mode': filter_mode,
+        'points_per_peak': max(4, min(64, points_per_peak)),
+        'accuracy': accuracy,
+        'detector_index': detector,
+    }
+    run_status.scan_interval = max(0, interval)
+    run_status.running = False
+    await ctrl.aio_publish(run_status, name="RunStatus.RGA")
+
+
+    
 async def run_command(command:str):
     if command.upper() == 'SCANSTART':
         result = 'ERROR: scan cannot be started from command console'
@@ -301,6 +429,7 @@ async def run_command(command:str):
 
 if __name__ =='__main__':
     logging.basicConfig(level=logging.INFO)
+    run_status.running = True
     
     from slowpy.dash import Tasklet
     task = Tasklet()

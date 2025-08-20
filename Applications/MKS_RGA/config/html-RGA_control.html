@@ -1,0 +1,83 @@
+<form>
+  <div style="font-weight:bold;margin-top:0.5em">Device</div>
+  <table>
+    <tr>
+      <td>Control</td>
+      <td><span sd-value="Status.RGA['System/controlling']">--</span></td>
+      <td>
+        <input type="submit" name="RGA.acquire_control()" value="Acquire" sd-enabled="Status.RGA['System/controlling']->match('No')">
+        <input type="submit" name="RGA.release_control()" value="Release" sd-enabled="Status.RGA['System/controlling']->match('Yes')">
+      </td>
+    </tr>
+    <tr>
+      <td>Filament</td>
+      <td><span sd-value="Info.RGA['FilamentInfo/SummaryState']">--</span></td>
+      <td>
+        <input type="submit" name="RGA.filament_on()" value="Turn On" sd-enabled="Info.RGA['FilamentInfo/SummaryState']->match('OFF')">
+        <input type="submit" name="RGA.filament_off()" value="Turn Off" sd-enabled="Info.RGA['FilamentInfo/SummaryState']->match('ON')">
+      </td>
+    </tr>
+    <tr>
+      <td>Multiplier</td>
+      <td><span sd-value="Info.RGA['MultiplierInfo/MultiplierOn']->replace('Yes','ON')->replace('No','OFF')">--</span></td>
+      <td><span style="font-size:small">(turns on automatically if conditions are satisfied)</span></td>
+    </tr>
+  </table>
+    
+  <div style="font-weight:bold;margin-top:1em">Measurement</div>
+  <table>
+    <tr>
+      <td>Scan Mode</td><td>
+        <label><input type="radio" name="scan_mode" value="Barchart" sd-value="Status.RGA['ScanSettings/scan_mode']->eq('Barchart')"> Barchart</label>:
+        <select name="filter_mode" sd-value="Status.RGA['ScanSettings/filter_mode']">
+          <option value="PeakCenter">Peak Center</option>
+          <option value="PeakMax">Peak Max</option>
+          <option value="PeakAverage">Peak Average</option>
+        </select>
+    </td></tr><tr><td></td><td>
+        <label><input type="radio" name="scan_mode" value="Analog" sd-value="Status.RGA['ScanSettings/scan_mode']->eq('Analog')"> Analog</label>:
+        <select name="points_per_peak" sd-value="Status.RGA['ScanSettings/points_per_peak']">
+          <option value="64">64 points/peak</option>
+          <option value="32">32 points/peak</option>
+          <option value="16">16 points/peak</option>
+          <option value="8">8 points/peak</option>
+          <option value="4">4 points/peak</option>
+        </select>
+    </td></tr>
+    <td>Mass Range</td>
+    <td>start: <input type="number" step="1" name="mass_start" style="width:4em" sd-value="Status.RGA['ScanSettings/mass_start']">,
+    end: <input type="number" step="1" name="mass_end" style="width:4em" sd-value="Status.RGA['ScanSettings/mass_end']"></td>
+    </tr>
+    <tr>
+      <td>Accuracy</td>
+      <td><select name="accuracy" style="width:12em" sd-value="Status.RGA['ScanSettings/accuracy']">
+          <option value="0">0: Fastest, least accurate</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8: Most accurate, slowest</option>
+      </select></td>
+    </tr>
+    <tr>
+      <td>Detector</td>
+      <td><select name="detector" style="width:12em" sd-value="Status.RGA['ScanSettings/detector_index']">
+          <option value="0">Faraday</option>
+          <option value="1">Multiplier 1</option>
+          <option value="2">Multiplier 2</option>
+          <option value="3">Multiplier 3</option>
+      </select></td>
+    </tr>
+    <tr>
+      <td>Interval</td>
+      <td><input type="number" name="interval" style="width:10em" sd-value="RunStatus.RGA['scan_interval']"> sec  (0 for not repeating)</td>
+    </tr>
+  </table>
+  <div style="font-size:200%;margin-top:0.5em">
+    <input type="submit" name="RGA.start()" value="Start" sd-enabled="RunStatus.RGA[running]->invert()">
+    <input type="submit" name="RGA.stop()" value="Stop" sd-enabled="RunStatus.RGA[running]">
+  </div>
+</form>

@@ -95,7 +95,7 @@ class ControlNode:
                 else:
                     await asyncio.sleep(0.1)
         elif subsec10 > 0:
-            await asyncio.sleep(subsec/10.0)
+            await asyncio.sleep(subsec10/10.0)
 
         return not self.is_stop_requested()
 

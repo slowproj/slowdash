@@ -51,13 +51,26 @@ class EthernetNode(spc.ControlNode):
 
     ## methods ##    
     def do_get_chunk(self, timeout=None):
+        """
+        return value:
+          - received chunk, can be empty if timeout occurs
+          - None if socket is closed
+        """
+        
         if self.socket is None:
             return ''
     
         events = self.selectors.select(timeout=timeout)
         for key, mask in events:
             if key.fileobj == self.socket and mask != 0:
-                return self.socket.recv(1024*1024).decode('utf-8', errors='ignore')
+                recv = self.socket.recv(1024*1024).decode('utf-8', errors='ignore')
+                if len(recv) == 0: # EOF
+                    logging.warn('socket disconnected')
+                    del self.socket
+                    self.socket = None
+                    return None
+                else:
+                    return recv
         else:
             return ''
 
@@ -70,7 +83,7 @@ class EthernetNode(spc.ControlNode):
         """
         
         if self.socket is None:
-            return ''
+            return None
 
         if timeout is not None:
             wait_until = time.time() + timeout
@@ -79,9 +92,18 @@ class EthernetNode(spc.ControlNode):
         
         line = ''
         with self.lock:
-            while not self.is_stop_requested():
+            while True:
                 if len(self.socket_buffer) == 0:
-                    self.socket_buffer = self.do_get_chunk(timeout=0.1)
+                    if self.is_stop_requested():
+                        chunk = None
+                    else:
+                        chunk = self.do_get_chunk(timeout=0.1)
+                    if chunk is None:  # stop requested or connection closed
+                        if len(line) > 0:
+                            break
+                        else:
+                            return None
+                    self.socket_buffer = chunk
                 
                 if len(self.socket_buffer) == 0:
                     if wait_until is not None and time.time() >= wait_until:
@@ -114,7 +136,7 @@ class EthernetNode(spc.ControlNode):
 
     def do_flush_input(self):
         while not self.is_stop_requested():
-            text = self.do_get_chunk(timeout=0.01)
+            text = self.do_get_chunk(timeout=0.01) or ''
             if len(text) == 0:
                 break
             logging.debug(f"dumping [{text.strip()}]")
@@ -169,7 +191,7 @@ class ScpiNode(spc.ControlNode):
         self.append_opc = append_opc
         self.verbose = verbose
         
-        while len(self.connection.do_get_chunk(timeout=0.1)) > 0:
+        while len(self.connection.do_get_chunk(timeout=0.1) or '') > 0:
             pass
 
     
@@ -240,7 +262,7 @@ class TelnetNode(spc.ControlNode):
         self.has_echo = has_echo
         self.line_terminator = line_terminator
 
-        while len(self.connection.do_get_chunk(timeout=0.1)) > 0:
+        while len(self.connection.do_get_chunk(timeout=0.1) or '') > 0:
             pass
 
         
