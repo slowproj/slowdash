@@ -6,3 +6,13 @@ slowdash_project:
     auto_load: true
     parameters:
       address: localhost
+      db_url: sqlite:///RGA.db
+
+
+  data_source:
+    url: sqlite:///RGA.db
+    time_series:
+      schema: time_series[channel]@timestamp(unix)=value
+    object_time_series:
+      schema: mass_spectrum[channel]@timestamp(unix)=value
+      

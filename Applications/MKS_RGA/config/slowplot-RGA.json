@@ -1,6 +1,6 @@
 {
     "control": {
-        "range": { "length": 300, "to": 0 },
+        "range": { "length": 3600, "to": 0 },
         "reload": 2,
         "mode": "normal",
         "grid": { "rows": 2, "columns": 2 }
@@ -12,7 +12,7 @@
             "item_type": "square",
             "items": [
                 {
-                    "channel": "Settings.RGA['Status/has_control']",
+                    "channel": "Status.RGA['Status/has_control']",
                     "gauge": { "min": 0, "max": 0 },
                     "ranges": {
                         "normal": { "min": 0, "max": 0.5 },
@@ -23,7 +23,7 @@
                     "text_transform": "replace(true,'Acquired')->replace(false,'Released')"
                 },
                 {
-                    "channel": "Settings.RGA['Status/filament']->replace('OFF',0)->replace('ON',1)",
+                    "channel": "Status.RGA['Status/filament']->replace('OFF',0)->replace('ON',1)",
                     "gauge": { "min": 0, "max": 0 },
                     "ranges": {
                         "normal": { "min": 0, "max": 0.5 },
@@ -34,7 +34,7 @@
                     "text_transform": "replace(0,'Off')->replace(1,'On')"
                 },
                 {
-                    "channel": "Settings.RGA['Status/multiplier']->replace('On',1)->replace('Off',0)",
+                    "channel": "Status.RGA['Status/multiplier']->replace('On',1)->replace('Off',0)",
                     "ranges": {
                         "normal": { "min": 0, "max": 0.5 },
                         "warn": { "min": 0, "max": 1.5 },
@@ -45,7 +45,7 @@
                     "gauge": { "min": 0, "max": 0 }
                 },
                 {
-                    "channel": "Status.RGA['running']",
+                    "channel": "RunControl.RGA['running']",
                     "gauge": { "min": 0, "max": 0 },
                     "ranges": {
                         "normal": { "min": 0, "max": 0.5 },
@@ -56,7 +56,7 @@
                     "label": "Run Status"
                 },
                 {
-                    "channel": "Settings.RGA['Settings/detector_index']",
+                    "channel": "Status.RGA['Settings/detector_index']",
                     "gauge": { "min": 0, "max": 3 },
                     "ranges": {
                         "normal": { "min": 0, "max": 0 },
@@ -67,7 +67,7 @@
                     "text_transform": "replace(0,'Faraday')->replace(1,'SEM 1')->replace(2,'SEM 2)->replace(3,'SEM 3')"
                 },
                 {
-                    "channel": "Settings.RGA['Settings/accuracy']",
+                    "channel": "Status.RGA['Settings/accuracy']",
                     "gauge": { "min": 0, "max": 8 },
                     "ranges": {
                         "normal": { "min": 0, "max": 0 },
@@ -78,7 +78,7 @@
                     "format": "%d/8"
                 },
                 {
-                    "channel": "Settings.RGA['Status/last_mass']",
+                    "channel": "Status.RGA['Status/last_mass']",
                     "gauge": { "min": 0, "max": 200 },
                     "ranges": {
                         "normal": { "min": 0, "max": 0.01 },
@@ -90,9 +90,9 @@
                     "format": "m=%.1f"
                 },
                 {
-                    "channel": "Status.RGA['time_to_next_scan']",
+                    "channel": "RunControl.RGA['time_to_next_scan']",
                     "ranges": {
-                        "normal": { "min": 0, "max": 0.5 },
+                        "normal": { "min": 0, "max": 0.9 },
                         "warn": { "min": 0, "max": 864000 },
                         "error": { "min": 0, "max": 0 }
                     },
@@ -110,13 +110,24 @@
         {
             "type": "plot",
             "plots": [
-                { "type": "bar", "channel": "mass_spectrum", "color": "#009090", "label": "Mass Spectrum", "format": "%.5g", "opacity": 1 }
+                { "type": "bar", "channel": "graph.MassSpec.RGA", "color": "#009090", "label": "Mass Spectrum", "format": "%.5g", "opacity": 1 }
             ],
-            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": true, "zlog": false, "xmin": -0.6, "xmax": 40, "ymin": "-2e-7", "ymax": "5e-7", "zmin": 0, "zmax": 1, "xtitle": "Mass Number", "ytitle": "Partial Pressure (mbar)" },
-            "legend": { "style": "none" }
+            "axes": { "xfixed": false, "yfixed": true, "xlog": false, "ylog": true, "zlog": false, "xmin": -0.6, "xmax": 40, "ymin": "1e-12", "ymax": 0.000001, "zmin": 0, "zmax": 1, "xtitle": "Mass Number", "ytitle": "Partial Pressure (mbar)" },
+            "legend": { "style": "transparent" }
         },
-        { "type": "tree", "channel": "Settings.RGA" },
-        { "type": "tree", "channel": "Status.RGA" }
+        {
+            "type": "timeseries",
+            "plots": [
+                { "type": "timeseries", "channel": "mbar.Mass02.RGA", "color": "#009090", "label": "Mass02", "format": "%.3g mbar", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_envelope": false, "fill_baseline": "1e-100" },
+                { "type": "timeseries", "channel": "mbar.Mass04.RGA", "color": "#dd8000", "label": "Mass04", "format": "%.3g mbar", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_envelope": false, "fill_baseline": "1e-100" },
+                { "type": "timeseries", "channel": "mbar.Mass16.RGA", "color": "#4169e1", "label": "Mass16", "format": "%.3g mbar", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_envelope": false, "fill_baseline": "1e-100" },
+                { "type": "timeseries", "channel": "mbar.Mass28.RGA", "color": "#b030b0", "label": "Mass28", "format": "%.3g mbar", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_envelope": false, "fill_baseline": "1e-100" }
+            ],
+            "axes": { "xfixed": false, "yfixed": true, "xlog": false, "ylog": true, "zlog": false, "ymin": "1e-12", "ymax": 0.000001, "title": "Historical Partial Pressures", "ytitle": "(mbar)" },
+            "legend": { "style": "side" }
+        },
+        { "type": "tree", "channel": "Status.RGA" },
+        { "type": "tree", "channel": "RunControl.RGA" }
     ],
     "meta": { "name": "RGA", "title": "", "description": "" }
 }
