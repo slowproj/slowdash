@@ -34,6 +34,7 @@
           <option value="PeakMax">Peak Max</option>
           <option value="PeakAverage">Peak Average</option>
         </select>
+        <span style="font-size:80%;margin-left:1em">(time-series recorded only with Barchart)</span>
     </td></tr><tr><td></td><td>
         <label><input type="radio" name="scan_mode" value="Analog" sd-value="Status.RGA['Settings/scan_mode']->eq('Analog')"> Analog</label>:
         <select name="points_per_peak" sd-value="Status.RGA['Settings/points_per_peak']">
@@ -73,7 +74,10 @@
     </tr>
     <tr>
       <td>Interval</td>
-      <td><input type="number" name="interval" style="width:10em" sd-value="RunControl.RGA['scan_interval']"> sec  (0 for not repeating)</td>
+      <td>
+        <input type="number" name="interval" style="width:10em" sd-value="RunControl.RGA['scan_interval']"> sec
+        <span style="font-size:80%;margin-left:1em">(0 for not repeating)</span>
+      </td>
     </tr>
   </table>
   <div style="font-size:200%;margin-top:0.5em">

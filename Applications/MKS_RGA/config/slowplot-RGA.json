@@ -1,7 +1,7 @@
 {
     "control": {
-        "range": { "length": 3600, "to": 0 },
-        "reload": 2,
+        "range": { "length": 10800, "to": 0 },
+        "reload": 1,
         "mode": "normal",
         "grid": { "rows": 2, "columns": 2 }
     },
@@ -97,8 +97,9 @@
                         "error": { "min": 0, "max": 0 }
                     },
                     "label": "Next Scan",
-                    "format": "in %d sec",
-                    "gauge": { "min": 0, "max": 0 }
+                    "format": "in %.0f sec",
+                    "gauge": { "min": 0, "max": 0 },
+                    "text_transform": ""
                 }
             ],
             "color": { "base": "rgb(0, 0, 0)", "normal": "#62a0ea", "warn": "#ff7800", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.4 },
@@ -106,13 +107,14 @@
             "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
             "ranges": { "apply_to_value": false, "apply_to_gauge": false, "apply_to_tile": true }
         },
-        { "type": "html", "location": "project", "file": "RGA_control", "title": "" },
+        { "type": "html", "location": "project", "file": "RGA_control", "title": "", "scaling": 0 },
         {
             "type": "plot",
             "plots": [
-                { "type": "bar", "channel": "graph.MassSpec.RGA", "color": "#009090", "label": "Mass Spectrum", "format": "%.5g", "opacity": 1 }
+                { "type": "bar", "channel": "graph.MassSpec.RGA", "color": "#009090", "label": "Mass Spectrum", "format": "%.5g", "opacity": 1 },
+                { "type": "graph", "channel": "graph_cumulative.MassSpec.RGA", "color": "#dd8000", "label": "Cumulative", "format": "%.2g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_envelope": false, "fill_baseline": "1e-100" }
             ],
-            "axes": { "xfixed": false, "yfixed": true, "xlog": false, "ylog": true, "zlog": false, "xmin": -0.6, "xmax": 40, "ymin": "1e-12", "ymax": 0.000001, "zmin": 0, "zmax": 1, "xtitle": "Mass Number", "ytitle": "Partial Pressure (mbar)" },
+            "axes": { "xfixed": false, "yfixed": true, "xlog": false, "ylog": true, "zlog": false, "xmin": -0.6, "xmax": 40, "ymin": "1e-12", "ymax": 0.000001, "zmin": 0, "zmax": 1, "xtitle": "Mass Number", "ytitle": "Partial Pressure (mbar)", "title": "Mass Spectrum" },
             "legend": { "style": "transparent" }
         },
         {
@@ -121,13 +123,14 @@
                 { "type": "timeseries", "channel": "mbar.Mass02.RGA", "color": "#009090", "label": "Mass02", "format": "%.3g mbar", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_envelope": false, "fill_baseline": "1e-100" },
                 { "type": "timeseries", "channel": "mbar.Mass04.RGA", "color": "#dd8000", "label": "Mass04", "format": "%.3g mbar", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_envelope": false, "fill_baseline": "1e-100" },
                 { "type": "timeseries", "channel": "mbar.Mass16.RGA", "color": "#4169e1", "label": "Mass16", "format": "%.3g mbar", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_envelope": false, "fill_baseline": "1e-100" },
-                { "type": "timeseries", "channel": "mbar.Mass28.RGA", "color": "#b030b0", "label": "Mass28", "format": "%.3g mbar", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_envelope": false, "fill_baseline": "1e-100" }
+                { "type": "timeseries", "channel": "mbar.Mass28.RGA", "color": "#b030b0", "label": "Mass28", "format": "%.3g mbar", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_envelope": false, "fill_baseline": "1e-100" },
+                { "type": "timeseries", "channel": "mbar.Sum.RGA", "color": "#9a9996", "label": "Sum", "format": "%.3g mbar", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_envelope": false, "fill_baseline": "1e-100" }
             ],
             "axes": { "xfixed": false, "yfixed": true, "xlog": false, "ylog": true, "zlog": false, "ymin": "1e-12", "ymax": 0.000001, "title": "Historical Partial Pressures", "ytitle": "(mbar)" },
             "legend": { "style": "side" }
         },
-        { "type": "tree", "channel": "Status.RGA" },
-        { "type": "tree", "channel": "RunControl.RGA" }
+        { "type": "tree", "channel": "Status.RGA", "title": "RGA Status" },
+        { "type": "tree", "channel": "RunControl.RGA", "title": "Run Control Status" }
     ],
     "meta": { "name": "RGA", "title": "", "description": "" }
 }

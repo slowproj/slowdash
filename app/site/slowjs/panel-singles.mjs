@@ -273,6 +273,9 @@ class SquareItem extends SingleDisplayItem {
             }
             return;
         }
+        if (typeof(value) == 'string') {
+            value = parseFloat(value);
+        }
         
         let range_color = null;
         if (this.config.ranges) {

@@ -193,7 +193,7 @@ class StatusNode(ControlNode):
 
         self.scan_mode = 'Barchart'       # 'Barchart' or 'Analog'
         self.mass_start = 1
-        self.mass_end = 50                # up to 200 (see the Info command output)
+        self.mass_end = 100               # up to 200 (see the Info command output)
         self.filter_mode = 'PeakAverage'  # "PeakCenter", "PeakMax", "PeakAverage"
         self.points_per_peak = 8          # (64), 32, 16, 8, 4
         self.accuracy = 3                 # 0..8, 0 is the fastest
@@ -344,9 +344,15 @@ async def _initialize(params):
 
 async def _loop():
     if not rga.status_node.scanning:
+        # update the status from the info command (not from notifications) in case of socket reconnect
+        info = rga.info().get()
+        rga.status_node.has_control = (info.get('Info',{}).get('UserApplication',None) == 'SlowDash')
+        rga.status_node.filament = (info.get('FilamentInfo',{}).get('SummaryState','Error'))
+        
         await ctrl.aio_publish(run_control)
         await ctrl.aio_publish(rga.status())
         await ctrl.aio_publish(rga.info())
+        
     if not rga.status_node.has_control or not run_control.running:
         run_control.time_to_next_scan = 0
         return await ctrl.aio_sleep(1)
@@ -362,35 +368,46 @@ async def _loop():
     if now < run_control.next_scan_time:
         return await ctrl.aio_sleep(1)
     
+    run_control.time_to_next_scan = 0
+    await ctrl.aio_publish(rga.status())
+    
+    result = rga.scan().get()
+    
     if run_control.scan_interval > 0:
         ticks = math.floor((now - run_control.next_scan_time) / run_control.scan_interval) + 1
         run_control.next_scan_time += ticks * run_control.scan_interval
         run_control.time_to_next_scan = run_control.next_scan_time - now
     else:
         run_control.next_scan_time = 0
-            
-    result = rga.scan().get()
-    
-    if run_control.next_scan_time <= 0:
         run_control.running = False
-
+            
     if result is None:
         return
     table, attr = result
     
-    if rga.status().scan_mode == 'Barchart':
-        datastore_ts.append({ f'mbar.Mass{row[0]:02.0f}.RGA':row[1]/100 for row in table })
-    
-    g = slowpy.Graph()
+    g0 = slowpy.Graph()
+    g1 = slowpy.Graph()
+    cumulative = 0
     for row in table:
-        g.add_point(row[0], row[1]/100)
-    timestamp = float(attr.get('timestamp', 0))
+        mbar = row[1]/100.0
+        cumulative += mbar
+        g0.add_point(row[0], mbar)
+        g1.add_point(row[0], cumulative)
+    timestamp = float(attr.get('_timestamp', time.time()))
     if timestamp > 0:
         tz = datetime.datetime.now().astimezone().tzinfo
-        g.add_attr('Time', datetime.datetime.fromtimestamp(timestamp,tz=tz).strftime('%y-%m-%d %H:%M:%S %z'))
-    datastore_obj.append(g, tag="graph.MassSpec.RGA")
-    await ctrl.aio_publish(g, name="graph.MassSpec.RGA")
+        g0.add_stat('Date', datetime.datetime.fromtimestamp(timestamp,tz=tz).strftime('%Y-%m-%d (%z)'))
+        g0.add_stat('Time', datetime.datetime.fromtimestamp(timestamp,tz=tz).strftime('%H:%M:%S'))
+        g1.add_stat('Sum', f'{cumulative:.3g} mbar')
+    datastore_obj.append(g0, tag="graph.MassSpec.RGA")
+    datastore_obj.append(g1, tag="graph_cumulative.MassSpec.RGA")
+    await ctrl.aio_publish(g0, name="graph.MassSpec.RGA")
+    await ctrl.aio_publish(g1, name="graph_cumulative.MassSpec.RGA")
 
+    if rga.status().scan_mode == 'Barchart':
+        datastore_ts.append({ f'mbar.Mass{row[0]:02.0f}.RGA':row[1]/100 for row in table })
+    datastore_ts.append({f'mbar.Sum.RGA':cumulative})
+    
     
 async def acquire_control():
     rga.do_acquire_control()

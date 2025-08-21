@@ -6,42 +6,85 @@ import slowpy.control as spc
 
 
 class EthernetNode(spc.ControlNode):
-    def __init__(self, address, port, **kwargs):
-        import socket
+    def __init__(self, address, port, **kwargs):        
         self.address = address
         self.port = port
-
-        if address is None or not int(port) > 0:
-            logging.error(f'bad address or port: {address}:{port}')
-            self.socket = None
-            return
+        self.reconnect_time = kwargs.get('reconnect', 10)
+        self.terminator = None
         
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.selectors = selectors.DefaultSelector()
-        self.selectors.register(self.socket, selectors.EVENT_READ)
+        self.socket = None
+        self.selectors = None
         self.lock = threading.Lock()
         
+        self.last_connect_time = 0
         self.socket_buffer = ''
-        self.terminator = None
-
-        try:
-            self.socket.connect((self.address, self.port))
-            logging.info('Ethernet: %s:%s connected' % (address, str(port)))
-        except Exception as e:
-            del self.socket
-            self.socket = None
-            logging.error(f'unable to connect to {address}:{port}: {e}')
         
-    
+        if self.address is None or not int(self.port) > 0:
+            logging.error(f'bad address or port: {self.address}:{self.port}')
+            
+            
     def __del__(self):
         if self.socket is not None:
-            self.socket.close()
+            try:
+                self.socket.close()
+            except:
+                pass
         del self.selectors
-
         
-    def set(self, value):
+        
+    def do_connect(self):
+        if self.address is None or not int(self.port) > 0:
+            return False
         if self.socket:
-            self.socket.sendall(value.encode('utf-8'))
+            try:
+                self.socket.close()
+            except:
+                pass
+            del self.selectors
+            del self.socket
+            
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        
+        try:
+            self.socket.connect((self.address, self.port))
+            logging.info(f'Ethernet: {self.address}:{self.port} connected')
+        except Exception as e:
+            logging.error(f'unable to connect to {self.address}:{self.port}: {e}')
+            self.socket = None
+            self.selectors = None
+            return False
+
+        self.selectors = selectors.DefaultSelector()
+        self.selectors.register(self.socket, selectors.EVENT_READ)
+        
+        return True
+
+
+    def is_available(self):
+        if self.socket:
+            return True
+        if self.last_connect_time > 0 and not (self.reconnect_time > 0):
+            return False
+        
+        now = time.time()
+        if now - self.last_connect_time < self.reconnect_time:
+            return False
+        self.last_connect_time = now
+            
+        return self.do_connect()
+        
+    
+    def set(self, value):
+        if self.is_available():
+            try:
+                self.socket.sendall(value.encode('utf-8'))
+            except Exception as e:
+                logging.warn(f'socket error: {e}')
+                try:
+                    self.socket.close()
+                except:
+                    pass
+                self.socket = None
 
     
     def get(self):
@@ -56,16 +99,22 @@ class EthernetNode(spc.ControlNode):
           - None if socket is closed
         """
         
-        if self.socket is None:
+        if not self.is_available():
             return ''
     
         events = self.selectors.select(timeout=timeout)
         for key, mask in events:
             if key.fileobj == self.socket and mask != 0:
-                recv = self.socket.recv(1024*1024).decode('utf-8', errors='ignore')
+                try:
+                    recv = self.socket.recv(1024*1024).decode('utf-8', errors='ignore')
+                except Exception as e:
+                    logging.warn(f'socket error: {e}')
                 if len(recv) == 0: # EOF
                     logging.warn('socket disconnected')
-                    del self.socket
+                    try:
+                        self.socket.close()
+                    except:
+                        pass
                     self.socket = None
                     return None
                 else:
@@ -81,7 +130,7 @@ class EthernetNode(spc.ControlNode):
           - None if timeout occurs
         """
         
-        if self.socket is None:
+        if not self.is_available():
             return None
 
         if timeout is not None:
