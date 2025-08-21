@@ -143,13 +143,16 @@ class App(slowlette.App):
         return (await self.slowlette(url)).content
 
 
-    async def request_publish(self, topic:str, message):
+    async def request_publish(self, topic:str, message, sender:str=None):
         """shortcut for "/api/publish"
         Parameters:
           - topic: subscription topic
           - message: bytes, or data to JSONize.
         """
-        return (await self.slowlette(f'/api/publish/{topic}', message)).content
+        if sender is None:
+            return (await self.slowlette(f'/api/publish/{topic}', message)).content
+        else:
+            return (await self.slowlette(f'/api/publish/{topic}?sender={sender}', message)).content
 
     
         

@@ -6,13 +6,13 @@ import slowpy.control as spc
 
 
 class EthernetNode(spc.ControlNode):
-    def __init__(self, host, port, **kwargs):
+    def __init__(self, address, port, **kwargs):
         import socket
-        self.host = host
+        self.address = address
         self.port = port
 
-        if host is None or not int(port) > 0:
-            logging.error(f'bad host or port: {host}:{port}')
+        if address is None or not int(port) > 0:
+            logging.error(f'bad address or port: {address}:{port}')
             self.socket = None
             return
         
@@ -25,14 +25,13 @@ class EthernetNode(spc.ControlNode):
         self.terminator = None
 
         try:
-            self.socket.connect((self.host, self.port))
+            self.socket.connect((self.address, self.port))
+            logging.info('Ethernet: %s:%s connected' % (address, str(port)))
         except Exception as e:
             del self.socket
             self.socket = None
-            raise spc.ControlException('EthernetNode: unable to connect to %s:%s: %s' % (host, str(port), str(e)))
+            logging.error(f'unable to connect to {address}:{port}: {e}')
         
-        logging.info('Ethernet: %s:%s connected' % (host, str(port)))
-            
     
     def __del__(self):
         if self.socket is not None:
@@ -153,8 +152,8 @@ class EthernetNode(spc.ControlNode):
 
     @classmethod
     def _node_creator_method(cls):
-        def ethernet(self, host, port):
-            name = '%s:%s' % (host, str(port))
+        def ethernet(self, address, port):
+            name = '%s:%s' % (address, str(port))
             try:
                 self._ethernet_nodes.keys()
             except:
@@ -162,7 +161,7 @@ class EthernetNode(spc.ControlNode):
             node = self._ethernet_nodes.get(name, None)
         
             if node is None:
-                node = EthernetNode(host, port)
+                node = EthernetNode(address, port)
                 self._ethernet_nodes[name] = node
 
             return node

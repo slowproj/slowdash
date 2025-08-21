@@ -19,13 +19,9 @@ class RGA(ControlNode):
 
         self.replies = []
         self.notifications = []
-        
-        self.has_control = (self.command('Control SlowDash 0.1').get() is not False)
-        if self.has_control:
-            logging.info("RGA: taking control")
 
         self.info_node = InfoNode(self)
-        self.status_node = StatusNode(self)
+        self.settings_node = SettingsNode(self)
         self.scan_node = ScanNode(self)
 
         
@@ -52,14 +48,24 @@ class RGA(ControlNode):
         return self.info_node
 
     
-    def status(self):
-        return self.status_node
+    def settings(self):
+        return self.settings_node
 
     
     def scan(self):
         return self.scan_node
 
 
+    def do_acquire_control(self):
+        self.command('Control').set('SlowDash 0.1')
+        self.settings_node.has_control = (rga.info().get().get('Info',{}).get('UserApplication',None) == 'SlowDash')
+
+        
+    def do_releasea_control(self):
+        self.command('Release').set()
+        self.settings_node.has_control = (rga.info().get().get('Info',{}).get('UserApplication',None) == 'SlowDash')
+
+        
     def _communicate(self, command):
         command_name = command.split()[0].lower()
         with self.connection._rga_lock:
@@ -74,17 +80,18 @@ class RGA(ControlNode):
                 if len(self.replies) > 0:
                     reply = self.replies.pop(0)
                 else:
-                    reply = self._receive_reply(timeout=1)
+                    reply = self._receive_reply(timeout=10)
                     if reply is None or len(reply) == 0:
                         return None
                 if reply[0][0].lower() == command_name:
                     break
-                self.notifications.append(reply)
+                self.notifications.extend(reply)
+                logging.warn(f'notification during a command {command}: {reply}')
 
         if reply[0][1] != "OK":
-            logging.error("error on command: %s" % command)
+            logging.error(f'error on command: "{command}"')
             for message in reply[1:]:
-                logging.error("  %s" % ' '.join(message))
+                logging.error(f'  {" ".join(message)}')
             return False
         
         return reply[1:]
@@ -105,7 +112,7 @@ class RGA(ControlNode):
                     continue
                 else:
                     break
-            rows = []
+            row = []
             value = ''
             in_quote = False
             is_filled = False
@@ -115,16 +122,26 @@ class RGA(ControlNode):
                     is_filled = True
                 elif (not in_quote) and (ch in [ ' ', '\t' ]):
                     if is_filled:
-                        rows.append(value)
+                        row.append(value)
                         value = ''
                         is_filled = False
                 else:
                     value = value + ch
                     is_filled = True
             if is_filled:
-                rows.append(value)
-            if len(rows) > 1:
-                reply.append(rows)
+                row.append(value)
+            if len(row) > 1:
+                reply.append(row)
+
+        if len(reply) > 0:
+            if reply[0][0] == 'FilamentStatus':
+                rga.settings_node.filament = reply[0][2]
+            elif reply[0][0] == 'MultiplierStatus':
+                rga.settings_node.multiplier = reply[0][1]
+            else:
+                return reply
+            
+            return self._receive_reply(timeout)
             
         return reply
 
@@ -136,8 +153,10 @@ class CommandNode(ControlNode):
         self.command = command
 
         
-    def set(self, value):
-        if type(value) is list:
+    def set(self, value=None):
+        if value is None:
+            return self.rga._communicate(self.command)
+        elif type(value) is list:
             return self.rga._communicate(f'{self.command} {' '.join(str(v) for v in value)}')
         else:
             return self.rga._communicate(f'{self.command} {value}')
@@ -168,30 +187,45 @@ class InfoNode(ControlNode):
 
 
 
-class StatusNode(ControlNode):
+class SettingsNode(ControlNode):
     def __init__(self, rga):
         self.rga = rga
 
-        self.scan_settings = {
-            'scan_mode': 'Barchart',       # 'Barchart' or 'Analog'
-            'mass_start': 1,
-            'mass_end': 50,
-            'filter_mode': 'PeakAverage',  # "PeakCenter", "PeakMax", "PeakAverage"
-            'points_per_peak': 8,          # (64), 32, 16, 8, 4
-            'accuracy': 1,                 # 0..8, 0 is the fastest
-            'detector_index': 3,   # 0: Faraday, 1..3: Multipliers
-        }
-            
+        self.scan_mode = 'Barchart'       # 'Barchart' or 'Analog'
+        self.mass_start = 1
+        self.mass_end = 50                # up to 200 (see the Info command output)
+        self.filter_mode = 'PeakAverage'  # "PeakCenter", "PeakMax", "PeakAverage"
+        self.points_per_peak = 8          # (64), 32, 16, 8, 4
+        self.accuracy = 3                 # 0..8, 0 is the fastest
+        self.detector_index = 3           # 0: Faraday, 1..3: Multipliers
+
+        # status set by the controller (ScanNode etc)
+        self.has_control = False
+        self.filament = 'OFF'
+        self.multiplier = 'Off'
+        self.scanning = False
+        self.last_mass = 0
+
         
     def get(self):
-        record = {
-            'System': {
-                'controlling': 'Yes' if self.rga.has_control else 'No',
+        return {
+            'Settings': {
+                'scan_mode': self.scan_mode,
+                'mass_start': self.mass_start,
+                'mass_end': self.mass_end,
+                'filter_mode': self.filter_mode,
+                'points_per_peak': self.points_per_peak,
+                'accuracy': self.accuracy,
+                'detector_index': self.detector_index,
             },
-            'ScanSettings': self.scan_settings,
+            'Status': {
+                'has_control': self.has_control,
+                'filament': self.filament,
+                'multiplier': self.multiplier,
+                'scanning': self.scanning,
+                'last_mass': self.last_mass,
+            }
         }
-            
-        return record
 
 
 
@@ -201,28 +235,31 @@ class ScanNode(ControlNode):
 
         
     def get(self):
-        settings = self.rga.status_node.scan_settings
-        scan_mode = ('Analog' if settings["scan_mode"] == 'Analog' else 'Barchart')
+        if not self.rga.settings_node.has_control:
+            return None
+        
+        if self.rga.settings_node.scanning:
+            return None
+        
+        settings = self.rga.settings_node
+        scan_mode = ('Analog' if settings.scan_mode == 'Analog' else 'Barchart')
         cmd = f'Add{scan_mode}'
         args = [
             'SlowdashOneTime',   # Measurement Name
-            settings["mass_start"], settings["mass_end"],
-            settings["filter_mode"] if scan_mode == "Barchart" else settings["points_per_peak"],
-            settings["accuracy"],
+            settings.mass_start, settings.mass_end,
+            settings.filter_mode if scan_mode == "Barchart" else settings.points_per_peak,
+            settings.accuracy,
             '0',   # EGainIndex
             '0',   # SourceInde
-            settings["detector_index"],
+            settings.detector_index,
         ]
         
-        if not self.rga.has_control:
-            return None
-        
-        if self.rga.command('ScanStop').get() is False:
+        if self.rga.command('ScanStop').set() is False:
             pass
         with self.rga.connection._rga_lock:
             while len(self.rga.notifications) > 0:
                 for record in self.rga.notifications.pop(0):
-                    logging.warning(f'Leftover notification dropped: {record[0]}')
+                    logging.warning(f'Leftover notification dropped: {record}')
         
         if self.rga.command(cmd).set(args) is False:
             pass
@@ -230,15 +267,17 @@ class ScanNode(ControlNode):
             return None
         if self.rga.command('ScanStart').set(1) is False:
             return None
+        self.rga.settings_node.scanning = True
+        self.rga.settings_node.last_mass = 0
         
         table = []
         attr = {}
-        length = int(settings["mass_end"]) - int(settings["mass_start"]) + 1
+        length = int(settings.mass_end) - int(settings.mass_start) + 1
         if scan_mode == "Analog":
-            length *= settings["points_per_peak"]
+            length *= settings.points_per_peak
         while len(table) < length:
             if len(self.rga.notifications) == 0:
-                reply = self.rga._receive_reply(timeout=1)
+                reply = self.rga._receive_reply(timeout=10)
                 if reply is None:
                     break
                 self.rga.notifications.extend(reply)
@@ -250,6 +289,7 @@ class ScanNode(ControlNode):
                         if record[1] != 'MultSkipped':
                             mass, value = [ float(x) for x in record[1:] ]
                             table.append([mass, value])
+                            self.rga.settings_node.last_mass = mass
                     elif record_name == 'StartingScan':
                         attr['timestamp'] = record[2]
                     elif record_name == 'StartingMeasurement':
@@ -260,9 +300,12 @@ class ScanNode(ControlNode):
                         self.rga.replies.append(record)
                 self.rga.notifications = []
             
-        if self.rga.command('ScanStop').get() is False:
+        self.rga.settings_node.scanning = False
+        self.rga.settings_node.last_mass = 0
+        
+        if self.rga.command('ScanStop').set() is False:
             pass
-        if self.rga.command('MeasurementRemove SlowDashOneTime').get() is False:
+        if self.rga.command('MeasurementRemove').set('SlowDashOneTime') is False:
             pass
         
         return table, attr
@@ -280,51 +323,56 @@ from dataclasses import dataclass
 
 
 @dataclass
-class RunStatus:
+class RunControl:
     running: bool = False
-    scan_interval: float = 10
+    scan_interval: float = 60
     next_scan_time: float = 0
-    scanning: bool = False
-run_status = RunStatus()
+    time_to_next_scan: float = 0
+run_control = RunControl()
 
 
 async def _initialize(params):
     global rga
-    rga = RGA(ctrl.ethernet(host=params.get('address',None), port=10014))
-    ctrl.export(rga.info(), 'Info.RGA')
-    ctrl.export(rga.status(), 'Status.RGA')
+    rga = RGA(ctrl.ethernet(host=params.get('address', None), port=10014))
     
-    rga.command('CalibrationOptions').set(['Current', 'Current'])
-    await ctrl.aio_publish(run_status, name="RunStatus.RGA")
+    ctrl.export(rga.settings(), name='Settings.RGA')
+    await ctrl.aio_publish(run_control, name="RunControl.RGA")
+    await ctrl.aio_publish(rga.info(), name='Info.RGA')
 
     
 
 async def _loop():
-    if not run_status.running:
+    if not rga.settings_node.scanning:
+        await ctrl.aio_publish(run_control)
+        await ctrl.aio_publish(rga.settings())
+        await ctrl.aio_publish(rga.info())
+    if not rga.settings_node.has_control or not run_control.running:
+        run_control.time_to_next_scan = 0
         return await ctrl.aio_sleep(1)
     
     now = time.time()
-    if run_status.next_scan_time == 0:
-        run_status.next_scan_time = now
-    if now < run_status.next_scan_time:
-        return await ctrl.aio_sleep(run_status.next_scan_time - now)
-    if run_status.next_scan_time <= now:
-        if run_status.scan_interval > 0:
-            ticks = math.floor((now - run_status.next_scan_time) / run_status.scan_interval) + 1
-            run_status.next_scan_time += ticks * run_status.scan_interval
-        else:
-            run_status.next_scan_time = 0
-
-    run_status.scanning = True
-    await ctrl.aio_publish(run_status)
+    if run_control.next_scan_time == 0:
+        run_control.next_scan_time = now
+        
+    if run_control.scan_interval > 0:
+        run_control.time_to_next_scan = run_control.next_scan_time - now
+    else:
+        run_control.time_to_next_scan = 0
+    if now < run_control.next_scan_time:
+        return await ctrl.aio_sleep(1)
+    
+    if run_control.scan_interval > 0:
+        ticks = math.floor((now - run_control.next_scan_time) / run_control.scan_interval) + 1
+        run_control.next_scan_time += ticks * run_control.scan_interval
+        run_control.time_to_next_scan = run_control.next_scan_time - now
+    else:
+        run_control.next_scan_time = 0
+            
     result = rga.scan().get()
-    run_status.scanning = False
-    await ctrl.aio_publish(run_status)
     
-    if run_status.next_scan_time <= 0:
-        run_status.running = False
-        await ctrl.aio_publish(run_status)
-    
+    if run_control.next_scan_time <= 0:
+        run_control.running = False
+
     if result is None:
         return
     
@@ -338,72 +386,66 @@ async def _loop():
 
     
 async def acquire_control():
-    if not rga.has_control:
-        rga.has_control = (rga.command('Control SlowDash 0.1').get() is not False)
-        if rga.has_control:
-            logging.info("RGA: taking control")
-        await ctrl.aio_publish(rga.status())
-
+    rga.do_acquire_control()
+    if not rga.settings_node.has_control:
+        logging.warn("RGA: unable to take control")
+    else:
+        logging.info("RGA: taking control")
+            
     return True
 
             
 async def release_control():
-    if rga.has_control:
-        rga.has_control = not (rga.command('Release').get() is not False)
-        if rga.has_control:
-            logging.info("RGA: control released")
-        await ctrl.aio_publish(rga.status())
-
+    rga.do_release_control()
+    if rga.settings_node.has_control:
+        logging.warn("RGA: unable to release control")
+    else:
+        logging.info("RGA: release control")
+            
     return True
 
                 
 async def filament_on():
-    if rga.command('FilamentControl On').get() is False:
+    if rga.command('FilamentControl').set('On') is False:
         pass
-    await ctrl.aio_publish(rga.info())
-    
     return True
 
             
 async def filament_off():
-    if rga.command('FilamentControl Off').get() is False:
+    if rga.command('FilamentControl').set('Off') is False:
         pass
-    await ctrl.aio_publish(rga.info())
-
     return True
 
 
     
-async def start(scan_mode:str, filter_mode:str, points_per_peak:int, mass_start:int, mass_end:int, accuracy:int, detector:int, interval:float):
-    rga.status_node.scan_settings = {
-        'scan_mode': ('Analog' if scan_mode == 'Analog' else 'Barchart'),
-        'mass_start': max(0, min(mass_start, mass_end)),
-        'mass_end': min(max(mass_start, mass_end), 200),
-        'filter_mode': filter_mode,
-        'points_per_peak': max(4, min(64, points_per_peak)),
-        'accuracy': accuracy,
-        'detector_index': detector,
-    }
-    run_status.scan_interval = max(0, interval)
-    run_status.next_scan_time = time.time()
-    run_status.running = True
-    await ctrl.aio_publish(run_status, name="RunStatus.RGA")
+async def start(scan_mode:str, filter_mode:str, points_per_peak:int, mass_start:int, mass_end:int, accuracy:int, detector:int, interval:float):    
+    rga.settings_node.scan_mode = ('Analog' if scan_mode == 'Analog' else 'Barchart')
+    rga.settings_node.mass_start = max(0, min(mass_start, mass_end))
+    rga.settings_node.mass_end = min(max(mass_start, mass_end), 200)
+    rga.settings_node.filter_mode = filter_mode
+    rga.settings_node.points_per_peak = max(4, min(64, points_per_peak))
+    rga.settings_node.accuracy = accuracy
+    rga.settings_node.detector_index = detector
+
+    run_control.scan_interval = max(0, interval)
+    run_control.next_scan_time = time.time()
+    run_control.running = True
+    await ctrl.aio_publish(run_control)
 
 
     
 async def stop(scan_mode:str, filter_mode:str, points_per_peak:int, mass_start:int, mass_end:int, accuracy:int, detector:int, interval:float):
-    rga.status_node.scan_settings = {
-        'scan_mode': ('Analog' if scan_mode == 'Analog' else 'Barchart'),
-        'mass_start': max(0, min(mass_start, mass_end)),
-        'mass_end': min(max(mass_start, mass_end), 200),
-        'filter_mode': filter_mode,
-        'points_per_peak': max(4, min(64, points_per_peak)),
-        'accuracy': accuracy,
-        'detector_index': detector,
-    }
-    run_status.scan_interval = max(0, interval)
-    run_status.running = False
-    await ctrl.aio_publish(run_status, name="RunStatus.RGA")
+    rga.settings_node.scan_mode = ('Analog' if scan_mode == 'Analog' else 'Barchart')
+    rga.settings_node.mass_start = max(0, min(mass_start, mass_end))
+    rga.settings_node.mass_end = min(max(mass_start, mass_end), 200)
+    rga.settings_node.filter_mode = filter_mode
+    rga.settings_node.points_per_peak = max(4, min(64, points_per_peak))
+    rga.settings_node.accuracy = accuracy
+    rga.settings_node.detector_index = detector
+
+    run_control.scan_interval = max(0, interval)
+    run_control.running = False
+    await ctrl.aio_publish(run_control)
 
 
     
@@ -429,7 +471,9 @@ async def run_command(command:str):
 
 if __name__ =='__main__':
     logging.basicConfig(level=logging.INFO)
-    run_status.running = True
+    
+    rga.do_acquire_control()
+    run_control.running = True
     
     from slowpy.dash import Tasklet
     task = Tasklet()

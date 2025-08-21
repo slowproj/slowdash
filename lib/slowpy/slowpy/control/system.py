@@ -94,7 +94,7 @@ class ControlSystem(spc.ControlNode):
             now = time.time()
             packet = { k: { 't': now, 'x': v } for k,v in data.items() }
             await cls.app().request(f'/config/transient/content/slowplot/{name}', config)
-            await cls.app().request_publish('current_data', packet)
+            await cls.app().request_publish('current_data', packet, sender=f'taskmodule_{name}')
             return
         
         # value
@@ -102,7 +102,7 @@ class ControlSystem(spc.ControlNode):
         if isinstance(obj, type):
             pass
         elif isinstance(obj, spc.ControlNode):
-            value = obj.get()
+            value = { 'tree': obj.get() }
         elif callable(getattr(obj, 'to_json', None)):  # SlowPy Element (histogram etc)
             value = obj.to_json()
             value_is_ts = isinstance(obj, slp.TimeSeries)
@@ -143,7 +143,7 @@ class ControlSystem(spc.ControlNode):
             record = { publish_name: value }
         else:
             record = { publish_name: { 't': time.time(), 'x': value } }
-        await cls.app().request_publish('current_data', record)
+        await cls.app().request_publish('current_data', record, sender=f'taskmodule_{publish_name}')
 
         
     @classmethod

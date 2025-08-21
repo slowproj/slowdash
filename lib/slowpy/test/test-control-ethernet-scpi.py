@@ -3,14 +3,14 @@ from slowpy.control import ControlSystem
 ctrl = ControlSystem()
 
 
-host, port = '192.168.1.29', 17674
+address, port = '192.168.1.29', 17674
 
-device_id = ctrl.ethernet(host, port).scpi().command('*IDN')
-V0 = ctrl.ethernet(host, port).scpi().command('MEAS:V0', set_format='V0 {};*OPC?')
+device_id = ctrl.ethernet(address, port).scpi().command('*IDN')
+V0 = ctrl.ethernet(address, port).scpi().command('MEAS:V0', set_format='V0 {};*OPC?')
 
 
 if __name__ == '__main__':
-    ctrl.ethernet(host, port).do_flush_input()
+    ctrl.ethernet(address, port).do_flush_input()
     print('ID: %s' % str(device_id))
     
     V0.setpoint().set(10)

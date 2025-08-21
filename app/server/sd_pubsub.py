@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 14 February 2024 #
 
 
-import sys, time, asyncio, logging
+import sys, time, asyncio, traceback, logging
 
 import slowlette
 from sd_component import Component
@@ -58,11 +58,15 @@ class PubsubComponent(Component):
 
             
     @slowlette.post('/api/publish/{topic}')
-    async def publish(self, topic:str, data:bytes):
+    async def publish(self, topic:str, data:bytes, sender:str=None):
         try:
-            await self.app.request(f'/consume/{topic}', data)
+            if sender is None:
+                await self.app.request(f'/consume/{topic}', data)
+            else:
+                await self.app.request(f'/consume/{topic}?sender={sender}', data)
         except Exception as e:
             logging.error(f'Error on consuming subpub message in topic "{topic}": {e}')
+            logging.error(traceback.format_exc())
             
         try:
             await asyncio.gather(*(ws.send(data.decode()) for ws in self.websockets.get(topic, [])))

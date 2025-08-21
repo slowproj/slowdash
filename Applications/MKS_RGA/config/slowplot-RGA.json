@@ -1,7 +1,7 @@
 {
     "control": {
         "range": { "length": 300, "to": 0 },
-        "reload": 60,
+        "reload": 2,
         "mode": "normal",
         "grid": { "rows": 2, "columns": 2 }
     },
@@ -12,7 +12,7 @@
             "item_type": "square",
             "items": [
                 {
-                    "channel": "Status.RGA['System/controlling']->replace('Yes',true)->replace('No',false)",
+                    "channel": "Settings.RGA['Status/has_control']",
                     "gauge": { "min": 0, "max": 0 },
                     "ranges": {
                         "normal": { "min": 0, "max": 0.5 },
@@ -23,7 +23,7 @@
                     "text_transform": "replace(true,'Acquired')->replace(false,'Released')"
                 },
                 {
-                    "channel": "Info.RGA['FilamentInfo/SummaryState']->replace('OFF',0)->replace('ON',1)",
+                    "channel": "Settings.RGA['Status/filament']->replace('OFF',0)->replace('ON',1)",
                     "gauge": { "min": 0, "max": 0 },
                     "ranges": {
                         "normal": { "min": 0, "max": 0.5 },
@@ -34,40 +34,40 @@
                     "text_transform": "replace(0,'Off')->replace(1,'On')"
                 },
                 {
-                    "channel": "RunStatus.RGA['running']",
+                    "channel": "Settings.RGA['Status/multiplier']->replace('On',1)->replace('Off',0)",
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0.5 },
+                        "warn": { "min": 0, "max": 1.5 },
+                        "error": { "min": 0, "max": 1000 }
+                    },
+                    "label": "Multiplier (auto on)",
+                    "text_transform": "replace(0,'Off')->replace(1,'On')",
+                    "gauge": { "min": 0, "max": 0 }
+                },
+                {
+                    "channel": "Status.RGA['running']",
                     "gauge": { "min": 0, "max": 0 },
                     "ranges": {
                         "normal": { "min": 0, "max": 0.5 },
                         "warn": { "min": 0, "max": 1.5 },
                         "error": { "min": 0, "max": 0 }
                     },
-                    "text_transform": "replace(true,'Running')->replace(false,'Idling')",
+                    "text_transform": "replace(true,'Running')->replace(false,'Idle')",
                     "label": "Run Status"
                 },
                 {
-                    "channel": "RunStatus.RGA['scanning']",
-                    "gauge": { "min": 0, "max": 0 },
-                    "ranges": {
-                        "normal": { "min": 0, "max": 0.5 },
-                        "warn": { "min": 0, "max": 1.5 },
-                        "error": { "min": 0, "max": 0 }
-                    },
-                    "label": "Scan Status",
-                    "text_transform": "replace(true,'Scanning')->replace(false,'Waiting')"
-                },
-                {
-                    "channel": "Status.RGA['ScanSettings/detector_index']",
+                    "channel": "Settings.RGA['Settings/detector_index']",
                     "gauge": { "min": 0, "max": 3 },
                     "ranges": {
-                        "normal": { "min": 0, "max": 0.5 },
+                        "normal": { "min": 0, "max": 0 },
                         "warn": { "min": 0, "max": 4 },
                         "error": { "min": 0, "max": 1000 }
                     },
-                    "label": "Detector Multiplier",
+                    "label": "Detector",
                     "text_transform": "replace(0,'Faraday')->replace(1,'SEM 1')->replace(2,'SEM 2)->replace(3,'SEM 3')"
                 },
                 {
-                    "channel": "Status.RGA['ScanSettings/accuracy']",
+                    "channel": "Settings.RGA['Settings/accuracy']",
                     "gauge": { "min": 0, "max": 8 },
                     "ranges": {
                         "normal": { "min": 0, "max": 0 },
@@ -78,27 +78,27 @@
                     "format": "%d/8"
                 },
                 {
-                    "channel": "Status.RGA['ScanSettings/mass_end']",
+                    "channel": "Settings.RGA['Status/last_mass']",
                     "gauge": { "min": 0, "max": 200 },
                     "ranges": {
-                        "normal": { "min": 0, "max": 0.5 },
+                        "normal": { "min": 0, "max": 0.01 },
                         "warn": { "min": 0, "max": 200 },
-                        "error": { "min": 0, "max": 10000 }
+                        "error": { "min": 0, "max": 0 }
                     },
-                    "label": "Scan Range Max",
-                    "format": "Mass %d"
+                    "label": "Scan Status",
+                    "text_transform": "",
+                    "format": "m=%.1f"
                 },
                 {
-                    "channel": "RunStatus.RGA['scan_interval']",
-                    "gauge": { "min": 0, "max": 0 },
+                    "channel": "Status.RGA['time_to_next_scan']",
                     "ranges": {
                         "normal": { "min": 0, "max": 0.5 },
-                        "warn": { "min": 0, "max": 86401 },
-                        "error": { "min": -1000000, "max": 1000000 }
+                        "warn": { "min": 0, "max": 864000 },
+                        "error": { "min": 0, "max": 0 }
                     },
-                    "label": "Scan Interval",
-                    "format": "%.0f sec",
-                    "text_transform": ""
+                    "label": "Next Scan",
+                    "format": "in %d sec",
+                    "gauge": { "min": 0, "max": 0 }
                 }
             ],
             "color": { "base": "rgb(0, 0, 0)", "normal": "#62a0ea", "warn": "#ff7800", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.4 },
@@ -115,8 +115,8 @@
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": true, "zlog": false, "xmin": -0.6, "xmax": 40, "ymin": "-2e-7", "ymax": "5e-7", "zmin": 0, "zmax": 1, "xtitle": "Mass Number", "ytitle": "Partial Pressure (mbar)" },
             "legend": { "style": "none" }
         },
-        { "type": "tree", "channel": "Status.RGA" },
-        { "type": "tree", "channel": "RunStatus.RGA" }
+        { "type": "tree", "channel": "Settings.RGA" },
+        { "type": "tree", "channel": "Status.RGA" }
     ],
     "meta": { "name": "RGA", "title": "", "description": "" }
 }

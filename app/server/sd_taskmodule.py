@@ -354,9 +354,9 @@ class SlowpyControl:
 
         try:
             await variable.aio_set(value)
-            logging.info(f'Set Variable: {name}={value}')
+            logging.info(f'Set Variable: [{name}]={value}')
         except Exception as e:
-            logging.error(f'Error on setting value: channel="{channel}", value="{value}": {e}')
+            logging.error(f'Error on setting value: [{name}]="{value}": {e}')
             return False
 
         return True
@@ -563,9 +563,11 @@ class TaskModuleComponent(Component):
 
 
     @slowlette.post('api/consume/current_data')
-    async def set_variable(self, doc:slowlette.DictJSON):
+    async def set_variable(self, doc:slowlette.DictJSON, sender:str=None):
         result = None
         for name, data in doc:
+            if sender == f'taskmodule_{name}':
+                continue
             value = data.get('x', None)
             if value is not None:
                 if await self.slowpy_control.set_variable(name, value):
