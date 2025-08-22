@@ -292,13 +292,34 @@ class HtmlPanel extends Panel {
             if (! variable.live) {
                 variable.waiting = false;
             }
+            if (data?.x == null) {
+                continue
+            }
 
-            let value = data?.x ?? null;
-            if (value) {
-                if (variable.transform) {
-                    value = variable.transform.apply(value);
+            let /*t = null,*/ x = null;  // TODO: accept only when t (if defined) is in displayTimeRange
+            if (Array.isArray(data.x)) {
+                if (data.x.length > 0) {
+                    //t = (data.start ?? 0) + data.t[data.t.length-1];
+                    x = data.x[data.x.length-1];
                 }
-                values[variable.metric] = value;
+            }
+            else {
+                //t = (data.start ?? 0) + data.t;
+                x = data.x;
+            }
+            if (x) {
+                if (typeof(x) == "string") {
+                    try {
+                        x = JSON.parse(x);
+                    }
+                    catch(error) {
+                        ; // x is a non-JSON string
+                    }
+                }
+                if (variable.transform) {
+                    x = variable.transform.apply(x);
+                }
+                values[variable.metric] = x;
             }
         }
         
