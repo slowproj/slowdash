@@ -6,7 +6,7 @@ slowdash_project:
 
   task:
     name: RGA
-    auto_load: false
+    auto_load: true
     enabled_for_commandline: false
     parameters:
       address: localhost

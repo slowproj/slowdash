@@ -20,7 +20,7 @@
     <tr>
       <td>Multiplier</td>
       <td><span sd-value="Status.RGA['Status/multiplier']">--</span></td>
-      <td><span style="font-size:small">(turns on automatically if conditions are satisfied)</span></td>
+      <td><span style="font-size:small">(turns on automatically when conditions are satisfied)</span></td>
     </tr>
   </table>
     
@@ -34,7 +34,7 @@
           <option value="PeakMax">Peak Max</option>
           <option value="PeakAverage">Peak Average</option>
         </select>
-        <span style="font-size:80%;margin-left:1em">(time-series recorded only with Barchart)</span>
+        <span style="font-size:80%;margin-left:1em">(time-series is recorded only in Barchart mode)</span>
     </td></tr><tr><td></td><td>
         <label><input type="radio" name="scan_mode" value="Analog" sd-value="Status.RGA['Settings/scan_mode']->eq('Analog')"> Analog</label>:
         <select name="points_per_peak" sd-value="Status.RGA['Settings/points_per_peak']">

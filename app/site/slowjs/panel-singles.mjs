@@ -74,12 +74,15 @@ class SingleDisplayItem {
         else if (dataPacket.__meta?.isCurrent ?? false) {
             this.currentDataTime = dataPacket.__meta.currentDataTime;
         }
-        
+
         let time=null, value=null;
         if ((ts?.t !== undefined) && (ts?.t !== null)) {
             if (Array.isArray(ts.t)) {
                 let k = ts.t.length - 1;
-                while ((k >= 0) && (ts.x[k] === null || isNaN(ts.x[k]))) {
+                while (k >= 0) {
+                    if (! Number.isNaN(ts.x[k])) {
+                        break;
+                    }
                     k--;
                 }
                 if (k >= 0) {
@@ -92,6 +95,15 @@ class SingleDisplayItem {
                 value = ts.x;
             }
         }
+        if (typeof(value) == "string") {
+            try {
+                value = JSON.parse(value);
+            }
+            catch(error) {
+                ; // value is a non-JSON string
+            }
+        }
+
         if (this.metric.transform) {
             value = this.metric.transform.apply(value);
         }

@@ -347,15 +347,13 @@ async def _initialize(params):
 
 
 async def _loop():
-    if not rga.status_node.scanning:
+    if not rga.status_node.scanning: # other command thread might be running a scan
         # update the status from the info command (not from notifications) in case of socket reconnect
         info = rga.info().get()
         rga.status_node.has_control = (info.get('Info',{}).get('UserApplication',None) == 'SlowDash')
         rga.status_node.filament = (info.get('FilamentInfo',{}).get('SummaryState','Error'))
-        
         await ctrl.aio_publish(run_control)
         await ctrl.aio_publish(rga.status())
-        await ctrl.aio_publish(rga.info())
         
     if not rga.status_node.has_control or not run_control.running:
         run_control.time_to_next_scan = 0
@@ -370,10 +368,10 @@ async def _loop():
     else:
         run_control.time_to_next_scan = 0
     if now < run_control.next_scan_time:
-        return await ctrl.aio_sleep(1)
+        return await ctrl.aio_sleep(min(1, run_control.next_scan_time-now))
     
     run_control.time_to_next_scan = 0
-    await ctrl.aio_publish(rga.status())
+    await ctrl.aio_publish(run_control)
     
     result = rga.scan().get()
     
@@ -411,7 +409,7 @@ async def _loop():
 
     if rga.status().scan_mode == 'Barchart':
         datastore_ts.append({ f'mbar.Mass{row[0]:02.0f}.RGA':row[1]/100 for row in table })
-    datastore_ts.append({f'mbar.Sum.RGA':cumulative})
+        datastore_ts.append({f'mbar.Sum.RGA':cumulative})
     
     datastore_obj.append({'Status.RGA': json.dumps({'tree':rga.status().get()})})
     datastore_obj.append({'Info.RGA': json.dumps({'tree':rga.info().get()})})

@@ -608,7 +608,7 @@ class UserModuleComponent(Component):
         now = time.time()
         if (to < 0) or (to > 0 and (now > to+1 or now < to - length)):
             return {}
-        start = to if to > 0 else now + to
+        start = (to if to > 0 else now + to) - length
 
         result = {}
         for usermodule in self.usermodule_list.values():

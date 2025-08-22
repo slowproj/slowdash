@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 14 February 2024 #
 
 
-import sys, time, asyncio, traceback, logging
+import sys, time, copy, asyncio, traceback, logging
 
 import slowlette
 from sd_component import Component
@@ -94,7 +94,7 @@ class PubsubComponent(Component):
                 continue
             try:
                 t = float(t) + float(data.get('start_time', 0))
-                self.current_data_cache[name] = (t, data)
+                self.current_data_cache[name] = (t, copy.deepcopy(data))
             except:
                 continue
 
@@ -153,7 +153,7 @@ class PubsubComponent(Component):
             
     class CacheDataMergerResponse(slowlette.Response):
         def __init__(self, channels, length, to, cache):
-            super().__init__(content={})
+            super().__init__(content=None)
             self.channels = channels.split(',')
             self.to = to if to > 0 else to + time.time() + 3
             self.frm = self.to - length
@@ -161,9 +161,9 @@ class PubsubComponent(Component):
 
             
         def merge_response(self, response) -> None:
-            """inserts cached data only when
-              - The "response" parameter (from datasource) does not include the data for the channel, and
-              - the cached data is a single point time-series (e.g., data object or scalar)
+            """append the cached pubsub data to the response (typiaclly data from storage)
+               - only if the channel does not exist, or
+               - the last data point is older than the cached pubsub data
             """
             
             if response.content is None:
@@ -171,14 +171,32 @@ class PubsubComponent(Component):
             elif type(response.content) is not dict:
                 return super().merge_response(response)
 
-            self.content = {}
             for ch in self.channels:
-                if ch in response.content:
+                my_t, my_data = self.cache.get(ch, (None, None))
+                if my_t is None or my_t < self.frm or my_t > self.to:
                     continue
-                t,x = self.cache.get(ch, (None, None))
-                if t is not None and t >= self.frm and t <= self.to:
-                    self.content[ch] = x
+                
+                if ch not in response.content:
+                    response.content[ch] = my_data
+                    continue
+                    
+                data = response.content[ch]
+                t0 = data.get('start', 0)
+                t = data.get('t', None)
+                if type(t) is list:
+                    if len(t) == 0 or t[-1] + t0 < my_t - 0.001:
+                        data['t'].append(my_t - t0)
+                        data['x'].append(my_data.get('x',None))
+                elif t is not None:
+                    if t < my_t - 0.001:
+                        data['t'] = [ t, my_t - t0 ]
+                        data['x'] = [ data.get('x', None), my_data.get('x',None) ]
+                else:
+                    data['start'] = self.frm
+                    data['t'] = my_t - self.frm
+                    data['x'] = my_data
 
+            self.content = None
             return super().merge_response(response)
 
             

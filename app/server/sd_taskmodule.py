@@ -449,32 +449,67 @@ class TaskModuleComponent(Component):
         return await self.slowpy_control.get_channels()
 
     
-    @slowlette.get('/api/data/{channels}')
-    async def api_data(self, channels:str, opts:dict):
-        try:
-            channels = channels.split(',')
-            length = float(opts.get('length', 3600))
-            to = float(opts.get('to', 0))
-        except Exception as e:
-            logging.error('Bad data URL: %s: %s' % (str(opts), str(e)))
-            return False
+    class DataMergerResponse(slowlette.Response):
+        def __init__(self, record):
+            super().__init__(content=None)
+            self.record = record
 
+            
+        def merge_response(self, response) -> None:
+            """append the "current" data from this task module to the response (typiaclly data from storage)
+               - only if the channel does not exist, or
+               - the last data point is older than the "current" data (it always should be, though)
+            """
+
+            if response.content is None:
+                response.content = {}
+            elif type(response.content) is not dict:
+                self.content = self.record
+                return super().merge_response(response)
+
+            for ch in self.record:
+                if ch not in response.content:
+                    response.content[ch] = self.record[ch]
+                    continue
+
+                data, my_data = response.content[ch], self.record[ch]
+                t0, my_t0 = data.get('start', 0), my_data['start']
+                t, my_t = data.get('t', None), my_data['t']
+                if type(t) is list:
+                    if len(t) == 0 or t[-1] + t0 < my_t + my_t0:
+                        data['t'].append(my_t + my_t0 - t0)
+                        data['x'].append(my_data['x'])
+                elif t is not None:
+                    if t < my_t:
+                        data['t'] = [ t, my_t + my_t0 - t0 ]
+                        data['x'] = [ data.get('x', None), my_data['x'] ]
+                else:
+                    data['start'] = my_t0
+                    data['t'] = my_t
+                    data['x'] = my_data['x']
+
+            self.content = None
+            return super().merge_response(response)
+
+            
+    @slowlette.get('/api/data/{channels}')
+    async def api_get_data(self, channels:str, length:float=3600, to:float=0):
         now = time.time()
         if (to < 0) or (to > 0 and (now > to+1 or now < to - length)):
             return {}
-        start = to if to > 0 else now + to
-
-        result = {}
-        for ch in channels:
+        
+        record = {}
+        start = (to if to > 0 else int(now) + to) - length
+        for ch in channels.split(','):
             data = await self.slowpy_control.get_data(ch)
             if data is not None:
-                result[ch] = {
+                record[ch] = {
                     'start': start, 'length': length,
                     't': now - start,
                     'x': data
                 }
 
-        return result
+        return self.DataMergerResponse(record)
 
 
     @slowlette.post('/api/update/tasklist')

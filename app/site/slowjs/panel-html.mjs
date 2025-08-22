@@ -298,9 +298,16 @@ class HtmlPanel extends Panel {
 
             let /*t = null,*/ x = null;  // TODO: accept only when t (if defined) is in displayTimeRange
             if (Array.isArray(data.x)) {
-                if (data.x.length > 0) {
-                    //t = (data.start ?? 0) + data.t[data.t.length-1];
-                    x = data.x[data.x.length-1];
+                let k = data.x.length - 1;
+                while (k >= 0) {
+                    if (! Number.isNaN(data.x[k])) {
+                        break;
+                    }
+                    k--;
+                }
+                if (k >= 0) {
+                    //t = (data.start ?? 0) + data.t[k];
+                    x = data.x[k];
                 }
             }
             else {
