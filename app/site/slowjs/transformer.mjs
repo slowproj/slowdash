@@ -259,13 +259,6 @@ class GetFunctor extends Functor {
                 }
             }
         }
-        if (typeof(column) != 'number') {
-            column = Number(column);
-        }
-        if (isNaN(column)) {
-            return [];
-        }
-
         let result = [];
         for (const row of data.table ?? []) {
             result.push(row[column]);

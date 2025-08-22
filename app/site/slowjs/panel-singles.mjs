@@ -79,7 +79,7 @@ class SingleDisplayItem {
         if ((ts?.t !== undefined) && (ts?.t !== null)) {
             if (Array.isArray(ts.t)) {
                 let k = ts.t.length - 1;
-                while ((k >= 0) && isNaN(ts.x[k])) {
+                while ((k >= 0) && (ts.x[k] === null || isNaN(ts.x[k]))) {
                     k--;
                 }
                 if (k >= 0) {

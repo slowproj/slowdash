@@ -1,18 +1,21 @@
 slowdash_project:
   name: MKS_RGA
 
+  environment:
+    - DB_URL=sqlite:///RGA2.db
+
   task:
     name: RGA
-    auto_load: true
+    auto_load: false
+    enabled_for_commandline: false
     parameters:
       address: localhost
-      db_url: sqlite:///RGA.db
+      db_url: ${DB_URL}
 
 
   data_source:
-    url: sqlite:///RGA.db
+    url: ${DB_URL}
     time_series:
-      schema: time_series[channel]@timestamp(unix)=value
+      schema: numeric_data[channel]@timestamp(unix)=value
     object_time_series:
-      schema: mass_spectrum[channel]@timestamp(unix)=value
-      
+      schema: json_data[channel]@timestamp(unix)=value

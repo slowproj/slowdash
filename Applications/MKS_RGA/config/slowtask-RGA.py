@@ -316,7 +316,7 @@ class ScanNode(ControlNode):
 # slowtask-RGA.py #
 # Created by Sanshiro Enomoto on 18 Aug 2025 
 
-import time, datetime, math
+import time, datetime, math, json
 import slowpy
 from slowpy.control import control_system as ctrl
 from dataclasses import dataclass
@@ -333,9 +333,13 @@ run_control = RunControl()
 
 async def _initialize(params):
     global rga, datastore_ts, datastore_obj
-    rga = RGA(ctrl.ethernet(address=params.get('address', None), port=10014))
-    datastore_ts = slowpy.store.create_datastore_from_url('sqlite:///RGA.db', table='time_series')
-    datastore_obj = slowpy.store.create_datastore_from_url('sqlite:///RGA.db', table='mass_spectrum')
+    
+    address = params.get('address', None)
+    rga = RGA(ctrl.ethernet(address=address, port=10014))
+    
+    db_url = params.get('db_url', 'sqlite:///RGA.db')
+    datastore_ts = slowpy.store.create_datastore_from_url(db_url, table='numeric_data')
+    datastore_obj = slowpy.store.create_datastore_from_url(db_url, table='json_data')
     
     ctrl.export(rga.status(), name='Status.RGA')
     await ctrl.aio_publish(run_control, name="RunControl.RGA")
@@ -388,6 +392,7 @@ async def _loop():
     g0 = slowpy.Graph()
     g1 = slowpy.Graph()
     cumulative = 0
+    g1.add_point(0, cumulative)
     for row in table:
         mbar = row[1]/100.0
         cumulative += mbar
@@ -408,6 +413,9 @@ async def _loop():
         datastore_ts.append({ f'mbar.Mass{row[0]:02.0f}.RGA':row[1]/100 for row in table })
     datastore_ts.append({f'mbar.Sum.RGA':cumulative})
     
+    datastore_obj.append({'Status.RGA': json.dumps({'tree':rga.status().get()})})
+    datastore_obj.append({'Info.RGA': json.dumps({'tree':rga.info().get()})})
+
     
 async def acquire_control():
     rga.do_acquire_control()
@@ -500,5 +508,4 @@ if __name__ =='__main__':
     task = Tasklet()
     task.run({
         'address': 'localhost',
-        'db_url': 'sqlite:///rga.db'
     })

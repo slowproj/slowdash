@@ -57,7 +57,7 @@ class Response:
         Note:
           - The default behavior is:
             - If status_code is different, take the content with a larger status code
-            - For equal status_code, self.append() the response content
+            - For equal status_code, self.merge_content() the response content
         """
         if self.status_code < response.status_code:
             self.status_code = response.status_code

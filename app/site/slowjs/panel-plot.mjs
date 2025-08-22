@@ -572,7 +572,7 @@ class GraphPlot extends Plot {
             const yk_err = this.graph?.y_err ? this.graph.y_err[k] : 0;
             const yk_min = this.graph?.y_min ? this.graph.y_min[k] : y[k] - yk_err;
             const yk_max = this.graph?.y_max ? this.graph.y_max[k] : y[k] + yk_err;
-            if (! isNaN(x[k]) && ! isNaN(y[k])) {
+            if (x[k] !== null && y[k] !== null && ! isNaN(x[k]) && ! isNaN(y[k])) {
                 [ xmin, xmax ] = [ Math.min(xmin??x[k], x[k]-xk_err), Math.max(xmax??x[k], x[k]+xk_err) ];
                 [ ymin, ymax ] = [ Math.min(ymin??y[k], yk_min), Math.max(ymax??y[k], yk_max) ];
             }
@@ -966,7 +966,7 @@ class TimeseriesPlot extends LineMarkerPlot {
         for (let k = 0; k < ts.t.length; k++) {
             const xk = this.graph.x[k];
             const yk = this.graph.y[k];
-            if (isNaN(xk) || isNaN(yk)) {
+            if (xk === null || yk === null || isNaN(xk) || isNaN(yk)) {
                 continue;
             }
             const yk_err = this.graph.y_err ? this.graph.y_err[k] : 0;
@@ -981,7 +981,7 @@ class TimeseriesPlot extends LineMarkerPlot {
         }
         this.valueRange = {xmin: xmin, xmax: xmax, ymin: ymin, ymax: ymax};
 
-        if (! isNaN(ylast)) {
+        if (ylast !== null && ! isNaN(ylast)) {
             this.setStat($.sprintf(this.config.format || '%f', ylast));
         }
 

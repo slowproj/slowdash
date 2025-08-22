@@ -604,7 +604,7 @@ class PlotItem extends CanvasItem {
             
         let [ ymin, ymax ] = [ null, null ];
         for (let k = 0; k < ts.x.length; k++) {
-            if (! isNaN(ts.x[k]) && ts.x[k] !== null) {
+            if (ts.x[k] !== null && ! isNaN(ts.x[k])) {
                 this.graph.x.push(ts.start + ts.t[k]);
                 this.graph.y.push(ts.x[k]);
                 ymin = Math.min((ymin ?? ts.x[k]), ts.x[k]);
@@ -770,7 +770,7 @@ class Viewlet {
         this.graph.x = [];
         this.graph.y = [];
         for (let k = 0; k < ts.x.length; k++) {
-            if (! isNaN(ts.x[k]) && ts.x[k] !== null) {
+            if (ts.x[k] !== null && ! isNaN(ts.x[k])) {
                 this.graph.x.push(ts.start + ts.t[k]);
                 this.graph.y.push(ts.x[k]);
                 ymin = Math.min((ymin ?? ts.x[k]), ts.x[k]);

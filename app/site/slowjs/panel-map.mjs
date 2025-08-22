@@ -398,7 +398,7 @@ export class MapPanel extends Panel {
             const x = (data.x?.length == data.y.length) ? data.x : [... Array(n)].map((_, i)=>i);
             for (let k = 0; k < n; k++) {
                 const [xk, yk] = [ x[k], y[k] ];
-                if (! isNaN(xk) && ! isNaN(yk)) {
+                if (xk !== null && yk !== null && ! isNaN(xk) && ! isNaN(yk)) {
                     values[Math.round(xk)] = yk;
                     [ ymin, ymax ] = [ Math.min(ymin??yk, yk), Math.max(ymax??yk, yk) ];
                 }
@@ -411,7 +411,7 @@ export class MapPanel extends Panel {
             for (let k = 0; k < nbins; k++) {
                 const x = Math.floor(histogram.bins.min + (k+0.5)*binwidth);
                 const y = histogram.counts[k];
-                if (! isNaN(y)) {
+                if (y !== null && ! isNaN(y)) {
                     values[x] = y;
                     ymax = Math.max(ymax??y, y);
                 }

@@ -102,7 +102,7 @@
                     "text_transform": ""
                 }
             ],
-            "color": { "base": "rgb(0, 0, 0)", "normal": "#62a0ea", "warn": "#ff7800", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.4 },
+            "color": { "base": "#000000", "normal": "#62a0ea", "warn": "#ff7800", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.4 },
             "grid": { "rows": 2, "columns": 4 },
             "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
             "ranges": { "apply_to_value": false, "apply_to_gauge": false, "apply_to_tile": true }
@@ -121,9 +121,9 @@
             "type": "timeseries",
             "plots": [
                 { "type": "timeseries", "channel": "mbar.Mass02.RGA", "color": "#009090", "label": "Mass02", "format": "%.3g mbar", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_envelope": false, "fill_baseline": "1e-100" },
-                { "type": "timeseries", "channel": "mbar.Mass04.RGA", "color": "#dd8000", "label": "Mass04", "format": "%.3g mbar", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_envelope": false, "fill_baseline": "1e-100" },
-                { "type": "timeseries", "channel": "mbar.Mass16.RGA", "color": "#4169e1", "label": "Mass16", "format": "%.3g mbar", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_envelope": false, "fill_baseline": "1e-100" },
-                { "type": "timeseries", "channel": "mbar.Mass28.RGA", "color": "#b030b0", "label": "Mass28", "format": "%.3g mbar", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_envelope": false, "fill_baseline": "1e-100" },
+                { "type": "timeseries", "channel": "mbar.Mass18.RGA", "color": "#dd8000", "label": "Mass18", "format": "%.3g mbar", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_envelope": false, "fill_baseline": "1e-100" },
+                { "type": "timeseries", "channel": "mbar.Mass28.RGA", "color": "#4169e1", "label": "Mass28", "format": "%.3g mbar", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_envelope": false, "fill_baseline": "1e-100" },
+                { "type": "timeseries", "channel": "mbar.Mass44.RGA", "color": "#b030b0", "label": "Mass44", "format": "%.3g mbar", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_envelope": false, "fill_baseline": "1e-100" },
                 { "type": "timeseries", "channel": "mbar.Sum.RGA", "color": "#9a9996", "label": "Sum", "format": "%.3g mbar", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_envelope": false, "fill_baseline": "1e-100" }
             ],
             "axes": { "xfixed": false, "yfixed": true, "xlog": false, "ylog": true, "zlog": false, "ymin": "1e-12", "ymax": 0.000001, "title": "Historical Partial Pressures", "ytitle": "(mbar)" },
