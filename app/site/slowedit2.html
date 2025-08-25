@@ -33,8 +33,13 @@
             theme: options.theme ?? 'github_dark',
         };
         let config = await Platform.initialize(defaults, options, args);
+        const proj_conf = config._project?.project ?? {};
+        if (proj_conf.is_cgi ?? false) {
+            document.body.textContent = 'SlowEdit: File editting not permitted in CGI mode';
+            return;
+        }
         
-        let title = config._project.project?.title || config._project.project?.name || "SlowDash";
+        let title = proj_conf.title || proj_conf.name || "SlowDash";
         document.title = 'SD Edit: ' + config.filename;
 
         let frame = new Frame($('#sd-header'), {

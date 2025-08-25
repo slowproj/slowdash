@@ -108,6 +108,7 @@ class EthernetNode(spc.ControlNode):
                 try:
                     recv = self.socket.recv(1024*1024).decode('utf-8', errors='ignore')
                 except Exception as e:
+                    recv = ''
                     logging.warn(f'socket error: {e}')
                 if len(recv) == 0: # EOF
                     logging.warn('socket disconnected')

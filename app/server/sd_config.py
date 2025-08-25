@@ -105,6 +105,9 @@ class ConfigComponent(Component):
             'name': self.project.config.get('name', 'Untitled Project'),
             'title': self.project.config.get('title', ''),
             'is_secure': self.project.is_secure,
+            'is_cgi': self.app.is_cgi,
+            'is_command': self.app.is_command,
+            'is_async': self.app.is_async,
         }
 
         style = self.project.config.get('style', None)
