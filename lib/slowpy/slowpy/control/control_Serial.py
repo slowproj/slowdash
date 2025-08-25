@@ -73,7 +73,7 @@ class SerialNode(spc.ControlNode):
             return ''
 
         if timeout is not None:
-            wait_until = time.time() + timeout
+            wait_until = time.monotonic() + timeout
         else:
             wait_until = None
         
@@ -82,7 +82,7 @@ class SerialNode(spc.ControlNode):
             ch = self.com.read().decode('utf-8', errors='ignore')
             
             if len(ch) == 0:
-                if wait_until is not None and time.time() >= wait_until:
+                if wait_until is not None and time.monotonic() >= wait_until:
                     print('SerialNode.do_get_line(): timeout')
                     break
 

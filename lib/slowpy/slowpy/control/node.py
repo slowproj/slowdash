@@ -110,7 +110,8 @@ class ControlNode:
         Examples:
           node.wait(lambda x: (float(x)>100))
         """
-        
+
+        start = time.monotonic()
         while True:
             if self.has_data() is not False:
                 if condition_lambda is None:
@@ -119,7 +120,7 @@ class ControlNode:
                     return True
             if not self.is_stop_requested():
                 return False
-            if timeout > 0 and (time.time() - start > timeout):
+            if timeout > 0 and (time.monotonic() - start > timeout):
                 break
             time.sleep(poll_interval)
             
@@ -137,6 +138,7 @@ class ControlNode:
           await node.wait(lambda x: (float(x)>100))
         """
         
+        start = time.monotonic()
         while True:
             if self.has_data() is not False:
                 if condition_lambda is None:
@@ -145,9 +147,9 @@ class ControlNode:
                     return True
             if not self.is_stop_requested():
                 return False
-            if timeout > 0 and (time.time() - start > timeout):
+            if timeout > 0 and (time.monotonic() - start > timeout):
                 break
-            asyncio.sleep(poll_interval)
+            await asyncio.sleep(poll_interval)
             
         return None
         
@@ -556,7 +558,7 @@ class OneshotNode(ControlNode):
         if self.normal is None:
             self.normal = self.node.get()
         self.node.set(value)
-        self.start_time = time.time()
+        self.start_time = time.monotonic()
 
         
     def get(self):
@@ -567,7 +569,7 @@ class OneshotNode(ControlNode):
                 self.start_time = None
                 return value
                 
-            if time.time() > self.start_time + self.duration:
+            if time.monotonic() > self.start_time + self.duration:
                 self.node.set(self.normal)
                 self.start_time = None
                 

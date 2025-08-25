@@ -66,7 +66,7 @@ class EthernetNode(spc.ControlNode):
         if self.last_connect_time > 0 and not (self.reconnect_time > 0):
             return False
         
-        now = time.time()
+        now = time.monotonic()
         if now - self.last_connect_time < self.reconnect_time:
             return False
         self.last_connect_time = now
@@ -135,7 +135,7 @@ class EthernetNode(spc.ControlNode):
             return None
 
         if timeout is not None:
-            wait_until = time.time() + timeout
+            wait_until = time.monotonic() + timeout
         else:
             wait_until = None
         
@@ -155,7 +155,7 @@ class EthernetNode(spc.ControlNode):
                     self.socket_buffer = chunk
                 
                 if len(self.socket_buffer) == 0:
-                    if wait_until is not None and time.time() >= wait_until:
+                    if wait_until is not None and time.monotonic() >= wait_until:
                         if len(line) > 0:
                             return line
                         else:
@@ -331,12 +331,12 @@ class TelnetNode(spc.ControlNode):
     ## methods ##
     def do_get_lines_to_prompt(self, timeout=None):
         lines = []
-        wait_until = time.time() + (timeout or self.timeout or 10)
+        wait_until = time.monotonic() + (timeout or self.timeout or 10)
         
         while not self.is_stop_requested():
             line = self.connection.do_get_line(timeout=0.1)
             if line is None:
-                if time.time() >= wait_until:
+                if time.monotonic() >= wait_until:
                     break
                 else:
                     continue

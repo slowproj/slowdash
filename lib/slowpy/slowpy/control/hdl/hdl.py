@@ -120,7 +120,7 @@ class Clock(threading.Thread):
         for reg in self.registers:
             reg._update_output()
 
-        self.start_time = time.time()
+        self.start_time = time.monotinic()
         self.next_time = self.start_time
         self.ticks = 0
 
@@ -130,7 +130,7 @@ class Clock(threading.Thread):
         if self.start_time is None:
             self.initialize()
             
-        now = time.time()
+        now = time.monotinic()
         togo = self.next_time - now
         
         if togo <= 0:

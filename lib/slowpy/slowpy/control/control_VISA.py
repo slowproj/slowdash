@@ -48,7 +48,7 @@ class VisaNode(spc.ControlNode):
             return None
 
         #if timeout is not None and float(timeout) > 0:
-        #    wait_until = time.time() + timeout
+        #    wait_until = time.monotonic() + timeout
         #    self.instr.timeout = 1000  # 1 sec
         #else:
         #    wait_until = None
@@ -61,7 +61,7 @@ class VisaNode(spc.ControlNode):
                 reply = self.instr.read().rstrip('\n')
             except pyvisa.VisaIOError as e:
                 #if e.error_code == pyvisa.constants.VI_ERROR_TMO:
-                #    if wait_until is None or time.time() < wait_until:
+                #    if wait_until is None or time.monotonic() < wait_until:
                 #        continue
                 print('VISA error on read: %s' % str(e))
                 return None
