@@ -81,7 +81,8 @@
     </tr>
   </table>
   <div style="font-size:200%;margin-top:0.5em">
-    <input type="submit" name="RGA.start()" value="Start" sd-enabled="RunControl.RGA[running]->invert()">
-    <input type="submit" name="RGA.stop()" value="Stop" sd-enabled="RunControl.RGA[running]">
+    <input type="submit" name="RGA.start()" value="Start" sd-enabled="RunControl.RGA['ready_to_start']">
+    <input type="submit" name="RGA.stop()" value="Stop" sd-enabled="RunControl.RGA['running']">
+    <span style="font-size:40%">(Control must be acquired and filament must be on to start)</font>
   </div>
 </form>

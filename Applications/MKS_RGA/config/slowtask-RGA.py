@@ -328,6 +328,7 @@ class RunControl:
     scan_interval: float = 60
     next_scan_time: float = 0
     time_to_next_scan: float = 0
+    ready_to_start: bool = False
 run_control = RunControl()
 
 
@@ -352,10 +353,17 @@ async def _loop():
         info = rga.info().get()
         rga.status_node.has_control = (info.get('Info',{}).get('UserApplication',None) == 'SlowDash')
         rga.status_node.filament = (info.get('FilamentInfo',{}).get('SummaryState','Error'))
+        run_control.ready_to_start = (
+            rga.status_node.has_control
+            and (rga.status_node.filament == 'ON')
+            and (not run_control.running)
+        )
         await ctrl.aio_publish(run_control)
         await ctrl.aio_publish(rga.status())
         
-    if not rga.status_node.has_control or not run_control.running:
+    if not rga.status_node.has_control:
+        run_control.running = False
+    if not run_control.running:
         run_control.time_to_next_scan = 0
         return await ctrl.aio_sleep(1)
     
