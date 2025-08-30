@@ -15,7 +15,7 @@ title: SlowDash を使ってみる
 
 もともとはスローコントロール用でしたが，現在では物理実験に関わる全てのデータのビジュアライズと，DAQ を含むシステムコントロールの UI を目指して開発をしています．現時点で，Grafana で行うようなビジュアライゼーションの部分はほぼ実装済みで，解析およびコントロールの部分が開発中です．
 
-データベースアクセス以外は外部ライブラリを使っておらず，ソフトウェアの寿命が外のライブラリの変更等に影響されることはないようになっています．特に，流行り廃れが激しい JavaScript の部分はフレームワークなどは使わず，完全に自己完結です（使っていたけど排除しました）．データベース側および解析モジュールは，全て独立なプラグインとなっており，いつでも切り捨てられます．依存性がないので，インストールがとても楽で，使用後も痕跡を残さずきれいに削除できます．それでもインストールをしたくない人のために，Docker コンテナも提供されています．
+データベースアクセス以外は外部ライブラリを使っておらず，ソフトウェアの寿命が外のライブラリの変更等に影響されることはないようになっています．特に，流行り廃れが激しい JavaScript の部分はフレームワークなどは使わず，完全に自己完結です（使っていたけど排除しました）．データベース側および解析モジュールは，全て独立なプラグインとなっており，いつでも切り捨てられます．依存性がないので，インストールがとても楽で，使用後も痕跡を残さずきれいに削除できます．それでもインストールをしたくない人のために，すぐに使える Docker コンテナも提供されています．
 
 <img src="fig/Gallery-ATDS-Dashboard.png" style="width:40%;box-shadow:0px 0px 15px -5px rgba(0,0,0,0.7);">
 <img src="fig/Gallery-RGA.png" style="width:40%;box-shadow:0px 0px 15px -5px rgba(0,0,0,0.7);">
@@ -28,7 +28,7 @@ Grafana と似たビジュアライゼーション（ほぼ実装済み）
 - 物理実験で使われているデータベースはだいたい使える．なくてもプラグインで追加は簡単．
   - SQL データベース: PostgreSQL, MySQL, SQLite
   - 時系列データベース： InfluxDB
-  - キーバリューストア： RedisTS
+  - キーバリューストア： Redis
   - ドキュメントデータベース： MongoDB, CouchDB
 - 実験ですでに使われているいろいろなデータ形式（スキーマ）に，時系列データならほぼ全て対応できる．
 - 誰でもブラウザから対話的にプロットを構成できる．作ったものは保存して共有できる．
@@ -48,7 +48,7 @@ Grafana と違って，物理屋に使いやすいようになっています（
 さらに，コントロール用の機能も実装しています（８割くらい完成）:
 
 - サーバー側にユーザの Python コードを置いて，ブラウザからコマンドを送れる
-- サーバー側のユーザ Python コードが動的に生成したデータも表示できる
+- サーバー側のユーザ Python コードが動的に生成したデータもストリーミング表示できる
 - ブラウザ上でも簡単なデータ加工が行える
 - ユーザ作成の任意の HTML コードを組み込める
 
@@ -72,9 +72,9 @@ Grafana にあって今の SlowDash にないもの（将来は実装される�
 - ３次元の絵
 - トラックとかを描くイベントディスプレイ（描画要素の数が毎回変わるもの）
 
-JSROOT や Bokeh との違い：
+JSROOT や Streamlit，Bokeh との違い：
 
-- SlowDash と Grafana にあるけど JSROOT/Bokeh にない機能
+- SlowDash と Grafana にあるけど JSROOT/Streamlit/Bokeh にない機能
   - コーディングなし：マウス数回のクリックでデータベース上のデータを可視化
   - データを見るユーザが自分でブラウザ上でプロットを作成し，保存・共有できる
 - SlowDash と LabVIEW UI にあるけど JSROOT/Bokeh にない機能
@@ -85,6 +85,7 @@ JSROOT や Bokeh との違い：
 - JSROOT や Bokeh でできて，今の SlowDash にないけど，やりたいこと（できる気がするもの）
   - 動いている ROOT の中身をリアルタイムにビジュアライズ
   - Jupyter でブラウザからサーバー側の解析コードを書いて，テストして，そのままデプロイ
+  - (動いている Python/Matplotlib の中身(Figure)を抜き出してリアルタイムにビジュアライズすることはすでにできます）
 
 
 ### よくある宣伝
@@ -427,7 +428,216 @@ $ python ./generate-testdata.py
 
 左上の Channel List のチャンネル名をクリックすると，直近の時系列データのプロットを含んだページが作成されます．それを元にいろいろ追加していくこともできます．
 
-ここまでの準備では時系列データしか生成していないので，すぐにできるのは，それを直接プロットする `Time-Axis Plot (Time-Series)` と，値分布のヒストグラムを作る `XY Plot (Histograms and Graphs)` &rarr; `Histogram of Time-Series Values` です．ここから先は，公式ドキュメントの [UI Panels の章](Panels.html)などを参照してください．
+ここまでの準備では時系列データしか生成していないので，すぐにできるのは，それを直接プロットする `Time-Axis Plot (Time-Series)` と，値分布のヒストグラムを作る `XY Plot (Histograms and Graphs)` &rarr; `Histogram of Time-Series Values` です．
+以下の章では，ユーザの解析スクリプトなどでヒストグラムやグラフなどを作成し，それらも表示するようにしてみます．
+
+
+### デバイスからデータを読む
+SlowDash は，ウェブサーバとブラウザからなるアプリ部分と，ユーザの Python スクリプトで利用するライブラリ部分から構成されます．
+上記のダミーデータ作成では，このライブラリ (SlowPy) を使用しました．アプリとライブラリは融合して動作しますが，それぞれを単体で使用することもできます．
+この章では，SlowPy ライブラリを単体で使用してデバイスからデータを読んで，ダミーデータ生成と置き換えます．
+
+#### 準備
+SlowPy は SlowDash インストール時に一緒にインストールされますが，標準インストールでは venv の中に入るので，最初にこの venv を有効にしておいてください．
+```console
+$ slowdash-activate-venv
+```
+これは新しいターミナルを開くごとに必要です．もし SlowDash 専用のコンピュータを使っているなら，`.bashrc` などの中に以下の行を追加すれば毎回行う必要がなくなります．
+```bash
+source $SLOWDASH_DIR/venv/bin/activate
+```
+
+#### 対象デバイス
+ここでは，ネットワーク制御が可能な広く使われているベントトップ型電圧計（マルチメータ）から直流電圧を読み出す例を作成します．
+多くの電圧計が同じコマンドを使いますが，特に以下のものは確認してあります（ChatGPT 調べ，2025年8月）：
+
+|メーカー | モデル |
+|--------|-------|
+| Keysight (Agilent) | 34460A TrueVolt DMM |
+| Tektronics / Keithley | DMM6500 |
+| Rigol | DM3058 |
+| BK Precision | 5492B DMM |
+
+また，多くの電源モジュールも，出力電圧の読み出しで同じコマンドを使用します．なので，この例で同様に使用できます．
+以下は確認済のモデルです（ChatGPT 調べ，2025年8月）
+
+|メーカー | モデル |
+|--------|-------|
+| Keysight (Agilent) | E363x/E364x |
+| Tektronics / Keithley | 2230G/2231A |
+| Rigol | DP800, DP2000 |
+| BK Precision | 9180/9190 |
+
+これらのデバイスは全てイーサーネット経由でコントロールできるものです．
+次の手順に進む前に，ネットワークに接続し，電源を入れて，IP アドレス（と念の為ポート番号；マニュアルに書いてあります）を確認しておいてください．
+
+#### 使えるデバイスがない場合
+ChatGPT によると，ほとんどの電圧計と電源ユニットでは，ここで使うレベルのコマンドは共通らしいです．
+もしいずれのデバイスも利用できない場合は，SlowDash にシミュレータがあるので，代わりにこれを使用して例を実行することができます．
+新しいターミナルを開いて，以下のコマンドを実行してください．
+
+```console
+$ slowdash-activate-venv
+$ cd PATH/TO/SLOWDASH/utils
+$ python ./dummy-scpi.py
+listening at 172.26.0.1:5025
+line terminator is: x0d
+type Ctrl-c to stop
+```
+
+これで，このデバイスがネットワーク上にあるように振る舞います．使われる IP アドレスはローカルホストのものです．
+終了は Ctrl-c を押してください．
+
+#### デバイスからの読み出し
+上記のデバイスは全て，SCPI と呼ばれる単純なテキストコマンド体系を使用します．
+以下は，ここで使う SCPI コマンドです．
+
+|動作 | コマンド | 戻り値例 |
+|----|---------|-------|
+| デバイスIDの取得 | `*IDN?`  | `xxxx` みたいな感じ |
+| 設定リセット | `*RST`  | たぶんなし |
+| DC 電圧値の読み出し | `MEAS:VOLT:DC?` | `2.2` みたいな感じ |
+
+SlowPy ライブラリでは，デバイスの論理構造を反映させたツリーをまず構築します．
+この例では，[測定システム] -> [イーサーネット] -> [SCPI デバイス] -> [各コマンド] のような形をしています．
+そして，それぞれのツリーのノードに対して値の読み書きを `set(value)` または `value=get()` により行います．
+
+以下は，SlowPy を使用して，上記のデバイスからデバイスIDを取得して表示する完全なコードです．
+```python
+# SlowPy ライブラリの import
+from slowpy.control import control_system as ctrl
+
+# デバイスツリーの構築
+device = ctrl.ethernet('172.26.0.1', 5025).scpi()
+
+# "*IDN?" コマンドノードからの読み出し
+print(device.command('*IDN?').get())
+```
+デバイスのアドレスとポート番号は適宜書き換えてください．
+この時点でデバイスとの接続確認ができます．
+
+```console
+$ slowdash-activate-venv
+$ python read-my.py
+XXXX
+```
+
+以下は，最初に設定リセットをして，1 秒ごとのデータ読み出しを永遠に続ける完全な例です．
+```python
+from slowpy.control import control_system as ctrl
+device = ctrl.ethernet('172.26.0.1', 5025).scpi()
+
+device.command('*RST').set()
+
+import time
+while True:
+    volt = device.command('MEAS:VOLT:DC?').get()
+
+    print(volt)
+    time.sleep(1)
+```
+
+SlowPy はデータベース読み書きの機能も提供しています．
+以下は，上記の画面への print の代わりにデータベース（この例では SQLite）に記録する完全な例です．
+```python
+from slowpy.control import control_system as ctrl
+device = ctrl.ethernet('172.26.0.1', 5025).scpi()
+
+from slowpy.store import DataStore_SQLite
+datastore = DataStore_SQLite('sqlite:///TestData.db', table="slowdata")
+
+device.command('*RST').set()
+
+import time
+while True:
+    volt = device.command('MEAS:VOLT:DC?').get()
+
+    datastore.append({'volt': volt})
+    time.sleep(1)
+```
+
+これをダミーデータ生成プログラムの代わりに走らせれば，実データに対して SlowDash を使えるようになります．
+この時点では，停止に `Ctrl-c` または `Ctrl-\` が必要です．
+見苦しいことになると思いますが，実害はないはずです．
+
+#### 読み出しスクリプトを SlowDash アプリに統合する
+任意の Python スクリプト(SlowPyを使う必要もない)を SlowDash プロジェクトディレクトリの下の `config` ディレクトリ（すでに自動作成されているはず）に `slowtask-XXX.py` という名前で保存すると，SlowDash ホーム画面の左下の "SlowTask" セクションに作成したスクリプトが表示され，コントロールできるようになります．
+`SlowdashProject.yaml` の設定で，スクリプトを自動開始するようにしたり，ブラウザからこの Python ファイルを直接編集できるようにすることもできます．具体的な手順は，公式ドキュメントを参照してください．
+
+ただし，上記のスクリプトは，（上品に）停止させるためのコードがありません．アプリ側から停止や再実行をできるようにするためには，アプリからのコントロールを受けられるようにする必要があります．そのために，以下のように SlowDash で規定されているコールバックを実装します．
+
+```python
+from slowpy.control import control_system as ctrl
+device = ctrl.ethernet('172.26.0.1', 5025).scpi()
+
+from slowpy.store import DataStore_SQLite
+datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata")
+
+device.command('*RST').set()
+
+import time
+def _loop():
+    volt = device.command('MEAS:VOLT:DC?').get()
+
+    datastore.append({'volt': volt})
+    time.sleep(1)
+```
+`while True` を `def _loop()` に置き換えただけです．
+`_loop()` 関数は，SlowDash が実行中（または SlowDash がスクリプトを実行中）に繰り返し呼び出されます．
+
+
+最後に以下のブロックを追加すると，このスクリプトを単体実行できるようになります．
+```python
+if __name__ == '__main__':
+    while True:
+      _loop()
+```
+
+さらにひと手間かけて，以下のようにすると Ctrl-c で上品に止まるようになります．
+```python
+if __name__ == '__main__':
+    ctrl.stop_by_signal()
+    while not ctrl.is_stop_requested():
+        _loop()
+```
+
+
+
+#### 追加の詳細
+電源ユニットを使用する場合で，出力電圧を設定するには以下のようにします．
+```python
+from slowpy.control import control_system as ctrl
+device = ctrl.ethernet('172.26.0.1', 5025).scpi(append_opc=True)
+
+device.command('VOLT').set(3.0)    # this will send "VOLT 3.0; *OPC?"
+device.command('OUTP').set('ON')   # this will send "OUTP ON; *OPC?"
+```
+SlowPy では，全てのコマンドに戻り値があることを期待するので，戻り値のないコマンドが存在するようなデバイスでは，コマンドの完了を待ってそのステータスをかえすコマンド `*OPC?` を付加する必要があります．常に戻り値があるようなデバイスに `*OPC?` を付加しても，通常は無害です．
+上記の例では，全ての set() に `*OPC*` を付加するように，`scpi()` ノード自体にオプションを設定しています．
+（もともと戻り値のある get() には付加されません．）
+もしコマンドごとに切り替えたいなら，自分でコマンドに `*OPC?` を付加しても全く構いません．
+```python
+device.command('OUTP ON; *OPC?').set()
+```
+
+イーサーネットではなく，USB や RS-232 などでコントロールするデバイスに対しては，デバイスツリーの対応する部分を置き換えます．
+例えば，USB 接続を VISA 経由で使用するデバイスでは，以下のようになります：
+```python
+from slowpy.control import control_system as ctrl
+ctrl.load_control_module('VISA')    # VISA は SlowPy プラグインとして提供されているので load する
+device = ctrl.visa(XXXXXX).scpi()
+
+(あとは同じ)
+```
+
+
+#### この先
+- `SlowdashProject.yaml` に `task` のエントリを作ると，スクリプトの自動実行を設定できます．
+- `SlowdashProject.yaml` に セキュリティ設定をすると，スクリプトをブラウザから編集できるようにできます．
+- ブラウザに入力エリアやボタンを配置して，ボタンクリックでスクリプト中の任意の関数を呼び出すようにすることができます．
+- スクリプト中でヒストグラムやグラフを作成して，データベースに保存したりブラウザにストリーミングすることができます．
+
+これらの手順については，公式ドキュメントの「プロジェクト設定」や「コントロールスクリプト」の章を参照してください．
 
 
 # Docker コンテナで使う

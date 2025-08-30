@@ -213,12 +213,12 @@ data from a voltmeter with SCPI commands over Ethernet</h4>
 class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ControlSystem</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>ctrl <span class="op">=</span> ControlSystem()</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a control node for SCPI command &quot;MEAS:V0&quot; on a device at 192.168.1.43</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>V0 <span class="op">=</span> ctrl.ethernet(host<span class="op">=</span><span class="st">&#39;192.168.1.43&#39;</span>, port<span class="op">=</span><span class="dv">17674</span>).scpi().command(<span class="st">&#39;MEAS:V0&#39;</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a control node for SCPI command &quot;MEAS:VOLT:DC&quot; on a device at 192.168.1.43</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>V <span class="op">=</span> ctrl.ethernet(host<span class="op">=</span><span class="st">&#39;192.168.1.43&#39;</span>, port<span class="op">=</span><span class="dv">5025</span>).scpi().command(<span class="st">&#39;MEAS:VOLT:DC&#39;</span>)</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Read a value from the control node using SCPI command &quot;MEAS:V?&quot;</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  value <span class="op">=</span> V0.get()</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Read a value from the control node using SCPI command &quot;MEAS:VOLT:DC?&quot;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  value <span class="op">=</span> V.get()</span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  ...</span></code></pre></div>
 <h4
 id="writing-data-to-postgresql-database-using-a-default-schema">Writing
@@ -230,49 +230,49 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a hr
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    value <span class="op">=</span> ...</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    datastore.append(value, tag<span class="op">=</span><span class="st">&quot;ch00&quot;</span>)</span></code></pre></div>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    datastore.append(value, tag<span class="op">=</span><span class="st">&quot;voltmeter&quot;</span>)</span></code></pre></div>
 <h4 id="calling-a-user-task-function-from-slowdash-gui-panels">Calling a
 User Task function from SlowDash GUI Panels</h4>
 <p>If you have a User Task Script like this:</p>
 <div class="sourceCode" id="cb3"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V0(value):</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    V0.<span class="bu">set</span>(value)</span></code></pre></div>
+class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_Vout(value):</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    Vout.<span class="bu">set</span>(value)</span></code></pre></div>
 <p>and write a SlowDash HTML panel like this:</p>
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  V0 value: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;value&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V0()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Set&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  Voltage output: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;value&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_Vout()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Set&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>Then, clicking the <code>Set</code> button will call the function
-<code>set_V0()</code> with a parameter from the <code>value</code> input
-field.</p>
+<code>set_Vout()</code> with a parameter from the <code>value</code>
+input field.</p>
 <h4 id="displaying-the-readout-values-on-the-slowdash-panels">Displaying
 the readout values on the SlowDash panels</h4>
-<p>For control nodes <code>V0</code> and <code>V1</code>, defining an
-<code>_export()</code> function in the User Task Script will export
-these node values, making them available in the SlowDash GUI in the same
-way as values stored in the database.</p>
+<p>For control nodes <code>V</code>, defining an <code>_export()</code>
+function in the User Task Script will export the node values, making
+them available in the SlowDash GUI in the same way as values stored in
+the database.</p>
 <div class="sourceCode" id="cb5"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(host<span class="op">=</span><span class="st">&#39;192.168.1.43&#39;</span>, port<span class="op">=</span><span class="dv">17674</span>).scpi()</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>V0 <span class="op">=</span> device.command(<span class="st">&#39;MEAS:V0&#39;</span>)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>V1 <span class="op">=</span> device.command(<span class="st">&#39;MEAS:V1&#39;</span>)</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(host<span class="op">=</span><span class="st">&#39;192.168.1.43&#39;</span>, port<span class="op">=</span><span class="dv">5025</span>).scpi()</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>V <span class="op">=</span> device.command(<span class="st">&#39;MEAS:VOLT:DC&#39;</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>A <span class="op">=</span> device.command(<span class="st">&#39;MEAS:CURR:DC&#39;</span>)</span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _export():</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> [</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&#39;V0&#39;</span>, V0),</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&#39;V1&#39;</span>, V1)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&#39;Voltage&#39;</span>, V),</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&#39;Current&#39;</span>, A)</span>
 <span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    ]</span></code></pre></div>
-<p>Only the “current” values are available in this way. If you need
-historical values, store the values in a database.</p>
+<p>Only the “current” (present) values are available in this way. If you
+need historical values, store the values in a database.</p>
 <h2 id="demonstration-example-project">Demonstration Example
 Project</h2>
 <p>In <code>slowdash/ExampleProjects/SlowTask</code> there is a SlowDash
 project that demonstrates some of the features described here.</p>
 <div class="sourceCode" id="cb6"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd slowdash/ExampleProjects/SlowTask</span></span>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd slowdash/ExampleProjects/SlowTask/Basic</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash --port=18881</span></span></code></pre></div>
 <p>or</p>
 <div class="sourceCode" id="cb7"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd slowdash/ExampleProjects/SlowTask</span></span>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd slowdash/ExampleProjects/SlowTask/Basic</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span></code></pre></div>
 <h1 id="slowpy-controls-library">SlowPy: Controls Library</h1>
 <p>SlowPy is a Python library (module) that provides functions such
@@ -299,11 +299,11 @@ Python environment. You might want to combine this with
 systems and hardware devices; everything is mapped into a single
 “ControlTree” where each node has <code>set()</code> and
 <code>get()</code> methods. The tree represents the logical structure of
-the system. For example, a SCPI command of <code>MEAS:V</code> to a
-voltmeter connected via Ethernet would be addressed like
-<code>ControlSystem.ethernet(host, port).scpi().command('MEAS:V')</code>,
+the system. For example, a SCPI command of <code>VOLT</code> to a power
+supply unit connected via Ethernet would be addressed like
+<code>ControlSystem.ethernet(host, port).scpi().command('VOLT')</code>,
 and <code>set(value)</code> on this node will send a SCPI command of
-<code>MEAS:V?</code> to the voltmeter. The <code>get()</code> method
+<code>VOLT value</code> to the device. The <code>get()</code> method
 performs a read operation and returns a value.</p>
 <p>Plugin modules can dynamically add branches to the control tree. For
 example, the Redis plugin adds the <code>redis()</code> node and several
@@ -318,22 +318,24 @@ as <code>send()</code> (which is <code>set()</code> of the node) and
 <p>Here is an example of using SlowPy Controls. In this example, we use
 a power supply device that accepts SCPI commands through Ethernet.</p>
 <div class="sourceCode" id="cb8"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ControlSystem</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>ctrl <span class="op">=</span> ControlSystem()</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a control node for SCPI command &quot;MEAS:V0&quot; on a device at 192.168.1.43</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>V0 <span class="op">=</span> ctrl.ethernet(host<span class="op">=</span><span class="st">&#39;192.168.1.43&#39;</span>, port<span class="op">=</span><span class="dv">17674</span>).scpi().command(<span class="st">&#39;MEAS:V0&#39;</span>, set_format<span class="op">=</span><span class="st">&#39;V0 </span><span class="sc">{}</span><span class="st">;*OPC?&#39;</span>)</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Write a value to the control node: this will issue SCPI command &quot;V0 10;*OPC?&quot;</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>V0.<span class="bu">set</span>(<span class="dv">10</span>)</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Read a value from the control node using SCPI command &quot;MEAS:V&quot;</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  value <span class="op">=</span> V0.get()</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  ...</span></code></pre></div>
+class="sourceCode python"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a control node for SCPI command &quot;VOLT&quot; (output) and &quot;MEAS:VOLT:DC&quot; (readback) on a device at 192.168.1.43</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(host<span class="op">=</span><span class="st">&#39;192.168.1.43&#39;</span>, port<span class="op">=</span><span class="dv">5025</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>Vout <span class="op">=</span> device.scpi(append_opc<span class="op">=</span><span class="va">True</span>).command(<span class="st">&#39;VOLT&#39;</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>V <span class="op">=</span> device.scpi().command(<span class="st">&#39;MEAS:VOLT:DC&#39;</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Write a value to the control node: this will issue SCPI command &quot;VOLT 10;*OPC?&quot;</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>Vout.<span class="bu">set</span>(<span class="dv">10</span>)</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Read a value from the control node using SCPI command &quot;MEAS:VOLT:DC?&quot;</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  value <span class="op">=</span> V.get()</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  ...</span></code></pre></div>
 <p>A common starting point would be importing
 <code>slowpy.control</code> and then creating an instance of the
-<code>ControlSystem</code> class.</p>
+<code>ControlSystem</code> class, or import an instance
+(<code>control_system</code>) directly.</p>
 <p>The <code>ControlSystem</code> already includes the
 <code>Ethernet</code> plugin, but if it were not included, the plugin
 loading code would be:</p>
@@ -752,36 +754,74 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb16-1"><a h
 <span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="co">        return value: reply text (even if empty) or None if command is not recognized</span></span>
 <span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="co">        &#39;&#39;&#39;</span></span>
 <span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Implemented Commands: &quot;V0 Value&quot; &quot;V1 Value&quot; &quot;MEASure:V0?&quot; &quot;MEASure:V1?&quot;</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Implemented Commands: [ &quot;VOLTage Value&quot;, &quot;MEASure:VOLTage:DC?&quot; ]</span></span>
 <span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Common SCPI commands, such as &quot;*IDN?&quot;, are implemented in the parent ScpiAdapter class</span></span>
-<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">len</span>(params) <span class="op">==</span> <span class="dv">1</span> <span class="kw">and</span> cmd_path[<span class="dv">0</span>].startswith(<span class="st">&#39;V&#39;</span>):</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> cmd_path[<span class="dv">0</span>].startswith(<span class="st">&#39;VOLT&#39;</span>) <span class="kw">and</span> <span class="bu">len</span>(params) <span class="op">==</span> <span class="dv">1</span>:</span>
 <span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>            <span class="cf">try</span>:</span>
-<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> cmd_path[<span class="dv">0</span>] <span class="op">==</span> <span class="st">&#39;V0&#39;</span>:</span>
-<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>                    <span class="va">self</span>.device.write(<span class="dv">0</span>, <span class="bu">float</span>(params[<span class="dv">0</span>]))</span>
-<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>                <span class="cf">elif</span> cmd_path[<span class="dv">0</span>] <span class="op">==</span> <span class="st">&#39;V1&#39;</span>:</span>
-<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>                    <span class="va">self</span>.device.write(<span class="dv">1</span>, <span class="bu">float</span>(params[<span class="dv">0</span>]))</span>
-<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>                <span class="cf">else</span>:</span>
-<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>                    <span class="va">self</span>.push_error(<span class="ss">f&#39;invalid command </span><span class="sc">{</span>cmd_path[<span class="dv">0</span>]<span class="sc">}</span><span class="ss">&#39;</span>)</span>
-<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>            <span class="cf">except</span>:</span>
-<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>                <span class="va">self</span>.push_error(<span class="ss">f&#39;bad parameter value: </span><span class="sc">{</span>params[<span class="dv">0</span>]<span class="sc">}</span><span class="ss">&#39;</span>)</span>
-<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">&#39;&#39;</span></span>
-<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> <span class="bu">len</span>(cmd_path) <span class="op">==</span> <span class="dv">2</span> <span class="kw">and</span> cmd_path[<span class="dv">0</span>].startswith(<span class="st">&#39;MEAS&#39;</span>):</span>
-<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> cmd_path[<span class="dv">1</span>] <span class="op">==</span> <span class="st">&#39;V0?&#39;</span>:</span>
-<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="va">self</span>.device.read(<span class="dv">0</span>)</span>
-<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a>            <span class="cf">elif</span> cmd_path[<span class="dv">1</span>] <span class="op">==</span> <span class="st">&#39;V1?&#39;</span>:</span>
-<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="va">self</span>.device.read(<span class="dv">1</span>)</span>
-<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a>            <span class="cf">else</span>:</span>
-<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a>                <span class="va">self</span>.push_error(<span class="ss">f&#39;invalid command </span><span class="sc">{</span>cmd_path[<span class="dv">0</span>]<span class="sc">}</span><span class="ss">&#39;</span>)</span>
-<span id="cb16-37"><a href="#cb16-37" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">&#39;&#39;</span></span>
-<span id="cb16-38"><a href="#cb16-38" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb16-39"><a href="#cb16-39" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">None</span></span>
-<span id="cb16-40"><a href="#cb16-40" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb16-41"><a href="#cb16-41" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> RandomWalkScpiDevice()</span>
-<span id="cb16-42"><a href="#cb16-42" aria-hidden="true" tabindex="-1"></a>server <span class="op">=</span> ScpiServer(device, port<span class="op">=</span><span class="dv">17674</span>)</span>
-<span id="cb16-43"><a href="#cb16-43" aria-hidden="true" tabindex="-1"></a>server.start()</span></code></pre></div>
-<p>Make this code start automatically on PC boot in your preferred way
-(<code>/etc/rc.local</code>, Docker, …).</p>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>                <span class="va">self</span>.device.write(<span class="dv">0</span>, <span class="bu">float</span>(params[<span class="dv">0</span>]))</span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>            <span class="cf">except</span>:</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>                <span class="va">self</span>.push_error(<span class="ss">f&#39;bad parameter value: </span><span class="sc">{</span>params[<span class="dv">0</span>]<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">&#39;&#39;</span></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> cmd_path[<span class="dv">0</span>].startswith(<span class="st">&#39;MEAS&#39;</span>):</span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="bu">len</span>(cmd_path) <span class="op">==</span> <span class="dv">3</span> <span class="kw">and</span> cmd_path[<span class="dv">1</span>].startswith(<span class="st">&#39;VOLT&#39;</span>) <span class="kw">and</span> cmd_path[<span class="dv">2</span>] <span class="op">==</span> <span class="st">&#39;DC&#39;</span>:</span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="va">self</span>.device.read(<span class="dv">0</span>)</span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>            <span class="cf">else</span>:</span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>                <span class="va">self</span>.push_error(<span class="ss">f&#39;invalid command </span><span class="sc">{</span><span class="st">&quot;:&quot;</span><span class="sc">.</span>join(cmd_path)<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="st">&#39;&#39;</span></span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">None</span></span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> RandomWalkScpiDevice()</span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a>server <span class="op">=</span> ScpiServer(device, port<span class="op">=</span><span class="dv">5025</span>)</span>
+<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a>server.start()</span></code></pre></div>
+<p>In the parent class, <code>ScpiAdapter</code>, the following standard
+SCPI commands are defined. The default behaviors can be customized by
+overriding the methods shown in the table.</p>
+<table>
+<colgroup>
+<col style="width: 43%" />
+<col style="width: 37%" />
+<col style="width: 18%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Description</th>
+<th>To Override</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>*IDN?</code></td>
+<td>returns the ID given in the <code>__init__(idn=ID)</code>
+method</td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td><code>*OPC?</code></td>
+<td>returns the value of <code>self.is_running</code></td>
+<td><code>do_OPC(self)</code></td>
+</tr>
+<tr class="odd">
+<td><code>SYST:ERR?</code></td>
+<td>returns the errors set by <code>self.push_error(msg)</code></td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td><code>*CLS</code></td>
+<td>clears the errors</td>
+<td><code>do_CLS(self)</code></td>
+</tr>
+<tr class="odd">
+<td><code>*RST</code></td>
+<td>clears the errors and set <code>self.is_running</code> False</td>
+<td><code>do_RST(self)</code></td>
+</tr>
+</tbody>
+</table>
+<p>Once the code is tested, make it start automatically on PC boot in
+your preferred way (<code>/etc/rc.local</code>, Docker, …).</p>
 <p>If SlowPy Control Nodes are already available for the device, the
 nodes can be directly mapped to the SCPI interface:</p>
 <div class="sourceCode" id="cb17"><pre
@@ -792,16 +832,17 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb17-1"><a h
 <span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>adapter <span class="op">=</span> ScpiAdapter(idn<span class="op">=</span><span class="st">&#39;RandomWalk&#39;</span>)</span>
 <span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>adapter.bind_nodes([</span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;CONFIGure:WALK&#39;</span>, device.walk().setpoint(limits<span class="op">=</span>(<span class="dv">0</span>,<span class="va">None</span>))),</span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;CONFIGure:DECAY&#39;</span>, device.decay().setpoint(limits<span class="op">=</span>(<span class="dv">0</span>,<span class="dv">1</span>))),</span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;V0&#39;</span>, device.ch(<span class="dv">0</span>).setpoint()),</span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;V1&#39;</span>, device.ch(<span class="dv">1</span>).setpoint()),</span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;MEASure:V0&#39;</span>, device.ch(<span class="dv">0</span>).readonly()),</span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;MEASure:V1&#39;</span>, device.ch(<span class="dv">1</span>).readonly()),</span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>])</span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>server <span class="op">=</span> ScpiServer(adapter, port<span class="op">=</span><span class="dv">17674</span>)</span>
-<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>server.start()</span></code></pre></div>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Randomwalk Configuration</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;CONFIGure:WALK&#39;</span>, device.walk().setpoint(limits<span class="op">=</span>(<span class="dv">0</span>,<span class="va">None</span>))),</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;CONFIGure:DECAY&#39;</span>, device.decay().setpoint(limits<span class="op">=</span>(<span class="dv">0</span>,<span class="dv">1</span>))),</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Common SCPI commands for power supplies and voltmeters</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;VOLTage&#39;</span>, device.ch(<span class="dv">0</span>).setpoint()),</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;MEASure:VOLTage:DC&#39;</span>, device.ch(<span class="dv">0</span>).readonly()),</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>server <span class="op">=</span> ScpiServer(adapter, port<span class="op">=</span><span class="dv">5025</span>)</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>server.start()</span></code></pre></div>
 <h1 id="slowtask-gui-script-binding">SlowTask: GUI-Script Binding</h1>
 <p>SlowTask is a user Python script placed under the SlowDash config
 directory with a name like <code>slowtask-XXX.py</code>. The SlowDash

@@ -230,7 +230,7 @@ class ScpiNode(spc.ControlNode):
           - timeout: timeout
           - line_terminator: '\x0d' for CR, '\x0a' for NL
           - sync: if True, SCPI read is appended to SCPI write in ScpiCommand.set()
-          - appdn_opc: if True, ';*OPC?' is appended to all SCPI commands
+          - append_opc: if True, ';*OPC?' is appended to all SCPI set commands
           - verbose: primt SCPI exchanges to sys.stderr
         """
         self.connection = connection

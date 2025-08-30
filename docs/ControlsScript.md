@@ -50,12 +50,12 @@ Although the GUI can access the variables and functions in user scripts, the scr
 from slowpy.control import ControlSystem
 ctrl = ControlSystem()
 
-# Create a control node for SCPI command "MEAS:V0" on a device at 192.168.1.43
-V0 = ctrl.ethernet(host='192.168.1.43', port=17674).scpi().command('MEAS:V0')
+# Create a control node for SCPI command "MEAS:VOLT:DC" on a device at 192.168.1.43
+V = ctrl.ethernet(host='192.168.1.43', port=5025).scpi().command('MEAS:VOLT:DC')
 
 while True:
-  # Read a value from the control node using SCPI command "MEAS:V?"
-  value = V0.get()
+  # Read a value from the control node using SCPI command "MEAS:VOLT:DC?"
+  value = V.get()
   ...
 ```
 
@@ -67,48 +67,48 @@ datastore = DataStore_PostgreSQL('postgresql://postgres:postgres@localhost:5432/
 
 while True:
     value = ...
-    datastore.append(value, tag="ch00")
+    datastore.append(value, tag="voltmeter")
 ```
 
 #### Calling a User Task function from SlowDash GUI Panels
 If you have a User Task Script like this:
 ```python
-def set_V0(value):
-    V0.set(value)
+def set_Vout(value):
+    Vout.set(value)
 ```
 and write a SlowDash HTML panel like this:
 ```html
 <form>
-  V0 value: <input name="value">
-  <input type="submit" name="test.set_V0()" value="Set">
+  Voltage output: <input name="value">
+  <input type="submit" name="test.set_Vout()" value="Set">
 </form>
 ```
-Then, clicking the `Set` button will call the function `set_V0()` with a parameter from the `value` input field. 
+Then, clicking the `Set` button will call the function `set_Vout()` with a parameter from the `value` input field. 
 
 #### Displaying the readout values on the SlowDash panels
-For control nodes `V0` and `V1`, defining an `_export()` function in the User Task Script will export these node values, making them available in the SlowDash GUI in the same way as values stored in the database.
+For control nodes `V`, defining an `_export()` function in the User Task Script will export the node values, making them available in the SlowDash GUI in the same way as values stored in the database.
 ```python
-device = ctrl.ethernet(host='192.168.1.43', port=17674).scpi()
-V0 = device.command('MEAS:V0')
-V1 = device.command('MEAS:V1')
+device = ctrl.ethernet(host='192.168.1.43', port=5025).scpi()
+V = device.command('MEAS:VOLT:DC')
+A = device.command('MEAS:CURR:DC')
 def _export():
     return [
-        ('V0', V0),
-        ('V1', V1)
+        ('Voltage', V),
+        ('Current', A)
     ]
 ```
-Only the "current" values are available in this way. If you need historical values, store the values in a database.
+Only the "current" (present) values are available in this way. If you need historical values, store the values in a database.
 
 
 ## Demonstration Example Project
 In `slowdash/ExampleProjects/SlowTask` there is a SlowDash project that demonstrates some of the features described here.
 ```console
-$ cd slowdash/ExampleProjects/SlowTask
+$ cd slowdash/ExampleProjects/SlowTask/Basic
 $ slowdash --port=18881
 ```
 or
 ```console
-$ cd slowdash/ExampleProjects/SlowTask
+$ cd slowdash/ExampleProjects/SlowTask/Basic
 $ docker compose up
 ```
 
@@ -123,7 +123,7 @@ SlowPy is a Python library (module) that provides functions such as:
 The SlowPy library is included in the SlowDash package under `slowdash/lib/slowpy`. By running `source slowdash/bin/slowdash-bashrc`, as instructed in the Installation section, this path will be included in the environment variable `PYTHONPATH`, so that users can use the library without modifying their system. It is also possible to install the library in the usual way: you can run `pip install slowdash/lib/slowpy` to install SlowPy into your Python environment. You might want to combine this with `venv` to avoid affecting your Python environment.
 
 ## Controls
-SlowPy provides a unified interface to connect external software systems and hardware devices; everything is mapped into a single "ControlTree" where each node has `set()` and `get()` methods. The tree represents the logical structure of the system. For example, a SCPI command of `MEAS:V` to a voltmeter connected via Ethernet would be addressed like `ControlSystem.ethernet(host, port).scpi().command('MEAS:V')`, and `set(value)` on this node will send a SCPI command of `MEAS:V?` to the voltmeter. The `get()` method performs a read operation and returns a value.
+SlowPy provides a unified interface to connect external software systems and hardware devices; everything is mapped into a single "ControlTree" where each node has `set()` and `get()` methods. The tree represents the logical structure of the system. For example, a SCPI command of `VOLT` to a power supply unit connected via Ethernet would be addressed like `ControlSystem.ethernet(host, port).scpi().command('VOLT')`, and `set(value)` on this node will send a SCPI command of `VOLT value` to the device. The `get()` method performs a read operation and returns a value.
 
 Plugin modules can dynamically add branches to the control tree. For example, the Redis plugin adds the `redis()` node and several sub-branches for functions provided by Redis, such as hash, JSON, and time-series. Plugins are loaded to a node, not necessarily to the root ControlSystem; for example, a plugin that uses Ethernet is loaded to an Ethernet node, creating a sub-branch under the Ethernet node, and the plugin can make use of the functions provided by the Ethernet node such as `send()` (which is `set()` of the node) and `receive()` (which is `get()`).
 
@@ -131,21 +131,22 @@ Plugin modules can dynamically add branches to the control tree. For example, th
 Here is an example of using SlowPy Controls. In this example, we use a power supply device that accepts SCPI commands through Ethernet.
 
 ```python
-from slowpy.control import ControlSystem
-ctrl = ControlSystem()
+from slowpy.control import control_system as ctrl
 
-# Create a control node for SCPI command "MEAS:V0" on a device at 192.168.1.43
-V0 = ctrl.ethernet(host='192.168.1.43', port=17674).scpi().command('MEAS:V0', set_format='V0 {};*OPC?')
+# Create a control node for SCPI command "VOLT" (output) and "MEAS:VOLT:DC" (readback) on a device at 192.168.1.43
+device = ctrl.ethernet(host='192.168.1.43', port=5025)
+Vout = device.scpi(append_opc=True).command('VOLT')
+V = device.scpi().command('MEAS:VOLT:DC')
 
-# Write a value to the control node: this will issue SCPI command "V0 10;*OPC?"
-V0.set(10)
+# Write a value to the control node: this will issue SCPI command "VOLT 10;*OPC?"
+Vout.set(10)
 
 while True:
-  # Read a value from the control node using SCPI command "MEAS:V"
-  value = V0.get()
+  # Read a value from the control node using SCPI command "MEAS:VOLT:DC?"
+  value = V.get()
   ...
 ```
-A common starting point would be importing `slowpy.control` and then creating an instance of the `ControlSystem` class.
+A common starting point would be importing `slowpy.control` and then creating an instance of the `ControlSystem` class, or import an instance (`control_system`) directly.
 
 The `ControlSystem` already includes the `Ethernet` plugin, but if it were not included, the plugin loading code would be:
 ```python
@@ -422,37 +423,39 @@ class RandomWalkScpiDevice(ScpiAdapter):
         return value: reply text (even if empty) or None if command is not recognized
         '''
         
-        # Implemented Commands: "V0 Value" "V1 Value" "MEASure:V0?" "MEASure:V1?"
+        # Implemented Commands: [ "VOLTage Value", "MEASure:VOLTage:DC?" ]
         # Common SCPI commands, such as "*IDN?", are implemented in the parent ScpiAdapter class
-        if len(params) == 1 and cmd_path[0].startswith('V'):
+        if cmd_path[0].startswith('VOLT') and len(params) == 1:
             try:
-                if cmd_path[0] == 'V0':
-                    self.device.write(0, float(params[0]))
-                elif cmd_path[0] == 'V1':
-                    self.device.write(1, float(params[0]))
-                else:
-                    self.push_error(f'invalid command {cmd_path[0]}')
+                self.device.write(0, float(params[0]))
             except:
                 self.push_error(f'bad parameter value: {params[0]}')
             return ''
             
-        elif len(cmd_path) == 2 and cmd_path[0].startswith('MEAS'):
-            if cmd_path[1] == 'V0?':
+        elif cmd_path[0].startswith('MEAS'):
+            if len(cmd_path) == 3 and cmd_path[1].startswith('VOLT') and cmd_path[2] == 'DC':
                 return self.device.read(0)
-            elif cmd_path[1] == 'V1?':
-                return self.device.read(1)
             else:
-                self.push_error(f'invalid command {cmd_path[0]}')
+                self.push_error(f'invalid command {":".join(cmd_path)}')
             return ''
             
         return None
         
 device = RandomWalkScpiDevice()
-server = ScpiServer(device, port=17674)
+server = ScpiServer(device, port=5025)
 server.start()
 ```
+In the parent class, `ScpiAdapter`, the following standard SCPI commands are defined. The default behaviors can be customized by overriding the methods shown in the table.
 
-Make this code start automatically on PC boot in your preferred way (`/etc/rc.local`, Docker, ...).
+| Command | Description | To Override |
+|-------|------|---|
+| `*IDN?`  | returns the ID given in the `__init__(idn=ID)` method | --- | 
+| `*OPC?`  | returns the value of `self.is_running` | `do_OPC(self)` |
+| `SYST:ERR?` | returns the errors set by `self.push_error(msg)` | --- |
+| `*CLS`  | clears the errors | `do_CLS(self)`
+| `*RST`  | clears the errors and set `self.is_running` False | `do_RST(self)` |
+
+Once the code is tested, make it start automatically on PC boot in your preferred way (`/etc/rc.local`, Docker, ...).
 
 If SlowPy Control Nodes are already available for the device, the nodes can be directly mapped to the SCPI interface:
 ```python
@@ -463,15 +466,16 @@ device = ControlSystem().randomwalk_device()
 
 adapter = ScpiAdapter(idn='RandomWalk')
 adapter.bind_nodes([
+    # Randomwalk Configuration
     ('CONFIGure:WALK', device.walk().setpoint(limits=(0,None))),
     ('CONFIGure:DECAY', device.decay().setpoint(limits=(0,1))),
-    ('V0', device.ch(0).setpoint()),
-    ('V1', device.ch(1).setpoint()),
-    ('MEASure:V0', device.ch(0).readonly()),
-    ('MEASure:V1', device.ch(1).readonly()),
+
+    # Common SCPI commands for power supplies and voltmeters
+    ('VOLTage', device.ch(0).setpoint()),
+    ('MEASure:VOLTage:DC', device.ch(0).readonly()),
 ])
 
-server = ScpiServer(adapter, port=17674)
+server = ScpiServer(adapter, port=5025)
 server.start()
 ```
 

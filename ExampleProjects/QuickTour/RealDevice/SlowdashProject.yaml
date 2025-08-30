@@ -1,0 +1,12 @@
+slowdash_project:
+  name: QuickTour
+  title: Slow-Dash Quick Tour
+  
+  data_source:
+    url: sqlite:///QuickTourTestData.db
+    time_series:
+      schema: testdata [channel] @timestamp(unix) = value
+
+  task:
+    name: testdata
+    auto_load: true

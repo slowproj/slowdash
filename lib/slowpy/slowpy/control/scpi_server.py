@@ -151,6 +151,8 @@ class ScpiConnection(threading.Thread):
             else:
                 if self.stop_event.is_set():
                     break
+                else:
+                    continue
             
             packet = self.sock.recv(1024)
             if len(packet) == 0 or self.stop_event.is_set():
@@ -210,6 +212,7 @@ class ScpiServer:
         self.port = port
         
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # allow immediate re-bind even during TIME_WAIT
         self.sock.bind((self.host, port))
         self.sock.listen(10)
         self.connections = []
@@ -223,6 +226,7 @@ class ScpiServer:
             
         print("listening at %s:%d" % (self.host, self.port))
         print("line terminator is: x%02x" % ord(self.line_terminator))
+        print("type Ctrl-c to stop")
         try:
             while True:
                 sock, addr = self.sock.accept()
@@ -239,3 +243,4 @@ class ScpiServer:
             conn.stop()
             conn.join()
         self.sock.close()
+        print("server closed")

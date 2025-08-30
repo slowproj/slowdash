@@ -135,8 +135,8 @@ id="toc-リバースプロキシ">リバースプロキシ</a></li>
 で行うようなビジュアライゼーションの部分はほぼ実装済みで，解析およびコントロールの部分が開発中です．</p>
 <p>データベースアクセス以外は外部ライブラリを使っておらず，ソフトウェアの寿命が外のライブラリの変更等に影響されることはないようになっています．特に，流行り廃れが激しい
 JavaScript
-の部分はフレームワークなどは使わず，完全に自己完結です（使っていたけど排除しました）．データベース側および解析モジュールは，全て独立なプラグインとなっており，いつでも切り捨てられます．依存性がないので，インストールがとても楽で，使用後も痕跡を残さずきれいに削除できます．それでもインストールをしたくない人のために，Docker
-コンテナも提供されています．</p>
+の部分はフレームワークなどは使わず，完全に自己完結です（使っていたけど排除しました）．データベース側および解析モジュールは，全て独立なプラグインとなっており，いつでも切り捨てられます．依存性がないので，インストールがとても楽で，使用後も痕跡を残さずきれいに削除できます．それでもインストールをしたくない人のために，すぐに使える
+Docker コンテナも提供されています．</p>
 <p><img src="fig/Gallery-ATDS-Dashboard.png" style="width:40%;box-shadow:0px 0px 15px -5px rgba(0,0,0,0.7);">
 <img src="fig/Gallery-RGA.png" style="width:40%;box-shadow:0px 0px 15px -5px rgba(0,0,0,0.7);"></p>
 <h3 id="機能と特長予定を含む">機能と特長（予定を含む）</h3>
@@ -147,7 +147,7 @@ JavaScript
 <ul>
 <li>SQL データベース: PostgreSQL, MySQL, SQLite</li>
 <li>時系列データベース： InfluxDB</li>
-<li>キーバリューストア： RedisTS</li>
+<li>キーバリューストア： Redis</li>
 <li>ドキュメントデータベース： MongoDB, CouchDB</li>
 </ul></li>
 <li>実験ですでに使われているいろいろなデータ形式（スキーマ）に，時系列データならほぼ全て対応できる．</li>
@@ -172,7 +172,7 @@ JavaScript
 <li>サーバー側にユーザの Python
 コードを置いて，ブラウザからコマンドを送れる</li>
 <li>サーバー側のユーザ Python
-コードが動的に生成したデータも表示できる</li>
+コードが動的に生成したデータもストリーミング表示できる</li>
 <li>ブラウザ上でも簡単なデータ加工が行える</li>
 <li>ユーザ作成の任意の HTML コードを組み込める</li>
 </ul>
@@ -200,9 +200,10 @@ JavaScript
 <li>３次元の絵</li>
 <li>トラックとかを描くイベントディスプレイ（描画要素の数が毎回変わるもの）</li>
 </ul>
-<p>JSROOT や Bokeh との違い：</p>
+<p>JSROOT や Streamlit，Bokeh との違い：</p>
 <ul>
-<li><p>SlowDash と Grafana にあるけど JSROOT/Bokeh にない機能</p>
+<li><p>SlowDash と Grafana にあるけど JSROOT/Streamlit/Bokeh
+にない機能</p>
 <ul>
 <li>コーディングなし：マウス数回のクリックでデータベース上のデータを可視化</li>
 <li>データを見るユーザが自分でブラウザ上でプロットを作成し，保存・共有できる</li>
@@ -219,6 +220,8 @@ JavaScript
 <li>動いている ROOT の中身をリアルタイムにビジュアライズ</li>
 <li>Jupyter
 でブラウザからサーバー側の解析コードを書いて，テストして，そのままデプロイ</li>
+<li>(動いている Python/Matplotlib
+の中身(Figure)を抜き出してリアルタイムにビジュアライズすることはすでにできます）</li>
 </ul></li>
 </ul>
 <h3 id="よくある宣伝">よくある宣伝</h3>
@@ -637,15 +640,284 @@ href="ProjectSetup.html#styles">Project Setup
 の章</a>に説明があります．</p>
 <p>右下の Tools にある New Plot Layout
 で新しい空のページを作ります．その中で，<code>Add a New Panel</code>
+を選んで，<code>Time-Axis Plot</code>
 を選んで，プロットを作成していきます．たぶん自明です．</p>
 <p>左上の Channel List
 のチャンネル名をクリックすると，直近の時系列データのプロットを含んだページが作成されます．それを元にいろいろ追加していくこともできます．</p>
 <p>ここまでの準備では時系列データしか生成していないので，すぐにできるのは，それを直接プロットする
 <code>Time-Axis Plot (Time-Series)</code> と，値分布のヒストグラムを作る
 <code>XY Plot (Histograms and Graphs)</code> →
-<code>Histogram of Time-Series Values</code>
-です．ここから先は，公式ドキュメントの <a href="Panels.html">UI Panels
-の章</a>などを参照してください．</p>
+<code>Histogram of Time-Series Values</code> です．
+以下の章では，ユーザの解析スクリプトなどでヒストグラムやグラフなどを作成し，それらも表示するようにしてみます．</p>
+<h3 id="デバイスからデータを読む">デバイスからデータを読む</h3>
+<p>SlowDash は，ウェブサーバとブラウザからなるアプリ部分と，ユーザの
+Python スクリプトで利用するライブラリ部分から構成されます．
+上記のダミーデータ作成では，このライブラリ (SlowPy)
+を使用しました．アプリとライブラリは融合して動作しますが，それぞれを単体で使用することもできます．
+この章では，SlowPy
+ライブラリを単体で使用してデバイスからデータを読んで，ダミーデータ生成と置き換えます．</p>
+<h4 id="準備">準備</h4>
+<p>SlowPy は SlowDash
+インストール時に一緒にインストールされますが，標準インストールでは venv
+の中に入るので，最初にこの venv を有効にしておいてください．</p>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span></code></pre></div>
+<p>これは新しいターミナルを開くごとに必要です．もし SlowDash
+専用のコンピュータを使っているなら，<code>.bashrc</code>
+などの中に以下の行を追加すれば毎回行う必要がなくなります．</p>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> <span class="va">$SLOWDASH_DIR</span>/venv/bin/activate</span></code></pre></div>
+<h4 id="対象デバイス">対象デバイス</h4>
+<p>ここでは，ネットワーク制御が可能な広く使われているベントトップ型電圧計（マルチメータ）から直流電圧を読み出す例を作成します．
+多くの電圧計が同じコマンドを使いますが，特に以下のものは確認してあります（ChatGPT
+調べ，2025年8月）：</p>
+<table>
+<thead>
+<tr class="header">
+<th>メーカー</th>
+<th>モデル</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Keysight (Agilent)</td>
+<td>34460A TrueVolt DMM</td>
+</tr>
+<tr class="even">
+<td>Tektronics / Keithley</td>
+<td>DMM6500</td>
+</tr>
+<tr class="odd">
+<td>Rigol</td>
+<td>DM3058</td>
+</tr>
+<tr class="even">
+<td>BK Precision</td>
+<td>5492B DMM</td>
+</tr>
+</tbody>
+</table>
+<p>また，多くの電源モジュールも，出力電圧の読み出しで同じコマンドを使用します．なので，この例で同様に使用できます．
+以下は確認済のモデルです（ChatGPT 調べ，2025年8月）</p>
+<table>
+<thead>
+<tr class="header">
+<th>メーカー</th>
+<th>モデル</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Keysight (Agilent)</td>
+<td>E363x/E364x</td>
+</tr>
+<tr class="even">
+<td>Tektronics / Keithley</td>
+<td>2230G/2231A</td>
+</tr>
+<tr class="odd">
+<td>Rigol</td>
+<td>DP800, DP2000</td>
+</tr>
+<tr class="even">
+<td>BK Precision</td>
+<td>9180/9190</td>
+</tr>
+</tbody>
+</table>
+<p>これらのデバイスは全てイーサーネット経由でコントロールできるものです．
+次の手順に進む前に，ネットワークに接続し，電源を入れて，IP
+アドレス（と念の為ポート番号；マニュアルに書いてあります）を確認しておいてください．</p>
+<h4 id="使えるデバイスがない場合">使えるデバイスがない場合</h4>
+<p>ChatGPT
+によると，ほとんどの電圧計と電源ユニットでは，ここで使うレベルのコマンドは共通らしいです．
+もしいずれのデバイスも利用できない場合は，SlowDash
+にシミュレータがあるので，代わりにこれを使用して例を実行することができます．
+新しいターミナルを開いて，以下のコマンドを実行してください．</p>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH/utils</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python ./dummy-scpi.py</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>listening at 172.26.0.1:5025</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>line terminator is: x0d</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>type Ctrl-c to stop</span></code></pre></div>
+<p>これで，このデバイスがネットワーク上にあるように振る舞います．使われる
+IP アドレスはローカルホストのものです． 終了は Ctrl-c
+を押してください．</p>
+<h4 id="デバイスからの読み出し">デバイスからの読み出し</h4>
+<p>上記のデバイスは全て，SCPI
+と呼ばれる単純なテキストコマンド体系を使用します． 以下は，ここで使う
+SCPI コマンドです．</p>
+<table>
+<thead>
+<tr class="header">
+<th>動作</th>
+<th>コマンド</th>
+<th>戻り値例</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>デバイスIDの取得</td>
+<td><code>*IDN?</code></td>
+<td><code>xxxx</code> みたいな感じ</td>
+</tr>
+<tr class="even">
+<td>設定リセット</td>
+<td><code>*RST</code></td>
+<td>たぶんなし</td>
+</tr>
+<tr class="odd">
+<td>DC 電圧値の読み出し</td>
+<td><code>MEAS:VOLT:DC?</code></td>
+<td><code>2.2</code> みたいな感じ</td>
+</tr>
+</tbody>
+</table>
+<p>SlowPy
+ライブラリでは，デバイスの論理構造を反映させたツリーをまず構築します．
+この例では，[測定システム] -&gt; [イーサーネット] -&gt; [SCPI デバイス]
+-&gt; [各コマンド] のような形をしています．
+そして，それぞれのツリーのノードに対して値の読み書きを
+<code>set(value)</code> または <code>value=get()</code>
+により行います．</p>
+<p>以下は，SlowPy
+を使用して，上記のデバイスからデバイスIDを取得して表示する完全なコードです．</p>
+<div class="sourceCode" id="cb31"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># SlowPy ライブラリの import</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="co"># デバイスツリーの構築</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;172.26.0.1&#39;</span>, <span class="dv">5025</span>).scpi()</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="co"># &quot;*IDN?&quot; コマンドノードからの読み出し</span></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(device.command(<span class="st">&#39;*IDN?&#39;</span>).get())</span></code></pre></div>
+<p>デバイスのアドレスとポート番号は適宜書き換えてください．
+この時点でデバイスとの接続確認ができます．</p>
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python read-my.py</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>XXXX</span></code></pre></div>
+<p>以下は，最初に設定リセットをして，1
+秒ごとのデータ読み出しを永遠に続ける完全な例です．</p>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;172.26.0.1&#39;</span>, <span class="dv">5025</span>).scpi()</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>device.command(<span class="st">&#39;*RST&#39;</span>).<span class="bu">set</span>()</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> time</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>    volt <span class="op">=</span> device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get()</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(volt)</span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>    time.sleep(<span class="dv">1</span>)</span></code></pre></div>
+<p>SlowPy はデータベース読み書きの機能も提供しています．
+以下は，上記の画面への print の代わりにデータベース（この例では
+SQLite）に記録する完全な例です．</p>
+<div class="sourceCode" id="cb34"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;172.26.0.1&#39;</span>, <span class="dv">5025</span>).scpi()</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_SQLite</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_SQLite(<span class="st">&#39;sqlite:///TestData.db&#39;</span>, table<span class="op">=</span><span class="st">&quot;slowdata&quot;</span>)</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>device.command(<span class="st">&#39;*RST&#39;</span>).<span class="bu">set</span>()</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> time</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>    volt <span class="op">=</span> device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get()</span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>    datastore.append({<span class="st">&#39;volt&#39;</span>: volt})</span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>    time.sleep(<span class="dv">1</span>)</span></code></pre></div>
+<p>これをダミーデータ生成プログラムの代わりに走らせれば，実データに対して
+SlowDash を使えるようになります． この時点では，停止に
+<code>Ctrl-c</code> または <code>Ctrl-\</code> が必要です．
+見苦しいことになると思いますが，実害はないはずです．</p>
+<h4
+id="読み出しスクリプトを-slowdash-アプリに統合する">読み出しスクリプトを
+SlowDash アプリに統合する</h4>
+<p>任意の Python スクリプト(SlowPyを使う必要もない)を SlowDash
+プロジェクトディレクトリの下の <code>config</code>
+ディレクトリ（すでに自動作成されているはず）に
+<code>slowtask-XXX.py</code> という名前で保存すると，SlowDash
+ホーム画面の左下の “SlowTask”
+セクションに作成したスクリプトが表示され，コントロールできるようになります．
+<code>SlowdashProject.yaml</code>
+の設定で，スクリプトを自動開始するようにしたり，ブラウザからこの Python
+ファイルを直接編集できるようにすることもできます．具体的な手順は，公式ドキュメントを参照してください．</p>
+<p>ただし，上記のスクリプトは，（上品に）停止させるためのコードがありません．アプリ側から停止や再実行をできるようにするためには，アプリからのコントロールを受けられるようにする必要があります．そのために，以下のように
+SlowDash で規定されているコールバックを実装します．</p>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;172.26.0.1&#39;</span>, <span class="dv">5025</span>).scpi()</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_SQLite</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_SQLite(<span class="st">&#39;sqlite:///TestData.db&#39;</span>, table<span class="op">=</span><span class="st">&quot;slowdata&quot;</span>)</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>device.command(<span class="st">&#39;*RST&#39;</span>).<span class="bu">set</span>()</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>    volt <span class="op">=</span> device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get()</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>    datastore.append({<span class="st">&#39;volt&#39;</span>: volt})</span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>    time.sleep(<span class="dv">1</span>)</span></code></pre></div>
+<p><code>while True</code> を <code>def _loop()</code>
+に置き換えただけです． <code>_loop()</code> 関数は，SlowDash
+が実行中（または SlowDash
+がスクリプトを実行中）に繰り返し呼び出されます．</p>
+<p>最後に以下のブロックを追加すると，このスクリプトを単体実行できるようになります．</p>
+<div class="sourceCode" id="cb36"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>      _loop()</span></code></pre></div>
+<p>さらにひと手間かけて，以下のようにすると Ctrl-c
+で上品に止まるようになります．</p>
+<div class="sourceCode" id="cb37"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    ctrl.stop_by_signal()</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="kw">not</span> ctrl.is_stop_requested():</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>        _loop()</span></code></pre></div>
+<h4 id="追加の詳細">追加の詳細</h4>
+<p>電源ユニットを使用する場合で，出力電圧を設定するには以下のようにします．</p>
+<div class="sourceCode" id="cb38"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;172.26.0.1&#39;</span>, <span class="dv">5025</span>).scpi(append_opc<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>device.command(<span class="st">&#39;VOLT&#39;</span>).<span class="bu">set</span>(<span class="fl">3.0</span>)    <span class="co"># this will send &quot;VOLT 3.0; *OPC?&quot;</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>device.command(<span class="st">&#39;OUTP&#39;</span>).<span class="bu">set</span>(<span class="st">&#39;ON&#39;</span>)   <span class="co"># this will send &quot;OUTP ON; *OPC?&quot;</span></span></code></pre></div>
+<p>SlowPy
+では，全てのコマンドに戻り値があることを期待するので，戻り値のないコマンドが存在するようなデバイスでは，コマンドの完了を待ってそのステータスをかえすコマンド
+<code>*OPC?</code>
+を付加する必要があります．常に戻り値があるようなデバイスに
+<code>*OPC?</code> を付加しても，通常は無害です． 上記の例では，全ての
+set() に <code>*OPC*</code> を付加するように，<code>scpi()</code>
+ノード自体にオプションを設定しています． （もともと戻り値のある get()
+には付加されません．）
+もしコマンドごとに切り替えたいなら，自分でコマンドに <code>*OPC?</code>
+を付加しても全く構いません．</p>
+<div class="sourceCode" id="cb39"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>device.command(<span class="st">&#39;OUTP ON; *OPC?&#39;</span>).<span class="bu">set</span>()</span></code></pre></div>
+<p>イーサーネットではなく，USB や RS-232
+などでコントロールするデバイスに対しては，デバイスツリーの対応する部分を置き換えます．
+例えば，USB 接続を VISA
+経由で使用するデバイスでは，以下のようになります：</p>
+<div class="sourceCode" id="cb40"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>ctrl.load_control_module(<span class="st">&#39;VISA&#39;</span>)    <span class="co"># VISA は SlowPy プラグインとして提供されているので load する</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.visa(XXXXXX).scpi()</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>(あとは同じ)</span></code></pre></div>
+<h4 id="この先">この先</h4>
+<ul>
+<li><code>SlowdashProject.yaml</code> に <code>task</code>
+のエントリを作ると，スクリプトの自動実行を設定できます．</li>
+<li><code>SlowdashProject.yaml</code> に
+セキュリティ設定をすると，スクリプトをブラウザから編集できるようにできます．</li>
+<li>ブラウザに入力エリアやボタンを配置して，ボタンクリックでスクリプト中の任意の関数を呼び出すようにすることができます．</li>
+<li>スクリプト中でヒストグラムやグラフを作成して，データベースに保存したりブラウザにストリーミングすることができます．</li>
+</ul>
+<p>これらの手順については，公式ドキュメントの「プロジェクト設定」や「コントロールスクリプト」の章を参照してください．</p>
 <h1 id="docker-コンテナで使う">Docker コンテナで使う</h1>
 <h3 id="基本">基本</h3>
 <p>DockerHub と GitHub に SlowDash
@@ -661,50 +933,50 @@ href="https://github.com/slowproj/slowdash/pkgs/container/slowdash">ghcr.io/slow
 です．これをボリュームマウントして使ってください．以下は，<code>SlowdashProject.yaml</code>
 ファイルが作ってあるプロジェクトディレクトリからコンテナの SlowDash
 サーバーを実行する例です．</p>
-<div class="sourceCode" id="cb28"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash</span></span></code></pre></div>
+<div class="sourceCode" id="cb41"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash</span></span></code></pre></div>
 <p>毎回打つのは大変なので，<code>docker-compose.yaml</code>
 を使うのが簡単です．SlowDash の <code>ExampleProjects</code>
 以下にあるプロジェクト例には，すべて <code>docker-compose.yaml</code>
 ファイルが含まれています．</p>
-<div class="sourceCode" id="cb29"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowdash</span></span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> .:/project</span></span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881:18881&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb42"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowdash</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> .:/project</span></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881:18881&quot;</span></span></code></pre></div>
 <p>このファイルがある場所で <code>docker compose up</code>
 とすればイメージがダウンロードされ，実行が開始されます．（初回は少し時間がかかります．）</p>
-<div class="sourceCode" id="cb30"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span></code></pre></div>
+<div class="sourceCode" id="cb43"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span></code></pre></div>
 <p>SlowDash のコマンドを使用したい場合，<code>docker run</code> または
 <code>docker compose up</code>
 でコンテナを走らせてから，<code>docker exec</code>
 でコンテナの中から実行してください．</p>
-<div class="sourceCode" id="cb31"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker ps</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>CONTAINER ID   IMAGE         COMMAND                   CREATED          STATUS         PORTS       NAMES</span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>70e0b99483ae   slowdash      &quot;/slowdash/app/docke…&quot;   10 seconds ago   Up 9 seconds   18881/tcp   elastic_jackson</span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker exec -it 70e    slowdash config -i4       （70e は上の行で表示されているコンテナID； -i4 は整形オプション）</span></span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>    &quot;slowdash&quot;: {</span>
-<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>        &quot;version&quot;: &quot;250128 \&quot;Skykomish\&quot;&quot;</span>
-<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
+<div class="sourceCode" id="cb44"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker ps</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>CONTAINER ID   IMAGE         COMMAND                   CREATED          STATUS         PORTS       NAMES</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>70e0b99483ae   slowdash      &quot;/slowdash/app/docke…&quot;   10 seconds ago   Up 9 seconds   18881/tcp   elastic_jackson</span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker exec -it 70e    slowdash config -i4       （70e は上の行で表示されているコンテナID； -i4 は整形オプション）</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>    &quot;slowdash&quot;: {</span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>        &quot;version&quot;: &quot;250128 \&quot;Skykomish\&quot;&quot;</span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
 <h1 id="slowdash-のアップデート">SlowDash のアップデート</h1>
 <h2 id="直接インストール">直接インストール</h2>
 <p>Make を使って更新をできます：</p>
-<div class="sourceCode" id="cb32"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH</span></span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make update</span></span></code></pre></div>
+<div class="sourceCode" id="cb45"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make update</span></span></code></pre></div>
 <p>手動で行う場合は，<code>git pull</code>
 の際に<code>--recurse-submodule</code>
 を忘れないようにしてください．</p>
-<div class="sourceCode" id="cb33"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ git pull --recurse-submodules</span></span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make</span></span></code></pre></div>
+<div class="sourceCode" id="cb46"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ git pull --recurse-submodules</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make</span></span></code></pre></div>
 <p>この <code>--recurse-submodules</code>
 を忘れることがとても多いです．そして，その場合には，異なるバージョンのソースが混ざるので，それに気づかないとデバッグがとても難しくなります．上記の
 <code>make update</code> を使うのがおすすめです．</p>
@@ -712,12 +984,12 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <p>latest タグの SlowDash
 コンテナを使っている場合，<code>docker pull</code>
 コマンドで最新のものに置き換えることができます．</p>
-<div class="sourceCode" id="cb34"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker pull slowproj/slowdash</span></span></code></pre></div>
+<div class="sourceCode" id="cb47"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker pull slowproj/slowdash</span></span></code></pre></div>
 <p>または，compose のディレクトリから compose
 コマンドで行うこともできます．</p>
-<div class="sourceCode" id="cb35"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose pull</span></span></code></pre></div>
+<div class="sourceCode" id="cb48"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose pull</span></span></code></pre></div>
 <p>使用中の SlowDash バージョンが SlowDash
 のホーム画面の左上に表示されているので，ここでちゃんと更新されたかを確認できます．</p>
 <h1 id="動作確認用テスト環境">動作確認用テスト環境</h1>
@@ -725,10 +997,10 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 などを集めたコンテナが <code>slowdash/utils/testbench</code>
 にあります．
 システム開発時に本番用のデータベースを使いたくない場合や，開発用サーバのインストールが面倒な場合に，すぐに使えてすぐに消せて便利です．</p>
-<div class="sourceCode" id="cb36"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH/utils/testbench</span></span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down   （終了後データを消す）</span></span></code></pre></div>
+<div class="sourceCode" id="cb49"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH/utils/testbench</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down   （終了後データを消す）</span></span></code></pre></div>
 <p>PostgreSQL, MySQL, InfluxDB, Redis, MQTT, Jupyter
 などがすべて使えるようになります．
 （これらがすでに走っている場合は，ポートが衝突してエラーになるので，コメントアウトかポート番号の変更が必要です．）</p>
@@ -746,23 +1018,23 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <p>もし内部の人を信用できない場合，最低限として，基本認証を使ってパスワードを設定することはできます．
 <code>SlowdashProject.yaml</code> に <code>authentication</code>
 エントリを追加し，パスワードハッシュを指定してください．</p>
-<div class="sourceCode" id="cb37"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="at">  ...</span></span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">authentication</span><span class="kw">:</span></span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> Basic</span></span>
-<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">key</span><span class="kw">:</span><span class="at"> slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS</span></span></code></pre></div>
+<div class="sourceCode" id="cb50"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="at">  ...</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">authentication</span><span class="kw">:</span></span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> Basic</span></span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">key</span><span class="kw">:</span><span class="at"> slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS</span></span></code></pre></div>
 <p>パスワードハッシュは，Apache の bcrypt
 と同じ形式ですが，<code>slowdash/utils</code> にある
 <code>slowdash-generate-key.py</code>
 プログラムで作ることもできます．</p>
-<div class="sourceCode" id="cb38"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash</span></span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    &quot;type&quot;: &quot;Basic&quot;,</span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    &quot;key&quot;: &quot;slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS&quot;</span>
-<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb51"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>    &quot;type&quot;: &quot;Basic&quot;,</span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>    &quot;key&quot;: &quot;slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS&quot;</span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>ここでのパスワードは，暗号化せずにやりとりされるので，基本認証を使う場合は
 HTTPS を使って通信を暗号化する必要があります．
 これは，外部のリバースプロキシを使って行うことが想定されています．</p>
@@ -770,10 +1042,10 @@ HTTPS を使って通信を暗号化する必要があります．
 モードで使っている場合は，リバースプロキシの代わりに，組み込みの HTTPS
 サーバーを使うこともできます．SSL/TLS 鍵ファイルと認証ファイルを指定して
 <code>slowdash</code> を起動してください．</p>
-<div class="sourceCode" id="cb39"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash  --port=18881  --ssl-keyfile=KEY_FILE  --ssl-certfile=CERT_FILE</span></span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>...</span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>Listening at port 18881 (ASGI HTTPS)</span></code></pre></div>
+<div class="sourceCode" id="cb52"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash  --port=18881  --ssl-keyfile=KEY_FILE  --ssl-certfile=CERT_FILE</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>Listening at port 18881 (ASGI HTTPS)</span></code></pre></div>
 <p>ただし，この機能は将来の SlowDash
 では削除されるかもしれません．長期使用するシステムでは，ちゃんとしたリバースプロキシを使用するのがいいと思います．</p>
 <h1 id="リバースプロキシ">リバースプロキシ</h1>
@@ -789,41 +1061,41 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 を含めてリバースプロキシとする例が
 <code>ExampleProjects/ReverseProxy</code>
 にあります．多くの場合，証明書類を置き換えるだけでそのまま使えるはずです．</p>
-<div class="sourceCode" id="cb40"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">nginx</span><span class="kw">:</span></span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">build</span><span class="kw">:</span><span class="at"> ./nginx</span></span>
-<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
-<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;80:80&quot;</span></span>
-<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;443:443&quot;</span></span>
-<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span></span>
-<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> slowdash</span></span>
-<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
-<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowdash</span></span>
-<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">expose</span><span class="kw">:</span></span>
-<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881&quot;</span></span>
-<span id="cb40-14"><a href="#cb40-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
-<span id="cb40-15"><a href="#cb40-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> .:/project</span></span></code></pre></div>
+<div class="sourceCode" id="cb53"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">nginx</span><span class="kw">:</span></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">build</span><span class="kw">:</span><span class="at"> ./nginx</span></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;80:80&quot;</span></span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;443:443&quot;</span></span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span></span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> slowdash</span></span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
+<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowdash</span></span>
+<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">expose</span><span class="kw">:</span></span>
+<span id="cb53-13"><a href="#cb53-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881&quot;</span></span>
+<span id="cb53-14"><a href="#cb53-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb53-15"><a href="#cb53-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> .:/project</span></span></code></pre></div>
 <p>ここでは SlowDash
 のポートは外部に接続されていないことに注意してください．</p>
 <p><code>ExampleProjects/ReverseProxy/Nginx</code>
 の下には，<code>nginx</code> という名前で Nginx
 の設定ファイルがあります（Apache の方もほぼ同様です）．</p>
-<div class="sourceCode" id="cb41"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ tree Nginx</span></span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>Nginx/</span>
-<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>├── SlowdashProject.yaml</span>
-<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>├── docker-compose.yaml</span>
-<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>└── nginx</span>
-<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>    ├── Dockerfile</span>
-<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>    ├── certs</span>
-<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>    │   ├── fullchain.pem</span>
-<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a>    │   └── privkey.pem</span>
-<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a>    ├── default.conf</span>
-<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a>    ├── generate-htpasswd.sh</span>
-<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a>    ├── generate-selfsigned-certificates.sh</span>
-<span id="cb41-13"><a href="#cb41-13" aria-hidden="true" tabindex="-1"></a>    └── htpasswd</span></code></pre></div>
+<div class="sourceCode" id="cb54"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ tree Nginx</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>Nginx/</span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>├── SlowdashProject.yaml</span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>├── docker-compose.yaml</span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>└── nginx</span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>    ├── Dockerfile</span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>    ├── certs</span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>    │   ├── fullchain.pem</span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a>    │   └── privkey.pem</span>
+<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a>    ├── default.conf</span>
+<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a>    ├── generate-htpasswd.sh</span>
+<span id="cb54-12"><a href="#cb54-12" aria-hidden="true" tabindex="-1"></a>    ├── generate-selfsigned-certificates.sh</span>
+<span id="cb54-13"><a href="#cb54-13" aria-hidden="true" tabindex="-1"></a>    └── htpasswd</span></code></pre></div>
 <p>使用する前に，<code>nginx</code>
 サブディレクトリもコピーし，さらに，その下の <code>certs</code>
 に証明書類を，<code>htpassword</code>

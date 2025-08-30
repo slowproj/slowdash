@@ -7,12 +7,13 @@ device = ControlSystem().randomwalk_device()
 
 adapter = ScpiAdapter(idn='RandomWalk')
 adapter.bind_nodes([
+    # Randomwalk Configuration
     ('CONFIGure:WALK', device.walk().setpoint(limits=(0,None))),
     ('CONFIGure:DECAY', device.decay().setpoint(limits=(0,1))),
-    ('V0', device.ch(0).setpoint()),
-    ('V1', device.ch(1).setpoint()),
-    ('MEASure:V0', device.ch(0).readonly()),
-    ('MEASure:V1', device.ch(1).readonly()),
+
+    # Common SCPI commands for power supplies and voltmeters
+    ('VOLTage', device.ch(0).setpoint()),
+    ('MEASure:VOLTage:DC', device.ch(0).readonly()),
 ])
 
 
@@ -20,7 +21,7 @@ if __name__ == '__main__':
     from optparse import OptionParser
     optionparser = OptionParser()
     optionparser.add_option(
-        '--port', action='store', dest='port', type='int', default=17674, help='port number'
+        '--port', action='store', dest='port', type='int', default=5025, help='port number'
     )
     optionparser.add_option(
         '--terminator', action='store', dest='line_terminator', type='string', default='CR',
