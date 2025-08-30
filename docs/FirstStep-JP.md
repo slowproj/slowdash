@@ -429,7 +429,7 @@ $ python ./generate-testdata.py
 左上の Channel List のチャンネル名をクリックすると，直近の時系列データのプロットを含んだページが作成されます．それを元にいろいろ追加していくこともできます．
 
 ここまでの準備では時系列データしか生成していないので，すぐにできるのは，それを直接プロットする `Time-Axis Plot (Time-Series)` と，値分布のヒストグラムを作る `XY Plot (Histograms and Graphs)` &rarr; `Histogram of Time-Series Values` です．
-以下の章では，ユーザの解析スクリプトなどでヒストグラムやグラフなどを作成し，それらも表示するようにしてみます．
+以降の章で，ユーザの読み出しや解析スクリプトなどでヒストグラムやグラフなどを作成し，それらも表示するようにします．
 
 
 ### デバイスからデータを読む
@@ -442,18 +442,19 @@ SlowPy は SlowDash インストール時に一緒にインストールされま
 ```console
 $ slowdash-activate-venv
 ```
-これは新しいターミナルを開くごとに必要です．もし SlowDash 専用のコンピュータを使っているなら，`.bashrc` などの中に以下の行を追加すれば毎回行う必要がなくなります．
+これは新しいターミナルを開くごとに実行する必要があります．
+もし SlowDash 専用のコンピュータを使っているなどで Python を他に使うことがないなら，`.bashrc` などの中に以下の行を追加しておけば毎回行う必要がなくなります．
 ```bash
 source $SLOWDASH_DIR/venv/bin/activate
 ```
 
 #### 対象デバイス
-ここでは，ネットワーク制御が可能な広く使われているベントトップ型電圧計（マルチメータ）から直流電圧を読み出す例を作成します．
-多くの電圧計が同じコマンドを使いますが，特に以下のものは確認してあります（ChatGPT 調べ，2025年8月）：
+ここでは，広く使われていてネットワーク制御が可能な電圧計（マルチメータ）から直流電圧を読み出す例を作成します．
+多くの電圧計が同じコマンドを使いますが，特に以下のものについてはコマンドを確認してあります（ChatGPT 調べ，2025年8月）：
 
 |メーカー | モデル |
 |--------|-------|
-| Keysight (Agilent) | 34460A TrueVolt DMM |
+| Keysight / Agilent | 34460A DMM |
 | Tektronics / Keithley | DMM6500 |
 | Rigol | DM3058 |
 | BK Precision | 5492B DMM |
@@ -463,8 +464,9 @@ source $SLOWDASH_DIR/venv/bin/activate
 
 |メーカー | モデル |
 |--------|-------|
-| Keysight (Agilent) | E363x/E364x |
+| Keysight / Agilent | E363x/E364x |
 | Tektronics / Keithley | 2230G/2231A |
+| Rhode&Schwarz | NGA100 など |
 | Rigol | DP800, DP2000 |
 | BK Precision | 9180/9190 |
 
@@ -494,24 +496,17 @@ type Ctrl-c to stop
 
 |動作 | コマンド | 戻り値例 |
 |----|---------|-------|
-| デバイスIDの取得 | `*IDN?`  | `xxxx` みたいな感じ |
+| デバイスIDの取得 | `*IDN?`  | `Keysight Technologies,34460A...` みたいな感じ |
 | 設定リセット | `*RST`  | たぶんなし |
-| DC 電圧値の読み出し | `MEAS:VOLT:DC?` | `2.2` みたいな感じ |
+| DC 電圧値の読み出し | `MEAS:VOLT:DC?` | `3.24` みたいな感じ |
 
 SlowPy ライブラリでは，デバイスの論理構造を反映させたツリーをまず構築します．
-この例では，[測定システム] -> [イーサーネット] -> [SCPI デバイス] -> [各コマンド] のような形をしています．
+この例では，[測定システム] -> [イーサーネット] -> [SCPI コントロール] -> [各コマンド] のような形をしています．
 そして，それぞれのツリーのノードに対して値の読み書きを `set(value)` または `value=get()` により行います．
-
-以下は，SlowPy を使用して，上記のデバイスからデバイスIDを取得して表示する完全なコードです．
+例えば，以下の２行で，SlowPy を使用して，上記のデバイスからデバイスIDを取得して表示します．
 ```python
-# SlowPy ライブラリの import
 from slowpy.control import control_system as ctrl
-
-# デバイスツリーの構築
-device = ctrl.ethernet('172.26.0.1', 5025).scpi()
-
-# "*IDN?" コマンドノードからの読み出し
-print(device.command('*IDN?').get())
+print(ctrl.ethernet('172.26.0.1', 5025).scpi().command('*IDN?').get())
 ```
 デバイスのアドレスとポート番号は適宜書き換えてください．
 この時点でデバイスとの接続確認ができます．
@@ -519,8 +514,10 @@ print(device.command('*IDN?').get())
 ```console
 $ slowdash-activate-venv
 $ python read-my.py
-XXXX
+Keysight Technologies,34460A...
 ```
+
+コマンド発行ごとに毎回ツリーを構築しても構いませんが（その度にネットワークコネクションが再作成されることはありません），通常はデバイスレベルで切って変数に保存すると便利です．
 
 以下は，最初に設定リセットをして，1 秒ごとのデータ読み出しを永遠に続ける完全な例です．
 ```python
@@ -529,16 +526,16 @@ device = ctrl.ethernet('172.26.0.1', 5025).scpi()
 
 device.command('*RST').set()
 
-import time
 while True:
     volt = device.command('MEAS:VOLT:DC?').get()
 
     print(volt)
-    time.sleep(1)
+    ctrl.sleep(1)
 ```
+（`ctrl.sleep()` は，ここの時点では `time.sleep()` と同じです．この後で，シグナルなどによりループを止めようとしたときに小さな差が出ます．）
 
 SlowPy はデータベース読み書きの機能も提供しています．
-以下は，上記の画面への print の代わりにデータベース（この例では SQLite）に記録する完全な例です．
+以下は，画面への print の代わりにデータベース（この例では SQLite）に記録するようにした完全な例です．
 ```python
 from slowpy.control import control_system as ctrl
 device = ctrl.ethernet('172.26.0.1', 5025).scpi()
@@ -548,12 +545,11 @@ datastore = DataStore_SQLite('sqlite:///TestData.db', table="slowdata")
 
 device.command('*RST').set()
 
-import time
 while True:
     volt = device.command('MEAS:VOLT:DC?').get()
 
     datastore.append({'volt': volt})
-    time.sleep(1)
+    ctrl.sleep(1)
 ```
 
 これをダミーデータ生成プログラムの代わりに走らせれば，実データに対して SlowDash を使えるようになります．
@@ -575,25 +571,26 @@ datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata")
 
 device.command('*RST').set()
 
-import time
 def _loop():
     volt = device.command('MEAS:VOLT:DC?').get()
 
     datastore.append({'volt': volt})
-    time.sleep(1)
+    ctrl.sleep(1)
 ```
 `while True` を `def _loop()` に置き換えただけです．
-`_loop()` 関数は，SlowDash が実行中（または SlowDash がスクリプトを実行中）に繰り返し呼び出されます．
+SlowDash がこのスクリプトを実行している間は `_loop()` 関数が繰り返し呼び出されます．
 
+他にも `_initialize()` などのコールバック関数があります．詳しくは公式ドキュメントの「Control Script」の章を参照してください．
+スレッド構造や非同期実行オプションなどの詳細も書かれています．
 
-最後に以下のブロックを追加すると，このスクリプトを単体実行できるようになります．
+このスクリプトの末尾に以下のブロックを追加しておくと，これを単独実行できるようになります．
 ```python
 if __name__ == '__main__':
     while True:
       _loop()
 ```
 
-さらにひと手間かけて，以下のようにすると Ctrl-c で上品に止まるようになります．
+さらにひと手間かけて，以下のようにすると，単独実行の際に Ctrl-c で上品に止まるようになります．
 ```python
 if __name__ == '__main__':
     ctrl.stop_by_signal()
@@ -601,6 +598,19 @@ if __name__ == '__main__':
         _loop()
 ```
 
+ここまでを行った例が `ExampleProjects/QuickTour/RealDevice` にあります．
+Python 読み出しスクリプトはその下の `config` においてあります．
+```console
+$ cd PATH/TO/SLOWDASH/ExampleProjects/QuickTour/RealDevice
+$ slowdash --port=18881
+```
+ブラウザを開いて `http://localhost:18881` にアクセスすると，左下の "SlowTask" セクションに "read-my" が表示されてそこから [start] と [stop] ができます．
+
+単体実行はいままでどおりです：
+```console
+$ slowdash-activate-venv
+$ python config/slowtask-read-my.py
+```
 
 
 #### 追加の詳細
@@ -613,7 +623,7 @@ device.command('VOLT').set(3.0)    # this will send "VOLT 3.0; *OPC?"
 device.command('OUTP').set('ON')   # this will send "OUTP ON; *OPC?"
 ```
 SlowPy では，全てのコマンドに戻り値があることを期待するので，戻り値のないコマンドが存在するようなデバイスでは，コマンドの完了を待ってそのステータスをかえすコマンド `*OPC?` を付加する必要があります．常に戻り値があるようなデバイスに `*OPC?` を付加しても，通常は無害です．
-上記の例では，全ての set() に `*OPC*` を付加するように，`scpi()` ノード自体にオプションを設定しています．
+上記の例では，全ての set() に `*OPC?` を付加するように，`scpi()` ノード自体にオプションを設定しています．
 （もともと戻り値のある get() には付加されません．）
 もしコマンドごとに切り替えたいなら，自分でコマンドに `*OPC?` を付加しても全く構いません．
 ```python
@@ -621,14 +631,17 @@ device.command('OUTP ON; *OPC?').set()
 ```
 
 イーサーネットではなく，USB や RS-232 などでコントロールするデバイスに対しては，デバイスツリーの対応する部分を置き換えます．
-例えば，USB 接続を VISA 経由で使用するデバイスでは，以下のようになります：
+例えば，USB 接続を VISA 経由で使用するデバイスでは，以下のようになります．
 ```python
 from slowpy.control import control_system as ctrl
 ctrl.load_control_module('VISA')    # VISA は SlowPy プラグインとして提供されているので load する
-device = ctrl.visa(XXXXXX).scpi()
+device = ctrl.visa('USB00::0x2A8D::0x201:MY54700218::00::INSTR').scpi()
 
 (あとは同じ)
 ```
+`visa()` の引数（VISA アドレス: ベンダ/モデル/シリアル番号を含む）は多くのデバイスで設定画面に表示されます．
+
+イーサーネット経由で SCPI を使うデバイスでも，HiSLIP などを使う場合は，VISA 経由で使用してください．`TPCIP0::<IPアドレス>::hislip0` みたいなアドレスになると思います．
 
 
 #### この先
@@ -638,6 +651,39 @@ device = ctrl.visa(XXXXXX).scpi()
 - スクリプト中でヒストグラムやグラフを作成して，データベースに保存したりブラウザにストリーミングすることができます．
 
 これらの手順については，公式ドキュメントの「プロジェクト設定」や「コントロールスクリプト」の章を参照してください．
+
+
+### おまけ：Raspberry-Pi を SCPI デバイスにする
+SlowPy ライブラリには SCPI のサーバー側インターフェースの機能も含まれているので，これを使えば任意の Python プログラムに SCPI を実装し，SlowDash のデータ保存やモニタ，コントロールなどに直接接続できます．
+
+```python
+from slowpy.control import ScpiServer, ScpiAdapter
+
+class MyDevice(ScpiAdapter):
+    def __init__(self):
+        super().__init__(idn='MyDevice')
+
+    def do_command(self, cmd_path, params):
+        # cmd_path: 文字列の配列．SCPI のコマンド部分を大文字にして : で区切ったもの．
+        # params: 文字列の配列．SCPI のパラメータ部分を大文字にして , で区切ったもの．
+        
+        if cmd_path[0].startswith('DATA'):
+            return データ値
+        elif ...
+            ...
+            
+        return None    # 知らないコマンドだった場合
+        
+device = MyDevice()
+server = ScpiServer(device, port=5025)
+server.start()
+```
+`do_command()` の中でコマンドを読んで値を返すだけです．返り値がない場合は空文字 `""` を返してください．
+無効なコマンドの場合は `None` を返してください．
+`*IDN?` や `*OPC?` などの一部の標準コマンドは親クラスで実装されています．
+SCPI のコマンド連結なども親クラスで処理されます．
+
+`/etc/rc.local` などを使って作成したスクリプトをシステム起動時に自動で実行するようにすれば，これが SCPI デバイスとして使えるようになります．
 
 
 # Docker コンテナで使う
