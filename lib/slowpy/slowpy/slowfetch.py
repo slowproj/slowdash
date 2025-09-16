@@ -55,7 +55,7 @@ class SlowFetch:
 
 
     def data(self, channels, start=-3600, stop=0, resample=None, reducer='last', filler=None):
-        """Obtain a list of channels.
+        """Fetch data contents
         Args:
           - channels   List of channels
           - start:     Date-time string, UNIX time, or negative integer for seconds to "stop"
@@ -90,7 +90,7 @@ class SlowFetch:
             if not isinstance(x, list):
                 x = [x]
             if len(t) != len(x) or len(t) == 0:
-                print("ERROR: badly formmatted data: %s" % ch)
+                print("ERROR: badly formatted data: %s" % ch)
                 continue
 
             result[ch] = (list(), list())

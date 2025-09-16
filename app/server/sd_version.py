@@ -1,1 +1,1 @@
-slowdash_version = '250830 "Nooksack"'
+slowdash_version = '250916 "Nooksack"'

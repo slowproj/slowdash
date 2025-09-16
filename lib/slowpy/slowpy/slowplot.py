@@ -113,11 +113,11 @@ class Axes:
     def errorbar(self, x, y, yerr=None, xerr=None, **kwargs):
         graph = Graph()
         graph.x = [ float(xk) for xk in x ]
-        graph.y = [ float(xk) for xk in x ]
+        graph.y = [ float(yk) for yk in y ]
         if xerr is not None:
             graph.x_err = [ float(xk) for xk in xerr ]
-        if xerr is not None:
-            graph.y_err = [ float(xk) for xk in yerr ]
+        if yerr is not None:
+            graph.y_err = [ float(yk) for yk in yerr ]
             
         name = slowplot.create_name(kwargs.get('label', None), 'errorbar')
 

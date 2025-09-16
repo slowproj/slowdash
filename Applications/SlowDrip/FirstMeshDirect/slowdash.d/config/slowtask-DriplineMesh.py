@@ -256,7 +256,6 @@ async def handle_alerts():
         except aio_pika.exceptions.QueueEmpty:
             await asyncio.sleep(0.5)
 
-
             
 async def send_heartbeats():
     while not ctrl.is_stop_requested():

@@ -92,7 +92,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 id="toc-ダミーデータで-ui-を動かしてみる">ダミーデータで UI
 を動かしてみる</a></li>
 <li><a href="#quick-tour-をやってみる"
-id="toc-quick-tour-をやってみる">Quick Tour をやってみる</a></li>
+id="toc-quick-tour-をやってみる">Quick Tour をやってみる</a>
+<ul>
+<li><a href="#ダミーデータで動かしてみる"
+id="toc-ダミーデータで動かしてみる">ダミーデータで動かしてみる</a></li>
+<li><a href="#デバイスからデータを読む"
+id="toc-デバイスからデータを読む">デバイスからデータを読む</a></li>
+</ul></li>
 <li><a href="#docker-コンテナで使う"
 id="toc-docker-コンテナで使う">Docker コンテナで使う</a></li>
 <li><a href="#slowdash-のアップデート"
@@ -393,6 +399,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <div class="sourceCode" id="cb13"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ mkdir QuickTour</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd QuickTour</span></span></code></pre></div>
+<h2 id="ダミーデータで動かしてみる">ダミーデータで動かしてみる</h2>
 <h3
 id="準備slowpy-ライブラリを使ってテスト用のデータストアを作る">準備：SlowPy
 ライブラリを使ってテスト用のデータストアを作る</h3>
@@ -649,14 +656,14 @@ href="ProjectSetup.html#styles">Project Setup
 <code>XY Plot (Histograms and Graphs)</code> →
 <code>Histogram of Time-Series Values</code> です．
 以降の章で，ユーザの読み出しや解析スクリプトなどでヒストグラムやグラフなどを作成し，それらも表示するようにします．</p>
-<h3 id="デバイスからデータを読む">デバイスからデータを読む</h3>
+<h2 id="デバイスからデータを読む">デバイスからデータを読む</h2>
 <p>SlowDash は，ウェブサーバとブラウザからなるアプリ部分と，ユーザの
 Python スクリプトで利用するライブラリ部分から構成されます．
 上記のダミーデータ作成では，このライブラリ (SlowPy)
 を使用しました．アプリとライブラリは融合して動作しますが，それぞれを単体で使用することもできます．
 この章では，SlowPy
 ライブラリを単体で使用してデバイスからデータを読んで，ダミーデータ生成と置き換えます．</p>
-<h4 id="準備">準備</h4>
+<h3 id="準備">準備</h3>
 <p>SlowPy は SlowDash
 インストール時に一緒にインストールされますが，標準インストールでは venv
 の中に入るので，最初にこの venv を有効にしておいてください．</p>
@@ -668,7 +675,7 @@ SlowDash 専用のコンピュータを使っているなどで Python
 などの中に以下の行を追加しておけば毎回行う必要がなくなります．</p>
 <div class="sourceCode" id="cb29"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> <span class="va">$SLOWDASH_DIR</span>/venv/bin/activate</span></code></pre></div>
-<h4 id="対象デバイス">対象デバイス</h4>
+<h3 id="対象デバイス">対象デバイス</h3>
 <p>ここでは，広く使われていてネットワーク制御が可能な電圧計（マルチメータ）から直流電圧を読み出す例を作成します．
 多くの電圧計が同じコマンドを使いますが，特に以下のものについてはコマンドを確認してあります（ChatGPT
 調べ，2025年8月）：</p>
@@ -736,7 +743,8 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href=
 <h4 id="使えるデバイスがない場合">使えるデバイスがない場合</h4>
 <p>ChatGPT
 によると，ほとんどの電圧計と電源ユニットでは，ここで使うレベルのコマンドは共通らしいです．
-もしいずれのデバイスも利用できない場合は，SlowDash
+もしネットワーク経由で電圧を読めるデバイスがあるなら，ここでのテストに使えるかもしれません．</p>
+<p>もしいずれのデバイスも利用できない場合は，SlowDash
 にシミュレータがあるので，代わりにこれを使用して例を実行することができます．
 新しいターミナルを開いて，以下のコマンドを実行してください．</p>
 <div class="sourceCode" id="cb30"><pre
@@ -749,7 +757,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <p>これで，このデバイスがネットワーク上にあるように振る舞います．使われる
 IP アドレスはローカルホストのものです． 終了は Ctrl-c
 を押してください．</p>
-<h4 id="デバイスからの読み出し">デバイスからの読み出し</h4>
+<h3 id="デバイスからの読み出し">デバイスからの読み出し</h3>
 <p>上記のデバイスは全て，SCPI
 と呼ばれる単純なテキストコマンド体系を使用します． 以下は，ここで使う
 SCPI コマンドです．</p>
@@ -839,9 +847,9 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb34-1"><a h
 SlowDash を使えるようになります． この時点では，停止に
 <code>Ctrl-c</code> または <code>Ctrl-\</code> が必要です．
 見苦しいことになると思いますが，実害はないはずです．</p>
-<h4
+<h3
 id="読み出しスクリプトを-slowdash-アプリに統合する">読み出しスクリプトを
-SlowDash アプリに統合する</h4>
+SlowDash アプリに統合する</h3>
 <p>任意の Python スクリプト(SlowPyを使う必要もない)を SlowDash
 プロジェクトディレクトリの下の <code>config</code>
 ディレクトリ（すでに自動作成されているはず）に
@@ -899,7 +907,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <div class="sourceCode" id="cb39"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span>
 <span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python config/slowtask-read-my.py</span></span></code></pre></div>
-<h4 id="追加の詳細">追加の詳細</h4>
+<h3 id="追加の詳細">追加の詳細</h3>
 <p>電源ユニットを使用する場合で，出力電圧を設定するには以下のようにします．</p>
 <div class="sourceCode" id="cb40"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
@@ -935,7 +943,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb42-1"><a h
 などを使う場合は，VISA
 経由で使用してください．<code>TPCIP0::&lt;IPアドレス&gt;::hislip0</code>
 みたいなアドレスになると思います．</p>
-<h4 id="この先">この先</h4>
+<h3 id="この先">この先</h3>
 <ul>
 <li><code>SlowdashProject.yaml</code> に <code>task</code>
 のエントリを作ると，スクリプトの自動実行を設定できます．</li>
@@ -948,8 +956,8 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb42-1"><a h
 <h3 id="おまけraspberry-pi-を-scpi-デバイスにする">おまけ：Raspberry-Pi
 を SCPI デバイスにする</h3>
 <p>SlowPy ライブラリには SCPI
-のサーバー側インターフェースの機能も含まれているので，これを使えば任意の
-Python プログラムに SCPI を実装し，SlowDash
+のサーバー側インターフェースの機能も含まれています．これを使えば任意の
+Python プログラムに SCPI を使ったコントロールを追加し，SlowDash
 のデータ保存やモニタ，コントロールなどに直接接続できます．</p>
 <div class="sourceCode" id="cb43"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ScpiServer, ScpiAdapter</span>
