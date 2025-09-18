@@ -319,7 +319,7 @@ class DataSource_CouchDB(DataSource):
                     'start': start, 'length': int(length), 't': [], 'x': []
                 }
             result[channel_name]['t'].append(int(10*(timestamp-start))/10)
-            result[channel_name]['x'].append(value)
+            result[channel_name]['x'].append(DataSource.decode_if_json(value))
         
         start = to - length
         view_name = schema.table

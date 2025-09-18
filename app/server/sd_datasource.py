@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 20 March 2022 #
 
-import os, time, math, statistics, logging
+import os, time, math, json, statistics, logging
 
 import slowlette
 from sd_component import ComponentPlugin, PluginComponent
@@ -248,7 +248,27 @@ class DataSource(ComponentPlugin):
         return math.nan
 
     
+    @classmethod
+    def decode_if_json(cls, value):
+        if type(value) is not str or len(value) < 2:
+            return value
+
+        # quickly pre-check whether the value starts with '{' or '[' after skipping white-spaces
+        n, k = len(value), 0
+        while k < n and value[k] in ('\t', '\n', '\r', ' '):
+            k += 1
+        if k >= n or value[k] not in ('{', '['):
+            return value
+
+        try:
+            obj = json.loads(value)
+        except:
+            return value
+
+        return obj
     
+        
+
 class DataSourceComponent(PluginComponent):
     def __init__(self, app, project):
         super().__init__('data_source', app, project)

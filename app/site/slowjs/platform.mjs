@@ -13,14 +13,10 @@ export class Platform {
     
     static getUrlOptions() {
         let options = {};
-        const search = window.location.search.split('?')[1];
-        if (search) {
-            for(let kv of search.split('&')) {
-                let [key, value] = kv.split('=');
-                options[key] = decodeURIComponent(value);
-            }
+        const params = new URLSearchParams(window.location.search);
+        for (const [key, value] of params.entries()) {
+            options[key] = value;
         }
-
         return options;
     }
 

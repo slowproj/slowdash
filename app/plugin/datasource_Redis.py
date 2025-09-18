@@ -127,7 +127,7 @@ class ObjectSource(KeyValueSource):
             key = ch[0:len(ch)-len(self.suffix)]
             if key in self.json_str_channels:
                 try:
-                    obj = await self.redis.get(key)
+                    obj = DataSource.decode_if_json(await self.redis.get(key))
                 except Exception as e:
                     logging.error('Redis: error on get(): %s: %s' % (ch, str(e)))
                     continue
@@ -169,7 +169,7 @@ class ObjectSource(KeyValueSource):
         keytype = await self.redis.type(key)
         if keytype == 'string':
             try:
-                obj = await self.redis.get(key)
+                obj = DataSource.decode_if_json(await self.redis.get(key))
             except Exception as e:
                 logging.error('Redis: error on json().get(): %s' % str(e))
                 obj = None
@@ -273,7 +273,7 @@ class ObjectTimeSeriesSource(TimeSeriesSource):
             objname = '%s_%s_%d' % (objts_prefix, key, int(index))
             if key in self.json_str_channels:
                 try:
-                    obj = await self.redis.get(objname)
+                    obj = DataSource.decode_if_json(await self.redis.get(objname))
                 except Exception as e:
                     logging.error('Redis: error on get(): %s: %s' % (ch, str(e)))
                     continue

@@ -253,7 +253,7 @@ class DataSource_TableStore(DataSource):
                     'start': start, 'length': int(length), 't': [], 'x': []
                 }
             result[channel]['t'].append(int(1000*(timestamp-start))/1000.0)
-            result[channel]['x'].append(value)
+            result[channel]['x'].append(DataSource.decode_if_json(value))
             
         remaining_channels = set(target_channels)
         for row in query_result_table:
