@@ -217,6 +217,12 @@ class HtmlPanel extends Panel {
         
         this.contentDiv.find('input[type="submit" i]').bind('click', e=>{
             e.preventDefault();
+            const confirm_msg = $(e.target).attr('sd-confirm');
+            if (confirm_msg) {
+                if (! confirm(confirm_msg)) {
+                    return;
+                }
+            }
             this._submit($(e.target).attr('name'), $(e.target).closest('form'));
         });
         
