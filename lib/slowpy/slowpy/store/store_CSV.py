@@ -11,6 +11,8 @@ class DataStore_CSV(DataStore):
         - db_url: directory for the CSV files. Example: 'csv:///SlowStore.d' for dir name SlowStore.d
         - table: file root name of the CSV file. Example: 'test' for file name 'test.csv'
         '''
+        super().__init__()
+        
         self.db_url = db_url
         self.flag = "w" if recreate else "a"
         self.csv_file = None

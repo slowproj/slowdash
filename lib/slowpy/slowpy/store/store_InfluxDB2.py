@@ -13,6 +13,8 @@ class DataStore_InfluxDB2(DataStore):
         Use a different measurement or field for different data types (e.g., numerical values and histograms)
         '''
         
+        super().__init__()
+        
         from influxdb_client import InfluxDBClient, Point
         from influxdb_client.client.write_api import SYNCHRONOUS, WritePrecision
 

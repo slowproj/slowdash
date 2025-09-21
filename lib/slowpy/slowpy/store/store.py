@@ -1,10 +1,46 @@
 # Created by Sanshiro Enomoto on 3 June 2023 #
 
-import time
+import time, atexit
 from ..basetypes import TimeSeries
 
 
-class DataStore:    
+class DataStore:
+    def __init__(self):
+        # call self.close() before dependent DB modules are cleaned up (__del__() might be too late)
+        try:
+            atexit.register(self._atexit_close)
+        except:
+            pass
+
+
+    def __del__(self):
+        try:
+            self.close()
+        except:
+            pass
+        
+        
+    def _atexit_close(self):
+        try:
+            self.close()
+        except:
+            pass
+        
+        
+    def __enter__(self):
+        return self
+
+
+    def __exit__(self, exc_type, exc, tb):
+        self.close()
+        return False
+    
+    
+    def close(self):
+        # this might be called multiple times
+        pass
+    
+
     def append(self, values, tag=None, timestamp=None):
         '''
         - values: one of the followings:
@@ -25,10 +61,6 @@ class DataStore:
         
         self._write(values, tag, timestamp, update=True)
 
-        
-    def close(self):
-        pass
-    
         
     def _write(self, values, tag=None, timestamp=None, update=False):                
         if isinstance(values, TimeSeries):

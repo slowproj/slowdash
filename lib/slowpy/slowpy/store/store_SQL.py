@@ -182,6 +182,8 @@ class DataStore_SQL(DataStore):
     
     
     def __init__(self, db_url, table, table_format, lazy_construction=False):
+        super().__init__()
+        
         self.lazy_construction = lazy_construction
         
         self.table = None
@@ -250,6 +252,7 @@ class DataStore_SQLite(DataStore_SQL):
     placeholder = '?'
     
     def __init__(self, db_url, table, table_format=None):
+        super().__init__()
         
         if table_format is None:
             table_format = LongTableFormat()
@@ -316,6 +319,8 @@ class DataStore_PostgreSQL(DataStore_SQL):
     placeholder = '%s'
         
     def __init__(self, db_url, table, table_format=None):
+        super().__init__()
+        
         if table_format is None:
             table_format = LongTableFormat_DateTime_PostgreSQL()
         super().__init__(db_url, table, table_format)
@@ -388,6 +393,8 @@ class DataStore_MySQL(DataStore_SQL):
     placeholder = '%s'
         
     def __init__(self, db_url, table, table_format=None):
+        super().__init__()
+        
         if table_format is None:
             # MySQL TIMESTAMP uses UTC, but pymysql cannot handle timezone (treat the time as "native")
             table_format = LongTableFormat()

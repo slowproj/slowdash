@@ -9,6 +9,8 @@ objts_prefix = '__sd_objts'
 
 class DataStore_Redis(DataStore):
     def __init__(self, db_url='redis://localhost/1', retention_length=None, objts_retention_length=3600, objts_timebin=1):
+        super().__init__()
+        
         self.db_url = db_url
         self.retention_length = retention_length
         self.objts_retention_length = objts_retention_length
