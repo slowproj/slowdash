@@ -44,7 +44,7 @@ async def _initialize():
 
 async def _finalize():
     pass
-    
+
 
 async def _loop():    
     if not run_status.running:
@@ -105,14 +105,23 @@ async def stop():
 """
 Measurement Specific Stuff
 - Readout: dummy event generator
+- Storage: HDF5 (one file for each run)
 - Analysis:
   - run lapse
   - trigger rate (rate trend graph)
   - number-of-hits distribution (nhits histogram)
 """
 
+n_channels = 4
+
+datastore = None
+data_fields = {
+    **{ f'tdc{ch:02d}':int for ch in range(n_channels) },
+    **{ f'adc{ch:02d}':int for ch in range(n_channels) },
+}
+
 ctrl.import_control_module('DummyDevice')
-device = ctrl.random_event_device(rate=10)
+device = ctrl.random_event_device(rate=10, n=n_channels)
 print("Dummy event generator loaded")
 
 import slowpy as slp
@@ -125,17 +134,33 @@ async def do_run_start():
     print(f"starting a new run {run_setting.run_number}")
     rate_trend.clear()
     nhits_hist.clear()
+
+    global datastore
+    datastore = slp.store.DataStore_HDF5(
+        f'hdf5:///Run{run_setting.run_number:05d}.h5',
+        dataset='test',
+        fields = data_fields,
+        recreate = True,
+    )
+    
     device.do_start()
 
     
 async def do_run_stop():
+    global datastore
+    
+    if datastore:
+        datastore.close()
+        datastore = None
+
     rate_trend.clear()
     nhits_hist.clear()
 
     
 async def do_run_loop():
+    global datastore
+    
     events = device.get()
-
     for ev in events:
         t = ev['timestamp']
         hits = ev['hits']
@@ -143,6 +168,8 @@ async def do_run_loop():
         adc = {ch:value for ch,value in hits.items() if ch.startswith('adc')}
         nhits = len(adc)
 
+        if datastore:
+            datastore.append(hits, timestamp=t)
         rate_trend.fill(t)
         nhits_hist.fill(nhits)
 
@@ -159,9 +186,10 @@ async def do_run_loop():
 if __name__ == '__main__':
     async def main():
         await _initialize()
+        await start()
         ctrl.stop_by_signal()
-        run_status.running = True
         while not ctrl.is_stop_requested():
             await _loop()
+        await stop()
         await _finalize()
     asyncio.run(main())

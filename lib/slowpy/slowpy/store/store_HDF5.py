@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 19 September 2025 #
 
 
-import logging
+import sys, os, inspect, logging
 import numpy as np
 from .store import DataStore
 
@@ -17,6 +17,9 @@ class DataStore_HDF5(DataStore):
           path to the HDF5 file. Example: 'hdf5:///path/to/file.h5
       dataset : str
           HDF "dataset" name
+      fields : Dict(str, default_value), Dict(str, type), or None
+          Data fields, such as { 'ch00': np.int32(-1), 'ch01': np.int32(-1), ... }
+          If None, inferred from the first data record.
       flush_every : str
           buffer rows before flushing to disk
       chunk_rows : int
@@ -31,7 +34,7 @@ class DataStore_HDF5(DataStore):
       - The HDF5 file are readable by multiple processes while writing (SWMR mode)
     """
 
-    def __init__(self, db_url:str, dataset:str, *, flush_every=128, chunk_rows=8192, compression='lzf'):
+    def __init__(self, db_url:str, dataset:str, fields=None, *, recreate=False, flush_every=128, chunk_rows=8192, compression='lzf'):
         super().__init__()
         
         self.filepath = db_url[8:] if db_url.startswith('hdf5://') else db_url
@@ -60,12 +63,40 @@ class DataStore_HDF5(DataStore):
         except Exception as e:
             logging.error(f'unable to import "h5py": {e}')
             return
+
+        if os.path.exists(self.filepath):
+            if not recreate:
+                logging.error(f'file already exists: {self.filepath}: use recreate=True to overwrite')
+                return
+            if not os.path.isfile(self.filepath):
+                logging.error(f'non-standard file already exists: {self.filepath}')
+                return
+            try:
+                os.remove(self.filepath)
+            except Exception as e:
+                logging.error(f'unable to delete file: {self.filepath}: {e}')
+                return
         
         try:
             self.hdf5_file = h5py.File(self.filepath, 'a', libver="latest")
         except Exception as e:
             logging.error(f'unable to open/create a HDF5 file: {self.filepath}: {e}')
             self.hdf5_file = None
+            return
+
+        if fields is not None:
+            if type(fields) is dict:
+                record = {}
+                defaults = {}
+                for k,v in fields.items():
+                    if inspect.isclass(v):
+                        record[k] = v()
+                    else:
+                        record[k] = v
+                        defaults[k] = v
+                self._build_dataset(record, defaults)
+            else:
+                logging.error(f'bad field descriptor: {fields}')
 
             
     def close(self):
@@ -113,7 +144,7 @@ class DataStore_HDF5(DataStore):
                 self.shown_errors.append('mismatch')
                 return
             
-        record = { 'timestamp': np.float64(timestamp) }
+        record = {}
         for i, ch in enumerate(channels):
             record[ch] = values[i]
         if self.dataset is None:
@@ -123,32 +154,43 @@ class DataStore_HDF5(DataStore):
 
         row = {}
         for name, dt in self.fields:
-            row[name] = record.get(name, None) or self.defaults[name]
+            if name == 'timestamp':
+                row[name] = timestamp
+            else:
+                row[name] = record.get(name, None) or self.defaults[name]
             
         self.buf.append(row)
         if len(self.buf) >= self.flush_every:
             self._flush()
 
 
-    def _build_dataset(self, first_record):
+    def _build_dataset(self, first_record, defaults={}):
         if self.file_holder.hdf5_file is None:
             return
-        self.fields = []
-        self.defaults = {}
 
         def _dtype_and_default(name:str, value):
             if name == 'timestamp':
-                return np.float64, np.nan
-            if isinstance(value, (np.floating, float)):
-                return np.float64, np.nan
-            if isinstance(value, (np.integer, int)):
-                return np.int32, 0
+                return float, float('nan')
+            if type(value) is float:
+                return float, float('nan')
+            if type(value) is int:
+                return int, 0
+            if isinstance(value, np.floating):
+                return type(value), np.nan
+            if isinstance(value, np.integer):
+                return type(value), 0
             return self.h5py.string_dtype(encoding='utf-8'), ''
 
+        self.fields = [('timestamp', np.float64)]
+        self.defaults = {'timestamp': 0}
+        
         for name, value in first_record.items():
             dt, dv = _dtype_and_default(name, value)
             self.fields.append((name, dt))
-            self.defaults[name] = dv
+            if name in defaults:
+                self.defaults[name] = defaults[name]
+            else:
+                self.defaults[name] = dv
 
         if len(self.fields) < 2:
             # only timestamp: wait until we see at least 1 channel

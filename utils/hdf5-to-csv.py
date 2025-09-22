@@ -1,3 +1,9 @@
+
+# TODO:
+#   If the input dataset is not a compound but contains multiple (sub)datasets,
+#   zip the arrays to create a CSV.
+
+
 import os, csv, h5py
 
 
@@ -73,7 +79,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--tail=N',
         action='store', dest='tail', type=int, default=3,
-        help='dumps the tail N lines of the output'
+        help='dumps the tail N lines of the output after successful conversion'
     )
     args = parser.parse_args()
 
