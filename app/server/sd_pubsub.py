@@ -111,7 +111,8 @@ class PubsubComponent(Component):
             if response.content is None:
                 response.content = []
             elif type(response.content) is not list:
-                return super().merge_response(response)
+                super().merge_response(response)
+                return
             existing_channels = { x.get('name', '__') for x in response.content }
             
             self.content = []
@@ -147,8 +148,8 @@ class PubsubComponent(Component):
                         pass
                     
                 self.content.append({ 'name': ch, 'type': datatype, 'current': True })
-                
-            return super().merge_response(response)
+
+            super().merge_response(response)
 
             
     class CacheDataMergerResponse(slowlette.Response):
@@ -169,7 +170,8 @@ class PubsubComponent(Component):
             if response.content is None:
                 response.content = {}
             elif type(response.content) is not dict:
-                return super().merge_response(response)
+                super().merge_response(response)
+                return
 
             for ch in self.channels:
                 my_t, my_data = self.cache.get(ch, (None, None))
@@ -197,7 +199,10 @@ class PubsubComponent(Component):
                     data['x'] = my_data
 
             self.content = None
-            return super().merge_response(response)
+            if len(response.content) > 0:
+                response.status_code = 200
+                
+            super().merge_response(response)
 
             
     @slowlette.get('/api/channels')

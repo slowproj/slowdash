@@ -4,6 +4,8 @@ __pycache__/
 .vscode/
 notebook/
 *.db
+*.hdf5
+*.csv
 *.pem
 *.key
 *.crt

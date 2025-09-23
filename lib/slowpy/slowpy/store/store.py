@@ -122,7 +122,8 @@ class DataStore:
     @staticmethod
     def _channels(tag, fields):
         channels = []
-        for field in (fields or ['']):
+
+        for field in (fields or ([''] if tag is not None else [])):
             if tag is not None and len(field) > 0:
                 ch = '%s:%s' % (tag, field)
             elif tag is not None:

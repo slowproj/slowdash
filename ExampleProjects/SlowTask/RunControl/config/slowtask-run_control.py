@@ -137,7 +137,7 @@ async def do_run_start():
 
     global datastore
     datastore = slp.store.DataStore_HDF5(
-        f'hdf5:///Run{run_setting.run_number:05d}.h5',
+        f'run{run_setting.run_number:05d}.hdf5',
         dataset='test',
         fields = data_fields,
         recreate = True,

@@ -118,6 +118,8 @@ class PathRule:
         kwargs = {}
         for pname, attr in self.param_attributes.items():
             value = params.get(pname, None)
+            if value is not None and value.strip() == '' and attr.annotation is not str:
+                value = None   # <input> not filled
             if value is None and attr.default is not inspect._empty:
                 value = attr.default
             if value is not None and attr.annotation is not inspect._empty:

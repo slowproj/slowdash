@@ -14,7 +14,7 @@ class DataStore_HDF5(DataStore):
     Parameters
     ----------
       db_url : str
-          path to the HDF5 file. Example: 'hdf5:///path/to/file.h5
+          path to the HDF5 file. Example: 'hdf5:///path/to/file.hdf5
       dataset : str
           HDF "dataset" name
       fields : Dict(str, default_value), Dict(str, type), or None
@@ -111,9 +111,9 @@ class DataStore_HDF5(DataStore):
                 self.hdf5_file = None
 
 
-    def another(self, dataset):
+    def another(self, dataset, fields=None):
         datastore = DataStore_HDF5(
-            None, dataset,
+            None, dataset, fields,
             flush_every=self.flush_every,
             chunk_rows = self.chunk_rows,
             compression = self.compression,
@@ -141,8 +141,11 @@ class DataStore_HDF5(DataStore):
         if len(channels) != len(values):
             if 'mismatch' not in self.shown_errors:
                 logging.error(f'HDF5: len(channels)={len(channels)} != len(values)={len(values)}')
+                logging.info(f'HDF5:   tag: {tag}')
+                logging.info(f'HDF5:   fields: {fields}')
+                logging.info(f'HDF5:   values: {values}')
                 self.shown_errors.append('mismatch')
-                return
+            return
             
         record = {}
         for i, ch in enumerate(channels):

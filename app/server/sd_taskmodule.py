@@ -243,13 +243,16 @@ class TaskModule(UserModule):
             if attr.kind == inspect.Parameter.VAR_KEYWORD:
                 var_keyword_param = name
                 continue
-            if name in params:
-                value = params[name]
-            elif attr.default is not inspect._empty:
-                value = attr.default
-            else:
-                logging.warn(f'Task: missing parameter: {name}')
-                return {'status': 'error', 'message': f'missing parameter: {name}'}
+            value = params.get(name, None)
+            if (type(value) is str) and (attr.annotation is not str) and (len(value.strip()) == 0):
+                value = None
+            if value is None:
+                if attr.default is not inspect._empty:
+                    kwargs[name] = attr.default
+                    continue
+                else:
+                    logging.warn(f'Task: missing parameter: {name}')
+                    return {'status': 'error', 'message': f'missing parameter: {name}'}
             if attr.annotation in [ int, float, bool, str ]:
                 try:
                     kwargs[name] = attr.annotation(value)
@@ -332,10 +335,10 @@ class SlowpyControl:
             return None
         
         value = await self.exports[channel].aio_get()
-        
+
         if type(value) in [ bool, int, float, str ]:
             return value
-        elif type(value) == dict:
+        elif type(value) is dict:
             if 'tree' in value or 'table' in value or 'bins' in value or 'ybin' in value or 'y' in value:
                 return value
             else:
@@ -460,12 +463,12 @@ class TaskModuleComponent(Component):
                - only if the channel does not exist, or
                - the last data point is older than the "current" data (it always should be, though)
             """
-
             if response.content is None:
                 response.content = {}
             elif type(response.content) is not dict:
                 self.content = self.record
-                return super().merge_response(response)
+                super().merge_response(response)
+                return
 
             for ch in self.record:
                 if ch not in response.content:
@@ -489,7 +492,10 @@ class TaskModuleComponent(Component):
                     data['x'] = my_data['x']
 
             self.content = None
-            return super().merge_response(response)
+            if len(response.content) > 0:
+                response.status_code = 200
+                
+            super().merge_response(response)
 
             
     @slowlette.get('/api/data/{channels}')
