@@ -2,10 +2,11 @@ bin/
 venv/
 __pycache__/
 .vscode/
-notebook/
+notebooks/
 *.db
 *.hdf5
 *.csv
 *.pem
 *.key
 *.crt
+*.egg-info

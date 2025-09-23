@@ -68,7 +68,6 @@ services:
       - ./mosquitto/data:/mosquitto/data
 
 
-  # for Jupyter export #
   notebook:
     image: slowproj/slowpy-notebook:latest
     command:
@@ -79,6 +78,6 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
       
-    # To use the volume mount, make the "notebook" directory before starting this container.
+    # To use the volume mount, make the "notebooks" directory before starting this container.
     # volumes:
-    # - ./notebook:/home/jovyan
+    # - ./notebooks:/home/jovyan

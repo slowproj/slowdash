@@ -75,39 +75,7 @@ class SingleDisplayItem {
             this.currentDataTime = dataPacket.__meta.currentDataTime;
         }
 
-        let time=null, value=null;
-        if ((ts?.t !== undefined) && (ts?.t !== null)) {
-            if (Array.isArray(ts.t)) {
-                let k = ts.t.length - 1;
-                while (k >= 0) {
-                    if (! Number.isNaN(ts.x[k])) {
-                        break;
-                    }
-                    k--;
-                }
-                if (k >= 0) {
-                    time = ts.t[k] + (ts.start ?? 0);
-                    value = ts.x[k];
-                }
-            }
-            else {
-                time = ts.t + (ts.start ?? 0);
-                value = ts.x;
-            }
-        }
-        if (typeof(value) == "string") {
-            try {
-                value = JSON.parse(value);
-            }
-            catch(error) {
-                ; // value is a non-JSON string
-            }
-        }
-
-        if (this.metric.transform) {
-            value = this.metric.transform.apply(value);
-        }
-        
+        const [time, value] = Panel._getLastTX(ts, this.metric.transform);
         let time_text, value_text;
         if (time === null) {
             time_text = '---';

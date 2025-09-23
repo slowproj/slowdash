@@ -112,7 +112,7 @@ Measurement Specific Stuff
   - number-of-hits distribution (nhits histogram)
 """
 
-n_channels = 4
+n_channels = 16
 
 datastore = None
 data_fields = {
@@ -161,20 +161,23 @@ async def do_run_loop():
     global datastore
     
     events = device.get()
-    for ev in events:
-        t = ev['timestamp']
+    for i, ev in enumerate(events):
+        timestamp = ev['timestamp']
         hits = ev['hits']
-        tdc = {ch:value for ch,value in hits.items() if ch.startswith('tdc')}
-        adc = {ch:value for ch,value in hits.items() if ch.startswith('adc')}
-        nhits = len(adc)
-
+        n_hits = len([ch for ch in hits if ch.startswith('adc')])
+        
         if datastore:
-            datastore.append(hits, timestamp=t)
-        rate_trend.fill(t)
-        nhits_hist.fill(nhits)
+            datastore.append(hits, timestamp=timestamp)
 
-    await ctrl.aio_publish(rate_trend.timeseries(), 'rate_trend')
-    await ctrl.aio_publish(nhits_hist, 'nhits_hist')
+        # for DQM plots
+        rate_trend.fill(timestamp)
+        nhits_hist.fill(n_hits)
+        if i == 0:
+            for channel, value in hits.items():
+                await ctrl.aio_publish(value, name=channel)
+
+    await ctrl.aio_publish(rate_trend.timeseries(), name='rate_trend')
+    await ctrl.aio_publish(nhits_hist, name='nhits_hist')
 
     await ctrl.aio_sleep(1)
 

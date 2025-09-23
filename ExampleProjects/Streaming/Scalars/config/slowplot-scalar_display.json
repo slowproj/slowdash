@@ -1,0 +1,73 @@
+{
+    "control": {
+        "range": { "length": 300, "to": 0 },
+        "reload": 60,
+        "mode": "normal",
+        "grid": { "rows": 2, "columns": 1 }
+    },
+    "style": { },
+    "panels": [
+        {
+            "type": "singles",
+            "item_type": "square",
+            "items": [
+                {
+                    "channel": "ch00",
+                    "gauge": { "min": 5, "max": 15 },
+                    "format": "%.3f",
+                    "ranges": {
+                        "normal": { "min": 0, "max": 10 },
+                        "warn": { "min": 0, "max": 12 },
+                        "error": { "min": 0, "max": 100 }
+                    }
+                },
+                {
+                    "channel": "ch01",
+                    "gauge": { "min": 5, "max": 15 },
+                    "format": "%.3f",
+                    "ranges": {
+                        "normal": { "min": 0, "max": 10 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    }
+                },
+                {
+                    "channel": "ch02",
+                    "gauge": { "min": 5, "max": 15 },
+                    "format": "%.3f",
+                    "ranges": {
+                        "normal": { "min": 7, "max": 10 },
+                        "warn": { "min": 6, "max": 12 },
+                        "error": { "min": 0, "max": 100 }
+                    }
+                },
+                {
+                    "channel": "ch03->scale(10)",
+                    "gauge": { "min": 0, "max": 150 },
+                    "format": "",
+                    "ranges": {
+                        "normal": { "min": 0, "max": 100 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 100, "max": 1000 }
+                    },
+                    "text_transform": "gt(100)->replace(true,'High')->replace(false,'Low')",
+                    "label": "ch3 (x10)"
+                }
+            ],
+            "grid": { "rows": 1, "columns": 0 },
+            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+            "title": "Current Values",
+            "color": { "base": "rgb(0, 0, 0)", "normal": "#06b6d4", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.1 },
+            "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false }
+        },
+        {
+            "type": "plot",
+            "plots": [
+                { "type": "histogram", "channel": "hist", "color": "#009090", "opacity": 0.2, "label": "", "format": "%.5g" }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
+            "legend": { "style": "side" }
+        }
+    ],
+    "meta": { "name": "scalar_display", "title": "", "description": "" }
+}

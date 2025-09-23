@@ -1,0 +1,14 @@
+{
+    "meta": {
+        "name": "ADC",
+    },
+    "view_box": "0 0 640 480",
+    "items": [
+        { "type": "grid" },
+        {
+            "type": "circle",
+            "attr": { "x": 100, "y": 100, "label": "00" },
+            "metric": { "channel": "adc00", "format": "%.1f", "active-above": 0 }
+        }
+    ]
+}

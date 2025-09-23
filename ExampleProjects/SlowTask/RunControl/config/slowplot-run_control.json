@@ -79,7 +79,54 @@
             "legend": { "style": "side" }
         },
         { "type": "tree", "channel": "run_setting" },
-        { "type": "tree", "channel": "run_status", "title": "Run Status" }
+        { "type": "tree", "channel": "run_status", "title": "Run Status" },
+        {
+            "type": "singles",
+            "item_type": "square",
+            "items": [
+                {
+                    "channel": "adc00",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    }
+                },
+                {
+                    "channel": "adc01",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    }
+                },
+                {
+                    "channel": "adc02",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    }
+                },
+                {
+                    "channel": "adc03",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    }
+                }
+            ],
+            "color": { "base": "rgb(0, 0, 0)", "normal": "#06b6d4", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.1 },
+            "grid": { "rows": 0, "columns": 0 },
+            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+            "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false }
+        },
+        { "type": "canvas", "config_name": "adc" }
     ],
     "meta": { "name": "run_control", "title": "", "description": "" }
 }

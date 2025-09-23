@@ -33,7 +33,8 @@ class CanvasItem {
         this.parent = svgParent;
         this.style = $.extend({}, defaultStyle, style);
         
-        this.elem = undefined;
+        this.elem = null;
+        this.last_tx = [null, null];
         this.alarmLevels = [];
     }
         
@@ -80,29 +81,34 @@ class CanvasItem {
         }
     }
     
-    update(dataPacket) {
-        if ((this.update_this === undefined) || (this.metric?.channel === undefined)) {
+    update(dataPacket) {        
+        if ((this.update_this == null) || (this.metric?.channel == null)) {
             return;
         }
 
         const ts = dataPacket[this.metric.channel];
-        const n = ts?.t?.length ?? 0;
-
-        let value;
-        const tolerable_gap = this.metric['tolerable-gap'] ?? 60;
-        if ((n <= 0) || (ts.t[n-1] < ts.length-tolerable_gap)) {
-            if (dataPacket?.__meta?.isCurrent ?? false) {
-                return;
-            }
-            else {
-                value = null;
-            }
-            //TODO: also check the case that the last "current" value is still valid
-        }
-        else {
-            value = ts.x[n-1];
+        const isPartial = (dataPacket?.meta?.isPartial ?? false) || (dataPacket?.meta?.isCurrent ?? false);
+        if (! ts && isPartial) {
+            return;
         }
         
+        let [time, value] = Panel._getLastTX(ts);
+        if (time == null) {
+            [time, value] = this.last_tx;
+        }
+        else {
+            this.last_tx = [time, value];
+        }
+        
+        const tolerable_gap = this.metric['tolerable-gap'] ?? 60;
+        const to = dataPacket?.__meta?.range?.to;
+        if ((time == null) || (to == null) || (time + tolerable_gap < to)) {
+            if (isPartial) {
+                return;  // no gap check for partial or current packets
+            }
+            [time, value] = [null, null];
+        }
+
         let status = 'none';
         if (value === null) {
             status = 'dead';
@@ -573,6 +579,7 @@ class PlotItem extends CanvasItem {
             return;
         }
         let ts = dataPacket[this.metric.channel];
+
         if (! ts?.t || ! (ts.t.length > 0)) {
             if (dataPacket?.__meta?.isCurrent ?? false) {
                 return;
@@ -1024,10 +1031,6 @@ export class CanvasPanel extends Panel {
 
     
     draw(data, displayTimeRange=null) {
-        if (data?.__meta?.isPartial ?? false) {
-            return;
-        }
-        
         this.currentDataPacket = data;
         for (let item of this.items) {
             item.update(data);

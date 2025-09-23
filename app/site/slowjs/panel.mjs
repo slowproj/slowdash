@@ -237,4 +237,46 @@ export class Panel {
 
         return (from <= timestamp && to >= timestamp);
     }
+
+    static _getLastTX(timeseries, transform=null) {
+        let time=null, value=null;
+
+        const [t, x] = [ timeseries?.t, timeseries?.x ];
+        if (t == null) {
+            return [time, value];
+        }
+        
+        if (Array.isArray(t)) {
+            let k = t.length - 1;
+            while (k >= 0) {
+                if (! Number.isNaN(x[k])) {
+                    break;
+                }
+                k--;
+            }
+            if (k >= 0) {
+                time = t[k] + (timeseries.start ?? 0);
+                value = x[k];
+            }
+        }
+        else {
+            time = t + (timeseries.start ?? 0);
+            value = x;
+        }
+
+        if (typeof(value) == "string") {
+            try {
+                value = JSON.parse(value);
+            }
+            catch(error) {
+                ; // value is a non-JSON string
+            }
+        }
+
+        if (transform) {
+            value = transform.apply(value);
+        }
+
+        return [ time, value ];
+    }
 };
