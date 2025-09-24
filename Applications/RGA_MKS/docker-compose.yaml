@@ -1,0 +1,32 @@
+services:
+  pgsql_db:
+    image: postgres:16
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=slowdash
+      - POSTGRES_PASSWORD=slowdash
+      - POSTGRES_DB=RGA
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    volumes:
+      - .data/postgres:/var/lib/postgresql/data
+
+
+  slowdash:
+    image: slowproj/slowdash
+    volumes:
+      - .:/project
+    ports:
+      - "18881:18881"
+    environment:
+      - DB_URL=postgresql://slowdash:slowdash@pgsql_db:5432/RGA
+    depends_on:
+      pgsql_db:
+        condition: service_healthy
+        

@@ -1,8 +1,9 @@
 slowdash_project:
-  name: MKS_RGA
+  name: RGA
 
   environment:
-    - DB_URL=sqlite:///RGA2.db
+    - DB_URL=${DB_URL:-sqlite:///data/RGA.db}
+
 
   task:
     name: RGA

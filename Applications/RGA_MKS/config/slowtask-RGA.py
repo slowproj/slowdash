@@ -29,7 +29,7 @@ class RGA(ControlNode):
     def _node_creator_method(cls):
         def mks_rga(self, *args, **kwargs):
             if self.__class__.__name__ != 'EthernetNode':
-                raise spc.ControlException('mksrga() can be inserted only to EthernetNode')
+                raise spc.ControlException('mksrga() can be inserted only to an EthernetNode')
             try:
                 self.rga_node
             except:
@@ -335,7 +335,7 @@ run_control = RunControl()
 async def _initialize(params):
     global rga, datastore_ts, datastore_obj
     
-    address = params.get('address', None)
+    address = params.get('address', 'localhost')
     rga = RGA(ctrl.ethernet(address=address, port=10014))
     
     db_url = params.get('db_url', 'sqlite:///RGA.db')
@@ -346,6 +346,14 @@ async def _initialize(params):
     await ctrl.aio_publish(run_control, name="RunControl.RGA")
     await ctrl.aio_publish(rga.info(), name='Info.RGA')
 
+
+async def _finalize():
+    global datastore_ts, datastore_obj
+    if datastore_ts:
+        datastore_ts.close()
+    if datastore_obj:
+        datastore_obj.close()
+    
 
 async def _loop():
     if not rga.status_node.scanning: # other command thread might be running a scan
@@ -514,4 +522,5 @@ if __name__ =='__main__':
     task = Tasklet()
     task.run({
         'address': 'localhost',
+        'db_url': 'sqlite:///RGA.db'
     })

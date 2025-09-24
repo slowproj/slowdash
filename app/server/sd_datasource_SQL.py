@@ -225,10 +225,15 @@ class DataSource_SQL(DataSource_TableStore):
         if schema.tag_value_sql is None:
             # TODO: this is inefficient. Modify not to go though all the DB entries.
             schema.tag_value_sql = 'SELECT DISTINCT %s FROM %s' % (schema.tag, schema.table)
+
+        try:
+            start_time = time.time()
+            result = await self.server.fetch(schema.tag_value_sql)
+            lapse = time.time() - start_time
+        except Exception as e:
+            logging.error(f'SQL Error: {e}')   # most likely the table does not exist (yet)
+            return []
             
-        start_time = time.time()
-        result = await self.server.fetch(schema.tag_value_sql)
-        lapse = time.time() - start_time
         if lapse > 10:
             logging.warning(f'Full scan of a SQL table ({schema.table}) was performed to obtain a list of available channels. It took {int(lapse)} seconds.')
             logging.warning('  This full-scan can be avoided by either:')

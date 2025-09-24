@@ -13,7 +13,6 @@ class Project:
         self.is_secure = False
         
         self.config = None
-        self.variables = {}
         self.auth_list = None
         self.update()
         
@@ -98,7 +97,7 @@ class Project:
                 logging.error('invalid project file: %s' % config_file)
                 return
             
-        self.config = self.process_substitution(project_conf)
+        self.config = Substitution().process(project_conf)
 
         if 'name' not in self.config:
             name = os.path.basename(self.project_dir)
@@ -133,43 +132,52 @@ class Project:
         else:
             self.auth_list = auth_key
 
-                
-    def process_substitution(self, project_doc):
-        self.variables = {}
-        if 'environment' in project_doc:
-            envs = self.substitute(project_doc['environment'])
-            if type(envs) == list:
-                for entry in envs:
-                    items = entry.split('=', 1)
-                    if len(items) > 1:
-                        self.variables[items[0]] = items[1]
-            elif type(envs) == dict:
-                for k,v in envs.items():
-                    self.variables[k] = v
-                    
-            del project_doc['environment']
 
-        return self.substitute(project_doc)
+            
+class Substitution:
+    def __init__(self):
+        self._variables = {}
+
+    def process(self, doc):
+        self.variables = {}
+        if 'environment' in doc:
+            self._process_envs(doc)
+
+        return self._substitute(doc)
+            
+
+    def _process_envs(self, doc):
+        envs = self._substitute(doc['environment'])
+        if type(envs) == list:
+            for entry in envs:
+                items = entry.split('=', 1)
+                if len(items) > 1:
+                    self._variables[items[0]] = items[1]
+        elif type(envs) == dict:
+            for k,v in envs.items():
+                self._variables[k] = v
+                    
+        del doc['environment']
 
     
-    def substitute(self, doc):
+    def _substitute(self, doc):
         if type(doc) == dict:
             new_doc = {}
             for k,v in doc.items():
-                new_doc[k] = self.substitute(v)
+                new_doc[k] = self._substitute(v)
             return new_doc
         elif type(doc) == list:
             new_doc = []
             for v in doc:
-                new_doc.append(self.substitute(v))
+                new_doc.append(self._substitute(v))
             return new_doc
         elif type(doc) == str:
-            return self.substitute_string(doc)
+            return self._substitute_string(doc)
         else:
             return doc
 
         
-    def substitute_string(self, string):
+    def _substitute_string(self, string):
         # Syntax: ......${VARIABLE}...$(COMMAND)...
         # "$$" for a single $
         
@@ -200,14 +208,14 @@ class Project:
                     state = state.PLAIN
             elif state == State.VARIABLE:
                 if ch == '}':
-                    new_string += self.substitute_variable(token)
+                    new_string += self._substitute_variable(token)
                     token = ''
                     state = state.PLAIN
                 else:
                     token += ch
             elif state == State.COMMAND:
                 if ch == ')':
-                    new_string += self.substitute_command(token)
+                    new_string += self._substitute_command(token)
                     token = ''
                     state = state.PLAIN
                 else:
@@ -216,7 +224,7 @@ class Project:
         return new_string
 
     
-    def substitute_variable(self, token):
+    def _substitute_variable(self, token):
         tokens = token.split('-', 1)
         name = tokens[0]
         empty_is_null = name.endswith(':')
@@ -224,7 +232,7 @@ class Project:
             name = name[0:-1]
         default = None if len(tokens) == 1 else tokens[1]
 
-        value = self.variables.get(name, None)
+        value = self._variables.get(name, None)
         if value is not None and (len(value) > 0 or not empty_is_null):
             return value
             
@@ -239,7 +247,7 @@ class Project:
         return value
 
         
-    def substitute_command(self, token):
+    def _substitute_command(self, token):
         try:
             result = subprocess.check_output(token, shell=True).decode()
             if len(result) > 0 and result[-1] == '\n':
@@ -251,7 +259,7 @@ class Project:
             return '$(%s)' % token
 
         
-
+                
 if __name__ == '__main__':
     from argparse import ArgumentParser
     parser = ArgumentParser()
