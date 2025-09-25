@@ -2,8 +2,10 @@
 # Created by Sanshiro Enomoto on 18 Aug 2025 
 
 
-import time, threading, logging
+import os, time, socket, threading, logging
 from slowpy.control import ControlNode, EthernetNode
+
+app_name = f'SlowDash-{socket.gethostname()}-{os.getpid()}'
 
 
 class RGA(ControlNode):
@@ -57,13 +59,13 @@ class RGA(ControlNode):
 
 
     def do_acquire_control(self):
-        self.command('Control').set('SlowDash 0.1')
-        self.status_node.has_control = (rga.info().get().get('Info',{}).get('UserApplication',None) == 'SlowDash')
+        self.command('Control').set(f'{app_name} 0.1')
+        self.status_node.has_control = (rga.info().get().get('Info',{}).get('UserApplication',None) == app_name)
 
         
     def do_release_control(self):
         self.command('Release').set()
-        self.status_node.has_control = (rga.info().get().get('Info',{}).get('UserApplication',None) == 'SlowDash')
+        self.status_node.has_control = (rga.info().get().get('Info',{}).get('UserApplication',None) == app_name)
 
         
     def _communicate(self, command):
@@ -336,7 +338,7 @@ async def _initialize(params):
     global rga, datastore_ts, datastore_obj
     
     address = params.get('address', 'localhost')
-    rga = RGA(ctrl.ethernet(address=address, port=10014))
+    rga = RGA(ctrl.ethernet(address, port=10014))
     
     db_url = params.get('db_url', 'sqlite:///RGA.db')
     datastore_ts = slowpy.store.create_datastore_from_url(db_url, table='numeric_data')
@@ -359,7 +361,7 @@ async def _loop():
     if not rga.status_node.scanning: # other command thread might be running a scan
         # update the status from the info command (not from notifications) in case of socket reconnect
         info = rga.info().get()
-        rga.status_node.has_control = (info.get('Info',{}).get('UserApplication',None) == 'SlowDash')
+        rga.status_node.has_control = (info.get('Info',{}).get('UserApplication',None) == app_name)
         rga.status_node.filament = (info.get('FilamentInfo',{}).get('SummaryState','Error'))
         run_control.ready_to_start = (
             rga.status_node.has_control

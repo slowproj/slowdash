@@ -78,7 +78,7 @@ slowdash:
 	@echo "" >> requirements.txt
 	@echo "### OPTIONAL Database packages, necessary only when used ###" >> requirements.txt
 	@if command -v pg_config > /dev/null; then \
-		echo psycopg2 >> requirements.txt; \
+		echo psycopg2-binary >> requirements.txt; \
 		echo asyncpg >> requirements.txt; \
 	fi
 	@if command -v mysql_config > /dev/null; then \

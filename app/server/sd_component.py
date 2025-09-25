@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 25 December 2024 #
 
 import sys, os, copy, glob, inspect, logging, traceback
-import importlib
+import importlib.util
 import slowlette
 
 

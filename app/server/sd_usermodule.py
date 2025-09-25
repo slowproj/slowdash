@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 24 October 2022 #
 
 import sys, os, time, re, threading, asyncio, types, inspect, logging, traceback
-import importlib
+import importlib.util
 
 import slowlette
 from sd_component import Component

@@ -15,7 +15,7 @@ services:
       retries: 5
 
     volumes:
-      - .data/postgres:/var/lib/postgresql/data
+      - ./data/postgres:/var/lib/postgresql/data
 
 
   slowdash:
@@ -26,6 +26,8 @@ services:
       - "18881:18881"
     environment:
       - DB_URL=postgresql://slowdash:slowdash@pgsql_db:5432/RGA
+
+
     depends_on:
       pgsql_db:
         condition: service_healthy

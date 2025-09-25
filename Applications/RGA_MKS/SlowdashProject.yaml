@@ -3,6 +3,7 @@ slowdash_project:
 
   environment:
     - DB_URL=${DB_URL:-sqlite:///data/RGA.db}
+    - RGA_ADDRESS=${RGA_ADDRESS:-localhost}
 
 
   task:
@@ -10,7 +11,7 @@ slowdash_project:
     auto_load: true
     enabled_for_commandline: false
     parameters:
-      address: localhost
+      address: ${RGA_ADDRESS}
       db_url: ${DB_URL}
 
 
