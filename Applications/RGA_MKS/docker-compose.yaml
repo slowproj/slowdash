@@ -15,7 +15,7 @@ services:
       retries: 5
 
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
+      - ./data/postgres-RGA:/var/lib/postgresql/data
 
 
   slowdash:

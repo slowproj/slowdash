@@ -14,7 +14,7 @@ class RGA(ControlNode):
         self.connection._rga_lock = threading.Lock()
         
         while True:
-            line = self.connection.do_get_line(timeout=0.5) or ''
+            line = self.connection.do_get_line(timeout=3) or ''
             if len(line) == 0:
                 break
             logging.info(f'MKS-RGA: {line}')
