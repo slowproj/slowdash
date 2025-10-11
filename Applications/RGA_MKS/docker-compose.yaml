@@ -26,6 +26,7 @@ services:
       - "18881:18881"
     environment:
       - DB_URL=postgresql://slowdash:slowdash@pgsql_db:5432/RGA
+      - RGA_ADDRESS=192.168.0.250
 
 
     depends_on:

@@ -18,6 +18,6 @@ slowdash_project:
   data_source:
     url: ${DB_URL}
     time_series:
-      schema: numeric_data[channel]@timestamp(unix)=value
+      schema: numeric_data[channel]@timestamp(aware)=value
     object_time_series:
-      schema: json_data[channel]@timestamp(unix)=value
+      schema: json_data[channel]@timestamp(aware)=value
