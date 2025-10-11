@@ -115,7 +115,7 @@ Docker があれば，DockerHub または GitHub CR にある SlowDash のイメ
 基本的に Python 3 が動けばすぐ使えます．
 
 - UNIX 風の OS．Ubuntu で開発，macOS とか Windows の WSL でも動いた．WinPython でも動くらしい．
-- Python 3.9 以上と venv
+- Python 3.10 以上と venv
 
 ここでのインストールでは，venv を使用してそこに必要なパッケージを自動インストールするので，手動で Python のパッケージなどを準備する必要はありません．(venv を使わずにインストールすることもできます．) 
 

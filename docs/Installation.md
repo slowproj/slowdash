@@ -21,7 +21,7 @@ title: Installation
 <p>
 - Git
 - Python 3
-  - Version 3.9 or higher
+  - Version 3.10 or higher
   - Virtual environment (venv) recommended
 
 

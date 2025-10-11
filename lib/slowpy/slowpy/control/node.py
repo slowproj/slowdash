@@ -93,7 +93,10 @@ class ControlNode:
                 if self.is_stop_requested():
                     return False
                 else:
-                    await asyncio.sleep(0.1)
+                    try:
+                        await asyncio.sleep(0.1)
+                    except: # asyncio.exceptions.CancelledError
+                        pass
         elif subsec10 > 0:
             await asyncio.sleep(subsec10/10.0)
 
