@@ -1,0 +1,17 @@
+slowdash_project:
+  name: DriplineFirstMesh
+  title: Dripline First-Mesh Walkthrough
+
+  data_source:
+    url: ${DB_URL:-postgresql://postgres:postgres@localhost:5432/sensor_data}
+    time_series:
+      - schema: numeric_data [sensor_name] @timestamp(with timezone) = value_raw(default), value_cal
+      
+  task:
+    - name: DriplineMesh2
+      auto_load: true
+      parameters:
+        rabbitmq_url: ${RABBITMQ_URL:-amqp://dripline:dripline@localhost}
+
+  system:
+    our_security_is_perfect: true
