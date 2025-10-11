@@ -6,4 +6,4 @@ slowdash_project:
     url: postgresql://postgres:postgres@postgres:5432/sensor_data
     parameters:
       time_series:
-        - schema: numeric_data [sensor_name] @timestamp(aware) = value_raw(default), value_cal
+        - schema: numeric_data [sensor_name] @timestamp(with timezone) = value_raw(default), value_cal

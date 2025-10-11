@@ -26,8 +26,6 @@ sender_info = {
         }
     }
 }
-sender_id = uuid.uuid4()
-
 
 
 import slowlette
@@ -207,7 +205,7 @@ async def _initialize(params):
     global alerts_exchange, requests_exchange
     global request_queue, reply_queue, alert_queue
     
-    connection = await aio_pika.connect_robust('amqp://dripline:dripline@localhost')
+    connection = await aio_pika.connect_robust('amqp://dripline:dripline@rabbit-broker')
     channel = await connection.channel()
     
     alerts_exchange = await channel.declare_exchange('alerts', aio_pika.ExchangeType.TOPIC)

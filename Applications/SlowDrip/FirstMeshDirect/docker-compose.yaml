@@ -7,7 +7,6 @@ services:
         condition: service_healthy
     volumes:
       - ./key-value-store.yaml:/root/key-value-store.yaml
-      - ./dripline_mesh.yaml:/root/.dripline_mesh.yaml
     environment:
       - DRIPLINE_USER=dripline
       - DRIPLINE_PASSWORD=dripline
@@ -24,7 +23,6 @@ services:
         condition: service_healthy
     volumes:
       - ./sensor-logger.yaml:/root/sensor-logger.yaml
-      - ./dripline_mesh.yaml:/root/.dripline_mesh.yaml
     environment:
       - DRIPLINE_USER=dripline
       - DRIPLINE_PASSWORD=dripline
@@ -44,22 +42,6 @@ services:
       test: ["CMD-SHELL", "curl -u dripline:dripline http://rabbit-broker:15672/api/overview &> /dev/null || exit 1"]
 
 
-  http-server:
-    image: ghcr.io/project8/dragonfly:develop-dev
-    depends_on:
-      rabbit-broker:
-        condition: service_healthy
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./dripline_mesh.yaml:/root/.dripline_mesh.yaml
-    environment:
-      - DRIPLINE_USER=dripline
-      - DRIPLINE_PASSWORD=dripline
-    command: >
-      bash -c "dl-http-server web_root=/usr/local/src_py/html"
-
-
   postgres:
     image: postgres:16.0
     ports:
@@ -75,7 +57,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
 
 
   slowdash:
