@@ -1,56 +1,30 @@
 
-import asyncio, logging
+import logging
 
 from slowpy.control import control_system as ctrl
-ctrl.import_control_module('AsyncDripline')
+ctrl.import_control_module('Dripline')
 
 
-async def _initialize(params):
+def _initialize(params):
     rmq_url = params.get('rabbitmq_url', 'amqp://dripline:dripline@localhost')
-    name = params.get('name', 'slowdrip')
+    name = params.get('name', 'slowdrip2')
     
     global dripline
     dripline = ctrl.dripline(rmq_url, name)
 
 
-async def _run():
-    asyncio.gather(run_queue(), run_alert(), run_service(), do())
-    
-
-async def do():
+def _run():
     peaches = dripline.endpoint('peaches')
-    await peaches.aio_set(30000)
-    
-    slowdrip = dripline.endpoint('slowdrip')
-    while not ctrl.is_stop_requested():
-        await ctrl.aio_sleep(2)
-        req = 'hello'
-        rep = await slowdrip.aio_set(req)
-        print(f'SET: {req} ---> {rep.body}')
+    chips = dripline.endpoint('chips')
+    peaches.set(1111)
+    print(chips.get())
 
-    
-async def run_queue():
     while not ctrl.is_stop_requested():
-        value, *_ = await dripline.sensor_value_queue().aio_get()
-        #value = await dripline.heartbeat_queue().aio_get()
-        #value, *_ = await dripline.status_message_queue().aio_get()
+        value, *_ = dripline.sensor_value_queue().get()
+        #value = await dripline.heartbeat_queue().get()
+        #value, *_ = await dripline.status_message_queue().get()
         print(f'QUEUE: {value}')
-
-        
-async def run_alert():
-    while not ctrl.is_stop_requested():
-        await dripline.sensor_value().aio_set((12345, 54321))
-        await dripline.heartbeat().aio_set(12345)
-        await ctrl.aio_sleep(10)
     
-
-async def run_service():
-    async def handler(msg):
-        operation = msg.header.get('message_operation', -1)
-        print(f'REQUEST: op={operation}, body={msg.body}')
-        return {'status': 'handled', 'request': msg.body}
-    while not ctrl.is_stop_requested():
-        await dripline.request(handler).aio_get()
     
         
     

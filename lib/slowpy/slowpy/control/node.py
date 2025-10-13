@@ -38,7 +38,8 @@ class ControlNode:
     
     # override this (async version)
     async def aio_set(self, value):
-        return self.set(value)
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, self.set, value)
 
     
     # override this
@@ -48,12 +49,18 @@ class ControlNode:
 
     # override this (async version)
     async def aio_get(self):
-        return self.get()
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, self.get)
 
 
     # override this
     def has_data(self):
-        raise ControlException('has() method not available')
+        raise ControlException('has_data() method not available')
+
+    
+    # override this (async version)
+    def aio_has_data(self):
+        return self.has_data()   # this assumes has_data() returns immediately
 
     
     # to be used in subclasses
@@ -516,7 +523,7 @@ class RampingNode(ControlNode):
 
 
     def get(self):
-        return self.value_node.get() if self.target_value is None else self.target_value
+        return self.target_value
 
 
     # child nodes

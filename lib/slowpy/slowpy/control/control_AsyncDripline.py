@@ -3,7 +3,7 @@
 import os, time, datetime, socket, getpass, uuid, json
 
 from slowpy.control import ControlNode, control_system as ctrl
-ctrl.import_control_module('RabbitMQ')
+ctrl.import_control_module('AsyncRabbitMQ')
 
 
 
