@@ -292,6 +292,15 @@ class QueueNode(ControlNode):
         
         return result
 
+    
+    def aio_has_data(self):
+        if self.queue is None:
+            return False
+
+        channel = self.exchange_node.rmq_node.channel
+        queue = channel.declare_queue(self.name, passive=True)  # returns a status for an existing queue
+        return queue.declaration_result.message_count > 0
+        
 
     # rabbitmq().direct_exchange(name).rpc_function(name, function)
     def rpc_function(self, function):

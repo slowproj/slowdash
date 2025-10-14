@@ -1,5 +1,7 @@
 # Created by Sanshiro Enomoto on 12 October 2025 #
 
+### THIS IS NOT THREAD SAFE as pika is not ####
+
 from slowpy.control import ControlNode, ControlException
 import time, uuid, json, typing, inspect, logging
 import pika
@@ -43,11 +45,13 @@ class RabbitMQNode(ControlNode):
 
         self.connection: pika.BlockingConnection | None = None
         self.channel: pika.adapters.blocking_connection.BlockingChannel | None = None
-        self.is_retry = False
-
         
+        self.is_retry = False
+        self.last_check_time = 0
+
+    
     def _construct(self):
-        if self.connection is None:
+        if self.channel is None:
             if self.is_retry:
                 logging.info(f'RabbitMQ: retrying to connect to {self.url}')
             try:
@@ -57,6 +61,7 @@ class RabbitMQNode(ControlNode):
                 self.connection = pika.BlockingConnection(params)
                 self.channel = self.connection.channel()
                 self.is_retry = False
+                self.last_check_time = time.monotonic()
             except Exception as e:
                 if not self.is_retry:
                     logging.error(f'unable to connect to RabbitMQ: {self.url}: {e}')
@@ -72,6 +77,45 @@ class RabbitMQNode(ControlNode):
             except Exception as e:
                 logging.warning(f'RabbitMQ: unable to set QoS prefetch count ({self.prefetch_count}): {e}')
 
+
+    def _check_connection(self):
+        if self.connection is None:
+            return False
+        if self.channel is None:
+            try:
+                self.connection.close()
+            except:
+                pass
+            self.connection = None
+            return False
+
+        now = time.monotonic()
+        if now - self.last_check_time < self.heartbeat-10:
+            return True
+        
+        if self.connection.is_closed or self.channel.is_closed:
+            logging.warning(f'RabbitMQ: stream closed')
+
+        else:
+            try:
+                self.channel.basic_get(queue='__slowdash_check_sacrifice', auto_ack=True)
+            except (pika.exceptions.StreamLostError, pika.exceptions.ChannelClosedByBroker) as e:
+                logging.warning(f'RabbitMQ: stream lost: {e}')
+            except:
+                # not a stream error -> connection is ok (expect an error for reading from an non-existing queue)
+                self.last_check_time = now
+                return True
+            
+        try:
+            self.connection.close()
+        except:
+            pass
+        
+        self.channel = None
+        self.connection = None
+
+        return False
+    
                 
     ## child nodes ##
     # rabbitmq().direct_exchange(name, **kwargs)
@@ -116,11 +160,12 @@ class ExchangeNode(ControlNode):
 
         
     def _construct(self):
-        if not self._declared:
+        if not self._declared or self.rmq_node.channel is None:
             if self.rmq_node.channel is None:
                 self.rmq_node._construct()
             if self.rmq_node.channel is None:
                 return  # retry later
+            
             try:
                 self.rmq_node.channel.exchange_declare(
                     exchange = self.name,
@@ -153,7 +198,8 @@ class PublishNode(ControlNode):
 
         
     def set(self, value):
-        if not self.exchange_node._declared:
+        self.exchange_node.rmq_node._check_connection()
+        if not self.exchange_node._declared or self.exchange_node.rmq_node.channel is None:
             self.exchange_node._construct()
         if not self.exchange_node._declared or self.exchange_node.rmq_node.channel is None:
             raise ControlException('RabbitMQ.PublishNode.set(): exchange not ready')
@@ -219,6 +265,16 @@ class PublishNode(ControlNode):
                 properties = props,
                 **self.kwargs
             )
+        except (pika.exceptions.StreamLostError, pika.exceptions.ChannelClosedByBroker) as e:
+            logging.warning(f'RabbitMQ: stream lost (basic_publish()): {e}')
+            try:
+                self.exchange_node.rmq_node.connection.close()
+            except:
+                pass
+            self.exchange_node.rmq_node.channel = None
+            self.exchange_node.rmq_node.connection = None
+            return False
+
         except Exception as e:
             logging.error(f'RabbitMQ: publish failed (exchange={self.exchange_node.name}, key={self.routing_key}): {e}')
             raise
@@ -254,16 +310,17 @@ class QueueNode(ControlNode):
                 return Message(incoming.body, headers, parameters)
 
         self.handler = handler or _default_handler
+        
         self._declared = False
 
         
     def _construct(self):
-        if not self._declared:
-            if self.exchange_node.rmq_node.channel is None:
-                self.exchange_node._construct()
+        if not self._declared or self.exchange_node.rmq_node.channel is None:
+            self.exchange_node._construct()
             channel = self.exchange_node.rmq_node.channel
             if channel is None:
                 return  # retry later
+            
             try:
                 channel.queue_declare(queue=self.name, **self.kwargs)
                 channel.queue_bind(queue=self.name, exchange=self.exchange_node.name, routing_key=self.routing_key)
@@ -274,9 +331,10 @@ class QueueNode(ControlNode):
                 
 
     def get(self, *, selector=None):
-        if not self._declared:
+        self.exchange_node.rmq_node._check_connection()
+        if not self._declared or self.exchange_node.rmq_node.channel is None:
             self._construct()
-        if not self._declared:
+        if not self._declared or self.exchange_node.rmq_node.channel is None:
             raise ControlException('RabbitMQ.QueueNode.get(): queue not ready')
 
         message: _IncomingMessage | None = None
@@ -285,6 +343,15 @@ class QueueNode(ControlNode):
         while True:
             try:
                 method, props, body = channel.basic_get(queue=self.name, auto_ack=False)
+            except (pika.exceptions.StreamLostError, pika.exceptions.ChannelClosedByBroker) as e:
+                logging.warning(f'RabbitMQ: stream lost (basic_get()): {e}')
+                try:
+                    self.exchange_node.rmq_node.connection.close()
+                except:
+                    pass
+                self.exchange_node.rmq_node.channel = None
+                self.exchange_node.rmq_node.connection = None
+                break                
             except Exception as e:
                 logging.error(f'RabbitMQ: basic_get failed (exchange={self.exchange_node.name}, queue={self.name}): {e}')
                 raise
@@ -327,6 +394,15 @@ class QueueNode(ControlNode):
             raise
 
         return result
+
+
+    def has_data(self):
+        if not self._declared:
+            return False
+
+        channel = self.exchange_node.rmq_node.channel
+        status = channel.queue_declare(queue=self.name, passive=True)  # returns a status for an existing queue
+        return status.method.message_count > 0
         
         
     # rabbitmq().direct_exchange(name).rpc_function(name, function)

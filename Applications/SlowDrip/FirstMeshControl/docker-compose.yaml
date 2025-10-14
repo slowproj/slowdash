@@ -44,10 +44,10 @@ services:
 
   postgres:
     image: postgres:16.0
-    volumes:
-      - ./postgres_init.d:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
+    volumes:
+      - ./postgres_init.d:/docker-entrypoint-initdb.d
     environment:
       # per the docs, you do *not* want to run with this configuration in production
       - POSTGRES_PASSWORD=postgres
@@ -59,9 +59,9 @@ services:
       retries: 5
 
 
-
   slowdash:
-    image: slowdash-dripline    ### make this image by typing "make" at the SlowDrip directory
+    #image: slowproj/slowdash
+    image: slowdash
     ports:
       - "18881:18881"
     volumes:

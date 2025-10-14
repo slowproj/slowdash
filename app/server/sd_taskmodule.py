@@ -16,11 +16,11 @@ class TaskFunctionThread(threading.Thread):
 
         
     def run(self):
-        if True:
+        if False:
             # avoid confusion by using the same loop in differen threads
             return self.run_in_own_eventloop()
         else:
-            # some libraries require running in the same loop            
+            # some libraries require running in the same loop (e.g., aio_pika)
             return self.run_in_common_eventloop()    
 
         # TODO: implement a way to let users specify which loop to use (e.g., by @slowpy.mainloop)
@@ -143,7 +143,7 @@ class TaskModule(UserModule):
     async def stop(self):
         self.touch_status()
         if self.user_thread and not self.user_thread.initialized_event.is_set():
-            time.sleep(1)
+            await asyncio.sleep(1)
             if not self.user_thread.initialized_event.is_set():
                 logging.warning('User/Task module not yet initialized')
                 

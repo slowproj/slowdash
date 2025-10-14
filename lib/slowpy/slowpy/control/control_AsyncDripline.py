@@ -2,7 +2,7 @@
 
 import os, time, datetime, socket, getpass, uuid, json
 
-from slowpy.control import ControlNode, control_system as ctrl
+from slowpy.control import ControlNode, ControlVariableNode, control_system as ctrl
 ctrl.import_control_module('AsyncRabbitMQ')
 
 
@@ -48,27 +48,27 @@ class DriplineNode(ControlNode):
     def request(self, handler):
         return RequestNode(self, handler)
 
-    # dripline().sensor_value_alerting(): sends sensor_value alert
-    def sensor_value(self):
-        return SensorValueAlertingNode(self)
+    # dripline().sensor_value_alert(): sends sensor_value alert; use aio_set(value)
+    def sensor_value_alert(self):
+        return SensorValueAlertNode(self)
 
-    # dripline().heartbeat_alerting(): sends heartbeat alerts
-    def heartbeat(self):
-        return HeartbeatAlertingNode(self)
+    # dripline().heartbeat_alert(): sends heartbeat alerts; use aio_set(value)
+    def heartbeat_alert(self):
+        return HeartbeatAlertNode(self)
 
-    # dripline().status_message_alerting(): sends status_message alerts
-    def status_message(self, message_type='notice'):
-        return StatusMessageAlertingNode(self, message_type)
+    # dripline().status_message_alert(): sends status_message alerts; use aio_set(value)
+    def status_message_alert(self, message_type='notice'):
+        return StatusMessageAlertNode(self, message_type)
 
-    # dripline().sensor_value_queue(): receives sensor_value
+    # dripline().sensor_value_queue(): receives sensor_value; use aio_get()
     def sensor_value_queue(self):
         return SensorValuesQueueNode(self)
 
-    # dripline().heartbeat_queue(): receives heartbeat
+    # dripline().heartbeat_queue(): receives heartbeat; use aio_get()
     def heartbeat_queue(self):
         return HeartbeatQueueNode(self)
 
-    # dripline().status_message_queue(): receives status_messages
+    # dripline().status_message_queue(): receives status_messages; use aio_get()
     def status_message_queue(self):
         return StatusMessageQueueNode(self)
 
@@ -88,13 +88,13 @@ class DriplineNode(ControlNode):
 
     
 class EndpointNode(ControlNode):
-    def __init__(self, dripline:DriplineNode, name:str, *, specifier:str=None, lockout_key:str=None):
+    def __init__(self, dripline:DriplineNode, name:str, *, specifier:str=None, lockout_key:str=None, timeout=None):
         self.specifier = specifier or ''
         self.lockout_key = lockout_key or '00000000-0000-0000-0000-000000000000'
         
         if dripline.reply_queue_node is None:
             dripline.reply_queue_node = (
-                dripline.requests_exchange.queue(f'{dripline.name}_reply', timeout=1, exclusive=True)
+                dripline.requests_exchange.queue(f'{dripline.name}_reply', timeout=(timeout or 30), exclusive=True)
             )
         self.reply_queue_node = dripline.reply_queue_node
         self.routing_key = name
@@ -112,7 +112,16 @@ class EndpointNode(ControlNode):
         return await self.aio_do_send_request(operation_code, body)
 
     
-    # dripline().endpoint(name).command(*args,**kwargs): cmd to other dripline endpoints
+    ## child nodes ##
+    # dripline().endpoint(name).value_raw(): aio_get() returns 'value_raw'
+    def value_raw(self):
+        return RawValueNode(self)
+
+    # dripline().endpoint(name).value_cal(): aio_get() returns 'value_cal'
+    def value_cal(self):
+        return CalibratedValueNode(self)
+
+    # dripline().endpoint(name).command(*args,**kwargs): aio_get() sends a command to other endpoints
     def command(self, *args, **kwargs):
         return EndpointCommandNode(self, *args, **kwargs)
 
@@ -133,11 +142,12 @@ class EndpointNode(ControlNode):
             'content_encoding': 'application/json',
         }
 
-        return await self.reply_queue_node.rpc_call(self.routing_key, body, headers, parameters).aio_get()
+        message = await self.reply_queue_node.rpc_call(self.routing_key, body, headers, parameters).aio_get()
+        return json.loads(message.body or '{}')
     
 
     
-class EndpointCommandNode(ControlNode):
+class EndpointCommandNode(ControlVariableNode):
     def __init__(self, endpoint:EndpointNode, *args, **kwargs):
         self.endpoint_node = endpoint_node
         self.body = {'values': [ arg for arg in args ] }
@@ -150,6 +160,27 @@ class EndpointCommandNode(ControlNode):
 
     
         
+class RawValueNode(ControlNode):
+    def __init__(self, endpoint:EndpointNode):
+        self.endpoint = endpoint
+            
+    async def aio_set(self, value):
+        return await self.endpoint.aio_set(value)
+    
+    async def aio_get(self):
+        return (await self.endpoint.aio_get()).get('value_raw', None)
+
+    
+    
+class CalibratedValueNode(ControlNode):
+    def __init__(self, endpoint:EndpointNode):
+        self.endpoint = endpoint
+            
+    async def aio_get(self):
+        return (await self.endpoint.aio_get()).get('value_cal', None)
+
+
+    
 class RequestNode(ControlNode):
     def __init__(self, dripline:DriplineNode, handler):
         self.handler = handler
@@ -166,7 +197,7 @@ class RequestNode(ControlNode):
 
 
     
-class SensorValueAlertingNode(ControlNode):
+class SensorValueAlertNode(ControlNode):
     def __init__(self, dripline:DriplineNode):
         self.name = dripline.name
         self.sender_id = dripline.sender_id
@@ -195,7 +226,7 @@ class SensorValueAlertingNode(ControlNode):
 
     
 
-class HeartbeatAlertingNode(ControlNode):
+class HeartbeatAlertNode(ControlNode):
     def __init__(self, dripline:DriplineNode):
         self.name = dripline.name
         self.sender_id = dripline.sender_id
@@ -223,7 +254,7 @@ class HeartbeatAlertingNode(ControlNode):
 
     
 
-class StatusMessageAlertingNode(ControlNode):
+class StatusMessageAlertNode(ControlNode):
     def __init__(self, dripline:DriplineNode, message_type='notice'):
         self.name = dripline.name
         self.sender_id = dripline.sender_id
@@ -265,7 +296,7 @@ class SensorValuesQueueNode(ControlNode):
             return message
         else:
             # Dripline puts content_type in the content_encoding fields, causing unparsed results
-            return type(message)(json.loads(message[0] or ''), *message[1:])
+            return type(message)(json.loads(message[0] or '{}'), *message[1:])
 
     
     
@@ -284,7 +315,7 @@ class HeartbeatQueueNode(ControlNode):
             return message
         else:
             # Dripline puts content_type in the content_encoding fields, causing unparsed results
-            return type(message)(json.loads(message[0] or ''), *message[1:])
+            return type(message)(json.loads(message[0] or '{}'), *message[1:])
 
 
     
@@ -303,4 +334,4 @@ class StatusMessageQueueNode(ControlNode):
             return message
         else:
             # Dripline puts content_type in the content_encoding fields, causing unparsed results
-            return type(message)(json.loads(message[0] or ''), *message[1:])
+            return type(message)(json.loads(message[0] or '{}'), *message[1:])

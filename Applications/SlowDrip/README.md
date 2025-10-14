@@ -7,27 +7,6 @@ This directory contains three docker deployments for different usage levels:
 - FirstMeshControlSlowPy: SlowDash visualization and SlowPy Scripting for full Dripline integration
 
 
-## __Prependix__: DashStart of SlowPlots
-For quick look at existing data on a database, SlowDash can be used without any installation and configuration. 
-Just add a SlowDash container in the `docker-compose.yaml` file as below and run `docker compose up -d`:
-```yaml
-  slowdash:
-    image: slowproj/slowdash
-    ports:
-      - "18881:18881"
-    environment:
-      - SLOWDASH_INIT_DATASOURCE_URL=postgresql://postgres@postgres:5432/sensor_data
-      - SLOWDASH_INIT_TIMESERIES_SCHEMA=numeric_data[sensor_name]@timestamp(aware)=value_raw(default),value_cal
-```
-
-Open a web browser and connect to `http://localhost:18881`. 
-You will see a list of the Dripine endpoints on the top left panel.
-By clicking an endpoint name, a time-series graph will be created.
-
-At this point, there is no persistency. 
-In order to save the created panels, you have to setup a SlowDash project as described below (standard installation procedure).
-
-
 ## FirstMesh
 This is the minimum addition to the Walkthrough, adding only data visualization with SlowDash.
 

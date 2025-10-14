@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 17 May 2024 #
 
 
-import sys, os, time, asyncio, threading, importlib.util, traceback, inspect
+import sys, os, time, asyncio, inspect, threading, importlib.util, traceback, logging
 
 
 class dualmethod:
@@ -31,31 +31,42 @@ class ControlException(Exception):
 
     
 class ControlNode:
+    def __init__(self):
+        # note __init__() might not be called by user subclasses
+        self.is_thread_safe = False
+
+        
     # override this
     def set(self, value):
-        raise ControlException('set() method not available')
+        raise ControlException(f'{type(self).__name__}.set() method not available')
 
     
     # override this (async version)
     async def aio_set(self, value):
-        loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, self.set, value)
+        if getattr(self, 'is_thread_safe', False):
+            loop = asyncio.get_running_loop()
+            return await loop.run_in_executor(None, self.set, value)  # makes a thread to call self.set(value)
+        else:
+            return set(value)   # this may cause a starvation if multiple aio set()/get() tasks are mutual
 
     
     # override this
     def get(self):
-        raise ControlException('get() method not available')
+        raise ControlException(f'{type(self).__name__}.set() method not available')
 
 
     # override this (async version)
     async def aio_get(self):
-        loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, self.get)
+        if getattr(self, 'is_thread_safe', False):
+            loop = asyncio.get_running_loop()
+            return await loop.run_in_executor(None, self.get)  # makes a thread to call self.get()
+        else:
+            return self.get()   # this may cause a starvation if multiple aio set()/get() tasks are mutual
 
 
     # override this
     def has_data(self):
-        raise ControlException('has_data() method not available')
+        raise ControlException(f'{type(self).__name__}.has_data() method not available')
 
     
     # override this (async version)
@@ -188,9 +199,10 @@ class ControlNode:
         else:
             return self.get() == value
 
-        
-    def __repr__(self):
-        return repr(self.get())
+
+    # __repr__() is called by interpreter, causing unexpected get() calls after creating a node
+    # def __repr__(self):
+    #     return repr(self.get())
 
     
     def __str__(self):
