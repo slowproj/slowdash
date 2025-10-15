@@ -60,8 +60,7 @@ services:
 
 
   slowdash:
-    #image: slowproj/slowdash
-    image: slowdash
+    image: slowproj/slowdash
     ports:
       - "18881:18881"
     volumes:

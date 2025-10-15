@@ -489,6 +489,7 @@ class RampingNode(ControlNode):
                 self.change_per_sec = None
                 
         self.target_value = None
+        self.running = False
 
         
     def set(self, target_value):
@@ -505,14 +506,15 @@ class RampingNode(ControlNode):
         
         try:
             current_value = float(self.value_node.get())
-        except:
-            try:
-                current_value = float(self.value_node.setpoint().get())
-            except:
-                return
+        except Exception as e:
+            logging.warning(f'ramping: unable to get current value: {e}')
+            return
         tolerance =  1e-5 * (abs(self.target_value) + abs(current_value) + 1e-10)
         
-        while self.target_value is not None:
+        self.running = True
+        while self.running:
+            if self.target_value is None:
+                break
             diff = current_value - self.target_value
             if abs(diff) < tolerance:
                 break
@@ -526,12 +528,12 @@ class RampingNode(ControlNode):
 
             for i in range(10):
                 if self.is_stop_requested():
-                    self.target_value = None
+                    self.running = False
                     return
                 else:
                     time.sleep(0.1)
             
-        self.target_value = None
+        self.running = False
 
 
     def get(self):
@@ -553,13 +555,13 @@ class RampingStatusNode(ControlNode):
         """set(0) to stop ramping
         """
         if str(zero_to_stop) == '0' or bool(zero_to_stop) == False:
-            self.ramping_node.target_value = None
+            self.ramping_node.running = False
 
     
     def get(self):
         """returns True if ramping is in progress
         """
-        return self.ramping_node.target_value is not None
+        return self.ramping_node.running
 
 
     

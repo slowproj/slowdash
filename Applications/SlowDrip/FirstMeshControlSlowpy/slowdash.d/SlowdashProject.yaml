@@ -6,11 +6,11 @@ slowdash_project:
     url: postgresql://postgres:postgres@postgres:5432/sensor_data
     parameters:
       time_series:
-        - schema: numeric_data [sensor_name] @timestamp(aware) = value_raw(default), value_cal
+        - schema: numeric_data [sensor_name] @timestamp(with timezone) = value_raw(default), value_cal
+      
+  task:
+    name: control_peaches
+    auto_load: true
 
   system:
     our_security_is_perfect: true
-
-  task:
-    name: control-peaches
-    auto_load: true

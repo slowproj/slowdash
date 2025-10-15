@@ -62,7 +62,7 @@ services:
 
   slowdash:
     build:
-      context: ../../..
+      context: https://github.com/slowproj/slowdash.git
       args:
         BASE_IMAGE: ghcr.io/driplineorg/dripline-python:v5.1.0
     ports:

@@ -1,13 +1,12 @@
 
 from slowpy.control import control_system as ctrl
-ctrl.import_control_module('AsyncDripline')
+ctrl.import_control_module('Dripline')
 
+print('hello from control_peaches.py')
 dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
 peaches = dripline.endpoint('peaches')
-print('hello from control_peaches.py')
 
 
-async def set_peaches(value:float):
+def set_peaches(value:float):
     print(f'setting peaches to {value}')
-    await peaches.aio_set(value)
-    return True
+    peaches.set(value)

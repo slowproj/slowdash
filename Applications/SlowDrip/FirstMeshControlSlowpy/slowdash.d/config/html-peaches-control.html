@@ -6,11 +6,12 @@
       </td><td></td>
     </tr><tr>
       <td>Ramping</td><td>
-        <input type="number" name="ramping" style="widtd:8em" step="any" value="0"> /s
+        <input type="number" name="ramping_rate" style="widtd:8em" step="any" value="0"> /s
       </td><td></td>
-    </tr>
-      <td></td><td></td><td>
-        <input type="submit" name="control-peaches.set_peaches()" value="set" style="font-size:130%">
+    </tr><tr>
+    <td></td><td></td><td style="font-size:150%">
+        <input type="submit" name="control_peaches.set_peaches()" value="set">
+        <input type="submit" name="async control_peaches.abort_ramping()" value="abort">
       </td>
     </tr>
   </table>

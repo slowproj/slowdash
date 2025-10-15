@@ -36,7 +36,7 @@ sender_info = {
 
 class DriplineNode(ControlNode):
     def __init__(self, rabbitmq_url:str, name:str=None):
-        self.rmq = ctrl.rabbitmq(rabbitmq_url)
+        self.rmq = ctrl.rabbitmq(rabbitmq_url, heartbeat=300)
         self.name = name or f'SlowDash_{socket.gethostname()}_{os.getpid()}'
         self.sender_id = str(uuid.uuid4())
         
@@ -64,7 +64,7 @@ class DriplineNode(ControlNode):
 
 
     
-class EndpointNode(ControlVariableNode):
+class EndpointNode(ControlNode):
     def __init__(self, dripline:DriplineNode, name:str, *, specifier:str=None, lockout_key:str=None, timeout=None):
         self.specifier = specifier or ''
         self.lockout_key = lockout_key or '00000000-0000-0000-0000-000000000000'
@@ -138,7 +138,7 @@ class EndpointCommandNode(ControlNode):
 
 
     
-class RawValueNode(ControlNode):
+class RawValueNode(ControlVariableNode):
     def __init__(self, endpoint:EndpointNode):
         self.endpoint = endpoint
             
