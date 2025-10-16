@@ -283,6 +283,7 @@ class ControlNode:
             except Exception as e:
                 if module_name in sys.modules:
                     del sys.modules[module_name]
+                logging.error(traceback.format_exc())
                 print(traceback.format_exc())
 
         if module is None:

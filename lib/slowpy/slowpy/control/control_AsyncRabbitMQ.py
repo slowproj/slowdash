@@ -21,6 +21,19 @@ class RabbitMQNode(ControlNode):
         self.channel = None
         self.is_retry = False
 
+
+    async def aio_close(self):
+        if self.connection:
+            try:
+                logging.info('RabbitMQ: closing')
+                await self.connection.close()
+            except:
+                pass
+            
+        self.connection = None
+        self.channel = None
+        self.is_retry = False
+
         
     async def _construct(self):
         if self.connection is None:
@@ -65,6 +78,9 @@ class RabbitMQNode(ControlNode):
     @classmethod
     def _node_creator_method(cls):
         def rabbitmq(self, url:str, **kwargs):
+            if True: # stop/start of a module will not delete this, but the event loop is different
+                return RabbitMQNode(url, **kwargs)
+                
             try:
                 self._rmq_nodes.keys()
             except:
@@ -206,6 +222,7 @@ class QueueNode(ControlNode):
                 'content_type': message.content_type,
                 'content_encoding': message.content_encoding,
                 'correlation_id': message.correlation_id,
+                'routing_key': message.routing_key,
                 'reply_to': message.reply_to,
             }
             headers = message.headers or {}

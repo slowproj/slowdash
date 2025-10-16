@@ -639,3 +639,21 @@ class TaskModuleComponent(Component):
         
         return {'status': 'ok'}
     
+
+    @slowlette.get('/api/config/contentlist')
+    async def get_taskmodule_contentlist(self):
+        result = []
+        for taskmodule in self.taskmodule_list:
+            result.extend(await taskmodule.get_contentlist())
+                
+        return result
+
+    
+    @slowlette.get('/api/config/content/{filename}')
+    async def get_taskmodule_content(self, filename:str):
+        for taskmodule in self.taskmodule_list:
+            content_type, content = await taskmodule.get_content(filename)
+            if content is not None:
+                return slowlette.Response(200, content_type=content_type, content=content)
+            
+        return None

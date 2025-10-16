@@ -455,28 +455,55 @@ class UserModule:
         return result
             
 
-    async def get_content_list(self, func_get_content_list, func_get_content):
-        if self.module is None or func_get_content is None:
-            return []
-
-        if func_get_content_list is None:
-            return [ self.module.name ]
+    async def get_contentlist(self):
+        result = []
         
-        try:
-            if inspect.iscoroutinefunction(func_get_content_list):
-                content_list = await func_get_content_list()
-            else:
-                content_list = func_get_content_list()
-        except Exception as e:
-            self.handle_error('user module error: get_content_list(): %s' % str(e))
-            content_list = []
-
-        return content_list
+        for content_type, file_ext, content_list in [
+            ('html', 'html', self.html_list),
+            ('slowplot', 'json', self.layout_list),
+        ]:
+            for name in content_list:
+                entry = {
+                    'type': content_type,
+                    'name': name,
+                    'config_file': f'{content_type}-{name}.{file_ext}',
+                    'description': f'dynamic {content_type} from UserModule {self.name}',
+                }
+                result.append(entry)
+                
+        return result
 
     
-    async def get_content(self, content_name, func_get_content):
-        if self.module is None or func_get_content is None:
-            return None
+    async def get_content(self, filename:str):
+        content_type, content = None, None
+        if self.module is None:
+            return content_type, content
+
+        if filename.startswith('html-'):
+            pattern = r'html-([a-zA-Z0-9_\-]+)(\.html)?'
+            content_type = 'text/html'
+            is_html = True
+        elif filename.startswith('slowplot-'):
+            pattern = r'slowplot-([a-zA-Z0-9_\-]+)(\.json)?'
+            content_type = 'text/json'
+            is_html = False
+        else:
+            return content_type, content
+        
+        match = re.fullmatch(pattern, filename)
+        if not match:
+            return content_type, content
+        content_name = match.group(1)
+
+        func_get_content = None
+        if is_html:
+            if content_name in self.html_list:
+                func_get_content = self.func_get_html
+        else:
+            if content_name in self.layout_list:
+                func_get_content = self.func_get_layout
+        if func_get_content is None:
+            return content_type, content
 
         nargs = len(inspect.signature(func_get_content).parameters)
         if nargs >= 1:
@@ -493,7 +520,7 @@ class UserModule:
             self.handle_error('user module error: get_content(): %s' % str(e))
             content = None
 
-        return content
+        return content_type, content
     
 
     def handle_error(self, message):
@@ -554,7 +581,6 @@ class UserModuleComponent(Component):
                         logging.warn(f'Instance {i} of user module "{name}" is renamed to {new_name}')
                 else:
                     logging.error(f'Too many user modules of the same name: {name}')
-                        
 
 
     @slowlette.on_event('startup')
@@ -652,58 +678,17 @@ class UserModuleComponent(Component):
     @slowlette.get('/api/config/contentlist')
     async def get_usermodule_contentlist(self):
         result = []
-        
         for usermodule in self.usermodule_list.values():
-            for content_type, file_ext, content_list in [
-                ('html', 'html', usermodule.html_list),
-                ('slowplot', 'json', usermodule.layout_list),
-            ]:
-                for name in content_list:
-                    entry = {
-                        'type': content_type,
-                        'name': name,
-                        'config_file': f'{content_type}-{name}.{file_ext}',
-                        'description': f'dynamic {content_type} from UserModule {usermodule.name}',
-                    }
-                    result.append(entry)
+            result.extend(usermodule.get_contentlist())
                 
         return result
 
         
     @slowlette.get('/api/config/content/{filename}')
     async def get_usermodule_content(self, filename:str):
-        if filename.startswith('html-'):
-            pattern = r'html-([a-zA-Z0-9_\-]+)(\.html)?'
-            content_type = 'text/html'
-            is_html = True
-        elif filename.startswith('slowplot-'):
-            pattern = r'slowplot-([a-zA-Z0-9_\-]+)(\.json)?'
-            content_type = 'text/json'
-            is_html = False
-        else:
-            return None
-        
-        match = re.fullmatch(pattern, filename)
-        if not match:
-            return None
-        name = match.group(1)
-
-        content = None
         for usermodule in self.usermodule_list.values():
-            get_func = None
-            if is_html:
-                if name in usermodule.html_list:
-                    get_func = usermodule.func_get_html
-            else:
-                if name in usermodule.layout_list:
-                    get_func = usermodule.func_get_layout
-            if get_func:
-                content = await usermodule.get_content(name, get_func)
-                break
+            content_type, content = await usermodule.get_content(filename)
+            if content is not None:
+                return slowlette.Response(200, content_type=content_type, content=content)
             
-        if content is None:
-            return None
-        elif is_html:
-            return slowlette.Response(200, content_type='text/html', content=content)
-        else:
-            return content
+        return None

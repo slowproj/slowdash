@@ -31,6 +31,9 @@ class ModbusNode(spc.ControlNode):
     @classmethod
     def _node_creator_method(cls):
         def modbus(self, host:str, port:int=502):
+            if True:  # create a new connection everytime (othwerwise task stop/start will use the same connection)
+                return ModbusNode(host, port)
+            
             name = '%s:%s' % (host, str(port))
             try:
                 self._modbus_nodes.keys()

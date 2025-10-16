@@ -50,6 +50,20 @@ class RabbitMQNode(ControlNode):
         self.last_check_time = 0
 
     
+    def close(self):
+        if self.connection:
+            try:
+                logging.info('RabbitMQ: closing')
+                self.connection.close()
+            except:
+                pass
+            
+            self.connection = None
+            self.channel = None
+            self.is_retry = False
+            self.last_check_time = 0
+
+            
     def _construct(self):
         if self.channel is None:
             if self.is_retry:

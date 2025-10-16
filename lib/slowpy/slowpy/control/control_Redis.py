@@ -71,7 +71,10 @@ class RedisNode(spc.ControlNode):
 
     @classmethod
     def _node_creator_method(cls):
-        def redis(self, url=None):
+        def redis(self, url):
+            if True:  # create a new connection everytime (othwerwise task stop/start will use the same connection)
+                return RedisNode(url)
+            
             try:
                 keys = [ key for key in self._redis_nodes.keys() ]
             except:

@@ -171,10 +171,7 @@ export class Platform {
         
         const response = await fetch('api/channels?fields=name');
         const record = await response.json();
-        if (! record || Object.keys(record).length == 0) {
-            return;
-        }
-        for (let entry of record) {
+        for (let entry of (record ?? [])) {
             if (! entry.name) {
                 continue;
             }

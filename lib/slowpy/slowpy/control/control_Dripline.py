@@ -46,6 +46,11 @@ class DriplineNode(ControlNode):
         self.reply_queue_node = None            # to be set by endpoint()
         
         
+    def close(self):
+        if self.rmq is not None:
+            self.rmq.close()
+        
+        
     ## child nodes ##
     # dripline().endpoint(name): set/get to other dripline endpoints
     def endpoint(self, name:str):

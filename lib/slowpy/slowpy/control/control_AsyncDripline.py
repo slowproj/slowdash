@@ -22,7 +22,6 @@ sender_info = {
 }
 
 
-
 class DriplineNode(ControlNode):
     def __init__(self, rabbitmq_url:str, name:str=None):
         self.rmq = ctrl.rabbitmq(rabbitmq_url)
@@ -37,6 +36,12 @@ class DriplineNode(ControlNode):
         self.sensor_value_queue_node = None     # to be set by self.sensors_value_queue()
         self.heartbeat_queue_node = None        # to be set by self.heartbeat_queue()
         self.status_message_queue_node = None   # to be set by self.status_message_queue()
+        
+        
+    async def aio_close(self):
+        if self.rmq is not None:
+            await self.rmq.aio_close()
+        self.rmq = None
         
         
     ## child nodes ##
@@ -72,10 +77,17 @@ class DriplineNode(ControlNode):
     def status_message_queue(self):
         return StatusMessageQueueNode(self)
 
+    # dripline().service(server):
+    def service(self, server, *, endpoints:list[str]|None=None):
+        return ServiceNode(self, server, endpoints=endpoints)
+
     
     @classmethod
     def _node_creator_method(cls):
         def dripline(self, *args, **kwargs):
+            if True:
+                return DriplineNode(*args, **kwargs)
+            
             try:
                 self.dripline_node
             except:
@@ -343,3 +355,26 @@ class StatusMessageQueueNode(ControlNode):
         else:
             # Dripline puts content_type in the content_encoding fields, causing unparsed results
             return type(message)(json.loads(message[0] or '{}'), *message[1:])
+
+
+
+class ServiceNode(ControlNode):
+    def __init__(self, dripline:DriplineNode, server, *, endpoints:list[str]|None=None):
+        self.dripline_node = dripline
+        self.server = server
+        self.endpoints = list(endpoints or [])
+        
+        self.request_queue_node = dripline.requests_exchange.queue(name=dripline.name, routing_key='*', exclusive=True)
+
+    
+    async def aio_start(self):
+        while not ctrl.is_stop_requested():
+            await self.request_queue_node.rpc_function(self._handle_message).aio_get()
+    
+
+    async def _handle_message(self, message):
+        print(message)
+        operation = message.headers.get('message_operation', -1)
+        print(f'REQUEST: op={operation}, body={message.body}')
+        return {'status': 'handled', 'request': message.body}
+        

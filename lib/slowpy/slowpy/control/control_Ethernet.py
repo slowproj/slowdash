@@ -24,12 +24,18 @@ class EthernetNode(spc.ControlNode):
             
             
     def __del__(self):
+        self.close()
+        
+        
+    def close(self):
         if self.socket is not None:
             try:
                 self.socket.close()
             except:
                 pass
         del self.selectors
+        
+        self.socket = None
         
         
     def do_connect(self):
@@ -203,6 +209,9 @@ class EthernetNode(spc.ControlNode):
     @classmethod
     def _node_creator_method(cls):
         def ethernet(self, address, port):
+            if True:  # create a new connection everytime (othwerwise task stop/start will use the same connection)
+                return EthernetNode(address, port)
+                
             name = '%s:%s' % (address, str(port))
             try:
                 self._ethernet_nodes.keys()
