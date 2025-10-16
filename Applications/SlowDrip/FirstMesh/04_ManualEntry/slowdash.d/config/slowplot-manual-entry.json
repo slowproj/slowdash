@@ -1,6 +1,6 @@
 {
     "control": {
-        "range": { "length": 3600, "to": 0 },
+        "range": { "length": 900, "to": 0 },
         "reload": 2,
         "mode": "normal",
         "grid": { "rows": 2, "columns": 2 }
@@ -27,7 +27,7 @@
         {
             "type": "timeseries",
             "plots": [
-                { "type": "timeseries", "channel": "apples", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "last", "fill_opacity": 0, "fill_envelope": false, "fill_baseline": 1e-100 }
+                { "type": "timeseries", "channel": "peacheese", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "last", "fill_opacity": 0, "fill_envelope": false, "fill_baseline": "1e-100" }
             ],
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": -20, "ymax": 20 },
             "legend": { "style": "side" }

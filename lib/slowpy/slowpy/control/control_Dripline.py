@@ -126,8 +126,10 @@ class EndpointNode(ControlNode):
         }
 
         message = self.reply_queue_node.rpc_call(self.routing_key, body, headers, parameters).get()
-        
-        return json.loads(message.body or '{}')
+        if type(message.body) is dict:
+            return message.body
+        else:
+            return json.loads(message.body or '{}')
     
 
     

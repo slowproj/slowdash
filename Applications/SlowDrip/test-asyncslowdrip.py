@@ -26,7 +26,7 @@ async def do():
         await ctrl.aio_sleep(2)
         req = 'hello'
         rep = await slowdrip.aio_set(req)
-        print(f'SET: {req} ---> {rep.body}')
+        print(f'SET: {req} ---> {rep}')
 
     
 async def run_queue():
