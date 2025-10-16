@@ -1,0 +1,16 @@
+slowdash_project:
+  name: DriplineFirstMesh
+  title: Dripline First-Mesh Walkthrough
+
+  data_source:
+    url: postgresql://postgres:postgres@postgres:5432/sensor_data
+    parameters:
+      time_series:
+        - schema: numeric_data [sensor_name] @timestamp(with timezone) = value_raw(default), value_cal
+      
+  task:
+    name: manual-entry
+    auto_load: true
+
+  system:
+    our_security_is_perfect: true

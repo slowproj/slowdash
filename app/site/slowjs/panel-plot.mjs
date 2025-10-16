@@ -683,8 +683,8 @@ class LineMarkerPlot extends GraphPlot {
         `));
 
         bindInput(this.config, 'line_width', div.find('input').at(k++).css('width', '5em'));
-        bindInput(this.config, 'line_type', div.find('select').at(1).css('width', '7em'));
-        bindInput(this.config, 'marker_type', div.find('select').at(0).css('width', '7em'));
+        bindInput(this.config, 'line_type', div.find('select').at(0).css('width', '7em'));
+        bindInput(this.config, 'marker_type', div.find('select').at(1).css('width', '7em'));
         bindInput(this.config, 'marker_size', div.find('input').at(k++).css('width', '5em'));
         bindInput(this.config, 'fill_envelope', div.find('input').at(k++), true);
         bindInput(this.config, 'fill_envelope', div.find('input').at(k++), false);

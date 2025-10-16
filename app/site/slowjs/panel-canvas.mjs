@@ -1106,7 +1106,7 @@ export class CanvasPanel extends Panel {
             }
             const reply = await response.text();
             if (reply.length == 0) {
-                throw new Error('empty response');
+                throw new Error(`empty response: function might not exist`);
             }
             const reply_doc = JSON.parse(reply);
             if ((reply_doc.status ?? '').toUpperCase() == 'ERROR') {

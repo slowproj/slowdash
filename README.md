@@ -24,12 +24,12 @@ For users with existing time-series data in a database and Docker Compose instal
 
 ## Setup and Quick Look
 
-### Docker (Linux, Mac, Windows WSL)
+### Docker (Linux, Mac, Windows)
 <details>
 
 #### Prerequisites
 - Git
-- Docker and Docker Compose
+- Docker and Docker Compose (or Docker Desktop)
 
 #### 1. Clone Repository (includes example projects)
 ```bash
@@ -93,7 +93,7 @@ To stop the service:
   
 #### Prerequisites
 - Git
-- Python 3.9 or higher
+- Python 3.10 or higher
 
 This installation method creates a self-contained environment in the `slowdash` directory, including all Python dependencies in a virtual environment. The installation can be completely removed by deleting this directory.
 
@@ -106,7 +106,7 @@ git clone https://github.com/slowproj/slowdash.git --recurse-submodules
 ```bash
 cd slowdash
 make
-source bin/slowdash-bashrc
+source ./bin/slowdash-bashrc
 ```
 
 #### 3. Launch Example Project
@@ -129,12 +129,7 @@ To stop the service, press `Ctrl`-`c` `in the terminal.
   - [Feature Ideas](https://github.com/slowproj/slowdash/wiki/Feature-Ideas) - Contributions welcome!
 
 ## Docker Image Options
-#### Build from Source
-```bash
-git clone https://github.com/slowproj/slowdash.git --recurse-submodules
-cd slowdash
-docker build -t slowdash .
-```
+All the example projects under `slowdash/ExampleProjects` can be executed with Docker Compose.
 
 #### Official DockerHub Image
 Available at [DockerHub](https://hub.docker.com/r/slowproj/slowdash)
@@ -148,3 +143,9 @@ Available at [GitHub Packages](https://github.com/slowproj/slowdash/pkgs/contain
 docker pull ghcr.io/slowproj/slowdash
 ```
 
+#### Build from Source
+```bash
+git clone https://github.com/slowproj/slowdash.git --recurse-submodules
+cd slowdash
+docker build -t slowdash .
+```

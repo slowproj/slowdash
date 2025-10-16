@@ -69,7 +69,7 @@ class TaskModule(UserModule):
 
         self.command_thread = None
         self.parallel_command_thread_set = set()
-        self.namespace_prefix = params.get('namespace', {}).get('prefix', '%s.' % name.replace('-','_'))
+        self.namespace_prefix = params.get('namespace', {}).get('prefix', f'{name}.')
         self.namespace_suffix = params.get('namespace', {}).get('suffix', '')
 
         logging.info(f'task module registered: {name}')
@@ -185,7 +185,7 @@ class TaskModule(UserModule):
                 return ''
             else:
                 name = name[:-len(self.namespace_suffix)]
-        if name.startswith('_'):
+        if name.startswith('_'):  # reserved function names
             return ''
 
         return name
@@ -228,10 +228,11 @@ class TaskModule(UserModule):
                 params[key] = value
 
         # function
-        function_name = self.match_namespace(function_name)
-        if len(function_name) == 0:
+        local_function_name = self.match_namespace(function_name)
+        if len(local_function_name) == 0:
+            logging.debug(f'SlowTask: no matching function: name="{function_name}", prefix="{self.namespace_prefix}"')
             return None
-        func = self.get_func(function_name)
+        func = self.get_func(local_function_name)
         if func is None:
             return {'status': 'error', 'message': 'undefined function: %s' % function_name}
 
@@ -294,7 +295,7 @@ class TaskModule(UserModule):
             else:
                 self.command_thread = this_thread
         
-        cmd = f"{self.name}.{function_name}({','.join(['%s=%s'%(key,repr(value)) for key,value in kwargs.items()])})"
+        cmd = f"{self.name}.{local_function_name}({','.join(['%s=%s'%(key,repr(value)) for key,value in kwargs.items()])})"
         self.command_history.append((time.time(), cmd))
         logging.info(f'Task: {cmd}')
         

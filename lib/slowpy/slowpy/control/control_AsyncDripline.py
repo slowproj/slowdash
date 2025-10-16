@@ -49,8 +49,8 @@ class DriplineNode(ControlNode):
         return RequestNode(self, handler)
 
     # dripline().sensor_value_alert(): sends sensor_value alert; use aio_set(value)
-    def sensor_value_alert(self):
-        return SensorValueAlertNode(self)
+    def sensor_value_alert(self, name:str=None):
+        return SensorValueAlertNode(self, name)
 
     # dripline().heartbeat_alert(): sends heartbeat alerts; use aio_set(value)
     def heartbeat_alert(self):
@@ -198,8 +198,8 @@ class RequestNode(ControlNode):
 
     
 class SensorValueAlertNode(ControlNode):
-    def __init__(self, dripline:DriplineNode):
-        self.name = dripline.name
+    def __init__(self, dripline:DriplineNode, name:str=None):
+        self.name = name or dripline.name
         self.sender_id = dripline.sender_id
         self.publish_node = dripline.alerts_exchange.publish(f'sensor_value.{self.name}')
 
@@ -209,8 +209,13 @@ class SensorValueAlertNode(ControlNode):
 
         if type(value) is tuple and len(value) >= 2:
             body = { 'value_raw': value[0], 'value_cal': value[1] }
-        else:
+        elif type(value) is dict:
+            body = value
+        elif type(value) in [ bool, int, float, str ]:
             body = { 'value_raw': value }
+        else:
+            # throw an error?
+            body = value
             
         headers = {
             'message_type': 4,  # 2: Reply, 3: Request, 4: Alert

@@ -1,0 +1,72 @@
+services:
+
+  key-value-store:
+    image: ghcr.io/driplineorg/dripline-python:v5.0.1
+    depends_on:
+      rabbit-broker:
+        condition: service_healthy
+    volumes:
+      - ./key-value-store.yaml:/root/key-value-store.yaml
+    environment:
+      - DRIPLINE_USER=dripline
+      - DRIPLINE_PASSWORD=dripline
+    command: >
+      bash -c "dl-serve -vv -c /root/key-value-store.yaml"
+
+
+  sensor-logger:
+    image: ghcr.io/driplineorg/dripline-python:v5.0.1
+    depends_on:
+      rabbit-broker:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./sensor-logger.yaml:/root/sensor-logger.yaml
+    environment:
+      - DRIPLINE_USER=dripline
+      - DRIPLINE_PASSWORD=dripline
+    command:
+      bash -c "dl-serve -vv -c /root/sensor-logger.yaml"
+
+
+  rabbit-broker:
+    image: rabbitmq:4-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=dripline
+      - RABBITMQ_DEFAULT_PASS=dripline
+    healthcheck:
+      test: ["CMD-SHELL", "curl -u dripline:dripline http://rabbit-broker:15672/api/overview &> /dev/null || exit 1"]
+
+
+  postgres:
+    image: postgres:16.0
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres_init.d:/docker-entrypoint-initdb.d
+    environment:
+      # per the docs, you do *not* want to run with this configuration in production
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  slowdash:
+    image: slowproj/slowdash
+    ports:
+      - "18881:18881"
+    volumes:
+      - ./slowdash.d:/project
+    depends_on:
+      rabbit-broker:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
