@@ -65,8 +65,6 @@ services:
       - "18881:18881"
     volumes:
       - ./slowdash.d:/project
-    environment:
-      - DB_URL=postgresql://postgres:postgres@postgres:5432/sensor_data
     depends_on:
       rabbit-broker:
         condition: service_healthy

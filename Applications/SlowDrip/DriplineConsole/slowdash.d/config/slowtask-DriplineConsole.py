@@ -31,15 +31,8 @@ sender_info = {
 import slowlette
 webapi = slowlette.Slowlette()
 
-@webapi.get('/api/config/contentlist')
-def add_slowplot_PlotLayoutOverride():
-    return [ { "type": "html", "name": "EndpointControl" } ]
 
-
-@webapi.get('/api/config/content/html-EndpointControl')
-def html_EndpointControl(request:slowlette.Request):
-    request.abort()
-
+def _get_html():
     html = f'''
     | <form>
     |   <datalist id="dripline_endpoints">
@@ -62,9 +55,7 @@ def html_EndpointControl(request:slowlette.Request):
     |   -->
     | </form>
     '''
-    html = re.sub('^[ ]*\\|', '', html, flags=re.MULTILINE)
-
-    return slowlette.Response(200, content_type='text/html', content=html)
+    return re.sub('^[ ]*\\|', '', html, flags=re.MULTILINE)
 
 
 
@@ -409,10 +400,5 @@ async def send_request(operation, routing_key, body, *, specifier=None, lockout_
             
     
 if __name__ == '__main__':
-    async def main():
-        await _initialize({})
-        await _run()
-        await _finalize()
-
-    ControlSystem.stop_by_signal()
-    asyncio.run(main())
+    from slowpy.dash import Tasklet
+    Tasklet().run()

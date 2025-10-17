@@ -13,12 +13,12 @@ class RandomwalkService:
     def __init__(self):
         self.x = 0
         self.step = 1
-        self.sensor_value_alert = dripline.sensor_value_alert('randomwalk')
 
         
     async def on_set(self, message):
         endpoint, value = message.parameters["routing_key"], message.body
-        print(f'SET {endpoint}: {value}')
+        logging.debug(f'SET {endpoint}: {value}')
+        
         if endpoint == 'randomwalk_step':
             self.step = abs(float(value['values'][0]))
             await dripline.sensor_value_alert('randomwalk_step').aio_set(self.step)
@@ -30,7 +30,8 @@ class RandomwalkService:
         
     async def on_get(self, message):
         endpoint, value = message.parameters["routing_key"], message.body
-        print(f'GET {endpoint}: {value}')
+        logging.debug(f'GET {endpoint}: {value}')
+        
         if endpoint == 'randomwalk_step':
             return self.step
         if endpoint == 'randomwalk':
@@ -39,7 +40,8 @@ class RandomwalkService:
         
     async def on_command(self, message):
         endpoint, value = message.parameters["routing_key"], message.body
-        print(f'CMD {endpoint}: {value}')
+        logging.debug(f'CMD {endpoint}: {value}')
+        
         return True
 
     
@@ -64,3 +66,9 @@ async def _run():
 
 async def _finalize():
     await dripline.aio_close()
+
+
+
+if __name__ == '__main__':
+    from slowpy.dash import Tasklet
+    Tasklet().run()

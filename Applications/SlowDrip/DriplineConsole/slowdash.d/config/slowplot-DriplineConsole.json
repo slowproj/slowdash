@@ -1,0 +1,18 @@
+{
+    "meta": { "name": "DriplineConsole", "title": "", "description": "" },
+    "control": {
+        "range": { "length": 900, "to": 0 },
+        "reload": 5,
+        "mode": "normal",
+        "grid": { "rows": 2, "columns": 2 }
+    },
+    "style": { },
+    "panels": [
+        { "type": "table", "channel": "DriplineConsole.SensorValues", "reversed": false, "title": "Sensor Values (sensor_value.* on alert exchange)" },
+        { "type": "table", "channel": "DriplineConsole.HeartBeats", "reversed": false, "title": "Heartbeats (heartbeat.* on alert exchange)" },
+        { "type": "html", "location": "project", "file": "DriplineConsole", "title": "Endpoint Control", "reload": false },
+        { "type": "table", "channel": "DriplineConsole.Replies", "reversed": false, "title": "Replies" },
+        { "type": "table", "channel": "DriplineConsole.StatusMessages", "reversed": false, "title": "Alarms (status_message.*.* on alert exchange)" },
+        { "type": "table", "channel": "DriplineConsole.Requests", "reversed": false, "title": "Processed Requests" }
+    ]
+}
