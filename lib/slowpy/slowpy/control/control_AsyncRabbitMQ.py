@@ -23,12 +23,26 @@ class RabbitMQNode(ControlNode):
 
 
     async def aio_close(self):
+        logging.info('RabbitMQ: closing')
+        
+        if self.channel:
+            try:
+                await self.channel.close()
+            except:
+                pass
         if self.connection:
             try:
-                logging.info('RabbitMQ: closing')
                 await self.connection.close()
             except:
                 pass
+
+        try:
+            # giving pika some task cycles for cleanup
+            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.1)
+        except:
+            pass
             
         self.connection = None
         self.channel = None
@@ -208,12 +222,16 @@ class PublishNode(ControlNode):
     
 
 class QueueNode(ControlNode):
-    def __init__(self, exchange_node:ExchangeNode, queue_name:str, *, routing_key:str=None, handler=None, timeout=0, **kwargs):
+    def __init__(self, exchange_node:ExchangeNode, queue_name:str, *, routing_key:list[str]|str|None=None, handler=None, timeout:float=0, **kwargs):
         self.exchange_node = exchange_node
         self.name = queue_name
-        self.routing_key = routing_key or queue_name
         self.timeout = timeout
         self.kwargs = {k:v for k,v in kwargs.items()}
+
+        if type(routing_key) is list:
+            self.routing_keys = routing_key
+        else:
+            self.routing_keys = [ routing_key or queue_name ]
         
         async def _default_handler(message: aio_pika.Message) -> Message:
             parameters = {
@@ -245,7 +263,8 @@ class QueueNode(ControlNode):
                 return  # error, retry later
             else:
                 self.queue = await self.exchange_node.rmq_node.channel.declare_queue(self.name, **self.kwargs)
-                await self.queue.bind(self.exchange_node.exchange, routing_key = self.routing_key)
+                for key in self.routing_keys:
+                    await self.queue.bind(self.exchange_node.exchange, routing_key=key)
 
         
     async def aio_get(self, *, selector=None):
@@ -370,7 +389,7 @@ class RpcCallNode(ControlNode):
         publish_node = self.queue_node.exchange_node.publish(routing_key=self.routing_key)
         correlation_id = str(uuid.uuid4())
         parameters = dict(self.parameters)
-        parameters['reply_to'] = self.queue_node.routing_key
+        parameters['reply_to'] = self.queue_node.routing_keys[0]
         parameters['correlation_id'] = correlation_id
         await publish_node.aio_set((self.body, self.headers, parameters))
         

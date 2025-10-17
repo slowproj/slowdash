@@ -298,13 +298,17 @@ class PublishNode(ControlNode):
     
 
 class QueueNode(ControlNode):
-    def __init__(self, exchange_node:ExchangeNode, queue_name:str, *, routing_key:str=None, handler=None, timeout=0, **kwargs):
+    def __init__(self, exchange_node:ExchangeNode, queue_name:str, *, routing_key:list[str]|str|None=None, handler=None, timeout:float=0, **kwargs):
         self.exchange_node = exchange_node
         self.name = queue_name
-        self.routing_key = routing_key or queue_name
         self.timeout = timeout
         self.kwargs = dict(kwargs)
 
+        if type(routing_key) is list:
+            self.routing_keys = routing_key
+        else:
+            self.routing_keys = [ routing_key or queue_name ]
+        
         def _default_handler(incoming: _IncomingMessage) -> Message:
             parameters = {
                 'message_id': incoming.message_id,
@@ -337,7 +341,8 @@ class QueueNode(ControlNode):
             
             try:
                 channel.queue_declare(queue=self.name, **self.kwargs)
-                channel.queue_bind(queue=self.name, exchange=self.exchange_node.name, routing_key=self.routing_key)
+                for key in self.routing_keys:
+                    channel.queue_bind(queue=self.name, exchange=self.exchange_node.name, routing_key=key)
                 self._declared = True
             except Exception as e:
                 logging.error(f'failed to declare/bind queue {self.name}: {e}')
@@ -469,7 +474,7 @@ class RpcCallNode(ControlNode):
         publish_node = self.queue_node.exchange_node.publish(routing_key=self.routing_key)
         correlation_id = str(uuid.uuid4())
         parameters = dict(self.parameters)
-        parameters['reply_to'] = self.queue_node.routing_key
+        parameters['reply_to'] = self.queue_node.routing_keys[0]
         parameters['correlation_id'] = correlation_id
         publish_node.set((self.body, self.headers, parameters))
 

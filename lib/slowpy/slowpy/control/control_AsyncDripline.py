@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 3 October 2025 #
 
-import os, time, datetime, socket, getpass, uuid, json
+import os, time, datetime, socket, getpass, uuid, json, inspect, logging
 
 from slowpy.control import ControlNode, ControlVariableNode, control_system as ctrl
 ctrl.import_control_module('AsyncRabbitMQ')
@@ -359,12 +359,22 @@ class StatusMessageQueueNode(ControlNode):
 
 
 class ServiceNode(ControlNode):
-    def __init__(self, dripline:DriplineNode, server, *, endpoints:list[str]|None=None):
+    def __init__(self, dripline:DriplineNode, server, *, endpoints:list[str]|str|None=None):
         self.dripline_node = dripline
         self.server = server
-        self.endpoints = list(endpoints or [])
+
+        if type(endpoints) is list:
+            self.endpoints = list(endpoints)
+        else:
+            self.endpoints = [endpoints or '*']
+
+        routing_keys = list(self.endpoints) or '*'
         
-        self.request_queue_node = dripline.requests_exchange.queue(name=dripline.name, routing_key='*', exclusive=True)
+        self.request_queue_node = dripline.requests_exchange.queue(
+            name = dripline.name,
+            routing_key = routing_keys,
+            exclusive = True,
+        )
 
     
     async def aio_start(self):
@@ -373,8 +383,35 @@ class ServiceNode(ControlNode):
     
 
     async def _handle_message(self, message):
-        print(message)
-        operation = message.headers.get('message_operation', -1)
-        print(f'REQUEST: op={operation}, body={message.body}')
-        return {'status': 'handled', 'request': message.body}
+        routing_key = message.parameters.get('routing_key')
+        operation = message.headers.get('message_operation', -1)  # 0: Set, 1: Get, 9: Command
+        if operation < 0: # reply message
+            return
         
+        print(f'REQUEST: key={routing_key}, op={operation}, body={message.body}')
+
+        reply = None
+        if operation == 0:
+            if hasattr(self.server, 'on_set') and callable(getattr(self.server, 'on_set')):
+                reply = self.server.on_set(message)
+        elif operation == 1:
+            if hasattr(self.server, 'on_get') and callable(getattr(self.server, 'on_get')):
+                reply = self.server.on_get(message)
+        elif operation == 9:
+            if hasattr(self.server, 'on_command') and callable(getattr(self.server, 'on_command')):
+                reply = self.server.on_command(message)
+        else:
+            logging.warning(f'Dripline: Unknown operation code: {operation}')
+
+        if inspect.isawaitable(reply):
+            reply = await reply
+                
+        if reply is True:
+            reply = {'status': 'success'}
+        elif reply is False:
+            reply = {'status': 'error'}
+        if reply is None:
+            reply = {'status': 'not handled'}
+            logging.warning(f'Dripline: request not handled: key={routing_key}, op={operation}, body={message.body}')
+        
+        return reply

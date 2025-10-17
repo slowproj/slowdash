@@ -12,7 +12,7 @@ This is a reduced no-async version of control_AsyncDripline.py.
 '''
 
 
-import os, time, datetime, socket, getpass, uuid, json
+import os, time, datetime, socket, getpass, uuid, json, logging
 
 from slowpy.control import ControlNode, ControlVariableNode, control_system as ctrl
 ctrl.import_control_module('RabbitMQ')
