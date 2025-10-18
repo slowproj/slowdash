@@ -46,8 +46,8 @@ class DriplineNode(ControlNode):
         
     ## child nodes ##
     # dripline().endpoint(name): set/get to other dripline endpoints
-    def endpoint(self, name:str):
-        return EndpointNode(self, name)
+    def endpoint(self, name:str, *, specifier:str=None, lockout_key:str=None, timeout=None):
+        return EndpointNode(self, name, specifier=specifier, lockout_key=lockout_key, timeout=timeout)
 
     # dripline().request(): handles set/get/cmd requests from other dripline services
     def request(self, handler):
@@ -154,7 +154,12 @@ class EndpointNode(ControlNode):
             'content_encoding': 'application/json',
         }
 
-        message = await self.reply_queue_node.rpc_call(self.routing_key, body, headers, parameters).aio_get()
+        try:
+            message = await self.reply_queue_node.rpc_call(self.routing_key, body, headers, parameters).aio_get()
+        except Exception as e:
+            logging.error(e)
+            return None
+        
         if type(message.body) is dict:
             return message.body
         else:
@@ -183,7 +188,7 @@ class RawValueNode(ControlNode):
         return await self.endpoint.aio_set(value)
     
     async def aio_get(self):
-        return (await self.endpoint.aio_get()).get('value_raw', None)
+        return ((await self.endpoint.aio_get()) or {}).get('value_raw', None)
 
     
     
@@ -192,7 +197,7 @@ class CalibratedValueNode(ControlNode):
         self.endpoint = endpoint
             
     async def aio_get(self):
-        return (await self.endpoint.aio_get()).get('value_cal', None)
+        return ((await self.endpoint.aio_get()) or {}).get('value_cal', None)
 
 
     
@@ -208,7 +213,11 @@ class RequestNode(ControlNode):
 
     
     async def aio_get(self):
-        return await self.request_queue_node.rpc_function(self.handler).aio_get()
+        try:
+            return await self.request_queue_node.rpc_function(self.handler).aio_get()
+        except Exception as e:
+            logging(e)
+            return None
 
 
     
@@ -311,7 +320,12 @@ class SensorValuesQueueNode(ControlNode):
 
     
     async def aio_get(self):
-        message = await self.queue_node.aio_get()
+        try:
+            message = await self.queue_node.aio_get()
+        except Exception as e:
+            logging.error(e)
+            return None
+        
         if message[0] is None or type(message[0]) is dict:
             return message
         else:
@@ -330,7 +344,12 @@ class HeartbeatQueueNode(ControlNode):
 
     
     async def aio_get(self):
-        message = await self.queue_node.aio_get()
+        try:
+            message = await self.queue_node.aio_get()
+        except Exception as e:
+            logging.error(e)
+            return None
+        
         if message[0] is None or type(message[0]) is dict:
             return message
         else:
@@ -349,7 +368,12 @@ class StatusMessageQueueNode(ControlNode):
 
     
     async def aio_get(self):
-        message = await self.queue_node.aio_get()
+        try:
+            message = await self.queue_node.aio_get()
+        except Exception as e:
+            logging.error(e)
+            return None
+        
         if message[0] is None or type(message[0]) is dict:
             return message
         else:
@@ -379,7 +403,12 @@ class ServiceNode(ControlNode):
     
     async def aio_start(self):
         while not ctrl.is_stop_requested():
-            await self.request_queue_node.rpc_function(self._handle_message).aio_get()
+            try:
+                await self.request_queue_node.rpc_function(self._handle_message).aio_get()
+            except Exception as e:
+            logging.error(e)
+            return None
+        
     
 
     async def _handle_message(self, message):

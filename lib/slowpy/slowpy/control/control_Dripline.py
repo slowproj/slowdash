@@ -53,8 +53,8 @@ class DriplineNode(ControlNode):
         
     ## child nodes ##
     # dripline().endpoint(name): set/get to other dripline endpoints
-    def endpoint(self, name:str):
-        return EndpointNode(self, name)
+    def endpoint(self, name:str, *, specifier:str=None, lockout_key:str=None, timeout=None):
+        return EndpointNode(self, name, specifier=specifier, lockout_key=lockout_key, timeout=timeout)
 
     # dripline().sensor_value_alert(): sends sensor_value alert; use set(value)
     def sensor_value_alert(self, name:str=None):
