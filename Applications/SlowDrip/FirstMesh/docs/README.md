@@ -20,7 +20,6 @@ Wait for the RabbitMQ to become ready (approx. 30 seconds). Then start a web bro
 To stop, type `ctrl-c` on the terminal. Run `docker compose down` before proceeding to the next example.
 
 ### Implementation
-
 ```yaml
 slowdash_project:
   name: DriplineFirstMesh
@@ -51,7 +50,6 @@ Wait for the RabbitMQ to become ready (approx. 30 seconds). Then start a web bro
 To stop, type `ctrl-c` on the terminal. Run `docker compose down` before proceeding to the next example.
 
 ### Implementation
-
 ```yaml
 slowdash_project:
   name: DriplineFirstMesh
@@ -78,7 +76,6 @@ ctrl.import_control_module('Dripline')
 print('hello from control_peaches.py')
 dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
 peaches = dripline.endpoint('peaches')
-
 
 def set_peaches(value:float):
     print(f'setting peaches to {value}')
@@ -111,16 +108,13 @@ Wait for the RabbitMQ to become ready (approx. 30 seconds). Then start a web bro
 To stop, type `ctrl-c` on the terminal. Run `docker compose down` before proceeding to the next example.
 
 ### Implementation
-
 ```python
-
 from slowpy.control import control_system as ctrl
 ctrl.import_control_module('Dripline')
 
 print('hello from control_peaches.py')
 dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
 peaches = dripline.endpoint('peaches').value_raw()
-
 
 def set_peaches(target:float, ramping_rate:float):
     print(f'setting peaches to {target}, with ramping at {ramping_rate}')
@@ -129,7 +123,6 @@ def set_peaches(target:float, ramping_rate:float):
 def abort_ramping():
     peaches.ramping().status().set(0)
     
-
 ctrl.export(peaches.ramping(), name='ramping_target')
 ctrl.export(peaches.ramping().status(), name='ramping_status')
 ```
@@ -174,7 +167,6 @@ Wait for the RabbitMQ to become ready (approx. 30 seconds). Then start a web bro
 To stop, type `ctrl-c` on the terminal. Run `docker compose down` before proceeding to the next example.
 
 ### Implementation
-
 ```yaml
   task:
     name: manual-entry
@@ -182,13 +174,11 @@ To stop, type `ctrl-c` on the terminal. Run `docker compose down` before proceed
 ```
 
 ```python
-
 from slowpy.control import control_system as ctrl
 ctrl.import_control_module('Dripline')
 
 print('hello from manual-entry.py')
 dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
-
 
 def write_value(name:str, value:float):
     print(f'writing {name}={value} ')
@@ -237,7 +227,6 @@ ctrl.import_control_module('Dripline')
 print('hello from control-randomwalk.py')
 dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
 
-
 def set_value(value:float):
     print(f'setting randomwalk value to {value}')
     dripline.endpoint('randomwalk').set(value)
@@ -245,7 +234,6 @@ def set_value(value:float):
 def set_step(step:float):
     print(f'setting randomwalk step to {step}')
     dripline.endpoint('randomwalk_step').set(step)
-
 
 def _get_html():
     return '''
@@ -276,13 +264,11 @@ print(f'hello from {__name__}')
 dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
 
 
-
 class RandomwalkService:
     def __init__(self):
         self.x = 0
         self.step = 1
 
-        
     async def on_set(self, message):
         endpoint, value = message.parameters["routing_key"], message.body
         logging.debug(f'SET {endpoint}: {value}')
@@ -294,7 +280,6 @@ class RandomwalkService:
         if endpoint == 'randomwalk':
             self.x = float(value['values'][0])
             return True
-            
         
     async def on_get(self, message):
         endpoint, value = message.parameters["routing_key"], message.body
@@ -305,14 +290,12 @@ class RandomwalkService:
         if endpoint == 'randomwalk':
             return self.x
 
-        
     async def on_command(self, message):
         endpoint, value = message.parameters["routing_key"], message.body
         logging.debug(f'CMD {endpoint}: {value}')
         
         return True
 
-    
     async def run(self):
         await dripline.sensor_value_alert('randomwalk_step').aio_set(self.step)
         while not ctrl.is_stop_requested():
@@ -321,11 +304,8 @@ class RandomwalkService:
             await ctrl.aio_sleep(1)
 
 
-            
-service = RandomwalkService()
-
-
 async def _run():
+    service = RandomwalkService()
     await asyncio.gather(
         dripline.service(service, endpoints='*').aio_start(),
         service.run()
@@ -334,7 +314,6 @@ async def _run():
 
 async def _finalize():
     await dripline.aio_close()
-
 
 
 if __name__ == '__main__':
