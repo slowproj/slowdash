@@ -76,16 +76,6 @@ To stop, type `ctrl-c` on the terminal. Run `docker compose down` before running
 
 ### Implementation
 ```yaml
-slowdash_project:
-  name: DriplineFirstMesh
-  title: Dripline First-Mesh Walkthrough
-
-  data_source:
-    url: postgresql://postgres:postgres@postgres:5432/sensor_data
-    parameters:
-      time_series:
-        - schema: numeric_data [sensor_name] @timestamp(with timezone) = value_raw(default), value_cal
-      
   task:
     name: control_peaches
     auto_load: true
@@ -224,9 +214,8 @@ def write_value(name:str, value:float):
 
 
 ## Handling SET/GET/CMD Requests
-Finally, this example shows how to make a fully featured Dripline service, which handles SET/GET/CMD requests from other Dripline services. This example sends out random walk data as a proxy of hardware readout data, with multiple parameter settings each of which is an endpoint.
-
 ### Objectives
+Finally, this example shows how to make a fully featured Dripline service, which handles SET/GET/CMD requests from other Dripline services. This example sends out random walk data as a proxy of hardware readout data, with multiple parameter settings each of which is an endpoint.
 
 | Screenshot |
 |------------|
@@ -312,21 +301,6 @@ class RandomwalkService:
             self.x = float(value['values'][0])
             return True
         
-    async def on_get(self, message):
-        endpoint, value = message.parameters["routing_key"], message.body
-        logging.debug(f'GET {endpoint}: {value}')
-        
-        if endpoint == 'randomwalk_step':
-            return self.step
-        if endpoint == 'randomwalk':
-            return self.x
-
-    async def on_command(self, message):
-        endpoint, value = message.parameters["routing_key"], message.body
-        logging.debug(f'CMD {endpoint}: {value}')
-        
-        return True
-
     async def run(self):
         await dripline.sensor_value_alert('randomwalk_step').aio_set(self.step)
         while not ctrl.is_stop_requested():
@@ -341,7 +315,6 @@ async def _run():
         dripline.service(service, endpoints='*').aio_start(),
         service.run()
     )
-
 
 async def _finalize():
     await dripline.aio_close()
