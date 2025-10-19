@@ -21,6 +21,7 @@ slowdash_project:
 <img src="FirstMeshControl.png" width="70%"  style="border: 2px solid gray">
 
 ### Setup Procedure 
+
 ```yaml
 slowdash_project:
   name: DriplineFirstMesh
@@ -66,6 +67,7 @@ def set_peaches(value:float):
 <img src="FirstMeshControlSlowpy.png" width="70%" style="border: 2px solid gray">
 
 ### Setup Procedure
+
 ```python
 
 from slowpy.control import control_system as ctrl
@@ -114,6 +116,7 @@ ctrl.export(peaches.ramping().status(), name='ramping_status')
 <img src="FirstMeshManualEntry.png" width="70%" style="border: 2px solid gray">
 
 ### Setup Procedure
+
 ```yaml
   task:
     name: manual-entry

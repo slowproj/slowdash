@@ -1,10 +1,15 @@
 Dripline Console
 ================
-<img src="DriplineConsole.png" width="70%" style="border: 2px solid gray">
+## Features
+- Listing sensor values without going through database
+- Listing Dripline service heartbeats
+- Sending SET/GET/CMD commands to endpoints
+
+<img src="DriplineConsole.png" width="90%" style="border:thin solid black;">
 
 ## Setup
-Copy the `slowdash.d/config/slowtask-DriplineConsole.py` file to your SlowDash configuration directory.
-Enable the slowatsk in your `SlowdashProject.yaml`:
+Copy the `slowdash.d/config/slowtask-DriplineConsole.py` file to your SlowDash configuration directory,
+and enable the slowatsk in your `SlowdashProject.yaml`:
 ```yaml
   task:
     name: DriplineConsole
