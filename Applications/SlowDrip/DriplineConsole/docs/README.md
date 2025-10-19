@@ -1,6 +1,6 @@
 Dripline Console
 ================
-<img src="DriplineConsole.png" width="70%" style="box-shadow:0 10px 10px gray">
+<img src="DriplineConsole.png" width="70%" style="border: 2px solid gray">
 
 ## Setup
 Copy the `slowdash.d/config/slowtask-DriplineConsole.py` file to your SlowDash configuration directory.

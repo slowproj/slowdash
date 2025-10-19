@@ -2,7 +2,7 @@ Dripline with SlowDash
 ======================
 
 ## Plotting
-<img src="FirstMeshPlotting.png" width="70%" style="box-shadow:0 10px 10px gray">
+<img src="FirstMeshPlotting.png" width="70%" style="border: 2px solid gray">
 
 ### Setup Procedure 
 ```yaml
@@ -17,8 +17,9 @@ slowdash_project:
         - schema: numeric_data [sensor_name] @timestamp(with timezone) = value_raw(default), value_cal
 ```
 
-## Control Endpoints
-<img src="FirstMeshControl.png" width="70%" style="box-shadow:0 10px 10px gray">
+## Controlling Endpoints
+<img src="FirstMeshControl.png" width="70%"  style="border: 2px solid gray">
+
 ### Setup Procedure 
 ```yaml
 slowdash_project:
@@ -61,8 +62,10 @@ def set_peaches(value:float):
 ```
 
 
-## Control Endpoints with Slowpy Logic
-<img src="FirstMeshControlSlowpy.png" width="70%" style="box-shadow:0 10px 10px gray">
+## Controlling Endpoints with Slowpy Logic
+<img src="FirstMeshControlSlowpy.png" width="70%" style="border: 2px solid gray">
+
+### Setup Procedure
 ```python
 
 from slowpy.control import control_system as ctrl
@@ -108,8 +111,9 @@ ctrl.export(peaches.ramping().status(), name='ramping_status')
 
 
 ## Writing (Sensor) Data Values / Manual Entry
-<img src="FirstMeshManualEntry.png" width="70%" style="box-shadow:0 10px 10px gray">
+<img src="FirstMeshManualEntry.png" width="70%" style="border: 2px solid gray">
 
+### Setup Procedure
 ```yaml
   task:
     name: manual-entry
@@ -140,7 +144,9 @@ def write_value(name:str, value:float):
 
 
 ## Handling SET/GET/CMD Requests
-<img src="FirstMeshService.png" width="70%" style="box-shadow:0 10px 10px gray">
+
+### Setup Procedure
+<img src="FirstMeshService.png" width="70%" style="border: 2px solid gray">
 
 ```yaml
   task:
