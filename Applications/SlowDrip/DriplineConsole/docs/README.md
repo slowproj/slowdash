@@ -6,8 +6,8 @@ Dripline Console
 - Sending SET/GET/CMD commands to endpoints
 
 | Screenshot |
-|--------|
-| <img src="DriplineConsole.png" width="100%" style="border:thin solid black;"> |
+|------------|
+| <img src="DriplineConsole.png" width="100%"> |
 
 ## Setup
 Copy the `slowdash.d/config/slowtask-DriplineConsole.py` file to your SlowDash configuration directory,

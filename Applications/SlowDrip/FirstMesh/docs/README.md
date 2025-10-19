@@ -2,7 +2,9 @@ Dripline with SlowDash
 ======================
 
 ## Plotting
-<img src="FirstMeshPlotting.png" width="70%" style="border: 2px solid gray">
+| Screenshot |
+|------------|
+|<img src="FirstMeshPlotting.png" width="70%">|
 
 ### Setup Procedure 
 ```yaml
@@ -18,7 +20,9 @@ slowdash_project:
 ```
 
 ## Controlling Endpoints
-<img src="FirstMeshControl.png" width="70%"  style="border: 2px solid gray">
+| Screenshot |
+|------------|
+|<img src="FirstMeshControl.png" width="70%">|
 
 ### Setup Procedure 
 
@@ -64,7 +68,9 @@ def set_peaches(value:float):
 
 
 ## Controlling Endpoints with Slowpy Logic
-<img src="FirstMeshControlSlowpy.png" width="70%" style="border: 2px solid gray">
+| Screenshot |
+|------------|
+|<img src="FirstMeshControlSlowpy.png" width="70%">|
 
 ### Setup Procedure
 
@@ -113,7 +119,9 @@ ctrl.export(peaches.ramping().status(), name='ramping_status')
 
 
 ## Writing (Sensor) Data Values / Manual Entry
-<img src="FirstMeshManualEntry.png" width="70%" style="border: 2px solid gray">
+| Screenshot |
+|------------|
+|<img src="FirstMeshManualEntry.png" width="70%">|
 
 ### Setup Procedure
 
@@ -149,7 +157,9 @@ def write_value(name:str, value:float):
 ## Handling SET/GET/CMD Requests
 
 ### Setup Procedure
-<img src="FirstMeshService.png" width="70%" style="border: 2px solid gray">
+| Screenshot |
+|------------|
+|<img src="FirstMeshService.png" width="70%">|
 
 ```yaml
   task:
