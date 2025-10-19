@@ -5,7 +5,9 @@ Dripline Console
 - Listing Dripline service heartbeats
 - Sending SET/GET/CMD commands to endpoints
 
-<img src="DriplineConsole.png" width="90%" style="border:thin solid black;">
+| &nbsp; |
+|--------|
+| <img src="DriplineConsole.png" width="90%" style="border:thin solid black;"> |
 
 ## Setup
 Copy the `slowdash.d/config/slowtask-DriplineConsole.py` file to your SlowDash configuration directory,
