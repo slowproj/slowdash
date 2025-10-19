@@ -2,11 +2,25 @@ Dripline with SlowDash
 ======================
 
 ## Plotting
+### Objectives
+This example shows how to add SlowDash data visualization to the Dripline First-Mesh Walkthrogh.
+
 | Screenshot |
 |------------|
-|<img src="FirstMeshPlotting.png" width="70%">|
+|<img src="FirstMeshPlotting.png" width="100%">|
 
-### Setup Procedure 
+### Running the Example
+The `01_Plotting` directory includes the complete set of files. Run `docker compose` at the directory:
+```bash
+cd 01_Plotting
+docker compose up
+```
+Wait for the RabbitMQ to become ready (approx. 30 seconds). Then start a web browser and access to `http://localhost:18881`.
+
+To stop, type `ctrl-c` on the terminal. Run `docker compose down` before proceeding to the next example.
+
+### Implementation
+
 ```yaml
 slowdash_project:
   name: DriplineFirstMesh
@@ -20,11 +34,23 @@ slowdash_project:
 ```
 
 ## Controlling Endpoints
+### Objectives
+
 | Screenshot |
 |------------|
-|<img src="FirstMeshControl.png" width="70%">|
+|<img src="FirstMeshControl.png" width="100%">|
 
-### Setup Procedure 
+### Running the Example
+The `02_Control` directory includes the complete set of files. Run `docker compose` at the directory:
+```bash
+cd 02_Control
+docker compose up
+```
+Wait for the RabbitMQ to become ready (approx. 30 seconds). Then start a web browser and access to `http://localhost:18881`.
+
+To stop, type `ctrl-c` on the terminal. Run `docker compose down` before proceeding to the next example.
+
+### Implementation
 
 ```yaml
 slowdash_project:
@@ -68,11 +94,23 @@ def set_peaches(value:float):
 
 
 ## Controlling Endpoints with Slowpy Logic
+### Objectives
+
 | Screenshot |
 |------------|
-|<img src="FirstMeshControlSlowpy.png" width="70%">|
+|<img src="FirstMeshControlSlowpy.png" width="100%">|
 
-### Setup Procedure
+### Running the Example
+The `03_ControlSlowpy` directory includes the complete set of files. Run `docker compose` at the directory:
+```bash
+cd 03_ControlSlowpy
+docker compose up
+```
+Wait for the RabbitMQ to become ready (approx. 30 seconds). Then start a web browser and access to `http://localhost:18881`.
+
+To stop, type `ctrl-c` on the terminal. Run `docker compose down` before proceeding to the next example.
+
+### Implementation
 
 ```python
 
@@ -119,11 +157,23 @@ ctrl.export(peaches.ramping().status(), name='ramping_status')
 
 
 ## Writing (Sensor) Data Values / Manual Entry
+### Objectives
+
 | Screenshot |
 |------------|
-|<img src="FirstMeshManualEntry.png" width="70%">|
+|<img src="FirstMeshManualEntry.png" width="100%">|
 
-### Setup Procedure
+### Running the Example
+The `04_ManualEntry` directory includes the complete set of files. Run `docker compose` at the directory:
+```bash
+cd 04_ManualEntry
+docker compose up
+```
+Wait for the RabbitMQ to become ready (approx. 30 seconds). Then start a web browser and access to `http://localhost:18881`.
+
+To stop, type `ctrl-c` on the terminal. Run `docker compose down` before proceeding to the next example.
+
+### Implementation
 
 ```yaml
   task:
@@ -155,12 +205,23 @@ def write_value(name:str, value:float):
 
 
 ## Handling SET/GET/CMD Requests
+### Objectives
 
-### Setup Procedure
 | Screenshot |
 |------------|
-|<img src="FirstMeshService.png" width="70%">|
+|<img src="FirstMeshService.png" width="100%">|
 
+### Running the Example
+The `04_ManualEntry` directory includes the complete set of files. Run `docker compose` at the directory:
+```bash
+cd 04_ManualEntry
+docker compose up
+```
+Wait for the RabbitMQ to become ready (approx. 30 seconds). Then start a web browser and access to `http://localhost:18881`.
+
+To stop, type `ctrl-c` on the terminal. Run `docker compose down` before proceeding to the next example.
+
+### Implementation
 ```yaml
   task:
     - name: randomwalk-service
