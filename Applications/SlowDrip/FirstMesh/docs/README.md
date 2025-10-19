@@ -29,6 +29,20 @@ To stop, type `ctrl-c` on the terminal. Run `docker compose down` before running
 
 ### Implementation
 ```yaml
+  slowdash:
+    image: slowproj/slowdash
+    ports:
+      - "18881:18881"
+    volumes:
+      - ./slowdash.d:/project
+    depends_on:
+      rabbit-broker:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+```
+
+```yaml
 slowdash_project:
   name: DriplineFirstMesh
   title: Dripline First-Mesh Walkthrough
@@ -42,6 +56,9 @@ slowdash_project:
 
 ## Controlling Endpoints
 ### Objectives
+This example shows:
+- How to bind user Python code to SlowDash GUI
+- How to send SET/GET/CMD commands to Dripline endpoints from user Python code
 
 | Screenshot |
 |------------|
@@ -97,9 +114,12 @@ def set_peaches(value:float):
 </form>    
 ```
 
-
 ## Controlling Endpoints with Slowpy Logic
 ### Objectives
+By advancing the previous example, this example shows:
+- How to use control logics (such as ramping) in SlowDash Python library (SlowPy)
+- How to send data directly from user Python to SlowDash GUI
+
 
 | Screenshot |
 |------------|
@@ -159,6 +179,7 @@ ctrl.export(peaches.ramping().status(), name='ramping_status')
 
 ## Writing (Sensor) Data Values / Manual Entry
 ### Objectives
+This example shows how to send Dripline alert messages (such as sensor value alerts), with an application of manually putting data from the SlowDash GUI.
 
 | Screenshot |
 |------------|
@@ -203,6 +224,8 @@ def write_value(name:str, value:float):
 
 
 ## Handling SET/GET/CMD Requests
+Finally, this example shows how to make a fully featured Dripline service, which handles SET/GET/CMD requests from other Dripline services. This example sends out random walk data as a proxy of hardware readout data, with multiple parameter settings each of which is an endpoint.
+
 ### Objectives
 
 | Screenshot |
