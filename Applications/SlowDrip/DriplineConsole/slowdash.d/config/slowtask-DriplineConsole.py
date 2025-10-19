@@ -1,23 +1,24 @@
 
-import time, datetime, re, json, asyncio
+import time, datetime, re, json, collections, asyncio
 from slowpy.control import ControlNode, control_system as ctrl
 ctrl.import_control_module('AsyncDripline')
 
 dripline = None
 sensor_values = {}
 heartbeats = {}
-status_messages = []
-replies = []
+status_messages = collections.deque(maxlen=10)
+replies = collections.deque(maxlen=10)
 
 
 def timestr(timestamp, now):
     if type(timestamp) in [int, float]:
         unix_time = timestamp
     elif type(timestamp) is str:
-        unix_time = datetime.datetime.fromisoformat(timestamp).timestamp()
+        unix_time = datetime.datetime.fromisoformat(timestamp.replace('Z','+00:00')).timestamp()
     else:
         return '---'
-            
+
+    # inside a docker container, the system timezone is UTC, so the display time will be in UTC
     lapse = now-unix_time
     if lapse < 3600:
         date = datetime.datetime.fromtimestamp(unix_time).strftime('%H:%M:%S')
@@ -71,10 +72,11 @@ class HeartbeatsTable(ControlNode):
         for key, entry in heartbeats.items():
             timestamp = entry.get('timestamp', None)
             name = entry.get('name', key)
-            table.append([name, timestr(timestamp, now)])
+            counts = entry.get('counts', 0)
+            table.append([name, timestr(timestamp, now), counts])
             
         return {
-            'columns': [ 'Name', 'Timestamp' ],
+            'columns': [ 'Name', 'Timestamp', 'Counts' ],
             'table': table,
         }
 
@@ -107,6 +109,7 @@ async def _initialize(params):
 
 async def _finalize():
     await dripline.aio_close()
+    await asyncio.sleep(1)   # give RabbitMQ a change to perform cleanup
     
         
 async def _run():
@@ -121,39 +124,41 @@ async def _run():
 async def monitor_sensor_value_alerts():
     while not ctrl.is_stop_requested():
         message = await dripline.sensor_value_queue().aio_get()
-        if message.body is None:
-            continue
+        if message is None or message.body is None:
+            break
         _, name = message.parameters['routing_key'].split('.')
         sensor_values[name] = message.body | {
             'timestamp': message.headers.get("timestamp", None),
         }
-        #await ctrl.aio_publish(SensorValuesTable(), name='SensorValues.DriplineConsole')
+        await ctrl.aio_publish(SensorValuesTable(), name='SensorValues.DriplineConsole')
         
 
 async def monitor_heartbeat_alerts():
     while not ctrl.is_stop_requested():
         message = await dripline.heartbeat_queue().aio_get()
-        if message.body is None:
-            continue
+        if message is None or message.body is None:
+            break
         _, name = message.parameters['routing_key'].split('.')
+        counts = heartbeats.get(name, {}).get('counts', 0) + 1
         heartbeats[name] = message.body | {
             'timestamp': message.headers.get("timestamp", None),
+            'counts': counts,
         }
-        #await ctrl.aio_publish(HeartbeatsTable(), name='HeartBeats.DriplineConsole')
+        await ctrl.aio_publish(HeartbeatsTable(), name='HeartBeats.DriplineConsole')
         
 
 async def monitor_status_message_alerts():
     while not ctrl.is_stop_requested():
         message = await dripline.status_message_queue().aio_get()
-        if message.body is None:
-            continue
+        if message is None or message.body is None:
+            break
         _, name, severity = message.parameters['routing_key'].split('.')
         status_messages.append([
             message.headers.get("timestamp", None),
             name, severity,
             message.body
         ])
-        #await ctrl.aio_publish(StatusMessagesTable(), name='StatusMessages.DriplineConsole')
+        await ctrl.aio_publish(StatusMessagesTable(), name='StatusMessages.DriplineConsole')
 
         
 async def send_heartbeats():
@@ -167,14 +172,14 @@ async def sd_get_endpoint(endpoint:str, specifier:str=None, value:str=None, lock
     endpoint_node = dripline.endpoint(endpoint, specifier=specifier, lockout_key=lockout_key)
     reply = await endpoint_node.aio_get()
     replies.append([time.time(), endpoint, f'GET {specifier}: {value}', reply])
-    #await ctrl.aio_publish(RepliesTable(), name='Replies.DriplineConsole')
+    await ctrl.aio_publish(RepliesTable(), name='Replies.DriplineConsole')
 
     
 async def sd_set_endpoint(endpoint:str, specifier:str=None, value:str=None, lockout_key:str=None):
     endpoint_node = dripline.endpoint(endpoint, specifier=specifier, lockout_key=lockout_key)
     reply = await endpoint_node.aio_set(value)    
     replies.append([time.time(), endpoint, f'SET {specifier}: {value}', reply])
-    #await ctrl.aio_publish(RepliesTable(), name='Replies.DriplineConsole')
+    await ctrl.aio_publish(RepliesTable(), name='Replies.DriplineConsole')
 
     
 async def sd_cmd_endpoint(endpoint:str, specifier:str, value:str=None, lockout_key:str=None):
@@ -190,7 +195,7 @@ async def sd_cmd_endpoint(endpoint:str, specifier:str, value:str=None, lockout_k
     reply = await endpoint_node.command(ordered_args, keyed_args).aio_get()
     
     replies.append([time.time(), endpoint, f'CMD {specifier}: {value}', reply])
-    #await ctrl.aio_publish(RepliesTable(), name='Replies.DriplineConsole')
+    await ctrl.aio_publish(RepliesTable(), name='Replies.DriplineConsole')
 
 
     
@@ -239,10 +244,10 @@ def _get_html():
     |     {'\n'.join(['<option value="'+name+'">' for name in sensor_values])}
     |   </datalist>
     |   <table>
-    |     <tr><td>Endpoint</td><td><input name="endpoint" list="dripline_endpoints" style="width:32em"></td></tr>
-    |     <tr><td>Specifier/Method</td><td><input name="specifier" style="width:32em"></td></tr>
-    |     <tr><td>Value(s)</td><td><input name="value" style="width:32em"></td></tr>
-    |     <tr><td>Lockout Key</td><td><input name="lockout_key" style="width:32em"></td></tr>
+    |     <tr><td>Endpoint</td><td><input name="endpoint" list="dripline_endpoints" style="width:24em"></td></tr>
+    |     <tr><td>Value(s)</td><td><input name="value" style="width:24em"></td></tr>
+    |     <tr><td>Specifier/Method</td><td><input name="specifier" style="width:24em" placeholder="usually this is empty"></td></tr>
+    |     <tr><td>Lockout Key</td><td><input name="lockout_key" style="width:24em" placeholder="usually this is empty"></td></tr>
     |     <tr><td></td><td>
     |       <input type="submit" name="DriplineConsole.sd_get_endpoint()" value="Get Value">
     |       <input type="submit" name="DriplineConsole.sd_set_endpoint()" value="Set Value">

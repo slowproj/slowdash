@@ -88,6 +88,18 @@ class ControlSystem(spc.ControlNode):
         if cls.app() is None:
             return
 
+        # name
+        export_name = getattr(obj, '__slowdash_export_name', None)
+        publish_name = name if name is not None else export_name
+        if publish_name is None:
+            name = cls._make_name()
+            publish_name = name
+        if name is not None and name != export_name:
+            try:
+                setattr(obj, '__slowdash_export_name', name)   # using setattr() for dataclass
+            except:
+                pass  # obj does not have setattr()  (such as an interger)
+
         # special handling for Matplotlib figure
         config, data = slp.slowdashify(obj, name)
         if data is not None:
@@ -96,20 +108,25 @@ class ControlSystem(spc.ControlNode):
             await cls.app().request(f'/config/transient/content/slowplot/{name}', config)
             await cls.app().request_publish('current_data', packet, sender=f'taskmodule_{name}')
             return
+
+        # special handling for ControlNode
+        if isinstance(obj, spc.ControlNode):
+            obj = await obj.aio_get()
         
         # value
         value, value_is_ts = None, False
         if isinstance(obj, type):
             pass
-        elif isinstance(obj, spc.ControlNode):
-            value = { 'tree': obj.get() }
         elif callable(getattr(obj, 'to_json', None)):  # SlowPy Element (histogram etc)
             value = obj.to_json()
             value_is_ts = isinstance(obj, slp.TimeSeries)
         elif type(obj) in [ bool, int, float, str ]:
             value = obj
-        elif type(obj) is dict:
-            value = {'tree': obj }
+        elif type(obj) is dict:  # must be a SlowDash value
+            if 'tree' in obj or 'table' in obj or 'bins' in obj or 'ybin' in obj or 'y' in obj:
+                value = obj
+            else:
+                value = {'tree': obj }  # or raise an exception...
         elif dataclasses.is_dataclass(obj):
             value = { 'tree': dataclasses.asdict(obj) }
         else:
@@ -120,24 +137,6 @@ class ControlSystem(spc.ControlNode):
         if value is None:
             logging.error(f'bad value type to publish: {type(obj)}')
             return
-
-        # name
-        export_name = getattr(obj, '__slowdash_export_name', None)
-        publish_name = name if name is not None else export_name
-        if publish_name is None:
-            name = cls._make_name()
-            publish_name = name
-                
-        # register this to channel list if not already in
-        if name is not None and name != export_name:
-            try:
-                setattr(obj, '__slowdash_export_name', name)   # using setattr() for dataclass
-            except:
-                pass  # obj does not have setattr()  (such as an interger)
-
-            # published channels are now handled by subpub cache
-            #if name not in cls._slowdash_channels:
-            #    cls._register_channel(name, value, value_is_ts)
 
         if value_is_ts:
             record = { publish_name: value }

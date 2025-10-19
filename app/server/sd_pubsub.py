@@ -186,11 +186,11 @@ class PubsubComponent(Component):
                 t0 = data.get('start', 0)
                 t = data.get('t', None)
                 if type(t) is list:
-                    if len(t) == 0 or t[-1] + t0 < my_t - 0.001:
+                    if len(t) == 0 or t0 + t[-1] < my_t - 0.001:
                         data['t'].append(my_t - t0)
                         data['x'].append(my_data.get('x',None))
                 elif t is not None:
-                    if t < my_t - 0.001:
+                    if t0 + t < my_t - 0.001:
                         data['t'] = [ t, my_t - t0 ]
                         data['x'] = [ data.get('x', None), my_data.get('x',None) ]
                 else:

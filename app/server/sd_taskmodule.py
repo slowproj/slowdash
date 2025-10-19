@@ -480,11 +480,11 @@ class TaskModuleComponent(Component):
                 t0, my_t0 = data.get('start', 0), my_data['start']
                 t, my_t = data.get('t', None), my_data['t']
                 if type(t) is list:
-                    if len(t) == 0 or t[-1] + t0 < my_t + my_t0:
+                    if len(t) == 0 or t0 + t[-1] < my_t0 + my_t:
                         data['t'].append(my_t + my_t0 - t0)
                         data['x'].append(my_data['x'])
                 elif t is not None:
-                    if t < my_t:
+                    if t0 + t < my_t0 + my_t:
                         data['t'] = [ t, my_t + my_t0 - t0 ]
                         data['x'] = [ data.get('x', None), my_data['x'] ]
                 else:

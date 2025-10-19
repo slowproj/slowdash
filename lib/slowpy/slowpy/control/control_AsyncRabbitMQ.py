@@ -54,7 +54,8 @@ class RabbitMQNode(ControlNode):
             if self.is_retry:
                 logging.info(f'RabbitMQ: retrying to connect to {self.url}')
             try:
-                self.connection = await aio_pika.connect_robust(self.url)
+                #self.connection = await aio_pika.connect_robust(self.url)
+                self.connection = await aio_pika.connect(self.url)
                 self.channel = await self.connection.channel()
                 self.is_retry = False
             except Exception as e:

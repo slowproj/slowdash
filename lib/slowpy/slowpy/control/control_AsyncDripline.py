@@ -406,8 +406,8 @@ class ServiceNode(ControlNode):
             try:
                 await self.request_queue_node.rpc_function(self._handle_message).aio_get()
             except Exception as e:
-            logging.error(e)
-            return None
+                logging.error(e)
+                return None
         
     
 
