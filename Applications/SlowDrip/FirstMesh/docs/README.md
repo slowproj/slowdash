@@ -1,5 +1,13 @@
 Dripline with SlowDash
 ======================
+This directory includes several examples for integrating Dripline and SlowDash.
+
+- Example 1: Adding SlowDash data visualization to Dripline
+- Example 2: Sending SET/GET/CMD commands to Dripline endpoints
+- Example 3: Controlling Dripline endpoints with SlowDash Python library (SlowPy)
+- Example 4: Sending (sensor) data values to the Dripline Mesh / Entering manual values
+- Example 5: Handling SET/GET/CMD commands from other Dripline services
+
 
 ## Plotting
 ### Objectives
@@ -17,7 +25,7 @@ docker compose up
 ```
 Wait for the RabbitMQ to become ready (approx. 30 seconds). Then start a web browser and access to `http://localhost:18881`.
 
-To stop, type `ctrl-c` on the terminal. Run `docker compose down` before proceeding to the next example.
+To stop, type `ctrl-c` on the terminal. Run `docker compose down` before running another example.
 
 ### Implementation
 ```yaml
@@ -47,7 +55,7 @@ docker compose up
 ```
 Wait for the RabbitMQ to become ready (approx. 30 seconds). Then start a web browser and access to `http://localhost:18881`.
 
-To stop, type `ctrl-c` on the terminal. Run `docker compose down` before proceeding to the next example.
+To stop, type `ctrl-c` on the terminal. Run `docker compose down` before running another example.
 
 ### Implementation
 ```yaml
@@ -105,7 +113,7 @@ docker compose up
 ```
 Wait for the RabbitMQ to become ready (approx. 30 seconds). Then start a web browser and access to `http://localhost:18881`.
 
-To stop, type `ctrl-c` on the terminal. Run `docker compose down` before proceeding to the next example.
+To stop, type `ctrl-c` on the terminal. Run `docker compose down` before running another example.
 
 ### Implementation
 ```python
@@ -164,7 +172,7 @@ docker compose up
 ```
 Wait for the RabbitMQ to become ready (approx. 30 seconds). Then start a web browser and access to `http://localhost:18881`.
 
-To stop, type `ctrl-c` on the terminal. Run `docker compose down` before proceeding to the next example.
+To stop, type `ctrl-c` on the terminal. Run `docker compose down` before running another example.
 
 ### Implementation
 ```yaml
@@ -202,14 +210,14 @@ def write_value(name:str, value:float):
 |<img src="FirstMeshService.png" width="100%">|
 
 ### Running the Example
-The `04_ManualEntry` directory includes the complete set of files. Run `docker compose` at the directory:
+The `05_Service` directory includes the complete set of files. Run `docker compose` at the directory:
 ```bash
-cd 04_ManualEntry
+cd 05_Service
 docker compose up
 ```
 Wait for the RabbitMQ to become ready (approx. 30 seconds). Then start a web browser and access to `http://localhost:18881`.
 
-To stop, type `ctrl-c` on the terminal. Run `docker compose down` before proceeding to the next example.
+To stop, type `ctrl-c` on the terminal. Run `docker compose down` before running another example.
 
 ### Implementation
 ```yaml
