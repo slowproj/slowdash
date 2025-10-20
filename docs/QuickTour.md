@@ -7,10 +7,10 @@ This tour demonstrates how to use SlowDash with SQLite as the data backend, whic
 
 ### Menu
 - Configure a project by defining the user data schema
-- Run SlowDash
+- Run SlowDash with a dummy data
 - Create interactive plots through the web interface
-- ~~Execute user code on the server-side~~ (coming soon)
-- ~~Send commands to user code~~ (coming soon)
+- Write scripts to read data from devices
+- ~~Send commands to user scripts~~ (coming soon)
 
 ### Getting Started
 First, create and navigate to a new project directory:
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     _finalize()
 ```
 
-Details of the script is described in the [Controls](ControlsScript.html) section. For now just copy-and-past the script and use it to generate some test-data.
+Details of the script are described in the [Controls](ControlsScript.html) section. For now, just copy and paste the script and use it to generate some test data.
 
 If you installed SlowPy in a virtual environment (the standard installation method), activate it using either:
 ```console
@@ -69,7 +69,7 @@ Running this script will create a SQLite database file and populate it with simu
 $ python3 generate-testdata.py
 ```
 
-After letting it run for about a minute, stop the script using `Ctrl`-`c`</kbd> and examine the created files:
+After letting it run for about a minute, stop the script using `Ctrl`-`c` and examine the created files:
 ```console
 $ ls -l
 -rw-r--r-- 1 sanshiro sanshiro 24576 Apr 11 16:52 QuickTourTestData.db
@@ -282,3 +282,254 @@ Create a new layout directly through a URL by specifying channels and plot types
 http://localhost:18881/slowplot.html?channel=ch00;ch00/ts-histogram&length=360&reload=60&grid=2x1
 ```
 
+
+# Reading Data from Hardware Devices
+SlowDash consists of two parts, a web application (web server + browser UI) and a Python library used in user scripts.
+In the previous example with dummy data, we used this library, called SlowPy.
+The application and library work seamlessly together, but each can also operate independently.
+In this section, we'll use the SlowPy library alone to read real data from a device, replacing the dummy data generator used in the previous section.
+
+## Preparation
+SlowPy is installed automatically along with SlowDash. In the standard installation, it resides inside a virtual environment (venv). Please activate this venv before starting:
+```console
+$ slowdash-activate-venv
+```
+
+You need to run this command every time you open a new terminal. If you're using a dedicated SlowDash machine and no other Python environments, you can add the following line to your `.bashrc` to avoid doing it manually:
+```bash
+source $SLOWDASH_DIR/venv/bin/activate
+```
+
+## Target Devices
+Here, we'll show an example that reads DC voltage from a network-controllable digital multimeter (DMM).
+Many DMMs share common command sets, and we have confirmed the following models (verified by ChatGPT, August 2025):
+
+| Manufacturer | Model |
+|---------------|--------|
+| Keysight / Agilent | 34460A DMM |
+| Tektronix / Keithley | DMM6500 |
+| Rigol | DM3058 |
+| BK Precision | 5492B DMM |
+
+Similarly, many DC power supplies use the same command for output voltage readout. You can therefore use the same example code. The following models are confirmed (ChatGPT, August 2025):
+
+| Manufacturer | Model |
+|---------------|--------|
+| Keysight / Agilent | E363x / E364x |
+| Tektronix / Keithley | 2230G / 2231A |
+| Rohde & Schwarz | NGA100 series |
+| Rigol | DP800 / DP2000 |
+| BK Precision | 9180 / 9190 |
+
+All of these devices are controllable via Ethernet.
+Before proceeding, make sure your device is powered on, connected to the network, and that you know its IP address (and port number, to be sure - see the manual).
+
+### If No Device Is Available
+According to ChatGPT, most DMMs and power supplies share a compatible command set.
+If you have any network-controllable device that can report voltage, you might be able to use it here.
+
+If you don’t have access to any physical device, SlowDash provides a built-in simulator.
+You can launch it as follows:
+
+```console
+$ slowdash-activate-venv
+$ cd PATH/TO/SLOWDASH/utils
+$ python ./dummy-scpi.py
+listening at 172.26.0.1:5025
+line terminator is: x0d
+type Ctrl-c to stop
+```
+
+This behaves like a real device on your local network (running on `localhost`). Press `Ctrl-C` to stop it.
+
+
+### Reading Data from the Device
+All of the above devices use the SCPI (Standard Commands for Programmable Instruments) text-based protocol.
+The commands we'll use here are as follows:
+
+| Action | Command | Example Response |
+|---------|----------|----------------|
+| Get device ID | `*IDN?` | `Keysight Technologies,34460A...` |
+| Reset settings | `*RST` | (no response) |
+| Read DC voltage | `MEAS:VOLT:DC?` | `3.24` |
+
+In SlowPy, device control is represented as a logical control tree, where each node of the tree has `set(value)` and/or `get()`. For this SCPI example, the hierarchy looks like:
+```
+[Measurement System] → [Ethernet] → [SCPI Control] → [Command Nodes]
+```
+
+A complete SlowPy script to retrieve and print the device ID is:
+```python
+from slowpy.control import control_system as ctrl
+print(ctrl.ethernet('172.26.0.1', 5025).scpi().command('*IDN?').get())
+```
+Adjust the IP address and port number as needed. With this two line code, you can verify the connection:
+```console
+$ slowdash-activate-venv
+$ python read-my.py
+Keysight Technologies,34460A...
+```
+
+Multiple calls to the connection node (`.ethernet()`) may or may not create a new connection every time, depending on the node specification and optional parameters.
+A common practice is to keep the device-level node in a variable.
+
+Example: continuously read DC voltage once per second after resetting the device.
+```python
+from slowpy.control import control_system as ctrl
+device = ctrl.ethernet('172.26.0.1', 5025).scpi()
+
+device.command('*RST').set()
+
+while True:
+    volt = device.command('MEAS:VOLT:DC?').get()
+    print(volt)
+    ctrl.sleep(1)
+```
+(`ctrl.sleep()` behaves like `time.sleep()`, but works better with SlowDash’s signal handling.)
+
+### Storing Data in a Database
+SlowPy also provides database-write capabilities.
+The following code stores the measurements into a local SQLite database instead of printing them.
+```python
+from slowpy.control import control_system as ctrl
+device = ctrl.ethernet('172.26.0.1', 5025).scpi()
+
+from slowpy.store import DataStore_SQLite
+datastore = DataStore_SQLite('sqlite:///TestData.db', table="slowdata")
+
+device.command('*RST').set()
+
+while True:
+    volt = device.command('MEAS:VOLT:DC?').get()
+    datastore.append({'volt': volt})
+    ctrl.sleep(1)
+```
+Running this script instead of the dummy-data generator enables SlowDash to visualize real measurements.
+Stop it with `Ctrl-C` or `Ctrl-\`. (You might see messy output, but it’s harmless.)
+
+
+### Integrating the Script into the SlowDash Application
+Any Python script (not necessarily using SlowPy) placed in your project's `config` directory as `slowtask-XXX.py` will automatically appear in the "SlowTask" section of the SlowDash home screen, where it can be controlled via the web interface.
+
+You can also configure it to auto-start or edit directly from the browser via entries in `SlowdashProject.yaml` (see the official documentation).
+
+However, the previous script cannot be gracefully stopped yet. To allow start/stop control from the app, implement the callback functions defined by SlowDash, such as `_loop()` and `_run()`:
+
+```python
+from slowpy.control import control_system as ctrl
+device = ctrl.ethernet('172.26.0.1', 5025).scpi()
+
+from slowpy.store import DataStore_SQLite
+datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata")
+
+device.command('*RST').set()
+
+def _loop():
+    volt = device.command('MEAS:VOLT:DC?').get()
+    datastore.append({'volt': volt})
+    ctrl.sleep(1)
+```
+
+Here, `while True` is replaced by `def _loop()`.
+When executed by SlowDash, `_loop()` will be repeatedly called in a managed thread.
+
+See the "Control Script" section of the documentation for additional callbacks such as `_initialize()` and details about threads and asynchronous execution.
+
+To make the script runnable standalone, add:
+```python
+if __name__ == '__main__':
+    while True:
+        _loop()
+```
+
+Or, for graceful termination with `Ctrl-C`:
+```python
+if __name__ == '__main__':
+    ctrl.stop_by_signal()
+    while not ctrl.is_stop_requested():
+        _loop()
+```
+
+A full working example is provided in `ExampleProjects/QuickTour/RealDevice`.
+```console
+$ cd PATH/TO/SLOWDASH/ExampleProjects/QuickTour/RealDevice
+$ slowdash --port=18881
+```
+
+Open your browser at <http://localhost:18881> — you'll find "read-my" under SlowTask, with [start] and [stop] buttons.
+
+You can still run the script without the SlowDash app as before:
+```console
+$ slowdash-activate-venv
+$ python config/slowtask-read-my.py
+```
+
+### Additional Notes
+For power supply devices that need voltage control:
+```python
+from slowpy.control import control_system as ctrl
+device = ctrl.ethernet('172.26.0.1', 5025).scpi(append_opc=True)
+
+device.command('VOLT').set(3.0)    # sends "VOLT 3.0; *OPC?"
+device.command('OUTP').set('ON')   # sends "OUTP ON; *OPC?"
+```
+
+SlowPy expects every command to return a response.
+If the device doesn't normally return one, append `*OPC?` to make it respond when complete.
+You can apply this globally (as above) or per-command by:
+```python
+device.command('OUTP ON; *OPC?').set()
+```
+
+For USB or RS-232 devices, replace the Ethernet part of the control tree.
+For example, using a VISA interface:
+```python
+from slowpy.control import control_system as ctrl
+ctrl.load_control_module('VISA')    # Load VISA plugin
+device = ctrl.visa('USB00::0x2A8D::0x201:MY54700218::00::INSTR').scpi()
+
+# (rest is the same)
+```
+
+For Ethernet devices using HiSLIP, also use VISA with an address like: `TCPIP0::<IP address>::hislip0`.
+
+### Next Steps
+
+- Add a `task` entry in `SlowdashProject.yaml` to auto-launch the script.
+- Configure security in the same file to allow browser-side script editing.
+- Create UI elements (buttons, inputs) to call arbitrary Python functions from the browser.
+- Generate histograms/plots within scripts and stream or store them for display in SlowDash.
+
+See the "Project Configuration" and "Controls Script" chapters in the official documentation for details.
+
+
+### Bonus: Turning a Raspberry Pi into an SCPI Device
+The SlowPy library also includes a server-side SCPI interface, allowing any Python program to act as an SCPI-controllable device, making it fully compatible with SlowDash monitoring, control, and data storage.
+
+```python
+from slowpy.control import ScpiServer, ScpiAdapter
+
+class MyDevice(ScpiAdapter):
+    def __init__(self):
+        super().__init__(idn='MyDevice')
+
+    def do_command(self, cmd_path, params):
+        # cmd_path: list of strings, uppercase SCPI path parts (split by :)
+        # params:   list of strings, uppercase SCPI parameters (split by ,)
+        if cmd_path[0].startswith('DATA'):
+            return <data_value>
+        elif ...:
+            ...
+        return None  # Unknown command
+
+device = MyDevice()
+server = ScpiServer(device, port=5025)
+server.start()
+```
+
+In `do_command()`, simply read the command and return a string value.
+Return an empty string `""` for commands with no response, or `None` for invalid commands.
+Standard commands like `*IDN?` and `*OPC?` are already implemented in the base class, and command concatenation (`;`) is automatically handled.
+
+If you add this script to `/etc/rc.local` or a similar startup mechanism, your Raspberry Pi can act as a real SCPI device accessible over the network.
+This is convenient not only for using the attached hardware through GPIB/I2C/SPI, but also for integrating USB devices (even with a vendor-provided library) as Ethernet-SCPI devices.

@@ -98,6 +98,14 @@ id="toc-running-the-application">Running the Application</a></li>
 <li><a href="#creating-plots" id="toc-creating-plots">Creating
 Plots</a></li>
 </ul></li>
+<li><a href="#reading-data-from-hardware-devices"
+id="toc-reading-data-from-hardware-devices">Reading Data from Hardware
+Devices</a>
+<ul>
+<li><a href="#preparation" id="toc-preparation">Preparation</a></li>
+<li><a href="#target-devices" id="toc-target-devices">Target
+Devices</a></li>
+</ul></li>
 </ul>
 </nav>
 </div>
@@ -111,10 +119,10 @@ completely removed by simply deleting that directory.</p>
 <h3 id="menu">Menu</h3>
 <ul>
 <li>Configure a project by defining the user data schema</li>
-<li>Run SlowDash</li>
+<li>Run SlowDash with a dummy data</li>
 <li>Create interactive plots through the web interface</li>
-<li><del>Execute user code on the server-side</del> (coming soon)</li>
-<li><del>Send commands to user code</del> (coming soon)</li>
+<li>Write scripts to read data from devices</li>
+<li><del>Send commands to user scripts</del> (coming soon)</li>
 </ul>
 <h3 id="getting-started">Getting Started</h3>
 <p>First, create and navigate to a new project directory:</p>
@@ -158,9 +166,9 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a hr
 <span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="kw">not</span> ctrl.is_stop_requested():</span>
 <span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>        _loop()</span>
 <span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    _finalize()</span></code></pre></div>
-<p>Details of the script is described in the <a
-href="ControlsScript.html">Controls</a> section. For now just
-copy-and-past the script and use it to generate some test-data.</p>
+<p>Details of the script are described in the <a
+href="ControlsScript.html">Controls</a> section. For now, just copy and
+paste the script and use it to generate some test data.</p>
 <p>If you installed SlowPy in a virtual environment (the standard
 installation method), activate it using either:</p>
 <div class="sourceCode" id="cb3"><pre
@@ -173,8 +181,7 @@ it with simulated time-series data every second:</p>
 <div class="sourceCode" id="cb5"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 generate-testdata.py</span></span></code></pre></div>
 <p>After letting it run for about a minute, stop the script using
-<code>Ctrl</code>-<code>c</code></kbd> and examine the created
-files:</p>
+<code>Ctrl</code>-<code>c</code> and examine the created files:</p>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ ls -l</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>-rw-r--r-- 1 sanshiro sanshiro 24576 Apr 11 16:52 QuickTourTestData.db</span>
@@ -411,6 +418,323 @@ appear on the SlowDash home page.</p>
 <p>Create a new layout directly through a URL by specifying channels and
 plot types:</p>
 <pre><code>http://localhost:18881/slowplot.html?channel=ch00;ch00/ts-histogram&amp;length=360&amp;reload=60&amp;grid=2x1</code></pre>
+<h1 id="reading-data-from-hardware-devices">Reading Data from Hardware
+Devices</h1>
+<p>SlowDash consists of two parts, a web application (web server +
+browser UI) and a Python library used in user scripts. In the previous
+example with dummy data, we used this library, called SlowPy. The
+application and library work seamlessly together, but each can also
+operate independently. In this section, we’ll use the SlowPy library
+alone to read real data from a device, replacing the dummy data
+generator used in the previous section.</p>
+<h2 id="preparation">Preparation</h2>
+<p>SlowPy is installed automatically along with SlowDash. In the
+standard installation, it resides inside a virtual environment (venv).
+Please activate this venv before starting:</p>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span></code></pre></div>
+<p>You need to run this command every time you open a new terminal. If
+you’re using a dedicated SlowDash machine and no other Python
+environments, you can add the following line to your
+<code>.bashrc</code> to avoid doing it manually:</p>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> <span class="va">$SLOWDASH_DIR</span>/venv/bin/activate</span></code></pre></div>
+<h2 id="target-devices">Target Devices</h2>
+<p>Here, we’ll show an example that reads DC voltage from a
+network-controllable digital multimeter (DMM). Many DMMs share common
+command sets, and we have confirmed the following models (verified by
+ChatGPT, August 2025):</p>
+<table>
+<thead>
+<tr class="header">
+<th>Manufacturer</th>
+<th>Model</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Keysight / Agilent</td>
+<td>34460A DMM</td>
+</tr>
+<tr class="even">
+<td>Tektronix / Keithley</td>
+<td>DMM6500</td>
+</tr>
+<tr class="odd">
+<td>Rigol</td>
+<td>DM3058</td>
+</tr>
+<tr class="even">
+<td>BK Precision</td>
+<td>5492B DMM</td>
+</tr>
+</tbody>
+</table>
+<p>Similarly, many DC power supplies use the same command for output
+voltage readout. You can therefore use the same example code. The
+following models are confirmed (ChatGPT, August 2025):</p>
+<table>
+<thead>
+<tr class="header">
+<th>Manufacturer</th>
+<th>Model</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Keysight / Agilent</td>
+<td>E363x / E364x</td>
+</tr>
+<tr class="even">
+<td>Tektronix / Keithley</td>
+<td>2230G / 2231A</td>
+</tr>
+<tr class="odd">
+<td>Rohde &amp; Schwarz</td>
+<td>NGA100 series</td>
+</tr>
+<tr class="even">
+<td>Rigol</td>
+<td>DP800 / DP2000</td>
+</tr>
+<tr class="odd">
+<td>BK Precision</td>
+<td>9180 / 9190</td>
+</tr>
+</tbody>
+</table>
+<p>All of these devices are controllable via Ethernet. Before
+proceeding, make sure your device is powered on, connected to the
+network, and that you know its IP address (and port number, to be sure -
+see the manual).</p>
+<h3 id="if-no-device-is-available">If No Device Is Available</h3>
+<p>According to ChatGPT, most DMMs and power supplies share a compatible
+command set. If you have any network-controllable device that can report
+voltage, you might be able to use it here.</p>
+<p>If you don’t have access to any physical device, SlowDash provides a
+built-in simulator. You can launch it as follows:</p>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH/utils</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python ./dummy-scpi.py</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>listening at 172.26.0.1:5025</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>line terminator is: x0d</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>type Ctrl-c to stop</span></code></pre></div>
+<p>This behaves like a real device on your local network (running on
+<code>localhost</code>). Press <code>Ctrl-C</code> to stop it.</p>
+<h3 id="reading-data-from-the-device">Reading Data from the Device</h3>
+<p>All of the above devices use the SCPI (Standard Commands for
+Programmable Instruments) text-based protocol. The commands we’ll use
+here are as follows:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Action</th>
+<th>Command</th>
+<th>Example Response</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Get device ID</td>
+<td><code>*IDN?</code></td>
+<td><code>Keysight Technologies,34460A...</code></td>
+</tr>
+<tr class="even">
+<td>Reset settings</td>
+<td><code>*RST</code></td>
+<td>(no response)</td>
+</tr>
+<tr class="odd">
+<td>Read DC voltage</td>
+<td><code>MEAS:VOLT:DC?</code></td>
+<td><code>3.24</code></td>
+</tr>
+</tbody>
+</table>
+<p>In SlowPy, device control is represented as a logical control tree,
+where each node of the tree has <code>set(value)</code> and/or
+<code>get()</code>. For this SCPI example, the hierarchy looks like:</p>
+<pre><code>[Measurement System] → [Ethernet] → [SCPI Control] → [Command Nodes]</code></pre>
+<p>A complete SlowPy script to retrieve and print the device ID is:</p>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(ctrl.ethernet(<span class="st">&#39;172.26.0.1&#39;</span>, <span class="dv">5025</span>).scpi().command(<span class="st">&#39;*IDN?&#39;</span>).get())</span></code></pre></div>
+<p>Adjust the IP address and port number as needed. With this two line
+code, you can verify the connection:</p>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python read-my.py</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>Keysight Technologies,34460A...</span></code></pre></div>
+<p>Multiple calls to the connection node (<code>.ethernet()</code>) may
+or may not create a new connection every time, depending on the node
+specification and optional parameters. A common practice is to keep the
+device-level node in a variable.</p>
+<p>Example: continuously read DC voltage once per second after resetting
+the device.</p>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;172.26.0.1&#39;</span>, <span class="dv">5025</span>).scpi()</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>device.command(<span class="st">&#39;*RST&#39;</span>).<span class="bu">set</span>()</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>    volt <span class="op">=</span> device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get()</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(volt)</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span></code></pre></div>
+<p>(<code>ctrl.sleep()</code> behaves like <code>time.sleep()</code>,
+but works better with SlowDash’s signal handling.)</p>
+<h3 id="storing-data-in-a-database">Storing Data in a Database</h3>
+<p>SlowPy also provides database-write capabilities. The following code
+stores the measurements into a local SQLite database instead of printing
+them.</p>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;172.26.0.1&#39;</span>, <span class="dv">5025</span>).scpi()</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_SQLite</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_SQLite(<span class="st">&#39;sqlite:///TestData.db&#39;</span>, table<span class="op">=</span><span class="st">&quot;slowdata&quot;</span>)</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>device.command(<span class="st">&#39;*RST&#39;</span>).<span class="bu">set</span>()</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>    volt <span class="op">=</span> device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get()</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>    datastore.append({<span class="st">&#39;volt&#39;</span>: volt})</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span></code></pre></div>
+<p>Running this script instead of the dummy-data generator enables
+SlowDash to visualize real measurements. Stop it with
+<code>Ctrl-C</code> or <code>Ctrl-\</code>. (You might see messy output,
+but it’s harmless.)</p>
+<h3
+id="integrating-the-script-into-the-slowdash-application">Integrating
+the Script into the SlowDash Application</h3>
+<p>Any Python script (not necessarily using SlowPy) placed in your
+project’s <code>config</code> directory as <code>slowtask-XXX.py</code>
+will automatically appear in the “SlowTask” section of the SlowDash home
+screen, where it can be controlled via the web interface.</p>
+<p>You can also configure it to auto-start or edit directly from the
+browser via entries in <code>SlowdashProject.yaml</code> (see the
+official documentation).</p>
+<p>However, the previous script cannot be gracefully stopped yet. To
+allow start/stop control from the app, implement the callback functions
+defined by SlowDash, such as <code>_loop()</code> and
+<code>_run()</code>:</p>
+<div class="sourceCode" id="cb31"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;172.26.0.1&#39;</span>, <span class="dv">5025</span>).scpi()</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_SQLite</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_SQLite(<span class="st">&#39;sqlite:///QuickTourTestData.db&#39;</span>, table<span class="op">=</span><span class="st">&quot;testdata&quot;</span>)</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>device.command(<span class="st">&#39;*RST&#39;</span>).<span class="bu">set</span>()</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>    volt <span class="op">=</span> device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get()</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>    datastore.append({<span class="st">&#39;volt&#39;</span>: volt})</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span></code></pre></div>
+<p>Here, <code>while True</code> is replaced by
+<code>def _loop()</code>. When executed by SlowDash,
+<code>_loop()</code> will be repeatedly called in a managed thread.</p>
+<p>See the “Control Script” section of the documentation for additional
+callbacks such as <code>_initialize()</code> and details about threads
+and asynchronous execution.</p>
+<p>To make the script runnable standalone, add:</p>
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>        _loop()</span></code></pre></div>
+<p>Or, for graceful termination with <code>Ctrl-C</code>:</p>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    ctrl.stop_by_signal()</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="kw">not</span> ctrl.is_stop_requested():</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>        _loop()</span></code></pre></div>
+<p>A full working example is provided in
+<code>ExampleProjects/QuickTour/RealDevice</code>.</p>
+<div class="sourceCode" id="cb34"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH/ExampleProjects/QuickTour/RealDevice</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash --port=18881</span></span></code></pre></div>
+<p>Open your browser at <a href="http://localhost:18881"
+class="uri">http://localhost:18881</a> — you’ll find “read-my” under
+SlowTask, with [start] and [stop] buttons.</p>
+<p>You can still run the script without the SlowDash app as before:</p>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python config/slowtask-read-my.py</span></span></code></pre></div>
+<h3 id="additional-notes">Additional Notes</h3>
+<p>For power supply devices that need voltage control:</p>
+<div class="sourceCode" id="cb36"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;172.26.0.1&#39;</span>, <span class="dv">5025</span>).scpi(append_opc<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>device.command(<span class="st">&#39;VOLT&#39;</span>).<span class="bu">set</span>(<span class="fl">3.0</span>)    <span class="co"># sends &quot;VOLT 3.0; *OPC?&quot;</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>device.command(<span class="st">&#39;OUTP&#39;</span>).<span class="bu">set</span>(<span class="st">&#39;ON&#39;</span>)   <span class="co"># sends &quot;OUTP ON; *OPC?&quot;</span></span></code></pre></div>
+<p>SlowPy expects every command to return a response. If the device
+doesn’t normally return one, append <code>*OPC?</code> to make it
+respond when complete. You can apply this globally (as above) or
+per-command by:</p>
+<div class="sourceCode" id="cb37"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>device.command(<span class="st">&#39;OUTP ON; *OPC?&#39;</span>).<span class="bu">set</span>()</span></code></pre></div>
+<p>For USB or RS-232 devices, replace the Ethernet part of the control
+tree. For example, using a VISA interface:</p>
+<div class="sourceCode" id="cb38"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>ctrl.load_control_module(<span class="st">&#39;VISA&#39;</span>)    <span class="co"># Load VISA plugin</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.visa(<span class="st">&#39;USB00::0x2A8D::0x201:MY54700218::00::INSTR&#39;</span>).scpi()</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="co"># (rest is the same)</span></span></code></pre></div>
+<p>For Ethernet devices using HiSLIP, also use VISA with an address
+like: <code>TCPIP0::&lt;IP address&gt;::hislip0</code>.</p>
+<h3 id="next-steps">Next Steps</h3>
+<ul>
+<li>Add a <code>task</code> entry in <code>SlowdashProject.yaml</code>
+to auto-launch the script.</li>
+<li>Configure security in the same file to allow browser-side script
+editing.</li>
+<li>Create UI elements (buttons, inputs) to call arbitrary Python
+functions from the browser.</li>
+<li>Generate histograms/plots within scripts and stream or store them
+for display in SlowDash.</li>
+</ul>
+<p>See the “Project Configuration” and “Controls Script” chapters in the
+official documentation for details.</p>
+<h3 id="bonus-turning-a-raspberry-pi-into-an-scpi-device">Bonus: Turning
+a Raspberry Pi into an SCPI Device</h3>
+<p>The SlowPy library also includes a server-side SCPI interface,
+allowing any Python program to act as an SCPI-controllable device,
+making it fully compatible with SlowDash monitoring, control, and data
+storage.</p>
+<div class="sourceCode" id="cb39"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ScpiServer, ScpiAdapter</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyDevice(ScpiAdapter):</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>(idn<span class="op">=</span><span class="st">&#39;MyDevice&#39;</span>)</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> do_command(<span class="va">self</span>, cmd_path, params):</span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>        <span class="co"># cmd_path: list of strings, uppercase SCPI path parts (split by :)</span></span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>        <span class="co"># params:   list of strings, uppercase SCPI parameters (split by ,)</span></span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> cmd_path[<span class="dv">0</span>].startswith(<span class="st">&#39;DATA&#39;</span>):</span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="op">&lt;</span>data_value<span class="op">&gt;</span></span>
+<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> ...:</span>
+<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a>            ...</span>
+<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">None</span>  <span class="co"># Unknown command</span></span>
+<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> MyDevice()</span>
+<span id="cb39-17"><a href="#cb39-17" aria-hidden="true" tabindex="-1"></a>server <span class="op">=</span> ScpiServer(device, port<span class="op">=</span><span class="dv">5025</span>)</span>
+<span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a>server.start()</span></code></pre></div>
+<p>In <code>do_command()</code>, simply read the command and return a
+string value. Return an empty string <code>""</code> for commands with
+no response, or <code>None</code> for invalid commands. Standard
+commands like <code>*IDN?</code> and <code>*OPC?</code> are already
+implemented in the base class, and command concatenation
+(<code>;</code>) is automatically handled.</p>
+<p>If you add this script to <code>/etc/rc.local</code> or a similar
+startup mechanism, your Raspberry Pi can act as a real SCPI device
+accessible over the network. This is convenient not only for using the
+attached hardware through GPIB/I2C/SPI, but also for integrating USB
+devices (even with a vendor-provided library) as Ethernet-SCPI
+devices.</p>
 
 
 </body>
