@@ -273,6 +273,10 @@ Wait for RabbitMQ to become ready (approximately 30 seconds). Then open a web br
 On the SlowDash home page, the "SlowDash, SlowPlot, SlowCruise" panel (top right) has one icon titled "Manual Entry".
 Clicking it will open a layout as shown in the screenshot above.
 
+When a new name is entered (`peacheese` in the screenshot), it will create a new endoint in the database.
+If the channel does not show up in the SlowDash "Channel List" after some time, click the "refresh" button on top of the list.
+Reloading the browser page might be necessary.
+
 To stop, press `Ctrl+C` in the terminal. Run `docker compose down` before running another example.
 
 ### Setup Procedure for your project
@@ -451,9 +455,9 @@ if __name__ == '__main__':
 ### How it works
 This example demonstrates how to create a complete Dripline service that handles SET/GET/CMD requests and generates continuous data streams. The system simulates a hardware device with configurable parameters and real-time data generation.
 
-**Service Architecture**:
-
 **RandomWalk Service (`slowtask-randomwalk-service.py`)**:
+- In SlowTask modules, `_initialize()`, `_run()`, and `_finalize()` functions are called by SlowDash in this order (if defined, among some others).
+
 - The SlowPy node, `dripline.service(handler)`, receives the SET/GET/CMD Dripline commands, passes them to the service handler, and sends back the reply. The `.aio_start()` method creates an asynchronous task.
 
 - The user `RandomwalkService` class is a service handler that simulates a hardware device:
@@ -461,6 +465,8 @@ This example demonstrates how to create a complete Dripline service that handles
   - The SlowPy node calls user's `on_set()` when it receives a Dripline SET request.
   - Similarly, `on_get()` and `on_command()` will be called for the GET and CMD requests, respectively, if defined
   - The `run()` method starts an asynchronous task to produce the random walk data
+
+- The last block with a Tasklet allows running this SlowTask as an independent process, instead of a loaded module to the SlowDash server process, to deploy SlowTasks over a distributed multinode/multiprocess system, or to run in an independent Docker container. This feature is not used in this example.
 
 **Control Interface (`slowtask-control-randomwalk.py`)**:
 - Similar to the control-peaches examples, this SlowTask connects user controls on the Web Interface to the Dripline endpoints.
