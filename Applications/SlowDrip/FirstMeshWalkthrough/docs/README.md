@@ -9,8 +9,64 @@ It provides a series of step-by-step examples, from basic visualization to fully
 - Example 4: Sending (sensor) data values to the Dripline Mesh / Entering manual values
 - Example 5: Handling SET/GET/CMD commands from other Dripline services
 
+## TL;DR
+#### Making a connection
+```python
+from slowpy.control import control_system as ctrl
+ctrl.import_control_module('Dripline')
+dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
+```
 
-## Plotting
+Or to use the "Async" version,
+```python
+from slowpy.control import control_system as ctrl
+ctrl.import_control_module('AsyncDripline')
+dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
+```
+Use `aio_set()` and `aio_get()` instead of `get()` and `set()`.
+
+#### Setting a value to an endpoint
+```python
+dripline.endpoint(name).set(value)
+```
+
+#### Getting a value_raw from an endpoint
+```python
+value = dripline.endpoint(name).value_raw().get()
+```
+
+#### Setting a value to an endpoint with ramping (or any SlowPy logic inserted)
+```python
+dripline.endpoint(name).ramping(change_per_sec).set(value)
+```
+
+#### Getting the ramping status / control ramping
+```python
+status = dripline.endpoint(name).ramping().status().get()
+dripline.endpoint(name).ramping().status().set(0)  # stop ramping
+```
+
+#### Sending data values (which will be stored together with other sensor values)
+```python
+dripline.sensor_value_alert(name=name).set(value)
+```
+
+#### Running a service (handling SET/GET/CMD requests)
+Avaialble only with the async version.
+```python
+await dripline.service(handler).aio_start()
+```
+where the `handler` implements the `on_set(message)` method (either async or not):
+```python
+class RandomwalkService:
+    async def on_set(self, message):
+        print(message.parameters['routing_key'])              # request-sender name
+        print(message.body)                                   # parsed JSON data
+        return { 'reply': 'your message has been received' }  # data body to return
+```
+
+
+## Example 01: Plotting
 ### Objectives
 This example shows how to add SlowDash data visualization to the Dripline First-Mesh Walkthrough.
 
@@ -89,7 +145,7 @@ CREATE TABLE numeric_data (
 ```
 which is defined in the Dripline's PostgreSQL configuration (FirstMesh Walkthrough).
 
-## Controlling Endpoints
+## Example 02: Controlling Endpoints
 ### Objectives
 This example shows:
 - How to bind user Python code to SlowDash GUI
@@ -171,7 +227,7 @@ This example demonstrates the integration between SlowDash's web interface and D
 - The `system.our_security_is_perfect: true` setting enables the Python script editor in the web interface; remove this section if there are any security concerns.
 
 
-## Controlling Endpoints with Slowpy Logic
+## Example 03: Controlling Endpoints with Slowpy Logic
 ### Objectives
 By advancing the previous example, this example shows:
 - How to use control logics (such as ramping) in SlowDash Python library (SlowPy)
@@ -255,7 +311,7 @@ This example extends the basic control functionality by introducing SlowPy contr
 - SlowPy node values can be exported to external systems such as web browsers, by `ctrl.export()`.
 
 
-## Writing (Sensor) Data Values / Manual Entry
+## Example 04: Writing (Sensor) Data Values / Manual Entry
 ### Objectives
 This example shows how to send Dripline alert messages (such as sensor value alerts), with an application of manually putting data from the SlowDash GUI.
 
@@ -324,7 +380,7 @@ This example demonstrates how to send sensor data values to the Dripline mesh. I
 - `dripline.sensor_value_alert(name)` will create a new SlowPy node to send alert messages.
 
 
-## Handling SET/GET/CMD Requests
+## Example 05: Handling SET/GET/CMD Requests
 ### Objectives
 Finally, this example shows how to make a fully featured Dripline service, which handles SET/GET/CMD requests from other Dripline services. 
 This example sends out random walk data as a proxy of hardware readout data, with multiple parameter settings each of which is an endpoint.
