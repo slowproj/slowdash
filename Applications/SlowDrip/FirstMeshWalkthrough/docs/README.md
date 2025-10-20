@@ -10,20 +10,21 @@ It provides a series of step-by-step examples, from basic visualization to fully
 - Example 5: Handling SET/GET/CMD commands from other Dripline services
 
 ## TL;DR
-#### Making a connection
+This section is a highly distilled summary for quick reference.
+Details are explained in the following sections.
+
+#### Making a connection to Dripline Mesh
 ```python
 from slowpy.control import control_system as ctrl
 ctrl.import_control_module('Dripline')
 dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
 ```
 
-Or to use the "Async" version,
+Or to use the "Async" version, import `AsyncDripline` instead of `Dripline`:
 ```python
-from slowpy.control import control_system as ctrl
 ctrl.import_control_module('AsyncDripline')
-dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
 ```
-Use `aio_set()` and `aio_get()` instead of `get()` and `set()`.
+and use `aio_set()` and `aio_get()` instead of `get()` and `set()`.
 
 #### Setting a value to an endpoint
 ```python
@@ -58,11 +59,12 @@ await dripline.service(handler).aio_start()
 ```
 where the `handler` implements the `on_set(message)` method (either async or not):
 ```python
-class RandomwalkService:
+class MyHandler:
     async def on_set(self, message):
         print(message.parameters['routing_key'])              # request-sender name
         print(message.body)                                   # parsed JSON data
         return { 'reply': 'your message has been received' }  # data body to return
+handler = MyHandler()        
 ```
 
 
