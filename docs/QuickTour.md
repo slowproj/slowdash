@@ -343,7 +343,7 @@ type Ctrl-c to stop
 This behaves like a real device on your local network (running on `localhost`). Press `Ctrl-C` to stop it.
 
 
-### Reading Data from the Device
+## Reading Data from the Device
 All of the above devices use the SCPI (Standard Commands for Programmable Instruments) text-based protocol.
 The commands we'll use here are as follows:
 
@@ -387,7 +387,7 @@ while True:
 ```
 (`ctrl.sleep()` behaves like `time.sleep()`, but works better with SlowDash’s signal handling.)
 
-### Storing Data in a Database
+## Storing Data in a Database
 SlowPy also provides database-write capabilities.
 The following code stores the measurements into a local SQLite database instead of printing them.
 ```python
@@ -408,7 +408,7 @@ Running this script instead of the dummy-data generator enables SlowDash to visu
 Stop it with `Ctrl-C` or `Ctrl-\`. (You might see messy output, but it’s harmless.)
 
 
-### Integrating the Script into the SlowDash Application
+## Integrating the Script into the SlowDash Application
 Any Python script (not necessarily using SlowPy) placed in your project's `config` directory as `slowtask-XXX.py` will automatically appear in the "SlowTask" section of the SlowDash home screen, where it can be controlled via the web interface.
 
 You can also configure it to auto-start or edit directly from the browser via entries in `SlowdashProject.yaml` (see the official documentation).
@@ -464,7 +464,7 @@ $ slowdash-activate-venv
 $ python config/slowtask-read-my.py
 ```
 
-### Additional Notes
+## Additional Notes
 For power supply devices that need voltage control:
 ```python
 from slowpy.control import control_system as ctrl
@@ -493,7 +493,7 @@ device = ctrl.visa('USB00::0x2A8D::0x201:MY54700218::00::INSTR').scpi()
 
 For Ethernet devices using HiSLIP, also use VISA with an address like: `TCPIP0::<IP address>::hislip0`.
 
-### Next Steps
+## Next Steps
 
 - Add a `task` entry in `SlowdashProject.yaml` to auto-launch the script.
 - Configure security in the same file to allow browser-side script editing.
@@ -503,7 +503,7 @@ For Ethernet devices using HiSLIP, also use VISA with an address like: `TCPIP0::
 See the "Project Configuration" and "Controls Script" chapters in the official documentation for details.
 
 
-### Bonus: Turning a Raspberry Pi into an SCPI Device
+## Bonus: Turning a Raspberry Pi into an SCPI Device
 The SlowPy library also includes a server-side SCPI interface, allowing any Python program to act as an SCPI-controllable device, making it fully compatible with SlowDash monitoring, control, and data storage.
 
 ```python

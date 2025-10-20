@@ -105,6 +105,20 @@ Devices</a>
 <li><a href="#preparation" id="toc-preparation">Preparation</a></li>
 <li><a href="#target-devices" id="toc-target-devices">Target
 Devices</a></li>
+<li><a href="#reading-data-from-the-device"
+id="toc-reading-data-from-the-device">Reading Data from the
+Device</a></li>
+<li><a href="#storing-data-in-a-database"
+id="toc-storing-data-in-a-database">Storing Data in a Database</a></li>
+<li><a href="#integrating-the-script-into-the-slowdash-application"
+id="toc-integrating-the-script-into-the-slowdash-application">Integrating
+the Script into the SlowDash Application</a></li>
+<li><a href="#additional-notes" id="toc-additional-notes">Additional
+Notes</a></li>
+<li><a href="#next-steps" id="toc-next-steps">Next Steps</a></li>
+<li><a href="#bonus-turning-a-raspberry-pi-into-an-scpi-device"
+id="toc-bonus-turning-a-raspberry-pi-into-an-scpi-device">Bonus: Turning
+a Raspberry Pi into an SCPI Device</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -522,7 +536,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>type Ctrl-c to stop</span></code></pre></div>
 <p>This behaves like a real device on your local network (running on
 <code>localhost</code>). Press <code>Ctrl-C</code> to stop it.</p>
-<h3 id="reading-data-from-the-device">Reading Data from the Device</h3>
+<h2 id="reading-data-from-the-device">Reading Data from the Device</h2>
 <p>All of the above devices use the SCPI (Standard Commands for
 Programmable Instruments) text-based protocol. The commands we’ll use
 here are as follows:</p>
@@ -584,7 +598,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb29-1"><a h
 <span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span></code></pre></div>
 <p>(<code>ctrl.sleep()</code> behaves like <code>time.sleep()</code>,
 but works better with SlowDash’s signal handling.)</p>
-<h3 id="storing-data-in-a-database">Storing Data in a Database</h3>
+<h2 id="storing-data-in-a-database">Storing Data in a Database</h2>
 <p>SlowPy also provides database-write capabilities. The following code
 stores the measurements into a local SQLite database instead of printing
 them.</p>
@@ -605,9 +619,9 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb30-1"><a h
 SlowDash to visualize real measurements. Stop it with
 <code>Ctrl-C</code> or <code>Ctrl-\</code>. (You might see messy output,
 but it’s harmless.)</p>
-<h3
+<h2
 id="integrating-the-script-into-the-slowdash-application">Integrating
-the Script into the SlowDash Application</h3>
+the Script into the SlowDash Application</h2>
 <p>Any Python script (not necessarily using SlowPy) placed in your
 project’s <code>config</code> directory as <code>slowtask-XXX.py</code>
 will automatically appear in the “SlowTask” section of the SlowDash home
@@ -661,7 +675,7 @@ SlowTask, with [start] and [stop] buttons.</p>
 <div class="sourceCode" id="cb35"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python config/slowtask-read-my.py</span></span></code></pre></div>
-<h3 id="additional-notes">Additional Notes</h3>
+<h2 id="additional-notes">Additional Notes</h2>
 <p>For power supply devices that need voltage control:</p>
 <div class="sourceCode" id="cb36"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
@@ -685,7 +699,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb38-1"><a h
 <span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="co"># (rest is the same)</span></span></code></pre></div>
 <p>For Ethernet devices using HiSLIP, also use VISA with an address
 like: <code>TCPIP0::&lt;IP address&gt;::hislip0</code>.</p>
-<h3 id="next-steps">Next Steps</h3>
+<h2 id="next-steps">Next Steps</h2>
 <ul>
 <li>Add a <code>task</code> entry in <code>SlowdashProject.yaml</code>
 to auto-launch the script.</li>
@@ -698,8 +712,8 @@ for display in SlowDash.</li>
 </ul>
 <p>See the “Project Configuration” and “Controls Script” chapters in the
 official documentation for details.</p>
-<h3 id="bonus-turning-a-raspberry-pi-into-an-scpi-device">Bonus: Turning
-a Raspberry Pi into an SCPI Device</h3>
+<h2 id="bonus-turning-a-raspberry-pi-into-an-scpi-device">Bonus: Turning
+a Raspberry Pi into an SCPI Device</h2>
 <p>The SlowPy library also includes a server-side SCPI interface,
 allowing any Python program to act as an SCPI-controllable device,
 making it fully compatible with SlowDash monitoring, control, and data
