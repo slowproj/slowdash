@@ -38,7 +38,7 @@ value = dripline.endpoint(name).value_raw().get()
 
 #### Setting a value to an endpoint with ramping (or any SlowPy logic inserted)
 ```python
-dripline.endpoint(name).ramping(change_per_sec).set(value)
+dripline.endpoint(name).ramping(changes_per_sec).set(value)
 ```
 
 #### Getting the ramping status / control ramping
@@ -49,8 +49,12 @@ dripline.endpoint(name).ramping().status().set(0)  # stop ramping
 
 #### Sending data values (which will be stored together with other sensor values)
 ```python
-dripline.sensor_value_alert(name=name).set(value)
+dripline.sensor_value_alert(endpoint_name).set(value)
 ```
+where `value` is one of these:
+- a scaler for `value_raw`
+- a tuple of two scalars for `value_raw` and `value_cal`
+- a dict for as-is
 
 #### Running a service (handling SET/GET/CMD requests)
 Avaialble only with the async version.
