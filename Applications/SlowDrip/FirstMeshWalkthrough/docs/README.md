@@ -1,6 +1,7 @@
 Dripline with SlowDash
 ======================
-This directory includes several examples for different use case levels.
+This document demonstrates how to integrate SlowDash with Dripline.
+It provides a series of step-by-step examples, from basic visualization to fully functional Dripline services.
 
 - Example 1: Adding SlowDash data visualization to Dripline
 - Example 2: Sending SET/GET/CMD commands to Dripline endpoints
@@ -23,7 +24,7 @@ The `01_Plotting` directory includes the complete set of files. Run `docker comp
 cd 01_Plotting
 docker compose up
 ```
-Wait for RabbitMQ to become ready (approximately 30 seconds). Then open a web browser and navigate to `http://localhost:18881`. On the SlowDash home page, the top left panel ("Data Channels") shows a list of data channels (endpoints). Clicking a channel name will create an initial layout with a plot panel. You can modify the panel and add more panels to the layout.
+Wait for RabbitMQ to become ready (approximately 30 seconds). Then open a web browser and navigate to `http://localhost:18881`. On the SlowDash home page, the Data Channels panel (top left) shows a list of data channels (endpoints). Clicking a channel name will create an initial layout with a plot panel. You can modify the panel and add more panels to the layout.
 
 To stop, press `Ctrl+C` in the terminal. Run `docker compose down` before running another example.
 
@@ -105,7 +106,7 @@ cd 02_Control
 docker compose up
 ```
 Wait for RabbitMQ to become ready (approximately 30 seconds). Then open a web browser and navigate to `http://localhost:18881`.
-On the SlowDash home page, the top right panel ("SlowDash, SlowPlot, SlowCruise") has one icon titled "Control Peaches".
+On the SlowDash home page, the "SlowDash, SlowPlot, SlowCruise" panel (top right) has one icon titled "Control Peaches".
 Clicking it will open a layout as shown in the screenshot above.
 
 To stop, press `Ctrl+C` in the terminal. Run `docker compose down` before running another example.
@@ -190,7 +191,7 @@ docker compose up
 Wait for RabbitMQ to become ready (approximately 30 seconds). Then open a web browser and navigate to `http://localhost:18881`.
 
 To stop, press `Ctrl+C` in the terminal. Run `docker compose down` before running another example.
-On the SlowDash home page, the top right panel ("SlowDash, SlowPlot, SlowCruise") has one icon titled "Control Peaches".
+On the SlowDash home page, the "SlowDash, SlowPlot, SlowCruise" panel (top right) has one icon titled "Control Peaches".
 Clicking it will open a layout as shown in the screenshot above.
 
 ### Setup Procedure for your project
@@ -269,7 +270,7 @@ cd 04_ManualEntry
 docker compose up
 ```
 Wait for RabbitMQ to become ready (approximately 30 seconds). Then open a web browser and navigate to `http://localhost:18881`.
-On the SlowDash home page, the top right panel ("SlowDash, SlowPlot, SlowCruise") has one icon titled "Manual Entry".
+On the SlowDash home page, the "SlowDash, SlowPlot, SlowCruise" panel (top right) has one icon titled "Manual Entry".
 Clicking it will open a layout as shown in the screenshot above.
 
 To stop, press `Ctrl+C` in the terminal. Run `docker compose down` before running another example.
@@ -335,7 +336,7 @@ cd 05_Service
 docker compose up
 ```
 Wait for RabbitMQ to become ready (approximately 30 seconds). Then open a web browser and navigate to `http://localhost:18881`.
-On the SlowDash home page, the top right panel ("SlowDash, SlowPlot, SlowCruise") has one icon titled "randomWalk-control".
+On the SlowDash home page, the "SlowDash, SlowPlot, SlowCruise" panel (top right) has one icon titled "randomWalk-control".
 Clicking it will open a layout as shown in the screenshot above.
 
 To stop, press `Ctrl+C` in the terminal. Run `docker compose down` before running another example.
