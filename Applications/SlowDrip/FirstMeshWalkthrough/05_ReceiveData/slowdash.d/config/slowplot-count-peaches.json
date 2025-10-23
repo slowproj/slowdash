@@ -1,0 +1,102 @@
+{
+    "control": {
+        "range": { "length": 900, "to": null },
+        "reload": 2,
+        "mode": "normal",
+        "grid": { "rows": 2, "columns": 2 }
+    },
+    "style": { },
+    "panels": [
+        {
+            "type": "timeaxis",
+            "plots": [
+                { "type": "timeseries", "channel": "peaches", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100", "fill_envelope": false }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
+            "legend": { "style": "side" }
+        },
+        {
+            "type": "timeaxis",
+            "plots": [
+                { "type": "timeseries", "channel": "peaches:value_cal", "color": "#dd8000", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100", "fill_envelope": false }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 0, "ymax": 30 },
+            "legend": { "style": "side" }
+        },
+        {
+            "type": "singles",
+            "item_type": "square",
+            "items": [
+                {
+                    "channel": "peaches.n",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "label": "Peaches count"
+                },
+                {
+                    "channel": "chips.n",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "label": "Chips count"
+                },
+                {
+                    "channel": "waffles.n",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "label": "Waffles count"
+                },
+                {
+                    "channel": "peaches.mean",
+                    "gauge": { "min": 0, "max": 2 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 1 },
+                        "warn": { "min": 0, "max": 1.5 },
+                        "error": { "min": 0, "max": 100 }
+                    },
+                    "label": "Peaches mean",
+                    "format": "%.2f"
+                },
+                {
+                    "channel": "chips.mean",
+                    "gauge": { "min": 0, "max": 2 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 1 },
+                        "warn": { "min": 0, "max": 1.5 },
+                        "error": { "min": 0, "max": 100 }
+                    },
+                    "label": "Chips mean",
+                    "format": "%.2f"
+                },
+                {
+                    "channel": "waffles.mean",
+                    "gauge": { "min": 0, "max": 2 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 1 },
+                        "warn": { "min": 0, "max": 1.5 },
+                        "error": { "min": 0, "max": 100 }
+                    },
+                    "label": "Waffles mean",
+                    "format": "%.2f"
+                }
+            ],
+            "color": { "base": "rgb(0, 0, 0)", "normal": "#06b6d4", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.1 },
+            "grid": { "rows": 2, "columns": 3 },
+            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+            "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false },
+            "title": "Stats"
+        }
+    ],
+    "meta": { "name": "peaches-control", "title": "", "description": "" }
+}

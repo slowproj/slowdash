@@ -1,0 +1,29 @@
+name: my_store
+module: Service
+dripline_mesh:
+  broker: rabbit-broker
+  
+endpoints:
+  - name: peaches
+    module: KeyValueStore
+    calibration: '2*{}'
+    initial_value: 0.75
+    log_interval: 10
+    get_on_set: True
+    log_on_set: True
+          
+  - name: chips
+    module: KeyValueStore
+    calibration: 'times3({})'
+    initial_value: 1.75
+    log_interval: 10
+    get_on_set: True
+    log_on_set: True
+          
+  - name: waffles
+    module: KeyValueStore
+    calibration: '1.*{}'
+    initial_value: 4.00
+    log_interval: 10
+    get_on_set: True
+    log_on_set: True

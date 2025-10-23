@@ -417,7 +417,7 @@ class ServiceNode(ControlNode):
         if operation < 0: # reply message
             return
         
-        print(f'REQUEST: key={routing_key}, op={operation}, body={message.body}')
+        logging.debug(f'REQUEST: key={routing_key}, op={operation}, body={message.body}')
 
         reply = None
         if operation == 0:

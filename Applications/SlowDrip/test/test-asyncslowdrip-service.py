@@ -14,10 +14,15 @@ async def _initialize(params):
 
 
 async def _run():
-    await asyncio.gather(run_queue(), run_alert(), run_service(), do())
+    await asyncio.gather(
+        run_queue(),
+        run_alert(),
+        run_service(),
+        send_requests()
+    )
     
 
-async def do():
+async def send_requests():
     peaches = dripline.endpoint('peaches')
     await peaches.aio_set(30000)
     
