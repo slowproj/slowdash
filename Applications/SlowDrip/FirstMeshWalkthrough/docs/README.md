@@ -1,70 +1,71 @@
 Dripline with SlowDash
 ======================
-SlowDash provides an interactive data visualization and control panel front-end GUI that integrates with back-end user Python scripts (SlowTask). 
-The SlowDash Python library, SlowPy, is designed for use in SlowTask scripts and implements convenient methods to interact with measurement devices and systems, including Dripline.
 
-This document describes how to integrate a Dripline system with SlowDash, using a Dripline system example from the Dripline First-Mesh tutorial.
-It provides a series of step-by-step examples, from basic visualization to fully functional Dripline services.
+SlowDash provides an interactive data visualization and control panel front-end GUI that integrates with back-end user Python scripts (SlowTask).
+The SlowDash Python library, SlowPy, is designed for use within SlowTask scripts and offers convenient methods to interact with measurement devices and systems, including Dripline.
+
+This document explains how to integrate a Dripline system with SlowDash, using a Dripline system example from the Dripline First-Mesh tutorial.
+It provides a series of step-by-step examples, ranging from basic visualization to fully functional Dripline services.
 
 - Example 1: Adding SlowDash data visualization to Dripline
 - Example 2: Sending SET/GET/CMD commands to Dripline endpoints
-- Example 3: Controlling Dripline endpoints with SlowDash Python library (SlowPy)
-- Example 4: Sending (sensor) data values to the Dripline Mesh / Entering manual values
-- Example 5 Receiving (sensor) data values from other Dripline endpoints
+- Example 3: Controlling Dripline endpoints with the SlowDash Python library (SlowPy)
+- Example 4: Sending (sensor) data values to the Dripline Mesh / Manual data entry
+- Example 5: Receiving (sensor) data values from other Dripline endpoints
 - Example 6: Handling SET/GET/CMD commands from other Dripline components
 
-These examples make extensive use of the chain-of-control-nodes structure in the SlowPy library and the Dashboard-Script interconnect.
-For details on these features, refer to the "Controls Script" section of the SlowDash documentation.
+These examples make extensive use of the chain-of-control-nodes structure in the SlowPy library and the Dashboard–Script interconnection.
+For details on these features, refer to the “Control Script” section of the SlowDash documentation.
 
 ## TL;DR
-This section is a highly distilled summary for quick reference.
-Details are explained in the following sections.
+This section provides a concise summary for quick reference.
+Detailed explanations are given in the following sections.
 
-#### Making a connection to Dripline Mesh
+#### Connecting to the Dripline Mesh
 ```python
 from slowpy.control import control_system as ctrl
 ctrl.import_control_module('Dripline')
 dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
 ```
 
-Or to use the "Async" version, import `AsyncDripline` instead of `Dripline`:
+To use the asynchronous version, import `AsyncDripline` instead of `Dripline`:
 ```python
 ctrl.import_control_module('AsyncDripline')
 ```
-and use `aio_set()` and `aio_get()` instead of `get()` and `set()`.
+Then use `aio_set()` and `aio_get()` instead of `set()` and `get()`.
 
-#### Setting a value to an endpoint
+#### Setting a value on an endpoint
 ```python
 dripline.endpoint(name).set(value)
 ```
 
-#### Getting a value_raw from an endpoint
+#### Getting a raw value from an endpoint
 ```python
 value = dripline.endpoint(name).value_raw().get()
 ```
 
-#### Setting a value to an endpoint with ramping (or any SlowPy logic inserted)
+#### Setting a value with ramping (or other SlowPy logic)
 ```python
 dripline.endpoint(name).ramping(changes_per_sec).set(value)
 ```
 
-#### Getting the ramping status / controlling ramping
+#### Checking or controlling ramping status
 ```python
 status = dripline.endpoint(name).ramping().status().get()
 dripline.endpoint(name).ramping().status().set(0)  # stop ramping
 ```
 
-#### Sending data values (which will be stored together with other sensor values)
+#### Sending data values (typically stored together with other sensor values)
 ```python
 dripline.sensor_value_alert(endpoint_name).set(value)
 ```
-where `value` is one of these:
+where `value` may be:
 - a scalar for `value_raw`
 - a tuple of two scalars for `value_raw` and `value_cal`
-- a dict for as-is
+- a dictionary (used as-is)
 
-#### Receiving data values
-Available only with the async version.
+#### Receiving data values  
+Available only in the async version:
 ```python
 message = await dripline.sensor_value_queue().aio_get()
 if message is not None and message.body is not None:
@@ -72,48 +73,48 @@ if message is not None and message.body is not None:
     timestamp = message.headers.get('timestamp', None)
     value_raw = message.body.get('value_raw', None)
 ```
-Empty replies can be returned on SlowDash shutdown or when the connection is closed by the broker.
+Empty replies may occur when SlowDash shuts down or when the broker closes the connection.
 
-#### Handling SET/GET/CMD requests (with sending out heartbeats)
-Available only with the async version.
+#### Handling SET/GET/CMD requests (and sending heartbeats)  
+Available only in the async version:
 ```python
 await dripline.service(handler).aio_start()
 ```
-where the `handler` implements the `on_set(message)` method (either async or not):
+where `handler` implements an `on_set(message)` method (either async or not):
 ```python
 class MyHandler:
     async def on_set(self, message):
         print(message.body)                                   # parsed JSON data
-        return { 'reply': 'your message has been received' }  # data body to return
-handler = MyHandler()        
+        return {'reply': 'Your message has been received'}     # data body to return
+handler = MyHandler()
 ```
-
 
 ## Example 01: Plotting
 ### Objectives
-This example shows how to add SlowDash data visualization to the Dripline First-Mesh Walkthrough.
+This example demonstrates how to add SlowDash data visualization to the Dripline First-Mesh Walkthrough.
 
 | Screenshot |
 |------------|
 |<img src="FirstMeshPlotting.png" width="100%">|
 
 ### Running the Example
-The `01_Plotting` directory includes the complete set of files. Run `docker compose` at the directory:
+The `01_Plotting` directory contains the complete set of files. Run the following command:
 ```bash
 cd 01_Plotting
 docker compose up
 ```
-Wait for RabbitMQ to become ready (approximately 30 seconds). Then open a web browser and navigate to `http://localhost:18881`. On the SlowDash home page, the Data Channels panel (top left) shows a list of data channels (endpoints). Clicking a channel name will create an initial layout with a plot panel. You can modify the panel and add more panels to the layout.
+Wait for RabbitMQ to become ready (about 30 seconds). Then open a web browser and navigate to `http://localhost:18881`.
+On the SlowDash home page, the Data Channels panel (top left) lists data channels (endpoints). Clicking a channel name creates an initial layout with a plot panel. You can modify or add panels to the layout.
 
 To stop, press `Ctrl+C` in the terminal. Run `docker compose down` before running another example.
 
-### Setup Procedure for your project
-1. Add a SlowDash container in your docker compose
-2. Optionally, make a SlowDash working directory (`slowdash.d` in the example)
-3. Write a SlowDash configuration file
+### Setup Procedure for Your Project
+1. Add a SlowDash container in your Docker Compose file.
+2. Optionally, create a SlowDash working directory (`slowdash.d` in this example).
+3. Write a SlowDash configuration file.
 
 #### Step 1
-Append the following block to your `docker-compose.yaml`
+Append the following block to your `docker-compose.yaml`:
 ```yaml
   slowdash:
     image: slowproj/slowdash
@@ -135,7 +136,7 @@ cd slowdash.d
 ```
 
 #### Step 3
-Create a `SlowdashProject.yaml` file with the following contents:
+Create a `SlowdashProject.yaml` file with the following content:
 ```yaml
 slowdash_project:
   name: DriplineFirstMesh
@@ -148,57 +149,57 @@ slowdash_project:
         schema: numeric_data [sensor_name] @timestamp(with timezone) = value_raw(default), value_cal
 ```
 
-### How it works
-For data visualization, SlowDash needs to know at least the location of the data (database URL) and the format of the data ("schema").
-The `data_source` section of the SlowDash configuration file describes these.
+### How It Works
+For data visualization, SlowDash requires at least the data source location (database URL) and the data format (“schema”).
+The `data_source` section in the SlowDash configuration file defines these.
 
-The schema defines the names of the table and columns, and describes which columns are for timestamps, endpoint names, data values, etc. The SlowDash time series data schema of
+The schema specifies table and column names and describes which columns are for timestamps, endpoint names, and data values. For example:
 ```yaml
       time_series:
         schema: numeric_data [sensor_name] @timestamp(with timezone) = value_raw(default), value_cal
 ```
-corresponds to a SQL table of
+corresponds to the SQL table:
 ```sql
 CREATE TABLE numeric_data (
   sensor_name TEXT NOT NULL,
-  "timestamp" TIMESTAMP WITH TIMEZONE NOT NULL DEFAULT NOW(),
+  "timestamp" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   value_raw DOUBLE PRECISION NOT NULL,
   value_cal DOUBLE PRECISION
 );
 ```
-which is defined in the Dripline's PostgreSQL configuration (FirstMesh Walkthrough).
+which is defined in the Dripline PostgreSQL configuration (First-Mesh Walkthrough).
 
 ## Example 02: Controlling Endpoints
 ### Objectives
-This example shows:
-- How to bind user Python code to SlowDash GUI
-- How to send SET/GET/CMD commands to Dripline endpoints from user Python code
+This example demonstrates:
+- How to link user Python code to the SlowDash GUI
+- How to send SET/GET/CMD commands to Dripline endpoints from user Python code (SlowTask)
 
 | Screenshot |
 |------------|
 |<img src="FirstMeshControl.png" width="100%">|
 
 ### Running the Example
-The `02_Control` directory includes the complete set of files. Run `docker compose` at the directory:
+The `02_Control` directory contains the complete set of files. Run:
 ```bash
 cd 02_Control
 docker compose up
 ```
-Wait for RabbitMQ to become ready (approximately 30 seconds). Then open a web browser and navigate to `http://localhost:18881`.
-On the SlowDash home page, the "SlowDash, SlowPlot, SlowCruise" panel (top right) has one icon titled "Control Peaches".
-Clicking it will open a layout as shown in the screenshot above.
+Wait for RabbitMQ to become ready (about 30 seconds). Then open a web browser and go to `http://localhost:18881`.
+On the SlowDash home page, the “SlowDash, SlowPlot, SlowCruise” panel (top right) has an icon labeled peaches-control.
+Click it to open the layout shown in the screenshot above.
 
-To stop, press `Ctrl+C` in the terminal. Run `docker compose down` before running another example.
+To stop, press `Ctrl+C` in the terminal. Run `docker compose down` before starting another example.
 
-### Setup Procedure for your project
-In addition to the steps in the previous example,
+### Setup Procedure for Your Project
+In addition to the previous example:
 
-1. Create a user Python script (SlowTask) that receives user operations and controls the endpoints
-2. Create an HTML form for the control panel
-3. Enable the Python script in the SlowDash configuration file
+1. Create a user Python script (SlowTask) that receives user input and controls the endpoints.
+2. Create an HTML form for the control panel.
+3. Enable the Python script in the SlowDash configuration file.
 
 #### Step 1
-Create a `slowtask-control_peaches.py` file under `YOUR/SLOWDASH/PROJECT/config` directory with the following contents:
+Create a `slowtask-control_peaches.py` file under your `YOUR/SLOWDASH/PROJECT/config` directory:
 ```python
 from slowpy.control import control_system as ctrl
 ctrl.import_control_module('Dripline')
@@ -207,13 +208,13 @@ print('hello from control_peaches.py')
 dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
 peaches = dripline.endpoint('peaches')
 
-def set_peaches(value:float):
+def set_peaches(value: float):
     print(f'setting peaches to {value}')
     peaches.set(value)
 ```
 
 #### Step 2
-Create a `html-ControlPeaches.html` file under `config` directory with the following contents:
+Create a `html-peaches-control.html` file under `config`:
 ```html
 <form>
   value: <input type="number" name="value" style="width:8em" step="any" value="0">
@@ -222,70 +223,68 @@ Create a `html-ControlPeaches.html` file under `config` directory with the follo
 ```
 
 #### Step 3
-Add the following block to your `SlowdashProject.yaml` file:
+Add the following block to your `SlowdashProject.yaml`:
 ```yaml
   task:
     name: control_peaches
     auto_load: true
 
   system:
-    our_security_is_perfect: true    # this will enable the Python script editor on the SlowDash Web interface
+    our_security_is_perfect: true    # enables the Python script editor on the SlowDash web interface
 ```
 
-### How it works
-This example demonstrates the integration between SlowDash's web interface and Dripline's control system through SlowTask scripts. The key features are:
+### How It Works
+This example demonstrates integration between SlowDash’s web interface and Dripline’s control system via SlowTask scripts.
+Key features include:
 
-- Setting a value to a Dripline endpoint can be done by: `dripline.endpoint(name).set(value)`
-- A very standard Python function (`set_peaches()` here) can be bound to an HTML button with function parameters taken from the HTML form input elements.
-- Output from print() in your script will be shown in the browser.
+- Setting a value on a Dripline endpoint using: `dripline.endpoint(name).set(value)`
+- Binding a standard Python function (e.g., `set_peaches()`) to an HTML button whose parameters are taken from HTML form inputs.
+- Output from `print()` in your script appears directly in the browser.
 
-Here's how the components work together:
+**SlowTask Script (`slowtask-control_peaches.py`)**
+- Imports the Dripline control module through SlowPy’s dynamic plugin loader.
+- Establishes a connection to the RabbitMQ broker.
+- Creates a reference to the `peaches` endpoint.
+- Exposes `set_peaches()` automatically to the web interface through SlowDash’s task system.
 
-**SlowTask Script (`slowtask-control_peaches.py`)**:
-- Imports the Dripline control module through SlowPy's dynamic plugin loading and establishes a connection to the RabbitMQ broker
-- Creates a reference to the 'peaches' endpoint using `dripline.endpoint('peaches')` through SlowPy's node chain mechanism
-- The user function `set_peaches()` is automatically exposed to the web interface through SlowDash's task system
+**HTML Form (`html-peaches-control.html`)**
+- Provides a web form with a numeric input field.
+- The submit button triggers the `control_peaches.set_peaches()` function.
+- Form input values are bound by parameter names; mismatches raise an error without executing the function.
 
-**HTML Form (`html-ControlPeaches.html`)**:
-- Provides a simple web form with a number input field for the value
-- The submit button triggers the `control_peaches.set_peaches()` function
-- The function parameter values are taken from other input fields in the form. Parameters are bound by names, and type mismatches will create an error response without calling the user function.
+**Configuration (`SlowdashProject.yaml`)**
+- The `task` section defines the SlowTask and loads it automatically.
+- `system.our_security_is_perfect: true` enables the in-browser script editor; remove this if there are any security concerns.
 
-**Configuration (`SlowdashProject.yaml`)**:
-- The `task` section defines the SlowTask with `auto_load: true` to automatically load the script
-- The `system.our_security_is_perfect: true` setting enables the Python script editor in the web interface; remove this section if there are any security concerns.
-
-
-## Example 03: Controlling Endpoints with Slowpy Logic
+## Example 03: Controlling Endpoints with SlowPy Logic
 ### Objectives
-By advancing the previous example, this example shows:
-- How to use control logics (such as ramping) in SlowDash Python library (SlowPy)
-- How to send data directly from user Python to SlowDash GUI
-
+Building on the previous example, this example shows:
+- How to use control logic (such as ramping) in the SlowDash Python library (SlowPy)
+- How to send data directly from user Python code to the SlowDash GUI
 
 | Screenshot |
 |------------|
 |<img src="FirstMeshControlSlowpy.png" width="100%">|
 
 ### Running the Example
-The `03_ControlSlowpy` directory includes the complete set of files. Run `docker compose` at the directory:
+The `03_ControlSlowpy` directory contains the complete set of files. Run:
 ```bash
 cd 03_ControlSlowpy
 docker compose up
 ```
-Wait for RabbitMQ to become ready (approximately 30 seconds). Then open a web browser and navigate to `http://localhost:18881`.
+Wait for RabbitMQ to become ready (about 30 seconds). Then open a web browser and navigate to `http://localhost:18881`.
 
 To stop, press `Ctrl+C` in the terminal. Run `docker compose down` before running another example.
-On the SlowDash home page, the "SlowDash, SlowPlot, SlowCruise" panel (top right) has one icon titled "Control Peaches".
-Clicking it will open a layout as shown in the screenshot above.
+On the SlowDash home page, the “SlowDash, SlowPlot, SlowCruise” panel (top right) has an icon labeled peaches-control.
+Click it to open the layout shown in the screenshot above.
 
-### Setup Procedure for your project
-In addition to the steps in the previous example,
-1. Modify the user Python script (SlowTask) to add more features
-2. Modify the HTML form for additional controls
+### Setup Procedure for Your Project
+In addition to the steps in the previous example:
+1. Modify the user Python script (SlowTask) to add more features.
+2. Modify the HTML form to provide additional controls.
 
 #### Step 1
-Replace the `slowtask-control_peaches.py` file from the previous example with the following contents:
+Replace the `slowtask-control_peaches.py` file from the previous example with the following content:
 ```python
 from slowpy.control import control_system as ctrl
 ctrl.import_control_module('Dripline')
@@ -294,7 +293,7 @@ print('hello from control_peaches.py')
 dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
 peaches = dripline.endpoint('peaches').value_raw()
 
-def set_peaches(target:float, ramping_rate:float):
+def set_peaches(target: float, ramping_rate: float):
     print(f'setting peaches to {target}, with ramping at {ramping_rate}')
     peaches.ramping(ramping_rate).set(target)
     
@@ -306,7 +305,7 @@ ctrl.export(peaches.ramping().status(), name='ramping_status')
 ```
 
 #### Step 2
-Replace the `html-ControlPeaches.html` file from the previous example with the following contents:
+Replace the `html-peaches-control.html` file with the following:
 ```html
 <form style="font-size:100%">
   <table>
@@ -328,62 +327,53 @@ Replace the `html-ControlPeaches.html` file from the previous example with the f
 </form>    
 ```
 
-### How it works
+### How It Works
+This example extends the basic control functionality by introducing SlowPy control logic and a direct data connection from user scripts to the web browser without going through the database.
+In this example, ramping control is added to endpoint value setting. Key features include:
 
-This example extends the basic control functionality by introducing SlowPy control logic and direct data connection from user scripts to the web browser without going through the database. In this example, ramping control is added to endpoint value setting. Key features are:
+- SlowPy builds a chain of control nodes. Appending a ramping node to a control node (endpoint) with `.ramping()` creates a new node with attached ramping logic; setting a value via `endpoint(name).ramping(speed).set(value)` starts a sequence of `endpoint(name).set(ramping_value)` calls.
+- The chain can be further extended. For example, `endpoint(name).ramping(speed).status().set(0)` adds a new function (stop ramping) to the ramping node.
+- Values in user scripts can be directly exported to browsers. On the browser side, exported values appear like values stored in the database (except that historical values are not persisted).
 
-- SlowPy builds a chain of control nodes. Appending a ramping node to a control node (endpoint) by `.ramping()` will create a new node with the attached ramping logic, where setting a value to the new node by `endpoint(name).ramping(speed).set(value)` will call a series of `endpont(name).set(ramping_value)`.
-- The chain can be further extended. For example, `endpoint(name).ramping(speed).status().set(0)` will add a new function, stop ramping in this case, to the ramping node.
-- Values in user scripts can be directly "export()"ed to browsers. On the browser side, the exported values looks the same as the values stored in the database (except that historical values are not saved).
-
-**SlowTask Script (`slowtask-control_peaches.py`)**:
+**SlowTask Script (`slowtask-control_peaches.py`)**
 - `peaches.ramping(rate)` attaches a SlowPy ramping logic node to the `peaches` node.
-- Similarly, `.status()` attaches a status node to the ramping node.
-- Setting a value (calling `set(value)`) to the ramping node will start a ramping sequence to its attaching node (i.e., `peaches`).
-- Setting `0` to the status node stops ramping of its attaching node (i.e., `peaches.ramping()`).
-- SlowPy node values can be exported to external systems such as web browsers using `ctrl.export()`.
-
+- `.status()` attaches a status node to the ramping node.
+- Setting a value (`set(value)`) on the ramping node starts a ramping sequence to its attached node (`peaches`).
+- Setting `0` on the status node stops ramping of its attached node (`peaches.ramping()`).
+- SlowPy node values can be exported to external systems (e.g., web browsers) using `ctrl.export()`.
 
 ## Example 04: Writing (Sensor) Data Values / Manual Entry
 ### Objectives
-This example shows how to send Dripline alert messages (such as sensor value alerts), with an application for manually entering data from the SlowDash GUI.
+This example shows how to send Dripline alert messages (such as sensor value alerts) and demonstrates manual data entry from the SlowDash GUI.
 
 | Screenshot |
 |------------|
 |<img src="FirstMeshManualEntry.png" width="100%">|
 
 ### Running the Example
-The `04_ManualEntry` directory includes the complete set of files. Run `docker compose` at the directory:
+The `04_ManualEntry` directory contains the complete set of files. Run:
 ```bash
 cd 04_ManualEntry
 docker compose up
 ```
-Wait for RabbitMQ to become ready (approximately 30 seconds). Then open a web browser and navigate to `http://localhost:18881`.
-On the SlowDash home page, the "SlowDash, SlowPlot, SlowCruise" panel (top right) has one icon titled "Manual Entry".
-Clicking it will open a layout as shown in the screenshot above.
+Wait for RabbitMQ to become ready (about 30 seconds). Then open a web browser and navigate to `http://localhost:18881`.
+On the SlowDash home page, the “SlowDash, SlowPlot, SlowCruise” panel (top right) has an icon labeled manual-entry.
+Click it to open the layout shown in the screenshot above.
 
-When a new name is entered (`peacheese` in the screenshot), it will create a new endpoint in the database.
-If the channel does not show up in the SlowDash "Channel List" after some time, click the "refresh" button on top of the list.
-Reloading the browser page might be necessary.
+When a new name is entered (`peacheese` in the screenshot), a new endpoint is created in the database.
+If the channel does not appear in the SlowDash Channel List after some time, click the refresh button above the list.
+Reloading the browser page may also be necessary.
 
-To stop, press `Ctrl+C` in the terminal. Run `docker compose down` before running another example.
+To stop, press `Ctrl+C` in the terminal. Run `docker compose down` before starting another example.
 
-### Setup Procedure for your project
-From the previous example,
-1. Change the SlowTask name from `control_peaches` to `manual_entry`
-2. Create a new SlowTask Python script and replace the old one
-3. Create a new HTML form for manual entry and replace the old one
+### Setup Procedure for Your Project
+From the previous example:
+1. Create a new SlowTask Python script.
+2. Create a new HTML form.
+3. Add a new SlowTask entry to the SlowDash configuration file.
 
 #### Step 1
-Modify the `task` block of the `Slowdash.yaml` file as follows:
-```yaml
-  task:
-    name: manual-entry
-    auto_load: true
-```
-
-#### Step 2
-Delete the old `slowtask-control-peaches.py` file, and create a `slowtask-manual-entry.py` with the following contents:
+Create `slowtask-manual-entry.py` with the following content:
 ```python
 from slowpy.control import control_system as ctrl
 ctrl.import_control_module('Dripline')
@@ -391,13 +381,13 @@ ctrl.import_control_module('Dripline')
 print('hello from manual-entry.py')
 dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
 
-def write_value(name:str, value:float):
+def write_value(name: str, value: float):
     print(f'writing {name}={value} ')
     dripline.sensor_value_alert(name=name).set(value)
 ```
 
-#### Step 3
-Delete the old `html-control-peaches.html` file, and create a `html-manual-entry.html` file under `config` with the following contents:
+#### Step 1
+Create `html-manual-entry.html` under `config` with the following content:
 ```html
 <form>
   name: <input name="name" style="width:8em" value="peaches">
@@ -406,45 +396,61 @@ Delete the old `html-control-peaches.html` file, and create a `html-manual-entry
 </form>    
 ```
 
-### How it works
-This example demonstrates how to send sensor data values to the Dripline mesh. In this example, manually entered values are pushed to the Dripline mesh in the same way as all other sensor readout values, to be stored in the database.
+#### Step 3
+Modify the `task` block of `SlowdashProject.yaml` to add the new slowtask
+```yaml
+  task:
+    - name: control-peaches
+      auto_load: true
+    - name: manual-entry
+      auto_load: true
+```
+or to replace the previous one
+```yaml
+  task:
+    name: manual-entry
+    auto_load: true
+```
 
-The key feature here is:
-- `dripline.sensor_value_alert(name).set(value)` will create a sensor value alert into the Dripline Mesh where the alerts are typically collected by a sensor_logger and stored in the DB.
 
-**Manual Entry SlowTask Script (`slowtask-manual-entry.py`)**:
-- `dripline.sensor_value_alert(name)` creates a new SlowPy node to send alert messages.
+### How It Works
+This example demonstrates how to send sensor data values to the Dripline mesh.
+Manually entered values are pushed to the Dripline mesh in the same way as other sensor readout values and are stored in the database.
+
+Key feature:
+- `dripline.sensor_value_alert(name).set(value)` creates a sensor value alert on the Dripline mesh, typically collected by a sensor logger and stored in the database.
 
 
 ## Example 05: Receiving (Sensor) Data Values from Other Dripline Endpoints
-This example shows how to receive data values (typically sensor readout values) from other Dripline endpoints and process them. In this example, statistics are calculated for each endpoint and pushed to the browser.
-
 ### Objectives
+This example shows how to receive data values (typically sensor readouts) from other Dripline endpoints and process them.
+In this example, statistics are calculated for each endpoint and pushed to the browser.
+
 | Screenshot |
 |------------|
 |<img src="FirstMeshReceiveData.png" width="100%">|
 
 ### Running the Example
-The `05_ReceivingData` directory includes the complete set of files. Run `docker compose` at the directory:
+The `05_ReceivingData` directory contains the complete set of files. Run:
 ```bash
 cd 05_ReceivingData
 docker compose up
 ```
-Wait for RabbitMQ to become ready (approximately 30 seconds). Then open a web browser and navigate to `http://localhost:18881`.
-On the SlowDash home page, the "SlowDash, SlowPlot, SlowCruise" panel (top right) has one icon titled "count-peaches".
-Clicking it will open a layout as shown in the screenshot above.
+Wait for RabbitMQ to become ready (about 30 seconds). Then open a web browser and navigate to `http://localhost:18881`.
+On the SlowDash home page, the “SlowDash, SlowPlot, SlowCruise” panel (top right) has an icon labeled count-peaches.
+Click it to open the layout shown in the screenshot above.
 
-To stop, press `Ctrl+C` in the terminal. Run `docker compose down` before running another example.
+To stop, press `Ctrl+C` in the terminal. Run `docker compose down` before starting another example.
 
-### Setup Procedure for your project
-This example can be appended to the previous Example 02 (Controlling Endpoints) or Example 03 (with SlowPy Logic).
-In addition to the steps in Example 02 or 03,
+### Setup Procedure for Your Project
+This example can be appended to a previous example, or can replace it.
+In addition to the steps in the previous example:
 
-1. Create a user Python script (SlowTask) that receives data from other endpoints, analyzes it, and sends it to the browsers
-2. Enable the Python script in the SlowDash configuration file
+1. Create a new SlowTask Python script that receives data from other endpoints, analyzes it, and sends the results to browsers.
+2. Enable the SlowTask script in the SlowDash configuration file.
 
 #### Step 1
-Create a `slowtask-count_peaches.py` file under `YOUR/SLOWDASH/PROJECT/config` directory with the following contents:
+Create a `slowtask-count_peaches.py` file under `YOUR/SLOWDASH/PROJECT/config` with the following content:
 ```python
 from slowpy.control import control_system as ctrl
 ctrl.import_control_module('AsyncDripline')
@@ -475,65 +481,64 @@ async def _run():
 ```
 
 #### Step 2
-Add the following block to your `SlowdashProject.yaml` file:
+Add the following block to your `SlowdashProject.yaml`:
 ```yaml
   task:
     name: count_peaches
     auto_load: true
 
   system:
-    our_security_is_perfect: true    # this will enable the Python script editor on the SlowDash Web interface
+    our_security_is_perfect: true    # enables the Python script editor on the SlowDash web interface
 ```
 
-### How it works
+### How It Works
 Unlike sending, receiving involves waiting and therefore execution can be blocked.
-In SlowDash, waiting is done by asynchronous tasks instead of using threads,
-using the "async" version of the Dripline module.
+In SlowDash, waiting is handled by asynchronous tasks instead of threads, using the async version of the Dripline module.
 This example also shows how to stream data directly to browsers.
 
-Key features in this example are:
-- Using the "async" version
-- Receiving a sensor value alert by `message = await dripline.sensor_value_queue().aio_get()`
-- If the `_run()` function is defined in the user script, it will be called by SlowTask.
-- `ctrl.aio_publish(value, name=name)` sends the data to browser. This is similar to `ctrl.export(value, name=name)`, but the difference is that `aio_publish()` pushes the data to browsers immediately, whereas `export()` makes the data available to browsers if the browsers want to pull (typically by the updating timer).
+Key features:
+- Using the async version.
+- Receiving a sensor value alert with `message = await dripline.sensor_value_queue().aio_get()`.
+- If the `_run()` function is defined in the user script, SlowTask will call it.
+- `ctrl.aio_publish(value, name=name)` sends data to browsers. This is similar to `ctrl.export(value, name=name)`, but `aio_publish()` pushes data immediately, whereas `export()` makes data available for browser-driven polling (e.g., via a periodic update timer).
 
-**Data Analysis SlowTask Script (`slowtask-count_peaches.py`)**:
-- In SlowTask modules, `_initialize()`, `_run()`, and `_finalize()` functions are called by SlowDash in this order (if defined, among some others).
-- When the SlowDash system initiates a shutdown process, `ctrl.is_stop_requested()` returns `True`. The user `_run()` function must terminate in this case.
-- When the shutdown process is triggered, `sensor_value_queue().aio_get()` returns `None`; otherwise, it waits for a new incoming message (if called with `await`).
+**Data Analysis SlowTask Script (`slowtask-count_peaches.py`)**
+- In SlowTask modules, `_initialize()`, `_run()`, and `_finalize()` are called by SlowDash in this order (if defined).
+- When the SlowDash system begins shutting down, `ctrl.is_stop_requested()` returns `True`; the user `_run()` must terminate in this case.
+- When shutdown is triggered, `sensor_value_queue().aio_get()` returns `None`; otherwise, it awaits a new incoming message.
 
 
 ## Example 06: Handling SET/GET/CMD Requests
 ### Objectives
-Finally, this example shows how to make a fully featured Dripline service, which handles SET/GET/CMD requests from other Dripline components. 
-This example sends out random walk data as a proxy for hardware readout data, with multiple parameter settings, each of which is an endpoint.
+This example shows how to create a fully featured Dripline service that handles SET/GET/CMD requests from other Dripline components.
+The example sends random-walk data as a proxy for hardware readout data, with multiple parameter settings, each represented by an endpoint.
 
 | Screenshot |
 |------------|
 |<img src="FirstMeshService.png" width="100%">|
 
 ### Running the Example
-The `06_HandlingCommands` directory includes the complete set of files. Run `docker compose` at the directory:
+The `06_HandlingCommands` directory contains the complete set of files. Run:
 ```bash
 cd 06_HandlingCommands
 docker compose up
 ```
-Wait for RabbitMQ to become ready (approximately 30 seconds). Then open a web browser and navigate to `http://localhost:18881`.
-On the SlowDash home page, the "SlowDash, SlowPlot, SlowCruise" panel (top right) has one icon titled "randomWalk-control".
-Clicking it will open a layout as shown in the screenshot above.
+Wait for RabbitMQ to become ready (about 30 seconds). Then open a web browser and navigate to `http://localhost:18881`.
+On the SlowDash home page, the “SlowDash, SlowPlot, SlowCruise” panel (top right) has an icon labeled randomWalk-control.
+Click it to open the layout shown in the screenshot above.
 
-To stop, press `Ctrl+C` in the terminal. Run `docker compose down` before running another example.
+To stop, press `Ctrl+C` in the terminal. Run `docker compose down` before starting another example.
 
-### Setup Procedure for your project
-From the previous example,
-1. Update the SlowTask settings
-2. Create a user Python code (SlowTask) to control the user endpoint
-3. Create another user Python code (SlowTask) to implement the service
+### Setup Procedure for Your Project
+From the previous example:
+1. Update the SlowTask settings.
+2. Create a user Python script (SlowTask) to control the user endpoint.
+3. Create another user Python script (SlowTask) to implement the service.
 
 In this example, the HTML form for the control panel is generated by the corresponding SlowTask script.
 
 #### Step 1
-Modify the `task` block of the `Slowdash.yaml` file as follows:
+Modify the `task` block of `SlowdashProject.yaml` as follows:
 ```yaml
   task:
     - name: randomwalk-service
@@ -543,7 +548,7 @@ Modify the `task` block of the `Slowdash.yaml` file as follows:
 ```
 
 #### Step 2
-Delete the old SlowTask script under `config`, and create a `slowtask-control-randomwalk.py` with the following contents:
+Create `slowtask-control-randomwalk.py` under `config` with the following content:
 ```python
 from slowpy.control import control_system as ctrl
 ctrl.import_control_module('Dripline')
@@ -551,11 +556,11 @@ ctrl.import_control_module('Dripline')
 print('hello from control-randomwalk.py')
 dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
 
-def set_value(value:float):
+def set_value(value: float):
     print(f'setting randomwalk value to {value}')
     dripline.endpoint('randomwalk').set(value)
 
-def set_step(step:float):
+def set_step(step: float):
     print(f'setting randomwalk step to {step}')
     dripline.endpoint('randomwalk_step').set(step)
 
@@ -579,7 +584,7 @@ def _get_html():
 ```
 
 #### Step 3
-Create another SlowTask Python script named as `slowtask-randomwalk-service.py` under `config` with the following contents:
+Create another SlowTask Python script named `slowtask-randomwalk-service.py` with the following content:
 ```python
 import asyncio, random, logging
 
@@ -631,22 +636,20 @@ if __name__ == '__main__':
     Tasklet().run()
 ```
 
-### How it works
-This example demonstrates how to create a complete Dripline service that handles SET/GET/CMD requests and generates continuous data streams. The system simulates a hardware device with configurable parameters and real-time data generation.
+### How It Works
+This example demonstrates how to create a complete Dripline service that handles SET/GET/CMD requests and generates continuous data streams.
+The system simulates a hardware device with configurable parameters and real-time data generation.
 
-**RandomWalk Service (`slowtask-randomwalk-service.py`)**:
-- In SlowTask modules, `_initialize()`, `_run()`, and `_finalize()` functions are called by SlowDash in this order (if defined, among some others).
+**RandomWalk Service (`slowtask-randomwalk-service.py`)**
+- In SlowTask modules, `_initialize()`, `_run()`, and `_finalize()` are called by SlowDash in this order (if defined, among other hooks).
+- The SlowPy node `dripline.service(handler)` receives SET/GET/CMD Dripline commands, forwards them to the service handler, and sends back replies. The `.aio_start()` method creates asynchronous tasks for command processing and heartbeat emission.
+- The `RandomwalkService` class is the user service handler:
+  - Maintains internal state: current position (`self.x`) and step size (`self.step`), both mapped to Dripline endpoints.
+  - The SlowPy node calls the handler’s `on_set()` method upon receiving a Dripline SET request.
+  - Similarly, `on_get()` and `on_command()` methods will be called for GET and CMD requests, respectively, if defined.
+  - The `run()` method is specific to this example and implements the user loop, including simulating the random walk process and sending out the data.
+- The final block with a `Tasklet` allows running this SlowTask as an independent process — useful for distributed multi-node/multi-process deployments or separate Docker containers. (Not used in this example.)
 
-- The SlowPy node, `dripline.service(handler)`, receives the SET/GET/CMD Dripline commands, passes them to the service handler, and sends back the reply. The `.aio_start()` method creates asynchronous tasks for command processing and heartbeat sending.
-
-- The user `RandomwalkService` class is a service handler that simulates a hardware device:
-  - Maintains internal state: current position (`self.x`) and step size (`self.step`), both corresponding to Dripline endpoints
-  - The SlowPy node calls the user's `on_set()` method when it receives a Dripline SET request
-  - Similarly, `on_get()` and `on_command()` methods will be called for GET and CMD requests, respectively, if defined
-  - The `run()` method starts an asynchronous task to produce the random walk data
-
-- The last block with a Tasklet allows running this SlowTask as an independent process, instead of a loaded module in the SlowDash server process, to deploy SlowTasks over a distributed multi-node/multi-process system, or to run in an independent Docker container. This feature is not used in this example.
-
-**Control Interface (`slowtask-control-randomwalk.py`)**:
-- Similar to the control-peaches examples, this SlowTask connects user controls on the web interface to the Dripline endpoints.
-- Instead of storing a static HTML form, this script dynamically generates the HTML form using the `_get_html()` function.
+**Control Interface (`slowtask-control-randomwalk.py`)**
+- Similar to the control-peaches examples, this SlowTask connects user controls in the web interface to Dripline endpoints.
+- Instead of storing a static HTML form, the script dynamically generates the form via `_get_html()`.
