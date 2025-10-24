@@ -13,7 +13,7 @@ It provides a series of step-by-step examples, from basic visualization to fully
 - Example 5 Receiving (sensor) data values from other Dripline endpoints
 - Example 6: Handling SET/GET/CMD commands from other Dripline components
 
-These examples make extensive use of the chain-of-contol-nodes structure in the SlowPy library and the Dashboard-Script interconnect.
+These examples make extensive use of the chain-of-control-nodes structure in the SlowPy library and the Dashboard-Script interconnect.
 For details on these features, refer to the "Controls Script" section of the SlowDash documentation.
 
 ## TL;DR
@@ -48,7 +48,7 @@ value = dripline.endpoint(name).value_raw().get()
 dripline.endpoint(name).ramping(changes_per_sec).set(value)
 ```
 
-#### Getting the ramping status / control ramping
+#### Getting the ramping status / controlling ramping
 ```python
 status = dripline.endpoint(name).ramping().status().get()
 dripline.endpoint(name).ramping().status().set(0)  # stop ramping
@@ -72,7 +72,7 @@ if message is not None and message.body is not None:
     timestamp = message.headers.get('timestamp', None)
     value_raw = message.body.get('value_raw', None)
 ```
-Empty replies can be returned on SlowDash shutdown or connection close by the broker.
+Empty replies can be returned on SlowDash shutdown or when the connection is closed by the broker.
 
 #### Handling SET/GET/CMD requests (with sending out heartbeats)
 Available only with the async version.
@@ -233,16 +233,22 @@ Add the following block to your `SlowdashProject.yaml` file:
 ```
 
 ### How it works
-This example demonstrates the integration between SlowDash's web interface and Dripline's control system through SlowTask scripts. Here's how the components work together:
+This example demonstrates the integration between SlowDash's web interface and Dripline's control system through SlowTask scripts. The key features are:
+
+- Setting a value to a Dripline endpoint can be done by: `dripline.endpoint(name).set(value)`
+- A very standard Python function (`set_peaches()` here) can be bound to an HTML button with function parameters taken from the HTML form input elements.
+- Output from print() in your script will be shown in the browser.
+
+Here's how the components work together:
 
 **SlowTask Script (`slowtask-control_peaches.py`)**:
 - Imports the Dripline control module through SlowPy's dynamic plugin loading and establishes a connection to the RabbitMQ broker
-- Creates a reference to the 'peaches' endpoint using `dripline.endpoint('peaches')` through SlowPy's node chain mechanism.
+- Creates a reference to the 'peaches' endpoint using `dripline.endpoint('peaches')` through SlowPy's node chain mechanism
 - The user function `set_peaches()` is automatically exposed to the web interface through SlowDash's task system
 
 **HTML Form (`html-ControlPeaches.html`)**:
 - Provides a simple web form with a number input field for the value
-- The submit button triggers the `control_peaches.set_peaches()` function 
+- The submit button triggers the `control_peaches.set_peaches()` function
 - The function parameter values are taken from other input fields in the form. Parameters are bound by names, and type mismatches will create an error response without calling the user function.
 
 **Configuration (`SlowdashProject.yaml`)**:
@@ -324,7 +330,11 @@ Replace the `html-ControlPeaches.html` file from the previous example with the f
 
 ### How it works
 
-This example extends the basic control functionality by introducing SlowPy control logic and direct data connection from user scripts to the web browser without going through the database. In this example, ramping control is added to endpoint value setting.
+This example extends the basic control functionality by introducing SlowPy control logic and direct data connection from user scripts to the web browser without going through the database. In this example, ramping control is added to endpoint value setting. Key features are:
+
+- SlowPy builds a chain of control nodes. Appending a ramping node to a control node (endpoint) by `.ramping()` will create a new node with the attached ramping logic, where setting a value to the new node by `endpoint(name).ramping(speed).set(value)` will call a series of `endpont(name).set(ramping_value)`.
+- The chain can be further extended. For example, `endpoint(name).ramping(speed).status().set(0)` will add a new function, stop ramping in this case, to the ramping node.
+- Values in user scripts can be directly "export()"ed to browsers. On the browser side, the exported values looks the same as the values stored in the database (except that historical values are not saved).
 
 **SlowTask Script (`slowtask-control_peaches.py`)**:
 - `peaches.ramping(rate)` attaches a SlowPy ramping logic node to the `peaches` node.
@@ -399,11 +409,16 @@ Delete the old `html-control-peaches.html` file, and create a `html-manual-entry
 ### How it works
 This example demonstrates how to send sensor data values to the Dripline mesh. In this example, manually entered values are pushed to the Dripline mesh in the same way as all other sensor readout values, to be stored in the database.
 
+The key feature here is:
+- `dripline.sensor_value_alert(name).set(value)` will create a sensor value alert into the Dripline Mesh where the alerts are typically collected by a sensor_logger and stored in the DB.
+
 **Manual Entry SlowTask Script (`slowtask-manual-entry.py`)**:
 - `dripline.sensor_value_alert(name)` creates a new SlowPy node to send alert messages.
 
 
-## Example 05: Receiving (Sensor) Data Values from ohter Dripline Endpoints
+## Example 05: Receiving (Sensor) Data Values from Other Dripline Endpoints
+This example shows how to receive data values (typically sensor readout values) from other Dripline endpoints and process them. In this example, statistics are calculated for each endpoint and pushed to the browser.
+
 ### Objectives
 | Screenshot |
 |------------|
@@ -423,9 +438,9 @@ To stop, press `Ctrl+C` in the terminal. Run `docker compose down` before runnin
 
 ### Setup Procedure for your project
 This example can be appended to the previous Example 02 (Controlling Endpoints) or Example 03 (with SlowPy Logic).
-In addition to the steps in the Example 02 or 03,
+In addition to the steps in Example 02 or 03,
 
-1. Create a user Python script (SlowTask) that receives data from other endpoints, analyze it, and sends to the browsers
+1. Create a user Python script (SlowTask) that receives data from other endpoints, analyzes it, and sends it to the browsers
 2. Enable the Python script in the SlowDash configuration file
 
 #### Step 1
@@ -463,7 +478,7 @@ async def _run():
 Add the following block to your `SlowdashProject.yaml` file:
 ```yaml
   task:
-    name: cotrol_peaches
+    name: count_peaches
     auto_load: true
 
   system:
@@ -471,7 +486,21 @@ Add the following block to your `SlowdashProject.yaml` file:
 ```
 
 ### How it works
+Unlike sending, receiving involves waiting and therefore execution can be blocked.
+In SlowDash, waiting is done by asynchronous tasks instead of using threads,
+using the "async" version of the Dripline module.
+This example also shows how to stream data directly to browsers.
 
+Key features in this example are:
+- Using the "async" version
+- Receiving a sensor value alert by `message = await dripline.sensor_value_queue().aio_get()`
+- If the `_run()` function is defined in the user script, it will be called by SlowTask.
+- `ctrl.aio_publish(value, name=name)` sends the data to browser. This is similar to `ctrl.export(value, name=name)`, but the difference is that `aio_publish()` pushes the data to browsers immediately, whereas `export()` makes the data available to browsers if the browsers want to pull (typically by the updating timer).
+
+**Data Analysis SlowTask Script (`slowtask-count_peaches.py`)**:
+- In SlowTask modules, `_initialize()`, `_run()`, and `_finalize()` functions are called by SlowDash in this order (if defined, among some others).
+- When the SlowDash system initiates a shutdown process, `ctrl.is_stop_requested()` returns `True`. The user `_run()` function must terminate in this case.
+- When the shutdown process is triggered, `sensor_value_queue().aio_get()` returns `None`; otherwise, it waits for a new incoming message (if called with `await`).
 
 
 ## Example 06: Handling SET/GET/CMD Requests
@@ -608,16 +637,16 @@ This example demonstrates how to create a complete Dripline service that handles
 **RandomWalk Service (`slowtask-randomwalk-service.py`)**:
 - In SlowTask modules, `_initialize()`, `_run()`, and `_finalize()` functions are called by SlowDash in this order (if defined, among some others).
 
-- The SlowPy node, `dripline.service(handler)`, receives the SET/GET/CMD Dripline commands, passes them to the service handler, and sends back the reply. The `.aio_start()` method creates an asynchronous task.
+- The SlowPy node, `dripline.service(handler)`, receives the SET/GET/CMD Dripline commands, passes them to the service handler, and sends back the reply. The `.aio_start()` method creates asynchronous tasks for command processing and heartbeat sending.
 
 - The user `RandomwalkService` class is a service handler that simulates a hardware device:
-  - Maintains internal state: current position (`self.x`) and step size (`self.step`), both corresponding to a Dripline endpoint
-  - The SlowPy node calls the user's `on_set()` when it receives a Dripline SET request.
-  - Similarly, `on_get()` and `on_command()` will be called for the GET and CMD requests, respectively, if defined
+  - Maintains internal state: current position (`self.x`) and step size (`self.step`), both corresponding to Dripline endpoints
+  - The SlowPy node calls the user's `on_set()` method when it receives a Dripline SET request
+  - Similarly, `on_get()` and `on_command()` methods will be called for GET and CMD requests, respectively, if defined
   - The `run()` method starts an asynchronous task to produce the random walk data
 
-- The last block with a Tasklet allows running this SlowTask as an independent process, instead of a loaded module in the SlowDash server process, to deploy SlowTasks over a distributed multinode/multiprocess system, or to run in an independent Docker container. This feature is not used in this example.
+- The last block with a Tasklet allows running this SlowTask as an independent process, instead of a loaded module in the SlowDash server process, to deploy SlowTasks over a distributed multi-node/multi-process system, or to run in an independent Docker container. This feature is not used in this example.
 
 **Control Interface (`slowtask-control-randomwalk.py`)**:
-- Similar to the control-peaches examples, this SlowTask connects user controls on the Web Interface to the Dripline endpoints.
+- Similar to the control-peaches examples, this SlowTask connects user controls on the web interface to the Dripline endpoints.
 - Instead of storing a static HTML form, this script dynamically generates the HTML form using the `_get_html()` function.
