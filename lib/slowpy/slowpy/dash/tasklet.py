@@ -110,10 +110,10 @@ class Tasklet:
 
     def _handle_error(self, message):
         logging.error(message)
-        if sys.exc_info()[0] is not None:
+        #if sys.exc_info()[0] is not None:
+        try:
             tb = traceback.format_exc()
             if tb is not None and len(tb.strip()) > 0:
-                logging.info(tb)
-    
-        
-        
+                logging.warning(tb)
+        except:
+            pass

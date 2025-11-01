@@ -200,7 +200,7 @@ class ExchangeNode(ControlNode):
     # rabbitmq().XXX_exchange(name).queue(name, routing_key, **kwargs)
     def queue(self, name: str, *, routing_key: str | None = None, handler=None, timeout=0, **kwargs):
         return QueueNode(self, name, routing_key=routing_key, handler=handler, timeout=timeout, **kwargs)
-
+    
     
 
 class PublishNode(ControlNode):
