@@ -175,7 +175,7 @@ class Histogram2d(DataElement):
 
     def to_numpy(self):
         obj = self.to_json()
-        counts = obj['counts']
+        counts = np.array(obj['counts']).T
         xedges = np.linspace(
             start = obj['xbins']['min'],
             stop = obj['xbins']['max'],
@@ -195,6 +195,7 @@ class Histogram2d(DataElement):
     def from_numpy(obj):
         # BUG: this assumes edges are equidistant
         counts, xedges, yedges, *_ = obj
+        counts = counts.T  # numpy counts[x][y] -> slowpy counts[y][x]
         hist2d = Histogram2d(len(xedges)-1, xedges[0], xedges[-1], len(yedges)-1, yedges[0], yedges[-1])
         for yk in range(len(yedges)-1):
             hist2d.counts[yk][:] = counts[yk][:].tolist()

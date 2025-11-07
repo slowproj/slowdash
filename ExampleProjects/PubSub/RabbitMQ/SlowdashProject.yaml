@@ -1,0 +1,16 @@
+slowdash_project:
+  title: PubSub - RabbitMQ
+  
+  task:
+    - name: randomwalk-system
+      auto_load: true
+    - name: control-randomwalk
+      auto_load: true
+
+  data_source:
+    url: sqlite:///SlowTestData
+    time_series:
+      schema: ts_data [channel] @timestamp(unix) = value
+    
+  system:
+    our_security_is_perfect: true

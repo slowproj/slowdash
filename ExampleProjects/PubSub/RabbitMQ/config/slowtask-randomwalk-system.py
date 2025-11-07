@@ -1,18 +1,18 @@
 
 from slowpy.control import control_system as ctrl
 ctrl.import_control_module('AsyncRabbitMQ')
-rabbitmq, command_queue, data_publish = None, None, None
+rabbitmq, command_queue_node, data_publish_node = None, None, None
 
 x, step = 0, 1
 
 
 async def _initialize(params):
-    global rabbitmq, command_queue, data_publish
+    global rabbitmq, command_queue_node, data_publish_node
     rabbitmq = ctrl.rabbitmq('amqp://slowdash:slowdash@localhost')
     exchange = rabbitmq.topic_exchange('slowdash')
     
-    command_queue = exchange.queue(name='command.randomwalk', exclusive=True)
-    data_publish = exchange.publish(routing_key='data.randomwalk')
+    command_queue_node = exchange.queue(name='command.randomwalk', exclusive=True)
+    data_publish_node = exchange.publish(routing_key='data.randomwalk')
 
 
 async def _finalize():
@@ -28,7 +28,7 @@ async def handle_commands():
     global x, step
     
     while not ctrl.is_stop_requested():
-        message = await command_queue.aio_get()
+        message = await command_queue_node.aio_get()
         command = message.body
         if command is None:
             continue
@@ -47,7 +47,7 @@ async def start():
     while not ctrl.is_stop_requested():
         x = random.gauss(x, step)
 
-        await data_publish.aio_set({'randomwalk':x})
+        await data_publish_node.aio_set({'randomwalk':x})
         
         await ctrl.aio_sleep(1)
 
