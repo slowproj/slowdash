@@ -519,10 +519,10 @@ class RampingNode(ControlNode):
                 current_value += self.change_per_sec
 
             if self.set_format is not None:
-                value = self.set_format.format(current_value)
+                set_value = self.set_format.format(current_value)
             else:
-                value = current_value
-            self.value_node.setpoint().set(value)
+                set_value = current_value
+            self.value_node.setpoint().set(set_value)
 
             for i in range(10):
                 if self.is_stop_requested():
@@ -560,10 +560,10 @@ class RampingNode(ControlNode):
                 current_value += self.change_per_sec
 
             if self.set_format is not None:
-                value = self.set_format.format(current_value)
+                set_value = self.set_format.format(current_value)
             else:
-                value = current_value
-            await self.value_node.setpoint().aio_set(value)
+                set_value = current_value
+            await self.value_node.setpoint().aio_set(set_value)
 
             for i in range(10):
                 if self.is_stop_requested():
