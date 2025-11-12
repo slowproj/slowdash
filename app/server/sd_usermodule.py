@@ -679,7 +679,7 @@ class UserModuleComponent(Component):
     async def get_usermodule_contentlist(self):
         result = []
         for usermodule in self.usermodule_list.values():
-            result.extend(usermodule.get_contentlist())
+            result.extend(await usermodule.get_contentlist())
                 
         return result
 

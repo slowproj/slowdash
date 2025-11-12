@@ -180,7 +180,7 @@ class EndpointCommandNode(ControlVariableNode):
 
     
         
-class RawValueNode(ControlNode):
+class RawValueNode(ControlVariableNode):
     def __init__(self, endpoint:EndpointNode):
         self.endpoint = endpoint
             

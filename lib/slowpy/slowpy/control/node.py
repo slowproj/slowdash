@@ -379,30 +379,6 @@ class ControlThreadNode(ControlNode):
         
         
         
-class ControlReadOnlyNode(ControlNode):
-    def __init__(self, node):
-        self.node = node
-
-    def set(self, value):
-        raise ControlException('node is read-only')
-
-    def get(self):
-        return self.node.get()
-
-    
-    
-class ControlWriteOnlyNode(ControlNode):
-    def __init__(self, node):
-        self.node = node
-
-    def set(self, value):
-        return self.node.set(value)
-
-    def get(self):
-        raise ControlException('node is write-only')
-
-
-    
 class ControlVariableNode(ControlNode):
     def __init__(self):
         super().__init__()
@@ -468,10 +444,30 @@ class SetpointNode(ControlNode):
         self.node.set(value)
 
         
+    async def aio_set(self, value):
+        try:
+            x = float(value)
+        except:
+            raise ControlException('numeric value is expected')
+            
+        if (
+            (self.limits[0] is not None and x < float(self.limits[0])) or
+            (self.limits[1] is not None and x > float(self.limits[1]))
+        ):
+            raise ControlException('setpoint out of valid range')
+
+        self.setpoint = value
+        await self.node.aio_set(value)
+
+    
     def get(self):
         return self.setpoint
 
 
+    async def aio_get(self):
+        return self.get()
+    
+    
     # child node which is the parent
     def current(self):
         return self.node
@@ -498,29 +494,23 @@ class RampingNode(ControlNode):
             self.target_value = float(target_value)
         except:
             raise ControlException('numeric value is expected')
-        if self.change_per_sec is None:
+        if self.change_per_sec is None or not (self.change_per_sec > 0):
             raise ControlException('invalid ramping speed')
-        
-        if (self.change_per_sec < 1e-10):
-            self.value_node.setpoint().set(target_value)
-            return
         
         try:
             current_value = float(self.value_node.get())
         except Exception as e:
             logging.warning(f'ramping: unable to get current value: {e}')
             return
-        tolerance =  1e-5 * (abs(self.target_value) + abs(current_value) + 1e-10)
         
         self.running = True
         while self.running:
             if self.target_value is None:
                 break
             diff = current_value - self.target_value
-            if abs(diff) < tolerance:
-                break
-            elif abs(diff) <= self.change_per_sec:
+            if abs(diff) <= self.change_per_sec:
                 current_value = self.target_value
+                self.running = False
             elif diff > 0:
                 current_value -= self.change_per_sec
             else:
@@ -530,14 +520,52 @@ class RampingNode(ControlNode):
             for i in range(10):
                 if self.is_stop_requested():
                     self.running = False
-                    return
+                    break
                 else:
                     time.sleep(0.1)
-            
-        self.running = False
 
+
+    async def aio_set(self, target_value):
+        try:
+            self.target_value = float(target_value)
+        except:
+            raise ControlException('numeric value is expected')
+        if self.change_per_sec is None or not (self.change_per_sec > 0):
+            raise ControlException('invalid ramping speed')
+        
+        try:
+            current_value = float(await self.value_node.aio_get())
+        except Exception as e:
+            logging.warning(f'ramping: unable to get current value: {e}')
+            return
+        
+        self.running = True
+        while self.running:
+            if self.target_value is None:
+                break
+            diff = current_value - self.target_value
+            if abs(diff) <= self.change_per_sec:
+                current_value = self.target_value
+                self.running = False
+            elif diff > 0:
+                current_value -= self.change_per_sec
+            else:
+                current_value += self.change_per_sec
+            await self.value_node.setpoint().aio_set(current_value)
+
+            for i in range(10):
+                if self.is_stop_requested():
+                    self.running = False
+                    break
+                else:
+                    await asyncio.sleep(0.1)
+            
 
     def get(self):
+        return self.target_value
+
+
+    async def aio_get(self):
         return self.target_value
 
 
@@ -565,7 +593,15 @@ class RampingStatusNode(ControlNode):
         return self.ramping_node.running
 
 
-    
+    async def aio_set(self, zero_to_stop):
+        return self.set(zero_to_stop)
+
+
+    async def aio_get(self):
+        return self.get()
+
+
+
 class OneshotNode(ControlNode):
     def __init__(self, node, duration=None, normal=None):
         """A value by `set()` is held for a given duration, then goes back to the `normal` value
@@ -586,6 +622,13 @@ class OneshotNode(ControlNode):
         self.start_time = time.monotonic()
 
         
+    async def aio_set(self, value):
+        if self.normal is None:
+            self.normal = await self.node.aio_get()
+        await self.node.aio_set(value)
+        self.start_time = time.monotonic()
+
+        
     def get(self):
         if self.start_time is not None:
             if self.duration is None:
@@ -599,3 +642,42 @@ class OneshotNode(ControlNode):
                 self.start_time = None
                 
         return self.node.get()
+
+
+    async def aio_get(self):
+        if self.start_time is not None:
+            if self.duration is None:
+                value = await self.node.aio_get()
+                await self.node.aio_set(self.normal)
+                self.start_time = None
+                return value
+                
+            if time.monotonic() > self.start_time + self.duration:
+                await self.node.aio_set(self.normal)
+                self.start_time = None
+                
+        return await self.node.aio_get()
+
+
+
+class ControlReadOnlyNode(ControlNode):
+    def __init__(self, node):
+        self.node = node
+
+    def set(self, value):
+        raise ControlException('node is read-only')
+
+    def get(self):
+        return self.node.get()
+
+    
+    
+class ControlWriteOnlyNode(ControlNode):
+    def __init__(self, node):
+        self.node = node
+
+    def set(self, value):
+        return self.node.set(value)
+
+    def get(self):
+        raise ControlException('node is write-only')
