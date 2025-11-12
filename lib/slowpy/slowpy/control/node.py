@@ -396,7 +396,7 @@ class ControlVariableNode(ControlNode):
         return self._node_setpoint
 
     
-    def ramping(self, change_per_sec=None):
+    def ramping(self, change_per_sec=None, *, set_format=None):
         """child node that ramps the set value
         """
         
@@ -405,7 +405,7 @@ class ControlVariableNode(ControlNode):
             if change_per_sec is not None:
                 self._node_ramping.change_per_sec = abs(float(change_per_sec))
         except:
-            self._node_ramping = RampingNode(self, change_per_sec)
+            self._node_ramping = RampingNode(self, change_per_sec, set_format=set_format)
         return self._node_ramping
     
 
@@ -475,7 +475,7 @@ class SetpointNode(ControlNode):
     
         
 class RampingNode(ControlNode):
-    def __init__(self, value_node, change_per_sec):
+    def __init__(self, value_node, change_per_sec, *, set_format=None):
         self.value_node = value_node
         if change_per_sec is None:
             self.change_per_sec = None
@@ -484,7 +484,9 @@ class RampingNode(ControlNode):
                 self.change_per_sec = abs(float(change_per_sec))
             except:
                 self.change_per_sec = None
-                
+
+        self.set_format = set_format
+        
         self.target_value = None
         self.running = False
 
@@ -515,7 +517,12 @@ class RampingNode(ControlNode):
                 current_value -= self.change_per_sec
             else:
                 current_value += self.change_per_sec
-            self.value_node.setpoint().set(current_value)
+
+            if self.set_format is not None:
+                value = self.set_format.format(current_value)
+            else:
+                value = current_value
+            self.value_node.setpoint().set(value)
 
             for i in range(10):
                 if self.is_stop_requested():
@@ -551,7 +558,12 @@ class RampingNode(ControlNode):
                 current_value -= self.change_per_sec
             else:
                 current_value += self.change_per_sec
-            await self.value_node.setpoint().aio_set(current_value)
+
+            if self.set_format is not None:
+                value = self.set_format.format(current_value)
+            else:
+                value = current_value
+            await self.value_node.setpoint().aio_set(value)
 
             for i in range(10):
                 if self.is_stop_requested():
