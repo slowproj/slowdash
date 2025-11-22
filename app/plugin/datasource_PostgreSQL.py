@@ -70,7 +70,7 @@ class AsyncPostgreSQLServer(SQLBaseServer):
                 return AsyncPostgreSQLQueryResult(rows)
             except Exception as e:
                 logging.error(f'SQL Async Fetch Error: {e}')
-                logging.error(traceback.format_exc())
+                logging.debug(traceback.format_exc())
                 return SQLQueryErrorResult(str(e))
             
     

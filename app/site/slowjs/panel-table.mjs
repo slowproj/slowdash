@@ -18,30 +18,53 @@ class TablePanel extends Panel {
     
     static buildConstructRows(table, on_done=config=>{}) {
         let tr1 = $('<tr>').html(`
-            <td>Channel</td><td><input list="sd-table-datalist"></td>
+            <td>Data Type</td><td>
+            <select style="font-size:130%">
+              <option hidden>Select...</option>
+              <option value="table_object">Table Object</options>
+              <option value="value_table">Value Table</options>
+            </select></td>
        `).appendTo(table);
-        let tr2 = $('<tr>').html(`
-            <td style="padding-top:1em"><button hidden style="font-size:x-large">Create</button></td><td></td>
-        `).appendTo(table);
-
-        let button = tr2.find('button');
-        tr1.find('input').bind('input', e=>{
-            let input = $(e.target);
-            if (input.val().length > 0) {
-                button.show();
+        
+        function updateSelection2() {
+            while (table.find('tr').size() > 2) {
+                table.find('tr').at(2).remove();
+            }
+            let data_type = tr1.find('select').selected().attr('value');
+            
+            let tr2 = $('<tr>').appendTo(table);
+            if (data_type == 'table_object') {
+                tr2.html(`<td>Channel</td><td><input list="sd-table-datalist"></td>`);
             }
             else {
-                button.hide();
+                tr2.html(`<td>Channel</td><td><input list="sd-all-datalist"></td>`);
             }
-        });
-        button.bind('click', e=>{
-            let config = {
-                type: 'table',
-                channel: table.find('input').val(),
-                reversed: false,
-            };
-            on_done(config);
-        });
+            let tr3 = $('<tr>').html(`
+                <td style="padding-top:1em"><button hidden style="font-size:x-large">Create</button></td><td></td>
+            `).appendTo(table);
+            
+            let button = tr3.find('button');
+            tr2.find('input').bind('input', e=>{
+                let input = $(e.target);
+                if (input.val().length > 0) {
+                    button.show();
+                }
+                else {
+                    button.hide();
+                }
+            });
+            button.bind('click', e=>{
+                let config = {
+                    type: 'table',
+                    channel: table.find('input').val(),
+                    data_type: data_type,
+                    reversed: (data_type == 'table_object' ? false : true),
+                    max_lines: 100,
+                };
+                on_done(config);
+            });
+        }
+        tr1.find('select').bind('change', e=>{ updateSelection2(); });            
     }
 
     
@@ -89,16 +112,21 @@ class TablePanel extends Panel {
     
     openSettings(div) {
         let inputsDiv = $('<div>').appendTo(div);
+        const datalist = (this.config.data_type??'table_object') == 'table_obect' ? 'sd-table-datalist' : 'sd-all-datalist';
         inputsDiv.html(`
             <table style="margin-top:1em">
-              <tr><th>channel</th><td><input list="sd-table-datalist"></td></tr>
+              <tr><th>channel</th><td><input list="${datalist}"></td></tr>
               <tr><th>Title</th><td><input placeholder="empty"></td></tr>
+              <tr><th>Reversed</th><td><input type="checkbox"></td></tr>
+              <tr><th>Max Lines</th><td><input type="number" step="1"></td></tr>
             </table>
         `);
 
         let k = 0;
         bindInput(this.config, 'channel', inputsDiv.find('input').at(k++).css('width', '20em'));
         bindInput(this.config, 'title', inputsDiv.find('input').at(k++).css('width', '20em'));
+        bindInput(this.config, 'reversed', inputsDiv.find('input').at(k++));
+        bindInput(this.config, 'max_lines', inputsDiv.find('input').at(k++).css('width', '10em'));
     }
 
     
@@ -129,10 +157,21 @@ class TablePanel extends Panel {
         }
         
         this.table.empty();
+        if ((this.config.data_type??'table_object') == 'table_object') {
+            if (this.draw_table_object(data)) {
+                return;
+            }
+            this.table.empty();
+        }
+        this.draw_value_table(dataPacket[this.config.channel]);
+    }
+
+    
+    draw_table_object(data) {
         if (Array.isArray(data)) {
             if (data.length < 1) {
                 this.table.html('<tr><td>Empty Table</td></tr>');		
-                return;
+                return true;
             }
             data = data[data.length-1];
         }
@@ -142,12 +181,12 @@ class TablePanel extends Panel {
             }
             catch(error) {
                 this.table.html('<tr><td>Table Data Error: ' + error.message + '</td></tr>');		
-                return;
+                return false;
             }
         }
         if (! data.table) {
             this.table.html('<tr><td>No Table Content</td></tr>');		
-            return;
+            return false;
         }
         const table = data;
 
@@ -166,6 +205,39 @@ class TablePanel extends Panel {
             for (let col of table.table[(this.config.reversed ?? false) ? n-k-1 : k]) {
                 $('<td>').text(col??'').appendTo(tr);
             }
+        }
+
+        return true;
+    }
+
+
+    draw_value_table(dataPacket) {
+        let [t, x] = [ dataPacket.t, dataPacket.x ];
+        const t0 = dataPacket.start ?? 0;
+        if (! Array.isArray(t)) {
+            t = [ t ];
+            x = [ x ];
+        }
+
+        const columns = [ 'Timestamp', this.config.channel ];
+        let tr = $('<tr>').appendTo(this.table);
+        const bg = window.getComputedStyle(tr.get()).getPropertyValue('background-color');
+        tr.append($('<th>').text('Timestamp'));
+        tr.append($('<th>').text(this.config.channel));
+        tr.find('th').css({position: 'sticky', top:0, left:0, background: bg});
+
+        const max_n = this.config.max_lines ?? 100;
+        const n = Math.min(t.length, max_n);
+        for (let i = 0; i < n; i++) {
+            const k = (this.config.reversed ?? false) ? n-i-1 : i;
+            let tr = $('<tr>').appendTo(this.table);
+            const datetime = (new JGDateTime(t0 + t[k])).asString('%Y-%m-%d %H:%M:%S %Z');
+            tr.append($('<td>').text(datetime)).append($('<td>').text(x[k]??''));
+        }
+        
+        const m = t.length - max_n;
+        if (m > 0) {
+            $('<tr>').append($('<td>').text(`... ${m} more lines`)).append($('<td>').text('...')).appendTo(this.table);
         }
     }
 };

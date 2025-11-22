@@ -14,8 +14,11 @@ class Schema:
         
     def __str__(self):
         return (''
-            + f'{self.table}<{self.suffix}>[{",".join([self.tag]+self.flags)}]@{self.time}({self.time_type})'
-            + f'={",".join(self.fields)}'
+            + f'{self.table}'
+            + (f'<{self.suffix}>' if self.suffix is not None and len(self.suffix) > 0 else '')
+            + (f'[{",".join([self.tag]+self.flags)}]' if self.tag is not None else '')
+            + f'@{self.time or ""}({self.time_type or ""})'
+            + (f'={",".join(self.fields)}' if self.fields is not None and len(self.fields) > 0 else '')
         )
 
     
@@ -201,6 +204,8 @@ class Schema:
         if len(token) > 0:
             if state == State.TABLE:
                 self.table = token
+            elif state == State.TIME:
+                self.time = token
             elif state == State.FIELD:
                 self.fields.append(token)
                 self.field_types.append(None)
@@ -287,7 +292,7 @@ class Schema:
         if isinstance(value, str):
             json_value = value.strip()
             if not (len(json_value) > 2 and json_value[0] == '{' and json_value[-1] == '}'):
-                return 'json'
+                return 'string'
             try:
                 json_value = json.loads(json_value)
             except Exception as e:

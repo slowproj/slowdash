@@ -123,7 +123,10 @@ class DataSource_SQL(DataSource_TableStore):
 
     async def aio_finalize(self):
         if self.server is not None:
-            await self.server.terminate()
+            try:
+                await self.server.terminate()
+            except Exception as e:
+                logging.warning(f'SQL termination error: {e}')
 
         
     # override this in DB implementation class
@@ -176,8 +179,12 @@ class DataSource_SQL(DataSource_TableStore):
             sql = sql.replace('${TO_DATETIME}', to_datetime_utc.isoformat(sep=self.time_sep))
             sql = sql.replace('${TO_DATETIME_NAIVE}', to_datetime_naive.isoformat(sep=self.time_sep))
             sql = sql.replace('${TO_DATETIME_UTC}', to_datetime_utc.isoformat(sep=self.time_sep))
-            
-            query_result = await self.server.fetch(sql)
+
+            try:
+                query_result = await self.server.fetch(sql)
+            except Exception as e:
+                logging.error('SQL Query Error: %s: %s' % (str(e), sql))
+                continue
             if query_result.is_error:
                 logging.error('SQL Query Error: %s: %s' % (query_result.error, sql))
                 continue
@@ -248,9 +255,13 @@ class DataSource_SQL(DataSource_TableStore):
 
     async def _get_first_data_row(self, schema):
         sql = 'SELECT * FROM %s LIMIT 1' % schema.table
-        result = await self.server.fetch(sql)
+        try:
+            result = await self.server.fetch(sql)
+        except Exception as e:
+            logging.error('SQL Error: %s: %s' % (str(e), sql))
+            return None, []
         if result.is_error:
-            logging.error('SQL Error: %s: %s' % (result.error, sql))
+            #logging.error('SQL Error: %s: %s' % (result.error, sql))
             return None, []
         columns = [ v for v in result.get_column_names() ]
         table = result.get_table()
@@ -267,7 +278,11 @@ class DataSource_SQL(DataSource_TableStore):
             sql = "SELECT %s FROM %s WHERE %s='%s' LIMIT 1" % (field, table_name, tag_name, tag_value)
         else:
             sql = "SELECT %s FROM %s LIMIT 1" % (field, table_name)
-        result = await self.server.fetch(sql)
+        try:
+            result = await self.server.fetch(sql)
+        except Exception as e:
+            logging.error('SQL Error: %s: %s' % (str(e), sql))
+            return None
         if result.is_error:
             logging.error('SQL Error: %s: %s' % (result.error, sql))
             return None

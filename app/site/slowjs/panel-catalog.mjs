@@ -430,36 +430,33 @@ export class ChannelListPanel extends Panel {
                 continue;
             }
             let tr = $('<tr>').data('channel', entry.name).appendTo(this.table);
+
+            let href = './slowplot.html?channel=' + entry.name;
             if ((entry.type || 'numeric') == 'numeric') {
                 if (entry.current ?? false) {
-                    let span = $('<span>').text(entry.name);
-                    let href = './slowplot.html?channel=' + entry.name + '/singles';
-                    href += '&length=300&reload=10&grid=2x2';
-                    let a = $('<a>').attr('href', href).text(entry.name).attr('target', '_blank');
-                    $('<td>').append(a).appendTo(tr);
+                    href += '/singles/&length=300&reload=10&grid=2x2';
                 }
                 else {
-                    let href = './slowplot.html?channel=' + entry.name;
                     href += '&length=300&reload=10&grid=2x1';
-                    let a = $('<a>').attr('href', href).text(entry.name).attr('target', '_blank');
-                    $('<td>').append(a).appendTo(tr);
                 }
             }
             else if (['histogram', 'ts-histogram', 'histogram2d', 'graph', 'table', 'tree', 'blob'].includes(entry.type)) {
-                let href = './slowplot.html?channel=' + entry.name + '/' + entry.type;
-                href += '&length=300&reload=10&grid=1x1';
-                let a = $('<a>').attr('href', href).text(entry.name).attr('target', '_blank');
-                $('<td>').append(a).appendTo(tr);
+                href += '/' + entry.type + '&length=300&reload=10&grid=1x1';
             }
             else if (entry.type == 'timeseries' && entry.current) {
-                let href = './slowplot.html?channel=' + entry.name;
                 href += '&length=300&reload=10&grid=2x1';
-                let a = $('<a>').attr('href', href).text(entry.name).attr('target', '_blank');
-                $('<td>').append(a).appendTo(tr);
             }
-            else {
-                $('<td>').text(entry.name).appendTo(tr);
+            else {  // others, such as "string"
+                if (entry.current) {
+                    href += '/singles/&length=300&reload=10&grid=2x2';
+                }
+                else {
+                    href += '/table&length=300&reload=10&grid=1x1';
+                }
             }
+            let a = $('<a>').attr('href', href).text(entry.name).attr('target', '_blank');
+            $('<td>').append(a).appendTo(tr);
+            
             if (entry.current ?? false) {
                 if (entry.type == 'timeseries') {
                     $('<td>').text('current numeric timeseries').appendTo(tr);
@@ -471,6 +468,7 @@ export class ChannelListPanel extends Panel {
             else {
                 $('<td>').text(entry.type ?? 'numeric').appendTo(tr);
             }
+            
             $('<td>').text(entry.label ?? '').appendTo(tr);
         }
         

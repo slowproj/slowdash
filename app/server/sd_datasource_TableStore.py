@@ -172,7 +172,7 @@ class DataSource_TableStore(DataSource):
                 for k in range(len(columns)):
                     column = columns[k]
                     if column not in [ schema.time, schema.tag ] + schema.flags:
-                        if schema.is_for_ts:
+                        if False and schema.is_for_ts:  # "False" to determine the field type anyway
                             fields[column] = None
                         elif schema.tag is not None:
                             # will be determined later for each tag value
