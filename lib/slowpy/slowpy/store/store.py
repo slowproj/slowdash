@@ -84,6 +84,9 @@ class DataStore:
                 
         else:
             t = timestamp if timestamp is not None else time.time()
+            if type(t) in [ int, float ] and t <= 0:
+                t += time.time()
+            
             if type(values) is dict:
                 fields = [ k for k in values.keys() ]
                 values = [ v for v in values.values() ]

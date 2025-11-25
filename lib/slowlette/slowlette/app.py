@@ -7,7 +7,7 @@ from .server import dispatch_asgi, dispatch_wsgi, serve_asgi, serve_wsgi
 
 
 class App:
-    """Slowlette App for ASIG
+    """Slowlette App for ASGI
     Note:
       - User App can be derived from this class, or can be passed to the constructor parameter:
         - Method 1: class MyApp(slowlette.App)  then  app = MyApp()

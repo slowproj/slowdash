@@ -1,0 +1,9 @@
+slowdash_project:
+  data_source:
+    url: ${DB_URL:-postgresql://slowdash:slowdash@localhost:5432/SlowTestData}
+    time_series:
+      schema: ts_data [channel] @timestamp(with timezone) = value
+
+  task:
+    name: postdata
+    auto_load: true
