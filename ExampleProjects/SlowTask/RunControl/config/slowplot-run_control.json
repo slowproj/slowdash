@@ -2,7 +2,7 @@
     "control": {
         "range": { "length": 60, "to": 0 },
         "reload": 60,
-        "mode": "protected",
+        "mode": "normal",
         "grid": { "rows": "2", "columns": "2" }
     },
     "style": { },

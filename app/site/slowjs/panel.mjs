@@ -249,7 +249,7 @@ export class Panel {
         if (Array.isArray(t)) {
             let k = t.length - 1;
             while (k >= 0) {
-                if (! Number.isNaN(x[k])) {
+                if ((x[k] != null) && ! Number.isNaN(x[k])) {
                     break;
                 }
                 k--;

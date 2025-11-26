@@ -9,7 +9,7 @@ services:
       - POSTGRES_PASSWORD=slowdash
       - POSTGRES_DB=SlowTestData
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U slowdash"]
       interval: 10s
       timeout: 5s
       retries: 5

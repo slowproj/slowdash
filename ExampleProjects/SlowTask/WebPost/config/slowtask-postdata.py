@@ -8,6 +8,7 @@
 '''
 
 db, table = 'postgresql://slowdash:slowdash@localhost:5432/SlowTestData', 'ts_data'
+db, table = 'postgresql://slowdash:slowdash@pgsql_db:5432/SlowTestData', 'ts_data'
 
 
 import slowlette

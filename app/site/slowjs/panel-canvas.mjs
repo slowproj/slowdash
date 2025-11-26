@@ -29,6 +29,10 @@ const defaultStyle = {
 
 
 class CanvasItem {
+    static defaults = {
+        'tolerable-gap': 60,
+    };
+    
     constructor(svgParent, style) {
         this.parent = svgParent;
         this.style = $.extend({}, defaultStyle, style);
@@ -100,8 +104,12 @@ class CanvasItem {
             this.last_tx = [time, value];
         }
         
-        const tolerable_gap = this.metric['tolerable-gap'] ?? 60;
-        const to = dataPacket?.__meta?.range?.to;
+        const tolerable_gap = this.metric['tolerable-gap'] ?? CanvasItem.defaults['tolerable-gap'];
+        let to = dataPacket?.__meta?.range?.to;
+        if (to <= 0) {
+            to += $.time();
+        }
+        console.log(time+tolerable_gap - to);
         if ((time == null) || (to == null) || (time + tolerable_gap < to)) {
             if (isPartial) {
                 return;  // no gap check for partial or current packets
@@ -978,6 +986,9 @@ export class CanvasPanel extends Panel {
             )
         );
 
+        // TODO: put default styles here
+        CanvasItem.defaults['tolerable-gap'] = (this.canvasConfig.defaults??{})['tolerable-gap'] ?? 60;
+        
         this.items = [];
         this.inputChannels = [];
         for (let itemConfig of this.canvasConfig.items ?? []) {
