@@ -67,6 +67,7 @@ export class SlowDash {
                 panels: [{
                     type: 'canvas',
                     view_box: this.config.view_box || this.config.viewBox,
+                    defaults: this.config.defaults ?? {},
                     items: this.config.items,
                     forms:this. config.forms,
                 }]

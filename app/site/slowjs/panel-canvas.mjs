@@ -109,7 +109,6 @@ class CanvasItem {
         if (to <= 0) {
             to += $.time();
         }
-        console.log(time+tolerable_gap - to);
         if ((time == null) || (to == null) || (time + tolerable_gap < to)) {
             if (isPartial) {
                 return;  // no gap check for partial or current packets
@@ -939,30 +938,35 @@ export class CanvasPanel extends Panel {
     
     async configure(config, options={}, callbacks={}) {
         await super.configure(config, options, callbacks);
-        
-        // if canvas panel is loaded as a panel in a layout (SlowPlot)
-        if (config.config_name && (config.config_name != this.loaded_config_name)) {
-            this.loaded_config_name = config.config_name;
 
-            const url ='./api/config/content/slowdash-' + config.config_name + '.json';
-            const response = await fetch(url);
-            if (! response.ok) {
-                this.div.html(`
-                    <h3>Configuration Loading Error</h3>
-                    Name: ${config.config_name}<br>
-                    <p>
-                    URL: ${url}<br>
-                    Error: ${response.status} ${response.statusText}
-                `);
-                return null;
+        // if canvas panel is loaded as a panel in a layout (SlowPlot)
+        if (config.config_name) {
+            if (config.config_name != this.loaded_config_name) {
+                this.loaded_config_name = config.config_name;
+
+                const url ='./api/config/content/slowdash-' + config.config_name + '.json';
+                const response = await fetch(url);
+                if (! response.ok) {
+                    this.div.html(`
+                        <h3>Configuration Loading Error</h3>
+                        Name: ${config.config_name}<br>
+                        <p>
+                        URL: ${url}<br>
+                        Error: ${response.status} ${response.statusText}
+                    `);
+                    return null;
+                }
+                this.canvasConfig = await response.json();
+                console.log(url, "loaded");
             }
-            this.canvasConfig = await response.json();
-            console.log(url, "loaded");
+            else {
+                //this.canvasConfig = this.canvasConfig;
+            }
         }
         else {
             this.canvasConfig = config;
         }
-        
+
         this._build();
     }
 
