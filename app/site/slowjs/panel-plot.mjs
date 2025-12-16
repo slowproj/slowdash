@@ -1121,10 +1121,13 @@ class PlotPanel extends Panel {
         if (! ['side', 'box', 'transparent', 'hidden', 'none'].includes(this.config.legend.style)) {
             this.config.legend.style = 'side';
         }
+        if (! ['left', 'right'].includes(this.config.legend.position)) {
+            this.config.legend.position = 'right';
+        }
         if (this.config.plots === undefined) {
             this.config.plots = [];
         }
-
+        
         const legendWidthFraction = 0.3;
         const divWidth = this.div.boundingClientWidth();
         const legendDivWidth = divWidth * legendWidthFraction;
@@ -1134,6 +1137,13 @@ class PlotPanel extends Panel {
             legendFontSize = legendDivWidth / 16.0 + "px";
         }
         
+        const referencePlotWidth = 640, referencePlotHeight = 480;
+        const marginTop = 32, marginRight = 20, marginBottom = 56, marginLeft = 88;
+        const viewportWidth = plotDivWidth;
+        const viewportHeight = this.div.get().offsetHeight;
+        const sizeRatio = Math.min(viewportWidth / referencePlotWidth, viewportHeight / referencePlotHeight);
+        const plotScaling = sizeRatio > 0.7 ? 1 : sizeRatio / 0.7;
+
         const panelStyle = {
             frameDiv: {
                 'position': 'relative',
@@ -1168,13 +1178,22 @@ class PlotPanel extends Panel {
         }
         else if (this.config.legend.style !== 'side') {
             this.legendDiv.css({
-                top: '40px',
-                left: `calc(${divWidth-legendDivWidth}px - 3em)`,
+                top: `calc(${marginTop*plotScaling}px + 1em)`,
                 padding: '0.5em',
                 background: this.style.pageBackgroundColor, 
                 border: '1px solid gray',
-                'border-radius': '7px',
+                'border-radius': `${7*plotScaling}px`,
             });
+            if (this.config.legend.position == 'left') {
+                this.legendDiv.css({
+                    left: `calc(${(marginLeft+8)*plotScaling}px + 1em)`,  // 8px for ticks, 1em for padding
+                });
+            }
+            else {
+                this.legendDiv.css({
+                    left: `calc(${divWidth-legendDivWidth-marginRight*plotScaling}px - 2em)`,
+                });
+            }
             if (this.config.legend.style == 'hidden') {
                 new JGInvisibleWidget(this.legendDiv, { sensingObj: this.div, group: 'legend', opacity: 1 });
             }
@@ -1192,12 +1211,6 @@ class PlotPanel extends Panel {
             }
         }
         
-        const w = plotDivWidth;
-        const h = this.div.get().offsetHeight;
-        const referencePlotWidth = 640, referencePlotHeight = 480;
-        const sizeRatio = Math.min(w / referencePlotWidth, h / referencePlotHeight);
-        const plotScaling = sizeRatio > 0.7 ? 1 : sizeRatio / 0.7;
-
         this.initialDisplayTimeRange = null;
         this.isTimeSeriesPlot = true;
         this.isQuadMeshPlot = false;
@@ -1245,7 +1258,11 @@ class PlotPanel extends Panel {
         }
         
         this.axes = new JGPlotWidget(this.plotDiv, {
-            width: w, height: h, labelScaling: plotScaling,
+            width: viewportWidth, height: viewportHeight, labelScaling: plotScaling,
+            marginLeft: marginLeft,
+            marginRight: marginRight,
+            marginTop: marginTop,
+            marginBottom: marginBottom,
             colorScale: this.config.axes.colorscale,
             cursorDigits: 6,
             logX: this.config.axes.xlog,
@@ -1321,13 +1338,19 @@ class PlotPanel extends Panel {
             <table style="margin-top:1em">
               <tr><th>Frame</th><td></td></tr>
               <tr><td>Title</td><td><input placeholder="auto"></td></tr>
-              <tr><td>Legend</td><td><select>
-                <option value="side">Side Panel</option>
-                <option value="box">Corner Box</option>
-                <option value="transparent">Transparent Corner Box</option>
-                <option value="hidden">Hidden Corner Box</option>
-                <option value="none">None</option>
-              </select></td></tr>
+              <tr><td>Legend</td><td>
+                <select>
+                  <option value="side">Side Panel</option>
+                  <option value="box">Corner Box</option>
+                  <option value="transparent">Transparent Corner Box</option>
+                  <option value="hidden">Hidden Corner Box</option>
+                  <option value="none">None</option>
+                </select>
+                <select>
+                  <option value="right">Top Right</option>
+                  <option value="left">Top Left</option>
+                </select>
+              </td></tr>
 
               <tr><th>X Axis</th><td></td></tr>
               <tr><td>Title</td><td><input placeholder="empty"></td></tr>
@@ -1412,7 +1435,8 @@ class PlotPanel extends Panel {
         bindInput(axes, 'zmax', inputsDiv.find('input').at(k++).css('width', '5em'));
         bindInput(axes, 'zlog', inputsDiv.find('input').at(k++), true);
         bindInput(legend, 'style', inputsDiv.find('select').at(0));
-        bindInput(axes, 'colorscale', inputsDiv.find('select').at(1));
+        bindInput(legend, 'position', inputsDiv.find('select').at(1));
+        bindInput(axes, 'colorscale', inputsDiv.find('select').at(2));
 
         let drawingsDiv = $('<div>').appendTo(div).css(boxStyle);
         drawingsDiv.html(`
@@ -1782,13 +1806,19 @@ class TimeAxisPlotPanel extends PlotPanel {
               <tr><td></td><td><label><input type="radio" name="yrange">Auto</label></td></tr>
               <tr><td></td><td><label><input type="checkbox">log</label></td></tr>
               <tr><th>Legend</th><td></td></tr>
-              <tr><td>Style</td><td><select>
-                <option value="side">Side Panel</option>
-                <option value="box">Corner Box</option>
-                <option value="transparent">Transparent Corner Box</option>
-                <option value="hidden">Hidden Corner Box</option>
-                <option value="none">None</option>
-              </select></td></tr>
+              <tr><td>Style</td><td>
+                <select>
+                  <option value="side">Side Panel</option>
+                  <option value="box">Corner Box</option>
+                  <option value="transparent">Transparent Corner Box</option>
+                  <option value="hidden">Hidden Corner Box</option>
+                  <option value="none">None</option>
+                </select>
+                <select>
+                  <option value="right">Top Right</option>
+                  <option value="left">Top Left</option>
+                </select>
+              </td></tr>
             </table>
         `);
 
@@ -1811,6 +1841,7 @@ class TimeAxisPlotPanel extends PlotPanel {
         bindInput(axes, 'yfixed', inputsDiv.find('input').at(k++), false);
         bindInput(axes, 'ylog', inputsDiv.find('input').at(k++), true);
         bindInput(legend, 'style', inputsDiv.find('select').at(0));
+        bindInput(legend, 'position', inputsDiv.find('select').at(1));
 
         let drawingsDiv = $('<div>').appendTo(div).css(boxStyle);
         drawingsDiv.html(`
