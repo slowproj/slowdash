@@ -53,10 +53,12 @@ class AsyncPostgreSQLServer(SQLBaseServer):
         async with self.pool.acquire() as conn:
             try:
                 await conn.execute(sql, *params)
-                await conn.commit()
+                # asyncpg performs automatic commit
+                return AsyncPostgreSQLQueryResult()
             except Exception as e:
                 logging.error(f'SQL Async Execute Error: {e}')
                 logging.error(traceback.format_exc())
+                return SQLQueryErrorResult(str(e))
             
         
     async def fetch(self, sql, *params):
@@ -80,6 +82,7 @@ class DataSource_PostgreSQL(DataSource_SQL):
         super().__init__(app, project, params)
         
         self.db_has_floor = True
+        self.placeholder = '%s'
         
         self.url = params.get('url', None)
         if self.url is not None and self.url[0:13] != 'postgresql://':

@@ -161,11 +161,13 @@ class ConfigComponent(Component):
         if meta is None:
             return None   # not in my list -> use Slowlette aggregation
         
-        try:
-            # this requires W_OK, might fail from CGI etc.
-            pathlib.Path(filepath).touch()
-        except:
-            pass
+        filepath, ext = self._get_filepath_ext(filename, os.R_OK)
+        if filepath is not None:
+            try:
+                # this requires W_OK, might fail from CGI etc.
+                pathlib.Path(filepath).touch()
+            except:
+                pass
             
         if content is None:
             return slowlette.Response(400)
@@ -297,7 +299,7 @@ class ConfigComponent(Component):
             gid = self.project.config.get('system', {}).get('file_gid', -1)
             os.chown(filepath, -1, gid)
         except Exception as e:
-            logging.warning('unable to change file gid (%d): %s: %s' % (gid, config_dir, str(e)))
+            logging.warning('unable to change file gid (%d): %s: %s' % (gid, filepath, str(e)))
 
         return slowlette.Response(201) # Created
 
@@ -306,7 +308,7 @@ class ConfigComponent(Component):
     async def delete_file(self, filename: str):
         filepath, ext = self._get_filepath_ext(filename, os.W_OK)
         if filepath is None:
-            logging.warning(f'DETETE config/file: {filename}: access denied')
+            logging.warning(f'DELETE config/file: {filename}: access denied')
             return slowlette.Response(404)  # Not Found
         if not self.project.is_secure:
             if ext not in [ '.json', '.yaml', '.html', '.csv', '.svg', '.png', '.jpg', '.jpeg' ]:

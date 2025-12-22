@@ -48,6 +48,6 @@ class DataStoreTagTimeNode(spc.ControlVariableNode):
             
     def set(self, value):
         if self.tag_node.appending:
-            self.tag_node.store.append(value, tag=self.tag_name, timetamp=self.timestamp)
+            self.tag_node.store.append(value, tag=self.tag_node.tag_name, timestamp=self.timestamp)
         else:
-            self.tag_node.store.update(value, tag=self.tag_name, timestamp=self.timestamp)
+            self.tag_node.store.update(value, tag=self.tag_node.tag_name, timestamp=self.timestamp)

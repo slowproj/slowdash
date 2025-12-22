@@ -69,7 +69,7 @@ class Export_Jupyter(export_Notebook.Export_Notebook):
         
         try:
             self.jupyter_session = requests.Session()
-            resonse = self.jupyter_session.get(f'{self.jupyter_internal_url}/tree')
+            response = self.jupyter_session.get(f'{self.jupyter_internal_url}/tree')
             self.xsrf_token = self.jupyter_session.cookies.get('_xsrf')
         except Exception as e:
             logging.error('Jupyter connection: %s' % str(e))

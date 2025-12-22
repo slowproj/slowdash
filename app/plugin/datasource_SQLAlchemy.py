@@ -52,6 +52,7 @@ class DataSource_SQLAlchemy(DataSource_SQL):
         super().__init__(app, project, params)
 
         self.db_has_floor = False
+        self.placeholder = '?'
         
         self.url = params.get('url', None)
         if self.url is None:

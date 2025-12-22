@@ -218,8 +218,8 @@ class HistogramBasicStat:
             n += yk
             sum += xk * yk
             sum2 += xk*xk * yk
-            mean = None if n < 1 else sum/n
-            std = None if n < 1 else np.sqrt(abs(sum2/n - mean*mean))
+        mean = None if n < 1 else sum/n
+        std = None if n < 1 else np.sqrt(abs(sum2/n - mean*mean))
         result = {}
         for key in self.fields:
             if key.lower() in ['n', 'counts', 'entries']:

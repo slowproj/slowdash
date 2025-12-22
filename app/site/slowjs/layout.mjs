@@ -259,18 +259,21 @@ export class Layout {
     
     _createPanel(div, panelType) {
         //... backwards compatibility
-        if ((panelType === undefined) || (panelType == 'timeseries')) {
+        if ((panelType === undefined) || (panelType === 'timeseries')) {
             panelType = 'timeaxis';
         }
         
+        let panel = null;
         for (let PanelClass of this.PanelClassList) {
             if (panelType == PanelClass.describe().type) {
-                return new PanelClass(div, this.style);
+                panel = new PanelClass(div, this.style);
+                break;
             }
         }
         if (panel === null) {
             console.log('unable to find panel type: ' + panelType);
         }
+        return panel;
     }
 
     

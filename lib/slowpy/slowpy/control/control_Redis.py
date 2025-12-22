@@ -229,7 +229,7 @@ class RedisTimeseriesLastNode(spc.ControlNode):
                 return (None, None)
         
     ## child nodes ##
-    # Redis.ts(name).last().time()
+    # Redis.ts(name).last().value()
     def value(self):
         return RedisTimeseriesLastValueNode(self)
 
@@ -263,7 +263,7 @@ class RedisTimeseriesLastTimeNode(spc.ControlNode):
         pass
 
     def get(self):
-        return self.parent.get_tx()[0]/1000.0
+        return self.parent.get()[0]/1000.0
 
 
     
@@ -275,4 +275,4 @@ class RedisTimeseriesLastLapseNode(spc.ControlNode):
         pass
 
     def get(self):
-        return time.time() - self.parent.get_tx()[0]/1000.0
+        return time.time() - self.parent.get()[0]/1000.0

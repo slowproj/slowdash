@@ -110,7 +110,7 @@ class DataStore_Redis(DataStore):
             except Exception as e:
                 logging.error('RedisTS.create(): %s' % str(e))
         if self.redis.type(tsname) != 'TSDB-TYPE':
-            logging.error('TSDB-TYPE expected for %s in DB %s' % (tsname, self.db))
+            logging.error('TSDB-TYPE expected for %s in DB %s' % (tsname, self.db_url))
             return
 
         index = int((timestamp % self.objts_retention_length) / self.objts_timebin)

@@ -69,7 +69,6 @@ class DataSource_YAML(DataSource):
         self.mtime = mtime
         
         try:
-            mtime = os.path.getmtime(self.filepath)
             with open(self.filepath) as f:
                 self.tree = yaml.safe_load(f)
         except Exception as e:

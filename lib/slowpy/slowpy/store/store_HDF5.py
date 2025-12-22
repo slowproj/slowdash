@@ -104,7 +104,7 @@ class DataStore_HDF5(DataStore):
             self._flush()
             try:
                 self.hdf5_file.flush()
-            except:
+            except Exception as e:
                 logging.warning(f'HDF5: Error on flushing data to disk: {e}')
             finally:
                 self.hdf5_file.close()
@@ -119,7 +119,7 @@ class DataStore_HDF5(DataStore):
             compression = self.compression,
         )
         datastore.file_holder = self.file_holder
-        datastore.h5py = getattr(self.file_holder, 'p5py', None)
+        datastore.h5py = getattr(self.file_holder, 'h5py', None)
         
         return datastore
 

@@ -56,9 +56,9 @@ class BlobStorage_File(BlobStorage):
         ext = os.path.splitext(filepath)[1]
         if ext == '.html':
             content_type = 'text/html'
-        elif ext == 'json':
+        elif ext == '.json':
             content_type = 'application/json'
-        elif ext == 'yaml':
+        elif ext == '.yaml':
             content_type = 'application/yaml'
         elif ext == '.png':
             content_type = 'image/png'

@@ -169,7 +169,7 @@ class EndpointNode(ControlNode):
     
 class EndpointCommandNode(ControlVariableNode):
     def __init__(self, endpoint:EndpointNode, *args, **kwargs):
-        self.endpoint_node = endpoint_node
+        self.endpoint_node = endpoint
         self.body = {'values': [ arg for arg in args ] }
         self.body.update({ k:v for k,v in kwargs.items() })
         

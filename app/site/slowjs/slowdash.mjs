@@ -69,7 +69,7 @@ export class SlowDash {
                     view_box: this.config.view_box || this.config.viewBox,
                     defaults: this.config.defaults ?? {},
                     items: this.config.items,
-                    forms:this. config.forms,
+                    forms: this.config.forms,
                 }]
             };
             this.config.control.inactive = true;

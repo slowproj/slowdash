@@ -277,7 +277,7 @@ class _DataclassInstanceExportAdapterNode(spc.ControlVariableNode):
             try:
                 vv = ann[k](v)
             except:
-                logging.error(f'unable to convert value "{v}" to field "{k}" of dataclass "{type(self.value)}" (type {an[k]})')
+                logging.error(f'unable to convert value "{v}" to field "{k}" of dataclass "{type(self.value)}" (type {ann[k]})')
             try:
                 setattr(self.value, k, vv)
             except:
@@ -309,9 +309,10 @@ class _ClassInstanceExportAdapterNode(spc.ControlVariableNode):
         tree = value.get('tree', value)
         
         for k, v in tree.items():
-            if not hasattr(self.value, k) and getattr(self.value, k) is not None:
+            if hasattr(self.value, k) and getattr(self.value, k) is not None:
                 try:
-                    setattr(self.value, k, type(self.value)(v))
+                    ValueType = type(getattr(self.value, k))
+                    setattr(self.value, k, ValueType(v))
                 except:
                     setattr(self.value, k, v)
             else:

@@ -234,7 +234,7 @@ class HistogramPlot extends Plot {
         }
         const histogram = data;
         
-        if (histogram.bins.min === undefined || histogram.bins.max == undefined || ! histogram.counts) {
+        if (histogram.bins.min === undefined || histogram.bins.max === undefined || ! histogram.counts) {
             this.histogram.counts = Array(this.histogram.counts.length).fill(0);
             return true;
         }
@@ -445,8 +445,8 @@ class Histogram2dPlot extends Plot {
         const histogram = data;
         
         if (
-            (histogram.xbins.min === undefined || histogram.xbins.max == undefined) || 
-            (histogram.ybins.min === undefined || histogram.ybins.max == undefined) || 
+            (histogram.xbins.min === undefined || histogram.xbins.max === undefined) || 
+            (histogram.ybins.min === undefined || histogram.ybins.max === undefined) || 
             ! histogram.counts
         ){
             return true;
@@ -650,7 +650,7 @@ class LineMarkerPlot extends GraphPlot {
             this.graph.style.markerSize = style.marker_size;
         }
         if (style.opacity) {
-            this.graph.style.markerOpacity = style.style.opacity;
+            this.graph.style.markerOpacity = style.opacity;
         }
         if (style.fill_opacity) {
             this.graph.style.fillOpacity = style.fill_opacity;
@@ -1001,12 +1001,12 @@ class PlotPanel extends Panel {
             <td>Drawing</td><td>
             <select style="font-size:130%">
               <option hidden>Select...</option>
-              <option value="histogram">Histogram Object</options>
-              <option value="histogram2d">2D Histogram Object</options>
-              <option value="graph">Graph Object</options>
-              <option value="bar">Bar-Chart of Graph Object</options>
-              <option value="ts-histogram">Histogram of Time-Series Values</options>
-              <option value="ts-scatter">Scatter Plot of Time-Series Value Pairs</options>
+              <option value="histogram">Histogram Object</option>
+              <option value="histogram2d">2D Histogram Object</option>
+              <option value="graph">Graph Object</option>
+              <option value="bar">Bar-Chart of Graph Object</option>
+              <option value="ts-histogram">Histogram of Time-Series Values</option>
+              <option value="ts-scatter">Scatter Plot of Time-Series Value Pairs</option>
             </select></td>
        `).appendTo(table);
 

@@ -19,7 +19,7 @@ def create_datastore_from_url(url, *args, **kwargs):
         return DataStore_SQLite(db_url=url, table=table)
     elif url.startswith('influxdb2://'):
         measurement = kwargs['measurement'] if 'measurement' in kwargs else (args[0] if len(args) > 0 else 'slow_data')
-        return DataStore_InfluxDB2(db_url=url, measurement=args[0])
+        return DataStore_InfluxDB2(db_url=url, measurement=measurement)
     elif url.startswith('redis://'):
         return DataStore_Redis(db_url=url)
     elif url.startswith('csv:///'):

@@ -12,6 +12,7 @@ class DataSource_PostgreSQL_NoAsync(DataSource_SQL):
         super().__init__(app, project, params)
         
         self.db_has_floor = True
+        self.placeholder = '%s'
         
         self.url = params.get('url', None)
         if self.url is not None and self.url[0:13] != 'postgresql://':

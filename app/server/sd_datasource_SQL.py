@@ -117,6 +117,7 @@ class DataSource_SQL(DataSource_TableStore):
     def __init__(self, app, project, params):
         self.server = None
         self.time_sep = 'T'
+        self.placeholder = '?'
         self.db_has_floor = False
         super().__init__(app, project, params)
 
@@ -275,11 +276,13 @@ class DataSource_SQL(DataSource_TableStore):
                 
     async def _get_first_data_value(self, table_name, tag_name, tag_value, field):
         if tag_name is not None:
-            sql = "SELECT %s FROM %s WHERE %s='%s' LIMIT 1" % (field, table_name, tag_name, tag_value)
+            sql = f"SELECT %s FROM %s WHERE %s={self.placeholder} LIMIT 1" % (field, table_name, tag_name)
+            params = (tag_value,)
         else:
             sql = "SELECT %s FROM %s LIMIT 1" % (field, table_name)
+            params = ()
         try:
-            result = await self.server.fetch(sql)
+            result = await self.server.fetch(sql, *params)
         except Exception as e:
             logging.error('SQL Error: %s: %s' % (str(e), sql))
             return None

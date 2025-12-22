@@ -42,7 +42,7 @@ class DataStore_InfluxDB2(DataStore):
             bucket = split_at_slash[1]
         split_at_slash_colon = split_at_slash[0].split(':', 1)
         if len(split_at_slash_colon) < 2:
-            host, port = split_at_slash, '8086'
+            host, port = split_at_slash[0], '8086'
         else:
             host, port = split_at_slash_colon[0], split_at_slash_colon[1]
             

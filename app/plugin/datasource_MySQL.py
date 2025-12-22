@@ -55,11 +55,13 @@ class AsyncMySQLServer(SQLBaseServer):
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cursor:
                 try:
-                    await cursor.execute(sql, *params)
+                    await cursor.execute(sql, params)
                     await conn.commit()
+                    return AsyncMySQLQueryResult()
                 except Exception as e:
                     logging.error(f'SQL Async Execute Error: {e}')
                     logging.error(traceback.format_exc())
+                    return SQLQueryErrorResult(str(e))
             
         
     async def fetch(self, sql, *params):
@@ -85,6 +87,7 @@ class DataSource_MySQL(DataSource_SQL):
         super().__init__(app, project, params)
         
         self.db_has_floor = True
+        self.placeholder = '%s'
         
         # Parse the MySQL-style URL into each parameter
         self.url = params.get('url', None)

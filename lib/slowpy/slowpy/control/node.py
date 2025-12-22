@@ -47,7 +47,7 @@ class ControlNode:
             loop = asyncio.get_running_loop()
             return await loop.run_in_executor(None, self.set, value)  # makes a thread to call self.set(value)
         else:
-            return set(value)   # this may cause a starvation if multiple aio set()/get() tasks are mutual
+            return self.set(value)   # this may cause a starvation if multiple aio set()/get() tasks are mutual
 
     
     # override this
@@ -91,7 +91,7 @@ class ControlNode:
                 else:
                     time.sleep(0.1)
         elif subsec10 > 0:
-            time.sleep(subsec/10.0)
+            time.sleep(subsec10/10.0)
 
         return not self.is_stop_requested()
 
@@ -122,7 +122,7 @@ class ControlNode:
 
     
     # to be used in subclasses
-    def wait(condition_lambda=None, poll_interval=0.1, timeout=0):
+    def wait(self, condition_lambda=None, poll_interval=0.1, timeout=0):
         """stoppable-wait: to be used in subclasses
         Args:
             condition_lambda (lambda x): a function that takes a value from self.get() and returns True or False.
@@ -149,7 +149,7 @@ class ControlNode:
         
             
     # to be used in subclasses (async version)
-    async def aio_wait(condition_lambda=None, poll_interval=0.1, timeout=0):
+    async def aio_wait(self, condition_lambda=None, poll_interval=0.1, timeout=0):
         """stoppable-wait: to be used in subclasses, async version
         Args:
             condition_lambda (lambda x): a function that takes a value from self.get() and returns True or False.
@@ -195,9 +195,9 @@ class ControlNode:
         
     def __ne__(self, value):
         if isinstance(value, ControlNode):
-            return self.get() == value.get()
+            return self.get() != value.get()
         else:
-            return self.get() == value
+            return self.get() != value
 
 
     # __repr__() is called by interpreter, causing unexpected get() calls after creating a node
@@ -280,14 +280,17 @@ class ControlNode:
                 module = importlib.util.module_from_spec(spec)
                 sys.modules[module_name] = module
                 spec.loader.exec_module(module)
+                error_msg = 'unknown error'
             except Exception as e:
-                if module_name in sys.modules:
-                    del sys.modules[module_name]
+                module = None
+                error_msg = str(e)
                 logging.error(traceback.format_exc())
                 print(traceback.format_exc())
 
-        if module is None:
-            raise ControlException('unable to load control module: %s: %s' % (module_name, str(e)))
+            if module is None:
+                if module_name in sys.modules:
+                    del sys.modules[module_name]
+                raise ControlException('unable to load control module: %s: %s' % (module_name, error_msg))
             
         node_classes = []
         for class_name, NodeClass in module.__dict__.items():

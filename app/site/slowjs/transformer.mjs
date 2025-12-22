@@ -141,7 +141,7 @@ class EqualFunctor extends ScalarFunctor {
     constructor(args) {
         super(args);
         if (args.length > 0) {
-            this.rhs = args[0]
+            this.rhs = args[0];
         }
         else {
             this.rhs = null;
@@ -269,7 +269,7 @@ class GetFunctor extends Functor {
     _applyToTree(path, data) {
         let node = $.extend(true, {}, data.tree);
         for (const key of path.split('/')) {
-            if ((node[key] == undefined) || (node[key] == null)) {
+            if ((node[key] === undefined) || (node[key] === null)) {
                 console.log("path not found: " + path);
                 return null;
             }
@@ -370,7 +370,7 @@ export class Transformer {
                     inSingleQuote = ! inSingleQuote;
                 }
                 if (! inSingleQuote && (ch == '"')) {
-                    inDoubleQuote = ! inDoubleQuote
+                    inDoubleQuote = ! inDoubleQuote;
                 }
                 if (inSingleQuote || inDoubleQuote) {
                     currentArg += ch;

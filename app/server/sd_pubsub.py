@@ -76,7 +76,7 @@ class PubsubComponent(Component):
         return True
 
 
-    @slowlette.post('api/consume/current_data')
+    @slowlette.post('/api/consume/current_data')
     async def cache_current_data(self, doc:slowlette.DictJSON):
         """caches the publised data for future data queries
         - holds only the last data for each channel

@@ -126,17 +126,17 @@ class DataSource_CSV(DataSource_TableStore):
                             if columns[k] == tag_name:
                                 tag_column = k
                             elif columns[k] == field:
-                                field_column = k
+                                value_column = k
                         if tag_column is None:
                             logging.error('unable to find tag column: %s: %s' % (tag_name, filepath))
                             return None
-                        if field_column is None:
+                        if value_column is None:
                             logging.error('unable to find field column: %s: %s' % (field, filepath))
                             return None
                     else:
                         record = self._split(line)
                         if (len(record) == len(columns)) and (record[tag_column] == tag_value):
-                            value = record[field_column]
+                            value = record[value_column]
                             break
         except Exception as e:
             logging.error('unable to read CSV file: %s: %s' % (filepath, str(e)))
@@ -178,7 +178,7 @@ class DataSource_CSV(DataSource_TableStore):
                                 row.append(record[tag_column])
                         row += [ record[k] for k in field_columns ]
                         if lastonly and len(table) > 0:
-                            table[0] = record
+                            table[0] = row
                         else:
                             table.append(row)
         except Exception as e:

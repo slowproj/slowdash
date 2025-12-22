@@ -217,7 +217,7 @@ class Schema:
 
                 
     def get_query_times(self, start, stop, time_sep='T'):
-        if self.time == None:
+        if self.time is None:
             time_from = '%d' % start
             time_to = '%d' % stop
         elif self.time_type == 'unix':

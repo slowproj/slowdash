@@ -163,9 +163,9 @@ class RandomSingleEventDeviceNode(spc.ControlNode):
         return self._get()
 
     
-    def aio_get(self):
+    async def aio_get(self):
         dt = self.random_trigger_interval.read(0)
-        asyncio.sleep(dt)
+        await asyncio.sleep(dt)
 
         return self._get()
 

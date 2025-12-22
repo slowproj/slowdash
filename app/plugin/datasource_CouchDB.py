@@ -65,8 +65,8 @@ class DataSource_CouchDB(DataSource):
             logging.error(traceback.format_exc())
             self.db = None
                 
-        if self.db is not  None:
-            logging.info('connected to CoudhDB, server: %s, db: %s' % (self.server_url, self.db_name))
+        if self.db is not None:
+            logging.info('connected to CouchDB, server: %s, db: %s' % (self.server_url, self.db_name))
             
         
     def scan_channels(self):
@@ -170,7 +170,7 @@ class DataSource_CouchDB(DataSource):
         couchdb_extra_entries = {
             'table': self.viewtable_schemata,
             'tree': self.viewtree_schemata,
-            'tree': self.dbinfo_schemata
+            'info': self.dbinfo_schemata
         }
         for datatype, schemata in couchdb_extra_entries.items():
             for schema in schemata:

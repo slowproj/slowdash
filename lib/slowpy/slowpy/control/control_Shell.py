@@ -51,7 +51,7 @@ class ShellNode(spc.ControlNode):
 
     ## child nodes ##
     def value(self):  # for set_point() and ramping() grand-child nodes
-        return ShellValueNode(self, *args)
+        return ShellValueNode(self)
 
     
     def arg(self, *args):

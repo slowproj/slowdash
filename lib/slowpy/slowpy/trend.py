@@ -55,11 +55,11 @@ class Trend(DataElement):
         self.start_index = self.current_index
         
         
-    def evolve(self, time=None, complete=False):
-        if time is None:
-            time = time.time()
+    def evolve(self, t=None, complete=False):
+        if t is None:
+            t = time.time()
             
-        this_index = int((time - self.start_time) / self.tick)
+        this_index = int((t - self.start_time) / self.tick)
         if this_index < 0:
             return
 
@@ -77,19 +77,21 @@ class Trend(DataElement):
             self.current_index = this_index
             
         
-    def fill(self, time=None, value=None, weight=1):
-        if time is None:
-            time = time.time()
+    def fill(self, t=None, value=None, weight=1):
+        if t is None:
+            t = time.time()
             
-        self.evolve(time)
+        self.evolve(t)
         k = int(self.current_index % self.nbins)
         
         self.count[k] += weight
         if value is not None:
             self.sum[k] += weight*value
             self.sum2[k] += weight*value*value                
-            self.min[k] = value if not (value > self.min[k]) else self.min[k]
-            self.max[k] = value if not (value < self.max[k]) else self.max[k]
+            if np.isnan(self.min[k]) or value < self.min[k]:
+                self.min[k] = value
+            if np.isnan(self.max[k]) or value > self.max[k]:
+                self.max[k] = value
         else:
             self.has_values = False
 

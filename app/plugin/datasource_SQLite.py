@@ -13,6 +13,7 @@ class DataSource_SQLite(DataSource_SQL):
         
         self.time_sep = ' '
         self.db_has_floor = False
+        self.placeholder = '?'
         
         url = params.get('url', '')
         if url[0:10] == 'sqlite:///':
@@ -29,7 +30,7 @@ class DataSource_SQLite(DataSource_SQL):
 
     async def connect(self):
         if self.db_name is None:
-            return super().connect()
+            return await super().connect()
 
         db_file = '%s.db' % self.db_name
         if not os.path.isfile(db_file):
@@ -39,7 +40,7 @@ class DataSource_SQLite(DataSource_SQL):
         try:
             conn = sqlite3.connect(db_file)
         except Exception as e:
-            logging.error(f'DB "db_file" cannot be connnected: {str(e)}')
+            logging.error(f'DB "{db_file}" cannot be connected: {str(e)}')
             return None
         if conn is None:
             return None

@@ -115,6 +115,8 @@ class LongTableFormat(TableFormat):
 
 
     def insert_numeric_data(self, cur, timestamp, channel, value):
+        if type(value) not in [int, float]:
+            return self.insert_text_data(cur, timestamp, channel, value)
         sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
         sql += f"VALUES(%.3f,%s,{value});" % (timestamp, self.db.placeholder)
         params = (channel,)
@@ -135,6 +137,8 @@ class LongTableFormat_DateTime_PostgreSQL(LongTableFormat):
 
     
     def insert_numeric_data(self, cur, timestamp, channel, value):
+        if type(value) not in [int, float]:
+            return self.insert_text_data(cur, timestamp, channel, value)
         sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
         sql += f"VALUES(TO_TIMESTAMP(%.3f),%s,{value});" % (timestamp, self.db.placeholder)
         params = (channel,)
@@ -157,6 +161,8 @@ class LongTableFormat_DateTime_MySQL(LongTableFormat):
 
     
     def insert_numeric_data(self, cur, timestamp, channel, value):
+        if type(value) not in [int, float]:
+            return self.insert_text_data(cur, timestamp, channel, value)
         sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
         sql += f"VALUES(FROM_UNIXTIME(%.3f),%s,{value});" % (timestamp, self.db.placeholder)
         params = (channel,)
@@ -275,7 +281,7 @@ class DataStore_SQLite(DataStore_SQL):
             
         import sqlite3
         if not os.path.exists('%s.db' % db_url):
-            logging.info('DB file "%s.db" does not exist. Creating...' % self.db_url)
+            logging.info('DB file "%s.db" does not exist. Creating...' % db_url)
         self.conn = sqlite3.connect('%s.db' % db_url)
         
         logging.info('DB "%s" is connnected.' % self.db_url)
@@ -429,7 +435,7 @@ class DataStore_MySQL(DataStore_SQL):
                 time.sleep(5)
         else:
             self.conn = None
-            logging.error('Unable to connect to PostgreSQL')
+            logging.error('Unable to connect to MySQL: %s' % db_url)
             logging.error(traceback.format_exc())
             return
 

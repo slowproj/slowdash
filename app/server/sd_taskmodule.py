@@ -531,7 +531,7 @@ class TaskModuleComponent(Component):
                 continue
             self.known_task_list.append(name)
 
-            module = TaskModule(filepath, name, {})
+            module = TaskModule(self.app, filepath, name, {}, {})
             if module is None:
                 logging.error('Unable to load control module: %s' % filepath)
             else:

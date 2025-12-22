@@ -16,9 +16,9 @@ class BlobStorage:
     def _get_mime(ext):
         if ext == '.html':
             mime = 'text/html'
-        elif ext == 'json':
+        elif ext == '.json':
             mime = 'application/json'
-        elif ext == 'yaml':
+        elif ext == '.yaml':
             mime = 'application/yaml'
         elif ext == '.png':
             mime = 'image/png'
@@ -115,7 +115,7 @@ class BlobStorage_File(BlobStorage):
         if filename is not None:
             dirname = os.path.join(*this_names)
             if mime is None:
-                mime = BlobStorage._get_mime(os.path.splitext(filepath)[1])
+                mime = BlobStorage._get_mime(os.path.splitext(filename)[1])
         else:
             dirname = os.path.join(*(this_names[:-1]))
             filename = self.prefix + this_names[-1] + self.ext

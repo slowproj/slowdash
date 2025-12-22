@@ -291,7 +291,7 @@ def slowdashify(fig, name:str):
             plotdata = plot.get('_data', {})
             plotname = plotdata.get('_attr', {}).get('name', None)
             if plotname is None:
-                plotname = f'unnamed{len(data):02d}'
+                plotname = f'unnamed{len(data_packet):02d}'
             channel = f'{name}.{plotname}'
             
             if 'bins' in plotdata:

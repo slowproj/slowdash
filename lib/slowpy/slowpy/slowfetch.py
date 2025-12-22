@@ -4,6 +4,10 @@
 import os, sys, time, json, io, datetime, logging
 from collections import namedtuple
 from urllib import request, parse
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 
 from .basetypes import DataElement
 from .histograms import Histogram, Histogram2d
@@ -69,8 +73,10 @@ class SlowFetch:
         """
         to, length = self._find_time_range(start, stop)
         if to is None:
-            df = pd.DataFrame(columns=['DateTime', 'TimeStamp']+channels)
-            return df
+            if pd is not None:
+                df = pd.DataFrame(columns=['DateTime', 'TimeStamp']+channels)
+                return df
+            return {}
         
         url = '%s/data/%s?length=%f&to=%f' % (self.baseurl, ','.join(channels), length, to)
         if resample is not None:

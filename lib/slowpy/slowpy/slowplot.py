@@ -520,13 +520,13 @@ class slowplot:
     def legend(cls, *args, **kwargs):
         if len(cls.figure_list):
             for ax in cls.figure_list[-1].axes_list:
-                cls.figure_list[-1].axes_list[-1].legend(*args, **kwargs)
+                ax.legend(*args, **kwargs)
 
     @classmethod
     def grid(cls, *args, **kwargs):
         if len(cls.figure_list):
             for ax in cls.figure_list[-1].axes_list:
-                cls.figure_list[-1].axes_list[-1].grid(*args, **kwargs)
+                ax.grid(*args, **kwargs)
         
     @classmethod
     def subplots_adjust(cls, *args, **kwargs):

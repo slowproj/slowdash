@@ -12,6 +12,7 @@ class DataSource_MySQL_mysqlclient(DataSource_SQL):
         super().__init__(app, project, params)
         
         self.db_has_floor = True
+        self.placeholder = '%s'
 
         # Parse the PostgreSQL-style URL into each parameter
         self.url = params.get('url', None)

@@ -69,9 +69,9 @@ class DataStore:
             for i in range(len(ts.t)):
                 fields, values = [], []
                 for k in range(len(ts.fields)):
-                    if ts.values[k][i] is not None:
+                    if ts.values[i][k] is not None:
                         fields.append(ts.fields[k])
-                        values.append(ts.values[k][i])
+                        values.append(ts.values[i][k])
                 if len(fields) > 0:
                     records.append((ts.start+ts.t[i], fields, values))
                 

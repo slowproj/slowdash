@@ -260,12 +260,12 @@ export class Platform {
             dialog.html(`
                 <h3>File uploading Failed</h3>
                 <h4>${filename}</h4>
-                ${e.message}
+                ${response.status} ${response.statusText}
                 <div class="jaga-dialog-button-pane"><button>Close</button></div>
             `);
             dialog.find('button').at(0).click(e=>{
                 dialog.get().close();
-                opts.on_error(e);
+                opts.on_error(response);
             });
             dialog.get().showModal();
             return;
@@ -337,7 +337,7 @@ export class SaveConfigDialog {
                 <label><input type="radio" name="mode" value="normal" checked>Normal</label>
               </td></tr>
               <tr><td></td><td>
-                <label><input type="radio" name="mode" value="protedted">Protected
+                <label><input type="radio" name="mode" value="protected">Protected
                 <span font-size="60%">(layout cannot be modified)</span></label>
               </td></tr>
               <tr><td></td><td>

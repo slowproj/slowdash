@@ -68,20 +68,20 @@ class TimeSeries:
         self.values = []
 
 
-    def write(values, time=None):
+    def write(self, values, t=None):
         '''
         # add one point to the time-series #
         - values: dict for field name-value pairs, or list for field values, or a value
                   where a value can be a number, string, or data-element.
         - time: UNIX time-stamp, if None if given, the current time will be used.
         '''
-        if time is None:
-            time = time.time() - self.start
+        if t is None:
+            t = time.time() - self.start
         
         record = [None] * len(self.fields)
         
         if type(values) == dict:
-            for i in len(record):
+            for i in range(len(record)):
                 record[i] = values.get(self.fields[i], None)
         elif type(values) == list:
             for i in range(min(len(values), len(record))):
@@ -89,7 +89,7 @@ class TimeSeries:
         else:
             record[0] = values
 
-        self.t.append(time)
+        self.t.append(t)
         self.values.append(record)
 
 
@@ -108,7 +108,7 @@ class TimeSeries:
             't': self.t,
         }
         for k in range(len(self.fields)):
-            record[self.fields[k]] = self.values[k]
+            record[self.fields[k]] = [ v[k] for v in self.values ]
         
         return record
 

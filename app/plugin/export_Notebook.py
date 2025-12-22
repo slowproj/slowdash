@@ -22,7 +22,7 @@ class Export_Notebook(ComponentPlugin):
 
 
     @slowlette.get('/api/export/python/{channels}')
-    def expor_python(self, channels:str, opts:dict):
+    def export_python(self, channels:str, opts:dict):
         return self.generate_python(channels, opts)
 
     
