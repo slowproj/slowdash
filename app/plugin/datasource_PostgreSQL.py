@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 7 March 2025 #
 
 
-import logging, traceback
+import re, logging, traceback
 from sd_datasource_SQL import SQLBaseServer, SQLQueryResult, SQLQueryErrorResult, DataSource_SQL
 
 import asyncpg
@@ -33,6 +33,7 @@ class AsyncPostgreSQLServer(SQLBaseServer):
     def __init__(self, pool):
         super().__init__()
         self.pool = pool
+        self.placeholder_re = re.compile(r"%s")  # psycopg2 (%s) -> asyncpg ($1,$2,...)
 
         
     def is_connected(self):
@@ -44,15 +45,25 @@ class AsyncPostgreSQLServer(SQLBaseServer):
             await self.pool.close()
             self.pool = None
 
-            
-    async def execute(self, sql, *params):
+
+    def _replace_placeholders(self, sql, params):
+        if sql.count('%s') != len(params):
+            raise ValueError('number of placeholders does not match number of params')
+        def repl(match):
+            repl.index += 1
+            return f'${repl.index}'
+        repl.index = 0
+        return self.placeholder_re.sub(repl, sql)
+
+    
+    async def execute(self, sql, params=()):
         if self.pool is None:
             return AsyncPostgreSQLQueryResult()
 
         logging.debug(f'SQL Async Execute: {sql}; params={params}')
         async with self.pool.acquire() as conn:
             try:
-                await conn.execute(sql, *params)
+                await conn.execute(self._replace_placeholders(sql, params), *params)
                 # asyncpg performs automatic commit
                 return AsyncPostgreSQLQueryResult()
             except Exception as e:
@@ -61,14 +72,14 @@ class AsyncPostgreSQLServer(SQLBaseServer):
                 return SQLQueryErrorResult(str(e))
             
         
-    async def fetch(self, sql, *params):
+    async def fetch(self, sql, params=()):
         if self.pool is None:
             return AsyncPostgreSQLQueryResult()
         
         logging.debug(f'SQL Async Fetch: {sql}; params={params}')
         async with self.pool.acquire() as conn:
             try:
-                rows = await conn.fetch(sql, *params)
+                rows = await conn.fetch(self._replace_placeholders(sql, params), *params)
                 return AsyncPostgreSQLQueryResult(rows)
             except Exception as e:
                 logging.error(f'SQL Async Fetch Error: {e}')

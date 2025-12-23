@@ -54,11 +54,11 @@ class SQLBaseServer:
         pass
     
 
-    async def execute(self, sql, *params):
+    async def execute(self, sql, params):
         return SQLQueryResult()
             
         
-    async def fetch(self, sql, *params):
+    async def fetch(self, sql, params):
         return SQLQueryResult()
 
     
@@ -79,7 +79,7 @@ class SQLServer(SQLBaseServer):
             self.conn = None
 
             
-    async def execute(self, sql, *params):
+    async def execute(self, sql, params=()):
         if self.conn is None:
             return SQLQueryResult()
 
@@ -96,7 +96,7 @@ class SQLServer(SQLBaseServer):
         return SQLQueryResult(cursor)
             
         
-    async def fetch(self, sql, *params):
+    async def fetch(self, sql, params=()):
         if self.conn is None:
             return SQLQueryResult()
 
@@ -232,7 +232,7 @@ class DataSource_SQL(DataSource_TableStore):
     async def _get_tag_values_from_data(self, schema):
         if schema.tag_value_sql is None:
             # TODO: this is inefficient. Modify not to go though all the DB entries.
-            schema.tag_value_sql = 'SELECT DISTINCT %s FROM %s' % (schema.tag, schema.table)
+            schema.tag_value_sql = f"SELECT DISTINCT {schema.tag} FROM {schema.table}"
 
         try:
             start_time = time.time()
@@ -255,7 +255,7 @@ class DataSource_SQL(DataSource_TableStore):
 
 
     async def _get_first_data_row(self, schema):
-        sql = 'SELECT * FROM %s LIMIT 1' % schema.table
+        sql = f"SELECT * FROM {schema.table} LIMIT 1"
         try:
             result = await self.server.fetch(sql)
         except Exception as e:
@@ -276,13 +276,13 @@ class DataSource_SQL(DataSource_TableStore):
                 
     async def _get_first_data_value(self, table_name, tag_name, tag_value, field):
         if tag_name is not None:
-            sql = f"SELECT %s FROM %s WHERE %s={self.placeholder} LIMIT 1" % (field, table_name, tag_name)
+            sql = f"SELECT {field} FROM {table_name} WHERE {tag_name}={self.placeholder} LIMIT 1"
             params = (tag_value,)
         else:
-            sql = "SELECT %s FROM %s LIMIT 1" % (field, table_name)
+            sql = f"SELECT {field} FROM {table_name} LIMIT 1"
             params = ()
         try:
-            result = await self.server.fetch(sql, *params)
+            result = await self.server.fetch(sql, params)
         except Exception as e:
             logging.error('SQL Error: %s: %s' % (str(e), sql))
             return None
@@ -340,30 +340,28 @@ class DataSource_SQL(DataSource_TableStore):
         else:
             time_field = time_col
         if tag_col is None:
-            sql_select = 'SELECT %s' % ','.join([ time_field ] + fields)
+            sql_select = f"SELECT {','.join([ time_field ] + fields)}"
         else:
-            sql_select = 'SELECT %s' % ','.join([ time_field, tag_col ] + fields)
-        sql_from = 'FROM %s' % table_name
+            sql_select = f"SELECT {','.join([ time_field, tag_col ] + fields)}"
+        sql_from = f"FROM {table_name}"
         params = []
         if time_col is not None:
-            sql_where_list = [ '%s>=%s' % (time_col, self.placeholder), '%s<%s' % (time_col, self.placeholder) ]
-            params.extend([time_from, time_to])
+            sql_where_list = [ f"{time_col}>={time_from}", f"{time_col}<{time_to}" ]
         else:
             sql_where_list = []
         if len(tag_values) > 0:
-            placeholders = ','.join([self.placeholder] * len(tag_values))
-            sql_where_list += [ '%s IN (%s)' % (tag_col, placeholders) ]
+            sql_where_list += [ f"{tag_col} IN ({','.join([self.placeholder]*len(tag_values))})" ]
             params.extend(tag_values)
         sql_where = 'WHERE ' + ' AND '.join(sql_where_list) if len(sql_where_list) > 0 else ''
         
         if time_col is None:
             sql_orderby = ''
         elif lastonly:
-            sql_orderby = 'ORDER BY %s DESC' % time_col
+            sql_orderby = f"ORDER BY {time_col} DESC"
             if (tag_col is None) or (len(tag_values) == 1):
                 sql_orderby += ' limit 1'
         else:
-            sql_orderby = 'ORDER BY %s ASC' % time_col
+            sql_orderby = f"ORDER BY {time_col} ASC"
 
         sql = None
         if time_col is None or lastonly:
@@ -396,7 +394,7 @@ class DataSource_SQL(DataSource_TableStore):
                     f"    cte_bucket AS ({sql_cte_bucket}),",
                     f"    cte_data AS ({sql_cte_data})",
                     f"SELECT",
-                    f"    {stop}-{resampling}*(bucket+0.5) AS {time_col}, t.{tag_col}, %s" % ','.join(fields),
+                    f"    {stop}-{resampling}*(bucket+0.5) AS {time_col}, t.{tag_col}, {','.join(fields)}",
                     f"FROM",
                     f"    cte_data AS t",
                     f"JOIN",
@@ -429,7 +427,7 @@ class DataSource_SQL(DataSource_TableStore):
                     f"SELECT",
                     f"    {stop}-{resampling}*(bucket+0.5) as {time_col},",
                     f"    %s" % ("" if tag_col is None else f"{tag_col},"),
-                    f"    %s" % ','.join(fields),
+                    f"    {','.join(fields)}",
                     f"FROM",
                     f"    cte_bucket",
                     f"{sql_orderby}"
@@ -438,9 +436,9 @@ class DataSource_SQL(DataSource_TableStore):
         if sql is None:
             sql = ' '.join([ sql_select, sql_from, sql_where, sql_orderby ])
 
-        query_result = await self.server.fetch(sql, *params)
+        query_result = await self.server.fetch(sql, params)
         if query_result.is_error:
-            logging.error('SQL Query Error: %s: %s' % (query_result.error, sql))
+            logging.error('SQL Query Error: %s: %s (params=%s)' % (query_result.error, sql, str(params)))
             return [], []
 
         return query_result.get_column_names(), query_result.get_table()

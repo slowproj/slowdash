@@ -47,7 +47,7 @@ class AsyncMySQLServer(SQLBaseServer):
             self.pool = None
 
             
-    async def execute(self, sql, *params):
+    async def execute(self, sql, params=()):
         if self.pool is None:
             return AsyncMySQLQueryResult()
 
@@ -64,7 +64,7 @@ class AsyncMySQLServer(SQLBaseServer):
                     return SQLQueryErrorResult(str(e))
             
         
-    async def fetch(self, sql, *params):
+    async def fetch(self, sql, params=()):
         if self.pool is None:
             return AsyncMySQLQueryResult()
         
@@ -72,7 +72,7 @@ class AsyncMySQLServer(SQLBaseServer):
         async with self.pool.acquire() as conn:
             async with conn.cursor(aiomysql.DictCursor) as cursor:
                 try:
-                    await cursor.execute(sql, *params)
+                    await cursor.execute(sql, params)
                     rows = await cursor.fetchall()
                     return AsyncMySQLQueryResult(rows)
                 except Exception as e:
