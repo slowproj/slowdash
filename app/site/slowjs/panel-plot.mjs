@@ -91,13 +91,13 @@ class Plot {
         div.html(`
             <table>
               <tr><td>Channel</td><td><input list="sd-numeric-timeseries-datalist"></td></tr>
-              <tr><td>Label</td><td><input placeholder="auto"></td></tr>
-              <tr><td>Format</td><td><input placeholder="%f"></td></tr>
+              <tr><td>Label</td><td><input placeholder="auto">, Format: <input placeholder="%f"></td></tr>
             </table>
         `);
+        
         let table = div.find('table');
-
-        let k = 0;
+        let k = 0, ks = 0;
+        
         if (this.config.channelX && this.config.channelY) {
             table.find('tr:first-child').remove();
             table.prepend($('<tr>').html(`<td>Channel Y</td><td><input list="sd-numeric-timeseries-datalist"></td>`));
@@ -108,8 +108,31 @@ class Plot {
         else {
             bindInput(this.config, 'channel', div.find('input').at(k++).css('width', '20em'));
         }
-        bindInput(this.config, 'label', div.find('input').at(k++).css('width', '20em'));
+        
+        bindInput(this.config, 'label', div.find('input').at(k++).css('width', '10em'));
         bindInput(this.config, 'format', div.find('input').at(k++).css('width', '5em'));
+        
+        if (this.config.resampling) {
+            let tr = $('<tr>');
+            tr.html(`
+              <td>Resampling</td>
+              <td>
+                threshold: <input placeholder="7200" type="number" step="any">,
+                <select>
+                    <option value="mean">mean</option>
+                    <option value="last">last</option>
+                </select>
+                ${this.config.resampling.envelope!==undefined ? ', <label><input type="checkbox">envelope</label>' : ''}
+              </td>
+            `);
+            tr.appendTo(table);
+            bindInput(this.config.resampling, 'threshold', div.find('input').at(k++).css('width', '5em'));
+            bindInput(this.config.resampling, 'reducer', div.find('select').at(ks++).css('width', '4em'));
+            if (this.config.resampling.envelope !== undefined) {
+                bindInput(this.config.resampling, 'envelope', div.find('input').at(k++), true);
+            }
+        }
+        
         if (this.config.color) {
             table.append($('<tr>').html(`
               <tr><td>Color</td><td><input type="color">, Opacity: <input type="number" step="0.05" min="0" max="1" placeholder="1"></td></tr>
@@ -259,6 +282,10 @@ class HistogramPlot extends Plot {
 class TimeseriesHistogramPlot extends HistogramPlot {
     configure(config, axes, legend, panel) {
         super.configure(config, axes, legend, panel);
+        
+        if (! this.config.resampling) {
+            this.config.resampling = {threshold: null, reducer: 'last'};
+        }
     }
     
     openSettings(div) {
@@ -660,7 +687,7 @@ class LineMarkerPlot extends GraphPlot {
     openSettings(div) {
         super.openSettings(div);
         let table = div.find('table');
-        let k = table.find('input').size();
+        let k = table.find('input').size(), ks = table.find('select').size();
         table.append($('<tr>').html(`
             <td>Line</td><td>width: <input type="number" step="any" min="0">, 
             type: <select>
@@ -683,8 +710,8 @@ class LineMarkerPlot extends GraphPlot {
         `));
 
         bindInput(this.config, 'line_width', div.find('input').at(k++).css('width', '5em'));
-        bindInput(this.config, 'line_type', div.find('select').at(0).css('width', '7em'));
-        bindInput(this.config, 'marker_type', div.find('select').at(1).css('width', '7em'));
+        bindInput(this.config, 'line_type', div.find('select').at(ks++).css('width', '7em'));
+        bindInput(this.config, 'marker_type', div.find('select').at(ks++).css('width', '7em'));
         bindInput(this.config, 'marker_size', div.find('input').at(k++).css('width', '5em'));
         bindInput(this.config, 'fill_envelope', div.find('input').at(k++), true);
         bindInput(this.config, 'fill_envelope', div.find('input').at(k++), false);
@@ -752,6 +779,10 @@ class TimeseriesScatterPlot extends GraphPlot {
 
         super.configure(config, axes, legend, panel);
         
+        if (! this.config.resampling) {
+            this.config.resampling = {threshold: 0, reducer: 'last'};
+        }
+        
         if (! this.config.lastpoint_type) {
             this.config.lastpoint_type = this.config.marker_type;
         }
@@ -807,7 +838,7 @@ class TimeseriesScatterPlot extends GraphPlot {
     openSettings(div) {
         super.openSettings(div);
         let table = div.find('table');
-        let k = table.find('input').size();
+        let k = table.find('input').size(), ks = table.find('select').size();
         table.append($('<tr>').html(`
             <td>Line</td><td>width: <input type="number" step="any" min="0"></td>
         `));
@@ -822,9 +853,9 @@ class TimeseriesScatterPlot extends GraphPlot {
         `));
 
         bindInput(this.config, 'line_width', div.find('input').at(k++).css('width', '5em'));
-        bindInput(this.config, 'marker_type', div.find('select').at(0).css('width', '7em'));
+        bindInput(this.config, 'marker_type', div.find('select').at(ks++).css('width', '7em'));
         bindInput(this.config, 'marker_size', div.find('input').at(k++).css('width', '5em'));
-        bindInput(this.config, 'lastpoint_type', div.find('select').at(1).css('width', '7em'));
+        bindInput(this.config, 'lastpoint_type', div.find('select').at(ks++).css('width', '7em'));
         bindInput(this.config, 'lastpoint_size', div.find('input').at(k++).css('width', '5em'));
         bindInput(this.config, 'lastpoint_color', div.find('input').at(k++).css('width', '2em'));
     }
@@ -909,6 +940,9 @@ class TimeseriesScatterPlot extends GraphPlot {
 class TimeseriesPlot extends LineMarkerPlot {
     configure(config, axes, legend, panel) {
         super.configure(config, axes, legend, panel);
+        if (! this.config.resampling) {
+            this.config.resampling = {threshold: null, reducer: 'last', envelope: false};
+        }
     }
     
     update(dataPacket, isCurrent, isPartial) {
@@ -1414,7 +1448,7 @@ class PlotPanel extends Panel {
 
         let legend = this.config.legend;
         
-        let k = 0;
+        let k = 0, ks = 0;
         bindInput(axes, 'title', inputsDiv.find('input').at(k++).css('width', '20em'));
         bindInput(axes, 'xtitle', inputsDiv.find('input').at(k++).css('width', '20em'));
         bindInput(axes, 'xfixed', inputsDiv.find('input').at(k++), false);
@@ -1434,9 +1468,9 @@ class PlotPanel extends Panel {
         bindInput(axes, 'zmin', inputsDiv.find('input').at(k++).css('width', '5em'));
         bindInput(axes, 'zmax', inputsDiv.find('input').at(k++).css('width', '5em'));
         bindInput(axes, 'zlog', inputsDiv.find('input').at(k++), true);
-        bindInput(legend, 'style', inputsDiv.find('select').at(0));
-        bindInput(legend, 'position', inputsDiv.find('select').at(1));
-        bindInput(axes, 'colorscale', inputsDiv.find('select').at(2));
+        bindInput(legend, 'style', inputsDiv.find('select').at(ks++));
+        bindInput(legend, 'position', inputsDiv.find('select').at(ks++));
+        bindInput(axes, 'colorscale', inputsDiv.find('select').at(ks++));
 
         let drawingsDiv = $('<div>').appendTo(div).css(boxStyle);
         drawingsDiv.html(`
@@ -1832,7 +1866,7 @@ class TimeAxisPlotPanel extends PlotPanel {
         
         let legend = this.config.legend;
         
-        let k = 0;
+        let k = 0, ks = 0;
         bindInput(axes, 'title', inputsDiv.find('input').at(k++).css('width', '20em'));
         bindInput(axes, 'ytitle', inputsDiv.find('input').at(k++).css('width', '20em'));
         bindInput(axes, 'yfixed', inputsDiv.find('input').at(k++), true);
@@ -1840,8 +1874,8 @@ class TimeAxisPlotPanel extends PlotPanel {
         bindInput(axes, 'ymax', inputsDiv.find('input').at(k++).css('width', '5em'));
         bindInput(axes, 'yfixed', inputsDiv.find('input').at(k++), false);
         bindInput(axes, 'ylog', inputsDiv.find('input').at(k++), true);
-        bindInput(legend, 'style', inputsDiv.find('select').at(0));
-        bindInput(legend, 'position', inputsDiv.find('select').at(1));
+        bindInput(legend, 'style', inputsDiv.find('select').at(ks++));
+        bindInput(legend, 'position', inputsDiv.find('select').at(ks++));
 
         let drawingsDiv = $('<div>').appendTo(div).css(boxStyle);
         drawingsDiv.html(`
