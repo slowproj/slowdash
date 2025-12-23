@@ -338,25 +338,23 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <h4 id="printing-channel-list">Printing Channel List</h4>
 <div class="sourceCode" id="cb7"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash channels</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>23-03-22 12:48:34 INFO: loaded datasource module &quot;datasource_SQLAlchemy&quot;</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>[</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  {&quot;name&quot;: &quot;sccm_Alicat_Inj_Gas&quot;}, </span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  {&quot;name&quot;: &quot;mbar_CC10_Inj_Gas&quot;}, </span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  {&quot;name&quot;: &quot;mbar_IG_Vac_MS&quot;}, </span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  {&quot;name&quot;: &quot;degC_RTD1_Acc_AS&quot;}, </span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  {&quot;name&quot;: &quot;degC_RTD2_Acc_AS&quot;}, </span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  ...</span></code></pre></div>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>[</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  {&quot;name&quot;: &quot;sccm_Alicat_Inj_Gas&quot;}, </span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  {&quot;name&quot;: &quot;mbar_CC10_Inj_Gas&quot;}, </span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  {&quot;name&quot;: &quot;mbar_IG_Vac_MS&quot;}, </span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  {&quot;name&quot;: &quot;degC_RTD1_Acc_AS&quot;}, </span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  {&quot;name&quot;: &quot;degC_RTD2_Acc_AS&quot;}, </span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  ...</span></code></pre></div>
 <h4 id="printing-data">Printing Data</h4>
 <div class="sourceCode" id="cb8"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash &#39;data/sccm_Alicat_Inj_Gas?length=60&#39;</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>23-03-22 12:50:20 INFO: loaded datasource module &quot;datasource_SQLAlchemy&quot;</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  &quot;sccm_Alicat_Inj_Gas&quot;: {</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    &quot;start&quot;: 1679514341, &quot;length&quot;: 60, </span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    &quot;t&quot;: [2.364, 12.364, 22.355, 32.366, 42.364, 52.362], </span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    &quot;x&quot;: [-0.015, -0.014, -0.014, -0.015, -0.014, -0.016]</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  &quot;sccm_Alicat_Inj_Gas&quot;: {</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    &quot;start&quot;: 1679514341, &quot;length&quot;: 60, </span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    &quot;t&quot;: [2.364, 12.364, 22.355, 32.366, 42.364, 52.362], </span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    &quot;x&quot;: [-0.015, -0.014, -0.014, -0.015, -0.014, -0.016]</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>When the argument includes a special character of the shell (such as
 <code>?</code> and <code>&amp;</code>), quote the entire argument.</p>
 <h1 id="running-the-server">Running the Server</h1>

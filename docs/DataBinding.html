@@ -859,19 +859,6 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb6-1"><a href="
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> sqlite:///FILENAME</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> TABLE [ TAG_COLUMN ] @ TIME_COLUMN</span></span></code></pre></div>
-<h4 id="other-sql-dbms">Other SQL DBMS</h4>
-<ul>
-<li>The “SQLAlchemy” library might support the SQL DB that you are
-using. See the <a href="https://www.sqlalchemy.org/">SQLAlchemy
-page</a>.</li>
-<li>In addition to <code>sqlalchemy</code>, also install the Python
-package to access the DB, as described in the SQLAlchemy page.</li>
-</ul>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> SQLAlchemy</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> DBTYPE://USER:PASS@HOST:PORT/DB</span></span></code></pre></div>
 <h3 id="avoiding-channel-scanning-overhead">Avoiding Channel Scanning
 Overhead</h3>
 <p>To obtain a list of channels, SlowDash executes a query like
@@ -879,19 +866,19 @@ Overhead</h3>
 table is large. This can be avoided either by manually listing the
 channels or by providing an efficient SQL statement:</p>
 <h4 id="by-a-manual-list">By a manual list</h4>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> numeric_data[endpoint]@timestamp(with timezone)=value_raw</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">tags</span><span class="kw">:</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="at">           </span><span class="fu">list</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> </span><span class="st">&quot;Ch0&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;Ch1&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;Ch2&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;Ch3&quot;</span><span class="at"> </span><span class="kw">]</span></span></code></pre></div>
+<h4 id="by-a-sql-query">By a SQL query</h4>
+<p>If the database has a channel table, separately from the data
+table:</p>
 <div class="sourceCode" id="cb8"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> numeric_data[endpoint]@timestamp(with timezone)=value_raw</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">tags</span><span class="kw">:</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="at">           </span><span class="fu">list</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> </span><span class="st">&quot;Ch0&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;Ch1&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;Ch2&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;Ch3&quot;</span><span class="at"> </span><span class="kw">]</span></span></code></pre></div>
-<h4 id="by-a-sql-query">By a SQL query</h4>
-<p>If the database has a channel table, separately from the data
-table:</p>
-<div class="sourceCode" id="cb9"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> numeric_data[endpoint]@timestamp(with timezone)=value_raw</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">tags</span><span class="kw">:</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="at">           </span><span class="fu">sql</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;select name from endpoint_table&quot;</span></span></code></pre></div>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="at">           </span><span class="fu">sql</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;select name from endpoint_table&quot;</span></span></code></pre></div>
 <h3 id="time-stamp-considerations">Time-stamp Considerations</h3>
 <p>SlowDash can handle several different data time-stamp types:</p>
 <ul>
@@ -952,57 +939,57 @@ SlowDash.</p>
 <h2 id="time-series-of-scalar-values">Time-Series of Scalar Values</h2>
 <p>To access a table containing time-series data, write the schema in
 the <code>time_series</code> entry:</p>
-<div class="sourceCode" id="cb10"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> postgresql://p8_db_user:****@localhost:5432/p8_sc_db</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> numeric_data[endpoint]@timestamp(with timezone)=value_raw</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> postgresql://p8_db_user:****@localhost:5432/p8_sc_db</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> numeric_data[endpoint]@timestamp(with timezone)=value_raw</span></span></code></pre></div>
 <h4 id="case-1-tag-values-for-channel-1">Case 1: Tag Values for
 Channel</h4>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> numeric_data[endpoint]@timestamp(with timezone)=value_raw</span></span></code></pre></div>
+<h4 id="case-2-fields-for-channel">Case 2: Fields for Channel</h4>
 <div class="sourceCode" id="cb11"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> numeric_data[endpoint]@timestamp(with timezone)=value_raw</span></span></code></pre></div>
-<h4 id="case-2-fields-for-channel">Case 2: Fields for Channel</h4>
-<div class="sourceCode" id="cb12"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> numeric_data@timestamp(with timezone)=value_raw,value_cal</span></span></code></pre></div>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> numeric_data@timestamp(with timezone)=value_raw,value_cal</span></span></code></pre></div>
 <h4 id="case-3-tag-and-fields-for-channel">Case 3: Tag and Fields for
 Channel</h4>
-<div class="sourceCode" id="cb13"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> numeric_data[endpoint]@timestamp(with timezone)=value_raw(default),value_cal</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> numeric_data[endpoint]@timestamp(with timezone)=value_raw(default),value_cal</span></span></code></pre></div>
 <h4 id="case-4-tag-flags-and-fields-for-channel">Case 4: Tag, Flags, and
 Fields for Channel</h4>
 <p>[TODO] Flags are currently not supported. To use the case 4 schemata,
 use the <code>where</code> and <code>suffix</code> options.</p>
-<div class="sourceCode" id="cb14"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> numeric_data[endpoint]@timestamp(with timezone)=value_raw(default),value_cal</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">where</span><span class="kw">:</span><span class="at"> ist_or_set=&#39;ist&#39;</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">suffix</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;:ist&#39;</span></span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> numeric_data[endpoint]@timestamp(with timezone)=value_raw(default),value_cal</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">where</span><span class="kw">:</span><span class="at"> ist_or_set=&#39;ist&#39;</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">suffix</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;:ist&#39;</span></span></code></pre></div>
 <h2 id="time-series-of-histograms-graphs-tables-trees">Time-Series of
 Histograms, Graphs, Tables &amp; Trees</h2>
 <ul>
 <li>store JSON string as data value</li>
 <li>use <code>object_time_series</code> entry</li>
 </ul>
-<div class="sourceCode" id="cb15"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> postgresql://p8_db_user:****@localhost:5432/p8_sc_db</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">object_time_series</span><span class="kw">:</span></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> histograms[channel]@timestamp(unix)=json</span></span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> postgresql://p8_db_user:****@localhost:5432/p8_sc_db</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">object_time_series</span><span class="kw">:</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> histograms[channel]@timestamp(unix)=json</span></span></code></pre></div>
 <h2 id="time-series-of-blobs">Time-Series of Blobs</h2>
 <p>[TODO] DB system specific?</p>
 <h2 id="sql-query-result-as-a-table">SQL Query Result as a Table</h2>
-<div class="sourceCode" id="cb16"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> sqlite:///RunTable.db</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">view</span><span class="kw">:</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">name</span><span class="kw">:</span><span class="at"> RunTable</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">sql</span><span class="kw">:</span><span class="at"> select * from RunTable where TimeStamp &gt;= ${FROM_UNIXTIME} and TimeStamp &lt; ${TO_UNIXTIME}</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> sqlite:///RunTable.db</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">view</span><span class="kw">:</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">name</span><span class="kw">:</span><span class="at"> RunTable</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">sql</span><span class="kw">:</span><span class="at"> select * from RunTable where TimeStamp &gt;= ${FROM_UNIXTIME} and TimeStamp &lt; ${TO_UNIXTIME}</span></span></code></pre></div>
 <ul>
 <li>The channel “RunTable” will return a single table object with
 time-stamp of “current”.
@@ -1022,19 +1009,19 @@ time-stamp of “current”.
 Values</h2>
 <p>For simple cases, just specify the Measurement name in the
 <code>time_series</code> entry:</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> influxdb://SlowDash@localhost:8086/TestData</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">token</span><span class="kw">:</span><span class="at"> MY_TOKEN_HERE</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">measurement</span><span class="kw">:</span><span class="at"> TestTimeSeries</span></span></code></pre></div>
+<p>or in a short form:</p>
 <div class="sourceCode" id="cb17"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> influxdb://SlowDash@localhost:8086/TestData</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">token</span><span class="kw">:</span><span class="at"> MY_TOKEN_HERE</span></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span></span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">measurement</span><span class="kw">:</span><span class="at"> TestTimeSeries</span></span></code></pre></div>
-<p>or in a short form:</p>
-<div class="sourceCode" id="cb18"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> influxdb://SlowDash@localhost:8086/TestData/TestTimeSeries</span></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">token</span><span class="kw">:</span><span class="at"> MY_TOKEN_HERE</span></span></code></pre></div>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> influxdb://SlowDash@localhost:8086/TestData/TestTimeSeries</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">token</span><span class="kw">:</span><span class="at"> MY_TOKEN_HERE</span></span></code></pre></div>
 <h3 id="non-minimal-configuration">Non-minimal Configuration</h3>
 <h4
 id="case-1-tag-values-for-channel-measchannelch1-valueval1-time">Case 1:
@@ -1043,37 +1030,37 @@ Tag Values for Channel
 <p>If there is only one Tag for channels and one Field for data values,
 the simple configuration above works. For data containing multiple tags
 and/or fields, specify the names using <code>schema</code>:</p>
-<div class="sourceCode" id="cb19"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> meas[channel]=value</span></span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> meas[channel]=value</span></span></code></pre></div>
 <h4 id="case-2-fields-for-channel-meas-ch1val1ch2val2-time">Case 2:
 Fields for Channel (<code>meas ch1=VAL1,ch2=VAL2 TIME</code>)</h4>
 <p>If the data does not have any Tags and all the Fields are used, the
 simple configuration above works. For data containing multiple tags
 and/or fields, specify the names using <code>schema</code>:</p>
-<div class="sourceCode" id="cb20"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> meas=ch1,ch2</span></span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> meas=ch1,ch2</span></span></code></pre></div>
 <h4
 id="case-3-tag-and-fields-for-channel-measchannelch1-value_rawvalrawvalue_calvalcal-time">Case
 3: Tag and Fields for Channel
 (<code>meas,channel=CH1 value_raw=VALRAW,value_cal=VALCAL TIME</code>)</h4>
 <p>Use <code>schema</code> to describe which tag and fields are
 used:</p>
-<div class="sourceCode" id="cb21"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> meas[channel]=value_raw(default),value_cal</span></span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> meas[channel]=value_raw(default),value_cal</span></span></code></pre></div>
 <h3 id="specifying-data-period">Specifying Data Period</h3>
 <p>Channel names (tag values and fields) are obtained through InfluxDB
 queries; however InfluxDB defaults do not extend back to a long range.
 The data time range for channel scan can be specified in the
 configuration:</p>
-<div class="sourceCode" id="cb22"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> meas</span></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">tags</span><span class="kw">:</span></span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">scan_date</span><span class="kw">:</span><span class="at"> 2025-01-01</span></span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">scan_length</span><span class="kw">:</span><span class="at"> 100d</span></span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> meas</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">tags</span><span class="kw">:</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">scan_date</span><span class="kw">:</span><span class="at"> 2025-01-01</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">scan_length</span><span class="kw">:</span><span class="at"> 100d</span></span></code></pre></div>
 <p>The tag values and fields are scanned for the time range
 <code>scan_date - scan_length</code> to <code>scan_date</code>. Default
 <code>scan_date</code> is <code>now()</code> and default
@@ -1087,13 +1074,13 @@ Histograms, Graphs, Tables &amp; Trees</h2>
 <li>store JSON string as data value</li>
 <li>use <code>object_time_series</code> entry</li>
 </ul>
-<div class="sourceCode" id="cb23"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> influxdb://SlowDash@localhost:8086/TestData</span></span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">token</span><span class="kw">:</span><span class="at"> MY_TOKEN_HERE</span></span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">object_time_series</span><span class="kw">:</span></span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">measurement</span><span class="kw">:</span><span class="at"> TestTimeSeriesOfObjects</span></span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> influxdb://SlowDash@localhost:8086/TestData</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">token</span><span class="kw">:</span><span class="at"> MY_TOKEN_HERE</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">object_time_series</span><span class="kw">:</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">measurement</span><span class="kw">:</span><span class="at"> TestTimeSeriesOfObjects</span></span></code></pre></div>
 <ul>
 <li>In InfluxDB, time-series of scalars and time-series of objects
 cannot live together in the same “measurement”. Use a dedicated
@@ -1125,16 +1112,16 @@ Values</h2>
 <li>Use RedisTS for time-series</li>
 <li>Redis key becomes the channel name</li>
 </ul>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> redis://localhost:6379</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">db</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span><span class="at"> </span><span class="kw">}</span></span></code></pre></div>
+<p>or in a short form:</p>
 <div class="sourceCode" id="cb24"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> redis://localhost:6379</span></span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">db</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span><span class="at"> </span><span class="kw">}</span></span></code></pre></div>
-<p>or in a short form:</p>
-<div class="sourceCode" id="cb25"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> redis://localhost:6379/1</span></span></code></pre></div>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> redis://localhost:6379/1</span></span></code></pre></div>
 <h2 id="time-series-of-histograms-graphs-tables-trees-2">Time-Series of
 Histograms, Graphs, Tables &amp; Trees</h2>
 <h3 id="implementation">Implementation</h3>
@@ -1153,11 +1140,11 @@ specified in user configuration.</li>
 calculated by <code>int(TimeStamp % RetentionLength)</code>.</li>
 </ul>
 <h3 id="configuration-file">Configuration File</h3>
-<div class="sourceCode" id="cb26"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> redis://localhost:6379</span></span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">object_time_series</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">db</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span><span class="at"> </span><span class="kw">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> redis://localhost:6379</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">object_time_series</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at"> </span><span class="fu">db</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span><span class="at"> </span><span class="kw">}</span></span></code></pre></div>
 <ul>
 <li>The <code>db</code> parameter of the <code>object_time_series</code>
 indicates the database number for the time-series of objects. All the
@@ -1170,30 +1157,30 @@ a specific way.</li>
 <code>SlowPy</code> client library can be used:</li>
 <li>Example:</li>
 </ul>
-<div class="sourceCode" id="cb27"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os, sys, time</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy <span class="im">as</span> slp</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>redis <span class="op">=</span> slp.DataStore_Redis(host<span class="op">=</span><span class="st">&#39;localhost&#39;</span>, port<span class="op">=</span><span class="dv">6379</span>, db<span class="op">=</span><span class="dv">1</span>, retention_length<span class="op">=</span><span class="dv">60</span>)</span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>histogram <span class="op">=</span> slp.Histogram(<span class="st">&#39;test_histogram_01&#39;</span>, <span class="dv">100</span>, <span class="dv">0</span>, <span class="dv">10</span>)</span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>graph <span class="op">=</span> slp.Graph(<span class="st">&#39;test_graph_01&#39;</span>, [<span class="st">&#39;time&#39;</span>, <span class="st">&#39;value&#39;</span>])</span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>redis.flush_db()</span>
-<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>tk, xk <span class="op">=</span> <span class="dv">0</span>, <span class="dv">0</span></span>
-<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
-<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">10</span>):</span>
-<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>        histogram.fill(np.random.normal(<span class="dv">5</span>, <span class="dv">2</span>))</span>
-<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>    tk <span class="op">=</span> tk <span class="op">+</span> <span class="dv">1</span></span>
-<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>    xk <span class="op">+=</span> np.random.normal(<span class="fl">0.1</span>, <span class="dv">1</span>)</span>
-<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>    graph.add_point(tk, xk)</span>
-<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>    redis.write_object_timeseries(histogram)</span>
-<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a>    redis.write_object_timeseries(graph)</span>
-<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>    time.sleep(<span class="dv">1</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os, sys, time</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy <span class="im">as</span> slp</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>redis <span class="op">=</span> slp.DataStore_Redis(host<span class="op">=</span><span class="st">&#39;localhost&#39;</span>, port<span class="op">=</span><span class="dv">6379</span>, db<span class="op">=</span><span class="dv">1</span>, retention_length<span class="op">=</span><span class="dv">60</span>)</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>histogram <span class="op">=</span> slp.Histogram(<span class="st">&#39;test_histogram_01&#39;</span>, <span class="dv">100</span>, <span class="dv">0</span>, <span class="dv">10</span>)</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>graph <span class="op">=</span> slp.Graph(<span class="st">&#39;test_graph_01&#39;</span>, [<span class="st">&#39;time&#39;</span>, <span class="st">&#39;value&#39;</span>])</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>redis.flush_db()</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>tk, xk <span class="op">=</span> <span class="dv">0</span>, <span class="dv">0</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">10</span>):</span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>        histogram.fill(np.random.normal(<span class="dv">5</span>, <span class="dv">2</span>))</span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>    tk <span class="op">=</span> tk <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>    xk <span class="op">+=</span> np.random.normal(<span class="fl">0.1</span>, <span class="dv">1</span>)</span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>    graph.add_point(tk, xk)</span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a>    redis.write_object_timeseries(histogram)</span>
+<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a>    redis.write_object_timeseries(graph)</span>
+<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-23"><a href="#cb26-23" aria-hidden="true" tabindex="-1"></a>    time.sleep(<span class="dv">1</span>)</span></code></pre></div>
 <h2 id="time-series-of-blobs-2">Time-series of Blobs</h2>
 <ul>
 <li>[TODO] store blob as string value (binary-safe, up to 1GB)</li>
@@ -1221,14 +1208,14 @@ section will be automatically taken.
 <p>
 Example of a Python script to write a “current” histogram:</li>
 </ul>
-<div class="sourceCode" id="cb28"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> redis</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> redis.Redis(<span class="st">&#39;localhost&#39;</span>, <span class="dv">6379</span>, <span class="dv">1</span>)</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>hist <span class="op">=</span> {</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;bins&#39;</span>: { <span class="st">&#39;min&#39;</span>: <span class="dv">0</span>, <span class="st">&#39;max&#39;</span>: <span class="dv">100</span> },</span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;counts&#39;</span>: [ <span class="dv">3</span>, <span class="dv">5</span>, <span class="dv">8</span>, <span class="dv">14</span>, <span class="dv">11</span>, <span class="dv">3</span>, <span class="dv">6</span>, <span class="dv">4</span>, <span class="dv">4</span>, <span class="dv">1</span> ]</span>
-<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>r.json().<span class="bu">set</span>(<span class="st">&#39;hist00&#39;</span>, <span class="st">&#39;$&#39;</span>, hist)</span></code></pre></div>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> redis</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> redis.Redis(<span class="st">&#39;localhost&#39;</span>, <span class="dv">6379</span>, <span class="dv">1</span>)</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>hist <span class="op">=</span> {</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;bins&#39;</span>: { <span class="st">&#39;min&#39;</span>: <span class="dv">0</span>, <span class="st">&#39;max&#39;</span>: <span class="dv">100</span> },</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;counts&#39;</span>: [ <span class="dv">3</span>, <span class="dv">5</span>, <span class="dv">8</span>, <span class="dv">14</span>, <span class="dv">11</span>, <span class="dv">3</span>, <span class="dv">6</span>, <span class="dv">4</span>, <span class="dv">4</span>, <span class="dv">1</span> ]</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>r.json().<span class="bu">set</span>(<span class="st">&#39;hist00&#39;</span>, <span class="st">&#39;$&#39;</span>, hist)</span></code></pre></div>
 <ul>
 <li>The SlowPy utility can also be used to write the JSON objects:
 replace <code>write_object_timeseries()</code> with
@@ -1251,16 +1238,16 @@ Histograms, Graphs, Tables &amp; Trees</h2>
 <h1 id="couchdb">CouchDB</h1>
 <h2 id="schema">Schema</h2>
 <p>Create a CouchDB view with the key being the time-stamp, e.g.:</p>
-<div class="sourceCode" id="cb29"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> (doc) {</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> record <span class="op">=</span> {</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;tag&quot;</span><span class="op">:</span> doc<span class="op">.</span><span class="at">channel</span><span class="op">,</span></span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;field01&quot;</span><span class="op">:</span> doc<span class="op">.</span><span class="at">value01</span><span class="op">,</span></span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;field02&quot;</span><span class="op">:</span> doc<span class="op">.</span><span class="at">value02</span><span class="op">,</span></span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">...</span></span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">emit</span>(doc<span class="op">.</span><span class="at">timestamp</span><span class="op">,</span> record)<span class="op">;</span></span>
-<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> (doc) {</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> record <span class="op">=</span> {</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;tag&quot;</span><span class="op">:</span> doc<span class="op">.</span><span class="at">channel</span><span class="op">,</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;field01&quot;</span><span class="op">:</span> doc<span class="op">.</span><span class="at">value01</span><span class="op">,</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;field02&quot;</span><span class="op">:</span> doc<span class="op">.</span><span class="at">value02</span><span class="op">,</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">...</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">emit</span>(doc<span class="op">.</span><span class="at">timestamp</span><span class="op">,</span> record)<span class="op">;</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>Here, the record fields can be scalars, JSON, or Blob-ID. Tags are
 optional. Multiple views can be created. Currently, only the UNIX
 timestamp is accepted for the key.</p>
@@ -1275,35 +1262,35 @@ the schema description.</p>
 mapped to channels, the schema description can be simply the view
 name.</p>
 <p>Write the schema in the project configuration file:</p>
-<div class="sourceCode" id="cb31"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> couchdb://USER:PASS@localhost:5984/MyDB</span></span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span><span class="at"> </span></span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> MyDesignDoc/MyIndex</span></span></code></pre></div>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> couchdb://USER:PASS@localhost:5984/MyDB</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span><span class="at"> </span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> MyDesignDoc/MyIndex</span></span></code></pre></div>
 <p>Channels are scanned from the data, but old channels that do not
 appear in the last segment of data might not be found. In that case,
 explicitly list the channel names:</p>
-<div class="sourceCode" id="cb32"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span><span class="at"> </span></span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> MyDesignDoc/MyIndex[Tag] = Field01, Field02, ...</span></span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">tags</span><span class="kw">:</span><span class="at"> </span></span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">list</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> </span><span class="st">&#39;Tag01&#39;</span><span class="kw">,</span><span class="at"> </span><span class="st">&#39;Tag02&#39;</span><span class="kw">,</span><span class="at"> ... </span><span class="kw">]</span></span></code></pre></div>
+<div class="sourceCode" id="cb31"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span><span class="at"> </span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> MyDesignDoc/MyIndex[Tag] = Field01, Field02, ...</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">tags</span><span class="kw">:</span><span class="at"> </span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">list</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> </span><span class="st">&#39;Tag01&#39;</span><span class="kw">,</span><span class="at"> </span><span class="st">&#39;Tag02&#39;</span><span class="kw">,</span><span class="at"> ... </span><span class="kw">]</span></span></code></pre></div>
 <h2 id="time-series-of-scalars-1">Time-Series of Scalars</h2>
 <h4 id="case-1-tag-values-for-channel-2">Case 1: Tag Values for
 Channel</h4>
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span><span class="at"> </span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> MyDesigDoc/MyIndex[Tag]</span></span></code></pre></div>
+<h4 id="case-2-fields-for-channel-1">Case 2: Fields for Channel</h4>
 <div class="sourceCode" id="cb33"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span><span class="at"> </span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> MyDesigDoc/MyIndex[Tag]</span></span></code></pre></div>
-<h4 id="case-2-fields-for-channel-1">Case 2: Fields for Channel</h4>
-<div class="sourceCode" id="cb34"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span><span class="at"> </span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> MyDesignDoc/MyIndex = Field01, Field02,...</span></span></code></pre></div>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> MyDesignDoc/MyIndex = Field01, Field02,...</span></span></code></pre></div>
 <h4 id="case-3-tag-and-fields-for-channel-1">Case 3: Tag and Fields for
 Channel</h4>
-<div class="sourceCode" id="cb35"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span><span class="at"> </span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> MyDesigDoc/MyIndex[Tag] = Field01(default), Field02, ...</span></span></code></pre></div>
+<div class="sourceCode" id="cb34"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span><span class="at"> </span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> MyDesigDoc/MyIndex[Tag] = Field01(default), Field02, ...</span></span></code></pre></div>
 <h4 id="case-4-tag-flags-and-fields-for-channel-1">Case 4: Tag, Flags,
 and Fields for Channel</h4>
 <p>Flags are currently not supported. Modify the CouchDB view definition
@@ -1311,76 +1298,76 @@ in a way that a tag includes flags.</p>
 <h2 id="time-series-of-histograms-graphs-tables-trees-4">Time-Series of
 Histograms, Graphs, Tables &amp; Trees</h2>
 <p>Store JSON objects as data values:</p>
-<div class="sourceCode" id="cb36"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> (doc) {</span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> record <span class="op">=</span> {</span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;spectrum&quot;</span><span class="op">:</span> {</span>
-<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>            {</span>
-<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;labels&quot;</span><span class="op">:</span> [ <span class="st">&quot;Frequency (Hz)&quot;</span><span class="op">,</span> <span class="st">&quot;FFT&quot;</span> ]<span class="op">,</span></span>
-<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;x&quot;</span><span class="op">:</span> [ <span class="op">...</span> ]<span class="op">,</span></span>
-<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;y&quot;</span><span class="op">:</span> [ <span class="op">...</span> ]</span>
-<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>            }</span>
-<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>        }</span>
-<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">...</span></span>
-<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>    }<span class="op">;</span></span>
-<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">emit</span>(doc<span class="op">.</span><span class="at">timestamp</span><span class="op">,</span> record)<span class="op">;</span></span>
-<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> (doc) {</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> record <span class="op">=</span> {</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;spectrum&quot;</span><span class="op">:</span> {</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>            {</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;labels&quot;</span><span class="op">:</span> [ <span class="st">&quot;Frequency (Hz)&quot;</span><span class="op">,</span> <span class="st">&quot;FFT&quot;</span> ]<span class="op">,</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;x&quot;</span><span class="op">:</span> [ <span class="op">...</span> ]<span class="op">,</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;y&quot;</span><span class="op">:</span> [ <span class="op">...</span> ]</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>            }</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">...</span></span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>    }<span class="op">;</span></span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">emit</span>(doc<span class="op">.</span><span class="at">timestamp</span><span class="op">,</span> record)<span class="op">;</span></span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>Then specify the schema in <code>object_time_series</code>:</p>
-<div class="sourceCode" id="cb37"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> couchdb://USER:PASS@localhost:5984/MyDB</span></span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">object_time_series</span><span class="kw">:</span><span class="at"> </span></span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> MyDesignDoc/MyIndex</span></span></code></pre></div>
+<div class="sourceCode" id="cb36"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> couchdb://USER:PASS@localhost:5984/MyDB</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">object_time_series</span><span class="kw">:</span><span class="at"> </span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> MyDesignDoc/MyIndex</span></span></code></pre></div>
 <h2 id="time-series-of-blobs-4">Time-Series of Blobs</h2>
 <ul>
 <li>Save a blob object (image file etc) as a CouchDB attachment.</li>
 <li>Use the same structure as the time-series of objects, with the blob
 data type.</li>
 </ul>
-<div class="sourceCode" id="cb38"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> (doc) {</span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> record <span class="op">=</span> {</span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;photo&quot;</span><span class="op">:</span> {</span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>            <span class="dt">mime</span><span class="op">:</span> doc<span class="op">.</span><span class="at">_attachments</span>[doc<span class="op">.</span><span class="at">name</span>]<span class="op">.</span><span class="at">content_type</span><span class="op">,</span> </span>
-<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>            <span class="dt">id</span><span class="op">:</span> doc<span class="op">.</span><span class="at">_id</span> <span class="op">+</span> <span class="st">&#39;/&#39;</span> <span class="op">+</span> doc<span class="op">.</span><span class="at">name</span><span class="op">,</span> </span>
-<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>            <span class="dt">meta</span><span class="op">:</span> doc<span class="op">.</span><span class="at">parameters</span></span>
-<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>        }</span>
-<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">...</span></span>
-<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>    }<span class="op">;</span></span>
-<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">emit</span>(doc<span class="op">.</span><span class="at">timestamp</span><span class="op">,</span> record)<span class="op">;</span></span>
-<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> (doc) {</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> record <span class="op">=</span> {</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;photo&quot;</span><span class="op">:</span> {</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>            <span class="dt">mime</span><span class="op">:</span> doc<span class="op">.</span><span class="at">_attachments</span>[doc<span class="op">.</span><span class="at">name</span>]<span class="op">.</span><span class="at">content_type</span><span class="op">,</span> </span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>            <span class="dt">id</span><span class="op">:</span> doc<span class="op">.</span><span class="at">_id</span> <span class="op">+</span> <span class="st">&#39;/&#39;</span> <span class="op">+</span> doc<span class="op">.</span><span class="at">name</span><span class="op">,</span> </span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>            <span class="dt">meta</span><span class="op">:</span> doc<span class="op">.</span><span class="at">parameters</span></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">...</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>    }<span class="op">;</span></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">emit</span>(doc<span class="op">.</span><span class="at">timestamp</span><span class="op">,</span> record)<span class="op">;</span></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <h2 id="view-rows-as-a-table">View-Rows as a Table</h2>
 <p>A CouchDB view can be accessed as a table object with
 <code>view_table</code>:</p>
+<div class="sourceCode" id="cb38"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> couchdb://USER:PASS@localhost:5984/MyDB</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">view_table</span><span class="kw">:</span><span class="at"> </span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">name</span><span class="kw">:</span><span class="at"> DataTable</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> MyDesignDoc/MyIndex = Field01, Field02, ..</span></span></code></pre></div>
+<h2 id="view-row-as-a-tree">View-Row as a Tree</h2>
+<p>A row of a CouchDB view can be accessed as a tree object with
+<code>view_tree</code>:</p>
 <div class="sourceCode" id="cb39"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
 <span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
 <span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> couchdb://USER:PASS@localhost:5984/MyDB</span></span>
-<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">view_table</span><span class="kw">:</span><span class="at"> </span></span>
-<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">name</span><span class="kw">:</span><span class="at"> DataTable</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">view_tree</span><span class="kw">:</span><span class="at"> </span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">name</span><span class="kw">:</span><span class="at"> DataRecord</span></span>
 <span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> MyDesignDoc/MyIndex = Field01, Field02, ..</span></span></code></pre></div>
-<h2 id="view-row-as-a-tree">View-Row as a Tree</h2>
-<p>A row of a CouchDB view can be accessed as a tree object with
-<code>view_tree</code>:</p>
-<div class="sourceCode" id="cb40"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> couchdb://USER:PASS@localhost:5984/MyDB</span></span>
-<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">view_tree</span><span class="kw">:</span><span class="at"> </span></span>
-<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">name</span><span class="kw">:</span><span class="at"> DataRecord</span></span>
-<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> MyDesignDoc/MyIndex = Field01, Field02, ..</span></span></code></pre></div>
 <h2 id="database-information-as-a-tree">Database information as a
 Tree</h2>
 <p>Current database information, such as the file size, can be obtained
 as a tree data object. Just make a <code>database_info</code> entry in
 the <code>data_source</code> definition with a name:</p>
-<div class="sourceCode" id="cb41"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> couchdb://USER:PASS@localhost:5984/MyDB</span></span>
-<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">database_info</span><span class="kw">:</span><span class="at"> </span></span>
-<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">name</span><span class="kw">:</span><span class="at"> DBInfo</span></span></code></pre></div>
+<div class="sourceCode" id="cb40"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> couchdb://USER:PASS@localhost:5984/MyDB</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">database_info</span><span class="kw">:</span><span class="at"> </span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">name</span><span class="kw">:</span><span class="at"> DBInfo</span></span></code></pre></div>
 <h1 id="local-csv-files">Local CSV Files</h1>
 <ul>
 <li>A directory containing CSV files can be used as a data store, in a
@@ -1392,12 +1379,12 @@ header line for its first line.</li>
 Values</h2>
 <p>To access a table containing time-series data, write the schema in
 the <code>time_series</code> entry:</p>
-<div class="sourceCode" id="cb42"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> csv:///PATH/TO/DIRECTORY</span></span>
-<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span></span>
-<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> FILE_ROOT_NAME [ TAG_COLUMN ] @ TIME_COLUMN</span></span></code></pre></div>
+<div class="sourceCode" id="cb41"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> csv:///PATH/TO/DIRECTORY</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> FILE_ROOT_NAME [ TAG_COLUMN ] @ TIME_COLUMN</span></span></code></pre></div>
 <h2 id="time-series-of-histograms-graphs-tables-trees-5">Time-Series of
 Histograms, Graphs, Tables &amp; Trees</h2>
 <ul>
@@ -1406,12 +1393,12 @@ Histograms, Graphs, Tables &amp; Trees</h2>
 <li>store JSON string as data value</li>
 <li>use <code>object_time_series</code> entry</li>
 </ul>
-<div class="sourceCode" id="cb43"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">url</span><span class="kw">:</span><span class="at"> csv:///PATH/TO/DIRECTORY</span></span>
-<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">object_time_series</span><span class="kw">:</span></span>
-<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> histograms[channel]@timestamp(unix)=value</span></span></code></pre></div></li>
+<div class="sourceCode" id="cb42"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">url</span><span class="kw">:</span><span class="at"> csv:///PATH/TO/DIRECTORY</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">object_time_series</span><span class="kw">:</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> histograms[channel]@timestamp(unix)=value</span></span></code></pre></div></li>
 </ul>
 <h2 id="current-histograms-graphs-tables-trees-1">“Current” Histograms,
 Graphs, Tables &amp; Trees</h2>
@@ -1419,12 +1406,12 @@ Graphs, Tables &amp; Trees</h2>
 <li>a table without a time-stamp column stores “current” objects</li>
 <li>use <code>object</code> entry</li>
 </ul>
-<div class="sourceCode" id="cb44"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> csv:///PATH/TO/DIRECTORY</span></span>
-<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">object_time_series</span><span class="kw">:</span></span>
-<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> histograms[channel]=value</span></span></code></pre></div>
+<div class="sourceCode" id="cb43"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> csv:///PATH/TO/DIRECTORY</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">object_time_series</span><span class="kw">:</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> histograms[channel]=value</span></span></code></pre></div>
 <h1 id="local-yaml-files">Local YAML Files</h1>
 <ul>
 <li>One YAML file stores one Tree object</li>
@@ -1432,13 +1419,13 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb44-1"><a href=
 names</li>
 <li>[TODO] implement <code>valid_from</code>.</li>
 </ul>
-<div class="sourceCode" id="cb45"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> YAML</span></span>
-<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> RunConfig</span></span>
-<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">file</span><span class="kw">:</span><span class="at"> RunConfig.yaml</span></span>
-<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">valid_from</span><span class="kw">:</span><span class="at"> now</span></span></code></pre></div>
+<div class="sourceCode" id="cb44"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> YAML</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> RunConfig</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">file</span><span class="kw">:</span><span class="at"> RunConfig.yaml</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">valid_from</span><span class="kw">:</span><span class="at"> now</span></span></code></pre></div>
 <h1 id="local-root-files">Local ROOT Files</h1>
 <p>[TODO]</p>
 

@@ -170,7 +170,6 @@ $ slowdash config
 #### Printing Channel List
 ```console
 $ slowdash channels
-23-03-22 12:48:34 INFO: loaded datasource module "datasource_SQLAlchemy"
 [
   {"name": "sccm_Alicat_Inj_Gas"}, 
   {"name": "mbar_CC10_Inj_Gas"}, 
@@ -183,7 +182,6 @@ $ slowdash channels
 #### Printing Data
 ```console
 $ slowdash 'data/sccm_Alicat_Inj_Gas?length=60'
-23-03-22 12:50:20 INFO: loaded datasource module "datasource_SQLAlchemy"
 {
   "sccm_Alicat_Inj_Gas": {
     "start": 1679514341, "length": 60, 

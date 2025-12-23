@@ -266,16 +266,6 @@ slowdash_project:
     schema: TABLE [ TAG_COLUMN ] @ TIME_COLUMN
 ```
 
-#### Other SQL DBMS
-- The "SQLAlchemy" library might support the SQL DB that you are using. See the [SQLAlchemy page](https://www.sqlalchemy.org/).
-- In addition to `sqlalchemy`, also install the Python package to access the DB, as described in the SQLAlchemy page.
-```yaml
-slowdash_project:
-  data_source:
-    type: SQLAlchemy
-    url: DBTYPE://USER:PASS@HOST:PORT/DB
-```
-
 ### Avoiding Channel Scanning Overhead
 To obtain a list of channels, SlowDash executes a query like `SELECT DISTINCT tag FROM table`, which can be slow if the table is large. This can be avoided either by manually listing the channels or by providing an efficient SQL statement:
 
