@@ -112,7 +112,7 @@ class TablePanel extends Panel {
     
     openSettings(div) {
         let inputsDiv = $('<div>').appendTo(div);
-        const datalist = (this.config.data_type??'table_object') == 'table_obect' ? 'sd-table-datalist' : 'sd-all-datalist';
+        const datalist = (this.config.data_type??'table_object') == 'table_object' ? 'sd-table-datalist' : 'sd-all-datalist';
         inputsDiv.html(`
             <table style="margin-top:1em">
               <tr><th>channel</th><td><input list="${datalist}"></td></tr>

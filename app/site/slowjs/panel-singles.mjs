@@ -308,7 +308,7 @@ export class SinglesPanel extends Panel {
             <td>Style</td><td>
             <select style="font-size:130%">
               <option hidden>Select...</option>
-              <option value="square">Square</options>
+              <option value="square">Square</option>
             </select></td>
        `).appendTo(table);
 

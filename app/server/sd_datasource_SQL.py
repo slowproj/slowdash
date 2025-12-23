@@ -344,13 +344,17 @@ class DataSource_SQL(DataSource_TableStore):
         else:
             sql_select = 'SELECT %s' % ','.join([ time_field, tag_col ] + fields)
         sql_from = 'FROM %s' % table_name
+        params = []
         if time_col is not None:
-            sql_where_list = [ '%s>=%s' % (time_col, time_from), '%s<%s' % (time_col, time_to) ]
+            sql_where_list = [ '%s>=%s' % (time_col, self.placeholder), '%s<%s' % (time_col, self.placeholder) ]
+            params.extend([time_from, time_to])
         else:
             sql_where_list = []
         if len(tag_values) > 0:
-            sql_where_list += [ '%s IN (%s)' % (tag_col, ','.join([ "'%s'" % val for val in tag_values ])) ]
-        sql_where = 'WHERE ' + ' AND '.join(sql_where_list)
+            placeholders = ','.join([self.placeholder] * len(tag_values))
+            sql_where_list += [ '%s IN (%s)' % (tag_col, placeholders) ]
+            params.extend(tag_values)
+        sql_where = 'WHERE ' + ' AND '.join(sql_where_list) if len(sql_where_list) > 0 else ''
         
         if time_col is None:
             sql_orderby = ''
@@ -434,7 +438,7 @@ class DataSource_SQL(DataSource_TableStore):
         if sql is None:
             sql = ' '.join([ sql_select, sql_from, sql_where, sql_orderby ])
 
-        query_result = await self.server.fetch(sql)
+        query_result = await self.server.fetch(sql, *params)
         if query_result.is_error:
             logging.error('SQL Query Error: %s: %s' % (query_result.error, sql))
             return [], []

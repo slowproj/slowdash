@@ -76,8 +76,8 @@ export class MapPanel extends Panel {
         }
         
         this.loaded_map = config.map;
-        const url = './api/config/ffile/map-' + config.map + '.json';
-        const response = await fetch('./api/config/file/map-' + config.map + '.json');
+        const url = './api/config/file/map-' + config.map + '.json';
+        const response = await fetch(url);
         if (! response.ok) {
             this.div.html(`
                 <h3>Map Loading Error</h3>
@@ -203,7 +203,7 @@ export class MapPanel extends Panel {
         const drawWidth = width - scaleBarWidth - scaleLabelWidth, drawHeight = height - titleHeight;
         let [x0, y0, x1, y1] = [0, 0, parseFloat(this.map.width ?? 1), parseFloat(this.map.height ?? 1)];
         if (! (x1 > x0)) x1 = x0+1;
-        if (! (y1 > x0)) y1 = y0+1;
+        if (! (y1 > y0)) y1 = y0+1;
         let [dx, dy] = [0, 0];
         if ((y1-y0)/(x1-x0) > drawHeight/drawWidth) {
             dx = (y1-y0) * drawWidth/drawHeight - (x1-x0);
@@ -394,7 +394,7 @@ export class MapPanel extends Panel {
         let [ymin, ymax] = [null, null];
         if (data.y?.length > 0) {
             const y = data.y;
-            const n = Math.min(data.y.length);
+            const n = data.y.length;
             const x = (data.x?.length == data.y.length) ? data.x : [... Array(n)].map((_, i)=>i);
             for (let k = 0; k < n; k++) {
                 const [xk, yk] = [ x[k], y[k] ];

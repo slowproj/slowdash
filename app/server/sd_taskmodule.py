@@ -252,13 +252,13 @@ class TaskModule(UserModule):
                     kwargs[name] = attr.default
                     continue
                 else:
-                    logging.warn(f'Task: missing parameter: {name}')
+                    logging.warning(f'Task: missing parameter: {name}')
                     return {'status': 'error', 'message': f'missing parameter: {name}'}
             if attr.annotation in [ int, float, bool, str ]:
                 try:
                     kwargs[name] = attr.annotation(value)
                 except Exception as e:
-                    logging.warn(f'Task: incompatible parameter value: {name}: {repr(value)}')
+                    logging.warning(f'Task: incompatible parameter value: {name}: {repr(value)}')
                     return {'status': 'error', 'message': f'incompatible parameter value: {name}: {repr(value)}'}
             else:
                 kwargs[name] = value
