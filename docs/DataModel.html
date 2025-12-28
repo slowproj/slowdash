@@ -120,10 +120,12 @@ Format</h1>
 <p>channel list is:</p>
 <pre><code>CH0,CH1,CH2...</code></pre>
 <p>options are:</p>
-<pre><code>length=LENGTH [default 3600]
-to=TO [default 0 (now)]
-resample=RESAMPLE [default 0 (auto)]
-reducer=REDUCER [default &quot;last&quot;]</code></pre>
+<pre><code>length=LENGTH [SEC, default 3600]
+to=TO [TIMESTAMP, 0 (now, default)]
+resample=RESAMPLE [BUCKET_WIDTH_SEC, -1 (no resampling, default), 0 (auto)]
+reducer=REDUCER [&quot;last&quot; (default), &quot;mean&quot;, &quot;sum&quot;, ...]
+filler=FILLER [&quot;fillna&quot; (default), &quot;last&quot;, &quot;linear&quot;, ...]
+envelope=1 [ 0 (no envelope, default), 1 (with envelope) ]</code></pre>
 <p>[TODO] Each channel can have options, which override the global
 options:</p>
 <pre><code>CH0{length=86400,resample=300},CH1,...</code></pre>

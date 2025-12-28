@@ -134,7 +134,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a hr
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> get_channels(<span class="va">self</span>):</span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> []</span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> get_timeseries(<span class="va">self</span>, channels, length, to, resampling<span class="op">=</span><span class="va">None</span>, reducer<span class="op">=</span><span class="st">&#39;last&#39;</span>):</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> get_timeseries(<span class="va">self</span>, channels, length, to, resampling<span class="op">=</span><span class="va">None</span>, reducer<span class="op">=</span><span class="st">&#39;last&#39;</span>, envelope<span class="op">=</span><span class="dv">0</span>):</span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {}</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> get_object(<span class="va">self</span>, channels, length, to):</span>
@@ -171,7 +171,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a hr
 <li>return time-series data</li>
 </ul>
 <div class="sourceCode" id="cb4"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> get_timeseries(<span class="va">self</span>, channels, length, to, resampling<span class="op">=</span><span class="va">None</span>, reducer<span class="op">=</span><span class="st">&#39;last&#39;</span>):</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> get_timeseries(<span class="va">self</span>, channels, length, to, resampling<span class="op">=</span><span class="va">None</span>, reducer<span class="op">=</span><span class="st">&#39;last&#39;</span>, envelope<span class="op">=</span><span class="dv">0</span>):</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> {}</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    ...</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result</span></code></pre></div>
@@ -197,6 +197,20 @@ values</li>
 </ul></li>
 <li>If resampling is not supported by the data source, use
 <code>self.resample()</code>.</li>
+</ul></li>
+<li>If resampling is applied, <code>envelope</code> controls calculation
+of additional fields.
+<ul>
+<li>Values are:
+<ul>
+<li><code>0</code>: no additional fields</li>
+<li><code>1</code>: add <code>x_min</code> and <code>x_max</code> values
+for each resampling point</li>
+<li><code>2</code>: add <code>x_err</code> (standard error of mean) and
+<code>x_count</code></li>
+</ul></li>
+<li>Calling <code>self.resample()</code> will add these additional
+fields.</li>
 </ul></li>
 </ul>
 <h3 id="optional-user-function-get_object">Optional User Function
@@ -229,20 +243,20 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a hr
 <code>resample()</code></h3>
 <div class="sourceCode" id="cb7"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="at">@classmethod</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> resample(cls, set_of_timeseries, length, to, interval, reducer):</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> resample(cls, set_of_timeseries, length, to, interval, reducer, envelope):</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> RESAMPLED_TIME_SERIES</span></code></pre></div>
 <p>This will be used in user’s <code>get_timeseries()</code>, if the
 data source does not efficiently support resampling, typically like:</p>
 <div class="sourceCode" id="cb8"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DataSource_XXX(DataSource):</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get_timeseries(<span class="va">self</span>, channels, length, to, resampling<span class="op">=</span><span class="va">None</span>, reducer<span class="op">=</span><span class="st">&#39;last&#39;</span>):</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get_timeseries(<span class="va">self</span>, channels, length, to, resampling<span class="op">=</span><span class="va">None</span>, reducer<span class="op">=</span><span class="st">&#39;last&#39;</span>, envelope<span class="op">=</span><span class="dv">0</span>):</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>        result <span class="op">=</span> {}</span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        ...</span>
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> resampling <span class="kw">is</span> <span class="va">None</span>:</span>
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> result</span>
 <span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.resample(result, length, to, resampling, reducer)</span></code></pre></div>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.resample(result, length, to, resampling, reducer, envelope)</span></code></pre></div>
 
 
 </body>

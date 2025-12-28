@@ -23,10 +23,12 @@ CH0,CH1,CH2...
 ```
 options are:
 ```
-length=LENGTH [default 3600]
-to=TO [default 0 (now)]
-resample=RESAMPLE [default 0 (auto)]
-reducer=REDUCER [default "last"]
+length=LENGTH [SEC, default 3600]
+to=TO [TIMESTAMP, 0 (now, default)]
+resample=RESAMPLE [BUCKET_WIDTH_SEC, -1 (no resampling, default), 0 (auto)]
+reducer=REDUCER ["last" (default), "mean", "sum", ...]
+filler=FILLER ["fillna" (default), "last", "linear", ...]
+envelope=1 [ 0 (no envelope, default), 1 (with envelope) ]
 ```
 
 [TODO] Each channel can have options, which override the global options:

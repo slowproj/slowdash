@@ -28,7 +28,7 @@ class Datasource_XXX(Datasource):
   def get_channels(self):
     return []
     
-  def get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
+  def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0):
     return {}
 
   def get_object(self, channels, length, to):
@@ -61,7 +61,7 @@ class Datasource_XXX(Datasource):
 ### Optional User Function `get_timeseries()`
 - return time-series data
 ```python
-  def get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
+  def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0):
     result = {}
     ...
     return result
@@ -79,6 +79,14 @@ class Datasource_XXX(Datasource):
     - `std`: standard deviation of non-NaN data point values
     - `min`: minimum data point value
     - `max`: maximum data point value
+  - `filler` can be:
+    - `fillna`: fills `null` (`null`, instead of `NaN`, is used for JSON serialization)
+    - `last`: uses the last valid value
+    - `linear`: uses linear interpolation
+  - `envelope` controls calculation of additional fields:
+    - `0`: no additional fields
+    - `1`: add `x_min` and `x_max` values for each resampling point
+    - `2`: add `x_err` (standard error of mean) and `x_count`
   - If resampling is not supported by the data source, use `self.resample()`.
 
 
@@ -106,18 +114,18 @@ class Datasource_XXX(Datasource):
 ### Utility Function for Users `resample()`
 ```python
 @classmethod
-def resample(cls, set_of_timeseries, length, to, interval, reducer):
+def resample(cls, set_of_timeseries, length, to, interval, reducer, filler, envelope):
     return RESAMPLED_TIME_SERIES
 ```
 This will be used in user's `get_timeseries()`, if the data source does not efficiently support resampling, typically like:
 ```python
 class DataSource_XXX(DataSource):
-    def get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
+    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0):
         result = {}
         ...
 
         if resampling is None:
             return result
             
-        return self.resample(result, length, to, resampling, reducer)
+        return self.resample(result, length, to, resampling, reducer, filler, envelope)
 ```
