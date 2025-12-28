@@ -6,6 +6,7 @@
 $ git clone https://github.com/project8/honeybee
 $ cd honeybee
 $ docker build -t honeybee .
+$ cd ..
 ```
 
 ### SlowDash-Honeybee
