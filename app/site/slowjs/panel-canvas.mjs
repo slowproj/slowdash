@@ -1038,9 +1038,9 @@ export class CanvasPanel extends Panel {
     }
 
     
-    fillInputChannels(inputChannels) {
+    fillDataRequest(dataRequest) {
         for (let channel of this.inputChannels) {
-            inputChannels.push(channel);
+            dataRequest.append(channel);
         }
     }
 

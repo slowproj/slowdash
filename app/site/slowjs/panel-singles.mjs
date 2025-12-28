@@ -49,9 +49,9 @@ class SingleDisplayItem {
     }
 
     
-    fillInputChannels(inputChannels) {
+    fillDataRequest(dataRequest) {
         if (this.metric) {
-            inputChannels.push(this.metric.channel);
+            dataRequest.append(this.metric.channel);
         }
     }
 
@@ -590,9 +590,9 @@ export class SinglesPanel extends Panel {
     }
 
     
-    fillInputChannels(inputChannels) {
+    fillDataRequest(dataRequest) {
         for (const item of this.items) {
-            item.fillInputChannels(inputChannels);
+            item.fillDataRequest(dataRequest);
         }
     }
 

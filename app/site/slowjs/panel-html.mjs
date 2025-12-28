@@ -113,10 +113,10 @@ class HtmlPanel extends Panel {
     }
 
 
-    fillInputChannels(inputChannels) {
+    fillDataRequest(dataRequest) {
         for (let variable of this.variables) {
             if (variable.channel && variable.waiting) {
-                inputChannels.push(variable.channel);
+                dataRequest.append(variable.channel);
             }
         }
     }

@@ -130,9 +130,9 @@ class TablePanel extends Panel {
     }
 
     
-    fillInputChannels(inputChannels) {
+    fillDataRequest(dataRequest) {
         if (this.config.channel) {
-            inputChannels.push(this.config.channel);
+            dataRequest.append(this.config.channel);
         }
     }
     
@@ -327,9 +327,9 @@ class TreePanel extends Panel {
     }
 
     
-    fillInputChannels(inputChannels) {
+    fillDataRequest(dataRequest) {
         if (this.config.channel) {
-            inputChannels.push(this.config.channel);
+            dataRequest.append(this.config.channel);
         }
     }
     
@@ -511,9 +511,9 @@ class BlobPanel extends Panel {
     }
 
     
-    fillInputChannels(inputChannels) {
+    fillDataRequest(dataRequest) {
         if (this.config.channel) {
-            inputChannels.push(this.config.channel);
+            dataRequest.append(this.config.channel);
         }
     }
     

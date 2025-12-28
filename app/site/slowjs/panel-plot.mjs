@@ -9,6 +9,8 @@ export { TimeAxisPlotPanel, PlotPanel };
 import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
 import { JGTabWidget, JGInvisibleWidget } from './jagaimo/jagawidgets.mjs';
 import { JGPlotWidget, JGPlotAxisScale } from './jagaimo/jagaplot.mjs';
+
+import { DataRequest } from './control.mjs';
 import { Panel, bindInput, getPaletteColor } from './panel.mjs';
 
 
@@ -32,6 +34,7 @@ class Plot {
         this.axes = axes;
         this.legend = legend;
         this.panel = panel;
+        this.requestDataIds = {};
 
         if (this.config.label === undefined) {
             this.config.label = '';
@@ -91,7 +94,7 @@ class Plot {
         div.html(`
             <table>
               <tr><td>Channel</td><td><input list="sd-numeric-timeseries-datalist"></td></tr>
-              <tr><td>Label</td><td><input placeholder="auto">, Format: <input placeholder="%f"></td></tr>
+              <tr><td>Label</td><td><input placeholder="auto">, format: <input placeholder="%f"></td></tr>
             </table>
         `);
         
@@ -131,6 +134,13 @@ class Plot {
             if (this.config.resampling.envelope !== undefined) {
                 bindInput(this.config.resampling, 'envelope', div.find('input').at(k++), true);
             }
+
+            let comment = $('<div>').appendTo(div).css({
+                'margin-top': '2em',
+                'margin-left': '1em',
+                'font-size':'70%'
+            });
+            comment.html('<b>Resampling Threshold</b>: 0 to enable always, -1 to disable');
         }
         
         if (this.config.color) {
@@ -142,14 +152,27 @@ class Plot {
         }
     }
     
-    fillInputChannels(inputChannels) {
+    fillDataRequest(dataRequest) {
         for (const field of ['channel', 'channelX', 'channelY']) {
             if (this.config[field] !== undefined) {
-                inputChannels.push(this.config[field]);
+                let customOptions = {};
+                const threshold = this.config.resampling?.threshold ?? NaN;
+                const reducer = (this.config.resampling?.reducer ?? 'last').trim();
+                const envelope = this.config.resampling?.envelope ?? false;
+                if (! Number.isNaN(threshold)) {
+                    customOptions['resamplingThreshold'] = threshold;
+                }
+                if ((reducer !== '') && (reducer !== 'last')) {
+                    customOptions['reducer'] = reducer;
+                }
+                if (envelope === true) {
+                    customOptions['envelope'] = 1;
+                }
+                this.requestDataIds[field] = dataRequest.append(this.config[field], customOptions);
             }
         }
     }
-
+    
     update(dataPacket, isCurrent, isPartial) {
         return false;
     }
@@ -210,7 +233,7 @@ class HistogramPlot extends Plot {
     }
 
     update(dataPacket, isCurrent, isPartial) {
-        let data = dataPacket[this.config.channel]?.x;
+        let data = dataPacket[this.requestDataIds.channel ?? ' ']?.x;
         if (! data) {
             if (isPartial) {
                 return false;
@@ -310,7 +333,7 @@ class TimeseriesHistogramPlot extends HistogramPlot {
     }
     
     update(dataPacket, isCurrent, isPartial) {
-        let ts = dataPacket[this.config.channel];
+        let ts = dataPacket[this.requestDataIds.channel ?? ' '];
         if (! ts) {
             if (isPartial) {
                 return false;
@@ -424,7 +447,7 @@ class Histogram2dPlot extends Plot {
     }
 
     update(dataPacket, isCurrent, isPartial) {
-        let data = dataPacket[this.config.channel]?.x;
+        let data = dataPacket[this.requestDataIds.channel ?? ' ']?.x;
         if (! data) {
             if (isPartial) {
                 return false;
@@ -529,7 +552,7 @@ class GraphPlot extends Plot {
     }
     
     update(dataPacket, isCurrent, isPartial) {
-        let data = dataPacket[this.config.channel]?.x;
+        let data = dataPacket[this.requestDataIds.channel ?? ' ']?.x;
         if (! data) {
             if (isPartial) {
                 return false;
@@ -862,8 +885,8 @@ class TimeseriesScatterPlot extends GraphPlot {
 
     
     update(dataPacket, isCurrent, isPartial) {
-        let ts0 = dataPacket[this.config.channelX];
-        let ts1 = dataPacket[this.config.channelY];
+        let ts0 = dataPacket[this.requestDataIds.channelX ?? ' '];
+        let ts1 = dataPacket[this.requestDataIds.channelY ?? ' '];
         if (! ts0 || ! ts1) {
             if (isPartial) {
                 return false;
@@ -946,7 +969,7 @@ class TimeseriesPlot extends LineMarkerPlot {
     }
     
     update(dataPacket, isCurrent, isPartial) {
-        let ts = dataPacket[this.config.channel];
+        let ts = dataPacket[this.requestDataIds.channel ?? ' '];
         if (! ts) {
             if (isPartial) {
                 return false;
@@ -981,7 +1004,7 @@ class TimeseriesPlot extends LineMarkerPlot {
             return true;
         }
 
-        const t0 = dataPacket[this.config.channel].start;
+        const t0 = dataPacket[this.requestDataIds.channel ?? ' '].start;
         for (let k = 0; k < ts.x.length; k++) {
             this.graph.x.push(t0 + ts.t[k]);
         }
@@ -1502,9 +1525,9 @@ class PlotPanel extends Panel {
     }
 
 
-    fillInputChannels(inputChannels) {
+    fillDataRequest(dataRequest) {
         for (const p of this.plots) {
-            p.fillInputChannels(inputChannels);
+            p.fillDataRequest(dataRequest);
         }
     }
     
@@ -1534,12 +1557,15 @@ class PlotPanel extends Panel {
 
     
     download() {
-        let channels = [];
-        this.fillInputChannels(channels);
+        const length = this.initialDisplayTimeRange.to - this.initialDisplayTimeRange.from;
+        const to = this.initialDisplayTimeRange.to;
+        let dataRequest = new DataRequest(length, to);
+        this.fillDataRequest(dataRequest);
+
         let opts = [
-            'channels=' + channels.join(','),
-            'length=' + (this.initialDisplayTimeRange.to - this.initialDisplayTimeRange.from),
-            'to=' + (this.initialDisplayTimeRange.to),
+            'channels=' + dataRequest.channelList().join(','),
+            'length=' + length,
+            'to=' + to,
         ];
         window.open('./slowdown.html?' + opts.join('&'));
     }

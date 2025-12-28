@@ -20,6 +20,7 @@ export class DataRequest {
             resample: (length/600).toFixed(1),
             reducer: 'last',
             filler: 'fillna',
+            envelope: 0,
             resamplingThreshold: 7200,
         };
         this.#defaultOptions = $.extend({}, defaults, defaultOptions);
@@ -30,27 +31,20 @@ export class DataRequest {
 
     
     append(channel, customOptions={}) {
-        let requestOpts = {
-            length: this.#defaultOptions.length,
-            to: this.#defaultOptions.to,
-            resample: this.#defaultOptions.resample,
-            reducer: this.#defaultOptions.reducer,
-            filler: this.#defaultOptions.filler,
-        };
-        let resamplingThreshold = this.#defaultOptions.resamplingThreshold;
+        let { resamplingThreshold, ...requestOpts } = this.#defaultOptions;
         
         for (const name in this.#defaultOptions) {
             if (name in customOptions) {
-                const value = customOptions[name];
+                const customValue = customOptions[name];
                 if (name === 'resamplingThreshold') {
-                    resamplingThreshold = value;
+                    resamplingThreshold = customValue;
                 }
                 else {
-                    requestOpts[name] = value;
+                    requestOpts[name] = customValue;
                 }
             }
         }
-        if (requestOpts.length <= resamplingThreshold) {
+        if (resamplingThreshold < 0 || requestOpts.length <= resamplingThreshold) {
             requestOpts.resample = -1;
         }
         
@@ -72,6 +66,20 @@ export class DataRequest {
     }
 
 
+    channelList() {
+        let list = [];
+
+        for (const [id, [ch, opts]] of Object.entries(this.#defaultRequests)) {
+            list.push(ch);
+        }
+        for (const [id, [ch, opts]] of Object.entries(this.#customRequests)) {
+            list.push(ch);
+        }
+
+        return list;
+    }
+
+    
     queryList(existingData, combinedRequestThreshold=5*86500) {
         let list = [];
 
@@ -235,7 +243,9 @@ export class Controller {
                 this.currentData[id ?? ch] = data[ch];
             }
             this.currentData.__meta.isPartial = isPartial;
-            this.view.draw(this.currentData);
+            if (! isPartial) {
+                this.view.draw(this.currentData);
+            }
         });
         this.isUpdateRunning = false;
         

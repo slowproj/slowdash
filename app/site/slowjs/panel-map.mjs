@@ -344,9 +344,9 @@ export class MapPanel extends Panel {
     }
 
     
-    fillInputChannels(inputChannels) {
+    fillDataRequest(dataRequest) {
         if (this.config.channel) {
-            inputChannels.push(this.config.channel);
+            dataRequest.append(this.config.channel);
         }
     }
 
