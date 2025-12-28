@@ -1,8 +1,8 @@
-bin/
-venv/
-utils/testbench/
+/bin/
+/venv/
+/utils/testbench/
+/requirements.txt
 __pycache__/
 .vscode/
-requirements.txt
 *.egg-info
 *~
