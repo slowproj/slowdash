@@ -1,0 +1,31 @@
+services:
+
+  postgres:
+    image: postgres:16.0
+    volumes:
+      - ./postgres_init.d:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    environment:
+      # per the docs, you do *not* want to run with this configuration in production
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  slowdash-honeybee:
+    build:
+      context: https://github.com/slowproj/slowdash.git
+      args:
+        BASE_IMAGE: honeybee
+    ports:
+      - "18881:18881"
+    volumes:
+      - ./slowdash.d:/project
+    depends_on:
+      postgres:
+        condition: service_healthy
