@@ -92,9 +92,9 @@ export class Layout {
     }
 
 
-    fillInputChannels(inputChannels) {
+    fillDataRequest(dataRequest) {
         for (let panel of this.panels) {
-            panel.fillInputChannels(inputChannels);
+            panel.fillDataRequest(dataRequest);
         }
     }
 

@@ -8,6 +8,106 @@
 import { JG as $, JGDateTime,  } from './jagaimo/jagaimo.mjs';
 
 
+export class DataRequest {
+    #defaultOptions = {};
+    #defaultRequests = {};
+    #customRequests = {};
+    
+    constructor(length, to, defaultOptions={}) {
+        const defaults = {
+            length: length,
+            to: to,
+            resample: (length/600).toFixed(1),
+            reducer: 'last',
+            filler: 'fillna',
+            resamplingThreshold: 7200,
+        };
+        this.#defaultOptions = $.extend({}, defaults, defaultOptions);
+        
+        this.#defaultRequests = {};
+        this.#customRequests = {};
+    }
+
+    
+    append(channel, customOptions={}) {
+        let requestOpts = {
+            length: this.#defaultOptions.length,
+            to: this.#defaultOptions.to,
+            resample: this.#defaultOptions.resample,
+            reducer: this.#defaultOptions.reducer,
+            filler: this.#defaultOptions.filler,
+        };
+        let resamplingThreshold = this.#defaultOptions.resamplingThreshold;
+        
+        for (const name in this.#defaultOptions) {
+            if (name in customOptions) {
+                const value = customOptions[name];
+                if (name === 'resamplingThreshold') {
+                    resamplingThreshold = value;
+                }
+                else {
+                    requestOpts[name] = value;
+                }
+            }
+        }
+        if (requestOpts.length <= resamplingThreshold) {
+            requestOpts.resample = -1;
+        }
+        
+        let requestParams = Object.entries(requestOpts).map(([key, value]) => {
+            return key + '=' + encodeURIComponent(value);
+        }).join('&');
+            
+        let requestId = channel;
+        if (Object.keys(customOptions).length > 0) {
+            const op = Object.entries(customOptions).map(([k,v])=>`${k}=${v}`).join(',');
+            requestId += '{' + op + '}';
+            this.#customRequests[requestId] = [ channel, requestParams ];
+        }
+        else {
+            this.#defaultRequests[requestId] = [ channel, requestParams ];
+        }
+        
+        return requestId;
+    }
+
+
+    queryList(existingData, combinedRequestThreshold=5*86500) {
+        let list = [];
+
+        if (length < combinedRequestThreshold) {
+            let channels = [], opts;
+            for (const [id, [ch, params]] of Object.entries(this.#defaultRequests)) {
+                if (! Object.hasOwn(existingData, id)) {
+                    channels.push(ch);
+                    opts = params;
+                }
+            }
+            if (channels.length > 0) {
+                list.push([null, `${channels.join(',')}?${opts}`]);
+            }
+        }
+        else{
+            for (const [id, [ch, opts]] of Object.entries(this.#defaultRequests)) {
+                if (! Object.hasOwn(existingData, id)) {
+                    list.push([null, `${ch}?${opts}`]);
+                }
+            }
+        }
+
+        // custom requests are always individual
+        for (const [id, [ch, opts]] of Object.entries(this.#customRequests)) {
+            if (! Object.hasOwn(existingData, id)) {
+                list.push([id, `${ch}?${opts}`]);
+            }
+        }
+
+        return list;
+    }
+};
+
+
+
 export class Controller {
     constructor(view) {  // "view" is an instance of "Layout" or "Panel"
         this.callbacks = {
@@ -23,8 +123,7 @@ export class Controller {
         this.socket = null;
         this._setupStreaming();
 
-        this.data_error_displayed = false;
-        this.socket_error_displayed = false;
+        this.loggedErrors = new Set();
     }
 
     
@@ -53,7 +152,7 @@ export class Controller {
                 await this.configure();
             },
             popout: (panel) => {
-                this._popoutPanel(panel);
+                this.#popoutPanel(panel);
             },
             publish: (topic, message) => {
                 this.publish(topic, message);
@@ -108,24 +207,7 @@ export class Controller {
             };
         }
 
-        let channels = {}; {
-            let inputChannels = [];
-            this.view.fillInputChannels(inputChannels);
-            for (let ch of inputChannels) {
-                if (! (ch in this.currentData)) {
-                    channels[ch] = 1;
-                }
-            }
-        }
-        
-        if (Object.keys(channels).length <= 0) {
-            this.view.draw(this.currentData);
-            this.isUpdateRunning = false;
-            return {code:200, text:'OK'};
-        }
-        this.currentData.__meta.isPartial = true;
-        
-        let length;
+        let length, to = this.currentData.__meta.range.to;
         if (this.currentData.__meta.range.from <= 0) {
             length = -this.currentData.__meta.range.from;
         }
@@ -136,27 +218,44 @@ export class Controller {
         else {
             length = this.currentData.__meta.range.to - this.currentData.__meta.range.from;
         }
-        let opts = [ 'length='+length, 'to='+this.currentData.__meta.range.to ];
-        if (length > 7200) {
-            opts.push('resample='+(length/600).toFixed(1));
-            opts.push('reducer=last');
+        
+        let dataRequest = new DataRequest(length, to);
+        this.view.fillDataRequest(dataRequest);
+        
+        const queryList = dataRequest.queryList(this.currentData);
+        if (queryList.length <= 0) {
+            this.view.draw(this.currentData);
+            this.isUpdateRunning = false;
+            return {code:200, text:'OK'};
+        }
+        this.currentData.__meta.isPartial = true;
+
+        const status = this.#executeQuery(queryList, (id, data, isPartial) => {
+            for (const ch in data) {
+                this.currentData[id ?? ch] = data[ch];
+            }
+            this.currentData.__meta.isPartial = isPartial;
+            this.view.draw(this.currentData);
+        });
+        this.isUpdateRunning = false;
+        
+        // re-establishing web-socket after server-recovery
+        if ((this.socket === null) && (status.code > 0)) {
+            this._setupStreaming();
         }
         
-        let url_list = [];
-        if (length < 5*86500) {
-            url_list.push('api/data/' + Object.keys(channels).join(',') + '?' + opts.join('&'));
-        }
-        else {
-            for (let ch in channels) {
-                url_list.push('api/data/' + ch + '?' + opts.join('&'));
-            }
-        }
-                
+        return status;
+    }
+
+    
+    async #executeQuery(queryList, onReceiveData) {
         let status = { code:200, text:'OK' };
-        for (let i = 0; i < url_list.length; i++) {
+        for (let i = 0; i < queryList.length; i++) {
+            const [id, query] = queryList[i];
+                                          
             let textdata = '';
             try {
-                const response = await fetch(url_list[i]);
+                const response = await fetch('api/data/' + query);
                 if (! response.ok) {
                     status = { code: response.status, text: response.statusText };
                 }
@@ -171,36 +270,23 @@ export class Controller {
             let data = {};
             if (textdata.length > 2) {
                 try {
-                    //data = JSON.parse(textdata.replace(/(?<!")\bNaN\b(?!")/g, '"NaN"'), (k,v) => {
                     data = JSON.parse(textdata.replace(/(:|{|\[|,)\s*NaN/g, '$1"NaN"'), (k,v) => {
-                        if (v === 'NaN') return NaN;
-                        return v;
+                        return (v === 'NaN') ? NaN : v;
                     });
                 }
                 catch (err) {
-                    if (! this.data_error_displayed) {
-                        this.data_error_displayed = true;
+                    if (! this.loggedErrors.has('data')) {
+                        this.loggedErrors.add('data');
                         console.error('invalid data packet: ', err);
                         console.log(textdata);
                     }
                 }
             }
-            
-            for (let ch in data) {
-                this.currentData[ch] = data[ch];
-            }
-            this.currentData.__meta.isPartial = (i < url_list.length-1);
 
-            this.view.draw(this.currentData);
+            const isPartial = (i < queryList.length-1);
+            onReceiveData(id, data, isPartial);
         }
 
-        // re-establishing web-socket after server-recovery
-        if ((this.socket === null) && (status.code > 0)) {
-            this._setupStreaming();
-        }
-        
-        this.isUpdateRunning = false;
-        
         return status;
     }
 
@@ -209,7 +295,7 @@ export class Controller {
         const socket_available = (this.socket && (this.socket.readyState === WebSocket.OPEN));
         const message = (typeof doc === 'string') ? doc : JSON.stringify(doc);
         
-        if (socket_available && (topic == 'current_data')) {
+        if (socket_available && (topic === 'current_data')) {
             this.socket.send(message);
         }
         else {
@@ -224,7 +310,7 @@ export class Controller {
     }
 
     
-    _popoutPanel(panel) {
+    #popoutPanel(panel) {
         let popout_config = JSON.parse(JSON.stringify(this.view.config));
         delete popout_config._project;
         delete popout_config.meta;
@@ -255,7 +341,7 @@ export class Controller {
         }
 
         let url = new URL(window.location.href);
-        url.protocol = (url.protocol == 'https:' ? 'wss:' : 'ws:');
+        url.protocol = (url.protocol === 'https:' ? 'wss:' : 'ws:');
         url.search = '';
         url.hash = '';
         
@@ -311,8 +397,8 @@ export class Controller {
                 });
             }
             catch (error) {
-                if (! this.socket_error_displayed) {
-                    this.socket_error_displayed = true;
+                if (! this.loggedErrors.has('socket')) {
+                    this.loggedErrors.add('socket');
                     console.error(error);
                     console.log(event.data);
                 }
@@ -423,7 +509,7 @@ export class Scheduler {
         let lapse = now - this.lastUpdateTime;
         let suspend = this.suspendUntil - now;
         let togo;
-        if ((this.lastUpdateTime == 0) || (this.pendingRequests > 0)) {
+        if ((this.lastUpdateTime === 0) || (this.pendingRequests > 0)) {
             togo = 0;
         }
         else if (this.updateInterval <= 0) {
@@ -440,7 +526,7 @@ export class Scheduler {
         }
 
         let text1, text2;
-        if (this.lastUpdateTime == 0) {
+        if (this.lastUpdateTime === 0) {
             text1 = 'initial loading';
         }
         else {

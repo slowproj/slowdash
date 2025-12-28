@@ -147,6 +147,13 @@ export class Panel {
     openSettings(div) {}
 
     
+    fillDataRequest(dataRequest) {
+        let inputChannels = [];
+        this.fillInputChannels(inputChannels);
+        for (let ch of inputChannels) {
+            dataRequest.append(ch, {});
+        }        
+    }
     fillInputChannels(dataRequest) {}
 
     
