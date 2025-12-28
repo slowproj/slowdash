@@ -79,7 +79,13 @@ class DataSource_Honeybee(DataSource):
         for ch in non_existent_channels:
             del result[ch]
 
-        return result
+        if resampling is None:
+            return result
+        if db_resampling is not None and db_resampling > 0:
+            # resampling applied in DB
+            return result
+        
+        return self.resample(result, length, to, resampling, reducer, filler, envelope)
 
                 
     async def execute(self, *cmd):
