@@ -17,10 +17,11 @@ export class DataRequest {
         const defaults = {
             length: length,
             to: to,
-            resample: (length/600).toFixed(1),
+            resample: -1,
             reducer: 'last',
             filler: 'fillna',
             envelope: 0,
+            resamplingBuckets: 600,
             resamplingThreshold: 7200,
         };
         this.#defaultOptions = $.extend({}, defaults, defaultOptions);
@@ -31,13 +32,18 @@ export class DataRequest {
 
     
     append(channel, customOptions={}) {
-        let { resamplingThreshold, ...requestOpts } = this.#defaultOptions;
-        
+        let { resamplingThreshold, resamplingBuckets, ...requestOpts } = this.#defaultOptions;
+
         for (const name in this.#defaultOptions) {
             if (name in customOptions) {
                 const customValue = customOptions[name];
                 if (name === 'resamplingThreshold') {
                     resamplingThreshold = customValue;
+                }
+                else if (name === 'resamplingBuckets') {
+                    if (customValue > 1) {
+                        resamplingBuckets = customValue;
+                    }
                 }
                 else {
                     requestOpts[name] = customValue;
@@ -46,6 +52,9 @@ export class DataRequest {
         }
         if (resamplingThreshold < 0 || requestOpts.length <= resamplingThreshold) {
             requestOpts.resample = -1;
+        }
+        else {
+            requestOpts.resample = (requestOpts.length / resamplingBuckets).toFixed(1);
         }
         
         let requestParams = Object.entries(requestOpts).map(([key, value]) => {

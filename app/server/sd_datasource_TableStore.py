@@ -52,7 +52,7 @@ class DataSource_TableStore(DataSource):
         return channels
         
     
-    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last', envelope=0):
+    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0):
         if not self.channels_scanned:
             await self._scan_channels()
         
@@ -60,14 +60,14 @@ class DataSource_TableStore(DataSource):
         for schema in self.ts_schemata:
             result.update(await self._get_query_result(
                 schema, channels, length, to,
-                resampling=resampling, reducer=reducer, lastonly=False,
-                use_server_resampling=(envelope==0)
+                resampling=resampling, reducer=reducer,
+                lastonly=False, use_server_resampling=(envelope==0)                
             ))
             
         if resampling is None:
             return result
             
-        return self.resample(result, length, to, resampling, reducer, envelope)
+        return self.resample(result, length, to, resampling, reducer, filler, envelope)
 
     
     async def aio_get_object(self, channels, length, to):
@@ -76,16 +76,16 @@ class DataSource_TableStore(DataSource):
             if schema.tag is None:
                 result.update(await self._get_query_result(
                     schema, channels, length, to,
-                    resampling=None, reducer=None, lastonly=True,
-                    use_server_resampling=False
+                    resampling=None, reducer=None,
+                    lastonly=True, use_server_resampling=False
                 ))
             else:
                 # to make use of "limit 1"
                 for ch in channels:  
                     result.update(await self._get_query_result(
                         schema, [ch], length, to,
-                        resampling=None, reducer=None, lastonly=True,
-                        use_server_resampling=False
+                        resampling=None, reducer=None,
+                        lastonly=True, use_server_resampling=False
                     ))
             # retry if the value is null?
             

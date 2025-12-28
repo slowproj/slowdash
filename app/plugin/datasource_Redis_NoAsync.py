@@ -337,7 +337,7 @@ class DataSource_Redis_NoAsync(DataSource):
         return channels
 
     
-    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', envelope=0):
+    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0):
         record = {}
         for src in self.sources:
             record.update(src.get_timeseries(channels, length, to))
@@ -345,7 +345,7 @@ class DataSource_Redis_NoAsync(DataSource):
         if resampling is None:
             return record
             
-        return self.resample(record, length, to, resampling, reducer, envelope)
+        return self.resample(record, length, to, resampling, reducer, filler, envelope)
 
                              
     def get_object(self, channels, length, to):

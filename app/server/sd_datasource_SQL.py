@@ -145,13 +145,13 @@ class DataSource_SQL(DataSource_TableStore):
         return channels
         
     
-    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last', envelope=0):
+    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0):
         if self.server is None:
             self.server = await self._connect_with_retry()
         if self.server is None:
             return {}
         
-        return await super().aio_get_timeseries(channels, length, to, resampling, reducer, envelope)
+        return await super().aio_get_timeseries(channels, length, to, resampling, reducer, filler, envelope)
 
         
     async def aio_get_object(self, channels, length, to):
@@ -335,6 +335,9 @@ class DataSource_SQL(DataSource_TableStore):
         if self.server is None:
             return [], []
 
+        sql = None
+        params = []
+        
         if time_col is None:
             time_field = '%.3f' % float(time.time())
         else:
@@ -344,14 +347,14 @@ class DataSource_SQL(DataSource_TableStore):
         else:
             sql_select = f"SELECT {','.join([ time_field, tag_col ] + fields)}"
         sql_from = f"FROM {table_name}"
-        params = []
         if time_col is not None:
             sql_where_list = [ f"{time_col}>={time_from}", f"{time_col}<{time_to}" ]
         else:
             sql_where_list = []
+        params_where = []
         if len(tag_values) > 0:
             sql_where_list += [ f"{tag_col} IN ({','.join([self.placeholder]*len(tag_values))})" ]
-            params.extend(tag_values)
+            params_where.extend(tag_values)
         sql_where = 'WHERE ' + ' AND '.join(sql_where_list) if len(sql_where_list) > 0 else ''
         
         if time_col is None:
@@ -363,7 +366,6 @@ class DataSource_SQL(DataSource_TableStore):
         else:
             sql_orderby = f"ORDER BY {time_col} ASC"
 
-        sql = None
         if time_col is None or lastonly:
             pass
         elif resampling is None or resampling <= 0:
@@ -407,6 +409,8 @@ class DataSource_SQL(DataSource_TableStore):
                     f"    %s" % ("" if tag_col is None else f"AND t.{tag_col} = b.{tag_col}"),
                     f"{sql_orderby}"
                 ])
+                params.extend(params_where)
+                params.extend(params_where)
                 
             elif reducer in ['mean', 'sum', 'min', 'max']:  # "count" cannot be applied twice
                 if reducer == 'mean':
@@ -435,11 +439,13 @@ class DataSource_SQL(DataSource_TableStore):
                     f"    cte_bucket",
                     f"{sql_orderby}"
                 ])
+                params.extend(params_where)
                 
         if sql is None:
             sql = ' '.join([ sql_select, sql_from, sql_where, sql_orderby ])
+            params.extend(params_where)
 
-        logging.info(f'SQL: {sql} , params:{params}');
+        logging.debug(f'SQL: {sql} , params:{params}');
         query_result = await self.server.fetch(sql, params)
         if query_result.is_error:
             logging.error('SQL Query Error: %s: %s (params=%s)' % (query_result.error, sql, str(params)))

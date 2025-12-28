@@ -46,6 +46,7 @@ class DataSource(ComponentPlugin):
             to = float(opts.get('to', 0))
             resample = float(opts.get('resample', -1))
             reducer = opts.get('reducer', 'last')
+            filler = opts.get('filler', 'fillna')
             envelope = int(opts.get('envelope', 0))
         except Exception as e:
             logging.error('Bad data URL: %s: %s' % (str(opts), str(e)))
@@ -57,7 +58,7 @@ class DataSource(ComponentPlugin):
             resample = None
                                 
         result = {}
-        result_ts = await self.aio_get_timeseries(channels, length, to, resample, reducer, envelope)
+        result_ts = await self.aio_get_timeseries(channels, length, to, resample, reducer, filler, envelope)
         result_obj = await self.aio_get_object(channels, length, to)
         if result_ts is not None:
             result.update(result_ts)
@@ -93,10 +94,10 @@ class DataSource(ComponentPlugin):
         return self.get_channels()
 
     
-    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last', envelope=0):
+    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0):
         """[implement in child class] returns a time-series data (async version)
         """
-        return self.get_timeseries(channels, length, to, resampling, reducer, envelope)
+        return self.get_timeseries(channels, length, to, resampling, reducer, filler, envelope)
 
     
     async def aio_get_object(self, channels, length, to):
@@ -125,7 +126,7 @@ class DataSource(ComponentPlugin):
         return []
 
     
-    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', envelope=0):
+    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0):
         """[implement in child class] returns a time-series data
         """
         return {}
@@ -144,13 +145,14 @@ class DataSource(ComponentPlugin):
             
 
     @classmethod
-    def resample(cls, set_of_timeseries, length, to, interval, reducer, envelope):
+    def resample(cls, set_of_timeseries, length, to, interval, reducer, filler, envelope):
         """performs resampling (can be used in child class)
         Args:
           - set_of_timeseries: { name: timeseries } dict of input timeseries objects
           - length, to: defines the time frame (start/stop)
           - interval: time-bucket interval in sec
           - reducer: name of the reducer applied, defined in DataSource.reduce()
+          - filler: name of the filler applied, currently only "fillna"
           - envelope: 0: no envelope, 1: min/max envelope
         Returns:
           - set of aligned timeseries, in a { name: timeseries } dict

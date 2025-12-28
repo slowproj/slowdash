@@ -227,25 +227,37 @@ class DataSource_InfluxDB2(DataSource):
         return channels
     
     
-    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', envelope=0):
+    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0):
         if not self.channels_scanned:
             self.scan_channels()
         if self.client is None:
             return None
 
+        if reducer in ['sd', 'stdev', 'rms', 'sigma']:
+            db_reducer = 'std'
+        else:
+            db_reducer = reducer
+        
+        if envelope > 0:
+            db_resampling = None
+        elif db_reducer not in ['first', 'last', 'min', 'max', 'mean', 'median', 'sum', 'count', 'std']:
+            db_resampling = None
+        else:
+            db_resampling = resampling
+        
         result = {}
         for schema in self.ts_schemata:
             result.update(self.execute_query(
-                schema, channels, length, to, resampling=resampling, reducer=reducer, lastonly=False
+                schema, channels, length, to, resampling=db_resampling, reducer=db_reducer, lastonly=False
             ))
             
         if resampling is None:
             return result
-        if resampling > 0 and reducer in ['first', 'last', 'min', 'max', 'mean', 'median', 'sum', 'count', 'std']:
+        if db_resampling is not None and db_resampling > 0:
             # resampling applied in DB
             return result
         
-        return self.resample(result, length, to, resampling, reducer, envelope)
+        return self.resample(result, length, to, resampling, reducer, filler, envelope)
         
 
     def get_object(self, channels, length, to):

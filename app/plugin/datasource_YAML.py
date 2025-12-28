@@ -32,7 +32,7 @@ class DataSource_YAML(DataSource):
             return [ { 'name': self.name, 'type': 'tree' } ]
 
     
-    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', envelope=0):
+    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0):
         return {}
 
     

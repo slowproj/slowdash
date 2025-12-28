@@ -40,15 +40,20 @@ class DataSource_Honeybee(DataSource):
         return result
 
     
-    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last', envelope=0):
+    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0):
+        if envelope > 0:
+            db_resampling = None
+        else:
+            db_resampling = resampling
+        
         cmd = [ os.path.join(self.bin_dir, 'hb-get-data') ]
         cmd.extend(channels)
         cmd.append('--series')
         cmd.append('--length=%f' % length)
         if to is not None:
             cmd.append('--to-ts=%f' % to)
-        if resampling is not None:
-            cmd.append('--resample=%s,%s' % (resampling, reducer))
+        if db_resampling is not None:
+            cmd.append('--resample=%s,%s' % (db_resampling, reducer))
         cmd.append('--config=' + self.config_file)
         if self.dripline_db is not None:
             cmd.append('--dripline-db=' + self.dripline_db)

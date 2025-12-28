@@ -116,11 +116,10 @@ class Plot {
         bindInput(this.config, 'format', div.find('input').at(k++).css('width', '5em'));
         
         if (this.config.resampling) {
-            let tr = $('<tr>');
-            tr.html(`
+            $('<tr>').html(`
               <td>Resampling</td>
               <td>
-                threshold: <input placeholder="7200" type="number" step="any">,
+                buckets: <input placeholder="600" type="number" step="1">,
                 <select>
                     <option value="last">last</option>
                     <option value="mean">mean</option>
@@ -133,13 +132,19 @@ class Plot {
                 </select>
                 ${this.config.resampling.envelope!==undefined ? ', <label><input type="checkbox">envelope</label>' : ''}
               </td>
-            `);
-            tr.appendTo(table);
-            bindInput(this.config.resampling, 'threshold', div.find('input').at(k++).css('width', '5em'));
+            `).appendTo(table);
+            $('<tr>').html(`
+              <td></td>
+              <td>
+                threshold: <input placeholder="7200" type="number" step="any"> (s)
+              </td>
+            `).appendTo(table);
+            bindInput(this.config.resampling, 'buckets', div.find('input').at(k++).css('width', '5em'));
             bindInput(this.config.resampling, 'reducer', div.find('select').at(ks++).css('width', '4em'));
             if (this.config.resampling.envelope !== undefined) {
                 bindInput(this.config.resampling, 'envelope', div.find('input').at(k++), true);
             }
+            bindInput(this.config.resampling, 'threshold', div.find('input').at(k++).css('width', '5em'));
 
             let comment = $('<div>').appendTo(div).css({
                 'margin-top': '2em',
@@ -162,17 +167,21 @@ class Plot {
         for (const field of ['channel', 'channelX', 'channelY']) {
             if (this.config[field] !== undefined) {
                 let customOptions = {};
-                const threshold = this.config.resampling?.threshold ?? NaN;
+                const buckets = this.config.resampling?.buckets ?? NaN;
                 const reducer = (this.config.resampling?.reducer ?? 'last').trim();
                 const envelope = this.config.resampling?.envelope ?? false;
-                if (! Number.isNaN(threshold)) {
-                    customOptions['resamplingThreshold'] = threshold;
+                const threshold = this.config.resampling?.threshold ?? NaN;
+                if (! Number.isNaN(buckets)) {
+                    customOptions.resamplingBuckets = buckets;
                 }
                 if ((reducer !== '') && (reducer !== 'last')) {
-                    customOptions['reducer'] = reducer;
+                    customOptions.reducer = reducer;
                 }
                 if (envelope === true) {
-                    customOptions['envelope'] = 1;
+                    customOptions.envelope = 1;
+                }
+                if (! Number.isNaN(threshold)) {
+                    customOptions.resamplingThreshold = threshold;
                 }
                 this.requestDataIds[field] = dataRequest.append(this.config[field], customOptions);
             }
@@ -313,7 +322,7 @@ class TimeseriesHistogramPlot extends HistogramPlot {
         super.configure(config, axes, legend, panel);
         
         if (! this.config.resampling) {
-            this.config.resampling = {threshold: null, reducer: 'last'};
+            this.config.resampling = {buckets: null, threshold: null, reducer: 'last'};
         }
     }
     
@@ -809,7 +818,7 @@ class TimeseriesScatterPlot extends GraphPlot {
         super.configure(config, axes, legend, panel);
         
         if (! this.config.resampling) {
-            this.config.resampling = {threshold: 0, reducer: 'last'};
+            this.config.resampling = { buckets: null, threshold: 0, reducer: 'last' };
         }
         
         if (! this.config.lastpoint_type) {
@@ -970,7 +979,7 @@ class TimeseriesPlot extends LineMarkerPlot {
     configure(config, axes, legend, panel) {
         super.configure(config, axes, legend, panel);
         if (! this.config.resampling) {
-            this.config.resampling = {threshold: null, reducer: 'last', envelope: false};
+            this.config.resampling = { buckets: null, threshold: null, reducer: 'last', envelope: false };
         }
     }
     
