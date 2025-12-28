@@ -1,0 +1,9 @@
+slowdash_project:
+  name: Honeybee
+
+  data_source:
+    - type: Honeybee
+      parameters:
+        bin_dir: ${HONEYBEE_BIN:-/home/hachi/Project8/github/honeybee/install/bin}
+        config: ${HONEYBEE_CONFIG:-/home/hachi/Project8/github/honeybee/SensorTable/SensorTable_CCA.ktf}
+        dripline_db: ${DRIPLINE_DB_URL:-p8_db_user:dripline@localhost:5432/p8_sc_db}
