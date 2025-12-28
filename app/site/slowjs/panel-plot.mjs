@@ -122,8 +122,14 @@ class Plot {
               <td>
                 threshold: <input placeholder="7200" type="number" step="any">,
                 <select>
-                    <option value="mean">mean</option>
                     <option value="last">last</option>
+                    <option value="mean">mean</option>
+                    <option value="median">median</option>
+                    <option value="sum">sum</option>
+                    <option value="count">count</option>
+                    <option value="stdev">stdev</option>
+                    <option value="min">min</option>
+                    <option value="max">max</option>
                 </select>
                 ${this.config.resampling.envelope!==undefined ? ', <label><input type="checkbox">envelope</label>' : ''}
               </td>

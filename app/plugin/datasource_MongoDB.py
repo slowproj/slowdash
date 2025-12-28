@@ -65,7 +65,7 @@ class DataSource_MongoDB(DataSource):
         return [ {'name': name} for name in sorted(channel_set) ]
     
     
-    def get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
+    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', envelope=0):
         if self.collection is None:
             return None
 
@@ -100,6 +100,6 @@ class DataSource_MongoDB(DataSource):
                     pass
                     
         if resampling is not None:
-            return self.resample(result, length, to, resampling, reducer)
+            return self.resample(result, length, to, resampling, reducer, envelope)
         else:
             return result

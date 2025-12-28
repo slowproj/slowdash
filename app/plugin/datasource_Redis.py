@@ -377,7 +377,7 @@ class DataSource_Redis(DataSource):
         return channels
 
     
-    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
+    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last', envelope=0):
         record = {}
         for src in self.sources:
             record.update(await src.get_timeseries(channels, length, to))
@@ -385,7 +385,7 @@ class DataSource_Redis(DataSource):
         if resampling is None:
             return record
             
-        return self.resample(record, length, to, resampling, reducer)
+        return self.resample(record, length, to, resampling, reducer, envelope)
 
                              
     async def aio_get_object(self, channels, length, to):

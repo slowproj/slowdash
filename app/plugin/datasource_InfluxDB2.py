@@ -227,7 +227,7 @@ class DataSource_InfluxDB2(DataSource):
         return channels
     
     
-    def get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
+    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', envelope=0):
         if not self.channels_scanned:
             self.scan_channels()
         if self.client is None:
@@ -245,7 +245,7 @@ class DataSource_InfluxDB2(DataSource):
             # resampling applied in DB
             return result
         
-        return self.resample(result, length, to, resampling, reducer)
+        return self.resample(result, length, to, resampling, reducer, envelope)
         
 
     def get_object(self, channels, length, to):

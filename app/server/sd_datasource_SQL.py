@@ -145,13 +145,13 @@ class DataSource_SQL(DataSource_TableStore):
         return channels
         
     
-    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
+    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last', envelope=0):
         if self.server is None:
             self.server = await self._connect_with_retry()
         if self.server is None:
             return {}
         
-        return await super().aio_get_timeseries(channels, length, to, resampling, reducer)
+        return await super().aio_get_timeseries(channels, length, to, resampling, reducer, envelope)
 
         
     async def aio_get_object(self, channels, length, to):
@@ -329,7 +329,7 @@ class DataSource_SQL(DataSource_TableStore):
             return None
 
     
-    async def _execute_query(self, table_name, time_col, time_type, time_from, time_to, tag_col, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
+    async def _execute_query(self, table_name, time_col, time_type, time_from, time_to, tag_col, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False, use_server_resampling=True):
         if self.server is None:
             self.server = await self._connect_with_retry()
         if self.server is None:
@@ -373,7 +373,10 @@ class DataSource_SQL(DataSource_TableStore):
         else:
             # The syntax to get the time difference may depend on the SQL type
             tdiff_query = self._get_timediffsec_query(time_col, time_type, stop, time_to)
-            if tdiff_query is None:
+            if not use_server_resampling:
+                pass  # no server-side resampling -> resampling in Python
+            
+            elif tdiff_query is None:
                 pass  # no server-side resampling -> resampling in Python
             
             elif reducer in ['first', 'last']:
@@ -436,6 +439,7 @@ class DataSource_SQL(DataSource_TableStore):
         if sql is None:
             sql = ' '.join([ sql_select, sql_from, sql_where, sql_orderby ])
 
+        logging.info(f'SQL: {sql} , params:{params}');
         query_result = await self.server.fetch(sql, params)
         if query_result.is_error:
             logging.error('SQL Query Error: %s: %s (params=%s)' % (query_result.error, sql, str(params)))

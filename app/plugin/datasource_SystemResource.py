@@ -23,7 +23,7 @@ class DataSource_SystemResource(DataSource):
         return [ { 'name': 'system', 'type': 'tree' } ]
 
     
-    def get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
+    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', envelope=0):
         return {}
 
     

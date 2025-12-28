@@ -40,7 +40,7 @@ class DataSource_Honeybee(DataSource):
         return result
 
     
-    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
+    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last', envelope=0):
         cmd = [ os.path.join(self.bin_dir, 'hb-get-data') ]
         cmd.extend(channels)
         cmd.append('--series')

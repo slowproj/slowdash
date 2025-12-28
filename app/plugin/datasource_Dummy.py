@@ -45,7 +45,7 @@ class DataSource_Dummy(DataSource):
         return channels
 
     
-    def get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
+    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', envelope=0):
         result = {}
         for ch in self.ts_channels:
             name = ch.get('name', None)
@@ -64,6 +64,7 @@ class DataSource_Dummy(DataSource):
                 t = start+dt
                 xw = (1-decay) * xw + np.random.normal(0, walk)
                 x = eval(formula) + np.random.normal(0, noise) + xw
+
                 series['t'].append(dt)
                 series['x'].append(float('%.4g'%x))
             result[name] = {'start': start, 'length': length, 't': series['t'], 'x': series['x'] }
@@ -71,7 +72,7 @@ class DataSource_Dummy(DataSource):
         if resampling is None:
             return result
             
-        return self.resample(result, length, to, resampling, reducer)
+        return self.resample(result, length, to, resampling, reducer, envelope)
 
     
     def get_object(self, channels, length, to):

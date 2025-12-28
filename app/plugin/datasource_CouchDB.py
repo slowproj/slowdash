@@ -198,7 +198,7 @@ class DataSource_CouchDB(DataSource):
         return channels
             
     
-    def get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
+    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', envelope=0):
         if not self.server_connected:
             self.connect()
         if self.db is None:
@@ -209,7 +209,7 @@ class DataSource_CouchDB(DataSource):
             result.update(self.execute_timeseries_query(schema, channels, length, to, lastonly=False))
         
         if resampling is not None and resampling <= 0:
-            return self.resample(result, length, to, resampling, reducer)
+            return self.resample(result, length, to, resampling, reducer, envelope)
         else:
             return result
 

@@ -112,7 +112,7 @@ class App(slowlette.App):
         return (await self.slowlette('/api/channels')).content
 
         
-    async def request_data(self, channels, length:float=None, to:float=None, resample:float=None, reducer:str=None):
+    async def request_data(self, channels, length:float=None, to:float=None, resample:float=None, reducer:str=None, envelope:int=None):
         """shortcut for "/api/data"
         Parameters:
           - channels: list or str
@@ -120,6 +120,7 @@ class App(slowlette.App):
           - to: timestamp for the end of the query period
           - resample: resampling buckets size, 0 to auto, -1 to disable
           - reducer: resampling reducer ("last", "mean", "median", ...)
+          - envelope: 0: no envelope, 1: min/max
         Returns:
           - data as a dict
         """
@@ -137,6 +138,8 @@ class App(slowlette.App):
             opts['resample'] = resample
         if reducer is not None:
             opts['reducer'] = reducer
+        if envelope is not None:
+            opts['envelope'] = envelope
         if len(opts) > 0:
             url += '?' + '&'.join(['%s=%s'%(k,v) for k,v in opts.items()])
         

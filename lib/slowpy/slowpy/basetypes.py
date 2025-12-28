@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 17 July 2024 #
 
 
-import time, json
+import time, json, logging
 
 
 class DataElement:
@@ -63,9 +63,9 @@ class TimeSeries:
     def __init__(self, fields=[''], start=0, length=None):
         self.start = start
         self.length = length
-        self.fields = fields if len(fields) > 0 else ['']
+        self.fields = fields if len(fields) > 0 else ['x']
         self.t = []
-        self.values = []
+        self.values = [] * len(self.fields)
 
 
     def write(self, values, t=None):
@@ -76,10 +76,9 @@ class TimeSeries:
         - time: UNIX time-stamp, if None if given, the current time will be used.
         '''
         if t is None:
-            t = time.time() - self.start
+            t = time.time()
         
         record = [None] * len(self.fields)
-        
         if type(values) == dict:
             for i in range(len(record)):
                 record[i] = values.get(self.fields[i], None)
@@ -89,28 +88,28 @@ class TimeSeries:
         else:
             record[0] = values
 
-        self.t.append(t)
-        self.values.append(record)
+        self.t.append(t - self.start)
+        for k in range(len(self.fields)):
+            self.values[k].append(record[k])
 
 
     def to_json(self):
         length = self.length
         if length is None:
-            if len(self.t) < 2:
+            if len(self.t) < 1:
                 length = 1
             else:
-                span = self.t[-1] - self.t[0]
-                length = span + (span / (len(self.t) - 1))
+                length = self.t[-1] + 1
             
-        record = {
+        data = {
             'start': self.start,
             'length': length,
             't': self.t,
         }
         for k in range(len(self.fields)):
-            record[self.fields[k]] = [ v[k] for v in self.values ]
+            data[self.fields[k]] = self.values[k]
         
-        return record
+        return data
 
     
     def __str__(self):

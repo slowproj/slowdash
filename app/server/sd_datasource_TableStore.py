@@ -32,7 +32,7 @@ class DataSource_TableStore(DataSource):
 
         
     # override this
-    async def _execute_query(self, table_name, time_col, time_type, time_from, time_to, tag, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
+    async def _execute_query(self, table_name, time_col, time_type, time_from, time_to, tag, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False, use_server_resampling=True):
         columns, table = [], []
         return columns, table
 
@@ -52,20 +52,22 @@ class DataSource_TableStore(DataSource):
         return channels
         
     
-    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
+    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last', envelope=0):
         if not self.channels_scanned:
             await self._scan_channels()
         
         result = {}
         for schema in self.ts_schemata:
             result.update(await self._get_query_result(
-                schema, channels, length, to, resampling=resampling, reducer=reducer, lastonly=False
+                schema, channels, length, to,
+                resampling=resampling, reducer=reducer, lastonly=False,
+                use_server_resampling=(envelope==0)
             ))
             
         if resampling is None:
             return result
             
-        return self.resample(result, length, to, resampling, reducer)
+        return self.resample(result, length, to, resampling, reducer, envelope)
 
     
     async def aio_get_object(self, channels, length, to):
@@ -73,13 +75,17 @@ class DataSource_TableStore(DataSource):
         for schema in self.obj_schemata + self.objts_schemata:
             if schema.tag is None:
                 result.update(await self._get_query_result(
-                    schema, channels, length, to, resampling=None, reducer=None, lastonly=True
+                    schema, channels, length, to,
+                    resampling=None, reducer=None, lastonly=True,
+                    use_server_resampling=False
                 ))
             else:
                 # to make use of "limit 1"
                 for ch in channels:  
                     result.update(await self._get_query_result(
-                        schema, [ch], length, to, resampling=None, reducer=None, lastonly=True
+                        schema, [ch], length, to,
+                        resampling=None, reducer=None, lastonly=True,
+                        use_server_resampling=False
                     ))
             # retry if the value is null?
             
@@ -212,7 +218,7 @@ class DataSource_TableStore(DataSource):
                                 schema.add_channel(channel_name_str, Schema.identify_datatype(value))
 
 
-    async def _get_query_result(self, schema, channels, length, to, resampling=None, reducer=None, lastonly=False):
+    async def _get_query_result(self, schema, channels, length, to, resampling=None, reducer=None, lastonly=False, use_server_resampling=True):
         result = {}
         stop = int(to)
         start = int(stop - float(length))
@@ -244,7 +250,8 @@ class DataSource_TableStore(DataSource):
             time_col, schema.time_type, time_from, time_to, 
             schema.tag, tag_values, fields,
             resampling=resampling, reducer=reducer, stop=stop,
-            lastonly=lastonly
+            lastonly=lastonly,
+            use_server_resampling = use_server_resampling
         )
 
         def add_result(channel, timestamp, value):

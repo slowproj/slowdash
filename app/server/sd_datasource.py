@@ -46,6 +46,7 @@ class DataSource(ComponentPlugin):
             to = float(opts.get('to', 0))
             resample = float(opts.get('resample', -1))
             reducer = opts.get('reducer', 'last')
+            envelope = int(opts.get('envelope', 0))
         except Exception as e:
             logging.error('Bad data URL: %s: %s' % (str(opts), str(e)))
             return slowlette.Response(400)
@@ -56,7 +57,7 @@ class DataSource(ComponentPlugin):
             resample = None
                                 
         result = {}
-        result_ts = await self.aio_get_timeseries(channels, length, to, resample, reducer)
+        result_ts = await self.aio_get_timeseries(channels, length, to, resample, reducer, envelope)
         result_obj = await self.aio_get_object(channels, length, to)
         if result_ts is not None:
             result.update(result_ts)
@@ -92,10 +93,10 @@ class DataSource(ComponentPlugin):
         return self.get_channels()
 
     
-    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
+    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last', envelope=0):
         """[implement in child class] returns a time-series data (async version)
         """
-        return self.get_timeseries(channels, length, to, resampling, reducer)
+        return self.get_timeseries(channels, length, to, resampling, reducer, envelope)
 
     
     async def aio_get_object(self, channels, length, to):
@@ -124,7 +125,7 @@ class DataSource(ComponentPlugin):
         return []
 
     
-    def get_timeseries(self, channels, length, to, resampling=None, reducer='last'):
+    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', envelope=0):
         """[implement in child class] returns a time-series data
         """
         return {}
@@ -143,13 +144,14 @@ class DataSource(ComponentPlugin):
             
 
     @classmethod
-    def resample(cls, set_of_timeseries, length, to, interval, reducer):
+    def resample(cls, set_of_timeseries, length, to, interval, reducer, envelope):
         """performs resampling (can be used in child class)
         Args:
           - set_of_timeseries: { name: timeseries } dict of input timeseries objects
           - length, to: defines the time frame (start/stop)
           - interval: time-bucket interval in sec
           - reducer: name of the reducer applied, defined in DataSource.reduce()
+          - envelope: 0: no envelope, 1: min/max envelope
         Returns:
           - set of aligned timeseries, in a { name: timeseries } dict
         """
@@ -179,6 +181,11 @@ class DataSource(ComponentPlugin):
             start = start - interval
             nbins = nbins + 1
 
+        def _reduce_buckets(buckets, reducer):
+            x = [ cls.reduce(bk, reducer) for bk in buckets ]
+            x = [ None if math.isnan(xk) else xk for xk in x ]
+            return x
+                
         result = {}
         for name, data in set_of_timeseries.items():
             if data is None:
@@ -198,10 +205,18 @@ class DataSource(ComponentPlugin):
                     continue
                 buckets[bin].append(x_in[k])
 
-            x = [ cls.reduce(xk, reducer) for xk in buckets ]
-            x = [ None if math.isnan(xk) else xk for xk in x ]
-                
+            x = _reduce_buckets(buckets, reducer)
             result[name] = { 'start': start, 'length': length, 't': t, 'x': x }
+
+            if envelope >= 1:
+                if reducer in ['first', 'last', 'mean', 'median']:
+                    result[name]['x_min'] = _reduce_buckets(buckets, 'min')
+                    result[name]['x_max'] = _reduce_buckets(buckets, 'max')
+            if envelope >= 2:
+                if reducer != 'count':
+                    result[name]['x_count'] = _reduce_buckets(buckets, 'count')
+                if reducer == 'mean':
+                    result[name]['x_err'] = _reduce_buckets(buckets, 'sem')
             
         return result
 
@@ -211,11 +226,16 @@ class DataSource(ComponentPlugin):
         """calculate a single scalar number out of the input list of values
         Args:
           - x: list of scalar values
-          - method: string name of the reducing method: 'first', 'last', 'mean', 'median', 'sum', 'count', 'min', 'max'
+          - method: string name of the reducing method:
+            - 'first', 'last', 'mean', 'median'
+            - 'min', 'max'
+            - 'sum', 'count'
+            - 'stdev' (or equivalently, 'sd', 'std', 'rms', 'sigma')
+            - 'sem' (or equivalently, 'err'): standard error of mean (= stdev/sqrt(count))
         Returns:
           - the calculated scalar value
         """
-        from decimal import Decimal
+
         xx = [ xk for xk in x if not math.isnan(xk) ]
 
         if method == 'count':
@@ -244,6 +264,8 @@ class DataSource(ComponentPlugin):
         
         if method in ['sd','std','stdev','rms','sigma']:
             return statistics.stdev(xx)
+        elif method in ['sem','err']:
+            return statistics.stdev(xx) / math.sqrt(len(xx))
         
         return math.nan
 
