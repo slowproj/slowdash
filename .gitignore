@@ -1,15 +1,8 @@
 bin/
 venv/
-ExampleProjects/
 utils/testbench/
 __pycache__/
 .vscode/
-notebooks/
 requirements.txt
-*.db
-*.hdf5
-*.csv
-*.pem
-*.key
-*.crt
 *.egg-info
+*~

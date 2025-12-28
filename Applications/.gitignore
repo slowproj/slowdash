@@ -1,0 +1,5 @@
+*.db
+*.hdf5
+*.csv
+notebooks/
+slowplot-*.json
