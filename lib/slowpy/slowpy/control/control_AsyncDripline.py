@@ -454,13 +454,18 @@ class ServiceNode(ControlNode):
 
         if inspect.isawaitable(reply):
             reply = await reply
-                
-        if reply is True:
-            reply = {'status': 'success'}
-        elif reply is False:
-            reply = {'status': 'error'}
+
         if reply is None:
-            reply = {'status': 'not handled'}
+            reply = {'status': 'ERROR: invalid request'}
             logging.warning(f'Dripline: request not handled: key={routing_key}, op={operation}, body={message.body}')
-        
+        elif type(reply) is dict:
+            pass
+        elif type(reply) is tuple and len(reply) >= 2:
+            reply = { 'value_raw': reply[0], 'value_cal': reply[1] }
+        elif type(reply) in [ bool, int, float, str ]:
+            reply = { 'value_raw': reply }
+        else:
+            # throw an error?
+            pass
+
         return reply
