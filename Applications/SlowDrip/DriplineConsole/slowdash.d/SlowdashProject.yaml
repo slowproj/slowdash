@@ -4,6 +4,8 @@ slowdash_project:
   task:
     name: DriplineConsole
     auto_load: true
+    parameters:
+      url: amqp://dripline:dripline@rabbit-broker
 
   system:
     our_security_is_perfect: true

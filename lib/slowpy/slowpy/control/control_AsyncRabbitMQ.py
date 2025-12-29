@@ -23,7 +23,7 @@ class RabbitMQNode(ControlNode):
 
 
     async def aio_close(self):
-        logging.info('RabbitMQ: closing')
+        logging.info('AsyncRabbitMQ: closing')
         
         if self.channel:
             try:
@@ -52,7 +52,7 @@ class RabbitMQNode(ControlNode):
     async def _construct(self):
         if self.connection is None:
             if self.is_retry:
-                logging.info(f'RabbitMQ: retrying to connect to {self.url}')
+                logging.info(f'AsyncRabbitMQ: retrying to connect to {self.url}')
             try:
                 #self.connection = await aio_pika.connect_robust(self.url)
                 self.connection = await aio_pika.connect(self.url)
@@ -60,10 +60,10 @@ class RabbitMQNode(ControlNode):
                 self.is_retry = False
             except Exception as e:
                 if not self.is_retry:
-                    logging.error(f'unable to connect to RabbitMQ: {self.url}: {e}')
+                    logging.error(f'AsyncRabbitMQ: unable to connect to RabbitMQ: {self.url}: {e}')
                     self.is_retry = True
                 else:
-                    logging.info(f'unable to connect to RabbitMQ: {self.url}: {e}')
+                    logging.info(f'AsyncRabbitMQ: unable to connect to RabbitMQ: {self.url}: {e}')
                 self.connection = None
                 self.channel = None
                 return
@@ -71,7 +71,7 @@ class RabbitMQNode(ControlNode):
             try:
                 await self.channel.set_qos(prefetch_count=self.prefetch_count)
             except Exception as e:
-                logging.warning(f'RabbitMQ: unable to set QoS prefetch count ({self.prefetch_count}): {e}')
+                logging.warning(f'AsyncRabbitMQ: unable to set QoS prefetch count ({self.prefetch_count}): {e}')
         
             
     ## child nodes ##
@@ -92,7 +92,7 @@ class RabbitMQNode(ControlNode):
 
     @classmethod
     def _node_creator_method(cls):
-        def rabbitmq(self, url:str, **kwargs):
+        def async_rabbitmq(self, url:str, **kwargs):
             if True: # stop/start of a module will not delete this, but the event loop is different
                 return RabbitMQNode(url, **kwargs)
                 
@@ -108,7 +108,7 @@ class RabbitMQNode(ControlNode):
 
             return node
 
-        return rabbitmq
+        return async_rabbitmq
 
     
 
@@ -163,8 +163,8 @@ class PublishNode(ControlNode):
         if self.exchange_node.exchange is None:
             await self.exchange_node._construct()
         if self.exchange_node.exchange is None:
-            raise ControlException('RabbitMQ.PublishNode.aio_set(): exchange not ready')
-            
+            raise ControlException(f'RabbitMQ.PublishNode[{self.routing_key}].aio_set(): exchange not ready')
+
         body, headers, parameters = ({}, {}, {})
         if type(value) is Message:
             body, headers, parameters = value
@@ -191,9 +191,15 @@ class PublishNode(ControlNode):
             elif body is None:
                 body = b''
             else:
-                raise ControlException(
-                    f'RabbitMQ.PublishNode: body is not serializable to bytes (type={type(body).__name__})'
-                )
+                try:
+                    body = str(body).encode()
+                    content_type, content_encoding = 'text/plain', 'utf-8'
+                except:
+                    raise ControlException(
+                        f'RabbitMQ.PublishNode[{self.routing_key}].aio_set(): ' +
+                        f'body is not serializable to bytes: {value}: ' +
+                        f'(body={body}, type={type(body).__name__})'
+                    )
 
         for k,v in self.parameters.items():
             if k not in parameters:
@@ -303,7 +309,7 @@ class QueueNode(ControlNode):
             if self.is_stop_requested():
                 break
             if self.timeout > 0 and lapse >= self.timeout:
-                logging.warning('AMQP Queue Timeout')
+                logging.warning(f'AMQP Queue Timeout (queue: {self.name})')
                 break
             
             lapse += 0.2
@@ -359,11 +365,15 @@ class RpcFunctionNode(ControlNode):
         request_message = await self.queue_node.aio_get()
         if request_message.body is None:
             return None
-        
-        if inspect.iscoroutinefunction(self.function):
-            return_value = await self.function(request_message)
-        else:
-            return_value = self.function(request_message)
+
+        try:
+            if inspect.iscoroutinefunction(self.function):
+                return_value = await self.function(request_message)
+            else:
+                return_value = self.function(request_message)
+        except Exception as e:
+            logging.error(f'SlowDrip.RpcFunctionNonde: error in handler function: {e}')
+            return_value = None
 
         routing_key = request_message.parameters.get('reply_to', None)
         if routing_key is not None:

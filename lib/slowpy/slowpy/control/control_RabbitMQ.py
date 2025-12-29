@@ -150,6 +150,9 @@ class RabbitMQNode(ControlNode):
     @classmethod
     def _node_creator_method(cls):
         def rabbitmq(self, url: str, **kwargs):
+            if True:
+                return RabbitMQNode(url, **kwargs)
+                
             try:
                 self._rmq_nodes.keys()
             except Exception:

@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 3 October 2025 #
 
-import os, time, datetime, socket, getpass, uuid, json, inspect, logging
+import os, time, datetime, socket, getpass, uuid, json, inspect, asyncio, logging
 
 from slowpy.control import ControlNode, ControlVariableNode, control_system as ctrl
 ctrl.import_control_module('AsyncRabbitMQ')
@@ -23,10 +23,13 @@ sender_info = {
 
 
 class DriplineNode(ControlNode):
+    _seq = 0
+    
     def __init__(self, rabbitmq_url:str, name:str=None):
-        self.rmq = ctrl.rabbitmq(rabbitmq_url)
-        self.name = name or f'SlowDash_{socket.gethostname()}_{os.getpid()}'
+        self.rmq = ctrl.async_rabbitmq(rabbitmq_url)
+        self.name = name or f'AsyncSlowDrip_{socket.gethostname()}_{os.getpid()}_{DriplineNode._seq}'
         self.sender_id = str(uuid.uuid4())
+        DriplineNode._seq += 1
         
         self.alerts_exchange = self.rmq.topic_exchange('alerts')
         self.requests_exchange = self.rmq.topic_exchange('requests')
@@ -84,7 +87,7 @@ class DriplineNode(ControlNode):
     
     @classmethod
     def _node_creator_method(cls):
-        def dripline(self, *args, **kwargs):
+        def async_dripline(self, *args, **kwargs):
             if True:
                 return DriplineNode(*args, **kwargs)
             
@@ -95,7 +98,7 @@ class DriplineNode(ControlNode):
 
             return self.dripline_node
 
-        return dripline
+        return async_dripline
 
 
     
@@ -157,7 +160,7 @@ class EndpointNode(ControlNode):
         try:
             message = await self.reply_queue_node.rpc_call(self.routing_key, body, headers, parameters).aio_get()
         except Exception as e:
-            logging.error(e)
+            logging.error(f'SlowDrip.Endpoint[{self.routing_key}]: RPC error: {e}')
             return None
         
         if type(message.body) is dict:
@@ -399,17 +402,34 @@ class ServiceNode(ControlNode):
             routing_key = routing_keys,
             exclusive = True,
         )
+        
+        self.heartbeat_alert = dripline.heartbeat_alert()
+        self.status_message_alert = dripline.status_message_alert()
 
     
     async def aio_start(self):
+        await asyncio.gather(
+            self._handle_requests(),
+            self._send_heartbeats()
+        )
+        
+
+    async def _send_heartbeats(self):
+        while not ctrl.is_stop_requested():
+            await self.heartbeat_alert.aio_set(time.time())
+            await self.status_message_alert.aio_set('I am working')
+            await ctrl.aio_sleep(30)
+                
+
+    async def _handle_requests(self):
         while not ctrl.is_stop_requested():
             try:
                 await self.request_queue_node.rpc_function(self._handle_message).aio_get()
             except Exception as e:
                 logging.error(e)
-                return None
-        
-    
+                logging.info('AsyncDripline.aio_start(): resuming in 3 seconds')
+                await ctrl.aio_sleep(3)
+
 
     async def _handle_message(self, message):
         routing_key = message.parameters.get('routing_key')

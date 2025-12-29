@@ -1,6 +1,9 @@
 # SlowDash with Honeybee
 
-## Building Docker Image
+Honeybee: [https://github.com/project8/honeybee](https://github.com/project8/honeybee)
+
+
+## Building Docker Images
 ### Honeybee
 ```
 $ git clone https://github.com/project8/honeybee

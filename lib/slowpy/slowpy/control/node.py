@@ -4,6 +4,9 @@
 import sys, os, time, asyncio, inspect, threading, importlib.util, traceback, logging
 
 
+lock_importing = threading.RLock()
+
+
 class dualmethod:
     '''decorator for hybrid of object-method(self) and class-method(cls)
     '''
@@ -261,8 +264,7 @@ class ControlNode:
         
     @dualmethod
     def import_control_module(this, module_name, search_dirs=[]):
-        module = sys.modules.get(module_name, None)
-        if module is None:
+        def _load_module(module_name, search_dirs):
             filename = 'control_%s.py' % module_name
             this_search_dirs = search_dirs + [
                 os.path.abspath(os.getcwd()),
@@ -291,20 +293,28 @@ class ControlNode:
                 if module_name in sys.modules:
                     del sys.modules[module_name]
                 raise ControlException('unable to load control module: %s: %s' % (module_name, error_msg))
+
+            return module
             
-        node_classes = []
-        for class_name, NodeClass in module.__dict__.items():
-            if not inspect.isclass(NodeClass):
-                continue
-            for member_name, member in inspect.getmembers(NodeClass):
-                if inspect.ismethod(member) and member.__qualname__ == f'{class_name}._node_creator_method':
-                    node_classes.append(NodeClass)
-        if len(node_classes) == 0:
-            raise ControlException('unable to identify Node class: %s' % module_name)
+        with lock_importing:
+            module = sys.modules.get(module_name, None)
+            if module is None:
+                module = _load_module(module_name, search_dirs)
+                logging.info(f"SlowPy Control: loaded control module {module_name}")
+            
+            node_classes = []
+            for class_name, NodeClass in module.__dict__.items():
+                if not inspect.isclass(NodeClass):
+                    continue
+                for member_name, member in inspect.getmembers(NodeClass):
+                    if inspect.ismethod(member) and member.__qualname__ == f'{class_name}._node_creator_method':
+                        node_classes.append(NodeClass)
+            if len(node_classes) == 0:
+                raise ControlException('unable to identify Node class: %s' % module_name)
         
-        for NodeClass in node_classes:
-            this.add_node(NodeClass)
-            #print(f'Control: importing {str(NodeClass)}')
+            for NodeClass in node_classes:
+                this.add_node(NodeClass)
+                logging.info(f'SlowPy Control: imported control node {str(NodeClass)}')
                 
         return this
 

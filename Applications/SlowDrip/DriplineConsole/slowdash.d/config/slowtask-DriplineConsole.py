@@ -104,7 +104,8 @@ ctrl.export(RepliesTable(), name='Replies.DriplineConsole')
 
 async def _initialize(params):
     global dripline
-    dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
+    url = params.get('url', 'amqp://dripline:dripline@rabbit-broker')
+    dripline = ctrl.async_dripline(url, 'SlowDripConsole')
 
 
 async def _finalize():
@@ -164,11 +165,12 @@ async def monitor_status_message_alerts():
 async def send_heartbeats():
     while not ctrl.is_stop_requested():
         await dripline.heartbeat_alert().aio_set(time.time())
-        await dripline.status_message_alert().aio_set('I am happy')
+        await dripline.status_message_alert().aio_set('I am working')
         await ctrl.aio_sleep(30)
 
         
 async def sd_get_endpoint(endpoint:str, specifier:str=None, value:str=None, lockout_key:str=None):
+    print(f'Console: GET {endpoint}')
     endpoint_node = dripline.endpoint(endpoint, specifier=specifier, lockout_key=lockout_key)
     reply = await endpoint_node.aio_get()
     replies.append([time.time(), endpoint, f'GET {specifier}: {value}', reply])
@@ -176,6 +178,7 @@ async def sd_get_endpoint(endpoint:str, specifier:str=None, value:str=None, lock
 
     
 async def sd_set_endpoint(endpoint:str, specifier:str=None, value:str=None, lockout_key:str=None):
+    print(f'Console: SET {endpoint} {value}')
     endpoint_node = dripline.endpoint(endpoint, specifier=specifier, lockout_key=lockout_key)
     reply = await endpoint_node.aio_set(value)    
     replies.append([time.time(), endpoint, f'SET {specifier}: {value}', reply])
@@ -189,8 +192,8 @@ async def sd_cmd_endpoint(endpoint:str, specifier:str, value:str=None, lockout_k
         if len(vv) == 1:
             ordered_args.append(vv[0].strip())
         elif len(vv) == 2:
-            keyed_args[vv[0].strip()] = vv[1].strip()
-
+            keyed_args[vv[0].strip()] = vv[1].strip()    
+            
     endpoint_node = dripline.endpoint(endpoint, specifier=specifier, lockout_key=lockout_key)
     reply = await endpoint_node.command(ordered_args, keyed_args).aio_get()
     
@@ -249,9 +252,9 @@ def _get_html():
     |     <tr><td>Specifier/Method</td><td><input name="specifier" style="width:24em" placeholder="usually this is empty"></td></tr>
     |     <tr><td>Lockout Key</td><td><input name="lockout_key" style="width:24em" placeholder="usually this is empty"></td></tr>
     |     <tr><td></td><td>
-    |       <input type="submit" name="DriplineConsole.sd_get_endpoint()" value="Get Value">
-    |       <input type="submit" name="DriplineConsole.sd_set_endpoint()" value="Set Value">
-    |       <input type="submit" name="DriplineConsole.sd_cmd_endpoint()" value="Send Command">
+    |       <input type="submit" name="parallel DriplineConsole.sd_get_endpoint()" value="Get Value">
+    |       <input type="submit" name="parallel DriplineConsole.sd_set_endpoint()" value="Set Value">
+    |       <input type="submit" name="parallel DriplineConsole.sd_cmd_endpoint()" value="Send Command">
     |     </td></tr>
     |   </table>
     |   <!--

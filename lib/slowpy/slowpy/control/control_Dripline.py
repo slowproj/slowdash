@@ -36,10 +36,13 @@ sender_info = {
 
 
 class DriplineNode(ControlNode):
+    _seq = 0
+    
     def __init__(self, rabbitmq_url:str, name:str=None):
         self.rmq = ctrl.rabbitmq(rabbitmq_url, heartbeat=300)
-        self.name = name or f'SlowDash_{socket.gethostname()}_{os.getpid()}'
+        self.name = name or f'SlowDrip_{socket.gethostname()}_{os.getpid()}_{DriplineNode._seq}'
         self.sender_id = str(uuid.uuid4())
+        DriplineNode._seq += 1
         
         self.alerts_exchange = self.rmq.topic_exchange('alerts')
         self.requests_exchange = self.rmq.topic_exchange('requests')                
@@ -64,6 +67,9 @@ class DriplineNode(ControlNode):
     @classmethod
     def _node_creator_method(cls):
         def dripline(self, *args, **kwargs):
+            if True:
+                return DriplineNode(*args, **kwargs)
+            
             try:
                 self.dripline_node
             except:
