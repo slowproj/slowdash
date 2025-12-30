@@ -1,6 +1,7 @@
 services:
 
-  slowdash-honeybee:
+  slowdash:
+    image: slowdash-honeybee
     build:
       context: https://github.com/slowproj/slowdash.git
       args:
@@ -13,6 +14,3 @@ services:
       - HONEYBEE_BIN=/honeybee/bin
       - HONEYBEE_CONFIG=/honeybee/SensorTable/SensorTable_CCA.ktf
       - DRIPLINE_DB_URL=postgresql://p8_db_user:dripline@host.docker.internal:5431/p8_sc_db
-    depends_on:
-      postgres:
-        condition: service_healthy
