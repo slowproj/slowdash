@@ -1,14 +1,15 @@
 
+print(f'hello from {__name__}')
+
 from slowpy.control import control_system as ctrl
 ctrl.import_control_module('Dripline')
-
-print('hello from control-randomwalk.py')
 dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
+
 
 
 def set_value(value:float):
     print(f'setting randomwalk value to {value}')
-    dripline.endpoint('randomwalk').set(value)
+    dripline.endpoint('randomwalk_value').set(value)
 
 def set_step(step:float):
     print(f'setting randomwalk step to {step}')

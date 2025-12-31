@@ -10,18 +10,48 @@
         {
             "type": "timeaxis",
             "plots": [
-                { "type": "timeseries", "channel": "randomwalk", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100", "fill_envelope": false }
+                {
+                    "type": "timeseries",
+                    "channel": "randomwalk_value",
+                    "color": "#009090",
+                    "label": "",
+                    "format": "%.5g",
+                    "opacity": 1,
+                    "marker_type": "circle",
+                    "marker_size": 2,
+                    "line_width": 1,
+                    "line_type": "connect",
+                    "fill_opacity": 0,
+                    "fill_baseline": "1e-100",
+                    "fill_envelope": false,
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                }
             ],
-            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
-            "legend": { "style": "side" }
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 0, "ymax": 2 },
+            "legend": { "style": "side", "position": "right" }
         },
         {
             "type": "timeaxis",
             "plots": [
-                { "type": "timeseries", "channel": "randomwalk_step", "color": "#dd8000", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "last", "fill_opacity": 0, "fill_baseline": "1e-100", "fill_envelope": false }
+                {
+                    "type": "timeseries",
+                    "channel": "randomwalk_step",
+                    "color": "#dd8000",
+                    "label": "",
+                    "format": "%.5g",
+                    "opacity": 1,
+                    "marker_type": "circle",
+                    "marker_size": 2,
+                    "line_width": 1,
+                    "line_type": "last",
+                    "fill_opacity": 0,
+                    "fill_baseline": "1e-100",
+                    "fill_envelope": false,
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                }
             ],
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 0, "ymax": 30 },
-            "legend": { "style": "side" }
+            "legend": { "style": "side", "position": "right" }
         },
         { "type": "html", "location": "project", "file": "control-randomwalk", "title": "Randomwalk Control" }
     ],
