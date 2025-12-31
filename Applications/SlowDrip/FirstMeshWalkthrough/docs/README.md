@@ -28,9 +28,10 @@ ctrl.import_control_module('Dripline')
 dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
 ```
 
-To use the asynchronous version, import `AsyncDripline` instead of `Dripline`:
+To use the asynchronous version, import `AsyncDripline` instead of `Dripline` and use `async_dripline()`:
 ```python
 ctrl.import_control_module('AsyncDripline')
+dripline = ctrl.async_dripline('amqp://dripline:dripline@rabbit-broker')
 ```
 Then use `aio_set()` and `aio_get()` instead of `set()` and `get()`.
 
@@ -38,15 +39,24 @@ Then use `aio_set()` and `aio_get()` instead of `set()` and `get()`.
 ```python
 dripline.endpoint(name).set(value)
 ```
+```python
+await dripline.endpoint(name).aio_set(value)
+```
 
 #### Getting a raw value from an endpoint
 ```python
 value = dripline.endpoint(name).value_raw().get()
 ```
+```python
+value = await dripline.endpoint(name).value_raw().aio_get()
+```
 
 #### Setting a value with ramping (or other SlowPy logic)
 ```python
 dripline.endpoint(name).ramping(changes_per_sec).set(value)
+```
+```python
+await dripline.endpoint(name).ramping(changes_per_sec).aio_set(value)
 ```
 
 #### Checking or controlling ramping status
@@ -54,10 +64,17 @@ dripline.endpoint(name).ramping(changes_per_sec).set(value)
 status = dripline.endpoint(name).ramping().status().get()
 dripline.endpoint(name).ramping().status().set(0)  # stop ramping
 ```
+```python
+status = await dripline.endpoint(name).ramping().status().aio_get()
+await dripline.endpoint(name).ramping().status().aio_set(0)  # stop ramping
+```
 
 #### Sending data values (typically stored together with other sensor values)
 ```python
 dripline.sensor_value_alert(endpoint_name).set(value)
+```
+```python
+await dripline.sensor_value_alert(endpoint_name).aio_set(value)
 ```
 where `value` may be:
 - a scalar for `value_raw`
@@ -454,7 +471,7 @@ Create a `slowtask-count_peaches.py` file under `YOUR/SLOWDASH/PROJECT/config` w
 ```python
 from slowpy.control import control_system as ctrl
 ctrl.import_control_module('AsyncDripline')
-dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
+dripline = ctrl.async_dripline('amqp://dripline:dripline@rabbit-broker')
 print(f'hello from {__name__}')
 
 async def _run():
@@ -592,7 +609,7 @@ from slowpy.control import control_system as ctrl
 ctrl.import_control_module('AsyncDripline')
 
 print(f'hello from {__name__}')
-dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
+dripline = ctrl.async_dripline('amqp://dripline:dripline@rabbit-broker')
 
 
 class RandomwalkService:
