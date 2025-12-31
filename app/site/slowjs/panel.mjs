@@ -238,6 +238,7 @@ export class Panel {
         return (from <= timestamp && to >= timestamp);
     }
 
+    // TODO: get only the value in the valid time range
     static _getLastTX(timeseries, transform=null) {
         let time=null, value=null;
 

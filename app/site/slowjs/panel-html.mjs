@@ -302,36 +302,9 @@ class HtmlPanel extends Panel {
                 continue
             }
 
-            let /*t = null,*/ x = null;  // TODO: accept only when t (if defined) is in displayTimeRange
-            if (Array.isArray(data.x)) {
-                let k = data.x.length - 1;
-                while (k >= 0) {
-                    if (! Number.isNaN(data.x[k])) {
-                        break;
-                    }
-                    k--;
-                }
-                if (k >= 0) {
-                    //t = (data.start ?? 0) + data.t[k];
-                    x = data.x[k];
-                }
-            }
-            else {
-                //t = (data.start ?? 0) + data.t;
-                x = data.x;
-            }
-            if (x) {
-                if (typeof(x) == "string") {
-                    try {
-                        x = JSON.parse(x);
-                    }
-                    catch(error) {
-                        ; // x is a non-JSON string
-                    }
-                }
-                if (variable.transform) {
-                    x = variable.transform.apply(x);
-                }
+            // TODO: get only the value in the valid time range
+            const [t, x] = Panel._getLastTX(data, variable.transform);
+            if (x !== null) {
                 values[variable.metric] = x;
             }
         }

@@ -75,6 +75,7 @@ class SingleDisplayItem {
             this.currentDataTime = dataPacket.__meta.currentDataTime;
         }
 
+        // TODO: get only the value in the valid time range
         const [time, value] = Panel._getLastTX(ts, this.metric.transform);
         let time_text, value_text;
         if (time === null) {
