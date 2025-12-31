@@ -1,7 +1,7 @@
 
 from slowpy.control import control_system as ctrl
 ctrl.import_control_module('AsyncDripline')
-dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
+dripline = ctrl.async_dripline('amqp://dripline:dripline@rabbit-broker')
 print(f'hello from {__name__}')
 
 
