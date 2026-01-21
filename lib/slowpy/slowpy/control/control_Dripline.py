@@ -47,7 +47,11 @@ class DriplineNode(ControlNode):
         self.alerts_exchange = self.rmq.topic_exchange('alerts')
         self.requests_exchange = self.rmq.topic_exchange('requests')                
         self.reply_queue_node = None            # to be set by endpoint()
-        
+
+
+    def __del__(self):
+        self.close()
+
         
     def close(self):
         if self.rmq is not None:

@@ -26,3 +26,8 @@ async def _run():
         # push the analyzed data to SlowDash
         await ctrl.aio_publish(n, name=f'{endpoint_name}.n')
         await ctrl.aio_publish(sum/n, name=f'{endpoint_name}.mean')
+
+
+async def _finalize():
+    await dripline.aio_close()
+    

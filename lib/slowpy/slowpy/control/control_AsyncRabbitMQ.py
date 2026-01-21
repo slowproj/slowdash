@@ -5,10 +5,15 @@ import asyncio, time, uuid, json, typing, inspect, logging
 import aio_pika
 
 
-class Message(typing.NamedTuple):
-    body: dict[str,typing.Any] | str | bytes | None = None
-    headers: dict[str, typing.Any] = {}
-    parameters: dict[str, typing.Any] = {}
+class Message:
+    def __init__(
+        body: dict[str,typing.Any] | str | bytes | None = None,
+        headers: dict[str, typing.Any] = {},
+        parameters: dict[str, typing.Any] = {}
+    ):
+        self.body = body
+        self.headers = dict(headers)
+        self.parameters = dict(parameters)
     
 
 
@@ -21,53 +26,69 @@ class RabbitMQNode(ControlNode):
         self.channel = None
         self.is_retry = False
 
+        self.children = []
+        
 
     async def aio_close(self):
-        logging.info('AsyncRabbitMQ: closing')
-        
-        if self.channel:
+        for child in self.children:
+            await child.aio_close()
+        self.children.clear()
+            
+        if self.channel is not None:
+            logging.info('AsyncRabbitMQ: closing channel')
             try:
                 await self.channel.close()
-            except:
-                pass
-        if self.connection:
+            except Exception as e:
+                logging.info(f'AsyncRabbitMQ: error during closing channel: {e}')
+            finally:
+                self.channel = None
+                
+        if self.connection is not None:
+            logging.info('AsyncRabbitMQ: closing connection')
             try:
                 await self.connection.close()
-            except:
-                pass
+            except Exception as e:
+                logging.info(f'AsyncRabbitMQ: error during closing connection: {e}')
+            finally:
+                self.connection = None
 
-        try:
-            # giving pika some task cycles for cleanup
-            await asyncio.sleep(0.1)
-            await asyncio.sleep(0.1)
-            await asyncio.sleep(0.1)
-        except:
-            pass
-            
-        self.connection = None
-        self.channel = None
         self.is_retry = False
+        
+        logging.info('AsyncRabbitMQ: closing completed')
+        
 
         
     async def _construct(self):
         if self.connection is None:
             if self.is_retry:
                 logging.info(f'AsyncRabbitMQ: retrying to connect to {self.url}')
+
+            if self.connection is None:
+                try:
+                    #self.connection = await aio_pika.connect_robust(self.url)
+                    self.connection = await aio_pika.connect(self.url)
+                except Exception as e:
+                    if not self.is_retry:
+                        logging.error(f'AsyncRabbitMQ: unable to connect to RabbitMQ: {self.url}: {e}')
+                        self.is_retry = True
+                    else:
+                        logging.info(f'AsyncRabbitMQ: unable to connect to RabbitMQ (retry): {self.url}: {e}')
+                    self.connection = None
+                    return
+                
+        if self.channel is None:
             try:
-                #self.connection = await aio_pika.connect_robust(self.url)
-                self.connection = await aio_pika.connect(self.url)
                 self.channel = await self.connection.channel()
-                self.is_retry = False
             except Exception as e:
                 if not self.is_retry:
-                    logging.error(f'AsyncRabbitMQ: unable to connect to RabbitMQ: {self.url}: {e}')
+                    logging.error(f'AsyncRabbitMQ: unable to create a channel: {self.url}: {e}')
                     self.is_retry = True
                 else:
-                    logging.info(f'AsyncRabbitMQ: unable to connect to RabbitMQ: {self.url}: {e}')
-                self.connection = None
+                    logging.info(f'AsyncRabbitMQ: unable to create a channel (retry): {self.url}: {e}')
                 self.channel = None
                 return
                 
+            self.is_retry = False
             try:
                 await self.channel.set_qos(prefetch_count=self.prefetch_count)
             except Exception as e:
@@ -115,29 +136,41 @@ class RabbitMQNode(ControlNode):
 class ExchangeNode(ControlNode):
     def __init__(self, rmq_node:RabbitMQNode, exchange_type, name:str, **kwargs):
         self.rmq_node = rmq_node
+        self.rmq_node.children.append(self)
+        
         self.exchange_type = exchange_type
         self.name = name
         self.kwargs = {k:v for k,v in kwargs.items()}
         
         self.exchange = None
+        self.children = []
 
         
+    async def aio_close(self):
+        for child in self.children:
+            await child.aio_close()
+        self.children.clear()
+        self.exchange = None
+
+            
     async def _construct(self):
-        if self.exchange is None:
-            if self.rmq_node.channel is None:
-                await self.rmq_node._construct()
-            if self.rmq_node.channel is None:
-                return   # error, retry later
-            else:
-                try:
-                    self.exchange = await self.rmq_node.channel.declare_exchange(
-                        self.name,
-                        self.exchange_type,
-                        **self.kwargs
-                    )
-                except Exception as e:
-                    logging.error(f'RabbitMQ: failed to declare exchange {self.name}: {e}')
-                    self.exchange = None
+        if self.exchange is not None:
+            return
+        
+        if self.rmq_node.channel is None:
+            await self.rmq_node._construct()
+        if self.rmq_node.channel is None:
+            return   # error, retry later
+        
+        try:
+            self.exchange = await self.rmq_node.channel.declare_exchange(
+                self.name,
+                self.exchange_type,
+                **self.kwargs
+            )
+        except Exception as e:
+            logging.error(f'AsyncRabbitMQ: failed to declare exchange {self.name}: {e}')
+            self.exchange = None
                     
         
     ## child nodes ##
@@ -154,6 +187,7 @@ class ExchangeNode(ControlNode):
 class PublishNode(ControlNode):
     def __init__(self, exchange_node:ExchangeNode, routing_key, *, parameters=None, **kwargs):
         self.exchange_node = exchange_node
+        
         self.routing_key = routing_key
         self.parameters = dict(parameters or {})
         self.kwargs = dict(kwargs)
@@ -163,7 +197,7 @@ class PublishNode(ControlNode):
         if self.exchange_node.exchange is None:
             await self.exchange_node._construct()
         if self.exchange_node.exchange is None:
-            raise ControlException(f'RabbitMQ.PublishNode[{self.routing_key}].aio_set(): exchange not ready')
+            raise ControlException(f'AsyncRabbitMQ.PublishNode[{self.routing_key}].aio_set(): exchange not ready')
 
         body, headers, parameters = ({}, {}, {})
         if type(value) is Message:
@@ -196,7 +230,7 @@ class PublishNode(ControlNode):
                     content_type, content_encoding = 'text/plain', 'utf-8'
                 except:
                     raise ControlException(
-                        f'RabbitMQ.PublishNode[{self.routing_key}].aio_set(): ' +
+                        f'AsyncRabbitMQ.PublishNode[{self.routing_key}].aio_set(): ' +
                         f'body is not serializable to bytes: {value}: ' +
                         f'(body={body}, type={type(body).__name__})'
                     )
@@ -219,9 +253,10 @@ class PublishNode(ControlNode):
             if self.is_stop_requested():
                 return False
             else:
+                logging.error(f'AsyncRabbitMQ: publish cancelled unexpectedly (exchange={self.exchange_node.name}, key={self.routing_key}): {e}')
                 raise
         except Exception as e:
-            logging.error(f'RabbitMQ: publish failed (exchange={self.exchange_node.name}, key={self.routing_key}): {e}')
+            logging.error(f'AsyncRabbitMQ: publish failed (exchange={self.exchange_node.name}, key={self.routing_key}): {e}')
             raise
         
         return True
@@ -231,6 +266,9 @@ class PublishNode(ControlNode):
 class QueueNode(ControlNode):
     def __init__(self, exchange_node:ExchangeNode, queue_name:str, *, routing_key:list[str]|str|None=None, handler=None, timeout:float=0, **kwargs):
         self.exchange_node = exchange_node
+        self.exchange_node.children.append(self)
+        self.tasks: set[asyncio.Task] = set()
+        
         self.name = queue_name
         self.timeout = timeout
         self.kwargs = {k:v for k,v in kwargs.items()}
@@ -263,35 +301,59 @@ class QueueNode(ControlNode):
         self.queue = None
 
 
+    def __del__(self):
+        if len(self.tasks) == 0:
+            return
+        logging.info(f'AsyncRabbitMQ.QueueNode[{self.name}]: cancelling aio_get()')
+        for task in list(self.tasks):
+            task.cancel()
+        self.tasks.clear()
+    
+            
+    async def aio_close(self):
+        logging.info(f'AsyncRabbitMQ.QueueNode[{self.name}]: cancelling aio_get(): {len(self.tasks)} tasks')
+        for task in list(self.tasks):
+            task.cancel()
+        self.tasks.clear()
+        
+            
     async def _construct(self):
-        if self.queue is None:
-            await self.exchange_node._construct()
-            if self.exchange_node.rmq_node.channel is None:
-                return  # error, retry later
-            else:
-                self.queue = await self.exchange_node.rmq_node.channel.declare_queue(self.name, **self.kwargs)
-                for key in self.routing_keys:
-                    await self.queue.bind(self.exchange_node.exchange, routing_key=key)
+        if self.queue is not None:
+            return
+        
+        await self.exchange_node._construct()
+        if self.exchange_node.rmq_node.channel is None:
+            return  # error, retry later
+        
+        self.queue = await self.exchange_node.rmq_node.channel.declare_queue(self.name, **self.kwargs)
+        for key in self.routing_keys:
+            await self.queue.bind(self.exchange_node.exchange, routing_key=key)
 
         
     async def aio_get(self, *, selector=None):
         if self.queue is None:
             await self._construct()
         if self.queue is None:
-            raise ControlException('RabbitMQ.QueueNode.aio_get(): queue not ready')
+            raise ControlException('AsyncRabbitMQ.QueueNode.aio_get(): queue not ready')
 
         message = None
         lapse = 0
         while True:
+            task = asyncio.create_task(self.queue.get(fail=False))
+            self.tasks.add(task)
+            task.add_done_callback(self.tasks.discard)
+            
             try:
-                message = await self.queue.get(fail=False)
-            except asyncio.CancelledError:
+                message = await task
+            except asyncio.CancelledError as e:
                 if self.is_stop_requested():
+                    logging.info(f'AsyncRabbitMQ: queue.get() cancelled (exchange={self.exchange_node.name}, queue={self.name}): {e}')
                     break
                 else:
+                    logging.error(f'AsyncRabbitMQ: queue.get() cancelled unexpectedly (exchange={self.exchange_node.name}, queue={self.name}): {e}')
                     raise
             except Exception as e:
-                logging.error(f'RabbitMQ: Queue.get() failed (exchange={self.exchange_node.name}, queue={self.name}): {e}')
+                logging.error(f'AsyncRabbitMQ: queue.get() failed (exchange={self.exchange_node.name}, queue={self.name}): {e}')
                 raise
 
             if message is not None and selector is not None:
@@ -336,12 +398,12 @@ class QueueNode(ControlNode):
         return result
 
     
-    def aio_has_data(self):
+    async def aio_has_data(self):
         if self.queue is None:
             return False
 
         channel = self.exchange_node.rmq_node.channel
-        queue = channel.declare_queue(self.name, passive=True)  # returns a status for an existing queue
+        queue = await channel.declare_queue(self.name, passive=True)  # returns a status for an existing queue
         return queue.declaration_result.message_count > 0
         
 

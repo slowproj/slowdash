@@ -7,12 +7,18 @@ import time, uuid, json, typing, inspect, logging
 import pika
 
 
-class Message(typing.NamedTuple):
-    body: dict[str,typing.Any] | str | bytes | None = None
-    headers: dict[str, typing.Any] = {}
-    parameters: dict[str, typing.Any] = {}
+class Message:
+    def __init__(
+        body: dict[str,typing.Any] | str | bytes | None = None,
+        headers: dict[str, typing.Any] = {},
+        parameters: dict[str, typing.Any] = {}
+    ):
+        self.body = body
+        self.headers = dict(headers)
+        self.parameters = dict(parameters)
+    
 
-
+        
 class _IncomingMessage:
     def __init__(self, ch: pika.adapters.blocking_connection.BlockingChannel, method, props: pika.BasicProperties, body: bytes):
         self._ch = ch
@@ -50,18 +56,31 @@ class RabbitMQNode(ControlNode):
         self.last_check_time = 0
 
     
+    def __del__(self):
+        self.close()
+
+        
     def close(self):
-        if self.connection:
+        if self.channel is not None:
             try:
-                logging.info('RabbitMQ: closing')
-                self.connection.close()
-            except:
-                pass
+                logging.info('RabbitMQ: closing channel')
+                self.channel.close()
+            except Exception as e:
+                logging.info('RabbitMQ: error during closing channel: {e}')
+            finally:
+                self.channel = None
             
-            self.connection = None
-            self.channel = None
-            self.is_retry = False
-            self.last_check_time = 0
+        if self.connection is not None:
+            try:
+                logging.info('RabbitMQ: closing connection')
+                self.connection.close()
+            except Exception as e:
+                logging.info('RabbitMQ: error during closing connection: {e}')
+            finally:
+                self.connection = None
+            
+        self.is_retry = False
+        self.last_check_time = 0
 
             
     def _construct(self):
@@ -305,7 +324,7 @@ class QueueNode(ControlNode):
         self.exchange_node = exchange_node
         self.name = queue_name
         self.timeout = timeout
-        self.kwargs = dict(kwargs)
+        self.kwargs = {k:v for k,v in kwargs.items()}
 
         if type(routing_key) is list:
             self.routing_keys = routing_key

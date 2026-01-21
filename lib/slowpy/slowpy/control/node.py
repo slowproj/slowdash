@@ -259,9 +259,12 @@ class ControlNode:
         
         if name is None:
             name = method.__name__
-        setattr(cls, name, method)
 
-        
+        if not hasattr(cls, name):
+            setattr(cls, name, method)
+            logging.info(f'SlowPy Control: imported control node {name}')
+
+            
     @dualmethod
     def import_control_module(this, module_name, search_dirs=[]):
         def _load_module(module_name, search_dirs):
@@ -314,7 +317,6 @@ class ControlNode:
         
             for NodeClass in node_classes:
                 this.add_node(NodeClass)
-                logging.info(f'SlowPy Control: imported control node {str(NodeClass)}')
                 
         return this
 

@@ -17,7 +17,7 @@ class TaskFunctionThread(threading.Thread):
         
     def run(self):
         if False:
-            # avoid confusion by using the same loop in differen threads
+            # avoid confusion by using the same loop in different threads
             return self.run_in_own_eventloop()
         else:
             # some libraries require running in the same loop (e.g., aio_pika)
@@ -155,7 +155,7 @@ class TaskModule(UserModule):
             if self.command_thread.is_alive():
                 #kill
                 pass
-            self.command_thread.join(timeout=5)
+            await asyncio.to_thread(self.command_thread.join, timeout=5)  # not to block the event loop during join()
             if self.command_thread.is_alive():
                 logging.warning('timeout on terminating a task command thread')
             self.command_thread = None
@@ -165,7 +165,7 @@ class TaskModule(UserModule):
             if thread.is_alive():
                 #kill
                 pass
-            thread.join(timeout=5)
+            await asyncio.to_thread(thread.join, timeout=5)  # not to block the event loop during join()
             if thread.is_alive():
                 logging.warning('timeout on terminating a task thread')
         self.parallel_command_thread_set = set()
@@ -270,10 +270,10 @@ class TaskModule(UserModule):
             if self.command_thread.is_alive():
                 return {'status': 'error', 'message': 'command already running'}
             else:
-                self.command_thread.join()
+                await asyncio.to_thread(self.command_thread.join)  # not to block the event loop during join()
         for thread in [ thread for thread in self.parallel_command_thread_set ]:
             if not thread.is_alive():
-                thread.join()
+                await asyncio.to_thread(thread.join)  # not to block the event loop during join()
                 self.parallel_command_thread_set.remove(thread)
 
         # "await" waits for the command to complete before returning a response

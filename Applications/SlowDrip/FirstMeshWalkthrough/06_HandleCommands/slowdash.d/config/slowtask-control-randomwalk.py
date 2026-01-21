@@ -6,7 +6,6 @@ ctrl.import_control_module('Dripline')
 dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
 
 
-
 def set_value(value:float):
     print(f'setting randomwalk value to {value}')
     dripline.endpoint('randomwalk_value').set(value)
@@ -15,7 +14,10 @@ def set_step(step:float):
     print(f'setting randomwalk step to {step}')
     dripline.endpoint('randomwalk_step').set(step)
 
+def _finalize():
+    dripline.close()
 
+    
 def _get_html():
     return '''
       <form>

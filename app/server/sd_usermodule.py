@@ -23,10 +23,30 @@ class UserModuleThread(threading.Thread):
     def run(self):        
         self.eventloop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.eventloop)
+        
         try:
             self.eventloop.run_until_complete(self.go())
         finally:
             # no "catch": propagate the error to make it visible for the user
+
+            # stop all the pending tasks before closing the event loop
+            pending_tasks = asyncio.all_tasks(self.eventloop)
+            if len(pending_tasks) > 0:
+                logging.info(f'UserModuleThread: cancelling pending tasks: {len(pending_tasks)} tasks')
+                try:
+                    for task in pending_tasks:
+                        #logging.info(f'UserModuleThread: cancelling task: {task}')
+                        task.cancel()
+                    self.eventloop.run_until_complete(asyncio.gather(*pending_tasks, return_exceptions=True))
+                except Exception as e:
+                    logging.error(f'UserModuleThread: error on cancelling pending tasks: {e}')
+                    
+            # stop all the pending async generators
+            try:
+                self.eventloop.run_until_complete(self.eventloop.shutdown_asyncgens())
+            except Exception as e:
+                logging.error(f'UserModuleThread: error on cancelling async generators: {e}')
+                
             self.eventloop.close()
             self.eventloop = None
 
@@ -335,7 +355,7 @@ class UserModule:
         
         self.touch_status()
         if self.user_thread is not None:
-            self.user_thread.join(timeout=5)
+            await asyncio.to_thread(self.user_thread.join, timeout=5)  # not to block the event loop during join()
             if self.user_thread.is_alive():
                 self.handle_error('timeout on terminating a user thread')
             self.user_thread = None

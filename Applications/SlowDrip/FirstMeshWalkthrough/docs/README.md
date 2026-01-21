@@ -495,6 +495,10 @@ async def _run():
         # push the analyzed data to SlowDash
         await ctrl.aio_publish(n, name=f'{endpoint_name}.n')
         await ctrl.aio_publish(sum/n, name=f'{endpoint_name}.mean')
+
+
+async def _finalize():
+    await dripline.aio_close()
 ```
 
 #### Step 2
@@ -663,7 +667,6 @@ async def _finalize():
 if __name__ == '__main__':
     from slowpy.dash import Tasklet
     Tasklet().run()
-k
 ```
 
 ### How It Works
@@ -679,6 +682,10 @@ The system simulates a hardware device with configurable parameters and real-tim
   - Similarly, `on_get()` and `on_command()` methods will be called for GET and CMD requests, respectively, if defined.
   - The `run()` method is specific to this example and implements the user loop, including simulating the random walk process and sending out the data.
 - The final block with a `Tasklet` allows running this SlowTask as an independent process — useful for distributed multi-node/multi-process deployments or separate Docker containers. (Not used in this example.)
+  - To do this:
+    1. activate venv: `slowdash-activate-venv` (see the Quick Tour section of the SlowDash documentation)
+    2. run it as a usual python script: `python slowtask-randonwalk-service.py`
+  - In a SlowDash container, the script can be directly executed from a Docker compose `command`.
 
 **Control Interface (`slowtask-control-randomwalk.py`)**
 - Similar to the control-peaches examples, this SlowTask connects user controls in the web interface to Dripline endpoints.
