@@ -65,6 +65,8 @@ services:
       - "18881:18881"
     volumes:
       - ./slowdash.d:/project
+    environment:
+      - RMQ_URL=amqp://dripline:dripline@rabbit-broker
     depends_on:
       rabbit-broker:
         condition: service_healthy

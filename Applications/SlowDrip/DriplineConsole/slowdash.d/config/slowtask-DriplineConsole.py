@@ -169,11 +169,11 @@ async def send_heartbeats():
         await ctrl.aio_sleep(30)
 
         
-async def sd_get_endpoint(endpoint:str, specifier:str=None, value:str=None, lockout_key:str=None):
+async def sd_get_endpoint(endpoint:str, specifier:str=None, lockout_key:str=None):
     print(f'Console: GET {endpoint}')
     endpoint_node = dripline.endpoint(endpoint, specifier=specifier, lockout_key=lockout_key)
     reply = await endpoint_node.aio_get()
-    replies.append([time.time(), endpoint, f'GET {specifier}: {value}', reply])
+    replies.append([time.time(), endpoint, f'GET {specifier}', reply])
     await ctrl.aio_publish(RepliesTable(), name='Replies.DriplineConsole')
 
     
@@ -267,6 +267,53 @@ def _get_html():
 
 
 
+### Web API ###
+
+import slowlette
+webapi = slowlette.Slowlette()
+
+@webapi.post('/api/slowdrip/endpoint/{endpoint}')
+async def api_set_endpoint(endpoint:str, doc:slowlette.JSON):
+    value = doc.get('value', None)
+    specifier = doc.get('specifier', None)
+    lockout_key = doc.get('lockout_key', None)
+    print(f'SlowDrip API: SET {endpoint} {value}')
+    
+    endpoint_node = dripline.endpoint(endpoint, specifier=specifier, lockout_key=lockout_key)
+    reply = await endpoint_node.aio_set(value)    
+    replies.append([time.time(), endpoint, f'SET {specifier}: {value}', reply])
+    await ctrl.aio_publish(RepliesTable(), name='Replies.DriplineConsole')
+
+    return reply
+    
+
+@webapi.get('/api/slowdrip/endpoint/{endpoint}')
+async def api_get_endpoint(endpoint:str):
+    print(f'SlowDrip API: GET {endpoint}')
+
+    endpoint_node = dripline.endpoint(endpoint)
+    reply = await endpoint_node.aio_get()
+    replies.append([time.time(), endpoint, f'GET', reply])
+    await ctrl.aio_publish(RepliesTable(), name='Replies.DriplineConsole')
+
+    return reply
+
+    
+@webapi.post('/api/slowdrip/sensor_value_alert/{name}')
+async def api_sensor_value_alert(name:str, doc:slowlette.JSON):
+    value = doc.get('value', None)
+    print(f'SlowDrip API: ValueAlert {name} {value}')
+    
+    alert_node = dripline.sensor_value_alert(name)
+    reply = await alert_node.aio_set(value)    
+    replies.append([time.time(), endpoint, f'VALUE_ALERT {name}: {value}', reply])
+    await ctrl.aio_publish(RepliesTable(), name='Replies.DriplineConsole')
+    
+    return reply
+
+    
+### Standalone Execution ###
+    
 if __name__ == '__main__':
     from slowpy.dash import Tasklet
     Tasklet().run()

@@ -67,7 +67,7 @@ async def dispatch_asgi(app, scope, receive, send):
 
     response = await app.slowlette(Request(url, method=method, headers=headers, body=body))
     if response.status_code < 300:
-        logging.debug(f'{method}: {url} -> {response.status_code}')
+        logging.info(f'{method}: {url} -> {response.status_code}')
     else:
         logging.warning(f'{method}: {url} -> {response.status_code}')
 

@@ -5,7 +5,7 @@ slowdash_project:
     name: DriplineConsole
     auto_load: true
     parameters:
-      url: amqp://dripline:dripline@rabbit-broker
+      url: ${RMQ_URL:-amqp://dripline:dripline@localhost}
 
   system:
     our_security_is_perfect: true
