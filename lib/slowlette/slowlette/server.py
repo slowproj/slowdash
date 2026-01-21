@@ -67,7 +67,7 @@ async def dispatch_asgi(app, scope, receive, send):
 
     response = await app.slowlette(Request(url, method=method, headers=headers, body=body))
     if response.status_code < 300:
-        logging.info(f'{method}: {url} -> {response.status_code}')
+        logging.debug(f'{method}: {url} -> {response.status_code}')
     else:
         logging.warning(f'{method}: {url} -> {response.status_code}')
 
@@ -129,7 +129,7 @@ def dispatch_wsgi(app, environ, start_response):
             body = b''
 
     response = asyncio.run(app.slowlette(Request(url, method=method, headers=headers, body=body)))
-    logging.info(f'{method}: {url} -> {response.status_code}')
+    logging.debug(f'{method}: {url} -> {response.status_code}')
     
     start_response(response.get_status(), response.get_headers())
     return [ response.get_content() ]
