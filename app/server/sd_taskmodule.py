@@ -16,17 +16,6 @@ class TaskFunctionThread(threading.Thread):
 
         
     def run(self):
-        if False:
-            # avoid confusion by using the same loop in different threads
-            return self.run_in_own_eventloop()
-        else:
-            # some libraries require running in the same loop (e.g., aio_pika)
-            return self.run_in_common_eventloop()    
-
-        # TODO: implement a way to let users specify which loop to use (e.g., by @slowpy.mainloop)
-
-    
-    def run_in_common_eventloop(self):
         try:
             if inspect.iscoroutinefunction(self.func):
                 future = asyncio.run_coroutine_threadsafe(
@@ -38,28 +27,6 @@ class TaskFunctionThread(threading.Thread):
                 self.func(**self.kwargs)
         except Exception as e:
             self.taskmodule.handle_error('task function error: %s' % str(e))
-
-
-    def run_in_own_eventloop(self):
-        self.eventloop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.eventloop)
-        try:
-            self.eventloop.run_until_complete(self.go())
-        finally:
-            # no "catch": propagate the error to make it visible for the user
-            self.eventloop.close()
-            self.eventloop = None
-            
-            
-    async def go(self):
-        try:
-            if inspect.iscoroutinefunction(self.func):
-                await self.func(**self.kwargs)
-            else:
-                self.func(**self.kwargs)
-        except Exception as e:
-            self.taskmodule.handle_error('task function error: %s' % str(e))
-            
 
 
         

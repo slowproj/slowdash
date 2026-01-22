@@ -168,6 +168,9 @@ async def send_heartbeats():
         await dripline.status_message_alert().aio_set('I am working')
         await ctrl.aio_sleep(30)
 
+
+
+### Web Bindings ####
         
 async def sd_get_endpoint(endpoint:str, specifier:str=None, lockout_key:str=None):
     print(f'Console: GET {endpoint}')
@@ -273,11 +276,9 @@ import slowlette
 webapi = slowlette.Slowlette()
 
 @webapi.post('/api/slowdrip/endpoint/{endpoint}')
-async def api_set_endpoint(endpoint:str, doc:slowlette.JSON):
-    value = doc.get('value', None)
-    specifier = doc.get('specifier', None)
-    lockout_key = doc.get('lockout_key', None)
-    print(f'SlowDrip API: SET {endpoint} {value}')
+async def api_set_endpoint(endpoint:str, doc:slowlette.JSON, specifier:str=None, lockout_key:str=None):
+    print(f'SlowDrip API: SET {endpoint} {doc} ({specifier}, {lockout_key})')
+    value = doc.dict()
     
     endpoint_node = dripline.endpoint(endpoint, specifier=specifier, lockout_key=lockout_key)
     reply = await endpoint_node.aio_set(value)    
@@ -288,7 +289,7 @@ async def api_set_endpoint(endpoint:str, doc:slowlette.JSON):
     
 
 @webapi.get('/api/slowdrip/endpoint/{endpoint}')
-async def api_get_endpoint(endpoint:str):
+async def api_get_endpoint(endpoint:str, specifier:str=None, lockout_key:str=None):
     print(f'SlowDrip API: GET {endpoint}')
 
     endpoint_node = dripline.endpoint(endpoint)

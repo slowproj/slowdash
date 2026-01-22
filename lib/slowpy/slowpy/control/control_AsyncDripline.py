@@ -329,11 +329,11 @@ class SensorValuesQueueNode(ControlNode):
             logging.error(e)
             return None
         
-        if message[0] is None or type(message[0]) is dict:
+        if message.body is None or type(message.body) is dict:
             return message
         else:
             # Dripline puts content_type in the content_encoding fields, causing unparsed results
-            return type(message)(json.loads(message[0] or '{}'), *message[1:])
+            return type(message)(json.loads(message.body or '{}'), message.headers, message.parameters)
 
     
     
@@ -353,11 +353,11 @@ class HeartbeatQueueNode(ControlNode):
             logging.error(e)
             return None
         
-        if message[0] is None or type(message[0]) is dict:
+        if message.body is None or type(message.body) is dict:
             return message
         else:
             # Dripline puts content_type in the content_encoding fields, causing unparsed results
-            return type(message)(json.loads(message[0] or '{}'), *message[1:])
+            return type(message)(json.loads(message.body or '{}'), message.headers, message.parameters)
 
 
     
@@ -377,11 +377,11 @@ class StatusMessageQueueNode(ControlNode):
             logging.error(e)
             return None
         
-        if message[0] is None or type(message[0]) is dict:
+        if message.body is None or type(message.body) is dict:
             return message
         else:
             # Dripline puts content_type in the content_encoding fields, causing unparsed results
-            return type(message)(json.loads(message[0] or '{}'), *message[1:])
+            return type(message)(json.loads(message.body or '{}'), message.headers, message.parameters)
 
 
 

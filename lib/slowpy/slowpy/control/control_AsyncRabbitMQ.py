@@ -7,6 +7,7 @@ import aio_pika
 
 class Message:
     def __init__(
+        self,
         body: dict[str,typing.Any] | str | bytes | None = None,
         headers: dict[str, typing.Any] = {},
         parameters: dict[str, typing.Any] = {}
@@ -14,9 +15,9 @@ class Message:
         self.body = body
         self.headers = dict(headers)
         self.parameters = dict(parameters)
-    
 
 
+        
 class RabbitMQNode(ControlNode):
     def __init__(self, url:str, *, qos_prefetch_count=32):
         self.url = url
@@ -253,7 +254,7 @@ class PublishNode(ControlNode):
             if self.is_stop_requested():
                 return False
             else:
-                logging.error(f'AsyncRabbitMQ: publish cancelled unexpectedly (exchange={self.exchange_node.name}, key={self.routing_key}): {e}')
+                logging.warning(f'AsyncRabbitMQ: publish cancelled unexpectedly (exchange={self.exchange_node.name}, key={self.routing_key}): {e}')
                 raise
         except Exception as e:
             logging.error(f'AsyncRabbitMQ: publish failed (exchange={self.exchange_node.name}, key={self.routing_key}): {e}')
@@ -304,14 +305,14 @@ class QueueNode(ControlNode):
     def __del__(self):
         if len(self.tasks) == 0:
             return
-        logging.info(f'AsyncRabbitMQ.QueueNode[{self.name}]: cancelling aio_get()')
+        logging.debug(f'AsyncRabbitMQ.QueueNode[{self.name}]: cancelling aio_get()')
         for task in list(self.tasks):
             task.cancel()
         self.tasks.clear()
     
             
     async def aio_close(self):
-        logging.info(f'AsyncRabbitMQ.QueueNode[{self.name}]: cancelling aio_get(): {len(self.tasks)} tasks')
+        logging.debug(f'AsyncRabbitMQ.QueueNode[{self.name}]: cancelling aio_get(): {len(self.tasks)} tasks')
         for task in list(self.tasks):
             task.cancel()
         self.tasks.clear()
@@ -350,7 +351,7 @@ class QueueNode(ControlNode):
                     logging.info(f'AsyncRabbitMQ: queue.get() cancelled (exchange={self.exchange_node.name}, queue={self.name}): {e}')
                     break
                 else:
-                    logging.error(f'AsyncRabbitMQ: queue.get() cancelled unexpectedly (exchange={self.exchange_node.name}, queue={self.name}): {e}')
+                    logging.warning(f'AsyncRabbitMQ: queue.get() cancelled unexpectedly (exchange={self.exchange_node.name}, queue={self.name}): {e}')
                     raise
             except Exception as e:
                 logging.error(f'AsyncRabbitMQ: queue.get() failed (exchange={self.exchange_node.name}, queue={self.name}): {e}')

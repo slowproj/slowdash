@@ -9,6 +9,7 @@ import pika
 
 class Message:
     def __init__(
+        self,
         body: dict[str,typing.Any] | str | bytes | None = None,
         headers: dict[str, typing.Any] = {},
         parameters: dict[str, typing.Any] = {}

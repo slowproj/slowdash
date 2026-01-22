@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 24 October 2022 #
 
-import sys, os, time, re, threading, asyncio, types, inspect, logging, traceback
+import sys, os, time, re, threading, asyncio, concurrent, types, inspect, logging, traceback
 import importlib.util
 
 import slowlette
@@ -17,41 +17,29 @@ class UserModuleThread(threading.Thread):
         self.stop_event = stop_event
         self.initialized_event = threading.Event()
         self.loaded_event = threading.Event()
+        
+        self.main_eventloop = asyncio.get_running_loop()
         self.eventloop = None
 
+        self.use_main_eventloop = True
+
         
-    def run(self):        
-        self.eventloop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.eventloop)
-        
+    def run(self):
         try:
-            self.eventloop.run_until_complete(self.go())
+            if self.use_main_eventloop:
+                asyncio.run_coroutine_threadsafe(self.go(), self.main_eventloop).result()
+            else:
+                asyncio.run(self.go())
+        except (asyncio.CancelledError, concurrent.futures.CancelledError):
+            pass
         finally:
             # no "catch": propagate the error to make it visible for the user
-
-            # stop all the pending tasks before closing the event loop
-            pending_tasks = asyncio.all_tasks(self.eventloop)
-            if len(pending_tasks) > 0:
-                logging.info(f'UserModuleThread: cancelling pending tasks: {len(pending_tasks)} tasks')
-                try:
-                    for task in pending_tasks:
-                        #logging.info(f'UserModuleThread: cancelling task: {task}')
-                        task.cancel()
-                    self.eventloop.run_until_complete(asyncio.gather(*pending_tasks, return_exceptions=True))
-                except Exception as e:
-                    logging.error(f'UserModuleThread: error on cancelling pending tasks: {e}')
-                    
-            # stop all the pending async generators
-            try:
-                self.eventloop.run_until_complete(self.eventloop.shutdown_asyncgens())
-            except Exception as e:
-                logging.error(f'UserModuleThread: error on cancelling async generators: {e}')
-                
-            self.eventloop.close()
             self.eventloop = None
 
         
     async def go(self):
+        self.eventloop = asyncio.get_running_loop()
+        
         self.loaded_event.clear()
         self.initialized_event.clear()
         self.stop_event.clear()
