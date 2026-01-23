@@ -109,7 +109,7 @@ class EndpointNode(ControlNode):
         
         if dripline.reply_queue_node is None:
             dripline.reply_queue_node = (
-                dripline.requests_exchange.queue(f'{dripline.name}_reply', timeout=(timeout or 30), exclusive=True)
+                dripline.requests_exchange.queue(f'{dripline.name}_reply', timeout=(timeout or 5), exclusive=True)
             )
         self.reply_queue_node = dripline.reply_queue_node
         self.routing_key = name

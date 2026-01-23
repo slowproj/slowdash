@@ -38,7 +38,9 @@ async def dispatch_asgi(app, scope, receive, send):
 
     if scope['type'] == 'websocket':
         logging.info(f'WEBSOCKET: {url}')
-        return await app.slowlette.websocket(Request(url, method='WEBSOCKET', headers=headers), WebSocket(receive, send))
+        return await app.slowlette.websocket(
+            Request(url, method='WEBSOCKET', headers=headers), WebSocket(receive, send)
+        )
     elif scope['type'] != 'http':
         logging.warning(f'ASGI Request not handled: type={scope["type"]}')
         return

@@ -25,6 +25,8 @@ class TaskFunctionThread(threading.Thread):
                 future.result()
             else:
                 self.func(**self.kwargs)
+        except (asyncio.CancelledError, concurrent.futures.CancelledError):
+            pass
         except Exception as e:
             self.taskmodule.handle_error('task function error: %s' % str(e))
 
@@ -35,7 +37,7 @@ class TaskModule(UserModule):
         super().__init__(app, filepath, name, params, user_params)
 
         self.command_thread = None
-        self.parallel_command_thread_set = set()
+        self.reentrant_command_thread_set = set()
         self.namespace_prefix = params.get('namespace', {}).get('prefix', f'{name}.')
         self.namespace_suffix = params.get('namespace', {}).get('suffix', '')
 
@@ -128,14 +130,14 @@ class TaskModule(UserModule):
             self.command_thread = None
 
         self.touch_status()
-        for thread in self.parallel_command_thread_set:
+        for thread in self.reentrant_command_thread_set:
             if thread.is_alive():
                 #kill
                 pass
             await asyncio.to_thread(thread.join, timeout=5)  # not to block the event loop during join()
             if thread.is_alive():
                 logging.warning('timeout on terminating a task thread')
-        self.parallel_command_thread_set = set()
+        self.reentrant_command_thread_set = set()
         self.touch_status()
 
         await super().stop()
@@ -178,16 +180,19 @@ class TaskModule(UserModule):
         # parse the request
         function_name, params = '', {}
         is_await = False  # if True, wait for the command to complete before returning a response
-        is_parallel = False  # if False, the command is rejected if another command is running
+        is_reentrant = False  # if False, the command is rejected if another command is running
         for key, value in doc.items():
             if len(key) > 2 and key.endswith('()'):
                 function_name = key[:-2]
-                if function_name.startswith('parallel '):
-                    is_parallel = True
-                    function_name = function_name[8:].lstrip()
+                if function_name.startswith('reentrant '):
+                    is_reentrant = True
+                    function_name = function_name[9:].lstrip()
                 if function_name.startswith('async '):  # backwards-compatibility
-                    is_parallel = True
+                    is_reentrant = True
                     function_name = function_name[5:].lstrip()
+                if function_name.startswith('parallel '):  # backwards-compatibility
+                    is_reentrant = True
+                    function_name = function_name[8:].lstrip()
                 if function_name.startswith('await '):
                     is_await = True
                     function_name = function_name[5:].lstrip()
@@ -232,16 +237,16 @@ class TaskModule(UserModule):
         if var_keyword_param is not None:
             kwargs[var_keyword_param] = { k:v for k,v in params.items() if k not in kwargs }
         
-        # task is single-threaded unless "parallel" is specified, except for loop()
-        if not is_parallel and self.command_thread is not None:
+        # task is single-threaded unless "reentrant" is specified, except for loop()
+        if not is_reentrant and not is_await and self.command_thread is not None:
             if self.command_thread.is_alive():
                 return {'status': 'error', 'message': 'command already running'}
             else:
                 await asyncio.to_thread(self.command_thread.join)  # not to block the event loop during join()
-        for thread in [ thread for thread in self.parallel_command_thread_set ]:
+        for thread in [ thread for thread in self.reentrant_command_thread_set ]:
             if not thread.is_alive():
                 await asyncio.to_thread(thread.join)  # not to block the event loop during join()
-                self.parallel_command_thread_set.remove(thread)
+                self.reentrant_command_thread_set.remove(thread)
 
         # "await" waits for the command to complete before returning a response
         is_async = inspect.iscoroutinefunction(func)
@@ -257,8 +262,8 @@ class TaskModule(UserModule):
         else:
             this_thread = TaskFunctionThread(self, func, kwargs)
             this_thread.start()
-            if is_parallel:
-                self.parallel_command_thread_set.add(this_thread)
+            if is_reentrant:
+                self.reentrant_command_thread_set.add(this_thread)
             else:
                 self.command_thread = this_thread
         

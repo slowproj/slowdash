@@ -234,7 +234,6 @@ Note that the numeric data values shown here can be of any other scalar types (s
 | MySQL            | mysql-connector-python |   no | yes |
 | MySQL   - Async access         | aiomysql    |  yes | yes |
 | SQLite           | (none)      |   no | no |
-| Others (generic) | sqlalchemy  |   no | no |
 
 
 ## Configuration

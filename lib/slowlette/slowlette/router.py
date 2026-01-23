@@ -10,14 +10,6 @@ from .response import Response
 from .websocket import WebSocket, ConnectionClosed
 
 
-def iscoroutinecallable(obj):
-    if inspect.iscoroutinefunction(obj):
-        return True
-    if hasattr(obj, '__call__'):
-        return inspect.iscoroutinefunction(obj.__call__)
-    return False
-
-
 class PathRule:
     def __init__(self, rule:str, method:str, func, *, status_code:int=200):
         self.rule_str = rule
@@ -267,13 +259,9 @@ class Router:
             request = Request(url=name, method="on_event")
             args = handler.slowlette_path_rule.match(request)
             if args is not None:
-                if iscoroutinecallable(handler):
-                    try:
-                        await handler(self.app, **args)
-                    except asyncio.CancelledError:
-                        pass
-                else:
-                    handler(self.app, **args)
+                result = handler(self.app, **args)
+                if inspect.isawaitable(result):
+                    await result
 
         if name == 'shutdown':
             subapps = reversed(self.subapps)
@@ -307,10 +295,9 @@ class Router:
             if args is None:
                 continue
             try:
-                if iscoroutinecallable(handler):
-                    response = await handler(self.app, **args)
-                else:
-                    response = handler(self.app, **args)
+                response = handler(self.app, **args)
+                if inspect.isawaitable(response):
+                    response = await response
             except asyncio.CancelledError:
                 response = None
             if not isinstance(response, Response):
@@ -366,12 +353,19 @@ class Router:
 
 
     async def websocket(self, request:Request, websocket:WebSocket) -> None:
+        def iscoroutinecallable(obj):
+            if inspect.iscoroutinefunction(obj):
+                return True
+            if hasattr(obj, '__call__'):
+                return inspect.iscoroutinefunction(obj.__call__)
+            return False
+
         for handler in self.handlers:
             args = handler.slowlette_path_rule.match(request)
             if args is None:
                 continue
-            request.abort()
-            
+            request.abort()        
+
             if not iscoroutinecallable(handler):
                 logging.error('WebSocket handler must be async')
                 return None

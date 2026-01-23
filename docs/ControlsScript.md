@@ -554,13 +554,13 @@ It is possible to place multiple buttons in one form:
 <form>
   Ramping: <input type="number" name="ramping" value="1" style="width:5em">/sec
   <p>
-  V0: <input type="number" name="V0" value="0"><input type="submit" name="parallel test.set_V0()" value="Set"><br>
-  V1: <input type="number" name="V1" value="0"><input type="submit" name="parallel test.set_V1()" value="Set"><br>
-  V2: <input type="number" name="V2" value="0"><input type="submit" name="parallel test.set_V2()" value="Set"><br>
-  V3: <input type="number" name="V3" value="0"><input type="submit" name="parallel test.set_V3()" value="Set"><br>
+  V0: <input type="number" name="V0" value="0"><input type="submit" name="reentrant test.set_V0()" value="Set"><br>
+  V1: <input type="number" name="V1" value="0"><input type="submit" name="reentrant test.set_V1()" value="Set"><br>
+  V2: <input type="number" name="V2" value="0"><input type="submit" name="reentrant test.set_V2()" value="Set"><br>
+  V3: <input type="number" name="V3" value="0"><input type="submit" name="reentrant test.set_V3()" value="Set"><br>
   <p>
   <input type="submit" name="test.set_all()" value="Set All">
-  <input type="submit" name="parallel test.stop()" value="Stop Ramping"><br>    
+  <input type="submit" name="reentrant test.stop()" value="Stop Ramping"><br>    
 </form>
 ```
 ```python
@@ -574,7 +574,9 @@ def set_V1(V1:float, ramping:float):
 ```
 The input values on the Web form will be bound to the function parameters based on the names (`<input name="V0">` will be bound to the `V0` parameter).
 
-In the example above, some functions have the `parallel` qualifier: by default, if a previous function call is in execution, the next action cannot be accepted to avoid multi-threading issues in the user code. The `parallel` qualifier indicates that this function can run in parallel to others. Another common qualifier is `await`, which instructs the web browser to wait for completion of the function execution before doing anything else (therefore, the browser will appear frozen).
+In the example above, some functions have the `reentrant` qualifier: by default, if a previous function call is in execution, the next action cannot be accepted to avoid multi-threading issues in the user code.
+The `reentrant` qualifier indicates that this function can run in parallel to others or to itself.
+Another common qualifier is `await`, which instructs the web browser to wait for completion of the function execution before doing anything else (therefore, the browser will appear frozen).
 
 #### Canvas Panel
 On a canvas panel, a button to call a task can be placed by:

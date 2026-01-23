@@ -28,6 +28,9 @@ class RabbitMQNode(ControlNode):
         self.is_retry = False
 
         self.children = []
+
+        logging.getLogger('aio_pika').setLevel(logging.INFO)
+        logging.getLogger('aiormq').setLevel(logging.INFO)
         
 
     async def aio_close(self):
@@ -254,8 +257,9 @@ class PublishNode(ControlNode):
             if self.is_stop_requested():
                 return False
             else:
-                logging.warning(f'AsyncRabbitMQ: publish cancelled unexpectedly (exchange={self.exchange_node.name}, key={self.routing_key}): {e}')
-                raise
+                err = f'AsyncRabbitMQ: publish cancelled unexpectedly (exchange={self.exchange_node.name}, key={self.routing_key}): {e}'
+                logging.warning(err)
+                raise ControlException(err)
         except Exception as e:
             logging.error(f'AsyncRabbitMQ: publish failed (exchange={self.exchange_node.name}, key={self.routing_key}): {e}')
             raise
@@ -305,14 +309,16 @@ class QueueNode(ControlNode):
     def __del__(self):
         if len(self.tasks) == 0:
             return
-        logging.debug(f'AsyncRabbitMQ.QueueNode[{self.name}]: cancelling aio_get()')
+        logging.info(f'AsyncRabbitMQ.QueueNode[{self.name}]: cancelling remaining {len(self.tasks)} tasks')
         for task in list(self.tasks):
             task.cancel()
         self.tasks.clear()
     
             
     async def aio_close(self):
-        logging.debug(f'AsyncRabbitMQ.QueueNode[{self.name}]: cancelling aio_get(): {len(self.tasks)} tasks')
+        if len(self.tasks) == 0:
+            return
+        logging.info(f'AsyncRabbitMQ.QueueNode[{self.name}]: cancelling remaining {len(self.tasks)} tasks')
         for task in list(self.tasks):
             task.cancel()
         self.tasks.clear()
@@ -351,8 +357,9 @@ class QueueNode(ControlNode):
                     logging.info(f'AsyncRabbitMQ: queue.get() cancelled (exchange={self.exchange_node.name}, queue={self.name}): {e}')
                     break
                 else:
-                    logging.warning(f'AsyncRabbitMQ: queue.get() cancelled unexpectedly (exchange={self.exchange_node.name}, queue={self.name}): {e}')
-                    raise
+                    err = f'AsyncRabbitMQ: queue.get() cancelled unexpectedly (exchange={self.exchange_node.name}, queue={self.name}): {e}'
+                    logging.warning(err)
+                    raise ControlException(err)
             except Exception as e:
                 logging.error(f'AsyncRabbitMQ: queue.get() failed (exchange={self.exchange_node.name}, queue={self.name}): {e}')
                 raise
@@ -360,11 +367,16 @@ class QueueNode(ControlNode):
             if message is not None and selector is not None:
                 try:
                     selected = selector(message)
-                except Exception:
-                    await message.nack(requeue=True)
-                    raise
+                except:
+                    try:
+                        await message.nack(requeue=True)
+                    except:
+                        logging.warning(f'AsyncRabbitMQ: unable to send NACK')
                 if not ((await selected) if inspect.isawaitable(selected) else bool(selected)):
-                    await message.nack(requeue=True)
+                    try:
+                        await message.nack(requeue=True)
+                    except:
+                        logging.warning(f'AsyncRabbitMQ: unable to send NACK')
                     continue
                     
             if message is not None:
@@ -379,10 +391,7 @@ class QueueNode(ControlNode):
             try:
                 await asyncio.sleep(0.2)
             except asyncio.CancelledError:
-                if self.is_stop_requested():
-                    break
-                else:
-                    raise
+                break
 
         if message is None:
             return Message()
@@ -393,8 +402,10 @@ class QueueNode(ControlNode):
                 result = await result
             await message.ack()
         except Exception:
-            await message.nack(requeue=False)
-            raise
+            try:
+                await message.nack(requeue=False)
+            except:
+                logging.warning(f'AsyncRabbitMQ: unable to send NACK')
         
         return result
 
@@ -435,7 +446,7 @@ class RpcFunctionNode(ControlNode):
             else:
                 return_value = self.function(request_message)
         except Exception as e:
-            logging.error(f'SlowDrip.RpcFunctionNonde: error in handler function: {e}')
+            logging.error(f'AsyncRabbitMQ: RpcFunctionNonde: error in handler function: {e}')
             return_value = None
 
         routing_key = request_message.parameters.get('reply_to', None)
