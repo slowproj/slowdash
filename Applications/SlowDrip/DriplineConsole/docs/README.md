@@ -59,3 +59,22 @@ endpoint = 'peacheese'
 response = requests.post(f'{base_url}/sensor_value_alert/{endpoint}', json={'value_raw': 200, 'value_cal': 10})
 print(response.reason)
 ```
+
+
+### Bash Examples
+#### Getting an endpoint value
+```bash
+#! /bin/bash
+
+URL="http://localhost:18881/api/slowdrip/endpoint/peaches"
+
+value=$(curl -s "$URL")
+echo ${value}
+```
+
+#### Logging a value
+```bash
+#! /bin/bash
+
+curl -X POST http://localhost:18881/api/slowdrip/sensor_value_alert/peacheese --data '{"value_raw":200, "value_cal":10}'
+```
