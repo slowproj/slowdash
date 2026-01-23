@@ -25,7 +25,10 @@ and enable the slowatsk in your `SlowdashProject.yaml`:
 The plot layout and HTML forms are included in the SlowTask.
 
 
-## API Usage
+## Web API
+Dripline Console provides a convenient API that can be used through HTTP. Using the API does not require any library such as Dripline or SlowDash; you can get and set endpoint values with standard tools like the `curl` command or the `request` Python module. There are some additional overhead by going through HTTP, and for a long-term applications, using the Dripline or SlowDrip library (described in SlowDrip/FirstmeshWalkthrough) is recommended.
+
+### Usage
 See bash and Python examples under `DriplineConsole/Examples/WebAPI`.
 
 - to get an endpoint value: GET `http://HOST:PORT/api/slowdrip/endpoint/ENDPOINT`
