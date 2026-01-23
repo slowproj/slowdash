@@ -36,6 +36,13 @@ See bash and Python examples under `DriplineConsole/Examples/WebAPI`.
 - to send a value for logging: POST `http://HOST:PORT/api/slowdrip/sensor_value_alert/NAME` with data (JSON) in body
 
 ### Bash/Commandline Examples
+(Modify the SlowDash server address accordingly)
+
+#### Getting an endpoint value
+```bash
+curl http://localhost:18881/api/slowdrip/endpoint/peaches
+```
+
 #### Setting an endpoint value
 ```bash
 curl -X POST http://localhost:18881/api/slowdrip/endpoint/peaches --data '200'
@@ -51,15 +58,16 @@ curl -X POST http://localhost:18881/api/slowdrip/sensor_value_alert/peacheese --
 ```python
 import requests
 
-url = "http://localhost:18881/api/slowdrip/endpoint/peaches"
+url = "http://localhost:18881"
+endpoint = "peaches"
 
-response = requests.get(url)
+response = requests.get(f"{url}/api/slowdrip/endpoint/{endpoint}")
 print(f"{response.reason}: {response.text}")
 
-value = response.json().get("value_raw")
+value = response.json().get("value_raw", None)
 new_value = value + 1
 
-response = requests.post(url, json=new_value)
+response = requests.post(f"{url}/api/slowdrip/endpoint/{endpoint}", json=new_value)
 print(response.reason)
 ```
 
@@ -67,9 +75,9 @@ print(response.reason)
 ```python
 import requests
 
-base_url = "http://localhost:18881/api/slowdrip"
+url = "http://localhost:18881"
 endpoint = "peacheese"
 
-response = requests.post(f"{base_url}/sensor_value_alert/{endpoint}", json={"value_raw": 200, "value_cal": 10})
+response = requests.post(f"{url}/api/slowdrip/sensor_value_alert/{endpoint}", json={"value_raw": 200, "value_cal": 10})
 print(response.reason)
 ```

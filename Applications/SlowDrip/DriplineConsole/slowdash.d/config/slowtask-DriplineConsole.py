@@ -280,7 +280,7 @@ webapi = slowlette.Slowlette()
 @webapi.post('/api/slowdrip/endpoint/{endpoint}')
 async def api_set_endpoint(endpoint:str, doc:slowlette.JSON, specifier:str=None, lockout_key:str=None):
     value = doc.value()
-    print(f'Console API: SET {endpoint}[{specifier}, {lockout_key}] {value}')
+    print(f'Console API: SET {endpoint}[S={specifier}, L={lockout_key}] <= {value}')
     
     endpoint_node = dripline.endpoint(endpoint, specifier=specifier, lockout_key=lockout_key)
     reply = await endpoint_node.aio_set(value)    
@@ -292,7 +292,7 @@ async def api_set_endpoint(endpoint:str, doc:slowlette.JSON, specifier:str=None,
 
 @webapi.get('/api/slowdrip/endpoint/{endpoint}')
 async def api_get_endpoint(endpoint:str, specifier:str=None, lockout_key:str=None):
-    print(f'Console API: GET {endpoint}[{specifier}, {lockout_key}]')
+    print(f'Console API: GET {endpoint}[S={specifier}, L={lockout_key}]')
 
     endpoint_node = dripline.endpoint(endpoint)
     reply = await endpoint_node.aio_get()
