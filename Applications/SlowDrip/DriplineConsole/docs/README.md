@@ -26,15 +26,15 @@ The plot layout and HTML forms are included in the SlowTask.
 
 
 ## API Usage
-See bash and Python examples under `DriplineConsole/test`.
+See bash and Python examples under `DriplineConsole/Examples/WebAPI`.
 
-- get: GET http://HOST:PORT/api/slowdrip/endpoint/ENDPOINT
-- set: POST http://HOST:PORT/api/slowdrip/endpoint/ENDPOINT with data (JSON) in body
-- log: POST http://HOST:PORT/api/slowdrip/sensor_value_alert/NAME with data (JSON) in body
+- to get an endpoint value: GET `http://HOST:PORT/api/slowdrip/endpoint/ENDPOINT`
+- to set an endpoint value: POST `http://HOST:PORT/api/slowdrip/endpoint/ENDPOINT` with data (JSON) in body
+- to send a value for logging: POST `http://HOST:PORT/api/slowdrip/sensor_value_alert/NAME` with data (JSON) in body
 
 ### Python Examples
 #### Increamenting an endpoint value
-```
+```python
 import requests
 
 url = 'http://localhost:18881/api/slowdrip/endpoint/peaches'
@@ -50,7 +50,7 @@ print(response.reason)
 ```
 
 #### Logging a value
-```
+```python
 import requests
 
 base_url = 'http://localhost:18881/api/slowdrip'
