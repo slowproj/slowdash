@@ -33,8 +33,8 @@ class TaskFunctionThread(threading.Thread):
 
         
 class TaskModule(UserModule):
-    def __init__(self, app, filepath, name, params, user_params):
-        super().__init__(app, filepath, name, params, user_params)
+    def __init__(self, app, filepath, name, params):
+        super().__init__(app, filepath, name, params)
 
         self.command_thread = None
         self.reentrant_command_thread_set = set()
@@ -80,7 +80,7 @@ class TaskModule(UserModule):
                 try:
                     exports = func() or []
                 except Exception as e:
-                    self.handle_error('task module error: export(): %s' % str(e))
+                    self.handle_error('export(): %s' % str(e))
                     exports = []
                 for name, node in exports:
                     export_name = '%s%s%s' % (self.namespace_prefix, name, self.namespace_suffix)
@@ -385,8 +385,7 @@ class TaskModuleComponent(Component):
                     self.known_task_list.append(name)
 
         for name, (filepath, params) in task_table.items():
-            user_params = params.get('parameters', {})
-            module = TaskModule(app, filepath, name, params, user_params)
+            module = TaskModule(app, filepath, name, params)
             if module is None:
                 logging.error('Unable to load slowtask module: %s' % filepath)
             else:
@@ -503,7 +502,7 @@ class TaskModuleComponent(Component):
                 continue
             self.known_task_list.append(name)
 
-            module = TaskModule(self.app, filepath, name, {}, {})
+            module = TaskModule(self.app, filepath, name, {})
             if module is None:
                 logging.error('Unable to load control module: %s' % filepath)
             else:

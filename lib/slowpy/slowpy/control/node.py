@@ -47,8 +47,7 @@ class ControlNode:
     # override this (async version)
     async def aio_set(self, value):
         if getattr(self, 'is_thread_safe', False):
-            loop = asyncio.get_running_loop()
-            return await loop.run_in_executor(None, self.set, value)  # makes a thread to call self.set(value)
+            return await asyncio.to_thread(self.set, value)
         else:
             return self.set(value)   # this may cause a starvation if multiple aio set()/get() tasks are mutual
 
@@ -61,8 +60,7 @@ class ControlNode:
     # override this (async version)
     async def aio_get(self):
         if getattr(self, 'is_thread_safe', False):
-            loop = asyncio.get_running_loop()
-            return await loop.run_in_executor(None, self.get)  # makes a thread to call self.get()
+            return await asyncio.to_thread(self.get)
         else:
             return self.get()   # this may cause a starvation if multiple aio set()/get() tasks are mutual
 
@@ -73,7 +71,7 @@ class ControlNode:
 
     
     # override this (async version)
-    def aio_has_data(self):
+    async def aio_has_data(self):
         return self.has_data()   # this assumes has_data() returns immediately
 
     

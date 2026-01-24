@@ -8,24 +8,47 @@ from sd_component import Component
 
 
 class UserModuleThread(threading.Thread):
-    def __init__(self, app, usermodule, user_params, stop_event):
+    def __init__(self, app, usermodule, params, stop_event):
         threading.Thread.__init__(self)
 
         self.app = app
         self.usermodule = usermodule
-        self.user_params = user_params
         self.stop_event = stop_event
         self.initialized_event = threading.Event()
         self.loaded_event = threading.Event()
         
+        self.func_setup = None
+        self.func_initialize = None
+        self.func_run = None
+        self.func_loop = None
+        self.func_finalize = None
         self.main_eventloop = asyncio.get_running_loop()
         self.eventloop = None
 
-        #self.use_main_eventloop = True
-        self.use_main_eventloop = False
-
+        self.use_main_eventloop = params.get('use_main_event_loop', False)
+        self.user_params = params.get('parameters', {})
         
+                
     def run(self):
+        if not self.load_module():
+            return        
+        self.func_setup = self.usermodule.get_func('_setup')
+        self.func_initialize = self.usermodule.get_func('_initialize')
+        self.func_run = self.usermodule.get_func('_run')
+        self.func_loop = self.usermodule.get_func('_loop')
+        self.func_finalize = self.usermodule.get_func('_finalize')
+        
+        if self.use_main_eventloop:
+            self.use_main_eventloop = False
+            if (self.func_run is not None) and (not inspect.iscoroutinefunction(self.func_run)):
+                logging.error(f'UserModule "{self.usermodule.name}": configured to use the main event loop, but _run() is not async')
+            elif (self.func_loop is not None) and (not inspect.iscoroutinefunction(self.func_loop)):
+                logging.error(f'UserModule "{self.usermodule.name}": configured to use the main event loop, but _loop() is not async')
+            else:
+                self.use_main_eventloop = True
+            if not self.use_main_eventloop:
+                logging.warning(f'UserModule "{self.usermodule.name}": using the main event loop is disabled')
+                
         try:
             if self.use_main_eventloop:
                 asyncio.run_coroutine_threadsafe(self.go(), self.main_eventloop).result()
@@ -37,10 +60,8 @@ class UserModuleThread(threading.Thread):
             # no "catch": propagate the error to make it visible for the user
             self.eventloop = None
 
-        
-    async def go(self):
-        self.eventloop = asyncio.get_running_loop()
-        
+            
+    def load_module(self):
         self.loaded_event.clear()
         self.initialized_event.clear()
         self.stop_event.clear()
@@ -48,18 +69,18 @@ class UserModuleThread(threading.Thread):
         status = self.usermodule.load()
         self.loaded_event.set()
         if not status:
-            return
+            return False
         if self.stop_event.is_set():
-            return
-        
-        func_setup = self.usermodule.get_func('_setup')
-        func_initialize = self.usermodule.get_func('_initialize')
-        func_run = self.usermodule.get_func('_run')
-        func_loop = self.usermodule.get_func('_loop')
-        func_finalize = self.usermodule.get_func('_finalize')
+            return False
 
-        if func_setup:
-            nargs = len(inspect.signature(func_setup).parameters)
+        return True
+
+        
+    async def go(self):
+        self.eventloop = asyncio.get_running_loop()
+        
+        if self.func_setup:
+            nargs = len(inspect.signature(self.func_setup).parameters)
             if nargs >= 2:
                 args = [ self.app, self.user_params ]
             elif nargs >= 1:
@@ -67,82 +88,82 @@ class UserModuleThread(threading.Thread):
             else:
                 args = []                            
             try:
-                if inspect.iscoroutinefunction(func_setup):
-                    await func_setup(*args)
+                if inspect.iscoroutinefunction(self.func_setup):
+                    await self.func_setup(*args)
                 else:
-                    func_setup(*args)
+                    self.func_setup(*args)
             except Exception as e:
-                self.usermodule.handle_error('user module error: _setup(): %s' % str(e))
+                self.usermodule.handle_error('_setup(): %s' % str(e))
 
-        if func_initialize:
+        if self.func_initialize:
             self.usermodule.routine_history.append((
                 time.time(),
                 '_initialize(%s)' % ','.join(['%s=%s' % (k,v) for k,v in self.user_params.items()])
             ))
-            nargs = len(inspect.signature(func_initialize).parameters)
+            nargs = len(inspect.signature(self.func_initialize).parameters)
             if nargs >= 1:
                 args = [ self.user_params ]
             else:
                 args = []
             try:
-                if inspect.iscoroutinefunction(func_initialize):
-                    await func_initialize(*args)
+                if inspect.iscoroutinefunction(self.func_initialize):
+                    await self.func_initialize(*args)
                 else:
-                    func_initialize(*args)
+                    self.func_initialize(*args)
             except Exception as e:
-                self.usermodule.handle_error('user module error: _initialize(): %s' % str(e))
+                self.usermodule.handle_error('_initialize(): %s' % str(e))
             
         self.usermodule._do_post_initialize()
         self.initialized_event.set()
         
-        if func_run and not self.stop_event.is_set():
+        if self.func_run and not self.stop_event.is_set():
             self.usermodule.routine_history.append((time.time(), '_run()'))
             try:
-                if inspect.iscoroutinefunction(func_run):
-                    await func_run()
+                if inspect.iscoroutinefunction(self.func_run):
+                    await self.func_run()
                 else:
-                    func_run()
+                    self.func_run()
             except Exception as e:
-                self.usermodule.handle_error('user module error: _run(): %s' % str(e))
+                self.usermodule.handle_error('_run(): %s' % str(e))
             self.usermodule.routine_history.append((time.time(), '_run()'))
                 
-        if func_loop and not self.stop_event.is_set():
+        if self.func_loop and not self.stop_event.is_set():
             self.usermodule.routine_history.append((time.time(), '_loop()'))
         while not self.stop_event.is_set():
-            if func_loop:
+            if self.func_loop:
                 try:
-                    if inspect.iscoroutinefunction(func_loop):
-                        await func_loop()
+                    if inspect.iscoroutinefunction(self.func_loop):
+                        await self.func_loop()
                     else:
-                        func_loop()
+                        self.func_loop()
                 except Exception as e:
-                    self.usermodule.handle_error('user module error: _loop(): %s' % str(e))
-                    func_loop = False
+                    self.usermodule.handle_error('_loop(): %s' % str(e))
+                    self.func_loop = False
                 await asyncio.sleep(0.01)
             else:
                 # not to proceed to finalize() before a stop_event occurs
                 await asyncio.sleep(0.1)
-        if func_loop:
+        if self.func_loop:
             self.usermodule.routine_history.append((time.time(), '_loop()'))
                 
-        if func_finalize:
+        if self.func_finalize:
             self.usermodule.routine_history.append((time.time(), '_finalize()'))
             try:
-                if inspect.iscoroutinefunction(func_finalize):
-                    await func_finalize()
+                if inspect.iscoroutinefunction(self.func_finalize):
+                    await self.func_finalize()
                 else:
-                    func_finalize()
+                    self.func_finalize()
             except Exception as e:
-                self.usermodule.handle_error('user module error: _finalize(): %s' % str(e))
+                self.usermodule.handle_error('_finalize(): %s' % str(e))
 
 
 
 class UserModule:        
-    def __init__(self, app, filepath, name, params, user_params):
+    def __init__(self, app, filepath, name, params):
         self.app = app
         self.filepath = filepath
         self.name = name
-        self.user_params = user_params
+        self.params = params
 
         self.module = None
         self.user_thread = None
@@ -228,7 +249,7 @@ class UserModule:
         try:
             spec.loader.exec_module(self.module)
         except Exception as e:
-            self.handle_error('user module error: %s' % str(e))
+            self.handle_error('%s' % str(e))
             return False
                 
         self.touch_status()
@@ -296,7 +317,7 @@ class UserModule:
         
         logging.info('starting user module: %s' % self.name)
         self.stop_event.clear()
-        self.user_thread = UserModuleThread(self.app, self, self.user_params, self.stop_event)        
+        self.user_thread = UserModuleThread(self.app, self, self.params, self.stop_event)        
         self.touch_status()
         self.user_thread.start()
         
@@ -339,7 +360,7 @@ class UserModule:
                 else:
                     self.func_halt()
             except Exception as e:
-                self.handle_error('user module error: halt(): %s' % str(e))
+                self.handle_error('halt(): %s' % str(e))
         self.stop_event.set()
         
         self.touch_status()
@@ -534,11 +555,11 @@ class UserModule:
 
     def handle_error(self, message):
         if self.error is None:
-            self.error = message
+            self.error = f'User/Task Module "{self.name}": {message}'
 
             # print() for web console
-            logging.error(message)
-            print(message)
+            logging.error(self.error)
+            print(self.error)
 
             if sys.exc_info()[0] is not None:
                 tb = traceback.format_exc()
@@ -574,8 +595,7 @@ class UserModuleComponent(Component):
                 continue
             filepath = node['file']
             name = node.get('name', os.path.splitext(os.path.basename(filepath))[0])
-            user_params = node.get('parameters', {})
-            module = UserModule(self.app, filepath, name, node, user_params)
+            module = UserModule(self.app, filepath, name, node, params)
             if module is None:
                 logging.error('Unable to load user module: %s' % filepath)
                 continue
