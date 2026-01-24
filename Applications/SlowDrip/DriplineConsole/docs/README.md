@@ -29,11 +29,11 @@ The plot layout and HTML forms are included in the SlowTask.
 Dripline Console provides a convenient API accessible via HTTP. Using the API does not require any library such as Dripline or SlowDash; you can get and set endpoint values with standard tools like the `curl` command or the `request` Python module. There is some additional overhead by going through HTTP, and for long-term applications, using the Dripline or SlowDrip library (described in SlowDrip/FirstmeshWalkthrough) is recommended.
 
 ### Usage
-See bash and Python examples under `DriplineConsole/Examples/WebAPI`.
+See Bash and Python examples under `DriplineConsole/Examples/WebAPI`.
 
-- to get an endpoint value: GET `http://HOST:PORT/api/slowdrip/endpoint/ENDPOINT`
-- to set an endpoint value: POST `http://HOST:PORT/api/slowdrip/endpoint/ENDPOINT` with data (JSON) in body
-- to send a value for logging: POST `http://HOST:PORT/api/slowdrip/sensor_value_alert/NAME` with data (JSON) in body
+- To get an endpoint value: GET `http://HOST:PORT/api/slowdrip/endpoint/ENDPOINT`
+- To set an endpoint value: POST `http://HOST:PORT/api/slowdrip/endpoint/ENDPOINT` with data (JSON) in body
+- To send a value alert for logging: POST `http://HOST:PORT/api/slowdrip/sensor_value_alert/NAME` with data (JSON) in body
 
 ### Bash/Commandline Examples
 (Modify the SlowDash server address accordingly)
@@ -54,7 +54,7 @@ curl -X POST http://localhost:18881/api/slowdrip/sensor_value_alert/peacheese --
 ```
 
 ### Python Examples
-#### Incrementing an endpoint value (get and set)
+#### Incrementing an endpoint value (getting and setting)
 ```python
 import requests
 
@@ -71,7 +71,7 @@ response = requests.post(f"{url}/api/slowdrip/endpoint/{endpoint}", json=new_val
 print(response.reason)
 ```
 
-#### Logging a value (alert)
+#### Logging a value (sending an alert)
 ```python
 import requests
 
