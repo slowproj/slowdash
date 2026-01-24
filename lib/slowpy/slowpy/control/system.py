@@ -134,7 +134,7 @@ class ControlSystem(spc.ControlNode):
                 value = {'tree': vars(obj) }
             except:
                 pass
-        if value is None:
+        if (obj is not None) and (value is None):
             logging.error(f'bad value type to publish: {type(obj)}')
             return
 
