@@ -445,8 +445,11 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb16-1"><a href=
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">use_main_event_loop</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div>
 <p>One example case where this becomes necessary is when using an
 event-loop-bound service such as RabbitMQ from a Slowlette callback
-(described below in overriding Web API), which runs in the main
-thread.</p>
+(described below in overriding Web API), which runs in the main thread.
+If you choose to use this option, be careful not to block the event loop
+(by, e.g., <code>time.sleep()</code>, <code>dev.get()</code>,
+<code>db.query()</code>, etc.) as it will cause the entire application
+to freeze.</p>
 <h2 id="using-slowdash-app-functions">Using SlowDash App Functions</h2>
 <p>To access services implemented in the SlowDash App, such as invoking
 Web API and publishing streaming data, the instance of the SlowDash App

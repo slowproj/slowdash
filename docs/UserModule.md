@@ -336,6 +336,7 @@ In a rare case where the same event loop as the main thread needs to be used, sp
     use_main_event_loop: true
 ```
 One example case where this becomes necessary is when using an event-loop-bound service such as RabbitMQ from a Slowlette callback (described below in overriding Web API), which runs in the main thread.
+If you choose to use this option, be careful not to block the event loop (by, e.g., `time.sleep()`, `dev.get()`, `db.query()`, etc.) as it will cause the entire application to freeze.
 
 ## Using SlowDash App Functions
 To access services implemented in the SlowDash App, such as invoking Web API and publishing streaming data, the instance of the SlowDash App can be passed to the User Module if the `_setup(app)` function is defined:

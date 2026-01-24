@@ -3,7 +3,7 @@ slowdash_project:
 
   task:
     name: DriplineConsole
-    use_main_event_loop: true
+    use_main_event_loop: true    # necessary to access RabbitMQ from Slowlette callback
     auto_load: true
     parameters:
       url: ${RMQ_URL:-amqp://dripline:dripline@localhost}
