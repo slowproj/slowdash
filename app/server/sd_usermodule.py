@@ -21,7 +21,8 @@ class UserModuleThread(threading.Thread):
         self.main_eventloop = asyncio.get_running_loop()
         self.eventloop = None
 
-        self.use_main_eventloop = True
+        #self.use_main_eventloop = True
+        self.use_main_eventloop = False
 
         
     def run(self):
