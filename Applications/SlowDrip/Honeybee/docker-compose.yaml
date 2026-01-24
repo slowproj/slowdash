@@ -3,7 +3,7 @@ services:
   slowdash:
     image: slowdash-honeybee
     build:
-      context: https://github.com/slowproj/slowdash.git#develop
+      context: https://github.com/slowproj/slowdash.git
       args:
         BASE_IMAGE: honeybee
     ports:

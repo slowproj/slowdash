@@ -6,11 +6,12 @@ Honeybee: [https://github.com/project8/honeybee](https://github.com/project8/hon
 ## Building Docker Images
 ### Honeybee
 ```
-$ git clone https://github.com/project8/honeybee
+$ git clone https://github.com/project8/honeybee#develop
 $ cd honeybee
 $ docker build -t honeybee .
 $ cd ..
 ```
+(Choose an appropreate branch. Often it is `develop`.)
 
 ### SlowDash-Honeybee
 ```

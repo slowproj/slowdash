@@ -595,7 +595,7 @@ class UserModuleComponent(Component):
                 continue
             filepath = node['file']
             name = node.get('name', os.path.splitext(os.path.basename(filepath))[0])
-            module = UserModule(self.app, filepath, name, node, params)
+            module = UserModule(self.app, filepath, name, node)
             if module is None:
                 logging.error('Unable to load user module: %s' % filepath)
                 continue

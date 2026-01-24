@@ -20,6 +20,7 @@ and enable the slowatsk in your `SlowdashProject.yaml`:
 ```yaml
   task:
     name: DriplineConsole
+    use_main_event_loop: true
     auto_load: true
 ```
 The plot layout and HTML forms are included in the SlowTask.

@@ -3,8 +3,8 @@ slowdash_project:
 
   task:
     name: DriplineConsole
-    auto_load: true
     use_main_event_loop: true
+    auto_load: true
     parameters:
       url: ${RMQ_URL:-amqp://dripline:dripline@localhost}
 
