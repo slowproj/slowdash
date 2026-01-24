@@ -54,11 +54,11 @@ class SQLBaseServer:
         pass
     
 
-    async def execute(self, sql, params):
+    async def execute(self, sql, params=()):
         return SQLQueryResult()
             
         
-    async def fetch(self, sql, params):
+    async def fetch(self, sql, params=()):
         return SQLQueryResult()
 
     
