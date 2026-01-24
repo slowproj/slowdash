@@ -328,6 +328,15 @@ User Module functions can be either standard (`def`) or async (`async def`).
 As User Module functions are executed in a dedicated thread, using `await` in `async` functions will not significantly improve overall performance. 
 However, this allows users to use async services as described below.
 
+By default, each user thread has its own async event loop.
+In a rare case where the same event loop as the main thread needs to be used, specify this in the configuration section:
+```yaml
+  module:
+    name: ...
+    use_main_event_loop: true
+```
+One example case where this becomes necessary is when using an event-loop-bound service such as RabbitMQ from a Slowlette callback (described below in overriding Web API), which runs in the main thread.
+
 ## Using SlowDash App Functions
 To access services implemented in the SlowDash App, such as invoking Web API and publishing streaming data, the instance of the SlowDash App can be passed to the User Module if the `_setup(app)` function is defined:
 ```python
@@ -449,7 +458,7 @@ def get_data(channels:str, length:float=None, to:float=None, resample:float=None
 
     return record
 ```
-Directly handling the Web API allows User Modules to perform any action for the request. 
+Directly handling the Web API allows User Modules to perform any action on the request. 
 Slowlette will distribute a web request to all possible (matching) handlers in the system and aggregate the multiple responses. 
 The handler for `/channels` above returns only one channel, but the client (web browser) will receive the entire list of channels due to this aggregation mechanism. 
 
