@@ -201,7 +201,15 @@ class SensorValueAlertNode(ControlNode):
         else:
             # throw an error?
             body = value
-            
+
+        if True:
+            if (type(value) is not dict) or ('value_raw' not in body):
+                # throw an error?
+                return
+            if body['value_raw'] is None:
+                # Dripline logger does not like a None value
+                return
+        
         headers = {
             'message_type': 4,  # 2: Reply, 3: Request, 4: Alert
             'timestamp': now.isoformat().replace('+00:00', 'Z'),

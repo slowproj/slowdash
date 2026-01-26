@@ -139,7 +139,7 @@ class UserModuleThread(threading.Thread):
                 except Exception as e:
                     self.usermodule.handle_error('_loop(): %s' % str(e))
                     self.func_loop = False
-                await asyncio.sleep(0.01)
+                await asyncio.sleep(0.001)
             else:
                 # not to proceed to finalize() before a stop_event occurs
                 await asyncio.sleep(0.1)
