@@ -18,7 +18,17 @@ class ModbusNode(spc.ControlNode):
 
             
     ## child nodes ##
-    # modbus().holding_register(address)
+    # modbus().register(address)
+    def register(self, address:int):
+        return ModbusHoldingRegisterNode(self.client, address)
+
+    
+    # modbus().register32(address)
+    def register32(self, address:int):
+        return ModbusHoldingRegisterNode(self.client, address, words=2)
+
+    
+    # modbus().holding_register(address): this is same as modbus().register(address)
     def holding_register(self, address:int):
         return ModbusHoldingRegisterNode(self.client, address)
 
@@ -52,31 +62,42 @@ class ModbusNode(spc.ControlNode):
     
     
 class ModbusHoldingRegisterNode(spc.ControlVariableNode):
-    def __init__(self, modbus, address:int):
+    def __init__(self, modbus, address:int, words:int=1):
         self.modbus = modbus
         self.address = address
+        self.words = words
 
         
     def set(self, value):
         if self.modbus is None:
             return None
-        
-        self.modbus.write_register(self.address, value)
 
+        if self.words == 1:
+            self.modbus.write_register(self.address, value)
+        else:
+            data = [ (value >> (w * 16)) & 0xffff for w in reversed(range(self.words)) ]
+            self.modbus.write_registers(self.address, data)
+            
         
     def get(self):
         if self.modbus is None:
             return None
         
         try:
-            reply = self.modbus.read_holding_registers(self.address)
+            reply = self.modbus.read_holding_registers(self.address, count=self.words)
             if reply.isError():
                 raise Exception(f'address: {self.address}')
         except Exception as e:
             logging.error(f'Modbus Error: read_holding_registers(): {e}')
             return None
 
-        return reply.registers[0]
+        if self.words == 1:
+            return reply.registers[0]
+        else:
+            value = 0
+            for w in range(self.words):
+                value = (value << 16) | reply.registers[w]
+            return value
 
     
 

@@ -15,5 +15,5 @@ $ cd ..
 
 ### SlowDash-Honeybee
 ```
-docker compose build slowdash-honeybee
+docker compose build slowdash
 ```

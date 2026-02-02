@@ -1,22 +1,24 @@
 
-host = '192.168.50.63'
+#host = '192.168.50.63', 502
+host, port = 'localhost', 1502
 
 from slowpy.control import control_system as ctrl
-modbus = ctrl.import_control_module('Modbus').modbus(host)
+modbus = ctrl.import_control_module('Modbus').modbus(host, port)
 
-interval = modbus.holding_register(0)
-dout0 = modbus.holding_register(1)
-dout1 = modbus.holding_register(2)
-din = modbus.input_register(0)
+reg0 = modbus.register32(0x10)
+reg1 = modbus.register32(0x11)
 
-
+reg0 <= 0x12345678
+reg1 <= 0xabcdef00
 
 import time
 
-interval <= 700
-dout0 <= 0x5a5a
-dout1 <= 0xa5a5
+while True:
+    reg0 <= reg0.get() + 1
+    reg1 <= reg1.get() + 1
 
-for i in range(12):
-    print(din)
-    time.sleep(0.2)
+    print(hex(reg0.get()))
+    print(hex(reg1.get()))
+
+    time.sleep(1)
+    
