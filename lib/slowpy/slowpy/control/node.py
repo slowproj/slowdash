@@ -302,7 +302,7 @@ class ControlNode:
             if module is None:
                 module = _load_module(module_name, search_dirs)
                 logging.info(f"SlowPy Control: loaded control module {module_name}")
-            
+                
             node_classes = []
             for class_name, NodeClass in module.__dict__.items():
                 if not inspect.isclass(NodeClass):
