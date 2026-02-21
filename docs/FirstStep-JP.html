@@ -990,8 +990,8 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb43-1"><a h
 <code>*OPC?</code>
 などの一部の標準コマンドは親クラスで実装されています． SCPI
 のコマンド連結なども親クラスで処理されます．</p>
-<p><code>/etc/rc.local</code>
-などを使って作成したスクリプトをシステム起動時に自動で実行するようにすれば，これが
+<p>systemd に登録するか <code>/etc/rc.local</code>
+に書くかなどにより，作成したスクリプトをシステム起動時に自動で実行するようにすれば，これが
 SCPI デバイスとして使えるようになります．</p>
 <h1 id="docker-コンテナで使う">Docker コンテナで使う</h1>
 <h3 id="基本">基本</h3>

@@ -241,7 +241,11 @@ class HtmlPanel extends Panel {
             if ((input.attr('type') ?? '').toUpperCase() != 'SUBMIT') {
                 const name = input.attr('name');
                 if (name) {
-                    doc[name] = input.val();
+                    const value = input.val();
+                    if (((input.attr('type') ?? '').toUpperCase() == 'RADIO') && (value === false)) {
+                        continue;
+                    }
+                    doc[name] = value;
                 }
             }
         }
