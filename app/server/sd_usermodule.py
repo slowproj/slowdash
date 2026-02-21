@@ -221,24 +221,28 @@ class UserModule:
         self.command_history = []
         self.error = None
 
+        logging.debug("=== Loading %s ===" % self.filepath)
+        if not self.filepath.endswith('.py'):
+            self.handle_error('bad user module name: %s' % self.filepath)
+            return False
+        if not os.path.exists(self.filepath):
+            self.handle_error('unable to find user module: %s' % self.filepath)
+            return False
+        module_name = os.path.basename(self.filepath)[:-3]
+        
         # purge previously-loaded module tree (including submodules)
         if self.module is not None:
-            to_del = [ k for k in sys.modules.keys() if k == self.name or k.startswith(self.name + '.') ]
+            to_del = [ k for k in sys.modules.keys() if k == module_name or k.startswith(module_name + '.') ]
             for k in to_del:
                 sys.modules.pop(k, None)
             self.module = None
             
         self.touch_status()
         
-        logging.debug("=== Loading %s ===" % self.filepath)
-        if not os.path.exists(self.filepath):
-            self.handle_error('unable to find user module: %s' % self.filepath)
-            return False
-
         try:
-            spec = importlib.util.spec_from_file_location(self.name, self.filepath)
+            spec = importlib.util.spec_from_file_location(module_name, self.filepath)
             self.module = importlib.util.module_from_spec(spec)
-            sys.modules[self.name] = self.module
+            sys.modules[module_name] = self.module
         except Exception as e:
             self.handle_error('unable to load user module: %s' % str(e))
             self.module = None

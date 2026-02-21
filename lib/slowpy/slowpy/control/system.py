@@ -48,36 +48,21 @@ class ControlSystem(spc.ControlNode):
         
     @classmethod
     def export(cls, obj, name:str=None):
-        if name is None:
-            name = getattr(obj, '__slowdash_export_name', None)
-        if name is None:
-            name = cls._make_name()
-        try:
-            setattr(obj, '__slowdash_export_name', name)  # using setattr() for dataclass
-        except:
-            pass
-        
-        node = None
-        if isinstance(obj, type):
-            logging.error(f'exporting a type is not allowed')
-        elif isinstance(obj, spc.ControlNode):
-            node = obj
-        elif callable(getattr(obj, 'to_json', None)):
-            node = _SlowpyElementExportAdapterNode(obj)
-        elif type(obj) is dict:
-            node = _DictExportAdapterNode(obj)
-        elif dataclasses.is_dataclass(obj):
-            node = _DataclassInstanceExportAdapterNode(obj)
-        else:
-            try:
-                vars(obj)
-                node = _ClassInstanceExportAdapterNode(obj)
-            except:
-                logging.error(f'exporting a bad type object: {type(obj)}')
-
+        node = cls._get_export_node(obj, name)
         if node is not None:
             cls._slowdash_exports.append((name, node))
             cls._register_channel(name, node.get())
+            node.__slowdash_export_name = name
+            
+        return node
+
+
+    @classmethod
+    async def aio_export(cls, obj, name:str=None):
+        node = cls._get_export_node(obj, name)
+        if node is not None:
+            cls._slowdash_exports.append((name, node))
+            cls._register_channel(name, await node.aio_get())
             node.__slowdash_export_name = name
             
         return node
@@ -145,6 +130,38 @@ class ControlSystem(spc.ControlNode):
         await cls.app().request_publish('current_data', record, sender=f'taskmodule_{publish_name}')
 
         
+    @classmethod
+    def _get_export_node(cls, obj, name:str):
+        if name is None:
+            name = getattr(obj, '__slowdash_export_name', None)
+        if name is None:
+            name = cls._make_name()
+        try:
+            setattr(obj, '__slowdash_export_name', name)  # using setattr() for dataclass
+        except:
+            pass
+        
+        node = None
+        if isinstance(obj, type):
+            logging.error(f'exporting a type is not allowed')
+        elif isinstance(obj, spc.ControlNode):
+            node = obj
+        elif callable(getattr(obj, 'to_json', None)):
+            node = _SlowpyElementExportAdapterNode(obj)
+        elif type(obj) is dict:
+            node = _DictExportAdapterNode(obj)
+        elif dataclasses.is_dataclass(obj):
+            node = _DataclassInstanceExportAdapterNode(obj)
+        else:
+            try:
+                vars(obj)
+                node = _ClassInstanceExportAdapterNode(obj)
+            except:
+                logging.error(f'exporting a bad type object: {type(obj)}')
+
+        return node
+
+                
     @classmethod
     def _register_channel(cls, name, value, value_is_ts=False):
         if type(value) is not dict:
