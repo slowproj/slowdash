@@ -368,17 +368,27 @@ class ConfigComponent(Component):
                 return { 'config_error': msg }, None
 
             meta, content = {}, None
-            try:
-                content = yaml.safe_load(doc)
-            except yaml.YAMLError as e:
-                if hasattr(e, 'problem_mark'):
-                    line = e.problem_mark.line+1
-                    meta['config_error_line'] = line
-                    meta['config_error'] = 'Line %d: %s' % (line, e.problem)
-                else:
-                    meta['config_error'] = str(e)
+            if ext == '.json':
+                # YAML 1.1 cannot parse 1e-3 as a number, making it a string value.
+                # This is solved in YAML 1.2, but PyYAML still implements YAML 1.1.
+                # Hence we cannot use PyYAML to parse a JSON document.
+                try:
+                    content = json.loads(doc)
+                except json.JSONDecodeError as e:
+                    meta['config_error_line'] = e.lineno
+                    meta['config_error'] = 'Line %d: %s' % (e.lineno, e.msg)
+            elif ext == '.yaml':
+                try:
+                    content = yaml.safe_load(doc)
+                except yaml.YAMLError as e:
+                    if hasattr(e, 'problem_mark'):
+                        line = e.problem_mark.line+1
+                        meta['config_error_line'] = line
+                        meta['config_error'] = 'Line %d: %s' % (line, e.problem)
+                    else:
+                        meta['config_error'] = str(e)
             if type(content) != dict:
-                meta['config_error'] = 'not a dict'
+                meta['config_error'] = meta.get('config_error', 'not a dict')
             else:
                 meta = content.get('meta', {})
 
