@@ -206,7 +206,7 @@ class Nanotech_C5E(spc.ControlNode):
 
     async def do_profile_position(self, steps:int, max_velocity:int):
         if self.current_mode != self.wreg.MODE_PROFILEPOSITION:
-            await self.cia402.initialize()
+            # mode can be changed even during operation-enabled            
             await self.wreg.write_mode(self.wreg.MODE_PROFILEPOSITION)
         await self.cia402.enable_operation()
 
@@ -225,8 +225,8 @@ class Nanotech_C5E(spc.ControlNode):
 
     async def do_velocity(self, velocity:int, duration:float):
         if self.current_mode != self.wreg.MODE_VELOCITY:
-            await self.cia402.initialize()
-            await self.wreg.write_mode(self.wreg.MODE_VELOCITY)
+            # mode can be changed even during operation-enabled            
+            await self.wreg.write_mode(self.wreg.MODE_VELOCITY)  
         await self.cia402.enable_operation()
 
         logging.info(f'Nanotech_C5E: running in velocity mode: volocity={velocity}')
@@ -234,11 +234,16 @@ class Nanotech_C5E(spc.ControlNode):
 
         if duration <= 0:
             return
-    
         await asyncio.sleep(duration)
 
         await self.wreg.write_control(self.wreg.CTRL_HALT | self.wreg.CTRL_OPERATION)
         logging.info(f'Nanotech_C5E: velocity mode stopped')
+
+        
+    async def do_halt(self):
+        if await self.cia402.is_operation_enabled():
+            await self.wreg.write_control(self.wreg.CTRL_HALT | self.wreg.CTRL_OPERATION)
+        logging.info(f'Nanotech_C5E: halted')
 
         
     async def do_read_position(self):
@@ -259,10 +264,12 @@ class NanotechC5E_AutoSetupModeNode(spc.ControlVariableNode):
 class NanotechC5E_ProfilePositionModeNode(spc.ControlVariableNode):
     def __init__(self, c5e, *, max_velocity:float=500):
         self.c5e = c5e
-        self.max_velocity = int(max_velocity)
+        self.max_velocity = int(abs(max_velocity))
 
     async def aio_set(self, steps_deg:float):
         steps = int(10*steps_deg)
+        if steps < 0:
+            steps = 0x100000000 + steps  # signed 32bit
         await self.c5e.do_profile_position(steps, self.max_velocity)
 
     async def aio_get(self):
@@ -273,7 +280,10 @@ class NanotechC5E_ProfilePositionModeNode(spc.ControlVariableNode):
 class NanotechC5E_VelocityModeNode(spc.ControlVariableNode):
     def __init__(self, c5e, velocity:float):
         self.c5e = c5e
-        self.velocity = int(velocity)
+        if velocity < 0:
+            self.velocity = 0x10000 + int(velocity)  # signed 16bit
+        else:
+            self.velocity = int(velocity)
 
     async def aio_set(self, duration:float):
         await self.c5e.do_velocity(self.velocity, duration)
@@ -294,14 +304,17 @@ class NanotechC5E_StatusNode(spc.ControlVariableNode):
 
     async def aio_get(self):
         mode = await self.c5e.rreg.read_mode()
-        status_bits = await self.c5e.rreg.read_status()
+        status_bits = await self.c5e.rreg.read_status()            
         
+        if mode is None or status_bits is None:
+            return 'NO_RESPONSE'
+            
         status = []
         if mode == self.c5e.wreg.MODE_AUTOSETUP:
             status.append('AUTO_SETUP_MODE')
-        elif self.c5e.wreg.MODE_PROFILEPOSITION:
+        elif mode == self.c5e.wreg.MODE_PROFILEPOSITION:
             status.append('PROFILE_POSITION_MODE')
-        elif self.c5e.wreg.MODE_VELOCITY:
+        elif mode == self.c5e.wreg.MODE_VELOCITY:
             status.append('VELOCITY_MODE')
         else:
             status.append('UNKNOWN_MODE')
@@ -325,7 +338,8 @@ class NanotechC5E_StatusNode(spc.ControlVariableNode):
         
 
 if __name__ == '__main__':
-    ip = '192.168.50.122'
+    ip = '192.168.50.148'
+    import sys, time
     logging.basicConfig(level=logging.INFO)
     
     async def main(ip):    
@@ -334,16 +348,19 @@ if __name__ == '__main__':
         c5e = modbus.import_control_module('NanotechMotor').nanotech_C5E()
         
         print('Initial State: %s' % await c5e.status().aio_get())
-        await c5e.cia402.initialize()
+        try:
+            await c5e.cia402.initialize()
+        except Exception as e:
+            print(f"ERROR: {e}")
+            sys.exit(-1)
 
-        import time
         start_time = time.time()
         start_position = await c5e.position().aio_get()
         print(await c5e.status().aio_get())
     
-        await c5e.profile_position_mode(max_velocity=2*60).aio_set(370)
-        #await c5e.velocity_mode(120).aio_set(6)
         #await c5e.auto_setup_mode().aio_set(True)
+        await c5e.profile_position_mode(max_velocity=2*60).aio_set(2*360*3)
+        await c5e.velocity_mode(-120).aio_set(3)
     
         #await c5e.cia402.disable_operation()
         await c5e.cia402.switch_off()
