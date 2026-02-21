@@ -117,7 +117,12 @@ class EndpointNode(ControlNode):
                 
     async def aio_set(self, value):
         operation_code = 0  # 0: Set, 1: Get, 9: Command
-        body={ 'values': [value] }
+        if type(value) is dict:
+            body = copy.deepcopy(value)
+        elif type(value) is list:
+            body = { 'values': value }
+        else:
+            body = { 'values': [value] }
         return await self.aio_do_send_request(operation_code, body)
 
     

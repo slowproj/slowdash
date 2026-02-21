@@ -1,5 +1,5 @@
 
-import time, datetime, re, json, collections, asyncio
+import os, time, datetime, socket, re, json, collections, asyncio
 from slowpy.control import ControlNode, control_system as ctrl
 ctrl.import_control_module('AsyncDripline')
 
@@ -105,7 +105,8 @@ ctrl.export(RepliesTable(), name='Replies.DriplineConsole')
 async def _initialize(params):
     global dripline
     url = params.get('url', 'amqp://dripline:dripline@rabbit-broker')
-    dripline = ctrl.async_dripline(url, 'SlowDripConsole')
+    name = f'SlowDripConsole_{socket.gethostname()}_{os.getpid()}'
+    dripline = ctrl.async_dripline(url, name)
 
 
 async def _finalize():
@@ -172,8 +173,16 @@ async def send_heartbeats():
 
 ### Web Bindings ####
         
+def parse(value):
+    try:
+        return json.loads(value)
+    except:
+        # unquoted string
+        return value
+
+    
 async def sd_get_endpoint(endpoint:str, specifier:str=None, lockout_key:str=None):
-    print(f'Console  GET {endpoint}[{specifier}, {lockout_key}])')
+    #print(f'Console GET {endpoint}[{specifier}, {lockout_key}])')
     endpoint_node = dripline.endpoint(endpoint, specifier=specifier, lockout_key=lockout_key)
     reply = await endpoint_node.aio_get()
     replies.append([time.time(), endpoint, f'GET {specifier}', reply])
@@ -181,22 +190,23 @@ async def sd_get_endpoint(endpoint:str, specifier:str=None, lockout_key:str=None
 
     
 async def sd_set_endpoint(endpoint:str, value:str=None, specifier:str=None, lockout_key:str=None):
-    print(f'Console  SET {endpoint}[{specifier}, {lockout_key}] <= {value}')
+    value = parse(value)
+    print(f'Console SET {endpoint}[{specifier}, {lockout_key}] <= {repr(value)}')
     endpoint_node = dripline.endpoint(endpoint, specifier=specifier, lockout_key=lockout_key)
     reply = await endpoint_node.aio_set(value)    
-    replies.append([time.time(), endpoint, f'SET {specifier}: {value}', reply])
+    replies.append([time.time(), endpoint, f'SET {specifier}: {repr(value)}', reply])
     await ctrl.aio_publish(RepliesTable(), name='Replies.DriplineConsole')
 
     
 async def sd_cmd_endpoint(endpoint:str, value:str=None, specifier:str=None, lockout_key:str=None):
-    print(f'Console  CMD {endpoint}[{specifier}, {lockout_key}]({value})')
+    print(f'Console CMD {endpoint}[{specifier}, {lockout_key}]({value})')
     ordered_args, keyed_args = [], {}
     for v in value.split(','):
         vv = v.split('=')
         if len(vv) == 1:
-            ordered_args.append(vv[0].strip())
+            ordered_args.append(parse(vv[0]))
         elif len(vv) == 2:
-            keyed_args[vv[0].strip()] = vv[1].strip()    
+            keyed_args[vv[0].strip()] = parse(vv[1])
             
     endpoint_node = dripline.endpoint(endpoint, specifier=specifier, lockout_key=lockout_key)
     reply = await endpoint_node.command(ordered_args, keyed_args).aio_get()
@@ -256,12 +266,12 @@ def _get_html():
     |     <tr><td>Value(s)</td><td><input name="value" style="width:24em"></td></tr>
     |     <tr><td>Specifier/Method</td><td><input name="specifier" style="width:24em" placeholder="usually this is empty"></td></tr>
     |     <tr><td>Lockout Key</td><td><input name="lockout_key" style="width:24em" placeholder="usually this is empty"></td></tr>
-    |     <tr><td></td><td>
-    |       <input type="submit" name="parallel DriplineConsole.sd_get_endpoint()" value="Get Value">
-    |       <input type="submit" name="parallel DriplineConsole.sd_set_endpoint()" value="Set Value">
-    |       <input type="submit" name="parallel DriplineConsole.sd_cmd_endpoint()" value="Send Command">
-    |     </td></tr>
     |   </table>
+    |   <div style="font-size:130%;margin:1em">
+    |     <input type="submit" name="parallel DriplineConsole.sd_get_endpoint()" value="Get Value">
+    |     <input type="submit" name="parallel DriplineConsole.sd_set_endpoint()" value="Set Value">
+    |     <input type="submit" name="parallel DriplineConsole.sd_cmd_endpoint()" value="Send Command">
+    |   </div>
     |   <!--
     |   <span style="margin-left:1rem">Replies</span>
     |   <div style="width:80%;height:8rem;margin-left:2rem;border:thin solid gray"></div>

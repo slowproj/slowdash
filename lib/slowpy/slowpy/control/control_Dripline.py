@@ -12,7 +12,7 @@ This is a reduced no-async version of control_AsyncDripline.py.
 '''
 
 
-import os, time, datetime, socket, getpass, uuid, json, logging
+import os, time, copy, datetime, socket, getpass, uuid, json, logging
 
 from slowpy.control import ControlNode, ControlVariableNode, control_system as ctrl
 ctrl.import_control_module('RabbitMQ')
@@ -100,7 +100,12 @@ class EndpointNode(ControlNode):
                 
     def set(self, value):
         operation_code = 0  # 0: Set, 1: Get, 9: Command
-        body={ 'values': [value] }
+        if type(value) is dict:
+            body = copy.deepcopy(value)
+        elif type(value) is list:
+            body = { 'values': value }
+        else:
+            body = { 'values': [value] }
         return self.do_send_request(operation_code, body)
 
     
