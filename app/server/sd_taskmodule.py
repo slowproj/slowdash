@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 24 May 2024 #
 
-import sys, os, time, glob, asyncio, threading, inspect, logging
+import sys, os, time, glob, json, asyncio, threading, inspect, logging
 
 import slowlette
 from sd_usermodule import UserModule
@@ -107,7 +107,6 @@ class TaskModule(UserModule):
                         channel =  {'name': export_name, 'current': True}
                     self.app.control_system._slowdash_channels[export_name] = channel
                     
-        
             
     async def stop(self):
         self.touch_status()
@@ -143,23 +142,6 @@ class TaskModule(UserModule):
         await super().stop()
         
         
-    def match_namespace(self, name):
-        if len(self.namespace_prefix) > 0:
-            if not name.startswith(self.namespace_prefix):
-                return ''
-            else:
-                name = name[len(self.namespace_prefix):]
-        if len(self.namespace_suffix) > 0:
-            if not name.endswith(self.namespace_suffix):
-                return ''
-            else:
-                name = name[:-len(self.namespace_suffix)]
-        if name.startswith('_'):  # reserved function names
-            return ''
-
-        return name
-
-
     def is_command_running(self):
         return self.command_thread is not None and self.command_thread.is_alive()
 
@@ -177,65 +159,20 @@ class TaskModule(UserModule):
     
 
     async def process_task_command(self, doc):
-        # parse the request
-        function_name, params = '', {}
-        is_await = False  # if True, wait for the command to complete before returning a response
-        is_reentrant = False  # if False, the command is rejected if another command is running
-        for key, value in doc.items():
-            if len(key) > 2 and key.endswith('()'):
-                function_name = key[:-2]
-                if function_name.startswith('reentrant '):
-                    is_reentrant = True
-                    function_name = function_name[9:].lstrip()
-                if function_name.startswith('async '):  # backwards-compatibility
-                    is_reentrant = True
-                    function_name = function_name[5:].lstrip()
-                if function_name.startswith('parallel '):  # backwards-compatibility
-                    is_reentrant = True
-                    function_name = function_name[8:].lstrip()
-                if function_name.startswith('await '):
-                    is_await = True
-                    function_name = function_name[5:].lstrip()
-            else:
-                params[key] = value
-
-        # function
-        local_function_name = self.match_namespace(function_name)
+        # if is_await is True, wait for the command to complete before returning a response
+        # if is_reentrant is False, the command is rejected if another command is running
+        function_name, params, is_await, is_reentrant, error = self._parse_command(doc)
+        if error is not None:
+            return {'status': 'error', 'message': f'{function_name}: {error}'}
+        
+        local_function_name = self._match_namespace(function_name)
         if len(local_function_name) == 0:
             logging.debug(f'SlowTask: no matching function: name="{function_name}", prefix="{self.namespace_prefix}"')
             return None
         func = self.get_func(local_function_name)
         if func is None:
             return {'status': 'error', 'message': 'undefined function: %s' % function_name}
-
-        # paramater binding by names, including types and defaults
-        kwargs = {}
-        var_keyword_param = None
-        signature = inspect.signature(func)
-        for name, attr in signature.parameters.items():
-            if attr.kind == inspect.Parameter.VAR_KEYWORD:
-                var_keyword_param = name
-                continue
-            value = params.get(name, None)
-            if (type(value) is str) and (attr.annotation is not str) and (len(value.strip()) == 0):
-                value = None
-            if value is None:
-                if attr.default is not inspect._empty:
-                    kwargs[name] = attr.default
-                    continue
-                else:
-                    logging.warning(f'Task: missing parameter: {name}')
-                    return {'status': 'error', 'message': f'missing parameter: {name}'}
-            if attr.annotation in [ int, float, bool, str ]:
-                try:
-                    kwargs[name] = attr.annotation(value)
-                except Exception as e:
-                    logging.warning(f'Task: incompatible parameter value: {name}: {repr(value)}')
-                    return {'status': 'error', 'message': f'incompatible parameter value: {name}: {repr(value)}'}
-            else:
-                kwargs[name] = value
-        if var_keyword_param is not None:
-            kwargs[var_keyword_param] = { k:v for k,v in params.items() if k not in kwargs }
+        kwargs = self._parse_args(func, params)
         
         # task is single-threaded unless "reentrant" is specified, except for loop()
         if not is_reentrant and not is_await and self.command_thread is not None:
@@ -273,7 +210,117 @@ class TaskModule(UserModule):
         
         return True
 
+    
+    def _parse_command(self, doc):
+        function_name, params, is_await, is_reentrant, error = '', {}, False, False, None
 
+        args = ''
+        for key, value in doc.items():
+            if len(key) > 2 and ('(' in key) and key.endswith(')'):
+                [function_name, args] = key.split('(', 1)
+                if function_name.startswith('await '):
+                    is_await = True
+                    function_name = function_name[5:].lstrip()
+                if function_name.startswith('reentrant '):
+                    is_reentrant = True
+                    function_name = function_name[9:].lstrip()
+                if function_name.startswith('async '):  # backwards-compatibility
+                    is_reentrant = True
+                    function_name = function_name[5:].lstrip()
+                if function_name.startswith('parallel '):  # backwards-compatibility
+                    is_reentrant = True
+                    function_name = function_name[8:].lstrip()
+            else:
+                params[key] = value
+
+        key, value = '', ''
+        in_key, quote = True, None
+        for ch in args:
+            if in_key:
+                if ch == ' ':
+                    pass
+                elif ch == '=':
+                    in_key = False
+                elif ch == ')':
+                    if (len(key) > 0):
+                        error = 'bad argument list'
+                    break
+                else:
+                    if (len(key) == 0 and not ch.isalpha()) or (not ch.isalnum()):
+                        error = 'bad argument name'
+                        break
+                    key += ch
+            else:
+                if ch in [ '"', "'" ]:
+                    if ch == quote:
+                        quote = None
+                    else:
+                        quote = ch
+                if ch not in  [',', ')'] or quote is not None:
+                    value += ch
+                else:
+                    try:
+                        params[key] = json.loads(value)
+                    except:
+                        params[key] = value
+                    key, value = '', ''
+                    in_key = True
+                    
+        if len(key) > 0 or len(value) > 0:
+            error = 'bad argument list'
+
+        return function_name, params, is_await, is_reentrant, error
+
+                
+    def _parse_args(self, func, params):
+        kwargs = {}   # paramater binding by names, including types and defaults
+        var_keyword_param = None
+        signature = inspect.signature(func)
+        for name, attr in signature.parameters.items():
+            if attr.kind == inspect.Parameter.VAR_KEYWORD:
+                var_keyword_param = name
+                continue
+            value = params.get(name, None)
+            if (type(value) is str) and (attr.annotation is not str) and (len(value.strip()) == 0):
+                value = None
+            if value is None:
+                if attr.default is not inspect._empty:
+                    kwargs[name] = attr.default
+                    continue
+                else:
+                    logging.warning(f'Task: missing parameter: {name}')
+                    return {'status': 'error', 'message': f'missing parameter: {name}'}
+            if attr.annotation in [ int, float, bool, str ]:
+                try:
+                    kwargs[name] = attr.annotation(value)
+                except Exception as e:
+                    logging.warning(f'Task: incompatible parameter value: {name}: {repr(value)}')
+                    return {'status': 'error', 'message': f'incompatible parameter value: {name}: {repr(value)}'}
+            else:
+                kwargs[name] = value
+        if var_keyword_param is not None:
+            kwargs[var_keyword_param] = { k:v for k,v in params.items() if k not in kwargs }
+
+        return kwargs
+
+            
+    def _match_namespace(self, name):
+        if len(self.namespace_prefix) > 0:
+            if not name.startswith(self.namespace_prefix):
+                return ''
+            else:
+                name = name[len(self.namespace_prefix):]
+        if len(self.namespace_suffix) > 0:
+            if not name.endswith(self.namespace_suffix):
+                return ''
+            else:
+                name = name[:-len(self.namespace_suffix)]
+        if name.startswith('_'):  # reserved function names
+            return ''
+
+        return name
+
+    
 
 class SlowpyControl:
     def __init__(self, app):
