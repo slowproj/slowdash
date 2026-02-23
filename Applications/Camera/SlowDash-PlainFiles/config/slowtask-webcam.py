@@ -52,7 +52,7 @@ async def _loop():
         read_photo()
         last_photo_time = now
         
-    await ctrl.aio_sleep(10)
+    await ctrl.aio_sleep(1)
 
         
 def read_photo():
@@ -60,23 +60,26 @@ def read_photo():
         return
     try:
         photo = http.get()
-        blob_id = blob_storage.write(photo)
-        datastore_objts.append(blob_id, tag='Photo')
-        print(blob_id)
     except Exception as e:
         print(e)
+        return
 
     properties = extract_properties(photo)
     datastore_objts.append(json.dumps({'tree': properties}), tag='Properties')
     datastore_ts.append(properties['Stats']['Brightness'], tag='Brightness')
-        
+
+    modified_photo = edit_image(photo)
+    blob_id = blob_storage.write(modified_photo)
+    datastore_objts.append(blob_id, tag='Photo')
+    print(blob_id)
 
 
 ############################################################
 
-from PIL import Image, ImageStat
+from PIL import Image, ImageDraw, ImageStat, ImageFont   # pip install pillow
 import PIL.ExifTags as ExifTags
 import io, datetime
+
 def extract_properties(photo):
     properties = {
         "Basic": {},
@@ -105,6 +108,41 @@ def extract_properties(photo):
         properties["Stats"]['Brightness'] = '%.3f' % (stat.mean[0]/2.56) # 0..100
         
     return properties
+
+    
+def edit_image(photo):
+    inp = io.BytesIO(photo)
+    with Image.open(inp) as img:
+        try:
+            exif = img.info.get("exif")
+        except:
+            exif = None
+
+        imprint_datetime(img)
+
+        outp = io.BytesIO()
+        if exif is not None:
+            img.save(outp, format=img.format, exif=exif)
+        else:
+            img.save(outp, format=img.format)
+
+        return outp.getvalue()
+
+    
+def imprint_datetime(img: Image):
+        draw = ImageDraw.Draw(img)
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 36)
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S %Z")
+
+        # drop-shadow in white
+        x, y = 10, 10
+        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            draw.text((x + dx, y + dy), timestamp, font=font, fill="white")
+        
+        # text in black
+        draw.text((x, y), timestamp, font=font, fill="black")
+
+    
 
     
 ############################################################

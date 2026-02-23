@@ -32,7 +32,7 @@ def take_photo(opts):
         config = picam2.create_still_configuration()        
         picam2.configure(config)
         picam2.start(show_preview=False)
-        time.sleep(1)
+        time.sleep(3)  # give enough time for AE
         picam2.capture_file(data, format='jpeg')        
     except Exception as e:
         sys.stdout.write('Content-Type: text/plain\n\n')
