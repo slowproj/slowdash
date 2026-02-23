@@ -74,7 +74,7 @@ class DataSource(ComponentPlugin):
         
         if content is None:
             if self.blob_storage is not None:
-                if channel in [entry['name'] for entry in self.get_channels()]:
+                if channel in [entry['name'] for entry in await self.aio_get_channels()]:
                     mime_type, content = await self.blob_storage.get_blob(id)
                 
         return slowlette.Response(content_type=mime_type, content=content)

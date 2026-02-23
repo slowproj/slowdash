@@ -1,0 +1,28 @@
+slowdash_project:
+  name: SlowCam
+  title: SlowCam
+
+  data_source:
+    url: ${DB_URL:-sqlite:///SlowPhoto}
+    time_series:
+      schema: data[channel]@timestamp(unix)=value
+    object_time_series:
+      schema: photo[channel]@timestamp(unix)=value
+    blob_storage:
+      type: file
+      base_directory: data/blob
+
+  task:
+    - name: webcam
+      auto_load: true
+      enabled_for_commandline: false
+      parameters:
+        camera_url: ${CAMERA_URL:-http://192.168.1.43/~pi/photo.cgi}
+        db_url: ${DB_URL:-sqlite:///SlowPhoto}
+        photo_interval: 60
+
+  style:
+    theme: dark
+    title_color: "#0b5345"
+    panel:
+      plotFrameThickness: 0
