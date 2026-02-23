@@ -7,6 +7,10 @@ from slowpy.control import ControlException
 MAC_RE = re.compile(r"^[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}$")
 
 
+def find_ip(mac:str, use_arp_cache=True):
+    return IPFinder().find(mac, use_arp_cache)
+
+
 class IPFinder:
     def __init__(self):
         pass
@@ -119,4 +123,4 @@ class IPFinder:
 
 
 if __name__ == "__main__":
-    print(find('44-AA-E8-00-BF-ED', use_arp_cache=False))
+    print(find_ip('44-AA-E8-00-BF-ED', use_arp_cache=False))
