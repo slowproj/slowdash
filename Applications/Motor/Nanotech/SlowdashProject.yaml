@@ -1,0 +1,7 @@
+slowdash_project:
+  name: Nanotech_Motor
+  task:
+    name: NanotechMotor
+    auto_load: true
+    parameters:
+      MAC: "44-AA-E8-00-BF-ED"

@@ -69,14 +69,22 @@ class Nanotech_C5E(spc.ControlNode):
             return self.mode.get()
 
         async def read_position(self):
-            return (self.position_h.get() << 16) | self.position_l.get()
+            position_h = self.position_h.get()
+            position_l = self.position_l.get()
+            if position_h is None or position_l is None:
+                return None
+            else:
+                return (self.position_h.get() << 16) | self.position_l.get()
 
         async def wait_for_status(self, bit_index, expected_value=1):
             while True:
                 status = await self.read_status()
+                if status is None:
+                    return Falae
                 if ((status >> bit_index) & 1) == expected_value:
                     break
                 await asyncio.sleep(0.1)
+            return True
 
 
     class CiA402:
@@ -88,16 +96,22 @@ class Nanotech_C5E(spc.ControlNode):
         async def is_ready_to_switch_on(self):
             if self.status is None:
                 self.status = await self.rreg.read_status()
+                if self.status is None:
+                    return False
             return (self.status & 0x06) == 0x06
 
         async def is_switched_on(self):
             if self.status is None:
                 self.status = await self.rreg.read_status()
+                if self.status is None:
+                    return False
             return (self.status & 0x07) == 0x07
 
         async def is_operation_enabled(self):
             if self.status is None:
                 self.status = await self.rreg.read_status()
+                if self.status is None:
+                    return False
             return (self.status & 0x0f) == 0x0f
     
         async def initialize(self):
@@ -295,7 +309,11 @@ class NanotechC5E_PositionNode(spc.ControlVariableNode):
         self.c5e = c5e
 
     async def aio_get(self):
-        return await self.c5e.do_read_position() / 10.0
+        position = await self.c5e.do_read_position()
+        if position is None:
+            return None
+        else:
+            return position / 10.0  # deg
 
 
 class NanotechC5E_StatusNode(spc.ControlVariableNode):

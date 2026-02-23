@@ -7,5 +7,6 @@ from .control_Shell import ShellNode
 from .control_DataStore import DataStoreNode
 
 from .scpi_server import ScpiServer, ScpiAdapter
+from .netutils import IPFinder
 
 from .dummy_device import RandomWalkDevice, RandomHitDevice, RandomChargeDevice, RandomTimeDevice
