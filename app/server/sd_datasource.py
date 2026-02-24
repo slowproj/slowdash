@@ -157,6 +157,8 @@ class DataSource(ComponentPlugin):
         Returns:
           - set of aligned timeseries, in a { name: timeseries } dict
         """
+
+        logging.error(f"{set_of_timeseries}")
         
         if interval is None:
             return set_of_timeseries
@@ -205,7 +207,11 @@ class DataSource(ComponentPlugin):
                 bin = math.floor((t0 + t_in[k]) / interval)
                 if bin < 0 or bin >= nbins:
                     continue
-                buckets[bin].append(x_in[k])
+                try:
+                    xk = float(x_in[k])
+                except:
+                    xk = float('nan')
+                buckets[bin].append(xk)
 
             x = _reduce_buckets(buckets, reducer)
             result[name] = { 'start': start, 'length': length, 't': t, 'x': x }

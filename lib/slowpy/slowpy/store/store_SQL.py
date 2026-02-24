@@ -227,7 +227,7 @@ class DataStore_SQL(DataStore):
         if self.conn is not None:
             self.conn.close()
         self.conn = None
-        logging.info('DB "%s" is disconnnected.' % self.db_url)
+        logging.info('DB "%s" is disconnected.' % self.db_url)
 
             
     def _write(self, values, tag=None, timestamp=None, update=False):
@@ -284,7 +284,7 @@ class DataStore_SQLite(DataStore_SQL):
             logging.info('DB file "%s.db" does not exist. Creating...' % db_url)
         self.conn = sqlite3.connect('%s.db' % db_url)
         
-        logging.info('DB "%s" is connnected.' % self.db_url)
+        logging.info(f'DB "{self.db_url}" is connected for table "{self.table}"')
         return self.conn
 
         
@@ -356,7 +356,7 @@ class DataStore_PostgreSQL(DataStore_SQL):
             logging.error(traceback.format_exc())
             return
 
-        logging.info('DB "%s" is connnected.' % self.db_url)
+        logging.info(f'DB "{self.db_url}" is connected for table "{self.table}"')
         return self.conn
 
         
@@ -439,7 +439,7 @@ class DataStore_MySQL(DataStore_SQL):
             logging.error(traceback.format_exc())
             return
 
-        logging.info('DB "%s" is connnected.' % self.db_url)
+        logging.info(f'DB "{self.db_url}" is connected for table "{self.table}"')
         return self.conn
 
         
