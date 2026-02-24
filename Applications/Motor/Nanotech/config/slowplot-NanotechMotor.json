@@ -1,0 +1,158 @@
+{
+    "control": {
+        "range": { "length": 900, "to": 0 },
+        "reload": 5,
+        "mode": "normal",
+        "grid": { "rows": "2", "columns": "2" }
+    },
+    "style": { },
+    "panels": [
+        { "type": "html", "location": "project", "file": "NanotechMotor", "title": "Motor Control" },
+        {
+            "type": "singles",
+            "item_type": "square",
+            "items": [
+                {
+                    "channel": "status->match(',RTSO',1,0)",
+                    "label": "Ready to Switch On",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0.5 },
+                        "warn": { "min": 0, "max": 10 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "text_transform": "gt(0.5)->replace(true,'Yes')->replace(false,'No')"
+                },
+                {
+                    "channel": "status->match(',SO,',1,0)",
+                    "label": "Switched On",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0.5 },
+                        "warn": { "min": 0, "max": 10 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "text_transform": "gt(0.5)->replace(true,'Yes')->replace(false,'No')"
+                },
+                {
+                    "channel": "status->match(',OE,',1,0)",
+                    "label": "Operation Enabled",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0.5 },
+                        "warn": { "min": 0, "max": 10 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "text_transform": "gt(0.5)->replace(true,'Yes')->replace(false,'No')"
+                },
+                {
+                    "channel": "status->match(',VE,',1,0)",
+                    "label": "Voltage Enabled",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0.5 },
+                        "warn": { "min": 0, "max": 10 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "text_transform": "gt(0.5)->replace(true,'Yes')->replace(false,'No')"
+                },
+                {
+                    "channel": "status->match(',CLA,',1,0)",
+                    "label": "Closed Loop Active",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0.5 },
+                        "warn": { "min": 0, "max": 10 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "text_transform": "gt(0.5)->replace(true,'Yes')->replace(false,'No')"
+                },
+                {
+                    "channel": "status->match(',MOVING',1,0)",
+                    "label": "Moving",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0.5 },
+                        "warn": { "min": 0, "max": 10 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "text_transform": "gt(0.5)->replace(true,'Yes')->replace(false,'No')"
+                },
+                {
+                    "channel": "status->match(',WARN,',1,0)",
+                    "label": "Warning",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0.5 },
+                        "warn": { "min": 0, "max": 10 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "text_transform": "gt(0.5)->replace(true,'Yes')->replace(false,'No')"
+                },
+                {
+                    "channel": "status->match(',FAULT,',1,0)",
+                    "label": "Fault",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0.5 },
+                        "warn": { "min": 0, "max": 10 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "text_transform": "gt(0.5)->replace(true,'Yes')->replace(false,'No')"
+                }
+            ],
+            "color": { "base": "rgb(0, 0, 0)", "normal": "#06b6d4", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.1 },
+            "grid": { "rows": 2, "columns": 4 },
+            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+            "ranges": { "apply_to_value": false, "apply_to_gauge": false, "apply_to_tile": true },
+            "title": "Motor Status"
+        },
+        {
+            "type": "timeseries",
+            "plots": [
+                {
+                    "type": "timeseries",
+                    "channel": "velocity",
+                    "color": "#009090",
+                    "label": "",
+                    "format": "%.5g",
+                    "opacity": 1,
+                    "marker_type": "circle",
+                    "marker_size": 2,
+                    "line_width": 1,
+                    "line_type": "connect",
+                    "fill_opacity": 0,
+                    "fill_envelope": false,
+                    "fill_baseline": 1e-100,
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": -200, "ymax": 90 },
+            "legend": { "style": "side", "position": "left" }
+        },
+        {
+            "type": "timeseries",
+            "plots": [
+                {
+                    "type": "timeseries",
+                    "channel": "position",
+                    "color": "#009090",
+                    "label": "",
+                    "format": "%d",
+                    "opacity": 1,
+                    "marker_type": "circle",
+                    "marker_size": 2,
+                    "line_width": 1,
+                    "line_type": "connect",
+                    "fill_opacity": 0,
+                    "fill_envelope": false,
+                    "fill_baseline": 1e-100,
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 240000, "ymax": 270000 },
+            "legend": { "style": "side", "position": "left" }
+        }
+    ],
+    "meta": { "name": "NanotechMotor", "title": "", "description": "" }
+}

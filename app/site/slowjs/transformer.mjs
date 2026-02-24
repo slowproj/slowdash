@@ -91,11 +91,16 @@ class FormatFunctor extends ScalarFunctor {
 class MatchFunctor extends ScalarFunctor {
     constructor(args) {
         super(args);
-        if (args.length < 1) {
-            this.regex = null;
+        this.regex = null;
+        this.true_value = true;
+        this.false_value = false;
+        if (args.length > 0) {
+            const flags = '';
+            this.regex = new RegExp(args[0], flags);
         }
-        else {
-            this.regex = new RegExp(args[0], args[1]);
+        if (args.length > 2) {
+            this.true_value = args[1];
+            this.false_value = args[2];
         }
     }
     _applyToScalar(data) {
@@ -105,7 +110,7 @@ class MatchFunctor extends ScalarFunctor {
         if ((data === null) || (data === undefined)) {
             return null;
         }
-        return this.regex.test(data);
+        return this.regex.test(data) ? this.true_value : this.false_value;
     }
 };
 

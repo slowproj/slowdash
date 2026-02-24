@@ -1,7 +1,32 @@
 slowdash_project:
   name: Nanotech_Motor
+
+  environment:
+    - DB_URL=${DB_URL:-sqlite:///SlowMotor}
+
+  data_source:
+    url: ${DB_URL}
+    time_series:
+      schema: data [channel] @timestamp(unix) = value
+
   task:
     name: NanotechMotor
     auto_load: true
     parameters:
+      IP: "192.168.50.106"
       MAC: "44-AA-E8-00-BF-ED"
+      db_url: ${DB_URL}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

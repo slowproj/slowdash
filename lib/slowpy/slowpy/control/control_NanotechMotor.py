@@ -1,6 +1,6 @@
 # control_NanotechMotor.py
 
-import asyncio, logging
+import time, asyncio, logging
 import slowpy.control as spc
 
 
@@ -41,14 +41,19 @@ class Nanotech_C5E(spc.ControlNode):
             
         async def write_position(self, position:int):
             self.position_h.set((position >> 16) & 0xffff)
+            await asyncio.sleep(0.1)
             self.position_l.set(position & 0xffff)
+            await asyncio.sleep(0.1)
             
         async def write_max_velocity(self, velocity:int):
             self.max_velocity_h.set((velocity >> 16) & 0xffff)
+            await asyncio.sleep(0.1)
             self.max_velocity_l.set(velocity & 0xffff)
+            await asyncio.sleep(0.1)
             
         async def write_velocity(self, velocity:int):
             self.velocity.set(velocity & 0xffff)
+            await asyncio.sleep(0.1)
             
             
     class ReadRegisters:
@@ -57,6 +62,7 @@ class Nanotech_C5E(spc.ControlNode):
             self.mode = modbus.register(5001)
             self.position_h = modbus.register(5002)
             self.position_l = modbus.register(5003)
+            self.velocity = modbus.register(5004)
 
             self.STATBIT_REACHED = 10
             self.STATBIT_AUTOSETUP_COMPLETE = 12
@@ -76,11 +82,14 @@ class Nanotech_C5E(spc.ControlNode):
             else:
                 return (self.position_h.get() << 16) | self.position_l.get()
 
+        async def read_velocity(self):
+            return self.velocity.get()
+
         async def wait_for_status(self, bit_index, expected_value=1):
             while True:
                 status = await self.read_status()
                 if status is None:
-                    return Falae
+                    return False
                 if ((status >> bit_index) & 1) == expected_value:
                     break
                 await asyncio.sleep(0.1)
@@ -159,8 +168,12 @@ class Nanotech_C5E(spc.ControlNode):
         self.cia402 = Nanotech_C5E.CiA402(self.wreg, self.rreg)
 
         self.current_mode = None
+        self.is_moving = False
 
-        
+        self.position_node = NanotechC5E_PositionNode(self)
+        self.velocity_node = NanotechC5E_VelocityNode(self)
+        self.status_node = NanotechC5E_StatusNode(self)
+    
     # nanotech_C5E().auto_setup_mode().aio_set(go:bool)
     def auto_setup_mode(self):
         return NanotechC5E_AutoSetupModeNode(self)
@@ -175,11 +188,15 @@ class Nanotech_C5E(spc.ControlNode):
 
     # nanotech_C5E().position(): returns the current position in degree
     def position(self):
-        return NanotechC5E_PositionNode(self)
+        return self.position_node
+
+    # nanotech_C5E().velocity(): returns the current velocity in rpm
+    def velocity(self):
+        return self.velocity_node
 
     # nanotech_C5E().status()
     def status(self):
-        return NanotechC5E_StatusNode(self)
+        return self.status_node
 
     
     @classmethod
@@ -219,49 +236,67 @@ class Nanotech_C5E(spc.ControlNode):
     
 
     async def do_profile_position(self, steps:int, max_velocity:int):
+        if self.is_moving:
+            await self.do_halt()
+            
         if self.current_mode != self.wreg.MODE_PROFILEPOSITION:
             # mode can be changed even during operation-enabled            
             await self.wreg.write_mode(self.wreg.MODE_PROFILEPOSITION)
-        await self.cia402.enable_operation()
 
+        await self.cia402.disable_operation()
         await self.wreg.write_max_velocity(int(max_velocity))
         await self.wreg.write_position(int(steps))
+        await self.cia402.enable_operation()
     
+        self.is_moving = True
         await self.wreg.write_control(self.wreg.CTRL_RELATIVE | self.wreg.CTRL_OPERATION)
         await self.wreg.write_control(self.wreg.CTRL_START | self.wreg.CTRL_RELATIVE | self.wreg.CTRL_OPERATION)
         logging.info(f'Nanotech_C5E: running in profile position mode: steps={steps}')
     
         await self.rreg.wait_for_status(self.rreg.STATBIT_REACHED) # wait for completion
+        
+        if self.is_moving:
+            await self.do_halt()
         logging.info(f'Nanotech_C5E: profile position mode completed')
-
-        await self.wreg.write_control(self.wreg.CTRL_OPERATION)
 
 
     async def do_velocity(self, velocity:int, duration:float):
+        if self.is_moving:
+            await self.do_halt()
+            
         if self.current_mode != self.wreg.MODE_VELOCITY:
             # mode can be changed even during operation-enabled            
             await self.wreg.write_mode(self.wreg.MODE_VELOCITY)  
         await self.cia402.enable_operation()
 
         logging.info(f'Nanotech_C5E: running in velocity mode: volocity={velocity}')
+        self.is_moving = True
+        await self.wreg.write_control(self.wreg.CTRL_OPERATION)
         await self.wreg.write_velocity(int(velocity))
 
         if duration <= 0:
             return
-        await asyncio.sleep(duration)
+        end_time = time.monotonic() + duration
+        while self.is_moving and time.monotonic() < end_time:
+            await asyncio.sleep(0.1)
 
-        await self.wreg.write_control(self.wreg.CTRL_HALT | self.wreg.CTRL_OPERATION)
-        logging.info(f'Nanotech_C5E: velocity mode stopped')
+        if self.is_moving:
+            await self.do_halt()
 
         
     async def do_halt(self):
         if await self.cia402.is_operation_enabled():
             await self.wreg.write_control(self.wreg.CTRL_HALT | self.wreg.CTRL_OPERATION)
+        self.is_moving = False
         logging.info(f'Nanotech_C5E: halted')
 
         
     async def do_read_position(self):
         return await self.rreg.read_position()
+
+        
+    async def do_read_velocity(self):
+        return await self.rreg.read_velocity()
 
         
         
@@ -316,6 +351,22 @@ class NanotechC5E_PositionNode(spc.ControlVariableNode):
             return position / 10.0  # deg
 
 
+class NanotechC5E_VelocityNode(spc.ControlVariableNode):
+    def __init__(self, c5e):
+        self.c5e = c5e
+
+    async def aio_get(self):
+        velocity = await self.c5e.do_read_velocity()
+        if velocity is None:
+            return None
+        else:
+            # signed 16bit
+            if velocity < 0x8000:
+                return velocity
+            else:
+                return velocity - 0x10000
+
+
 class NanotechC5E_StatusNode(spc.ControlVariableNode):
     def __init__(self, c5e):
         self.c5e = c5e
@@ -352,12 +403,14 @@ class NanotechC5E_StatusNode(spc.ControlVariableNode):
         status.append('SO' if status_bits & 0x0002 else '-')
         status.append('RTSO' if status_bits & 0x0001 else '-')
 
+        status.append('MOVING' if self.c5e.is_moving else '-')
+        
         return ','.join(status)
         
 
 if __name__ == '__main__':
     ip = '192.168.50.148'
-    import sys, time
+    import sys
     logging.basicConfig(level=logging.INFO)
     
     async def main(ip):    
