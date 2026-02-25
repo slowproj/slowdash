@@ -13,7 +13,7 @@ slowdash_project:
     name: NanotechMotor
     auto_load: true
     parameters:
-      IP: "192.168.50.106"
+      IP: "192.168.80.53"
       MAC: "44-AA-E8-00-BF-ED"
       CIDR: "
       db_url: ${DB_URL}
