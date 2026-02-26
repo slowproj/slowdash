@@ -337,11 +337,13 @@ class DataSource_Redis_NoAsync(DataSource):
         return channels
 
     
-    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0):
+    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0, prior_data=0):
         record = {}
         for src in self.sources:
             record.update(src.get_timeseries(channels, length, to))
 
+        # TODO: implement prior_data
+            
         if resampling is None:
             return record
             

@@ -45,7 +45,7 @@ class DataSource_Dummy(DataSource):
         return channels
 
     
-    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0):
+    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0, prior_data=0):
         result = {}
         for ch in self.ts_channels:
             name = ch.get('name', None)

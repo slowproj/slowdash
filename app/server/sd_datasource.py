@@ -47,7 +47,8 @@ class DataSource(ComponentPlugin):
             resample = float(opts.get('resample', -1))
             reducer = opts.get('reducer', 'last')
             filler = opts.get('filler', 'fillna')
-            envelope = int(opts.get('envelope', 0))
+            envelope = int(opts.get('envelope', 0))      # 0: center, 1: center/min/max, 2: center/min/max/n/sem
+            prior_data = int(opts.get('prior_data', 0))  # 0: no prior data, 1: use if empty, 2: always include
         except Exception as e:
             logging.error('Bad data URL: %s: %s' % (str(opts), str(e)))
             return slowlette.Response(400)
@@ -58,7 +59,11 @@ class DataSource(ComponentPlugin):
             resample = None
                                 
         result = {}
-        result_ts = await self.aio_get_timeseries(channels, length, to, resample, reducer, filler, envelope)
+        result_ts = await self.aio_get_timeseries(
+            channels, length, to,
+            resample, reducer, filler,
+            envelope, prior_data
+        )
         result_obj = await self.aio_get_object(channels, length, to)
         if result_ts is not None:
             result.update(result_ts)
@@ -94,10 +99,10 @@ class DataSource(ComponentPlugin):
         return self.get_channels()
 
     
-    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0):
+    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0, prior_data=0):
         """[implement in child class] returns a time-series data (async version)
         """
-        return self.get_timeseries(channels, length, to, resampling, reducer, filler, envelope)
+        return self.get_timeseries(channels, length, to, resampling, reducer, filler, envelope, prior_data)
 
     
     async def aio_get_object(self, channels, length, to):
@@ -126,7 +131,7 @@ class DataSource(ComponentPlugin):
         return []
 
     
-    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0):
+    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0, prior_data=0):
         """[implement in child class] returns a time-series data
         """
         return {}

@@ -227,7 +227,7 @@ class DataSource_InfluxDB2(DataSource):
         return channels
     
     
-    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0):
+    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0, prior_data=0):
         if not self.channels_scanned:
             self.scan_channels()
         if self.client is None:
@@ -244,12 +244,14 @@ class DataSource_InfluxDB2(DataSource):
             db_resampling = None
         else:
             db_resampling = resampling
-        
+
         result = {}
         for schema in self.ts_schemata:
             result.update(self.execute_query(
                 schema, channels, length, to, resampling=db_resampling, reducer=db_reducer, lastonly=False
             ))
+            
+        # TODO: implement prior_data
             
         if resampling is None:
             return result

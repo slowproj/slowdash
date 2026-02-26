@@ -145,13 +145,13 @@ class DataSource_SQL(DataSource_TableStore):
         return channels
         
     
-    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0):
+    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0, prior_data=0):
         if self.server is None:
             self.server = await self._connect_with_retry()
         if self.server is None:
             return {}
         
-        return await super().aio_get_timeseries(channels, length, to, resampling, reducer, filler, envelope)
+        return await super().aio_get_timeseries(channels, length, to, resampling, reducer, filler, envelope, prior_data)
 
         
     async def aio_get_object(self, channels, length, to):
