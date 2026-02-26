@@ -7,8 +7,8 @@ from slowpy.control import ControlException
 MAC_RE = re.compile(r"^[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}$")
 
 
-def find_ip(mac:str, use_arp_cache=True):
-    return IPFinder().find(mac, use_arp_cache)
+def find_ip(mac:str, **kwargs):
+    return IPFinder().find(mac, **kwargs)
 
 
 class IPFinder:
@@ -16,39 +16,39 @@ class IPFinder:
         pass
 
     
-    def find(self, mac:str, use_arp_cache=True):
+    def find(self, mac:str, *, use_arp_cache=True, interface:str|None=None, cidr:str|None=None):
         max_hosts = 256
         workers = 8
         timeout = 1
 
         mac = mac.lower().replace('-', ':')
-        logging.debug(f'IPFinder: Searching IP for {mac}')
-    
         if not MAC_RE.match(mac):
             raise ControlException("IPFinder: Invalid MAC format")
-
-        if shutil.which("ip") is None or shutil.which("ping") is None:
-            raise ControlException("IPFinder: Required commands not found: ip, ping")
-
-        iface = self._get_default_iface()
-        if not iface:
-            raise ControlException("IPFinder: Could not determine default interface")
-        logging.debug(f'IPFinder: Interface: {iface}')
-
-        iface_cidr = self._get_iface_cidr(iface)
-        if not iface_cidr:
-            raise ControlException(f"Could not get IPv4 address/prefix for interface {iface}")
-        # 192.168.1.10/24 -> 192.168.1.0/24
-        net = ipaddress.ip_network(iface_cidr, strict=False)
-        cidr = str(net)
-        logging.debug(f'IPFinder: IPv4 address/prefix: {cidr}')
-
+        logging.debug(f'IPFinder: Searching IP for {mac}')
+    
         # look at the cache first
         if use_arp_cache:
             found = self._ip_from_mac_in_neigh(mac)
             if found:
                 logging.info(f'IP Found in ARP cache: {found}')
                 return found
+
+        if shutil.which("ip") is None or shutil.which("ping") is None:
+            raise ControlException("IPFinder: Required commands not found: ip, ping")
+
+        if cidr is None:
+            iface = interface or self._get_default_iface()
+            if not iface:
+                raise ControlException("IPFinder: Could not determine default interface")
+            logging.debug(f'IPFinder: Interface: {iface}')
+
+        iface_cidr = cidr or self._get_iface_cidr(iface)
+        if not iface_cidr:
+            raise ControlException(f"Could not get IPv4 address/prefix for interface {iface}")
+        # 192.168.1.10/24 -> 192.168.1.0/24
+        net = ipaddress.ip_network(iface_cidr, strict=False)
+        cidr = str(net)
+        logging.debug(f'IPFinder: IPv4 address/prefix: {cidr}')
 
         net = ipaddress.ip_network(cidr, strict=False)
         host_count = net.num_addresses - 2 if net.num_addresses >= 2 else 0
@@ -61,13 +61,14 @@ class IPFinder:
             for ip in net.hosts():
                 yield str(ip)
         ips = list(generate_hosts(cidr))
+
         with ThreadPoolExecutor(max_workers=max(1, workers)) as ex:
             futures = [ex.submit(self._ping_once, ip, timeout) for ip in ips]
             for _ in as_completed(futures):
                 found = self._ip_from_mac_in_neigh(mac)
                 if found:
                     logging.info(f'IP Found: {found}')
-                return found
+                    return found
             
         return None
 
@@ -123,4 +124,4 @@ class IPFinder:
 
 
 if __name__ == "__main__":
-    print(find_ip('44-AA-E8-00-BF-ED', use_arp_cache=False))
+    print(find_ip('d8:3a:dd:e4:b9:9f', use_arp_cache=False))

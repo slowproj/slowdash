@@ -15,6 +15,7 @@ slowdash_project:
     parameters:
       IP: "192.168.50.106"
       MAC: "44-AA-E8-00-BF-ED"
+      CIDR: "
       db_url: ${DB_URL}
 
 

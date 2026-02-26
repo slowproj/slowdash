@@ -291,6 +291,11 @@ class Nanotech_C5E(spc.ControlNode):
         logging.info(f'Nanotech_C5E: halted')
 
         
+    async def do_switch_off(self):
+        await self.cia402.switch_off()
+        self.is_moving = False
+
+        
     async def do_read_position(self):
         return await self.rreg.read_position()
 

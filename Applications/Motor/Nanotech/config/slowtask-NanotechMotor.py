@@ -14,11 +14,13 @@ async def _initialize(params):
     if ip is None:
         mac = params.get('MAC', None)
         if mac is not None:
-            ip = slowpy.control.find_ip(mac, use_arp_cache=False)
+            cidr = params.get('CIDR', None)
+            ip = slowpy.control.find_ip(mac, use_arp_cache=False, cidr=cidr)
     if ip is None:
+        await ctrl.aio_publish(f"Unable to find the IP address of the controller")
         raise slowpy.control.ControlException('Unable to find Nanotech Motor Controller')
-    print(f'Nanotech Controller at {ip}')
     await ctrl.aio_publish(f"Found at {ip}", name="connection")
+    print(f'Nanotech Controller at {ip}')
 
     modbus = ctrl.import_control_module('Modbus').modbus(ip)
     modbus.import_control_module('NanotechMotor')
@@ -94,7 +96,7 @@ async def sd_switch_off():
     if c5e is None:
         return False
     
-    await c5e.cia402.switch_off()
+    await c5e.do_switch_off()
     await ctrl.aio_publish(c5e.status(), "status")
 
     
