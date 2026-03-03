@@ -48,7 +48,7 @@ class DataSource(ComponentPlugin):
             reducer = opts.get('reducer', 'last')
             filler = opts.get('filler', 'fillna')
             envelope = int(opts.get('envelope', 0))      # 0: center, 1: center/min/max, 2: center/min/max/n/sem
-            prior_data = int(opts.get('prior_data', 0))  # 0: no prior data, 1: use if empty, 2: always include
+            prior_data = int(opts.get('prior_data', 0))  # 0: no prior data, 1: use if empty, 2: always include one prior
         except Exception as e:
             logging.error('Bad data URL: %s: %s' % (str(opts), str(e)))
             return slowlette.Response(400)
@@ -150,7 +150,7 @@ class DataSource(ComponentPlugin):
             
 
     @classmethod
-    def resample(cls, set_of_timeseries, length, to, interval, reducer, filler, envelope):
+    def resample(cls, set_of_timeseries, length, to, interval, reducer, filler, envelope, *, prior_data=0):
         """performs resampling (can be used in child class)
         Args:
           - set_of_timeseries: { name: timeseries } dict of input timeseries objects
@@ -159,12 +159,11 @@ class DataSource(ComponentPlugin):
           - reducer: name of the reducer applied, defined in DataSource.reduce()
           - filler: name of the filler applied, currently only "fillna"
           - envelope: 0: no envelope, 1: min/max envelope
+          - prior_data: 0: no prior, 1: use prior if empty, 2: always include one prior point
         Returns:
           - set of aligned timeseries, in a { name: timeseries } dict
         """
 
-        logging.error(f"{set_of_timeseries}")
-        
         if interval is None:
             return set_of_timeseries
 
@@ -203,7 +202,17 @@ class DataSource(ComponentPlugin):
             t_in = data.get('t')
             x_in = data.get('x')
             
-            t, buckets = [], []
+            t, x = [], []
+            if (prior_data > 0) and (envelope == 0):
+                # no resampling for the "prior" data points; not compatible with an envelope
+                for k in range(len(t_in)):
+                    if t0 + t_in[k] < 0:
+                        t.append(t0 + t_in[k])
+                        x.append(x_in[k])
+                    else:
+                        break
+                    
+            buckets = []
             for bin in range(nbins):
                 t.append(float(interval) * (bin + 0.5))
                 buckets.append([])
@@ -218,7 +227,7 @@ class DataSource(ComponentPlugin):
                     xk = float('nan')
                 buckets[bin].append(xk)
 
-            x = _reduce_buckets(buckets, reducer)
+            x.extend(_reduce_buckets(buckets, reducer))
             result[name] = { 'start': start, 'length': length, 't': t, 'x': x }
 
             if envelope >= 1:

@@ -65,29 +65,35 @@ class DataSource_TableStore(DataSource):
                 schema, channels, length, to,
                 resampling=resampling, reducer=reducer, use_server_resampling=(envelope==0),
                 lastonly=False, 
-            ))
+            )
             result.update(record)
             
-            if use_prior_on_empty or always_include_prior_data:
-                end = to - length
-                unlimited_length = end
-                for ch, data in record.items():
-                    if always_include_prior_data or (len(data.get('x', [])) == 0):
+        for ch in channels:
+            if ch not in result:
+                result[ch] = {'start':to-length, 't':[], 'x':[]}
+                
+        if use_prior_on_empty or always_include_prior_data:
+            end = to - length
+            unlimited_length = end
+            for ch, data in result.items():
+                if always_include_prior_data or (len(data['x']) == 0):
+                    for schema in self.ts_schemata:
                         # this will make a query of "order by time desc limit 1" 
-                        prior_record = await self._get_query_result(
+                        prior_point_record = await self._get_query_result(
                             schema, [ch], unlimited_length, end,
                             resampling=None, reducer=None, use_server_resampling=False, 
                             lastonly=True
-                        ))
-                        prior_data = prior_record.get(ch)
-                        if len(prior_data['x']) > 0:
-                            data['t'].append(prior_data['t'][-1] + prior_data['start'] - data['start'])
-                            data['x'].append(prior_data['x'][-1])
+                        )
+                        prior_point_data = prior_point_record.get(ch)
+                        if prior_point_data is not None and (len(prior_point_data.get('x', [])) > 0):
+                            data['t'].insert(0, prior_point_data['t'][-1] + prior_point_data['start'] - data['start'])
+                            data['x'].insert(0, prior_point_data['x'][-1])
+                            break  # from the schemata loop
             
         if resampling is None:
             return result
             
-        return self.resample(result, length, to, resampling, reducer, filler, envelope)
+        return self.resample(result, length, to, resampling, reducer, filler, envelope, prior_data=prior_data)
 
     
     async def aio_get_object(self, channels, length, to):

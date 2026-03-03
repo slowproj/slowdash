@@ -17,11 +17,11 @@ signal.signal(signal.SIGTERM, signal_handler)
 
 
     
-def start(db_url, ts_name='ts_data', obj_name='obj_data', objts_name='objts_data'):
+def start(db_url, ts_name='ts_data', obj_name='obj_data', objts_name='objts_data', *, interval=1.0):
     datastore_ts = slowpy.store.create_datastore_from_url(db_url, ts_name)
     datastore_obj = slowpy.store.create_datastore_from_url(db_url, obj_name)
     datastore_objts = slowpy.store.create_datastore_from_url(db_url, objts_name)
-    
+
     device = RandomWalkDevice()
     readout_count = 0
     histogram = slowpy.Histogram(100, -10, 10)
@@ -72,7 +72,7 @@ def start(db_url, ts_name='ts_data', obj_name='obj_data', objts_name='objts_data
             })
         readout_count = readout_count + 1
 
-        time.sleep(1)
+        time.sleep(interval)
 
         
 
@@ -83,6 +83,10 @@ if __name__ == '__main__':
         '--db-url', action='store', dest='db_url', type='string', default='dump:///',
         help='set Database URL'
     )
+    optionparser.add_option(
+        '--interval', action='store', dest='interval', type='float', default=1.0,
+        help='data readout inteval'
+    )
     (options, args) = optionparser.parse_args()
 
-    start(options.db_url)
+    start(options.db_url, interval=options.interval)
