@@ -208,7 +208,7 @@ class SensorValueAlertNode(ControlNode):
             body = value
 
         if True:
-            if (type(value) is not dict) or ('value_raw' not in body):
+            if (type(body) is not dict) or ('value_raw' not in body):
                 # throw an error?
                 return
             if body['value_raw'] is None:

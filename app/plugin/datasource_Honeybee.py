@@ -40,12 +40,14 @@ class DataSource_Honeybee(DataSource):
         return result
 
     
-    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0):
+    async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0, prior_data=0):
         if envelope > 0:
             db_resampling = None
         else:
             db_resampling = resampling
-        
+
+        # TODO: implement prior_data
+            
         cmd = [ os.path.join(self.bin_dir, 'hb-get-data') ]
         cmd.extend(channels)
         cmd.append('--series')

@@ -171,6 +171,7 @@ class Plot {
                 const reducer = (this.config.resampling?.reducer ?? 'last').trim();
                 const envelope = this.config.resampling?.envelope ?? false;
                 const threshold = this.config.resampling?.threshold ?? NaN;
+                
                 if (! Number.isNaN(buckets)) {
                     customOptions.resamplingBuckets = buckets;
                 }
@@ -182,6 +183,9 @@ class Plot {
                 }
                 if (! Number.isNaN(threshold)) {
                     customOptions.resamplingThreshold = threshold;
+                }
+                if (this.config.include_prior_point) {
+                    customOptions.prior_data = 2;  // 2: always include one prior data (if exists)
                 }
                 this.requestDataIds[field] = dataRequest.append(this.config[field], customOptions);
             }
@@ -674,6 +678,9 @@ class LineMarkerPlot extends GraphPlot {
         if (config.line_type === undefined) {
             config.line_type = 'connect';
         }
+        if (config.include_prior_point === undefined) {
+            config.include_prior_point = false;
+        }
         if (config.fill_opacity === undefined) {
             config.fill_opacity = 0;
         }
@@ -705,9 +712,6 @@ class LineMarkerPlot extends GraphPlot {
             this.graph.style.markerColor = color;
             this.label.css('color', color);
         }
-        if (style?.line_width) {
-            this.graph.style.lineWidth = style.line_width;
-        }
         if (style?.marker_type) {
             this.graph.style.markerType = style.marker_type;
         }
@@ -716,6 +720,9 @@ class LineMarkerPlot extends GraphPlot {
         }
         if (style.opacity) {
             this.graph.style.markerOpacity = style.opacity;
+        }
+        if (style?.line_width) {
+            this.graph.style.lineWidth = style.line_width;
         }
         if (style.fill_opacity) {
             this.graph.style.fillOpacity = style.fill_opacity;
@@ -727,15 +734,20 @@ class LineMarkerPlot extends GraphPlot {
         let table = div.find('table');
         let k = table.find('input').size(), ks = table.find('select').size();
         table.append($('<tr>').html(`
-            <td>Line</td><td>width: <input type="number" step="any" min="0">, 
-            type: <select>
-                <option value="connect">connect</option>
-                <option value="last">last</option>
-            </select></td>
-        `));
-        table.append($('<tr>').html(`
             <td>Marker</td><td>type: ${marker_select},
             size: <input type="number" step="any" min="0"></td>
+        `));
+        table.append($('<tr>').html(`
+            <td>Line</td><td>width: <input type="number" step="any" min="0"></td>
+        `));
+        table.append($('<tr>').html(`
+            <td></td><td>
+              type: <select>
+                  <option value="connect">connect</option>
+                  <option value="last">last</option>
+              </select>
+              <label><input type="checkbox">include prior point</label>
+            </td>
         `));
         table.append($('<tr>').html(`
             <td>Fill</td><td>
@@ -747,10 +759,11 @@ class LineMarkerPlot extends GraphPlot {
             <td></td><td>opacity: <input type="number" step="0.05" min="0" max="1"></td>
         `));
 
-        bindInput(this.config, 'line_width', div.find('input').at(k++).css('width', '5em'));
-        bindInput(this.config, 'line_type', div.find('select').at(ks++).css('width', '7em'));
         bindInput(this.config, 'marker_type', div.find('select').at(ks++).css('width', '7em'));
         bindInput(this.config, 'marker_size', div.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config, 'line_width', div.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config, 'line_type', div.find('select').at(ks++).css('width', '7em'));
+        bindInput(this.config, 'include_prior_point', div.find('input').at(k++));
         bindInput(this.config, 'fill_envelope', div.find('input').at(k++), true);
         bindInput(this.config, 'fill_envelope', div.find('input').at(k++), false);
         bindInput(this.config, 'fill_baseline', div.find('input').at(k++).css('width', '5em'));
@@ -1045,11 +1058,16 @@ class TimeseriesPlot extends LineMarkerPlot {
             const yk_min = this.graph.y_min ? this.graph.y_min[k] : yk - yk_err;
             const yk_max = this.graph.y_max ? this.graph.y_max[k] : yk + yk_err;
             ylast = yk;
-            [ xmin, xmax ] = [ Math.min(xmin??xk, xk), Math.max(xmax??xk, xk) ];
+            if (ts.t[k] >= 0) {
+                [ xmin, xmax ] = [ Math.min(xmin??xk, xk), Math.max(xmax??xk, xk) ];
+            }
             [ ymin, ymax ] = [ Math.min(ymin??yk, yk_min), Math.max(ymax??yk, yk_max) ];
         }
-        if ((xmin === null) || (ymin === null)) {
-            [xmin, xmax, ymin, ymax] = [t0, t0+3600, 0, 1];
+        if (xmin === null) {
+            [xmin, xmax] = [t0, t0+3600];
+        }
+        if (ymin === null) {
+            [ymin, ymax] = [0, 1];
         }
         this.valueRange = {xmin: xmin, xmax: xmax, ymin: ymin, ymax: ymax};
 

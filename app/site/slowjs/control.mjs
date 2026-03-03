@@ -21,6 +21,7 @@ export class DataRequest {
             reducer: 'last',
             filler: 'fillna',
             envelope: 0,
+            prior_data: 0,
             resamplingBuckets: 600,
             resamplingThreshold: 7200,
         };

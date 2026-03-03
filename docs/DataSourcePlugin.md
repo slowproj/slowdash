@@ -28,7 +28,7 @@ class Datasource_XXX(Datasource):
   def get_channels(self):
     return []
     
-  def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0):
+  def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0, use_prior_on_empty=False):
     return {}
 
   def get_object(self, channels, length, to):
@@ -61,7 +61,7 @@ class Datasource_XXX(Datasource):
 ### Optional User Function `get_timeseries()`
 - return time-series data
 ```python
-  def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0):
+  def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0, use_prior_on_empty=False):
     result = {}
     ...
     return result
@@ -120,7 +120,7 @@ def resample(cls, set_of_timeseries, length, to, interval, reducer, filler, enve
 This will be used in user's `get_timeseries()`, if the data source does not efficiently support resampling, typically like:
 ```python
 class DataSource_XXX(DataSource):
-    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0):
+    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0, use_prior_on_empty=False):
         result = {}
         ...
 
