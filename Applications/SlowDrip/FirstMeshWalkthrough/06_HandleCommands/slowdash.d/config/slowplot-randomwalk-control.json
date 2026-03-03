@@ -24,7 +24,8 @@
                     "fill_opacity": 0,
                     "fill_baseline": "1e-100",
                     "fill_envelope": false,
-                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false },
+                    "include_prior_point": false
                 }
             ],
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 0, "ymax": 2 },
@@ -47,7 +48,8 @@
                     "fill_opacity": 0,
                     "fill_baseline": "1e-100",
                     "fill_envelope": false,
-                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false },
+                    "include_prior_point": true
                 }
             ],
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 0, "ymax": 30 },
