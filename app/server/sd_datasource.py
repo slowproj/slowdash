@@ -236,7 +236,7 @@ class DataSource(ComponentPlugin):
                     result[name]['x_max'] = _reduce_buckets(buckets, 'max')
             if envelope >= 2:
                 if reducer != 'count':
-                    result[name]['x_count'] = _reduce_buckets(buckets, 'count')
+                    result[name]['x_n'] = _reduce_buckets(buckets, 'count')
                 if reducer == 'mean':
                     result[name]['x_err'] = _reduce_buckets(buckets, 'sem')
             

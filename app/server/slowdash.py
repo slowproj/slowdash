@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 # Created by Sanshiro Enomoto on 3 Sep 2021 #
 # Restructured to use Slowlette by Sanshiro Enomoto on 12 January 2025 #
 
