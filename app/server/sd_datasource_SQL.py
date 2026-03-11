@@ -80,7 +80,7 @@ class SQLServer(SQLBaseServer):
 
             
     async def execute(self, sql, params=()):
-        if self.conn is None:
+        if not self.is_connected():
             return SQLQueryResult()
 
         logging.debug(f'SQL Execute: {sql}; params={params}')
@@ -97,7 +97,7 @@ class SQLServer(SQLBaseServer):
             
         
     async def fetch(self, sql, params=()):
-        if self.conn is None:
+        if not self.is_connected():
             return SQLQueryResult()
 
         logging.debug(f'SQL Fetch: {sql}; params={params}')
@@ -137,9 +137,8 @@ class DataSource_SQL(DataSource_TableStore):
         return SQLBaseServer()
     
 
-    async def aio_get_channels(self):
-        self.channels_scanned = False  # forced scan; efficient for existing channels
-        channels = await super().aio_get_channels()
+    async def aio_get_channels(self, force_rescan=False):
+        channels = await super().aio_get_channels(force_rescan=force_rescan)
         channels += [ {'name': view, 'type': 'table'} for view in self.views ]
 
         return channels
@@ -220,13 +219,13 @@ class DataSource_SQL(DataSource_TableStore):
             self.views[view['name']] = view['sql']
             
 
-    async def _scan_channels(self):
+    async def _scan_channels(self, force_rescan=False):
         if self.server is None:
             self.server = await self._connect_with_retry()
         if self.server is None:
             return
             
-        await super()._scan_channels()
+        await super()._scan_channels(force_rescan=force_rescan)
 
         
     async def _get_tag_values_from_data(self, schema):
@@ -239,7 +238,7 @@ class DataSource_SQL(DataSource_TableStore):
             result = await self.server.fetch(schema.tag_value_sql)
             lapse = time.time() - start_time
         except Exception as e:
-            logging.error(f'SQL Error: {e}')   # most likely the table does not exist (yet)
+            logging.warning(f'SQL Error: {e}')   # most likely the table does not exist (yet)
             return []
             
         if lapse > 10:
@@ -248,7 +247,7 @@ class DataSource_SQL(DataSource_TableStore):
             logging.warning('    - manually list the channels, in "data_source/time_series/tags/list" as an array, or')
             logging.warning('    - provide a SQL that returns the list, in "data_source/time_series/tags/sql" as a string')
         if result.is_error:
-            logging.error('SQL Error: %s: %s' % (result.error, schema.tag_value_sql))
+            logging.warning(f'SQL Error: {result.error}: {schema.tag_value_sql}')
             return None
         
         return sorted([ row[0] for row in result.get_table() ])

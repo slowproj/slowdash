@@ -37,8 +37,8 @@ class DataSource_TableStore(DataSource):
         return columns, table
 
         
-    async def aio_get_channels(self):
-        await self._scan_channels()
+    async def aio_get_channels(self, force_rescan=False):
+        await self._scan_channels(force_rescan=force_rescan)
             
         channels = []
         for schema in self.ts_schemata + self.obj_schemata + self.objts_schemata:
@@ -150,10 +150,11 @@ class DataSource_TableStore(DataSource):
         self.objts_schemata = load_schema(params, 'object_time_series')
 
         
-    async def _scan_channels(self):
-        if self.channels_scanned:
+    async def _scan_channels(self, force_rescan=False):
+        if self.channels_scanned and not force_rescan:
             return
         self.channels_scanned = True
+        logging.info(f'Scanning Channels (forced: {force_rescan})')
         
         for schema in self.ts_schemata + self.obj_schemata + self.objts_schemata:
             schema.initialize()

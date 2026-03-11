@@ -23,7 +23,7 @@ class DataSource_YAML(DataSource):
         self.mtime = 0
         
         
-    def get_channels(self):
+    def get_channels(self, force_rescan=False):
         self._read_file()
             
         if self.tree is None:

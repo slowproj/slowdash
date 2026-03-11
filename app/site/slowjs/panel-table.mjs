@@ -232,7 +232,17 @@ class TablePanel extends Panel {
             const k = (this.config.reversed ?? false) ? n-i-1 : i;
             let tr = $('<tr>').appendTo(this.table);
             const datetime = (new JGDateTime(t0 + t[k])).asString('%Y-%m-%d %H:%M:%S %Z');
-            tr.append($('<td>').text(datetime)).append($('<td>').text(x[k]??''));
+            let value = x[k] ?? ''
+            if ($.isDict(value)) {
+                try {
+                    value = JSON.stringify(value);
+                }
+                catch (e) {
+                    value;  // not JSON serializable -> display as a string value
+                }                
+            }
+            tr.append($('<td>').text(datetime));
+            tr.append($('<td>').text(value));
         }
         
         const m = t.length - max_n;

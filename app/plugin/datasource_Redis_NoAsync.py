@@ -35,7 +35,7 @@ class KeyValueSource:
             logging.debug('Redis loaded: %s:%s/%s' % (host, port, db))
 
         
-    def get_channels(self):
+    def get_channels(self, force_rescan=False):
         return [ { **{'name': key}, **val } for key, val in self.channels.items() ]
 
     
@@ -326,7 +326,7 @@ class DataSource_Redis_NoAsync(DataSource):
             src.scan_channels()
         
                     
-    def get_channels(self):
+    def get_channels(self, force_rescan=False):
         for src in self.sources:
             src.scan_channels()
 

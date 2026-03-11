@@ -59,8 +59,8 @@ class KeyValueSource:
         self.redis = None
 
         
-    async def get_channels(self):
-        if self.channels is None:
+    async def get_channels(self, force_rescan=False):
+        if force_rescan or self.channels is None:
             await self.scan_channels()
         return [ { **{'name': key}, **val } for key, val in self.channels.items() ]
 
@@ -364,14 +364,14 @@ class DataSource_Redis(DataSource):
         for src in self.sources:
             await src.close()
         
-                    
-    async def aio_get_channels(self):
+
+    async def aio_get_channels(self, force_rescan=False):
         for src in self.sources:
-            await src.scan_channels()
+            await src.scan_channels(force_rescan=force_rescan)
 
         channels = []
         for src in self.sources:
-            this_channels = await src.get_channels()
+            this_channels = await src.get_channels(force_rescan=force_rescan)
             channels.extend([ k for k in this_channels ])
             
         return channels

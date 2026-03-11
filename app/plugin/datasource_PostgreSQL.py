@@ -82,8 +82,11 @@ class AsyncPostgreSQLServer(SQLBaseServer):
                 rows = await conn.fetch(self._replace_placeholders(sql, params), *params)
                 return AsyncPostgreSQLQueryResult(rows)
             except Exception as e:
-                logging.error(f'SQL Async Fetch Error: {e}')
-                logging.debug(traceback.format_exc())
+                if True:
+                    logging.warning(f'SQL Async Fetch Error: {e}')
+                else:
+                    logging.error(f'SQL Async Fetch Error: {e}')
+                    logging.debug(traceback.format_exc())
                 return SQLQueryErrorResult(str(e))
             
     

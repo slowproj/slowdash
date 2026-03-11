@@ -316,7 +316,7 @@ export class ChannelListPanel extends Panel {
             localStorage.removeItem(this.cachePath + '-cachetime');
             localStorage.removeItem(this.cachePath + '-doc');
             this.table.html('<tr><td></td></tr><tr><td>loading channel list...</td></tr>');
-            this._load();
+            this._load(true);
         });
         this.searchDiv.html(`
             <span style="white-space:nowrap">
@@ -334,6 +334,8 @@ export class ChannelListPanel extends Panel {
         caseSensitiveInput.bind('change', e=>{
             this._applyFilter(this.table, filterInput.val(), caseSensitiveInput.val());
         });
+
+        this._isLoading = false;
     }
 
     
@@ -367,8 +369,8 @@ export class ChannelListPanel extends Panel {
     }
 
 
-    _load() {
-        if (this.cachePath) {
+    async _load(forceRescan=false) {
+        if ((! forceRescan) && this.cachePath) {
             let cachedDoc = localStorage.getItem(this.cachePath + '-doc');
             if (cachedDoc) {
                 this._render(JSON.parse(cachedDoc));
@@ -379,19 +381,34 @@ export class ChannelListPanel extends Panel {
             }
         }
 
-        fetch('api/channels')
-            .then(response => {
-                if (response.ok) return response.json();
-            })
-            .then(record => {
-                if (record) {
-                    this._render(record);
-                    if (this.cachePath) {
-                        localStorage.setItem(this.cachePath + '-cachetime', $.time());
-                        localStorage.setItem(this.cachePath + '-doc', JSON.stringify(record));
-                    }
-                }
-            });
+        if (this._isLoading) {
+            return;
+        }
+        this._isLoading = true;
+        
+        const url = 'api/channels?force_rescan=' + (forceRescan ? 'true' : 'false');
+        let record = null;
+        try {
+            const response = await fetch(url);
+            this._isLoading = false;
+            if (! response.ok) {
+                console.error('ERROR on fetch: ' + url);
+            }
+            else {
+                record = await response.json();
+            }
+        }
+        catch (err) {
+            console.error('ERROR on fetching channel list: ' + url);
+        }
+
+        this._render(record);
+        if (record) {
+            if (this.cachePath) {
+                localStorage.setItem(this.cachePath + '-cachetime', $.time());
+                localStorage.setItem(this.cachePath + '-doc', JSON.stringify(record));
+            }
+        }
     }
 
     
@@ -425,7 +442,7 @@ export class ChannelListPanel extends Panel {
         const bg = window.getComputedStyle(tr.get()).getPropertyValue('background-color');
         tr.find('th').css({position: 'sticky', top:0, left:0, background: bg});
         
-        for (let entry of record) {
+        for (let entry of record ?? []) {
             if (! entry.name) {
                 continue;
             }

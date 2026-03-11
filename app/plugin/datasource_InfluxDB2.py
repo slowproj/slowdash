@@ -68,8 +68,8 @@ class DataSource_InfluxDB2(DataSource):
         self.scan_channels()
 
 
-    def scan_channels(self):
-        if self.channels_scanned:
+    def scan_channels(self, force_rescan=False):
+        if self.channels_scanned and not force_rescan:
             return
         self.channels_scanned = True
         
@@ -214,9 +214,8 @@ class DataSource_InfluxDB2(DataSource):
                             break
                 
         
-    def get_channels(self):
-        self.channels_scanned = False  # forced scan; efficient for existing channels
-        self.scan_channels()
+    def get_channels(self, force_rescan=False):
+        self.scan_channels(force_rescan=force_rescan)
             
         channels = []
         for schema in self.ts_schemata + self.objts_schemata:

@@ -25,7 +25,7 @@ class Datasource_XXX(Datasource):
   def __init__(self, app, project, params):
     super.__init__(app, project, params)
 
-  def get_channels(self):
+  def get_channels(self, force_rescan=False):
     return []
     
   def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0, use_prior_on_empty=False):
@@ -49,7 +49,7 @@ class Datasource_XXX(Datasource):
 ### User Function `get_channels()`
 - return a list of channels
 ```python
-  def get_channels(self):
+  def get_channels(self, force_rescan=False):
     result = []
     ...
     return result

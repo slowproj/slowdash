@@ -17,7 +17,7 @@ class DataSource_Honeybee(DataSource):
             self.config_file = os.path.join(project.project_dir, self.config_file)
 
             
-    async def aio_get_channels(self):
+    async def aio_get_channels(self, force_rescan=False):
         cmd = [ os.path.join(self.bin_dir, 'hb-list-sensors') ]
         cmd.append('--config=' + self.config_file)
         if self.dripline_db is not None:

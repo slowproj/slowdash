@@ -34,8 +34,8 @@ class DataSource(ComponentPlugin):
 
     
     @slowlette.get('/api/channels')
-    async def api_get_channels(self):
-        return await self.aio_get_channels()
+    async def api_get_channels(self, force_rescan=False):
+        return await self.aio_get_channels(force_rescan=force_rescan)
 
     
     @slowlette.get('/api/data/{channels}')
@@ -79,7 +79,7 @@ class DataSource(ComponentPlugin):
         
         if content is None:
             if self.blob_storage is not None:
-                if channel in [entry['name'] for entry in await self.aio_get_channels()]:
+                if channel in [entry['name'] for entry in await self.aio_get_channels(force_rescan=False)]:
                     mime_type, content = await self.blob_storage.get_blob(id)
                 
         return slowlette.Response(content_type=mime_type, content=content)
@@ -93,10 +93,10 @@ class DataSource(ComponentPlugin):
         return self.finalize()
         
                     
-    async def aio_get_channels(self):
+    async def aio_get_channels(self, force_rescan=False):
         """[implement in child class] returns a list of channels (async version)
         """
-        return self.get_channels()
+        return self.get_channels(force_rescan=force_rescan)
 
     
     async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0, prior_data=0):
@@ -125,7 +125,7 @@ class DataSource(ComponentPlugin):
         pass
         
                     
-    def get_channels(self):
+    def get_channels(self, force_rescan=False):
         """[implement in child class] returns a list of channels
         """
         return []

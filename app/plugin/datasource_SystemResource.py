@@ -19,7 +19,7 @@ class DataSource_SystemResource(DataSource):
         self.disk_path = params.get('disk_path', project.project_dir)
 
         
-    def get_channels(self):
+    def get_channels(self, force_rescan=False):
         return [ { 'name': 'system', 'type': 'tree' } ]
 
     

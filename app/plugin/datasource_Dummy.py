@@ -19,7 +19,7 @@ class DataSource_Dummy(DataSource):
         self.log_channel_name = params.get('log', {}).get('name', None)
 
         
-    def get_channels(self):
+    def get_channels(self, force_rescan=False):
         channels = []
         for ch in self.ts_channels:
             name = ch.get('name', None)

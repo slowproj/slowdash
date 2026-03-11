@@ -188,8 +188,8 @@ class DataSource_CSV(DataSource_TableStore):
         return columns, table
 
     
-    async def aio_get_channels(self):
-        channels = await super().aio_get_channels()
+    async def aio_get_channels(self, force_rescan=False):
+        channels = await super().aio_get_channels(force_rescan=force_rescan)
         channels += [ {'name': name, 'type': 'table'} for name in self.tables ]
 
         return channels

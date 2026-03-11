@@ -181,7 +181,7 @@ class DataSource_CouchDB(DataSource):
         self.channels_scaned = True
 
                     
-    def get_channels(self):
+    def get_channels(self, force_rescan=False):
         self.scan_channels()
             
         channels = []

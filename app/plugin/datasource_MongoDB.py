@@ -44,7 +44,7 @@ class DataSource_MongoDB(DataSource):
             sys.stderr.write('ERROR: unable to find Collection: %s\n' % self.collection_name)
             
             
-    def get_channels(self):
+    def get_channels(self, force_rescan=False):
         if self.collection is None:
             return None
 
