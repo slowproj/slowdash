@@ -35,6 +35,8 @@ class AsyncMySQLServer(SQLBaseServer):
         super().__init__()
         self.pool = pool
 
+        self.connection_error_reported = False
+
         
     def is_connected(self):
         return self.pool is not None
@@ -51,35 +53,47 @@ class AsyncMySQLServer(SQLBaseServer):
         if self.pool is None:
             return AsyncMySQLQueryResult()
 
-        logging.debug(f'SQL Async Execute: {sql}; params={params}')
-        async with self.pool.acquire() as conn:
-            async with conn.cursor() as cursor:
-                try:
+        logging.debug(f'MySQL Async Execute: {sql}; params={params}')
+        try:
+            async with self.pool.acquire() as conn:
+                async with conn.cursor() as cursor:
                     await cursor.execute(sql, params)
                     await conn.commit()
-                    return AsyncMySQLQueryResult()
-                except Exception as e:
-                    logging.error(f'SQL Async Execute Error: {e}')
-                    logging.error(traceback.format_exc())
-                    return SQLQueryErrorResult(str(e))
+        except Exception as e:
+            if not self.connection_error_reported:
+                logging.error(f'MySQL Async Execute Error: {e}')
+                self.connection_error_reported = True
+            return SQLQueryErrorResult(str(e))
             
-        
+        if self.connection_error_reported:
+            self.connection_error_reported = False
+            logging.info(f'MySQL: Reconnected')
+            
+        return AsyncMySQLQueryResult()
+
+    
     async def fetch(self, sql, params=()):
         if self.pool is None:
             return AsyncMySQLQueryResult()
         
-        logging.debug(f'SQL Async Fetch: {sql}; params={params}')
-        async with self.pool.acquire() as conn:
-            async with conn.cursor(aiomysql.DictCursor) as cursor:
-                try:
+        logging.debug(f'MySQL Async Fetch: {sql}; params={params}')
+        try:
+            async with self.pool.acquire() as conn:
+                async with conn.cursor(aiomysql.DictCursor) as cursor:
                     await cursor.execute(sql, params)
                     rows = await cursor.fetchall()
-                    return AsyncMySQLQueryResult(rows)
-                except Exception as e:
-                    logging.error(f'SQL Fetch Error: {e}')
-                    logging.error(traceback.format_exc())
-                    return SQLQueryErrorResult(str(e))
+        except Exception as e:
+            if not self.connection_error_reported:
+                logging.error(f'MySQL Fetch Error: {e}')
+                self.connection_error_reported = True
+            return AsyncMySQLQueryResult()
+        
+        if self.connection_error_reported:
+            self.connection_error_reported = False
+            logging.info(f'MySQL: Reconnected')
             
+        return AsyncMySQLQueryResult(rows)
+
     
     
 class DataSource_MySQL(DataSource_SQL):
@@ -113,7 +127,8 @@ class DataSource_MySQL(DataSource_SQL):
             )
         except Exception as e:
             logging.error(f'AsyncMySQL: {self.url}: {e}')
-            return await super().connect()
+            pool = None
+        
         if pool is None:
             return await super().connect()
         

@@ -19,38 +19,34 @@ class KeyValueSource:
         self.redis = None
         self.channels = None
 
+        self.last_reconnect_attempt_time = 0
+        self.reconnect_interval = 5
+
         
-    async def connect(self):
+    async def _try_reconnect(self):
         if self.redis is not None:
-            return
+            return True
         
-        for i in range(12):
-            try:
-                self.redis = aioredis.from_url(self.url, decode_responses=True)
-                await asyncio.wait_for(self.redis.keys(), timeout=0.1)
-                break
-            except Exception as e:
-                if self.redis is not None:
-                    try:
-                        await self.redis.close()
-                    except:
-                        pass
-                    self.redis = None
-                logging.info(f'Unable to connect to Redis: {e}')
-                logging.info(f'retrying in 5 sec... ({i+1}/12)')
-                time.sleep(5)
-        else:
+        now = time.monotonic()
+        if now - self.last_reconnect_attempt_time < self.reconnect_interval:
+            return False
+        self.last_reconnect_attempt_time = now
+        
+        try:
+            self.redis = aioredis.from_url(self.url, decode_responses=True)
+            await asyncio.wait_for(self.redis.keys(), timeout=0.1)
+        except Exception as e:
             if self.redis is not None:
                 try:
                     await self.redis.close()
                 except:
                     pass
                 self.redis = None
-            logging.error(f'Unable to connect to Redis: {self.url}')
-            logging.error(traceback.format_exc())
-
-        if self.redis is not None:
-            logging.info(f'Redis loaded for {self.__class__.__name__}: {self.url}')
+            logging.error(f'Redis: unable to connect to server: {e}')
+            return False
+                
+        logging.info(f'Redis: loaded for {self.__class__.__name__}: {self.url}')
+        return True
 
         
     async def close(self):
@@ -60,8 +56,10 @@ class KeyValueSource:
 
         
     async def get_channels(self, force_rescan=False):
+        if not await self._try_reconnect():
+            return []
         if force_rescan or self.channels is None:
-            await self.scan_channels()
+            await self.scan_channels(force_rescan=force_rescan)
         return [ { **{'name': key}, **val } for key, val in self.channels.items() ]
 
     
@@ -70,6 +68,8 @@ class KeyValueSource:
 
     
     async def get_object(self, channels, length, to):
+        if not await self._try_reconnect():
+            return {}
         if self.channels is None:
             await self.scan_channels()
             
@@ -94,9 +94,9 @@ class KeyValueSource:
         return record
 
     
-    async def scan_channels(self):
+    async def scan_channels(self, force_rescan=False):
         self.channels = {}
-        if self.redis is None:
+        if not await self._try_reconnect():
             return
         
         for key in await self.redis.keys():
@@ -115,6 +115,8 @@ class ObjectSource(KeyValueSource):
         
         
     async def get_object(self, channels, length, to):
+        if not await self._try_reconnect():
+            return {}
         if self.channels is None:
             await self.scan_channels()
             
@@ -147,10 +149,10 @@ class ObjectSource(KeyValueSource):
         return record
 
     
-    async def scan_channels(self):
+    async def scan_channels(self, force_rescan=False):
         self.channels = {}
-        if self.redis is None:
-            return
+        if not await self._try_reconnect():
+            return {}
         
         for key in await self.redis.keys():
             if key.startswith(objts_prefix):
@@ -163,9 +165,6 @@ class ObjectSource(KeyValueSource):
                     
     
     async def find_object_type(self, key):
-        if self.redis is None:
-            return None
-        
         keytype = await self.redis.type(key)
         if keytype == 'string':
             try:
@@ -191,10 +190,10 @@ class TimeSeriesSource(ObjectSource):
         super().__init__(url, params)
 
             
-    async def scan_channels(self):
+    async def scan_channels(self, force_rescan=False):
         self.channels = {}
-        if self.redis is None:
-            return
+        if not await self._try_reconnect():
+            return {}
         
         for key in await self.redis.keys():
             if key.startswith(objts_prefix):
@@ -204,6 +203,8 @@ class TimeSeriesSource(ObjectSource):
 
 
     async def get_timeseries(self, channels, length, to):
+        if not await self._try_reconnect():
+            return {}
         if self.channels is None:
             await self.scan_channels()
             
@@ -244,6 +245,8 @@ class ObjectTimeSeriesSource(TimeSeriesSource):
 
     
     async def get_object(self, channels, length, to):
+        if not await self._try_reconnect():
+            return {}
         if self.channels is None:
             await self.scan_channels()
                     
@@ -293,10 +296,10 @@ class ObjectTimeSeriesSource(TimeSeriesSource):
         return record
 
     
-    async def scan_channels(self):
+    async def scan_channels(self, force_rescan=False):
         self.channels = {}
-        if self.redis is None:
-            return
+        if not await self._try_reconnect():
+            return {}
 
         for key in await self.redis.keys():
             if not key.startswith(objts_prefix):
@@ -357,7 +360,7 @@ class DataSource_Redis(DataSource):
             
     async def aio_initialize(self):
         for src in self.sources:
-            await src.connect()
+            await src._try_reconnect()
         
                     
     async def aio_finalize(self):

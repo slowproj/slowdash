@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 7 March 2025 #
 
 
-import re, logging, traceback
+import asyncio, re, logging, traceback
 from sd_datasource_SQL import SQLBaseServer, SQLQueryResult, SQLQueryErrorResult, DataSource_SQL
 
 import asyncpg
@@ -35,6 +35,8 @@ class AsyncPostgreSQLServer(SQLBaseServer):
         self.pool = pool
         self.placeholder_re = re.compile(r"%s")  # psycopg2 (%s) -> asyncpg ($1,$2,...)
 
+        self.connection_error_reported = False
+
         
     def is_connected(self):
         return self.pool is not None
@@ -61,35 +63,61 @@ class AsyncPostgreSQLServer(SQLBaseServer):
             return AsyncPostgreSQLQueryResult()
 
         logging.debug(f'SQL Async Execute: {sql}; params={params}')
-        async with self.pool.acquire() as conn:
-            try:
+        try:
+            async with self.pool.acquire() as conn:
                 await conn.execute(self._replace_placeholders(sql, params), *params)
                 # asyncpg performs automatic commit
-                return AsyncPostgreSQLQueryResult()
-            except Exception as e:
-                logging.error(f'SQL Async Execute Error: {e}')
-                logging.error(traceback.format_exc())
-                return SQLQueryErrorResult(str(e))
+        except (
+            # server crash (pool can be reused after server recovery)
+            asyncpg.exceptions.PostgresConnectionError,
+            asyncio.TimeoutError,
+            OSError
+        ) as e:
+            logging.error(f'PostgreSQL Connection Error: {e}')
+            return SQLQueryErrorResult(str(e))
+        except Exception as e:
+            if not self.connection_error_reported:
+                logging.error(f'PostgreSQL Async Execute Error: {e}')
+                self.connection_error_reported = True
+            return SQLQueryErrorResult(str(e))
+
+        if self.connection_error_reported:
+            self.connection_error_reported = False
+            logging.info(f'PostgreSQL: Reconnected')
+            
+        return AsyncPostgreSQLQueryResult()
+        
             
         
     async def fetch(self, sql, params=()):
         if self.pool is None:
             return AsyncPostgreSQLQueryResult()
         
-        logging.debug(f'SQL Async Fetch: {sql}; params={params}')
-        async with self.pool.acquire() as conn:
-            try:
+        logging.debug(f'PostgreSQL Async Fetch: {sql}; params={params}')
+        try:
+            async with self.pool.acquire() as conn:
                 rows = await conn.fetch(self._replace_placeholders(sql, params), *params)
-                return AsyncPostgreSQLQueryResult(rows)
-            except Exception as e:
-                if True:
-                    logging.warning(f'SQL Async Fetch Error: {e}')
-                else:
-                    logging.error(f'SQL Async Fetch Error: {e}')
-                    logging.debug(traceback.format_exc())
-                return SQLQueryErrorResult(str(e))
-            
+        except (
+            # server crash (pool can be reused after server recovery)
+            asyncpg.exceptions.PostgresConnectionError,
+            asyncio.TimeoutError,
+            OSError
+        ) as e:
+            if not self.connection_error_reported:
+                logging.error(f'PostgreSQL Connection Error: {e}')
+                self.connection_error_reported = True
+            return AsyncPostgreSQLQueryResult()
+        except Exception as e:
+            logging.error(f'PostgreSQL Async Fetch Error: {e}')
+            return SQLQueryErrorResult(str(e))
     
+        if self.connection_error_reported:
+            self.connection_error_reported = False
+            logging.info(f'PostgreSQL: Reconnected')
+            
+        return AsyncPostgreSQLQueryResult(rows)
+
+
     
 class DataSource_PostgreSQL(DataSource_SQL):
     def __init__(self, app, project, params):
@@ -111,7 +139,8 @@ class DataSource_PostgreSQL(DataSource_SQL):
             pool = await asyncpg.create_pool(self.url)
         except Exception as e:
             logging.error(f'AsyncPostgreSQL: {self.url}: {e}')
-            return await super().connect()
+            pool = None
+            
         if pool is None:
             return await super().connect()
 

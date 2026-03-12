@@ -35,15 +35,16 @@ class DataSource_SQLite(DataSource_SQL):
         db_file = '%s.db' % self.db_name
         if not os.path.isfile(db_file):
             logging.info(f'SQLite: DB file does not exist: "{db_file}"')
-            return None
-        
+            return await super().connect()
+
         try:
             conn = sqlite3.connect(db_file)
         except Exception as e:
             logging.error(f'DB "{db_file}" cannot be connected: {str(e)}')
-            return None
+            conn = None
+            
         if conn is None:
-            return None
+            return await super().connect()
         
         logging.debug(f'SQLite: DB connected: "{db_file}"')
         

@@ -37,11 +37,14 @@ class DataSource_MySQL_NoAsync(DataSource_SQL):
             return await super().connect()
         
         try:
-            conn = mysql.connect(host=self.host, port=self.port, user=self.user,
-                              password=self.password, database=self.database)
+            conn = mysql.connect(
+                host=self.host, port=self.port, user=self.user,
+                password=self.password, database=self.database
+            )
         except Exception as e:
             logging.error("MySQL: %s: %s" % (self.url, str(e)))
-            return await super().connect()
+            conn = None
+        
         if conn is None:
             return await super().connect()
         

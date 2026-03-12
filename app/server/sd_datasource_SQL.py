@@ -89,8 +89,7 @@ class SQLServer(SQLBaseServer):
             cursor.execute(sql, params)
             self.conn.commit()
         except Exception as e:
-            logging.error(f'SQL Fetch Error: {e}')
-            logging.error(traceback.format_exc())
+            logging.error(f'SQL Execute Error: {e}')
             return SQLQueryErrorResult(str(e))
             
         return SQLQueryResult(cursor)
@@ -106,7 +105,6 @@ class SQLServer(SQLBaseServer):
             cursor.execute(sql, params)
         except Exception as e:
             logging.error(f'SQL Fetch Error: {e}')
-            logging.error(traceback.format_exc())
             return SQLQueryErrorResult(str(e))
             
         return SQLQueryResult(cursor)
@@ -115,15 +113,18 @@ class SQLServer(SQLBaseServer):
     
 class DataSource_SQL(DataSource_TableStore):
     def __init__(self, app, project, params):
-        self.server = None
         self.time_sep = 'T'
         self.placeholder = '?'
         self.db_has_floor = False
         super().__init__(app, project, params)
 
+        self.server = SQLBaseServer()
+        self.last_reconnect_attempt_time = 0
+        self.reconnect_interval = 5
+        
 
     async def aio_finalize(self):
-        if self.server is not None:
+        if self.server.is_connected():
             try:
                 await self.server.terminate()
             except Exception as e:
@@ -132,7 +133,7 @@ class DataSource_SQL(DataSource_TableStore):
         
     # override this in DB implementation class
     async def connect(self):
-        if self.server is not None:
+        if self.server.is_connected():
             return self.server
         return SQLBaseServer()
     
@@ -145,18 +146,14 @@ class DataSource_SQL(DataSource_TableStore):
         
     
     async def aio_get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0, prior_data=0):
-        if self.server is None:
-            self.server = await self._connect_with_retry()
-        if self.server is None:
+        if not await self._try_reconnect():
             return {}
         
         return await super().aio_get_timeseries(channels, length, to, resampling, reducer, filler, envelope, prior_data)
 
         
     async def aio_get_object(self, channels, length, to):
-        if self.server is None:
-            self.server = await self._connect_with_retry()
-        if self.server is None:
+        if not await self._try_reconnect():
             return {}
         
         result = await super().aio_get_object(channels, length, to)
@@ -219,12 +216,31 @@ class DataSource_SQL(DataSource_TableStore):
             self.views[view['name']] = view['sql']
             
 
+    async def _try_reconnect(self):
+        if self.server.is_connected():
+            return True
+
+        now = time.monotonic()
+        if now - self.last_reconnect_attempt_time < self.reconnect_interval:
+            return False
+        self.last_reconnect_attempt_time = now
+        
+        try:
+            server = await self.connect()
+        except Exception as e:
+            return False
+        
+        if not server.is_connected():
+            return False
+
+        self.server = server
+        return True
+
+        
     async def _scan_channels(self, force_rescan=False):
-        if self.server is None:
-            self.server = await self._connect_with_retry()
-        if self.server is None:
-            return
-            
+        if not await self._try_reconnect():
+            return {}
+        
         await super()._scan_channels(force_rescan=force_rescan)
 
         
@@ -234,9 +250,9 @@ class DataSource_SQL(DataSource_TableStore):
             schema.tag_value_sql = f"SELECT DISTINCT {schema.tag} FROM {schema.table}"
 
         try:
-            start_time = time.time()
+            start_time = time.monotonic()
             result = await self.server.fetch(schema.tag_value_sql)
-            lapse = time.time() - start_time
+            lapse = time.monotonic() - start_time
         except Exception as e:
             logging.warning(f'SQL Error: {e}')   # most likely the table does not exist (yet)
             return []
@@ -297,28 +313,6 @@ class DataSource_SQL(DataSource_TableStore):
         return value
 
         
-    async def _connect_with_retry(self, repeat=12, interval=5):
-        if self.server is not None:
-            return self.server
-        
-        for i in range(repeat):
-            try:
-                server = await self.connect()
-            except Exception as e:
-                logging.info('Unable to connect to SQLDB: %s' % str(e))
-                server = None
-            if (server is None) or (not server.is_connected()):
-                logging.info(f'retrying in 5 sec... ({i+1}/{repeat})')
-                await asyncio.sleep(interval)
-            else:
-                return server
-        else:
-            logging.error('Unable to connect to SQLDB')
-            if server is None:
-                logging.error(traceback.format_exc())
-            return SQLBaseServer()
-
-        
     # The DB-specific syntax to get a time difference between time_col and (stop_sec | stop_tstamp) 
     # Override this if needed
     def _get_timediffsec_query(self, time_col, time_type, stop_sec, stop_tstamp):
@@ -329,9 +323,7 @@ class DataSource_SQL(DataSource_TableStore):
 
     
     async def _execute_query(self, table_name, time_col, time_type, time_from, time_to, tag_col, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False, use_server_resampling=True):
-        if self.server is None:
-            self.server = await self._connect_with_retry()
-        if self.server is None:
+        if not await self._try_reconnect():
             return [], []
 
         sql = None

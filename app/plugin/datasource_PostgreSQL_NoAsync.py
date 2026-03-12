@@ -27,7 +27,8 @@ class DataSource_PostgreSQL_NoAsync(DataSource_SQL):
             conn = db.connect(self.url)
         except Exception as e:
             logging.error("PostgreSQL: %s: %s" % (self.url, str(e)))
-            return await super().connect()
+            conn = None
+            
         if conn is None:
             return await super().connect()
 

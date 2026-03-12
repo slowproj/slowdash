@@ -7,6 +7,7 @@ from sd_datasource import DataSource
 
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
+from influxdb_client.client.exceptions import InfluxDBError
 
 
 
@@ -14,6 +15,12 @@ class DataSource_InfluxDB2(DataSource):
     def __init__(self, app, project, params):
         super().__init__(app, project, params)
         self.client = None
+        self.api = None
+        
+        self.last_reconnect_attempt_time = 0
+        self.reconnect_interval = 5
+        self.connection_error_reported = False
+        
         self.channels_scanned = False
 
         dburl = Schema.parse_dburl(params.get('url', ''))
@@ -25,13 +32,13 @@ class DataSource_InfluxDB2(DataSource):
         self.bucket = params.get('bucket', dburl.get('db', None))
 
         if self.org is None:
-            logging.error('"organization" is not specified')
+            logging.error('InfluxDB2: "organization" is not specified')
             return
         if self.token is None:
-            logging.error('"token" not provided')
+            logging.error('InfluxDb2: "token" not provided')
             return
         if self.bucket is None:
-            logging.error('"bucket" is not specified')
+            logging.error('InfluxDb2: "bucket" is not specified')
             return
             
         def load_schema(params, entrytype):
@@ -65,35 +72,44 @@ class DataSource_InfluxDB2(DataSource):
             schema.is_for_objts = False
             self.ts_schemata.append(schema)
             
-        self.scan_channels()
+        
+    def try_reconnect(self):
+        if self.client is not None:
+            return True
 
+        now = time.monotonic()
+        if now - self.last_reconnect_attempt_time < self.reconnect_interval:
+            return False
+        self.last_reconnect_attempt_time = now
+        
+        url = '%s://%s:%s' % (self.protocol, self.host, self.port)
+        test_query = '''
+            from(bucket:"%s")
+            |> range(start: -1s)
+        ''' % (self.bucket)
+        
+        try:
+            self.client = InfluxDBClient(url=url, org=self.org, token=self.token)
+            self.api = self.client.query_api()
+            self.api.query(test_query, org=self.org)
+        except Exception as e:
+            logging.error(f'InfluxDB2: Unable to connect to server: {e}')
+            self.client = None
+            self.api = None
+            return False
 
+        logging.info(f'InfluxDB2: connected')
+        
+        return True
+
+            
     def scan_channels(self, force_rescan=False):
+        if not self.try_reconnect():
+            return
+        
         if self.channels_scanned and not force_rescan:
             return
         self.channels_scanned = True
-        
-        if self.client is None:
-            url = '%s://%s:%s' % (self.protocol, self.host, self.port)
-            test_query = '''
-                from(bucket:"%s")
-                |> range(start: -1s)
-            ''' % (self.bucket)
-            for i in range(12):
-                try:
-                    self.client = InfluxDBClient(url=url, org=self.org, token=self.token)
-                    self.api = self.client.query_api()
-                    self.api.query(test_query, org=self.org)
-                    break
-                except Exception as e:
-                    logging.info(f'Unable to connect to InfluxDB2: {e}')
-                    logging.info(f'retrying in 5 sec... ({i+1}/12)')
-                    time.sleep(5)
-            else:
-                logging.error('Unable to connect to InfluxDB2 "%s"' % url)
-                logging.error(traceback.format_exc())
-                self.client = None
-                return
 
         for schema in self.ts_schemata + self.objts_schemata:
             schema.initialize()
@@ -115,7 +131,7 @@ class DataSource_InfluxDB2(DataSource):
                     try:
                         tag_scan_stop = datetime.datetime.fromisoformat(schema.tag_scan_date).timestamp()
                     except Exception as e:
-                        logging.error(e)
+                        logging.error(f'InfluxDB2: {e}')
                         tag_scan_stop = 0
             if tag_scan_stop <= 0:
                 tag_scan_stop += time.time()
@@ -133,7 +149,7 @@ class DataSource_InfluxDB2(DataSource):
                 try:
                     tag_scan_start = tag_scan_stop - float(length) * factor
                 except:
-                    logging.error(f'Invalid tag_scan_length: {schema.tag_scan_length}')
+                    logging.error(f'InfluxDB2: Invalid tag_scan_length: {schema.tag_scan_length}')
                     tag_scan_start = tag_scan_stop - 864000
                 
             # no "tag" and "fields" specified -> find a tag in data schema
@@ -144,9 +160,11 @@ class DataSource_InfluxDB2(DataSource):
                 ''' % (self.bucket, schema.table, tag_scan_start, tag_scan_stop)
                 try:
                     table = self.api.query(query, org=self.org)[0]
+                except InfluxDBError as e:
+                    logging.error(f'InfluxDB2: Query Error: {e}: {query}')
+                    table = []
                 except Exception as e:
-                    logging.error(f'Query: {query}')
-                    logging.error(e)
+                    # usually a connection error
                     table = []
                 for record in table:
                     tag = record.get_value()
@@ -162,9 +180,11 @@ class DataSource_InfluxDB2(DataSource):
                 ''' % (self.bucket, schema.table, schema.tag, tag_scan_start, tag_scan_stop)
                 try:
                     table = self.api.query(query, org=self.org)[0]
+                except InfluxDBError as e:
+                    logging.error(f'InfluxDB2: Query Error: {e}: {query}')
+                    table = []
                 except Exception as e:
-                    logging.error(f'Query: {query}')
-                    logging.error(e)
+                    # usually a connection error
                     table = []
                 schema.tag_values = [record.get_value() for record in table]
 
@@ -176,9 +196,11 @@ class DataSource_InfluxDB2(DataSource):
                 ''' % (self.bucket, schema.table, tag_scan_start, tag_scan_stop)
                 try:
                     table = self.api.query(query, org=self.org)[0]
+                except InfluxDBError as e:
+                    logging.error(f'InfluxDB2: Query Error: {e}: {query}')
+                    table = []
                 except Exception as e:
-                    logging.error(f'Query: {query}')
-                    logging.error(e)
+                    # usually a connection error
                     table = []
                 schema.fields = [record.get_value() for record in table]
                 schema.field_types = [None] * len(schema.fields)
@@ -227,10 +249,10 @@ class DataSource_InfluxDB2(DataSource):
     
     
     def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0, prior_data=0):
+        if not self.try_reconnect():
+            return
         if not self.channels_scanned:
             self.scan_channels()
-        if self.client is None:
-            return None
 
         if reducer in ['sd', 'stdev', 'rms', 'sigma']:
             db_reducer = 'std'
@@ -262,10 +284,10 @@ class DataSource_InfluxDB2(DataSource):
         
 
     def get_object(self, channels, length, to):
+        if not self.try_reconnect():
+            return
         if not self.channels_scanned:
             self.scan_channels()
-        if self.client is None:
-            return None
 
         result = {}
         for schema in self.objts_schemata:
@@ -292,7 +314,7 @@ class DataSource_InfluxDB2(DataSource):
         target_channels = []
         for name in channels:
             if not name.replace('.', '').replace('_', '').replace('-', '').replace(':', '').isalnum():
-                logging.error('bad channel name: %s' % name)
+                logging.error('InfluxDB2: bad channel name: %s' % name)
             else:
                 key = name[0:len(name)-len(schema.suffix)]
                 if key in schema.channel_table:
@@ -323,8 +345,21 @@ class DataSource_InfluxDB2(DataSource):
             query_lines.append('|> last()')
         query = '\n'.join(query_lines)
 
-        #print(query)
-        tables = self.api.query(query, org=self.org)
+        logging.debug(query)
+        try:
+            tables = self.api.query(query, org=self.org)
+        except InfluxDBError as e:
+            logging.error(f'InfluxDB2: Error on query: {e}')
+            tables = []
+        except Exception as e:
+            if not self.connection_error_reported:
+                logging.error(f'InfluxDB2: Connection error: {e}')
+                self.connection_error_reported = True
+            tables = []
+        else:
+            if self.connection_error_reported:
+                self.connection_error_reported = False
+                logging.info(f'InfluxDB2: Reconnected')
         
         remaining_channels = set(target_channels)
         for table in tables:

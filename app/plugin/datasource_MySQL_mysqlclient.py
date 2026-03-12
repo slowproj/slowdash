@@ -38,12 +38,15 @@ class DataSource_MySQL_mysqlclient(DataSource_SQL):
             return await super().connect()
         
         try:
-            conn = db.connect(host=self.host, port=self.port, user=self.user,
-                              password=self.password, database=self.database,
-                              autocommit=True)
+            conn = db.connect(
+                host=self.host, port=self.port, user=self.user,
+                password=self.password, database=self.database,
+                autocommit=True
+            )
         except Exception as e:
             logging.error("MySQL: %s: %s" % (self.url, str(e)))
-            return await super().connect()
+            conn = None
+        
         if conn is None:
             return await super().connect()
         
