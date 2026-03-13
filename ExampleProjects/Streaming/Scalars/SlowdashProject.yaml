@@ -2,7 +2,7 @@ slowdash_project:
   name: ScalarDisplay
   
   task:
-    - name: publish_scalars
+    - name: stream_scalars
       auto_load: true
 
   system:

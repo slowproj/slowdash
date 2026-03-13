@@ -132,7 +132,7 @@ async def monitor_sensor_value_alerts():
         sensor_values[name] = message.body | {
             'timestamp': message.headers.get("timestamp", None),
         }
-        await ctrl.aio_publish(SensorValuesTable(), name='SensorValues.DriplineConsole')
+        await ctrl.aio_emit(SensorValuesTable(), name='SensorValues.DriplineConsole')
         
 
 async def monitor_heartbeat_alerts():
@@ -146,7 +146,7 @@ async def monitor_heartbeat_alerts():
             'timestamp': message.headers.get("timestamp", None),
             'counts': counts,
         }
-        await ctrl.aio_publish(HeartbeatsTable(), name='HeartBeats.DriplineConsole')
+        await ctrl.aio_emit(HeartbeatsTable(), name='HeartBeats.DriplineConsole')
         
 
 async def monitor_status_message_alerts():
@@ -160,7 +160,7 @@ async def monitor_status_message_alerts():
             name, severity,
             message.body
         ])
-        await ctrl.aio_publish(StatusMessagesTable(), name='StatusMessages.DriplineConsole')
+        await ctrl.aio_emit(StatusMessagesTable(), name='StatusMessages.DriplineConsole')
 
         
 async def send_heartbeats():
@@ -186,7 +186,7 @@ async def sd_get_endpoint(endpoint:str, specifier:str=None, lockout_key:str=None
     endpoint_node = dripline.endpoint(endpoint, specifier=specifier, lockout_key=lockout_key)
     reply = await endpoint_node.aio_get()
     replies.append([time.time(), endpoint, f'GET {specifier}', reply])
-    await ctrl.aio_publish(RepliesTable(), name='Replies.DriplineConsole')
+    await ctrl.aio_emit(RepliesTable(), name='Replies.DriplineConsole')
 
     
 async def sd_set_endpoint(endpoint:str, value:str=None, specifier:str=None, lockout_key:str=None):
@@ -195,7 +195,7 @@ async def sd_set_endpoint(endpoint:str, value:str=None, specifier:str=None, lock
     endpoint_node = dripline.endpoint(endpoint, specifier=specifier, lockout_key=lockout_key)
     reply = await endpoint_node.aio_set(value)    
     replies.append([time.time(), endpoint, f'SET {specifier}: {repr(value)}', reply])
-    await ctrl.aio_publish(RepliesTable(), name='Replies.DriplineConsole')
+    await ctrl.aio_emit(RepliesTable(), name='Replies.DriplineConsole')
 
     
 async def sd_cmd_endpoint(endpoint:str, value:str=None, specifier:str=None, lockout_key:str=None):
@@ -212,7 +212,7 @@ async def sd_cmd_endpoint(endpoint:str, value:str=None, specifier:str=None, lock
     reply = await endpoint_node.command(ordered_args, keyed_args).aio_get()
     
     replies.append([time.time(), endpoint, f'CMD {specifier}: {value}', reply])
-    await ctrl.aio_publish(RepliesTable(), name='Replies.DriplineConsole')
+    await ctrl.aio_emit(RepliesTable(), name='Replies.DriplineConsole')
 
 
     
@@ -295,7 +295,7 @@ async def api_set_endpoint(endpoint:str, doc:slowlette.JSON, specifier:str=None,
     endpoint_node = dripline.endpoint(endpoint, specifier=specifier, lockout_key=lockout_key)
     reply = await endpoint_node.aio_set(value)    
     replies.append([time.time(), endpoint, f'SET {specifier}: {value}', reply])
-    await ctrl.aio_publish(RepliesTable(), name='Replies.DriplineConsole')
+    await ctrl.aio_emit(RepliesTable(), name='Replies.DriplineConsole')
 
     return reply
     
@@ -307,7 +307,7 @@ async def api_get_endpoint(endpoint:str, specifier:str=None, lockout_key:str=Non
     endpoint_node = dripline.endpoint(endpoint)
     reply = await endpoint_node.aio_get()
     replies.append([time.time(), endpoint, f'GET', reply])
-    await ctrl.aio_publish(RepliesTable(), name='Replies.DriplineConsole')
+    await ctrl.aio_emit(RepliesTable(), name='Replies.DriplineConsole')
 
     return reply
 
@@ -320,7 +320,7 @@ async def api_sensor_value_alert(name:str, doc:slowlette.JSON):
     alert_node = dripline.sensor_value_alert(name)
     reply = await alert_node.aio_set(value)    
     replies.append([time.time(), name, f'VALUE_ALERT {name}: {value}', reply])
-    await ctrl.aio_publish(RepliesTable(), name='Replies.DriplineConsole')
+    await ctrl.aio_emit(RepliesTable(), name='Replies.DriplineConsole')
     
     return reply
 

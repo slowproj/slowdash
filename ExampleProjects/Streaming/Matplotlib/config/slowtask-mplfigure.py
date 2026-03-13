@@ -37,7 +37,7 @@ async def _loop():
     plt.show()
 
     # This will create a SlowDash layout config (slowplot-XXX) and send the content data to SlowDash.
-    await ctrl.aio_publish(fig, name='mpl')
+    await ctrl.aio_emit(fig, name='mpl')
 
     # If a figure is created in a loop, it must be closed every time.
     plt.close()

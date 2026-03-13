@@ -52,7 +52,7 @@ async def _loop():
         return
 
     run_status.lapse = round(time.time() - run_status.start_time,3)
-    await ctrl.aio_publish(run_status)
+    await ctrl.aio_emit(run_status)
 
     if run_setting.stop_after and run_status.lapse >= run_setting.run_length:
         await stop()
@@ -79,8 +79,8 @@ async def start(run_number:int=None, stop_after:bool=None, run_length:float=None
     
     run_status.start_time = round(time.time(),3)
     run_status.running = True
-    await ctrl.aio_publish(run_setting)
-    await ctrl.aio_publish(run_status)
+    await ctrl.aio_emit(run_setting)
+    await ctrl.aio_emit(run_status)
     
     await do_run_start()
     
@@ -95,8 +95,8 @@ async def stop():
         run_setting.run_number += 1
         
     save_run_setting()
-    await ctrl.aio_publish(run_setting)
-    await ctrl.aio_publish(run_status)
+    await ctrl.aio_emit(run_setting)
+    await ctrl.aio_emit(run_status)
     
     return True
 
@@ -174,10 +174,10 @@ async def do_run_loop():
         nhits_hist.fill(n_hits)
         if i == 0:
             for channel, value in hits.items():
-                await ctrl.aio_publish(value, name=channel)
+                await ctrl.aio_emit(value, name=channel)
 
-    await ctrl.aio_publish(rate_trend.timeseries(), name='rate_trend')
-    await ctrl.aio_publish(nhits_hist, name='nhits_hist')
+    await ctrl.aio_emit(rate_trend.timeseries(), name='rate_trend')
+    await ctrl.aio_emit(nhits_hist, name='nhits_hist')
 
     await ctrl.aio_sleep(1)
 
