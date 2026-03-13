@@ -339,7 +339,7 @@ One example case where this becomes necessary is when using an event-loop-bound 
 If you choose to use this option, be careful not to block the event loop (by, e.g., `time.sleep()`, `dev.get()`, `db.query()`, etc.) as it will cause the entire application to freeze.
 
 ## Using SlowDash App Functions
-To access services implemented in the SlowDash App, such as invoking Web API and publishing streaming data, the instance of the SlowDash App can be passed to the User Module if the `_setup(app)` function is defined:
+To access services implemented in the SlowDash App, such as invoking Web API and streaming data, the instance of the SlowDash App can be passed to the User Module if the `_setup(app)` function is defined:
 ```python
 import asyncio
 
@@ -349,7 +349,7 @@ def _setup(app):
     slowdash = app
 
 async def _loop():
-    await slowdash.request_publish(topic='user_news', message='I am still alive')
+    await slowdash.request_emit(topic='user_news', message='I am still alive')
     await asyncio.sleep(1)
 ```
 If defined, `_setup(app)` is called before `_initialize(params)`. 

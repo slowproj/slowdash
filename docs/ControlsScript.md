@@ -689,10 +689,10 @@ V0 = ctrl.ethernet(host, port).scpi().command("V")
 ctrl.export(V0, 'V0')            # exporting to be pulled
 
 async def _loop():
-    await ctrl.aio_publish(V0)   # publishing (pushing to subscribers)
+    await ctrl.aio_emit(V0)   # pushing to subscribers
     await ctrl.aio_sleep(1)
 ```
-If the variable is already exported, the same export name is used. Otherwise, the name must be provided as a `name` argument of the `aio_publish()` function. In addition to the exportable variables, `aio_publish()` accepts many other types, including Python numbers.
+If the variable is already exported, the same export name is used. Otherwise, the name must be provided as a `name` argument of the `aio_emit()` function. In addition to the exportable variables, `aio_emit()` accepts many other types, including Python numbers.
 ```python
 import random
 from slowpy.control import control_system as ctrl
@@ -701,7 +701,7 @@ x = 0
 async def _loop():
     global x
     x = x + random.random()
-    await ctrl.aio_publish(x, name="RandomWalk")
+    await ctrl.aio_emit(x, name="RandomWalk")
     await ctrl.aio_sleep(1)
 ```
 
@@ -721,7 +721,7 @@ ctrl.export(readout_frequency, 'readout_frequency')   # to be set by GUI
 V = ctrl.ethernet(host, port).scpi().command("V")
 
 async def _loop():
-    await ctrl.aio_publish(V, name='V')
+    await ctrl.aio_emit(V, name='V')
     await ctrl.aio_sleep(readout_frequency.get())
 ```
 In HTML, `sd-live="true"` indicates that changes to the value on the browser will trigger calling the `.set()` method of the bound variable.
@@ -729,7 +729,7 @@ In HTML, `sd-live="true"` indicates that changes to the value on the browser wil
 More examples can be found in `ExampleProjects/Streaming`.
 
 ## Matplotlib Integration
-Instances of Matplotlib Figure can be directly published. 
+Instances of Matplotlib Figure can be directly pushed to SlowDash layouts. 
 ```python
 import matplotlib.pyplot as plt
 from slowpy.control import control_system as ctrl
@@ -738,12 +738,12 @@ async def _loop():
     fig, axes = plt.subplots(2, 2)
     #... draw plots in the usual way
 
-    await ctrl.aio_publish(fig, name='mpl')
+    await ctrl.aio_emit(fig, name='mpl')
 
     plt.close()  # If a figure is created in a loop, it must be closed every time.
     await ctrl.aio_sleep(1)
 ```
-When a Matplotlib figure is published, a SlowDash layout (usually a `slowplot-XXX.json` file under `config`) is created dynamically for the same axes layout as the figure. The plotting objects in the figure are extracted and converted to SlowDash objects before publishing.
+When a Matplotlib figure is "aio_emit()"ed, a SlowDash layout (usually a `slowplot-XXX.json` file under `config`) is created dynamically for the same axes layout as the figure. The plotting objects in the figure are extracted and converted to SlowDash objects before emitting.
 
 More examples can be found in `ExampleProjects/Streaming/Matplotlib`.
 

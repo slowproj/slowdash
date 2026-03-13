@@ -452,9 +452,9 @@ If you choose to use this option, be careful not to block the event loop
 to freeze.</p>
 <h2 id="using-slowdash-app-functions">Using SlowDash App Functions</h2>
 <p>To access services implemented in the SlowDash App, such as invoking
-Web API and publishing streaming data, the instance of the SlowDash App
-can be passed to the User Module if the <code>_setup(app)</code>
-function is defined:</p>
+Web API and streaming data, the instance of the SlowDash App can be
+passed to the User Module if the <code>_setup(app)</code> function is
+defined:</p>
 <div class="sourceCode" id="cb17"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> asyncio</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -464,7 +464,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb17-1"><a h
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    slowdash <span class="op">=</span> app</span>
 <span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> _loop():</span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> slowdash.request_publish(topic<span class="op">=</span><span class="st">&#39;user_news&#39;</span>, message<span class="op">=</span><span class="st">&#39;I am still alive&#39;</span>)</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> slowdash.request_emit(topic<span class="op">=</span><span class="st">&#39;user_news&#39;</span>, message<span class="op">=</span><span class="st">&#39;I am still alive&#39;</span>)</span>
 <span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> asyncio.sleep(<span class="dv">1</span>)</span></code></pre></div>
 <p>If defined, <code>_setup(app)</code> is called before
 <code>_initialize(params)</code>. Optionally, <code>_setup()</code> can

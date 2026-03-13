@@ -1111,13 +1111,13 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb32-1"><a h
 <span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>ctrl.export(V0, <span class="st">&#39;V0&#39;</span>)            <span class="co"># exporting to be pulled</span></span>
 <span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> _loop():</span>
-<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_publish(V0)   <span class="co"># publishing (pushing to subscribers)</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_emit(V0)   <span class="co"># pushing to subscribers</span></span>
 <span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_sleep(<span class="dv">1</span>)</span></code></pre></div>
 <p>If the variable is already exported, the same export name is used.
 Otherwise, the name must be provided as a <code>name</code> argument of
-the <code>aio_publish()</code> function. In addition to the exportable
-variables, <code>aio_publish()</code> accepts many other types,
-including Python numbers.</p>
+the <code>aio_emit()</code> function. In addition to the exportable
+variables, <code>aio_emit()</code> accepts many other types, including
+Python numbers.</p>
 <div class="sourceCode" id="cb33"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
 <span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
@@ -1126,7 +1126,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb33-1"><a h
 <span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> _loop():</span>
 <span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">global</span> x</span>
 <span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> x <span class="op">+</span> random.random()</span>
-<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_publish(x, name<span class="op">=</span><span class="st">&quot;RandomWalk&quot;</span>)</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_emit(x, name<span class="op">=</span><span class="st">&quot;RandomWalk&quot;</span>)</span>
 <span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_sleep(<span class="dv">1</span>)</span></code></pre></div>
 <p>In addition to accessing the exported variables in the same way as
 data in databases, the variables can be directly “bound” in web
@@ -1147,7 +1147,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb35-1"><a h
 <span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>V <span class="op">=</span> ctrl.ethernet(host, port).scpi().command(<span class="st">&quot;V&quot;</span>)</span>
 <span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> _loop():</span>
-<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_publish(V, name<span class="op">=</span><span class="st">&#39;V&#39;</span>)</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_emit(V, name<span class="op">=</span><span class="st">&#39;V&#39;</span>)</span>
 <span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_sleep(readout_frequency.get())</span></code></pre></div>
 <p>In HTML, <code>sd-live="true"</code> indicates that changes to the
 value on the browser will trigger calling the <code>.set()</code> method
@@ -1155,7 +1155,8 @@ of the bound variable.</p>
 <p>More examples can be found in
 <code>ExampleProjects/Streaming</code>.</p>
 <h2 id="matplotlib-integration">Matplotlib Integration</h2>
-<p>Instances of Matplotlib Figure can be directly published.</p>
+<p>Instances of Matplotlib Figure can be directly pushed to SlowDash
+layouts.</p>
 <div class="sourceCode" id="cb36"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
@@ -1164,15 +1165,15 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb36-1"><a h
 <span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>    fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">2</span>)</span>
 <span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">#... draw plots in the usual way</span></span>
 <span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_publish(fig, name<span class="op">=</span><span class="st">&#39;mpl&#39;</span>)</span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_emit(fig, name<span class="op">=</span><span class="st">&#39;mpl&#39;</span>)</span>
 <span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>    plt.close()  <span class="co"># If a figure is created in a loop, it must be closed every time.</span></span>
 <span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_sleep(<span class="dv">1</span>)</span></code></pre></div>
-<p>When a Matplotlib figure is published, a SlowDash layout (usually a
-<code>slowplot-XXX.json</code> file under <code>config</code>) is
-created dynamically for the same axes layout as the figure. The plotting
-objects in the figure are extracted and converted to SlowDash objects
-before publishing.</p>
+<p>When a Matplotlib figure is “aio_emit()”ed, a SlowDash layout
+(usually a <code>slowplot-XXX.json</code> file under
+<code>config</code>) is created dynamically for the same axes layout as
+the figure. The plotting objects in the figure are extracted and
+converted to SlowDash objects before emitting.</p>
 <p>More examples can be found in
 <code>ExampleProjects/Streaming/Matplotlib</code>.</p>
 <h1 id="distributed-system-network-deployment">Distributed System /
