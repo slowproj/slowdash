@@ -172,8 +172,8 @@ export class Controller {
             popout: (panel) => {
                 this.#popoutPanel(panel);
             },
-            publish: (topic, message) => {
-                this.publish(topic, message);
+            emit: (topic, message) => {
+                this.emit(topic, message);
             },
             forceUpdate: this.callbacks.forceUpdate,
             suspend: this.callbacks.suspend,
@@ -311,7 +311,7 @@ export class Controller {
     }
 
     
-    async publish(topic, doc) {
+    async emit(topic, doc) {
         const socket_available = (this.socket && (this.socket.readyState === WebSocket.OPEN));
         const message = (typeof doc === 'string') ? doc : JSON.stringify(doc);
         
@@ -319,7 +319,7 @@ export class Controller {
             this.socket.send(message);
         }
         else {
-            const url = './api/control/' + topic;
+            const url = './api/emit/' + topic;
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json; charset=utf-8' },
@@ -372,7 +372,7 @@ export class Controller {
         else {
             url.pathname += (url.pathname.endsWith('/') ? '' : '/');
         }
-        url.pathname += 'ws/subscribe/current_data';
+        url.pathname += 'ws/attach/current_data';
 
         // if HTTPS is used and WebSocket is not WSS, an error occurs here
         try {

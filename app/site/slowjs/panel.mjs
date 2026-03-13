@@ -91,7 +91,7 @@ export class Panel {
             suspendUpdate: (duration) => {},
             reconfigure: () => {},
             popout: (p) => {},
-            publish: (topic, message) => {},
+            emit: (topic, message) => {},
         };
 
         this.config = config;

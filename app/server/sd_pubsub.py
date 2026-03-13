@@ -1,6 +1,10 @@
 # Created by Sanshiro Enomoto on 14 February 2024 #
 
 
+# pubsub->fabric, publish->emit, subscribe->attach
+
+
+
 import sys, time, copy, asyncio, traceback, logging
 
 import slowlette
@@ -25,8 +29,8 @@ class PubsubComponent(Component):
         }}
 
     
-    @slowlette.websocket('/ws/subscribe/{topic}')
-    async def subscribe(self, topic:str, websocket:slowlette.WebSocket):
+    @slowlette.websocket('/ws/attach/{topic}')
+    async def attach(self, topic:str, websocket:slowlette.WebSocket):
         if topic not in self.topics:
             return None
         
@@ -46,9 +50,9 @@ class PubsubComponent(Component):
                 if message is not None and len(message) > 0:
                     logging.info(f"WS-RCV: {topic}: {repr(message)}");
                     try:
-                        await self.app.request(f'/publish/{topic}', message)
+                        await self.app.request(f'/emit/{topic}', message)
                     except Exception as e:
-                        logging.error(f'Error on re-publishing subpub message in topic "{topic}": {e}')
+                        logging.error(f'Error on re-emitting a pubsub message in topic "{topic}": {e}')
         except slowlette.ConnectionClosed:
             logging.info("WebSocket Closed")
         except Exception as e:
@@ -57,8 +61,8 @@ class PubsubComponent(Component):
             self.websockets[topic].remove(websocket)
 
             
-    @slowlette.post('/api/publish/{topic}')
-    async def publish(self, topic:str, data:bytes, sender:str=None):
+    @slowlette.post('/api/emit/{topic}')
+    async def emit(self, topic:str, data:bytes, sender:str=None):
         try:
             if sender is None:
                 await self.app.request(f'/consume/{topic}', data)

@@ -30,7 +30,7 @@ export class Layout {
             forceUpdate: () => {},
             suspend: (duration) => {},
             popout: (panel) => {},
-            publish: (topic, message) => {},
+            emit: (topic, message) => {},
         };
         if (config !== null) {
             this.config = config;
@@ -312,8 +312,8 @@ export class Layout {
             popout: (p) => {
                 this.callbacks.popout(p);
             },
-            publish: (topic, message) => {
-                this.callbacks.publish(topic, message);
+            emit: (topic, message) => {
+                this.callbacks.emit(topic, message);
             },
         };
 

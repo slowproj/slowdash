@@ -146,30 +146,17 @@ class App(slowlette.App):
 
 
     async def request_emit(self, topic:str, message, sender:str=None):
-        """shortcut for "/api/publish"
+        """shortcut for "/api/emit"
         Parameters:
           - topic: subscription topic
           - message: bytes, or data to JSONize.
         """
         if sender is None:
-            return (await self.slowlette(f'/api/publish/{topic}', message)).content
+            return (await self.slowlette(f'/api/emit/{topic}', message)).content
         else:
-            return (await self.slowlette(f'/api/publish/{topic}?sender={sender}', message)).content
+            return (await self.slowlette(f'/api/emit/{topic}?sender={sender}', message)).content
 
         
-    # DEPRECIATED: gradually moving to "emit"
-    async def request_publish(self, topic:str, message, sender:str=None):
-        """shortcut for "/api/publish"
-        Parameters:
-          - topic: subscription topic
-          - message: bytes, or data to JSONize.
-        """
-        if sender is None:
-            return (await self.slowlette(f'/api/publish/{topic}', message)).content
-        else:
-            return (await self.slowlette(f'/api/publish/{topic}?sender={sender}', message)).content
-
-    
         
 if __name__ == '__main__':
     from argparse import ArgumentParser
