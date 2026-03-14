@@ -8,7 +8,7 @@ x, step = 0, 1
 
 async def _initialize(params):
     global rabbitmq, command_queue_node, data_publish_node
-    rabbitmq = ctrl.rabbitmq('amqp://slowdash:slowdash@localhost')
+    rabbitmq = ctrl.async_rabbitmq('amqp://slowdash:slowdash@localhost')
     exchange = rabbitmq.topic_exchange('slowdash')
     
     command_queue_node = exchange.queue(name='command.randomwalk', exclusive=True)
@@ -53,7 +53,6 @@ async def start():
 
 
     
-# make this script independently executable
 if __name__ == '__main__':
     from slowpy.dash import Tasklet
     Tasklet().run()

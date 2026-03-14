@@ -9,7 +9,7 @@ datastore = DataStore_SQLite('sqlite:///SlowTestData', 'ts_data')
 
 async def _initialize(params):
     global rabbitmq, data_queue_node, command_publish_node
-    rabbitmq = ctrl.rabbitmq('amqp://slowdash:slowdash@localhost')
+    rabbitmq = ctrl.async_rabbitmq('amqp://slowdash:slowdash@localhost')
     exchange = rabbitmq.topic_exchange('slowdash')
     
     command_publish_node = exchange.publish(routing_key='command.randomwalk')
@@ -34,7 +34,6 @@ async def _run():
         
 
     
-# make this script independently executable
 if __name__ == '__main__':
     from slowpy.dash import Tasklet
     Tasklet().run()
