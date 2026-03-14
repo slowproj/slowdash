@@ -689,7 +689,7 @@ V0 = ctrl.ethernet(host, port).scpi().command("V")
 ctrl.export(V0, 'V0')            # exporting to be pulled
 
 async def _loop():
-    await ctrl.aio_emit(V0)   # pushing to subscribers
+    await ctrl.aio_emit(V0)   # pushing to consumers
     await ctrl.aio_sleep(1)
 ```
 If the variable is already exported, the same export name is used. Otherwise, the name must be provided as a `name` argument of the `aio_emit()` function. In addition to the exportable variables, `aio_emit()` accepts many other types, including Python numbers.

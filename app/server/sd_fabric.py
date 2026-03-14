@@ -1,17 +1,12 @@
 # Created by Sanshiro Enomoto on 14 February 2024 #
 
-
-# pubsub->fabric, publish->emit, subscribe->attach
-
-
-
 import sys, time, copy, asyncio, traceback, logging
 
 import slowlette
 from sd_component import Component
 
 
-class PubsubComponent(Component):
+class FabricComponent(Component):
     topics = [ 'current_data' ]
     
     def __init__(self, app, project):
@@ -23,9 +18,9 @@ class PubsubComponent(Component):
         
 
     def public_config(self):
-        return { 'pubsub': {
+        return { 'fabric': {
             'enabled': self.enabled,
-            'subscribers': { topic:len(self.websockets.get(topic,[])) for topic in self.topics },
+            'attached': { topic:len(self.websockets.get(topic,[])) for topic in self.topics },
         }}
 
     
@@ -52,7 +47,7 @@ class PubsubComponent(Component):
                     try:
                         await self.app.request(f'/emit/{topic}', message)
                     except Exception as e:
-                        logging.error(f'Error on re-emitting a pubsub message in topic "{topic}": {e}')
+                        logging.error(f'Error on re-emitting a message in topic "{topic}": {e}')
         except slowlette.ConnectionClosed:
             logging.info("WebSocket Closed")
         except Exception as e:
@@ -69,7 +64,7 @@ class PubsubComponent(Component):
             else:
                 await self.app.request(f'/consume/{topic}?sender={sender}', data)
         except Exception as e:
-            logging.error(f'Error on consuming subpub message in topic "{topic}": {e}')
+            logging.error(f'Error on consuming a message in topic "{topic}": {e}')
             logging.error(traceback.format_exc())
             
         try:
@@ -82,7 +77,7 @@ class PubsubComponent(Component):
 
     @slowlette.post('/api/consume/current_data')
     async def cache_current_data(self, doc:slowlette.DictJSON):
-        """caches the publised data for future data queries
+        """caches the emitted data for future data queries
         - holds only the last data for each channel
         - holds only single time-point data (e.g., objects and scalars)
         """
@@ -166,9 +161,9 @@ class PubsubComponent(Component):
 
             
         def merge_response(self, response) -> None:
-            """append the cached pubsub data to the response (typiaclly data from storage)
+            """append the fabric-cached data to the response (typiaclly data from storage)
                - only if the channel does not exist, or
-               - the last data point is older than the cached pubsub data
+               - the last data point is older than the fabric-cached data
             """
             
             if response.content is None:

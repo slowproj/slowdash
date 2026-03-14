@@ -12,7 +12,7 @@ from sd_config import ConfigComponent
 from sd_console import ConsoleComponent
 from sd_datasource import DataSourceComponent
 from sd_export import ExportComponent
-from sd_pubsub import PubsubComponent
+from sd_fabric import FabricComponent
 from sd_usermodule import UserModuleComponent
 from sd_taskmodule import TaskModuleComponent
 from sd_userhtml import UserHtmlComponent
@@ -64,7 +64,7 @@ class App(slowlette.App):
         ### API Components: see the Slowlette documentation for the mechanism ###
         
         self.slowlette.include(ConsoleComponent(self, self.project))     # this must be the first to capture stdout
-        self.slowlette.include(PubsubComponent(self, self.project))      # pubsub-cache override datasoruce replies
+        self.slowlette.include(FabricComponent(self, self.project))      # fabric-cache override datasoruce replies
         self.slowlette.include(UserModuleComponent(self, self.project))  # user module might want to capture API
         self.slowlette.include(TaskModuleComponent(self, self.project))
         self.slowlette.include(ConfigComponent(self, self.project))
