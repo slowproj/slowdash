@@ -6,7 +6,7 @@ import slowlette
 from sd_component import Component
 
 
-class FabricComponent(Component):
+class MeshComponent(Component):
     topics = [ 'current_data' ]
     
     def __init__(self, app, project):
@@ -18,7 +18,7 @@ class FabricComponent(Component):
         
 
     def public_config(self):
-        return { 'fabric': {
+        return { 'mesh': {
             'enabled': self.enabled,
             'attached': { topic:len(self.websockets.get(topic,[])) for topic in self.topics },
         }}
@@ -161,9 +161,9 @@ class FabricComponent(Component):
 
             
         def merge_response(self, response) -> None:
-            """append the fabric-cached data to the response (typiaclly data from storage)
+            """append the mesh-cached data to the response (typiaclly data from storage)
                - only if the channel does not exist, or
-               - the last data point is older than the fabric-cached data
+               - the last data point is older than the mesh-cached data
             """
             
             if response.content is None:
