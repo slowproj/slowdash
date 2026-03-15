@@ -1,7 +1,11 @@
 # Created by Sanshiro Enomoto on 13 March 2026 #
 
-import queue, logging
+import queue
 from slowpy.control import ControlNode, ControlException
+
+import logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class MQTTNode(ControlNode):
@@ -16,10 +20,10 @@ class MQTTNode(ControlNode):
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
         def on_connect(client, userdata, flags, response_code, properties):
-            logging.info(f'MQTT server connected: {response_code}')
+            logger.info(f'MQTT broker connected: {response_code}')
 
         def on_message(client, userdata, msg):
-            logging.debug(f'MQTT message: {msg.topic}: {msg.payload.decode()}')
+            logger.debug(f'MQTT message: {msg.topic}: {msg.payload.decode()}')
             topic, message = msg.topic, msg.payload.decode()
             for subscriber in self.subscribers.get(topic, []):
                 subscriber.do_handle(message)
@@ -30,7 +34,7 @@ class MQTTNode(ControlNode):
         try:
             self.client.connect(self.host, self.port, keepalive=self.keepalive)
         except Exception as e:
-            logging.error(f'Unable to connect to MQTT Broker:  {host}:{port}: {e}')
+            logger.error(f'Unable to connect to MQTT Broker:  {host}:{port}: {e}')
             self.client = None
 
         if self.client:
@@ -39,14 +43,16 @@ class MQTTNode(ControlNode):
 
     def __del__(self):
         self.close()
-        logging.info(f'MQTT Connection Closed')
 
         
     def close(self):
-        if self.client:
-            self.client.loop_stop()
+        if self.client is None:
+            return
+        
+        self.client.loop_stop()
         del self.client
         self.client = None
+        logger.info(f'MQTT Connection Closed')
 
         
     def publish(self, topic):
@@ -67,8 +73,7 @@ class MQTTNode(ControlNode):
             
         self.subscribers[topic].append(subscribe_node)
         
-
-        
+     
     @classmethod
     def _node_creator_method(cls):
         def mqtt(self, host:str, port:int=1883):
@@ -146,7 +151,7 @@ if __name__ == '__main__':
     while True:
         try:
             line = input('> ')
-        except:
+        except (EOFError, KeyboardInterrupt):
             break
         mqtt.publish('chat').set(line)
 
