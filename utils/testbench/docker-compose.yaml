@@ -1,6 +1,6 @@
 
 services:
-  pgsql_db:
+  postgres:
     image: postgres:16
     restart: always
     ports:
@@ -11,7 +11,7 @@ services:
       - POSTGRES_DB=SlowTestData
 
 
-  mysql_db:
+  mysql:
     image: mysql:8.0
     restart: always
     ports:
@@ -59,11 +59,8 @@ services:
     image: eclipse-mosquitto:latest
     ports:
       - "1883:1883"
-      - "9001:9001"
     volumes:
-      - ./mosquitto/config:/mosquitto/config
-      - ./mosquitto/log:/mosquitto/log
-      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
 
 
   notebook:
@@ -91,4 +88,3 @@ services:
       - "9200:9200"
     volumes:
       - ./esdata:/usr/share/elasticsearch/data
-      
