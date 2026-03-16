@@ -191,6 +191,10 @@ class SubscribeNode(ControlNode):
         
             
 if __name__ == '__main__':
+    """
+    Chat example
+    """
+    
     import sys
     from slowpy.control import control_system as ctrl
 
