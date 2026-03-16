@@ -67,8 +67,16 @@ class RedisNode(spc.ControlNode):
     
     def ts(self, name, length=3600, to=0):
         return RedisTimeseriesNode(self.redis, name, length, to)
-    
 
+
+    def publish(self, topic):
+        return RedisPublishNode(self.redis, topic)
+
+    
+    def subscribe(self, topic_pattern):
+        return RedisSubscribeNode(self.redis, topic_pattern)
+
+    
     @classmethod
     def _node_creator_method(cls):
         def redis(self, url):
@@ -276,3 +284,26 @@ class RedisTimeseriesLastLapseNode(spc.ControlNode):
 
     def get(self):
         return time.time() - self.parent.get()[0]/1000.0
+
+
+class RedisPublishNode(spc.ControlNode):
+    def __init__(self, redis, topic):
+        self.pubsub = redis.pubsub()
+        self.topic = topic
+
+
+    def 
+
+    
+class RedisSubscribeNode(spc.ControlNode):
+    def __init__(self, redis, topic_pattern):
+        self.pubsub = redis.pubsub()
+        self.topic_pattern = topic_pattern
+
+        
+    def has_data(self):
+        return self.pubsub
+
+    
+    def get(self):
+        return self.pubsub.get_message()

@@ -15,9 +15,14 @@ class MQTTNode(ControlNode):
         self.keepalive = 60
 
         self.subscribers: dict[str,list[SubscribeNode]] = {}
-        
-        import paho.mqtt.client as mqtt
-        self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+
+        try:
+            import paho.mqtt.client as mqtt
+            self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+        except Exception as e:
+            logging.error(f'MQTT: {e}')
+            self.client = None
+            return
 
         def on_connect(client, userdata, flags, response_code, properties):
             logger.info(f'MQTT broker connected: {response_code}')
@@ -56,11 +61,14 @@ class MQTTNode(ControlNode):
 
 
     def do_subscribe(self, topic_filter:str, subscribe_node):
+        if self.client is None:
+            return
+        
         def mqtt_callback(client, userdata, msg):
-            topic, message = str(msg.topic), msg.payload.decode()
-            logger.debug(f'MQTT message: {msg.topic}: {msg.payload.decode()}')
+            topic, message = str(msg.topic), msg.payload
+            logger.debug(f'MQTT message: {topic}: {message.decode()}')
             for subscriber in self.subscribers.get(topic_filter, []):
-                subscriber.handler(topic, message)
+                subscriber.do_handle_message(topic, message)
 
         if topic_filter not in self.subscribers:
             self.subscribers[topic_filter] = []
@@ -116,7 +124,7 @@ class SubscribeNode(ControlNode):
                 
         self.queue = queue.Queue(maxsize=1024)
         
-        def default_handler(topic:str, message:str):
+        def default_handler(topic:str, message:bytes):
             self.queue.put(message, block=True, timeout=None)
         self.handler = handler or default_handler
 
@@ -131,29 +139,5 @@ class SubscribeNode(ControlNode):
         return self.queue.get(block=True, timeout=None)
 
 
-    def do_handle_message(self, topic, message):
-        return self.queue.get(block=True, timeout=None)
-
-
-    
-if __name__ == '__main__':
-    """
-    Chat example
-    """
-    
-    import sys
-    from slowpy.control import control_system as ctrl
-    mqtt = ctrl.import_control_module('MQTT').mqtt('localhost')
-
-    def handler(topic, message):
-        sys.stdout.write(f'\n{message}\n> ')
-    mqtt.subscribe('chat/#', handler)
-        
-    while True:
-        try:
-            line = input('> ')
-        except (EOFError, KeyboardInterrupt):
-            break
-        mqtt.publish('chat/all').set(line)
-
-    mqtt.close()
+    def do_handle_message(self, topic:str, message:bytes):
+        return self.handler(topic, message)
