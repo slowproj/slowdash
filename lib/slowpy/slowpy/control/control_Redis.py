@@ -17,8 +17,8 @@ class RedisNode(spc.ControlNode):
         
         for i in range(12):
             try:
-                self.redis = redis.from_url(url, decode_responses=True, **kwargs)
-                keys =  self.redis.keys()
+                self.redis = redis.from_url(url, decode_responses=True, health_check_interval=60, **kwargs)
+                self.redis.ping()
                 break
             except Exception as e:
                 print('Redis not connected: %s: retry in 5 sec' % url)
