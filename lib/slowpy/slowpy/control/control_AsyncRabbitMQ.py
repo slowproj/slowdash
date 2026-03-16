@@ -183,7 +183,7 @@ class ExchangeNode(ControlNode):
         return PublishNode(self, routing_key, parameters=parameters, **kwargs)
 
     # rabbitmq().XXX_exchange(name).queue(name, routing_key, **kwargs)  kwargs{exclusive:bool=False}
-    def queue(self, name:str, *, routing_key:str=None, handler=None, timeout=0, **kwargs):
+    def queue(self, name:str|None=None, *, routing_key:str=None, handler=None, timeout=0, **kwargs):
         return QueueNode(self, name, routing_key=routing_key, handler=handler, timeout=timeout, **kwargs)
 
 
@@ -269,19 +269,24 @@ class PublishNode(ControlNode):
     
 
 class QueueNode(ControlNode):
-    def __init__(self, exchange_node:ExchangeNode, queue_name:str, *, routing_key:list[str]|str|None=None, handler=None, timeout:float=0, **kwargs):
+    def __init__(self, exchange_node:ExchangeNode, queue_name:str|None=None, *, routing_key:list[str]|str|None=None, handler=None, timeout:float=0, **kwargs):
         self.exchange_node = exchange_node
         self.exchange_node.children.append(self)
         self.tasks: set[asyncio.Task] = set()
         
-        self.name = queue_name
         self.timeout = timeout
         self.kwargs = {k:v for k,v in kwargs.items()}
+
+        # queue_name must be unique
+        if queue_name is not None and len(queue_name) > 0:
+            self.name = queue_name
+        else:
+            self.name = str(uuid.uuid4())
 
         if type(routing_key) is list:
             self.routing_keys = routing_key
         else:
-            self.routing_keys = [ routing_key or queue_name ]
+            self.routing_keys = [ routing_key or '*' ]
         
         async def _default_handler(message: aio_pika.Message) -> Message:
             parameters = {
