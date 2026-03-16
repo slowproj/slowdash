@@ -32,7 +32,8 @@ class RedisNode(spc.ControlNode):
 
         
     def __del__(self):
-        pass
+        if self.redis is not None:
+            self.redis.close()
 
     
     def set(self, value):
@@ -288,22 +289,47 @@ class RedisTimeseriesLastLapseNode(spc.ControlNode):
 
 class RedisPublishNode(spc.ControlNode):
     def __init__(self, redis, topic):
-        self.pubsub = redis.pubsub()
+        self.redis = redis
         self.topic = topic
 
 
-    def 
+    def set(self, value):
+        self.redis.publish(self.topic, value)
 
-    
-class RedisSubscribeNode(spc.ControlNode):
-    def __init__(self, redis, topic_pattern):
-        self.pubsub = redis.pubsub()
-        self.topic_pattern = topic_pattern
 
         
-    def has_data(self):
-        return self.pubsub
+class RedisSubscribeNode(spc.ControlNode):
+    def __init__(self, redis, topic_pattern, timeout=None):
+        self.pubsub = redis.pubsub()
+        self.topic_pattern = topic_pattern
+        self.timeout = timeout
+
+        self.pubsub.psubscribe(self.topic_pattern)
+
+        
+    def get(self):
+        if self.timeout is None or self.timeout < 0:
+            return self.pubsub.get_message(ignore_subscribe_messages=True)
+        else:
+            return self.pubsub.get_message(ignore_subscribe_messages=True, timeout=self.timeout)
+
+
+    ## child nodes ##
+    # Redis.subscribe(topic_pettern).data()
+    def data(self):
+        return RedisSubscribeDataNode(self)
+        
 
     
+class RedisSubscribeDataNode(spc.ControlNode):
+    def __init__(self, subscribe_node):
+        self.subscribe_node = subscribe_node
+        
+
     def get(self):
-        return self.pubsub.get_message()
+        while True:
+            msg = self.subscribe_node.get()
+            if msg is None:
+                return None
+            if msg.get('type', None) == 'pmessage':
+                return msg.get('data', None) if msg is not None else None
