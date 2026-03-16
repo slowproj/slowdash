@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 13 March 2026 #
 
-import asyncio, inspect
+import asyncio
 from slowpy.control import ControlNode, ControlException
 
 import logging
@@ -56,8 +56,8 @@ class MQTTNode(ControlNode):
         return PublishNode(self, topic)
 
 
-    def subscribe(self, topic, handler=None, timeout=None):
-        return SubscribeNode(self, topic, handler, timeout)
+    def subscribe(self, topic_filter, handler=None, timeout=None):
+        return SubscribeNode(self, topic_filter, handler, timeout)
 
      
     async def aio_do_connect(self):
@@ -83,24 +83,28 @@ class MQTTNode(ControlNode):
             async for msg in self.client.messages:
                 logger.debug(f'MQTT message: ({msg.topic}) {msg.payload.decode()}')
                 topic, message = str(msg.topic), msg.payload.decode()
-                for subscriber in self.subscribers.get(topic, []):
-                    await subscriber.aio_do_handle(message)
+                for topic_filter, subscribers in self.subscribers.items():
+                    if not msg.topic.matches(topic_filter):
+                        continue
+                    logger.debug(f'MQTT message topic matches: {msg.topic} ~ {topic_filter}')
+                    for subscriber in subscribers:
+                        await subscriber.aio_do_handle(topic, message)
 
         self.receiver_task = asyncio.create_task(receiver())
 
         return True
     
         
-    async def aio_do_subscribe(self, topic, subscribe_node):
+    async def aio_do_subscribe(self, topic_filter, subscribe_node):
         if not await self.aio_do_connect():
             return
         
-        if topic not in self.subscribers:
-            logger.debug(f'MQTT subscribe: {topic}')
-            await self.client.subscribe(topic)
-            self.subscribers[topic] = []
+        if topic_filter not in self.subscribers:
+            logger.debug(f'MQTT subscribe: {topic_filter}')
+            await self.client.subscribe(topic_filter)
+            self.subscribers[topic_filter] = []
             
-        self.subscribers[topic].append(subscribe_node)
+        self.subscribers[topic_filter].append(subscribe_node)
         
      
     @classmethod
@@ -141,33 +145,34 @@ class PublishNode(ControlNode):
 
         
 class SubscribeNode(ControlNode):
-    def __init__(self, mqtt:MQTTNode, topic:str, handler=None, timeout=None):
+    def __init__(self, mqtt:MQTTNode, topic_filter:str, handler=None, timeout=None):
         """
         - If handler is not None, it is called on receiving a message.
         - Otherwise, the received messages are queued, which can be retrieved by has_data()/get()
         """
 
         self.mqtt = mqtt
-        self.topic = topic
+        self.topic_filter = topic_filter
         self.timeout = timeout
         
         self.queue = asyncio.Queue(maxsize=1024)
-        async def default_handler(message):
-            await self.queue.put(message)
         
+        async def default_handler(topic:str, message:str):
+            await self.queue.put(message)
         self.handler = handler or default_handler
+        
         self.registered = False
 
         
-    async def aio_do_handle(self, message:str):
-        result = self.handler(message)
-        if inspect.isawaitable(result):
+    async def aio_do_handle(self, topic:str, message:str):
+        result = self.handler(topic, message)
+        if asyncio.iscoroutine(result):
             await result
 
 
     async def aio_has_data(self):
         if not self.registered:
-            await self.mqtt.aio_do_subscribe(self.topic, self)
+            await self.mqtt.aio_do_subscribe(self.topic_filter, self)
             self.registered = True
             
         return not await self.queue.empty()
@@ -175,7 +180,7 @@ class SubscribeNode(ControlNode):
         
     async def aio_get(self):
         if not self.registered:
-            await self.mqtt.aio_do_subscribe(self.topic, self)
+            await self.mqtt.aio_do_subscribe(self.topic_filter, self)
             self.registered = True
 
         try:
@@ -204,7 +209,7 @@ if __name__ == '__main__':
 
         async def reader():
             nonlocal is_running
-            sub = mqtt.subscribe('chat', timeout=0.1)
+            sub = mqtt.subscribe('chat/#', timeout=0.1)
             while is_running:
                 message = await sub.aio_get()
                 if message is not None:
@@ -223,7 +228,7 @@ if __name__ == '__main__':
                 if line is None:
                     is_running = False
                 else:
-                    await mqtt.publish('chat').aio_set(line)
+                    await mqtt.publish('chat/all').aio_set(line)
 
         await asyncio.gather(reader(), writer())
         await mqtt.aio_close()

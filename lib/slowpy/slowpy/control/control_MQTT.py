@@ -113,10 +113,10 @@ class SubscribeNode(ControlNode):
         - If handler is not None, it is called on receiving a message.
         - Otherwise, the received messages are queued, which can be retrieved by has_data()/get()
         """
-        
+                
         self.queue = queue.Queue(maxsize=1024)
         
-        def default_handler(topic, message):
+        def default_handler(topic:str, message:str):
             self.queue.put(message, block=True, timeout=None)
         self.handler = handler or default_handler
 
