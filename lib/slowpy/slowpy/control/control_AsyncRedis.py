@@ -17,12 +17,18 @@ class RedisNode(spc.ControlNode):
         self.redis = None
         self.pubsub_list = []
 
+        self.open_lock = asyncio.Lock()
+
         
     def __del__(self):
         pass
 
     
     async def aio_open(self, retries=12, retry_interval=5, force_check=False):
+        async with self.open_lock:
+            return await self._aio_open(retries=retries, retry_interval=retry_interval, force_check=force_check)
+
+    async def _aio_open(self, retries, retry_interval, force_check):
         if self.redis is not None:
             if not force_check:
                 return True

@@ -1,12 +1,12 @@
 
-print('MQTT Chat')
+print('NATS Chat')
 print('type ctrl-d to stop')
 
 
 import asyncio
 
 from slowpy.control import control_system as ctrl
-mqtt = ctrl.import_control_module('AsyncMQTT').async_mqtt('localhost')
+nats = ctrl.import_control_module('AsyncNATS').async_nats('localhost')
 
 
 async def aio_input(prompot=""):
@@ -14,30 +14,30 @@ async def aio_input(prompot=""):
         return await asyncio.to_thread(input, prompot)
     except:
         return None
+    
 
-            
 async def main():
     is_running = True
 
     async def reader():
         nonlocal is_running
-        sub = mqtt.subscribe('chat/#', timeout=0.1)
+        sub = nats.subscribe('chat.*', timeout=0.1)
         while is_running:
             message = await sub.aio_get()
             if message is not None:
                 print(message.decode())
 
     async def writer():
-        nonlocal is_running
-        while is_running:
+       nonlocal is_running
+       while is_running:
             line = await aio_input()
             if line is None:
                 is_running = False
             else:
-                await mqtt.publish('chat/all').aio_set(line)
+                await nats.publish('chat.all').aio_set(line.encode())
 
     await asyncio.gather(reader(), writer())
-    await mqtt.aio_close()
+    await nats.aio_close()
 
 
 asyncio.run(main())

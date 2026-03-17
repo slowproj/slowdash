@@ -9,6 +9,13 @@ from slowpy.control import control_system as ctrl
 redis = ctrl.import_control_module('AsyncRedis').async_redis('redis://localhost:6379/12')
 
 
+async def aio_input(prompot=""):
+    try:
+        return await asyncio.to_thread(input, prompot)
+    except:
+        return None
+    
+    
 async def main():
     is_running = True
 
@@ -22,14 +29,8 @@ async def main():
 
     async def writer():
         nonlocal is_running
-        async def ainput(prompot=""):
-            try:
-                return await asyncio.to_thread(input, prompot)
-            except:
-                return None
-    
         while is_running:
-            line = await ainput()
+            line = await aio_input()
             if line is None:
                 is_running = False
             else:

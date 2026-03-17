@@ -26,6 +26,7 @@ class RabbitMQNode(ControlNode):
         self.connection = None
         self.channel = None
         self.is_retry = False
+        self.construct_lock = asyncio.Lock()
 
         self.children = []
 
@@ -63,6 +64,10 @@ class RabbitMQNode(ControlNode):
 
         
     async def _construct(self):
+        async with self.construct_lock:
+            return await self._construct_in_locked()
+            
+    async def _construct_in_locked(self):
         if self.connection is None:
             if self.is_retry:
                 logging.info(f'AsyncRabbitMQ: retrying to connect to {self.url}')
@@ -149,6 +154,8 @@ class ExchangeNode(ControlNode):
         self.exchange = None
         self.children = []
 
+        self.construct_lock = asyncio.Lock()
+
         
     async def aio_close(self):
         for child in self.children:
@@ -158,6 +165,10 @@ class ExchangeNode(ControlNode):
 
             
     async def _construct(self):
+        async with self.construct_lock:
+            return await self._construct_in_locked()
+            
+    async def _construct_in_locked(self):
         if self.exchange is not None:
             return
         
@@ -273,11 +284,12 @@ class QueueNode(ControlNode):
         self.exchange_node = exchange_node
         self.exchange_node.children.append(self)
         self.tasks: set[asyncio.Task] = set()
-        
+        self.construct_lock = asyncio.Lock()
+
         self.timeout = timeout
         self.kwargs = {k:v for k,v in kwargs.items()}
 
-        # queue_name must be unique
+        # queue_name must be unique if exclusive
         if queue_name is not None and len(queue_name) > 0:
             self.name = queue_name
         else:
@@ -330,6 +342,10 @@ class QueueNode(ControlNode):
         
             
     async def _construct(self):
+        async with self.construct_lock:
+            return await self._construct_in_locked()
+            
+    async def _construct_in_locked(self):
         if self.queue is not None:
             return
         

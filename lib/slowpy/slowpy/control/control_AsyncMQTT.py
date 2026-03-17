@@ -17,8 +17,10 @@ class MQTTNode(ControlNode):
         self.subscribers: dict[str,list[SubscribeNode]] = {}
         self.receiver_task = None
 
-        self.connected = False
         self.client = None
+        self.connected = False
+        self.connect_lock = asyncio.Lock()
+        self.subscribe_lock = asyncio.Lock()
         
         
     def __del__(self):
@@ -59,57 +61,59 @@ class MQTTNode(ControlNode):
 
      
     async def aio_do_connect(self):
-        if self.connected:
-            return True
+        async with self.connect_lock:
+            if self.connected:
+                return True
 
-        if self.client is None:
+            if self.client is None:
+                try:
+                    import aiomqtt
+                    self.client = aiomqtt.Client(self.host, self.port, keepalive=self.keepalive)
+                except Exception as e:
+                    logging.error(f'MQTT: {e}')
+                    self.client = None
+                    return False
+            
             try:
-                import aiomqtt
-                self.client = aiomqtt.Client(self.host, self.port, keepalive=self.keepalive)
+                await self.client.__aenter__()
             except Exception as e:
-                logging.error(f'MQTT: {e}')
-                self.client = None
+                logger.error(f'Unable to connect to MQTT broker: {e}')
                 return False
+            else:
+                logger.info(f'MQTT broker connected')
             
-        try:
-            await self.client.__aenter__()
-        except Exception as e:
-            logger.error(f'Unable to connect to MQTT broker: {e}')
-            return False
-        else:
-            logger.info(f'MQTT broker connected')
-            
-        self.connected = True
+            self.connected = True
         
-        if self.receiver_task is not None:
-            self.receiver_task.cancel()
+            if self.receiver_task is not None:
+                self.receiver_task.cancel()
 
-        async def receiver():
-            async for msg in self.client.messages:
-                topic, message = str(msg.topic), msg.payload
-                logger.debug(f'MQTT message: ({topic}) {message.decode()}')
-                for topic_filter, subscribers in self.subscribers.items():
-                    if not msg.topic.matches(topic_filter):
-                        continue
-                    logger.debug(f'MQTT message topic matches: {msg.topic} ~ {topic_filter}')
-                    for subscriber in subscribers:
-                        await subscriber.aio_do_handle_message(topic, message)
+            async def receiver():
+                async for msg in self.client.messages:
+                    topic, message = str(msg.topic), msg.payload
+                    logger.debug(f'MQTT message: ({topic}) {message.decode()}')
+                    for topic_filter, subscribers in self.subscribers.items():
+                        if not msg.topic.matches(topic_filter):
+                            continue
+                        logger.debug(f'MQTT message topic matches: {msg.topic} ~ {topic_filter}')
+                        for subscriber in subscribers:
+                            await subscriber.aio_do_handle_message(topic, message)
 
-        self.receiver_task = asyncio.create_task(receiver())
+            self.receiver_task = asyncio.create_task(receiver())
 
-        return True
+            return True
     
         
     async def aio_do_subscribe(self, topic_filter, subscribe_node):
-        if not await self.aio_do_connect():
-            return
+        async with self.subscribe_lock:
+            if not await self.aio_do_connect():
+                return
         
-        if topic_filter not in self.subscribers:
-            logger.debug(f'MQTT subscribe: {topic_filter}')
-            await self.client.subscribe(topic_filter)
-            self.subscribers[topic_filter] = []
+            if topic_filter not in self.subscribers:
+                logger.debug(f'MQTT subscribe: {topic_filter}')
+                await self.client.subscribe(topic_filter)
+                self.subscribers[topic_filter] = []
             
-        self.subscribers[topic_filter].append(subscribe_node)
+            self.subscribers[topic_filter].append(subscribe_node)
         
      
     @classmethod

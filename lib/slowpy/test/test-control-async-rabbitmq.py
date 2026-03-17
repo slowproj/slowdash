@@ -10,12 +10,20 @@ rabbitmq = ctrl.import_control_module('AsyncRabbitMQ').async_rabbitmq('amqp://sl
 exchange = rabbitmq.topic_exchange('slowchat')
 
 
+async def aio_input(prompot=""):
+    try:
+        return await asyncio.to_thread(input, prompot)
+    except:
+        return None
+    
+            
 async def main():
     is_running = True
 
     async def reader():
         nonlocal is_running
-        queue_node = exchange.queue(routing_key='chat.*', exclusive=True)
+        queue_node = exchange.queue(routing_key='chat.*', exclusive=True)    # using an exclusive queue
+        #queue_node = exchange.queue('chat_receiver', routing_key='chat.*')  # using a shared queue
         while is_running:
             message = await queue_node.aio_get()
             data = message.body
@@ -25,15 +33,9 @@ async def main():
 
     async def writer():
         nonlocal is_running
-        async def ainput(prompot=""):
-            try:
-                return await asyncio.to_thread(input, prompot)
-            except:
-                return None
-    
         publish_node = exchange.publish(routing_key='chat.all')
         while is_running:
-            line = await ainput()
+            line = await aio_input()
             if line is None:
                 is_running = False
             else:

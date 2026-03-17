@@ -45,14 +45,13 @@ services:
       - "8001:8001"
 
 
-  rabbitmq:
-    image: rabbitmq:4-management
+  nats:
+    image: nats:latest
     ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      - RABBITMQ_DEFAULT_USER=slowdash
-      - RABBITMQ_DEFAULT_PASS=slowdash
+      - "4222:4222"
+      - "8222:8222"
+    #volumes:
+    #  - ./nats/data:/data
 
 
   mqtt:
@@ -61,6 +60,16 @@ services:
       - "1883:1883"
     volumes:
       - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=slowdash
+      - RABBITMQ_DEFAULT_PASS=slowdash
 
 
   notebook:
