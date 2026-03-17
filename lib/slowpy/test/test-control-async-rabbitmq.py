@@ -20,28 +20,25 @@ async def aio_input(prompot=""):
 async def main():
     is_running = True
 
-    async def reader():
-        nonlocal is_running
-        queue_node = exchange.queue(routing_key='chat.*', exclusive=True)    # using an exclusive queue
-        #queue_node = exchange.queue('chat_receiver', routing_key='chat.*')  # using a shared queue
-        while is_running:
-            message = await queue_node.aio_get()
-            data = message.body
-            if data is None:
-                continue
-            print(data)
-
     async def writer():
+        pub = exchange.publish(routing_key='chat.all')
         nonlocal is_running
-        publish_node = exchange.publish(routing_key='chat.all')
         while is_running:
             line = await aio_input()
             if line is None:
                 is_running = False
             else:
-                await publish_node.aio_set(line)
+                await pub.aio_set(line)
 
-    await asyncio.gather(reader(), writer())
+    async def reader():
+        sub = exchange.queue(routing_key='chat.*', exclusive=True, timeout=0.1)
+        nonlocal is_running
+        while is_running:
+            body = await sub.message_body().aio_get()
+            if body is not None:
+                print(body)
+
+    await asyncio.gather(writer(), reader())
     await rabbitmq.aio_close()
 
 

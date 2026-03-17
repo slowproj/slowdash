@@ -119,7 +119,7 @@ class SubscribeNode(ControlNode):
         
         self.queue = asyncio.Queue(maxsize=1024)
         
-        async def default_handler(topic:str, message:bytes):
+        async def default_handler(message):
             await self.queue.put(message)
         self.handler = handler or default_handler
         
@@ -137,7 +137,7 @@ class SubscribeNode(ControlNode):
             async def message_handler(msg):
                 topic, message = msg.subject, msg.data
                 logger.debug(f'NATS message: ({topic}) {message.decode()}')
-                result = self.handler(topic, message)
+                result = self.handler(msg)
                 if asyncio.iscoroutine(result):
                     await result
 
@@ -172,3 +172,22 @@ class SubscribeNode(ControlNode):
                 return await asyncio.wait_for(self.queue.get(), timeout=self.timeout)
         except (asyncio.CancelledError, asyncio.TimeoutError, asyncio.QueueEmpty):
             return None
+        
+    ## child nodes ##
+    # nats.subscribe(subject).data()
+    def data(self):
+        return SubscribeDataNode(self)
+        
+
+    
+class SubscribeDataNode(ControlNode):
+    def __init__(self, subscribe_node):
+        self.subscribe_node = subscribe_node
+        
+
+    async def aio_get(self):
+        msg = await self.subscribe_node.aio_get()
+        if msg is None:
+            return None
+        else:
+            return msg.data

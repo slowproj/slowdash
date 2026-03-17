@@ -19,24 +19,25 @@ async def aio_input(prompot=""):
 async def main():
     is_running = True
 
-    async def reader():
-        nonlocal is_running
-        sub = redis.subscribe('chat:*')
-        while is_running:
-            message = await sub.data().aio_get()
-            if message is not None:
-                print(message)
-
     async def writer():
+        pub = redis.publish('chat:all')
         nonlocal is_running
         while is_running:
             line = await aio_input()
             if line is None:
                 is_running = False
             else:
-                await redis.publish('chat:all').aio_set(line)
+                await pub.aio_set(line)
 
-    await asyncio.gather(reader(), writer())
+    async def reader():
+        sub = redis.subscribe('chat:*')
+        nonlocal is_running
+        while is_running:
+            message = await sub.data().aio_get()
+            if message is not None:
+                print(message)
+
+    await asyncio.gather(writer(), reader())
     await redis.aio_close()
 
 

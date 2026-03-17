@@ -19,24 +19,25 @@ async def aio_input(prompot=""):
 async def main():
     is_running = True
 
-    async def reader():
-        nonlocal is_running
-        sub = nats.subscribe('chat.*', timeout=0.1)
-        while is_running:
-            message = await sub.aio_get()
-            if message is not None:
-                print(message.decode())
-
     async def writer():
+       pub = nats.publish('chat.all')
        nonlocal is_running
        while is_running:
             line = await aio_input()
             if line is None:
                 is_running = False
             else:
-                await nats.publish('chat.all').aio_set(line.encode())
+                await pub.aio_set(line.encode())
 
-    await asyncio.gather(reader(), writer())
+    async def reader():
+        sub = nats.subscribe('chat.*', timeout=0.1)
+        nonlocal is_running
+        while is_running:
+            message = await sub.data().aio_get()
+            if message is not None:
+                print(message.decode())
+
+    await asyncio.gather(writer(), reader())
     await nats.aio_close()
 
 

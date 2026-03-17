@@ -260,11 +260,11 @@ class RedisTimeseriesNode(spc.ControlNode):
         return await self.redis_node.redis.ts().range(self.name, int(1000*start), int(1000*to))
        
     ## child nodes ##
-    # Redis.ts(name).current() to aio_set()
+    # redis().ts(name).current() to aio_set()
     def current(self):  
         return RedisTimeseriesCurrentNode(self)
 
-    # Redis.ts(name).last() to aio_get()
+    # redis().ts(name).last() to aio_get()
     def last(self):
         return RedisTimeseriesLastNode(self)
 
@@ -302,15 +302,15 @@ class RedisTimeseriesLastNode(spc.ControlNode):
                 return (None, None)
         
     ## child nodes ##
-    # Redis.ts(name).last().value()
+    # redis().ts(name).last().value()
     def value(self):
         return RedisTimeseriesLastValueNode(self)
 
-    # Redis.ts(name).last().time()
+    # redis().ts(name).last().time()
     def time(self):
         return RedisTimeseriesLastTimeNode(self)
 
-    # Redis.ts(name).last().lapse()    
+    # redis().ts(name).last().lapse()    
     def lapse(self):
         return RedisTimeseriesLastLapseNode(self)
 
@@ -389,7 +389,7 @@ class RedisSubscribeNode(spc.ControlNode):
 
 
     ## child nodes ##
-    # Redis.subscribe(topic_pettern).data()
+    # redis().subscribe(topic_pettern).data()
     def data(self):
         return RedisSubscribeDataNode(self)
         

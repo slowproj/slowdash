@@ -405,7 +405,8 @@ class QueueNode(ControlNode):
             if self.is_stop_requested():
                 break
             if self.timeout > 0 and lapse >= self.timeout:
-                logging.warning(f'AMQP Queue Timeout (queue: {self.name})')
+                if self.timeout >= 10:
+                    logging.warning(f'AMQP Queue Timeout (queue: {self.name})')
                 break
             
             lapse += 0.2
@@ -440,6 +441,10 @@ class QueueNode(ControlNode):
         return queue.declaration_result.message_count > 0
         
 
+    # rabbitmq().direct_exchange(name).queue(name).body()
+    def message_body(self):
+        return QueueMessageBodyNode(self)
+
     # rabbitmq().direct_exchange(name).rpc_function(name, function)
     def rpc_function(self, function):
         return RpcFunctionNode(self, function)
@@ -449,6 +454,17 @@ class QueueNode(ControlNode):
         return RpcCallNode(self, routing_key, body, headers, parameters)
 
 
+class QueueMessageBodyNode(ControlNode):
+    def __init__(self, queue_node:QueueNode):
+        self.queue_node = queue_node
+        
+    async def aio_get(self):
+        message = await self.queue_node.aio_get()
+        if message is None:
+            return None
+        else:
+            return message.body
+        
     
 class RpcFunctionNode(ControlNode):
     def __init__(self, queue_node:QueueNode, function):

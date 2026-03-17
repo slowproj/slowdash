@@ -89,14 +89,13 @@ class MQTTNode(ControlNode):
 
             async def receiver():
                 async for msg in self.client.messages:
-                    topic, message = str(msg.topic), msg.payload
-                    logger.debug(f'MQTT message: ({topic}) {message.decode()}')
+                    logger.debug(f'MQTT message: ({str(msg.topic)}) {msg.payload.decode()}')
                     for topic_filter, subscribers in self.subscribers.items():
                         if not msg.topic.matches(topic_filter):
                             continue
                         logger.debug(f'MQTT message topic matches: {msg.topic} ~ {topic_filter}')
                         for subscriber in subscribers:
-                            await subscriber.aio_do_handle_message(topic, message)
+                            await subscriber.aio_do_handle_message(msg)
 
             self.receiver_task = asyncio.create_task(receiver())
 
@@ -106,7 +105,7 @@ class MQTTNode(ControlNode):
     async def aio_do_subscribe(self, topic_filter, subscribe_node):
         async with self.subscribe_lock:
             if not await self.aio_do_connect():
-                return
+                return False
         
             if topic_filter not in self.subscribers:
                 logger.debug(f'MQTT subscribe: {topic_filter}')
@@ -114,6 +113,8 @@ class MQTTNode(ControlNode):
                 self.subscribers[topic_filter] = []
             
             self.subscribers[topic_filter].append(subscribe_node)
+
+            return True
         
      
     @classmethod
@@ -166,31 +167,47 @@ class SubscribeNode(ControlNode):
         
         self.queue = asyncio.Queue(maxsize=1024)
         
-        async def default_handler(topic:str, message:bytes):
+        async def default_handler(message):
             await self.queue.put(message)
         self.handler = handler or default_handler
         
         self.registered = False
+        self.register_lock = asyncio.Lock()
 
         
-    async def aio_do_handle_message(self, topic:str, message:bytes):
-        result = self.handler(topic, message)
+    async def aio_do_handle_message(self, message):
+        result = self.handler(message)
         if asyncio.iscoroutine(result):
             await result
 
 
     async def aio_has_data(self):
-        if not self.registered:
-            await self.mqtt.aio_do_subscribe(self.topic_filter, self)
-            self.registered = True
+        async with self.register_lock:
+            if not self.registered:
+                if not await self.mqtt.aio_do_subscribe(self.topic_filter, self):
+                    return False
+                else:
+                    self.registered = True
             
         return not await self.queue.empty()
 
         
     async def aio_get(self):
-        if not self.registered:
-            await self.mqtt.aio_do_subscribe(self.topic_filter, self)
-            self.registered = True
+        """
+        return aiomqtt.Message (or None), which has the following fields:
+          - topic: aiomqtt.client.Topic (which has __str__())
+          - payload: bytes
+          - qos: int
+          - retain: bool
+          - mid: int
+          - properties: paho.mqtt.properties.Properties|None
+        """
+        async with self.register_lock:
+            if not self.registered:
+                if not await self.mqtt.aio_do_subscribe(self.topic_filter, self):
+                    return None
+                else:
+                    self.registered = True
 
         try:
             if self.timeout is None:
@@ -201,3 +218,23 @@ class SubscribeNode(ControlNode):
                 return await asyncio.wait_for(self.queue.get(), timeout=self.timeout)
         except (asyncio.CancelledError, asyncio.TimeoutError, asyncio.QueueEmpty):
             return None
+
+        
+    ## child nodes ##
+    # mqtt.subscribe(topic_pettern).payload()
+    def payload(self):
+        return SubscribePayloadNode(self)
+        
+
+    
+class SubscribePayloadNode(ControlNode):
+    def __init__(self, subscribe_node):
+        self.subscribe_node = subscribe_node
+        
+
+    async def aio_get(self):
+        msg = await self.subscribe_node.aio_get()
+        if msg is None:
+            return None
+        else:
+            return msg.payload

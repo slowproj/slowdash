@@ -6,8 +6,8 @@ print('type ctrl-d to stop')
 from slowpy.control import control_system as ctrl
 mqtt = ctrl.import_control_module('MQTT').mqtt('localhost')
 
-def handler(topic, message):
-    print(message.decode())
+def handler(message):
+    print(message.payload.decode())
 mqtt.subscribe('chat/#', handler)
         
 while True:

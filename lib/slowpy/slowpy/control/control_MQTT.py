@@ -68,7 +68,7 @@ class MQTTNode(ControlNode):
             topic, message = str(msg.topic), msg.payload
             logger.debug(f'MQTT message: {topic}: {message.decode()}')
             for subscriber in self.subscribers.get(topic_filter, []):
-                subscriber.do_handle_message(topic, message)
+                subscriber.do_handle_message(msg)
 
         if topic_filter not in self.subscribers:
             self.subscribers[topic_filter] = []
@@ -124,7 +124,7 @@ class SubscribeNode(ControlNode):
                 
         self.queue = queue.Queue(maxsize=1024)
         
-        def default_handler(topic:str, message:bytes):
+        def default_handler(message):
             self.queue.put(message, block=True, timeout=None)
         self.handler = handler or default_handler
 
@@ -139,5 +139,26 @@ class SubscribeNode(ControlNode):
         return self.queue.get(block=True, timeout=None)
 
 
-    def do_handle_message(self, topic:str, message:bytes):
-        return self.handler(topic, message)
+    def do_handle_message(self, message):
+        return self.handler(message)
+
+        
+    ## child nodes ##
+    # mqtt.subscribe(topic_pettern).payload()
+    def payload(self):
+        return SubscribePayloadNode(self)
+        
+
+    
+class SubscribePayloadNode(ControlNode):
+    def __init__(self, subscribe_node):
+        self.subscribe_node = subscribe_node
+        
+
+    def get(self):
+        msg = self.subscribe_node.get()
+        if msg is None:
+            return None
+        else:
+            return msg.payload
+    
