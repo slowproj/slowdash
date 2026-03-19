@@ -78,9 +78,13 @@ class DataStore:
             if len(records) > 0:
                 handle = self._open_transaction()
                 if handle is not None:
-                    for row in records:
-                        self._write_one(handle, timestamp=row[0], tag=tag, fields=row[1], values=row[2], update=update)
-                    self._close_transaction(handle)
+                    try:
+                        for row in records:
+                            self._write_one(handle, timestamp=row[0], tag=tag, fields=row[1], values=row[2], update=update)
+                    except Exception as e:
+                        logging.warning(f'DataStore: error on writing a time-series value: {e}')
+                    finally:
+                        self._close_transaction(handle)
                 
         else:
             t = timestamp if timestamp is not None else time.time()
@@ -96,8 +100,12 @@ class DataStore:
                 
             handle = self._open_transaction()
             if handle is not None:
-                self._write_one(handle, timestamp=t, tag=tag, fields=fields, values=values, update=update)
-                self._close_transaction(handle)
+                try:
+                    self._write_one(handle, timestamp=t, tag=tag, fields=fields, values=values, update=update)
+                except Exception as e:
+                    logging.warning(f'DataStore: error on writing a value: {e}')
+                finally:
+                    self._close_transaction(handle)
                 
 
     # override in child classes
