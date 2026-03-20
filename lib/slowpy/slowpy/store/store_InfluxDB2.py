@@ -55,9 +55,9 @@ class DataStore_InfluxDB2(DataStore):
                 buckets = self.client.buckets_api().find_buckets().buckets
                 break
             except Exception as e:
-                logging.warn(e)
-                logging.warn(f'Unable to connect to the Db server: http://{host}:{port}')
-                logging.warn('Retrying in 5 sec...')
+                logging.warning(e)
+                logging.warning(f'Unable to connect to the Db server: http://{host}:{port}')
+                logging.warning('Retrying in 5 sec...')
                 time.sleep(5)
         else:
             self.client = None

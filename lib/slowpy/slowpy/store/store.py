@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 3 June 2023 #
 
-import time, atexit
+import time, atexit, logging
 from ..basetypes import TimeSeries
 
 
