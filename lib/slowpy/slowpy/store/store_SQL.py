@@ -183,7 +183,7 @@ class DataStore_SQL(DataStore):
     placeholder = '?'
     def construct(self):
         return None # conn
-    def get_table_list(self):
+    def get_table_list(self, cur):
         return []
     
     
@@ -211,8 +211,13 @@ class DataStore_SQL(DataStore):
         if self.conn is None:
             self.table_exists = None
             return
-        
-        table_list = [ name.upper() for name in self.get_table_list() ]
+
+
+        if self.conn is None:
+            return []
+            
+        cur = self.conn.cursor()
+        table_list = [ name.upper() for name in self.get_table_list(cur) ]
         self.table_exists = (self.table is not None) and (self.table.upper() in table_list)
 
 
@@ -241,7 +246,7 @@ class DataStore_SQL(DataStore):
 
         
     def _write_one(self, cur, timestamp, tag, fields, values, update):
-        table_list = [ name.upper() for name in self.get_table_list() ]
+        table_list = [ name.upper() for name in self.get_table_list(cur) ]
         self.table_exists = (self.table is not None) and (self.table.upper() in table_list)
                     
         if self.table_exists is False:
@@ -288,11 +293,7 @@ class DataStore_SQLite(DataStore_SQL):
         return self.conn
 
         
-    def get_table_list(self):
-        if self.conn is None:
-            return []
-            
-        cur = self.conn.cursor()
+    def get_table_list(self, cur):
         try:
             cur.execute('select name from sqlite_master where type="table";')
         except Exception as e:
@@ -306,7 +307,7 @@ class DataStore_SQLite(DataStore_SQL):
         if self.conn is None:
             return None
         cur = self.conn.cursor()
-        cur.execute('BEGIN TRANSACTION;')
+        #cur.execute('BEGIN TRANSACTION;')  # not necesssary for default SQLite setting
         return cur
         
     
@@ -360,11 +361,7 @@ class DataStore_PostgreSQL(DataStore_SQL):
         return self.conn
 
         
-    def get_table_list(self):
-        if self.conn is None:
-            return []
-        
-        cur = self.conn.cursor()
+    def get_table_list(self, cur):
         try:
             cur.execute("select tablename from pg_tables where schemaname='public';")
             result = [ table_name[0] for table_name in cur.fetchall() ]
@@ -443,11 +440,7 @@ class DataStore_MySQL(DataStore_SQL):
         return self.conn
 
         
-    def get_table_list(self):
-        if self.conn is None:
-            return []
-        
-        cur = self.conn.cursor()
+    def get_table_list(self, cur):
         try:
             cur.execute("SHOW TABLES")
             result = [ table_name[0] for table_name in cur.fetchall() ]
