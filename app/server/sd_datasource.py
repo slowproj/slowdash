@@ -65,6 +65,7 @@ class DataSource(ComponentPlugin):
             envelope, prior_data
         )
         result_obj = await self.aio_get_object(channels, length, to)
+
         if result_ts is not None:
             result.update(result_ts)
         if result_obj is not None:

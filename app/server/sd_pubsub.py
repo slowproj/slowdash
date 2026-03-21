@@ -34,6 +34,7 @@ class PubsubComponent(Component):
             return None
 
         client_id = await self.add_client(name, websocket)
+        name = self.clients[client_id].get('name')
         
         try:
             while True:
@@ -84,7 +85,7 @@ class PubsubComponent(Component):
         if reply_to is None:
             return
 
-        await websocket.send({
+        await websocket.send(json.dumps({
             'headers': {
                 'action': 'error',
                 'reply_to': reply_to,
@@ -92,7 +93,7 @@ class PubsubComponent(Component):
             'data':{
                 'message': message
             }
-        })
+        }))
             
         
     async def handle_message(self, client_id:int, header, message):
@@ -128,13 +129,13 @@ class PubsubComponent(Component):
         websocket = self.websockets.get(client_id)
         reply_to = header.get('message_id')
         if websocket is not None and reply_to is not None:
-            await websocket.send({
+            await websocket.send(json.dumps({
                 'header': {
                     'action': 'reply',
                     'reply_to': reply_to,
                 },
                 'data': None
-            })
+            }))
                                  
         
         return True

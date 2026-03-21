@@ -172,6 +172,7 @@ class SubscribeNode(ControlNode):
                 return await asyncio.wait_for(self.queue.get(), timeout=self.timeout)
         except (asyncio.CancelledError, asyncio.TimeoutError, asyncio.QueueEmpty):
             return None
+
         
     ## child nodes ##
     # nats.subscribe(subject).data()
