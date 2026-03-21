@@ -17,7 +17,7 @@ class SlowMQNode(ControlNode):
         self.connections = set()
         self.publish_ws = None
         self.publish_retry_time = 0
-        self.retry_interval = 10
+        self.retry_wait = 10
 
         
     def __del__(self):
@@ -52,7 +52,7 @@ class SlowMQNode(ControlNode):
             import websockets
             ws = await websockets.connect(url)
         except Exception as e:
-            logging.error(f'SlowMQ: {url}: {e}')
+            logging.warning(f'SlowMQ Error: {url}: {e}')
             ws = None
 
         if ws is not None:
@@ -103,7 +103,7 @@ class PublishNode(ControlNode):
     async def aio_set(self, value):
         if not self.connected:
             now = time.monotonic()
-            if now - self.slowmq_node.publish_retry_time < self.slowmq_node.retry_interval:
+            if now - self.slowmq_node.publish_retry_time < self.slowmq_node.retry_wait:
                 return
             self.slowmq_node.publish_retry_time = now
             
@@ -124,7 +124,7 @@ class PublishNode(ControlNode):
         try:
             await self.slowmq_node.publish_ws.send(doc)
         except Exception as e:
-            logging.error(f'SlowMQ.publish(): {e}')
+            logging.warning(f'SlowMQ.publish(): {e}')
             self.connected = False
         except asyncio.CancelledError:
             pass
@@ -149,7 +149,7 @@ class SubscribeNode(ControlNode):
             return (self.ws is not None)
 
         now = time.monotonic()
-        if now - self.retry_time < self.slowmq_node.retry_interval:
+        if now - self.retry_time < self.slowmq_node.retry_wait:
             return False
         self.retry_time = now
         
@@ -177,7 +177,7 @@ class SubscribeNode(ControlNode):
         except asyncio.TimeoutError:
             return False
         except Exception as e:
-            logging.error(f'SlowMQ.subscribe(): {e}')
+            logging.warning(f'SlowMQ.subscribe(): {e}')
             self.connected = False
             return False
         except asyncio.CancelledError:
@@ -186,12 +186,12 @@ class SubscribeNode(ControlNode):
         try:
             message = json.loads(reply)
         except Exception as e:
-            logging.error(f'SlowMQ.subscribe(): Invalid reply JSON: {e}: {reply}')
+            logging.warning(f'SlowMQ.subscribe(): Invalid reply JSON: {e}: {reply}')
             return None
         
         if message.get('action') == 'error':
             msg = message.get('data',{}).get('message', '')
-            logging.error(f'SlowMQ.subscribe(): error reply: {msg}')
+            logging.warning(f'SlowMQ.subscribe(): error reply: {msg}')
             self.connected = False
             return False
             
@@ -209,7 +209,7 @@ class SubscribeNode(ControlNode):
         except asyncio.CancelledError:
             message = None
         except Exception as e:
-            logging.error(f'SlowMQ.subscribe().aio_get(): {e}')
+            logging.warning(f'SlowMQ.subscribe().aio_get(): {e}')
             self.connected = False
             message = None
             await asyncio.sleep(0.1)
@@ -219,7 +219,7 @@ class SubscribeNode(ControlNode):
         try:
             doc = json.loads(message)
         except Exception as e:
-            logging.error(f'SlowMQ.subscribe().aio_get(): Invalid reply JSON: {e}: {message}')
+            logging.warning(f'SlowMQ.subscribe().aio_get(): Invalid reply JSON: {e}: {message}')
             return None
 
         return doc

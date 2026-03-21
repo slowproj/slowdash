@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 13 March 2026 #
 
-import asyncio
+import asyncio, time
 from slowpy.control import ControlNode, ControlException
 
 import logging
@@ -19,8 +19,11 @@ class MQTTNode(ControlNode):
 
         self.client = None
         self.connected = False
+        self.disconnected = False
         self.connect_lock = asyncio.Lock()
         self.subscribe_lock = asyncio.Lock()
+        self.retry_wait = 10
+        self.last_connect_attempt_time = 0
         
         
     def __del__(self):
@@ -34,19 +37,20 @@ class MQTTNode(ControlNode):
         if self.client is None:
             return
 
-        try:
-            if self.receiver_task is not None:
+        if self.receiver_task is not None:
+            try:
                 self.receiver_task.cancel()
-                self.receiver_task = None
-        except:
-            pass
+            except:
+                pass
+            self.receiver_task = None
 
-        try:
-            if self.connected:
+        if self.connected:
+            try:
                 await self.client.__aexit__(None, None, None)
                 logger.info(f'MQTT Connection Closed')
-        except:
-            pass
+            except:
+                pass
+            self.connected = False
             
         del self.client
         self.client = None
@@ -64,6 +68,17 @@ class MQTTNode(ControlNode):
         async with self.connect_lock:
             if self.connected:
                 return True
+
+            now = time.monotonic()
+            if now - self.last_connect_attempt_time < self.retry_wait:
+                return False
+            self.last_connect_attempt_time = now
+
+            if self.receiver_task is not None:
+                try:
+                    self.receiver_task.cancel()
+                except:
+                    pass
 
             if self.client is None:
                 try:
@@ -84,18 +99,29 @@ class MQTTNode(ControlNode):
             
             self.connected = True
         
-            if self.receiver_task is not None:
-                self.receiver_task.cancel()
-
+            if self.disconnected:
+                logger.info(f'MQTT: reconnected')
+                self.disconnected = False
+                for topic_filter in self.subscribers:
+                    await self.client.subscribe(topic_filter)
+                                
             async def receiver():
-                async for msg in self.client.messages:
-                    logger.debug(f'MQTT message: ({str(msg.topic)}) {msg.payload.decode()}')
-                    for topic_filter, subscribers in self.subscribers.items():
-                        if not msg.topic.matches(topic_filter):
-                            continue
-                        logger.debug(f'MQTT message topic matches: {msg.topic} ~ {topic_filter}')
-                        for subscriber in subscribers:
-                            await subscriber.aio_do_handle_message(msg)
+                try:
+                    async for msg in self.client.messages:
+                        logger.debug(f'MQTT message: ({str(msg.topic)}) {msg.payload.decode()}')
+                        for topic_filter, subscribers in self.subscribers.items():
+                            if not msg.topic.matches(topic_filter):
+                                continue
+                            logger.debug(f'MQTT message topic matches: {msg.topic} ~ {topic_filter}')
+                            for subscriber in subscribers:
+                                await subscriber.aio_do_handle_message(msg)
+                except asyncio.CancelledError:
+                    pass
+                except Exception as e:
+                    logging.warning(f'MQTT: error: {e}')
+                    self.disconnected = True
+                    await self.aio_close() # this will cause retries
+                    await asyncio.sleep(self.retry_wait)
 
             self.receiver_task = asyncio.create_task(receiver())
 
@@ -149,9 +175,16 @@ class PublishNode(ControlNode):
     async def aio_set(self, value):
         if not await self.mqtt.aio_do_connect():
             return None
-    
-        await self.mqtt.client.publish(self.topic, value)
-        
+
+        try:
+            await self.mqtt.client.publish(self.topic, value)
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            logging.warning(f'MQTT: error: {e}')
+            self.disconnected = True
+            await self.aio_close() # this will cause retries
+            await asyncio.sleep(self.retry_wait)
 
         
 class SubscribeNode(ControlNode):
