@@ -96,28 +96,28 @@ class PubsubComponent(Component):
         }))
             
         
-    async def handle_message(self, client_id:int, header, message):
-        topic = header.get('topic')
+    async def handle_message(self, client_id:int, headers, message):
+        topic = headers.get('topic')
         if topic is None or len(topic) == 0:
             return False
 
-        action = header.get('action', 'publish')
+        action = headers.get('action', 'publish')
         if action == 'publish':
-            return await self.publish(topic, message, header)
+            return await self.publish(topic, message, headers)
         
         if action == 'subscribe':
-            return await self.subscribe(client_id, topic, header)
+            return await self.subscribe(client_id, topic, headers)
         
         if action == 'unsubscribe':
-            return await self.unsubscribe(client_id, topic, header)
+            return await self.unsubscribe(client_id, topic, headers)
 
 
-    async def subscribe(self, client_id:int, topic:str, header):
+    async def subscribe(self, client_id:int, topic:str, headers):
         try:
             self.validate_topic_pattern(topic)
         except Exception as e:
             logging.warning(f'Pubsub: {e}')
-            await self.reply_error(client_id, header, str(e))
+            await self.reply_error(client_id, headers, str(e))
             return False
         
         if topic not in self.subscribers:
@@ -127,10 +127,10 @@ class PubsubComponent(Component):
         logging.info(f'Pubsub Subscription: {topic} <- {self.clients[client_id]["name"]}')
 
         websocket = self.websockets.get(client_id)
-        reply_to = header.get('message_id')
+        reply_to = headers.get('message_id')
         if websocket is not None and reply_to is not None:
             await websocket.send(json.dumps({
-                'header': {
+                'headers': {
                     'action': 'reply',
                     'reply_to': reply_to,
                 },
@@ -141,13 +141,13 @@ class PubsubComponent(Component):
         return True
         
     
-    async def unsubscribe(self, client_id:int, topic:str, header=None):
+    async def unsubscribe(self, client_id:int, topic:str, headers=None):
         if topic not in self.subscribers:
-            await self.reply_error(client_id, header or {}, f'unknown topic "{topic}"')
+            await self.reply_error(client_id, headers or {}, f'unknown topic "{topic}"')
             return False
 
         if client_id not in self.subscribers[topic]:
-            await self.reply_error(client_id, header or {}, f'not registered to the topic "{topic}"')
+            await self.reply_error(client_id, headers or {}, f'not registered to the topic "{topic}"')
             return False
 
         self.subscribers[topic].discard(client_id)
@@ -156,7 +156,7 @@ class PubsubComponent(Component):
         return True
 
     
-    async def publish(self, topic:str, message, header):
+    async def publish(self, topic:str, message, headers):
         receivers = []
         for topic_pattern, subscribers in self.subscribers.items():
             if self.topic_match(topic_pattern, topic):

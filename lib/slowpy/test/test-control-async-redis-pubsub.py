@@ -27,15 +27,15 @@ async def main():
             if line is None:
                 is_running = False
             else:
-                await pub.aio_set(line)
+                await pub.json().aio_set(line)
 
     async def reader():
-        sub = redis.subscribe('chat:*')
+        sub = redis.subscribe('chat:*', timeout=0.1)
         nonlocal is_running
         while is_running:
-            message = await sub.data().aio_get()
-            if message is not None:
-                print(message)
+            headers, data = await sub.json().aio_get()
+            if data is not None:
+                print(f'{headers}: {data}')
 
     await asyncio.gather(writer(), reader())
     await redis.aio_close()

@@ -27,15 +27,15 @@ async def main():
             if line is None:
                 is_running = False
             else:
-                await pub.aio_set(line)
+                await pub.json().aio_set(line)
 
     async def reader():
         sub = mqtt.subscribe('chat/#', timeout=0.1)
         nonlocal is_running
         while is_running:
-            message = await sub.payload().aio_get()
-            if message is not None:
-                print(message.decode())
+            headers, data = await sub.json().aio_get()
+            if data is not None:
+                print(f'{headers}: {data}')
 
     await asyncio.gather(writer(), reader())
     await mqtt.aio_close()

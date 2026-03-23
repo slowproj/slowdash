@@ -115,11 +115,15 @@ class PublishNode(ControlNode):
                 return
             else:
                 self.connected = True
-        
-        doc = json.dumps({
-            'headers': { 'topic': self.topic },
-            'data': value
-        })
+
+        try:
+            doc = json.dumps({
+                'headers': { 'topic': self.topic },
+                'data': value
+            })
+        except Exception as e:
+            logger.warning(f'AsyncSlowMQ.publish(): unable to convert to JSON: {e}')
+            return
         
         try:
             await self.slowmq_node.publish_ws.send(doc)
@@ -128,6 +132,12 @@ class PublishNode(ControlNode):
             self.connected = False
         except asyncio.CancelledError:
             pass
+
+        
+    ## child nodes ##
+    # nats.publish(subject).json()
+    def json(self, headers=None):
+        return PublishJsonNode(self, headers)
         
 
         
@@ -224,22 +234,36 @@ class SubscribeNode(ControlNode):
 
         return doc
 
-    
+        
     ## child nodes ##
-    # slowmq.subscribe(subject).data()
-    def data(self):
-        return SubscribeDataNode(self)
+    # nats.subscribe(subject).json()
+    def json(self):
+        return SubscribeJsonNode(self)
         
 
     
-class SubscribeDataNode(ControlNode):
+class PublishJsonNode(ControlNode):
+    def __init__(self, publish_node, headers=None):
+        self.publish_node = publish_node
+        self.headers = dict(headers or {})
+        
+
+    async def aio_set(self, value):
+        return await self.publish_node.aio_set(value)
+
+
+
+class SubscribeJsonNode(ControlNode):
     def __init__(self, subscribe_node):
         self.subscribe_node = subscribe_node
         
 
     async def aio_get(self):
-        msg = await self.subscribe_node.aio_get()
-        if msg is None:
-            return None
-        else:
-            return msg.get('data', None)
+        message = await self.subscribe_node.aio_get()
+        if message is None:
+            return None, None
+        
+        headers = message.get('headers', {})
+        body = message.get('data')
+                
+        return (headers, body)

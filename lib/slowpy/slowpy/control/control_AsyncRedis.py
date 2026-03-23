@@ -1,15 +1,15 @@
 # Created by Sanshiro Enomoto on 22 May 2024 #
 # Updated by Sanshiro Enomoto on 16 March 2026 for async #
 
-import asyncio, time
-import slowpy.control as spc
+import asyncio, time, json
+from slowpy.control import ControlNode, ControlException
 
 import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-class RedisNode(spc.ControlNode):
+class RedisNode(ControlNode):
     def __init__(self, url, **kwargs):
         self.url = url
         self.kwargs = { k:v for k,v in kwargs.items() }
@@ -121,8 +121,8 @@ class RedisNode(spc.ControlNode):
         return RedisPublishNode(self, topic)
 
     
-    def subscribe(self, topic_pattern):
-        return RedisSubscribeNode(self, topic_pattern)
+    def subscribe(self, topic_pattern, timeout=None):
+        return RedisSubscribeNode(self, topic_pattern, timeout=timeout)
 
     
     @classmethod
@@ -138,7 +138,7 @@ class RedisNode(spc.ControlNode):
                 keys = []
             if url is None:
                 if len(keys) == 0:
-                    raise spc.ControlException('Redis URL not provided')
+                    raise ControlException('Redis URL not provided')
                 else:
                     url = keys[-1]
             node = self._redis_nodes.get(url, None)
@@ -153,7 +153,7 @@ class RedisNode(spc.ControlNode):
 
     
 
-class RedisStringNode(spc.ControlNode):
+class RedisStringNode(ControlNode):
     def __init__(self, redis_node, name):
         self.redis_node = redis_node
         self.name = name
@@ -175,7 +175,7 @@ class RedisStringNode(spc.ControlNode):
     
 
     
-class RedisHashNode(spc.ControlNode):
+class RedisHashNode(ControlNode):
     def __init__(self, redis_node, name):
         self.redis_node = redis_node
         self.name = name
@@ -197,7 +197,7 @@ class RedisHashNode(spc.ControlNode):
 
     
     
-class RedisHashFieldNode(spc.ControlNode):
+class RedisHashFieldNode(ControlNode):
     def __init__(self, redis_node, name, fieldname):
         self.redis_node = redis_node
         self.name = name
@@ -215,7 +215,7 @@ class RedisHashFieldNode(spc.ControlNode):
 
     
     
-class RedisJsonNode(spc.ControlNode):
+class RedisJsonNode(ControlNode):
     def __init__(self, redis_node, name, base='$'):
         self.redis_node = redis_node
         self.name = name
@@ -244,7 +244,7 @@ class RedisJsonNode(spc.ControlNode):
 
     
     
-class RedisTimeseriesNode(spc.ControlNode):
+class RedisTimeseriesNode(ControlNode):
     def __init__(self, redis_node, name, length=3600, to=0):
         self.redis_node = redis_node
         self.name = name
@@ -275,7 +275,7 @@ class RedisTimeseriesNode(spc.ControlNode):
 
     
     
-class RedisTimeseriesCurrentNode(spc.ControlNode):
+class RedisTimeseriesCurrentNode(ControlNode):
     def __init__(self, parent):
         self.parent = parent
     
@@ -287,7 +287,7 @@ class RedisTimeseriesCurrentNode(spc.ControlNode):
         
     
     
-class RedisTimeseriesLastNode(spc.ControlNode):
+class RedisTimeseriesLastNode(ControlNode):
     def __init__(self, parent):
         self.parent = parent
     
@@ -321,7 +321,7 @@ class RedisTimeseriesLastNode(spc.ControlNode):
 
     
     
-class RedisTimeseriesLastValueNode(spc.ControlNode):
+class RedisTimeseriesLastValueNode(ControlNode):
     def __init__(self, parent):
         self.parent = parent
     
@@ -336,7 +336,7 @@ class RedisTimeseriesLastValueNode(spc.ControlNode):
 
 
     
-class RedisTimeseriesLastTimeNode(spc.ControlNode):
+class RedisTimeseriesLastTimeNode(ControlNode):
     def __init__(self, parent):
         self.parent = parent
     
@@ -351,7 +351,7 @@ class RedisTimeseriesLastTimeNode(spc.ControlNode):
 
 
     
-class RedisTimeseriesLastLapseNode(spc.ControlNode):
+class RedisTimeseriesLastLapseNode(ControlNode):
     def __init__(self, parent):
         self.parent = parent
     
@@ -366,7 +366,7 @@ class RedisTimeseriesLastLapseNode(spc.ControlNode):
 
 
     
-class RedisPublishNode(spc.ControlNode):
+class RedisPublishNode(ControlNode):
     def __init__(self, redis_node, topic):
         self.redis_node = redis_node
         self.topic = topic
@@ -381,8 +381,14 @@ class RedisPublishNode(spc.ControlNode):
             logger.warning(f'AsyncRedis: redis.publish(): {e}')
 
             
+    ## child nodes ##
+    # redis().publish(topic).json(headers=None).set(value)
+    def json(self):
+        return RedisPublishJsonNode(self)
+    
+            
         
-class RedisSubscribeNode(spc.ControlNode):
+class RedisSubscribeNode(ControlNode):
     def __init__(self, redis_node, topic_pattern, timeout=None):
         self.redis_node = redis_node
         self.topic_pattern = topic_pattern
@@ -423,21 +429,52 @@ class RedisSubscribeNode(spc.ControlNode):
 
 
     ## child nodes ##
-    # redis().subscribe(topic_pettern).data()
-    def data(self):
-        return RedisSubscribeDataNode(self)
+    # redis().subscribe(topic_pettern).json()
+    def json(self, headers=None):
+        return RedisSubscribeJsonNode(self, headers)
         
 
     
-class RedisSubscribeDataNode(spc.ControlNode):
+class RedisPublishJsonNode(ControlNode):
+    def __init__(self, publish_node, headers = None):
+        self.publish_node = publish_node
+        self.headers = dict(headers or {})
+        
+
+    async def aio_set(self, value):
+        try:
+            doc = json.dumps(value)
+        except Exception as e:
+            logger.warning('AsyncRedis: publish(): unable to convert to JSON: {e}')
+            return None
+        
+        return await self.publish_node.aio_set(doc)
+
+
+
+class RedisSubscribeJsonNode(ControlNode):
     def __init__(self, subscribe_node):
         self.subscribe_node = subscribe_node
         
 
     async def aio_get(self):
         while True:
-            msg = await self.subscribe_node.aio_get()
-            if msg is None:
-                return None
-            if msg.get('type', None) == 'pmessage':
-                return msg.get('data', None) if msg is not None else None
+            message = await self.subscribe_node.aio_get()
+            if message is None:
+                return None, None
+            
+            if message.get('type', None) == 'pmessage':
+                headers = {
+                    'topic': message.get('channel', None),
+                }
+                body = message.get('data', None)
+                if type(body) is bytes:
+                    try:
+                        body = body.decode()
+                    except:
+                        body = str(body)
+                try:
+                    doc = json.loads(body)
+                except:
+                    doc = body
+                return (headers, doc)

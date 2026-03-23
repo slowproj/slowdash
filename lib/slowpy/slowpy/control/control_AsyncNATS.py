@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 16 March 2026 #
 
-import asyncio, time
+import asyncio, time, json
 from slowpy.control import ControlNode, ControlException
 
 import logging
@@ -126,9 +126,15 @@ class PublishNode(ControlNode):
             logger.error(f'AsnncNATS.publish(): {e}')
         except asyncio.CancelledError:
             pass
-        
 
         
+    ## child nodes ##
+    # nats.publish(subject).json()
+    def json(self, headers=None):
+        return PublishJsonNode(self, headers)
+
+
+    
 class SubscribeNode(ControlNode):
     def __init__(self, nats_node:NATSNode, topic_filter:str, handler=None, timeout=None):
         """
@@ -199,20 +205,52 @@ class SubscribeNode(ControlNode):
 
         
     ## child nodes ##
-    # nats.subscribe(subject).data()
-    def data(self):
-        return SubscribeDataNode(self)
+    # nats.subscribe(subject).json()
+    def json(self):
+        return SubscribeJsonNode(self)
         
 
     
-class SubscribeDataNode(ControlNode):
+class PublishJsonNode(ControlNode):
+    def __init__(self, publish_node, headers = None):
+        self.publish_node = publish_node
+        self.headers = dict(headers or {})
+        
+
+    async def aio_set(self, value):
+        try:
+            doc = json.dumps(value)
+        except Exception as e:
+            logger.warning(f'AsyncNATS: publish(): unable to convert to JSON: {e}')
+            return None
+        
+        return await self.publish_node.aio_set(doc.encode())
+
+
+
+class SubscribeJsonNode(ControlNode):
     def __init__(self, subscribe_node):
         self.subscribe_node = subscribe_node
         
 
     async def aio_get(self):
-        msg = await self.subscribe_node.aio_get()
-        if msg is None:
-            return None
-        else:
-            return msg.data
+        message = await self.subscribe_node.aio_get()
+        if message is None:
+            return None, None
+        
+        headers = {
+            'topic': message.subject,
+        }
+        
+        body = message.data
+        if type(body) is bytes:
+            try:
+                body = body.decode()
+            except:
+                body = str(body)
+            try:
+                doc = json.loads(body)
+            except:
+                doc = body
+                
+        return (headers, doc)

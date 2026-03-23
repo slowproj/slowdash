@@ -20,22 +20,22 @@ async def main():
     is_running = True
 
     async def writer():
-       pub = slowmq.publish('chat.all')
-       nonlocal is_running
-       while is_running:
+        pub = slowmq.publish('chat.all')
+        nonlocal is_running
+        while is_running:
             line = await aio_input()
             if line is None:
                 is_running = False
             else:
-                await pub.aio_set(line)
+                await pub.json().aio_set(line)
 
     async def reader():
-        sub = slowmq.subscribe('chat.*', timeout=1)
+        sub = slowmq.subscribe('chat.*', timeout=0.1)
         nonlocal is_running
         while is_running:
-            message = await sub.data().aio_get()
-            if message is not None:
-                print(message)
+            headers, data = await sub.json().aio_get()
+            if data is not None:
+                print(f'{headers}: {data}')
 
     await asyncio.gather(writer(), reader())
     await slowmq.aio_close()
