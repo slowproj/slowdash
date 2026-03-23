@@ -40,6 +40,11 @@ class RedisNode(spc.ControlNode):
             
             try:
                 import redis.asyncio as redis
+            except Exception as e:
+                logger.warning('Redis: radis python module import error: %s' % str(e))
+                return False
+        
+            try:
                 self.redis = redis.from_url(
                     self.url,
                     decode_responses=self.decode_response,
@@ -324,7 +329,10 @@ class RedisTimeseriesLastValueNode(spc.ControlNode):
         pass
 
     async def aio_get(self):
-        return (await self.parent.aio_get())[1]
+        last = await self.parent.aio_get()
+        if last is None:
+            return None
+        return last[1]
 
 
     
@@ -336,7 +344,10 @@ class RedisTimeseriesLastTimeNode(spc.ControlNode):
         pass
 
     async def aio_get(self):
-        return (await self.parent.aio_get())[0]/1000.0
+        last = await self.parent.aio_get()
+        if last is None:
+            return None
+        return last[0]/1000.0
 
 
     
@@ -348,7 +359,10 @@ class RedisTimeseriesLastLapseNode(spc.ControlNode):
         pass
 
     async def aio_get(self):
-        return time.time() - (await self.parent.aio_get())[0]/1000.0
+        last = await self.parent.aio_get()
+        if last is None:
+            return None
+        return time.time() - last[0]/1000.0
 
 
     
