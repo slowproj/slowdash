@@ -13,65 +13,65 @@ class RedisNode(spc.ControlNode):
     def __init__(self, url, **kwargs):
         self.url = url
         self.kwargs = { k:v for k,v in kwargs.items() }
+
+        self.decode_response = self.kwargs.get('decode_response', True)
         
         self.redis = None
-        self.pubsub_list = []
+        self.subscriber_list = []
 
         self.open_lock = asyncio.Lock()
+        self.retry_wait = 10
+        self.last_connect_attempt_time = 0
 
         
     def __del__(self):
         pass
 
     
-    async def aio_open(self, retries=12, retry_interval=5, force_check=False):
+    async def aio_open(self):
         async with self.open_lock:
-            return await self._aio_open(retries=retries, retry_interval=retry_interval, force_check=force_check)
-
-    async def _aio_open(self, retries, retry_interval, force_check):
-        if self.redis is not None:
-            if not force_check:
+            if self.redis is not None:
                 return True
+
+            now = time.monotonic()
+            if now - self.last_connect_attempt_time < self.retry_wait:
+                return False
+            self.last_connect_attempt_time = now
+            
             try:
+                import redis.asyncio as redis
+                self.redis = redis.from_url(
+                    self.url,
+                    decode_responses=self.decode_response,
+                    health_check_interval=60,
+                    retry_on_timeout = True, socket_connect_timeout = 10,
+                    **self.kwargs
+                )
                 await self.redis.ping()
-            except Exception as e:
-                logging.error(f'AsyncRedis: Redis connection found dead; restarting...')
-                await self.redis.aclose()
+            except:
+                logger.warning(f'AsyncRedis: unable to connected to Redis server: {self.url}')
                 self.redis = None
             else:
-                return True
-        
-        try:
-            import redis.asyncio as redis
-        except Exception as e:
-            logging.error(f'AsyncRedis: {e}')
-            return False
-        
-        for i in range(retries):
-            try:
-                self.redis = redis.from_url(self.url, decode_responses=True, health_check_interval=60, **self.kwargs)
-                await self.redis.ping()
-                break
-            except Exception as e:
-                logging.info(f'Redis not connected: {url}: retry in {retry_interval} sec')
-                asyncio.sleep(retry_interval)
-        else:
-            logging.info(f'Redis not connected: {url}: retry in {retry_interval} sec')
-            self.redis = None
-        
-        if self.redis is None:
-            logging.error(f'Redis not loaded: {url}')
+                logger.info(f'AsyncRedis: connected: {self.url}')
 
         return self.redis is not None
 
         
     async def aio_close(self):
-        for pubsub in self.pubsub_list:
-            await pubsub.aclose()
+        for sub in self.subscriber_list:
+            try:
+                await sub.pubsub.aclose()
+            except:
+                pass
         if self.redis is not None:
-            await self.redis.aclose()
+            try:
+                await self.redis.aclose()
+            except:
+                pass
+            finally:
+                self.redis = None
 
-    
+
     async def aio_set(self, value):
         pass
 
@@ -361,9 +361,12 @@ class RedisPublishNode(spc.ControlNode):
     async def aio_set(self, value):
         if not await self.redis_node.aio_open():
             return None
-        await self.redis_node.redis.publish(self.topic, value)
+        try:
+            await self.redis_node.redis.publish(self.topic, value)
+        except Exception as e:
+            logger.warning(f'AsyncRedis: redis.publish(): {e}')
 
-
+            
         
 class RedisSubscribeNode(spc.ControlNode):
     def __init__(self, redis_node, topic_pattern, timeout=None):
@@ -372,20 +375,37 @@ class RedisSubscribeNode(spc.ControlNode):
         self.timeout = timeout
         
         self.pubsub = None
+        self.disconnected = False
         
         
     async def aio_get(self):
         if not await self.redis_node.aio_open():
+            await asyncio.sleep(1)
             return None
+        
         if self.pubsub is None:
             self.pubsub = self.redis_node.redis.pubsub()
-            self.redis_node.pubsub_list.append(self.pubsub)
-            await self.pubsub.psubscribe(self.topic_pattern)
-            
-        if self.timeout is None or self.timeout < 0:
-            return await self.pubsub.get_message(ignore_subscribe_messages=True)
-        else:
-            return await self.pubsub.get_message(ignore_subscribe_messages=True, timeout=self.timeout)
+            self.redis_node.subscriber_list.append(self)
+            try:
+                await self.pubsub.psubscribe(self.topic_pattern)
+            except Exception as e:
+                logger.warning(f'AsyncRedis: redis.psubscribe(): {e}')
+                return None
+
+        try:
+            await self.pubsub.connect()  # check connection, if disconnected, re-connect and re-subscribe
+            if self.disconnected:
+                self.disconnected = False
+                logger.info(f'AsyncRedis: reconnected')
+            if self.timeout is None or self.timeout < 0:
+                return await self.pubsub.get_message(ignore_subscribe_messages=True)
+            else:
+                return await self.pubsub.get_message(ignore_subscribe_messages=True, timeout=self.timeout)
+        except Exception as e:
+            await asyncio.sleep(1)
+            if not self.disconnected:
+                self.disconnected = True
+                logger.warning(f'AsyncRedis: redis.pubsub.get_message(): {e}')
 
 
     ## child nodes ##

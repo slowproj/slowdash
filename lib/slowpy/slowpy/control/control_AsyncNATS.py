@@ -25,6 +25,47 @@ class NATSNode(ControlNode):
             del self.client
 
 
+    async def aio_open(self):
+        async with self.connect_lock:
+            if self.connected:
+                return True
+
+            now = time.monotonic()
+            if now - self.last_connect_attempt_time < self.retry_wait:
+                return False
+            self.last_connect_attempt_time = now
+
+            if self.client is None:
+                url = f'nats://{self.host}:{self.port}' 
+                async def error_cb(e):
+                    logger.warning(f'AsyncNATS: ERROR: {url}: {e}')
+                async def disconnected_cb():
+                    logger.warning(f'AsyncNATS: disconnected: {url}')
+                async def reconnected_cb():
+                    logger.warning(f'AsyncNATS: reconnected: {url}')
+                async def closed_cb():
+                    logger.warning(f'AsyncNATS: permanently closed (no reconnection): {url}')
+                try:
+                    import nats
+                    self.client = await nats.connect(
+                        url,
+                        allow_reconnect=True, reconnect_time_wait=self.retry_wait, max_reconnect_attempts=-1,
+                        ping_interval=30, max_outstanding_pings=3,
+                        error_cb = error_cb, closed_cb = closed_cb,
+                        disconnected_cb = disconnected_cb, reconnected_cb = reconnected_cb
+                    )
+                except Exception as e:
+                    logger.error(f'AsyncNATS: {url}: {e}')
+                    self.client = None
+                    return False
+                else:
+                    logger.info(f'AsyncNATS: connected: {url}')
+            
+            self.connected = True
+            
+            return True
+    
+        
     async def aio_close(self):
         if self.client is None:
             return
@@ -46,47 +87,6 @@ class NATSNode(ControlNode):
         return SubscribeNode(self, topic_filter, handler, timeout)
 
      
-    async def aio_do_connect(self):
-        async with self.connect_lock:
-            if self.connected:
-                return True
-
-            now = time.monotonic()
-            if now - self.last_connect_attempt_time < self.retry_wait:
-                return False
-            self.last_connect_attempt_time = now
-
-            if self.client is None:
-                url = f'nats://{self.host}:{self.port}' 
-                async def error_cb(e):
-                    logging.warning(f'NATS: ERROR: {url}: {e}')
-                async def disconnected_cb():
-                    logging.warning(f'NATS: disconnected: {url}')
-                async def reconnected_cb():
-                    logging.warning(f'NATS: reconnected: {url}')
-                async def closed_cb():
-                    logging.warning(f'NATS: permanently closed (no reconnection): {url}')
-                try:
-                    import nats
-                    self.client = await nats.connect(
-                        url,
-                        allow_reconnect=True, reconnect_time_wait=self.retry_wait, max_reconnect_attempts=-1,
-                        ping_interval=30, max_outstanding_pings=3,
-                        error_cb = error_cb, closed_cb = closed_cb,
-                        disconnected_cb = disconnected_cb, reconnected_cb = reconnected_cb
-                    )
-                except Exception as e:
-                    logging.error(f'NATS: {url}: {e}')
-                    self.client = None
-                    return False
-                else:
-                    logging.info(f'NATS: connected: {url}')
-            
-            self.connected = True
-            
-            return True
-    
-        
     @classmethod
     def _node_creator_method(cls):
         def async_nats(self, host:str, port:int=4222):
@@ -117,13 +117,13 @@ class PublishNode(ControlNode):
 
         
     async def aio_set(self, value):
-        if not await self.nats_node.aio_do_connect():
+        if not await self.nats_node.aio_open():
             return None
 
         try:
             await self.nats_node.client.publish(self.topic, value)
         except Exception as e:
-            logging.error(f'NATS.publish(): {e}')
+            logger.error(f'AsnncNATS.publish(): {e}')
         except asyncio.CancelledError:
             pass
         
@@ -150,16 +150,16 @@ class SubscribeNode(ControlNode):
         self.register_lock = asyncio.Lock()
 
 
-    async def aio_do_register(self):
+    async def _register(self):
         async with self.register_lock:
             if self.registered:
                 return True
-            if not await self.nats_node.aio_do_connect():
+            if not await self.nats_node.aio_open():
                 return False
     
             async def message_handler(msg):
                 topic, message = msg.subject, msg.data
-                logger.debug(f'NATS message: ({topic}) {message.decode()}')
+                logger.debug(f'AsyncNATS message: ({topic}) {message.decode()}')
                 result = self.handler(msg)
                 if asyncio.iscoroutine(result):
                     await result
@@ -167,7 +167,7 @@ class SubscribeNode(ControlNode):
             try:
                 await self.nats_node.client.subscribe(self.topic_filter, cb=message_handler)
             except Exception as e:
-                logging.warning(f'NATS.subscribe(): {e}')
+                logger.warning(f'AsyncNATS.subscribe(): {e}')
                 return False
             else:
                 self.registered = True
@@ -176,14 +176,14 @@ class SubscribeNode(ControlNode):
 
         
     async def aio_has_data(self):
-        if not await self.aio_do_register():
+        if not await self._register():
             return False
             
         return not await self.queue.empty()
 
         
     async def aio_get(self):
-        if not await self.aio_do_register():
+        if not await self._register():
             asyncio.sleep(1)
             return None
 
