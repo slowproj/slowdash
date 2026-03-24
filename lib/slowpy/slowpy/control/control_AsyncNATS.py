@@ -212,7 +212,7 @@ class SubscribeNode(ControlNode):
 
     
 class PublishJsonNode(ControlNode):
-    def __init__(self, publish_node, headers = None):
+    def __init__(self, publish_node, headers=None):
         self.publish_node = publish_node
         self.headers = dict(headers or {})
         
@@ -237,7 +237,7 @@ class SubscribeJsonNode(ControlNode):
         message = await self.subscribe_node.aio_get()
         if message is None:
             return None, None
-        
+
         headers = {
             'topic': message.subject,
         }

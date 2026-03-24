@@ -431,12 +431,12 @@ class RedisSubscribeNode(ControlNode):
     ## child nodes ##
     # redis().subscribe(topic_pettern).json()
     def json(self, headers=None):
-        return RedisSubscribeJsonNode(self, headers)
+        return RedisSubscribeJsonNode(self)
         
 
     
 class RedisPublishJsonNode(ControlNode):
-    def __init__(self, publish_node, headers = None):
+    def __init__(self, publish_node, headers=None):
         self.publish_node = publish_node
         self.headers = dict(headers or {})
         

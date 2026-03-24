@@ -1,8 +1,8 @@
 # Created by Sanshiro Enomoto on 27 September 2025 #
 
-from slowpy.control import ControlNode, ControlException
-import asyncio, time, uuid, json, typing, inspect, logging
+import asyncio, time, uuid, json, copy, typing, inspect, logging
 import aio_pika
+from slowpy.control import ControlNode, ControlException
 
 
 class Message:
@@ -15,6 +15,14 @@ class Message:
         self.body = body
         self.headers = dict(headers)
         self.parameters = dict(parameters)
+
+        
+    def __str__(self):
+        return json.dumps({
+            'parameters': self.parameters,
+            'headers': self.headers,
+            'body': repr(self.body)
+        })
 
 
         
@@ -230,7 +238,7 @@ class PublishNode(ControlNode):
         if type(body) is str:
             content_type, content_encoding = 'text/plain', 'utf-8'
             body = body.encode()
-        elif type(body) in [ list, dict ]:
+        elif type(body) in [ list, dict, int, float, bool ]:
             content_type, content_encoding = 'application/json', 'utf-8'
             body = json.dumps(body).encode()
         else:
@@ -277,7 +285,24 @@ class PublishNode(ControlNode):
         
         return True
 
+        
+    ## child nodes ##
+    # rabbitmq.publish(subject).json()
+    def json(self, headers=None):
+        return PublishJsonNode(self, headers)
+
     
+
+class PublishJsonNode(ControlNode):
+    def __init__(self, publish_node, headers=None):
+        self.publish_node = publish_node
+        self.headers = dict(headers or {})
+        
+
+    async def aio_set(self, value):
+        return await self.publish_node.aio_set((value, self.headers))
+
+
 
 class QueueNode(ControlNode):
     def __init__(self, exchange_node:ExchangeNode, queue_name:str|None=None, *, routing_key:list[str]|str|None=None, handler=None, timeout:float=0, **kwargs):
@@ -313,7 +338,11 @@ class QueueNode(ControlNode):
             headers = message.headers or {}
             content_type = message.content_type or 'application/octet-stream'
             if content_type == 'application/json':
-                return Message(json.loads(message.body.decode('utf-8')), headers, parameters)
+                try:
+                    return Message(json.loads(message.body.decode('utf-8')), headers, parameters)
+                except Exception as e:
+                    logging.warning(f'AsyncRabbitMQ.QueueNode[{self.name}]: bad JSON format: {e}')
+                    return Message(message.body.decode('utf-8'), headers, parameters)
             elif content_type == 'text/plain':
                 return Message(message.body.decode('utf-8'), headers, parameters)
             else:
@@ -340,11 +369,12 @@ class QueueNode(ControlNode):
             task.cancel()
         self.tasks.clear()
         
-            
+        
     async def _construct(self):
         async with self.construct_lock:
             return await self._construct_in_locked()
-            
+
+        
     async def _construct_in_locked(self):
         if self.queue is not None:
             return
@@ -441,9 +471,9 @@ class QueueNode(ControlNode):
         return queue.declaration_result.message_count > 0
         
 
-    # rabbitmq().direct_exchange(name).queue(name).body()
-    def message_body(self):
-        return QueueMessageBodyNode(self)
+    # rabbitmq().direct_exchange(name).queue(name).json()
+    def json(self):
+        return QueueMessageJsonNode(self)
 
     # rabbitmq().direct_exchange(name).rpc_function(name, function)
     def rpc_function(self, function):
@@ -454,18 +484,25 @@ class QueueNode(ControlNode):
         return RpcCallNode(self, routing_key, body, headers, parameters)
 
 
-class QueueMessageBodyNode(ControlNode):
+    
+class QueueMessageJsonNode(ControlNode):
     def __init__(self, queue_node:QueueNode):
         self.queue_node = queue_node
+
         
     async def aio_get(self):
         message = await self.queue_node.aio_get()
-        if message is None:
-            return None
+        if message.body is None:
+            return None, None
         else:
-            return message.body
+            headers = copy.deepcopy(message.headers)
+            headers['topic'] = message.parameters.get('routing_key')
+            headers['message_id'] = message.parameters.get('message_id')
+            headers['timestamp'] = message.parameters.get('timestamp')
+            return headers, message.body
         
-    
+
+        
 class RpcFunctionNode(ControlNode):
     def __init__(self, queue_node:QueueNode, function):
         self.queue_node = queue_node

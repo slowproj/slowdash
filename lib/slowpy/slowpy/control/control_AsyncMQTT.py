@@ -292,11 +292,11 @@ class SubscribeJsonNode(ControlNode):
         message = await self.subscribe_node.aio_get()
         if message is None:
             return None, None
-        
+
         headers = {
             'topic': message.topic.value,
+            'message_id': message.mid,
         }
-        
         body = message.payload
         if type(body) is bytes:
             try:

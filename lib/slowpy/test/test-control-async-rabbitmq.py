@@ -28,15 +28,15 @@ async def main():
             if line is None:
                 is_running = False
             else:
-                await pub.aio_set(line)
+                await pub.json().aio_set({'input': line})
 
     async def reader():
         sub = exchange.queue(routing_key='chat.*', exclusive=True, timeout=0.1)
         nonlocal is_running
         while is_running:
-            body = await sub.message_body().aio_get()
-            if body is not None:
-                print(body)
+            headers, data = await sub.json().aio_get()
+            if data is not None:
+                print(f'{headers}: {data}')
 
     await asyncio.gather(writer(), reader())
     await rabbitmq.aio_close()
