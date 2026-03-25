@@ -64,7 +64,7 @@ class MQTTNode(ControlNode):
                 logger.error(f'AsyncMQTT: Unable to connect to MQTT broker: {e}')
                 return False
             else:
-                logger.info(f'AsyncMQTT: broker connected')
+                logger.info(f'AsyncMQTT: connected: mqtt://{self.host}:{self.port}')
             
             self.connected = True
         
@@ -84,8 +84,6 @@ class MQTTNode(ControlNode):
                             logger.debug(f'AsyncMQTT message topic matches: {msg.topic} ~ {topic_filter}')
                             for subscriber in subscribers:
                                 await subscriber._handle_message(msg)
-                except asyncio.CancelledError:
-                    pass
                 except Exception as e:
                     logger.warning(f'AsyncMQTT: error: {e}')
                     self.disconnected = True
@@ -178,8 +176,6 @@ class PublishNode(ControlNode):
 
         try:
             await self.mqtt.client.publish(self.topic, value)
-        except asyncio.CancelledError:
-            pass
         except Exception as e:
             logger.warning(f'AsyncMQTT: error: {e}')
             self.disconnected = True
@@ -255,7 +251,7 @@ class SubscribeNode(ControlNode):
                 return await self.queue.get_nowait()
             else:
                 return await asyncio.wait_for(self.queue.get(), timeout=self.timeout)
-        except (asyncio.CancelledError, asyncio.TimeoutError, asyncio.QueueEmpty):
+        except (asyncio.TimeoutError, asyncio.QueueEmpty):
             return None
 
         

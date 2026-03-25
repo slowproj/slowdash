@@ -1,8 +1,4 @@
 
-print('RabbitMQ Chat')
-print('type ctrl-d to stop')
-
-
 import asyncio
 
 from slowpy.control import control_system as ctrl
@@ -19,6 +15,7 @@ async def aio_input(prompot=""):
             
 async def main():
     is_running = True
+    print('type ctrl-d to stop')
 
     async def writer():
         pub = exchange.publish(routing_key='chat.all')
@@ -31,7 +28,7 @@ async def main():
                 await pub.json().aio_set({'input': line})
 
     async def reader():
-        sub = exchange.queue(routing_key='chat.*', exclusive=True, timeout=0.1)
+        sub = exchange.subscribe('chat.*', timeout=0.1)
         nonlocal is_running
         while is_running:
             headers, data = await sub.json().aio_get()

@@ -1,12 +1,7 @@
-
-print('SlowMQ Chat')
-print('type ctrl-d to stop')
-
-
 import asyncio
 
 from slowpy.control import control_system as ctrl
-slowmq = ctrl.import_control_module('AsyncSlowMQ').async_slowmq('localhost')
+slowmq = ctrl.import_control_module('AsyncSlowMQ').async_slowmq('slowmq://localhost:18881')
 
 
 async def aio_input(prompot=""):
@@ -18,6 +13,7 @@ async def aio_input(prompot=""):
 
 async def main():
     is_running = True
+    print('type ctrl-d to stop')
 
     async def writer():
         pub = slowmq.publish('chat.all')

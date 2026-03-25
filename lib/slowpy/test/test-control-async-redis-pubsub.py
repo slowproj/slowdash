@@ -1,8 +1,3 @@
-
-print('Redis Chat')
-print('type ctrl-d to stop')
-
-
 import asyncio
 
 from slowpy.control import control_system as ctrl
@@ -18,6 +13,7 @@ async def aio_input(prompot=""):
     
 async def main():
     is_running = True
+    print('type ctrl-d to stop')
 
     async def writer():
         pub = redis.publish('chat:all')

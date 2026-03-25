@@ -1,12 +1,7 @@
-
-print('NATS Chat')
-print('type ctrl-d to stop')
-
-
 import asyncio
 
 from slowpy.control import control_system as ctrl
-nats = ctrl.import_control_module('AsyncNATS').async_nats('localhost')
+nats = ctrl.import_control_module('AsyncNATS').async_nats('nats://localhost')
 
 
 async def aio_input(prompot=""):
@@ -18,6 +13,7 @@ async def aio_input(prompot=""):
 
 async def main():
     is_running = True
+    print('type ctrl-d to stop')
 
     async def writer():
         pub = nats.publish('chat.all')

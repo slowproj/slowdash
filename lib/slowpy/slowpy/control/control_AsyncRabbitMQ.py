@@ -205,6 +205,11 @@ class ExchangeNode(ControlNode):
     def queue(self, name:str|None=None, *, routing_key:str=None, handler=None, timeout=0, **kwargs):
         return QueueNode(self, name, routing_key=routing_key, handler=handler, timeout=timeout, **kwargs)
 
+    # rabbitmq().XXX_exchange(name).subscribe(routing_key): use the queue for subscribe 
+    def subscribe(self, routing_key:str, timeout=0, **kwargs):
+        kwargs['exclusive'] = True
+        return QueueNode(self, None, routing_key=routing_key, handler=None, timeout=timeout, **kwargs)
+
 
     
 class PublishNode(ControlNode):
@@ -272,13 +277,13 @@ class PublishNode(ControlNode):
         message = aio_pika.Message(body, headers=headers, **parameters)
         try:
             await self.exchange_node.exchange.publish(message, self.routing_key, **self.kwargs)
-        except asyncio.CancelledError:
+        except asyncio.CancelledError as e:
             if self.is_stop_requested():
                 return False
             else:
                 err = f'AsyncRabbitMQ: publish cancelled unexpectedly (exchange={self.exchange_node.name}, key={self.routing_key}): {e}'
                 logging.warning(err)
-                raise ControlException(err)
+                raise e
         except Exception as e:
             logging.error(f'AsyncRabbitMQ: publish failed (exchange={self.exchange_node.name}, key={self.routing_key}): {e}')
             raise
@@ -410,7 +415,7 @@ class QueueNode(ControlNode):
                 else:
                     err = f'AsyncRabbitMQ: queue.get() cancelled unexpectedly (exchange={self.exchange_node.name}, queue={self.name}): {e}'
                     logging.warning(err)
-                    raise ControlException(err)
+                    raise e
             except Exception as e:
                 logging.error(f'AsyncRabbitMQ: queue.get() failed (exchange={self.exchange_node.name}, queue={self.name}): {e}')
                 raise
@@ -440,10 +445,7 @@ class QueueNode(ControlNode):
                 break
             
             lapse += 0.2
-            try:
-                await asyncio.sleep(0.2)
-            except asyncio.CancelledError:
-                break
+            await asyncio.sleep(0.2)
 
         if message is None:
             return Message()

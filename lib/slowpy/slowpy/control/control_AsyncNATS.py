@@ -9,9 +9,8 @@ logger.setLevel(logging.INFO)
 
 
 class NATSNode(ControlNode):
-    def __init__(self, host:str, port:int=4222):
-        self.host = host
-        self.port = port
+    def __init__(self, url:str):
+        self.url = url
         
         self.client = None
         self.connected = False
@@ -36,30 +35,29 @@ class NATSNode(ControlNode):
             self.last_connect_attempt_time = now
 
             if self.client is None:
-                url = f'nats://{self.host}:{self.port}' 
                 async def error_cb(e):
-                    logger.warning(f'AsyncNATS: ERROR: {url}: {e}')
+                    logger.warning(f'AsyncNATS: ERROR: {self.url}: {e}')
                 async def disconnected_cb():
-                    logger.warning(f'AsyncNATS: disconnected: {url}')
+                    logger.warning(f'AsyncNATS: disconnected: {self.url}')
                 async def reconnected_cb():
-                    logger.warning(f'AsyncNATS: reconnected: {url}')
+                    logger.warning(f'AsyncNATS: reconnected: {self.url}')
                 async def closed_cb():
-                    logger.warning(f'AsyncNATS: permanently closed (no reconnection): {url}')
+                    logger.warning(f'AsyncNATS: permanently closed (no reconnection): {self.url}')
                 try:
                     import nats
                     self.client = await nats.connect(
-                        url,
+                        self.url,
                         allow_reconnect=True, reconnect_time_wait=self.retry_wait, max_reconnect_attempts=-1,
                         ping_interval=30, max_outstanding_pings=3,
                         error_cb = error_cb, closed_cb = closed_cb,
                         disconnected_cb = disconnected_cb, reconnected_cb = reconnected_cb
                     )
                 except Exception as e:
-                    logger.error(f'AsyncNATS: {url}: {e}')
+                    logger.error(f'AsyncNATS: {self.url}: {e}')
                     self.client = None
                     return False
                 else:
-                    logger.info(f'AsyncNATS: connected: {url}')
+                    logger.info(f'AsyncNATS: connected: {self.url}')
             
             self.connected = True
             
@@ -89,11 +87,11 @@ class NATSNode(ControlNode):
      
     @classmethod
     def _node_creator_method(cls):
-        def async_nats(self, host:str, port:int=4222):
+        def async_nats(self, url:str):
             if True:
-                return NATSNode(host, port)
+                return NATSNode(url)
             
-            name = '%s:%s' % (host, str(port))
+            name = url
             try:
                 self._nats_nodes.keys()
             except:
@@ -124,8 +122,6 @@ class PublishNode(ControlNode):
             await self.nats_node.client.publish(self.topic, value)
         except Exception as e:
             logger.error(f'AsnncNATS.publish(): {e}')
-        except asyncio.CancelledError:
-            pass
 
         
     ## child nodes ##
@@ -190,7 +186,7 @@ class SubscribeNode(ControlNode):
         
     async def aio_get(self):
         if not await self._register():
-            asyncio.sleep(1)
+            await asyncio.sleep(1)
             return None
 
         try:
@@ -200,7 +196,7 @@ class SubscribeNode(ControlNode):
                 return await self.queue.get_nowait()
             else:
                 return await asyncio.wait_for(self.queue.get(), timeout=self.timeout)
-        except (asyncio.CancelledError, asyncio.TimeoutError, asyncio.QueueEmpty):
+        except (asyncio.TimeoutError, asyncio.QueueEmpty):
             return None
 
         

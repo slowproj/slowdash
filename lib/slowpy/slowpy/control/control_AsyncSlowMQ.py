@@ -9,15 +9,16 @@ logger.setLevel(logging.INFO)
 
 
 class SlowMQNode(ControlNode):
-    def __init__(self, host:str, port:int=4222, *, name=None):
-        self.host = host
-        self.port = port
+    def __init__(self, url:str, *, name=None):
+        self.url = url
         self.name = name
 
         self.connections = set()
         self.publish_ws = None
         self.publish_retry_time = 0
         self.retry_wait = 10
+
+        self.publish_ws_connected = False
 
         
     def __del__(self):
@@ -26,15 +27,24 @@ class SlowMQNode(ControlNode):
 
 
     async def aio_open(self):
-        url = f'ws://{self.host}:{self.port}/ws/pubsub'
+        if not self.url.startswith('slowmq://'):
+            logger.warning(f'AsyncSlowMQ Error: {self.url}: bad SlowMQ URL: must start with slowmq://')
+            return None
+            
+        netloc = self.url[len('slowmq://'):]
+        if netloc.endswith('/'):
+            netloc = netloc[:-1]
+        wsurl = f'ws://{netloc}/ws/pubsub'
         if self.name is not None:
-            url += f'?name={self.name}'
+            wsurl += f'?name={self.name}'
         try:
             import websockets
-            ws = await websockets.connect(url)
+            ws = await websockets.connect(wsurl)
         except Exception as e:
-            logger.warning(f'AsyncSlowMQ Error: {url}: {e}')
+            logger.warning(f'AsyncSlowMQ Error: {self.url}: {e}')
             ws = None
+        else:
+            logger.info(f'AsyncSlowMQ: connected: {self.url}')
 
         if ws is not None:
             self.connections.add(ws)
@@ -43,14 +53,20 @@ class SlowMQNode(ControlNode):
 
     
     async def aio_close(self):
+        is_cancelled = False
         for ws in self.connections:
             try:
                 await ws.close()
-            except (asyncio.CancelledError, Exception):
+            except asyncio.CancelledError as e:
+                is_cancelled = True
+            except Exception:
                 pass
             del ws
 
         self.connections = set()
+
+        if is_cancelled:
+            raise asyncio.CancelledError
 
         
     def publish(self, topic):
@@ -62,20 +78,27 @@ class SlowMQNode(ControlNode):
 
      
     async def _disconnect(self, ws):
+        is_cancelled = False
+        
         try:
             await ws.close()
             self.connections.discard(ws)
-        except (asyncio.CancelledError, Exception):
+        except asyncio.CancelledError as e:
+            is_cancelled = True
+        except Exception:
             pass
         
+        if is_cancelled:
+            raise asyncio.CancelledError
+
         
     @classmethod
     def _node_creator_method(cls):
-        def async_slowmq(self, host:str, port:int=18881, name:str=None):
+        def async_slowmq(self, url:str, name:str=None):
             if True:
-                return SlowMQNode(host, port, name=name)
+                return SlowMQNode(url, name=name)
             
-            obj_name = '%s:%s' % (host, str(port))
+            obj_name = url
             try:
                 self._slowmq_nodes.keys()
             except:
@@ -83,7 +106,7 @@ class SlowMQNode(ControlNode):
             node = self._slowmq_nodes.get(obj_name, None)
         
             if node is None:
-                node = SlowMQNode(host, port)
+                node = SlowMQNode(url)
                 self._slowmq_nodes[obj_name] = node
 
             return node
@@ -97,11 +120,9 @@ class PublishNode(ControlNode):
         self.slowmq_node = slowmq_node
         self.topic = topic
 
-        self.connected = False
-
         
     async def aio_set(self, value):
-        if not self.connected:
+        if not self.slowmq_node.publish_ws_connected:
             now = time.monotonic()
             if now - self.slowmq_node.publish_retry_time < self.slowmq_node.retry_wait:
                 return
@@ -114,7 +135,7 @@ class PublishNode(ControlNode):
             if self.slowmq_node.publish_ws is None:
                 return
             else:
-                self.connected = True
+                self.slowmq_node.publish_ws_connected = True
 
         try:
             doc = json.dumps({
@@ -127,11 +148,10 @@ class PublishNode(ControlNode):
         
         try:
             await self.slowmq_node.publish_ws.send(doc)
+            print("PUBLISH", doc)
         except Exception as e:
             logger.warning(f'AsyncSlowMQ.publish(): {e}')
-            self.connected = False
-        except asyncio.CancelledError:
-            pass
+            self.slowmq_node.publish_ws_connected = False
 
         
     ## child nodes ##
@@ -190,8 +210,6 @@ class SubscribeNode(ControlNode):
             logger.warning(f'AsyncSlowMQ.subscribe(): {e}')
             self.connected = False
             return False
-        except asyncio.CancelledError:
-            return False
 
         try:
             message = json.loads(reply)
@@ -215,8 +233,6 @@ class SubscribeNode(ControlNode):
         try:
             message = await asyncio.wait_for(self.ws.recv(), timeout=self.timeout)
         except asyncio.TimeoutError:
-            message = None
-        except asyncio.CancelledError:
             message = None
         except Exception as e:
             logger.warning(f'AsyncSlowMQ.subscribe().aio_get(): {e}')
