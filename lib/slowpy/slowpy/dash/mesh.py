@@ -7,25 +7,93 @@ from slowpy.control import control_system as ctrl
 import logging
 
 
+class EmptyPubsubNode:
+    def __init__(self):
+        pass
+    
+    def aio_open():
+        pass
+
+    def aio_close():
+        pass
+
+    def publish(self, topic, **kwargs):
+        return EmptyPublishNode(topic)
+
+    def subscribe(self, topic_filter, timeout=None, **kwargs):
+        return EmptySubscribeNode(topic_filter, timeout=timeout)
+
+    
+class EmptyPublishNode:
+    def __init__(self, topic):
+        self.topic = topic
+
+    async def aio_set(self, value):
+        print(f'PUBSLIH ({self.topic}): {repr(value)}')
+
+    def json(self, headers=None):
+        return EmptyPublishJsonNode(self)
+
+    
+class EmptySubscribeNode:
+    def __init__(self, topic_filter:str, timeout=None):
+        self.topic_filter = topic_filter
+        self.timeout = timeout
+        
+    async def aio_get(self):
+        if self.timeout is not None and self.timeout > 0:
+            await asyncio.sleep(self.timeout)
+        return None, None
+    
+    def json(self):
+        return EmptySubscribeJsonNode(self)
+        
+    
+class EmptyPublishJsonNode:
+    def __init__(self, publish_node):
+        self.publish_node = publish_node
+
+    async def aio_set(self, value):
+        return await self.publish_node.aio_set(value)
+
+
+class EmptySubscribeJsonNode:
+    def __init__(self, subscribe_node):
+        self.subscribe_node = subscribe_node
+
+    async def aio_get(self):
+        return await self.subscribe_node.aio_get()
+
+
+
 class Mesh:
-    def __init__(self, url:str, *, timeout:float=0.1):
-        self.url = url
-        self.pubsub = None
+    def __init__(self, url=None, *, timeout:float=0.1):
         self.pubargs = {}
         self.subargs = { 'timeout': timeout }
         
         self.subscription_coros = []
+        self.subscription_tasks = None
+
+        if url is not None:
+            self.connect(url)
+        else:
+            self.pubsub = EmptyPubsubNode()
+
+        
+    def connect(self, url:str):
+        if url is None:
+            return
         
         try:
-            o = urlsplit(self.url)
+            o = urlsplit(url)
             if o.scheme in ['slowmq', 'slowdash']:
                 self.pubsub = ctrl.import_control_module('AsyncSlowMQ').async_slowmq(f'slowmq://{o.netloc}')
             elif o.scheme == 'nats':
-                self.pubsub = ctrl.import_control_module('AsyncNATS').async_nats(self.url)
+                self.pubsub = ctrl.import_control_module('AsyncNATS').async_nats(url)
             elif o.scheme == 'mqtt':
                 self.pubsub = ctrl.import_control_module('AsyncMQTT').async_mqtt(o.hostname, o.port or 1883)
             elif o.scheme == 'redis':
-                self.pubsub = ctrl.import_control_module('AsyncRedis').async_redis(self.url)
+                self.pubsub = ctrl.import_control_module('AsyncRedis').async_redis(url)
             elif o.scheme in ['amqp', 'rabbitmq', 'rmq']:
                 amqp = ctrl.import_control_module('AsyncRabbitMQ').async_rabbitmq(f'amqp://{o.netloc}')
                 if len(o.path) > 1:
@@ -36,9 +104,11 @@ class Mesh:
                 logging.error('Mesh: unknown pubsub type: %s' % scheme)
         except Exception as e:
             logging.error(e)
-        
 
+            
     async def aio_close(self):
+        await self.aio_stop()
+        
         if self.pubsub is not None:
             try:
                 await self.pubsub.aio_close()
@@ -66,6 +136,14 @@ class Mesh:
             return None
         else:
             return await publisher.aio_set(value)
+
+
+    def publish(self, topic:str, value):
+        publisher = self.publisher(topic)
+        if publisher is None:
+            return None
+        
+        asyncio.get_running_loop().create_task(publisher.aio_set(value))
 
 
     async def aio_subscribe(self, topic:str, func):
@@ -98,6 +176,31 @@ class Mesh:
         return await receiver()
 
 
+    async def aio_start(self):
+        if self.subscription_tasks is not None:
+            await self.aio_stop()
+
+        self.subscription_tasks = set()
+        for coro in self.subscription_coros:
+            task = asyncio.create_task(coro)
+            task.add_done_callback(self.subscription_tasks.discard)
+            self.subscription_tasks.add(task)
+            
+
+    async def aio_stop(self):
+        if self.subscription_tasks is None:
+            return
+            
+        for task in self.subscription_tasks:
+            task.cancel()
+        try:
+            await asyncio.gather(*self.subscription_tasks, return_exceptions=True)
+        except:
+            pass
+        finally:
+            self.subscription_tasks = None
+
+
     def on(self, topic:str):
         """decorator to make a message handler
         Args:
@@ -107,7 +210,3 @@ class Mesh:
             self.subscription_coros.append(self.aio_subscribe(topic, func))
             return func
         return wrapper
-
-
-    async def aio_start(self):
-        await asyncio.gather(*self.subscription_coros)

@@ -148,7 +148,6 @@ class PublishNode(ControlNode):
         
         try:
             await self.slowmq_node.publish_ws.send(doc)
-            print("PUBLISH", doc)
         except Exception as e:
             logger.warning(f'AsyncSlowMQ.publish(): {e}')
             self.slowmq_node.publish_ws_connected = False

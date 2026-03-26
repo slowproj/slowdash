@@ -1,7 +1,8 @@
 # Created by Sanshiro Enomoto on 13 August 2025 #
 
-import sys, asyncio, threading, inspect, traceback, logging
+import sys, time, asyncio, threading, inspect, traceback, logging
 from slowpy.control import control_system as ctrl
+from .mesh import Mesh
 
 #logging.basicConfig(level=logging.DEBUG)
 
@@ -10,9 +11,14 @@ class Tasklet:
     def __init__(self):
         self.app = None
         self.module = None
+        self.mesh = Mesh()
+        self.task_coros = []
+        self.task_tasks = set()
+
+        self.initialize_completed = False
 
 
-    def run(self, params={}):
+    def run(self, params:dict|None=None, mesh_url:str|None=None):
         caller_frame = inspect.currentframe().f_back
         modname = caller_frame.f_globals.get('__name__')
         self.module = sys.modules.get(modname)
@@ -21,11 +27,43 @@ class Tasklet:
             return
         logging.debug(f'Tasklet took over module {self.module.__name__}')
 
+        self.mesh.connect(mesh_url)
+        
         ctrl.stop_by_signal()
-        asyncio.run(self._go(params))
+        
+        try:
+            asyncio.run(self._start(params or {}))
+        except asyncio.CancelledError:
+            pass
+            
 
-
-    async def _go(self, params):
+    async def _start(self, params):
+        try:
+            await self.mesh.aio_start()
+            
+            self.task_tasks = set()
+            for coro in self.task_coros:
+                task = asyncio.create_task(coro)
+                task.add_done_callback(self.task_tasks.discard)
+                self.task_tasks.add(task)
+                
+            await self._start_script(params)
+            
+        except Exception as e:
+            raise e
+        finally:
+            await self.mesh.aio_close()
+            for task in self.task_tasks:
+                task.cancel()
+            try:
+                await task
+            except Exception as e:
+                logging.error(f'Error in Tasklet Callback: {e}')
+            except:
+                pass
+                
+        
+    async def _start_script(self, params):
         func_setup = self._get_func('_setup')
         func_initialize = self._get_func('_initialize')
         func_run = self._get_func('_run')
@@ -62,6 +100,8 @@ class Tasklet:
             except Exception as e:
                 self._handle_error(f'Tasklet error: _initialize(): {e}')
             
+        self.initialize_completed = True
+        
         if func_run and not ctrl.is_stop_requested():
             try:
                 if inspect.iscoroutinefunction(func_run):
@@ -96,7 +136,6 @@ class Tasklet:
                 self._handle_error(f'Tasklet error: _finalize(): {e}')
 
 
-                
     def _get_func(self, name):
         if self.module is None:
             return None
@@ -107,7 +146,42 @@ class Tasklet:
             logging.debug(f'Tasklet callback {name} not defined')
             return None
 
+        
+    def add_loop_callback(self, func, interval:float):
+        """
+        Args:
+          func: callback function
+          interval: func execution intervals. Zero for no wait, negative to run the func only once.
+        """
+        async def go():
+            try:
+                last_execusion_time = time.monotonic()
+                while not ctrl.is_stop_requested():
+                    if not self.initialize_completed:
+                        await asyncio.sleep(0.1)
+                        continue
+                    if interval > 0:
+                        now = time.monotonic()
+                        lapse = now - last_execusion_time
+                        if lapse < interval:
+                            await asyncio.sleep(min(interval-lapse, 0.5))
+                            continue
+                        last_execusion_time += int(lapse / interval) * interval
+                    
+                    result = func()
+                    if asyncio.iscoroutine(result):
+                        await result
+                    else:
+                        await asyncio.sleep(0.01)
 
+                    if interval < 0:
+                        break
+            except Exception as e:
+                logging.error(f'Error in Tasklet loop function: {e}')
+                
+        self.task_coros.append(go())
+
+                
     def _handle_error(self, message):
         logging.error(message)
         #if sys.exc_info()[0] is not None:
@@ -117,3 +191,29 @@ class Tasklet:
                 logging.warning(tb)
         except:
             pass
+
+
+    def is_stop_requested(self):
+        return ctrl.is_stop_requested()
+    
+        
+    async def aio_publish(self, topic:str, value):
+        return await self.mesh.aio_publish(topic, value)
+    
+        
+    def loop(self, interval=0):
+        """decorator to add a tasklet task
+        """
+        def wrapper(func):
+            self.add_loop_callback(func, interval)
+            return func
+        return wrapper
+        
+
+    def on(self, topic:str):
+        """decorator to make a message handler
+        Args:
+        - topic: path pattern to match
+        """
+        return self.mesh.on(topic)
+
