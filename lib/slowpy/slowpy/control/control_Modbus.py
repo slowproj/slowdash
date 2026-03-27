@@ -1,41 +1,78 @@
 # Created by Sanshiro Enomoto on 7 May 2025 #
 
 
-import slowpy.control as spc
-import logging
+import time, logging
+from slowpy.control import ControlNode, ControlVariableNode, ControlException
 
 
-class ModbusNode(spc.ControlNode):
+class ModbusNode(ControlNode):
     def __init__(self, host:str, port:int=502):
-        from pymodbus.client import ModbusTcpClient
-        self.client = ModbusTcpClient(host, port=port)
+        self.host = host
+        self.port = port
+        
+        self.client = None
+        self.retry_wait = 10
+        self.last_retry_time = 0
+        
+
+    def __del__(self):
+        self.close()
+
+        
+    def open(self):
+        if self.client is not None:
+            return True
+
+        now = time.monotonic()
+        if now - self.last_retry_time < self.retry_wait:
+            return False
+        self.last_retry_time = now
+        
         try:
-            self.client.connect()
-            print(f'Modbus Connected at {host}:{port}')
+            from pymodbus.client import ModbusTcpClient
+        except Exception:
+            logging.error(f'unable to import pymodbus')
+            return False
+            
+        try:
+            self.client = ModbusTcpClient(self.host, port=self.port)
+            if self.client.connect():
+                print(f'Modbus Connected at {self.host}:{self.port}')
+            else:
+                logging.error(f'Modbus Intialization Error at {self.host}:{self.port}: connect() failed')
+                self.client = None
         except Exception as e:
-            logging.error(f'Modbus Intialization Error at {host}:{port}: {e}')
+            logging.error(f'Modbus Intialization Error at {self.host}:{self.port}: {e}')
+            self.client = None
+
+        return self.client is not None
+    
+            
+    def close(self):
+        if self.client is not None:
+            self.client.close()
             self.client = None
 
             
     ## child nodes ##
     # modbus().register(address)
     def register(self, address:int):
-        return ModbusHoldingRegisterNode(self.client, address)
+        return HoldingRegisterNode(self, address)
 
     
     # modbus().register32(address)
     def register32(self, address:int):
-        return ModbusHoldingRegisterNode(self.client, address, words=2)
+        return HoldingRegisterNode(self, address, words=2)
 
     
     # modbus().holding_register(address): this is same as modbus().register(address)
     def holding_register(self, address:int):
-        return ModbusHoldingRegisterNode(self.client, address)
+        return HoldingRegisterNode(self, address)
 
     
     # modbus().input_register(address)
     def input_register(self, address:int):
-        return ModbusInputRegisterNode(self.client, address)
+        return InputRegisterNode(self, address)
 
     
     @classmethod
@@ -61,35 +98,46 @@ class ModbusNode(spc.ControlNode):
 
     
     
-class ModbusHoldingRegisterNode(spc.ControlVariableNode):
-    def __init__(self, modbus, address:int, words:int=1):
-        self.modbus = modbus
+class HoldingRegisterNode(ControlVariableNode):
+    def __init__(self, modbus_node, address:int, words:int=1):
+        self.modbus_node = modbus_node
         self.address = address
         self.words = words
 
         
     def set(self, value):
-        if self.modbus is None:
+        if not self.modbus_node.open():
             return None
 
-        if self.words == 1:
-            self.modbus.write_register(self.address, value)
-        else:
-            data = [ (value >> (w * 16)) & 0xffff for w in reversed(range(self.words)) ]
-            self.modbus.write_registers(self.address, data)
+        try:
+            if self.words == 1:
+                data = value & 0xffff
+                reply = self.modbus_node.client.write_register(self.address, data)
+            else:
+                data = [ (value >> (w * 16)) & 0xffff for w in reversed(range(self.words)) ]
+                reply = self.modbus_node.client.write_registers(self.address, data)
+        except Exception as e:
+            logging.error(f'Modbus Error: write_register[s]: address {self.address}: {e}')
+            self.modbus_node.close()  # this will start retrying
+            return None
             
+        if reply.isError():
+            raise ControlException(f'Modbus Error Reply: write_register[s]: address={self.address}')
+
         
     def get(self):
-        if self.modbus is None:
+        if not self.modbus_node.open():
             return None
         
         try:
-            reply = self.modbus.read_holding_registers(self.address, count=self.words)
-            if reply.isError():
-                raise Exception(f'address: {self.address}')
+            reply = self.modbus_node.client.read_holding_registers(self.address, count=self.words)
         except Exception as e:
             logging.error(f'Modbus Error: read_holding_registers(): {e}')
+            self.modbus_node.close()  # this will start retrying
             return None
+
+        if reply.isError():
+            raise ControlException(f'Modbus Error Reply: read_holding_register(): address={self.address}')
 
         if self.words == 1:
             return reply.registers[0]
@@ -101,22 +149,24 @@ class ModbusHoldingRegisterNode(spc.ControlVariableNode):
 
     
 
-class ModbusInputRegisterNode(spc.ControlVariableNode):
-    def __init__(self, modbus, address:int):
-        self.modbus = modbus
+class InputRegisterNode(ControlVariableNode):
+    def __init__(self, modbus_node, address:int):
+        self.modbus_node = modbus_node
         self.address = address
 
         
     def get(self):
-        if self.modbus is None:
+        if not self.modbus_node.open():
             return None
         
         try:
-            reply = self.modbus.read_input_registers(self.address)
-            if reply.isError():
-                raise Exception(f'address: {self.address}')
+            reply = self.modbus_node.client.read_input_registers(self.address, count=1)
         except Exception as e:
             logging.error(f'Modbus Error: read_input_registers(): {e}')
+            self.modbus_node.close()  # this will start retrying
             return None
+
+        if reply.isError():
+            raise ControlException(f'Modbus Error Reply: read_input_registers: address={self.address}')
 
         return reply.registers[0]

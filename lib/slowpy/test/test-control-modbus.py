@@ -1,5 +1,5 @@
 
-#host = '192.168.50.63', 502
+#host, port = '192.168.50.63', 502
 host, port = 'localhost', 1502
 
 from slowpy.control import control_system as ctrl
@@ -14,11 +14,14 @@ reg1 <= 0xabcdef00
 import time
 
 while True:
-    reg0 <= reg0.get() + 1
-    reg1 <= reg1.get() + 1
+    try:
+        reg0 <= reg0.get() + 1
+        reg1 <= reg1.get() + 1
 
-    print(hex(reg0.get()))
-    print(hex(reg1.get()))
+        print(hex(reg0.get()))
+        print(hex(reg1.get()))
+    except Exception as e:
+        pass
 
     time.sleep(1)
     
