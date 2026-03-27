@@ -227,6 +227,7 @@ class SubscribeNode(ControlNode):
         
     async def aio_get(self):
         if not await self._subscribe():
+            await asyncio.sleep(1)
             return None
 
         try:

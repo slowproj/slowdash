@@ -147,13 +147,44 @@ class Tasklet:
             return None
 
         
+    def add_once_callback(self, func, delay:float):
+        """
+        Args:
+          func: callback function
+          delay: func execution delay after completion of intialization
+        """
+        async def go_once():
+            try:
+                start = time.monotonic()
+                while not ctrl.is_stop_requested():
+                    if not self.initialize_completed:
+                        await asyncio.sleep(0.1)
+                        continue
+
+                    now = time.monotonic()
+                    if now - start < delay:
+                        await asyncio.sleep(0.1)
+                        continue
+                    
+                    result = func()
+                    if asyncio.iscoroutine(result):
+                        await result
+                    else:
+                        await asyncio.sleep(0.01)
+                    break
+            except Exception as e:
+                logging.error(f'Error in Tasklet once function: {e}')
+                
+        self.task_coros.append(go_once())
+
+                
     def add_loop_callback(self, func, interval:float):
         """
         Args:
           func: callback function
           interval: func execution intervals. Zero for no wait, negative to run the func only once.
         """
-        async def go():
+        async def go_loop():
             try:
                 last_execusion_time = time.monotonic()
                 while not ctrl.is_stop_requested():
@@ -179,7 +210,7 @@ class Tasklet:
             except Exception as e:
                 logging.error(f'Error in Tasklet loop function: {e}')
                 
-        self.task_coros.append(go())
+        self.task_coros.append(go_loop())
 
                 
     def _handle_error(self, message):
@@ -201,7 +232,16 @@ class Tasklet:
         return await self.mesh.aio_publish(topic, value)
     
         
-    def loop(self, interval=0):
+    def once(self, delay:float=0):
+        """decorator to add a tasklet task
+        """
+        def wrapper(func):
+            self.add_once_callback(func, delay)
+            return func
+        return wrapper
+        
+
+    def loop(self, interval:float=0):
         """decorator to add a tasklet task
         """
         def wrapper(func):
