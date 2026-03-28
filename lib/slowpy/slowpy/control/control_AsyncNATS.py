@@ -162,9 +162,13 @@ class SubscribeNode(ControlNode):
             async def message_handler(msg):
                 topic, message = msg.subject, msg.data
                 logger.debug(f'AsyncNATS message: ({topic}) {message.decode()}')
-                result = self.handler(msg)
-                if asyncio.iscoroutine(result):
-                    await result
+                try:
+                    result = self.handler(msg)
+                    if asyncio.iscoroutine(result):
+                        await result
+                except Exception as e:
+                    logging.error('AsyncNATS: error in message handler: {e}')
+                        
 
             try:
                 await self.nats_node.client.subscribe(self.topic_filter, cb=message_handler)

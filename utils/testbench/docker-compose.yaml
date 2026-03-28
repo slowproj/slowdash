@@ -97,3 +97,18 @@ services:
       - "9200:9200"
     volumes:
       - ./esdata:/usr/share/elasticsearch/data
+
+
+  portainer:
+    image: portainer/portainer-ce:lts
+    restart: always
+    ports:
+      - "9443:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+
+
+volumes:
+  portainer_data:
+  

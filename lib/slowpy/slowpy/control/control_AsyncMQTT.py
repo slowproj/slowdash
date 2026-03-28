@@ -178,8 +178,8 @@ class PublishNode(ControlNode):
             await self.mqtt.client.publish(self.topic, value)
         except Exception as e:
             logger.warning(f'AsyncMQTT: error: {e}')
-            self.disconnected = True
-            await self.aio_close() # this will cause retries
+            self.mqtt.disconnected = True
+            await self.mqtt.aio_close() # this will cause retries
 
         
     ## child nodes ##
@@ -211,9 +211,12 @@ class SubscribeNode(ControlNode):
 
         
     async def _handle_message(self, message):
-        result = self.handler(message)
-        if asyncio.iscoroutine(result):
-            await result
+        try:
+            result = self.handler(message)
+            if asyncio.iscoroutine(result):
+                await result
+        except Exception as e:
+            logging.error('AsyncMQTT: error in message handler: {e}')
 
 
     async def aio_has_data(self):
@@ -272,7 +275,7 @@ class PublishJsonNode(ControlNode):
         try:
             doc = json.dumps(value)
         except Exception as e:
-            logger.warning(f'AsyncNATS: publish(): unable to convert to JSON: {e}')
+            logger.warning(f'AsyncMQTT: publish(): unable to convert to JSON: {e}')
             return None
         
         return await self.publish_node.aio_set(doc)
