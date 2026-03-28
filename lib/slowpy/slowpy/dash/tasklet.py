@@ -1,10 +1,11 @@
 # Created by Sanshiro Enomoto on 13 August 2025 #
 
 import sys, time, asyncio, threading, inspect, traceback, logging
+from datetime import datetime, timezone
 from slowpy.control import control_system as ctrl
 from .mesh import Mesh
 
-#logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
 
 
 class Tasklet:
@@ -213,6 +214,83 @@ class Tasklet:
         self.task_coros.append(go_loop())
 
                 
+    def add_schedule_callback(self, func, schedule:str, use_utc:bool):
+        """
+        Args:
+          func: callback function
+          schedule: comma-separated HH:MM list. HH or MM can be a *.
+        """                    
+        time_set: set[int] = set() # int for HHMM
+        for hhmm in schedule.split(','):
+            hh,mm = hhmm.strip().split(':', 2)
+            if hh == '*':
+                hh = range(0, 24)
+            else:
+                try:
+                    hh = [int(hh)]
+                except Exception:
+                    raise Exception(f'Tasklet: bad schedule time: "{hhmm}"')
+            if mm == '*':
+                mm = range(0, 60)
+            else:
+                try:
+                    mm = [int(mm)]
+                except Exception:
+                    raise Exception(f'Tasklet: bad schedule time: "{hhmm}"')
+            for h in hh:
+                for m in mm:
+                    time_set.add(100*h+m)
+
+        if len(time_set) == 0:
+            return
+                    
+        time_list:list[int] = sorted(time_set)
+
+        name = func.__name__
+        times = [ f"{int(t/100):02d}:{int(t)%100:02d}" for t in time_list ]
+        logging.info(f'Tasklet: scheduled {name}() at {",".join(times)}')
+
+        def now():
+            if use_utc:
+                t = datetime.now(timezone.utc)
+            else:
+                t = datetime.now()
+            return 100 * t.hour + t.minute
+
+        async def go_schedule():
+            t = now()
+            next_k = 0
+            while next_k < len(time_list) and time_list[next_k] <= t:
+                next_k += 1
+            if next_k == len(time_list):
+                next_k = 0
+            next_t = time_list[next_k]
+            
+            try:
+                while not ctrl.is_stop_requested():
+                    t = now()
+                    if t != next_t:
+                        await ctrl.aio_sleep(1)
+                        continue
+
+                    next_k += 1
+                    if next_k == len(time_list):
+                        next_k = 0
+                    next_t = time_list[next_k]
+                
+                    result = func()
+                    if asyncio.iscoroutine(result):
+                        await result
+
+                    if len(time_list) == 1: # once a day -> same HH:MM time
+                        await ctrl.aio_sleep(100) # make sure the next check is on a different HH:MM
+
+            except Exception as e:
+                logging.error(f'Error in Tasklet loop function: {e}')
+                
+        self.task_coros.append(go_schedule())
+
+                
     def _handle_error(self, message):
         logging.error(message)
         #if sys.exc_info()[0] is not None:
@@ -226,6 +304,11 @@ class Tasklet:
 
     def is_stop_requested(self):
         return ctrl.is_stop_requested()
+    
+        
+    def publish(self, topic:str, value):
+        loop = asyncio.get_running_loop()
+        loop.create_task(self.aio_publish(topic, value))
     
         
     async def aio_publish(self, topic:str, value):
@@ -246,6 +329,18 @@ class Tasklet:
         """
         def wrapper(func):
             self.add_loop_callback(func, interval)
+            return func
+        return wrapper
+        
+
+    def schedule(self, time_list:str, *, use_utc:bool=False):
+        """decorator to add a tasklet task
+        Args:
+        time_list: comma-separated list of times in HH:MM. HH and MM must be an integer or *.
+        use_utc: set True to use the UTC time.
+        """
+        def wrapper(func):
+            self.add_schedule_callback(func, time_list, use_utc)
             return func
         return wrapper
         

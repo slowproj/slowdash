@@ -3,32 +3,38 @@ from slowpy.dash import Tasklet
 tasklet = Tasklet()
     
 
-@tasklet.on('data.*')
-async def handle(headers, data):
-    print(f'{headers}: {data}')
+@tasklet.schedule('0:00,8:00,16:00', use_utc=True)
+def alarm():
+    print("It's time!")
 
 
-@tasklet.loop(interval=3)
-async def hello():
-    print('hello')
-    
-    
 @tasklet.once(delay=5)
 def late():
     print("I'm joining now")
 
-          
-@tasklet.once()
-async def publish():
-    import asyncio, random
+
+@tasklet.loop(interval=3)
+def hello():
+    print("I'm still working")
     
-    x = 0
-    while not tasklet.is_stop_requested():
-        x += random.gauss(0, 1)
-        await tasklet.aio_publish('data.randomwalk', x)
-        await asyncio.sleep(1)
+    
+    
+@tasklet.on('data.>')
+def handle(headers, data):
+    print(f'{headers}: {data}')
+
+    
+import random
+x = 0
+
+@tasklet.loop(interval=1.0)
+def publish():
+    global x
+    x += random.gauss(0, 1)
+    tasklet.publish('data.randomwalk', x)
 
 
+    
 if __name__ == '__main__':
     #mesh = None
     mesh = 'slowmq://localhost:18881'
