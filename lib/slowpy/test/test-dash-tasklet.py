@@ -3,6 +3,25 @@ from slowpy.dash import Tasklet
 tasklet = Tasklet()
     
 
+def _initialize(params):
+    print(f"params are {params}")
+
+    
+@tasklet.initialize()
+def init():
+    print("I'm gonna work hard!")
+
+    
+@tasklet.finalize()
+def fin():
+    print("I'm done.")
+
+    
+@tasklet.finalize()
+def fin2():
+    print("bye!")
+
+    
 @tasklet.schedule('0:00,8:00,16:00', use_utc=True)
 def alarm():
     print("It's time!")

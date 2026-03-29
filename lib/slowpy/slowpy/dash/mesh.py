@@ -17,14 +17,14 @@ class EmptyPubsubNode:
     def aio_close():
         pass
 
-    def publish(self, topic, **kwargs):
-        return EmptyPublishNode(topic)
+    def publisher(self, topic, **kwargs):
+        return EmptyPublisherNode(topic)
 
-    def subscribe(self, topic_filter, timeout=None, **kwargs):
-        return EmptySubscribeNode(topic_filter, timeout=timeout)
+    def subscriber(self, topic_filter, timeout=None, **kwargs):
+        return EmptySubscriberNode(topic_filter, timeout=timeout)
 
     
-class EmptyPublishNode:
+class EmptyPublisherNode:
     def __init__(self, topic):
         self.topic = topic
 
@@ -32,10 +32,10 @@ class EmptyPublishNode:
         print(f'PUBSLIH ({self.topic}): {repr(value)}')
 
     def json(self, headers=None):
-        return EmptyPublishJsonNode(self)
+        return EmptyPublisherJsonNode(self)
 
     
-class EmptySubscribeNode:
+class EmptySubscriberNode:
     def __init__(self, topic_filter:str, timeout=None):
         self.topic_filter = topic_filter
         self.timeout = timeout
@@ -46,23 +46,23 @@ class EmptySubscribeNode:
         return None, None
     
     def json(self):
-        return EmptySubscribeJsonNode(self)
+        return EmptySubscriberJsonNode(self)
         
     
-class EmptyPublishJsonNode:
-    def __init__(self, publish_node):
-        self.publish_node = publish_node
+class EmptyPublisherJsonNode:
+    def __init__(self, publisher_node):
+        self.publisher_node = publisher_node
 
     async def aio_set(self, value):
-        return await self.publish_node.aio_set(value)
+        return await self.publisher_node.aio_set(value)
 
 
-class EmptySubscribeJsonNode:
-    def __init__(self, subscribe_node):
-        self.subscribe_node = subscribe_node
+class EmptySubscriberJsonNode:
+    def __init__(self, subscriber_node):
+        self.subscriber_node = subscriber_node
 
     async def aio_get(self):
-        return await self.subscribe_node.aio_get()
+        return await self.subscriber_node.aio_get()
 
 
 
@@ -120,14 +120,14 @@ class Mesh:
         if self.pubsub is None:
             return None
         
-        return self.pubsub.publish(topic, **self.pubargs).json()
+        return self.pubsub.publisher(topic, **self.pubargs).json()
 
 
     def subscriber(self, topic:str):
         if self.pubsub is None:
             return None
         
-        return self.pubsub.subscribe(topic, **self.subargs).json()
+        return self.pubsub.subscriber(topic, **self.subargs).json()
 
 
     async def aio_publish(self, topic:str, value):
