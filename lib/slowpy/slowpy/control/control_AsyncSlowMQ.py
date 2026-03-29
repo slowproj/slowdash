@@ -14,11 +14,11 @@ class SlowMQNode(ControlNode):
         self.name = name
 
         self.connections = set()
-        self.publish_ws = None
-        self.publish_retry_time = 0
+        self.publisher_ws = None
+        self.publisher_retry_time = 0
         self.retry_wait = 10
 
-        self.publish_ws_connected = False
+        self.publisher_ws_connected = False
 
         
     def __del__(self):
@@ -69,12 +69,12 @@ class SlowMQNode(ControlNode):
             raise asyncio.CancelledError
 
         
-    def publish(self, topic):
-        return PublishNode(self, topic)
+    def publisher(self, topic):
+        return PublisherNode(self, topic)
 
 
-    def subscribe(self, topic_filter, timeout=None):
-        return SubscribeNode(self, topic_filter, timeout)
+    def subscriber(self, topic_filter, timeout=None):
+        return SubscriberNode(self, topic_filter, timeout)
 
      
     async def _disconnect(self, ws):
@@ -115,27 +115,27 @@ class SlowMQNode(ControlNode):
 
     
     
-class PublishNode(ControlNode):
+class PublisherNode(ControlNode):
     def __init__(self, slowmq_node, topic):
         self.slowmq_node = slowmq_node
         self.topic = topic
 
         
     async def aio_set(self, value):
-        if not self.slowmq_node.publish_ws_connected:
+        if not self.slowmq_node.publisher_ws_connected:
             now = time.monotonic()
-            if now - self.slowmq_node.publish_retry_time < self.slowmq_node.retry_wait:
+            if now - self.slowmq_node.publisher_retry_time < self.slowmq_node.retry_wait:
                 return
-            self.slowmq_node.publish_retry_time = now
+            self.slowmq_node.publisher_retry_time = now
             
-            if self.slowmq_node.publish_ws is not None:
-                await self.slowmq_node._disconnect(self.slowmq_node.publish_ws)
-            self.slowmq_node.publish_ws = await self.slowmq_node.aio_open()
+            if self.slowmq_node.publisher_ws is not None:
+                await self.slowmq_node._disconnect(self.slowmq_node.publisher_ws)
+            self.slowmq_node.publisher_ws = await self.slowmq_node.aio_open()
             
-            if self.slowmq_node.publish_ws is None:
+            if self.slowmq_node.publisher_ws is None:
                 return
             else:
-                self.slowmq_node.publish_ws_connected = True
+                self.slowmq_node.publisher_ws_connected = True
 
         try:
             doc = json.dumps({
@@ -143,24 +143,24 @@ class PublishNode(ControlNode):
                 'data': value
             })
         except Exception as e:
-            logger.warning(f'AsyncSlowMQ.publish(): unable to convert to JSON: {e}')
+            logger.warning(f'AsyncSlowMQ.publisher(): unable to convert to JSON: {e}')
             return
         
         try:
-            await self.slowmq_node.publish_ws.send(doc)
+            await self.slowmq_node.publisher_ws.send(doc)
         except Exception as e:
-            logger.warning(f'AsyncSlowMQ.publish(): {e}')
-            self.slowmq_node.publish_ws_connected = False
+            logger.warning(f'AsyncSlowMQ.publisher(): {e}')
+            self.slowmq_node.publisher_ws_connected = False
 
         
     ## child nodes ##
-    # nats.publish(subject).json()
+    # nats.publisher(subject).json()
     def json(self, headers=None):
-        return PublishJsonNode(self, headers)
+        return PublisherJsonNode(self, headers)
         
 
         
-class SubscribeNode(ControlNode):
+class SubscriberNode(ControlNode):
     def __init__(self, slowmq_node:SlowMQNode, topic_filter:str, timeout:float=None):
         self.slowmq_node = slowmq_node
         self.topic_filter = topic_filter
@@ -206,19 +206,19 @@ class SubscribeNode(ControlNode):
         except asyncio.TimeoutError:
             return False
         except Exception as e:
-            logger.warning(f'AsyncSlowMQ.subscribe(): {e}')
+            logger.warning(f'AsyncSlowMQ.subscriber(): {e}')
             self.connected = False
             return False
 
         try:
             message = json.loads(reply)
         except Exception as e:
-            logger.warning(f'AsyncSlowMQ.subscribe(): Invalid reply JSON: {e}: {reply}')
+            logger.warning(f'AsyncSlowMQ.subscriber(): Invalid reply JSON: {e}: {reply}')
             return None
         
         if message.get('action') == 'error':
             msg = message.get('data',{}).get('message', '')
-            logger.warning(f'AsyncSlowMQ.subscribe(): error reply: {msg}')
+            logger.warning(f'AsyncSlowMQ.subscriber(): error reply: {msg}')
             self.connected = False
             return False
             
@@ -235,7 +235,7 @@ class SubscribeNode(ControlNode):
         except asyncio.TimeoutError:
             message = None
         except Exception as e:
-            logger.warning(f'AsyncSlowMQ.subscribe().aio_get(): {e}')
+            logger.warning(f'AsyncSlowMQ.subscriber().aio_get(): {e}')
             self.connected = False
             message = None
             await asyncio.sleep(1)
@@ -245,37 +245,37 @@ class SubscribeNode(ControlNode):
         try:
             doc = json.loads(message)
         except Exception as e:
-            logger.warning(f'AsyncSlowMQ.subscribe().aio_get(): Invalid reply JSON: {e}: {message}')
+            logger.warning(f'AsyncSlowMQ.subscriber().aio_get(): Invalid reply JSON: {e}: {message}')
             return None
 
         return doc
 
         
     ## child nodes ##
-    # nats.subscribe(subject).json()
+    # nats.subscriber(subject).json()
     def json(self):
-        return SubscribeJsonNode(self)
+        return SubscriberJsonNode(self)
         
 
     
-class PublishJsonNode(ControlNode):
-    def __init__(self, publish_node, headers=None):
-        self.publish_node = publish_node
+class PublisherJsonNode(ControlNode):
+    def __init__(self, publisher_node, headers=None):
+        self.publisher_node = publisher_node
         self.headers = dict(headers or {})
         
 
     async def aio_set(self, value):
-        return await self.publish_node.aio_set(value)
+        return await self.publisher_node.aio_set(value)
 
 
 
-class SubscribeJsonNode(ControlNode):
-    def __init__(self, subscribe_node):
-        self.subscribe_node = subscribe_node
+class SubscriberJsonNode(ControlNode):
+    def __init__(self, subscriber_node):
+        self.subscriber_node = subscriber_node
         
 
     async def aio_get(self):
-        message = await self.subscribe_node.aio_get()
+        message = await self.subscriber_node.aio_get()
         if message is None:
             return None, None
         

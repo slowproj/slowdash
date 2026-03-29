@@ -96,12 +96,12 @@ class RedisNode(ControlNode):
         return RedisTimeseriesNode(self, name, length, to)
 
 
-    def publish(self, topic):
-        return RedisPublishNode(self, topic)
+    def publisher(self, topic):
+        return RedisPublisherNode(self, topic)
 
     
-    def subscribe(self, topic_pattern, timeout=None):
-        return RedisSubscribeNode(self, topic_pattern, timeout=timeout)
+    def subscriber(self, topic_pattern, timeout=None):
+        return RedisSubscriberNode(self, topic_pattern, timeout=timeout)
 
     
     @classmethod
@@ -346,7 +346,7 @@ class RedisTimeseriesLastLapseNode(ControlNode):
         return time.time() - last[0]/1000.0
 
 
-class RedisPublishNode(ControlNode):
+class RedisPublisherNode(ControlNode):
     def __init__(self, redis_node, topic):
         self.redis_node = redis_node
         self.topic = topic
@@ -362,13 +362,13 @@ class RedisPublishNode(ControlNode):
 
 
     ## child nodes ##
-    # redis().publish(topic).json(headers=None).set(value)
+    # redis().publisher(topic).json(headers=None).set(value)
     def json(self):
-        return RedisPublishJsonNode(self)
+        return RedisPublisherJsonNode(self)
 
     
 
-class RedisSubscribeNode(ControlNode):
+class RedisSubscriberNode(ControlNode):
     def __init__(self, redis_node, topic_pattern, timeout=None):
         self.redis_node = redis_node
         self.topic_pattern = topic_pattern
@@ -428,15 +428,15 @@ class RedisSubscribeNode(ControlNode):
 
 
     ## child nodes ##
-    # redis().subscribe(topic_pettern).json()
+    # redis().subscriber(topic_pettern).json()
     def json(self):
-        return RedisSubscribeJsonNode(self)
+        return RedisSubscriberJsonNode(self)
         
 
     
-class RedisPublishJsonNode(ControlNode):
-    def __init__(self, publish_node, headers = None):
-        self.publish_node = publish_node
+class RedisPublisherJsonNode(ControlNode):
+    def __init__(self, publisher_node, headers = None):
+        self.publisher_node = publisher_node
         self.headers = dict(headers or {})
         
 
@@ -444,21 +444,21 @@ class RedisPublishJsonNode(ControlNode):
         try:
             doc = json.dumps(value)
         except Exception as e:
-            logger.warning('AsyncRedis: publish(): unable to convert to JSON: {e}')
+            logger.warning('AsyncRedis: publisher(): unable to convert to JSON: {e}')
             return None
         
-        return self.publish_node.set(doc)
+        return self.publisher_node.set(doc)
 
 
 
-class RedisSubscribeJsonNode(ControlNode):
-    def __init__(self, subscribe_node):
-        self.subscribe_node = subscribe_node
+class RedisSubscriberJsonNode(ControlNode):
+    def __init__(self, subscriber_node):
+        self.subscriber_node = subscriber_node
         
 
     def get(self):
         while True:
-            message = self.subscribe_node.get()
+            message = self.subscriber_node.get()
             if message is None:
                 return None, None
             if message.get('type', None) == 'pmessage':

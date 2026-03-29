@@ -14,7 +14,7 @@ class MQTTNode(ControlNode):
         self.port = port
         self.keepalive = 60
         
-        self.subscribers: dict[str,list[SubscribeNode]] = {}
+        self.subscribers: dict[str,list["SubscriberNode"]] = {}
         self.receiver_task = None
 
         self.client = None
@@ -118,15 +118,15 @@ class MQTTNode(ControlNode):
         self.client = None
 
         
-    def publish(self, topic):
-        return PublishNode(self, topic)
+    def publisher(self, topic):
+        return PublisherNode(self, topic)
 
 
-    def subscribe(self, topic_filter, handler=None, timeout=None):
-        return SubscribeNode(self, topic_filter, handler, timeout)
+    def subscriber(self, topic_filter, handler=None, timeout=None):
+        return SubscriberNode(self, topic_filter, handler, timeout)
 
      
-    async def _subscribe(self, topic_filter, subscribe_node):
+    async def _subscribe(self, topic_filter, subscriber_node):
         async with self.subscribe_lock:
             if not await self.aio_open():
                 return False
@@ -136,7 +136,7 @@ class MQTTNode(ControlNode):
                 await self.client.subscribe(topic_filter)
                 self.subscribers[topic_filter] = []
             
-            self.subscribers[topic_filter].append(subscribe_node)
+            self.subscribers[topic_filter].append(subscriber_node)
 
             return True
         
@@ -164,39 +164,39 @@ class MQTTNode(ControlNode):
 
     
     
-class PublishNode(ControlNode):
-    def __init__(self, mqtt, topic):
-        self.mqtt = mqtt
+class PublisherNode(ControlNode):
+    def __init__(self, mqtt_node, topic):
+        self.mqtt_node = mqtt_node
         self.topic = topic
 
         
     async def aio_set(self, value):
-        if not await self.mqtt.aio_open():
+        if not await self.mqtt_node.aio_open():
             return None
 
         try:
-            await self.mqtt.client.publish(self.topic, value)
+            await self.mqtt_node.client.publish(self.topic, value)
         except Exception as e:
             logger.warning(f'AsyncMQTT: error: {e}')
-            self.mqtt.disconnected = True
-            await self.mqtt.aio_close() # this will cause retries
+            self.mqtt_node.disconnected = True
+            await self.mqtt_node.aio_close() # this will cause retries
 
         
     ## child nodes ##
-    # nats.publish(subject).json()
+    # nats.publisher(subject).json()
     def json(self, headers=None):
-        return PublishJsonNode(self, headers)
+        return PublisherJsonNode(self, headers)
 
 
     
-class SubscribeNode(ControlNode):
-    def __init__(self, mqtt:MQTTNode, topic_filter:str, handler=None, timeout=None):
+class SubscriberNode(ControlNode):
+    def __init__(self, mqtt_node:MQTTNode, topic_filter:str, handler=None, timeout=None):
         """
         - If handler is not None, it is called on receiving a message.
         - Otherwise, the received messages are queued, which can be retrieved by has_data()/get()
         """
 
-        self.mqtt = mqtt
+        self.mqtt_node = mqtt_node
         self.topic_filter = topic_filter
         self.timeout = timeout
         
@@ -222,7 +222,7 @@ class SubscribeNode(ControlNode):
     async def aio_has_data(self):
         async with self.register_lock:
             if not self.registered:
-                if not await self.mqtt._subscribe(self.topic_filter, self):
+                if not await self.mqtt_node._subscribe(self.topic_filter, self):
                     return False
                 else:
                     self.registered = True
@@ -242,7 +242,7 @@ class SubscribeNode(ControlNode):
         """
         async with self.register_lock:
             if not self.registered:
-                if not await self.mqtt._subscribe(self.topic_filter, self):
+                if not await self.mqtt_node._subscribe(self.topic_filter, self):
                     return None
                 else:
                     self.registered = True
@@ -259,15 +259,15 @@ class SubscribeNode(ControlNode):
 
         
     ## child nodes ##
-    # nats.subscribe(subject).json()
+    # nats.subscriber(subject).json()
     def json(self):
-        return SubscribeJsonNode(self)
+        return SubscriberJsonNode(self)
         
 
     
-class PublishJsonNode(ControlNode):
-    def __init__(self, publish_node, headers = None):
-        self.publish_node = publish_node
+class PublisherJsonNode(ControlNode):
+    def __init__(self, publisher_node, headers = None):
+        self.publisher_node = publisher_node
         self.headers = dict(headers or {})
         
 
@@ -275,20 +275,20 @@ class PublishJsonNode(ControlNode):
         try:
             doc = json.dumps(value)
         except Exception as e:
-            logger.warning(f'AsyncMQTT: publish(): unable to convert to JSON: {e}')
+            logger.warning(f'AsyncMQTT: publisher(): unable to convert to JSON: {e}')
             return None
         
-        return await self.publish_node.aio_set(doc)
+        return await self.publisher_node.aio_set(doc)
 
 
 
-class SubscribeJsonNode(ControlNode):
-    def __init__(self, subscribe_node):
-        self.subscribe_node = subscribe_node
+class SubscriberJsonNode(ControlNode):
+    def __init__(self, subscriber_node):
+        self.subscriber_node = subscriber_node
         
 
     async def aio_get(self):
-        message = await self.subscribe_node.aio_get()
+        message = await self.subscriber_node.aio_get()
         if message is None:
             return None, None
 

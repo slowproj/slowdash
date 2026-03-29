@@ -3,7 +3,7 @@
 ### THIS IS NOT THREAD SAFE as pika is not ####
 
 from slowpy.control import ControlNode, ControlException
-import time, uuid, json, typing, inspect, logging
+import time, uuid, json, copy, typing, inspect, logging
 import pika
 
 
@@ -216,17 +216,22 @@ class ExchangeNode(ControlNode):
                 
 
     ## child nodes ##
-    # rabbitmq().XXX_exchange(name).publish(routing_key:str)
-    def publish(self, routing_key: str, *, parameters=None, **kwargs):
-        return PublishNode(self, routing_key, parameters=parameters, **kwargs)
+    # rabbitmq().XXX_exchange(name).publisher(routing_key:str)
+    def publisher(self, routing_key: str, *, parameters=None, **kwargs):
+        return PublisherNode(self, routing_key, parameters=parameters, **kwargs)
 
     # rabbitmq().XXX_exchange(name).queue(name, routing_key, **kwargs)
     def queue(self, name: str, *, routing_key: str | None = None, handler=None, timeout=0, **kwargs):
         return QueueNode(self, name, routing_key=routing_key, handler=handler, timeout=timeout, **kwargs)
     
+    # rabbitmq().XXX_exchange(name).subscriber(routing_key): use the queue for subscribe 
+    def subscriber(self, routing_key:str, timeout=0, **kwargs):
+        kwargs['exclusive'] = True
+        return QueueNode(self, None, routing_key=routing_key, handler=None, timeout=timeout, **kwargs)
+
     
 
-class PublishNode(ControlNode):
+class PublisherNode(ControlNode):
     def __init__(self, exchange_node: ExchangeNode, routing_key, *, parameters=None, **kwargs):
         self.exchange_node = exchange_node
         self.routing_key = routing_key
@@ -239,7 +244,7 @@ class PublishNode(ControlNode):
         if not self.exchange_node._declared or self.exchange_node.rmq_node.channel is None:
             self.exchange_node._construct()
         if not self.exchange_node._declared or self.exchange_node.rmq_node.channel is None:
-            raise ControlException('RabbitMQ.PublishNode.set(): exchange not ready')
+            raise ControlException('RabbitMQ.PublisherNode.set(): exchange not ready')
 
         body, headers, parameters = ({}, {}, {})
         if isinstance(value, Message):
@@ -267,9 +272,15 @@ class PublishNode(ControlNode):
             elif body is None:
                 body = b''
             else:
-                raise ControlException(
-                    f'RabbitMQ.PublishNode: body is not serializable to bytes (type={type(body).__name__})'
-                )
+                try:
+                    body = str(body).encode()
+                    content_type, content_encoding = 'text/plain', 'utf-8'
+                except:
+                    raise ControlException(
+                        f'RabbitMQ.PublisherNode[{self.routing_key}].set(): ' +
+                        f'body is not serializable to bytes: {value}: ' +
+                        f'(body={body}, type={type(body).__name__})'
+                    )
 
         for k,v in self.parameters.items():
             if k not in parameters:
@@ -279,7 +290,7 @@ class PublishNode(ControlNode):
         if content_encoding is not None:
             parameters.setdefault('content_encoding', content_encoding)
 
-        #set delivery_mode explicitly in **parameters of PublishNode()
+        #set delivery_mode explicitly in **parameters of PublisherNode()
         #parameters.setdefault('delivery_mode', 2)   # 1: transient, 2: persistent (needs durable=True for queue)
 
         props = pika.BasicProperties(
@@ -318,7 +329,24 @@ class PublishNode(ControlNode):
         
         return True
 
+        
+    ## child nodes ##
+    # rabbitmq.publisher(subject).json()
+    def json(self, headers=None):
+        return PublisherJsonNode(self, headers)
+
     
+
+class PublisherJsonNode(ControlNode):
+    def __init__(self, publisher_node, headers=None):
+        self.publisher_node = publisher_node
+        self.headers = dict(headers or {})
+        
+
+    def set(self, value):
+        return self.publisher_node.set((value, self.headers))
+
+
 
 class QueueNode(ControlNode):
     def __init__(self, exchange_node:ExchangeNode, queue_name:str, *, routing_key:list[str]|str|None=None, handler=None, timeout:float=0, **kwargs):
@@ -327,10 +355,16 @@ class QueueNode(ControlNode):
         self.timeout = timeout
         self.kwargs = {k:v for k,v in kwargs.items()}
 
+        # queue_name must be unique if exclusive
+        if queue_name is not None and len(queue_name) > 0:
+            self.name = queue_name
+        else:
+            self.name = str(uuid.uuid4())
+
         if type(routing_key) is list:
             self.routing_keys = routing_key
         else:
-            self.routing_keys = [ routing_key or queue_name ]
+            self.routing_keys = [ routing_key or '*' ]
         
         def _default_handler(incoming: _IncomingMessage) -> Message:
             parameters = {
@@ -344,14 +378,17 @@ class QueueNode(ControlNode):
             headers = incoming.headers or {}
             content_type = incoming.content_type or 'application/octet-stream'
             if content_type == 'application/json':
-                return Message(json.loads(incoming.body.decode('utf-8')), headers, parameters)
+                try:
+                    return Message(json.loads(incoming.body.decode('utf-8')), headers, parameters)
+                except Exception as e:
+                    logging.warning(f'RabbitMQ.QueueNode[{self.name}]: bad JSON format: {e}')
+                    return Message(incoming.body.decode('utf-8'), headers, parameters)
             elif content_type == 'text/plain':
                 return Message(incoming.body.decode('utf-8'), headers, parameters)
             else:
                 return Message(incoming.body, headers, parameters)
 
-        self.handler = handler or _default_handler
-        
+        self.handler = handler or _default_handler        
         self._declared = False
 
         
@@ -417,7 +454,8 @@ class QueueNode(ControlNode):
             if self.is_stop_requested():
                 break
             if self.timeout > 0 and lapse >= self.timeout:
-                logging.warning('AMQP Queue Timeout')
+                if self.timeout >= 10:
+                    logging.warning('AMQP Queue Timeout')
                 break
 
             lapse += 0.2
@@ -447,6 +485,10 @@ class QueueNode(ControlNode):
         return status.method.message_count > 0
         
         
+    # rabbitmq().direct_exchange(name).queue(name).json()
+    def json(self):
+        return QueueMessageJsonNode(self)
+
     # rabbitmq().direct_exchange(name).rpc_function(name, function)
     def rpc_function(self, function):
         return RpcFunctionNode(self, function)
@@ -456,6 +498,24 @@ class QueueNode(ControlNode):
         return RpcCallNode(self, routing_key, body, headers, parameters)
 
     
+    
+class QueueMessageJsonNode(ControlNode):
+    def __init__(self, queue_node:QueueNode):
+        self.queue_node = queue_node
+
+        
+    def get(self):
+        message = self.queue_node.get()
+        if message.body is None:
+            return None, None
+        else:
+            headers = copy.deepcopy(message.headers)
+            headers['topic'] = message.parameters.get('routing_key')
+            headers['message_id'] = message.parameters.get('message_id')
+            headers['timestamp'] = message.parameters.get('timestamp')
+            return headers, message.body
+
+        
 
 class RpcFunctionNode(ControlNode):
     def __init__(self, queue_node: QueueNode, function):
@@ -477,8 +537,8 @@ class RpcFunctionNode(ControlNode):
             parameters = {
                 'correlation_id': request_message.parameters.get('correlation_id', None),
             }
-            publish_node = self.queue_node.exchange_node.publish(routing_key, parameters=parameters)
-            publish_node.set(return_value)
+            publisher_node = self.queue_node.exchange_node.publisher(routing_key, parameters=parameters)
+            publisher_node.set(return_value)
 
         return return_value
 
@@ -494,12 +554,12 @@ class RpcCallNode(ControlNode):
 
         
     def get(self):
-        publish_node = self.queue_node.exchange_node.publish(routing_key=self.routing_key)
+        publisher_node = self.queue_node.exchange_node.publisher(routing_key=self.routing_key)
         correlation_id = str(uuid.uuid4())
         parameters = dict(self.parameters)
         parameters['reply_to'] = self.queue_node.routing_keys[0]
         parameters['correlation_id'] = correlation_id
-        publish_node.set((self.body, self.headers, parameters))
+        publisher_node.set((self.body, self.headers, parameters))
 
         # BUG: there might be multiple reply messages (e.g., by topic/fanout exchange)
         reply_selector = lambda m: m.correlation_id == correlation_id

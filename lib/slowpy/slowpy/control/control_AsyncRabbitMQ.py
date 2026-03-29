@@ -197,22 +197,22 @@ class ExchangeNode(ControlNode):
                     
         
     ## child nodes ##
-    # rabbitmq().XXX_exchange(name).publish(routing_key:str)
-    def publish(self, routing_key:str, *, parameters=None, **kwargs):
-        return PublishNode(self, routing_key, parameters=parameters, **kwargs)
+    # rabbitmq().XXX_exchange(name).publisher(routing_key:str)
+    def publisher(self, routing_key:str, *, parameters=None, **kwargs):
+        return PublisherNode(self, routing_key, parameters=parameters, **kwargs)
 
     # rabbitmq().XXX_exchange(name).queue(name, routing_key, **kwargs)  kwargs{exclusive:bool=False}
     def queue(self, name:str|None=None, *, routing_key:str=None, handler=None, timeout=0, **kwargs):
         return QueueNode(self, name, routing_key=routing_key, handler=handler, timeout=timeout, **kwargs)
 
-    # rabbitmq().XXX_exchange(name).subscribe(routing_key): use the queue for subscribe 
-    def subscribe(self, routing_key:str, timeout=0, **kwargs):
+    # rabbitmq().XXX_exchange(name).subscriber(routing_key): use the queue for subscribe 
+    def subscriber(self, routing_key:str, timeout=0, **kwargs):
         kwargs['exclusive'] = True
         return QueueNode(self, None, routing_key=routing_key, handler=None, timeout=timeout, **kwargs)
 
 
     
-class PublishNode(ControlNode):
+class PublisherNode(ControlNode):
     def __init__(self, exchange_node:ExchangeNode, routing_key, *, parameters=None, **kwargs):
         self.exchange_node = exchange_node
         
@@ -225,14 +225,14 @@ class PublishNode(ControlNode):
         if self.exchange_node.exchange is None:
             await self.exchange_node._construct()
         if self.exchange_node.exchange is None:
-            raise ControlException(f'AsyncRabbitMQ.PublishNode[{self.routing_key}].aio_set(): exchange not ready')
+            raise ControlException(f'AsyncRabbitMQ.PublisherNode[{self.routing_key}].aio_set(): exchange not ready')
 
         body, headers, parameters = ({}, {}, {})
         if type(value) is Message:
             body, headers, parameters = value
         elif type(value) is tuple:
             if len(value) == 1:
-                body, = value
+                (body,) = value
             elif len(value) == 2:
                 body, headers = value
             elif len(value) == 3:
@@ -258,7 +258,7 @@ class PublishNode(ControlNode):
                     content_type, content_encoding = 'text/plain', 'utf-8'
                 except:
                     raise ControlException(
-                        f'AsyncRabbitMQ.PublishNode[{self.routing_key}].aio_set(): ' +
+                        f'AsyncRabbitMQ.PublisherNode[{self.routing_key}].aio_set(): ' +
                         f'body is not serializable to bytes: {value}: ' +
                         f'(body={body}, type={type(body).__name__})'
                     )
@@ -271,7 +271,7 @@ class PublishNode(ControlNode):
         if content_encoding is not None:
             parameters.setdefault('content_encoding', content_encoding)
 
-        #set delivery_mode explicitly in **parameters of PublishNode()
+        #set delivery_mode explicitly in **parameters of PublisherNode()
         #parameters.setdefault('delivery_mode', 2)   # 1: transient, 2: persistent (needs durable=True for queue)
 
         message = aio_pika.Message(body, headers=headers, **parameters)
@@ -281,31 +281,31 @@ class PublishNode(ControlNode):
             if self.is_stop_requested():
                 return False
             else:
-                err = f'AsyncRabbitMQ: publish cancelled unexpectedly (exchange={self.exchange_node.name}, key={self.routing_key}): {e}'
+                err = f'AsyncRabbitMQ: publisher cancelled unexpectedly (exchange={self.exchange_node.name}, key={self.routing_key}): {e}'
                 logging.warning(err)
                 raise e
         except Exception as e:
-            logging.error(f'AsyncRabbitMQ: publish failed (exchange={self.exchange_node.name}, key={self.routing_key}): {e}')
+            logging.error(f'AsyncRabbitMQ: publisher failed (exchange={self.exchange_node.name}, key={self.routing_key}): {e}')
             raise
         
         return True
 
         
     ## child nodes ##
-    # rabbitmq.publish(subject).json()
+    # rabbitmq.publisher(subject).json()
     def json(self, headers=None):
-        return PublishJsonNode(self, headers)
+        return PublisherJsonNode(self, headers)
 
     
 
-class PublishJsonNode(ControlNode):
-    def __init__(self, publish_node, headers=None):
-        self.publish_node = publish_node
+class PublisherJsonNode(ControlNode):
+    def __init__(self, publisher_node, headers=None):
+        self.publisher_node = publisher_node
         self.headers = dict(headers or {})
         
 
     async def aio_set(self, value):
-        return await self.publish_node.aio_set((value, self.headers))
+        return await self.publisher_node.aio_set((value, self.headers))
 
 
 
@@ -530,8 +530,8 @@ class RpcFunctionNode(ControlNode):
             parameters = {
                 'correlation_id': request_message.parameters.get('correlation_id', None),
             }
-            publish_node = self.queue_node.exchange_node.publish(routing_key, parameters=parameters)
-            await publish_node.aio_set(return_value)
+            publisher_node = self.queue_node.exchange_node.publisher(routing_key, parameters=parameters)
+            await publisher_node.aio_set(return_value)
 
         return return_value
 
@@ -547,12 +547,12 @@ class RpcCallNode(ControlNode):
 
         
     async def aio_get(self):
-        publish_node = self.queue_node.exchange_node.publish(routing_key=self.routing_key)
+        publisher_node = self.queue_node.exchange_node.publisher(routing_key=self.routing_key)
         correlation_id = str(uuid.uuid4())
         parameters = dict(self.parameters)
         parameters['reply_to'] = self.queue_node.routing_keys[0]
         parameters['correlation_id'] = correlation_id
-        await publish_node.aio_set((self.body, self.headers, parameters))
+        await publisher_node.aio_set((self.body, self.headers, parameters))
         
         # BUG: there might be multiple reply messages (e.g., by topic/fanout exchange)
         reply_selector = lambda message: message.correlation_id == correlation_id

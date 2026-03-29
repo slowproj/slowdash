@@ -14,7 +14,7 @@ class MQTTNode(ControlNode):
         self.port = port
         self.keepalive = 60
 
-        self.subscribers: dict[str,list[SubscribeNode]] = {}
+        self.subscribers: dict[str,list[SubscriberNode]] = {}
 
         try:
             import paho.mqtt.client as mqtt
@@ -52,15 +52,15 @@ class MQTTNode(ControlNode):
         logger.info(f'MQTT Connection Closed')
 
         
-    def publish(self, topic):
-        return PublishNode(self, topic)
+    def publisher(self, topic):
+        return PublisherNode(self, topic)
 
 
-    def subscribe(self, topic, handler=None):
-        return SubscribeNode(self, topic, handler)
+    def subscriber(self, topic, handler=None, timeout=None):
+        return SubscriberNode(self, topic, handler, timeout=timeout)
 
 
-    def do_subscribe(self, topic_filter:str, subscribe_node):
+    def do_subscribe(self, topic_filter:str, subscriber_node):
         if self.client is None:
             return
         
@@ -75,7 +75,7 @@ class MQTTNode(ControlNode):
             self.client.message_callback_add(topic_filter, mqtt_callback)
             self.client.subscribe(topic_filter)
 
-        self.subscribers[topic_filter].append(subscribe_node)
+        self.subscribers[topic_filter].append(subscriber_node)
 
         
     @classmethod
@@ -101,7 +101,7 @@ class MQTTNode(ControlNode):
 
     
     
-class PublishNode(ControlNode):
+class PublisherNode(ControlNode):
     def __init__(self, mqtt, topic):
         self.mqtt = mqtt
         self.topic = topic
@@ -114,13 +114,20 @@ class PublishNode(ControlNode):
         self.mqtt.client.publish(self.topic, value)
         
 
-        
-class SubscribeNode(ControlNode):
-    def __init__(self, mqtt:MQTTNode, topic_filter:str, handler=None):
+    ## child nodes ##
+    # nats.publisher(subject).json()
+    def json(self, headers=None):
+        return PublisherJsonNode(self, headers)
+
+
+    
+class SubscriberNode(ControlNode):
+    def __init__(self, mqtt:MQTTNode, topic_filter:str, handler=None, timeout=None):
         """
         - If handler is not None, it is called on receiving a message.
         - Otherwise, the received messages are queued, which can be retrieved by has_data()/get()
         """
+        self.timeout = timeout
                 
         self.queue = queue.Queue(maxsize=1024)
         
@@ -136,29 +143,69 @@ class SubscribeNode(ControlNode):
 
         
     def get(self):
-        return self.queue.get(block=True, timeout=None)
-
+        try:
+            if self.timeout is None:
+                return self.queue.get(block=True)
+            elif self.timeout <= 0:
+                return self.queue.get(block=False)
+            else:
+                return self.queue.get(timeout=self.timeout)
+        except queue.Empty:
+            return None
+    
 
     def do_handle_message(self, message):
         return self.handler(message)
 
         
     ## child nodes ##
-    # mqtt.subscribe(topic_pettern).payload()
-    def payload(self):
-        return SubscribePayloadNode(self)
+    # nats.subscriber(subject).json()
+    def json(self):
+        return SubscriberJsonNode(self)
         
 
     
-class SubscribePayloadNode(ControlNode):
-    def __init__(self, subscribe_node):
-        self.subscribe_node = subscribe_node
+class PublisherJsonNode(ControlNode):
+    def __init__(self, publisher_node, headers = None):
+        self.publisher_node = publisher_node
+        self.headers = dict(headers or {})
+        
+
+    def set(self, value):
+        try:
+            doc = json.dumps(value)
+        except Exception as e:
+            logger.warning(f'MQTT: publisher(): unable to convert to JSON: {e}')
+            return None
+        
+        return self.publisher_node.set(doc)
+
+
+
+class SubscriberJsonNode(ControlNode):
+    def __init__(self, subscriber_node):
+        self.subscriber_node = subscriber_node
         
 
     def get(self):
-        msg = self.subscribe_node.get()
-        if msg is None:
-            return None
-        else:
-            return msg.payload
-    
+        message = self.subscriber_node.get()
+        if message is None:
+            return None, None
+
+        headers = {
+            'topic': message.topic,
+            'message_id': message.mid,
+        }
+        body = message.payload
+        if type(body) is bytes:
+            try:
+                body = body.decode()
+            except:
+                body = str(body)
+            try:
+                doc = json.loads(body)
+            except:
+                doc = body
+                
+        return (headers, doc)
+        

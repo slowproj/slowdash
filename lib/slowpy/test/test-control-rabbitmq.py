@@ -1,12 +1,16 @@
-import sys, time
+
+print('RabbitMQ Chat')
+print('type ctrl-d to stop')
+
 
 from slowpy.control import control_system as ctrl
-redis = ctrl.import_control_module('Redis').redis('redis://localhost:6379/12')
+rabbitmq = ctrl.import_control_module('RabbitMQ').rabbitmq('amqp://slowdash:slowdash@localhost')
+exchange = rabbitmq.topic_exchange('slowchat')
 
 
 is_running = True
 
-sub = redis.subscriber('chat:*', timeout=0.1)
+sub = exchange.subscriber('chat.*', timeout=0.1)
 def receiver():
     while is_running:
         headers, data = sub.json().get()
@@ -24,9 +28,8 @@ while is_running:
     except (EOFError, KeyboardInterrupt):
         is_running = False
         break
-    redis.publisher('chat:all').set(line)
+    exchange.publisher('chat.all').set(line)
 
 
 th.join()
-redis.close()
-
+rabbitmq.close()

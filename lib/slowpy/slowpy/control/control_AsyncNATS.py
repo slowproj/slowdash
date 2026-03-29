@@ -77,12 +77,12 @@ class NATSNode(ControlNode):
         self.client = None
 
         
-    def publish(self, topic):
-        return PublishNode(self, topic)
+    def publisher(self, topic):
+        return PublisherNode(self, topic)
 
 
-    def subscribe(self, topic_filter, handler=None, timeout=None):
-        return SubscribeNode(self, topic_filter, handler, timeout)
+    def subscriber(self, topic_filter, handler=None, timeout=None):
+        return SubscriberNode(self, topic_filter, handler, timeout)
 
      
     @classmethod
@@ -108,7 +108,7 @@ class NATSNode(ControlNode):
 
     
     
-class PublishNode(ControlNode):
+class PublisherNode(ControlNode):
     def __init__(self, nats_node, topic):
         self.nats_node = nats_node
         self.topic = topic
@@ -121,17 +121,17 @@ class PublishNode(ControlNode):
         try:
             await self.nats_node.client.publish(self.topic, value)
         except Exception as e:
-            logger.error(f'AsnncNATS.publish(): {e}')
+            logger.error(f'AsnncNATS.publisher(): {e}')
 
         
     ## child nodes ##
-    # nats.publish(subject).json()
+    # nats.publisher(subject).json()
     def json(self, headers=None):
-        return PublishJsonNode(self, headers)
+        return PublisherJsonNode(self, headers)
 
 
     
-class SubscribeNode(ControlNode):
+class SubscriberNode(ControlNode):
     def __init__(self, nats_node:NATSNode, topic_filter:str, handler=None, timeout=None):
         """
         - If handler is not None, it is called on receiving a message.
@@ -205,15 +205,15 @@ class SubscribeNode(ControlNode):
 
         
     ## child nodes ##
-    # nats.subscribe(subject).json()
+    # nats.subscriber(subject).json()
     def json(self):
-        return SubscribeJsonNode(self)
+        return SubscriberJsonNode(self)
         
 
     
-class PublishJsonNode(ControlNode):
-    def __init__(self, publish_node, headers=None):
-        self.publish_node = publish_node
+class PublisherJsonNode(ControlNode):
+    def __init__(self, publisher_node, headers=None):
+        self.publisher_node = publisher_node
         self.headers = dict(headers or {})
         
 
@@ -221,20 +221,20 @@ class PublishJsonNode(ControlNode):
         try:
             doc = json.dumps(value)
         except Exception as e:
-            logger.warning(f'AsyncNATS: publish(): unable to convert to JSON: {e}')
+            logger.warning(f'AsyncNATS: publisher(): unable to convert to JSON: {e}')
             return None
         
-        return await self.publish_node.aio_set(doc.encode())
+        return await self.publisher_node.aio_set(doc.encode())
 
 
 
-class SubscribeJsonNode(ControlNode):
-    def __init__(self, subscribe_node):
-        self.subscribe_node = subscribe_node
+class SubscriberJsonNode(ControlNode):
+    def __init__(self, subscriber_node):
+        self.subscriber_node = subscriber_node
         
 
     async def aio_get(self):
-        message = await self.subscribe_node.aio_get()
+        message = await self.subscriber_node.aio_get()
         if message is None:
             return None, None
 

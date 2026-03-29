@@ -18,7 +18,7 @@ async def main():
     print('type ctrl-d to stop')
 
     async def writer():
-        pub = exchange.publish(routing_key='chat.all')
+        pub = exchange.publisher(routing_key='chat.all')
         nonlocal is_running
         while is_running:
             line = await aio_input()
@@ -28,7 +28,7 @@ async def main():
                 await pub.json().aio_set({'input': line})
 
     async def reader():
-        sub = exchange.subscribe('chat.*', timeout=0.1)
+        sub = exchange.subscriber('chat.*', timeout=0.1)
         nonlocal is_running
         while is_running:
             headers, data = await sub.json().aio_get()

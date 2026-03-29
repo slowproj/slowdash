@@ -233,7 +233,7 @@ class SensorValueAlertNode(ControlNode):
     def __init__(self, dripline:DriplineNode, name:str=None):
         self.name = name or dripline.name
         self.sender_id = dripline.sender_id
-        self.publish_node = dripline.alerts_exchange.publish(f'sensor_value.{self.name}')
+        self.publisher_node = dripline.alerts_exchange.publisher(f'sensor_value.{self.name}')
 
         
     async def aio_set(self, value):
@@ -267,7 +267,7 @@ class SensorValueAlertNode(ControlNode):
             'content_encoding': 'application/json',
         }
         
-        return await self.publish_node.aio_set((body, headers, parameters))
+        return await self.publisher_node.aio_set((body, headers, parameters))
 
     
 
@@ -275,7 +275,7 @@ class HeartbeatAlertNode(ControlNode):
     def __init__(self, dripline:DriplineNode):
         self.name = dripline.name
         self.sender_id = dripline.sender_id
-        self.publish_node = dripline.alerts_exchange.publish(f'heartbeat.{self.name}')
+        self.publisher_node = dripline.alerts_exchange.publisher(f'heartbeat.{self.name}')
 
         
     async def aio_set(self, value):
@@ -295,7 +295,7 @@ class HeartbeatAlertNode(ControlNode):
             'content_encoding': 'application/json',
         }
         
-        return await self.publish_node.aio_set((body, headers, parameters))
+        return await self.publisher_node.aio_set((body, headers, parameters))
 
     
 
@@ -303,7 +303,7 @@ class StatusMessageAlertNode(ControlNode):
     def __init__(self, dripline:DriplineNode, message_type='notice'):
         self.name = dripline.name
         self.sender_id = dripline.sender_id
-        self.publish_node = dripline.alerts_exchange.publish(f'status_message.{self.name}.{message_type}')
+        self.publisher_node = dripline.alerts_exchange.publisher(f'status_message.{self.name}.{message_type}')
 
         
     async def aio_set(self, value):
@@ -322,7 +322,7 @@ class StatusMessageAlertNode(ControlNode):
             'content_encoding': 'application/json',
         }
         
-        return await self.publish_node.aio_set((body, headers, parameters))
+        return await self.publisher_node.aio_set((body, headers, parameters))
 
     
 

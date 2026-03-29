@@ -191,7 +191,7 @@ class SensorValueAlertNode(ControlNode):
     def __init__(self, dripline:DriplineNode, name:str=None):
         self.name = name or dripline.name
         self.sender_id = dripline.sender_id
-        self.publish_node = dripline.alerts_exchange.publish(f'sensor_value.{self.name}')
+        self.publisher_node = dripline.alerts_exchange.publisher(f'sensor_value.{self.name}')
 
         
     def set(self, value):
@@ -225,5 +225,5 @@ class SensorValueAlertNode(ControlNode):
             'content_encoding': 'application/json',
         }
         
-        return self.publish_node.set((body, headers, parameters))
+        return self.publisher_node.set((body, headers, parameters))
     

@@ -16,7 +16,7 @@ async def main():
     print('type ctrl-d to stop')
 
     async def writer():
-        pub = slowmq.publish('chat.all')
+        pub = slowmq.publisher('chat.all')
         nonlocal is_running
         while is_running:
             line = await aio_input()
@@ -26,7 +26,7 @@ async def main():
                 await pub.json().aio_set(line)
 
     async def reader():
-        sub = slowmq.subscribe('chat.*', timeout=0.1)
+        sub = slowmq.subscriber('chat.*', timeout=0.1)
         nonlocal is_running
         while is_running:
             headers, data = await sub.json().aio_get()
