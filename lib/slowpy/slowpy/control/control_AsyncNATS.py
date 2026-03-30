@@ -38,11 +38,11 @@ class NATSNode(ControlNode):
                 async def error_cb(e):
                     logger.warning(f'AsyncNATS: ERROR: {self.url}: {e}')
                 async def disconnected_cb():
-                    logger.warning(f'AsyncNATS: disconnected: {self.url}')
+                    logger.info(f'AsyncNATS: disconnected: {self.url}')
                 async def reconnected_cb():
-                    logger.warning(f'AsyncNATS: reconnected: {self.url}')
+                    logger.info(f'AsyncNATS: reconnected: {self.url}')
                 async def closed_cb():
-                    logger.warning(f'AsyncNATS: permanently closed (no reconnection): {self.url}')
+                    logger.info(f'AsyncNATS: permanently closed (no reconnection): {self.url}')
                 try:
                     import nats
                     self.client = await nats.connect(

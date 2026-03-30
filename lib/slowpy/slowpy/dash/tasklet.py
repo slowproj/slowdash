@@ -39,6 +39,82 @@ class Tasklet:
             pass
             
 
+    def is_stop_requested(self):
+        return ctrl.is_stop_requested()
+    
+        
+    async def aio_publish(self, topic:str, value, *, headers:dict|None=None):
+        return await self.mesh.publisher(topic).headers(headers or {}).aio_set(value)
+
+        
+    def publish(self, topic:str, value, *, headers:dict|None=None):
+        loop = asyncio.get_running_loop()
+        loop.create_task(self.aio_publish(topic, value, headers=headers))
+    
+        
+    #### Callback Decorators ####
+        
+    def initialize(self):
+        """decorator to add a tasklet initialization task
+        """
+        def wrapper(func):
+            self._add_initialize_callback(func)
+            return func
+        return wrapper
+        
+        
+    def finalize(self):
+        """decorator to add a tasklet finalization task
+        """
+        def wrapper(func):
+            self._add_finalize_callback(func)
+            return func
+        return wrapper
+        
+        
+    def once(self, delay:float=0):
+        """decorator to add a tasklet task
+        """
+        def wrapper(func):
+            self._add_once_callback(func, delay)
+            return func
+        return wrapper
+        
+
+    def loop(self, interval:float=0):
+        """decorator to add a tasklet task
+        """
+        def wrapper(func):
+            self._add_loop_callback(func, interval)
+            return func
+        return wrapper
+        
+
+    def schedule(self, time_list:str, *, use_utc:bool=False):
+        """decorator to add a tasklet task
+        Args:
+        time_list: comma-separated list of times in HH:MM. HH and MM must be an integer or *.
+        use_utc: set True to use the UTC time.
+        """
+        def wrapper(func):
+            self._add_schedule_callback(func, time_list, use_utc)
+            return func
+        return wrapper
+        
+
+    def on(self, topic:str):
+        """decorator to make a message handler
+        Args:
+        - topic: path pattern to match
+        """
+        def wrapper(func):
+            self._add_subscription_callback(func, topic)
+            return func
+        return wrapper
+
+
+    #### Internal Methods ####
+
     def _scan_oldstyle_callbacks(self, module):
         def _get_func(name):
             if (name in module.__dict__) and callable(module.__dict__[name]):
@@ -81,10 +157,11 @@ class Tasklet:
             await asyncio.gather(*self.initialize_task_coros)
         except Exception as e:
             raise e
+        finally:
+            await self.mesh.aio_close()
         
         main_tasks = set()
         try:
-            await self.mesh.aio_start()
             for coro in self.main_task_coros:
                 task = asyncio.create_task(coro)
                 task.add_done_callback(main_tasks.discard)
@@ -100,12 +177,10 @@ class Tasklet:
             try:
                 await task
             except Exception as e:
-                self._handle_error(f'Tasklet error during clean up: {func.__name__}(): {e}')
+                self._handle_error(f'Tasklet error during clean up: {e}')
             except:
                 pass
             
-            await self.mesh.aio_close()
-
             try:
                 await asyncio.gather(*self.finalize_task_coros)
             except Exception as e:
@@ -113,6 +188,8 @@ class Tasklet:
             except:
                 pass
             
+            await self.mesh.aio_close()
+
             
     def _add_initialize_callback(self, func):
         """
@@ -292,6 +369,40 @@ class Tasklet:
         self.main_task_coros.append(go_schedule())
 
                 
+    def _add_subscription_callback(self, func, topic:str):
+        """
+        Args:
+          func: callback function
+          topic: topic filter
+        """
+        func._slowpy_task = True
+
+        nargs = len(inspect.signature(func).parameters)
+        if nargs > 2:
+            logging.error(f'Invalid mesh message handler: wrong number of arguments')
+            return None
+
+        async def go_subscription():
+            subscriber = self.mesh.subscriber(topic)
+            try:
+                while not ctrl.is_stop_requested():
+                    headers, data = await subscriber.aio_get()
+                    if data is None:
+                        continue
+                    if nargs == 0:
+                        result = func()
+                    elif nargs == 1:
+                        result = func(data)
+                    elif nargs == 2:
+                        result = func(headers, data)
+                    if asyncio.iscoroutine(result):
+                        await result
+            except Exception as e:
+                self._handle_error(f'Tasklet error: {func.__name__}(): {e}')
+                
+        self.main_task_coros.append(go_subscription())
+
+                
     def _handle_error(self, message):
         logging.error(message)
         #if sys.exc_info()[0] is not None:
@@ -301,75 +412,4 @@ class Tasklet:
                 logging.warning(tb)
         except:
             pass
-
-
-    def is_stop_requested(self):
-        return ctrl.is_stop_requested()
     
-        
-    def publish(self, topic:str, value):
-        loop = asyncio.get_running_loop()
-        loop.create_task(self.aio_publish(topic, value))
-    
-        
-    async def aio_publish(self, topic:str, value):
-        return await self.mesh.aio_publish(topic, value)
-
-    
-    #### Callback Decorators ####
-        
-    def initialize(self):
-        """decorator to add a tasklet initialization task
-        """
-        def wrapper(func):
-            self._add_initialize_callback(func)
-            return func
-        return wrapper
-        
-        
-    def finalize(self):
-        """decorator to add a tasklet finalization task
-        """
-        def wrapper(func):
-            self._add_finalize_callback(func)
-            return func
-        return wrapper
-        
-        
-    def once(self, delay:float=0):
-        """decorator to add a tasklet task
-        """
-        def wrapper(func):
-            self._add_once_callback(func, delay)
-            return func
-        return wrapper
-        
-
-    def loop(self, interval:float=0):
-        """decorator to add a tasklet task
-        """
-        def wrapper(func):
-            self._add_loop_callback(func, interval)
-            return func
-        return wrapper
-        
-
-    def schedule(self, time_list:str, *, use_utc:bool=False):
-        """decorator to add a tasklet task
-        Args:
-        time_list: comma-separated list of times in HH:MM. HH and MM must be an integer or *.
-        use_utc: set True to use the UTC time.
-        """
-        def wrapper(func):
-            self._add_schedule_callback(func, time_list, use_utc)
-            return func
-        return wrapper
-        
-
-    def on(self, topic:str):
-        """decorator to make a message handler
-        Args:
-        - topic: path pattern to match
-        """
-        return self.mesh.on(topic)
-

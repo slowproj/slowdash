@@ -51,7 +51,7 @@ x = 0
 def publish():
     global x
     x += random.gauss(0, 1)
-    tasklet.publish('data.randomwalk', x)
+    tasklet.publish('data.randomwalk', x, headers={'sender':'me'})
 
 
     

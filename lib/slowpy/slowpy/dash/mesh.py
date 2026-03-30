@@ -1,10 +1,8 @@
 # Created by Sanshiro Enomoto on 23 March 2026 #
 
-import asyncio, inspect
+import asyncio, inspect, logging
 from urllib.parse import urlsplit
 from slowpy.control import control_system as ctrl
-
-import logging
 
 
 class Mesh:
@@ -20,9 +18,6 @@ class Mesh:
         self.single_wc_mesh = single_wc
         self.tail_wc_mesh = tail_wc
         
-        self.subscription_coros = []
-        self.subscription_tasks = None
-
         if url is not None:
             self.connect(url)
         else:
@@ -82,106 +77,24 @@ class Mesh:
 
             
     async def aio_close(self):
-        await self.aio_stop()
-        
-        if self.pubsub is not None:
-            try:
-                await self.pubsub.aio_close()
-            except:
-                pass
+        try:
+            await self.pubsub.aio_close()
+        except:
+            pass
             
             
     def publisher(self, topic:str):
-        if self.pubsub is None:
-            return None
-        
         return self.pubsub.publisher(self._convert_topic(topic), **self.pubargs).json()
 
 
     def subscriber(self, topic:str):
-        if self.pubsub is None:
-            return None
-        
         return self.pubsub.subscriber(self._convert_topic(topic), **self.subargs).json()
 
 
     async def aio_publish(self, topic:str, value, *, headers:dict|None=None):
-        publisher = self.publisher(topic)
-        if publisher is None:
-            return None
-        else:
-            return await publisher.headers(headers or {}).aio_set(value)
+        return await self.publisher(topic).headers(headers or {}).aio_set(value)
 
 
     def publish(self, topic:str, value, *, headers:dict|None=None):
-        publisher = self.publisher(topic)
-        if publisher is None:
-            return None
-        
-        asyncio.get_running_loop().create_task(publisher.headers(headers or {}).aio_set(value))
-
-
-    async def aio_subscribe(self, topic:str, func):
-        subscriber = self.subscriber(topic)
-        if subscriber is None:
-            return None
-
-        nargs = len(inspect.signature(func).parameters)
-        if nargs > 2:
-            logging.error(f'Invalid mesh message handler: wrong number of arguments')
-            return None
-
-        async def receiver():
-            try:
-                while True:
-                    headers, data = await subscriber.aio_get()
-                    if data is None:
-                        continue
-                    if nargs == 0:
-                        result = func()
-                    elif nargs == 1:
-                        result = func(data)
-                    elif nargs == 2:
-                        result = func(headers, data)
-                    if asyncio.iscoroutine(result):
-                        await result
-            except Exception as e:
-                logging.error(f'Error in mesh message handler: {e}')
-        
-        return await receiver()
-
-
-    async def aio_start(self):
-        if self.subscription_tasks is not None:
-            await self.aio_stop()
-
-        self.subscription_tasks = set()
-        for coro in self.subscription_coros:
-            task = asyncio.create_task(coro)
-            task.add_done_callback(self.subscription_tasks.discard)
-            self.subscription_tasks.add(task)
-            
-
-    async def aio_stop(self):
-        if self.subscription_tasks is None:
-            return
-            
-        for task in self.subscription_tasks:
-            task.cancel()
-        try:
-            await asyncio.gather(*self.subscription_tasks, return_exceptions=True)
-        except:
-            pass
-        finally:
-            self.subscription_tasks = None
-
-
-    def on(self, topic:str):
-        """decorator to make a message handler
-        Args:
-        - topic: path pattern to match
-        """
-        def wrapper(func):
-            self.subscription_coros.append(self.aio_subscribe(topic, func))
-            return func
-        return wrapper
+        loop = asyncio.get_running_loop()
+        loop.create_task(self.aio_publish(topic, value, headers=headers))
