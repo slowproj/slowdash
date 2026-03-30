@@ -126,6 +126,8 @@ class PublisherNode(ControlNode):
                 headers, body = value
         else:
             body = value
+        if headers is None:
+            headers = {}
 
         try:
             await self.nats_node.client.publish(self.topic, body, headers=headers)

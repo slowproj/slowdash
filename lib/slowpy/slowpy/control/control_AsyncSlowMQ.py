@@ -146,6 +146,8 @@ class PublisherNode(ControlNode):
         else:
             body = value
 
+        if headers is None:
+            headers = {}
         headers['topic'] = self.topic
             
         try:

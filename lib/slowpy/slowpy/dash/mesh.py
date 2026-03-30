@@ -7,68 +7,6 @@ from slowpy.control import control_system as ctrl
 import logging
 
 
-class EmptyPubsubNode:
-    def __init__(self):
-        pass
-    
-    def aio_open():
-        pass
-
-    def aio_close():
-        pass
-
-    def publisher(self, topic, **kwargs):
-        return EmptyPublisherNode(topic)
-
-    def subscriber(self, topic_filter, timeout=None, **kwargs):
-        return EmptySubscriberNode(topic_filter, timeout=timeout)
-
-    
-class EmptyPublisherNode:
-    def __init__(self, topic):
-        self.topic = topic
-
-    async def aio_set(self, value):
-        print(f'PUBSLIH ({self.topic}): {repr(value)}')
-
-    def json(self, headers=None):
-        return EmptyPublisherJsonNode(self)
-
-    
-class EmptySubscriberNode:
-    def __init__(self, topic_filter:str, timeout=None):
-        self.topic_filter = topic_filter
-        self.timeout = timeout
-        
-    async def aio_get(self):
-        if self.timeout is not None and self.timeout > 0:
-            await asyncio.sleep(self.timeout)
-        return None, None
-    
-    def json(self):
-        return EmptySubscriberJsonNode(self)
-        
-    
-class EmptyPublisherJsonNode:
-    def __init__(self, publisher_node):
-        self.publisher_node = publisher_node
-
-    async def aio_set(self, value):
-        return await self.publisher_node.aio_set(value)
-
-    def headers(self, headers):
-        return self
-
-
-class EmptySubscriberJsonNode:
-    def __init__(self, subscriber_node):
-        self.subscriber_node = subscriber_node
-
-    async def aio_get(self):
-        return await self.subscriber_node.aio_get()
-
-
-
 class Mesh:
     def __init__(self, url=None, *, timeout:float=0.1, sep='.', single_wc='*', tail_wc='>'):
         self.pubargs = {}
@@ -88,7 +26,7 @@ class Mesh:
         if url is not None:
             self.connect(url)
         else:
-            self.pubsub = EmptyPubsubNode()
+            self.pubsub = ctrl.import_control_module('AsyncLocalPubsub').async_localpubsub()
 
         
     def connect(self, url:str):

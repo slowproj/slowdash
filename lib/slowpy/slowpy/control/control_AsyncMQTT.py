@@ -201,6 +201,8 @@ class PublisherNode(ControlNode):
                 headers, body = value
         else:
             body = value
+        if headers is None:
+            headers = {}
 
         try:
             await self.mqtt_node.client.publish(self.topic, body, properties=self.mqtt_node.dict2props(headers))

@@ -258,6 +258,10 @@ class PublisherNode(ControlNode):
                 headers, body, parameters = value
         else:
             body = value
+        if headers is None:
+            headers = {}
+        if parameters is None:
+            parameters = {}
 
         if isinstance(body, str):
             content_type, content_encoding = 'text/plain', 'utf-8'
