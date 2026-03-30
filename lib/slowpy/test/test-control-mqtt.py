@@ -26,7 +26,7 @@ while is_running:
     except (EOFError, KeyboardInterrupt):
         is_running = False
         break
-    mqtt.publisher('chat/all').set(line)
+    mqtt.publisher('chat/all').set(({'sender':'me'}, line))
 
 
 th.join()

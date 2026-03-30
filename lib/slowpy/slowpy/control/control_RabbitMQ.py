@@ -10,13 +10,13 @@ import pika
 class Message:
     def __init__(
         self,
+        headers: dict[str, typing.Any]|None = None,
         body: dict[str,typing.Any] | str | bytes | None = None,
-        headers: dict[str, typing.Any] = {},
-        parameters: dict[str, typing.Any] = {}
+        parameters: dict[str, typing.Any]|None = None
     ):
+        self.headers = dict(headers or {})
         self.body = body
-        self.headers = dict(headers)
-        self.parameters = dict(parameters)
+        self.parameters = dict(parameters or {})
     
 
         
@@ -248,14 +248,14 @@ class PublisherNode(ControlNode):
 
         body, headers, parameters = ({}, {}, {})
         if isinstance(value, Message):
-            body, headers, parameters = value
+            body, headers, parameters = value.body, value.headers, value.parameters
         elif isinstance(value, tuple):
             if len(value) == 1:
                 (body,) = value
             elif len(value) == 2:
-                body, headers = value
+                headers, body = value
             elif len(value) == 3:
-                body, headers, parameters = value
+                headers, body, parameters = value
         else:
             body = value
 
@@ -340,14 +340,20 @@ class PublisherNode(ControlNode):
 class PublisherJsonNode(ControlNode):
     def __init__(self, publisher_node, headers=None):
         self.publisher_node = publisher_node
-        self.headers = dict(headers or {})
+        self.headers_dict = dict(headers or {})
         
 
     def set(self, value):
-        return self.publisher_node.set((value, self.headers))
+        return self.publisher_node.set((self.headers_dict, value))
 
 
+    ## (virtual) child nodes ##
+    def headers(self, headers):
+        self.headers_dict = dict(headers)
+        return self
 
+
+    
 class QueueNode(ControlNode):
     def __init__(self, exchange_node:ExchangeNode, queue_name:str, *, routing_key:list[str]|str|None=None, handler=None, timeout:float=0, **kwargs):
         self.exchange_node = exchange_node
@@ -379,14 +385,14 @@ class QueueNode(ControlNode):
             content_type = incoming.content_type or 'application/octet-stream'
             if content_type == 'application/json':
                 try:
-                    return Message(json.loads(incoming.body.decode('utf-8')), headers, parameters)
+                    return Message(headers, json.loads(incoming.body.decode('utf-8')), parameters)
                 except Exception as e:
                     logging.warning(f'RabbitMQ.QueueNode[{self.name}]: bad JSON format: {e}')
-                    return Message(incoming.body.decode('utf-8'), headers, parameters)
+                    return Message(headers, incoming.body.decode('utf-8'), parameters)
             elif content_type == 'text/plain':
-                return Message(incoming.body.decode('utf-8'), headers, parameters)
+                return Message(headers, incoming.body.decode('utf-8'), parameters)
             else:
-                return Message(incoming.body, headers, parameters)
+                return Message(headers, incoming.body, parameters)
 
         self.handler = handler or _default_handler        
         self._declared = False

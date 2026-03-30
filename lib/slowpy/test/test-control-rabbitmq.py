@@ -28,7 +28,7 @@ while is_running:
     except (EOFError, KeyboardInterrupt):
         is_running = False
         break
-    exchange.publisher('chat.all').set(line)
+    exchange.publisher('chat.all').json({'sender':'me'}).set(line)
 
 
 th.join()

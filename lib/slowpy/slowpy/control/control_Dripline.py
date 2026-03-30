@@ -225,5 +225,5 @@ class SensorValueAlertNode(ControlNode):
             'content_encoding': 'application/json',
         }
         
-        return self.publisher_node.set((body, headers, parameters))
+        return self.publisher_node.set((headers, body, parameters))
     

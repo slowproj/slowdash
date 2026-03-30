@@ -23,7 +23,7 @@ async def main():
             if line is None:
                 is_running = False
             else:
-                await pub.json().aio_set(line)
+                await pub.json({'sender':'me'}).aio_set({'message':line})
 
     async def reader():
         sub = redis.subscriber('chat:*', timeout=0.1)

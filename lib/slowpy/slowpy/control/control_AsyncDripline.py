@@ -267,7 +267,7 @@ class SensorValueAlertNode(ControlNode):
             'content_encoding': 'application/json',
         }
         
-        return await self.publisher_node.aio_set((body, headers, parameters))
+        return await self.publisher_node.aio_set((headers, body, parameters))
 
     
 
@@ -295,7 +295,7 @@ class HeartbeatAlertNode(ControlNode):
             'content_encoding': 'application/json',
         }
         
-        return await self.publisher_node.aio_set((body, headers, parameters))
+        return await self.publisher_node.aio_set((headers, body, parameters))
 
     
 
@@ -322,7 +322,7 @@ class StatusMessageAlertNode(ControlNode):
             'content_encoding': 'application/json',
         }
         
-        return await self.publisher_node.aio_set((body, headers, parameters))
+        return await self.publisher_node.aio_set((headers, body, parameters))
 
     
 

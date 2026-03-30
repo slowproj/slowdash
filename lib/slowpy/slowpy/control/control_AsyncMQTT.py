@@ -9,10 +9,11 @@ logger.setLevel(logging.INFO)
 
 
 class MQTTNode(ControlNode):
-    def __init__(self, host:str, port:int=1883):
+    def __init__(self, host:str, port:int=1883, *, use_v5=True, keep_alive=60):
         self.host = host
         self.port = port
-        self.keepalive = 60
+        self.use_v5 = use_v5   # if False, v3.11 is used, and headers (properties) are not available
+        self.keep_alive = keep_alive
         
         self.subscribers: dict[str,list["SubscriberNode"]] = {}
         self.receiver_task = None
@@ -52,7 +53,25 @@ class MQTTNode(ControlNode):
             if self.client is None:
                 try:
                     import aiomqtt
-                    self.client = aiomqtt.Client(self.host, self.port, keepalive=self.keepalive)
+                    import paho.mqtt.client as mqtt
+                    if self.use_v5:
+                        from paho.mqtt.properties import Properties
+                        from paho.mqtt.packettypes import PacketTypes
+                        self.client = aiomqtt.Client(
+                            self.host, self.port, keepalive=self.keep_alive, protocol=mqtt.MQTTv5
+                        )
+                        def dict2props(value:dict):
+                            props = Properties(PacketTypes.PUBLISH)
+                            props.UserProperty = [ (k,v) for k,v in value.items() ]
+                            return props
+                        self.dict2props = dict2props
+                    else:
+                        self.client = aiomqtt.Client(
+                            self.host, self.port, keepalive=self.keep_alive, protocol=mqtt.MQTTv311
+                        )
+                        def dict2props(value:dict):
+                            return None
+                        self.dict2props = dict2props
                 except Exception as e:
                     logger.error(f'AsyncMQTT: {e}')
                     self.client = None
@@ -85,7 +104,7 @@ class MQTTNode(ControlNode):
                             for subscriber in subscribers:
                                 await subscriber._handle_message(msg)
                 except Exception as e:
-                    logger.warning(f'AsyncMQTT: error: {e}')
+                    logger.warning(f'AsyncMQTT: receiver(): error: {e}')
                     self.disconnected = True
                     await self.aio_close() # this will cause retries
                     await asyncio.sleep(1)
@@ -174,10 +193,19 @@ class PublisherNode(ControlNode):
         if not await self.mqtt_node.aio_open():
             return None
 
+        body, headers = (None, {})
+        if type(value) is tuple:
+            if len(value) == 1:
+                (body,) = value
+            elif len(value) == 2:
+                headers, body = value
+        else:
+            body = value
+
         try:
-            await self.mqtt_node.client.publish(self.topic, value)
+            await self.mqtt_node.client.publish(self.topic, body, properties=self.mqtt_node.dict2props(headers))
         except Exception as e:
-            logger.warning(f'AsyncMQTT: error: {e}')
+            logger.warning(f'AsyncMQTT: publisher().aio_set(): error: {e}')
             self.mqtt_node.disconnected = True
             await self.mqtt_node.aio_close() # this will cause retries
 
@@ -268,7 +296,7 @@ class SubscriberNode(ControlNode):
 class PublisherJsonNode(ControlNode):
     def __init__(self, publisher_node, headers = None):
         self.publisher_node = publisher_node
-        self.headers = dict(headers or {})
+        self.headers_dict = dict(headers or {})
         
 
     async def aio_set(self, value):
@@ -278,10 +306,16 @@ class PublisherJsonNode(ControlNode):
             logger.warning(f'AsyncMQTT: publisher(): unable to convert to JSON: {e}')
             return None
         
-        return await self.publisher_node.aio_set(doc)
+        return await self.publisher_node.aio_set((self.headers_dict, doc))
 
 
+    ## (virtual) child nodes ##
+    def headers(self, headers):
+        self.headers_dict = dict(headers)
+        return self
 
+
+    
 class SubscriberJsonNode(ControlNode):
     def __init__(self, subscriber_node):
         self.subscriber_node = subscriber_node
@@ -296,6 +330,10 @@ class SubscriberJsonNode(ControlNode):
             'topic': message.topic.value,
             'message_id': message.mid,
         }
+        if message.properties is not None and hasattr(message.properties, 'UserProperty'):
+            for k,v in (message.properties.UserProperty or []):
+                headers[k] = v
+        
         body = message.payload
         if type(body) is bytes:
             try:

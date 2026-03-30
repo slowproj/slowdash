@@ -3,6 +3,7 @@ from slowpy.dash import Tasklet
 tasklet = Tasklet()
     
 
+@tasklet.initialize()
 def _initialize(params):
     print(f"params are {params}")
 

@@ -42,8 +42,13 @@ class Tasklet:
     def _scan_oldstyle_callbacks(self, module):
         def _get_func(name):
             if (name in module.__dict__) and callable(module.__dict__[name]):
-                logging.debug(f'Tasklet callback {name} found')
-                return module.__dict__[name]
+                func = module.__dict__[name]
+                if hasattr(func, '_slowpy_task'):
+                    logging.debug(f'Tasklet callback {name} has a callback decorator: skipped')
+                    return None
+                else:
+                    logging.debug(f'Tasklet callback {name} found')
+                    return func
             else:
                 logging.debug(f'Tasklet callback {name} not defined')
                 return None
@@ -127,6 +132,7 @@ class Tasklet:
             except Exception as e:
                 self._handle_error(f'Tasklet error: {func.__name__}(): {e}')
 
+        func._slowpy_task = True
         self.initialize_task_coros.append(go_initialize())
 
                 
@@ -143,6 +149,7 @@ class Tasklet:
             except Exception as e:
                 self._handle_error(f'Tasklet error: {func.__name__}(): {e}')
 
+        func._slowpy_task = True
         self.finalize_task_coros.append(go_finalize())
 
                 
@@ -152,6 +159,7 @@ class Tasklet:
           func: callback function
           delay: func execution delay after completion of intialization
         """
+        func._slowpy_task = True
         async def go_once():
             try:
                 start = time.monotonic()
@@ -202,6 +210,7 @@ class Tasklet:
             except Exception as e:
                 self._handle_error(f'Tasklet error: {func.__name__}(): {e}')
                 
+        func._slowpy_task = True
         self.main_task_coros.append(go_loop())
 
                 
@@ -279,6 +288,7 @@ class Tasklet:
             except Exception as e:
                 self._handle_error(f'Tasklet error: {func.__name__}(): {e}')
                 
+        func._slowpy_task = True
         self.main_task_coros.append(go_schedule())
 
                 

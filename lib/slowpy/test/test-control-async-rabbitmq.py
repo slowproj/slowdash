@@ -25,7 +25,7 @@ async def main():
             if line is None:
                 is_running = False
             else:
-                await pub.json().aio_set({'input': line})
+                await pub.json(headers={'sender':'me'}).aio_set(line)
 
     async def reader():
         sub = exchange.subscriber('chat.*', timeout=0.1)

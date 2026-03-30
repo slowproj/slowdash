@@ -363,8 +363,8 @@ class RedisPublisherNode(ControlNode):
 
     ## child nodes ##
     # redis().publisher(topic).json(headers=None).set(value)
-    def json(self):
-        return RedisPublisherJsonNode(self)
+    def json(self, headers:dict|None=None):
+        return RedisPublisherJsonNode(self, headers)
 
     
 
@@ -435,22 +435,37 @@ class RedisSubscriberNode(ControlNode):
 
     
 class RedisPublisherJsonNode(ControlNode):
-    def __init__(self, publisher_node, headers = None):
+    def __init__(self, publisher_node, headers:dict|None=None):
         self.publisher_node = publisher_node
-        self.headers = dict(headers or {})
+        self.headers_dict = headers
         
 
     def set(self, value):
         try:
-            doc = json.dumps(value)
+            if self.headers_dict is None:
+                doc = json.dumps(value)
+            else:
+                if type(value) is not dict:
+                    logger.warning('Redis: publisher(): headers cannot be attached to a non-dict value')
+                    doc = json.dumps(value)
+                else:
+                    value2 = { '_slowpy_headers': self.headers_dict }
+                    value2.update(value)
+                    doc = json.dumps(value2)
         except Exception as e:
-            logger.warning('AsyncRedis: publisher(): unable to convert to JSON: {e}')
+            logger.warning('Redis: publisher(): unable to convert to JSON: {e}')
             return None
-        
+
         return self.publisher_node.set(doc)
 
 
+    ## (virtual) child nodes ##
+    def headers(self, headers):
+        self.headers_dict = dict(headers)
+        return self
 
+
+    
 class RedisSubscriberJsonNode(ControlNode):
     def __init__(self, subscriber_node):
         self.subscriber_node = subscriber_node
@@ -475,5 +490,10 @@ class RedisSubscriberJsonNode(ControlNode):
                     doc = json.loads(body)
                 except:
                     doc = body
+
+                if type(doc) is dict and '_slowpy_headers' in doc:
+                    headers.update(doc['_slowpy_headers'])
+                    del doc['_slowpy_headers']
+                    
                 return (headers, doc)
             

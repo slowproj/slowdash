@@ -137,10 +137,21 @@ class PublisherNode(ControlNode):
             else:
                 self.slowmq_node.publisher_ws_connected = True
 
+        body, headers = (None, {})
+        if type(value) is tuple:
+            if len(value) == 1:
+                (body,) = value
+            elif len(value) == 2:
+                headers, body = value
+        else:
+            body = value
+
+        headers['topic'] = self.topic
+            
         try:
             doc = json.dumps({
-                'headers': { 'topic': self.topic },
-                'data': value
+                'headers': headers,
+                'data': body
             })
         except Exception as e:
             logger.warning(f'AsyncSlowMQ.publisher(): unable to convert to JSON: {e}')
@@ -261,13 +272,19 @@ class SubscriberNode(ControlNode):
 class PublisherJsonNode(ControlNode):
     def __init__(self, publisher_node, headers=None):
         self.publisher_node = publisher_node
-        self.headers = dict(headers or {})
+        self.headers_dict = dict(headers or {})
         
 
     async def aio_set(self, value):
-        return await self.publisher_node.aio_set(value)
+        return await self.publisher_node.aio_set((self.headers_dict, value))
 
 
+    ## (virtual) child nodes ##
+    def headers(self, headers):
+        self.headers_dict = dict(headers)
+        return self
+
+    
 
 class SubscriberJsonNode(ControlNode):
     def __init__(self, subscriber_node):

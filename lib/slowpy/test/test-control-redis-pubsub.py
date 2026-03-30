@@ -24,7 +24,7 @@ while is_running:
     except (EOFError, KeyboardInterrupt):
         is_running = False
         break
-    redis.publisher('chat:all').set(line)
+    redis.publisher('chat:all').json({'sender':'me'}).set({'message':line})
 
 
 th.join()

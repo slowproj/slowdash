@@ -8,13 +8,13 @@ from slowpy.control import ControlNode, ControlException
 class Message:
     def __init__(
         self,
+        headers: dict[str, typing.Any]|None = None,
         body: dict[str,typing.Any] | str | bytes | None = None,
-        headers: dict[str, typing.Any] = {},
-        parameters: dict[str, typing.Any] = {}
+        parameters: dict[str, typing.Any]|None = None
     ):
+        self.headers = dict(headers or {})
         self.body = body
-        self.headers = dict(headers)
-        self.parameters = dict(parameters)
+        self.parameters = dict(parameters or {})
 
         
     def __str__(self):
@@ -229,14 +229,14 @@ class PublisherNode(ControlNode):
 
         body, headers, parameters = ({}, {}, {})
         if type(value) is Message:
-            body, headers, parameters = value
+            body, headers, parameters = value.body, value.headers, value.parameters
         elif type(value) is tuple:
             if len(value) == 1:
                 (body,) = value
             elif len(value) == 2:
-                body, headers = value
+                headers, body = value
             elif len(value) == 3:
-                body, headers, parameters = value
+                headers, body, parameters = value
         else:
             body = value
 
@@ -301,11 +301,17 @@ class PublisherNode(ControlNode):
 class PublisherJsonNode(ControlNode):
     def __init__(self, publisher_node, headers=None):
         self.publisher_node = publisher_node
-        self.headers = dict(headers or {})
+        self.headers_dict = dict(headers or {})
         
 
     async def aio_set(self, value):
-        return await self.publisher_node.aio_set((value, self.headers))
+        return await self.publisher_node.aio_set((self.headers_dict, value))
+
+
+    ## (virtual) child nodes ##
+    def headers(self, headers):
+        self.headers_dict = dict(headers)
+        return self
 
 
 
@@ -344,14 +350,14 @@ class QueueNode(ControlNode):
             content_type = message.content_type or 'application/octet-stream'
             if content_type == 'application/json':
                 try:
-                    return Message(json.loads(message.body.decode('utf-8')), headers, parameters)
+                    return Message(headers, json.loads(message.body.decode('utf-8')), parameters)
                 except Exception as e:
                     logging.warning(f'AsyncRabbitMQ.QueueNode[{self.name}]: bad JSON format: {e}')
-                    return Message(message.body.decode('utf-8'), headers, parameters)
+                    return Message(headers, message.body.decode('utf-8'), parameters)
             elif content_type == 'text/plain':
-                return Message(message.body.decode('utf-8'), headers, parameters)
+                return Message(headers, message.body.decode('utf-8'), parameters)
             else:
-                return Message(message.body, headers, parameters)
+                return Message(headers, message.body, parameters)
 
         self.handler = handler or _default_handler
         self.queue = None

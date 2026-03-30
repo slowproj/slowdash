@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 13 March 2026 #
 
-import queue
+import queue, json
 from slowpy.control import ControlNode, ControlException
 
 import logging
@@ -9,16 +9,30 @@ logger.setLevel(logging.INFO)
 
 
 class MQTTNode(ControlNode):
-    def __init__(self, host:str, port:int=1883):
+    def __init__(self, host:str, port:int=1883, *, use_v5=True, keep_alive=60):
         self.host = host
         self.port = port
-        self.keepalive = 60
+        self.use_v5 = use_v5   # if False, v3.11 is used, and headers (properties) are not available
+        self.keep_alive = keep_alive
 
         self.subscribers: dict[str,list[SubscriberNode]] = {}
 
         try:
             import paho.mqtt.client as mqtt
-            self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+            if self.use_v5:
+                self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, protocol=mqtt.MQTTv5)
+                from paho.mqtt.properties import Properties
+                from paho.mqtt.packettypes import PacketTypes
+                def dict2props(value:dict):
+                    props = Properties(PacketTypes.PUBLISH)
+                    props.UserProperty = [ (k,v) for k,v in value.items() ]
+                    return props
+                self.dict2props = dict2props
+            else:
+                self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, protocol=mqtt.MQTTv311)
+                def dict2props(value:dict):
+                    return None
+                self.dict2props = dict2props
         except Exception as e:
             logging.error(f'MQTT: {e}')
             self.client = None
@@ -29,7 +43,7 @@ class MQTTNode(ControlNode):
         self.client.on_connect = on_connect
     
         try:
-            self.client.connect(self.host, self.port, keepalive=self.keepalive)
+            self.client.connect(self.host, self.port, keepalive=self.keep_alive)
         except Exception as e:
             logger.error(f'Unable to connect to MQTT Broker:  {host}:{port}: {e}')
             self.client = None
@@ -102,17 +116,26 @@ class MQTTNode(ControlNode):
     
     
 class PublisherNode(ControlNode):
-    def __init__(self, mqtt, topic):
-        self.mqtt = mqtt
+    def __init__(self, mqtt_node, topic):
+        self.mqtt_node = mqtt_node
         self.topic = topic
 
         
     def set(self, value):
-        if self.mqtt.client is None:
+        if self.mqtt_node.client is None:
             return None
 
-        self.mqtt.client.publish(self.topic, value)
-        
+        body, headers = (None, {})
+        if type(value) is tuple:
+            if len(value) == 1:
+                (body,) = value
+            elif len(value) == 2:
+                headers, body = value
+        else:
+            body = value
+
+        self.mqtt_node.client.publish(self.topic, body, properties=self.mqtt_node.dict2props(headers))
+
 
     ## child nodes ##
     # nats.publisher(subject).json()
@@ -122,7 +145,7 @@ class PublisherNode(ControlNode):
 
     
 class SubscriberNode(ControlNode):
-    def __init__(self, mqtt:MQTTNode, topic_filter:str, handler=None, timeout=None):
+    def __init__(self, mqtt_node:MQTTNode, topic_filter:str, handler=None, timeout=None):
         """
         - If handler is not None, it is called on receiving a message.
         - Otherwise, the received messages are queued, which can be retrieved by has_data()/get()
@@ -135,7 +158,7 @@ class SubscriberNode(ControlNode):
             self.queue.put(message, block=True, timeout=None)
         self.handler = handler or default_handler
 
-        mqtt.do_subscribe(topic_filter, self)
+        mqtt_node.do_subscribe(topic_filter, self)
 
         
     def has_data(self):
@@ -168,7 +191,7 @@ class SubscriberNode(ControlNode):
 class PublisherJsonNode(ControlNode):
     def __init__(self, publisher_node, headers = None):
         self.publisher_node = publisher_node
-        self.headers = dict(headers or {})
+        self.headers_dict = dict(headers or {})
         
 
     def set(self, value):
@@ -178,9 +201,15 @@ class PublisherJsonNode(ControlNode):
             logger.warning(f'MQTT: publisher(): unable to convert to JSON: {e}')
             return None
         
-        return self.publisher_node.set(doc)
+        return self.publisher_node.set((self.headers_dict, doc))
 
+    
+    ## (virtual) child nodes ##
+    def headers(self, headers):
+        self.headers_dict = dict(headers)
+        return self
 
+    
 
 class SubscriberJsonNode(ControlNode):
     def __init__(self, subscriber_node):
@@ -196,6 +225,10 @@ class SubscriberJsonNode(ControlNode):
             'topic': message.topic,
             'message_id': message.mid,
         }
+        if message.properties is not None and hasattr(message.properties, 'UserProperty'):
+            for k,v in (message.properties.UserProperty or []):
+                headers[k] = v
+        
         body = message.payload
         if type(body) is bytes:
             try:

@@ -118,8 +118,17 @@ class PublisherNode(ControlNode):
         if not await self.nats_node.aio_open():
             return None
 
+        body, headers = (None, {})
+        if type(value) is tuple:
+            if len(value) == 1:
+                (body,) = value
+            elif len(value) == 2:
+                headers, body = value
+        else:
+            body = value
+
         try:
-            await self.nats_node.client.publish(self.topic, value)
+            await self.nats_node.client.publish(self.topic, body, headers=headers)
         except Exception as e:
             logger.error(f'AsnncNATS.publisher(): {e}')
 
@@ -214,7 +223,7 @@ class SubscriberNode(ControlNode):
 class PublisherJsonNode(ControlNode):
     def __init__(self, publisher_node, headers=None):
         self.publisher_node = publisher_node
-        self.headers = dict(headers or {})
+        self.headers_dict = dict(headers or {})
         
 
     async def aio_set(self, value):
@@ -224,8 +233,13 @@ class PublisherJsonNode(ControlNode):
             logger.warning(f'AsyncNATS: publisher(): unable to convert to JSON: {e}')
             return None
         
-        return await self.publisher_node.aio_set(doc.encode())
+        return await self.publisher_node.aio_set((self.headers_dict, doc.encode()))
 
+
+    ## (virtual) child nodes ##
+    def headers(self, headers):
+        self.headers_dict = dict(headers)
+        return self
 
 
 class SubscriberJsonNode(ControlNode):
@@ -241,6 +255,7 @@ class SubscriberJsonNode(ControlNode):
         headers = {
             'topic': message.subject,
         }
+        headers.update(message.headers)
         
         body = message.data
         if type(body) is bytes:
