@@ -68,11 +68,11 @@ class DataSource_TableStore(DataSource):
             )
             result.update(record)
             
-        for ch in channels:
-            if ch not in result:
-                result[ch] = {'start':to-length, 't':[], 'x':[]}
-                
         if use_prior_on_empty or always_include_prior_data:
+            for ch in channels:
+                if ch not in result:
+                    result[ch] = {'start':to-length, 't':[], 'x':[]}
+                
             end = to - length
             unlimited_length = end
             for ch, data in result.items():
@@ -89,7 +89,9 @@ class DataSource_TableStore(DataSource):
                             data['t'].insert(0, prior_point_data['t'][-1] + prior_point_data['start'] - data['start'])
                             data['x'].insert(0, prior_point_data['x'][-1])
                             break  # from the schemata loop
-            
+                    
+            result = { ch:data for ch,data in result.items() if len(data['x']) > 0 }
+                        
         if resampling is None:
             return result
             

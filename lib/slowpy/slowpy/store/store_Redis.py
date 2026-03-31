@@ -29,7 +29,7 @@ class DataStore_Redis(DataStore):
                 break
             except Exception as e:
                 logging.info(e)
-                logging.warn('Redis not connected: retry in 5 sec')
+                logging.warning('Redis not connected: retry in 5 sec')
                 time.sleep(5)
         else:
             self.redis = None

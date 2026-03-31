@@ -183,7 +183,7 @@ class DataStore_SQL(DataStore):
     placeholder = '?'
     def construct(self):
         return None # conn
-    def get_table_list(self):
+    def get_table_list(self, cur):
         return []
     
     
@@ -194,9 +194,10 @@ class DataStore_SQL(DataStore):
         
         self.table = None
         self.conn = None
+        self.table_exists = None
         
-        if not table.replace('_', '').isalnum():
-            logging.error('SQL: bad table name "%s"' % table)
+        if (type(table) is not str) or not table.replace('_', '').isalnum():
+            logging.error(f'SQL: bad table name {table}')
             return
         
         self.db_url = db_url
@@ -205,14 +206,15 @@ class DataStore_SQL(DataStore):
         self.table_format.bind(self, table)
 
         if self.lazy_construction:
+            self.table_exists = False
             return
         
         self.conn = self.construct()
         if self.conn is None:
-            self.table_exists = None
             return
-        
-        table_list = [ name.upper() for name in self.get_table_list() ]
+
+        cur = self.conn.cursor()
+        table_list = [ name.upper() for name in self.get_table_list(cur) ]
         self.table_exists = (self.table is not None) and (self.table.upper() in table_list)
 
 
@@ -241,14 +243,25 @@ class DataStore_SQL(DataStore):
 
         
     def _write_one(self, cur, timestamp, tag, fields, values, update):
-        table_list = [ name.upper() for name in self.get_table_list() ]
-        self.table_exists = (self.table is not None) and (self.table.upper() in table_list)
-                    
+        if self.table_exists is None:
+            return
+        
         if self.table_exists is False:
-            self.table_exists = self.table_format.create_table(cur, tag, fields, values)
-            if not self.table_exists:
-                self.table_exists = None  # no further retrying
+            if (self.table is None) or (len(self.table)) == 0:
                 return
+            
+            # No table -> update the table list
+            table_list = [ name.upper() for name in self.get_table_list(cur) ]
+            self.table_exists = (self.table is not None) and (self.table.upper() in table_list)
+                    
+            if self.table_exists is False:
+                # still no table -> create the table
+                self.table_exists = self.table_format.create_table(cur, tag, fields, values)
+            
+                if self.table_exists is False:
+                    # still no table -> give up
+                    self.table_exists = None  # no further retrying
+                    return
 
         self.table_format.write(cur, timestamp, tag, fields, values, update)
 
@@ -288,11 +301,7 @@ class DataStore_SQLite(DataStore_SQL):
         return self.conn
 
         
-    def get_table_list(self):
-        if self.conn is None:
-            return []
-            
-        cur = self.conn.cursor()
+    def get_table_list(self, cur):
         try:
             cur.execute('select name from sqlite_master where type="table";')
         except Exception as e:
@@ -306,7 +315,7 @@ class DataStore_SQLite(DataStore_SQL):
         if self.conn is None:
             return None
         cur = self.conn.cursor()
-        cur.execute('BEGIN TRANSACTION;')
+        #cur.execute('BEGIN TRANSACTION;')  # not necesssary for default SQLite setting
         return cur
         
     
@@ -347,8 +356,8 @@ class DataStore_PostgreSQL(DataStore_SQL):
                 self.conn = pg2.connect(db_url)
                 break
             except Exception as e:
-                logging.warn(e)
-                logging.warn('Unable to connect to the Db server. Retrying in 5 sec...')
+                logging.warning(e)
+                logging.warning('Unable to connect to the Db server. Retrying in 5 sec...')
                 time.sleep(5)
         else:
             self.conn = None
@@ -360,11 +369,7 @@ class DataStore_PostgreSQL(DataStore_SQL):
         return self.conn
 
         
-    def get_table_list(self):
-        if self.conn is None:
-            return []
-        
-        cur = self.conn.cursor()
+    def get_table_list(self, cur):
         try:
             cur.execute("select tablename from pg_tables where schemaname='public';")
             result = [ table_name[0] for table_name in cur.fetchall() ]
@@ -430,8 +435,8 @@ class DataStore_MySQL(DataStore_SQL):
                 self.conn = mysql.connect(host=host, port=port, user=user, password=password, db=db)
                 break
             except Exception as e:
-                logging.warn(e)
-                logging.warn('Unable to connect to the Db server. Retrying in 5 sec...')
+                logging.warning(e)
+                logging.warning('Unable to connect to the Db server. Retrying in 5 sec...')
                 time.sleep(5)
         else:
             self.conn = None
@@ -443,11 +448,7 @@ class DataStore_MySQL(DataStore_SQL):
         return self.conn
 
         
-    def get_table_list(self):
-        if self.conn is None:
-            return []
-        
-        cur = self.conn.cursor()
+    def get_table_list(self, cur):
         try:
             cur.execute("SHOW TABLES")
             result = [ table_name[0] for table_name in cur.fetchall() ]
