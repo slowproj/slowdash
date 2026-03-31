@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 13 March 2026 #
 
-import asyncio, time, json
+import asyncio, time, json, uuid
 from slowpy.control import ControlNode, ControlException
 
 import logging
@@ -95,7 +95,22 @@ class MQTTNode(ControlNode):
                                 
             async def receiver():
                 try:
+                    last_message_key = None
                     async for msg in self.client.messages:
+                        # MQTT can send one message multiple times, especially if multiple filters match to a topic.
+                        # We cannot use the MQTT QoS mid here, as it could be different among different filters.
+                        message_key = None
+                        if msg.properties is not None and hasattr(msg.properties, 'UserProperty'):
+                            for k,v in (msg.properties.UserProperty or []):
+                                if k == 'message_id':
+                                    message_key = v
+                                    break
+                        if message_key is None:
+                            message_key = (msg.topic, msg.payload)  # is there a better way???
+                        if message_key == last_message_key:
+                            continue
+                        last_message_key = message_key
+                        
                         logger.debug(f'AsyncMQTT message: ({str(msg.topic)}) {msg.payload.decode()}')
                         for topic_filter, subscribers in self.subscribers.items():
                             if not msg.topic.matches(topic_filter):
@@ -204,6 +219,9 @@ class PublisherNode(ControlNode):
         if headers is None:
             headers = {}
 
+        if 'message_id' not in headers:
+            headers['message_id'] = str(uuid.uuid4())
+            
         try:
             await self.mqtt_node.client.publish(self.topic, body, properties=self.mqtt_node.dict2props(headers))
         except Exception as e:
@@ -303,7 +321,7 @@ class PublisherJsonNode(ControlNode):
 
     async def aio_set(self, value):
         try:
-            doc = json.dumps(value)
+            doc = json.dumps(value).encode()
         except Exception as e:
             logger.warning(f'AsyncMQTT: publisher(): unable to convert to JSON: {e}')
             return None
@@ -330,7 +348,9 @@ class SubscriberJsonNode(ControlNode):
 
         headers = {
             'topic': message.topic.value,
-            'message_id': message.mid,
+            'mid': str(message.mid),
+            'qos': str(message.qos),
+            'retain': str(message.retain),
         }
         if message.properties is not None and hasattr(message.properties, 'UserProperty'):
             for k,v in (message.properties.UserProperty or []):

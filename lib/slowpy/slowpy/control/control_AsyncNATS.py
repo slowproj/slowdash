@@ -129,10 +129,12 @@ class PublisherNode(ControlNode):
         if headers is None:
             headers = {}
 
+        # Note: NATS headers must be dict[str,str]
+            
         try:
             await self.nats_node.client.publish(self.topic, body, headers=headers)
         except Exception as e:
-            logger.error(f'AsnncNATS.publisher(): {e}')
+            logger.error(f'AsyncNATS.publisher(): {e}')
 
         
     ## child nodes ##

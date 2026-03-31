@@ -13,20 +13,21 @@ async def main(mesh_url):
         while is_running:
             try:
                 line = await asyncio.to_thread(input)
-                await mesh.aio_publish('chat.all', line, headers={'sender':'me'})
             except:
                 is_running = False
+            else:
+                await mesh.aio_publish('chat.all', line, headers={'sender':'me'})
 
     async def reader():
         sub = mesh.subscriber('chat.>')
-        while is_running:
+        while is_running:<
             headers, data = await sub.aio_get()
             if data is not None:
                 print(f'{headers}: {data}')
         
     await asyncio.gather(writer(), reader())
     await mesh.aio_close()
-
+                
 
 if __name__ == '__main__':
     #mesh = None
