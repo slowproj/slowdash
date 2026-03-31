@@ -32,7 +32,8 @@ class MeshComponent(Component):
         try:
             await websocket.accept()
             logging.info(f"WebSocket Connected: {topic}")
-        except:
+        except Exception as e:
+            logging.warning(f"WebSocket Accept Failed: {topic}: {e}")
             return None
 
         if topic not in self.websockets:
@@ -43,7 +44,7 @@ class MeshComponent(Component):
             while True:
                 message = await websocket.receive()
                 if message is not None and len(message) > 0:
-                    logging.info(f"WS-RCV: {topic}: {repr(message)}");
+                    logging.info(f"WS-RCV: {topic}: {repr(message)}")
                     try:
                         await self.app.request(f'/emit/{topic}', message)
                     except Exception as e:
@@ -82,9 +83,9 @@ class MeshComponent(Component):
         - holds only single time-point data (e.g., objects and scalars)
         """
         
-        for name, data in doc:
+        for name, data in doc.items():
             t, x = data.get('t', None), data.get('x', None)
-            if type(t) == list:
+            if isinstance(t, list):
                 if len(t) == 1:
                     t = t[0]
                 else:

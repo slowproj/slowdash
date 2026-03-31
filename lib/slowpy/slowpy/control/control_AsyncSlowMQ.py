@@ -229,8 +229,8 @@ class SubscriberNode(ControlNode):
             logger.warning(f'AsyncSlowMQ.subscriber(): Invalid reply JSON: {e}: {reply}')
             return None
         
-        if message.get('action') == 'error':
-            msg = message.get('data',{}).get('message', '')
+        if message.get('headers', {}).get('action') == 'error':
+            msg = message.get('data', {}).get('message', '')
             logger.warning(f'AsyncSlowMQ.subscriber(): error reply: {msg}')
             self.connected = False
             return False

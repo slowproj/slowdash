@@ -64,7 +64,7 @@ class TaskModule(UserModule):
             exec('import matplotlib', module.__dict__)
             exec('matplotlib.use("Agg")', module.__dict__)
             logging.info('Matplotlib GUI is disabled')
-        except Exception as e:
+        except Exception:
             logging.info('Matplotlib not available')
             
             
@@ -261,7 +261,7 @@ class TaskModule(UserModule):
                 else:
                     try:
                         params[key] = json.loads(value)
-                    except:
+                    except Exception:
                         params[key] = value
                     key, value = '', ''
                     in_key = True
@@ -293,7 +293,7 @@ class TaskModule(UserModule):
             if attr.annotation in [ int, float, bool, str ]:
                 try:
                     kwargs[name] = attr.annotation(value)
-                except Exception as e:
+                except Exception:
                     logging.warning(f'Task: incompatible parameter value: {name}: {repr(value)}')
                     return {'status': 'error', 'message': f'incompatible parameter value: {name}: {repr(value)}'}
             else:
@@ -409,9 +409,9 @@ class TaskModuleComponent(Component):
             if not isinstance(node, dict):
                 logging.error('bad slowtask configuration')
                 continue
-            if app.is_cgi and node.get('enabled_for_cgi', False) != True:
+            if app.is_cgi and not node.get('enabled_for_cgi', False):
                 continue
-            if app.is_command and node.get('enabled_for_commandline', True) != True:
+            if app.is_command and not node.get('enabled_for_commandline', True):
                 continue
             if 'name' not in node:
                 logging.error('name is required for slowtask module')
@@ -622,10 +622,10 @@ class TaskModuleComponent(Component):
         return result
 
 
-    @slowlette.post('api/consume/current_data')
+    @slowlette.post('/api/consume/current_data')
     async def set_variable(self, doc:slowlette.DictJSON, sender:str=None):
         result = None
-        for name, data in doc:
+        for name, data in doc.items():
             if sender == f'taskmodule_{name}':
                 continue
             value = data.get('x', None)

@@ -166,7 +166,7 @@ class SlowFetch:
             if stop > 0:
                 length = abs(stop - start)
             else:
-                length = min(time.time()+stop - start, 0)
+                length = max(time.time()+stop - start, 0)
         if length > 315576000: # ten years
             return None, None
         

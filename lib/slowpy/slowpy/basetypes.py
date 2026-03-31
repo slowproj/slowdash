@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 17 July 2024 #
 
 
-import time, json, logging
+import time, json
 
 
 class DataElement:
@@ -41,9 +41,11 @@ class DataElement:
     
     @staticmethod
     def from_json(obj):
-        # this assumes that the user has already imported the histogram and graph modules
         if type(obj) is not dict:
             return obj
+
+        from .graphs import Graph
+        from .histograms import Histogram, Histogram2d
         
         if 'bins' in obj:
             return Histogram.from_json(obj)
@@ -65,7 +67,7 @@ class TimeSeries:
         self.length = length
         self.fields = fields if len(fields) > 0 else ['x']
         self.t = []
-        self.values = [] * len(self.fields)
+        self.values = [ [] for _ in self.fields ]   # self.values[field] is a time-series (array) for the field
 
 
     def write(self, values, t=None):
@@ -79,10 +81,10 @@ class TimeSeries:
             t = time.time()
         
         record = [None] * len(self.fields)
-        if type(values) == dict:
+        if isinstance(values, dict):
             for i in range(len(record)):
                 record[i] = values.get(self.fields[i], None)
-        elif type(values) == list:
+        elif isinstance(values, list):
             for i in range(min(len(values), len(record))):
                 record[i] = values[i]
         else:

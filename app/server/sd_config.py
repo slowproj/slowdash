@@ -164,9 +164,9 @@ class ConfigComponent(Component):
         filepath, ext = self._get_filepath_ext(filename, os.R_OK)
         if filepath is not None:
             try:
-                # this requires W_OK, might fail from CGI etc.
                 pathlib.Path(filepath).touch()
-            except:
+            except Exception:
+                # this requires W_OK, might fail from CGI etc. Errors here is not serious
                 pass
             
         if content is None:
@@ -186,11 +186,11 @@ class ConfigComponent(Component):
             mtime = int(os.path.getmtime(filepath))
             try:
                 owner = pwd.getpwuid(filestat.st_uid)[0]
-            except:
+            except Exception:
                 owner = filestat.st_uid
             try:
                 group = grp.getgrgid(filestat.st_gid)[0]
-            except:
+            except Exception:
                 group = filestat.st_gid
             filelist.append({
                 'name': os.path.basename(filepath),
@@ -257,8 +257,8 @@ class ConfigComponent(Component):
         if not os.path.isdir(config_dir):
             try:
                 os.makedirs(config_dir)
-            except:
-                logging.error('unable to create directory: ' + config_dir)
+            except Exception as e:
+                logging.error(f'unable to create directory: {config_dir}: {e}')
                 return slowlette.Response(500)       # Internal Server Error
             
         mode = self.project.config.get('system', {}).get('file_mode', 0o644) + 0o100

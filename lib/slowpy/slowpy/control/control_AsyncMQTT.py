@@ -264,7 +264,7 @@ class SubscriberNode(ControlNode):
             if asyncio.iscoroutine(result):
                 await result
         except Exception as e:
-            logging.error('AsyncMQTT: error in message handler: {e}')
+            logging.error(f'AsyncMQTT: error in message handler: {e}')
 
 
     async def aio_has_data(self):
@@ -275,7 +275,7 @@ class SubscriberNode(ControlNode):
                 else:
                     self.registered = True
             
-        return not await self.queue.empty()
+        return not self.queue.empty()
 
         
     async def aio_get(self):
@@ -299,7 +299,7 @@ class SubscriberNode(ControlNode):
             if self.timeout is None:
                 return await self.queue.get()
             elif self.timeout <= 0:
-                return await self.queue.get_nowait()
+                return self.queue.get_nowait()
             else:
                 return await asyncio.wait_for(self.queue.get(), timeout=self.timeout)
         except (asyncio.TimeoutError, asyncio.QueueEmpty):

@@ -30,7 +30,8 @@ class PubsubComponent(Component):
     async def connect(self, websocket:slowlette.WebSocket, name:str=None):
         try:
             await websocket.accept()
-        except:
+        except Exception as e:
+            logging.warning(f'Unable to accept pubsub websocket: {e}')
             return None
 
         client_id = await self.add_client(name, websocket)
@@ -44,7 +45,7 @@ class PubsubComponent(Component):
                         doc = json.loads(message)
                         headers = doc['headers']
                     except Exception as e:
-                        logging.warning(f'Bad Pubsub Message: {name}: {repr(message)}')
+                        logging.warning(f'Bad Pubsub Message: {name}: {repr(message)}: {e}')
                         continue
                     else:
                         logging.debug(f'Pubsub Message Received: {name}: {repr(message)}')
