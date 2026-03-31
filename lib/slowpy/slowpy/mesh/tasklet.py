@@ -1,23 +1,32 @@
 # Created by Sanshiro Enomoto on 13 August 2025 #
 
-import sys, time, copy, asyncio, threading, inspect, traceback, logging
+import sys, time, copy, asyncio, inspect, traceback, logging
 from datetime import datetime, timezone
 from slowpy.control import control_system as ctrl
 from .mesh import Mesh
-
-logging.basicConfig(level=logging.DEBUG)
 
 
 class Tasklet:
     def __init__(self, name:str|None=None):
         self.name = name
         self.params = {}
-        self.mesh_url = None
         
+        self.mesh_url = None
         self.mesh = Mesh()
+        
+        self.mesh_list = [ self.mesh ]
         self.initialize_task_coros = []
         self.main_task_coros = []
         self.finalize_task_coros = []
+
+
+    def another_mesh(mesh_url:str, **kwargs):
+        """returns a mesh object to communicate with an external SlowMesh
+        -  This mesh will be started and stopped together with the main mesh.
+        """
+        mesh = Mesh(mesh_url, **kwargs)
+        self.mesh_list.append(mesh)
+        return mesh
 
 
     def run(self, params:dict|None=None, mesh_url:str|None=None):
@@ -41,15 +50,6 @@ class Tasklet:
 
     def is_stop_requested(self):
         return ctrl.is_stop_requested()
-    
-        
-    async def aio_publish(self, topic:str, value, *, headers:dict|None=None):
-        return await self.mesh.publisher(topic).headers(headers or {}).aio_set(value)
-
-        
-    def publish(self, topic:str, value, *, headers:dict|None=None):
-        loop = asyncio.get_running_loop()
-        loop.create_task(self.aio_publish(topic, value, headers=headers))
     
         
     #### Callback Decorators ####
@@ -102,17 +102,6 @@ class Tasklet:
         return wrapper
         
 
-    def on(self, topic:str):
-        """decorator to make a message handler
-        Args:
-        - topic: path pattern to match
-        """
-        def wrapper(func):
-            self._add_subscription_callback(func, topic)
-            return func
-        return wrapper
-
-
     #### Internal Methods ####
 
     def _scan_oldstyle_callbacks(self, module):
@@ -158,7 +147,12 @@ class Tasklet:
         except Exception as e:
             raise e
         finally:
-            await self.mesh.aio_close()
+            for mesh in self.mesh_list:
+                await mesh.aio_close()   
+
+        # mesh.aio_publish() is possible even before aio_start()            
+        for mesh in self.mesh_list:
+            await mesh.aio_start()   
         
         main_tasks = set()
         try:
@@ -187,8 +181,9 @@ class Tasklet:
                 self._handle_error(f'error during clean up: {e}')
             except:
                 pass
-            
-            await self.mesh.aio_close()
+
+            for mesh in self.mesh_list:
+                await mesh.aio_close()
 
             
     def _add_initialize_callback(self, func):
@@ -367,40 +362,6 @@ class Tasklet:
                 
         func._slowpy_task = True
         self.main_task_coros.append(go_schedule())
-
-                
-    def _add_subscription_callback(self, func, topic:str):
-        """
-        Args:
-          func: callback function
-          topic: topic filter
-        """
-        func._slowpy_task = True
-
-        nargs = len(inspect.signature(func).parameters)
-        if nargs > 2:
-            logging.error(f'Invalid mesh message handler: wrong number of arguments')
-            return None
-
-        async def go_subscription():
-            subscriber = self.mesh.subscriber(topic)
-            try:
-                while not ctrl.is_stop_requested():
-                    headers, data = await subscriber.aio_get()
-                    if data is None:
-                        continue
-                    if nargs == 0:
-                        result = func()
-                    elif nargs == 1:
-                        result = func(data)
-                    elif nargs == 2:
-                        result = func(headers, data)
-                    if asyncio.iscoroutine(result):
-                        await result
-            except Exception as e:
-                self._handle_error(f'Tasklet error: {func.__name__}(): {e}')
-                
-        self.main_task_coros.append(go_subscription())
 
                 
     def _handle_error(self, message):

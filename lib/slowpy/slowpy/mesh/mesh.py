@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 23 March 2026 #
 
-import os, time, re, uuid, socket, asyncio, inspect, logging
+import os, time, re, uuid, socket, threading, asyncio, inspect, logging
 from urllib.parse import urlsplit
 from functools import wraps
 from slowpy.control import control_system as ctrl
@@ -48,7 +48,7 @@ class Mesh:
             self.name = name
 
         Mesh._mesh_sequence_id += 1
-        self.mesh_id = f'{self.name}_HOST_{socket.gethostname()}_PID_{os.getpid()}_SEQ_{Mesh._mesh_sequence_id}'
+        self.mesh_id = f'{self.name}_{socket.gethostname()}_{os.getpid()}_{Mesh._mesh_sequence_id}'
         self.mesh_id = re.sub(r'[^a-zA-Z0-9]', '_', self.mesh_id)
         self.rpc_count = 0
         self.reply_queues = {}  # CorrelationID(str) -> asyncio.Queue
@@ -159,13 +159,18 @@ class Mesh:
     async def aio_publish(self, topic:str, value, *, headers:dict|None=None):
         return await self.publisher(topic).headers(headers or {}).aio_set(value)
 
+    
+    def publish(self, topic:str, value, *, headers:dict|None=None):
+        loop = asyncio.get_running_loop()
+        loop.create_task(self.aio_publish(topic, value, headers=headers))
 
+    
     async def aio_call(self, name:str, *args, **kwargs):
         reply = await self.aio_call_many(name, list(args), dict(kwargs), multiple_replies=False)
         if reply.get('status') == 'ok':
             return reply.get('return_value')
         else:
-            raise Exception(f'Mesh: RPC remote error: {name}: {reply.message}')
+            raise Exception(f'Mesh: RPC remote error: {name}: {reply.get("message")}')
     
         
     async def aio_call_many(self, name:str, args:list, kwargs:dict, *, multiple_replies=True, timeout=None):
@@ -234,12 +239,58 @@ class Mesh:
         """decorator to mark the function mesh-callable
         """
         self.function_table[func.__name__] = func
+        func._slowpy_task = True
         @wraps(func)
         def wrapper(*args, **argv):
             return func(*args, **argv)
         return wrapper
 
 
+    def on(self, topic:str):
+        """decorator to make a subscriptoin message handler
+        Args:
+        - topic: path pattern to match
+        """
+        def wrapper(func):
+            self._add_subscription_callback(func, topic)
+            return func
+        return wrapper
+
+
+    def _add_subscription_callback(self, func, topic:str):
+        """
+        Args:
+          func: callback function
+          topic: topic filter
+        """
+        func._slowpy_task = True
+
+        nargs = len(inspect.signature(func).parameters)
+        if nargs > 2:
+            logging.error(f'Invalid mesh message handler: wrong number of arguments')
+            return None
+
+        async def handle_subscription():
+            subscriber = self.subscriber(topic)
+            try:
+                while not ctrl.is_stop_requested():
+                    headers, data = await subscriber.aio_get()
+                    if data is None:
+                        continue
+                    if nargs == 0:
+                        result = func()
+                    elif nargs == 1:
+                        result = func(data)
+                    elif nargs == 2:
+                        result = func(headers, data)
+                    if asyncio.iscoroutine(result):
+                        await result
+            except Exception as e:
+                logging.error(f'Mesh: error in subscription callback: {func.__name__}(): {e}')
+                
+        self.callback_coros.append(handle_subscription())
+
+                
     async def _start_rpc_call_handler(self):
         topic = self.sep_mesh.join(['rpc', self.name])
         subscriber = self.subscriber(topic)

@@ -1,5 +1,5 @@
 
-from slowpy.dash import Tasklet
+from slowpy.mesh import Tasklet
 tasklet = Tasklet()
     
 
@@ -39,9 +39,10 @@ def hello():
     
     
     
-@tasklet.on('data.>')
+@tasklet.mesh.on('data.>')
 def handle(headers, data):
-    print(f'{headers}: {data}')
+    sender = headers.get('sender', 'unknown')
+    print(f'{sender} is now at {data}.')
 
     
 import random
@@ -51,7 +52,7 @@ x = 0
 def publish():
     global x
     x += random.gauss(0, 1)
-    tasklet.publish('data.randomwalk', x, headers={'sender':'me'})
+    tasklet.mesh.publish('data.randomwalk', x, headers={'sender':tasklet.mesh.mesh_id})
 
 
     

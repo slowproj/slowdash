@@ -17,7 +17,7 @@ def _loop():
 
     
 if __name__ == '__main__':
-    from slowpy.dash import Tasklet
+    from slowpy.mesh import Tasklet
     slowtask = Tasklet()
     slowtask.run()
     

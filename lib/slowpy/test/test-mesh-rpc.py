@@ -1,10 +1,10 @@
 
-import asyncio
-from slowpy.dash import Mesh
+import asyncio, datetime
+from slowpy.mesh import Mesh
 
 #mesh_url = None
-#mesh_url = 'slowmq://localhost:18881'
-mesh_url = 'nats://localhost'
+mesh_url = 'slowmq://localhost:18881'
+#mesh_url = 'nats://localhost'
 #mesh_url = 'mqtt://localhost'
 #mesh_url = 'redis://localhost/12'
 #mesh_url = 'amqp://slowdash:slowdash@localhost/SlowMesh'
@@ -12,12 +12,10 @@ mesh_url = 'nats://localhost'
 mesh = Mesh(mesh_url)
 
 
-import datetime
-
 @mesh.export
-def chat(*args, **kwargs):
-    print(f"hello, you gave me {args} and {kwargs}")
-    print(f"I will tell you the current time")
+def chat(line, *, sender=None):
+    print(f'You ("{sender}") sent me "{line}".')
+    print(f'I will send you the current time.')
     return str(datetime.datetime.now())
 
 
@@ -31,7 +29,10 @@ async def main():
         except:
             break
         else:
-            print(await mesh.aio_call('test-dash-mesh-rpc.chat', line, sender='me'))
+            try:
+                print(await mesh.aio_call('test-mesh-rpc.chat', line, sender=mesh.mesh_id))
+            except Exception as e:
+                print(f'ERROR: {e}')
         
     await mesh.aio_close()
 
