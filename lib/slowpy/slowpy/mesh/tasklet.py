@@ -20,7 +20,7 @@ class Tasklet:
         self.finalize_task_coros = []
 
 
-    def another_mesh(mesh_url:str, **kwargs):
+    def external_mesh(self, mesh_url:str, **kwargs):
         """returns a mesh object to communicate with an external SlowMesh
         -  This mesh will be started and stopped together with the main mesh.
         """

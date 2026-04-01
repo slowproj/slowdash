@@ -88,7 +88,7 @@ class Mesh:
                     logging.error('Mesh: AMQP (RabbitMQ) requries an exchange name')
                 self.sep, self.single_wc, self.tail_wc = tail_wc = '.', '*', '#'
             else:
-                logging.error('Mesh: unknown pubsub type: %s' % scheme)
+                logging.error('Mesh: unknown pubsub type: %s' % o.scheme)
         except Exception as e:
             logging.error(e)
 

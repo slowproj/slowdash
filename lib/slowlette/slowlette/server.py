@@ -51,12 +51,12 @@ async def dispatch_asgi(app, scope, receive, send):
             content_length = int(headers.get('content-length', None))
         except:
             logging.error(f'ASGI_POST: bad content length: {content_length}')
-            await send({type:'http.response.start', status:400})
-            await send({type:'http.response.body', body:b''})
+            await send({'type':'http.response.start', 'status':400})
+            await send({'type':'http.response.body', 'body':b''})
         if content_length > 1024*1024*1024:
             logging.error(f'ASGI_POST: content length too large: {content_length}')
-            await send({type:'http.response.start', status:507})
-            await send({type:'http.response.body', body:b''})
+            await send({'type':'http.response.start', 'status':507})
+            await send({'type':'http.response.body', 'body':b''})
         
         body = b''
         if content_length > 0:
@@ -76,7 +76,7 @@ async def dispatch_asgi(app, scope, receive, send):
     await send({
         'type': 'http.response.start',
         'status': response.get_status_code(),
-        'headers': [(k.encode(),v.encode()) for k,v in response.get_headers() ]
+        'headers': [ (k.encode(),v.encode()) for k,v in response.get_headers() ]
     })
     await send({
         'type': 'http.response.body',

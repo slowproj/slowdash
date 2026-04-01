@@ -195,7 +195,7 @@ export class SlowDash {
         let optionsDict = {};
         if (typeof options == 'string') {
             for(let kv of options.split('&')) {
-                let [key, value] = kv.split('=');
+                let [key, value] = kv.split('=');   // BUG: value can contain '='
                 optionsDict[key] = decodeURIComponent(value);
             }
         }
@@ -263,11 +263,15 @@ export class SlowDash {
             args.control.range.length = parseFloat(options.length);
         }
         if (options.reload) {
-            if (parseFloat(options.reload) >= 1) {
-                args.control.reload = Math.max(1, parseFloat(options.reload));
+            const reload = parseFloat(options.reload);
+            if (reload >= 1) {
+                args.control.reload = Math.max(1, reload);
+            }
+            else if (reload <= -1) {
+                args.control.reload = -1;
             }
             else {
-                args.control.reload = parseFloat(0);
+                args.control.reload = 0;
             }
         }
         if (options.grid) {

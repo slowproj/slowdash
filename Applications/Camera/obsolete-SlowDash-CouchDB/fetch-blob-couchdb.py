@@ -86,7 +86,7 @@ class DataStore:
             # these must exist, but may not be created yet
             for sys_db_name in ['_users', '_replicator', '_global_changes']:
                 try:
-                    sys_db = self.couch[sys_db_names]
+                    sys_db = self.couch[sys_db_name]
                 except Exception as e:
                     self.couch.create(sys_db_name)
                             

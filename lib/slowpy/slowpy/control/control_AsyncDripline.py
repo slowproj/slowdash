@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 3 October 2025 #
 
-import os, time, datetime, socket, getpass, uuid, json, inspect, asyncio, logging
+import os, time, datetime, socket, copy, getpass, uuid, json, inspect, asyncio, logging
 
 from slowpy.control import ControlNode, ControlVariableNode, control_system as ctrl
 ctrl.import_control_module('AsyncRabbitMQ')

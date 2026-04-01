@@ -90,10 +90,10 @@ export class DataRequest {
     }
 
     
-    queryList(existingData, combinedRequestThreshold=5*86500) {
+    queryList(existingData, thresholdToCombimeRequests=5*86500) {
         let list = [];
 
-        if (length < combinedRequestThreshold) {
+        if (this.#defaultOptions.length < thresholdToCombimeRequests) {
             let channels = [], opts;
             for (const [id, [ch, params]] of Object.entries(this.#defaultRequests)) {
                 if (! Object.hasOwn(existingData, id)) {

@@ -3,7 +3,7 @@
 
 
 import os, time, socket, threading, logging
-from slowpy.control import ControlNode, EthernetNode
+from slowpy.control import ControlNode, EthernetNode, ControlException
 
 app_name = f'SlowDash-{socket.gethostname()}-{os.getpid()}'
 
@@ -31,7 +31,7 @@ class RGA(ControlNode):
     def _node_creator_method(cls):
         def mks_rga(self, *args, **kwargs):
             if self.__class__.__name__ != 'EthernetNode':
-                raise spc.ControlException('mksrga() can be inserted only to an EthernetNode')
+                raise ControlException('mksrga() can be inserted only to an EthernetNode')
             try:
                 self.rga_node
             except:

@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 7 August 2025 #
 
-import uuid
+import uuid, logging
 import numpy as np
 import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
