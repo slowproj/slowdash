@@ -260,7 +260,7 @@ class ControlNode:
 
         if not hasattr(cls, name):
             setattr(cls, name, method)
-            logging.info(f'SlowPy Control: imported control node {name}')
+            logging.info(f'SlowPy Control: imported control node {cls.__name__}.{name}')
 
             
     @dualmethod
@@ -295,13 +295,16 @@ class ControlNode:
                     del sys.modules[module_name]
                 raise ControlException('unable to load control module: %s: %s' % (module_name, error_msg))
 
+            dirname = os.path.sep.join(module_dir.split(os.path.sep)[-2:])
+            logging.info(f"SlowPy Control: loaded control module {module_name} (@{dirname})")
+
+            
             return module
             
         with lock_importing:
             module = sys.modules.get(module_name, None)
             if module is None:
                 module = _load_module(module_name, search_dirs)
-                logging.info(f"SlowPy Control: loaded control module {module_name}")
                 
             node_classes = []
             for class_name, NodeClass in module.__dict__.items():
@@ -695,6 +698,12 @@ class ControlReadOnlyNode(ControlNode):
     def get(self):
         return self.node.get()
 
+    async def aio_set(self, value):
+        raise ControlException('node is read-only')
+
+    async def aio_get(self):
+        return await self.node.aio_get()
+
     
     
 class ControlWriteOnlyNode(ControlNode):
@@ -706,3 +715,10 @@ class ControlWriteOnlyNode(ControlNode):
 
     def get(self):
         raise ControlException('node is write-only')
+
+    async def aio_set(self, value):
+        return await self.node.aio_set(value)
+
+    async def aio_get(self):
+        raise ControlException('node is write-only')
+    

@@ -16,7 +16,8 @@ class ControlSystem(spc.ControlNode):
     
     def __init__(self):
         self.import_control_module('Ethernet')
-        self.import_control_module('HTTP').import_control_module('Slowdash')
+        self.import_control_module('HTTP')
+        self.import_control_module('AsyncHTTP')
         self.import_control_module('Shell')
         self.import_control_module('DataStore')
 

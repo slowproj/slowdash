@@ -1,53 +1,50 @@
 # Created by Sanshiro Enomoto on 30 August 2024 #
+# Updated by Sanshiro Enomoto on 1 April 2025 for Asyc (requests -> httpx)
 
 
 import json, logging
 from slowpy.control import ControlNode, ControlVariableNode, ControlException
 
 
-class HttpNode(ControlNode):
+class AsyncHttpNode(ControlNode):
     def __init__(self, url, auth=None):
         self.url = url
         self.auth = auth  # None or tuple of (user, pass)
 
         try:
-            import requests
-            self.session = requests.Session()
+            import httpx
+            if self.auth is not None:
+                self.client = httpx.AsyncClient(auth=auth)
+            else:
+                self.client = httpx.AsyncClient()
         except Exception as e:
             logging.error(f'unable to import "requests" module; maybe not installed?: {e}')
-            self.session = None
-
-        if self.auth is not None:
-            self.session.auth = self.auth
-            
-
-    def __del__(self):
-        self.close()
+            self.client = None
 
 
-    def close(self):
-        if self.session is not None:
-            self.session.close()
+    async def aio_close(self):
+        if self.client is not None:
+            self.client.aclose()
 
             
     @classmethod
     def _node_creator_method(cls):
-        def http(self, url, **kwargs):
-            return HttpNode(url, **kwargs)
+        def async_http(self, url, **kwargs):
+            return AsyncHttpNode(url, **kwargs)
 
-        return http
+        return async_http
 
     
-    def set(self, value):
-        return self.do_post_request(path='', content=value)
+    async def aio_set(self, value):
+        return await self.aio_do_post_request(path='', content=value)
 
-    def get(self):
-        return self.do_get_request(path='')
+    async def aio_get(self):
+        return await self.aio_do_get_request(path='')
 
 
     ## methods ##    
-    def do_get_request(self, path):
-        if self.session is None:
+    async def aio_do_get_request(self, path):
+        if self.client is None:
             return None
         
         if path is None or len(path) == 0:
@@ -56,7 +53,7 @@ class HttpNode(ControlNode):
             url = self.url + path
             
         try:
-            response = self.session.get(url)
+            response = await self.client.get(url)
         except Exception as e:
             raise ControlException('unable to fetch URL resource "%s": %s' % (url, str(e)))
         if response.status_code != 200:
@@ -65,8 +62,8 @@ class HttpNode(ControlNode):
         return response.content
     
         
-    def do_post_request(self, path, content):
-        if self.session is None:
+    async def aio_do_post_request(self, path, content):
+        if self.client is None:
             return None
         
         if path is None or len(path) == 0:
@@ -76,7 +73,7 @@ class HttpNode(ControlNode):
         print(f'POST: {url}')
             
         try:
-            response = self.session.post(url, data=content)
+            response = await self.client.post(url, data=content)
         except Exception as e:
             raise ControlException('unable to fetch URL resource "%s": %s' % (url, str(e)))
         if response.status_code >= 300:
@@ -104,11 +101,11 @@ class HttpPathNode(ControlNode):
             self.path = path + '?' + opts
         
         
-    def set(self, value):
-        return self.connection.do_post_request(self.path, value)
+    async def aio_set(self, value):
+        return await self.connection.aio_do_post_request(self.path, value)
             
-    def get(self):
-        return self.connection.do_get_request(self.path)
+    async def aio_get(self):
+        return await self.connection.aio_do_get_request(self.path)
 
     
     ## child nodes ##
@@ -124,11 +121,11 @@ class HttpValuePathNode(ControlVariableNode):
     def __init__(self, path_node, **kwargs):
         self.path_node = path_node
         
-    def set(self, value):
-        return self.path_node.set(value)
+    async def aio_set(self, value):
+        return await self.path_node.aio_set(value)
             
-    def get(self):
-        content = self.path_node.get()
+    async def aio_get(self):
+        content = await self.path_node.aio_get()
         if content is None:
             return None
         
@@ -141,12 +138,12 @@ class HttpJsonPathNode(ControlNode):
         self.path_node = path_node
         
     
-    def set(self, value):
-        return self.path_node.set(json.dumps(value))
+    async def aio_set(self, value):
+        return await self.path_node.aio_set(json.dumps(value))
             
     
-    def get(self):
-        content = self.path_node.get()
+    async def aio_get(self):
+        content = await self.path_node.aio_get()
         if content is None:
             return None
         
