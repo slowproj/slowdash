@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-class RedisNode(ControlNode):
+class AsyncRedisNode(ControlNode):
     def __init__(self, url, **kwargs):
         self.url = url
         self.kwargs = { k:v for k,v in kwargs.items() }
@@ -129,7 +129,7 @@ class RedisNode(ControlNode):
     def _node_creator_method(cls):
         def async_redis(self, url):
             if True:  # create a new connection everytime (othwerwise task stop/start will use the same connection)
-                return RedisNode(url)
+                return AsyncRedisNode(url)
             
             try:
                 keys = [ key for key in self._redis_nodes.keys() ]
@@ -144,7 +144,7 @@ class RedisNode(ControlNode):
             node = self._redis_nodes.get(url, None)
                 
             if node is None:
-                node = RedisNode(url)
+                node = AsyncRedisNode(url)
                 self._redis_nodes[url] = node
 
             return node

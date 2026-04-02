@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-class SlowMQNode(ControlNode):
+class AsyncSlowMQNode(ControlNode):
     def __init__(self, url:str, *, name=None):
         self.url = url
         self.name = name
@@ -102,7 +102,7 @@ class SlowMQNode(ControlNode):
     def _node_creator_method(cls):
         def async_slowmq(self, url:str, name:str=None):
             if True:
-                return SlowMQNode(url, name=name)
+                return AsyncSlowMQNode(url, name=name)
             
             obj_name = url
             try:
@@ -112,7 +112,7 @@ class SlowMQNode(ControlNode):
             node = self._slowmq_nodes.get(obj_name, None)
         
             if node is None:
-                node = SlowMQNode(url)
+                node = AsyncSlowMQNode(url)
                 self._slowmq_nodes[obj_name] = node
 
             return node
@@ -180,7 +180,7 @@ class PublisherNode(ControlNode):
 
         
 class SubscriberNode(ControlNode):
-    def __init__(self, slowmq_node:SlowMQNode, topic_filter:str, timeout:float=None):
+    def __init__(self, slowmq_node:AsyncSlowMQNode, topic_filter:str, timeout:float=None):
         self.slowmq_node = slowmq_node
         self.topic_filter = topic_filter
         self.timeout = timeout

@@ -22,14 +22,14 @@ sender_info = {
 }
 
 
-class DriplineNode(ControlNode):
+class AsyncDriplineNode(ControlNode):
     _seq = 0
     
     def __init__(self, rabbitmq_url:str, name:str=None):
         self.rmq = ctrl.async_rabbitmq(rabbitmq_url)
-        self.name = name or f'AsyncSlowDrip_{socket.gethostname()}_{os.getpid()}_{DriplineNode._seq}'
+        self.name = name or f'AsyncSlowDrip_{socket.gethostname()}_{os.getpid()}_{AsyncDriplineNode._seq}'
         self.sender_id = str(uuid.uuid4())
-        DriplineNode._seq += 1
+        AsyncDriplineNode._seq += 1
         
         self.alerts_exchange = self.rmq.topic_exchange('alerts')
         self.requests_exchange = self.rmq.topic_exchange('requests')
@@ -89,12 +89,12 @@ class DriplineNode(ControlNode):
     def _node_creator_method(cls):
         def async_dripline(self, *args, **kwargs):
             if True:
-                return DriplineNode(*args, **kwargs)
+                return AsyncDriplineNode(*args, **kwargs)
             
             try:
                 self.dripline_node
             except:
-                self.dripline_node = DriplineNode(*args, **kwargs)
+                self.dripline_node = AsyncDriplineNode(*args, **kwargs)
 
             return self.dripline_node
 
@@ -103,7 +103,7 @@ class DriplineNode(ControlNode):
 
     
 class EndpointNode(ControlNode):
-    def __init__(self, dripline:DriplineNode, name:str, *, specifier:str=None, lockout_key:str=None, timeout=None):
+    def __init__(self, dripline:AsyncDriplineNode, name:str, *, specifier:str=None, lockout_key:str=None, timeout=None):
         self.specifier = specifier or ''
         self.lockout_key = lockout_key or '00000000-0000-0000-0000-000000000000'
         
@@ -210,7 +210,7 @@ class CalibratedValueNode(ControlNode):
 
     
 class RequestNode(ControlNode):
-    def __init__(self, dripline:DriplineNode, handler):
+    def __init__(self, dripline:AsyncDriplineNode, handler):
         self.handler = handler
         
         if dripline.request_queue_node is None:
@@ -230,7 +230,7 @@ class RequestNode(ControlNode):
 
     
 class SensorValueAlertNode(ControlNode):
-    def __init__(self, dripline:DriplineNode, name:str=None):
+    def __init__(self, dripline:AsyncDriplineNode, name:str=None):
         self.name = name or dripline.name
         self.sender_id = dripline.sender_id
         self.publisher_node = dripline.alerts_exchange.publisher(f'sensor_value.{self.name}')
@@ -272,7 +272,7 @@ class SensorValueAlertNode(ControlNode):
     
 
 class HeartbeatAlertNode(ControlNode):
-    def __init__(self, dripline:DriplineNode):
+    def __init__(self, dripline:AsyncDriplineNode):
         self.name = dripline.name
         self.sender_id = dripline.sender_id
         self.publisher_node = dripline.alerts_exchange.publisher(f'heartbeat.{self.name}')
@@ -300,7 +300,7 @@ class HeartbeatAlertNode(ControlNode):
     
 
 class StatusMessageAlertNode(ControlNode):
-    def __init__(self, dripline:DriplineNode, message_type='notice'):
+    def __init__(self, dripline:AsyncDriplineNode, message_type='notice'):
         self.name = dripline.name
         self.sender_id = dripline.sender_id
         self.publisher_node = dripline.alerts_exchange.publisher(f'status_message.{self.name}.{message_type}')
@@ -327,7 +327,7 @@ class StatusMessageAlertNode(ControlNode):
     
 
 class SensorValuesQueueNode(ControlNode):
-    def __init__(self, dripline:DriplineNode):
+    def __init__(self, dripline:AsyncDriplineNode):
         if dripline.sensor_value_queue_node is None:
             dripline.sensor_value_queue_node = (
                 dripline.alerts_exchange.queue(f'{dripline.name}_sensor_value', routing_key='sensor_value.*', exclusive=True)
@@ -351,7 +351,7 @@ class SensorValuesQueueNode(ControlNode):
     
     
 class HeartbeatQueueNode(ControlNode):
-    def __init__(self, dripline:DriplineNode):
+    def __init__(self, dripline:AsyncDriplineNode):
         if dripline.heartbeat_queue_node is None:
             dripline.heartbeat_queue_node = (
                 dripline.alerts_exchange.queue(f'{dripline.name}_heartbeat', routing_key='heartbeat.*', exclusive=True)
@@ -375,7 +375,7 @@ class HeartbeatQueueNode(ControlNode):
 
     
 class StatusMessageQueueNode(ControlNode):
-    def __init__(self, dripline:DriplineNode):
+    def __init__(self, dripline:AsyncDriplineNode):
         if dripline.status_message_queue_node is None:
             dripline.status_message_queue_node = (
                 dripline.alerts_exchange.queue(f'{dripline.name}_status_message', routing_key='status_message.*.*', exclusive=True)
@@ -399,7 +399,7 @@ class StatusMessageQueueNode(ControlNode):
 
 
 class ServiceNode(ControlNode):
-    def __init__(self, dripline:DriplineNode, server, *, endpoints:list[str]|str|None=None):
+    def __init__(self, dripline:AsyncDriplineNode, server, *, endpoints:list[str]|str|None=None):
         self.dripline_node = dripline
         self.server = server
 

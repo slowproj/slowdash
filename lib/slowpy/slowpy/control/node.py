@@ -397,9 +397,9 @@ class ControlThreadNode(ControlNode):
         
 class ControlVariableNode(ControlNode):
     def __init__(self):
-        super().__init__()
-    
+        super().__init__()    
 
+        
     ### child nodes ###
     def setpoint(self, limits=(None, None)):
         """child node that holds setpoints
@@ -443,6 +443,9 @@ class SetpointNode(ControlNode):
         self.setpoint = None
         self.limits = limits
 
+        if hasattr(node, 'is_thread_safe'):
+            self.is_thread_safe = node.is_thread_safe
+            
         
     def set(self, value):
         try:
@@ -505,6 +508,9 @@ class RampingNode(ControlNode):
         
         self.target_value = None
         self.running = False
+
+        if hasattr(value_node, 'is_thread_safe'):
+            self.is_thread_safe = value_node.is_thread_safe
 
         
     def set(self, target_value):
@@ -607,6 +613,9 @@ class RampingStatusNode(ControlNode):
     def __init__(self, ramping_node):
         self.ramping_node = ramping_node
 
+        if hasattr(ramping_node, 'is_thread_safe'):
+            self.is_thread_safe = ramping_node.is_thread_safe
+
         
     def set(self, zero_to_stop):
         """set(0) to stop ramping
@@ -641,6 +650,9 @@ class OneshotNode(ControlNode):
         self.normal = normal
         
         self.start_time = None
+
+        if hasattr(node, 'is_thread_safe'):
+            self.is_thread_safe = node.is_thread_safe
 
         
     def set(self, value):
@@ -692,6 +704,9 @@ class ControlReadOnlyNode(ControlNode):
     def __init__(self, node):
         self.node = node
 
+        if hasattr(node, 'is_thread_safe'):
+            self.is_thread_safe = node.is_thread_safe
+
     def set(self, value):
         raise ControlException('node is read-only')
 
@@ -709,6 +724,9 @@ class ControlReadOnlyNode(ControlNode):
 class ControlWriteOnlyNode(ControlNode):
     def __init__(self, node):
         self.node = node
+
+        if hasattr(node, 'is_thread_safe'):
+            self.is_thread_safe = node.is_thread_safe
 
     def set(self, value):
         return self.node.set(value)

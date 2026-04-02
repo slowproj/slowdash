@@ -20,9 +20,11 @@ class EthernetNode(spc.ControlNode):
         self.socket_buffer = ''
         
         if self.address is None or not int(self.port) > 0:
-            logging.error(f'bad address or port: {self.address}:{self.port}')
-            
-            
+            logging.error(f'bad address or port: {self.address}:{self.port}')            
+
+        self.is_thread_safe = True
+
+        
     def __del__(self):
         self.close()
         
@@ -251,8 +253,11 @@ class ScpiNode(spc.ControlNode):
         
         while len(self.connection.do_get_chunk(timeout=0.1) or '') > 0:
             pass
+        
+        if hasattr(connection, 'is_thread_safe'):
+            self.is_thread_safe = connection.is_thread_safe
 
-    
+            
     def set(self, value):
         if self.verbose:
             sys.stderr.write('SCPI SET: [%s]' % value)
@@ -277,6 +282,9 @@ class ScpiCommandNode(spc.ControlVariableNode):
         self.scpi = scpi
         self.name = name
         self.set_format = set_format
+        
+        if hasattr(scpi, 'is_thread_safe'):
+            self.is_thread_safe = scpi.is_thread_safe
         
     
     def set(self, value=None):
@@ -322,8 +330,11 @@ class TelnetNode(spc.ControlNode):
 
         while len(self.connection.do_get_chunk(timeout=0.1) or '') > 0:
             pass
-
         
+        if hasattr(connection, 'is_thread_safe'):
+            self.is_thread_safe = connection.is_thread_safe
+
+            
     def set(self, value):
         self.connection.set(value + self.line_terminator)
         if self.has_echo:
@@ -366,8 +377,11 @@ class TelnetCommandNode(spc.ControlVariableNode):
     def __init__(self, telnet, command):
         self.telnet = telnet
         self.command = command
-        
-    
+                
+        if hasattr(telnet, 'is_thread_safe'):
+            self.is_thread_safe = telnet.is_thread_safe
+
+            
     def set(self, value=None):
         if value is None:
             return self.telnet.set(self.command)

@@ -26,7 +26,7 @@ class Message:
 
 
         
-class RabbitMQNode(ControlNode):
+class AsyncRabbitMQNode(ControlNode):
     def __init__(self, url:str, *, qos_prefetch_count=32):
         self.url = url
         self.prefetch_count = qos_prefetch_count
@@ -132,7 +132,7 @@ class RabbitMQNode(ControlNode):
     def _node_creator_method(cls):
         def async_rabbitmq(self, url:str, **kwargs):
             if True: # stop/start of a module will not delete this, but the event loop is different
-                return RabbitMQNode(url, **kwargs)
+                return AsyncRabbitMQNode(url, **kwargs)
                 
             try:
                 self._rmq_nodes.keys()
@@ -141,7 +141,7 @@ class RabbitMQNode(ControlNode):
             node = self._rmq_nodes.get(url, None)
         
             if node is None:
-                node = RabbitMQNode(url, **kwargs)
+                node = AsyncRabbitMQNode(url, **kwargs)
                 self._rmq_nodes[url] = node
 
             return node
@@ -151,7 +151,7 @@ class RabbitMQNode(ControlNode):
     
 
 class ExchangeNode(ControlNode):
-    def __init__(self, rmq_node:RabbitMQNode, exchange_type, name:str, **kwargs):
+    def __init__(self, rmq_node:AsyncRabbitMQNode, exchange_type, name:str, **kwargs):
         self.rmq_node = rmq_node
         self.rmq_node.children.append(self)
         

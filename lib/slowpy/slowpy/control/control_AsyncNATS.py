@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-class NATSNode(ControlNode):
+class AsyncNATSNode(ControlNode):
     def __init__(self, url:str):
         self.url = url
         
@@ -89,7 +89,7 @@ class NATSNode(ControlNode):
     def _node_creator_method(cls):
         def async_nats(self, url:str):
             if True:
-                return NATSNode(url)
+                return AsyncNATSNode(url)
             
             name = url
             try:
@@ -99,7 +99,7 @@ class NATSNode(ControlNode):
             node = self._nats_nodes.get(name, None)
         
             if node is None:
-                node = NATSNode(host, port)
+                node = AsyncNATSNode(host, port)
                 self._nats_nodes[name] = node
 
             return node
@@ -145,7 +145,7 @@ class PublisherNode(ControlNode):
 
     
 class SubscriberNode(ControlNode):
-    def __init__(self, nats_node:NATSNode, topic_filter:str, handler=None, timeout=None):
+    def __init__(self, nats_node:AsyncNATSNode, topic_filter:str, handler=None, timeout=None):
         """
         - If handler is not None, it is called on receiving a message.
         - Otherwise, the received messages are queued, which can be retrieved by has_data()/get()

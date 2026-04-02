@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-class MQTTNode(ControlNode):
+class AsyncMQTTNode(ControlNode):
     def __init__(self, host:str, port:int=1883, *, use_v5=True, keep_alive=60):
         self.host = host
         self.port = port
@@ -179,7 +179,7 @@ class MQTTNode(ControlNode):
     def _node_creator_method(cls):
         def async_mqtt(self, host:str, port:int=1883):
             if True:
-                return MQTTNode(host, port)
+                return AsyncMQTTNode(host, port)
             
             name = '%s:%s' % (host, str(port))
             try:
@@ -189,7 +189,7 @@ class MQTTNode(ControlNode):
             node = self._mqtt_nodes.get(name, None)
         
             if node is None:
-                node = MQTTNode(host, port)
+                node = AsyncMQTTNode(host, port)
                 self._mqtt_nodes[name] = node
 
             return node
@@ -238,7 +238,7 @@ class PublisherNode(ControlNode):
 
     
 class SubscriberNode(ControlNode):
-    def __init__(self, mqtt_node:MQTTNode, topic_filter:str, handler=None, timeout=None):
+    def __init__(self, mqtt_node:AsyncMQTTNode, topic_filter:str, handler=None, timeout=None):
         """
         - If handler is not None, it is called on receiving a message.
         - Otherwise, the received messages are queued, which can be retrieved by has_data()/get()
