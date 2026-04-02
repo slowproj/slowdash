@@ -27,16 +27,22 @@ class SlowMQNode(ControlNode):
 
 
     async def aio_open(self):
-        if not self.url.startswith('slowmq://'):
-            logger.warning(f'AsyncSlowMQ Error: {self.url}: bad SlowMQ URL: must start with slowmq://')
+        if self.url.startswith('slowmq://'):
+            netloc = self.url[len('slowmq://'):]
+            ws_prot = 'ws'
+        elif self.url.startswith('slowmqs://'):
+            netloc = self.url[len('slowmqs://'):]
+            ws_prot = 'wss'
+        else:
+            logger.warning(f'AsyncSlowMQ Error: {self.url}: bad SlowMQ URL: must start with slowmq:// or slowmqs://')
             return None
             
-        netloc = self.url[len('slowmq://'):]
         if netloc.endswith('/'):
             netloc = netloc[:-1]
-        wsurl = f'ws://{netloc}/ws/pubsub'
+        wsurl = f'{ws_prot}://{netloc}/ws/pubsub'
         if self.name is not None:
             wsurl += f'?name={self.name}'
+            
         try:
             import websockets
             ws = await websockets.connect(wsurl)

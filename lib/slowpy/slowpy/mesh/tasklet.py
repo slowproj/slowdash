@@ -3,6 +3,7 @@
 import sys, time, copy, asyncio, inspect, traceback, logging
 from datetime import datetime, timezone
 from slowpy.control import control_system as ctrl
+from .dash import Dash
 from .mesh import Mesh
 
 
@@ -10,6 +11,9 @@ class Tasklet:
     def __init__(self, name:str|None=None):
         self.name = name
         self.params = {}
+        
+        self.dash_url = None
+        self.dash = Dash()
         
         self.mesh_url = None
         self.mesh = Mesh()
@@ -29,9 +33,15 @@ class Tasklet:
         return mesh
 
 
-    def run(self, params:dict|None=None, mesh_url:str|None=None):
+    def run(self, params:dict|None=None, slowdash_url:str|None=None, mesh_url:str|None=None):
         self.params = copy.deepcopy(params)
-        self.mesh_url = mesh_url
+        self.dash_url = slowdash_url or self.dash_url
+        self.mesh_url = mesh_url or self.mesh_url
+        if self.mesh_url is None:
+            if self.dash_url.startswith('http://'):
+                self.mesh_url = 'slowmq' + self.dash_url[4:]
+            elif self.dash_url.startswith('https://'):
+                self.mesh_url = 'slowmqs' + self.dash_url[5:]
 
         caller_frame = inspect.currentframe().f_back
         modname = caller_frame.f_globals.get('__name__')
@@ -140,15 +150,21 @@ class Tasklet:
         
 
     async def _start(self):
-        self.mesh.connect(self.mesh_url)
+        if self.dash_url is not None:
+            self.dash.connect(self.dash_url)
+        if self.mesh_url is not None:
+            self.mesh.connect(self.mesh_url)
         
         try:
             await asyncio.gather(*self.initialize_task_coros)
         except Exception as e:
+            try:
+                for mesh in self.mesh_list:
+                    await mesh.aio_close()   
+                await self.dash.aio_close()
+            except Exception:
+                pass
             raise e
-        finally:
-            for mesh in self.mesh_list:
-                await mesh.aio_close()   
 
         # mesh.aio_publish() is possible even before aio_start()            
         for mesh in self.mesh_list:
@@ -184,6 +200,7 @@ class Tasklet:
 
             for mesh in self.mesh_list:
                 await mesh.aio_close()
+            await self.dash.aio_close()   
 
             
     def _add_initialize_callback(self, func):

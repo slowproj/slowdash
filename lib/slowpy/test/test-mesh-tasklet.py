@@ -9,8 +9,8 @@ def _initialize(params):
 
     
 @tasklet.initialize()
-def init():
-    print("I'm gonna work hard!")
+async def get_conf():
+    print(await tasklet.dash.aio_get_config())
 
     
 @tasklet.finalize()
@@ -38,6 +38,10 @@ def hello():
     print("I'm still working")
     
     
+@tasklet.loop(interval=5)
+async def get_data():
+    print(await tasklet.dash.aio_get_data('ch0',length=30))
+
     
 @tasklet.mesh.on('data.>')
 def handle(headers, data):
@@ -57,11 +61,4 @@ def publish():
 
     
 if __name__ == '__main__':
-    #mesh = None
-    mesh = 'slowmq://localhost:18881'
-    #mesh = 'nats://localhost'
-    #mesh = 'mqtt://localhost'
-    #mesh = 'redis://localhost/12'
-    #mesh = 'amqp://slowdash:slowdash@localhost/SlowMesh'
-
-    tasklet.run(mesh_url=mesh)
+    tasklet.run(slowdash_url='http://localhost:18881')

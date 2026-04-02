@@ -71,6 +71,9 @@ class Mesh:
             if o.scheme in ['slowmq', 'slowdash']:
                 self.pubsub = ctrl.import_control_module('AsyncSlowMQ').async_slowmq(f'slowmq://{o.netloc}')
                 self.sep, self.single_wc, self.tail_wc = tail_wc = '.', '*', '>'
+            elif o.scheme in ['slowmqs', 'slowdashs']:
+                self.pubsub = ctrl.import_control_module('AsyncSlowMQ').async_slowmq(f'slowmqs://{o.netloc}')
+                self.sep, self.single_wc, self.tail_wc = tail_wc = '.', '*', '>'
             elif o.scheme == 'nats':
                 self.pubsub = ctrl.import_control_module('AsyncNATS').async_nats(url)
                 self.sep, self.single_wc, self.tail_wc = tail_wc = '.', '*', '>'

@@ -24,7 +24,7 @@ class AsyncHttpNode(ControlNode):
 
     async def aio_close(self):
         if self.client is not None:
-            self.client.aclose()
+            await self.client.aclose()
 
             
     @classmethod
