@@ -1,0 +1,6 @@
+slowdash_project:
+  name: MicrophoneScope
+  
+  task:
+    name: microphone
+    auto_load: true

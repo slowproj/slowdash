@@ -211,32 +211,32 @@ class ControlSystem(spc.ControlNode):
 class ValueNode(spc.ControlVariableNode):
     def __init__(self, initial_value=None):
         if isinstance(initial_value, spc.ControlNode):
-            self.value = initial_value.get()
+            self._value = initial_value.get()
         else:
-            self.value = initial_value
+            self._value = initial_value
 
-        if self.value is not None:
-            self.VariableType = type(self.value)
+        if self._value is not None:
+            self._VariableType = type(self._value)
         else:
-            self.VariableType = None
+            self._VariableType = None
 
         
     def set(self, value):
-        if self.VariableType is None:
+        if self._VariableType is None:
             if value is not None:
-                self.VariableType = type(value)
+                self._VariableType = type(value)
                 
-        if self.VariableType is not None:
+        if self._VariableType is not None:
             try:
-                self.value = self.VariableType(value)
+                self._value = self._VariableType(value)
             except:
-                self.value = value
+                self._value = value
         else:
-            self.value = value
+            self._value = value
 
         
     def get(self):
-        return self.value
+        return self._value
 
 
     # DEPRECIATED (July 2025): use ControlSystem.aio_emit(obj) instead
@@ -249,9 +249,9 @@ class _DictExportAdapterNode(spc.ControlVariableNode):
     def __init__(self, value=None):
         if not type(value) is dict:
             logging.error('dict value expected')
-            self.value = None
+            self._value = None
         else:
-            self.value = value
+            self._value = value
             
         
     def set(self, value):
@@ -261,18 +261,18 @@ class _DictExportAdapterNode(spc.ControlVariableNode):
         tree = value.get('tree',value)
         
         for k, v in tree.items():
-            if k in self.value and self.value[k] is not None:
+            if k in self._value and self._value[k] is not None:
                 try:
-                    self.value[k] = type(self.value)(v)
+                    self._value[k] = type(self._value)(v)
                 except:
-                    self.value[k] = v
+                    self._value[k] = v
             else:
-                self.value[k] = v
+                self._value[k] = v
 
             
     def get(self):
-        if self.value is not None:
-            return { 'tree': self.value }
+        if self._value is not None:
+            return { 'tree': self._value }
         else:
             return { 'tree': {} }
 
@@ -282,9 +282,9 @@ class _DataclassInstanceExportAdapterNode(spc.ControlVariableNode):
     def __init__(self, value=None):
         if not dataclasses.is_dataclass(value) or isinstance(value, type):
             logging.error('dataclass instance expected')
-            self.value = None
+            self._value = None
         else:
-            self.value = value
+            self._value = value
             
 
     def set(self, value):
@@ -293,24 +293,24 @@ class _DataclassInstanceExportAdapterNode(spc.ControlVariableNode):
             return
         tree = value.get('tree', value)
 
-        ann = type(self.value).__annotations__
+        ann = type(self._value).__annotations__
         for k, v in tree.items():
             if k not in ann:
-                logging.error(f'undefined field "{k}" for dataclass "{type(self.value)}"')
+                logging.error(f'undefined field "{k}" for dataclass "{type(self._value)}"')
                 continue
             try:
                 vv = ann[k](v)
             except:
-                logging.error(f'unable to convert value "{v}" to field "{k}" of dataclass "{type(self.value)}" (type {ann[k]})')
+                logging.error(f'unable to convert value "{v}" to field "{k}" of dataclass "{type(self._value)}" (type {ann[k]})')
             try:
-                setattr(self.value, k, vv)
+                setattr(self._value, k, vv)
             except:
-                logging.error(f'unable to assign value "{v}" to field "{k}" of dataclass "{type(self.value)}"')
+                logging.error(f'unable to assign value "{v}" to field "{k}" of dataclass "{type(self._value)}"')
         
             
     def get(self):
-        if self.value is not None:
-            return { 'tree': dataclasses.asdict(self.value) }
+        if self._value is not None:
+            return { 'tree': dataclasses.asdict(self._value) }
         else:
             return { 'tree': {} }
 
@@ -320,10 +320,10 @@ class _ClassInstanceExportAdapterNode(spc.ControlVariableNode):
     def __init__(self, value=None):
         try:
             vars(value)
-            self.value = value
+            self._value = value
         except:
             logging.error('class instance expected')
-            self.value = None
+            self._value = None
 
             
     def set(self, value):
@@ -333,19 +333,19 @@ class _ClassInstanceExportAdapterNode(spc.ControlVariableNode):
         tree = value.get('tree', value)
         
         for k, v in tree.items():
-            if hasattr(self.value, k) and getattr(self.value, k) is not None:
+            if hasattr(self._value, k) and getattr(self._value, k) is not None:
                 try:
-                    ValueType = type(getattr(self.value, k))
-                    setattr(self.value, k, ValueType(v))
+                    ValueType = type(getattr(self._value, k))
+                    setattr(self._value, k, ValueType(v))
                 except:
-                    setattr(self.value, k, v)
+                    setattr(self._value, k, v)
             else:
-                setattr(self.value, k, v)
+                setattr(self._value, k, v)
 
             
     def get(self):
-        if self.value is not None:
-            return { 'tree': { k:v for k,v in vars(self.value).items() if not k.endswith('__slowdash_export_name') } }
+        if self._value is not None:
+            return { 'tree': { k:v for k,v in vars(self._value).items() if not k.endswith('__slowdash_export_name') } }
         else:
             return { 'tree': {} }
 
@@ -353,7 +353,7 @@ class _ClassInstanceExportAdapterNode(spc.ControlVariableNode):
 
 class _SlowpyElementExportAdapterNode(spc.ControlVariableNode):
     def __init__(self, value=None):
-        self.value = value
+        self._value = value
 
         
     def set(self, value):
@@ -361,7 +361,7 @@ class _SlowpyElementExportAdapterNode(spc.ControlVariableNode):
 
 
     def get(self):
-        return self.value.to_json()
+        return self._value.to_json()
 
 
 control_system = ControlSystem()

@@ -7,22 +7,22 @@ import slowpy.control as spc
 
 class EthernetNode(spc.ControlNode):
     def __init__(self, address, port, **kwargs):        
-        self.address = address
-        self.port = port
-        self.reconnect_time = kwargs.get('reconnect', 10)
-        self.terminator = None
+        self._address = address
+        self._port = port
+        self._reconnect_time = kwargs.get('reconnect', 10)
+        self._terminator = None
         
-        self.socket = None
-        self.selectors = None
-        self.lock = threading.Lock()
+        self._socket = None
+        self._selectors = None
+        self._lock = threading.Lock()
         
-        self.last_connect_time = 0
-        self.socket_buffer = ''
+        self._last_connect_time = 0
+        self._socket_buffer = ''
         
-        if self.address is None or not int(self.port) > 0:
-            logging.error(f'bad address or port: {self.address}:{self.port}')            
+        if self._address is None or not int(self._port) > 0:
+            logging.error(f'bad address or port: {self._address}:{self._port}')            
 
-        self.is_thread_safe = True
+        self._is_thread_safe = True
 
         
     def __del__(self):
@@ -30,69 +30,69 @@ class EthernetNode(spc.ControlNode):
         
         
     def close(self):
-        if self.socket is not None:
+        if self._socket is not None:
             try:
-                self.socket.close()
+                self._socket.close()
             except:
                 pass
-        del self.selectors
+        del self._selectors
         
-        self.socket = None
+        self._socket = None
         
         
     def do_connect(self):
-        if self.address is None or not int(self.port) > 0:
+        if self._address is None or not int(self._port) > 0:
             return False
-        if self.socket:
+        if self._socket:
             try:
-                self.socket.close()
+                self._socket.close()
             except:
                 pass
-            del self.selectors
-            del self.socket
+            del self._selectors
+            del self._socket
             
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         
         try:
-            self.socket.connect((self.address, self.port))
-            logging.info(f'Ethernet: {self.address}:{self.port} connected')
+            self._socket.connect((self._address, self._port))
+            logging.info(f'Ethernet: {self._address}:{self._port} connected')
         except Exception as e:
-            logging.error(f'unable to connect to {self.address}:{self.port}: {e}')
-            self.socket = None
-            self.selectors = None
+            logging.error(f'unable to connect to {self._address}:{self._port}: {e}')
+            self._socket = None
+            self._selectors = None
             return False
 
-        self.selectors = selectors.DefaultSelector()
-        self.selectors.register(self.socket, selectors.EVENT_READ)
+        self._selectors = selectors.DefaultSelector()
+        self._selectors.register(self._socket, selectors.EVENT_READ)
         
         return True
 
 
     def is_available(self):
-        if self.socket:
+        if self._socket:
             return True
-        if self.last_connect_time > 0 and not (self.reconnect_time > 0):
+        if self._last_connect_time > 0 and not (self._reconnect_time > 0):
             return False
         
         now = time.monotonic()
-        if now - self.last_connect_time < self.reconnect_time:
+        if now - self._last_connect_time < self._reconnect_time:
             return False
-        self.last_connect_time = now
+        self._last_connect_time = now
             
-        return self.do_connect()
+        return self._do_connect()
         
     
     def set(self, value):
         if self.is_available():
             try:
-                self.socket.sendall(value.encode('utf-8'))
+                self._socket.sendall(value.encode('utf-8'))
             except Exception as e:
                 logging.warn(f'socket error: {e}')
                 try:
-                    self.socket.close()
+                    self._socket.close()
                 except:
                     pass
-                self.socket = None
+                self._socket = None
 
     
     def get(self):
@@ -110,21 +110,21 @@ class EthernetNode(spc.ControlNode):
         if not self.is_available():
             return ''
     
-        events = self.selectors.select(timeout=timeout)
+        events = self._selectors.select(timeout=timeout)
         for key, mask in events:
-            if key.fileobj == self.socket and mask != 0:
+            if key.fileobj == self._socket and mask != 0:
                 try:
-                    recv = self.socket.recv(1024*1024).decode('utf-8', errors='ignore')
+                    recv = self._socket.recv(1024*1024).decode('utf-8', errors='ignore')
                 except Exception as e:
                     recv = ''
                     logging.warn(f'socket error: {e}')
                 if len(recv) == 0: # EOF
                     logging.warn('socket disconnected')
                     try:
-                        self.socket.close()
+                        self._socket.close()
                     except:
                         pass
-                    self.socket = None
+                    self._socket = None
                     return None
                 else:
                     return recv
@@ -148,10 +148,10 @@ class EthernetNode(spc.ControlNode):
             wait_until = None
         
         line = ''
-        with self.lock:
+        with self._lock:
             while True:
-                if len(self.socket_buffer) == 0:
-                    if self.is_stop_requested():
+                if len(self._socket_buffer) == 0:
+                    if self._is_stop_requested():
                         chunk = None
                     else:
                         chunk = self.do_get_chunk(timeout=0.1)
@@ -160,9 +160,9 @@ class EthernetNode(spc.ControlNode):
                             break
                         else:
                             return None
-                    self.socket_buffer = chunk
+                    self._socket_buffer = chunk
                 
-                if len(self.socket_buffer) == 0:
+                if len(self._socket_buffer) == 0:
                     if wait_until is not None and time.monotonic() >= wait_until:
                         if len(line) > 0:
                             return line
@@ -172,13 +172,13 @@ class EthernetNode(spc.ControlNode):
                     else:
                         continue
 
-                for k in range(len(self.socket_buffer)):
-                    ch = self.socket_buffer[k]
+                for k in range(len(self._socket_buffer)):
+                    ch = self._socket_buffer[k]
                     if ch in [ '\x0a', '\x0d' ]:
-                        if self.terminator is None:
-                            self.terminator = ch
-                        if ch == self.terminator:
-                            self.socket_buffer = self.socket_buffer[k+1:]
+                        if self._terminator is None:
+                            self._terminator = ch
+                        if ch == self._terminator:
+                            self._socket_buffer = self._socket_buffer[k+1:]
                             return line
                         else:
                             # skip <CR> and <LF>
@@ -186,7 +186,7 @@ class EthernetNode(spc.ControlNode):
                     else:
                         line += ch
                         
-                self.socket_buffer = ''
+                self._socket_buffer = ''
 
         return line
 
@@ -216,14 +216,14 @@ class EthernetNode(spc.ControlNode):
                 
             name = '%s:%s' % (address, str(port))
             try:
-                self._ethernet_nodes.keys()
+                self.__ethernet_nodes.keys()
             except:
-                self._ethernet_nodes = {}
-            node = self._ethernet_nodes.get(name, None)
+                self.__ethernet_nodes = {}
+            node = self.__ethernet_nodes.get(name, None)
         
             if node is None:
                 node = EthernetNode(address, port)
-                self._ethernet_nodes[name] = node
+                self.__ethernet_nodes[name] = node
 
             return node
 
@@ -244,29 +244,29 @@ class ScpiNode(spc.ControlNode):
           - append_opc: if True, ';*OPC?' is appended to all SCPI set commands
           - verbose: primt SCPI exchanges to sys.stderr
         """
-        self.connection = connection
-        self.timeout = timeout
-        self.line_terminator = line_terminator
-        self.sync = sync
-        self.append_opc = append_opc
-        self.verbose = verbose
+        self._connection = connection
+        self._timeout = timeout
+        self._line_terminator = line_terminator
+        self._sync = sync
+        self._append_opc = append_opc
+        self._verbose = verbose
         
-        while len(self.connection.do_get_chunk(timeout=0.1) or '') > 0:
+        while len(self._connection.do_get_chunk(timeout=0.1) or '') > 0:
             pass
         
-        if hasattr(connection, 'is_thread_safe'):
-            self.is_thread_safe = connection.is_thread_safe
+        if hasattr(connection, '_is_thread_safe'):
+            self._is_thread_safe = connection._is_thread_safe
 
             
     def set(self, value):
-        if self.verbose:
+        if self._verbose:
             sys.stderr.write('SCPI SET: [%s]' % value)
-        return self.connection.set(value + self.line_terminator)
+        return self._connection.set(value + self._line_terminator)
             
     
     def get(self):
-        reply = self.connection.do_get_line(timeout=self.timeout)
-        if self.verbose:
+        reply = self._connection.do_get_line(timeout=self._timeout)
+        if self._verbose:
             sys.stderr.write(' --> [%s]\n' % reply)
         return reply
 
@@ -279,88 +279,88 @@ class ScpiNode(spc.ControlNode):
 
 class ScpiCommandNode(spc.ControlVariableNode):
     def __init__(self, scpi, name, set_format=None):
-        self.scpi = scpi
-        self.name = name
-        self.set_format = set_format
+        self._scpi = scpi
+        self._name = name
+        self._set_format = set_format
         
-        if hasattr(scpi, 'is_thread_safe'):
-            self.is_thread_safe = scpi.is_thread_safe
+        if hasattr(scpi, '_is_thread_safe'):
+            self._is_thread_safe = scpi._is_thread_safe
         
     
     def set(self, value=None):
-        if self.set_format is None:
+        if self._set_format is None:
             if value is None:
-                cmd = self.name
+                cmd = self._name
             else:
-                cmd = '%s %s' % (self.name, str(value))
+                cmd = '%s %s' % (self._name, str(value))
         else:
             if value is None:
-                cmd = self.set_format
+                cmd = self._set_format
             else:
-                cmd = self.set_format.format(value)
+                cmd = self._set_format.format(value)
 
-        if self.scpi.append_opc:
+        if self._scpi.append_opc:
             cmd += ';*opc?'
                 
-        self.scpi.set(cmd)
+        self._scpi.set(cmd)
                 
-        if self.scpi.sync:
-            return self.scpi.get()
+        if self._scpi.sync:
+            return self._scpi.get()
 
     
     def get(self):
-        if self.name[-1] == '?':
-            cmd = self.name
+        if self._name[-1] == '?':
+            cmd = self._name
         else:
-            cmd = f'{self.name}?'
+            cmd = f'{self._name}?'
             
-        self.scpi.set(cmd)
+        self._scpi.set(cmd)
         
-        return self.scpi.get()
+        return self._scpi.get()
 
     
 
 class TelnetNode(spc.ControlNode):
     def __init__(self, connection, prompt, line_terminator, timeout=10, has_echo=True):
-        self.connection = connection
-        self.prompt = prompt
-        self.timeout = timeout
-        self.has_echo = has_echo
-        self.line_terminator = line_terminator
+        self._connection = connection
+        self._prompt = prompt
+        self._timeout = timeout
+        self._has_echo = has_echo
+        self._line_terminator = line_terminator
 
-        while len(self.connection.do_get_chunk(timeout=0.1) or '') > 0:
+        while len(self._connection.do_get_chunk(timeout=0.1) or '') > 0:
             pass
         
-        if hasattr(connection, 'is_thread_safe'):
-            self.is_thread_safe = connection.is_thread_safe
+        if hasattr(connection, '_is_thread_safe'):
+            self._is_thread_safe = connection._is_thread_safe
 
             
     def set(self, value):
-        self.connection.set(value + self.line_terminator)
-        if self.has_echo:
-            return self.connection.do_get_line() or ''            
+        self._connection.set(value + self._line_terminator)
+        if self._has_echo:
+            return self._connection.do_get_line() or ''            
 
     
     def get(self):
-        if self.prompt is not None:
+        if self._prompt is not None:
             return '\n'.join(self.do_get_lines_to_prompt())
         else:
-            return self.connection.do_get_line(timeout=self.timeout)
+            return self._connection.do_get_line(timeout=self._timeout)
             
         
     ## methods ##
     def do_get_lines_to_prompt(self, timeout=None):
         lines = []
-        wait_until = time.monotonic() + (timeout or self.timeout or 10)
+        wait_until = time.monotonic() + (timeout or self._timeout or 10)
         
         while not self.is_stop_requested():
-            line = self.connection.do_get_line(timeout=0.1)
+            line = self._connection.do_get_line(timeout=0.1)
             if line is None:
                 if time.monotonic() >= wait_until:
                     break
                 else:
                     continue
-            if line.startswith(self.prompt):
+            if line.startswith(self._prompt):
                 break
             lines.append(line.strip())
 
@@ -375,20 +375,20 @@ class TelnetNode(spc.ControlNode):
 
 class TelnetCommandNode(spc.ControlVariableNode):
     def __init__(self, telnet, command):
-        self.telnet = telnet
-        self.command = command
+        self._telnet = telnet
+        self._command = command
                 
-        if hasattr(telnet, 'is_thread_safe'):
-            self.is_thread_safe = telnet.is_thread_safe
+        if hasattr(telnet, '_is_thread_safe'):
+            self._is_thread_safe = telnet._is_thread_safe
 
             
     def set(self, value=None):
         if value is None:
-            return self.telnet.set(self.command)
+            return self._telnet.set(self._command)
         else:
-            return self.telnet.set(f'{self.command} {str(value)}')
+            return self._telnet.set(f'{self._command} {str(value)}')
 
     
     def get(self):
-        self.telnet.set(self.command)
-        return self.telnet.get()
+        self._telnet.set(self._command)
+        return self._telnet.get()

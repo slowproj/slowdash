@@ -16,37 +16,35 @@ from slowpy.control import ControlNode, ControlException, control_system as ctrl
 
 
 class MicrophoneNode(ControlNode):
-    def __init__(self, sample_rate:int=44100, duration:float=0.1, block_size:int|None=None):
+    def __init__(self, sample_rate:int=44100, block_size:int=1024):
         """
         Arguments:
           sample_rate (int): typically, one of [ 8000 (phone), 16000, 22050, 44100 (CD), 48000, 96000, 192000 ]
-          duration (float): length of traces to be taken in one "event"; overriden by block_size
-          blocK_size (int|None): number of data points in one "event"; if not None this overrides the duration setting
-        Notes:
-          - block_size is useful when FFT is used, to make the number of samples a power of 2.
+          blocK_size (int|None): number of data points in one "event"
         """
         
-        self.sample_rate = sample_rate
-        self.block_size = block_size or int(sample_rate * duration)
+        self._sample_rate = sample_rate
+        self._block_size = block_size
 
-        self.stream = None
+        self._stream = None
 
         try:
             import sounddevice as sd   
-            self.sd = sd
+            self._sd = sd
         except Exception as e:
             logging.error('Unable to import sounddevice: {e}')
             logging.info('You might need:')
             logging.info('  pip install sounddevice, and/or')
             logging.info('  apt install portaudio19-dev (Linux) or brew install portaudio')
-            self.sd = None
+            self._sd = None
         else:
-            print('imported sounddevice. Available devices are')
-            print(self.sd.query_devices())
+            logging.info('imported sounddevice')
+            logging.debug('Available devices are')
+            logging.debug(self._sd.query_devices())
 
-        self.data = None
-        self.data_lock = threading.Lock()
-        self.data_flag = threading.Event()
+        self._record = None
+        self._record_lock = threading.Lock()
+        self._record_flag = threading.Event()
         
 
     def __del__(self):
@@ -54,10 +52,10 @@ class MicrophoneNode(ControlNode):
 
 
     def close(self):
-        if self.stream:
-            self.stream.stop()
-            self.stream.close()
-            self.stream = None
+        if self._stream:
+            self._stream.stop()
+            self._stream.close()
+            self._stream = None
             
         
     @classmethod
@@ -69,20 +67,23 @@ class MicrophoneNode(ControlNode):
 
     
     def start(self):
-        def callback(indata, frames, time_info, status):
-            with self.data_lock:
-                self.data = indata[:,0]  # TODO: make this a ring buffer
-                self.data_flag.set()
+        if self._sd is None:
+            return
+        
+        def callback(indata, frames, timeinfo, status):
+            with self._record_lock:
+                self._record = indata[:,0]  # TODO: make this a ring buffer
+                self._record_flag.set()
 
         self.close()
-        self.stream = self.sd.InputStream(
+        self._stream = self._sd.InputStream(
             channels=1,
-            samplerate=self.sample_rate,
-            blocksize=self.block_size,
+            samplerate=self._sample_rate,
+            blocksize=self._block_size,
             dtype='float32',
             callback=callback
         )
-        self.stream.start()
+        self._stream.start()
 
         
     def stop(self):
@@ -90,20 +91,23 @@ class MicrophoneNode(ControlNode):
 
 
     def get(self):
-        if self.stream is not None:
+        if self._sd is None:
+            return None
+        
+        if self._stream is not None:
             # Streaming mode
-            self.data_flag.wait()
-            with self.data_lock:
-                self.data_flag.clear()
-                return self.data
+            self._record_flag.wait()
+            with self._record_lock:
+                self._record_flag.clear()
+                return self._record
             
-        data = self.sd.rec(
-            self.block_size, 
+        record = self._sd.rec(
+            self._block_size, 
             channels = 1,
-            samplerate = self.sample_rate,
+            samplerate = self._sample_rate,
             dtype = 'float32',
         )
-        return data[:,0]
+        return record[:,0]
 
 
     # mocrophone().rms().get() returns rms([x])
@@ -112,21 +116,27 @@ class MicrophoneNode(ControlNode):
 
     # mocrophone().trace().get() returns [t],[x]
     def trace(self):
-        return TraceNode(self)
+        return TraceNode(self, self._sample_rate)
 
     # mocrophone().fft().get() returns [f],[FFT]
     def fft(self):
-        return FftNode(self)    
+        return FftNode(self, self._sample_rate)
+
+    def sample_rate(self):
+        return self.FieldAccessNode(self, '_sample_rate')
+
+    def block_size(self):
+        return self.FieldAccessNode(self, '_block_size')
 
     
 
 class RmsNode(ControlNode):
     def __init__(self, mic_node):
-        self.mic_node = mic_node
+        self._mic_node = mic_node
 
 
     def get(self):
-        x = self.mic_node.get()
+        x = self._mic_node.get()
         if x is None:
             return None
         
@@ -135,16 +145,17 @@ class RmsNode(ControlNode):
                  
         
 class TraceNode(ControlNode):
-    def __init__(self, mic_node):
-        self.mic_node = mic_node
+    def __init__(self, mic_node, sample_rate):
+        self._mic_node = mic_node
+        self._sample_rate = sample_rate
 
 
     def get(self):
-        x = self.mic_node.get()
+        x = self._mic_node.get()
         if x is None:
             return None
 
-        dt = 1.0 / self.mic_node.sample_rate
+        dt = 1.0 / self._sample_rate
         t = [ i*dt for i in range(len(x)) ]
               
         return t, x.tolist()
@@ -152,31 +163,36 @@ class TraceNode(ControlNode):
                  
         
 class FftNode(ControlNode):
-    def __init__(self, mic_node):
-        self.mic_node = mic_node
+    def __init__(self, mic_node, sample_rate):
+        self._mic_node = mic_node
+        self._sample_rate = sample_rate
 
 
     def get(self):
-        x = self.mic_node.get()
+        x = self._mic_node.get()
         if x is None:
             return None
 
         fft = np.abs(np.fft.rfft(x))
-        freq = np.fft.rfftfreq(len(x), 1/self.mic_node.sample_rate)
+        freq = np.fft.rfftfreq(len(x), 1/self._sample_rate)
         
         return freq.tolist(), fft.tolist()
         
                  
         
 if __name__ == '__main__':
-    device = MicrophoneNode(block_size=32)
+    device = MicrophoneNode()
+    device.sample_rate().set(9600)
+    device.block_size().set(4)
+    
     device.start()  # for streaming (optional)
     
     ctrl.stop_by_signal()
     while not ctrl.is_stop_requested():
-        print(device.rms().get())
-        print(device.trace().get())
-        print(device.fft().get())
+        data = device.data().get()
+        print(data.rms().get())
+        print(data.trace().get())
+        print(data.fft().get())
         ctrl.sleep(1)
 
     device.stop()
