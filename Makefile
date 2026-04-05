@@ -5,7 +5,7 @@ PIP_REQS = uvicorn hypercorn websockets pyyaml psutil bcrypt
 # used only by SlowPy: can be removed if not used by the users
 PIP_OPTIONAL_DBS = mysql-connector-python aiomysql influxdb-client redis pymongo couchdb h5py elasticsearch
 PIP_OPTIONAL_MSGS = requests httpx nats-py paho-mqtt aiomqtt pika aio-pika
-PIP_OPTIONAL_DEVS = pyserial pyvisa pymodbus
+PIP_OPTIONAL_DEVS = pyserial pyvisa pymodbus sounddevice
 PIP_OPTIONAL_DATA = numpy matplotlib lmfit scikit-image
 
 

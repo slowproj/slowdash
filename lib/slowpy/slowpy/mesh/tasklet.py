@@ -37,7 +37,7 @@ class Tasklet:
         self.params = copy.deepcopy(params)
         self.dash_url = slowdash_url or self.dash_url
         self.mesh_url = mesh_url or self.mesh_url
-        if self.mesh_url is None:
+        if self.mesh_url is None and self.dash_url is not None:
             if self.dash_url.startswith('http://'):
                 self.mesh_url = 'slowmq' + self.dash_url[4:]
             elif self.dash_url.startswith('https://'):
@@ -138,15 +138,20 @@ class Tasklet:
         
         func_run = _get_func('_run')
         if func_run:
+            if not inspect.iscoroutinefunction(func_run):
+                # non-async function will stop all the other async tasks
+                logging.warning(f'Tasklet: _run() callback must be async; otherwise other functions will not be called')
             self._add_once_callback(func_run)
-        
+                
         func_loop = _get_func('_loop')
         if func_loop:
-            if inspect.iscoroutinefunction(func_loop):
-                self._add_loop_callback(func_loop, 0)
+            if not inspect.iscoroutinefunction(func_loop):
+                # use of time.sleep() in user function will cause starving
+                logging.warning(f'Tasklet: _loop() callback must be async; a loop delay of 0.1 sec is inserted')
+                loop_delay = 0.1
             else:
-                # use of time.sleep() in user function will cause starving: do not allow it
-                logging.error(f'Tasklet: _loop() callback must be async')
+                loop_delay = 0
+            self._add_loop_callback(func_loop, loop_delay)
         
 
     async def _start(self):
@@ -184,12 +189,12 @@ class Tasklet:
         finally:
             for task in main_tasks:
                 task.cancel()
-            try:
-                await task
-            except Exception as e:
-                self._handle_error(f'Tasklet error during clean up: {e}')
-            except:
-                pass
+                try:
+                    await task
+                except Exception as e:
+                    self._handle_error(f'Tasklet error during clean up: {e}')
+                except:
+                    pass
             
             try:
                 await asyncio.gather(*self.finalize_task_coros)
