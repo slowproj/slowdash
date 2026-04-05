@@ -1,7 +1,7 @@
 
 
 from slowpy.control import control_system as ctrl
-mic = ctrl.import_control_module('Microphone').microphone(duration=0.001)
+mic = ctrl.import_control_module('Microphone').microphone(block_size=1024)
 mic.is_running = False
 
 from slowpy import Graph

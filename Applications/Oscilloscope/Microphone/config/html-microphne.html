@@ -1,0 +1,33 @@
+<form>
+  <table>
+    <tr>
+      <td>Sample Rate (kHz)</td>
+      <td>
+        <select name="sample_rate">
+          <option value="8000">8.0 (phone)</option>
+          <option value="16000">16.0 (voice)</option>
+          <option value="22050">22.05</option>
+          <option value="44100" selected>44.1 (CD)</option>
+          <option value="48000">48.0 (Pro Audio)</option>
+          <option value="96000">96.0</option>
+          <option value="192000">192.0</option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td>Trace Length (points)</td>
+      <td>
+        <select name="block_size">
+          <option value="32">32</option>
+          <option value="256">256</option>
+          <option value="1024" selected>1024</option>
+          <option value="4096">4096</option>
+        </select>
+      </td>
+    </tr>
+  </table>
+  <div style="font-size:130%;margin-top:2em">
+    <input type="submit" name="microphone.start()" value="Start">
+    <input type="submit" name="microphone.stop()" value="Stop" sd-enabled="mic_running">
+  </div>
+</form>
