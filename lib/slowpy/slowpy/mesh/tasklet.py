@@ -9,39 +9,52 @@ from .mesh import Mesh
 
 class Tasklet:
     def __init__(self, name:str|None=None):
-        self.name = name
-        self.params = {}
+        self._name = name
+        self._params = {}
         
-        self.dash_url = None
-        self.dash = Dash()
+        self._dash_url = None
+        self._dash = Dash()
         
-        self.mesh_url = None
-        self.mesh = Mesh()
+        self._mesh_url = None
+        self._mesh = Mesh()
         
-        self.mesh_list = [ self.mesh ]
-        self.initialize_task_coros = []
-        self.main_task_coros = []
-        self.finalize_task_coros = []
+        self._mesh_list = [ self._mesh ]
+        self._initialize_task_coros = []
+        self._main_task_coros = []
+        self._finalize_task_coros = []
 
 
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def mesh(self):
+        return self._mesh
+
+    @property
+    def dash(self):
+        return self._dash
+
+        
     def external_mesh(self, mesh_url:str, **kwargs):
         """returns a mesh object to communicate with an external SlowMesh
         -  This mesh will be started and stopped together with the main mesh.
         """
         mesh = Mesh(mesh_url, **kwargs)
-        self.mesh_list.append(mesh)
+        self._mesh_list.append(mesh)
         return mesh
 
 
     def run(self, params:dict|None=None, slowdash_url:str|None=None, mesh_url:str|None=None):
-        self.params = copy.deepcopy(params)
-        self.dash_url = slowdash_url or self.dash_url
-        self.mesh_url = mesh_url or self.mesh_url
-        if self.mesh_url is None and self.dash_url is not None:
-            if self.dash_url.startswith('http://'):
-                self.mesh_url = 'slowmq' + self.dash_url[4:]
-            elif self.dash_url.startswith('https://'):
-                self.mesh_url = 'slowmqs' + self.dash_url[5:]
+        self._params = copy.deepcopy(params)
+        self._dash_url = slowdash_url or self._dash_url
+        self._mesh_url = mesh_url or self._mesh_url
+        if self._mesh_url is None and self._dash_url is not None:
+            if self._dash_url.startswith('http://'):
+                self._mesh_url = 'slowmq' + self._dash_url[4:]
+            elif self._dash_url.startswith('https://'):
+                self._mesh_url = 'slowmqs' + self._dash_url[5:]
 
         caller_frame = inspect.currentframe().f_back
         modname = caller_frame.f_globals.get('__name__')
@@ -155,29 +168,29 @@ class Tasklet:
         
 
     async def _start(self):
-        if self.dash_url is not None:
-            self.dash.connect(self.dash_url)
-        if self.mesh_url is not None:
-            self.mesh.connect(self.mesh_url)
+        if self._dash_url is not None:
+            self._dash.connect(self._dash_url)
+        if self._mesh_url is not None:
+            self._mesh.connect(self._mesh_url)
         
         try:
-            await asyncio.gather(*self.initialize_task_coros)
+            await asyncio.gather(*self._initialize_task_coros)
         except Exception as e:
             try:
-                for mesh in self.mesh_list:
+                for mesh in self._mesh_list:
                     await mesh.aio_close()   
-                await self.dash.aio_close()
+                await self._dash.aio_close()
             except Exception:
                 pass
             raise e
 
         # mesh.aio_publish() is possible even before aio_start()            
-        for mesh in self.mesh_list:
+        for mesh in self._mesh_list:
             await mesh.aio_start()   
         
         main_tasks = set()
         try:
-            for coro in self.main_task_coros:
+            for coro in self._main_task_coros:
                 task = asyncio.create_task(coro)
                 task.add_done_callback(main_tasks.discard)
                 main_tasks.add(task)
@@ -187,25 +200,26 @@ class Tasklet:
             raise e
         
         finally:
-            for task in main_tasks:
-                task.cancel()
+            while main_tasks:
+                task = main_tasks.pop()
                 try:
+                    task.cancel()
                     await task
                 except Exception as e:
-                    self._handle_error(f'Tasklet error during clean up: {e}')
+                    logging.error(f'Tasklet: error during clean up: {e}')
                 except:
                     pass
             
             try:
-                await asyncio.gather(*self.finalize_task_coros)
+                await asyncio.gather(*self._finalize_task_coros)
             except Exception as e:
                 self._handle_error(f'error during clean up: {e}')
             except:
                 pass
 
-            for mesh in self.mesh_list:
+            for mesh in self._mesh_list:
                 await mesh.aio_close()
-            await self.dash.aio_close()   
+            await self._dash.aio_close()   
 
             
     def _add_initialize_callback(self, func):
@@ -216,7 +230,7 @@ class Tasklet:
         async def go_initialize():
             nargs = len(inspect.signature(func).parameters)
             if nargs >= 1:
-                args = [ self.params ]
+                args = [ self._params ]
             else:
                 args = []
             try:
@@ -227,7 +241,7 @@ class Tasklet:
                 self._handle_error(f'Tasklet error: {func.__name__}(): {e}')
 
         func._slowpy_task = True
-        self.initialize_task_coros.append(go_initialize())
+        self._initialize_task_coros.append(go_initialize())
 
                 
     def _add_finalize_callback(self, func):
@@ -244,7 +258,7 @@ class Tasklet:
                 self._handle_error(f'Tasklet error: {func.__name__}(): {e}')
 
         func._slowpy_task = True
-        self.finalize_task_coros.append(go_finalize())
+        self._finalize_task_coros.append(go_finalize())
 
                 
     def _add_once_callback(self, func, delay:float):
@@ -272,7 +286,7 @@ class Tasklet:
             except Exception as e:
                 self._handle_error(f'Tasklet error: {func.__name__}(): {e}')
                 
-        self.main_task_coros.append(go_once())
+        self._main_task_coros.append(go_once())
 
                 
     def _add_loop_callback(self, func, interval:float):
@@ -305,7 +319,7 @@ class Tasklet:
                 self._handle_error(f'Tasklet error: {func.__name__}(): {e}')
                 
         func._slowpy_task = True
-        self.main_task_coros.append(go_loop())
+        self._main_task_coros.append(go_loop())
 
                 
     def _add_schedule_callback(self, func, schedule:str, use_utc:bool):
@@ -383,7 +397,7 @@ class Tasklet:
                 self._handle_error(f'Tasklet error: {func.__name__}(): {e}')
                 
         func._slowpy_task = True
-        self.main_task_coros.append(go_schedule())
+        self._main_task_coros.append(go_schedule())
 
                 
     def _handle_error(self, message):
