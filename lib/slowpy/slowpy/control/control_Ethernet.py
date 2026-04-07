@@ -52,8 +52,10 @@ class EthernetNode(spc.ControlNode):
             del self._socket
             
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._socket.settimeout(0.2)  # data timeout is separately implemented
         
         try:
+            logging.info(f'Ethernet: connecting to {self._address}:{self._port} ...')
             self._socket.connect((self._address, self._port))
             logging.info(f'Ethernet: {self._address}:{self._port} connected')
         except Exception as e:
@@ -79,13 +81,14 @@ class EthernetNode(spc.ControlNode):
             return False
         self._last_connect_time = now
             
-        return self._do_connect()
+        return self.do_connect()
         
     
     def set(self, value):
         if self.is_available():
             try:
                 self._socket.sendall(value.encode('utf-8'))
+                logging.debug(f'Socket.Send: {value.encode()}')
             except Exception as e:
                 logging.warn(f'socket error: {e}')
                 try:
@@ -115,6 +118,7 @@ class EthernetNode(spc.ControlNode):
             if key.fileobj == self._socket and mask != 0:
                 try:
                     recv = self._socket.recv(1024*1024).decode('utf-8', errors='ignore')
+                    logging.debug(f'Socket.Receive: "{recv.encode()}"')
                 except Exception as e:
                     recv = ''
                     logging.warn(f'socket error: {e}')
@@ -151,7 +155,7 @@ class EthernetNode(spc.ControlNode):
         with self._lock:
             while True:
                 if len(self._socket_buffer) == 0:
-                    if self._is_stop_requested():
+                    if self.is_stop_requested():
                         chunk = None
                     else:
                         chunk = self.do_get_chunk(timeout=0.1)
@@ -299,12 +303,12 @@ class ScpiCommandNode(spc.ControlVariableNode):
             else:
                 cmd = self._set_format.format(value)
 
-        if self._scpi.append_opc:
+        if self._scpi._append_opc:
             cmd += ';*opc?'
                 
         self._scpi.set(cmd)
                 
-        if self._scpi.sync:
+        if self._scpi._sync:
             return self._scpi.get()
 
     

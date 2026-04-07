@@ -637,13 +637,15 @@ class GraphPlot extends Plot {
             
         let [xmin, xmax, ymin, ymax] = [null, null, null, null];
         for (let k = 0; k < x.length; k++) {
-            const xk_err = this.graph?.x_err ? this.graph.x_err[k] : 0;
-            const yk_err = this.graph?.y_err ? this.graph.y_err[k] : 0;
-            const yk_min = this.graph?.y_min ? this.graph.y_min[k] : y[k] - yk_err;
-            const yk_max = this.graph?.y_max ? this.graph.y_max[k] : y[k] + yk_err;
             if (x[k] !== null && y[k] !== null && ! isNaN(x[k]) && ! isNaN(y[k])) {
-                [ xmin, xmax ] = [ Math.min(xmin??x[k], x[k]-xk_err), Math.max(xmax??x[k], x[k]+xk_err) ];
-                [ ymin, ymax ] = [ Math.min(ymin??y[k], yk_min), Math.max(ymax??y[k], yk_max) ];
+                const xk_err = this.graph?.x_err ? this.graph.x_err[k] : 0;
+                const yk_err = this.graph?.y_err ? this.graph.y_err[k] : 0;
+                const xk_min = x[k] - xk_err;
+                const xk_max = x[k] + xk_err;
+                const yk_min = this.graph?.y_min ? this.graph.y_min[k] : y[k] - yk_err;
+                const yk_max = this.graph?.y_max ? this.graph.y_max[k] : y[k] + yk_err;
+                [ xmin, xmax ] = [ Math.min(xmin??xk_min, xk_min), Math.max(xmax??xk_max, xk_max) ];
+                [ ymin, ymax ] = [ Math.min(ymin??yk_min, yk_min), Math.max(ymax??yk_max, yk_max) ];
             }
         }
         if ((xmin === null) || (ymin === null)) {
@@ -968,7 +970,7 @@ class TimeseriesScatterPlot extends GraphPlot {
             [ xmin, xmax ] = [ Math.min(xmin??xk, xk), Math.max(xmax??xk, xk) ];
             [ ymin, ymax ] = [ Math.min(ymin??yk, yk), Math.max(ymax??yk, yk) ];
         }
-        
+
         if (this.graph.x.length < 1) {
             [xmin, xmax, ymin, ymax] = [0, 1, 0, 1];
         }
@@ -1061,7 +1063,7 @@ class TimeseriesPlot extends LineMarkerPlot {
             if (ts.t[k] >= 0) {
                 [ xmin, xmax ] = [ Math.min(xmin??xk, xk), Math.max(xmax??xk, xk) ];
             }
-            [ ymin, ymax ] = [ Math.min(ymin??yk, yk_min), Math.max(ymax??yk, yk_max) ];
+            [ ymin, ymax ] = [ Math.min(ymin??yk_min, yk_min), Math.max(ymax??yk_max, yk_max) ];
         }
         if (xmin === null) {
             [xmin, xmax] = [t0, t0+3600];
@@ -1070,7 +1072,7 @@ class TimeseriesPlot extends LineMarkerPlot {
             [ymin, ymax] = [0, 1];
         }
         this.valueRange = {xmin: xmin, xmax: xmax, ymin: ymin, ymax: ymax};
-
+        
         if (ylast !== null && ! isNaN(ylast)) {
             this.setStat($.sprintf(this.config.format || '%f', ylast));
         }
@@ -1739,7 +1741,7 @@ class PlotPanel extends Panel {
             isLog: this.config.axes.ylog,
             stickyZero: true,
         });
-
+        
         if (this.config.axes.yfixed) {
             this.config.axes.ymin = min;
             this.config.axes.ymax = max;
