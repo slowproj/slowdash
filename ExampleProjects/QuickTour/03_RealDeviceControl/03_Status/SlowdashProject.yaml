@@ -1,6 +1,6 @@
 slowdash_project:
   name: QuickTour
-  title: Slow-Dash Quick Tour
+  title: SlowDash Quick Tour
   
   data_source:
     url: sqlite:///QuickTourTestData.db

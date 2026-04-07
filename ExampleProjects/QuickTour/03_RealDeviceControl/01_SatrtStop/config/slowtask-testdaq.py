@@ -15,8 +15,11 @@ datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata")
 
 def _loop():
     if run_status.running:
-        volt = device.command('MEAS:VOLT:DC?').get()
-        datastore.append({'volt': float(volt)})
+        try:
+            volt = float(device.command('MEAS:VOLT:DC?').get() or 'nan')
+            datastore.append({'volt': volt})
+        except Exception as e:
+            print(f'ERROR: {e}')
         
     ctrl.sleep(1)
 

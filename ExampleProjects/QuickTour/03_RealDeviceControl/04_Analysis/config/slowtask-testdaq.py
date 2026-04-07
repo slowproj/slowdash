@@ -22,9 +22,13 @@ histogram = Histogram(nbins=20, range_min=-10, range_max=10)
 
 def _loop():
     if run_status.running:
-        volt = float(device.command('MEAS:VOLT:DC?').get())
-        datastore.append({'volt': volt})
-        histogram.fill(volt)
+        try:
+            volt = float(device.command('MEAS:VOLT:DC?').get() or 'nan')
+            datastore.append({'volt': volt})
+            histogram.fill(volt)
+        except Exception as e:
+            print(f'ERROR: {e}')
+            
         if run_status.auto_stop:
             now = time.time()
             if now - run_status.start_time >= run_status.run_length:

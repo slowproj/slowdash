@@ -9,9 +9,13 @@ device.command('*RST').set()
 
 
 def _loop():
-    volt = device.command('MEAS:VOLT:DC?').get()
-
-    datastore.append({'volt': volt})
+    try:
+        volt = device.command('MEAS:VOLT:DC?').get()
+        if volt is not None:
+            datastore.append({'volt': float(volt)})
+    except Exception as e:
+        print(f'ERROR: {e}')
+        
     ctrl.sleep(1)
 
     
