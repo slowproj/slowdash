@@ -1,20 +1,20 @@
 from dataclasses import dataclass
 
 @dataclass
-class RunControl:
+class RunStatus:
     running: bool = False
-run_control = RunControl
+run_status = RunStatus()
     
 
 from slowpy.control import control_system as ctrl
-device = ctrl.ethernet('192.168.50.121', 5025).scpi()
+device = ctrl.ethernet('192.168.1.34', 5025).scpi()
 
 from slowpy.store import DataStore_SQLite
 datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata")
 
 
 def _loop():
-    if run_control.running:
+    if run_status.running:
         volt = device.command('MEAS:VOLT:DC?').get()
         datastore.append({'volt': float(volt)})
         
@@ -22,9 +22,9 @@ def _loop():
 
 
 def start():
-    run_control.running = True
+    run_status.running = True
     
     
 def stop():
-    run_control.running = False
+    run_status.running = False
     

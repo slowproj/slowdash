@@ -25,7 +25,8 @@ def _loop():
             now = time.time()
             if now - run_status.start_time >= run_status.run_length:
                 run_status.running = False
-                        
+
+    ctrl.stream('run_status', run_status)
     ctrl.sleep(1)
 
 

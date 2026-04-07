@@ -16,16 +16,22 @@ device = ctrl.ethernet('192.168.1.34', 5025).scpi()
 from slowpy.store import DataStore_SQLite
 datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata")
 
+from slowpy import Histogram
+histogram = Histogram(nbins=20, range_min=-10, range_max=10)
+
 
 def _loop():
     if run_status.running:
-        volt = device.command('MEAS:VOLT:DC?').get()
-        datastore.append({'volt': float(volt)})
+        volt = float(device.command('MEAS:VOLT:DC?').get())
+        datastore.append({'volt': volt})
+        histogram.fill(volt)
         if run_status.auto_stop:
             now = time.time()
             if now - run_status.start_time >= run_status.run_length:
                 run_status.running = False
-                        
+
+    ctrl.stream('run_status', run_status)
+    ctrl.stream('hist01', histogram)
     ctrl.sleep(1)
 
 

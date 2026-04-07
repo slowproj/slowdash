@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 17 May 2024 #
 
 
-import time, signal, dataclasses, logging
+import time, signal, dataclasses, asyncio, logging
 import slowpy as slp
 import slowpy.control as spc
 
@@ -135,6 +135,15 @@ class ControlSystem(spc.ControlNode):
     @classmethod
     async def aio_publish(cls, obj, name:str=None):
         return await cls.aio_emit(obj, name)
+
+    @classmethod
+    async def aio_stream(cls, name:str, obj):
+        return await cls.aio_emit(obj, name)
+
+    @classmethod
+    def stream(cls, name:str, obj):
+        loop = asyncio.get_running_loop()
+        loop.create_task(cls.aio_emit(obj, name))
 
         
     @classmethod
