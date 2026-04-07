@@ -1,0 +1,38 @@
+{
+    "control": {
+        "range": { "length": 300, "to": 0 },
+        "reload": 2,
+        "mode": "normal",
+        "grid": { "rows": "2", "columns": "2" }
+    },
+    "style": { },
+    "panels": [
+        { "type": "html", "location": "project", "file": "testdaq", "title": "Run Control" },
+        { "type": "tree", "channel": "run_status", "title": "Run Status" },
+        {
+            "type": "timeseries",
+            "plots": [
+                {
+                    "type": "timeseries",
+                    "channel": "volt",
+                    "color": "#009090",
+                    "label": "",
+                    "format": "%.5g",
+                    "opacity": 1,
+                    "marker_type": "circle",
+                    "marker_size": 2,
+                    "line_width": 1,
+                    "line_type": "connect",
+                    "include_prior_point": false,
+                    "fill_opacity": 0,
+                    "fill_envelope": false,
+                    "fill_baseline": 1e-100,
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
+            "legend": { "style": "side", "position": "right" }
+        }
+    ],
+    "meta": { "name": "testdaq", "title": "", "description": "" }
+}
