@@ -81,6 +81,7 @@ class AsyncMySQLServer(SQLBaseServer):
             async with self.pool.acquire() as conn:
                 async with conn.cursor(aiomysql.DictCursor) as cursor:
                     await cursor.execute(sql, params)
+                    await conn.commit()
                     rows = await cursor.fetchall()
         except Exception as e:
             if not self.connection_error_reported:
