@@ -1,8 +1,9 @@
 slowdash_project:
   name: DummyDataSource
   title: Plot Demo with Dummy Data Source
-
-  style:
+  style: 
+   theme: dark
+  style2:
     theme: light
     title_color: darkgreen
     logo: logo.png
