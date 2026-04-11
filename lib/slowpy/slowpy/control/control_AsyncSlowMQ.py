@@ -39,7 +39,7 @@ class AsyncSlowMQNode(ControlNode):
             
         if netloc.endswith('/'):
             netloc = netloc[:-1]
-        wsurl = f'{ws_prot}://{netloc}/ws/pubsub'
+        wsurl = f'{ws_prot}://{netloc}/ws/slowmq'
         if self.name is not None:
             wsurl += f'?name={self.name}'
             

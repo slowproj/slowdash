@@ -13,7 +13,7 @@ from sd_console import ConsoleComponent
 from sd_datasource import DataSourceComponent
 from sd_export import ExportComponent
 from sd_mesh import MeshComponent
-from sd_pubsub import PubsubComponent
+from sd_slowmq import SlowMQComponent
 from sd_usermodule import UserModuleComponent
 from sd_taskmodule import TaskModuleComponent
 from sd_userhtml import UserHtmlComponent
@@ -73,7 +73,7 @@ class App(slowlette.App):
         self.slowlette.include(UserHtmlComponent(self, self.project))
         self.slowlette.include(ExportComponent(self, self.project))
         self.slowlette.include(MiscApiComponent(self, self.project))
-        self.slowlette.include(PubsubComponent(self, self.project))
+        self.slowlette.include(SlowMQComponent(self, self.project))
 
 
     @slowlette.on_event("shutdown")

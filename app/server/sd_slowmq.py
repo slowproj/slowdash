@@ -6,7 +6,7 @@ import slowlette
 from sd_component import Component
 
 
-class PubsubComponent(Component):
+class SlowMQComponent(Component):
     topics = []
     
     def __init__(self, app, project):
@@ -20,18 +20,18 @@ class PubsubComponent(Component):
         
 
     def public_config(self):
-        return { 'pubsub': {
+        return { 'slowmq': {
             'enabled': self.enabled,
             'attached': { topic:len(self.websockets.get(topic,[])) for topic in self.topics },
         }}
 
     
-    @slowlette.websocket('/ws/pubsub')
+    @slowlette.websocket('/ws/slowmq')
     async def connect(self, websocket:slowlette.WebSocket, name:str=None):
         try:
             await websocket.accept()
         except Exception as e:
-            logging.warning(f'Unable to accept pubsub websocket: {e}')
+            logging.warning(f'Unable to accept slowmq websocket: {e}')
             return None
 
         client_id = await self.add_client(name, websocket)
@@ -45,15 +45,15 @@ class PubsubComponent(Component):
                         doc = json.loads(message)
                         headers = doc['headers']
                     except Exception as e:
-                        logging.warning(f'Bad Pubsub Message: {name}: {repr(message)}: {e}')
+                        logging.warning(f'Bad SlowMQ Message: {name}: {repr(message)}: {e}')
                         continue
                     else:
-                        logging.debug(f'Pubsub Message Received: {name}: {repr(message)}')
+                        logging.debug(f'SlowMQ Message Received: {name}: {repr(message)}')
                     await self.handle_message(client_id, headers, message)
         except slowlette.ConnectionClosed:
-            logging.info(f'Pubsub WebSocket Closed: {name}')
+            logging.info(f'SlowMQ WebSocket Closed: {name}')
         except Exception as e:
-            logging.warning(f'Pubsub WebSocket Closed by error: {e}')
+            logging.warning(f'SlowMQ WebSocket Closed by error: {e}')
             logging.info(traceback.format_exc())
         finally:
             await self.remove_client(client_id)
@@ -66,7 +66,7 @@ class PubsubComponent(Component):
         self.clients[client_id] = { 'name': name }
 
         self.websockets[client_id] = websocket
-        logging.info(f'Pubsub WebSocket Connected: {name} (id:{client_id})')
+        logging.info(f'SlowMQ WebSocket Connected: {name} (id:{client_id})')
 
         return client_id
         
@@ -117,7 +117,7 @@ class PubsubComponent(Component):
         try:
             self.validate_topic_pattern(topic)
         except Exception as e:
-            logging.warning(f'Pubsub: {e}')
+            logging.warning(f'SlowMQ: {e}')
             await self.reply_error(client_id, headers, str(e))
             return False
         
@@ -125,7 +125,7 @@ class PubsubComponent(Component):
             self.subscribers[topic] = set()
             
         self.subscribers[topic].add(client_id)
-        logging.info(f'Pubsub Subscription: {topic} <- {self.clients[client_id]["name"]}')
+        logging.info(f'SlowMQ Subscription: {topic} <- {self.clients[client_id]["name"]}')
 
         websocket = self.websockets.get(client_id)
         reply_to = headers.get('message_id')
@@ -152,7 +152,7 @@ class PubsubComponent(Component):
             return False
 
         self.subscribers[topic].discard(client_id)
-        logging.info(f'Pubsub Cancel Subscription: {topic} <- {self.clients[client_id]["name"]}')
+        logging.info(f'SlowMQ Cancel Subscription: {topic} <- {self.clients[client_id]["name"]}')
         
         return True
 
