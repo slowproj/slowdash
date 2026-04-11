@@ -1,4 +1,57 @@
 
+/* ============================================================
+   Dark theme css variables
+   ============================================================
+   Redefines the design tokens declared in slowdash.css so that
+   every rule using a CSS variable automatically picks up the
+   dark-mode colors. additional explicit class overrides below handle
+   styles that fall outside the variable system (button states,
+   jagaimo widget internals, etc.).
+   ============================================================ */
+:root {
+    --sd-color-bg:           black;
+    --sd-color-text:         #e8e8e8;
+    --sd-color-link:         #6666ff;
+    --sd-color-link-visited: #6666ff;
+    --sd-color-link-hover:   #2222ff;
+
+    --sd-header-bg:          #660000;
+    --sd-header-color:       white;
+
+    --sd-pad-bg:             #202020;
+    --sd-pad-color:          white;
+
+    --sd-popup-bg:           #202020;
+    --sd-popup-border:       gray;
+
+    --sd-table-row-even:     #080808;
+    --sd-table-row-odd:      #101010;
+    --sd-table-row-first:    #303030;
+    --sd-table-row-hover:    #202020;
+    --sd-table-tree-hdr-bg:  #303030;
+
+    /* Buttons and selects on the dark-red header
+       Slightly more transparent than the light theme to avoid looking
+       washed-out against the deep background.  White chevron for contrast */
+    --sd-header-btn-bg:         rgba(255,255,255,0.10);
+    --sd-header-btn-bg-hover:   rgba(255,255,255,0.20);
+    --sd-header-btn-bg-active:  rgba(255,255,255,0.30);
+    --sd-header-btn-color:      #f0f0f0;
+    --sd-header-btn-border:     rgba(255,255,255,0.18);
+    --sd-header-btn-shadow:     0 1px 4px rgba(0,0,0,0.40),
+                                inset 0 1px 0 rgba(255,255,255,0.08);
+
+    --sd-header-sel-bg:         rgba(255,255,255,0.10);
+    --sd-header-sel-color:      #f0f0f0;
+    --sd-header-sel-border:     rgba(255,255,255,0.18);
+    /* White semi-transparent chevron for the dark-red header */
+    --sd-header-sel-arrow:      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23ffffffbb'/%3E%3C/svg%3E");
+}
+
+/*  overrides below handle properties that cannot be expressed
+   as simple variable swaps (e.g. button hover states, border colors,
+   and jagaimo-internal gradient backgrounds) */
+
 body {
     background-color: black;
     color: #e8e8e8;
@@ -6,11 +59,6 @@ body {
 
 input:invalid {
     background: #a06060;
-}
-
-.sd-header {
-    background: #660000;
-    color: white;
 }
 
 .sd-panel {
@@ -25,36 +73,13 @@ input:invalid {
     color: white;
 }
 
+/* .sd-pad background and color come from the variables above;
+   only the border color needs an explicit override here */
 .sd-pad {
-    background: #202020;
     border-color: #404040;
-    color: white;
 }
 
-.sd-popup {
-    border: thin solid gray;
-    background: #202020;
-}
-
-
-
-.sd-data-table tr:nth-child(even) {
-    background-color: #080808;
-}
-.sd-data-table tr:nth-child(odd) {
-    background-color: #101010;
-}
-.sd-data-table tr:first-child {
-    background-color: #303030;
-}
-.sd-data-table tr:hover {
-    background-color: #202020;
-}
-.sd-data-tree-header th {
-    background-color: #303030;
-}
-
-
+/* dark background so they're visible on the dark page */
 button, select, input, textarea {
     background: #606060;
     color: white;
@@ -69,8 +94,8 @@ button:hover {
     background: #909090;
 }
 
-
-
+/* Link colors are handled by --sd-color-link* variables, but the
+   explicit rules below keep specificity parity with the dark theme */
 .clickables-ul a,
 .clickable a {
     color: white;
@@ -92,8 +117,7 @@ a:hover {
     color: #2222ff;
 }
 
-
-
+/* jagaimo dialog: dark gradient title bar and matching button styles */
 .jaga-dialog-title {
     background: linear-gradient(#808080, #404040);
 }
@@ -112,7 +136,7 @@ a:hover {
     color: #909090;
 }
 
-
+/* jagaimo tabs dark gradient label bar */
 .jaga-tabLabelBox {
     background: linear-gradient(#606060, #202020);
 }
@@ -126,7 +150,7 @@ a:hover {
     background: #404040;
 }
 
-
+/* jagaimo popup and file-icon dark backgrounds */
 .jaga-popup {
     background-color: #202020;
 }

@@ -1,32 +1,84 @@
 
 @import url("jagaimo/jagaimo.css");
 
+:root {
+    /* --- Page colors --- */
+    --sd-color-bg:           white;
+    --sd-color-text:         black;
+    --sd-color-link:         blue;
+    --sd-color-link-visited: blue;
+    --sd-color-link-hover:   #8888ff;
+
+    --sd-header-bg:          lightgray;
+    --sd-header-color:       black;
+
+    /* Panels and info pads */
+    --sd-panel-border:       transparent;
+    --sd-pad-bg:             lightgray;
+    --sd-pad-color:          black;
+
+    --sd-popup-bg:           white;
+    --sd-popup-border:       gray;
+
+    /* Data table row colors */
+    --sd-table-row-even:     #f8f8f8;
+    --sd-table-row-odd:      #f0f0f0;
+    --sd-table-row-first:    #e0e0e0;
+    --sd-table-row-hover:    #d0d0d0;
+    --sd-table-tree-hdr-bg:  #e0e0e0;
+
+    --sd-header-title-fs:    clamp(0.85rem, 1.4vw, 1.3rem);
+    --sd-header-ctrl-fs:     clamp(0.72rem, 1vw,   0.95rem);
+    --sd-header-prog-fs:     clamp(0.65rem, 0.7vw, 0.80rem);
+    --sd-header-btn-fs:      clamp(0.85rem, 1.2vw, 1.1rem);
+    --sd-header-btn-min-h:   2rem;
+
+    /* Header spacing */
+    --sd-header-padding:     4px 8px;
+    --sd-header-gap:         6px;
+    --sd-header-btn-radius:     8px;
+
+    --sd-header-btn-bg:         rgba(255,255,255,0.55);
+    --sd-header-btn-bg-hover:   rgba(255,255,255,0.80);
+    --sd-header-btn-bg-active:  rgba(255,255,255,0.95);
+    --sd-header-btn-color:      #1a1a1a;
+    --sd-header-btn-border:     rgba(0,0,0,0.14);
+    --sd-header-btn-shadow:     0 1px 3px rgba(0,0,0,0.12),
+                                inset 0 1px 0 rgba(255,255,255,0.60);
+
+    --sd-header-sel-bg:         rgba(255,255,255,0.55);
+    --sd-header-sel-color:      #1a1a1a;
+    --sd-header-sel-border:     rgba(0,0,0,0.14);
+    --sd-header-sel-arrow:      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23333333'/%3E%3C/svg%3E");
+}
+
 
 body {
     font-family: sans-serif;
-    background-color: white;
-    color: black;
+    background-color: var(--sd-color-bg);
+    color: var(--sd-color-text);
 }
 
 a {
-    color: blue;
+    color: var(--sd-color-link);
     text-decoration: none;
 }
 a:visited {
-    color: blue;
+    color: var(--sd-color-link-visited);
     text-decoration: none;
 }
 a:hover {
-    color: #8888ff;
+    color: var(--sd-color-link-hover);
     text-decoration: underline;
 }
 
+/* Inherit the page font size so themes can control scale in one place. */
 input, button, select, option, textarea {
     font-size: 100%;
 }
 
 input:invalid {
-    background:#ffdddd;
+    background: #ffdddd;
 }
 
 summary {
@@ -34,27 +86,273 @@ summary {
 }
 
 
-
 .sd-panel {
-    border-color: transparent;
+    border-color: var(--sd-panel-border);
 }
 
 .sd-pad {
-    background: lightgray;
-    color: black;
+    background: var(--sd-pad-bg);
+    color: var(--sd-pad-color);
 }
 
 .sd-popup {
     padding: 0.2em;
-    border: thin solid gray;
-    background: white;
+    border: thin solid var(--sd-popup-border);
+    background: var(--sd-popup-bg);
     border-radius: 10px;
     z-index: 10000;
 }
 
+
+/* Header layout  (.sd-header and children)
+   DOM structure built by frame.mjs:
+     .sd-header  (flex row)
+       .sd-header-logo-left    hidden unless a logo is configured
+       .sd-header-left         title + controls row
+         .sd-header-title
+         .sd-header-controls   (flex, wrapping)
+           .sd-header-selects  → contains .sd-header-sel dropdowns
+           .sd-header-status
+           .sd-header-progress
+       .sd-header-right        clock + button row
+         .sd-header-clock
+         .sd-header-buttons    (flex, wrapping)
+           .sd-header-btn buttons
+       .sd-header-logo-right   hidden unless a logo is configured
+
+   Responsive behaviour
+   ≥ 641 px  Normal two-column layout: left col (title + controls)
+             and right col (clock + buttons) sit side by side.
+
+   ≤ 640 px  Each column takes a full row; the clock is hidden to
+             save space; the right column switches from column to
+             row layout so buttons stay on one accessible row.
+
 .sd-header {
-    background: lightgray;
+    display: flex;
+    align-items: center;
+    /* flex-wrap lets the left and right columns stack on narrow screens */
+    flex-wrap: wrap;
+    margin: 0;
+    padding: var(--sd-header-padding);
+    gap: var(--sd-header-gap);
+    background: var(--sd-header-bg);
+    color: var(--sd-header-color);
+    box-sizing: border-box;
 }
+
+/* Logo containers: zero-sized by default; JS sets width/height to match
+   the rendered header height when a logo file is provided. */
+.sd-header-logo {
+    overflow: hidden;
+    flex-shrink: 0;
+    padding: 0;
+}
+.sd-header-logo-left  { margin-right: 4px; }
+.sd-header-logo-right { margin-left:  4px; }
+
+/* Left column fills all remaining space; min-width: 0 allows it to shrink
+   below its intrinsic content width when the viewport is very small. */
+.sd-header-left {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 2px 4px;
+}
+
+/* Right column does not grow; aligns its children (clock, buttons) to the right. */
+.sd-header-right {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin: 2px 4px;
+}
+
+/* Project title: scales with the viewport but never drops below ~13.5 px.
+   Ellipsis prevents layout overflow on tiny screens. */
+.sd-header-title {
+    font-size: var(--sd-header-title-fs);
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Current date/time readout next to the buttons. */
+.sd-header-clock {
+    font-size: var(--sd-header-ctrl-fs);
+    white-space: nowrap;
+}
+
+/* Controls row: wrapping flex so dropdowns can spill to a second line
+   on screens that are wide enough for the title but not all the controls. */
+.sd-header-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    margin-top: 3px;
+}
+
+/* Dropdown <select> elements inside the controls row.
+   appearance: none removes the OS default arrow so we can replace it with
+   our own SVG chevron via background-image (see --sd-header-sel-arrow). */
+.sd-header-sel {
+    font-size: var(--sd-header-ctrl-fs);
+    /* Extra right padding makes room for the custom arrow. */
+    padding: 4px 26px 4px 8px;
+    border-radius: var(--sd-header-btn-radius);
+
+    appearance: none;
+    -webkit-appearance: none;
+
+    background-color: var(--sd-header-sel-bg);
+    background-image: var(--sd-header-sel-arrow);
+    background-repeat: no-repeat;
+    background-position: right 7px center;
+    background-size: 9px 5px;
+
+    color: var(--sd-header-sel-color);
+    border: 1px solid var(--sd-header-sel-border);
+    box-shadow: var(--sd-header-btn-shadow);
+    cursor: pointer;
+
+    /* Smooth hover transition. */
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sd-header-sel:hover {
+    background-color: var(--sd-header-btn-bg-hover);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.16);
+}
+
+/* Keyboard-focus ring in a color that shows on any header. */
+.sd-header-sel:focus-visible {
+    outline: 2px solid rgba(255,255,255,0.70);
+    outline-offset: 1px;
+}
+
+/* Status text (e.g. "OK", "loading…", error messages). */
+.sd-header-status {
+    font-size: var(--sd-header-ctrl-fs);
+    margin-right: 0.4em;
+}
+
+/* Secondary progress indicator — smaller and lighter than status. */
+.sd-header-progress {
+    font-size: var(--sd-header-prog-fs);
+    margin-right: 0.4em;
+}
+
+/* Action-button row: right-aligned flex row; gap replaces per-button margins. */
+.sd-header-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-top: 3px;
+}
+
+/* min-height/min-width guarantee a tap-friendly touch target (≥ 32 px) */
+.sd-header-btn {
+    font-size: var(--sd-header-btn-fs);
+    min-height: var(--sd-header-btn-min-h);
+    min-width:  var(--sd-header-btn-min-h); /* square target matches height */
+    padding: 0.15em 0.45em;
+    cursor: pointer;
+    white-space: nowrap;
+
+    border-radius: var(--sd-header-btn-radius);
+    background: var(--sd-header-btn-bg);
+    color: var(--sd-header-btn-color);
+    border: 1px solid var(--sd-header-btn-border);
+    box-shadow: var(--sd-header-btn-shadow);
+
+    /* Hover lifts the button slightly; active press pushes it back down. */
+    transition: background 0.15s ease,
+                box-shadow  0.15s ease,
+                transform   0.10s ease;
+}
+
+.sd-header-btn:hover {
+    background: var(--sd-header-btn-bg-hover);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+
+.sd-header-btn:active {
+    background: var(--sd-header-btn-bg-active);
+    /* Subtle downward nudge gives tactile click feedback. */
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.14);
+}
+
+/* Keyboard-focus ring in a color visible on any header. */
+.sd-header-btn:focus-visible {
+    outline: 2px solid rgba(255,255,255,0.70);
+    outline-offset: 1px;
+}
+
+/* ── Grid-too-small warning banner ───────────────────────── */
+/* Created by layout.mjs when the configured grid would make panels
+   smaller than the minimum readable size.  position: absolute takes
+   it out of the flex flow so it overlays the top of the panel area
+   without shifting any panel.  pointer-events: none lets click and
+   drag events pass through to the panels underneath. */
+.sd-grid-warning {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 500;
+    pointer-events: none;
+
+    padding: 5px 12px;
+    text-align: center;
+    font-size: clamp(0.7rem, 1.2vw, 0.85rem);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    /* Amber warning color — visible on both light and dark backgrounds. */
+    background: rgba(200, 100, 0, 0.82);
+    color: white;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+    /* Subtle bottom blur shadow to separate it from panels. */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.30);
+}
+
+/* ── Responsive: narrow viewports (≤ 640 px) ─────────────── */
+@media (max-width: 640px) {
+    /* Hide the clock to reclaim vertical space on small screens. */
+    .sd-header-clock {
+        display: none;
+    }
+
+    /* Each main column takes a full row of the wrapping flex container. */
+    .sd-header-left,
+    .sd-header-right {
+        flex-basis: 100%;
+    }
+
+    /* Right column switches to a left-aligned row so buttons don't become
+       inaccessibly small when stacked as a column at full width. */
+    .sd-header-right {
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+    }
+
+    /* Button row fills the right-column row on small screens. */
+    .sd-header-buttons {
+        justify-content: flex-start;
+        margin-top: 0;
+    }
+}
+
+
+/* Button chain  (panel toolbars — not the header) */
 
 .sd-buttonchain button {
     margin: 0;
@@ -63,6 +361,9 @@ summary {
     filter: grayscale(80%);
     white-space: nowrap;
 }
+
+
+/* Data tables */
 
 .sd-data-table th,td {
     padding-left: 0.5em;
@@ -77,21 +378,23 @@ summary {
     text-align: left;
 }
 .sd-data-table tr:nth-child(even) {
-    background-color: #f8f8f8;
+    background-color: var(--sd-table-row-even);
 }
 .sd-data-table tr:nth-child(odd) {
-    background-color: #f0f0f0;
+    background-color: var(--sd-table-row-odd);
 }
 .sd-data-table tr:first-child {
-    background-color: #e0e0e0;
+    background-color: var(--sd-table-row-first);
 }
 .sd-data-table tr:hover {
-    background-color: #d0d0d0;
+    background-color: var(--sd-table-row-hover);
 }
 .sd-data-tree-header th {
-    background-color: #e0e0e0;
+    background-color: var(--sd-table-tree-hdr-bg);
 }
 
+
+/* jagaimo tab and file-icon overrides  (light-theme defaults) */
 
 .jaga-tabLabel {
     background: darkgray;
@@ -110,6 +413,7 @@ summary {
 }
 
 
+/* Focus-indicator helper  (.forcusible — original spelling kept) */
 
 .forcusible {
     border: none;
@@ -124,28 +428,31 @@ summary {
 }
 
 
+/* Clickable link lists and SVG clickables */
+
 .clickables-ul {
     list-style-type: none;
     padding: 0;
     margin: 0;
 }
 
+/* Use the page text/link color variables so these adapt to dark mode. */
 .clickables-ul a,
 .clickable a {
-    color: black;
+    color: var(--sd-color-text);
     text-decoration: none;
 }
 
 .clickables-ul a:hover,
 .clickable a:hover {
     cursor: pointer;
-    color: blue;
+    color: var(--sd-color-link);
     text-decoration: underline;
 }
 
 svg .clickable:hover {
     cursor: pointer;
-    fill: blue;
+    fill: var(--sd-color-link);
     text-decoration: underline;
 }
 
@@ -153,6 +460,10 @@ svg .clickableShape:hover {
     stroke-width: 2;
 }
 
+
+/* jagaimo popup font scaling
+   Below 1500 px the popup font tracks the viewport; above it
+   is capped at 1 rem so text does not grow excessively large. */
 
 @media (max-width: 1500px) {
     .jaga-popup {
