@@ -1,0 +1,51 @@
+{
+    "control": {
+        "range": { "length": 43200, "to": 0 },
+        "reload": 10,
+        "mode": "normal",
+        "grid": { "rows": "2", "columns": "2" }
+    },
+    "style": { },
+    "panels": [
+        { "type": "html", "location": "project", "file": "microphne", "title": "Microphone Control" },
+        {
+            "type": "singles",
+            "items": [
+                {
+                    "channel": "mic",
+                    "gauge": { "min": 0, "max": 1 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0.7 },
+                        "warn": { "min": 0, "max": 0.9 },
+                        "error": { "min": 0, "max": 1 }
+                    },
+                    "format": "%.3f",
+                    "label": "RMS"
+                }
+            ],
+            "item_type": "square",
+            "color": { "base": "rgb(0, 0, 0)", "normal": "#06b6d4", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.1 },
+            "grid": { "rows": 0, "columns": 0 },
+            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+            "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false }
+        },
+        {
+            "type": "plot",
+            "plots": [
+                { "type": "graph", "channel": "mic_trace", "color": "#009090", "label": "Trace", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "include_prior_point": false, "fill_opacity": 0, "fill_envelope": false, "fill_baseline": 1e-100 }
+            ],
+            "axes": { "xfixed": false, "yfixed": true, "xlog": false, "ylog": false, "zlog": false, "xmin": -0.00005, "xmax": 0.002, "ymin": -0.5, "ymax": 0.5, "zmin": 0, "zmax": 1 },
+            "legend": { "style": "none", "position": "right" }
+        },
+        {
+            "type": "plot",
+            "plots": [
+                { "type": "graph", "channel": "mic_fft", "color": "#009090", "label": "FFT", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "include_prior_point": false, "fill_opacity": 0.3, "fill_envelope": false, "fill_baseline": 1e-100 }
+            ],
+            "axes": { "xfixed": false, "yfixed": true, "xlog": false, "ylog": true, "zlog": false, "xmin": -2000, "xmax": 30000, "ymin": 0.0001, "ymax": 10, "zmin": 0, "zmax": 1 },
+            "legend": { "style": "none", "position": "right" }
+        },
+        { "type": "table", "channel": "mic_trace", "data_type": "value_table", "reversed": true, "max_lines": 100 }
+    ],
+    "meta": { "name": "microphone", "title": "", "description": "" }
+}
