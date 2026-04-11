@@ -107,6 +107,7 @@ class Trend(DataElement):
         
         ts = TimeSeries(start=start, length=length)
         ts.fields = []
+        ts.values = []
         
         record = self.to_json()
         ts.t = [ t - start_offset for t in record['x'] ]

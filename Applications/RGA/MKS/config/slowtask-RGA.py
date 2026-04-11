@@ -345,8 +345,8 @@ async def _initialize(params):
     datastore_obj = slowpy.store.create_datastore_from_url(db_url, table='json_data')
     
     ctrl.export(rga.status(), name='Status.RGA')
-    await ctrl.aio_emit(run_control, name="RunControl.RGA")
-    await ctrl.aio_emit(rga.info(), name='Info.RGA')
+    await ctrl.aio_publish(run_control, name="RunControl.RGA")
+    await ctrl.aio_publish(rga.info(), name='Info.RGA')
 
 
 async def _finalize():
@@ -368,8 +368,8 @@ async def _loop():
             and (rga.status_node.filament == 'ON')
             and (not run_control.running)
         )
-        await ctrl.aio_emit(run_control)
-        await ctrl.aio_emit(rga.status())
+        await ctrl.aio_publish(run_control)
+        await ctrl.aio_publish(rga.status())
         
     if not rga.status_node.has_control:
         run_control.running = False
@@ -389,7 +389,7 @@ async def _loop():
         return await ctrl.aio_sleep(min(1, run_control.next_scan_time-now))
     
     run_control.time_to_next_scan = 0
-    await ctrl.aio_emit(run_control)
+    await ctrl.aio_publish(run_control)
     
     result = rga.scan().get()
     
@@ -422,8 +422,8 @@ async def _loop():
         g1.add_stat('Sum', f'{cumulative:.3g} mbar')
     datastore_obj.append(g0, tag="graph.MassSpec.RGA")
     datastore_obj.append(g1, tag="graph_cumulative.MassSpec.RGA")
-    await ctrl.aio_emit(g0, name="graph.MassSpec.RGA")
-    await ctrl.aio_emit(g1, name="graph_cumulative.MassSpec.RGA")
+    await ctrl.aio_publish(g0, name="graph.MassSpec.RGA")
+    await ctrl.aio_publish(g1, name="graph_cumulative.MassSpec.RGA")
 
     if rga.status().scan_mode == 'Barchart':
         datastore_ts.append({ f'mbar.Mass{row[0]:02.0f}.RGA':row[1]/100 for row in table })
@@ -477,7 +477,7 @@ async def start(scan_mode:str, filter_mode:str, points_per_peak:int, mass_start:
     run_control.scan_interval = max(0, interval)
     run_control.next_scan_time = time.time()
     run_control.running = True
-    await ctrl.aio_emit(run_control)
+    await ctrl.aio_publish(run_control)
 
     
 async def stop(scan_mode:str, filter_mode:str, points_per_peak:int, mass_start:int, mass_end:int, accuracy:int, detector:int, interval:float):
@@ -491,7 +491,7 @@ async def stop(scan_mode:str, filter_mode:str, points_per_peak:int, mass_start:i
 
     run_control.scan_interval = max(0, interval)
     run_control.running = False
-    await ctrl.aio_emit(run_control)
+    await ctrl.aio_publish(run_control)
 
     
 async def run_command(command:str):
@@ -509,7 +509,7 @@ async def run_command(command:str):
     elif result is False:
         result = f'ERROR: invalid command: {command}'
         
-    await ctrl.aio_emit(str(result), name="command_result")
+    await ctrl.aio_publish(str(result), name="command_result")
 
     return True
     

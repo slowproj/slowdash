@@ -30,9 +30,9 @@ async def _loop():
     g_y.add_point(t, x2)
     g_xy.add_point(x1, x2)
 
-    await ctrl.aio_emit(g_x, 'x.current')
-    await ctrl.aio_emit(g_y, 'y.current')
-    await ctrl.aio_emit(g_xy, 'xy.current')
+    await ctrl.aio_publish(g_x, 'x.current')
+    await ctrl.aio_publish(g_y, 'y.current')
+    await ctrl.aio_publish(g_xy, 'xy.current')
 
     global next_store_time
     now = time.time()

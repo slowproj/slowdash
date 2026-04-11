@@ -79,21 +79,21 @@ class MeshComponent(Component):
     @slowlette.post('/api/consume/current_data')
     async def cache_current_data(self, doc:slowlette.DictJSON):
         """caches the emitted data for future data queries
-        - holds only the last data for each channel
-        - holds only single time-point data (e.g., objects and scalars)
+        - The cache holds only the last data for each channel.
+        - If the data is a time-series, the time of the last point is taken,
+          although the entire time-series is cached; a special care is taken on merging.
         """
         
         for name, data in doc.items():
             t, x = data.get('t', None), data.get('x', None)
-            if isinstance(t, list):
-                if len(t) == 1:
-                    t = t[0]
-                else:
-                    continue
             if t is None or x is None:
                 continue
+            if isinstance(t, list):
+                if len(t) == 0:
+                    continue
+                t = t[-1]
             try:
-                t = float(t) + float(data.get('start_time', 0))
+                t = float(t) + float(data.get('start', 0))
                 self.current_data_cache[name] = (t, copy.deepcopy(data))
             except:
                 continue
@@ -122,12 +122,15 @@ class MeshComponent(Component):
                 x = data.get('x', {})
                 
                 datatype = 'unknown'
-                if type(x) is list and len(x) > 0:
-                    if type(x[-1]) in [int, float]:
-                        datatype = 'timeseries'
-                    else:
-                        x = x[-1]
                 if type(x) is list:
+                    for i in range(len(x)):
+                        if x[-(i+1)] is None:
+                            continue
+                        x = x[-(i+1)]
+                        break
+                    else:
+                        x = None
+                if x is None:
                     pass
                 elif type(x) in [ int, float ]:
                     datatype = 'numeric'
@@ -177,22 +180,42 @@ class MeshComponent(Component):
                 my_t, my_data = self.cache.get(ch, (None, None))
                 if my_t is None or my_t < self.frm or my_t > self.to:
                     continue
-                
+
+                # if the cache is the only available data, take it
                 if ch not in response.content:
                     response.content[ch] = my_data
                     continue
-                    
+
+                # if the cached data is a time-series, take the last point
+                my_x = my_data.get('x')
+                if type(my_x) is list:
+                    for i in range(len(my_x)):
+                        if my_x[-(i+1)] is None:
+                            continue
+                        try:
+                            my_t = float(mydata.get('t')[-(i+1)]) + float(my_data.get('start', 0))
+                        except:
+                            my_x = None
+                            break
+                        my_x = x[-(i+1)]
+                        break
+                    else:
+                        my_x = None
+                if my_x is None:
+                    continue
+                
+                # insert the cached data if it is newer
                 data = response.content[ch]
                 t0 = data.get('start', 0)
                 t = data.get('t', None)
                 if type(t) is list:
                     if len(t) == 0 or t0 + t[-1] < my_t - 0.001:
                         data['t'].append(my_t - t0)
-                        data['x'].append(my_data.get('x',None))
+                        data['x'].append(my_x)
                 elif t is not None:
                     if t0 + t < my_t - 0.001:
                         data['t'] = [ t, my_t - t0 ]
-                        data['x'] = [ data.get('x', None), my_data.get('x',None) ]
+                        data['x'] = [ data.get('x', None), my_x ]
                 else:
                     data['start'] = self.frm
                     data['t'] = my_t - self.frm

@@ -62,10 +62,10 @@ class DataElement:
 
 
 class TimeSeries:
-    def __init__(self, fields=[''], start=0, length=None):
+    def __init__(self, *, fields:list[str]|None=None, start:float=0, length:float|None=None):
         self.start = start
         self.length = length
-        self.fields = fields if len(fields) > 0 else ['x']
+        self.fields = fields if fields is not None and len(fields) > 0 else ['x']
         self.t = []
         self.values = [ [] for _ in self.fields ]   # self.values[field] is a time-series (array) for the field
 

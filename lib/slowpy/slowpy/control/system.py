@@ -11,8 +11,8 @@ class ControlSystem(spc.ControlNode):
     _slowdash_app = None
     
     # note that these class variables are app-wide: multiple task modules will share these.
-    _slowdash_exports = []   # not including aio_emit()
-    _slowdash_channels = {}  # including export() and aio_emit()
+    _slowdash_exports = []   # not including aio_publish()
+    _slowdash_channels = {}  # including export() and aio_publish()
     
     def __init__(self):
         self.import_control_module('Ethernet')
@@ -70,16 +70,16 @@ class ControlSystem(spc.ControlNode):
 
 
     @classmethod
-    async def aio_emit(cls, obj, name:str=None):
+    async def aio_publish(cls, obj, name:str|None=None):
         if cls.app() is None:
             return
 
         # name
         export_name = getattr(obj, '__slowdash_export_name', None)
-        emit_name = name if name is not None else export_name
-        if emit_name is None:
+        publish_name = name if name is not None else export_name
+        if publish_name is None:
             name = cls._make_name()
-            emit_name = name
+            publish_name = name
         if name is not None and name != export_name:
             try:
                 setattr(obj, '__slowdash_export_name', name)   # using setattr() for dataclass
@@ -121,29 +121,14 @@ class ControlSystem(spc.ControlNode):
             except:
                 pass
         if (obj is not None) and (value is None):
-            logging.error(f'bad value type to emit: {type(obj)}')
+            logging.error(f'bad value type to publish: {type(obj)}')
             return
 
         if value_is_ts:
-            record = { emit_name: value }
+            record = { publish_name: value }
         else:
-            record = { emit_name: { 't': time.time(), 'x': value } }
-        await cls.app().request_emit('current_data', record, sender=f'taskmodule_{emit_name}')
-
-        
-    # DEPRECIATED (March 2026): use aio_emit() instead
-    @classmethod
-    async def aio_publish(cls, obj, name:str=None):
-        return await cls.aio_emit(obj, name)
-
-    @classmethod
-    async def aio_stream(cls, name:str, obj):
-        return await cls.aio_emit(obj, name)
-
-    @classmethod
-    def stream(cls, name:str, obj):
-        loop = asyncio.get_running_loop()
-        loop.create_task(cls.aio_emit(obj, name))
+            record = { publish_name: { 't': time.time(), 'x': value } }
+        await cls.app().request_emit('current_data', record, sender=f'taskmodule_{publish_name}')
 
         
     @classmethod
@@ -248,9 +233,9 @@ class ValueNode(spc.ControlVariableNode):
         return self._value
 
 
-    # DEPRECIATED (July 2025): use ControlSystem.aio_emit(obj) instead
+    # DEPRECIATED (July 2025): use ControlSystem.aio_publish(obj) instead
     async def deliver(self):
-        return await ControlSystem.aio_emit(self)
+        return await ControlSystem.aio_publish(self)
 
 
                                          
