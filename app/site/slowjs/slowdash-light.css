@@ -1,5 +1,28 @@
 
-.sd-header {
-    background: #460084;
-    color: white;
+/* ============================================================
+   Light (purple) theme css variables
+   ============================================================
+   Redefines only the header colors, other styles
+   inherit the defaults declared in slowdash.css
+   ============================================================ */
+:root {
+    --sd-header-bg:    #460084;
+    --sd-header-color: white;
+
+    /* Buttons and selects on a dark-purple background
+       Translucent white overlays lighten without clashing;
+       white SVG chevron stays legible against the purple header */
+    --sd-header-btn-bg:         rgba(255,255,255,0.16);
+    --sd-header-btn-bg-hover:   rgba(255,255,255,0.28);
+    --sd-header-btn-bg-active:  rgba(255,255,255,0.40);
+    --sd-header-btn-color:      white;
+    --sd-header-btn-border:     rgba(255,255,255,0.25);
+    --sd-header-btn-shadow:     0 1px 4px rgba(0,0,0,0.30),
+                                inset 0 1px 0 rgba(255,255,255,0.12);
+
+    --sd-header-sel-bg:         rgba(255,255,255,0.16);
+    --sd-header-sel-color:      white;
+    --sd-header-sel-border:     rgba(255,255,255,0.25);
+    /* White semi-transparent chevron for the dark-purple header */
+    --sd-header-sel-arrow:      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23ffffffbb'/%3E%3C/svg%3E");
 }

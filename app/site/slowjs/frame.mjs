@@ -30,43 +30,37 @@ export class Frame {
         this.obj = obj;
         this.options = $.extend(true, {}, defaults, options);
 
-        const style = {
-            headerDiv: {
-                "display": "flex",
-                "margin": "0",
-                "padding": "0",
-                "border": "none",
-            },
-            leftDiv: { "margin": "5px" },
-            rightDiv: { "margin": "5px 10px 5px auto" },
-            leftLogoDiv: { 'width': '0%', 'overflow': 'hidden', 'margin': '0 5px 0 0', 'padding': 0 },
-            rightLogoDiv: { 'width': '0%', 'overflow': 'hidden', 'margin': '0 0 0 5px', 'padding': 0 },
-            
-            titleDiv: { "font-size": "1.4vw" },
-            clockDiv: { "font-size": "1vw" },
-            controlDiv: { "margin-top": "5px" },
-            selectSpan: {},
-            select: { "font-size": "1vw", "margin-right": "5px", "padding": "3px", "border-radius": "7px" },
-            statusSpan: { "font-size": "1vw", 'margin-right': "0.5vw" },
-            progressSpan: { "font-size": "0.7vw", "margin-right": "0.5vw" },
-            buttonDiv: { "margin-top": "5px", "display": "flex" },
-            button: { "font-size": "1.2vw", "margin-left": "5px" }
-        };
-        
-        let headerDiv = this.obj.addClass('sd-header').css(style.headerDiv);
-        let leftLogoDiv = $('<div>').css(style.leftLogoDiv).appendTo(headerDiv);
-        let leftDiv = $('<div>').css(style.leftDiv).appendTo(headerDiv);
-        let rightDiv = $('<div>').css(style.rightDiv).appendTo(headerDiv);
-        let rightLogoDiv = $('<div>').css(style.rightLogoDiv).appendTo(headerDiv);
-        
-        let titleDiv = $('<div>').css(style.titleDiv).appendTo(leftDiv);
-        let controlDiv = $('<div>').css(style.controlDiv).appendTo(leftDiv);
-        this.selectSpan = $('<span>').css(style.selectSpan).appendTo(controlDiv);
-        this.statusSpan = $('<span>').css(style.statusSpan).appendTo(controlDiv);
-        this.progressSpan = $('<span>').css(style.progressSpan).appendTo(controlDiv);
-        this.clockDiv = $('<div>').css(style.clockDiv).appendTo(rightDiv);
-        this.buttonDiv = $('<div>').css(style.buttonDiv).appendTo(rightDiv);
-        this.style = style;
+        // All visual sizing and typography is driven by CSS classes defined in slowdash.css.
+        // Only runtime-computed values (e.g. logo size that must match the rendered header
+        // height) remain as inline styles set further below.
+
+        // Header root — .sd-header provides flex layout, background, and color via CSS variables.
+        let headerDiv = this.obj.addClass('sd-header');
+
+        // Logo containers: hidden (zero width) by default.
+        // JS sizes them at runtime when a logo file is configured.
+        let leftLogoDiv  = $('<div>').addClass('sd-header-logo sd-header-logo-left').appendTo(headerDiv);
+
+        // Left column: project title + controls row (dropdowns, status, progress).
+        let leftDiv      = $('<div>').addClass('sd-header-left').appendTo(headerDiv);
+
+        // Right column: clock + action-button row.
+        // CSS gives this column `margin-left: auto` so it hugs the right edge.
+        let rightDiv     = $('<div>').addClass('sd-header-right').appendTo(headerDiv);
+        let rightLogoDiv = $('<div>').addClass('sd-header-logo sd-header-logo-right').appendTo(headerDiv);
+
+        // Title bar inside the left column.
+        let titleDiv   = $('<div>').addClass('sd-header-title').appendTo(leftDiv);
+
+        // Controls row: a wrapping flex container so dropdowns reflow on narrow screens.
+        let controlDiv = $('<div>').addClass('sd-header-controls').appendTo(leftDiv);
+        this.selectSpan   = $('<span>').addClass('sd-header-selects').appendTo(controlDiv);
+        this.statusSpan   = $('<span>').addClass('sd-header-status').appendTo(controlDiv);
+        this.progressSpan = $('<span>').addClass('sd-header-progress').appendTo(controlDiv);
+
+        // Clock and action-button row inside the right column.
+        this.clockDiv  = $('<div>').addClass('sd-header-clock').appendTo(rightDiv);
+        this.buttonDiv = $('<div>').addClass('sd-header-buttons').appendTo(rightDiv);
 
         const titleBackground = this.options.style.title?.background ?? this.options.style.title_color;
         const titleColor = this.options.style.title?.color ?? this.options.style.title_text_color;
@@ -100,12 +94,18 @@ export class Frame {
         }
     }
     
+    // Appends a <select> dropdown to the controls area of the header.
+    // The sd-header-sel class provides consistent font size, padding, and
+    // border-radius via the CSS variables defined in slowdash.css.
     appendSelect(select) {
-        select.css(this.style.select).appendTo(this.selectSpan);
+        select.addClass('sd-header-sel').appendTo(this.selectSpan);
     }
-    
+
+    // Appends a <button> to the action-button row of the header.
+    // The sd-header-btn class enforces minimum tap-target dimensions
+    // and consistent font scaling for accessibility on all screen sizes.
     appendButton(button) {
-        button.css(this.style.button).appendTo(this.buttonDiv);
+        button.addClass('sd-header-btn').appendTo(this.buttonDiv);
     }
 
     setStatus(html) {

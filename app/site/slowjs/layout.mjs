@@ -158,28 +158,66 @@ export class Layout {
         const scrollBarWidth = 20; // this does not exist yet, so <html>.clientWidth does not include it
         const layoutInnerWidth = this.dimension.layoutWidth - scrollBarWidth;
         const layoutInnerHeight = this.dimension.layoutHeight /*- scrollBarWidth */ - 2; // 4 for panel border on hover
-        
-        const ncols = parseInt(this.config.control.grid.columns ?? 1);
-        const nrows = parseInt(this.config.control.grid.rows ?? 1);
-        this.dimension.panelWidth = Math.floor(layoutInnerWidth / ncols);
-        this.dimension.panelHeight = Math.floor(layoutInnerHeight / nrows);
 
-        if (ncols < 3) {
+        const configuredCols = parseInt(this.config.control.grid.columns ?? 1);
+        const configuredRows = parseInt(this.config.control.grid.rows ?? 1);
+
+        // ── Minimum readable panel size (added by Yao ) ───────────────────────────────
+        // The fixed plot margins in panel-plot.mjs are: left 88 px, bottom 56 px,
+        // top 32 px, right 20 px.  These constants guarantee a usable data area
+        // inside each cell and legible axis labels at 100 % browser zoom.
+        const minPanelWidth  = 300;  // px — keeps x-axis labels and ticks readable
+        const minPanelHeight = 220;  // px — keeps y-axis labels and plot area readable
+
+        // How many columns / rows of that minimum size fit in the current viewport?
+        const maxFitCols = Math.max(1, Math.floor(layoutInnerWidth  / minPanelWidth));
+        const maxFitRows = Math.max(1, Math.floor(layoutInnerHeight / minPanelHeight));
+
+        // resize to what fits.  When the window is large enough, effectiveCols /
+        // effectiveRows equal the configured values and nothing changes.
+        const effectiveCols = Math.min(configuredCols, maxFitCols);
+        const effectiveRows = Math.min(configuredRows, maxFitRows);
+
+        // ── Grid-too-small warning ────────────────────────────────────────────
+        // Remove any warning left from a previous _setupDimensions() call (the
+        // layout div may not have been emptied between resize events).
+        this.layoutDiv.find('.sd-grid-warning').remove();
+
+        if (effectiveCols < configuredCols || effectiveRows < configuredRows) {
+            // The warning is position: absolute so it overlays the top of the
+            // panel area without participating in the flex layout.  It therefore
+            // does not shift or resize any panel.
+            const msg = `Window too small for ${configuredCols}\u00d7${configuredRows} grid`
+                      + ` \u2014 showing ${effectiveCols}\u00d7${effectiveRows}`;
+            $('<div>').addClass('sd-grid-warning').text(msg).appendTo(this.layoutDiv);
+        }
+
+        // Panel dimensions are based on the effective (clamped) column / row count,
+        // guaranteeing each panel is at least minPanelWidth × minPanelHeight.
+        this.dimension.panelWidth  = Math.floor(layoutInnerWidth  / effectiveCols);
+        this.dimension.panelHeight = Math.floor(layoutInnerHeight / effectiveRows);
+
+        // Font scaling: reduce label size at high column counts to prevent overlap.
+        // Use effectiveCols (what is actually displayed) rather than configuredCols.
+        if (effectiveCols < 3) {
             this.dimension.fontScaling = 100.0;
         }
-        else if (ncols == 3) {
+        else if (effectiveCols == 3) {
             this.dimension.fontScaling = 80;
         }
         else {
-            this.dimension.fontScaling = 100.0 / (ncols-2);
+            this.dimension.fontScaling = 100.0 / (effectiveCols - 2);
         }
 
+        // Container stays at the viewport size.
+        // overflow: auto provides scrollbars if (despite clamping) panels still
+        // overflow — e.g. because more panels exist than effectiveCols × effectiveRows.
         this.layoutDiv.css({
             'position': 'relative',
-            'width': this.dimension.layoutWidth + 'px',
-            'height': this.dimension.layoutHeight + 'px',
+            'width':    this.dimension.layoutWidth  + 'px',
+            'height':   this.dimension.layoutHeight + 'px',
             'overflow': 'auto',
-            'display': 'flex',
+            'display':  'flex',
             'flex-wrap': 'wrap',
         });
     }
