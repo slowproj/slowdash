@@ -127,6 +127,7 @@ summary {
    ≤ 640 px  Each column takes a full row; the clock is hidden to
              save space; the right column switches from column to
              row layout so buttons stay on one accessible row.
+*/
 
 .sd-header {
     display: flex;
