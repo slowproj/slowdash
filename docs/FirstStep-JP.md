@@ -610,6 +610,7 @@ $ cd PATH/TO/SLOWDASH/ExampleProjects/QuickTour/RealDevice
 $ slowdash --port=18881
 ```
 ブラウザを開いて `http://localhost:18881` にアクセスすると，左下の "SlowTask" セクションに "read-my" が表示されてそこから [start] と [stop] ができます．
+ブラウザからスクリプトを実行した場合，スクリプトの print() の表示内容はターミナルには出力されず，代わりにブラウザのホーム画面の左下の Console に表示されるようになります．
 
 単体実行はいままでどおりです：
 ```console
@@ -649,15 +650,6 @@ device = ctrl.visa('USB00::0x2A8D::0x201:MY54700218::00::INSTR').scpi()
 イーサーネット経由で SCPI を使うデバイスでも，HiSLIP などを使う場合は，VISA 経由で使用してください．`TPCIP0::<IPアドレス>::hislip0` みたいなアドレスになると思います．
 
 
-### この先
-- `SlowdashProject.yaml` に `task` のエントリを作ると，スクリプトの自動実行を設定できます．
-- `SlowdashProject.yaml` に セキュリティ設定をすると，スクリプトをブラウザから編集できるようにできます．
-- ブラウザに入力エリアやボタンを配置して，ボタンクリックでスクリプト中の任意の関数を呼び出すようにすることができます．
-- スクリプト中でヒストグラムやグラフを作成して，データベースに保存したりブラウザにストリーミングすることができます．
-
-これらの手順については，公式ドキュメントの「プロジェクト設定」や「コントロールスクリプト」の章を参照してください．
-
-
 ### おまけ：Raspberry-Pi を SCPI デバイスにする
 SlowPy ライブラリには SCPI のサーバー側インターフェースの機能も含まれています．これを使えば任意の Python プログラムに SCPI を使ったコントロールを追加し，SlowDash のデータ保存やモニタ，コントロールなどに直接接続できます．
 
@@ -689,6 +681,249 @@ server.start()
 SCPI のコマンド連結なども親クラスで処理されます．
 
 systemd に登録するか `/etc/rc.local` に書くかなどにより，作成したスクリプトをシステム起動時に自動で実行するようにすれば，これが SCPI デバイスとして使えるようになります．
+
+### この先
+- `SlowdashProject.yaml` に `task` のエントリを作ると，スクリプトの自動実行を設定できます．
+- `SlowdashProject.yaml` に セキュリティ設定をすると，スクリプトをブラウザから編集できるようにできます．いちいちサーバーにログインしなくて済み，便利です．
+
+これらの手順については，公式ドキュメントの「プロジェクト設定」や「コントロールスクリプト」の章を参照してください．
+
+
+
+## Web GUI からコントロールする
+上の２つの例では，最初に SlowDash をデータブラウザとして使用し，次に SlowPy ライブラリを使ってデータを取得しましたが，それぞれ別のものでした．ここでは，これらを統合し，ブラウザからデバイスをコントロールしてデータを取得し，それをデーターベース経由または直接ストリーミングでブラウザに送って表示するようにしてみます．
+
+ここでは，以下の４段階で進めます：
+
+1. ブラウザにボタンを並べた入力フォームを作成し，ボタンクリックで Python スクリプトの関数を呼び出す
+2. ブラウザに入力要素を配置し，関数呼び出しの引数に渡す
+3. Python コードからブラウザにデータを直接送り，コントロールパネルの表示を状況に合わせて変化させる
+4. Python コードでヒストグラムを作成し，ブラウザに直接送ってリアルタイム表示させる
+
+最終的に，以下のような SlowDash Layout を作成します．
+
+<img src="fig/QuickTour-DeviceControlFull.png" style="width:70%;box-shadow:0px 0px 15px -5px rgba(0,0,0,0.7);">
+
+
+### ブラウザからの関数呼び出し
+（ここで使うコードは `ExampleProjects/QuickTour/03_RealDeviceControl/01_StartStop` に置いてあります．）
+
+SlowDash ブラウザ上には，ユーザ作成の HTML フォームを表示できます．ここに `<input type="number">` などの入力エレメントを配置し，`<input type="submit">` でボタンを作ると，ボタンをクリックしたときにユーザの Python スクリプトの関数を呼び出すことができます．
+このときの呼び出す関数名は，ボタンの `name` 属性で指定します．
+
+まず，上記の例で作成したデバイスからの読み出しスクリプトに，読み出しの開始と停止の機能を追加します．今回は，`slowtask-testdaq.py` というファイル名にして，`config` ディレクトリに保存します．
+```python
+from dataclasses import dataclass
+
+@dataclass
+class RunStatus:
+    running: bool = False
+run_status = RunStatus()
+    
+
+from slowpy.control import control_system as ctrl
+device = ctrl.ethernet('192.168.1.34', 5025).scpi()
+
+from slowpy.store import DataStore_SQLite
+datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata")
+
+
+def _loop():
+    if run_status.running:
+        try:
+            volt = float(device.command('MEAS:VOLT:DC?').get() or 'nan')
+            datastore.append({'volt': volt})
+        except Exception as e:
+            print(f'ERROR: {e}')
+        
+    ctrl.sleep(1)
+
+
+def start():
+    run_status.running = True
+    
+    
+def stop():
+    run_status.running = False
+```
+データクラス `run_status` で，現在のランの状態を管理します．この後，ここにいろいろな状態変数を追加していきますが，今は「動作中」を示すフラグ `running` だけです．メインのループでこの変数を見て，デバイスからデータを読み出すかを決めます．また，この変数を外部から設定するための関数 `satrt()` と `stop()` を作成します．
+ついでに，エラー処理も追加して，もう少し現実的な状況で使えるようにしました．
+
+この `start()` と `stop()` をブラウザから呼ぶためのフォーム，`html-testdaq.html` というファイルを作成し，`config` 以下に配置します．ファイル名は，`html-` で始まり，拡張子は `.html` である必要があります．
+
+```html
+<form>
+  <input type="submit" name="testdaq.start()" value="Start">
+  <input type="submit" name="testdaq.stop()" value="Stop">
+</form>    
+```
+
+ここでは，それぞれの関数に対応したボタンを２つ作成しているだけです．それぞれのボタンの `name` 属性で，そのボタンがクリックされたときにどのファイルのどの関数を呼ぶかを指定しています．`name` の形式は，スクリプトファイル名（`slowtask-XXX.py` の `XXX` の部分）と，その中の関数名です．
+
+これらのファイルを作成して `config` 以下に配置したら，slowdash を立ち上げ直してください．ホーム画面の左下の SlowTask セクションに `testdaq` というタスクがあるはずなので，そこの start をクリックしてスクリプトをスタートさせてください．
+毎回手動でスタートするのが面倒な場合は，，`SlowdashProject.yaml` に以下のように書くと，スクリプトを slowdash 開始時に自動で開始するようにできます．
+```yaml
+slowdash_project:
+  name: QuickTour
+  title: SlowDash Quick Tour
+  
+  data_source:
+    url: sqlite:///QuickTourTestData.db
+    time_series:
+      schema: testdata [channel] @timestamp(unix) = value
+
+  task:
+    name: testdaq
+    auto_load: true
+```
+
+スクリプトが無事に走ったら，New Plot Layout で新しいレイアウトを作成し，Add New Panel から HTML Form を選んで，HTML ファイルに testdaq を指定してください．これにより，２つのボタンが並んだフォームがレイアウトに作成されるはずです．
+ボタンをクリックするとデータの取得や停止を行うことができ，データが保存されると，今までと同じ手順で時系列プロットが作成できます．
+（最初の Start までデータが存在しないので，プロットの作成はできません．Start 後に Channel List の更新ボタンを押すか，レイアウトを保存してからページ全体をリロードしてください．）
+
+### ブラウザからパラメータを渡す
+（ここで使うコードは `ExampleProjects/QuickTour/03_RealDeviceControl/02_Params` に置いてあります．）
+
+次に，フォームに入力要素を追加して，その値を関数の引数にしてスクリプトに渡すようにします．
+ここでは，ランの長さを指定して，指定時間経過後にランが自動で止まるようにするオプションを追加します．
+追加する変数は，実数値のランの長さ `run_length` と，自動停止を行うかの真偽値 `auto_stop` です．
+HTML 側の変更は，入力要素を追加するだけです．真偽値にはチェックボックスを使っています．
+
+```html
+<form>
+  <input type="checkbox" name="auto_stop">Stop After:
+  <input type="number" name="run_length" value="10">
+  <br>
+  <input type="submit" name="testdaq.start()" value="Start">
+  <input type="submit" name="testdaq.stop()" value="Stop">
+</form>    
+```
+
+`<input>` エレメントの `name` 属性が，スクリプト側の仮引数の名前になります．
+スクリプト側では，ボタンを押したときに呼ばれる関数に，引数を追加します．
+自動停止などを行うために，RunStatus に必要なフィールドをいくつか追加しています．
+
+```python
+@dataclass
+class RunStatus:
+    auto_stop: bool = False
+    run_length: float = 0
+    start_time: float = 0
+    running: bool = False
+run_status = RunStatus()
+
+
+def _loop():
+    if run_status.running:
+        try:
+            volt = float(device.command('MEAS:VOLT:DC?').get() or 'nan')
+            datastore.append({'volt': volt})
+        except Exception as e:
+            print(f'ERROR: {e}')
+            
+        if run_status.auto_stop:
+            now = time.time()
+            if now - run_status.start_time >= run_status.run_length:
+                run_status.running = False
+                        
+    ctrl.sleep(1)
+
+
+def start(auto_stop:bool, run_length:float):
+    run_status.auto_stop = auto_stop
+    run_status.run_length = run_length
+
+    run_status.start_time = time.time()
+    run_status.running = True
+    
+    
+def stop():
+    run_status.running = False
+```
+
+この例のように，引数に型情報を追加すると，関数呼び出しの前に型チェックと型変換が自動で行われ，型が合わない場合には，関数が呼ばれる前にブラウザにエラーが返されるようになります．
+
+### スクリプトからブラウザにステータス情報を送る
+（ここで使うコードは `ExampleProjects/QuickTour/03_RealDeviceControl/03_Status` に置いてあります．）
+
+ブラウザ側には，現在の状態を表示したり．それに合わせて Start や Stop などのボタンの有効・無効を切り替えられると便利です．
+このために，スクリプト側からブラウザに直接データを送って，HTML のフォームをコントロールしたりできるようにします．
+
+スクリプトからデータベースを経由せずにブラウザに直接データを送るためには，ControlSystem のインスタンス `ctrl` に対して `ctrl.stream(name:str, value)` メソッドを使います（async の場合は `await ctrl.aio_stream(name, value)`）．
+ここで，value に渡す値として，数値や文字列の他，dataclass や dict なども使えます．
+数値や文字列はスカラデータとして，dataclass や dict は Tree 型データとして扱われます．
+
+以下の例では，一秒ごとに Run Status を送るようにしています．
+
+```python
+def _loop():
+    if run_status.running:
+        try:
+            volt = float(device.command('MEAS:VOLT:DC?').get() or 'nan')
+            datastore.append({'volt': volt})
+        except Exception as e:
+            print(f'ERROR: {e}')
+            
+        if run_status.auto_stop:
+            now = time.time()
+            if now - run_status.start_time >= run_status.run_length:
+                run_status.running = False
+
+    ctrl.stream('run_status', run_status)
+    ctrl.sleep(1)
+```
+Run Status は dataclass なので，ブラウザ側は Tree データとしてそのまま表示できます．
+SlowDash を走らせなおすか，SlowTask のパネルからこのスクリプトを Stop して Start しなおすと，Data Channels に `current tree` 型のデータとして `run_status` が表示されます．
+先程作成した入力フォームを含むレイアウトで， Add a New Panel -> Tree -> `run_status` により，これをレイアウトに追加できます．
+
+HTML フォームとしてレイアウトに追加される HTML では，SlowDash による拡張として，`<input>` エレメントに `sd-enabled` 属性を指定でき，ここでデータ値に応じて `enabled` 属性を動的に切り替えることができます．
+ただし，`sd-enabled` のデータ値は，真偽値である必要があります．
+データ値が真偽値でない場合は，SlowDash の Data Transform の機能を使って，真偽値に変換します．
+この例では，`run_status` は Tree 型なので，そこから `running` フィールドを取り出して，必要に応じてロジック反転（`invert()`）を行います．
+Data Transform についてはまだ試験実装段階で，将来変更する可能性がありますが，ここで使う程度の基本的な部分についてはそのままになる可能性が高いです．
+
+```html
+<form>
+  <input type="checkbox" name="auto_stop">Stop After:
+  <input type="number" name="run_length" value="10">
+  <br>
+  <input type="submit" name="testdaq.start()" value="Start" sd-enabled="run_status['running']->invert()">
+  <input type="submit" name="testdaq.stop()" value="Stop" sd-enabled="run_status['running']">
+</form>    
+```
+`sd-enabled` 属性でよく使われる他の Data Transform としては，数値の大小を判定する `->gt(thres)` / `->lt(thresh)` や，文字列に対する `->match(pattern)` などがあります．
+
+### スクリプトで解析を行ってブラウザに送る
+（ここで使うコードは `ExampleProjects/QuickTour/03_RealDeviceControl/04_Analysis` に置いてあります．）
+
+SlowPy ライブラリには軽量なヒストグラムなどの解析データオブジェクトが含まれていて，これを使って構築したヒストグラムなどもブラウザにストリーミングすることができます．（普通にデータベースに保存することもできます．）
+以下は，1秒ごとにデータを読み出し，それをデータベースに記録するとともに，ヒストグラムも更新してブラウザにリアルタイムに送る例です．
+
+```python
+from slowpy import Histogram
+histogram = Histogram(nbins=20, range_min=-10, range_max=10)
+
+
+def _loop():
+    if run_status.running:
+        try:
+            volt = float(device.command('MEAS:VOLT:DC?').get() or 'nan')
+            datastore.append({'volt': volt})
+            histogram.fill(volt)
+        except Exception as e:
+            print(f'ERROR: {e}')
+            
+        if run_status.auto_stop:
+            now = time.time()
+            if now - run_status.start_time >= run_status.run_length:
+                run_status.running = False
+
+    ctrl.stream('run_status', run_status)
+    ctrl.stream('hist01', histogram)
+    ctrl.sleep(1)
+```
+SlowDash を走らせなおすか，SlowTask のパネルからこのスクリプトを Stop して Start しなおすと，Data Channels に `current histogram` 型のデータとして `hist01` が表示されます．
+レイアウトにも， Add a New Panel -> XY Plot -> -> Histogram Object -> `hist01` により，これをレイアウトに追加できます．
 
 
 # Docker コンテナで使う

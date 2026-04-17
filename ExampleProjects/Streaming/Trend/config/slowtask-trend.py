@@ -21,10 +21,10 @@ async def _loop():
     for xk in x:
         trend.fill(t, xk)
         
-    await ctrl.aio_publish(trend, name="trend")
-    await ctrl.aio_publish(trend.timeseries(), name="trend_ts")
+    await ctrl.aio_stream("trend", trend)
+    await ctrl.aio_stream("trend_ts", trend.timeseries())
     
     datastore.append(x[-1], tag='x')
-    await ctrl.aio_publish(x[-1], name="value")
+    await ctrl.aio_stream("value", x[-1])
         
     await ctrl.aio_sleep(0.5)

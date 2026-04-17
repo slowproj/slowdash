@@ -24,8 +24,8 @@ async def _run():
         endpoint_stats[endpoint_name] = (n, sum)
     
         # push the analyzed data to SlowDash
-        await ctrl.aio_publish(n, name=f'{endpoint_name}.n')
-        await ctrl.aio_publish(sum/n, name=f'{endpoint_name}.mean')
+        await ctrl.aio_stream(f'{endpoint_name}.n', n)
+        await ctrl.aio_stream(f'{endpoint_name}.mean', sum/n)
 
 
 async def _finalize():

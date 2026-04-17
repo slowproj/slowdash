@@ -2,7 +2,6 @@
 
 import os, time, re, uuid, socket, threading, asyncio, inspect, logging
 from urllib.parse import urlsplit
-from functools import wraps
 from slowpy.control import ControlNode, control_system as ctrl
 
 

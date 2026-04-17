@@ -493,8 +493,8 @@ async def _run():
         endpoint_stats[endpoint_name] = (n, sum)
     
         # push the analyzed data to SlowDash
-        await ctrl.aio_emit(n, name=f'{endpoint_name}.n')
-        await ctrl.aio_emit(sum/n, name=f'{endpoint_name}.mean')
+        await ctrl.aio_stream(f'{endpoint_name}.n', n)
+        await ctrl.aio_stream(f'{endpoint_name}.mean', sum/n)
 
 
 async def _finalize():
@@ -521,7 +521,7 @@ Key features:
 - Using the async version.
 - Receiving a sensor value alert with `message = await dripline.sensor_value_queue().aio_get()`.
 - If the `_run()` function is defined in the user script, SlowTask will call it.
-- `ctrl.aio_emit(value, name=name)` sends data to browsers. This is similar to `ctrl.export(value, name=name)`, but `aio_emit()` pushes data immediately, whereas `export()` makes data available for browser-driven polling (e.g., via a periodic update timer).
+- `ctrl.aio_stream(name, value)` sends data to browsers. This is similar to `ctrl.export(value, name=name)`, but `aio_stream()` pushes data immediately, whereas `export()` makes data available for browser-driven polling (e.g., via a periodic update timer).
 
 **Data Analysis SlowTask Script (`slowtask-count_peaches.py`)**
 - In SlowTask modules, `_initialize()`, `_run()`, and `_finalize()` are called by SlowDash in this order (if defined).

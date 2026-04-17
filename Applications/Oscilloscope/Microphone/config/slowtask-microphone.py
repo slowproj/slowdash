@@ -10,13 +10,13 @@ from slowpy import Graph
 async def _initialize():
     mic.stop()
     mic.is_running = False
-    await ctrl.aio_publish(mic.is_running, name='mic_running')
+    await ctrl.aio_stream('mic_running', mic.is_running)
 
     
 async def _finalize():
     mic.stop()
     mic.is_running = False
-    await ctrl.aio_publish(mic.is_running, name='mic_running')
+    await ctrl.aio_stream('mic_running', mic.is_running)
 
 
 async def _loop():
@@ -34,9 +34,9 @@ async def _loop():
         g_trace.add_point(x, y)
         g_fft.add_point(f, fft)
         
-        await ctrl.aio_publish(rms, name='mic')
-        await ctrl.aio_publish(g_trace, name='mic_trace')
-        await ctrl.aio_publish(g_fft, name='mic_fft')
+        await ctrl.aio_stream('mic', rms)
+        await ctrl.aio_stream('mic_trace', g_trace)
+        await ctrl.aio_stream('mic_fft', g_fft)
         
         await ctrl.aio_sleep(0.5)
 
@@ -47,13 +47,13 @@ async def start(sample_rate:int, block_size:int):
     mic.block_size().set(block_size)
     mic.start()
     mic.is_running = True
-    await ctrl.aio_publish(mic.is_running, name='mic_running')
+    await ctrl.aio_stream('mic_running', mic.is_running)
     
 
 async def stop():
     mic.is_running = False
     mic.stop()
-    await ctrl.aio_publish(mic.is_running, name='mic_running')
+    await ctrl.aio_stream('mic_running', mic.is_running)
     
 
         

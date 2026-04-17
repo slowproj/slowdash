@@ -30,9 +30,9 @@ async def _loop():
     g_y.add_point(t, x2)
     g_xy.add_point(x1, x2)
 
-    await ctrl.aio_publish(g_x, 'x.current')
-    await ctrl.aio_publish(g_y, 'y.current')
-    await ctrl.aio_publish(g_xy, 'xy.current')
+    await ctrl.aio_stream('x.current', g_x)
+    await ctrl.aio_stream('y.current', g_y)
+    await ctrl.aio_stream('xy.current', g_xy)
 
     global next_store_time
     now = time.time()
@@ -42,4 +42,4 @@ async def _loop():
         datastore.update(g_xy, tag='xy')
         next_store_time = now + 5
         
-    ctrl.sleep(0.5)
+    await ctrl.aio_sleep(0.5)

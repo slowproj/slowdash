@@ -32,7 +32,7 @@ class MicrophoneNode(ControlNode):
             import sounddevice as sd   
             self._sd = sd
         except Exception as e:
-            logging.error('Unable to import sounddevice: {e}')
+            logging.error(f'Unable to import sounddevice: {e}')
             logging.info('You might need:')
             logging.info('  pip install sounddevice, and/or')
             logging.info('  apt install portaudio19-dev (Linux) or brew install portaudio')

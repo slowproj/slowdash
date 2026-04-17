@@ -634,99 +634,19 @@ If a SlowTask script has functions of `_initialize(params)`, `_finalize()`, `_ru
 
 These functions can be either the standard `def` or `async def`.
 
-## Control Variable Exporting
-Control variables can be exported to other SlowDash components (typically web browsers) so that the other components can call `get()` and `set()` of the nodes. 
+
+## Data Streaming / Live Updating
+Values can be pushed from SlowTask scripts to browsers for live updates using the `stream(name:str, value)` method of ControlSystem:
 ```python
 from slowpy.control import control_system as ctrl
-V0 = ctrl.ethernet(host, port).scpi().command("V")
-ctrl.export(V0, 'V0')
-```
-The exported nodes are listed in the channel list and can be accessed in the same way as data stored in databases, except that only "current" values are available. Typically these are used in "Single Scalar" display panels, or in HTML panels:
-```html
-<form>
-  V0: <span sd-value="V0"></span>
-</form>
-```
 
-Python `dict` and `dataclass` instances can be exported in the same way. Instances of `class` can also be exported, but with some restrictions (e.g., `vars()` must be able to serialize the instance). SlowPy analysis elements, such as histograms and graphs, are also accepted.
-```python
-from slowpy.control import control_system as ctrl
 V0 = ctrl.ethernet(host, port).scpi().command("V")
-ctrl.export(V0, name='V0')
-
-from slowpy import Histogram
-h = Histogram(100, 0, 20)
-ctrl.export(h, name='hist')
 
 def _loop():
-    h.fill(V0.get())
+    ctrl.stream('V0', V0)   # pushing to consumers
     ctrl.sleep(1)
 ```
-
-To export a variable not of these types, make a temporary control node variable to wrap it:
-```python
-class RampingStatusNode(ControlNode):
-    def get(self):
-        return {
-            'columns': [ 'Channel', 'Value', 'Ramping' ],
-            'table': [
-                [ 'Ch0', float(V0), 'Yes' if V0.ramping().status().get() else 'No' ],
-                [ 'Ch1', float(V1), 'Yes' if V1.ramping().status().get() else 'No' ],
-                [ 'Ch2', float(V2), 'Yes' if V2.ramping().status().get() else 'No' ],
-                [ 'Ch3', float(V3), 'Yes' if V3.ramping().status().get() else 'No' ]
-            ]
-        }
-    
-ctrl.export(RampingStatusNode(), 'Status')
-```
-
-## Control Variable Binding (Streaming / Live Updating)
-The current values of exported variables are "pulled" by the other components. In addition, the values can be "pushed" to the others (data streaming).
-```python
-from slowpy.control import control_system as ctrl
-
-V0 = ctrl.ethernet(host, port).scpi().command("V")
-ctrl.export(V0, 'V0')            # exporting to be pulled
-
-async def _loop():
-    await ctrl.aio_emit(V0)   # pushing to consumers
-    await ctrl.aio_sleep(1)
-```
-If the variable is already exported, the same export name is used. Otherwise, the name must be provided as a `name` argument of the `aio_emit()` function. In addition to the exportable variables, `aio_emit()` accepts many other types, including Python numbers.
-```python
-import random
-from slowpy.control import control_system as ctrl
-
-x = 0
-async def _loop():
-    global x
-    x = x + random.random()
-    await ctrl.aio_emit(x, name="RandomWalk")
-    await ctrl.aio_sleep(1)
-```
-
-In addition to accessing the exported variables in the same way as data in databases, the variables can be directly "bound" in web browsers. If a SlowTask control variable is bound in SlowDash HTML, changes to the variable on the browser call the `.set()` method of the SlowTask variable.
-```html
-<form>
-  Readout Frequency: <input type="number" sd-value="readout_frequency" sd-live="true">
-  ...
-</form>
-```
-```python
-from slowpy.control import control_system as ctrl
-
-readout_frequency = ctrl.value(1.0)
-ctrl.export(readout_frequency, 'readout_frequency')   # to be set by GUI
-
-V = ctrl.ethernet(host, port).scpi().command("V")
-
-async def _loop():
-    await ctrl.aio_emit(V, name='V')
-    await ctrl.aio_sleep(readout_frequency.get())
-```
-In HTML, `sd-live="true"` indicates that changes to the value on the browser will trigger calling the `.set()` method of the bound variable.
-
-More examples can be found in `ExampleProjects/Streaming`.
+The types of values that can be streamed include numeric, string, dict, Python dataclass, SlowPy Node, SlowPy Data Element (histogram etc), and Matplotlib Figure (described below).
 
 ## Matplotlib Integration
 Instances of Matplotlib Figure can be directly pushed to SlowDash layouts. 
@@ -734,20 +654,16 @@ Instances of Matplotlib Figure can be directly pushed to SlowDash layouts.
 import matplotlib.pyplot as plt
 from slowpy.control import control_system as ctrl
 
-async def _loop():
+def _loop():
     fig, axes = plt.subplots(2, 2)
     #... draw plots in the usual way
 
-    await ctrl.aio_emit(fig, name='mpl')
+    ctrl.stram(name='mpl', fig)
 
     plt.close()  # If a figure is created in a loop, it must be closed every time.
-    await ctrl.aio_sleep(1)
+    ctrl.sleep(1)
 ```
-When a Matplotlib figure is "aio_emit()"ed, a SlowDash layout (usually a `slowplot-XXX.json` file under `config`) is created dynamically for the same axes layout as the figure. The plotting objects in the figure are extracted and converted to SlowDash objects before emitting.
+When a Matplotlib figure is streamed, a SlowDash layout (usually a `slowplot-XXX.json` file under `config`) is created dynamically for the same axes layout as the figure.
+The plotting objects in the figure are extracted and converted to SlowDash objects before streaming.
 
 More examples can be found in `ExampleProjects/Streaming/Matplotlib`.
-
-
-# Distributed System / Network Deployment
-## SlowDash Interconnect
-## SlowTask Scpization

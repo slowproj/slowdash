@@ -70,6 +70,17 @@ class ControlSystem(spc.ControlNode):
 
 
     @classmethod
+    async def aio_stream(cls, name:str, value):
+        return await cls.aio_publish(value, name=name)
+
+    
+    @classmethod
+    def stream(cls, name:str, value):
+        loop = asyncio.get_running_loop()
+        loop.create_task(cls.aio_publish(value, name=name))
+
+    
+    @classmethod
     async def aio_publish(cls, obj, name:str|None=None):
         if cls.app() is None:
             return
@@ -232,7 +243,7 @@ class ValueNode(spc.ControlVariableNode):
     def get(self):
         return self._value
 
-
+    
     # DEPRECIATED (July 2025): use ControlSystem.aio_publish(obj) instead
     async def deliver(self):
         return await ControlSystem.aio_publish(self)

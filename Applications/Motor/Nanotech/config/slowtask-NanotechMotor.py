@@ -9,7 +9,7 @@ datastore = None
 async def _initialize(params):
     global c5e, datastore
 
-    await ctrl.aio_publish("Looking for the device (can take a minute)", name="connection")
+    await ctrl.aio_stream('connection', 'Looking for the device (can take a minute)')
     ip = params.get('IP', None)
     if ip is None:
         mac = params.get('MAC', None)
@@ -17,9 +17,9 @@ async def _initialize(params):
             cidr = params.get('CIDR', None)
             ip = slowpy.control.find_ip(mac, use_arp_cache=False, cidr=cidr)
     if ip is None:
-        await ctrl.aio_publish(f"Unable to find the IP address of the controller")
+        await ctrl.aio_stream('connection', f'Unable to find the IP address of the controller')
         raise slowpy.control.ControlException('Unable to find Nanotech Motor Controller')
-    await ctrl.aio_publish(f"Found at {ip}", name="connection")
+    await ctrl.aio_stream('connection', f'Found at {ip}')
     print(f'Nanotech Controller at {ip}')
 
     modbus = ctrl.import_control_module('Modbus').modbus(ip)
@@ -36,7 +36,7 @@ async def _initialize(params):
     db_url = params.get('db_url', 'sqlite:///SlowMotor')
     try:
         datastore = slowpy.store.create_datastore_from_url(db_url, 'data')
-        print(f"DB connected at {db_url}")
+        print(f'DB connected at {db_url}')
     except Exception as e:
         print(e)
         datastore = None
@@ -48,9 +48,9 @@ async def _loop():
     if c5e is not None:
         position = await c5e.position().aio_get()
         velocity = await c5e.velocity().aio_get()
-        await ctrl.aio_publish(position, "position")
-        await ctrl.aio_publish(velocity, "velocity")
-        await ctrl.aio_publish(c5e.status(), "status")
+        await ctrl.aio_stream('position', position)
+        await ctrl.aio_stream('velocity', velocity)
+        await ctrl.aio_stream('status', c5e.status())
         if datastore is not None:
             now = time.monotonic()
             if c5e.is_moving or (now - c5e.last_log_time > 10):
@@ -81,7 +81,7 @@ async def sd_move(mode:str, steps_deg:float=0, duration_sec:float=0, velocity_rp
     else:
         await c5e.do_halt()
         
-    await ctrl.aio_publish(c5e.status(), "status")
+    await ctrl.aio_stream('status', c5e.status())
 
         
 async def sd_halt():
@@ -89,7 +89,7 @@ async def sd_halt():
         return False
     
     await c5e.do_halt()
-    await ctrl.aio_publish(c5e.status(), "status")
+    await ctrl.aio_stream('status', c5e.status())
 
     
 async def sd_switch_off():
@@ -97,7 +97,7 @@ async def sd_switch_off():
         return False
     
     await c5e.do_switch_off()
-    await ctrl.aio_publish(c5e.status(), "status")
+    await ctrl.aio_stream('status', c5e.status())
 
     
 
