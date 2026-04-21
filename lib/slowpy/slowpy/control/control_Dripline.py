@@ -145,7 +145,7 @@ class EndpointNode(ControlNode):
             'content_encoding': 'application/json',
         }
 
-        message = self.reply_queue_node.rpc_call(self.routing_key, body, headers, parameters).get()
+        message = self.reply_queue_node.rpc_call(self.routing_key, headers, body, parameters).get()
         if type(message.body) is dict:
             return message.body
         else:

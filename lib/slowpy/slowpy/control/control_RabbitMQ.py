@@ -504,8 +504,8 @@ class QueueNode(ControlNode):
         return RpcFunctionNode(self, function)
 
     # rabbitmq().direct_exchange(name).queue(name).rpc_call(routing_key)
-    def rpc_call(self, routing_key: str, body=None, headers=None, parameters=None):
-        return RpcCallNode(self, routing_key, body, headers, parameters)
+    def rpc_call(self, routing_key: str, headers=None, body=None, parameters=None):
+        return RpcCallNode(self, routing_key, headers, body, parameters)
 
     
     
@@ -555,11 +555,11 @@ class RpcFunctionNode(ControlNode):
 
     
 class RpcCallNode(ControlNode):
-    def __init__(self, queue_node: QueueNode, routing_key: str, body=None, headers=None, parameters=None):
+    def __init__(self, queue_node: QueueNode, routing_key: str, headers=None, body=None, parameters=None):
         self.queue_node = queue_node
         self.routing_key = routing_key
-        self.body = body or {}
         self.headers = headers or {}
+        self.body = body or {}
         self.parameters = parameters or {}
 
         
@@ -569,7 +569,7 @@ class RpcCallNode(ControlNode):
         parameters = dict(self.parameters)
         parameters['reply_to'] = self.queue_node.routing_keys[0]
         parameters['correlation_id'] = correlation_id
-        publisher_node.set((self.body, self.headers, parameters))
+        publisher_node.set((self.headers, self.body, parameters))
 
         # BUG: there might be multiple reply messages (e.g., by topic/fanout exchange)
         reply_selector = lambda m: m.correlation_id == correlation_id

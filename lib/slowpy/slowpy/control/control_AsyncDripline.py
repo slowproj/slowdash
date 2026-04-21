@@ -163,7 +163,7 @@ class EndpointNode(ControlNode):
         }
 
         try:
-            message = await self.reply_queue_node.rpc_call(self.routing_key, body, headers, parameters).aio_get()
+            message = await self.reply_queue_node.rpc_call(self.routing_key, headers, body, parameters).aio_get()
         except Exception as e:
             logging.error(f'SlowDrip.Endpoint[{self.routing_key}]: RPC error: {e}')
             return None
