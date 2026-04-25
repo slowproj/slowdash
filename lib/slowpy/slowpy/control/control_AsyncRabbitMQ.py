@@ -19,9 +19,9 @@ class Message:
         
     def __str__(self):
         return json.dumps({
-            'parameters': self.parameters,
             'headers': self.headers,
-            'body': repr(self.body)
+            'body': repr(self.body),
+            'parameters': self.parameters
         })
 
 
@@ -45,7 +45,6 @@ class AsyncRabbitMQNode(ControlNode):
     async def aio_close(self):
         for child in self.children:
             await child.aio_close()
-        self.children.clear()
             
         if self.channel is not None:
             logging.info('AsyncRabbitMQ: closing channel')
@@ -86,19 +85,24 @@ class AsyncRabbitMQNode(ControlNode):
                     self.connection = await aio_pika.connect(self.url)
                 except Exception as e:
                     if not self.is_retry:
-                        logging.error(f'AsyncRabbitMQ: unable to connect to RabbitMQ: {self.url}: {e}')
+                        logging.warning(f'AsyncRabbitMQ: unable to connect to RabbitMQ: {self.url}: {e}')
                         self.is_retry = True
                     else:
                         logging.info(f'AsyncRabbitMQ: unable to connect to RabbitMQ (retry): {self.url}: {e}')
+                        await asyncio.sleep(1)
                     self.connection = None
                     return
+                
+            if not self.is_retry:
+                logging.info(f'AsyncRabbitMQ: reconnected: {self.url}')
+                
                 
         if self.channel is None:
             try:
                 self.channel = await self.connection.channel()
             except Exception as e:
                 if not self.is_retry:
-                    logging.error(f'AsyncRabbitMQ: unable to create a channel: {self.url}: {e}')
+                    logging.warning(f'AsyncRabbitMQ: unable to create a channel: {self.url}: {e}')
                     self.is_retry = True
                 else:
                     logging.info(f'AsyncRabbitMQ: unable to create a channel (retry): {self.url}: {e}')
@@ -168,7 +172,6 @@ class ExchangeNode(ControlNode):
     async def aio_close(self):
         for child in self.children:
             await child.aio_close()
-        self.children.clear()
         self.exchange = None
 
             
@@ -225,11 +228,13 @@ class PublisherNode(ControlNode):
         if self.exchange_node.exchange is None:
             await self.exchange_node._construct()
         if self.exchange_node.exchange is None:
-            raise ControlException(f'AsyncRabbitMQ.PublisherNode[{self.routing_key}].aio_set(): exchange not ready')
+            #raise ControlException(f'AsyncRabbitMQ.PublisherNode[{self.routing_key}].aio_set(): exchange not ready')
+            logging.warning(f'AsyncRabbitMQ.PublisherNode[{self.routing_key}].aio_set(): exchange not ready')
+            return False
 
-        body, headers, parameters = ({}, {}, {})
+        headers, body, parameters = ({}, {}, {})
         if type(value) is Message:
-            body, headers, parameters = value.body, value.headers, value.parameters
+            headers, body, parameters = value.headers, value.body, value.parameters
         elif type(value) is tuple:
             if len(value) == 1:
                 (body,) = value
@@ -289,8 +294,10 @@ class PublisherNode(ControlNode):
                 logging.warning(err)
                 raise e
         except Exception as e:
-            logging.error(f'AsyncRabbitMQ: publisher failed (exchange={self.exchange_node.name}, key={self.routing_key}): {e}')
-            raise
+            #raise
+            logging.warning(f'AsyncRabbitMQ: publisher failed (exchange={self.exchange_node.name}, key={self.routing_key}): {e}')
+            await self.exchange_node.rmq_node.aio_close()  # this will initiate reconnect-loop
+            return False
         
         return True
 
@@ -321,6 +328,13 @@ class PublisherJsonNode(ControlNode):
 
 class QueueNode(ControlNode):
     def __init__(self, exchange_node:ExchangeNode, queue_name:str|None=None, *, routing_key:list[str]|str|None=None, handler=None, timeout:float=0, **kwargs):
+        """
+        Notes:
+        - If routing_key is not given:
+          - if queue_name is not None, the queue_name is used for the routing_key,
+          - otherwise, routing_key becomes '*'.
+        """
+        
         self.exchange_node = exchange_node
         self.exchange_node.children.append(self)
         self.tasks: set[asyncio.Task] = set()
@@ -335,10 +349,15 @@ class QueueNode(ControlNode):
         else:
             self.name = str(uuid.uuid4())
 
-        if type(routing_key) is list:
+        if routing_key is None:
+            if queue_name is not None and len(queue_name) > 0:
+                self.routing_keys = [ self.name ]
+            else:
+                self.routing_key = [ '*' ]
+        elif type(routing_key) is list:
             self.routing_keys = routing_key
         else:
-            self.routing_keys = [ routing_key or '*' ]
+            self.routing_keys = [ routing_key ]
         
         async def _default_handler(message: aio_pika.Message) -> Message:
             parameters = {
@@ -377,6 +396,8 @@ class QueueNode(ControlNode):
     
             
     async def aio_close(self):
+        self.queue = None
+        
         if len(self.tasks) == 0:
             return
         logging.info(f'AsyncRabbitMQ.QueueNode[{self.name}]: cancelling remaining {len(self.tasks)} tasks')
@@ -407,7 +428,9 @@ class QueueNode(ControlNode):
         if self.queue is None:
             await self._construct()
         if self.queue is None:
-            raise ControlException('AsyncRabbitMQ.QueueNode.aio_get(): queue not ready')
+            #raise ControlException('AsyncRabbitMQ.QueueNode.aio_get(): queue not ready')
+            logging.warning(f'AsyncRabbitMQ.QueueNode[{self.name}].aio_get(): exchange not ready')
+            return None
 
         message = None
         lapse = 0
@@ -427,18 +450,19 @@ class QueueNode(ControlNode):
                     logging.warning(err)
                     raise e
             except Exception as e:
-                logging.error(f'AsyncRabbitMQ: queue.get() failed (exchange={self.exchange_node.name}, queue={self.name}): {e}')
-                raise
+                #raise
+                logging.warning(f'AsyncRabbitMQ: queue.get() failed (exchange={self.exchange_node.name}, queue={self.name}): {e}')
+                await self.exchange_node.rmq_node.aio_close()  # this will initiate reconnect-loop
+                break
 
             if message is not None and selector is not None:
                 try:
                     selected = selector(message)
+                    if inspect.isawaitable(selected):
+                        selected = await selected
                 except:
-                    try:
-                        await message.nack(requeue=True)
-                    except:
-                        logging.warning(f'AsyncRabbitMQ: unable to send NACK')
-                if not ((await selected) if inspect.isawaitable(selected) else bool(selected)):
+                    selected = False
+                if not selected:
                     try:
                         await message.nack(requeue=True)
                     except:
@@ -504,7 +528,7 @@ class QueueMessageJsonNode(ControlNode):
         
     async def aio_get(self):
         message = await self.queue_node.aio_get()
-        if message.body is None:
+        if message is None or message.body is None:
             return None, None
         else:
             headers = copy.deepcopy(message.headers)
@@ -562,7 +586,8 @@ class RpcCallNode(ControlNode):
         parameters = dict(self.parameters)
         parameters['reply_to'] = self.queue_node.routing_keys[0]
         parameters['correlation_id'] = correlation_id
-        await publisher_node.aio_set((self.headers, self.body, parameters))
+        if not await publisher_node.aio_set((self.headers, self.body, parameters)):
+            return None
         
         # BUG: there might be multiple reply messages (e.g., by topic/fanout exchange)
         reply_selector = lambda message: message.correlation_id == correlation_id

@@ -167,6 +167,8 @@ class EndpointNode(ControlNode):
         except Exception as e:
             logging.error(f'SlowDrip.Endpoint[{self.routing_key}]: RPC error: {e}')
             return None
+        if message is None:
+            return None
         
         if type(message.body) is dict:
             return message.body
@@ -341,12 +343,14 @@ class SensorValuesQueueNode(ControlNode):
         except Exception as e:
             logging.error(e)
             return None
+        if message is None:
+            return None
         
         if message.body is None or type(message.body) is dict:
             return message
         else:
             # Dripline puts content_type in the content_encoding fields, causing unparsed results
-            return type(message)(json.loads(message.body or '{}'), message.headers, message.parameters)
+            return type(message)(message.headers, json.loads(message.body or '{}'), message.parameters)
 
     
     
@@ -365,12 +369,14 @@ class HeartbeatQueueNode(ControlNode):
         except Exception as e:
             logging.error(e)
             return None
+        if message is None:
+            return None
         
         if message.body is None or type(message.body) is dict:
             return message
         else:
             # Dripline puts content_type in the content_encoding fields, causing unparsed results
-            return type(message)(json.loads(message.body or '{}'), message.headers, message.parameters)
+            return type(message)(message.headers, json.loads(message.body or '{}'), message.parameters)
 
 
     
@@ -389,12 +395,14 @@ class StatusMessageQueueNode(ControlNode):
         except Exception as e:
             logging.error(e)
             return None
+        if message is None:
+            return None
         
         if message.body is None or type(message.body) is dict:
             return message
         else:
             # Dripline puts content_type in the content_encoding fields, causing unparsed results
-            return type(message)(json.loads(message.body or '{}'), message.headers, message.parameters)
+            return type(message)(message.headers, json.loads(message.body or '{}'), message.parameters)
 
 
 

@@ -1,4 +1,3 @@
-
 import os, time, datetime, socket, re, json, collections, asyncio
 from slowpy.control import ControlNode, control_system as ctrl
 ctrl.import_control_module('AsyncDripline')
@@ -182,7 +181,7 @@ def parse(value):
 
     
 async def sd_get_endpoint(endpoint:str, specifier:str=None, lockout_key:str=None):
-    #print(f'Console GET {endpoint}[{specifier}, {lockout_key}])')
+    print(f'Console GET {endpoint}[{specifier}, {lockout_key}])')
     endpoint_node = dripline.endpoint(endpoint, specifier=specifier, lockout_key=lockout_key)
     reply = await endpoint_node.aio_get()
     replies.append([time.time(), endpoint, f'GET {specifier}', reply])
