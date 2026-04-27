@@ -5,7 +5,7 @@ import socket, selectors, threading, logging
 import slowpy.control as spc
 
 
-class UDPNode(spc.ControlNode):
+class UdpSocketNode(spc.ControlNode):
     """Node for a UDP style connection (socket.SOCK_DGRAM)"""
     
     def __init__(self, port, address="0.0.0.0", timeout=1, **kwargs):        
@@ -115,5 +115,5 @@ class UDPNode(spc.ControlNode):
     @classmethod
     def _node_creator_method(cls):
         def udp(self, port, address=None):
-            return UDPNode(port, address)
+            return UdpSocketNode(port, address)
         return udp
