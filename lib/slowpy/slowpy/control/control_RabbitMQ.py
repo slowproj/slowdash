@@ -17,8 +17,16 @@ class Message:
         self.headers = dict(headers or {})
         self.body = body
         self.parameters = dict(parameters or {})
-    
 
+        
+    def __str__(self):
+        return json.dumps({
+            'headers': self.headers,
+            'body': repr(self.body),
+            'parameters': self.parameters
+        })
+
+    
         
 class _IncomingMessage:
     def __init__(self, ch: pika.adapters.blocking_connection.BlockingChannel, method, props: pika.BasicProperties, body: bytes):
@@ -246,9 +254,9 @@ class PublisherNode(ControlNode):
         if not self.exchange_node._declared or self.exchange_node.rmq_node.channel is None:
             raise ControlException('RabbitMQ.PublisherNode.set(): exchange not ready')
 
-        body, headers, parameters = ({}, {}, {})
+        headers, body, parameters = ({}, {}, {})
         if isinstance(value, Message):
-            body, headers, parameters = value.body, value.headers, value.parameters
+            headers, body, parameters = value.headers, value.body, value.parameters
         elif isinstance(value, tuple):
             if len(value) == 1:
                 (body,) = value
@@ -360,6 +368,13 @@ class PublisherJsonNode(ControlNode):
     
 class QueueNode(ControlNode):
     def __init__(self, exchange_node:ExchangeNode, queue_name:str, *, routing_key:list[str]|str|None=None, handler=None, timeout:float=0, **kwargs):
+        """
+        Notes:
+        - If routing_key is not given:
+          - if queue_name is not None, the queue_name is used for the routing_key,
+          - otherwise, routing_key becomes '*'.
+        """
+        
         self.exchange_node = exchange_node
         self.name = queue_name
         self.timeout = timeout
@@ -371,10 +386,15 @@ class QueueNode(ControlNode):
         else:
             self.name = str(uuid.uuid4())
 
-        if type(routing_key) is list:
+        if routing_key is None:
+            if queue_name is not None and len(queue_name) > 0:
+                self.routing_keys = [ self.name ]
+            else:
+                self.routing_key = [ '*' ]
+        elif type(routing_key) is list:
             self.routing_keys = routing_key
         else:
-            self.routing_keys = [ routing_key or '*' ]
+            self.routing_keys = [ routing_key ]
         
         def _default_handler(incoming: _IncomingMessage) -> Message:
             parameters = {
