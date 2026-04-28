@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Prerequisites</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+<header>
+<div class="title">Prerequisites</div><p>
+<div class="toc">
+<span class="toc-title">Contents</span>
+<nav id="TOC">
+<ul>
+<li><a href="#before-you-start" id="toc-before-you-start">Before You
+Start</a>
+<ul>
+<li><a href="#who-this-is-for" id="toc-who-this-is-for">Who This Is
+For</a></li>
+<li><a href="#terminal-basics" id="toc-terminal-basics">1) Terminal
+Basics</a></li>
+<li><a href="#python-and-virtual-environments"
+id="toc-python-and-virtual-environments">2) Python and Virtual
+Environments</a></li>
+<li><a href="#yaml-basics-for-slowdashproject.yaml"
+id="toc-yaml-basics-for-slowdashproject.yaml">3) YAML Basics for
+<code>SlowdashProject.yaml</code></a></li>
+<li><a href="#data-time-representation"
+id="toc-data-time-representation">4) Data Time Representation</a></li>
+<li><a href="#table-structure-description-schema-descriptor"
+id="toc-table-structure-description-schema-descriptor">5) Table
+Structure Description (Schema Descriptor)</a></li>
+<li><a href="#rdbms-and-sql-basics" id="toc-rdbms-and-sql-basics">6)
+RDBMS and SQL Basics</a></li>
+<li><a href="#basic-network-and-port-awareness"
+id="toc-basic-network-and-port-awareness">7) Basic Network and Port
+Awareness</a></li>
+<li><a href="#docker-and-docker-compose-basics"
+id="toc-docker-and-docker-compose-basics">8) Docker and Docker Compose
+Basics</a></li>
+<li><a href="#recommended-read-order" id="toc-recommended-read-order">9)
+Recommended Read Order</a></li>
+<li><a href="#quick-self-check" id="toc-quick-self-check">Quick
+Self-Check</a></li>
+</ul></li>
+</ul>
+</nav>
+</div>
+</header>
+
+<h1 id="before-you-start">Before You Start</h1>
+<p>This page summarizes the minimum background knowledge needed before
+following the SlowDash documentation, especially <a
+href="Installation.html">Installation</a>, <a
+href="QuickTour.html">Quick Tour</a>, <a
+href="ProjectSetup.html">Project Setup</a>, and <a
+href="DataBinding.html">Data Binding</a>.</p>
+<h2 id="who-this-is-for">Who This Is For</h2>
+<p>This documentation assumes you can:</p>
+<ul>
+<li>run commands in a terminal</li>
+<li>edit text files (YAML, Python, HTML)</li>
+<li>understand basic Python script execution</li>
+<li>understand basic database table concepts</li>
+</ul>
+<p>If you are new to some of these topics, the quick notes below are
+enough to get started.</p>
+<h2 id="terminal-basics">1) Terminal Basics</h2>
+<p>You should be comfortable with:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pwd                 # show current directory</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ ls -la              # list files</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/DIR      # move to a directory</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ mkdir MyProject     # create a directory</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 script.py   # run a Python script</span></span></code></pre></div>
+<p>You will often need multiple terminals:</p>
+<ul>
+<li>one terminal for <code>slowdash --port=18881</code></li>
+<li>one terminal for data generator / user task scripts</li>
+</ul>
+<h2 id="python-and-virtual-environments">2) Python and Virtual
+Environments</h2>
+<p>In native installation, SlowDash uses a project-local Python virtual
+environment (<code>venv</code>) prepared by <code>make</code>.</p>
+<p>Typical flow:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source PATH/TO/SLOWDASH/bin/slowdash-bashrc</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python your-script.py</span></span></code></pre></div>
+<p>What <code>venv</code> does:</p>
+<ul>
+<li>keeps dependencies isolated</li>
+<li>avoids breaking system Python</li>
+<li>ensures <code>slowpy</code> is available from your scripts</li>
+</ul>
+<p>For SlowDash users, the key point is:</p>
+<ul>
+<li>know what <code>venv</code> is (an isolated Python environment)</li>
+<li>run <code>slowdash-activate-venv</code> before running scripts in a
+new terminal</li>
+</ul>
+<p>Useful checks after activation:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ echo &quot;$VIRTUAL_ENV&quot;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ which python</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ which pip</span></span></code></pre></div>
+<p><code>$VIRTUAL_ENV</code> should be a non-empty path (for example,
+<code>.../venv</code>), and both <code>python</code> and
+<code>pip</code> should point to that environment.</p>
+<p>When <code>venv</code> is active:</p>
+<ul>
+<li>shell prompt often shows <code>(.venv)</code> (depends on
+shell)</li>
+<li><code>python</code> and <code>pip</code> point to
+<code>.venv/bin/...</code></li>
+<li>packages installed by <code>pip</code> stay inside that
+environment</li>
+</ul>
+<h3 id="if-your-system-python-is-too-old-eol-use-pyenv-venv">If your
+system Python is too old (EOL), use <code>pyenv</code> +
+<code>venv</code></h3>
+<p>If your OS-provided Python is already End-of-Life (EOL), avoid
+building your workflow on it. Use <code>pyenv</code> to install and
+select a supported Python version first, then run the normal SlowDash
+installation (<code>make</code>) so SlowDash sets up its
+<code>venv</code> with that Python.</p>
+<p>Example flow:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv install 3.12.9</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv local 3.12.9</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source PATH/TO/SLOWDASH/bin/slowdash-bashrc</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span></code></pre></div>
+<p>Enable <code>pyenv</code> automatically in new terminals:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ~/.bashrc</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PYENV_ROOT</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$HOME</span><span class="st">/.pyenv&quot;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PYENV_ROOT</span><span class="st">/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="bu">eval</span> <span class="st">&quot;</span><span class="va">$(</span><span class="ex">pyenv</span> init <span class="at">-</span> bash<span class="va">)</span><span class="st">&quot;</span></span></code></pre></div>
+<p>After editing <code>.bashrc</code>, reload it:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source ~/.bashrc</span></span></code></pre></div>
+<p>Then verify:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv version</span></span></code></pre></div>
+<p>Recommended approach:</p>
+<ul>
+<li><code>pyenv</code>: selects and manages Python runtime versions</li>
+<li><code>venv</code>: isolates project dependencies</li>
+<li>use both together for long-term reproducibility and security
+updates</li>
+</ul>
+<h2 id="yaml-basics-for-slowdashproject.yaml">3) YAML Basics for
+<code>SlowdashProject.yaml</code></h2>
+<p>SlowDash project configuration is written in YAML.</p>
+<p>Minimal example:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> QuickTour</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">title</span><span class="kw">:</span><span class="at"> SlowDash Quick Tour</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> sqlite:///QuickTourTestData.db</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> testdata[channel]@timestamp(unix)=value</span></span></code></pre></div>
+<p>Important YAML rules:</p>
+<ul>
+<li>indentation is semantic (use spaces, not tabs)</li>
+<li><code>key: value</code> pairs define mappings</li>
+<li>nested blocks are created by deeper indentation</li>
+</ul>
+<h2 id="data-time-representation">4) Data Time Representation</h2>
+<p>When data is recorded, each value has a timestamp. This section
+explains how that timestamp itself is represented:</p>
+<ul>
+<li><code>unix</code>: elapsed seconds from
+<code>1970-01-01 00:00:00 UTC</code> (UNIX epoch),
+timezone-independent</li>
+<li><code>with time zone</code> (or <code>aware</code>)</li>
+<li><code>without time zone</code> / <code>naive</code> (generally
+discouraged)</li>
+<li><code>unspecified utc</code> (time string without zone, but known to
+be UTC)</li>
+</ul>
+<p>Practical difference:</p>
+<ul>
+<li><code>unix</code> is a numeric elapsed-time representation</li>
+<li>other types are date-time representations written as
+year/month/day/hour/minute/second strings</li>
+</ul>
+<p>Use <code>unix</code> when possible for least ambiguity.</p>
+<h2 id="table-structure-description-schema-descriptor">5) Table
+Structure Description (Schema Descriptor)</h2>
+<p>Next, you need a way to describe the structure of your data table:
+which column is time, which is channel tag, and which is value. In
+SlowDash, this structure description is called a schema descriptor.</p>
+<p>A common pattern is:</p>
+<pre><code>table[tag]@time_column(type)=value_column</code></pre>
+<p>Examples:</p>
+<ul>
+<li><code>testdata[channel]@timestamp(unix)=value</code></li>
+<li><code>numeric_data[endpoint]@timestamp(with timezone)=value_raw</code></li>
+</ul>
+<p>Meaning:</p>
+<ul>
+<li><code>table</code>: source table or measurement</li>
+<li><code>[tag]</code>: column used as channel name</li>
+<li><code>@time_column(type)</code>: timestamp source and type</li>
+<li><code>=value_column</code>: value field</li>
+</ul>
+<h2 id="rdbms-and-sql-basics">6) RDBMS and SQL Basics</h2>
+<p>SlowDash commonly reads data from SQL databases (RDBMS), such as
+PostgreSQL, MySQL, and SQLite. As a first image, think of RDBMS as
+storing data in multiple table-like sheets, similar to Excel. (Strictly
+speaking, RDBMS also defines formal relations between tables, which is
+beyond this introductory image.)</p>
+<p>Minimum concepts:</p>
+<ul>
+<li>a <strong>table</strong> stores data in rows and columns</li>
+<li>a <strong>row</strong> is one record (one timestamped measurement,
+for example)</li>
+<li>a <strong>column</strong> is one attribute (<code>timestamp</code>,
+<code>channel</code>, <code>value</code>, etc.)</li>
+<li><code>PRIMARY KEY</code> uniquely identifies a row (often timestamp
++ channel in time-series tables)</li>
+</ul>
+<p>Minimum SQL you should recognize:</p>
+<ul>
+<li><code>SELECT ... FROM table</code> to read data</li>
+<li><code>WHERE ...</code> to filter rows</li>
+<li><code>ORDER BY ...</code> to sort rows</li>
+<li><code>LIMIT N</code> to fetch only part of the result</li>
+</ul>
+<p>Example:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="dt">timestamp</span>, channel, <span class="fu">value</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> testdata</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> channel <span class="op">=</span> <span class="st">&#39;ch00&#39;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dt">timestamp</span> <span class="kw">DESC</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div>
+<p>You do not need advanced SQL to start Quick Tour, but these basics
+help when checking and troubleshooting data bindings.</p>
+<h2 id="basic-network-and-port-awareness">7) Basic Network and Port
+Awareness</h2>
+<p>SlowDash server examples often use port <code>18881</code>.</p>
+<ul>
+<li>open browser to <code>http://localhost:18881</code></li>
+<li>if using Docker, map <code>-p 18881:18881</code></li>
+<li>ensure the port is not already occupied</li>
+</ul>
+<h2 id="docker-and-docker-compose-basics">8) Docker and Docker Compose
+Basics</h2>
+<p>Containers are optional in SlowDash. If you are not familiar with
+containers, you do not need to use Docker to get started; native
+installation is a valid and recommended first path.</p>
+<p>When to skip containers (at first):</p>
+<ul>
+<li>you are learning SlowDash basics</li>
+<li>you use a single machine and simple setup</li>
+<li>you prefer fewer moving parts while troubleshooting</li>
+</ul>
+<p>If you are new to containers, start with this mental model:</p>
+<ul>
+<li>a <strong>container image</strong> is a packaged runtime environment
+(application command + dependencies + runtime settings)</li>
+<li>a <strong>container</strong> is a running instance created from that
+image</li>
+<li>Docker runs one container with one command</li>
+<li>Docker Compose is a tool to run and coordinate multiple related
+containers</li>
+</ul>
+<p>For SlowDash, this means:</p>
+<ul>
+<li>if Docker is already installed, you can pull an existing SlowDash
+image and start using SlowDash without installing SlowDash itself on
+your host</li>
+<li>you do not need to install SlowDash Python dependencies directly on
+your host</li>
+<li>your project files stay on your host machine</li>
+<li>the SlowDash process runs inside the container and reads your
+mounted project directory</li>
+</ul>
+<p>Why introduce containers later:</p>
+<ul>
+<li>reproducibility: same runtime environment across machines</li>
+<li>cleaner host system: fewer Python packages installed globally</li>
+<li>easier team sharing: colleagues can run with the same image and
+compose file</li>
+<li>safer upgrades/rollbacks: switch image tags with less host-side
+impact</li>
+<li>better multi-service workflows: easy to combine SlowDash with
+DB/reverse-proxy/notebook services</li>
+</ul>
+<p>Important options in examples:</p>
+<ul>
+<li><code>-v $(pwd):/project</code>
+<ul>
+<li>left side (<code>$(pwd)</code>): your current host directory</li>
+<li>right side (<code>/project</code>): path inside the container</li>
+<li>effect: files edited on host are immediately visible in the
+container</li>
+</ul></li>
+<li><code>-p 18881:18881</code>
+<ul>
+<li>left side: host port</li>
+<li>right side: container port</li>
+<li>effect: browser access to <code>http://localhost:18881</code>
+reaches SlowDash in the container</li>
+</ul></li>
+<li><code>--rm</code>
+<ul>
+<li>remove the container automatically when it stops</li>
+<li>useful for temporary test runs</li>
+</ul></li>
+</ul>
+<p>Minimal single-container example:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd YOUR_PROJECT_DIR</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash</span></span></code></pre></div>
+<p>What happens:</p>
+<ol type="1">
+<li>Docker downloads the image if needed.</li>
+<li>A container starts and runs SlowDash.</li>
+<li>You open <code>http://localhost:18881</code> in your browser.</li>
+<li>When you stop it, that container is removed (<code>--rm</code>), but
+your project files remain on host.</li>
+</ol>
+<p>Minimal Docker Compose example:</p>
+<p>In many practical setups, you also want a database without installing
+it directly on your host. In that case, both SlowDash and the database
+run as containers, so you need to run at least two containers together.
+Docker Compose automates this multi-container startup/shutdown from one
+configuration file.</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">postgres</span><span class="kw">:</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> postgres:16</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> POSTGRES_USER=slowdash</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> POSTGRES_PASSWORD=slowdash</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> POSTGRES_DB=slowdash</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> postgres-data:/var/lib/postgresql/data</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowdash</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> postgres</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> .:/project</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881:18881&quot;</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">postgres-data</span><span class="kw">:</span></span></code></pre></div>
+<p>Why Compose is useful:</p>
+<ul>
+<li>no manual step-by-step startup of multiple containers</li>
+<li>one <code>docker compose up</code> can start SlowDash + database
+together</li>
+<li>one <code>docker compose down</code> can stop them together</li>
+<li>service definitions stay in a file and are easy to share with
+teammates</li>
+</ul>
+<p>Start and stop:</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down</span></span></code></pre></div>
+<h2 id="recommended-read-order">9) Recommended Read Order</h2>
+<p>For most users:</p>
+<ol type="1">
+<li><a href="Installation.html">Installation</a></li>
+<li><a href="QuickTour.html">Quick Tour</a></li>
+<li><a href="ProjectSetup.html">Project Setup</a></li>
+<li><a href="DataBinding.html">Data Binding</a></li>
+<li><a href="ControlsScript.html">Controls</a></li>
+</ol>
+<h2 id="quick-self-check">Quick Self-Check</h2>
+<p>Before starting Quick Tour, confirm:</p>
+<ul>
+<li>you can run <code>slowdash</code> command</li>
+<li><code>slowdash-activate-venv</code> works (native setup)</li>
+<li>you can create/edit <code>SlowdashProject.yaml</code></li>
+<li>you understand that <code>length</code> in queries means time range,
+not number of samples</li>
+</ul>
+<p>If all are true, you are ready.</p>
+
+
+</body>
+</html>
