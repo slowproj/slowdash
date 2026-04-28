@@ -10,7 +10,7 @@ This tour demonstrates how to use SlowDash with SQLite as the data backend, whic
 - Run SlowDash with a dummy data
 - Create interactive plots through the web interface
 - Write scripts to read data from devices
-- ~~Send commands to user scripts~~ (coming soon)
+- Send commands from the web interface to user scripts
 
 ### Getting Started
 First, create and navigate to a new project directory:
@@ -493,16 +493,6 @@ device = ctrl.visa('USB00::0x2A8D::0x201:MY54700218::00::INSTR').scpi()
 
 For Ethernet devices using HiSLIP, also use VISA with an address like: `TCPIP0::<IP address>::hislip0`.
 
-## Next Steps
-
-- Add a `task` entry in `SlowdashProject.yaml` to auto-launch the script.
-- Configure security in the same file to allow browser-side script editing.
-- Create UI elements (buttons, inputs) to call arbitrary Python functions from the browser.
-- Generate histograms/plots within scripts and stream or store them for display in SlowDash.
-
-See the "Project Configuration" and "Controls Script" chapters in the official documentation for details.
-
-
 ## Bonus: Turning a Raspberry Pi into an SCPI Device
 The SlowPy library also includes a server-side SCPI interface, allowing any Python program to act as an SCPI-controllable device, making it fully compatible with SlowDash monitoring, control, and data storage.
 
@@ -533,3 +523,254 @@ Standard commands like `*IDN?` and `*OPC?` are already implemented in the base c
 
 If you add this script to `/etc/rc.local` or a similar startup mechanism, your Raspberry Pi can act as a real SCPI device accessible over the network.
 This is convenient not only for using the attached hardware through GPIB/I2C/SPI, but also for integrating USB devices (even with a vendor-provided library) as Ethernet-SCPI devices.
+
+
+# Control from the Web GUI
+In the two examples above, we first used SlowDash as a data browser and then used the SlowPy library to retrieve data, but they were separate pieces. Here, we will integrate them so that you can control a device from the browser, acquire data, and send it back to the browser either through the database or by direct streaming for display.
+
+We will proceed in the following four steps:
+
+1. Create an input form with buttons in the browser and call Python script functions on button clicks
+2. Add input elements in the browser and pass their values as function call arguments
+3. Send data directly from Python code to the browser and change control panel display based on the current state
+4. Build a histogram in Python code and send it directly to the browser for real-time display
+
+Eventually, we will create a SlowDash layout like this:
+
+<img src="fig/QuickTour-DeviceControlFull.png" style="width:70%;box-shadow:0px 0px 15px -5px rgba(0,0,0,0.7);">
+
+
+## Calling Functions from the Browser
+(The code used here is in `ExampleProjects/QuickTour/03_RealDeviceControl/01_StartStop`.)
+
+On the SlowDash browser, you can display user-created HTML forms. 
+If you place input elements such as `<input type="number">` there and create buttons with `<input type="submit">`, clicking a button can call a function in your Python script.
+The function name to call is specified with the button's `name` attribute.
+
+First, we add start/stop control to the device readout script created in the previous example. 
+This time, save it as `slowtask-testdaq.py` under the `config` directory.
+```python
+from dataclasses import dataclass
+
+@dataclass
+class RunStatus:
+    running: bool = False
+run_status = RunStatus()
+    
+
+from slowpy.control import control_system as ctrl
+device = ctrl.ethernet('192.168.1.34', 5025).scpi()
+
+from slowpy.store import DataStore_SQLite
+datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata")
+
+
+def _loop():
+    if run_status.running:
+        try:
+            volt = float(device.command('MEAS:VOLT:DC?').get() or 'nan')
+            datastore.append({'volt': volt})
+        except Exception as e:
+            print(f'ERROR: {e}')
+        
+    ctrl.sleep(1)
+
+
+def start():
+    run_status.running = True
+    
+    
+def stop():
+    run_status.running = False
+```
+The `run_status` data class manages the current run state. 
+Later we will add more state variables, but for now it only has the `running` flag that indicates whether acquisition is active. 
+The main loop checks this variable to decide whether to read data from the device. 
+We also define `start()` and `stop()` so this flag can be set externally.
+We also added error handling to make the script more practical in realistic situations.
+
+Create a form to call these `start()` and `stop()` functions from the browser, save it as `html-testdaq.html`, and place it under `config`. 
+The filename must start with `html-` and have the `.html` extension.
+
+```html
+<form>
+  <input type="submit" name="testdaq.start()" value="Start">
+  <input type="submit" name="testdaq.stop()" value="Stop">
+</form>    
+```
+
+Here, we simply create two buttons corresponding to the two functions. 
+In each button's `name` attribute, specify which function in which file should be called when the button is clicked. 
+The `name` format is the script filename (the `XXX` part of `slowtask-XXX.py`) and the function name in that script.
+
+After creating and placing these files under `config`, restart slowdash. 
+In the SlowTask section at the lower left of the home screen, you should see a task called `testdaq`; click `start` there to start the script.
+If manually starting every time is inconvenient, add the following to `SlowdashProject.yaml` to auto-start the script when slowdash starts.
+
+```yaml
+slowdash_project:
+  name: QuickTour
+  title: SlowDash Quick Tour
+  
+  data_source:
+    url: sqlite:///QuickTourTestData.db
+    time_series:
+      schema: testdata [channel] @timestamp(unix) = value
+
+  task:
+    name: testdaq
+    auto_load: true
+```
+
+Once the script is running, create a new layout via New Plot Layout, choose HTML Form in Add New Panel, and set the HTML file to `testdaq`. 
+This should place a form with two buttons in the layout.
+By clicking the buttons, you can start/stop data acquisition, and once data is saved, you can create a time-series plot using the same steps as before.
+(No data exists before the first Start, so you cannot create the plot yet. After pressing Start, click the Channel List refresh button, or save the layout and reload the whole page.)
+
+## Passing Parameters from the Browser
+(The code used here is in `ExampleProjects/QuickTour/03_RealDeviceControl/02_Params`.)
+
+Next, we add input elements to the form so their values are passed to the script as function arguments.
+Here, we add an option to specify run duration so the run can automatically stop after the specified time.
+The new variables are a real-valued run length `run_length` and a boolean `auto_stop` indicating whether auto-stop is enabled.
+On the HTML side, we only add input elements. 
+A checkbox is used for the boolean.
+
+```html
+<form>
+  <input type="checkbox" name="auto_stop">Stop After:
+  <input type="number" name="run_length" value="10">
+  <br>
+  <input type="submit" name="testdaq.start()" value="Start">
+  <input type="submit" name="testdaq.stop()" value="Stop">
+</form>    
+```
+
+The `name` attribute of each `<input>` element becomes the parameter name on the script side.
+In the script, add parameters to the function called when a button is pressed.
+To support auto-stop and related behavior, we add several required fields to `RunStatus`.
+
+```python
+@dataclass
+class RunStatus:
+    auto_stop: bool = False
+    run_length: float = 0
+    start_time: float = 0
+    running: bool = False
+run_status = RunStatus()
+
+
+def _loop():
+    if run_status.running:
+        try:
+            volt = float(device.command('MEAS:VOLT:DC?').get() or 'nan')
+            datastore.append({'volt': volt})
+        except Exception as e:
+            print(f'ERROR: {e}')
+            
+        if run_status.auto_stop:
+            now = time.time()
+            if now - run_status.start_time >= run_status.run_length:
+                run_status.running = False
+                        
+    ctrl.sleep(1)
+
+
+def start(auto_stop:bool, run_length:float):
+    run_status.auto_stop = auto_stop
+    run_status.run_length = run_length
+
+    run_status.start_time = time.time()
+    run_status.running = True
+    
+    
+def stop():
+    run_status.running = False
+```
+
+As in this example, if you add type annotations to function parameters, type checking and conversion are automatically performed before the function call. 
+If the types do not match, an error is returned to the browser before the function is called.
+
+## Sending Status Information from the Script to the Browser
+(The code used here is in `ExampleProjects/QuickTour/03_RealDeviceControl/03_Status`.)
+
+On the browser side, it is convenient to display the current status and enable/disable buttons such as Start and Stop accordingly.
+To do this, we send data directly from the script to the browser so the HTML form can be controlled dynamically.
+
+To send data directly from the script to the browser without going through the database, use `ctrl.stream(name:str, value)` on the `ControlSystem` instance `ctrl` (`await ctrl.aio_stream(name, value)` for async).
+For `value`, you can pass numbers and strings, as well as dataclasses and dicts.
+Numbers and strings are treated as scalar data, while dataclasses and dicts are treated as Tree-type data.
+
+In the example below, Run Status is sent every second.
+
+```python
+def _loop():
+    if run_status.running:
+        try:
+            volt = float(device.command('MEAS:VOLT:DC?').get() or 'nan')
+            datastore.append({'volt': volt})
+        except Exception as e:
+            print(f'ERROR: {e}')
+            
+        if run_status.auto_stop:
+            now = time.time()
+            if now - run_status.start_time >= run_status.run_length:
+                run_status.running = False
+
+    ctrl.stream('run_status', run_status)
+    ctrl.sleep(1)
+```
+Because Run Status is a dataclass, the browser can display it directly as Tree data.
+Restart SlowDash, or stop and start this script again from the SlowTask panel, and `run_status` will appear in Data Channels as `current tree` data.
+In the layout containing the input form created earlier, you can add it via Add a New Panel -> Tree -> `run_status`.
+
+In HTML added as an HTML form panel in a layout, SlowDash provides an extension where `<input>` elements can use the `sd-enabled` attribute, allowing the `enabled` state to be dynamically switched based on a data value.
+Here the data value for `sd-enabled` must be boolean.
+If the data value is not boolean, use SlowDash Data Transform to convert it.
+In this example, `run_status` is a Tree type, so we extract the `running` field and apply logical inversion (`invert()`) as needed.
+Data Transform is still in an experimental stage and may change in the future, but the basic features used here are likely to remain.
+
+```html
+<form>
+  <input type="checkbox" name="auto_stop">Stop After:
+  <input type="number" name="run_length" value="10">
+  <br>
+  <input type="submit" name="testdaq.start()" value="Start" sd-enabled="run_status['running']->invert()">
+  <input type="submit" name="testdaq.stop()" value="Stop" sd-enabled="run_status['running']">
+</form>    
+```
+Other frequently used Data Transforms for `sd-enabled` include `->gt(thresh)` / `->lt(thresh)` for numeric comparisons and `->match(pattern)` for string matching.
+
+## Run Analysis in the Script and Send to the Browser
+(The code used here is in `ExampleProjects/QuickTour/03_RealDeviceControl/04_Analysis`.)
+
+The SlowPy library includes lightweight analysis data objects such as histograms, and histograms built with them can also be streamed to the browser. 
+(You can also save them to the database as usual.)
+Below is an example that reads data every second, records it in the database, updates a histogram, and sends it to the browser in real time.
+
+```python
+from slowpy import Histogram
+histogram = Histogram(nbins=20, range_min=-10, range_max=10)
+
+
+def _loop():
+    if run_status.running:
+        try:
+            volt = float(device.command('MEAS:VOLT:DC?').get() or 'nan')
+            datastore.append({'volt': volt})
+            histogram.fill(volt)
+        except Exception as e:
+            print(f'ERROR: {e}')
+            
+        if run_status.auto_stop:
+            now = time.time()
+            if now - run_status.start_time >= run_status.run_length:
+                run_status.running = False
+
+    ctrl.stream('run_status', run_status)
+    ctrl.stream('hist01', histogram)
+    ctrl.sleep(1)
+```
+
+Restart SlowDash, or stop and start this script again from the SlowTask panel, and `hist01` will appear in Data Channels as `current histogram` data.
+You can add it to the layout via Add a New Panel -> XY Plot -> Histogram Object -> `hist01`.

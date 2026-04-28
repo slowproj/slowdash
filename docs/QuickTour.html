@@ -115,10 +115,25 @@ id="toc-integrating-the-script-into-the-slowdash-application">Integrating
 the Script into the SlowDash Application</a></li>
 <li><a href="#additional-notes" id="toc-additional-notes">Additional
 Notes</a></li>
-<li><a href="#next-steps" id="toc-next-steps">Next Steps</a></li>
 <li><a href="#bonus-turning-a-raspberry-pi-into-an-scpi-device"
 id="toc-bonus-turning-a-raspberry-pi-into-an-scpi-device">Bonus: Turning
 a Raspberry Pi into an SCPI Device</a></li>
+</ul></li>
+<li><a href="#control-from-the-web-gui"
+id="toc-control-from-the-web-gui">Control from the Web GUI</a>
+<ul>
+<li><a href="#calling-functions-from-the-browser"
+id="toc-calling-functions-from-the-browser">Calling Functions from the
+Browser</a></li>
+<li><a href="#passing-parameters-from-the-browser"
+id="toc-passing-parameters-from-the-browser">Passing Parameters from the
+Browser</a></li>
+<li><a href="#sending-status-information-from-the-script-to-the-browser"
+id="toc-sending-status-information-from-the-script-to-the-browser">Sending
+Status Information from the Script to the Browser</a></li>
+<li><a href="#run-analysis-in-the-script-and-send-to-the-browser"
+id="toc-run-analysis-in-the-script-and-send-to-the-browser">Run Analysis
+in the Script and Send to the Browser</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -136,7 +151,7 @@ completely removed by simply deleting that directory.</p>
 <li>Run SlowDash with a dummy data</li>
 <li>Create interactive plots through the web interface</li>
 <li>Write scripts to read data from devices</li>
-<li><del>Send commands to user scripts</del> (coming soon)</li>
+<li>Send commands from the web interface to user scripts</li>
 </ul>
 <h3 id="getting-started">Getting Started</h3>
 <p>First, create and navigate to a new project directory:</p>
@@ -699,19 +714,6 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb38-1"><a h
 <span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="co"># (rest is the same)</span></span></code></pre></div>
 <p>For Ethernet devices using HiSLIP, also use VISA with an address
 like: <code>TCPIP0::&lt;IP address&gt;::hislip0</code>.</p>
-<h2 id="next-steps">Next Steps</h2>
-<ul>
-<li>Add a <code>task</code> entry in <code>SlowdashProject.yaml</code>
-to auto-launch the script.</li>
-<li>Configure security in the same file to allow browser-side script
-editing.</li>
-<li>Create UI elements (buttons, inputs) to call arbitrary Python
-functions from the browser.</li>
-<li>Generate histograms/plots within scripts and stream or store them
-for display in SlowDash.</li>
-</ul>
-<p>See the “Project Configuration” and “Controls Script” chapters in the
-official documentation for details.</p>
 <h2 id="bonus-turning-a-raspberry-pi-into-an-scpi-device">Bonus: Turning
 a Raspberry Pi into an SCPI Device</h2>
 <p>The SlowPy library also includes a server-side SCPI interface,
@@ -749,6 +751,285 @@ accessible over the network. This is convenient not only for using the
 attached hardware through GPIB/I2C/SPI, but also for integrating USB
 devices (even with a vendor-provided library) as Ethernet-SCPI
 devices.</p>
+<h1 id="control-from-the-web-gui">Control from the Web GUI</h1>
+<p>In the two examples above, we first used SlowDash as a data browser
+and then used the SlowPy library to retrieve data, but they were
+separate pieces. Here, we will integrate them so that you can control a
+device from the browser, acquire data, and send it back to the browser
+either through the database or by direct streaming for display.</p>
+<p>We will proceed in the following four steps:</p>
+<ol type="1">
+<li>Create an input form with buttons in the browser and call Python
+script functions on button clicks</li>
+<li>Add input elements in the browser and pass their values as function
+call arguments</li>
+<li>Send data directly from Python code to the browser and change
+control panel display based on the current state</li>
+<li>Build a histogram in Python code and send it directly to the browser
+for real-time display</li>
+</ol>
+<p>Eventually, we will create a SlowDash layout like this:</p>
+<p><img src="fig/QuickTour-DeviceControlFull.png" style="width:70%;box-shadow:0px 0px 15px -5px rgba(0,0,0,0.7);"></p>
+<h2 id="calling-functions-from-the-browser">Calling Functions from the
+Browser</h2>
+<p>(The code used here is in
+<code>ExampleProjects/QuickTour/03_RealDeviceControl/01_StartStop</code>.)</p>
+<p>On the SlowDash browser, you can display user-created HTML forms. If
+you place input elements such as
+<code>&lt;input type="number"&gt;</code> there and create buttons with
+<code>&lt;input type="submit"&gt;</code>, clicking a button can call a
+function in your Python script. The function name to call is specified
+with the button’s <code>name</code> attribute.</p>
+<p>First, we add start/stop control to the device readout script created
+in the previous example. This time, save it as
+<code>slowtask-testdaq.py</code> under the <code>config</code>
+directory.</p>
+<div class="sourceCode" id="cb40"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dataclasses <span class="im">import</span> dataclass</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RunStatus:</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>    running: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>run_status <span class="op">=</span> RunStatus()</span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;192.168.1.34&#39;</span>, <span class="dv">5025</span>).scpi()</span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_SQLite</span>
+<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_SQLite(<span class="st">&#39;sqlite:///QuickTourTestData.db&#39;</span>, table<span class="op">=</span><span class="st">&quot;testdata&quot;</span>)</span>
+<span id="cb40-14"><a href="#cb40-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-15"><a href="#cb40-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-16"><a href="#cb40-16" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
+<span id="cb40-17"><a href="#cb40-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> run_status.running:</span>
+<span id="cb40-18"><a href="#cb40-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
+<span id="cb40-19"><a href="#cb40-19" aria-hidden="true" tabindex="-1"></a>            volt <span class="op">=</span> <span class="bu">float</span>(device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get() <span class="kw">or</span> <span class="st">&#39;nan&#39;</span>)</span>
+<span id="cb40-20"><a href="#cb40-20" aria-hidden="true" tabindex="-1"></a>            datastore.append({<span class="st">&#39;volt&#39;</span>: volt})</span>
+<span id="cb40-21"><a href="#cb40-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
+<span id="cb40-22"><a href="#cb40-22" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f&#39;ERROR: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb40-23"><a href="#cb40-23" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb40-24"><a href="#cb40-24" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span>
+<span id="cb40-25"><a href="#cb40-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-26"><a href="#cb40-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-27"><a href="#cb40-27" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> start():</span>
+<span id="cb40-28"><a href="#cb40-28" aria-hidden="true" tabindex="-1"></a>    run_status.running <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb40-29"><a href="#cb40-29" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb40-30"><a href="#cb40-30" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb40-31"><a href="#cb40-31" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> stop():</span>
+<span id="cb40-32"><a href="#cb40-32" aria-hidden="true" tabindex="-1"></a>    run_status.running <span class="op">=</span> <span class="va">False</span></span></code></pre></div>
+<p>The <code>run_status</code> data class manages the current run state.
+Later we will add more state variables, but for now it only has the
+<code>running</code> flag that indicates whether acquisition is active.
+The main loop checks this variable to decide whether to read data from
+the device. We also define <code>start()</code> and <code>stop()</code>
+so this flag can be set externally. We also added error handling to make
+the script more practical in realistic situations.</p>
+<p>Create a form to call these <code>start()</code> and
+<code>stop()</code> functions from the browser, save it as
+<code>html-testdaq.html</code>, and place it under <code>config</code>.
+The filename must start with <code>html-</code> and have the
+<code>.html</code> extension.</p>
+<div class="sourceCode" id="cb41"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.start()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Start&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.stop()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Stop&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span>    </span></code></pre></div>
+<p>Here, we simply create two buttons corresponding to the two
+functions. In each button’s <code>name</code> attribute, specify which
+function in which file should be called when the button is clicked. The
+<code>name</code> format is the script filename (the <code>XXX</code>
+part of <code>slowtask-XXX.py</code>) and the function name in that
+script.</p>
+<p>After creating and placing these files under <code>config</code>,
+restart slowdash. In the SlowTask section at the lower left of the home
+screen, you should see a task called <code>testdaq</code>; click
+<code>start</code> there to start the script. If manually starting every
+time is inconvenient, add the following to
+<code>SlowdashProject.yaml</code> to auto-start the script when slowdash
+starts.</p>
+<div class="sourceCode" id="cb42"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> QuickTour</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">title</span><span class="kw">:</span><span class="at"> SlowDash Quick Tour</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> sqlite:///QuickTourTestData.db</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> testdata [channel] @timestamp(unix) = value</span></span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">task</span><span class="kw">:</span></span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> testdaq</span></span>
+<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">auto_load</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div>
+<p>Once the script is running, create a new layout via New Plot Layout,
+choose HTML Form in Add New Panel, and set the HTML file to
+<code>testdaq</code>. This should place a form with two buttons in the
+layout. By clicking the buttons, you can start/stop data acquisition,
+and once data is saved, you can create a time-series plot using the same
+steps as before. (No data exists before the first Start, so you cannot
+create the plot yet. After pressing Start, click the Channel List
+refresh button, or save the layout and reload the whole page.)</p>
+<h2 id="passing-parameters-from-the-browser">Passing Parameters from the
+Browser</h2>
+<p>(The code used here is in
+<code>ExampleProjects/QuickTour/03_RealDeviceControl/02_Params</code>.)</p>
+<p>Next, we add input elements to the form so their values are passed to
+the script as function arguments. Here, we add an option to specify run
+duration so the run can automatically stop after the specified time. The
+new variables are a real-valued run length <code>run_length</code> and a
+boolean <code>auto_stop</code> indicating whether auto-stop is enabled.
+On the HTML side, we only add input elements. A checkbox is used for the
+boolean.</p>
+<div class="sourceCode" id="cb43"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;checkbox&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;auto_stop&quot;</span><span class="dt">&gt;</span>Stop After:</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;run_length&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.start()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Start&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.stop()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Stop&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span>    </span></code></pre></div>
+<p>The <code>name</code> attribute of each <code>&lt;input&gt;</code>
+element becomes the parameter name on the script side. In the script,
+add parameters to the function called when a button is pressed. To
+support auto-stop and related behavior, we add several required fields
+to <code>RunStatus</code>.</p>
+<div class="sourceCode" id="cb44"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RunStatus:</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>    auto_stop: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>    run_length: <span class="bu">float</span> <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>    start_time: <span class="bu">float</span> <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>    running: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>run_status <span class="op">=</span> RunStatus()</span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
+<span id="cb44-11"><a href="#cb44-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> run_status.running:</span>
+<span id="cb44-12"><a href="#cb44-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
+<span id="cb44-13"><a href="#cb44-13" aria-hidden="true" tabindex="-1"></a>            volt <span class="op">=</span> <span class="bu">float</span>(device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get() <span class="kw">or</span> <span class="st">&#39;nan&#39;</span>)</span>
+<span id="cb44-14"><a href="#cb44-14" aria-hidden="true" tabindex="-1"></a>            datastore.append({<span class="st">&#39;volt&#39;</span>: volt})</span>
+<span id="cb44-15"><a href="#cb44-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
+<span id="cb44-16"><a href="#cb44-16" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f&#39;ERROR: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb44-17"><a href="#cb44-17" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb44-18"><a href="#cb44-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> run_status.auto_stop:</span>
+<span id="cb44-19"><a href="#cb44-19" aria-hidden="true" tabindex="-1"></a>            now <span class="op">=</span> time.time()</span>
+<span id="cb44-20"><a href="#cb44-20" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> now <span class="op">-</span> run_status.start_time <span class="op">&gt;=</span> run_status.run_length:</span>
+<span id="cb44-21"><a href="#cb44-21" aria-hidden="true" tabindex="-1"></a>                run_status.running <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb44-22"><a href="#cb44-22" aria-hidden="true" tabindex="-1"></a>                        </span>
+<span id="cb44-23"><a href="#cb44-23" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span>
+<span id="cb44-24"><a href="#cb44-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-25"><a href="#cb44-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-26"><a href="#cb44-26" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> start(auto_stop:<span class="bu">bool</span>, run_length:<span class="bu">float</span>):</span>
+<span id="cb44-27"><a href="#cb44-27" aria-hidden="true" tabindex="-1"></a>    run_status.auto_stop <span class="op">=</span> auto_stop</span>
+<span id="cb44-28"><a href="#cb44-28" aria-hidden="true" tabindex="-1"></a>    run_status.run_length <span class="op">=</span> run_length</span>
+<span id="cb44-29"><a href="#cb44-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-30"><a href="#cb44-30" aria-hidden="true" tabindex="-1"></a>    run_status.start_time <span class="op">=</span> time.time()</span>
+<span id="cb44-31"><a href="#cb44-31" aria-hidden="true" tabindex="-1"></a>    run_status.running <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb44-32"><a href="#cb44-32" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb44-33"><a href="#cb44-33" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb44-34"><a href="#cb44-34" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> stop():</span>
+<span id="cb44-35"><a href="#cb44-35" aria-hidden="true" tabindex="-1"></a>    run_status.running <span class="op">=</span> <span class="va">False</span></span></code></pre></div>
+<p>As in this example, if you add type annotations to function
+parameters, type checking and conversion are automatically performed
+before the function call. If the types do not match, an error is
+returned to the browser before the function is called.</p>
+<h2
+id="sending-status-information-from-the-script-to-the-browser">Sending
+Status Information from the Script to the Browser</h2>
+<p>(The code used here is in
+<code>ExampleProjects/QuickTour/03_RealDeviceControl/03_Status</code>.)</p>
+<p>On the browser side, it is convenient to display the current status
+and enable/disable buttons such as Start and Stop accordingly. To do
+this, we send data directly from the script to the browser so the HTML
+form can be controlled dynamically.</p>
+<p>To send data directly from the script to the browser without going
+through the database, use <code>ctrl.stream(name:str, value)</code> on
+the <code>ControlSystem</code> instance <code>ctrl</code>
+(<code>await ctrl.aio_stream(name, value)</code> for async). For
+<code>value</code>, you can pass numbers and strings, as well as
+dataclasses and dicts. Numbers and strings are treated as scalar data,
+while dataclasses and dicts are treated as Tree-type data.</p>
+<p>In the example below, Run Status is sent every second.</p>
+<div class="sourceCode" id="cb45"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> run_status.running:</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>            volt <span class="op">=</span> <span class="bu">float</span>(device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get() <span class="kw">or</span> <span class="st">&#39;nan&#39;</span>)</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>            datastore.append({<span class="st">&#39;volt&#39;</span>: volt})</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f&#39;ERROR: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> run_status.auto_stop:</span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>            now <span class="op">=</span> time.time()</span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> now <span class="op">-</span> run_status.start_time <span class="op">&gt;=</span> run_status.run_length:</span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a>                run_status.running <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-14"><a href="#cb45-14" aria-hidden="true" tabindex="-1"></a>    ctrl.stream(<span class="st">&#39;run_status&#39;</span>, run_status)</span>
+<span id="cb45-15"><a href="#cb45-15" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span></code></pre></div>
+<p>Because Run Status is a dataclass, the browser can display it
+directly as Tree data. Restart SlowDash, or stop and start this script
+again from the SlowTask panel, and <code>run_status</code> will appear
+in Data Channels as <code>current tree</code> data. In the layout
+containing the input form created earlier, you can add it via Add a New
+Panel -&gt; Tree -&gt; <code>run_status</code>.</p>
+<p>In HTML added as an HTML form panel in a layout, SlowDash provides an
+extension where <code>&lt;input&gt;</code> elements can use the
+<code>sd-enabled</code> attribute, allowing the <code>enabled</code>
+state to be dynamically switched based on a data value. Here the data
+value for <code>sd-enabled</code> must be boolean. If the data value is
+not boolean, use SlowDash Data Transform to convert it. In this example,
+<code>run_status</code> is a Tree type, so we extract the
+<code>running</code> field and apply logical inversion
+(<code>invert()</code>) as needed. Data Transform is still in an
+experimental stage and may change in the future, but the basic features
+used here are likely to remain.</p>
+<div class="sourceCode" id="cb46"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;checkbox&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;auto_stop&quot;</span><span class="dt">&gt;</span>Stop After:</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;run_length&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.start()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Start&quot;</span> <span class="er">sd-enabled</span><span class="ot">=</span><span class="st">&quot;run_status[&#39;running&#39;]-&gt;invert()&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.stop()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Stop&quot;</span> <span class="er">sd-enabled</span><span class="ot">=</span><span class="st">&quot;run_status[&#39;running&#39;]&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span>    </span></code></pre></div>
+<p>Other frequently used Data Transforms for <code>sd-enabled</code>
+include <code>-&gt;gt(thresh)</code> / <code>-&gt;lt(thresh)</code> for
+numeric comparisons and <code>-&gt;match(pattern)</code> for string
+matching.</p>
+<h2 id="run-analysis-in-the-script-and-send-to-the-browser">Run Analysis
+in the Script and Send to the Browser</h2>
+<p>(The code used here is in
+<code>ExampleProjects/QuickTour/03_RealDeviceControl/04_Analysis</code>.)</p>
+<p>The SlowPy library includes lightweight analysis data objects such as
+histograms, and histograms built with them can also be streamed to the
+browser. (You can also save them to the database as usual.) Below is an
+example that reads data every second, records it in the database,
+updates a histogram, and sends it to the browser in real time.</p>
+<div class="sourceCode" id="cb47"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy <span class="im">import</span> Histogram</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>histogram <span class="op">=</span> Histogram(nbins<span class="op">=</span><span class="dv">20</span>, range_min<span class="op">=-</span><span class="dv">10</span>, range_max<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> run_status.running:</span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>            volt <span class="op">=</span> <span class="bu">float</span>(device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get() <span class="kw">or</span> <span class="st">&#39;nan&#39;</span>)</span>
+<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>            datastore.append({<span class="st">&#39;volt&#39;</span>: volt})</span>
+<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a>            histogram.fill(volt)</span>
+<span id="cb47-11"><a href="#cb47-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
+<span id="cb47-12"><a href="#cb47-12" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f&#39;ERROR: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb47-13"><a href="#cb47-13" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb47-14"><a href="#cb47-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> run_status.auto_stop:</span>
+<span id="cb47-15"><a href="#cb47-15" aria-hidden="true" tabindex="-1"></a>            now <span class="op">=</span> time.time()</span>
+<span id="cb47-16"><a href="#cb47-16" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> now <span class="op">-</span> run_status.start_time <span class="op">&gt;=</span> run_status.run_length:</span>
+<span id="cb47-17"><a href="#cb47-17" aria-hidden="true" tabindex="-1"></a>                run_status.running <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb47-18"><a href="#cb47-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-19"><a href="#cb47-19" aria-hidden="true" tabindex="-1"></a>    ctrl.stream(<span class="st">&#39;run_status&#39;</span>, run_status)</span>
+<span id="cb47-20"><a href="#cb47-20" aria-hidden="true" tabindex="-1"></a>    ctrl.stream(<span class="st">&#39;hist01&#39;</span>, histogram)</span>
+<span id="cb47-21"><a href="#cb47-21" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span></code></pre></div>
+<p>Restart SlowDash, or stop and start this script again from the
+SlowTask panel, and <code>hist01</code> will appear in Data Channels as
+<code>current histogram</code> data. You can add it to the layout via
+Add a New Panel -&gt; XY Plot -&gt; Histogram Object -&gt;
+<code>hist01</code>.</p>
 
 
 </body>
