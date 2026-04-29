@@ -1,9 +1,8 @@
 import time, logging
-from slowpy.control import ControlSystem, ControlNode
+from slowpy.control import control_system as ctrl
 import slowpy.store as sls
 
-ControlSystem.import_control_module('DummyDevice')
-device = ControlSystem().randomwalk_device()
+device = ctrl.import_control_module('DummyDevice').randomwalk_device()
 ch0, ch1, ch2, ch3 = [ device.ch(ch) for ch in range(4) ]
 print("Random-Walk Device Loaded")
 
@@ -35,33 +34,6 @@ def stop():
     ch3.ramping().status().set(0)
 
 
-    
-### Exporting Variables ###
-    
-class StatusNode(ControlNode):
-    def get(self):
-        return {
-            'columns': [ 'Channel', 'Value', 'Ramping' ],
-            'table': [
-                [ 'Ch0', ch0.get(), 'Yes' if ch0.ramping().status().get() else 'No' ],
-                [ 'Ch1', ch1.get(), 'Yes' if ch1.ramping().status().get() else 'No' ],
-                [ 'Ch2', ch2.get(), 'Yes' if ch2.ramping().status().get() else 'No' ],
-                [ 'Ch3', ch3.get(), 'Yes' if ch3.ramping().status().get() else 'No' ],
-            ]
-        }
-
-
-    
-def _export():
-    return [
-        ('V0', ch0),
-        ('V1', ch1),
-        ('V2', ch2),
-        ('V3', ch3),
-        ('Status', StatusNode()),
-    ]
-
-
 
 ### Storing Data ###
 
@@ -85,11 +57,22 @@ def _loop():
     for ch in range(4):
         x = float(device.ch(ch))
         datastore.append(x, tag='ch%02d'%ch)
+        
+    status = {
+        'columns': [ 'Channel', 'Value', 'Ramping' ],
+        'table': [
+            [ 'Ch0', ch0.get(), 'Yes' if ch0.ramping().status().get() else 'No' ],
+            [ 'Ch1', ch1.get(), 'Yes' if ch1.ramping().status().get() else 'No' ],
+            [ 'Ch2', ch2.get(), 'Yes' if ch2.ramping().status().get() else 'No' ],
+            [ 'Ch3', ch3.get(), 'Yes' if ch3.ramping().status().get() else 'No' ],
+        ]
+    }
+    ctrl.stream('test.Status', status)
+    
     time.sleep(1)
 
 
 
-    
 ### Stand-alone Testing ###
     
 if __name__ == '__main__':

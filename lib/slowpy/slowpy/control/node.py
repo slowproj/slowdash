@@ -25,11 +25,11 @@ class dualmethod:
     
 class ControlException(Exception):
     def __init__(self, message):
-        self.message = message
+        self._message = message
 
         
     def __str__(self):
-        return str(self.message)
+        return str(self._message)
 
 
     
@@ -497,7 +497,7 @@ class ControlVariableNode(ControlNode):
         try:
             self._node_ramping
             if change_per_sec is not None:
-                self._node_ramping.change_per_sec = abs(float(change_per_sec))
+                self._node_ramping._change_per_sec = abs(float(change_per_sec))
         except:
             self._node_ramping = RampingNode(self, change_per_sec, set_format=set_format)
         return self._node_ramping
@@ -699,13 +699,13 @@ class RampingStatusNode(ControlNode):
         """set(0) to stop ramping
         """
         if str(zero_to_stop) == '0' or bool(zero_to_stop) == False:
-            self._ramping_node.running = False
+            self._ramping_node._running = False
 
     
     def get(self):
         """returns True if ramping is in progress
         """
-        return self._ramping_node.running
+        return self._ramping_node._running
 
 
     async def aio_set(self, zero_to_stop):

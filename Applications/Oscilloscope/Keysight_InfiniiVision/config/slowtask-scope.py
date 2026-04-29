@@ -17,13 +17,7 @@ config = {
     'running': False,
     'next_readout': 0,
 }
-
-class ConfigNode(ControlNode):
-    def get(self):
-        return { 'tree': config }
-
-def _export():
-    return [ ('config', ConfigNode()) ]
+ctrl.export(config, name='config')
 
 
 
