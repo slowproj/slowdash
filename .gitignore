@@ -6,3 +6,7 @@ __pycache__/
 .vscode/
 *.egg-info
 *~
+
+# slowdash-canvas install.sh symlinks (local, machine-specific)
+app/site/slowcanvas
+app/site/slowcanvas.html
