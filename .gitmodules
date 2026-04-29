@@ -7,3 +7,6 @@
 [submodule "system/web/autocruise"]
 	path = app/site/slowjs/autocruise
 	url = https://github.com/SanshiroEnomoto/autocruise.git
+[submodule "slowdash-canvas"]
+	path = slowdash-canvas
+	url = ./slowdash-canvas
