@@ -87,7 +87,7 @@ $ cd slowdash
 $ make
 ```
 
-This will create a bash file to set environmental variables. `source` it to include the settings:
+This will create a bash file to set environment variables. `source` it to include the settings:
 ```console
 $ source PATH/TO/SLOWDASH/bin/slowdash-bashrc
 ```
@@ -120,7 +120,7 @@ usage:
   Web-Server Mode:      slowdash.py [Options] --port=PORT
   Command-line Mode:    slowdash.py [Options] COMMAND
 
-Slowdash Version 250128 "Skykomish"
+SlowDash Version 250128 "Skykomish"
 
 positional arguments:
   COMMAND               API query string. Ex) "config", "channels", "data/CHANNELS?length=LENGTH"
@@ -129,14 +129,14 @@ options:
   -h, --help            show this help message and exit
   -p PORT, --port PORT  port number for web connection; command-line mode without this option
   --project-dir PROJECT_DIR
-                        project directory (default: current dir if not specified by SLOWDASH_PROJECT environmental variable)
+                        project directory (default: current dir if not specified by SLOWDASH_PROJECT environment variable)
 ...
 ```
 
 Test the web interface by starting the server on a test port. You'll see a warning about undefined project settings, which is expected at this stage:
 ```console
 $ slowdash --port=18881
-23-05-15 20:12:35 WARNING: unable to find Slowdash Project Dir: specify it with the --project-dir option, set the SLOWDASH_PROJECT environmental variable, or run the slowdash commands at a project directory
+23-05-15 20:12:35 WARNING: unable to find SlowDash Project Dir: specify it with the --project-dir option, set the SLOWDASH_PROJECT environment variable, or run the slowdash commands at a project directory
 listening at port 18881
 ```
 ```console

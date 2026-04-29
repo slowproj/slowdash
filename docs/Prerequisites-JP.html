@@ -85,34 +85,28 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span class="toc-title">Contents</span>
 <nav id="TOC">
 <ul>
-<li><a href="#はじめる前に" id="toc-はじめる前に">はじめる前に</a>
+<li><a href="#はじめる前に" id="toc-はじめる前に">はじめる前に</a></li>
+<li><a href="#ターミナルの基本"
+id="toc-ターミナルの基本">ターミナルの基本</a></li>
+<li><a href="#python-と仮想環境" id="toc-python-と仮想環境">Python
+と仮想環境</a>
 <ul>
-<li><a href="#想定している読者"
-id="toc-想定している読者">想定している読者</a></li>
-<li><a href="#ターミナルの基本" id="toc-ターミナルの基本">1)
-ターミナルの基本</a></li>
-<li><a href="#python-と仮想環境-venv" id="toc-python-と仮想環境-venv">2)
-Python と仮想環境 (<code>venv</code>)</a></li>
-<li><a href="#slowdashproject.yaml-の基礎"
-id="toc-slowdashproject.yaml-の基礎">3)
-<code>SlowdashProject.yaml</code> の基礎</a></li>
-<li><a href="#データの時刻の表現形式" id="toc-データの時刻の表現形式">4)
-データの時刻の表現形式</a></li>
-<li><a href="#データ記録テーブルの構造記述スキーマ記述子"
-id="toc-データ記録テーブルの構造記述スキーマ記述子">5)
-データ記録テーブルの構造記述（スキーマ記述子）</a></li>
-<li><a href="#rdbms-と-sql-の基礎" id="toc-rdbms-と-sql-の基礎">6) RDBMS
-と SQL の基礎</a></li>
-<li><a href="#ネットワークとポートの基本"
-id="toc-ネットワークとポートの基本">7)
-ネットワークとポートの基本</a></li>
-<li><a href="#docker-docker-compose-の基礎"
-id="toc-docker-docker-compose-の基礎">8) Docker / Docker Compose
-の基礎</a></li>
-<li><a href="#おすすめの読み順" id="toc-おすすめの読み順">9)
-おすすめの読み順</a></li>
-<li><a href="#事前チェック" id="toc-事前チェック">事前チェック</a></li>
+<li><a href="#システム-python-が古すぎる場合"
+id="toc-システム-python-が古すぎる場合">システム Python
+が古すぎる場合</a></li>
 </ul></li>
+<li><a href="#yaml" id="toc-yaml">YAML</a></li>
+<li><a href="#データの時刻の表現形式"
+id="toc-データの時刻の表現形式">データの時刻の表現形式</a></li>
+<li><a href="#rdbms-と-sql-の基礎" id="toc-rdbms-と-sql-の基礎">RDBMS と
+SQL の基礎</a></li>
+<li><a href="#データ記録テーブルの構造記述"
+id="toc-データ記録テーブルの構造記述">データ記録テーブルの構造記述</a></li>
+<li><a href="#ネットワークとポートの基本"
+id="toc-ネットワークとポートの基本">ネットワークとポートの基本</a></li>
+<li><a href="#docker-docker-compose-の基礎"
+id="toc-docker-docker-compose-の基礎">Docker / Docker Compose
+の基礎</a></li>
 </ul>
 </nav>
 </div>
@@ -124,8 +118,8 @@ href="Installation.html">Installation</a>、<a
 href="QuickTour.html">Quick Tour</a>、<a
 href="ProjectSetup.html">Project Setup</a>、<a
 href="DataBinding.html">Data
-Binding</a>）を読む前に必要な最小限の知識をまとめたものです．</p>
-<h2 id="想定している読者">想定している読者</h2>
+Binding</a>）を読む前に必要な最小限の知識をまとめたものです．この文書は
+Claude によって自動で作成されました．</p>
 <p>次のことができることを前提にしています．</p>
 <ul>
 <li>ターミナルでコマンドを実行できる</li>
@@ -134,7 +128,7 @@ Binding</a>）を読む前に必要な最小限の知識をまとめたもので
 <li>データベースのテーブルの基本概念を理解している</li>
 </ul>
 <p>不安がある場合でも、以下の要点だけ押さえれば開始できます．</p>
-<h2 id="ターミナルの基本">1) ターミナルの基本</h2>
+<h1 id="ターミナルの基本">ターミナルの基本</h1>
 <p>以下のコマンド操作に慣れているとスムーズです．</p>
 <div class="sourceCode" id="cb1"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pwd                 # 現在のディレクトリを表示</span></span>
@@ -147,8 +141,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <li>1つ目：<code>slowdash --port=18881</code> を起動</li>
 <li>2つ目：テストデータ生成やユーザースクリプトを実行</li>
 </ul>
-<h2 id="python-と仮想環境-venv">2) Python と仮想環境
-(<code>venv</code>)</h2>
+<h1 id="python-と仮想環境">Python と仮想環境</h1>
 <p>ネイティブ環境では、SlowDash は <code>make</code>
 の中で準備されるプロジェクト内 <code>venv</code> を使う構成です．</p>
 <p>代表的な流れ：</p>
@@ -185,9 +178,8 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <code>.venv/bin/...</code> を指す</li>
 <li><code>pip install</code> したパッケージはその環境内に閉じる</li>
 </ul>
-<h3 id="システム-python-が古すぎるeol場合pyenv-venv-を使う">システム
-Python が古すぎる（EOL）場合：<code>pyenv</code> + <code>venv</code>
-を使う</h3>
+<h2 id="システム-python-が古すぎる場合">システム Python
+が古すぎる場合</h2>
 <p>OS に標準で入っている Python が
 EOL（End-of-Life）に達している場合は、そのまま使わないことを推奨します．
 <code>pyenv</code> でサポート中の Python を先に選び、その後に通常どおり
@@ -200,12 +192,12 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source PATH/TO/SLOWDASH/bin/slowdash-bashrc</span></span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span></code></pre></div>
-<p>新しいターミナルで <code>pyenv</code> を自動有効化する設定：</p>
+<p>新しいターミナルで <code>pyenv</code> を自動有効化する設定
+(<code>.bashrc</code>)：</p>
 <div class="sourceCode" id="cb5"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ~/.bashrc</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PYENV_ROOT</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$HOME</span><span class="st">/.pyenv&quot;</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PYENV_ROOT</span><span class="st">/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="bu">eval</span> <span class="st">&quot;</span><span class="va">$(</span><span class="ex">pyenv</span> init <span class="at">-</span> bash<span class="va">)</span><span class="st">&quot;</span></span></code></pre></div>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PYENV_ROOT</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$HOME</span><span class="st">/.pyenv&quot;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PYENV_ROOT</span><span class="st">/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="bu">eval</span> <span class="st">&quot;</span><span class="va">$(</span><span class="ex">pyenv</span> init <span class="at">-</span> bash<span class="va">)</span><span class="st">&quot;</span></span></code></pre></div>
 <p><code>.bashrc</code>
 を編集したら、現在のシェルで再読み込みします：</p>
 <div class="sourceCode" id="cb6"><pre
@@ -219,8 +211,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <li><code>venv</code>：プロジェクト依存パッケージの隔離</li>
 <li>併用すると、再現性とセキュリティ更新の両方を確保しやすい</li>
 </ul>
-<h2 id="slowdashproject.yaml-の基礎">3)
-<code>SlowdashProject.yaml</code> の基礎</h2>
+<h1 id="yaml">YAML</h1>
 <p>プロジェクト設定は YAML で記述します．</p>
 <p>最小例：</p>
 <div class="sourceCode" id="cb8"><pre
@@ -237,7 +228,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb8-1"><a href="
 <li><code>key: value</code> で項目を定義</li>
 <li>深いインデントで入れ子を表現</li>
 </ul>
-<h2 id="データの時刻の表現形式">4) データの時刻の表現形式</h2>
+<h1 id="データの時刻の表現形式">データの時刻の表現形式</h1>
 <p>データを記録するときは、各データに時刻情報が付きます．
 この節では、その時刻情報そのものの表現形式を説明します．</p>
 <ul>
@@ -255,26 +246,7 @@ epoch）からの経過秒で，タイムゾーンに依存しない</li>
 <li>それ以外は、年月日時分秒で記述する日時文字列表現</li>
 </ul>
 <p>迷ったら、まず <code>unix</code> を使うのが安全です．</p>
-<h2 id="データ記録テーブルの構造記述スキーマ記述子">5)
-データ記録テーブルの構造記述（スキーマ記述子）</h2>
-<p>次に必要なのは、データ記録テーブルの構造をどう表すかです．
-つまり「どの列が時刻で、どの列がチャンネルで、どの列が値か」を記述します．
-SlowDash ではこの構造記述を「スキーマ記述子」と呼びます．</p>
-<p>よく使う形：</p>
-<pre><code>table[tag]@time_column(type)=value_column</code></pre>
-<p>例：</p>
-<ul>
-<li><code>testdata[channel]@timestamp(unix)=value</code></li>
-<li><code>numeric_data[endpoint]@timestamp(with timezone)=value_raw</code></li>
-</ul>
-<p>意味：</p>
-<ul>
-<li><code>table</code>：読み出し元テーブル（または measurement）</li>
-<li><code>[tag]</code>：チャンネル名として使う列</li>
-<li><code>@time_column(type)</code>：時刻列とその型</li>
-<li><code>=value_column</code>：値の列</li>
-</ul>
-<h2 id="rdbms-と-sql-の基礎">6) RDBMS と SQL の基礎</h2>
+<h1 id="rdbms-と-sql-の基礎">RDBMS と SQL の基礎</h1>
 <p>SlowDash では、PostgreSQL、MySQL、SQLite などの SQL
 データベース（RDBMS）をデータソースとして使うことが多いです．
 最初のイメージとしては、RDBMS は Excel
@@ -298,23 +270,41 @@ timestamp + channel の組がよく使われます）</li>
 <li><code>LIMIT N</code>：取得件数の上限指定</li>
 </ul>
 <p>例:</p>
-<div class="sourceCode" id="cb10"><pre
-class="sourceCode sql"><code class="sourceCode sql"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="dt">timestamp</span>, channel, <span class="fu">value</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> testdata</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> channel <span class="op">=</span> <span class="st">&#39;ch00&#39;</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dt">timestamp</span> <span class="kw">DESC</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="dt">timestamp</span>, channel, <span class="fu">value</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> testdata</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> channel <span class="op">=</span> <span class="st">&#39;ch00&#39;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dt">timestamp</span> <span class="kw">DESC</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div>
 <p>Quick Tour を進めるだけなら高度な SQL は不要ですが、この基礎があると
 Data Binding の確認やトラブルシュートがしやすくなります．</p>
-<h2 id="ネットワークとポートの基本">7) ネットワークとポートの基本</h2>
+<h1 id="データ記録テーブルの構造記述">データ記録テーブルの構造記述</h1>
+<p>次に必要なのは、データ記録テーブルの構造をどう表すかです．
+つまり「どの列が時刻で、どの列がチャンネルで、どの列が値か」を記述します．
+SlowDash ではこの構造記述を「スキーマ記述子」と呼びます．</p>
+<p>よく使う形：</p>
+<pre><code>table[tag]@time_column(type)=value_column</code></pre>
+<p>例：</p>
+<ul>
+<li><code>testdata[channel]@timestamp(unix)=value</code></li>
+<li><code>numeric_data[endpoint]@timestamp(with timezone)=value_raw</code></li>
+</ul>
+<p>意味：</p>
+<ul>
+<li><code>table</code>：読み出し元テーブル（または measurement）</li>
+<li><code>[tag]</code>：チャンネル名として使う列</li>
+<li><code>@time_column(type)</code>：時刻列とその型</li>
+<li><code>=value_column</code>：値の列</li>
+</ul>
+<h1 id="ネットワークとポートの基本">ネットワークとポートの基本</h1>
 <p>SlowDash の例ではポート <code>18881</code> をよく使います．</p>
 <ul>
 <li>ブラウザで <code>http://localhost:18881</code> を開く</li>
 <li>Docker 利用時は <code>-p 18881:18881</code> を設定</li>
 <li>そのポートが他プロセスで使用中でないことを確認</li>
 </ul>
-<h2 id="docker-docker-compose-の基礎">8) Docker / Docker Compose
-の基礎</h2>
+<h1 id="docker-docker-compose-の基礎">Docker / Docker Compose
+の基礎</h1>
 <p>SlowDash において、コンテナは必須ではなくオプションです．
 コンテナに慣れていない場合は、最初から Docker
 を使う必要はありません．まずはネイティブ構成で始めて問題ありません．</p>
@@ -422,26 +412,6 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb12-1"><a href=
 <div class="sourceCode" id="cb13"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down</span></span></code></pre></div>
-<h2 id="おすすめの読み順">9) おすすめの読み順</h2>
-<p>多くのユーザーには次の順序がおすすめです．</p>
-<ol type="1">
-<li><a href="Installation.html">Installation</a></li>
-<li><a href="QuickTour.html">Quick Tour</a></li>
-<li><a href="ProjectSetup.html">Project Setup</a></li>
-<li><a href="DataBinding.html">Data Binding</a></li>
-<li><a href="ControlsScript.html">Controls</a></li>
-</ol>
-<h2 id="事前チェック">事前チェック</h2>
-<p>Quick Tour を始める前に、以下を確認してください．</p>
-<ul>
-<li><code>slowdash</code> コマンドが実行できる</li>
-<li>（ネイティブ構成なら）<code>slowdash-activate-venv</code>
-が動作する</li>
-<li><code>SlowdashProject.yaml</code> を作成・編集できる</li>
-<li>クエリの <code>length</code>
-は「秒の範囲」であり、サンプル数ではないと理解している</li>
-</ul>
-<p>すべて満たせば、開始準備は完了です．</p>
 
 
 </body>

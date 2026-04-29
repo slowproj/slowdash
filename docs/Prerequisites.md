@@ -3,9 +3,8 @@ title: Prerequisites
 ---
 
 # Before You Start
-This page summarizes the minimum background knowledge needed before following the SlowDash documentation, especially [Installation](Installation.html), [Quick Tour](QuickTour.html), [Project Setup](ProjectSetup.html), and [Data Binding](DataBinding.html).
+This page, written by Claude, summarizes the minimum background knowledge needed before following the SlowDash documentation, especially [Installation](Installation.html), [Quick Tour](QuickTour.html), [Project Setup](ProjectSetup.html), and [Data Binding](DataBinding.html).
 
-## Who This Is For
 This documentation assumes you can:
 
 - run commands in a terminal
@@ -15,7 +14,7 @@ This documentation assumes you can:
 
 If you are new to some of these topics, the quick notes below are enough to get started.
 
-## 1) Terminal Basics
+# Terminal Basics
 You should be comfortable with:
 
 ```console
@@ -31,7 +30,7 @@ You will often need multiple terminals:
 - one terminal for `slowdash --port=18881`
 - one terminal for data generator / user task scripts
 
-## 2) Python and Virtual Environments
+# Python and Virtual Environments
 In native installation, SlowDash uses a project-local Python virtual environment (`venv`) prepared by `make`.
 
 Typical flow:
@@ -69,7 +68,7 @@ When `venv` is active:
 - `python` and `pip` point to `.venv/bin/...`
 - packages installed by `pip` stay inside that environment
 
-### If your system Python is too old (EOL), use `pyenv` + `venv`
+## If your system Python is too old
 If your OS-provided Python is already End-of-Life (EOL), avoid building your workflow on it.
 Use `pyenv` to install and select a supported Python version first, then run the normal SlowDash installation (`make`) so SlowDash sets up its `venv` with that Python.
 
@@ -83,10 +82,9 @@ $ source PATH/TO/SLOWDASH/bin/slowdash-bashrc
 $ slowdash-activate-venv
 ```
 
-Enable `pyenv` automatically in new terminals:
+Enable `pyenv` automatically in new terminals (`.bashrc`):
 
 ```bash
-# ~/.bashrc
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init - bash)"
@@ -110,7 +108,7 @@ Recommended approach:
 - `venv`: isolates project dependencies
 - use both together for long-term reproducibility and security updates
 
-## 3) YAML Basics for `SlowdashProject.yaml`
+# YAML
 SlowDash project configuration is written in YAML.
 
 Minimal example:
@@ -131,46 +129,7 @@ Important YAML rules:
 - `key: value` pairs define mappings
 - nested blocks are created by deeper indentation
 
-## 4) Data Time Representation
-When data is recorded, each value has a timestamp.
-This section explains how that timestamp itself is represented:
-
-- `unix`: elapsed seconds from `1970-01-01 00:00:00 UTC` (UNIX epoch), timezone-independent
-- `with time zone` (or `aware`)
-- `without time zone` / `naive` (generally discouraged)
-- `unspecified utc` (time string without zone, but known to be UTC)
-
-Practical difference:
-
-- `unix` is a numeric elapsed-time representation
-- other types are date-time representations written as year/month/day/hour/minute/second strings
-
-Use `unix` when possible for least ambiguity.
-
-## 5) Table Structure Description (Schema Descriptor)
-Next, you need a way to describe the structure of your data table:
-which column is time, which is channel tag, and which is value.
-In SlowDash, this structure description is called a schema descriptor.
-
-A common pattern is:
-
-```
-table[tag]@time_column(type)=value_column
-```
-
-Examples:
-
-- `testdata[channel]@timestamp(unix)=value`
-- `numeric_data[endpoint]@timestamp(with timezone)=value_raw`
-
-Meaning:
-
-- `table`: source table or measurement
-- `[tag]`: column used as channel name
-- `@time_column(type)`: timestamp source and type
-- `=value_column`: value field
-
-## 6) RDBMS and SQL Basics
+# RDBMS and SQL Basics
 SlowDash commonly reads data from SQL databases (RDBMS), such as PostgreSQL, MySQL, and SQLite.
 As a first image, think of RDBMS as storing data in multiple table-like sheets, similar to Excel.
 (Strictly speaking, RDBMS also defines formal relations between tables, which is beyond this introductory image.)
@@ -201,14 +160,53 @@ LIMIT 10;
 
 You do not need advanced SQL to start Quick Tour, but these basics help when checking and troubleshooting data bindings.
 
-## 7) Basic Network and Port Awareness
+# Data Time Representation
+When data is recorded, each value has a timestamp.
+This section explains how that timestamp itself is represented:
+
+- `unix`: elapsed seconds from `1970-01-01 00:00:00 UTC` (UNIX epoch), timezone-independent
+- `with time zone` (or `aware`)
+- `without time zone` / `naive` (generally discouraged)
+- `unspecified utc` (time string without zone, but known to be UTC)
+
+Practical difference:
+
+- `unix` is a numeric elapsed-time representation
+- other types are date-time representations written as year/month/day/hour/minute/second strings
+
+Use `unix` when possible for least ambiguity.
+
+# Table Structure Description
+Next, you need a way to describe the structure of your data table:
+which column is time, which is channel tag, and which is value.
+In SlowDash, this structure description is called a schema descriptor.
+
+A common pattern is:
+
+```
+table[tag]@time_column(type)=value_column
+```
+
+Examples:
+
+- `testdata[channel]@timestamp(unix)=value`
+- `numeric_data[endpoint]@timestamp(with timezone)=value_raw`
+
+Meaning:
+
+- `table`: source table or measurement
+- `[tag]`: column used as channel name
+- `@time_column(type)`: timestamp source and type
+- `=value_column`: value field
+
+# Basic Network and Port Awareness
 SlowDash server examples often use port `18881`.
 
 - open browser to `http://localhost:18881`
 - if using Docker, map `-p 18881:18881`
 - ensure the port is not already occupied
 
-## 8) Docker and Docker Compose Basics
+# Docker and Docker Compose Basics
 Containers are optional in SlowDash.
 If you are not familiar with containers, you do not need to use Docker to get started; native installation is a valid and recommended first path.
 
@@ -311,22 +309,3 @@ Start and stop:
 $ docker compose up
 $ docker compose down
 ```
-
-## 9) Recommended Read Order
-For most users:
-
-1. [Installation](Installation.html)
-2. [Quick Tour](QuickTour.html)
-3. [Project Setup](ProjectSetup.html)
-4. [Data Binding](DataBinding.html)
-5. [Controls](ControlsScript.html)
-
-## Quick Self-Check
-Before starting Quick Tour, confirm:
-
-- you can run `slowdash` command
-- `slowdash-activate-venv` works (native setup)
-- you can create/edit `SlowdashProject.yaml`
-- you understand that `length` in queries means time range, not number of samples
-
-If all are true, you are ready.

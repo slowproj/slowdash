@@ -254,7 +254,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="
 <div class="sourceCode" id="cb3"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> redis://localhost:6739/DB</span></span></code></pre></div>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> redis://localhost:6379/DB</span></span></code></pre></div>
 <h1 id="concepts-and-terminologies">Concepts and Terminologies</h1>
 <h2 id="data-model">Data Model</h2>
 <h3 id="time-series-data">Time-Series Data</h3>
@@ -351,12 +351,12 @@ multiple tags (case 4); the additional tag(s) is/are called
 </ul>
 <h3 id="schema-descriptor">Schema Descriptor</h3>
 <p>For a table storing time-series data, a “schema descriptor” describes
-which columns are for timestamps, tas(s), and field(s).</p>
+which columns are for timestamps, tag(s), and field(s).</p>
 <h4 id="examples">Examples</h4>
 <ul>
 <li><code>data_table[endpoint_name]@timestamp=value</code></li>
 <li><code>data_table[endpoint_name,set_or_ist]@timestamp(unix)=value_raw,value_cal</code></li>
-<li><code>data_table[endpoint_name]@datetime(with timezome)=value_raw(default),value_cal</code></li>
+<li><code>data_table[endpoint_name]@datetime(with timezone)=value_raw(default),value_cal</code></li>
 </ul>
 <p>
 <h4 id="syntax">Syntax</h4>
@@ -578,7 +578,7 @@ Channel</h3>
 <p></li>
 <li>Schema Descriptor examples:
 <ul>
-<li><code>RunTable@TimeStamp(unix)=sccm.Alicat.Inj,mbar.CC10.Inj,K.THrmCpl.Diss,mbar.IG.AS</code></li>
+<li><code>RunTable@TimeStamp(unix)=sccm.Alicat.Inj,mbar.CC10.Inj,K.ThrmCpl.Diss,mbar.IG.AS</code></li>
 <li><code>RunTable@TimeStamp(unix)</code></li>
 </ul></li>
 </ul>
@@ -835,7 +835,8 @@ Values and Field Names for Channel</h3>
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> postgresql://USER:PASS@HOST:PORT/DB</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> TABLE [ TAG_COLUMN ] @ TIME_COLUMN</span></span></code></pre></div>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> TABLE [ TAG_COLUMN ] @ TIME_COLUMN</span></span></code></pre></div>
 <h4 id="mysql">MySQL</h4>
 <p>Write SlowDash project configuration file
 (<code>SlowdashProject.yaml</code>) like below.</p>
@@ -843,7 +844,8 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb4-1"><a href="
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> mysql://USER:PASS@HOST:PORT/DB</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> TABLE [ TAG_COLUMN ] @ TIME_COLUMN</span></span></code></pre></div>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> TABLE [ TAG_COLUMN ] @ TIME_COLUMN</span></span></code></pre></div>
 <h4 id="sqlite">SQLite</h4>
 <p>Write SlowDash project configuration file
 (<code>SlowdashProject.yaml</code>) like below. The SQLite DB file path
@@ -852,7 +854,8 @@ is relative to the project directory.</p>
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> sqlite:///FILENAME</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> TABLE [ TAG_COLUMN ] @ TIME_COLUMN</span></span></code></pre></div>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> TABLE [ TAG_COLUMN ] @ TIME_COLUMN</span></span></code></pre></div>
 <h3 id="avoiding-channel-scanning-overhead">Avoiding Channel Scanning
 Overhead</h3>
 <p>To obtain a list of channels, SlowDash executes a query like
@@ -888,7 +891,7 @@ necessary</li>
 <h4 id="postgresql-1">PostgreSQL</h4>
 <p>PostgreSQL supports several different time types:</p>
 <ul>
-<li>UNIX timestamp: as <code>INTERGER</code>/<code>BIGINT</code> (32/64
+<li>UNIX timestamp: as <code>INTEGER</code>/<code>BIGINT</code> (32/64
 bit), or <code>REAL</code>/<code>DOUBLE PRECISION</code> (32/64
 bit)</li>
 <li>DateTime with time-zone: <code>TIMESTAMP WITH TIME ZONE</code> /
@@ -901,7 +904,7 @@ SlowDash.</p>
 <h4 id="mysql-1">MySQL</h4>
 <p>MySQL supports several different time types:</p>
 <ul>
-<li>UNIX timestamp: as <code>INTERGER</code>/<code>BIGINT</code> (32/64
+<li>UNIX timestamp: as <code>INTEGER</code>/<code>BIGINT</code> (32/64
 bit) or <code>FLOAT</code>/<code>REAL</code>/<code>DOUBLE</code>
 (32/64/64 bit)</li>
 <li>DateTime without time-zone (DISCOURAGED): <code>DATETIME</code></li>
@@ -910,7 +913,7 @@ bit) or <code>FLOAT</code>/<code>REAL</code>/<code>DOUBLE</code>
 <p>The MySQL libraries used in SlowDash (aiomysql) cannot handle
 time-zone with the TIMESTAMP type, therefore if the
 <code>TIMESTAMP</code> type is used, it must be specified in SlowDash
-configuration file as <code>unspeficied utc</code>. Using the UNIX
+configuration file as <code>unspecified utc</code>. Using the UNIX
 timestamps is always safe.</p>
 <p>UNIX timestamps as <code>REAL</code> is recommended for use with
 SlowDash.</p>
@@ -920,13 +923,13 @@ can be stored in a time-string as TEXT or UNIX timestamps as
 INTEGER/REAL. If a field is declared as <code>DATETIME</code>, it uses
 TEXT for time string in UTC.</p>
 <ul>
-<li>UNIX timestamp: as <code>INTERGER</code> (64 bit) or
+<li>UNIX timestamp: as <code>INTEGER</code> (64 bit) or
 <code>REAL</code> (64 bit)</li>
 <li>DateTime string in UTC: <code>DATETIME</code></li>
 </ul>
 <p>If the time string in TEXT (or <code>DATETIME</code>) is used, it
 must be specified in SlowDash configuration file as
-<code>unspeficied utc</code>. Using the UNIX timestamps is always
+<code>unspecified utc</code>. Using the UNIX timestamps is always
 safe.</p>
 <p>UNIX timestamps as <code>REAL</code> are recommended for use with
 SlowDash.</p>
@@ -1275,7 +1278,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb31-1"><a href=
 Channel</h4>
 <div class="sourceCode" id="cb32"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span><span class="at"> </span></span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> MyDesigDoc/MyIndex[Tag]</span></span></code></pre></div>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> MyDesignDoc/MyIndex[Tag]</span></span></code></pre></div>
 <h4 id="case-2-fields-for-channel-1">Case 2: Fields for Channel</h4>
 <div class="sourceCode" id="cb33"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span><span class="at"> </span></span>
@@ -1284,7 +1287,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb33-1"><a href=
 Channel</h4>
 <div class="sourceCode" id="cb34"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span><span class="at"> </span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> MyDesigDoc/MyIndex[Tag] = Field01(default), Field02, ...</span></span></code></pre></div>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> MyDesignDoc/MyIndex[Tag] = Field01(default), Field02, ...</span></span></code></pre></div>
 <h4 id="case-4-tag-flags-and-fields-for-channel-1">Case 4: Tag, Flags,
 and Fields for Channel</h4>
 <p>Flags are currently not supported. Modify the CouchDB view definition

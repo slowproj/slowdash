@@ -3,9 +3,8 @@ title: 事前知識
 ---
 
 # はじめる前に
-このページは、SlowDash のドキュメント（特に [Installation](Installation.html)、[Quick Tour](QuickTour.html)、[Project Setup](ProjectSetup.html)、[Data Binding](DataBinding.html)）を読む前に必要な最小限の知識をまとめたものです．
+このページは、SlowDash のドキュメント（特に [Installation](Installation.html)、[Quick Tour](QuickTour.html)、[Project Setup](ProjectSetup.html)、[Data Binding](DataBinding.html)）を読む前に必要な最小限の知識をまとめたものです．この文書は Claude によって自動で作成されました．
 
-## 想定している読者
 次のことができることを前提にしています．
 
 - ターミナルでコマンドを実行できる
@@ -15,7 +14,7 @@ title: 事前知識
 
 不安がある場合でも、以下の要点だけ押さえれば開始できます．
 
-## 1) ターミナルの基本
+# ターミナルの基本
 以下のコマンド操作に慣れているとスムーズです．
 
 ```console
@@ -31,7 +30,7 @@ $ python3 script.py   # Python スクリプトを実行
 - 1つ目：`slowdash --port=18881` を起動
 - 2つ目：テストデータ生成やユーザースクリプトを実行
 
-## 2) Python と仮想環境 (`venv`)
+# Python と仮想環境
 ネイティブ環境では、SlowDash は `make` の中で準備されるプロジェクト内 `venv` を使う構成です．
 
 代表的な流れ：
@@ -69,7 +68,7 @@ $ which pip
 - `python` と `pip` は `.venv/bin/...` を指す
 - `pip install` したパッケージはその環境内に閉じる
 
-### システム Python が古すぎる（EOL）場合：`pyenv` + `venv` を使う
+## システム Python が古すぎる場合
 OS に標準で入っている Python が EOL（End-of-Life）に達している場合は、そのまま使わないことを推奨します．
 `pyenv` でサポート中の Python を先に選び、その後に通常どおり `make` を実行して SlowDash に `venv` を準備させる運用が安全です．
 
@@ -83,10 +82,9 @@ $ source PATH/TO/SLOWDASH/bin/slowdash-bashrc
 $ slowdash-activate-venv
 ```
 
-新しいターミナルで `pyenv` を自動有効化する設定：
+新しいターミナルで `pyenv` を自動有効化する設定 (`.bashrc`)：
 
 ```bash
-# ~/.bashrc
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init - bash)"
@@ -110,7 +108,7 @@ $ pyenv version
 - `venv`：プロジェクト依存パッケージの隔離
 - 併用すると、再現性とセキュリティ更新の両方を確保しやすい
 
-## 3) `SlowdashProject.yaml` の基礎
+# YAML
 プロジェクト設定は YAML で記述します．
 
 最小例：
@@ -131,7 +129,7 @@ YAML の重要ポイント：
 - `key: value` で項目を定義
 - 深いインデントで入れ子を表現
 
-## 4) データの時刻の表現形式
+# データの時刻の表現形式
 データを記録するときは、各データに時刻情報が付きます．
 この節では、その時刻情報そのものの表現形式を説明します．
 
@@ -147,30 +145,7 @@ YAML の重要ポイント：
 
 迷ったら、まず `unix` を使うのが安全です．
 
-## 5) データ記録テーブルの構造記述（スキーマ記述子）
-次に必要なのは、データ記録テーブルの構造をどう表すかです．
-つまり「どの列が時刻で、どの列がチャンネルで、どの列が値か」を記述します．
-SlowDash ではこの構造記述を「スキーマ記述子」と呼びます．
-
-よく使う形：
-
-```
-table[tag]@time_column(type)=value_column
-```
-
-例：
-
-- `testdata[channel]@timestamp(unix)=value`
-- `numeric_data[endpoint]@timestamp(with timezone)=value_raw`
-
-意味：
-
-- `table`：読み出し元テーブル（または measurement）
-- `[tag]`：チャンネル名として使う列
-- `@time_column(type)`：時刻列とその型
-- `=value_column`：値の列
-
-## 6) RDBMS と SQL の基礎
+# RDBMS と SQL の基礎
 SlowDash では、PostgreSQL、MySQL、SQLite などの SQL データベース（RDBMS）をデータソースとして使うことが多いです．
 最初のイメージとしては、RDBMS は Excel のような表形式データを複数のテーブルに格納する仕組みだと考えると分かりやすいです．
 （厳密には、RDBMS にはテーブル間のリレーションを定義する仕組みがありますが、この導入ではまず表形式データのイメージを優先します．）
@@ -201,14 +176,37 @@ LIMIT 10;
 
 Quick Tour を進めるだけなら高度な SQL は不要ですが、この基礎があると Data Binding の確認やトラブルシュートがしやすくなります．
 
-## 7) ネットワークとポートの基本
+# データ記録テーブルの構造記述
+次に必要なのは、データ記録テーブルの構造をどう表すかです．
+つまり「どの列が時刻で、どの列がチャンネルで、どの列が値か」を記述します．
+SlowDash ではこの構造記述を「スキーマ記述子」と呼びます．
+
+よく使う形：
+
+```
+table[tag]@time_column(type)=value_column
+```
+
+例：
+
+- `testdata[channel]@timestamp(unix)=value`
+- `numeric_data[endpoint]@timestamp(with timezone)=value_raw`
+
+意味：
+
+- `table`：読み出し元テーブル（または measurement）
+- `[tag]`：チャンネル名として使う列
+- `@time_column(type)`：時刻列とその型
+- `=value_column`：値の列
+
+# ネットワークとポートの基本
 SlowDash の例ではポート `18881` をよく使います．
 
 - ブラウザで `http://localhost:18881` を開く
 - Docker 利用時は `-p 18881:18881` を設定
 - そのポートが他プロセスで使用中でないことを確認
 
-## 8) Docker / Docker Compose の基礎
+# Docker / Docker Compose の基礎
 SlowDash において、コンテナは必須ではなくオプションです．
 コンテナに慣れていない場合は、最初から Docker を使う必要はありません．まずはネイティブ構成で始めて問題ありません．
 
@@ -311,22 +309,3 @@ Docker Compose を使う利点：
 $ docker compose up
 $ docker compose down
 ```
-
-## 9) おすすめの読み順
-多くのユーザーには次の順序がおすすめです．
-
-1. [Installation](Installation.html)
-2. [Quick Tour](QuickTour.html)
-3. [Project Setup](ProjectSetup.html)
-4. [Data Binding](DataBinding.html)
-5. [Controls](ControlsScript.html)
-
-## 事前チェック
-Quick Tour を始める前に、以下を確認してください．
-
-- `slowdash` コマンドが実行できる
-- （ネイティブ構成なら）`slowdash-activate-venv` が動作する
-- `SlowdashProject.yaml` を作成・編集できる
-- クエリの `length` は「秒の範囲」であり、サンプル数ではないと理解している
-
-すべて満たせば、開始準備は完了です．

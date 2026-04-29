@@ -38,7 +38,7 @@ All the time-series entries will be taken from a database:
 ```yaml
 slowdash_project:
   data_source:
-    url: redis://localhost:6739/DB
+    url: redis://localhost:6379/DB
 ```
 
 
@@ -95,12 +95,12 @@ slowdash_project:
 
 
 ### Schema Descriptor
-For a table storing time-series data, a "schema descriptor" describes which columns are for timestamps, tas(s), and field(s).
+For a table storing time-series data, a "schema descriptor" describes which columns are for timestamps, tag(s), and field(s).
 
 #### Examples
 - `data_table[endpoint_name]@timestamp=value`
 - `data_table[endpoint_name,set_or_ist]@timestamp(unix)=value_raw,value_cal`
-- `data_table[endpoint_name]@datetime(with timezome)=value_raw(default),value_cal`
+- `data_table[endpoint_name]@datetime(with timezone)=value_raw(default),value_cal`
 
 <p>
 #### Syntax
@@ -171,7 +171,7 @@ Note that the numeric data values shown here can be of any other scalar types (s
 - Channel name example: `sccm.Alicat.Inj`
 <p>
 - Schema Descriptor examples: 
-  - `RunTable@TimeStamp(unix)=sccm.Alicat.Inj,mbar.CC10.Inj,K.THrmCpl.Diss,mbar.IG.AS`
+  - `RunTable@TimeStamp(unix)=sccm.Alicat.Inj,mbar.CC10.Inj,K.ThrmCpl.Diss,mbar.IG.AS`
   - `RunTable@TimeStamp(unix)`
 
 
@@ -244,7 +244,8 @@ Write SlowDash project configuration file (`SlowdashProject.yaml`) like below.
 slowdash_project:
   data_source:
     url: postgresql://USER:PASS@HOST:PORT/DB
-    schema: TABLE [ TAG_COLUMN ] @ TIME_COLUMN
+    time_series:
+      schema: TABLE [ TAG_COLUMN ] @ TIME_COLUMN
 ```
 
 #### MySQL
@@ -253,7 +254,8 @@ Write SlowDash project configuration file (`SlowdashProject.yaml`) like below.
 slowdash_project:
   data_source:
     url: mysql://USER:PASS@HOST:PORT/DB
-    schema: TABLE [ TAG_COLUMN ] @ TIME_COLUMN
+    time_series:
+      schema: TABLE [ TAG_COLUMN ] @ TIME_COLUMN
 ```
 
 #### SQLite
@@ -262,7 +264,8 @@ Write SlowDash project configuration file (`SlowdashProject.yaml`) like below. T
 slowdash_project:
   data_source:
     url: sqlite:///FILENAME
-    schema: TABLE [ TAG_COLUMN ] @ TIME_COLUMN
+    time_series:
+      schema: TABLE [ TAG_COLUMN ] @ TIME_COLUMN
 ```
 
 ### Avoiding Channel Scanning Overhead
@@ -295,7 +298,7 @@ SlowDash can handle several different data time-stamp types:
 #### PostgreSQL
 PostgreSQL supports several different time types:
 
-- UNIX timestamp: as `INTERGER`/`BIGINT` (32/64 bit), or `REAL`/`DOUBLE PRECISION` (32/64 bit)
+- UNIX timestamp: as `INTEGER`/`BIGINT` (32/64 bit), or `REAL`/`DOUBLE PRECISION` (32/64 bit)
 - DateTime with time-zone: `TIMESTAMP WITH TIME ZONE` / `TIMESTAMPTZ`
 - DateTime without time-zone (DISCOURAGED): `TIMESTAMP`
 
@@ -304,21 +307,21 @@ PostgreSQL supports several different time types:
 #### MySQL
 MySQL supports several different time types:
 
-- UNIX timestamp: as `INTERGER`/`BIGINT` (32/64 bit) or `FLOAT`/`REAL`/`DOUBLE` (32/64/64 bit)
+- UNIX timestamp: as `INTEGER`/`BIGINT` (32/64 bit) or `FLOAT`/`REAL`/`DOUBLE` (32/64/64 bit)
 - DateTime without time-zone (DISCOURAGED): `DATETIME`
 - DateTime in UTC: `TIMESTAMP`
 
-The MySQL libraries used in SlowDash (aiomysql) cannot handle time-zone with the TIMESTAMP type, therefore if the `TIMESTAMP` type is used, it must be specified in SlowDash configuration file as `unspeficied utc`. Using the UNIX timestamps is always safe.
+The MySQL libraries used in SlowDash (aiomysql) cannot handle time-zone with the TIMESTAMP type, therefore if the `TIMESTAMP` type is used, it must be specified in SlowDash configuration file as `unspecified utc`. Using the UNIX timestamps is always safe.
 
 UNIX timestamps as `REAL` is recommended for use with SlowDash.
 
 #### SQLite
 SQLite does not have a dedicated date-time type, and time information can be stored in a time-string as TEXT or UNIX timestamps as INTEGER/REAL. If a field is declared as `DATETIME`, it uses TEXT for time string in UTC.
 
-- UNIX timestamp: as `INTERGER` (64 bit) or `REAL` (64 bit)
+- UNIX timestamp: as `INTEGER` (64 bit) or `REAL` (64 bit)
 - DateTime string in UTC: `DATETIME`
 
-If the time string in TEXT (or `DATETIME`) is used, it must be specified in SlowDash configuration file as `unspeficied utc`. Using the UNIX timestamps is always safe.
+If the time string in TEXT (or `DATETIME`) is used, it must be specified in SlowDash configuration file as `unspecified utc`. Using the UNIX timestamps is always safe.
 
 UNIX timestamps as `REAL` are recommended for use with SlowDash.
 
@@ -627,7 +630,7 @@ Channels are scanned from the data, but old channels that do not appear in the l
 #### Case 1: Tag Values for Channel
 ```yaml
       time_series: 
-        schema: MyDesigDoc/MyIndex[Tag]
+        schema: MyDesignDoc/MyIndex[Tag]
 ```
 
 #### Case 2: Fields for Channel
@@ -638,7 +641,7 @@ Channels are scanned from the data, but old channels that do not appear in the l
 #### Case 3: Tag and Fields for Channel 
 ```yaml
       time_series: 
-        schema: MyDesigDoc/MyIndex[Tag] = Field01(default), Field02, ...
+        schema: MyDesignDoc/MyIndex[Tag] = Field01(default), Field02, ...
 ```
 
 #### Case 4: Tag, Flags, and Fields for Channel 

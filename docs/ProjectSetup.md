@@ -58,8 +58,8 @@ slowdash_project:
   - `YAML`
 - other parameters: defined by each data source. See the [Data Binding section](DataBinding.html) for details.
 
-#### TaskEntry (`task`, optional)
-- Server-side control tasks (user Python script). See the [Controls section](ControlScript.html) for details.
+#### Task Entry (`task`, optional)
+- Server-side control tasks (user Python script). See the [Controls section](ControlsScript.html) for details.
 
 #### Style Entry (`style`, optional)
 See [Styles](#styles) below.
@@ -69,7 +69,7 @@ See [Styles](#styles) below.
 - `file_gid`: Group ID of configuration files uploaded from Web clients
 - `our_security_is_perfect`: set `true` to enable Python script uploading; be extremely careful to use this
 
-#### Authenticate Entry (`authenticate`, for special purposes)
+#### Authentication Entry (`authentication`, for special purposes)
 See [Security Considerations](#security-considerations) below.
 
 #### Module Entry (`module`, optional)
@@ -181,7 +181,7 @@ $ slowdash channels
 
 #### Printing Data
 ```console
-$ slowdash 'data/sccm_Alicat_Inj_Gas?length=60'
+$ slowdash "data/sccm_Alicat_Inj_Gas?length=60"
 {
   "sccm_Alicat_Inj_Gas": {
     "start": 1679514341, "length": 60, 
@@ -424,7 +424,7 @@ Replace `SLOWDASH_HOST` with your actual SlowDash host name.
 A full working example in Docker Compose with more features such as HTTPS, HTTP/2, and Basic Authentication can be found in `ExampleProjects/ReverseProxy/Apache`.
 
 # Jupyter Integration
-By providing Jupyter URL and token in `SlowdashProject.yaml`, SlowDash can export the displayed data to Jupyter Notebook so that users can continue analysis on Jupyter. Two examples, with and without a reverse proxy, can be found in `ExampleProject/Jupyter`.
+By providing Jupyter URL and token in `SlowdashProject.yaml`, SlowDash can export the displayed data to Jupyter Notebook so that users can continue analysis on Jupyter. Two examples, with and without a reverse proxy, can be found in `ExampleProjects/Jupyter`.
 
 ## Native (without containers)
 ```yaml

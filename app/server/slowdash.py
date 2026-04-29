@@ -163,7 +163,7 @@ class App(slowlette.App):
 if __name__ == '__main__':
     from argparse import ArgumentParser
     parser = ArgumentParser(
-        description = f'Slowdash Version {slowdash_version}',
+        description = f'SlowDash Version {slowdash_version}',
         usage = ('\n'
             + '  Web-Server Mode:      %(prog)s [Options] --port=PORT\n'
             + '  Command-line Mode:    %(prog)s [Options] COMMAND'

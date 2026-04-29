@@ -86,49 +86,43 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <nav id="TOC">
 <ul>
 <li><a href="#before-you-start" id="toc-before-you-start">Before You
-Start</a>
-<ul>
-<li><a href="#who-this-is-for" id="toc-who-this-is-for">Who This Is
-For</a></li>
-<li><a href="#terminal-basics" id="toc-terminal-basics">1) Terminal
+Start</a></li>
+<li><a href="#terminal-basics" id="toc-terminal-basics">Terminal
 Basics</a></li>
 <li><a href="#python-and-virtual-environments"
-id="toc-python-and-virtual-environments">2) Python and Virtual
-Environments</a></li>
-<li><a href="#yaml-basics-for-slowdashproject.yaml"
-id="toc-yaml-basics-for-slowdashproject.yaml">3) YAML Basics for
-<code>SlowdashProject.yaml</code></a></li>
+id="toc-python-and-virtual-environments">Python and Virtual
+Environments</a>
+<ul>
+<li><a href="#if-your-system-python-is-too-old"
+id="toc-if-your-system-python-is-too-old">If your system Python is too
+old</a></li>
+</ul></li>
+<li><a href="#yaml" id="toc-yaml">YAML</a></li>
+<li><a href="#rdbms-and-sql-basics" id="toc-rdbms-and-sql-basics">RDBMS
+and SQL Basics</a></li>
 <li><a href="#data-time-representation"
-id="toc-data-time-representation">4) Data Time Representation</a></li>
-<li><a href="#table-structure-description-schema-descriptor"
-id="toc-table-structure-description-schema-descriptor">5) Table
-Structure Description (Schema Descriptor)</a></li>
-<li><a href="#rdbms-and-sql-basics" id="toc-rdbms-and-sql-basics">6)
-RDBMS and SQL Basics</a></li>
+id="toc-data-time-representation">Data Time Representation</a></li>
+<li><a href="#table-structure-description"
+id="toc-table-structure-description">Table Structure
+Description</a></li>
 <li><a href="#basic-network-and-port-awareness"
-id="toc-basic-network-and-port-awareness">7) Basic Network and Port
+id="toc-basic-network-and-port-awareness">Basic Network and Port
 Awareness</a></li>
 <li><a href="#docker-and-docker-compose-basics"
-id="toc-docker-and-docker-compose-basics">8) Docker and Docker Compose
+id="toc-docker-and-docker-compose-basics">Docker and Docker Compose
 Basics</a></li>
-<li><a href="#recommended-read-order" id="toc-recommended-read-order">9)
-Recommended Read Order</a></li>
-<li><a href="#quick-self-check" id="toc-quick-self-check">Quick
-Self-Check</a></li>
-</ul></li>
 </ul>
 </nav>
 </div>
 </header>
 
 <h1 id="before-you-start">Before You Start</h1>
-<p>This page summarizes the minimum background knowledge needed before
-following the SlowDash documentation, especially <a
-href="Installation.html">Installation</a>, <a
+<p>This page, written by Claude, summarizes the minimum background
+knowledge needed before following the SlowDash documentation, especially
+<a href="Installation.html">Installation</a>, <a
 href="QuickTour.html">Quick Tour</a>, <a
 href="ProjectSetup.html">Project Setup</a>, and <a
 href="DataBinding.html">Data Binding</a>.</p>
-<h2 id="who-this-is-for">Who This Is For</h2>
 <p>This documentation assumes you can:</p>
 <ul>
 <li>run commands in a terminal</li>
@@ -138,7 +132,7 @@ href="DataBinding.html">Data Binding</a>.</p>
 </ul>
 <p>If you are new to some of these topics, the quick notes below are
 enough to get started.</p>
-<h2 id="terminal-basics">1) Terminal Basics</h2>
+<h1 id="terminal-basics">Terminal Basics</h1>
 <p>You should be comfortable with:</p>
 <div class="sourceCode" id="cb1"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pwd                 # show current directory</span></span>
@@ -151,8 +145,8 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <li>one terminal for <code>slowdash --port=18881</code></li>
 <li>one terminal for data generator / user task scripts</li>
 </ul>
-<h2 id="python-and-virtual-environments">2) Python and Virtual
-Environments</h2>
+<h1 id="python-and-virtual-environments">Python and Virtual
+Environments</h1>
 <p>In native installation, SlowDash uses a project-local Python virtual
 environment (<code>venv</code>) prepared by <code>make</code>.</p>
 <p>Typical flow:</p>
@@ -189,9 +183,8 @@ shell)</li>
 <li>packages installed by <code>pip</code> stay inside that
 environment</li>
 </ul>
-<h3 id="if-your-system-python-is-too-old-eol-use-pyenv-venv">If your
-system Python is too old (EOL), use <code>pyenv</code> +
-<code>venv</code></h3>
+<h2 id="if-your-system-python-is-too-old">If your system Python is too
+old</h2>
 <p>If your OS-provided Python is already End-of-Life (EOL), avoid
 building your workflow on it. Use <code>pyenv</code> to install and
 select a supported Python version first, then run the normal SlowDash
@@ -204,12 +197,12 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source PATH/TO/SLOWDASH/bin/slowdash-bashrc</span></span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span></code></pre></div>
-<p>Enable <code>pyenv</code> automatically in new terminals:</p>
+<p>Enable <code>pyenv</code> automatically in new terminals
+(<code>.bashrc</code>):</p>
 <div class="sourceCode" id="cb5"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ~/.bashrc</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PYENV_ROOT</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$HOME</span><span class="st">/.pyenv&quot;</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PYENV_ROOT</span><span class="st">/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="bu">eval</span> <span class="st">&quot;</span><span class="va">$(</span><span class="ex">pyenv</span> init <span class="at">-</span> bash<span class="va">)</span><span class="st">&quot;</span></span></code></pre></div>
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PYENV_ROOT</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$HOME</span><span class="st">/.pyenv&quot;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PYENV_ROOT</span><span class="st">/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="bu">eval</span> <span class="st">&quot;</span><span class="va">$(</span><span class="ex">pyenv</span> init <span class="at">-</span> bash<span class="va">)</span><span class="st">&quot;</span></span></code></pre></div>
 <p>After editing <code>.bashrc</code>, reload it:</p>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source ~/.bashrc</span></span></code></pre></div>
@@ -223,8 +216,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <li>use both together for long-term reproducibility and security
 updates</li>
 </ul>
-<h2 id="yaml-basics-for-slowdashproject.yaml">3) YAML Basics for
-<code>SlowdashProject.yaml</code></h2>
+<h1 id="yaml">YAML</h1>
 <p>SlowDash project configuration is written in YAML.</p>
 <p>Minimal example:</p>
 <div class="sourceCode" id="cb8"><pre
@@ -241,46 +233,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb8-1"><a href="
 <li><code>key: value</code> pairs define mappings</li>
 <li>nested blocks are created by deeper indentation</li>
 </ul>
-<h2 id="data-time-representation">4) Data Time Representation</h2>
-<p>When data is recorded, each value has a timestamp. This section
-explains how that timestamp itself is represented:</p>
-<ul>
-<li><code>unix</code>: elapsed seconds from
-<code>1970-01-01 00:00:00 UTC</code> (UNIX epoch),
-timezone-independent</li>
-<li><code>with time zone</code> (or <code>aware</code>)</li>
-<li><code>without time zone</code> / <code>naive</code> (generally
-discouraged)</li>
-<li><code>unspecified utc</code> (time string without zone, but known to
-be UTC)</li>
-</ul>
-<p>Practical difference:</p>
-<ul>
-<li><code>unix</code> is a numeric elapsed-time representation</li>
-<li>other types are date-time representations written as
-year/month/day/hour/minute/second strings</li>
-</ul>
-<p>Use <code>unix</code> when possible for least ambiguity.</p>
-<h2 id="table-structure-description-schema-descriptor">5) Table
-Structure Description (Schema Descriptor)</h2>
-<p>Next, you need a way to describe the structure of your data table:
-which column is time, which is channel tag, and which is value. In
-SlowDash, this structure description is called a schema descriptor.</p>
-<p>A common pattern is:</p>
-<pre><code>table[tag]@time_column(type)=value_column</code></pre>
-<p>Examples:</p>
-<ul>
-<li><code>testdata[channel]@timestamp(unix)=value</code></li>
-<li><code>numeric_data[endpoint]@timestamp(with timezone)=value_raw</code></li>
-</ul>
-<p>Meaning:</p>
-<ul>
-<li><code>table</code>: source table or measurement</li>
-<li><code>[tag]</code>: column used as channel name</li>
-<li><code>@time_column(type)</code>: timestamp source and type</li>
-<li><code>=value_column</code>: value field</li>
-</ul>
-<h2 id="rdbms-and-sql-basics">6) RDBMS and SQL Basics</h2>
+<h1 id="rdbms-and-sql-basics">RDBMS and SQL Basics</h1>
 <p>SlowDash commonly reads data from SQL databases (RDBMS), such as
 PostgreSQL, MySQL, and SQLite. As a first image, think of RDBMS as
 storing data in multiple table-like sheets, similar to Excel. (Strictly
@@ -304,24 +257,62 @@ for example)</li>
 <li><code>LIMIT N</code> to fetch only part of the result</li>
 </ul>
 <p>Example:</p>
-<div class="sourceCode" id="cb10"><pre
-class="sourceCode sql"><code class="sourceCode sql"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="dt">timestamp</span>, channel, <span class="fu">value</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> testdata</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> channel <span class="op">=</span> <span class="st">&#39;ch00&#39;</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dt">timestamp</span> <span class="kw">DESC</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="dt">timestamp</span>, channel, <span class="fu">value</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> testdata</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> channel <span class="op">=</span> <span class="st">&#39;ch00&#39;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dt">timestamp</span> <span class="kw">DESC</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div>
 <p>You do not need advanced SQL to start Quick Tour, but these basics
 help when checking and troubleshooting data bindings.</p>
-<h2 id="basic-network-and-port-awareness">7) Basic Network and Port
-Awareness</h2>
+<h1 id="data-time-representation">Data Time Representation</h1>
+<p>When data is recorded, each value has a timestamp. This section
+explains how that timestamp itself is represented:</p>
+<ul>
+<li><code>unix</code>: elapsed seconds from
+<code>1970-01-01 00:00:00 UTC</code> (UNIX epoch),
+timezone-independent</li>
+<li><code>with time zone</code> (or <code>aware</code>)</li>
+<li><code>without time zone</code> / <code>naive</code> (generally
+discouraged)</li>
+<li><code>unspecified utc</code> (time string without zone, but known to
+be UTC)</li>
+</ul>
+<p>Practical difference:</p>
+<ul>
+<li><code>unix</code> is a numeric elapsed-time representation</li>
+<li>other types are date-time representations written as
+year/month/day/hour/minute/second strings</li>
+</ul>
+<p>Use <code>unix</code> when possible for least ambiguity.</p>
+<h1 id="table-structure-description">Table Structure Description</h1>
+<p>Next, you need a way to describe the structure of your data table:
+which column is time, which is channel tag, and which is value. In
+SlowDash, this structure description is called a schema descriptor.</p>
+<p>A common pattern is:</p>
+<pre><code>table[tag]@time_column(type)=value_column</code></pre>
+<p>Examples:</p>
+<ul>
+<li><code>testdata[channel]@timestamp(unix)=value</code></li>
+<li><code>numeric_data[endpoint]@timestamp(with timezone)=value_raw</code></li>
+</ul>
+<p>Meaning:</p>
+<ul>
+<li><code>table</code>: source table or measurement</li>
+<li><code>[tag]</code>: column used as channel name</li>
+<li><code>@time_column(type)</code>: timestamp source and type</li>
+<li><code>=value_column</code>: value field</li>
+</ul>
+<h1 id="basic-network-and-port-awareness">Basic Network and Port
+Awareness</h1>
 <p>SlowDash server examples often use port <code>18881</code>.</p>
 <ul>
 <li>open browser to <code>http://localhost:18881</code></li>
 <li>if using Docker, map <code>-p 18881:18881</code></li>
 <li>ensure the port is not already occupied</li>
 </ul>
-<h2 id="docker-and-docker-compose-basics">8) Docker and Docker Compose
-Basics</h2>
+<h1 id="docker-and-docker-compose-basics">Docker and Docker Compose
+Basics</h1>
 <p>Containers are optional in SlowDash. If you are not familiar with
 containers, you do not need to use Docker to get started; native
 installation is a valid and recommended first path.</p>
@@ -438,25 +429,6 @@ teammates</li>
 <div class="sourceCode" id="cb13"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down</span></span></code></pre></div>
-<h2 id="recommended-read-order">9) Recommended Read Order</h2>
-<p>For most users:</p>
-<ol type="1">
-<li><a href="Installation.html">Installation</a></li>
-<li><a href="QuickTour.html">Quick Tour</a></li>
-<li><a href="ProjectSetup.html">Project Setup</a></li>
-<li><a href="DataBinding.html">Data Binding</a></li>
-<li><a href="ControlsScript.html">Controls</a></li>
-</ol>
-<h2 id="quick-self-check">Quick Self-Check</h2>
-<p>Before starting Quick Tour, confirm:</p>
-<ul>
-<li>you can run <code>slowdash</code> command</li>
-<li><code>slowdash-activate-venv</code> works (native setup)</li>
-<li>you can create/edit <code>SlowdashProject.yaml</code></li>
-<li>you understand that <code>length</code> in queries means time range,
-not number of samples</li>
-</ul>
-<p>If all are true, you are ready.</p>
 
 
 </body>

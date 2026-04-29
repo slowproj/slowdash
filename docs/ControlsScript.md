@@ -34,7 +34,7 @@ Although the GUI can access the variables and functions in user scripts, the scr
 - Store raw and analyzed values (including histograms) in database systems
 
 ## Structure
-<img src="fig/ContrlScript-UserTask.png" width="40%">
+<img src="fig/ControlScript-UserTask.png" width="40%">
 
 - Controls are implemented as user task Python scripts.
 - User task scripts are normal Python scripts that can be executed independently from the SlowDash server.
@@ -150,7 +150,7 @@ A common starting point would be importing `slowpy.control` and then creating an
 
 The `ControlSystem` already includes the `Ethernet` plugin, but if it were not included, the plugin loading code would be:
 ```python
-ctrl.load_control_module('Ethernet')
+ctrl.import_control_module('Ethernet')
 ```
 This will search for a file named `control_Ethernet.py` from search directories, load it, and inject the `ethernet()` Python method to the node class that loaded the plugin (which is ControlSystem in this case). The Ethernet plugin already includes sub-branches for SCPI; for specific protocols not already included, a plugin would be loaded onto the Ethernet node.
 
@@ -175,7 +175,7 @@ Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to perform
 
 #### Ethernet, SCPI, and Telnet
 ##### Loading (already included)
-`ControlSystem.load_control_module('Ethernet')`
+`ControlSystem.import_control_module('Ethernet')`
 
 ##### Nodes
 - **ethernet(host,port)**: sends and receives text messages through a TCP socket connection
@@ -204,7 +204,7 @@ Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to perform
 
 #### HTTP (Web API)
 ##### Loading (already included)
-`ControlSystem.load_control_module('HTTP')`
+`ControlSystem.import_control_module('HTTP')`
 
 ##### Nodes
 - **http(base_url)**:
@@ -218,7 +218,7 @@ Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to perform
   
 #### Shell Command
 ##### Loading (already included)
-`ControlSystem.load_control_module('Shell')`
+`ControlSystem.import_control_module('Shell')`
 
 ##### Nodes
 - **shell(cmd)**: run a shell command. 
@@ -231,7 +231,7 @@ Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to perform
     
 #### SlowDash server control
 ##### Loading (already included)
-`ControlSystem.load_control_module('HTTP').load_control_module('Slowdash')`
+`ControlSystem.import_control_module('HTTP').import_control_module('Slowdash')`
 
 ##### Nodes
 - **http(url).slowdash()**
@@ -243,7 +243,7 @@ Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to perform
     
 #### Redis Interface
 ##### Loading
-`ControlSystem.load_control_module('Redis')`
+`ControlSystem.import_control_module('Redis')`
 
 ##### Nodes
 - **redis(url)**
@@ -658,7 +658,7 @@ def _loop():
     fig, axes = plt.subplots(2, 2)
     #... draw plots in the usual way
 
-    ctrl.stram(name='mpl', fig)
+    ctrl.stream('mpl', fig)
 
     plt.close()  # If a figure is created in a loop, it must be closed every time.
     ctrl.sleep(1)

@@ -199,11 +199,11 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="
 <li>other parameters: defined by each data source. See the <a
 href="DataBinding.html">Data Binding section</a> for details.</li>
 </ul>
-<h4 id="taskentry-task-optional">TaskEntry (<code>task</code>,
+<h4 id="task-entry-task-optional">Task Entry (<code>task</code>,
 optional)</h4>
 <ul>
 <li>Server-side control tasks (user Python script). See the <a
-href="ControlScript.html">Controls section</a> for details.</li>
+href="ControlsScript.html">Controls section</a> for details.</li>
 </ul>
 <h4 id="style-entry-style-optional">Style Entry (<code>style</code>,
 optional)</h4>
@@ -219,8 +219,8 @@ Web clients</li>
 enable Python script uploading; be extremely careful to use this</li>
 </ul>
 <h4
-id="authenticate-entry-authenticate-for-special-purposes">Authenticate
-Entry (<code>authenticate</code>, for special purposes)</h4>
+id="authentication-entry-authentication-for-special-purposes">Authentication
+Entry (<code>authentication</code>, for special purposes)</h4>
 <p>See <a href="#security-considerations">Security Considerations</a>
 below.</p>
 <h4 id="module-entry-module-optional">Module Entry (<code>module</code>,
@@ -347,7 +347,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  ...</span></code></pre></div>
 <h4 id="printing-data">Printing Data</h4>
 <div class="sourceCode" id="cb8"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash &#39;data/sccm_Alicat_Inj_Gas?length=60&#39;</span></span>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash &quot;data/sccm_Alicat_Inj_Gas?length=60&quot;</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>{</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  &quot;sccm_Alicat_Inj_Gas&quot;: {</span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    &quot;start&quot;: 1679514341, &quot;length&quot;: 60, </span>
@@ -623,7 +623,7 @@ as HTTPS, HTTP/2, and Basic Authentication can be found in
 <code>SlowdashProject.yaml</code>, SlowDash can export the displayed
 data to Jupyter Notebook so that users can continue analysis on Jupyter.
 Two examples, with and without a reverse proxy, can be found in
-<code>ExampleProject/Jupyter</code>.</p>
+<code>ExampleProjects/Jupyter</code>.</p>
 <h2 id="native-without-containers">Native (without containers)</h2>
 <div class="sourceCode" id="cb22"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>

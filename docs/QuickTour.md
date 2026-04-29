@@ -7,7 +7,7 @@ This tour demonstrates how to use SlowDash with SQLite as the data backend, whic
 
 ### Menu
 - Configure a project by defining the user data schema
-- Run SlowDash with a dummy data
+- Run SlowDash with test data
 - Create interactive plots through the web interface
 - Write scripts to read data from devices
 - Send commands from the web interface to user scripts
@@ -285,7 +285,7 @@ http://localhost:18881/slowplot.html?channel=ch00;ch00/ts-histogram&length=360&r
 
 # Reading Data from Hardware Devices
 SlowDash consists of two parts, a web application (web server + browser UI) and a Python library used in user scripts.
-In the previous example with dummy data, we used this library, called SlowPy.
+In the previous example with test data, we used this library, called SlowPy.
 The application and library work seamlessly together, but each can also operate independently.
 In this section, we'll use the SlowPy library alone to read real data from a device, replacing the dummy data generator used in the previous section.
 
