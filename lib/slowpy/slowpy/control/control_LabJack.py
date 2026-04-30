@@ -3,6 +3,11 @@
 """SlowPy/Control LabJack plugin
 - This uses LabJack Python Library, LabJackPython. Install it by `pip LabJackPython`.
 - LabJack Python for U12 uses the LabJack Exodriver library available at the LabJack web page.
+  [Web Page](https://support.labjack.com/docs/exodriver-downloads-for-ud-series-linux-and-macos-)
+  [Download (Apr 2026)](https://github.com/labjack/exodriver/archive/refs/heads/master.zip)
+  $ sudo apt install libusb-1.0-0-dev
+  $ cd exodriver-master
+  $ sudo ./install.sh
 """
 
 
@@ -15,7 +20,12 @@ class LabJackU12(spc.ControlNode):
         self.u12 = u12.U12()
         
     ## child nodes ##
-    def ain(self, ch, gain=0):
+    def ain(self, ch:int, gain:int=0)->float:
+        """Analog In
+        Arguments (see U12 User's Guide, "EAnalogIn"):
+          ch: { 0..7: single-ended, 8..11: differential }
+          gain: { 0..7: x1,x2,x4,x5,x8,x10,x16,x20 }, valid only for the differential channels
+        """
         return LabjackU12_AnalogIn(self.u12, ch, gain)
     
     def aout(self, ch):
@@ -108,3 +118,10 @@ class LabjackU12_DigitalOut(spc.ControlVariableNode):
     def get(self):
         return self.value
     
+
+
+if __name__ == '__main__':
+    labjack = LabJackU12()
+    for ch in range(12):
+        print(f'AIN{ch}: {labjack.ain(ch)}')
+        
