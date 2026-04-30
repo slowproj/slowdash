@@ -1,15 +1,20 @@
 [submodule "system/web/extern/ace-builds"]
 	path = app/site/slow-extern/ace-builds
 	url = https://github.com/ajaxorg/ace-builds.git
+	fetchRecurseSubmodules = on-demand
 [submodule "system/web/jagaimo"]
 	path = app/site/slowjs/jagaimo
 	url = https://github.com/SanshiroEnomoto/jagaimo.git
+	fetchRecurseSubmodules = on-demand
 [submodule "system/web/autocruise"]
 	path = app/site/slowjs/autocruise
 	url = https://github.com/SanshiroEnomoto/autocruise.git
+	fetchRecurseSubmodules = on-demand
 [submodule "slowdash-canvas"]
 	path = slowdash-canvas
 	url = ./slowdash-canvas
+	fetchRecurseSubmodules = on-demand
 [submodule "slowdash-agent-tools"]
 	path = slowdash-agent-tools
 	url = git@github.com:yaosarayin/slowdash-agent-tools.git
+	fetchRecurseSubmodules = on-demand
