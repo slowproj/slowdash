@@ -23,49 +23,56 @@
       "label": "Zone 1 (\u00b0C)  \u00b7 suffix C A",
       "color": "#009090",
       "ymin": 0,
-      "ymax": 200
+      "ymax": 200,
+      "connected": true
     },
     {
       "name": "ctr2",
       "label": "Zone 2 (\u00b0C)  \u00b7 suffix C b",
       "color": "#dd8000",
       "ymin": 0,
-      "ymax": 200
+      "ymax": 200,
+      "connected": false
     },
     {
       "name": "ctr3",
       "label": "Zone 3 (\u00b0C)  \u00b7 suffix C C",
       "color": "#4169e1",
       "ymin": 0,
-      "ymax": 200
+      "ymax": 200,
+      "connected": false
     },
     {
       "name": "ctr4",
       "label": "Zone 4 (\u00b0C)  \u00b7 suffix C d",
       "color": "#e74c3c",
       "ymin": 0,
-      "ymax": 200
+      "ymax": 200,
+      "connected": false
     },
     {
       "name": "ctr5",
       "label": "Zone 5 (\u00b0C)  \u00b7 suffix C E",
       "color": "#9b59b6",
       "ymin": 0,
-      "ymax": 200
+      "ymax": 200,
+      "connected": false
     },
     {
       "name": "ctr6",
       "label": "Zone 6 (\u00b0C)  \u00b7 suffix C F",
       "color": "#16a085",
       "ymin": 0,
-      "ymax": 200
+      "ymax": 200,
+      "connected": true
     },
     {
       "name": "ctr7",
       "label": "Zone 7 (\u00b0C)  \u00b7 suffix C G",
       "color": "#f1c40f",
       "ymin": 0,
-      "ymax": 200
+      "ymax": 200,
+      "connected": false
     }
   ],
   "plot": {
