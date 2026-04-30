@@ -1,73 +1,39 @@
 {
-  "meta": {
-    "name": "Omega",
-    "title": "Omega CN1500 Multi-Zone Controller",
-    "description": "Webcam OCR for an Omega CN1500 ramp & soak controller. The display cycles through enabled zones every few seconds; an LLM reads each frame and tags the value to the right channel based on the lit CTR-N indicator at the bottom of the screen."
-  },
-  "capture": {
-    "source": "file://./last_images",
-    "rate_per_min": 12,
-    "buffer_minutes": 1
-  },
-  "llm": {
-    "model": "claude-opus-4-7",
-    "max_tokens": 1024,
-    "prompt": "These frames show the front panel of an Omega CN1500 multi-zone temperature controller. The screen cycles through enabled zones, displaying one zone's value at a time for a few seconds before switching to the next. The lit-up red dot under one of the CTR labels (CTR1..CTR7 or HLD) tells you which zone the currently-displayed number belongs to. Read every distinct (CTR, value) pair you can find across all frames and return them as a JSON object keyed by zone name (ctr1..ctr7) with the displayed numeric value (Celsius). Use null for any zone that does not appear in any frame.",
-    "example_prompt": "These frames show the front panel of an Omega CN1500 multi-zone temperature controller. The screen cycles through enabled zones, displaying one zone's value at a time for a few seconds before switching to the next. The lit-up red dot under one of the CTR labels (CTR1..CTR7 or HLD) tells you which zone the currently-displayed number belongs to. Read every distinct (CTR, value) pair you can find across all frames and return them as a JSON object keyed by zone name (ctr1..ctr7) with the displayed numeric value (Celsius). Use null for any zone that does not appear in any frame."
-  },
-  "channels": [
-    {
-      "name": "ctr1",
-      "label": "Zone 1 (\u00b0C)",
-      "color": "#009090",
-      "ymin": 0,
-      "ymax": 200
+    "meta": {
+        "name":  "Omega",
+        "title": "Omega CN1500 Multi-Zone Controller",
+        "description": "Live OCR of an Omega CN1500 ramp & soak controller. The single 7-segment display auto-scans through up to 7 channels; each value is followed by a per-channel unit-suffix that uniquely identifies which channel it belongs to."
     },
-    {
-      "name": "ctr2",
-      "label": "Zone 2 (\u00b0C)",
-      "color": "#dd8000",
-      "ymin": 0,
-      "ymax": 200
+
+    "capture": {
+        "source":           "http://10.0.0.91/~sanshiro/photo.jpg",
+        "cycle_seconds":     30,
+        "frames_per_cycle":  14,
+        "frame_interval":    1.5,
+        "batch_dir":         "last_images"
     },
-    {
-      "name": "ctr3",
-      "label": "Zone 3 (\u00b0C)",
-      "color": "#4169e1",
-      "ymin": 0,
-      "ymax": 200
+
+    "llm": {
+        "model":      "claude-opus-4-7",
+        "max_tokens": 1024,
+
+        "prompt": "These photos are of the front panel of an Omega CN1500 multi-zone temperature controller. The single 7-segment LED display auto-scans through the enabled channels, showing each one for a few seconds before advancing.\n\nIn each scan slot the display first shows a label of the form \"Ctr# Pr\" (where # is 1..7 and \"Pr\" stands for \"process value\"), then the numeric temperature followed by a 2-character engineering-units suffix in the format \"C X\". The first character is always 'C' (Centigrade). The second character is a UNIT-SUFFIX TAG that uniquely identifies which channel the value belongs to:\n\n  C A → ctr1   (temperature for channel 1, unit-tag 'A')\n  C b → ctr2   (channel 2, unit-tag 'b')\n  C C → ctr3   (channel 3, unit-tag 'C' — note that the first character is also 'C' for Centigrade; the SECOND character is the channel tag)\n  C d → ctr4   (channel 4, unit-tag 'd')\n  C E → ctr5   (channel 5, unit-tag 'E')\n  C F → ctr6   (channel 6, unit-tag 'F')\n  C G → ctr7   (channel 7, unit-tag 'G')\n\nUSE THE SECOND CHARACTER OF THE SUFFIX as the primary channel identifier — it is shown at the same time as the value, so it's unambiguous. The \"Ctr# Pr\" label that flashes just before the value is a secondary confirmation only; if it's not visible in any frame, rely on the unit-tag.\n\nAcross all the frames provided, identify every (channel, value) pair you can read clearly and return a JSON object mapping channel name to the numeric Celsius value. Use null for any channel that does not appear, or whose value you cannot read confidently, in any of the frames.",
+
+        "example_prompt": "These photos are of the front panel of an Omega CN1500 multi-zone temperature controller. The single 7-segment LED display auto-scans through the enabled channels, showing each one for a few seconds before advancing.\n\nIn each scan slot the display first shows a label of the form \"Ctr# Pr\" (where # is 1..7 and \"Pr\" stands for \"process value\"), then the numeric temperature followed by a 2-character engineering-units suffix in the format \"C X\". The first character is always 'C' (Centigrade). The second character is a UNIT-SUFFIX TAG that uniquely identifies which channel the value belongs to:\n\n  C A → ctr1   (temperature for channel 1, unit-tag 'A')\n  C b → ctr2   (channel 2, unit-tag 'b')\n  C C → ctr3   (channel 3, unit-tag 'C' — note that the first character is also 'C' for Centigrade; the SECOND character is the channel tag)\n  C d → ctr4   (channel 4, unit-tag 'd')\n  C E → ctr5   (channel 5, unit-tag 'E')\n  C F → ctr6   (channel 6, unit-tag 'F')\n  C G → ctr7   (channel 7, unit-tag 'G')\n\nUSE THE SECOND CHARACTER OF THE SUFFIX as the primary channel identifier — it is shown at the same time as the value, so it's unambiguous. The \"Ctr# Pr\" label that flashes just before the value is a secondary confirmation only; if it's not visible in any frame, rely on the unit-tag.\n\nAcross all the frames provided, identify every (channel, value) pair you can read clearly and return a JSON object mapping channel name to the numeric Celsius value. Use null for any channel that does not appear, or whose value you cannot read confidently, in any of the frames."
     },
-    {
-      "name": "ctr4",
-      "label": "Zone 4 (\u00b0C)",
-      "color": "#e74c3c",
-      "ymin": 0,
-      "ymax": 200
-    },
-    {
-      "name": "ctr5",
-      "label": "Zone 5 (\u00b0C)",
-      "color": "#9b59b6",
-      "ymin": 0,
-      "ymax": 200
-    },
-    {
-      "name": "ctr6",
-      "label": "Zone 6 (\u00b0C)",
-      "color": "#16a085",
-      "ymin": 0,
-      "ymax": 200
-    },
-    {
-      "name": "ctr7",
-      "label": "Zone 7 (\u00b0C)",
-      "color": "#f1c40f",
-      "ymin": 0,
-      "ymax": 200
+
+    "channels": [
+        { "name": "ctr1", "label": "Zone 1 (°C)  · suffix C A", "color": "#009090", "ymin": 0, "ymax": 200 },
+        { "name": "ctr2", "label": "Zone 2 (°C)  · suffix C b", "color": "#dd8000", "ymin": 0, "ymax": 200 },
+        { "name": "ctr3", "label": "Zone 3 (°C)  · suffix C C", "color": "#4169e1", "ymin": 0, "ymax": 200 },
+        { "name": "ctr4", "label": "Zone 4 (°C)  · suffix C d", "color": "#e74c3c", "ymin": 0, "ymax": 200 },
+        { "name": "ctr5", "label": "Zone 5 (°C)  · suffix C E", "color": "#9b59b6", "ymin": 0, "ymax": 200 },
+        { "name": "ctr6", "label": "Zone 6 (°C)  · suffix C F", "color": "#16a085", "ymin": 0, "ymax": 200 },
+        { "name": "ctr7", "label": "Zone 7 (°C)  · suffix C G", "color": "#f1c40f", "ymin": 0, "ymax": 200 }
+    ],
+
+    "plot": {
+        "length": 86400,
+        "reload": 5
     }
-  ],
-  "plot": {
-    "length": 600,
-    "reload": 5
-  }
 }
