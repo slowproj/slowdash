@@ -1,0 +1,73 @@
+{
+  "meta": {
+    "name": "Omega",
+    "title": "Omega CN1500 Multi-Zone Controller",
+    "description": "Webcam OCR for an Omega CN1500 ramp & soak controller. The display cycles through enabled zones every few seconds; an LLM reads each frame and tags the value to the right channel based on the lit CTR-N indicator at the bottom of the screen."
+  },
+  "capture": {
+    "source": "file://./last_images",
+    "rate_per_min": 12,
+    "buffer_minutes": 1
+  },
+  "llm": {
+    "model": "claude-opus-4-7",
+    "max_tokens": 1024,
+    "prompt": "These frames show the front panel of an Omega CN1500 multi-zone temperature controller. The screen cycles through enabled zones, displaying one zone's value at a time for a few seconds before switching to the next. The lit-up red dot under one of the CTR labels (CTR1..CTR7 or HLD) tells you which zone the currently-displayed number belongs to. Read every distinct (CTR, value) pair you can find across all frames and return them as a JSON object keyed by zone name (ctr1..ctr7) with the displayed numeric value (Celsius). Use null for any zone that does not appear in any frame.",
+    "example_prompt": "These frames show the front panel of an Omega CN1500 multi-zone temperature controller. The screen cycles through enabled zones, displaying one zone's value at a time for a few seconds before switching to the next. The lit-up red dot under one of the CTR labels (CTR1..CTR7 or HLD) tells you which zone the currently-displayed number belongs to. Read every distinct (CTR, value) pair you can find across all frames and return them as a JSON object keyed by zone name (ctr1..ctr7) with the displayed numeric value (Celsius). Use null for any zone that does not appear in any frame."
+  },
+  "channels": [
+    {
+      "name": "ctr1",
+      "label": "Zone 1 (\u00b0C)",
+      "color": "#009090",
+      "ymin": 0,
+      "ymax": 200
+    },
+    {
+      "name": "ctr2",
+      "label": "Zone 2 (\u00b0C)",
+      "color": "#dd8000",
+      "ymin": 0,
+      "ymax": 200
+    },
+    {
+      "name": "ctr3",
+      "label": "Zone 3 (\u00b0C)",
+      "color": "#4169e1",
+      "ymin": 0,
+      "ymax": 200
+    },
+    {
+      "name": "ctr4",
+      "label": "Zone 4 (\u00b0C)",
+      "color": "#e74c3c",
+      "ymin": 0,
+      "ymax": 200
+    },
+    {
+      "name": "ctr5",
+      "label": "Zone 5 (\u00b0C)",
+      "color": "#9b59b6",
+      "ymin": 0,
+      "ymax": 200
+    },
+    {
+      "name": "ctr6",
+      "label": "Zone 6 (\u00b0C)",
+      "color": "#16a085",
+      "ymin": 0,
+      "ymax": 200
+    },
+    {
+      "name": "ctr7",
+      "label": "Zone 7 (\u00b0C)",
+      "color": "#f1c40f",
+      "ymin": 0,
+      "ymax": 200
+    }
+  ],
+  "plot": {
+    "length": 600,
+    "reload": 5
+  }
+}

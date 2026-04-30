@@ -10,3 +10,8 @@ __pycache__/
 # slowdash-canvas install.sh symlinks (local, machine-specific)
 app/site/slowcanvas
 app/site/slowcanvas.html
+
+# slowdash-agent-tools install.sh symlinks (local, machine-specific)
+app/site/slowagent
+app/site/slowagent.html
+lib/slowpy/slowagent

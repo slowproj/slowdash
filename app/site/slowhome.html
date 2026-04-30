@@ -21,33 +21,44 @@
     import { SlowDash } from './slowjs/slowdash.mjs';
     import { Frame } from './slowjs/frame.mjs';
 
-    let layout_config = {
-        control: {
-            grid: { 'rows': 2, 'columns': 2 },
-            inactive: true,
-        },
-        panels: [
-            {
-                type: 'channellist',
-                default_filter: '',
-                case_sensitive: false,
-            },
-            {
-                type: 'catalog',
-                catalog_type: 'slowdash,slowplot,slowcruise,userhtml'
-            },
-            {
-                type: 'taskmanager',
-            },
-            {
-                type: 'tools',
+    // Default known catalog types.  Submodule-introduced types
+    // (slowcanvas, slowagent, …) are discovered dynamically below.
+    const BASE_CATALOG_TYPES = ['slowdash', 'slowplot', 'slowcruise', 'userhtml'];
+
+    async function discoverCatalogTypes() {
+        // Read the contentlist once at boot and union in any extra `type`
+        // values we see — that way any submodule that drops a new
+        // <kind>-<name>.json into the config dir starts appearing on the
+        // home page without anyone having to edit this file.
+        const types = new Set(BASE_CATALOG_TYPES);
+        try {
+            const r = await fetch('./api/config/contentlist');
+            if (r.ok) {
+                const list = await r.json();
+                for (const e of (list || [])) if (e?.type) types.add(e.type);
             }
-        ]
-    };
+        }
+        catch (e) { console.warn('home: contentlist fetch failed', e); }
+        // Drop slowtask — it's not a directly clickable layout (it's a backend python file).
+        types.delete('slowtask');
+        return [...types].join(',');
+    }
 
 
     async function main() {
         $('#sd-layout').css({'width':"100%", 'margin':0, 'padding':0});
+
+        const catalog_type = await discoverCatalogTypes();
+        const layout_config = {
+            control: { grid: { rows: 2, columns: 2 }, inactive: true },
+            panels: [
+                { type: 'channellist', default_filter: '', case_sensitive: false },
+                { type: 'catalog', catalog_type },
+                { type: 'taskmanager' },
+                { type: 'tools' },
+            ],
+        };
+
         let slowdash = new SlowDash($('#sd-layout'));
         const config = await slowdash.configure(layout_config);
         

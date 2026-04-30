@@ -1,0 +1,28 @@
+slowdash_project:
+  name:  WebcamOCR
+  title: Webcam OCR (Omega CN1500)
+
+  data_source:
+    url: ${DB_URL:-sqlite:///WebcamOCR}
+    time_series:
+      schema: data[channel]@timestamp(unix)=value
+    object_time_series:
+      schema: photo[channel]@timestamp(unix)=value
+    blob_storage:
+      type: file
+      base_directory: data/blob
+
+  # Loaded by slowdash-agent-tools.  Adds /api/agent/* routes and surfaces
+  # slowagent-NAME.json layouts in the home-page catalog.
+  module:
+    file: ../../slowdash-agent-tools/server/sd_agent.py
+
+  task:
+    - name: webcam_ocr
+      auto_load: true
+      enabled_for_commandline: false
+      parameters:
+        layout_file: slowagent-Omega.json
+
+  style:
+    theme: light

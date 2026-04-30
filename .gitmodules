@@ -10,3 +10,6 @@
 [submodule "slowdash-canvas"]
 	path = slowdash-canvas
 	url = ./slowdash-canvas
+[submodule "slowdash-agent-tools"]
+	path = slowdash-agent-tools
+	url = git@github.com:yaosarayin/slowdash-agent-tools.git
