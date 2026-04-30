@@ -7,6 +7,6 @@ slowdash_project:
     time_series:
       schema: testdata [channel] @timestamp(unix) = value
 
-  task:
-    name: testdata
-    auto_load: true
+#  task:
+#    name: testdata
+#    auto_load: true

@@ -1,6 +1,6 @@
 #! /usr/bin/env python3        
 
-import time
+import time, logging
 import numpy as np
 import slowpy
 from slowpy.control import RandomWalkDevice
@@ -87,6 +87,18 @@ if __name__ == '__main__':
         '--interval', action='store', dest='interval', type='float', default=1.0,
         help='data readout inteval'
     )
+    optionparser.add_option(
+        '--logging', action='store', dest='loglevel', default='info', choices=['debug', 'info', 'warning', 'error'],
+        help='logging level'
+    )
     (options, args) = optionparser.parse_args()
 
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+    logging.basicConfig(
+        level=getattr(logging, options.loglevel.upper(), logging.INFO),
+        format='%(asctime)s %(levelname)s: %(filename)s %(funcName)s():   %(message)s', 
+        datefmt='%y-%m-%d %H:%M:%S'
+    )
+    
     start(options.db_url, interval=options.interval)

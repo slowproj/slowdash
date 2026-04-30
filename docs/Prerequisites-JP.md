@@ -5,7 +5,7 @@ title: 事前知識
 # はじめる前に
 このページは、SlowDash のドキュメント（特に [Installation](Installation.html)、[Quick Tour](QuickTour.html)、[Project Setup](ProjectSetup.html)、[Data Binding](DataBinding.html)）を読む前に必要な最小限の知識をまとめたものです．この文書は Claude によって自動で作成されました．
 
-次のことができることを前提にしています．
+SlowDash のドキュメントでは，読み手は次のことができることを前提にしています．
 
 - ターミナルでコマンドを実行できる
 - テキストファイル（YAML, Python, HTML）を編集できる
@@ -22,12 +22,12 @@ $ pwd                 # 現在のディレクトリを表示
 $ ls -la              # ファイル一覧を表示
 $ cd PATH/TO/DIR      # ディレクトリを移動
 $ mkdir MyProject     # ディレクトリを作成
-$ python3 script.py   # Python スクリプトを実行
+$ python script.py    # Python スクリプトを実行
 ```
 
-通常はターミナルを2つ使います．
+SlowDash のチュートリアルでは，ターミナルを2つ使います．
 
-- 1つ目：`slowdash --port=18881` を起動
+- 1つ目：SlowDash 本体を起動
 - 2つ目：テストデータ生成やユーザースクリプトを実行
 
 # Python と仮想環境

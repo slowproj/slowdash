@@ -450,9 +450,9 @@ if __name__ == '__main__':
         _loop()
 ```
 
-A full working example is provided in `ExampleProjects/QuickTour/RealDevice`.
+A full working example is provided in `ExampleProjects/QuickTour/02_RealDevice`.
 ```console
-$ cd PATH/TO/SLOWDASH/ExampleProjects/QuickTour/RealDevice
+$ cd PATH/TO/SLOWDASH/ExampleProjects/QuickTour/02_RealDevice
 $ slowdash --port=18881
 ```
 

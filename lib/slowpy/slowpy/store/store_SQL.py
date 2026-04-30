@@ -68,7 +68,8 @@ class TableFormat:
             # this is worse than UPSERT, as DELETE/INSERT might trigger re-indexing,
             # but there is no reliable standard way for UPSERT usable in all RDBMS...
             sql = f"DELETE FROM {self.table} WHERE channel={self.db.placeholder}"
-            cur.execute(sql, (channel,))            
+            logging.debug(f'{sql}: {(channel,)}')
+            cur.execute(sql, (channel,))       
         if type(value) in [int, float]:
             self.insert_numeric_data(cur, timestamp, channel, value)
         elif type(value) in [str, bool]:
@@ -132,21 +133,21 @@ class LongTableFormat(TableFormat):
             
 
 class LongTableFormat_DateTime_PostgreSQL(LongTableFormat):
-    schema_numeric = '("timestamp" TIMESTAMP WITH TIME ZONE , channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp,channel))'
-    schema_text = '("timestamp" TIMESTAMP WITH TIME ZONE, channel VARCHAR(100), value TEXT, PRIMARY KEY(timestamp,channel))'
+    schema_numeric = '("timestamp" TIMESTAMP WITH TIME ZONE , channel VARCHAR(100), value REAL, PRIMARY KEY("timestamp",channel))'
+    schema_text = '("timestamp" TIMESTAMP WITH TIME ZONE, channel VARCHAR(100), value TEXT, PRIMARY KEY("timestamp",channel))'
 
     
     def insert_numeric_data(self, cur, timestamp, channel, value):
         if type(value) not in [int, float]:
             return self.insert_text_data(cur, timestamp, channel, value)
-        sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
+        sql = f'INSERT INTO {self.table}("timestamp",channel,value) '
         sql += f"VALUES(TO_TIMESTAMP(%.3f),%s,{value});" % (timestamp, self.db.placeholder)
         params = (channel,)
         cur.execute(sql, params)
 
         
     def insert_text_data(self, cur, timestamp, channel, value):
-        sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
+        sql = f'INSERT INTO {self.table}("timestamp",channel,value) '
         sql += f"VALUES(TO_TIMESTAMP(%.3f),%s,%s);" % (timestamp, self.db.placeholder, self.db.placeholder)
         params = (channel, str(value))
         cur.execute(sql, params)
@@ -228,8 +229,8 @@ class DataStore_SQL(DataStore):
     def close(self):
         if self.conn is not None:
             self.conn.close()
-        self.conn = None
-        logging.info('DB "%s" is disconnected.' % self.db_url)
+            self.conn = None
+            logging.info('DB "%s" is disconnected.' % self.db_url)
 
             
     def _write(self, values, tag=None, timestamp=None, update=False):
@@ -323,8 +324,12 @@ class DataStore_SQLite(DataStore_SQL):
         try:
             self.conn.commit()
         except Exception as e:
-            logging.error('SQL commit(): %s' % str(e))
-        del cur
+            logging.error('SQLite commit(): %s' % str(e))
+        finally:
+            try:
+                cur.close()
+            except Exception as e:
+                logging.warning('SQLite cursor close(): %s' % str(e))
 
     
     
@@ -349,7 +354,7 @@ class DataStore_PostgreSQL(DataStore_SQL):
         if not db_url.startswith('postgresql://'):
             db_url = 'postgresql://' + db_url
             
-        logging.info('connecting to %s...' % db_url)
+        logging.debug('connecting to %s...' % db_url)
         import psycopg2 as pg2
         for i in range(12):
             try:
@@ -376,7 +381,6 @@ class DataStore_PostgreSQL(DataStore_SQL):
         except Exception as e:
             logging.error('PostgreSQL: unable to get table list: %s: %s' % (self.db_url, str(e)))
             result = []
-        cur.close()
         
         return result
     
@@ -391,11 +395,19 @@ class DataStore_PostgreSQL(DataStore_SQL):
         try:
             self.conn.commit()
         except Exception as e:
-            logging.error('SQL commit(): %s' % str(e))
-        del cur
+            logging.error('PostgreSQL commit(): %s' % str(e))
+            try:
+                self.conn.rollback()   # exiting from the "aborted transaction" state (possible only with PostgreSQL)
+            except Exception as e:
+                logging.warning('PostgreSQL rollback(): %s' % str(e))
+        finally:
+            try:
+                cur.close()
+            except Exception as e:
+                logging.warning('PostgreSQL cursor close(): %s' % str(e))
 
 
-        
+                
 class DataStore_MySQL(DataStore_SQL):
     placeholder = '%s'
         
@@ -429,7 +441,7 @@ class DataStore_MySQL(DataStore_SQL):
         #import pymysql as mysql
         import mysql.connector as mysql
         
-        logging.info('connecting to %s...' % db_url)
+        logging.debug('connecting to %s...' % db_url)
         for i in range(12):
             try:
                 self.conn = mysql.connect(host=host, port=port, user=user, password=password, db=db)
@@ -455,7 +467,6 @@ class DataStore_MySQL(DataStore_SQL):
         except Exception as e:
             logging.error('MySQL: unable to get table list: %s: %s' % (self.db_url, str(e)))
             result = []
-        cur.close()
         
         return result
     
@@ -470,5 +481,9 @@ class DataStore_MySQL(DataStore_SQL):
         try:
             self.conn.commit()
         except Exception as e:
-            logging.error('SQL commit(): %s' % str(e))
-        del cur
+            logging.error('MySQL commit(): %s' % str(e))
+        finally:
+            try:
+                cur.close()
+            except Exception as e:
+                logging.warning('MySQL cursor close(): %s' % str(e))

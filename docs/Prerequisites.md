@@ -22,12 +22,12 @@ $ pwd                 # show current directory
 $ ls -la              # list files
 $ cd PATH/TO/DIR      # move to a directory
 $ mkdir MyProject     # create a directory
-$ python3 script.py   # run a Python script
+$ python script.py    # run a Python script
 ```
 
-You will often need multiple terminals:
+In the SlowDash tutorial, You will often need multiple terminals:
 
-- one terminal for `slowdash --port=18881`
+- one terminal for the SlowDash server
 - one terminal for data generator / user task scripts
 
 # Python and Virtual Environments

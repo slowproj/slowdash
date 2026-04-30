@@ -62,7 +62,7 @@ class DataStore:
         self._write(values, tag, timestamp, update=True)
 
         
-    def _write(self, values, tag=None, timestamp=None, update=False):                
+    def _write(self, values, tag=None, timestamp=None, update=False):
         if isinstance(values, TimeSeries):
             ts = values
             records = []
