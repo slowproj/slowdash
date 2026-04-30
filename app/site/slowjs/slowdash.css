@@ -306,15 +306,18 @@ summary {
     left: 0;
     right: 0;
     z-index: 500;
+    /* Banner background ignores clicks so panels underneath stay interactive;
+       the buttons re-enable pointer-events for themselves. */
     pointer-events: none;
 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
     padding: 5px 12px;
-    text-align: center;
     font-size: clamp(0.7rem, 1.2vw, 0.85rem);
     font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 
     /* Amber warning color — visible on both light and dark backgrounds. */
     background: rgba(200, 100, 0, 0.82);
@@ -322,6 +325,39 @@ summary {
     border-bottom: 1px solid rgba(255, 255, 255, 0.25);
     /* Subtle bottom blur shadow to separate it from panels. */
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.30);
+}
+
+.sd-grid-warning-msg {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.sd-grid-warning-btn {
+    pointer-events: auto;
+    cursor: pointer;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.18);
+    color: inherit;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 3px;
+    padding: 1px 8px;
+    font: inherit;
+    line-height: 1.3;
+}
+.sd-grid-warning-btn:hover {
+    background: rgba(255, 255, 255, 0.30);
+}
+.sd-grid-warning-btn:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.75);
+    outline-offset: 1px;
+}
+
+.sd-grid-warning-close {
+    padding: 0 6px;
+    font-size: 1.1em;
+    line-height: 1;
 }
 
 /* ── Responsive: narrow viewports (≤ 640 px) ─────────────── */

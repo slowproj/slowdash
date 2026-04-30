@@ -175,8 +175,12 @@ export class Layout {
 
         // resize to what fits.  When the window is large enough, effectiveCols /
         // effectiveRows equal the configured values and nothing changes.
-        const effectiveCols = Math.min(configuredCols, maxFitCols);
-        const effectiveRows = Math.min(configuredRows, maxFitRows);
+        // The Disable button sets this flag for the lifetime of the page only;
+        // a refresh re-enables auto-shrink.
+        const shrinkDisabled = this._gridShrinkDisabled === true;
+
+        const effectiveCols = shrinkDisabled ? configuredCols : Math.min(configuredCols, maxFitCols);
+        const effectiveRows = shrinkDisabled ? configuredRows : Math.min(configuredRows, maxFitRows);
 
         // ── Grid-too-small warning ────────────────────────────────────────────
         // Remove any warning left from a previous _setupDimensions() call (the
@@ -189,7 +193,26 @@ export class Layout {
             // does not shift or resize any panel.
             const msg = `Window too small for ${configuredCols}\u00d7${configuredRows} grid`
                       + ` \u2014 showing ${effectiveCols}\u00d7${effectiveRows}`;
-            $('<div>').addClass('sd-grid-warning').text(msg).appendTo(this.layoutDiv);
+            const warning = $('<div>').addClass('sd-grid-warning').appendTo(this.layoutDiv);
+            $('<span>').addClass('sd-grid-warning-msg').text(msg).appendTo(warning);
+            $('<button>')
+                .addClass('sd-grid-warning-btn')
+                .attr('type', 'button')
+                .attr('title', 'Always show the configured grid even if the window is small')
+                .text('Disable')
+                .bind('click', () => {
+                    this._gridShrinkDisabled = true;
+                    this.callbacks.reconfigure();
+                })
+                .appendTo(warning);
+            $('<button>')
+                .addClass('sd-grid-warning-btn sd-grid-warning-close')
+                .attr('type', 'button')
+                .attr('aria-label', 'Close')
+                .attr('title', 'Close')
+                .html('\u00d7')
+                .bind('click', () => warning.remove())
+                .appendTo(warning);
         }
 
         // Panel dimensions are based on the effective (clamped) column / row count,
