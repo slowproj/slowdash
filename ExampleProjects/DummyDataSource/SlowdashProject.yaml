@@ -2,15 +2,15 @@ slowdash_project:
   name: DummyDataSource
   title: Plot Demo with Dummy Data Source
   
-  style:
-    theme: light
-    title_color: darkgreen
-    logo: logo.png
-    panel:
-      plotTicksOutwards: true
-      plotFrameThickness: 0
-      plotBackgroundColor: "#fafafa"
-      plotGridColor: lightgray
+ # style:
+ #   theme: light
+ #   title_color: darkgreen
+ #   logo: logo.png
+ #   panel:
+ #     plotTicksOutwards: true
+ #     plotFrameThickness: 0
+ #     plotBackgroundColor: "#fafafa"
+ #     plotGridColor: lightgray
       
   data_source:
     - type: Dummy

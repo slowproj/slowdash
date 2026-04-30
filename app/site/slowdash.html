@@ -56,6 +56,7 @@
         setupTimeSelect(config, slowdash, frame);
         setupReloadSelect(config, slowdash, frame);
         setupSnapshotButton(config, slowdash, frame);
+        setupCanvasEditButton(config, frame);
         setupCommonButtons(config, slowdash, frame);
 
         
@@ -147,6 +148,28 @@
         frame.appendButton(configUrlButton);
     }
         
+
+    /* Show an "Edit" button only when the loaded config is canvas-shaped.
+       SlowDash wraps such configs into a single canvas panel (slowdash.mjs),
+       so we detect by inspecting the wrapped panel list rather than the raw
+       view_box / items keys (which the wrapper moves under panels[0]).
+       The button deep-links to the SlowCanvas editor with the same config. */
+    function setupCanvasEditButton(config, frame) {
+        const onlyCanvas = Array.isArray(config.panels)
+                       && config.panels.length === 1
+                       && config.panels[0]?.type === 'canvas';
+        if (!onlyCanvas) return;
+
+        const name = config.meta?.name;
+        if (!name) return;
+
+        let editButton = $('<button>').html("&#x270f;&#xfe0f;").bind('click', e=>{
+            window.open(`./slowcanvas.html?config=slowdash-${encodeURIComponent(name)}.json&mode=edit`, '_self');
+        });
+        editButton.attr('title', 'Edit canvas');
+        frame.appendButton(editButton);
+    }
+
 
     function setupCommonButtons(config, slowdash, frame) {
         let homeButton = $('<button>').html("&#x1f3e0;").bind('click', e=>{
