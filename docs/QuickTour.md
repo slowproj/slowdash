@@ -433,7 +433,7 @@ def _loop():
 Here, `while True` is replaced by `def _loop()`.
 When executed by SlowDash, `_loop()` will be repeatedly called in a managed thread.
 
-See the "Control Script" section of the documentation for additional callbacks such as `_initialize()` and details about threads and asynchronous execution.
+See the "Controls Script" section of the documentation for additional callbacks such as `_initialize()` and details about threads and asynchronous execution.
 
 To make the script runnable standalone, add:
 ```python
@@ -485,7 +485,7 @@ For USB or RS-232 devices, replace the Ethernet part of the control tree.
 For example, using a VISA interface:
 ```python
 from slowpy.control import control_system as ctrl
-ctrl.load_control_module('VISA')    # Load VISA plugin
+ctrl.import_control_module('VISA')    # Load VISA plugin
 device = ctrl.visa('USB00::0x2A8D::0x201:MY54700218::00::INSTR').scpi()
 
 # (rest is the same)

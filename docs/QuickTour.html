@@ -664,7 +664,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb31-1"><a h
 <p>Here, <code>while True</code> is replaced by
 <code>def _loop()</code>. When executed by SlowDash,
 <code>_loop()</code> will be repeatedly called in a managed thread.</p>
-<p>See the “Control Script” section of the documentation for additional
+<p>See the “Controls Script” section of the documentation for additional
 callbacks such as <code>_initialize()</code> and details about threads
 and asynchronous execution.</p>
 <p>To make the script runnable standalone, add:</p>
@@ -708,7 +708,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb37-1"><a h
 tree. For example, using a VISA interface:</p>
 <div class="sourceCode" id="cb38"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>ctrl.load_control_module(<span class="st">&#39;VISA&#39;</span>)    <span class="co"># Load VISA plugin</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>ctrl.import_control_module(<span class="st">&#39;VISA&#39;</span>)    <span class="co"># Load VISA plugin</span></span>
 <span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.visa(<span class="st">&#39;USB00::0x2A8D::0x201:MY54700218::00::INSTR&#39;</span>).scpi()</span>
 <span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="co"># (rest is the same)</span></span></code></pre></div>

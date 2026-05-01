@@ -885,7 +885,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb35-1"><a h
 に置き換えただけです． SlowDash がこのスクリプトを実行している間は
 <code>_loop()</code> 関数が繰り返し呼び出されます．</p>
 <p>他にも <code>_initialize()</code>
-などのコールバック関数があります．詳しくは公式ドキュメントの「Control
+などのコールバック関数があります．詳しくは公式ドキュメントの「Controls
 Script」の章を参照してください．
 スレッド構造や非同期実行オプションなどの詳細も書かれています．</p>
 <p>このスクリプトの末尾に以下のブロックを追加しておくと，これを単独実行できるようになります．</p>
@@ -942,7 +942,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb41-1"><a h
 経由で使用するデバイスでは，以下のようになります．</p>
 <div class="sourceCode" id="cb42"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>ctrl.load_control_module(<span class="st">&#39;VISA&#39;</span>)    <span class="co"># VISA は SlowPy プラグインとして提供されているので load する</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>ctrl.import_control_module(<span class="st">&#39;VISA&#39;</span>)    <span class="co"># VISA は SlowPy プラグインとして提供されているので load する</span></span>
 <span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.visa(<span class="st">&#39;USB00::0x2A8D::0x201:MY54700218::00::INSTR&#39;</span>).scpi()</span>
 <span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>(あとは同じ)</span></code></pre></div>

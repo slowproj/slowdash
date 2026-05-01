@@ -585,7 +585,7 @@ def _loop():
 `while True` を `def _loop()` に置き換えただけです．
 SlowDash がこのスクリプトを実行している間は `_loop()` 関数が繰り返し呼び出されます．
 
-他にも `_initialize()` などのコールバック関数があります．詳しくは公式ドキュメントの「Control Script」の章を参照してください．
+他にも `_initialize()` などのコールバック関数があります．詳しくは公式ドキュメントの「Controls Script」の章を参照してください．
 スレッド構造や非同期実行オプションなどの詳細も書かれています．
 
 このスクリプトの末尾に以下のブロックを追加しておくと，これを単独実行できるようになります．
@@ -640,7 +640,7 @@ device.command('OUTP ON; *OPC?').set()
 例えば，USB 接続を VISA 経由で使用するデバイスでは，以下のようになります．
 ```python
 from slowpy.control import control_system as ctrl
-ctrl.load_control_module('VISA')    # VISA は SlowPy プラグインとして提供されているので load する
+ctrl.import_control_module('VISA')    # VISA は SlowPy プラグインとして提供されているので load する
 device = ctrl.visa('USB00::0x2A8D::0x201:MY54700218::00::INSTR').scpi()
 
 (あとは同じ)
