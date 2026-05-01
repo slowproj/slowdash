@@ -657,7 +657,7 @@ class UserModuleComponent(Component):
             return None
         
         try:
-            channels = channels.split(',')
+            channels = channels.split(',') if channels else []
             length = float(opts.get('length', 3600))
             to = float(opts.get('to', 0))
         except Exception as e:

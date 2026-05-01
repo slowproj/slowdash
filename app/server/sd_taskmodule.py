@@ -525,7 +525,7 @@ class TaskModuleComponent(Component):
         
         record = {}
         start = (to if to > 0 else int(now) + to) - length
-        for ch in channels.split(','):
+        for ch in channels.split(',') if channels else []:
             data = await self.slowpy_control.get_data(ch)
             if data is not None:
                 record[ch] = {

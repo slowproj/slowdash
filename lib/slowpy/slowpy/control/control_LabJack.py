@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 10 September 2024 #
 
 """SlowPy/Control LabJack plugin
-- This uses LabJack Python Library, LabJackPython. Install it by `pip LabJackPython`.
+- This uses LabJack Python Library, LabJackPython. Install it by `pip install LabJackPython`.
 - LabJack Python for U12 uses the LabJack Exodriver library available at the LabJack web page.
   [Web Page](https://support.labjack.com/docs/exodriver-downloads-for-ud-series-linux-and-macos-)
   [Download (Apr 2026)](https://github.com/labjack/exodriver/archive/refs/heads/master.zip)
@@ -122,6 +122,8 @@ class LabjackU12_DigitalOut(spc.ControlVariableNode):
 
 if __name__ == '__main__':
     labjack = LabJackU12()
-    for ch in range(12):
+    for ch in range(8):
         print(f'AIN{ch}: {labjack.ain(ch)}')
+    for ch in range(8,12):
+        print(f'AIN{ch}: {labjack.ain(ch, gain=7)}')
         

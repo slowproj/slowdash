@@ -7,16 +7,20 @@
 - data is a JSON string for { channel: value, ... }
 '''
 
-db, table = 'postgresql://slowdash:slowdash@localhost:5432/SlowTestData', 'ts_data'
-#db, table = 'postgresql://slowdash:slowdash@pgsql_db:5432/SlowTestData', 'ts_data'
 
-
-import slowlette
+import slowpy, slowlette
 webapi = slowlette.Slowlette()
+datastore = None
 
-import slowpy
-datastore = slowpy.store.create_datastore_from_url(db, table)
+
+def _initialize(params):
+    global datastore
+    db_url = params.get('db_url', 'sqlite:///TestData.db')
+    db_table = params.get('db_table', 'ts_data')
+    datastore = slowpy.store.create_datastore_from_url(db_url, db_table)
+
 
 @webapi.post('/api/postdata')
 def postdata(doc:slowlette.JSON, timestamp:float=0):
-    datastore.append(dict(doc), timestamp=timestamp)
+    if datastore is not None:
+        datastore.append(dict(doc), timestamp=timestamp)

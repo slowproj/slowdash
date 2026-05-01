@@ -41,7 +41,7 @@ class DataSource(ComponentPlugin):
     @slowlette.get('/api/data/{channels}')
     async def api_get_data(self, channels:str, opts:dict):
         try:
-            channels = channels.split(',')
+            channels = channels.split(',') if channels else []
             length = float(opts.get('length', 3600))
             to = float(opts.get('to', 0))
             resample = float(opts.get('resample', -1))

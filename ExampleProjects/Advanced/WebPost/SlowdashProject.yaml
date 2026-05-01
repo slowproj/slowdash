@@ -1,0 +1,15 @@
+slowdash_project:
+  environment:
+    - DB=${DB_URL:-postgresql://slowdash:slowdash@localhost:5432/SlowTestData}
+    
+  data_source:
+    url: ${DB}
+    time_series:
+      schema: ts_data [channel] @timestamp = value
+
+  module:
+    file: postdata.py
+    enabled_for_commandline: true
+    parameters:
+      db_url: ${DB}
+      db_table: ts_data

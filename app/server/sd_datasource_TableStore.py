@@ -164,24 +164,11 @@ class DataSource_TableStore(DataSource):
                 logging.error('schema: table name not specified')
                 continue
             
-            # time type #
             if schema.time is None:
                 pass
-            elif schema.time_type is None:
-                logging.warning('schema: time type not specified: "with timezone" is assumed')
-                schema.time_type = 'aware'
-            else:
-                schema.time_type = schema.time_type.lower().replace(' ', '')
-                if schema.time_type in ["withtimezone", "utc", "gmt"]:
-                    schema.time_type = "aware"
-                elif schema.time_type in ["withouttimezone", "local"]:
-                    schema.time_type = "naive"
-                elif schema.time_type == "unspecifiedutc":
-                    schema.time_type = "unspecifiedutc"
-                if schema.time_type not in [ 'unix', 'aware', 'naive', 'unspecifiedutc' ]:
-                    logging.error('invalid time type: %s' % schema.time_type)
-                    schema.timeseries_table = None
 
+            first_columns, first_record = None, None
+            
             # scan for tag values #
             if schema.tag is not None and len(schema.tag_values) == 0:
                 tag_values = await self._get_tag_values_from_data(schema)
@@ -198,14 +185,14 @@ class DataSource_TableStore(DataSource):
                         all_fields_have_types = False
                         break
             if len(schema.fields) == 0 or not all_fields_have_types:
-                columns, record = await self._get_first_data_row(schema)
-                if columns is None:
+                first_columns, first_record = await self._get_first_data_row(schema)
+                if first_columns is None:
                     self.channels_scanned = False  # maybe the table is not created yet. Try again later
                     continue
                     
                 fields = {}
-                for k in range(len(columns)):
-                    column = columns[k]
+                for k in range(len(first_columns)):
+                    column = first_columns[k]
                     if column not in [ schema.time, schema.tag ] + schema.flags:
                         if False and schema.is_for_ts:  # "False" to determine the field type anyway
                             fields[column] = None
@@ -213,7 +200,7 @@ class DataSource_TableStore(DataSource):
                             # will be determined later for each tag value
                             fields[column] = None
                         else:
-                            fields[column] = Schema.identify_datatype(record[k])
+                            fields[column] = Schema.identify_datatype(first_record[k])
                 if len(schema.fields) == 0:
                     schema.fields = [ k for k in fields.keys() ]
                     schema.field_types = [ v for v in fields.values() ]
@@ -246,6 +233,38 @@ class DataSource_TableStore(DataSource):
                             if value is not None:
                                 schema.add_channel(channel_name_str, Schema.identify_datatype(value))
 
+            # time type #
+            if schema.time_type is None:
+                time_value = None
+                if first_record is None:
+                    first_columns, first_record = await self._get_first_data_row(schema)
+                for k in range(len(first_columns or [])):
+                    if first_columns[k] == schema.time:
+                        time_value = first_record[k]
+                        break
+                    
+                if type(time_value) in [int, float]:
+                    schema.time_type = 'unix'
+                elif type(time_value) == str:
+                    if time_value.isdigit():
+                        schema.time_type = 'unix'
+                    else:
+                        try:
+                            dt = datetime.datetime.fromisoformat(time_value)
+                        except:
+                            pass
+                        if dt.utcoffset() is not None:
+                            schema.time_type = 'aware'
+                        else:
+                            schema.time_type = 'naive'
+                elif isinstance(time_value, datetime.datetime):
+                    if dt.utcoffset() is not None:
+                        schema.time_type = 'aware'
+                    else:
+                        schema.time_type = 'naive'
+            if schema.time_type is not None:
+                logging.info(f'Schema: time type not specified: "{schema.time_type}" is inferred from data')
+                
 
     async def _get_query_result(self, schema, channels, length, to, resampling=None, reducer=None, use_server_resampling=True, lastonly=False):
         result = {}
@@ -266,6 +285,9 @@ class DataSource_TableStore(DataSource):
         if len(target_channels) == 0:
             return result
 
+        if schema.time_type is None:
+            logging.error('Schema: time-type not specified: {schema}')
+            return result
         time_col, time_from, time_to = schema.get_query_times(start, stop, self.time_sep)
         if time_from is None or time_to is None:
             return result
@@ -297,7 +319,9 @@ class DataSource_TableStore(DataSource):
                 break
             
             timestamp = row[0]
-            if type(timestamp) == str:
+            if type(timestamp) in [int, float]:
+                pass
+            elif type(timestamp) == str:
                 if timestamp.isdigit():
                     timestamp = float(timestamp)
                 else:
@@ -306,6 +330,8 @@ class DataSource_TableStore(DataSource):
                 if schema.time_type == 'unspecifiedutc':
                     timestamp = timestamp.replace(tzinfo=datetime.timezone.utc)
                 timestamp = timestamp.timestamp()
+            else:
+                logging.error(f'Unable to decode timestamp: {timestamp} (type="{schema.time_type}"')
 
             if schema.tag is None:
                 # no tag: channel as field
