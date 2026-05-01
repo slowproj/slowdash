@@ -1,0 +1,19 @@
+# save this file at /etc/systemd/system/camera_loop.service
+# enable it by:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable camera_loop.service
+#   sudo systemctl start camera_loop.service
+
+[Unit]
+Description=Raspberry Pi camera still capture loop
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/rpicam-still -n -t 0 --width 640 --height 480 --timelapse 1000 -o /home/pi/public_html/photo.jpg
+Restart=always
+RestartSec=2
+User=pi
+WorkingDirectory=/home/pi/public_html
+
+[Install]
+WantedBy=multi-user.target
