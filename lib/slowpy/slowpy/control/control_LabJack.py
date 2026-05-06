@@ -1,8 +1,8 @@
 # Created by Sanshiro Enomoto on 10 September 2024 #
 
-"""SlowPy/Control LabJack plugin
+"""SlowPy/Control LabJack plugin for U6 and U12
 - This uses LabJack Python Library, LabJackPython. Install it by `pip install LabJackPython`.
-- LabJack Python for U12 uses the LabJack Exodriver library available at the LabJack web page.
+- LabJack Python for U6/U12 uses the LabJack Exodriver library available at the LabJack web page.
   [Web Page](https://support.labjack.com/docs/exodriver-downloads-for-ud-series-linux-and-macos-)
   [Download (Apr 2026)](https://github.com/labjack/exodriver/archive/refs/heads/master.zip)
   $ sudo apt install libusb-1.0-0-dev
@@ -14,6 +14,66 @@
 import slowpy.control as spc
 
 
+class LabJackU6(spc.ControlNode):
+    def __init__(self):
+        import u6
+        self.u6 = u6.U6()
+
+
+    def close(self):
+        if self.u6:
+            self.u6.close()
+            self.u6 = None
+            
+        
+    ## child nodes ##
+    def config(self):
+        return LabjackU6_Config(self)
+    
+    def ain(self, ch:int, *, resolution:int=0, gain:int=0, differential:bool=False)->float:
+        """Analog In
+        Arguments (see U6.getAIN())
+          ch (int): 0..13
+          resolutoin(int): { 0:default, 1:16bit, ..., 8:19bit }
+          gain (int): { 0:x1, 1:x10, 2:x100, 3:x1000, 15:auto_range }
+          differential (bool): if True, channel ch+1 (odd) is paired for negative input
+        """
+        return LabjackU6_AnalogIn(self, ch, gain=gain, differential=differential)
+
+    
+    @classmethod
+    def _node_creator_method(cls):
+        def labjack_U6(self):
+            try:
+                self.labjack_U6_node
+            except:
+                self.labjack_U6_node = LabJackU6()
+            return self.labjack_U6_node
+
+        return labjack_U6
+
+        
+class LabjackU6_Config(spc.ControlVariableNode):
+    def __init__(self, labjack_node):
+        self.labjack_node = labjack_node
+            
+    def get(self):
+        return self.labjack_node.u6.configU6()
+
+    
+class LabjackU6_AnalogIn(spc.ControlVariableNode):
+    def __init__(self, labjack_node, ch, *, gain, differential):
+        self.labjack_node = labjack_node
+        self.ch = int(ch)
+        self.gain = int(gain)
+        self.differential = bool(differential)
+            
+    def get(self):
+        return self.labjack_node.u6.getAIN(self.ch, gainIndex=self.gain, differential=self.differential)
+
+
+    
+    
 class LabJackU12(spc.ControlNode):
     def __init__(self):
         import u12
@@ -117,13 +177,23 @@ class LabjackU12_DigitalOut(spc.ControlVariableNode):
 
     def get(self):
         return self.value
+
     
 
 
 if __name__ == '__main__':
-    labjack = LabJackU12()
-    for ch in range(8):
-        print(f'AIN{ch}: {labjack.ain(ch)}')
-    for ch in range(8,12):
-        print(f'AIN{ch}: {labjack.ain(ch, gain=7)}')
+    if True:
+        labjack = LabJackU6()
+        print(labjack.config().get())
+        for ch in range(8):
+            print(f'AIN{ch}: {labjack.ain(ch, gain=3)}')
+        for ch in range(4):
+            print(f'AIN{ch}: {labjack.ain(2*ch, gain=3, differential=True)}')
+            
+    elif True:
+        labjack = LabJackU12()
+        for ch in range(8):
+            print(f'AIN{ch}: {labjack.ain(ch)}')
+        for ch in range(8,12):
+            print(f'AIN{ch}: {labjack.ain(ch, gain=7)}')
         
