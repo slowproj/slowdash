@@ -358,8 +358,11 @@ class DataSource_TableStore(DataSource):
                     timestamp = timestamp.replace(tzinfo=datetime.timezone.utc)
                 timestamp = timestamp.timestamp()
             else:
-                timestamp = float(timestamp)
-                logging.error(f'Unable to decode timestamp: {timestamp} (type="{schema.time_type}")')
+                logging.error(f'Unable to decode timestamp: {timestamp} (type="{type(timestamp)}")')
+                try:
+                    timestamp = float(timestamp)  # try anyway
+                except:
+                    continue
 
             if schema.tag is None:
                 # no tag: channel as field
