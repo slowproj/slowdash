@@ -6,6 +6,12 @@ from sd_dataschema import Schema
 from sd_datasource import DataSource
 
 
+from numbers import Number
+def is_numeric_value(x):
+    return isinstance(x, Number) and not isinstance(x, bool)
+
+
+
 class DataSource_TableStore(DataSource):
     def __init__(self, app, project, params):
         super().__init__(app, project, params)
@@ -255,7 +261,7 @@ class DataSource_TableStore(DataSource):
                     break
                 
             data_time_type = None
-            if type(time_value) in [int, float]:
+            if is_numeric_value(time_value):
                 data_time_type = 'unix'
             elif type(time_value) == str:
                 if time_value.isdigit():
@@ -340,19 +346,20 @@ class DataSource_TableStore(DataSource):
                 break
             
             timestamp = row[0]
-            if type(timestamp) in [int, float]:
+            if is_numeric_value(timestamp):
                 pass
-            elif type(timestamp) == str:
+            elif isinstance(timestamp, str):
                 if timestamp.isdigit():
                     timestamp = float(timestamp)
                 else:
                     timestamp = datetime.datetime.fromisoformat(timestamp)
-            elif type(timestamp).__name__ == 'datetime':
+            elif isinstance(timestamp, datetime.datetime):
                 if schema.time_type == 'unspecifiedutc':
                     timestamp = timestamp.replace(tzinfo=datetime.timezone.utc)
                 timestamp = timestamp.timestamp()
             else:
-                logging.error(f'Unable to decode timestamp: {timestamp} (type="{schema.time_type}"')
+                timestamp = float(timestamp)
+                logging.error(f'Unable to decode timestamp: {timestamp} (type="{schema.time_type}")')
 
             if schema.tag is None:
                 # no tag: channel as field

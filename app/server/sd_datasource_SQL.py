@@ -180,10 +180,10 @@ class DataSource_SQL(DataSource_TableStore):
             try:
                 query_result = await self.server.fetch(sql)
             except Exception as e:
-                logging.error('SQL Query Error: %s: %s' % (str(e), sql))
+                logging.error(f'SQL Query Error: {e}: {sql}')
                 continue
             if query_result.is_error:
-                logging.error('SQL Query Error: %s: %s' % (query_result.error, sql))
+                logging.error(f'SQL Query Error: {query_result.error}: {sql}')
                 continue
 
             table = {
@@ -211,7 +211,7 @@ class DataSource_SQL(DataSource_TableStore):
             views = [views]
         for view in views:
             if not (('name' in view) and ('sql' in view)):
-                logging.error('view needs "name" and "sql" fields: "%s"' % view)
+                logging.error(f'view needs "name" and "sql" fields: "{view}"')
                 continue
             self.views[view['name']] = view['sql']
             
@@ -274,10 +274,10 @@ class DataSource_SQL(DataSource_TableStore):
         try:
             result = await self.server.fetch(sql)
         except Exception as e:
-            logging.error('SQL Error: %s: %s' % (str(e), sql))
+            logging.error(f'SQL Error: {e}: {sql}')
             return None, []
         if result.is_error:
-            #logging.error('SQL Error: %s: %s' % (result.error, sql))
+            #logging.error(f'SQL Error: {result.error}: {sql}')
             return None, []
         columns = [ v for v in result.get_column_names() ]
         table = result.get_table()
@@ -299,15 +299,15 @@ class DataSource_SQL(DataSource_TableStore):
         try:
             result = await self.server.fetch(sql, params)
         except Exception as e:
-            logging.error('SQL Error: %s: %s' % (str(e), sql))
+            logging.error(f'SQL Error: {e}: {sql}')
             return None
         if result.is_error:
-            logging.error('SQL Error: %s: %s' % (result.error, sql))
+            logging.error(f'SQL Error: {result.error}: {sql}')
             return None
         try:
             value = result.get_table()[0][0]
         except Exception as e:
-            logging.error('SQL Error: %s: %s' % (str(e), sql))
+            logging.error(f'SQL Error: {e}: {sql}')
             return None
 
         return value
@@ -377,12 +377,12 @@ class DataSource_SQL(DataSource_TableStore):
                     f"SELECT",
                     f"    FLOOR(({tdiff_query})/{resampling}) AS bucket, ",
                     f"    %s({time_col}) AS picked_timestamp" % ("max" if reducer == 'last' else 'min'),
-                    f"    %s" % ("" if tag_col is None else f", {tag_col}"),
+                    f"    , {tag_col}" if tag_col is not None else "",
                     f"{sql_from}",
                     f"{sql_where}",
                     f"GROUP BY ",
                     f"    bucket",
-                    f"    %s" % ("" if tag_col is None else f", {tag_col}")
+                    f"    , {tag_col}" if tag_col is not None else ""
                 ])
                 sql_cte_data = ' '.join([ sql_select, sql_from, sql_where ])
                 sql = ' '.join([
@@ -390,18 +390,20 @@ class DataSource_SQL(DataSource_TableStore):
                     f"    cte_bucket AS ({sql_cte_bucket}),",
                     f"    cte_data AS ({sql_cte_data})",
                     f"SELECT",
-                    f"    {stop}-{resampling}*(bucket+0.5) AS {time_col}, t.{tag_col}, {','.join(fields)}",
+                    f"    {stop}-{resampling}*(bucket+0.5) AS {time_col},",
+                    f"    t.{tag_col}," if tag_col is not None else "",
+                    f"    {','.join(fields)}",
                     f"FROM",
                     f"    cte_data AS t",
                     f"JOIN",
                     f"    cte_bucket AS b",
                     f"ON ",
                     f"    t.{time_col} = b.picked_timestamp",
-                    f"    %s" % ("" if tag_col is None else f"AND t.{tag_col} = b.{tag_col}"),
+                    f"    AND t.{tag_col} = b.{tag_col}" if tag_col is not None else "",
                     f"{sql_orderby}"
                 ])
                 params.extend(params_where)
-                params.extend(params_where)
+                params.extend(params_where)  # sql_where appears twice above
                 
             elif reducer in ['mean', 'sum', 'min', 'max']:  # "count" cannot be applied twice
                 if reducer == 'mean':
@@ -411,20 +413,20 @@ class DataSource_SQL(DataSource_TableStore):
                 sql_cte_bucket = ' '.join([
                     f"SELECT",
                     f"    FLOOR(({tdiff_query})/{resampling}) AS bucket,",
-                    f"    %s" % ("" if tag_col is None else f"{tag_col},"),
+                    f"    {tag_col}," if tag_col is not None else "",
                     f"    %s" % ','.join([f"{agg_func}({field}) as {field}" for field in fields]),
                     f"{sql_from}",
                     f"{sql_where}",
                     f"GROUP BY ",
                     f"    bucket",
-                    f"    %s" % (f", {tag_col}" if tag_col is not None else "")
+                    f"    , {tag_col}" if tag_col is not None else ""
                 ])
                 sql = ' '.join([
                     f"WITH",
                     f"    cte_bucket AS ({sql_cte_bucket})",
                     f"SELECT",
                     f"    {stop}-{resampling}*(bucket+0.5) as {time_col},",
-                    f"    %s" % ("" if tag_col is None else f"{tag_col},"),
+                    f"    {tag_col}," if tag_col is not None else "",
                     f"    {','.join(fields)}",
                     f"FROM",
                     f"    cte_bucket",
@@ -439,7 +441,7 @@ class DataSource_SQL(DataSource_TableStore):
         logging.debug(f'SQL: {sql} , params:{params}')
         query_result = await self.server.fetch(sql, params)
         if query_result.is_error:
-            logging.error('SQL Query Error: %s: %s (params=%s)' % (query_result.error, sql, str(params)))
+            logging.error(f'SQL Query Error: {query_result.error}: {sql} (params={params})')
             return [], []
 
         return query_result.get_column_names(), query_result.get_table()
