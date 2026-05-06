@@ -383,7 +383,7 @@ class DataSource_SQL(DataSource_TableStore):
                     f"GROUP BY ",
                     f"    bucket",
                     f"    %s" % ("" if tag_col is None else f", {tag_col}")
-                ]);
+                ])
                 sql_cte_data = ' '.join([ sql_select, sql_from, sql_where ])
                 sql = ' '.join([
                     f"WITH ",
@@ -418,7 +418,7 @@ class DataSource_SQL(DataSource_TableStore):
                     f"GROUP BY ",
                     f"    bucket",
                     f"    %s" % (f", {tag_col}" if tag_col is not None else "")
-                ]);
+                ])
                 sql = ' '.join([
                     f"WITH",
                     f"    cte_bucket AS ({sql_cte_bucket})",
@@ -436,7 +436,7 @@ class DataSource_SQL(DataSource_TableStore):
             sql = ' '.join([ sql_select, sql_from, sql_where, sql_orderby ])
             params.extend(params_where)
 
-        logging.debug(f'SQL: {sql} , params:{params}');
+        logging.debug(f'SQL: {sql} , params:{params}')
         query_result = await self.server.fetch(sql, params)
         if query_result.is_error:
             logging.error('SQL Query Error: %s: %s (params=%s)' % (query_result.error, sql, str(params)))

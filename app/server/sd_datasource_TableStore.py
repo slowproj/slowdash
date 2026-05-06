@@ -234,37 +234,56 @@ class DataSource_TableStore(DataSource):
                                 schema.add_channel(channel_name_str, Schema.identify_datatype(value))
 
             # time type #
-            if schema.time_type is None:
-                time_value = None
-                if first_record is None:
-                    first_columns, first_record = await self._get_first_data_row(schema)
-                for k in range(len(first_columns or [])):
-                    if first_columns[k] == schema.time:
-                        time_value = first_record[k]
-                        break
-                    
-                if type(time_value) in [int, float]:
-                    schema.time_type = 'unix'
-                elif type(time_value) == str:
-                    if time_value.isdigit():
-                        schema.time_type = 'unix'
-                    else:
-                        try:
-                            dt = datetime.datetime.fromisoformat(time_value)
-                        except:
-                            pass
-                        if dt.utcoffset() is not None:
-                            schema.time_type = 'aware'
-                        else:
-                            schema.time_type = 'naive'
-                elif isinstance(time_value, datetime.datetime):
-                    if dt.utcoffset() is not None:
-                        schema.time_type = 'aware'
-                    else:
-                        schema.time_type = 'naive'
             if schema.time_type is not None:
-                logging.info(f'Schema: time type not specified: "{schema.time_type}" is inferred from data')
+                schema.time_type = schema.time_type.lower().replace(' ', '')
+                if schema.time_type in ["withtimezone", "utc", "gmt"]:
+                    schema.time_type = "aware"
+                elif schema.time_type in ["withouttimezone", "local"]:
+                    schema.time_type = "naive"
+                elif schema.time_type == "unspecifiedutc":
+                    schema.time_type = "unspecifiedutc"
+                if schema.time_type not in [ 'unix', 'aware', 'naive', 'unspecifiedutc' ]:
+                    logging.error('Schema: invalid time type: %s' % schema.time_type)
+                    schema.timeseries_table = None
                 
+            time_value = None
+            if first_record is None:
+                first_columns, first_record = await self._get_first_data_row(schema)
+            for k in range(len(first_columns or [])):
+                if first_columns[k] == schema.time:
+                    time_value = first_record[k]
+                    break
+                
+            data_time_type = None
+            if type(time_value) in [int, float]:
+                data_time_type = 'unix'
+            elif type(time_value) == str:
+                if time_value.isdigit():
+                    data_time_type = 'unix'
+                else:
+                    try:
+                        dt = datetime.datetime.fromisoformat(time_value)
+                        if dt.utcoffset() is not None:
+                            data_time_type = 'aware'
+                        else:
+                            data_time_type = 'unspecifiedutc'
+                    except:
+                        pass
+            elif isinstance(time_value, datetime.datetime):
+                if time_value.utcoffset() is not None:
+                    data_time_type = 'aware'
+                else:
+                    data_time_type = 'unspecifiedutc'
+
+            if data_time_type is not None:
+                if schema.time_type is None:
+                    schema.time_type = data_time_type
+                    logging.info(f'Schema: time type not specified: "{schema.time_type}" is inferred from data')
+                    if data_time_type == 'unspecifiedutc':
+                        logging.warning(f'Schema: inferred time type might be wrong; could be "naive"')
+                elif schema.time_type != data_time_type:
+                    logging.error(f'Schema: time_type "{schema.time_type}" does not match with data value: {time_value}')
+                    
 
     async def _get_query_result(self, schema, channels, length, to, resampling=None, reducer=None, use_server_resampling=True, lastonly=False):
         result = {}
@@ -278,15 +297,17 @@ class DataSource_TableStore(DataSource):
         for name in channels:
             if not name.replace('.', '').replace('_', '').replace('-', '').replace(':', '').isalnum():
                 logging.error('bad channel name: %s' % name)
-            else:
-                key = str(name[0:len(name)-len(schema.suffix)])
-                if key in schema.channel_table:
-                    target_channels.append(key)
+                continue
+            if schema.suffix and name[-len(schema.suffix):] != schema.suffix:
+                continue
+            key = str(name[0:len(name)-len(schema.suffix)])
+            if key in schema.channel_table:
+                target_channels.append(key)
         if len(target_channels) == 0:
             return result
 
-        if schema.time_type is None:
-            logging.error('Schema: time-type not specified: {schema}')
+        if schema.time_type is None and not schema.is_for_obj:
+            logging.error(f'Schema: time-type not specified: {schema}')
             return result
         time_col, time_from, time_to = schema.get_query_times(start, stop, self.time_sep)
         if time_from is None or time_to is None:
@@ -294,8 +315,8 @@ class DataSource_TableStore(DataSource):
 
         tag_values, fields, name_mapping = schema.get_query_tagvalues_fields(target_channels)
         if len(fields) < 1:
-            return result               
-
+            return result
+        
         query_result_columns, query_result_table = await self._execute_query(
             schema.table, 
             time_col, schema.time_type, time_from, time_to, 
