@@ -1182,6 +1182,7 @@ class PlotPanel extends Panel {
     constructor(div, style={}) {
         super(div, style);
         this.initialDisplayTimeRange = null;
+        this.plots = [];
     }
 
     
@@ -1220,15 +1221,19 @@ class PlotPanel extends Panel {
             this.config.plots = [];
         }
         
-        const legendWidthFraction = 0.3;
         const divWidth = this.div.boundingClientWidth();
+        if (divWidth <= 0) {
+            return; // too early configuration
+        }
+        
+        const legendWidthFraction = 0.3;
         const legendDivWidth = divWidth * legendWidthFraction;
         const plotDivWidth = divWidth * (1 - ((config.legend?.style == 'side') ? legendWidthFraction : 0.0));
         let legendFontSize = window.getComputedStyle(this.div.get()).getPropertyValue('font-size');
         if (! (legendDivWidth / parseFloat(legendFontSize) > 16)) {
             legendFontSize = legendDivWidth / 16.0 + "px";
         }
-        
+
         const referencePlotWidth = 640, referencePlotHeight = 480;
         const marginTop = 32, marginRight = 20, marginBottom = 56, marginLeft = 88;
         const viewportWidth = plotDivWidth;
