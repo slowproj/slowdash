@@ -226,7 +226,7 @@ Naming convention: `set()`, `get()`, and `do_XXX()` are usual methods to perform
   - get(): launches `cmd` and returns the result
   - **value()**: returns ControlValueNode for ramping() etc.
   - **arg(\*args)**: append program arguments to the parent "shell" node. <br>
-    Example: `adc0 = ctrl.shell('read_adc', '--timeout=0').arg('--ch=0')`
+    Example: `adc0 = ctrl.shell('read_adc').arg('--ch=0')`
     - **value()**: returns ControlValueNode for ramping() etc.
     
 #### SlowDash server control

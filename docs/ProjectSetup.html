@@ -493,7 +493,7 @@ class="sourceCode apache"><code class="sourceCode apache"><span id="cb16-1"><a h
 <span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>AddHandler<span class="st"> cgi-script .cgi</span></span>
 <span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="ex">RewriteEngine</span><span class="ch"> </span><span class="kw">On</span></span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>RewriteRule<span class="st"> ^api/(.*)$ slowdash.cgi/$1</span></span></code></pre></div>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>RewriteRule<span class="st"> ^api/(.*)$ slowdash.cgi/api/$1</span></span></code></pre></div>
 <p>For a SlowDash CGI setup in a different way, mind that it requires
 URL rewriting.</p>
 <h4 id="wsgi-daemon">WSGI (Daemon)</h4>
@@ -535,7 +535,7 @@ class="sourceCode apache"><code class="sourceCode apache"><span id="cb18-1"><a h
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>AddHandler<span class="st"> wsgi-script .wsgi</span></span>
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="ex">RewriteEngine</span><span class="ch"> </span><span class="kw">On</span></span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>RewriteRule<span class="st"> ^api/(.*)$ slowdash.wsgi/$1</span></span></code></pre></div>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>RewriteRule<span class="st"> ^api/(.*)$ slowdash.wsgi/api/$1</span></span></code></pre></div>
 <p>Although a dedicated daemon is created for this SlowDash project,
 currently only one WSGI can be set up on one host. The other SlowDash
 project must use CGI.</p>

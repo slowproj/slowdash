@@ -223,7 +223,7 @@ class HtmlPanel extends Panel {
                     return;
                 }
             }
-            this._submit($(e.target).attr('name'), $(e.target).closest('form'));
+            this._submit($(e.target).attr('name'), $(e.target).closest('form'), e);
         });
         
         this.contentDiv.find('form').bind('submit', e=>{
@@ -232,7 +232,7 @@ class HtmlPanel extends Panel {
     }
 
     
-    async _submit(submit_name, form) {
+    async _submit(submit_name, form, event) {
         let doc = {};
         if (submit_name) {
             doc[submit_name] = true

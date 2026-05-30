@@ -268,8 +268,8 @@ class App(slowlette.App):
         await websocket.accept()
         try:
             while True:
-                message = await websocket.receive_text()
-                await websocket.send_text(f'Received: {message}')
+                message = await websocket.receive()
+                await websocket.send(f'Received: {message}')
         except slowlette.ConnectionClosed:
             print("WebSocket Closed")
 
@@ -340,10 +340,10 @@ class DropPrefix:
         self.prefix = 'api'
 
     @slowlette.route('/{*}')
-    def handle(request: Request):
+    def handle(self, request: slowlette.Request):
         if len(request.path) > 0 and request.path[0] == self.prefix:
             request.path = request.path[1:]
-        return Response()
+        return slowlette.Response()
 
 class App(slowlette.App):
     def __init__(self):
@@ -386,7 +386,7 @@ key = slowlette.BasicAuthentication.generate_key('api', 'slow')
 ```
 
 #### File Server
-`FileServer(filedir, *, prefix='', index_file=None, exclude=None, drop_exclude_prefix=False, ext_allow=None, ext_deny=None)`
+`FileServer(filedir, *, prefix='', index_file=None, exclude=None, ext_allow=None, ext_deny=None)`
 
 The file server handles GET requests to send back files stored in `filedir`. The request path, optionally with `prefix` that will be dropped, is the relative path from the `filedir`. For security reasons, file names cannot contain special characters other than a few selected ones (`_`, `-`, `+`, `=`, `,`, `.`, `:`), and the first letter of each path element must be an alphabet or digit. Also, the path cannot start with a Windows drive letter (like `c:`), even if Slowlette runs on non-Windows. POST and DELETE are not implemented.
 
@@ -394,9 +394,9 @@ The file server handles GET requests to send back files stored in `filedir`. The
 - `prefix` (str): URL path to bind this app (e.g., `/webfile`)
 - `index_file` (str): index file when the path is empty (i.e., `/`)
 - `exclude` (str): URL path not to be handled (e.g., prefix=`/app`, exclude=`/app/api`)
- - `drop_exclude_prefix` (bool): if True, the prefix is removed from the requet path if the request is for an excluded path (e.g., for exclude `/api`, the request path of `api/userlist` becomes `/userlist`)
- - `ext_allow` (list[str]): a list of file extensions to allow accessing
- - `ext_deny` (list[str]): a list of file extensions not to allow accessing
+- `not_found_is_error` (bool): if true return an error response (404) if file does not exist, otherwise propagate
+- `ext_allow` (list[str]): a list of file extensions to allow accessing
+- `ext_deny` (list[str]): a list of file extensions not to allow accessing
 
 ### Custom Response Aggregation
 A handler can make a user aggregator by returning an instance of a custom Response class with an overridden `merge_response()` method, as explained above.
@@ -405,16 +405,17 @@ A handler can make a user aggregator by returning an instance of a custom Respon
 import slowlette
 
 class MyExclusiveApp:
-    class MyExclusiveResponse(Response):
-        def merge_response(self, response:Response)->None:
+    class MyExclusiveResponse(slowlette.Response):
+        def __init__(self, status_code=0, *, content_type=None, content=None):
+            super().__init__(satus_code, conent_type=content_type, content=conent)
+            
+        def merge_response(self, response:slowlette.Response)->None:
             # example: do not merge the responses from the subsequent handlers
             pass
 
     @slowlette.route('/hello')
     def hello(self):
-        response = self.MyExclusiveResponse()
-        response.append('hello, there is no one else here.')
-        return response
+        return self.MyExclusiveResponse(content='hello, there is no one else here.')
 ```
 This method is useful if the method returns a data structure that requires a certain way to merge other data.
 
@@ -424,6 +425,9 @@ In addition to that, a user app class can override a method to aggregate all the
 import slowlette
 
 class MyRouter(slowlette.Router):
+    def __init__(self, app):
+        super().__init__(app)
+        
     def merge_responses(self, responses: list[Response]) -> Response:
         response = Response()
         for r in responses:
@@ -435,7 +439,7 @@ Then use this as a `slowlette` of the user app:
 ```python
 class MyApp(slowlette.App):
     def __init__(self):
-        self.slowlette = MyRouter()
+        self.slowlette = MyRouter(self)
         super().__init__()
 ```
 Calling `super().__init__()` later is a little bit more efficient, as it does not replace `self.slowlette` if it is already defined.
@@ -455,7 +459,7 @@ class App(slowlette.App):
 key = slowlette.BasicAuthentication.generate_key(username='api', password='slow')
 
 app = App()
-app.add_middleware(slowlette.BasicAuthentication(auth_list=[key]))
+app.slowlette.add_middleware(slowlette.BasicAuthentication(auth_list=[key]))
 ```
 
 If HTTP is used, nothing will be returned, as the access is denied. (Add `-v` option to see details.)

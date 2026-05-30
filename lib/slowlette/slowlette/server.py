@@ -48,15 +48,17 @@ async def dispatch_asgi(app, scope, receive, send):
     body = None
     if method == 'POST':
         try:
-            content_length = int(headers.get('content-length', None))
+            content_length = int(headers.get('content-length', 0))
         except:
-            logging.error(f'ASGI_POST: bad content length: {content_length}')
+            logging.error(f'ASGI_POST: bad content length: {headers.get("content-length","")}')
             await send({'type':'http.response.start', 'status':400})
             await send({'type':'http.response.body', 'body':b''})
+            return
         if content_length > 1024*1024*1024:
             logging.error(f'ASGI_POST: content length too large: {content_length}')
             await send({'type':'http.response.start', 'status':507})
             await send({'type':'http.response.body', 'body':b''})
+            return
         
         body = b''
         if content_length > 0:

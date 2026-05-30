@@ -17,7 +17,7 @@ class UserHtmlComponent(Component):
         self.slowlette.include(slowlette.FileServer(
             filedir = os.path.join(self.app.project_dir, 'userhtml'),
             prefix = '/userhtml',
-            exclude = ['/userhtml/api', '/userhtml/slowjs'],
+            exclude = ['/api', '/slowjs'],
         ))
 
         # make slowjs accessble at /userhtml/slowjs

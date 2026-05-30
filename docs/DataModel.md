@@ -15,7 +15,7 @@ title: Data Model
 # Query Syntax and Reply Format
 ### Query Format
 ```
-http://ADDRESS/data/CHANNEL_LIST?OPTIONS
+http://ADDRESS/api/data/CHANNEL_LIST?OPTIONS
 ```
 channel list is:
 ```

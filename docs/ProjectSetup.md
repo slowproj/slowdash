@@ -302,7 +302,7 @@ Options +ExecCGI
 AddHandler cgi-script .cgi
 
 RewriteEngine On
-RewriteRule ^api/(.*)$ slowdash.cgi/$1
+RewriteRule ^api/(.*)$ slowdash.cgi/api/$1
 ```
 For a SlowDash CGI setup in a different way, mind that it requires URL rewriting.
 
@@ -343,7 +343,7 @@ Options +ExecCGI
 AddHandler wsgi-script .wsgi
 
 RewriteEngine On
-RewriteRule ^api/(.*)$ slowdash.wsgi/$1
+RewriteRule ^api/(.*)$ slowdash.wsgi/api/$1
 ```
 Although a dedicated daemon is created for this SlowDash project, currently only one WSGI can be set up on one host. The other SlowDash project must use CGI.
 

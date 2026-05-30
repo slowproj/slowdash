@@ -8,7 +8,7 @@ import slowpy.control as spc
 class ShellNode(spc.ControlNode):
     def __init__(self, command, decode=True, strip=True, **kwargs):
         self.command = command
-        self.kwargs = { key:value for key,value in kwargs if key not in ['shell', 'stdout', 'capture_output'] }
+        self.kwargs = { key:value for key,value in kwargs.items() if key not in ['shell', 'stdout', 'capture_output'] }
         self.kwargs['shell'] = kwargs.get('shell', True)
         self.decode = decode
         self.strip = strip

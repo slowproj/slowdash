@@ -3,7 +3,7 @@ title: Data-Source Plugin
 ---
 
 # Plugin Structure
-- Create `datasource_XXX.py` file under `system/plugin`, where `XXX` is the name of the datasource.
+- Create `datasource_XXX.py` file under `app/plugin`, where `XXX` is the name of the datasource.
 - Derive a plugin class `DataSource_XXX` from `DataSource` in `datasource.py`.
 - Implement:
   - `__init__()` 
@@ -13,7 +13,7 @@ title: Data-Source Plugin
   - `get_timeseries()` / or async version: `aio_get_timeseries()`
   - `get_object()` / or async version: `aio_get_object()`
   - `get_blob()`  / or async version: `aio_get_blob()`
-- `Datasource` class provides methods that can be used by plugin:
+- `DataSource` class provides methods that can be used by plugin:
   - `resample()`
 
 
@@ -21,14 +21,14 @@ The minimal / empty class will be:
 ```python
 from datasource import DataSource
 
-class Datasource_XXX(Datasource):
+class DataSource_XXX(DataSource):
   def __init__(self, app, project, params):
-    super.__init__(app, project, params)
+    super().__init__(app, project, params)
 
   def get_channels(self, force_rescan=False):
     return []
     
-  def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0, use_prior_on_empty=False):
+  def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0, prior_data=0):
     return {}
 
   def get_object(self, channels, length, to):
@@ -42,7 +42,7 @@ class Datasource_XXX(Datasource):
 ### User Function `__init___`
 ```python
   def __init__(self, app, project, config):
-    super.__init__(app, project, config)
+    super().__init__(app, project, config)
     ...
 ```
 
@@ -61,7 +61,7 @@ class Datasource_XXX(Datasource):
 ### Optional User Function `get_timeseries()`
 - return time-series data
 ```python
-  def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0, use_prior_on_empty=False):
+  def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0, prior_data=0):
     result = {}
     ...
     return result
@@ -87,6 +87,10 @@ class Datasource_XXX(Datasource):
     - `0`: no additional fields
     - `1`: add `x_min` and `x_max` values for each resampling point
     - `2`: add `x_err` (standard error of mean) and `x_count`
+  - `prior_data` controls whether or not to include a data point prior to the query range. The value can be:
+    - `0`: no prior data point
+    - `1`: add one prior data point if there is no data point in the query range
+    - `2`: always add one prior data point
   - If resampling is not supported by the data source, use `self.resample()`.
 
 
@@ -104,9 +108,9 @@ class Datasource_XXX(Datasource):
 ### Optional User Function `get_blob()`
 - Fill blob content
 ```python
-  def get_blob(self, channel, params, output):
+  def get_blob(self, channel:str, blob_id:str):
     ...
-    return mime_type
+    return mime_type, content
 ```
 - Fill the blob content into "output" and return the mime_type
     
@@ -120,7 +124,7 @@ def resample(cls, set_of_timeseries, length, to, interval, reducer, filler, enve
 This will be used in user's `get_timeseries()`, if the data source does not efficiently support resampling, typically like:
 ```python
 class DataSource_XXX(DataSource):
-    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0, use_prior_on_empty=False):
+    def get_timeseries(self, channels, length, to, resampling=None, reducer='last', filler='fillna', envelope=0, prior_data=0):
         result = {}
         ...
 

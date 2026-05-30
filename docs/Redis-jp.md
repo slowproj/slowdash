@@ -11,9 +11,9 @@ title: SlowDash で Redis を使う
 # インストール
 
 ## Docker を使う場合：Redis と SlowDash の一括インストールとテスト
-`ExampleProjects/DataSourceTest/Redis` に Redis Server と，SlowDash と，テストデータ生成スクリプトが全て入った `docker-compose.yaml` があるので，これを使います：
+`ExampleProjects/DatasourceTest/Redis` に Redis Server と，SlowDash と，テストデータ生成スクリプトが全て入った `docker-compose.yaml` があるので，これを使います：
 ```console
-$ cd PATH/TO/SLOWDASH/ExampleProjects/DataSourceTest/Redis
+$ cd PATH/TO/SLOWDASH/ExampleProjects/DatasourceTest/Redis
 $ docker compose up
 ```
 
@@ -78,7 +78,7 @@ $ slowdash-activate-venv     # 普通に source PATH/TO/SLOWDASH/venv/bin/activa
 
 これでダミーデータを生成するスクリプトが走るはずです：
 ```console
-$ cd PATH/TO/SLOWDASH/ExampleProjects/DataSourceTest/Redis
+$ cd PATH/TO/SLOWDASH/ExampleProjects/DatasourceTest/Redis
 $ ./generate-testdata.sh
 ```
 ここでエラーがでなければ正常に走っているはずです．
@@ -88,8 +88,8 @@ $ ./generate-testdata.sh
 （もし `bin/slowdash-bashrc` の `source` をしていなければ，してください．）
 ```console
 $ cd PATH/TO/SLOWDASH/
-$ souce ./bin/slowdash-bashrc
-$ cd ExampleProjects/DataSourceTests/Redis
+$ source ./bin/slowdash-bashrc
+$ cd ExampleProjects/DatasourceTests/Redis
 $ slowdash channels
 Running in venv at /PATH/TO/SLOWDASH/venv
 [{"name": "Status", "type": "tree"}, {"name": "test_graph_01", "type": "graph"}, {"name": "test_histogram_01", "type": "histogram"}, {"name": "ch00", "type": "timeseries"}, {"name": "ch10", "type": "timeseries"}, {"name": "ch14", "type": "timeseries"}, {"name": "ch04", "type": "timeseries"}, {"name": "ch15", "type": "timeseries"}, {"name": "ch03", "type": "timeseries"}, {"name": "ch11", "type": "timeseries"}, {"name": "ch02", "type": "timeseries"}, {"name": "ch09", "type": "timeseries"}, {"name": "ch08", "type": "timeseries"}, {"name": "ch13", "type": "timeseries"}, {"name": "ch05", "type": "timeseries"}, {"name": "ch06", "type": "timeseries"}, {"name": "ch01", "type": "timeseries"}, {"name": "ch07", "type": "timeseries"}, {"name": "ch12", "type": "timeseries"}]
@@ -114,7 +114,7 @@ $ firefox http://localhost:18881/
 
 # 使い方
 ## プロジェクト設定
-動作テストに使った `ExampleProjects/DataSourceTests/Redis` の `SlowdashProject.yaml` に設定を記述します．
+動作テストに使った `ExampleProjects/DatasourceTests/Redis` の `SlowdashProject.yaml` に設定を記述します．
 Redis サーバのアドレス，ポート番号とデータベース番号を指定するだけです．
 ```yaml
 slowdash_project:

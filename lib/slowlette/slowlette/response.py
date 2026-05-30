@@ -76,7 +76,7 @@ class Response:
             pass
         
         elif isinstance(content, Response):
-            self.merge_content(content)
+            self.merge_response(content)
         
         elif type(content) is list:
             # list contents are appended
@@ -228,9 +228,9 @@ def read_file(filepath, content_type):
             content_type = 'text/javascript'
         elif ext == '.css':
             content_type = 'text/css'
-        elif ext == 'json':
+        elif ext == '.json':
             content_type = 'application/json'
-        elif ext == 'yaml':
+        elif ext == '.yaml':
             content_type = 'application/yaml'
         elif ext == '.png':
             content_type = 'image/png'

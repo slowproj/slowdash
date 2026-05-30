@@ -140,7 +140,7 @@ class ControlNode:
                     return True
                 elif condition_lambda(self.get()):
                     return True
-            if not self.is_stop_requested():
+            if self.is_stop_requested():
                 return False
             if timeout > 0 and (time.monotonic() - start > timeout):
                 break
@@ -167,7 +167,7 @@ class ControlNode:
                     return True
                 elif condition_lambda(self.get()):
                     return True
-            if not self.is_stop_requested():
+            if self.is_stop_requested():
                 return False
             if timeout > 0 and (time.monotonic() - start > timeout):
                 break

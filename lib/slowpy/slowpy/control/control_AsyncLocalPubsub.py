@@ -8,10 +8,10 @@ class LocalPubsubNode:
     def __init__(self):
         self.subscribers = {}    # TopicPattern -> set[asyncio.Queue]
 
-    def aio_open():
+    def aio_open(self):
         pass
 
-    def aio_close():
+    def aio_close(self):
         pass
 
     def publisher(self, topic, **kwargs):

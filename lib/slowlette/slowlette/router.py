@@ -112,8 +112,11 @@ class PathRule:
             value = params.get(pname, None)
             if value is not None and value.strip() == '' and attr.annotation is not str:
                 value = None   # <input> not filled
-            if value is None and attr.default is not inspect._empty:
-                value = attr.default
+            if value is None:
+                if attr.default is not inspect._empty:
+                    value = attr.default
+                elif pname in self.path_params.values():
+                    return None  # omitted path parameter without a default value -> no match
             if value is not None and attr.annotation is not inspect._empty:
                 try:
                     # BUG: this does not work if the type is "Optional[xxx]"
@@ -143,7 +146,7 @@ class PathRule:
         if self.json_dict_body_param is not None:
             doc = DictJSON(request.body)
             if doc.value() is None:
-                return None
+                return None  # BUG: this will return 404 (not found), should return 400 (bad request)
             else:
                 kwargs[self.json_dict_body_param] = doc
         if self.path_param is not None:

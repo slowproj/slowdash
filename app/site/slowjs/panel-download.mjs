@@ -494,7 +494,7 @@ export class DownloadPanel extends Panel {
             const url = 'api/export/jupyter/' + download_url(opts);
             const headers = { 'Content-Type': 'application/json; charset=utf-8' };
             const doc = { 'filename': filename };
-            this.indicator.open("Launching Jupyter...", "&#x23f3;", event?.clientX ?? null, event?.clientY ?? null);
+            this.indicator.open("Launching Jupyter...", "&#x23f3;", e?.clientX ?? null, e?.clientY ?? null);
             let response = await fetch(url, {
                 method: 'POST',
                 headers: headers,

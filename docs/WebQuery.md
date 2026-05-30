@@ -224,7 +224,7 @@ GET http://ADDRESS:PORT/api/config/file/FILENAME
 
 - The FILENAME must:
   - start with an alphabet or `_`
-  - consist of only alphabets, digits, `_`, `-`, `.`, `,`, `:`, `[` and `]`
+  - consist of only alphabets, digits, `_`, `-`, `.`
   - end with one of: `.json`, `.yaml`, `.html`, `.png`, `.jpg`, `.jpeg`, `.svg`, `.csv`
 
 
@@ -236,8 +236,7 @@ POST http://ADDRESS:PORT/api/config/file/NAME?OPTIONS
 ```
 - The NAME must:
   - consist of only alphabets, digits, `.`, `_` and `-`.
-  - start with `slowdash-`, `slowplot-`, or `slowcruise-`.
-  - end with `.json` or `.yaml`.
+- Depending on securiy settings, only certain file names and types might be accepted.
 - Files are stored under the `config` sub-directory of the user project directory.
 
 ### Response

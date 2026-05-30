@@ -97,7 +97,7 @@ Definitions</a></li>
 <h1 id="plugin-structure">Plugin Structure</h1>
 <ul>
 <li>Create <code>datasource_XXX.py</code> file under
-<code>system/plugin</code>, where <code>XXX</code> is the name of the
+<code>app/plugin</code>, where <code>XXX</code> is the name of the
 datasource.</li>
 <li>Derive a plugin class <code>DataSource_XXX</code> from
 <code>DataSource</code> in <code>datasource.py</code>.</li>
@@ -117,7 +117,7 @@ datasource.</li>
 <li><code>get_blob()</code> / or async version:
 <code>aio_get_blob()</code></li>
 </ul></li>
-<li><code>Datasource</code> class provides methods that can be used by
+<li><code>DataSource</code> class provides methods that can be used by
 plugin:
 <ul>
 <li><code>resample()</code></li>
@@ -127,14 +127,14 @@ plugin:
 <div class="sourceCode" id="cb1"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> datasource <span class="im">import</span> DataSource</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Datasource_XXX(Datasource):</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DataSource_XXX(DataSource):</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, app, project, params):</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">super</span>.<span class="fu">__init__</span>(app, project, params)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">super</span>().<span class="fu">__init__</span>(app, project, params)</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> get_channels(<span class="va">self</span>, force_rescan<span class="op">=</span><span class="va">False</span>):</span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> []</span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> get_timeseries(<span class="va">self</span>, channels, length, to, resampling<span class="op">=</span><span class="va">None</span>, reducer<span class="op">=</span><span class="st">&#39;last&#39;</span>, filler<span class="op">=</span><span class="st">&#39;fillna&#39;</span>, envelope<span class="op">=</span><span class="dv">0</span>, use_prior_on_empty<span class="op">=</span><span class="va">False</span>):</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> get_timeseries(<span class="va">self</span>, channels, length, to, resampling<span class="op">=</span><span class="va">None</span>, reducer<span class="op">=</span><span class="st">&#39;last&#39;</span>, filler<span class="op">=</span><span class="st">&#39;fillna&#39;</span>, envelope<span class="op">=</span><span class="dv">0</span>, prior_data<span class="op">=</span><span class="dv">0</span>):</span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {}</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> get_object(<span class="va">self</span>, channels, length, to):</span>
@@ -147,7 +147,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a hr
 <code>__init___</code></h3>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, app, project, config):</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">super</span>.<span class="fu">__init__</span>(app, project, config)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">super</span>().<span class="fu">__init__</span>(app, project, config)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
 <h3 id="user-function-get_channels">User Function
 <code>get_channels()</code></h3>
@@ -171,7 +171,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a hr
 <li>return time-series data</li>
 </ul>
 <div class="sourceCode" id="cb4"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> get_timeseries(<span class="va">self</span>, channels, length, to, resampling<span class="op">=</span><span class="va">None</span>, reducer<span class="op">=</span><span class="st">&#39;last&#39;</span>, filler<span class="op">=</span><span class="st">&#39;fillna&#39;</span>, envelope<span class="op">=</span><span class="dv">0</span>, use_prior_on_empty<span class="op">=</span><span class="va">False</span>):</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> get_timeseries(<span class="va">self</span>, channels, length, to, resampling<span class="op">=</span><span class="va">None</span>, reducer<span class="op">=</span><span class="st">&#39;last&#39;</span>, filler<span class="op">=</span><span class="st">&#39;fillna&#39;</span>, envelope<span class="op">=</span><span class="dv">0</span>, prior_data<span class="op">=</span><span class="dv">0</span>):</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> {}</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    ...</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result</span></code></pre></div>
@@ -210,6 +210,14 @@ for each resampling point</li>
 <li><code>2</code>: add <code>x_err</code> (standard error of mean) and
 <code>x_count</code></li>
 </ul></li>
+<li><code>prior_data</code> controls whether or not to include a data
+point prior to the query range. The value can be:
+<ul>
+<li><code>0</code>: no prior data point</li>
+<li><code>1</code>: add one prior data point if there is no data point
+in the query range</li>
+<li><code>2</code>: always add one prior data point</li>
+</ul></li>
 <li>If resampling is not supported by the data source, use
 <code>self.resample()</code>.</li>
 </ul></li>
@@ -234,9 +242,9 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a hr
 <li>Fill blob content</li>
 </ul>
 <div class="sourceCode" id="cb6"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> get_blob(<span class="va">self</span>, channel, params, output):</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">def</span> get_blob(<span class="va">self</span>, channel:<span class="bu">str</span>, blob_id:<span class="bu">str</span>):</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    ...</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> mime_type</span></code></pre></div>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> mime_type, content</span></code></pre></div>
 <ul>
 <li>Fill the blob content into “output” and return the mime_type</li>
 </ul>
@@ -250,7 +258,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a hr
 data source does not efficiently support resampling, typically like:</p>
 <div class="sourceCode" id="cb8"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DataSource_XXX(DataSource):</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get_timeseries(<span class="va">self</span>, channels, length, to, resampling<span class="op">=</span><span class="va">None</span>, reducer<span class="op">=</span><span class="st">&#39;last&#39;</span>, filler<span class="op">=</span><span class="st">&#39;fillna&#39;</span>, envelope<span class="op">=</span><span class="dv">0</span>, use_prior_on_empty<span class="op">=</span><span class="va">False</span>):</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get_timeseries(<span class="va">self</span>, channels, length, to, resampling<span class="op">=</span><span class="va">None</span>, reducer<span class="op">=</span><span class="st">&#39;last&#39;</span>, filler<span class="op">=</span><span class="st">&#39;fillna&#39;</span>, envelope<span class="op">=</span><span class="dv">0</span>, prior_data<span class="op">=</span><span class="dv">0</span>):</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>        result <span class="op">=</span> {}</span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        ...</span>
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>

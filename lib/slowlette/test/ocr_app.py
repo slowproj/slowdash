@@ -40,7 +40,7 @@ class App(slowlette.App):
             image = Image.open(io.BytesIO(file))
             extracted_text = pytesseract.image_to_string(image, lang=lang)
         except Exception as e:
-            return Response(f"Error processing image: {e}", status=400)
+            return Response(400, content=f"Error processing image: {e}")
         
         return {"text": extracted_text}
 

@@ -121,11 +121,11 @@ id="toc-プロジェクト設定">プロジェクト設定</a></li>
 <h2
 id="docker-を使う場合redis-と-slowdash-の一括インストールとテスト">Docker
 を使う場合：Redis と SlowDash の一括インストールとテスト</h2>
-<p><code>ExampleProjects/DataSourceTest/Redis</code> に Redis Server
+<p><code>ExampleProjects/DatasourceTest/Redis</code> に Redis Server
 と，SlowDash と，テストデータ生成スクリプトが全て入った
 <code>docker-compose.yaml</code> があるので，これを使います：</p>
 <div class="sourceCode" id="cb1"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH/ExampleProjects/DataSourceTest/Redis</span></span>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH/ExampleProjects/DatasourceTest/Redis</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span></code></pre></div>
 <p>システムが立ち上がったら，ブラウザで
 <code>http://localhost:18881</code> にアクセスしてください：</p>
@@ -185,7 +185,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv     # 普通に source PATH/TO/SLOWDASH/venv/bin/activate でも良い</span></span></code></pre></div>
 <p>これでダミーデータを生成するスクリプトが走るはずです：</p>
 <div class="sourceCode" id="cb7"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH/ExampleProjects/DataSourceTest/Redis</span></span>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH/ExampleProjects/DatasourceTest/Redis</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ ./generate-testdata.sh</span></span></code></pre></div>
 <p>ここでエラーがでなければ正常に走っているはずです．</p>
 <h4 id="slowdash-の実行テスト">SlowDash の実行テスト</h4>
@@ -194,8 +194,8 @@ SlowDash を走らせてください． （もし <code>bin/slowdash-bashrc</cod
 <code>source</code> をしていなければ，してください．）</p>
 <div class="sourceCode" id="cb8"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH/</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ souce ./bin/slowdash-bashrc</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd ExampleProjects/DataSourceTests/Redis</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source ./bin/slowdash-bashrc</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd ExampleProjects/DatasourceTests/Redis</span></span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash channels</span></span>
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>Running in venv at /PATH/TO/SLOWDASH/venv</span>
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>[{&quot;name&quot;: &quot;Status&quot;, &quot;type&quot;: &quot;tree&quot;}, {&quot;name&quot;: &quot;test_graph_01&quot;, &quot;type&quot;: &quot;graph&quot;}, {&quot;name&quot;: &quot;test_histogram_01&quot;, &quot;type&quot;: &quot;histogram&quot;}, {&quot;name&quot;: &quot;ch00&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch10&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch14&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch04&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch15&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch03&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch11&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch02&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch09&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch08&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch13&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch05&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch06&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch01&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch07&quot;, &quot;type&quot;: &quot;timeseries&quot;}, {&quot;name&quot;: &quot;ch12&quot;, &quot;type&quot;: &quot;timeseries&quot;}]</span></code></pre></div>
@@ -214,7 +214,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <img src="fig/Redis-SimplePlots.png" width="80%" style="margin:2rem;box-shadow: 0px 0px 15px -5px rgba(0,0,0,0.7);"></p>
 <h1 id="使い方">使い方</h1>
 <h2 id="プロジェクト設定">プロジェクト設定</h2>
-<p>動作テストに使った <code>ExampleProjects/DataSourceTests/Redis</code>
+<p>動作テストに使った <code>ExampleProjects/DatasourceTests/Redis</code>
 の <code>SlowdashProject.yaml</code> に設定を記述します． Redis
 サーバのアドレス，ポート番号とデータベース番号を指定するだけです．</p>
 <div class="sourceCode" id="cb11"><pre
