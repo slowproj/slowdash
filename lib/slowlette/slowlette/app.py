@@ -75,7 +75,7 @@ class Slowlette(App):
         return wrapper
 
     
-    def post(self, path_rule:str, status_code:int=200):
+    def post(self, path_rule:str, status_code:int=201):
         """decorator to make a POST-request handler (Python function)
         Args:
             - path_rule: path pattern to match

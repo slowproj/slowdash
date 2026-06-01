@@ -46,28 +46,28 @@ async def dispatch_asgi(app, scope, receive, send):
         return
     
     body = None
+    MAX_CONTENT_LENGTH = 1024*1024*1024
     if method == 'POST':
         try:
-            content_length = int(headers.get('content-length', 0))
+            content_length = int(headers.get('content-length', MAX_CONTENT_LENGTH))
         except:
             logging.error(f'ASGI_POST: bad content length: {headers.get("content-length","")}')
             await send({'type':'http.response.start', 'status':400})
             await send({'type':'http.response.body', 'body':b''})
             return
-        if content_length > 1024*1024*1024:
+        if content_length > MAX_CONTENT_LENGTH:
             logging.error(f'ASGI_POST: content length too large: {content_length}')
             await send({'type':'http.response.start', 'status':507})
             await send({'type':'http.response.body', 'body':b''})
             return
-        
+
         body = b''
-        if content_length > 0:
-            while len(body) < content_length:
-                message = await receive()
-                if message['type'] == 'http.request':
-                    body += message.get('body', b'')
-                    if not message.get('more_body',False):
-                        break
+        while len(body) < content_length:
+            message = await receive()
+            if message['type'] == 'http.request':
+                body += message.get('body', b'')
+                if not message.get('more_body',False):
+                    break
 
     response = await app.slowlette(Request(url, method=method, headers=headers, body=body))
     if response.status_code < 300:
@@ -118,9 +118,9 @@ def dispatch_wsgi(app, environ, start_response):
     body = None
     if method == 'POST':
         try:
-            content_length = int(environ.get('CONTENT_LENGTH', ''))
+            content_length = int(environ.get('CONTENT_LENGTH', 0))
         except:
-            logging.error(f'WSGI_POST: bad content length: {content_length}')
+            logging.error(f'WSGI_POST: bad content length: {environ.get("CONTENT_LENGTH", None)}')
             start_response('400 Bad Request', [])
             return [ b'' ]
         if content_length > 1024*1024*1024:

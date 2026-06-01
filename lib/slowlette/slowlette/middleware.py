@@ -40,7 +40,7 @@ class BasicAuthentication():
         
     @route('/{*}')
     def dispatch(self, request:Request, body:bytes=None) -> Response:
-        if self.auth_list is None:
+        if len(self.auth_list) == 0:
             return Response()
 
         auth = request.headers.get('authorization', request.headers.get('Authorization', None))
