@@ -3,6 +3,8 @@
 
 
 import sys, os, asyncio, logging
+from urllib.parse import urlencode
+
 import slowlette
 
 from sd_version import slowdash_version
@@ -142,7 +144,7 @@ class App(slowlette.App):
         if envelope is not None:
             opts['envelope'] = envelope
         if len(opts) > 0:
-            url += '?' + '&'.join(['%s=%s'%(k,v) for k,v in opts.items()])
+            url += '?' + urlencode(opts)
         
         return (await self.slowlette(url)).content
 
@@ -156,7 +158,8 @@ class App(slowlette.App):
         if sender is None:
             return (await self.slowlette(f'/api/emit/{topic}', message)).content
         else:
-            return (await self.slowlette(f'/api/emit/{topic}?sender={sender}', message)).content
+            opts = {'sender': sender}
+            return (await self.slowlette(f'/api/emit/{topic}?{urlencode(opts)}', message)).content
 
         
         

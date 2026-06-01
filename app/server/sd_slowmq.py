@@ -7,8 +7,6 @@ from sd_component import Component
 
 
 class SlowMQComponent(Component):
-    topics = []
-    
     def __init__(self, app, project):
         super().__init__(app, project)
         
@@ -22,7 +20,7 @@ class SlowMQComponent(Component):
     def public_config(self):
         return { 'slowmq': {
             'enabled': self.enabled,
-            'attached': { topic:len(self.websockets.get(topic,[])) for topic in self.topics },
+            'attached': { topic:len(clients) for topic,clients in self.subscribers.items() },
         }}
 
     
@@ -74,7 +72,7 @@ class SlowMQComponent(Component):
     async def remove_client(self, client_id:int):
         del self.websockets[client_id]
         
-        for topic in self.subscribers:
+        for topic in list(self.subscribers):
             await self.unsubscribe(client_id, topic)
             
         

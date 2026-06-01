@@ -75,7 +75,7 @@ class ControlSystem(spc.ControlNode):
 
     
     @classmethod
-    def stream(cls, name:str, value):
+    def stream(cls, name:str, value):  # needs a loop somewhere: e.g., running from Tasklet etc.
         loop = asyncio.get_running_loop()
         loop.create_task(cls.aio_publish(value, name=name))
 

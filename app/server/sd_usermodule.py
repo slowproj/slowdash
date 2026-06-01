@@ -612,6 +612,7 @@ class UserModuleComponent(Component):
                     if new_name not in self.usermodule_list:
                         self.usermodule_list[new_name] = module
                         logging.warning(f'Instance {i} of user module "{name}" is renamed to {new_name}')
+                        break
                 else:
                     logging.error(f'Too many user modules of the same name: {name}')
 
