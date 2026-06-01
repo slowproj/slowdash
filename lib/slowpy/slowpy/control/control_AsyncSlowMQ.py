@@ -1,6 +1,8 @@
 # Created by Sanshiro Enomoto on 19 March 2026 #
 
 import asyncio, json, uuid, time
+from urllib.parse import urlencode
+
 from slowpy.control import ControlNode, ControlException
 
 import logging
@@ -41,7 +43,7 @@ class AsyncSlowMQNode(ControlNode):
             netloc = netloc[:-1]
         wsurl = f'{ws_prot}://{netloc}/ws/slowmq'
         if self.name is not None:
-            wsurl += f'?name={self.name}'
+            wsurl += '?' + urlencode({name: self.name})
             
         try:
             import websockets
@@ -221,8 +223,9 @@ class SubscriberNode(ControlNode):
         
         try:
             await self.ws.send(doc)
-            reply = await asyncio.wait_for(self.ws.recv(), timeout=1)
+            reply = await asyncio.wait_for(self.ws.recv(), timeout=3)
         except asyncio.TimeoutError:
+            self.connected = False
             return False
         except Exception as e:
             logger.warning(f'AsyncSlowMQ.subscriber(): {e}')

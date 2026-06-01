@@ -1,6 +1,7 @@
 # Created by Sanshiro Enomoto on 14 February 2024 #
 
 import sys, time, copy, asyncio, traceback, logging
+from urllib.parse import urlencode
 
 import slowlette
 from sd_component import Component
@@ -54,7 +55,7 @@ class MeshComponent(Component):
         except Exception as e:
             logging.info(f"WebSocket Closed by error: {e}")
         finally:
-            self.websockets[topic].remove(websocket)
+            self.websockets.get(topic, set()).discard(websocket)
 
             
     @slowlette.post('/api/emit/{topic}')
@@ -63,7 +64,7 @@ class MeshComponent(Component):
             if sender is None:
                 await self.app.request(f'/consume/{topic}', data)
             else:
-                await self.app.request(f'/consume/{topic}?sender={sender}', data)
+                await self.app.request(f'/consume/{topic}?' + urlencode({'sender':sender}), data)
         except Exception as e:
             logging.error(f'Error on consuming a message in topic "{topic}": {e}')
             logging.error(traceback.format_exc())
@@ -193,11 +194,11 @@ class MeshComponent(Component):
                         if my_x[-(i+1)] is None:
                             continue
                         try:
-                            my_t = float(mydata.get('t')[-(i+1)]) + float(my_data.get('start', 0))
+                            my_t = float(my_data.get('t')[-(i+1)]) + float(my_data.get('start', 0))
                         except:
                             my_x = None
                             break
-                        my_x = x[-(i+1)]
+                        my_x = my_x[-(i+1)]
                         break
                     else:
                         my_x = None
@@ -219,7 +220,7 @@ class MeshComponent(Component):
                 else:
                     data['start'] = self.frm
                     data['t'] = my_t - self.frm
-                    data['x'] = my_data
+                    data['x'] = my_x
 
             self.content = None
             if len(response.content) > 0:

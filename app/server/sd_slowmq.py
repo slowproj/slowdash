@@ -70,10 +70,10 @@ class SlowMQComponent(Component):
         
         
     async def remove_client(self, client_id:int):
-        del self.websockets[client_id]
-        
+        self.websockets.pop(client_id, None)
         for topic in list(self.subscribers):
             await self.unsubscribe(client_id, topic)
+        self.clients.pop(client_id, None)
             
         
     async def reply_error(self, client_id:int, headers, message):
