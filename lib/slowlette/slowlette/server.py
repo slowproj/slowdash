@@ -66,16 +66,16 @@ async def dispatch_asgi(app, scope, receive, send):
         while len(body) < content_length:
             message = await receive()
             if message['type'] == 'http.request':
-                body += message.get('body', b'')
+                body += message.get('body', b'')                
+                if len(body) > MAX_CONTENT_LENGTH:
+                    logging.error(f'ASGI_POST: content too large (chunked transfer): {len(body)}')
+                    await send({'type':'http.response.start', 'status':507})
+                    await send({'type':'http.response.body', 'body':b''})
+                    return
+
                 if not message.get('more_body',False):
                     break
                 
-        if len(body) >= content_length:
-            logging.error(f'ASGI_POST: content too large (chunked transfer): {len(body)')
-            await send({'type':'http.response.start', 'status':507})
-            await send({'type':'http.response.body', 'body':b''})
-            return
-
     response = await app.slowlette(Request(url, method=method, headers=headers, body=body))
     if response.status_code < 300:
         logging.debug(f'{method}: {url} -> {response.status_code}')
@@ -125,8 +125,8 @@ def dispatch_wsgi(app, environ, start_response):
     body = None
     if method == 'POST':
         try:
-            # chunked transfer will not have content-length; reject it to be safe
-            content_length = int(environ.get('CONTENT_LENGTH', None))
+            # chunked transfer will not have content-length; drop the content to be safe
+            content_length = int(environ.get('CONTENT_LENGTH', 0))
         except:
             logging.error(f'WSGI_POST: bad content length: {environ.get("CONTENT_LENGTH", None)}')
             start_response('400 Bad Request', [])
