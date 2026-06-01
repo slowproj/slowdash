@@ -49,9 +49,9 @@ async def dispatch_asgi(app, scope, receive, send):
     MAX_CONTENT_LENGTH = 1024*1024*1024
     if method == 'POST':
         try:
-            # chunked transfer will not have content-length; use MAX size (minus one) in that case
-            # (the "minus one" is to avoid accepting a partial chunk with exaxtly the size of MAX below)
-            content_length = int(headers.get('content-length', MAX_CONTENT_LENGTH-1))
+            # chunked transfer has no content-length; use MAX size (plus one) in that case
+            # (the "plus one" is to avoid accepting a partial chunk with exactly the size of MAX below)
+            content_length = int(headers.get('content-length', MAX_CONTENT_LENGTH+1))
         except:
             logging.error(f'ASGI_POST: bad content length: {headers.get("content-length","")}')
             await send({'type':'http.response.start', 'status':400})

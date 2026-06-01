@@ -28,6 +28,8 @@ class DataSource_Honeybee(DataSource):
         except Exception as e:
             logging.error('error on executing honeybee command: %s' % str(e))
             return []
+        if output is None:
+            return []
         try:
             if len(output) > 0:
                 result = json.loads(output)
@@ -63,6 +65,8 @@ class DataSource_Honeybee(DataSource):
             output = await self.execute(*cmd)
         except Exception as e:
             logging.error('error on executing honeybee command: %s' % str(e))
+            return None
+        if output is None:
             return None
         try:
             if len(output) > 0:

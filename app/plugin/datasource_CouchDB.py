@@ -210,10 +210,10 @@ class DataSource_CouchDB(DataSource):
         
         # TODO: implement prior_data
         
-        if resampling is not None and resampling <= 0:
-            return self.resample(result, length, to, resampling, reducer, filler, envelope)
-        else:
+        if resampling is None:
             return result
+            
+        return self.resample(result, length, to, resampling, reducer, filler, envelope)
 
     
     def get_object(self, channels, length, to):

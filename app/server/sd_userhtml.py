@@ -1,6 +1,7 @@
 # Created by Sanshiro Enomoto on 25 February 2025 #
 
 import sys, os, glob, logging
+from urllib.parse import urlencode
 
 import slowlette
 from sd_component import Component
@@ -32,7 +33,7 @@ class UserHtmlComponent(Component):
     async def api_redirect(self, path:list, opts:dict):
         url = '/'.join(path[1:])
         if len(opts):
-            url += '?' + '&'.join([f'{k}={v}' for k,v in opts.items()])
+            url += '?' + urlencode(opts)
         return await self.app.request(url)
 
 
