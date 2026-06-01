@@ -49,22 +49,23 @@ async def dispatch_asgi(app, scope, receive, send):
     MAX_CONTENT_LENGTH = 1024*1024*1024
     if method == 'POST':
         try:
-            # chunked transfer has no content-length; use MAX size (plus one) in that case
-            # (the "plus one" is to avoid accepting a partial chunk with exactly the size of MAX below)
-            content_length = int(headers.get('content-length', MAX_CONTENT_LENGTH+1))
+            # note: chunked transfer does not have content-length; use "more_body" in the loop
+            content_length = headers.get('content-length', None) or None
+            if content_length is not None:
+                content_length = int(content_length)
         except:
-            logging.error(f'ASGI_POST: bad content length: {headers.get("content-length","")}')
+            logging.error(f'ASGI_POST: bad content length: {headers.get("content-length")}')
             await send({'type':'http.response.start', 'status':400})
             await send({'type':'http.response.body', 'body':b''})
             return
-        if content_length > MAX_CONTENT_LENGTH:
+        if content_length is not None and content_length > MAX_CONTENT_LENGTH:
             logging.error(f'ASGI_POST: content length too large: {content_length}')
             await send({'type':'http.response.start', 'status':507})
             await send({'type':'http.response.body', 'body':b''})
             return
 
         body = b''
-        while len(body) < content_length:
+        while content_length is None or len(body) < content_length:
             message = await receive()
             if message['type'] == 'http.request':
                 body += message.get('body', b'')                
@@ -74,7 +75,7 @@ async def dispatch_asgi(app, scope, receive, send):
                     await send({'type':'http.response.body', 'body':b''})
                     return
 
-                if not message.get('more_body',False):
+                if not message.get('more_body', False):
                     break
                 
     response = await app.slowlette(Request(url, method=method, headers=headers, body=body))
