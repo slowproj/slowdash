@@ -795,6 +795,30 @@ SlowDash-compatible data:</p>
 </ul>
 <p>These objects are used by task/user code, storage writers, and APIs
 that publish current data.</p>
+<h3 id="creating-and-filling-data-objects">Creating and filling data
+objects</h3>
+<p>Data objects are created from the top-level <code>slowpy</code>
+package and populated incrementally, typically inside a task loop:</p>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy <span class="im">as</span> slp</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>hist <span class="op">=</span> slp.Histogram(<span class="dv">100</span>, <span class="dv">0</span>, <span class="dv">10</span>)         <span class="co"># 100 bins over [0, 10]</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>graph <span class="op">=</span> slp.Graph([<span class="st">&#39;channel&#39;</span>, <span class="st">&#39;value&#39;</span>])</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="kw">not</span> ControlSystem.is_stop_requested():</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    value <span class="op">=</span> device.read(...)</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    hist.fill(value)</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    graph.fill(channel, value)</span></code></pre></div>
+<p>Each object implements <code>to_json()</code>, which is how the same
+object can be published as current data (through
+<code>ControlSystem.stream()</code> / <code>aio_publish()</code>) or
+written to a data store. Trend helpers such as
+<code>slp.RateTrend</code> accumulate values over a moving window and
+produce a <code>TimeSeries</code> suitable for storage:</p>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>rate_trend <span class="op">=</span> slp.RateTrend(length<span class="op">=</span><span class="dv">300</span>, tick<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>rate_trend.fill(time.time())</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>datastore.append(rate_trend.time_series(<span class="st">&#39;rate&#39;</span>))</span></code></pre></div>
 <h2 id="control-nodes">Control nodes</h2>
 <p><code>ControlNode</code> in <code>slowpy/control/node.py</code> is
 the base abstraction for readable/writable control endpoints.</p>
@@ -815,9 +839,138 @@ writeonly()</code></pre>
 <code>_is_thread_safe</code> is set, sync <code>get()</code> and
 <code>set()</code> calls can be run through
 <code>asyncio.to_thread()</code>.</p>
+<h3 id="building-and-using-control-node-chains">Building and using
+control-node chains</h3>
+<p>SlowPy maps every external system or device into a single control
+tree. Each node exposes <code>set()</code> and <code>get()</code>, and
+methods with noun-like names return child nodes. A chain of these
+accessors describes the logical path to a specific endpoint.</p>
+<p>A typical starting point is a <code>ControlSystem</code> instance (or
+the shared <code>control_system</code> instance):</p>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ControlSystem</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>ctrl <span class="op">=</span> ControlSystem()</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Build a node chain: Ethernet connection -&gt; SCPI -&gt; a specific command</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(host<span class="op">=</span><span class="st">&#39;192.168.1.43&#39;</span>, port<span class="op">=</span><span class="dv">5025</span>)</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>Vout <span class="op">=</span> device.scpi(append_opc<span class="op">=</span><span class="va">True</span>).command(<span class="st">&#39;VOLT&#39;</span>)</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>V    <span class="op">=</span> device.scpi().command(<span class="st">&#39;MEAS:VOLT:DC&#39;</span>)</span></code></pre></div>
+<p>Each call in the chain adds a branch:</p>
+<ul>
+<li><code>ctrl.ethernet(...)</code> opens (or reuses) a TCP connection
+node.</li>
+<li><code>.scpi()</code> returns a child node that holds SCPI
+configuration.</li>
+<li><code>.command('VOLT')</code> binds the chain to a specific SCPI
+command.</li>
+</ul>
+<p>Once a leaf node is built, <code>set()</code> writes and
+<code>get()</code> reads:</p>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>Vout.<span class="bu">set</span>(<span class="dv">10</span>)        <span class="co"># sends SCPI &quot;VOLT 10;*OPC?&quot;</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>value <span class="op">=</span> V.get()     <span class="co"># sends SCPI &quot;MEAS:VOLT:DC?&quot; and returns the reply</span></span></code></pre></div>
+<p><code>ControlNode</code> also defines several shortcuts:</p>
+<ul>
+<li><code>node(value)</code> is equivalent to
+<code>node.set(value)</code>.</li>
+<li><code>node()</code> is equivalent to <code>node.get()</code>.</li>
+<li><code>node &lt;= value</code> performs
+<code>node.set(value)</code>.</li>
+<li><code>float(node)</code>, <code>int(node)</code>,
+<code>str(node)</code>, and <code>print(node)</code> implicitly call
+<code>node.get()</code>.</li>
+</ul>
+<p>The asynchronous equivalents are
+<code>await node.aio_set(value)</code> and
+<code>value = await node.aio_get()</code>, available on every node
+through the sync/async model described below.</p>
+<p>Branches are added by plugins and are not limited to the root
+<code>ControlSystem</code>. A plugin can be loaded onto any node; for
+example, a protocol plugin loaded onto an Ethernet node creates a
+sub-branch that reuses the Ethernet node’s <code>set()</code> (send) and
+<code>get()</code> (receive). For the full catalogue of built-in nodes
+(Ethernet/SCPI/Telnet, HTTP, Shell, Slowdash, Redis, and others) and
+their <code>set()</code> / <code>get()</code> semantics, see <a
+href="ControlsScript.html">Controls Script</a>.</p>
 <p>Control modules under <code>slowpy/control/control_*.py</code>
 provide concrete device, network, message, shell, HTTP, datastore, and
 protocol integrations.</p>
+<h3 id="synchronous-and-asynchronous-control-modules">Synchronous and
+asynchronous control modules</h3>
+<p>Most integrations are provided as a synchronous/asynchronous pair of
+modules, named <code>control_X.py</code> and
+<code>control_AsyncX.py</code>:</p>
+<pre class="text"><code>control_HTTP.py      / control_AsyncHTTP.py
+control_Redis.py     / control_AsyncRedis.py
+control_RabbitMQ.py  / control_AsyncRabbitMQ.py
+control_MQTT.py      / control_AsyncMQTT.py
+control_Modbus.py    / control_AsyncModbus.py
+control_Slowdash.py  / control_AsyncSlowdash.py
+control_Dripline.py  / control_AsyncDripline.py</code></pre>
+<p>Some integrations exist in only one form:</p>
+<ul>
+<li>Synchronous only, such as <code>control_Ethernet.py</code>,
+<code>control_UDP.py</code>, <code>control_Serial.py</code>,
+<code>control_VISA.py</code>, <code>control_Shell.py</code>,
+<code>control_DataStore.py</code>, <code>control_LabJackU.py</code>,
+<code>control_NanotechMotor.py</code>,
+<code>control_Microphone.py</code>, and
+<code>control_DummyDevice.py</code>.</li>
+<li>Asynchronous only, such as <code>control_AsyncNATS.py</code>,
+<code>control_AsyncSlowMQ.py</code>, and
+<code>control_AsyncLocalPubsub.py</code>.</li>
+</ul>
+<p>The two forms differ only in how the I/O methods are implemented:</p>
+<ul>
+<li>A synchronous module (for example <code>HttpNode</code> in
+<code>control_HTTP.py</code>) overrides <code>set()</code> /
+<code>get()</code> and uses blocking libraries such as
+<code>requests</code>.</li>
+<li>An asynchronous module (for example <code>AsyncHttpNode</code> in
+<code>control_AsyncHTTP.py</code>) overrides <code>aio_set()</code> /
+<code>aio_get()</code> and uses non-blocking libraries such as
+<code>httpx</code>.</li>
+</ul>
+<p>Both forms subclass <code>ControlNode</code>, so they share the same
+node-tree model, child-node accessors, <code>readonly()</code> /
+<code>writeonly()</code> wrappers, and helper methods
+(<code>sleep()</code>, <code>wait()</code>, and their <code>aio_*</code>
+variants). Only the leaf I/O implementation changes.</p>
+<h3 id="node-tree-registration">Node-tree registration</h3>
+<p>Each node class defines a classmethod
+<code>_node_creator_method()</code> that returns a factory function.
+<code>ControlNode.add_node()</code> injects this function as a method on
+a parent node class, and the function name becomes the accessor used to
+create child nodes. Synchronous and asynchronous variants usually expose
+different accessor names, for example:</p>
+<pre class="text"><code>HttpNode       -&gt; node.http(url)
+AsyncHttpNode  -&gt; node.async_http(url)</code></pre>
+<p><code>ControlNode.import_control_module(name)</code> loads
+<code>control_&lt;name&gt;.py</code> from the current working directory
+or the <code>slowpy/control</code> directory, scans it for classes that
+define <code>_node_creator_method()</code>, and registers their
+accessors on the node class. <code>ControlSystem.__init__()</code>
+imports a default set of modules:</p>
+<pre class="text"><code>Ethernet
+HTTP
+AsyncHTTP
+Shell
+DataStore</code></pre>
+<p>Additional modules are imported on demand from task or user code, for
+example <code>ControlSystem().import_control_module('Redis')</code>.</p>
+<h3 id="relationship-to-the-async-fallback">Relationship to the async
+fallback</h3>
+<p>The base <code>ControlNode</code> already provides default
+<code>aio_set()</code> / <code>aio_get()</code> methods that delegate to
+the synchronous <code>set()</code> / <code>get()</code> (directly, or
+through <code>asyncio.to_thread()</code> when
+<code>_is_thread_safe</code> is set). A synchronous-only module can
+therefore still be used from async code. The dedicated
+<code>control_Async*.py</code> modules exist for cases where genuinely
+non-blocking I/O matters, such as long-lived network or message-broker
+connections. This mirrors the server-side <code>DataSource</code>
+sync/async dual methods and the <code>_NoAsync</code> data-source
+plugins described earlier.</p>
 <h2 id="data-stores">Data stores</h2>
 <p>SlowPy data stores provide write-side storage helpers.</p>
 <p><code>store/factory.py</code> maps URLs to implementations:</p>
@@ -834,6 +987,31 @@ update(values, tag=None, timestamp=None)
 close()</code></pre>
 <p>Values can be scalars, dictionaries of fields, data elements, or
 <code>TimeSeries</code>.</p>
+<h3 id="writing-data">Writing data</h3>
+<p>A store is created directly from its class, or from a URL through
+<code>create_datastore_from_url()</code> in
+<code>store/factory.py</code>:</p>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_PostgreSQL</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_PostgreSQL(</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;postgresql://postgres:postgres@localhost:5432/SlowTestData&#39;</span>,</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    table<span class="op">=</span><span class="st">&#39;SlowData&#39;</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>    datastore.append(value, tag<span class="op">=</span><span class="st">&#39;voltmeter&#39;</span>)      <span class="co"># a single value under a channel tag</span></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>    datastore.append({<span class="st">&#39;ch00&#39;</span>: v0, <span class="st">&#39;ch01&#39;</span>: v1})    <span class="co"># a dict of channel/value pairs</span></span></code></pre></div>
+<p><code>append()</code> adds a new time-series record, while
+<code>update()</code> overwrites the previous value so that only the
+latest is kept. This distinction matters for data-element objects such
+as histograms:</p>
+<div class="sourceCode" id="cb34"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>datastore.append(hist, tag<span class="op">=</span><span class="st">&#39;spectrum&#39;</span>)   <span class="co"># time-series of histograms (one per time point)</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>datastore.update(hist, tag<span class="op">=</span><span class="st">&#39;spectrum&#39;</span>)   <span class="co"># keep only the latest histogram</span></span></code></pre></div>
+<p>For SQL stores, a “long format” with UNIX timestamps is used by
+default. A user-defined <code>TableFormat</code> can override the schema
+and insert statements when a different table layout is required.</p>
 <h1 id="slowlette-internals-that-matter-to-slowdash">Slowlette Internals
 That Matter to SlowDash</h1>
 <p>Several SlowDash behaviors depend directly on Slowlette’s design:</p>

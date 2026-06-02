@@ -88,39 +88,38 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="#全体構造" id="toc-全体構造">全体構造</a></li>
 <li><a href="#主要ディレクトリ"
 id="toc-主要ディレクトリ">主要ディレクトリ</a></li>
-<li><a href="#application-startup-flow"
-id="toc-application-startup-flow">Application Startup Flow</a>
+<li><a href="#アプリケーションの起動フロー"
+id="toc-アプリケーションの起動フロー">アプリケーションの起動フロー</a>
 <ul>
-<li><a href="#command-line-または-server-startup"
-id="toc-command-line-または-server-startup">Command-line または server
-startup</a></li>
-<li><a href="#component-include-order"
-id="toc-component-include-order">Component include order</a></li>
+<li><a href="#コマンドラインまたはサーバーの起動"
+id="toc-コマンドラインまたはサーバーの起動">コマンドラインまたはサーバーの起動</a></li>
+<li><a href="#コンポーネントの組み込み順序"
+id="toc-コンポーネントの組み込み順序">コンポーネントの組み込み順序</a></li>
 </ul></li>
-<li><a href="#slowlette-routing-and-response-model"
-id="toc-slowlette-routing-and-response-model">Slowlette Routing and
-Response Model</a>
+<li><a href="#slowlette-のルーティングとレスポンスモデル"
+id="toc-slowlette-のルーティングとレスポンスモデル">Slowlette
+のルーティングとレスポンスモデル</a>
 <ul>
-<li><a href="#request-flow" id="toc-request-flow">Request flow</a></li>
-<li><a href="#decorator-と-argument-binding"
-id="toc-decorator-と-argument-binding">Decorator と argument
-binding</a></li>
-<li><a href="#response-merging" id="toc-response-merging">Response
-merging</a></li>
+<li><a href="#リクエストの流れ"
+id="toc-リクエストの流れ">リクエストの流れ</a></li>
+<li><a href="#デコレータと引数のバインディング"
+id="toc-デコレータと引数のバインディング">デコレータと引数のバインディング</a></li>
+<li><a href="#レスポンスのマージ"
+id="toc-レスポンスのマージ">レスポンスのマージ</a></li>
 </ul></li>
-<li><a href="#project-configuration-flow"
-id="toc-project-configuration-flow">Project Configuration Flow</a></li>
-<li><a href="#built-in-server-components"
-id="toc-built-in-server-components">Built-In Server Components</a>
+<li><a href="#プロジェクト設定のフロー"
+id="toc-プロジェクト設定のフロー">プロジェクト設定のフロー</a></li>
+<li><a href="#組み込みサーバーコンポーネント"
+id="toc-組み込みサーバーコンポーネント">組み込みサーバーコンポーネント</a>
 <ul>
-<li><a href="#component-and-plugincomponent"
-id="toc-component-and-plugincomponent"><code>Component</code> and
+<li><a href="#component-と-plugincomponent"
+id="toc-component-と-plugincomponent"><code>Component</code> と
 <code>PluginComponent</code></a></li>
 <li><a href="#configcomponent"
 id="toc-configcomponent"><code>ConfigComponent</code></a></li>
-<li><a href="#datasourcecomponent-and-datasource"
-id="toc-datasourcecomponent-and-datasource"><code>DataSourceComponent</code>
-and <code>DataSource</code></a></li>
+<li><a href="#datasourcecomponent-と-datasource"
+id="toc-datasourcecomponent-と-datasource"><code>DataSourceComponent</code>
+と <code>DataSource</code></a></li>
 <li><a href="#exportcomponent"
 id="toc-exportcomponent"><code>ExportComponent</code></a></li>
 <li><a href="#usermodulecomponent"
@@ -133,114 +132,116 @@ id="toc-userhtmlcomponent"><code>UserHtmlComponent</code></a></li>
 id="toc-meshcomponent"><code>MeshComponent</code></a></li>
 <li><a href="#slowmqcomponent"
 id="toc-slowmqcomponent"><code>SlowMQComponent</code></a></li>
-<li><a href="#other-components" id="toc-other-components">Other
-components</a></li>
+<li><a href="#その他のコンポーネント"
+id="toc-その他のコンポーネント">その他のコンポーネント</a></li>
 </ul></li>
-<li><a href="#plugin-architecture" id="toc-plugin-architecture">Plugin
-Architecture</a></li>
-<li><a href="#data-query-communication-flow"
-id="toc-data-query-communication-flow">Data Query Communication
-Flow</a></li>
-<li><a href="#write-emit-and-current-data-flow"
-id="toc-write-emit-and-current-data-flow">Write, Emit, and Current-Data
-Flow</a></li>
-<li><a href="#control-flow" id="toc-control-flow">Control Flow</a></li>
-<li><a href="#slowpy-library-role" id="toc-slowpy-library-role">SlowPy
-Library Role</a>
+<li><a href="#プラグインアーキテクチャ"
+id="toc-プラグインアーキテクチャ">プラグインアーキテクチャ</a></li>
+<li><a href="#データ取得の通信フロー"
+id="toc-データ取得の通信フロー">データ取得の通信フロー</a></li>
+<li><a href="#書き込み配信現在値データのフロー"
+id="toc-書き込み配信現在値データのフロー">書き込み・配信・現在値データのフロー</a></li>
+<li><a href="#制御フロー" id="toc-制御フロー">制御フロー</a></li>
+<li><a href="#slowpy-ライブラリの役割"
+id="toc-slowpy-ライブラリの役割">SlowPy ライブラリの役割</a>
 <ul>
-<li><a href="#data-object-model" id="toc-data-object-model">Data object
-model</a></li>
-<li><a href="#control-nodes" id="toc-control-nodes">Control
-nodes</a></li>
-<li><a href="#data-stores" id="toc-data-stores">Data stores</a></li>
+<li><a href="#データオブジェクトモデル"
+id="toc-データオブジェクトモデル">データオブジェクトモデル</a></li>
+<li><a href="#制御ノード" id="toc-制御ノード">制御ノード</a></li>
+<li><a href="#データストア" id="toc-データストア">データストア</a></li>
 </ul></li>
-<li><a href="#slowdash-にとって重要な-slowlette-内部仕様"
-id="toc-slowdash-にとって重要な-slowlette-内部仕様">SlowDash
-にとって重要な Slowlette 内部仕様</a></li>
-<li><a href="#main-flow-summary" id="toc-main-flow-summary">Main Flow
-Summary</a></li>
-<li><a href="#development-notes" id="toc-development-notes">Development
-Notes</a></li>
+<li><a href="#slowdash-にとって重要な-slowlette-の内部仕様"
+id="toc-slowdash-にとって重要な-slowlette-の内部仕様">SlowDash
+にとって重要な Slowlette の内部仕様</a></li>
+<li><a href="#主要フローのまとめ"
+id="toc-主要フローのまとめ">主要フローのまとめ</a></li>
+<li><a href="#開発上の実務的な注意"
+id="toc-開発上の実務的な注意">開発上の実務的な注意</a></li>
 </ul>
 </nav>
 </div>
 </header>
 
-<p>この文書は，2026-06-01 に確認した最新 <code>develop</code>
-ブランチ時点の SlowDash
-のソース構造と実行時フローを説明するものです．対象は，既存実装の
+<p>この文書は，2026-06-01 に確認した最新の <code>develop</code>
+ブランチ時点における SlowDash
+のソース構造と実行時の処理フローを説明します．対象は，現在の実装である
 <code>app/server</code>，<code>app/plugin</code>，<code>lib/slowpy</code>，<code>lib/slowlette</code>
 です．</p>
-<p>ここでは現在のシステムだけを説明し，将来計画については扱いません．</p>
+<p>ここでは現行のシステムのみを説明し，将来の計画については扱いません．</p>
 <h1 id="全体構造">全体構造</h1>
-<p>SlowDash は主に 4 つの Python レイヤーで構成されています．</p>
+<p>SlowDash は，主に 4 つの Python レイヤーで構成されています．</p>
 <pre class="text"><code>Client / CLI / CGI
     |
     v
 Slowlette
     - ASGI/WSGI アダプタ
     - URL ルーティング
-    - request 引数バインディング
-    - response merge
+    - リクエスト引数のバインディング
+    - レスポンスのマージ
     |
     v
-SlowDash server components
-    - project/config 処理
-    - data source API
-    - user/task module API
-    - export API
-    - user HTML/content API
-    - real-time/current-data 補助機能
+SlowDash サーバーコンポーネント
+    - プロジェクト/設定の処理
+    - データソース API
+    - ユーザー/タスクモジュール API
+    - エクスポート API
+    - ユーザー HTML/コンテンツ API
+    - リアルタイム/現在値データの補助機能
     |
     v
-Plugins and libraries
-    - app/plugin の data source / exporter
-    - slowpy の data object，control node，store，client helper</code></pre>
-<p>中心となる server object は <code>app/server/slowdash.py</code> の
-<code>App</code> です．<code>App</code> は <code>slowlette.App</code>
+プラグインとライブラリ
+    - app/plugin のデータソースとエクスポータ
+    - slowpy のデータオブジェクト，制御ノード，ストア，クライアントヘルパー</code></pre>
+<p>中心となるサーバーオブジェクトは，<code>app/server/slowdash.py</code>
+の <code>App</code> です．<code>App</code> は <code>slowlette.App</code>
 を継承し，<code>Project</code>
-を作成し，実行環境を整えたうえで，SlowDash の各 component を Slowlette
-router に include します．</p>
+を生成して実行環境を整えたうえで，SlowDash の各コンポーネントを
+Slowlette のルーターに組み込みます．</p>
 <h1 id="主要ディレクトリ">主要ディレクトリ</h1>
 <h3 id="appserver"><code>app/server</code></h3>
-<p>このディレクトリには，SlowDash の web application と組み込み API
-component が入っています．</p>
-<p>主要ファイル:</p>
+<p>このディレクトリには，SlowDash のウェブアプリケーションと組み込みの
+API コンポーネントが含まれます．</p>
+<p>主なファイル:</p>
 <ul>
-<li><code>slowdash.py</code>: application entry point，command-line
-entry point，component assembly，内部 API helper．</li>
+<li><code>slowdash.py</code>:
+アプリケーションのエントリーポイント，コマンドラインのエントリーポイント，コンポーネントの組み立て，内部
+API のヘルパー．</li>
 <li><code>slowdash_wsgi.py</code> と <code>slowdash.cgi</code>: WSGI/CGI
-entry point．</li>
-<li><code>sd_project.py</code>: project 探索，YAML
-読み込み，環境変数/コマンド置換，公開 project metadata．</li>
-<li><code>sd_component.py</code>: component と plugin-backed component
-の base class．</li>
-<li><code>sd_config.py</code>: <code>/api/config</code>，config
-file/content API，transient content．</li>
-<li><code>sd_datasource.py</code>: data source plugin base class と
-<code>/api/channels</code>，<code>/api/data</code>，<code>/api/blob</code>
-route．</li>
+のエントリーポイント．</li>
+<li><code>sd_project.py</code>: プロジェクトの探索，YAML
+の読み込み，環境変数やコマンドの置換，公開用のプロジェクトメタデータ．</li>
+<li><code>sd_component.py</code>:
+コンポーネントおよびプラグインベースのコンポーネントの基底クラス．</li>
+<li><code>sd_config.py</code>:
+<code>/api/config</code>，設定ファイル/コンテンツ
+API，一時コンテンツのサポート．</li>
+<li><code>sd_datasource.py</code>:
+データソースプラグインの基底クラスと，<code>/api/channels</code>，<code>/api/data</code>，<code>/api/blob</code>
+の各ルート．</li>
 <li><code>sd_datasource_SQL.py</code>，<code>sd_datasource_TableStore.py</code>，<code>sd_dataschema.py</code>:
-data source 共通 helper．</li>
-<li><code>sd_blobstorage.py</code>: blob storage helper．</li>
-<li><code>sd_export.py</code>: export plugin component．</li>
-<li><code>sd_usermodule.py</code>: in-process user module
-拡張システム．</li>
-<li><code>sd_taskmodule.py</code>: 現行の in-process task module
-システム．</li>
-<li><code>sd_userhtml.py</code>: user-provided HTML/content 配信．</li>
-<li><code>sd_console.py</code>: console/stdout capture．</li>
-<li><code>sd_misc_api.py</code>: その他の組み込み API endpoint．</li>
-<li><code>sd_mesh.py</code>: current-data cache と一部 topic への
-websocket attachment．</li>
-<li><code>sd_slowmq.py</code>: 組み込み websocket-based pub/sub
-component．</li>
-<li><code>sd_version.py</code>: version string．</li>
+データソース共通のヘルパー．</li>
+<li><code>sd_blobstorage.py</code>: blob ストレージのヘルパー．</li>
+<li><code>sd_export.py</code>:
+エクスポートプラグインのコンポーネント．</li>
+<li><code>sd_usermodule.py</code>:
+プロセス内で動作するユーザーモジュールの拡張機構．</li>
+<li><code>sd_taskmodule.py</code>:
+現行のプロセス内タスクモジュールシステム．</li>
+<li><code>sd_userhtml.py</code>: ユーザー提供の
+HTML/コンテンツの配信．</li>
+<li><code>sd_console.py</code>: コンソール/標準出力のキャプチャ．</li>
+<li><code>sd_misc_api.py</code>: その他の組み込み API
+エンドポイント．</li>
+<li><code>sd_mesh.py</code>:
+現在値データのキャッシュと，選択したトピックへの websocket 接続．</li>
+<li><code>sd_slowmq.py</code>: 組み込みの websocket ベースの pub/sub
+コンポーネント．</li>
+<li><code>sd_version.py</code>: バージョン文字列．</li>
 </ul>
 <h3 id="appplugin"><code>app/plugin</code></h3>
-<p>このディレクトリには，<code>PluginComponent</code> により読み込まれる
-plugin module が入っています．</p>
-<p>Data source plugin:</p>
+<p>このディレクトリには，<code>PluginComponent</code>
+によって読み込まれるプラグインモジュールが含まれます．</p>
+<p>データソースプラグイン:</p>
 <ul>
 <li><code>datasource_CSV.py</code></li>
 <li><code>datasource_SQLite.py</code></li>
@@ -255,40 +256,41 @@ plugin module が入っています．</p>
 <li><code>datasource_SystemResource.py</code></li>
 <li><code>datasource_YAML.py</code></li>
 </ul>
-<p>Export plugin:</p>
+<p>エクスポートプラグイン:</p>
 <ul>
 <li><code>export_CSV.py</code></li>
 <li><code>export_Notebook.py</code></li>
 <li><code>export_Jupyter.py</code></li>
 </ul>
-<p>Plugin の file name と class name は規約で決まります．たとえば data
-source type が <code>SQLite</code> の場合は，次に対応します．</p>
+<p>プラグインのファイル名とクラス名は命名規約で決まります．たとえばデータソースの種別が
+<code>SQLite</code> の場合は，次のように対応します．</p>
 <pre class="text"><code>app/plugin/datasource_SQLite.py
 DataSource_SQLite</code></pre>
 <h3 id="libslowlette"><code>lib/slowlette</code></h3>
-<p>Slowlette は SlowDash が使用する小さな web framework です．</p>
-<p>主要ファイル:</p>
+<p>Slowlette は，SlowDash が使用する小さなウェブフレームワークです．</p>
+<p>主なファイル:</p>
 <ul>
 <li><code>app.py</code>: <code>App</code> と <code>Slowlette</code>
-application class．</li>
-<li><code>router.py</code>: decorator，path matching，argument
-binding，sub-app dispatch，response merge．</li>
-<li><code>server.py</code>: ASGI/WSGI dispatch と開発用 server
-helper．</li>
-<li><code>request.py</code>: parse 済み HTTP request object．</li>
-<li><code>response.py</code>: response object，content merge，file
-response．</li>
-<li><code>model.py</code>: JSON request-body wrapper．</li>
-<li><code>websocket.py</code>: websocket wrapper と connection close
-処理．</li>
-<li><code>middleware.py</code>: middleware support．</li>
+のアプリケーションクラス．</li>
+<li><code>router.py</code>:
+デコレータ，パスのマッチング，引数のバインディング，サブアプリへのディスパッチ，レスポンスのマージ．</li>
+<li><code>server.py</code>: ASGI/WSGI
+のディスパッチと，開発用サーバーのヘルパー．</li>
+<li><code>request.py</code>: 解析済みの HTTP
+リクエストオブジェクト．</li>
+<li><code>response.py</code>:
+レスポンスオブジェクト，コンテンツのマージ，ファイルレスポンス．</li>
+<li><code>model.py</code>: JSON リクエストボディのラッパー．</li>
+<li><code>websocket.py</code>: websocket
+のラッパーと，接続のクローズ処理．</li>
+<li><code>middleware.py</code>: ミドルウェアのサポート．</li>
 </ul>
 <h3 id="libslowpy"><code>lib/slowpy</code></h3>
-<p>SlowPy は data type，control abstraction，storage writer，client
-helper，plotting helper を提供します．</p>
-<p>主要領域:</p>
+<p>SlowPy
+は，データ型，制御の抽象化，ストレージへの書き込み機能，クライアントヘルパー，作図ヘルパーを提供します．</p>
+<p>主な領域:</p>
 <ul>
-<li>Top-level data object:
+<li>トップレベルのデータオブジェクト:
 <ul>
 <li><code>basetypes.py</code></li>
 <li><code>histograms.py</code></li>
@@ -298,13 +300,13 @@ helper，plotting helper を提供します．</p>
 <li><code>mpldata.py</code></li>
 <li><code>slowplot.py</code></li>
 </ul></li>
-<li>Control system:
+<li>制御システム:
 <ul>
 <li><code>control/node.py</code></li>
 <li><code>control/system.py</code></li>
 <li><code>control/control_*.py</code></li>
 </ul></li>
-<li>Data store:
+<li>データストア:
 <ul>
 <li><code>store/store.py</code></li>
 <li><code>store/factory.py</code></li>
@@ -314,42 +316,42 @@ helper，plotting helper を提供します．</p>
 <li><code>store/store_InfluxDB2.py</code></li>
 <li><code>store/store_Redis.py</code></li>
 </ul></li>
-<li>Client helper:
+<li>クライアントヘルパー:
 <ul>
 <li><code>slowfetch.py</code></li>
 </ul></li>
 </ul>
-<p>公開 top-level <code>slowpy</code> package
-は，<code>Histogram</code>，<code>Graph</code>，<code>Trend</code>，<code>Tree</code>，<code>Table</code>，<code>TimeSeries</code>，<code>SlowFetch</code>，<code>slowdashify</code>，<code>slowplot</code>
-などのよく使う data object/helper を export します．</p>
-<h1 id="application-startup-flow">Application Startup Flow</h1>
-<h2 id="command-line-または-server-startup">Command-line または server
-startup</h2>
-<p>主な entry point は <code>app/server/slowdash.py</code> です．</p>
-<p>通常の startup sequence:</p>
+<p>公開されているトップレベルの <code>slowpy</code>
+パッケージは，<code>Histogram</code>，<code>Graph</code>，<code>Trend</code>，<code>Tree</code>，<code>Table</code>，<code>TimeSeries</code>，<code>SlowFetch</code>，<code>slowdashify</code>，<code>slowplot</code>
+など，よく使われるデータオブジェクトやヘルパーをエクスポートします．</p>
+<h1 id="アプリケーションの起動フロー">アプリケーションの起動フロー</h1>
+<h2
+id="コマンドラインまたはサーバーの起動">コマンドラインまたはサーバーの起動</h2>
+<p>主要なエントリーポイントは <code>app/server/slowdash.py</code>
+です．</p>
+<p>通常の起動シーケンスは次のとおりです．</p>
 <ol type="1">
-<li>command-line option を parse する．</li>
+<li>コマンドラインオプションを解析する．</li>
 <li><code>App(project_dir, project_file, is_cgi, is_command, is_async)</code>
-を作成する．</li>
-<li><code>App</code> が <code>Project</code> を作成する．</li>
-<li><code>Project</code> が SlowDash system directory と project
-directory を探す．</li>
+を生成する．</li>
+<li><code>App</code> が <code>Project</code> を生成する．</li>
+<li><code>Project</code> が SlowDash
+のシステムディレクトリとプロジェクトディレクトリを探す．</li>
 <li><code>Project</code> が <code>SlowdashProject.yaml</code>
-を読み込む．設定によっては environment variable から初期 data source
-config を作る．</li>
-<li>project directory がある場合，<code>App</code> は process working
-directory を project directory に移動する．</li>
-<li><code>App</code> は system plugin directory，project
-directory，project の <code>config</code> directory を
-<code>sys.path</code> に追加する．</li>
-<li><code>App</code> が全 built-in component を Slowlette router に
-include する．</li>
-<li>選択された mode に応じて，ASGI，WSGI，CGI，または command-line
-internal request として実行される．</li>
+を読み込む．設定によっては，環境変数から初期設定を生成する．</li>
+<li>プロジェクトディレクトリが存在する場合，<code>App</code>
+はプロセスの作業ディレクトリをプロジェクトディレクトリに移す．</li>
+<li><code>App</code>
+は，システムのプラグインディレクトリ，プロジェクトディレクトリ，プロジェクトの
+<code>config</code> ディレクトリを <code>sys.path</code>
+に追加する．</li>
+<li><code>App</code> がすべての組み込みコンポーネントを，自身の
+Slowlette ルーターに組み込む．</li>
+<li>選択されたモードに応じて，ASGI，WSGI，CGI，またはコマンドラインの内部リクエストとして実行される．</li>
 </ol>
-<h2 id="component-include-order">Component include order</h2>
-<p><code>slowdash.py</code> は component を次の順序で include
-します．</p>
+<h2 id="コンポーネントの組み込み順序">コンポーネントの組み込み順序</h2>
+<p><code>slowdash.py</code>
+は，コンポーネントを次の順序で組み込みます．</p>
 <pre class="text"><code>ConsoleComponent
 MeshComponent
 UserModuleComponent
@@ -360,23 +362,22 @@ UserHtmlComponent
 ExportComponent
 MiscApiComponent
 SlowMQComponent</code></pre>
-<p>この順序は重要です．Slowlette は複数の matching handler から response
-を集めて merge するため，先に include された component が merge wrapper
-を返し，後続 component の response を加工することがあります．</p>
-<p>コード中の重要な意図:</p>
+<p>この順序は重要です．Slowlette
+は，一致した複数のハンドラからレスポンスを集めてマージします．そのため，先に組み込まれたコンポーネントがマージ用のラッパーを担い，後続のコンポーネントがマージ対象のコンテンツを提供できます．</p>
+<p>コード中で示されている順序の意図は次のとおりです．</p>
 <ul>
-<li><code>ConsoleComponent</code> は stdout を早期に capture
-するため最初に include される．</li>
-<li><code>MeshComponent</code> は data source response に cache
-を重ねるため，data source より前に include される．</li>
+<li><code>ConsoleComponent</code>
+は，標準出力を早い段階でキャプチャするため，最初に組み込まれる．</li>
+<li><code>MeshComponent</code>
+は，そのキャッシュがデータソースの応答を補えるよう，データソースより前に組み込まれる．</li>
 <li><code>UserModuleComponent</code> と <code>TaskModuleComponent</code>
-は user/task module が API や DB
-作成に関与できるよう，<code>DataSourceComponent</code> より前に include
-される．</li>
+は，ユーザー/タスクモジュールが API
+に関与したりデータソースを生成したりできるよう，<code>DataSourceComponent</code>
+より前に組み込まれる．</li>
 </ul>
-<h1 id="slowlette-routing-and-response-model">Slowlette Routing and
-Response Model</h1>
-<h2 id="request-flow">Request flow</h2>
+<h1 id="slowlette-のルーティングとレスポンスモデル">Slowlette
+のルーティングとレスポンスモデル</h1>
+<h2 id="リクエストの流れ">リクエストの流れ</h2>
 <p>ASGI の場合:</p>
 <pre class="text"><code>ASGI server
     |
@@ -396,151 +397,151 @@ slowlette.server.dispatch_wsgi()
     |
     v
 Request -&gt; asyncio.run(router.dispatch()) -&gt; WSGI response</code></pre>
-<p>Slowlette は受信 URL を <code>Request</code> に変換します．</p>
+<p>Slowlette は，受信した URL を <code>Request</code> に変換します．</p>
 <ul>
-<li><code>Request.path</code>: decode 済み path component．</li>
-<li><code>Request.query</code>: decode 済み query dictionary．</li>
-<li><code>Request.headers</code>: server layer から渡される header
-dictionary．</li>
-<li><code>Request.body</code>: raw body，または internal dispatch 用の
-Python object．</li>
+<li><code>Request.path</code>: デコード済みのパス要素．</li>
+<li><code>Request.query</code>: デコード済みのクエリ辞書．</li>
+<li><code>Request.headers</code>:
+サーバー層から渡される，正規化されたヘッダ辞書．</li>
+<li><code>Request.body</code>: 生のボディ，または内部ディスパッチ用の
+Python オブジェクト．</li>
 </ul>
-<h2 id="decorator-と-argument-binding">Decorator と argument
-binding</h2>
-<p>Handler は次のような decorator で宣言されます．</p>
+<h2
+id="デコレータと引数のバインディング">デコレータと引数のバインディング</h2>
+<p>ハンドラは，次のようなデコレータで宣言します．</p>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="at">@slowlette.get</span>(<span class="st">&#39;/api/channels&#39;</span>)</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">@slowlette.post</span>(<span class="st">&#39;/api/control&#39;</span>)</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="at">@slowlette.websocket</span>(<span class="st">&#39;/ws/slowmq&#39;</span>)</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="at">@slowlette.on_event</span>(<span class="st">&#39;startup&#39;</span>)</span></code></pre></div>
-<p><code>router.py</code> の <code>PathRule</code> は decorated function
-の signature を調べ，次を bind します．</p>
+<p><code>router.py</code> の <code>PathRule</code>
+は，デコレートされた関数のシグネチャを調べ，次のものをバインドします．</p>
 <ul>
-<li><code>{channels}</code> のような path parameter．</li>
-<li>名前で一致する query parameter．</li>
-<li><code>bytes</code> request body．</li>
-<li>JSON body wrapper．</li>
-<li>request 全体を表す <code>Request</code>．</li>
+<li><code>{channels}</code> のようなパスパラメータ．</li>
+<li>名前で一致するクエリパラメータ．</li>
+<li><code>bytes</code> のリクエストボディ．</li>
+<li>JSON ボディのラッパー．</li>
+<li>リクエスト全体を表す <code>Request</code>．</li>
 <li><code>WebSocket</code>．</li>
-<li>path list または query dict．</li>
+<li>パスのリスト，またはクエリの辞書．</li>
 </ul>
-<p>Router は sub-app を include できます．各 component はそれ自体が
-<code>slowlette.App</code> なので，component ごとに route
-を追加できます．</p>
-<h2 id="response-merging">Response merging</h2>
-<p>Slowlette dispatch は最初に一致した handler で止まりません．Component
-tree を歩き，すべての matching response を集め，下から上に merge
-します．</p>
-<p><code>Response.merge_response()</code> の default merge behavior:</p>
+<p>ルーターはサブアプリを組み込めます．各コンポーネント自体が
+<code>slowlette.App</code>
+であるため，コンポーネントごとに独自のルートを追加できます．</p>
+<h2 id="レスポンスのマージ">レスポンスのマージ</h2>
+<p>Slowlette
+のディスパッチは，最初に一致したハンドラで止まりません．コンポーネントツリーをたどってすべての一致するレスポンスを集め，下から上へとマージします．</p>
+<p><code>Response.merge_response()</code>
+のデフォルトのマージ動作は次のとおりです．</p>
 <ul>
-<li>status code が大きい response が勝つ．</li>
-<li>status code が同じ場合は content を merge する．</li>
-<li>dict content は deep merge される．</li>
-<li>list content は append される．</li>
-<li>string content は newline 付きで append される．</li>
+<li>ステータスコードが大きいレスポンスが優先される．</li>
+<li>ステータスコードが同じ場合は，コンテンツをマージする．</li>
+<li>辞書のコンテンツはディープマージされる．</li>
+<li>リストのコンテンツは末尾に追加される．</li>
+<li>文字列のコンテンツは改行を挟んで連結される．</li>
 </ul>
-<p>SlowDash は aggregate endpoint
-のためにこの仕組みに依存しています．</p>
+<p>SlowDash
+は，集約型のエンドポイントのためにこの仕組みを利用しています．</p>
 <ul>
-<li><code>/api/config</code> は複数 component の
-<code>public_config()</code> response から組み立てられる．</li>
-<li><code>/api/channels</code> は複数 source からの channel を combine
-できる．</li>
-<li><code>/api/data/{channels}</code> は data-source result と
-current-data cache を merge できる．</li>
+<li><code>/api/config</code> は，複数のコンポーネントの
+<code>public_config()</code> の応答から組み立てられる．</li>
+<li><code>/api/channels</code>
+は，複数のソースからのチャンネルを統合できる．</li>
+<li><code>/api/data/{channels}</code>
+は，データソースの結果と現在値データのキャッシュをマージできる．</li>
 </ul>
-<p>一部 component は <code>merge_response()</code> を override した
-custom <code>Response</code> subclass を返します．たとえば current-data
-cache component は，data-source response が生成された後に current value
-を追加します．</p>
-<h1 id="project-configuration-flow">Project Configuration Flow</h1>
-<p><code>sd_project.py</code> の <code>Project</code> は project
-configuration の探索と読み込みを担当します．</p>
-<p>Configuration source:</p>
+<p>一部のコンポーネントは，<code>merge_response()</code>
+をオーバーライドした独自の <code>Response</code>
+サブクラスを返します．たとえば現在値データのキャッシュコンポーネントは，データソースの応答が生成された後に現在値を追加します．</p>
+<h1 id="プロジェクト設定のフロー">プロジェクト設定のフロー</h1>
+<p><code>sd_project.py</code> の <code>Project</code>
+は，プロジェクト設定の探索と読み込みを担当します．</p>
+<p>設定の取得元は次のとおりです．</p>
 <ol type="1">
-<li>明示的な <code>--project-dir</code> または
+<li>明示的に指定された <code>--project-dir</code> または
 <code>--project-file</code>．</li>
 <li><code>SLOWDASH_PROJECT</code>．</li>
-<li>親 directory 方向への <code>SlowdashProject.yaml</code> 探索．</li>
-<li><code>SLOWDASH_INIT_DATASOURCE_URL</code> による environment-based
-initial data source．</li>
+<li>親ディレクトリをたどっての <code>SlowdashProject.yaml</code>
+の探索．</li>
+<li><code>SLOWDASH_INIT_DATASOURCE_URL</code>
+による，環境変数ベースの初期データソース．</li>
 </ol>
-<p>Project file は <code>slowdash_project</code> dictionary
-を含む必要があります．読み込み時に，<code>Substitution</code>
-が次の形式の文字列置換を処理します．</p>
+<p>プロジェクトファイルは <code>slowdash_project</code>
+辞書を含む必要があります．読み込み時には，<code>Substitution</code>
+が次の形式を含む文字列の置換を処理します．</p>
 <pre class="text"><code>${VARIABLE}
 ${VARIABLE-default}
 ${VARIABLE:-default-like-empty-is-null}
 $(COMMAND)
 $$</code></pre>
-<p>読み込み後:</p>
+<p>読み込み後の処理は次のとおりです．</p>
 <ul>
-<li><code>name</code> と <code>title</code> がなければ補完される．</li>
-<li><code>system</code> は <code>{}</code> が default になる．</li>
+<li><code>name</code> と <code>title</code> が無ければ補完される．</li>
+<li><code>system</code> のデフォルトは <code>{}</code> になる．</li>
 <li><code>authentication.key</code> は <code>project.auth_list</code>
 になる．</li>
-<li><code>system.our_security_is_perfect</code> は
+<li><code>system.our_security_is_perfect</code> が
 <code>project.is_secure</code> を制御する．</li>
 </ul>
-<p><code>ConfigComponent</code> は <code>/api/config</code> で公開
-project metadata を返します．ただし raw project configuration は secret
-を含みうるため，そのまま公開しません．</p>
-<h1 id="built-in-server-components">Built-In Server Components</h1>
-<h2 id="component-and-plugincomponent"><code>Component</code> and
+<p><code>ConfigComponent</code> は，公開用のプロジェクトメタデータを
+<code>/api/config</code>
+から提供します．ただし，生のプロジェクト設定は秘密情報を含む可能性があるため，そのまま公開しません．</p>
+<h1
+id="組み込みサーバーコンポーネント">組み込みサーバーコンポーネント</h1>
+<h2 id="component-と-plugincomponent"><code>Component</code> と
 <code>PluginComponent</code></h2>
-<p><code>Component</code> は server component の base class
-です．次を提供します．</p>
+<p><code>Component</code>
+は，サーバーコンポーネントの基底クラスです．次のものを提供します．</p>
 <ul>
 <li><code>self.app</code></li>
 <li><code>self.project</code></li>
-<li><code>public_config()</code> を返す default <code>/api/config</code>
-route</li>
+<li><code>public_config()</code> を返すデフォルトの
+<code>/api/config</code> ルート</li>
 </ul>
-<p><code>PluginComponent</code> は project config から component plugin
-を構築します．</p>
+<p><code>PluginComponent</code>
+は，プロジェクト設定からコンポーネントのプラグインを構築します．</p>
 <ol type="1">
-<li><code>project.config[component_type]</code> または plural form
-を読む．</li>
-<li>単一 node を list に正規化する．</li>
-<li>plugin file と class name を解決する．</li>
-<li><code>app/plugin</code> から plugin module を読み込む．</li>
-<li>plugin class を instantiate する．</li>
-<li>各 plugin を Slowlette sub-app として include する．</li>
+<li><code>project.config[component_type]</code>，またはその複数形を読み込む．</li>
+<li>単一のノードをリストに正規化する．</li>
+<li>プラグインのファイル名とクラス名を解決する．</li>
+<li><code>app/plugin</code> からプラグインモジュールを読み込む．</li>
+<li>プラグインクラスをインスタンス化する．</li>
+<li>各プラグインを Slowlette のサブアプリとして組み込む．</li>
 </ol>
-<p>App が async でない場合，利用可能なら <code>_NoAsync</code> plugin
-file が優先されます．</p>
+<p>アプリが非同期でない場合は，利用可能であれば <code>_NoAsync</code>
+版のプラグインファイルが優先されます．</p>
 <h2 id="configcomponent"><code>ConfigComponent</code></h2>
-<p>主な責務:</p>
+<p>主な責務は次のとおりです．</p>
 <ul>
 <li><code>/api/config</code> を提供する．</li>
-<li>project <code>config/*-*.*</code> content を list/load する．</li>
-<li>許可された config file を serve する．</li>
-<li>generated plot content などの transient content を管理する．</li>
+<li>プロジェクトの <code>config/*-*.*</code>
+コンテンツを一覧・読み込みする．</li>
+<li>許可されている場合に設定ファイルを配信する．</li>
+<li>生成されたプロット内容などの一時コンテンツを管理する．</li>
 </ul>
 <p><code>/api/config/contentlist</code> と
-<code>/api/config/content/{filename}</code> は，UI component が
-dashboard，plot，cruise，その他 user content
-を発見するために使われます．</p>
+<code>/api/config/content/{filename}</code> のエンドポイントは，UI
+コンポーネントがダッシュボード，プロット，cruise，その他のユーザーコンテンツを見つけるために使われます．</p>
 <h2
-id="datasourcecomponent-and-datasource"><code>DataSourceComponent</code>
-and <code>DataSource</code></h2>
-<p><code>DataSourceComponent</code> は data source 用の plugin-backed
-component です．</p>
-<p>各 <code>DataSource</code> plugin は次の route を提供します．</p>
+id="datasourcecomponent-と-datasource"><code>DataSourceComponent</code>
+と <code>DataSource</code></h2>
+<p><code>DataSourceComponent</code>
+は，データソース用のプラグインベースのコンポーネントです．</p>
+<p>各 <code>DataSource</code> プラグインは，次のルートを提供します．</p>
 <pre class="text"><code>GET /api/channels
 GET /api/data/{channels}
 GET /api/blob/{channel}
 startup
 shutdown</code></pre>
-<p>Base <code>DataSource</code> class は sync/async のどちらの plugin
-実装にも対応します．</p>
+<p>基底の <code>DataSource</code>
+クラスは，同期・非同期のどちらのプラグイン実装にも対応します．</p>
 <pre class="text"><code>initialize()       -&gt; aio_initialize()
 finalize()         -&gt; aio_finalize()
 get_channels()     -&gt; aio_get_channels()
 get_timeseries()   -&gt; aio_get_timeseries()
 get_object()       -&gt; aio_get_object()
 get_blob()         -&gt; aio_get_blob()</code></pre>
-<p>Data query flow:</p>
+<p>データ取得の流れは次のとおりです．</p>
 <pre class="text"><code>GET /api/data/{channels}
     |
     v
@@ -552,50 +553,48 @@ aio_get_object(...)
     |
     v
 merge time-series and object results into one dict</code></pre>
-<p><code>DataSource.resample()</code> helper は time-series data を
-bucket
-に揃え，<code>last</code>，<code>mean</code>，<code>median</code>，<code>min</code>，<code>max</code>，<code>count</code>，<code>sem</code>
-などの reducer を support します．</p>
+<p><code>DataSource.resample()</code>
+ヘルパーは，時系列データをビンに揃え，<code>last</code>，<code>mean</code>，<code>median</code>，<code>min</code>，<code>max</code>，<code>count</code>，<code>sem</code>
+などのリデューサに対応します．</p>
 <h2 id="exportcomponent"><code>ExportComponent</code></h2>
-<p><code>ExportComponent</code> は project config から export plugin
-を読み込みます．</p>
-<p>また default export support を必ず追加します．</p>
+<p><code>ExportComponent</code>
+は，プロジェクト設定からエクスポートプラグインを読み込みます．</p>
+<p>また，次のデフォルトのエクスポート機能を必ず追加します．</p>
 <ul>
-<li>CSV export が設定されていなければ CSV export．</li>
-<li>Notebook/Jupyter export が設定されていなければ Notebook
-export．</li>
+<li>CSV エクスポートが設定されていなければ，CSV エクスポート．</li>
+<li>Notebook と Jupyter
+のいずれのエクスポートも設定されていなければ，Notebook
+エクスポート．</li>
 </ul>
-<p>実際の export route は export plugin 側が提供します．</p>
+<p>実際のエクスポート用ルートは，エクスポートプラグイン側が提供します．</p>
 <h2 id="usermodulecomponent"><code>UserModuleComponent</code></h2>
-<p><code>sd_usermodule.py</code> は SlowDash の in-process Python
-extension mechanism を提供します．</p>
-<p>User module は project configuration
-から読み込まれ，<code>UserModuleThread</code> 内で実行されます．Module
-は lifecycle callback を定義できます．</p>
+<p><code>sd_usermodule.py</code> は，SlowDash のプロセス内 Python
+拡張機構を提供します．</p>
+<p>ユーザーモジュールはプロジェクト設定から読み込まれ，<code>UserModuleThread</code>
+内で実行されます．モジュールは，次のライフサイクルコールバックを定義できます．</p>
 <pre class="text"><code>_setup(app, params) or _setup(app) or _setup()
 _initialize(params) or _initialize()
 _run()
 _loop()
 _finalize()</code></pre>
-<p>User module は，定義されている関数に応じて，API
-handler，content，HTML，layout，channel/data hook，control command
-も提供できます．</p>
-<p>User-module thread は通常，自分自身の event loop
-を使います．<code>_run()</code> と <code>_loop()</code> が
-async-compatible な場合のみ，設定により main event loop を使えます．</p>
+<p>ユーザーモジュールは，定義されている関数に応じて，API
+ハンドラ，コンテンツ，HTML，レイアウト，チャンネル/データのフック，制御コマンドも提供できます．</p>
+<p>ユーザーモジュールのスレッドは，通常は自身のイベントループを使います．<code>_run()</code>
+と <code>_loop()</code>
+が非同期に対応している場合に限り，設定によってメインのイベントループを使えます．</p>
 <h2 id="taskmodulecomponent"><code>TaskModuleComponent</code></h2>
-<p><code>sd_taskmodule.py</code> は現行の in-process task module system
-です．</p>
-<p>User-module mechanism を拡張し，task command parsing，command
-execution，<code>ControlSystem</code> integration を追加します．</p>
-<p>主な route:</p>
+<p><code>sd_taskmodule.py</code>
+は，現行のプロセス内タスクモジュールシステムです．</p>
+<p>ユーザーモジュールの機構を拡張し，タスクコマンドの解析，コマンドの実行，<code>ControlSystem</code>
+との統合を追加します．</p>
+<p>主なルートは次のとおりです．</p>
 <pre class="text"><code>GET  /api/control/task
 POST /api/control
 POST /api/control/task/{taskname}
 GET  /api/channels
 GET  /api/data/{channels}
 POST /api/consume/current_data</code></pre>
-<p>Task command flow:</p>
+<p>タスクコマンドの流れは次のとおりです．</p>
 <pre class="text"><code>POST /api/control
     |
     v
@@ -612,91 +611,85 @@ match namespace prefix/suffix
     |
     v
 call task function immediately or in TaskFunctionThread</code></pre>
-<p>Export された control node は current channel
-として公開され，<code>/api/data/{channels}</code> から読めます．Incoming
-current-data message は <code>/api/consume/current_data</code> を通して
-exported variable の設定にも使われます．</p>
+<p>エクスポートされた制御ノードは現在値チャンネルとして公開され，<code>/api/data/{channels}</code>
+から読み取れます．受信した現在値データのメッセージは，<code>/api/consume/current_data</code>
+を通じてエクスポート済み変数の設定にも使えます．</p>
 <h2 id="userhtmlcomponent"><code>UserHtmlComponent</code></h2>
-<p><code>sd_userhtml.py</code> は user-provided HTML と関連 content
-を配信します．また user URL を internal config/content API に redirect
-または map します．</p>
-<p>これにより，project-specific UI page を core server を変更せず
-project configuration/content area に置けます．</p>
+<p><code>sd_userhtml.py</code> は，ユーザー提供の HTML
+と関連コンテンツを配信します．また，ユーザー URL を内部の設定/コンテンツ
+API へリダイレクトまたはマッピングします．</p>
+<p>これにより，プロジェクト固有の UI
+ページを，コアサーバーを変更することなく，プロジェクトの設定/コンテンツ領域に置けます．</p>
 <h2 id="meshcomponent"><code>MeshComponent</code></h2>
-<p><code>sd_mesh.py</code> は <code>/api/consume/current_data</code>
-で受け取った current data の cache を保持します．</p>
-<p>主な役割:</p>
+<p><code>sd_mesh.py</code> は，<code>/api/consume/current_data</code>
+を通じて受け取った現在値データのキャッシュを保持します．</p>
+<p>主な役割は次のとおりです．</p>
 <ul>
-<li>selected topic への websocket attachment．</li>
-<li><code>/api/emit/{topic}</code> の re-emission と websocket
-forwarding．</li>
-<li>current-data caching．</li>
-<li>cache-backed current channel による <code>/api/channels</code>
-augmentation．</li>
-<li>latest cache value による <code>/api/data/{channels}</code>
-augmentation．</li>
+<li>選択したトピックへの websocket 接続．</li>
+<li><code>/api/emit/{topic}</code> の再配信と，websocket への転送．</li>
+<li>現在値データのキャッシュ．</li>
+<li>キャッシュに基づく現在値チャンネルによる <code>/api/channels</code>
+の補完．</li>
+<li>最新のキャッシュ値による <code>/api/data/{channels}</code>
+の補完．</li>
 </ul>
-<p>この component は data source より前に include されます．そのため
-custom response が data-source response と cache data を merge
-できます．</p>
+<p>このコンポーネントはデータソースより前に組み込まれます．そのため独自のレスポンスが，後続のデータソースの応答とキャッシュデータをマージできます．</p>
 <h2 id="slowmqcomponent"><code>SlowMQComponent</code></h2>
-<p><code>sd_slowmq.py</code> は組み込み websocket pub/sub service
-を提供します．</p>
-<p>主な route:</p>
+<p><code>sd_slowmq.py</code> は，組み込みの websocket pub/sub
+サービスを提供します．</p>
+<p>主なルートは次のとおりです．</p>
 <pre class="text"><code>WEBSOCKET /ws/slowmq</code></pre>
-<p>各 connected client は次を持ちます．</p>
+<p>接続中の各クライアントは，次のものを持ちます．</p>
 <ul>
-<li>client id．</li>
-<li>optional name．</li>
+<li>クライアント ID．</li>
+<li>省略可能な名前．</li>
 <li>websocket．</li>
-<li>0 個以上の topic-pattern subscription．</li>
+<li>0 個以上のトピックパターンのサブスクリプション．</li>
 </ul>
-<p>Message は headers を含みます．Header の <code>action</code>
-により，その message が publish，subscribe，unsubscribe
-のどれかが決まります．</p>
-<p>Topic pattern は dot-separated で，次を support します．</p>
+<p>メッセージはヘッダを含みます．ヘッダの <code>action</code>
+によって，そのメッセージが publish，subscribe，unsubscribe
+のいずれの操作かが決まります．</p>
+<p>トピックパターンはドット区切りで，次のものに対応します．</p>
 <ul>
-<li><code>*</code>: ちょうど 1 token に match．</li>
-<li><code>&gt;</code>: trailing token 0 個以上に match．ただし final
-token としてのみ使用可能．</li>
+<li><code>*</code>: ちょうど 1 トークンに一致する．</li>
+<li><code>&gt;</code>: 末尾の 0
+個以上のトークンに一致する．ただし最後のトークンとしてのみ使用できる．</li>
 </ul>
-<h2 id="other-components">Other components</h2>
-<p>その他の server component:</p>
+<h2 id="その他のコンポーネント">その他のコンポーネント</h2>
+<p>その他のサーバーコンポーネントは次のとおりです．</p>
 <ul>
-<li><code>ConsoleComponent</code>: display/API 用に console output を
-capture する．</li>
-<li><code>MiscApiComponent</code>: miscellaneous utility API．</li>
-<li><code>BlobStorage_File</code>: data source で使われる file-backed
-blob storage．</li>
+<li><code>ConsoleComponent</code>: 表示や API
+での利用のためにコンソール出力をキャプチャする．</li>
+<li><code>MiscApiComponent</code>: その他のユーティリティ API．</li>
+<li><code>BlobStorage_File</code>: データソースが使う，ファイルベースの
+blob ストレージ．</li>
 </ul>
-<h1 id="plugin-architecture">Plugin Architecture</h1>
-<p>Plugin は <code>app/plugin</code> 以下の通常の Python module
-です．Filename と class name により動的に読み込まれます．</p>
-<p>Data source の例:</p>
+<h1 id="プラグインアーキテクチャ">プラグインアーキテクチャ</h1>
+<p>プラグインは，<code>app/plugin</code> 以下にある通常の Python
+モジュールです．ファイル名とクラス名によって動的に読み込まれます．</p>
+<p>データソースの例:</p>
 <div class="sourceCode" id="cb15"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> SQLite</span></span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">parameters</span><span class="kw">:</span></span>
 <span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="at">      ...</span></span></code></pre></div>
-<p>これは次に解決されます．</p>
+<p>これは次のように解決されます．</p>
 <pre class="text"><code>datasource_SQLite.py
 DataSource_SQLite</code></pre>
-<p>Export の例:</p>
+<p>エクスポートの例:</p>
 <div class="sourceCode" id="cb17"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">export</span><span class="kw">:</span></span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> CSV</span></span></code></pre></div>
-<p>これは次に解決されます．</p>
+<p>これは次のように解決されます．</p>
 <pre class="text"><code>export_CSV.py
 Export_CSV</code></pre>
-<p><code>PluginComponent</code> は default で nested
-<code>parameters</code> dictionary を root parameter dictionary に merge
-します．これにより plugin constructor は flatten された parameter view
-を使えます．</p>
-<h1 id="data-query-communication-flow">Data Query Communication
-Flow</h1>
-<p>最も一般的な read path:</p>
+<p>また <code>PluginComponent</code> は，デフォルトでネストした
+<code>parameters</code>
+辞書をルートのパラメータ辞書にマージします．これにより，プラグインのコンストラクタは平坦化されたパラメータを参照できます．</p>
+<h1 id="データ取得の通信フロー">データ取得の通信フロー</h1>
+<p>最も一般的な読み取り経路は次のとおりです．</p>
 <pre class="text"><code>Browser or client
     |
     v
@@ -720,20 +713,20 @@ Slowlette response merge
     v
 JSON response</code></pre>
 <p><code>/api/data/{channels}</code> では，<code>DataSource</code>
-plugin が SlowDash data model 形式の data を返します．Cache component
-は次の場合に current value を追加できます．</p>
+プラグインが SlowDash
+のデータモデル形式でデータを返します．キャッシュコンポーネントは，次の条件を満たす場合に現在値を追加できます．</p>
 <ul>
-<li>requested channel が cache-backed である．</li>
-<li>cached timestamp が requested time window に入っている．</li>
-<li>existing response が存在しない，または cached value より古い．</li>
+<li>要求されたチャンネルがキャッシュ対象である．</li>
+<li>キャッシュのタイムスタンプが，要求された時間範囲に入っている．</li>
+<li>既存のレスポンスが存在しないか，キャッシュ値より古い．</li>
 </ul>
-<h1 id="write-emit-and-current-data-flow">Write, Emit, and Current-Data
-Flow</h1>
-<p>Current-data update は次の経路で SlowDash に入れられます．</p>
+<h1
+id="書き込み配信現在値データのフロー">書き込み・配信・現在値データのフロー</h1>
+<p>現在値データの更新は，次の経路で SlowDash に入ります．</p>
 <pre class="text"><code>POST /api/emit/{topic}
 POST /api/consume/current_data
 internal app.request_emit(topic, message, sender=...)</code></pre>
-<p>典型的な flow:</p>
+<p>典型的な流れは次のとおりです．</p>
 <pre class="text"><code>producer
     |
     v
@@ -747,11 +740,11 @@ app.request(&#39;/consume/current_data&#39;, data)
     |
     v
 websocket forwarding to attached clients</code></pre>
-<p><code>sender</code> parameter は，task 自身が publish した値を同じ
-task variable path に反射させないために使われます．</p>
-<h1 id="control-flow">Control Flow</h1>
-<p>Control command は <code>/api/control</code> を使います．</p>
-<p>現行 in-process task flow:</p>
+<p><code>sender</code>
+パラメータは，タスク自身が配信した値が同じタスク変数のパスに反射して戻ってくるのを防ぐために使われます．</p>
+<h1 id="制御フロー">制御フロー</h1>
+<p>制御コマンドは <code>/api/control</code> を使います．</p>
+<p>現行のプロセス内タスクの流れは次のとおりです．</p>
 <pre class="text"><code>POST /api/control
     |
     v
@@ -767,30 +760,53 @@ TaskModule.process_task_command()
     |
     v
 execute function synchronously, await it, or run it in a command thread</code></pre>
-<p>User module も，定義した hook に応じて command processing
-に参加できます．</p>
-<h1 id="slowpy-library-role">SlowPy Library Role</h1>
-<p>SlowPy は server-side component と user code
-の両方から使われます．</p>
-<h2 id="data-object-model">Data object model</h2>
-<p>SlowPy は SlowDash-compatible data に変換できる Python object
-を提供します．</p>
+<p>ユーザーモジュールも，定義したフックに応じてコマンド処理に参加できます．</p>
+<h1 id="slowpy-ライブラリの役割">SlowPy ライブラリの役割</h1>
+<p>SlowPy
+は，サーバー側のコンポーネントとユーザーコードの両方から使われます．</p>
+<h2 id="データオブジェクトモデル">データオブジェクトモデル</h2>
+<p>SlowPy は，SlowDash 互換のデータに変換できる Python
+オブジェクトを提供します．</p>
 <ul>
-<li>scalar value．</li>
+<li>スカラー値．</li>
 <li><code>TimeSeries</code>．</li>
-<li>histogram．</li>
-<li>graph．</li>
-<li>trend．</li>
-<li>tree．</li>
-<li>table．</li>
-<li><code>slowdashify</code> による matplotlib-derived data．</li>
+<li>ヒストグラム．</li>
+<li>グラフ．</li>
+<li>トレンド．</li>
+<li>ツリー．</li>
+<li>テーブル．</li>
+<li><code>slowdashify</code> による matplotlib 由来のデータ．</li>
 </ul>
-<p>これらの object は task/user code，storage writer，current data を
-publish する API で使われます．</p>
-<h2 id="control-nodes">Control nodes</h2>
-<p><code>slowpy/control/node.py</code> の <code>ControlNode</code> は
-readable/writable control endpoint の base abstraction です．</p>
-<p>主な method:</p>
+<p>これらのオブジェクトは，タスク/ユーザーコード，ストレージへの書き込み，現在値データを配信する
+API で使われます．</p>
+<h3
+id="データオブジェクトの生成とデータ追加">データオブジェクトの生成とデータ追加</h3>
+<p>データオブジェクトは，トップレベルの <code>slowpy</code>
+パッケージから生成し，通常はタスクのループ内で逐次データを追加していきます．</p>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy <span class="im">as</span> slp</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>hist <span class="op">=</span> slp.Histogram(<span class="dv">100</span>, <span class="dv">0</span>, <span class="dv">10</span>)         <span class="co"># [0, 10] を 100 ビンに分割</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>graph <span class="op">=</span> slp.Graph([<span class="st">&#39;channel&#39;</span>, <span class="st">&#39;value&#39;</span>])</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="kw">not</span> ControlSystem.is_stop_requested():</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    value <span class="op">=</span> device.read(...)</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    hist.fill(value)</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    graph.fill(channel, value)</span></code></pre></div>
+<p>各オブジェクトは <code>to_json()</code>
+を実装しており，これにより同じオブジェクトを現在値データとして配信したり（<code>ControlSystem.stream()</code>
+/ <code>aio_publish()</code>
+を通じて），データストアに書き込んだりできます．<code>slp.RateTrend</code>
+のようなトレンド用のヘルパーは，移動窓に値を蓄積し，保存に適した
+<code>TimeSeries</code> を生成します．</p>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>rate_trend <span class="op">=</span> slp.RateTrend(length<span class="op">=</span><span class="dv">300</span>, tick<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>rate_trend.fill(time.time())</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>datastore.append(rate_trend.time_series(<span class="st">&#39;rate&#39;</span>))</span></code></pre></div>
+<h2 id="制御ノード">制御ノード</h2>
+<p><code>slowpy/control/node.py</code> の <code>ControlNode</code>
+は，読み書き可能な制御エンドポイントの基底となる抽象です．</p>
+<p>主なメソッドは次のとおりです．</p>
 <pre class="text"><code>set(value)
 get()
 aio_set(value)
@@ -803,17 +819,140 @@ wait()
 aio_wait()
 readonly()
 writeonly()</code></pre>
-<p>Async method は default では sync method に delegate
-します．<code>_is_thread_safe</code> が設定されている場合，sync
-<code>get()</code> と <code>set()</code> call は
-<code>asyncio.to_thread()</code> 経由で実行できます．</p>
-<p><code>slowpy/control/control_*.py</code> 以下の control module
-は，device，network，message，shell，HTTP，datastore，protocol
-integration の concrete implementation を提供します．</p>
-<h2 id="data-stores">Data stores</h2>
-<p>SlowPy data store は write-side storage helper を提供します．</p>
-<p><code>store/factory.py</code> は URL を implementation に map
-します．</p>
+<p>非同期メソッドは，デフォルトでは同期メソッドに委譲します．<code>_is_thread_safe</code>
+が設定されている場合，同期版の <code>get()</code> と <code>set()</code>
+の呼び出しを <code>asyncio.to_thread()</code> 経由で実行できます．</p>
+<h3 id="ノードチェーンの構築と-getset-の利用">ノードチェーンの構築と
+get()/set() の利用</h3>
+<p>SlowPy
+は，外部システムやデバイスをすべて単一の制御ツリーに対応づけます．各ノードは
+<code>set()</code> と <code>get()</code>
+を持ち，名詞的な名前のメソッドは子ノードを返します．これらのアクセサを連ねたチェーンが，特定のエンドポイントへの論理的な経路を表します．</p>
+<p>起点となるのは，通常は <code>ControlSystem</code>
+のインスタンス（または共有インスタンスの
+<code>control_system</code>）です．</p>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ControlSystem</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>ctrl <span class="op">=</span> ControlSystem()</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ノードチェーンを構築する: Ethernet 接続 -&gt; SCPI -&gt; 特定のコマンド</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(host<span class="op">=</span><span class="st">&#39;192.168.1.43&#39;</span>, port<span class="op">=</span><span class="dv">5025</span>)</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>Vout <span class="op">=</span> device.scpi(append_opc<span class="op">=</span><span class="va">True</span>).command(<span class="st">&#39;VOLT&#39;</span>)</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>V    <span class="op">=</span> device.scpi().command(<span class="st">&#39;MEAS:VOLT:DC&#39;</span>)</span></code></pre></div>
+<p>チェーン中の各呼び出しが，1 つの枝を追加します．</p>
+<ul>
+<li><code>ctrl.ethernet(...)</code> は TCP
+接続のノードを開く（または再利用する）．</li>
+<li><code>.scpi()</code> は，SCPI の設定を保持する子ノードを返す．</li>
+<li><code>.command('VOLT')</code> は，チェーンを特定の SCPI
+コマンドに束縛する．</li>
+</ul>
+<p>末端のノードを構築したら，<code>set()</code>
+で書き込み，<code>get()</code> で読み取ります．</p>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>Vout.<span class="bu">set</span>(<span class="dv">10</span>)        <span class="co"># SCPI &quot;VOLT 10;*OPC?&quot; を送る</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>value <span class="op">=</span> V.get()     <span class="co"># SCPI &quot;MEAS:VOLT:DC?&quot; を送り，応答を返す</span></span></code></pre></div>
+<p><code>ControlNode</code>
+には，次のショートカットも定義されています．</p>
+<ul>
+<li><code>node(value)</code> は <code>node.set(value)</code>
+と同じ．</li>
+<li><code>node()</code> は <code>node.get()</code> と同じ．</li>
+<li><code>node &lt;= value</code> は <code>node.set(value)</code>
+を実行する．</li>
+<li><code>float(node)</code>，<code>int(node)</code>，<code>str(node)</code>，<code>print(node)</code>
+は，暗黙的に <code>node.get()</code> を呼び出す．</li>
+</ul>
+<p>非同期版は <code>await node.aio_set(value)</code> と
+<code>value = await node.aio_get()</code>
+で，後述の同期/非同期モデルを通じて，すべてのノードで利用できます．</p>
+<p>枝はプラグインによって追加され，ルートの <code>ControlSystem</code>
+に限られません．プラグインは任意のノードに読み込めます．たとえば，Ethernet
+ノードに読み込まれたプロトコルプラグインは，Ethernet ノードの
+<code>set()</code>（送信）と
+<code>get()</code>（受信）を再利用するサブ枝を作ります．組み込みノード（Ethernet/SCPI/Telnet，HTTP，Shell，Slowdash，Redis
+など）の一覧と，それぞれの <code>set()</code> / <code>get()</code>
+の意味については，<a href="ControlsScript.html">Controls Script</a>
+を参照してください．</p>
+<p><code>slowpy/control/control_*.py</code>
+以下の制御モジュールは，デバイス，ネットワーク，メッセージ，シェル，HTTP，データストア，各種プロトコルとの具体的な連携を提供します．</p>
+<h3
+id="同期版非同期版の制御モジュール">同期版・非同期版の制御モジュール</h3>
+<p>ほとんどの連携は，<code>control_X.py</code> と
+<code>control_AsyncX.py</code>
+という同期版・非同期版のモジュールの組として提供されます．</p>
+<pre class="text"><code>control_HTTP.py      / control_AsyncHTTP.py
+control_Redis.py     / control_AsyncRedis.py
+control_RabbitMQ.py  / control_AsyncRabbitMQ.py
+control_MQTT.py      / control_AsyncMQTT.py
+control_Modbus.py    / control_AsyncModbus.py
+control_Slowdash.py  / control_AsyncSlowdash.py
+control_Dripline.py  / control_AsyncDripline.py</code></pre>
+<p>一方の形式しか存在しない連携もあります．</p>
+<ul>
+<li>同期版のみ:
+<code>control_Ethernet.py</code>，<code>control_UDP.py</code>，<code>control_Serial.py</code>，<code>control_VISA.py</code>，<code>control_Shell.py</code>，<code>control_DataStore.py</code>，<code>control_LabJackU.py</code>，<code>control_NanotechMotor.py</code>，<code>control_Microphone.py</code>，<code>control_DummyDevice.py</code>
+など．</li>
+<li>非同期版のみ:
+<code>control_AsyncNATS.py</code>，<code>control_AsyncSlowMQ.py</code>，<code>control_AsyncLocalPubsub.py</code>
+など．</li>
+</ul>
+<p>両者の違いは，入出力（I/O）メソッドの実装方法だけです．</p>
+<ul>
+<li>同期版のモジュール（たとえば <code>control_HTTP.py</code> の
+<code>HttpNode</code>）は，<code>set()</code> / <code>get()</code>
+をオーバーライドし，<code>requests</code>
+のようなブロッキング型のライブラリを使います．</li>
+<li>非同期版のモジュール（たとえば <code>control_AsyncHTTP.py</code> の
+<code>AsyncHttpNode</code>）は，<code>aio_set()</code> /
+<code>aio_get()</code> をオーバーライドし，<code>httpx</code>
+のようなノンブロッキング型のライブラリを使います．</li>
+</ul>
+<p>どちらも <code>ControlNode</code>
+を継承するため，ノードツリーのモデル，子ノードのアクセサ，<code>readonly()</code>
+/ <code>writeonly()</code>
+のラッパー，ヘルパーメソッド（<code>sleep()</code>，<code>wait()</code>，およびそれらの
+<code>aio_*</code> 版）を共通して持ちます．変わるのは末端の I/O
+実装だけです．</p>
+<h3 id="ノードツリーへの登録">ノードツリーへの登録</h3>
+<p>各ノードクラスは，ファクトリ関数を返すクラスメソッド
+<code>_node_creator_method()</code>
+を定義します．<code>ControlNode.add_node()</code>
+はこの関数を親ノードクラスのメソッドとして注入し，その関数名が子ノードを生成するためのアクセサになります．同期版と非同期版では，通常は異なるアクセサ名を公開します．たとえば次のとおりです．</p>
+<pre class="text"><code>HttpNode       -&gt; node.http(url)
+AsyncHttpNode  -&gt; node.async_http(url)</code></pre>
+<p><code>ControlNode.import_control_module(name)</code>
+は，現在の作業ディレクトリまたは <code>slowpy/control</code>
+ディレクトリから <code>control_&lt;name&gt;.py</code>
+を読み込み，<code>_node_creator_method()</code>
+を定義しているクラスを走査して，それらのアクセサをノードクラスに登録します．<code>ControlSystem.__init__()</code>
+は，次のデフォルトのモジュール群を読み込みます．</p>
+<pre class="text"><code>Ethernet
+HTTP
+AsyncHTTP
+Shell
+DataStore</code></pre>
+<p>それ以外のモジュールは，タスクコードやユーザーコードから必要に応じて読み込みます．たとえば
+<code>ControlSystem().import_control_module('Redis')</code>
+のようにします．</p>
+<h3 id="非同期フォールバックとの関係">非同期フォールバックとの関係</h3>
+<p>基底の <code>ControlNode</code> は，同期版の <code>set()</code> /
+<code>get()</code> に委譲するデフォルトの <code>aio_set()</code> /
+<code>aio_get()</code>
+をあらかじめ提供しています（直接呼び出すか，<code>_is_thread_safe</code>
+が設定されている場合は <code>asyncio.to_thread()</code>
+経由で呼び出します）．このため，同期版のみのモジュールでも，非同期コードから利用できます．専用の
+<code>control_Async*.py</code>
+モジュールは，長時間維持するネットワーク接続やメッセージブローカーとの接続など，真にノンブロッキングな
+I/O
+が重要になる場合のために用意されています．これは，前述したサーバー側の
+<code>DataSource</code>
+の同期/非同期の二重メソッドや，<code>_NoAsync</code>
+データソースプラグインと同じ考え方です．</p>
+<h2 id="データストア">データストア</h2>
+<p>SlowPy
+のデータストアは，書き込み側のストレージヘルパーを提供します．</p>
+<p><code>store/factory.py</code> は，URL を実装にマッピングします．</p>
 <pre class="text"><code>postgresql:// -&gt; DataStore_PostgreSQL
 mysql://      -&gt; DataStore_MySQL
 sqlite://     -&gt; DataStore_SQLite
@@ -821,47 +960,70 @@ influxdb2://  -&gt; DataStore_InfluxDB2
 redis://      -&gt; DataStore_Redis
 csv:///       -&gt; DataStore_CSV
 dump:///      -&gt; DataStore_TextDump</code></pre>
-<p><code>DataStore</code> は次を support します．</p>
+<p><code>DataStore</code> は，次の操作に対応します．</p>
 <pre class="text"><code>append(values, tag=None, timestamp=None)
 update(values, tag=None, timestamp=None)
 close()</code></pre>
-<p>Value には scalar，field dictionary，data
-element，<code>TimeSeries</code> を使えます．</p>
-<h1 id="slowdash-にとって重要な-slowlette-内部仕様">SlowDash
-にとって重要な Slowlette 内部仕様</h1>
+<p>値には，スカラー，フィールドの辞書，データ要素，<code>TimeSeries</code>
+を使えます．</p>
+<h3 id="データの書き込み">データの書き込み</h3>
+<p>ストアは，クラスから直接生成するか，<code>store/factory.py</code> の
+<code>create_datastore_from_url()</code> を使って URL
+から生成します．</p>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_PostgreSQL</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_PostgreSQL(</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;postgresql://postgres:postgres@localhost:5432/SlowTestData&#39;</span>,</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    table<span class="op">=</span><span class="st">&#39;SlowData&#39;</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>    datastore.append(value, tag<span class="op">=</span><span class="st">&#39;voltmeter&#39;</span>)      <span class="co"># チャンネルタグを付けた単一の値</span></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>    datastore.append({<span class="st">&#39;ch00&#39;</span>: v0, <span class="st">&#39;ch01&#39;</span>: v1})    <span class="co"># チャンネル/値のペアの辞書</span></span></code></pre></div>
+<p><code>append()</code>
+は新しい時系列レコードを追加し，<code>update()</code>
+は直前の値を上書きして最新の値だけを残します．この違いは，ヒストグラムのようなデータ要素オブジェクトを扱う際に意味を持ちます．</p>
+<div class="sourceCode" id="cb34"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>datastore.append(hist, tag<span class="op">=</span><span class="st">&#39;spectrum&#39;</span>)   <span class="co"># ヒストグラムの時系列（時刻ごとに 1 つ）</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>datastore.update(hist, tag<span class="op">=</span><span class="st">&#39;spectrum&#39;</span>)   <span class="co"># 最新のヒストグラムだけを残す</span></span></code></pre></div>
+<p>SQL 系のストアでは，デフォルトで UNIX
+タイムスタンプを用いた「ロングフォーマット」が使われます．異なるテーブル構成が必要な場合は，ユーザー定義の
+<code>TableFormat</code> でスキーマや INSERT 文を上書きできます．</p>
+<h1 id="slowdash-にとって重要な-slowlette-の内部仕様">SlowDash
+にとって重要な Slowlette の内部仕様</h1>
 <p>SlowDash のいくつかの挙動は，Slowlette
 の設計に直接依存しています．</p>
-<h3 id="multiple-handlers-can-answer-the-same-route">Multiple handlers
-can answer the same route</h3>
-<p>Slowlette は app tree 内のすべての matching handler
-を呼びます．そのため，複数 component が
+<h3
+id="同一ルートに複数のハンドラが応答できる">同一ルートに複数のハンドラが応答できる</h3>
+<p>Slowlette
+は，アプリツリー内の一致するすべてのハンドラを意図的に呼び出します．このため，複数のコンポーネントが
 <code>/api/config</code>，<code>/api/channels</code>，<code>/api/data/{channels}</code>
 を提供できます．</p>
-<h3 id="response-merging-is-part-of-the-application-model">Response
-merging is part of the application model</h3>
-<p>Merged response は単なる便利機能ではありません．独立に開発された
-component や plugin から aggregate API response
-を組み立てるための仕組みです．</p>
-<h3 id="component-order-is-meaningful">Component order is
-meaningful</h3>
-<p>Custom response は後続 component の response を merge
-できるため，<code>slowdash.py</code> の include order は runtime
-behavior の一部です．</p>
-<h3 id="internal-api-calls-use-the-same-router">Internal API calls use
-the same router</h3>
+<h3
+id="レスポンスのマージはアプリケーションモデルの一部である">レスポンスのマージはアプリケーションモデルの一部である</h3>
+<p>マージされたレスポンスは，単なる便利機能ではありません．独立に開発されたコンポーネントやプラグインから集約型の
+API レスポンスを組み立てるための仕組みです．</p>
+<h3
+id="コンポーネントの順序には意味がある">コンポーネントの順序には意味がある</h3>
+<p>独自のレスポンスが後続のレスポンスをマージできるため，<code>slowdash.py</code>
+における組み込み順序は実行時の挙動の一部です．</p>
+<h3 id="内部-api-呼び出しも同じルーターを使う">内部 API
+呼び出しも同じルーターを使う</h3>
 <p><code>App.request()</code>，<code>request_config()</code>，<code>request_channels()</code>，<code>request_data()</code>，<code>request_emit()</code>
-は <code>self.slowlette(...)</code> を直接呼びます．そのため server-side
-の producer/consumer も，外部 HTTP client と同じ routing / response
-merging model を使います．</p>
-<h1 id="main-flow-summary">Main Flow Summary</h1>
-<h3 id="startup">Startup</h3>
+は <code>self.slowlette(...)</code>
+を直接呼び出します．このため，サーバー側のプロデューサ/コンシューマも，外部の
+HTTP
+クライアントと同じルーティングおよびレスポンスマージのモデルを使います．</p>
+<h1 id="主要フローのまとめ">主要フローのまとめ</h1>
+<h3 id="起動">起動</h3>
 <pre class="text"><code>slowdash.py
   -&gt; App
   -&gt; Project
   -&gt; sys.path / cwd setup
   -&gt; include components
   -&gt; ASGI/WSGI/CGI/CLI dispatch</code></pre>
-<h3 id="api-request">API request</h3>
+<h3 id="api-リクエスト">API リクエスト</h3>
 <pre class="text"><code>HTTP request
   -&gt; Slowlette server adapter
   -&gt; Request
@@ -870,48 +1032,48 @@ merging model を使います．</p>
   -&gt; Response list
   -&gt; merged Response
   -&gt; HTTP response</code></pre>
-<h3 id="data-read">Data read</h3>
+<h3 id="データ読み取り">データ読み取り</h3>
 <pre class="text"><code>/api/data/{channels}
   -&gt; data source plugins
   -&gt; optional user/task/current-data additions
   -&gt; merged JSON data</code></pre>
-<h3 id="config-read">Config read</h3>
+<h3 id="設定の読み取り">設定の読み取り</h3>
 <pre class="text"><code>/api/config
   -&gt; each component public_config()
   -&gt; deep-merged JSON config</code></pre>
-<h3 id="current-data">Current data</h3>
+<h3 id="現在値データ">現在値データ</h3>
 <pre class="text"><code>/api/emit/current_data
   -&gt; /api/consume/current_data
   -&gt; cache update and variable update hooks
   -&gt; websocket forwarding where applicable</code></pre>
-<h3 id="plugin-loading">Plugin loading</h3>
+<h3 id="プラグインの読み込み">プラグインの読み込み</h3>
 <pre class="text"><code>project config
   -&gt; PluginComponent
   -&gt; app/plugin module lookup
   -&gt; class lookup
   -&gt; plugin instance
   -&gt; Slowlette include</code></pre>
-<h1 id="development-notes">Development Notes</h1>
+<h1 id="開発上の実務的な注意">開発上の実務的な注意</h1>
 <ul>
-<li>新しい API component を追加する場合は，<code>Component</code> を
-subclass し，<code>slowdash.py</code> から include する．</li>
-<li>新しい data source を追加する場合は，新しい
-<code>app/plugin/datasource_*.py</code> file で <code>DataSource</code>
-を subclass する．</li>
-<li>新しい exporter を追加する場合は，<code>export_*.py</code> plugin
-を追加する．</li>
-<li>他 component と aggregate する endpoint では，dict/list content
-を返して response merging を利用する．</li>
-<li>後続 component の output を加工する endpoint では，custom
-<code>slowlette.Response</code> subclass
-を返し，<code>merge_response()</code> を override する．</li>
-<li><code>public_config()</code> には secret
-を入れない．<code>/api/config</code> は client に公開される．</li>
-<li>Component include order の変更には注意する．merge behavior
-が変わる可能性がある．</li>
-<li>Server-side code が外部 API client と同じ route logic
-を使うべき場合は，internal <code>App.request*()</code> helper
-を使う．</li>
+<li>新しい API コンポーネントを追加する場合は，<code>Component</code>
+をサブクラス化し，<code>slowdash.py</code> から組み込む．</li>
+<li>新しいデータソースを追加する場合は，新しい
+<code>app/plugin/datasource_*.py</code> ファイルで
+<code>DataSource</code> をサブクラス化する．</li>
+<li>新しいエクスポータを追加する場合は，<code>export_*.py</code>
+プラグインを追加する．</li>
+<li>他のコンポーネントと集約させたいエンドポイントでは，辞書やリストのコンテンツを返してレスポンスのマージを利用する．</li>
+<li>後続のコンポーネントの出力を加工したいエンドポイントでは，独自の
+<code>slowlette.Response</code>
+サブクラスを返し，<code>merge_response()</code>
+をオーバーライドする．</li>
+<li><code>public_config()</code>
+には秘密情報を入れない．<code>/api/config</code>
+はクライアントに公開される．</li>
+<li>コンポーネントの組み込み順序の変更には注意する．マージの挙動が変わる可能性がある．</li>
+<li>サーバー側のコードを外部 API
+クライアントと同じルートロジックで動かしたい場合は，内部の
+<code>App.request*()</code> ヘルパーを使う．</li>
 </ul>
 
 

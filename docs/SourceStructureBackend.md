@@ -639,6 +639,30 @@ SlowPy provides Python objects that can be converted into SlowDash-compatible da
 
 These objects are used by task/user code, storage writers, and APIs that publish current data.
 
+### Creating and filling data objects
+
+Data objects are created from the top-level `slowpy` package and populated incrementally, typically inside a task loop:
+
+```python
+import slowpy as slp
+
+hist = slp.Histogram(100, 0, 10)         # 100 bins over [0, 10]
+graph = slp.Graph(['channel', 'value'])
+
+while not ControlSystem.is_stop_requested():
+    value = device.read(...)
+    hist.fill(value)
+    graph.fill(channel, value)
+```
+
+Each object implements `to_json()`, which is how the same object can be published as current data (through `ControlSystem.stream()` / `aio_publish()`) or written to a data store. Trend helpers such as `slp.RateTrend` accumulate values over a moving window and produce a `TimeSeries` suitable for storage:
+
+```python
+rate_trend = slp.RateTrend(length=300, tick=10)
+rate_trend.fill(time.time())
+datastore.append(rate_trend.time_series('rate'))
+```
+
 ## Control nodes
 
 `ControlNode` in `slowpy/control/node.py` is the base abstraction for readable/writable control endpoints.
@@ -662,7 +686,98 @@ writeonly()
 
 The async methods delegate to sync methods by default. If `_is_thread_safe` is set, sync `get()` and `set()` calls can be run through `asyncio.to_thread()`.
 
+### Building and using control-node chains
+
+SlowPy maps every external system or device into a single control tree. Each node exposes `set()` and `get()`, and methods with noun-like names return child nodes. A chain of these accessors describes the logical path to a specific endpoint.
+
+A typical starting point is a `ControlSystem` instance (or the shared `control_system` instance):
+
+```python
+from slowpy.control import ControlSystem
+ctrl = ControlSystem()
+
+# Build a node chain: Ethernet connection -> SCPI -> a specific command
+device = ctrl.ethernet(host='192.168.1.43', port=5025)
+Vout = device.scpi(append_opc=True).command('VOLT')
+V    = device.scpi().command('MEAS:VOLT:DC')
+```
+
+Each call in the chain adds a branch:
+
+- `ctrl.ethernet(...)` opens (or reuses) a TCP connection node.
+- `.scpi()` returns a child node that holds SCPI configuration.
+- `.command('VOLT')` binds the chain to a specific SCPI command.
+
+Once a leaf node is built, `set()` writes and `get()` reads:
+
+```python
+Vout.set(10)        # sends SCPI "VOLT 10;*OPC?"
+value = V.get()     # sends SCPI "MEAS:VOLT:DC?" and returns the reply
+```
+
+`ControlNode` also defines several shortcuts:
+
+- `node(value)` is equivalent to `node.set(value)`.
+- `node()` is equivalent to `node.get()`.
+- `node <= value` performs `node.set(value)`.
+- `float(node)`, `int(node)`, `str(node)`, and `print(node)` implicitly call `node.get()`.
+
+The asynchronous equivalents are `await node.aio_set(value)` and `value = await node.aio_get()`, available on every node through the sync/async model described below.
+
+Branches are added by plugins and are not limited to the root `ControlSystem`. A plugin can be loaded onto any node; for example, a protocol plugin loaded onto an Ethernet node creates a sub-branch that reuses the Ethernet node's `set()` (send) and `get()` (receive). For the full catalogue of built-in nodes (Ethernet/SCPI/Telnet, HTTP, Shell, Slowdash, Redis, and others) and their `set()` / `get()` semantics, see [Controls Script](ControlsScript.html).
+
 Control modules under `slowpy/control/control_*.py` provide concrete device, network, message, shell, HTTP, datastore, and protocol integrations.
+
+### Synchronous and asynchronous control modules
+
+Most integrations are provided as a synchronous/asynchronous pair of modules, named `control_X.py` and `control_AsyncX.py`:
+
+```text
+control_HTTP.py      / control_AsyncHTTP.py
+control_Redis.py     / control_AsyncRedis.py
+control_RabbitMQ.py  / control_AsyncRabbitMQ.py
+control_MQTT.py      / control_AsyncMQTT.py
+control_Modbus.py    / control_AsyncModbus.py
+control_Slowdash.py  / control_AsyncSlowdash.py
+control_Dripline.py  / control_AsyncDripline.py
+```
+
+Some integrations exist in only one form:
+
+- Synchronous only, such as `control_Ethernet.py`, `control_UDP.py`, `control_Serial.py`, `control_VISA.py`, `control_Shell.py`, `control_DataStore.py`, `control_LabJackU.py`, `control_NanotechMotor.py`, `control_Microphone.py`, and `control_DummyDevice.py`.
+- Asynchronous only, such as `control_AsyncNATS.py`, `control_AsyncSlowMQ.py`, and `control_AsyncLocalPubsub.py`.
+
+The two forms differ only in how the I/O methods are implemented:
+
+- A synchronous module (for example `HttpNode` in `control_HTTP.py`) overrides `set()` / `get()` and uses blocking libraries such as `requests`.
+- An asynchronous module (for example `AsyncHttpNode` in `control_AsyncHTTP.py`) overrides `aio_set()` / `aio_get()` and uses non-blocking libraries such as `httpx`.
+
+Both forms subclass `ControlNode`, so they share the same node-tree model, child-node accessors, `readonly()` / `writeonly()` wrappers, and helper methods (`sleep()`, `wait()`, and their `aio_*` variants). Only the leaf I/O implementation changes.
+
+### Node-tree registration
+
+Each node class defines a classmethod `_node_creator_method()` that returns a factory function. `ControlNode.add_node()` injects this function as a method on a parent node class, and the function name becomes the accessor used to create child nodes. Synchronous and asynchronous variants usually expose different accessor names, for example:
+
+```text
+HttpNode       -> node.http(url)
+AsyncHttpNode  -> node.async_http(url)
+```
+
+`ControlNode.import_control_module(name)` loads `control_<name>.py` from the current working directory or the `slowpy/control` directory, scans it for classes that define `_node_creator_method()`, and registers their accessors on the node class. `ControlSystem.__init__()` imports a default set of modules:
+
+```text
+Ethernet
+HTTP
+AsyncHTTP
+Shell
+DataStore
+```
+
+Additional modules are imported on demand from task or user code, for example `ControlSystem().import_control_module('Redis')`.
+
+### Relationship to the async fallback
+
+The base `ControlNode` already provides default `aio_set()` / `aio_get()` methods that delegate to the synchronous `set()` / `get()` (directly, or through `asyncio.to_thread()` when `_is_thread_safe` is set). A synchronous-only module can therefore still be used from async code. The dedicated `control_Async*.py` modules exist for cases where genuinely non-blocking I/O matters, such as long-lived network or message-broker connections. This mirrors the server-side `DataSource` sync/async dual methods and the `_NoAsync` data-source plugins described earlier.
 
 ## Data stores
 
@@ -689,6 +804,32 @@ close()
 ```
 
 Values can be scalars, dictionaries of fields, data elements, or `TimeSeries`.
+
+### Writing data
+
+A store is created directly from its class, or from a URL through `create_datastore_from_url()` in `store/factory.py`:
+
+```python
+from slowpy.store import DataStore_PostgreSQL
+
+datastore = DataStore_PostgreSQL(
+    'postgresql://postgres:postgres@localhost:5432/SlowTestData',
+    table='SlowData'
+)
+
+while True:
+    datastore.append(value, tag='voltmeter')      # a single value under a channel tag
+    datastore.append({'ch00': v0, 'ch01': v1})    # a dict of channel/value pairs
+```
+
+`append()` adds a new time-series record, while `update()` overwrites the previous value so that only the latest is kept. This distinction matters for data-element objects such as histograms:
+
+```python
+datastore.append(hist, tag='spectrum')   # time-series of histograms (one per time point)
+datastore.update(hist, tag='spectrum')   # keep only the latest histogram
+```
+
+For SQL stores, a "long format" with UNIX timestamps is used by default. A user-defined `TableFormat` can override the schema and insert statements when a different table layout is required.
 
 # Slowlette Internals That Matter to SlowDash
 

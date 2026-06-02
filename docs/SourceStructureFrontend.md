@@ -57,6 +57,7 @@ slowdash.html or slowplot.html
 - `slowhome.html`: home/content list page.
 - `slowdown.html`: layout/dashboard display page.
 - `slowedit.html`: config editor using Ace.
+- `slowedit2.html`: alternative config editor using Monaco (loaded from a CDN).
 - `slowfile.html`: file-oriented page.
 - `slowplan.html`: planning page.
 - `slowcruise.html`: autocruise entry point.
@@ -199,6 +200,31 @@ merged config object
 
 If a config contains `items` instead of `panels`, `SlowDash` treats it as a canvas-style config and wraps it into a single canvas panel.
 
+### URL query options
+
+When `config` is a query string (as on `slowdash.html`), `SlowDash._buildSettings()` maps URL parameters to config values:
+
+```text
+config=<name>        load a named page config from ./api/config/content/
+configdata=<base64>  load an inline base64-encoded config (used by pop-out)
+mode=normal|protected|display
+theme=<name>         load slowjs/slowdash-<name>.css
+time=<datetime>      end of the time range
+to=<datetime>        same as time
+length=<seconds>     length of the time range (must be > 10)
+reload=<seconds>     auto-reload interval (>=1), -1 = off, 0 = once
+grid=<rows>x<cols>   panel grid size
+channel=<spec>       build panels directly from channels (see below)
+```
+
+These URL values are collected into `args`, which override the project and page configs during the deep merge performed by `Platform`.
+
+The `channel` option builds panels without a saved config. Each semicolon-separated item is `channels/type`, where `channels` is a comma-separated channel list and `type` is one of `timeseries` (default), `histogram`, `ts-histogram`, `histogram2d`, `graph`, `singles`, `table`, `tree`, or `blob`:
+
+```text
+slowdash.html?channel=ch0,ch1;ch2/histogram&length=3600
+```
+
 ### Start flow
 
 ```text
@@ -274,6 +300,19 @@ It can combine multiple default channel requests into a single API call when the
 api/data/ch1,ch2,ch3?length=...&to=...&resample=...
 ```
 
+Each request carries a set of options, with these defaults:
+
+```text
+length, to        time range
+resample = -1     bin width in seconds (-1 = no resampling)
+reducer = 'last'  last/mean/median/min/max/count/sem within a bin
+filler = 'fillna' gap-filling policy
+envelope = 0      include a min/max envelope when resampling
+prior_data = 0    include one data point before the range
+```
+
+These options match the server-side parameters parsed by `DataSource` (`length`, `to`, `resample`, `reducer`, `filler`, `envelope`, `prior_data`). When the requested `length` exceeds `resamplingThreshold` (7200 s by default), `DataRequest` automatically sets `resample` to `length / resamplingBuckets` (600 buckets by default), so long ranges are downsampled before being sent to the server.
+
 Custom requests are kept separate so panel-specific options do not interfere with default requests.
 
 ### `Controller`
@@ -313,6 +352,23 @@ merge JSON response into currentData
     v
 Layout.draw(currentData)
 ```
+
+The accumulated data lives in `Controller.currentData`, which is the packet passed to `view.draw()`. It is a dictionary keyed by request id (the channel name, or a custom request id), plus a `__meta` entry that describes the packet:
+
+```text
+currentData = {
+    "<channel-or-request-id>": <SlowDash data object>,
+    ...
+    __meta: {
+        range: { from, to },
+        isPartial,        // true while a multi-query update is still in progress
+        isCurrent,        // true for websocket-pushed current data
+        currentDataTime,  // timestamp of the pushed current data
+    }
+}
+```
+
+`DataRequest.queryList()` skips request ids already present in `currentData`, so an unchanged time range reuses previously loaded data instead of refetching it. A multi-query update sets `isPartial` while queries remain, and the view is redrawn once when the last query completes.
 
 Emit flow:
 
@@ -365,6 +421,16 @@ It is initialized by `SlowDash.configure()` with:
 - reset delay;
 - callback to `SlowDash._update()`;
 - status/progress/beat-time callbacks.
+
+The scheduler runs a one-second `_beat()` loop that refreshes the status/progress text, triggers `update()` when the interval has elapsed, and—if a reset delay is set—reloads the page after that delay. The reset delay is derived from the control mode:
+
+```text
+normal     -> 0   (no auto reset)
+protected  -> 300 s
+display    -> 10 s
+```
+
+`update()` also coalesces requests: a call made while an update is already running is recorded as a pending request rather than starting a second query, and the pending request runs on the next beat.
 
 # Layout and Panel Model
 
@@ -442,6 +508,119 @@ panel-misc.mjs
 ```
 
 Additional panel plugin files can be appended through `add_plugin(filepath)`.
+
+# Module Relationships and Call Sequences
+
+This section summarizes how `SlowDash`, `Frame`, `Platform`, `Scheduler`, `Controller`, `Layout`, and `Panel` relate to each other and how the main flows are driven.
+
+## Ownership and references
+
+The HTML entry page creates `SlowDash` and `Frame` and wires them together. `SlowDash` creates `Layout`, `Controller`, and `Scheduler`; `Controller` holds the `Layout` as its view; `Layout` creates and owns the `Panel` instances. `Platform` is a static helper (it is not instantiated).
+
+```mermaid
+flowchart TD
+    HTML["HTML entry page"]
+    API[("SlowDash server: ./api, /ws")]
+
+    HTML -->|new| SD["SlowDash"]
+    HTML -->|new| FR["Frame"]
+    SD <-->|"status / progress / beat callbacks;<br/>setRange() / setUpdateInterval()"| FR
+
+    SD -->|new| LO["Layout"]
+    SD -->|new| CO["Controller"]
+    SD -->|new| SC["Scheduler"]
+
+    SD -.->|"Platform.initialize()"| PF["Platform (static)"]
+    PF -->|"GET ./api/config, content, theme"| API
+
+    CO -->|"view"| LO
+    CO -->|"fetch api/data, websocket"| API
+    LO -->|"PanelPluginLoader.load()"| PP["PanelPluginLoader"]
+    LO -->|"creates and owns"| PA["Panel (one per config entry)"]
+```
+
+## Startup sequence
+
+`configure()` builds the merged config through `Platform` and initializes the `Scheduler`; `start()` configures the `Controller` (and through it the `Layout` and `Panel`s) and starts the `Scheduler`.
+
+```mermaid
+sequenceDiagram
+    participant HTML as HTML page
+    participant SD as SlowDash
+    participant PF as Platform
+    participant SC as Scheduler
+    participant CO as Controller
+    participant LO as Layout
+    participant PA as Panel
+
+    HTML->>SD: new SlowDash(div)
+    HTML->>SD: configure(query)
+    SD->>PF: Platform.initialize(defaults, options, args)
+    PF->>PF: fetch ./api/config, page config, theme CSS
+    PF-->>SD: merged config
+    SD->>SC: initialize({updateInterval, update, ...})
+    HTML->>SD: start()
+    SD->>CO: configure(config)
+    CO->>LO: configure(config, options, callbacks)
+    LO->>LO: PanelPluginLoader.load()
+    LO->>PA: new Panel(...); configure(...)
+    SD->>SC: start()
+```
+
+## Update-loop sequence
+
+The `Scheduler` runs a one-second beat. When an update is due it calls back into `SlowDash._update()`, which asks the `Controller` to collect data requests from the panels, fetch data, and redraw.
+
+```mermaid
+sequenceDiagram
+    participant SC as Scheduler
+    participant SD as SlowDash
+    participant CO as Controller
+    participant LO as Layout
+    participant PA as Panel
+    participant API as server
+    participant FR as Frame
+
+    SC->>SC: _beat() (every 1 s)
+    SC->>SD: update() -> _update()
+    SD->>CO: update({from, to})
+    CO->>LO: fillDataRequest(dataRequest)
+    LO->>PA: fillDataRequest(dataRequest)
+    CO->>CO: dataRequest.queryList(currentData)
+    CO->>API: GET api/data/<channels>?...
+    API-->>CO: JSON data
+    CO->>CO: merge into currentData
+    CO->>LO: draw(currentData)
+    LO->>PA: draw(currentData, displayTimeRange)
+    SC-->>FR: setStatus() / setProgress() (via SlowDash callbacks)
+```
+
+## Streaming and emit sequence
+
+Current-data updates can also arrive over the websocket, bypassing the scheduler. Panel callbacks send control or current-data messages back through the `Controller`.
+
+```mermaid
+sequenceDiagram
+    participant API as server
+    participant CO as Controller
+    participant LO as Layout
+    participant PA as Panel
+
+    API-->>CO: ws message (current_data)
+    CO->>CO: parse JSON, set __meta.isCurrent
+    CO->>LO: draw(data)
+    LO->>PA: draw(data, displayTimeRange)
+
+    PA->>CO: callbacks.emit(topic, message)
+    alt websocket open and topic == current_data
+        CO->>API: socket.send(message)
+    else
+        CO->>API: POST ./api/emit/{topic}
+        CO->>SC2: callbacks.forceUpdate()
+    end
+```
+
+Here `SC2` is the same `Scheduler` shown earlier; `forceUpdate()` requests an immediate refresh after an emit.
 
 # Built-In Panel Modules
 
@@ -630,24 +809,44 @@ These controls are used by dashboard pages to manage:
 https://github.com/SanshiroEnomoto/jagaimo.git
 ```
 
-SlowDash imports it as a local frontend library.
+SlowDash imports it as a local frontend library. The submodule contains four ES modules and a stylesheet:
+
+```text
+jagaimo.mjs      core DOM/SVG wrapper, utilities, date/time
+jagawidgets.mjs  reusable UI widgets
+jagaplot.mjs     SVG plotting engine and interactive plot widget
+colormap.mjs     color palettes and numeric-to-color mapping
+jagaimo.css      styling for the widget classes
+```
+
+The modules are layered: `jagawidgets.mjs` and `jagaplot.mjs` build on `jagaimo.mjs`, and `jagaplot.mjs` also uses `jagawidgets.mjs` and `colormap.mjs`. The submodule's own `docs/SOURCE_GUIDE.md` and `docs/LIBRARY_REFERENCE.md` document the full API.
 
 ### `jagaimo.mjs`
 
-`jagaimo.mjs` provides the `JG` helper and `JGElement` wrapper.
+`jagaimo.mjs` provides the `JG` factory (usually imported as `$`) and the `JGElement` wrapper around one or more DOM/SVG nodes. `JG()` recognizes three input forms:
 
-Its role is similar to a small DOM utility library:
+```text
+$('#plot')        wrap every DOM node matching a CSS selector
+$('<div>')        create an HTML element
+$('<g>', 'svg')   create an SVG element in the SVG namespace
+```
 
-- select elements;
-- create elements;
-- wrap DOM objects;
-- append/prepend/remove elements;
-- search descendants;
-- get/set HTML, text, values, attributes, styles, data;
-- bind events;
-- provide date/time helpers such as `JGDateTime`.
+`JGElement` methods are chainable and grouped by purpose:
 
-SlowDash imports it as:
+```text
+traversal       find(), closest(), parent(), next(), at(), get()
+tree changes    append(), appendTo(), prepend(), remove(), empty()
+content/values  html(), text(), val(), selected(), checked(), enabled()
+attributes      attr(), data(), css(), addClass(), removeClass()
+events/visible  bind(), unbind(), click(), show(), hide(), focus()
+geometry        boundingClientWidth(), pageX(), pageY()
+```
+
+`val()` is input-type aware (checkbox/radio, number/range, color, and select controls). The `JG` factory also carries static utilities, including `JG.extend()`, `JG.sanitize()` / `JG.sanitizeWeakly()`, `JG.sprintf()`, `JG.JSON_stringify()`, `JG.time()`, `JG.formatDuration()`, `JG.percentileOf()`, and `JG.hsv2rgb()`.
+
+`JGDateTime` wraps a Unix timestamp and formats it with `strftime`-style specifiers, in local time (`asString()`) or UTC (`asUTCString()`). Plot axes reuse it for time-based X axes.
+
+SlowDash imports the core as:
 
 ```javascript
 import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
@@ -657,33 +856,56 @@ The `$` alias is used throughout `slowjs` for DOM creation and manipulation.
 
 ### `jagawidgets.mjs`
 
-`jagawidgets.mjs` provides reusable UI widgets.
+`jagawidgets.mjs` provides reusable UI widgets built on a common `JGWidget` base class. `JGWidget` records a widget index on its DOM element so the JavaScript object can be recovered from a displayed widget (used, for example, to close active popups on global events).
 
-Common imports include:
+```text
+JGTabWidget        tabbed view over a set of pages
+JGPopupWidget      fixed-position popup with outside-click / Escape closing
+JGDraggable        makes a positioned element movable by dragging
+JGDialogWidget     popup with title bar, buttons, optional dragging
+JGMenuListWidget   menu-list styling and behavior on a list element
+JGPullDownWidget   labeled selection control around a <select>
+JGHiddenWidget     reveals elements by changing display
+JGInvisibleWidget  reveals elements by changing opacity (keeps layout)
+JGIndicatorWidget  temporary status message and icon near a position
+JGFileIconWidget   formats an item as a file-like icon with badge/backdrop
+```
 
-- `JGTabWidget`
-- `JGDialogWidget`
-- `JGInvisibleWidget`
-- `JGPopupWidget`
-- `JGDraggable`
-- `JGIndicatorWidget`
-- `JGFileIconWidget`
-- `JGHiddenWidget`
-
-These widgets are used for panel settings dialogs, tabbed configuration UIs, popups, indicators, draggable canvas elements, and file/content controls.
+In SlowDash these are used for panel settings dialogs, tabbed configuration UIs, pop-ups, pull-downs, indicators, draggable canvas elements, and file/content controls. Their appearance is defined in `jagaimo.css`.
 
 ### `jagaplot.mjs`
 
-`jagaplot.mjs` provides plotting helpers.
+`jagaplot.mjs` is an SVG plotting engine whose classes have distinct roles:
 
-SlowDash uses:
+```text
+JGPlotAxisScale      linear/log/time ticks and one axis
+JGPlotColorBarScale  colored scale bar for Z values
+JGPlotFrame          dimensions, ranges, labels, grid, clip, transforms
+JGPlot               draws datasets and annotations into an existing <svg>
+JGPlotWidget         creates the <svg> in a container and adds interaction
+```
 
-- `JGPlotWidget`
-- `JGPlot`
-- `JGPlotAxisScale`
-- `JGPlotColorBarScale`
+`JGPlotFrame` holds the data ranges, geometry, and linear/log axis modes, and provides the data-to-canvas transforms (`_cx()`, `_cy()`) and their inverses (`_px()`, `_py()`). `JGPlot` draws data and annotations through methods such as `drawGraph()`, `drawHistogram()`, `drawHistogram2d()`, `drawBarChart()`, `drawFunction()`, `drawStat()`, `drawText()`, `drawLine()`, and `drawRectangle()`. Most accept a `style` object with properties such as `lineColor`, `lineWidth`, `lineStyle`, `fillColor`, `fillOpacity`, `markerType`, `markerColor`, and `markerSize`.
 
-These are used by plot panels, canvas microplots, and map/color-scale panels.
+There are two usage modes:
+
+- `JGPlot` is used when SlowDash already owns an `<svg>` canvas and wants several frames in it (used by canvas microplots).
+- `JGPlotWidget` is used when a normal HTML container should receive a generated, interactive SVG plot (used by plot panels).
+
+`JGPlotWidget` distinguishes stored from immediate drawing: `addGraph()` / `addHistogram()` store the data reference and redraw it on `setRange()` / `update()`, whereas `drawGraph()` draws once. Stored items make interactive zoom and incremental data updates possible. The widget also supports cursor read-out, drag range selection, and two-finger touch pan/zoom, converting screen coordinates back through SVG to data coordinates.
+
+SlowDash uses `JGPlotWidget`, `JGPlot`, `JGPlotAxisScale`, and `JGPlotColorBarScale` in plot panels, canvas microplots, and map/color-scale panels.
+
+### `colormap.mjs`
+
+`colormap.mjs` provides the `ColorMap` class, which maps a normalized scalar (0 to 1) to an RGB CSS color:
+
+```javascript
+const colorMap = new ColorMap('Viridis');
+const color = colorMap.colorNameOf(0.42);
+```
+
+Built-in palettes include `Parula`, `Viridis`, `Magma`, `DarkBodyRadiator`, `UW`, `UWGold`, `MIT`, `KIT`, and `Gray`; an unrecognized name falls back to a generated rainbow palette. A color map can use distinct underflow/overflow colors or clamp out-of-range values. `jagaplot.mjs` uses it for colored 2D-histogram cells and the color-scale bar.
 
 ### Role in SlowDash
 
@@ -695,6 +917,7 @@ slowjs modules
     +-- DOM manipulation via JG/$
     +-- dialogs/widgets via jagawidgets
     +-- plotting primitives via jagaplot
+    +-- color scales via colormap
 ```
 
 # Autocruise Submodule
