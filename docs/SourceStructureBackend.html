@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Source Structure - Python Backend</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+<header>
+<div class="title">Source Structure - Python Backend</div><p>
+<div class="toc">
+<span class="toc-title">Contents</span>
+<nav id="TOC">
+<ul>
+<li><a href="#high-level-structure"
+id="toc-high-level-structure">High-Level Structure</a></li>
+<li><a href="#important-directories"
+id="toc-important-directories">Important Directories</a></li>
+<li><a href="#application-startup-flow"
+id="toc-application-startup-flow">Application Startup Flow</a>
+<ul>
+<li><a href="#command-line-or-server-startup"
+id="toc-command-line-or-server-startup">Command-line or server
+startup</a></li>
+<li><a href="#component-include-order"
+id="toc-component-include-order">Component include order</a></li>
+</ul></li>
+<li><a href="#slowlette-routing-and-response-model"
+id="toc-slowlette-routing-and-response-model">Slowlette Routing and
+Response Model</a>
+<ul>
+<li><a href="#request-flow" id="toc-request-flow">Request flow</a></li>
+<li><a href="#decorators-and-argument-binding"
+id="toc-decorators-and-argument-binding">Decorators and argument
+binding</a></li>
+<li><a href="#response-merging" id="toc-response-merging">Response
+merging</a></li>
+</ul></li>
+<li><a href="#project-configuration-flow"
+id="toc-project-configuration-flow">Project Configuration Flow</a></li>
+<li><a href="#built-in-server-components"
+id="toc-built-in-server-components">Built-In Server Components</a>
+<ul>
+<li><a href="#component-and-plugincomponent"
+id="toc-component-and-plugincomponent"><code>Component</code> and
+<code>PluginComponent</code></a></li>
+<li><a href="#configcomponent"
+id="toc-configcomponent"><code>ConfigComponent</code></a></li>
+<li><a href="#datasourcecomponent-and-datasource"
+id="toc-datasourcecomponent-and-datasource"><code>DataSourceComponent</code>
+and <code>DataSource</code></a></li>
+<li><a href="#exportcomponent"
+id="toc-exportcomponent"><code>ExportComponent</code></a></li>
+<li><a href="#usermodulecomponent"
+id="toc-usermodulecomponent"><code>UserModuleComponent</code></a></li>
+<li><a href="#taskmodulecomponent"
+id="toc-taskmodulecomponent"><code>TaskModuleComponent</code></a></li>
+<li><a href="#userhtmlcomponent"
+id="toc-userhtmlcomponent"><code>UserHtmlComponent</code></a></li>
+<li><a href="#meshcomponent"
+id="toc-meshcomponent"><code>MeshComponent</code></a></li>
+<li><a href="#slowmqcomponent"
+id="toc-slowmqcomponent"><code>SlowMQComponent</code></a></li>
+<li><a href="#other-components" id="toc-other-components">Other
+components</a></li>
+</ul></li>
+<li><a href="#plugin-architecture" id="toc-plugin-architecture">Plugin
+Architecture</a></li>
+<li><a href="#data-query-communication-flow"
+id="toc-data-query-communication-flow">Data Query Communication
+Flow</a></li>
+<li><a href="#write-emit-and-current-data-flow"
+id="toc-write-emit-and-current-data-flow">Write, Emit, and Current-Data
+Flow</a></li>
+<li><a href="#control-flow" id="toc-control-flow">Control Flow</a></li>
+<li><a href="#slowpy-library-role" id="toc-slowpy-library-role">SlowPy
+Library Role</a>
+<ul>
+<li><a href="#data-object-model" id="toc-data-object-model">Data object
+model</a></li>
+<li><a href="#control-nodes" id="toc-control-nodes">Control
+nodes</a></li>
+<li><a href="#data-stores" id="toc-data-stores">Data stores</a></li>
+</ul></li>
+<li><a href="#slowlette-internals-that-matter-to-slowdash"
+id="toc-slowlette-internals-that-matter-to-slowdash">Slowlette Internals
+That Matter to SlowDash</a></li>
+<li><a href="#summary-of-main-flows"
+id="toc-summary-of-main-flows">Summary of Main Flows</a></li>
+<li><a href="#practical-development-notes"
+id="toc-practical-development-notes">Practical Development
+Notes</a></li>
+</ul>
+</nav>
+</div>
+</header>
+
+<p>This document describes the current SlowDash source structure and
+runtime flows as of the latest <code>develop</code> branch checked on
+2026-06-01. It focuses on the existing implementation under
+<code>app/server</code>, <code>app/plugin</code>,
+<code>lib/slowpy</code>, and <code>lib/slowlette</code>.</p>
+<p>It intentionally describes the current system, not planned future
+work.</p>
+<h1 id="high-level-structure">High-Level Structure</h1>
+<p>SlowDash is organized in four main Python layers:</p>
+<pre class="text"><code>Client / CLI / CGI
+    |
+    v
+Slowlette
+    - ASGI/WSGI adapter
+    - URL routing
+    - request argument binding
+    - response merging
+    |
+    v
+SlowDash server components
+    - project/config handling
+    - data source API
+    - user/task module API
+    - export API
+    - user HTML/content API
+    - real-time/current-data helpers
+    |
+    v
+Plugins and libraries
+    - app/plugin data sources and exporters
+    - slowpy data objects, control nodes, stores, client helpers</code></pre>
+<p>The central server object is <code>App</code> in
+<code>app/server/slowdash.py</code>. It subclasses
+<code>slowlette.App</code>, creates a <code>Project</code>, adjusts the
+runtime environment, then includes a list of SlowDash components into
+the Slowlette router.</p>
+<h1 id="important-directories">Important Directories</h1>
+<h3 id="appserver"><code>app/server</code></h3>
+<p>This directory contains the SlowDash web application and built-in API
+components.</p>
+<p>Key files:</p>
+<ul>
+<li><code>slowdash.py</code>: application entry point, command-line
+entry point, component assembly, internal API helpers.</li>
+<li><code>slowdash_wsgi.py</code> and <code>slowdash.cgi</code>:
+WSGI/CGI entry points.</li>
+<li><code>sd_project.py</code>: project discovery, YAML loading,
+environment/command substitution, public project metadata.</li>
+<li><code>sd_component.py</code>: base classes for components and
+plugin-backed components.</li>
+<li><code>sd_config.py</code>: <code>/api/config</code>, config
+file/content APIs, transient content support.</li>
+<li><code>sd_datasource.py</code>: data source plugin base class and
+<code>/api/channels</code>, <code>/api/data</code>,
+<code>/api/blob</code> routes.</li>
+<li><code>sd_datasource_SQL.py</code>,
+<code>sd_datasource_TableStore.py</code>, <code>sd_dataschema.py</code>:
+common data-source helpers.</li>
+<li><code>sd_blobstorage.py</code>: blob storage helpers.</li>
+<li><code>sd_export.py</code>: export plugin component.</li>
+<li><code>sd_usermodule.py</code>: in-process user module extension
+system.</li>
+<li><code>sd_taskmodule.py</code>: current in-process task module
+system.</li>
+<li><code>sd_userhtml.py</code>: user-provided HTML/content
+serving.</li>
+<li><code>sd_console.py</code>: console/stdout capture.</li>
+<li><code>sd_misc_api.py</code>: miscellaneous built-in API
+endpoints.</li>
+<li><code>sd_mesh.py</code>: current-data cache and websocket attachment
+for selected topics.</li>
+<li><code>sd_slowmq.py</code>: built-in websocket-based pub/sub
+component.</li>
+<li><code>sd_version.py</code>: version string.</li>
+</ul>
+<h3 id="appplugin"><code>app/plugin</code></h3>
+<p>This directory contains plugin modules loaded by
+<code>PluginComponent</code>.</p>
+<p>Data source plugins include:</p>
+<ul>
+<li><code>datasource_CSV.py</code></li>
+<li><code>datasource_SQLite.py</code></li>
+<li><code>datasource_PostgreSQL.py</code>,
+<code>datasource_PostgreSQL_NoAsync.py</code></li>
+<li><code>datasource_MySQL.py</code>,
+<code>datasource_MySQL_mysqlclient.py</code>,
+<code>datasource_MySQL_NoAsync.py</code></li>
+<li><code>datasource_InfluxDB2.py</code></li>
+<li><code>datasource_Redis.py</code>,
+<code>datasource_Redis_NoAsync.py</code></li>
+<li><code>datasource_MongoDB.py</code></li>
+<li><code>datasource_CouchDB.py</code></li>
+<li><code>datasource_Honeybee.py</code></li>
+<li><code>datasource_Dummy.py</code></li>
+<li><code>datasource_SystemResource.py</code></li>
+<li><code>datasource_YAML.py</code></li>
+</ul>
+<p>Export plugins include:</p>
+<ul>
+<li><code>export_CSV.py</code></li>
+<li><code>export_Notebook.py</code></li>
+<li><code>export_Jupyter.py</code></li>
+</ul>
+<p>Plugin file names and class names are convention-based. For example,
+a data source of type <code>SQLite</code> maps to:</p>
+<pre class="text"><code>app/plugin/datasource_SQLite.py
+DataSource_SQLite</code></pre>
+<h3 id="libslowlette"><code>lib/slowlette</code></h3>
+<p>Slowlette is the small web framework used by SlowDash.</p>
+<p>Important files:</p>
+<ul>
+<li><code>app.py</code>: <code>App</code> and <code>Slowlette</code>
+application classes.</li>
+<li><code>router.py</code>: decorators, path matching, argument binding,
+sub-app dispatch, response merging.</li>
+<li><code>server.py</code>: ASGI/WSGI dispatch and development server
+helpers.</li>
+<li><code>request.py</code>: parsed HTTP request object.</li>
+<li><code>response.py</code>: response object, content merging, file
+responses.</li>
+<li><code>model.py</code>: JSON request-body wrappers.</li>
+<li><code>websocket.py</code>: websocket wrapper and connection-close
+handling.</li>
+<li><code>middleware.py</code>: middleware support.</li>
+</ul>
+<h3 id="libslowpy"><code>lib/slowpy</code></h3>
+<p>SlowPy provides data types, control abstractions, storage writers,
+client helpers, and plotting helpers.</p>
+<p>Important areas:</p>
+<ul>
+<li>Top-level data objects:
+<ul>
+<li><code>basetypes.py</code></li>
+<li><code>histograms.py</code></li>
+<li><code>graphs.py</code></li>
+<li><code>trend.py</code></li>
+<li><code>treetable.py</code></li>
+<li><code>mpldata.py</code></li>
+<li><code>slowplot.py</code></li>
+</ul></li>
+<li>Control system:
+<ul>
+<li><code>control/node.py</code></li>
+<li><code>control/system.py</code></li>
+<li><code>control/control_*.py</code></li>
+</ul></li>
+<li>Data stores:
+<ul>
+<li><code>store/store.py</code></li>
+<li><code>store/factory.py</code></li>
+<li><code>store/store_SQL.py</code></li>
+<li><code>store/store_CSV.py</code></li>
+<li><code>store/store_HDF5.py</code></li>
+<li><code>store/store_InfluxDB2.py</code></li>
+<li><code>store/store_Redis.py</code></li>
+</ul></li>
+<li>Client helpers:
+<ul>
+<li><code>slowfetch.py</code></li>
+</ul></li>
+</ul>
+<p>The public top-level <code>slowpy</code> package exports common data
+objects such as <code>Histogram</code>, <code>Graph</code>,
+<code>Trend</code>, <code>Tree</code>, <code>Table</code>,
+<code>TimeSeries</code>, <code>SlowFetch</code>,
+<code>slowdashify</code>, and <code>slowplot</code>.</p>
+<h1 id="application-startup-flow">Application Startup Flow</h1>
+<h2 id="command-line-or-server-startup">Command-line or server
+startup</h2>
+<p>The main entry point is <code>app/server/slowdash.py</code>.</p>
+<p>The normal startup sequence is:</p>
+<ol type="1">
+<li>Parse command-line options.</li>
+<li>Create
+<code>App(project_dir, project_file, is_cgi, is_command, is_async)</code>.</li>
+<li><code>App</code> creates a <code>Project</code>.</li>
+<li><code>Project</code> finds the SlowDash system directory and project
+directory.</li>
+<li><code>Project</code> loads <code>SlowdashProject.yaml</code>, or
+creates an initial config from environment variables when configured
+that way.</li>
+<li><code>App</code> changes the process working directory to the
+project directory when available.</li>
+<li><code>App</code> adds the system plugin directory, project
+directory, and project <code>config</code> directory to
+<code>sys.path</code>.</li>
+<li><code>App</code> includes all built-in components into its Slowlette
+router.</li>
+<li>The app is run as ASGI, WSGI, CGI, or command-line internal request
+depending on the selected mode.</li>
+</ol>
+<h2 id="component-include-order">Component include order</h2>
+<p><code>slowdash.py</code> includes components in this order:</p>
+<pre class="text"><code>ConsoleComponent
+MeshComponent
+UserModuleComponent
+TaskModuleComponent
+ConfigComponent
+DataSourceComponent
+UserHtmlComponent
+ExportComponent
+MiscApiComponent
+SlowMQComponent</code></pre>
+<p>This order matters because Slowlette collects responses from multiple
+matching handlers and merges them. Earlier components can provide merge
+wrappers, and later components can provide content to be merged.</p>
+<p>Notable ordering comments in the code:</p>
+<ul>
+<li><code>ConsoleComponent</code> is first so it can capture stdout
+early.</li>
+<li><code>MeshComponent</code> is before data sources so its cache
+merger can augment data-source replies.</li>
+<li><code>UserModuleComponent</code> and
+<code>TaskModuleComponent</code> are before
+<code>DataSourceComponent</code> so user/task modules can participate in
+APIs and create data sources.</li>
+</ul>
+<h1 id="slowlette-routing-and-response-model">Slowlette Routing and
+Response Model</h1>
+<h2 id="request-flow">Request flow</h2>
+<p>For ASGI:</p>
+<pre class="text"><code>ASGI server
+    |
+    v
+slowlette.server.dispatch_asgi()
+    |
+    +-- lifespan.startup/shutdown -&gt; router.dispatch_event()
+    |
+    +-- websocket -&gt; router.websocket()
+    |
+    +-- http -&gt; read body -&gt; Request -&gt; router.dispatch()</code></pre>
+<p>For WSGI:</p>
+<pre class="text"><code>WSGI server
+    |
+    v
+slowlette.server.dispatch_wsgi()
+    |
+    v
+Request -&gt; asyncio.run(router.dispatch()) -&gt; WSGI response</code></pre>
+<p>Slowlette converts the incoming URL into a <code>Request</code>:</p>
+<ul>
+<li><code>Request.path</code>: decoded path components.</li>
+<li><code>Request.query</code>: decoded query dictionary.</li>
+<li><code>Request.headers</code>: normalized header dictionary supplied
+by the server layer.</li>
+<li><code>Request.body</code>: raw body or Python object for internal
+dispatch.</li>
+</ul>
+<h2 id="decorators-and-argument-binding">Decorators and argument
+binding</h2>
+<p>Handlers are declared with decorators such as:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="at">@slowlette.get</span>(<span class="st">&#39;/api/channels&#39;</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">@slowlette.post</span>(<span class="st">&#39;/api/control&#39;</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="at">@slowlette.websocket</span>(<span class="st">&#39;/ws/slowmq&#39;</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="at">@slowlette.on_event</span>(<span class="st">&#39;startup&#39;</span>)</span></code></pre></div>
+<p><code>PathRule</code> in <code>router.py</code> inspects the
+decorated function signature and binds:</p>
+<ul>
+<li>path parameters such as <code>{channels}</code>;</li>
+<li>query parameters by name;</li>
+<li><code>bytes</code> request bodies;</li>
+<li>JSON body wrappers;</li>
+<li>the whole <code>Request</code>;</li>
+<li><code>WebSocket</code>;</li>
+<li>path list or query dict.</li>
+</ul>
+<p>The router can include sub-apps. Each component is itself a
+<code>slowlette.App</code>, so components contribute their own
+routes.</p>
+<h2 id="response-merging">Response merging</h2>
+<p>Slowlette dispatch does not stop at the first matching handler. It
+walks the component tree, collects all matching responses, then merges
+them from bottom to top.</p>
+<p>Default merge behavior in <code>Response.merge_response()</code>:</p>
+<ul>
+<li>Higher status code wins.</li>
+<li>Equal status code merges content.</li>
+<li>Dict content is deep-merged.</li>
+<li>List content is appended.</li>
+<li>String content is appended with a newline.</li>
+</ul>
+<p>SlowDash relies on this for aggregate endpoints:</p>
+<ul>
+<li><code>/api/config</code> is assembled from multiple component
+<code>public_config()</code> responses.</li>
+<li><code>/api/channels</code> can combine channels from multiple
+sources.</li>
+<li><code>/api/data/{channels}</code> can merge data-source results with
+current-data caches.</li>
+</ul>
+<p>Some components return custom <code>Response</code> subclasses whose
+<code>merge_response()</code> method modifies the downstream response.
+For example, current-data cache components add current values after
+data-source responses have been produced.</p>
+<h1 id="project-configuration-flow">Project Configuration Flow</h1>
+<p><code>Project</code> in <code>sd_project.py</code> is responsible for
+discovering and loading the project configuration.</p>
+<p>Configuration sources:</p>
+<ol type="1">
+<li>Explicit <code>--project-dir</code> or
+<code>--project-file</code>.</li>
+<li><code>SLOWDASH_PROJECT</code>.</li>
+<li>Parent-directory search for <code>SlowdashProject.yaml</code>.</li>
+<li>Environment-based initial data source via
+<code>SLOWDASH_INIT_DATASOURCE_URL</code>.</li>
+</ol>
+<p>The project file must contain a <code>slowdash_project</code>
+dictionary. During loading, <code>Substitution</code> processes strings
+containing:</p>
+<pre class="text"><code>${VARIABLE}
+${VARIABLE-default}
+${VARIABLE:-default-like-empty-is-null}
+$(COMMAND)
+$$</code></pre>
+<p>After loading:</p>
+<ul>
+<li>Missing <code>name</code> and <code>title</code> are filled.</li>
+<li><code>system</code> defaults to <code>{}</code>.</li>
+<li><code>authentication.key</code> becomes
+<code>project.auth_list</code>.</li>
+<li><code>system.our_security_is_perfect</code> controls
+<code>project.is_secure</code>.</li>
+</ul>
+<p><code>ConfigComponent</code> exposes public project metadata through
+<code>/api/config</code>, but avoids publishing raw project
+configuration because it can contain secrets.</p>
+<h1 id="built-in-server-components">Built-In Server Components</h1>
+<h2 id="component-and-plugincomponent"><code>Component</code> and
+<code>PluginComponent</code></h2>
+<p><code>Component</code> is the base class for server components. It
+provides:</p>
+<ul>
+<li><code>self.app</code></li>
+<li><code>self.project</code></li>
+<li>a default <code>/api/config</code> route that returns
+<code>public_config()</code></li>
+</ul>
+<p><code>PluginComponent</code> builds component plugins from project
+config:</p>
+<ol type="1">
+<li>Read <code>project.config[component_type]</code> or plural
+form.</li>
+<li>Normalize a single node into a list.</li>
+<li>Resolve plugin file and class names.</li>
+<li>Load plugin modules from <code>app/plugin</code>.</li>
+<li>Instantiate plugin classes.</li>
+<li>Include each plugin as a Slowlette sub-app.</li>
+</ol>
+<p>When the app is not async, <code>_NoAsync</code> plugin files are
+preferred when available.</p>
+<h2 id="configcomponent"><code>ConfigComponent</code></h2>
+<p>Main responsibilities:</p>
+<ul>
+<li>Expose <code>/api/config</code>.</li>
+<li>List and load project <code>config/*-*.*</code> content.</li>
+<li>Serve config files when allowed.</li>
+<li>Manage transient content, such as generated plot content.</li>
+</ul>
+<p>The <code>/api/config/contentlist</code> and
+<code>/api/config/content/{filename}</code> endpoints are used by UI
+components to discover dashboards, plots, cruises, and other user
+content.</p>
+<h2
+id="datasourcecomponent-and-datasource"><code>DataSourceComponent</code>
+and <code>DataSource</code></h2>
+<p><code>DataSourceComponent</code> is a plugin-backed component for
+data sources.</p>
+<p>Each <code>DataSource</code> plugin provides routes:</p>
+<pre class="text"><code>GET /api/channels
+GET /api/data/{channels}
+GET /api/blob/{channel}
+startup
+shutdown</code></pre>
+<p>The base <code>DataSource</code> class supports both sync and async
+plugin implementations:</p>
+<pre class="text"><code>initialize()       -&gt; aio_initialize()
+finalize()         -&gt; aio_finalize()
+get_channels()     -&gt; aio_get_channels()
+get_timeseries()   -&gt; aio_get_timeseries()
+get_object()       -&gt; aio_get_object()
+get_blob()         -&gt; aio_get_blob()</code></pre>
+<p>The data query flow is:</p>
+<pre class="text"><code>GET /api/data/{channels}
+    |
+    v
+parse length/to/resample/reducer/filler/envelope/prior_data
+    |
+    v
+aio_get_timeseries(...)
+aio_get_object(...)
+    |
+    v
+merge time-series and object results into one dict</code></pre>
+<p>The <code>DataSource.resample()</code> helper aligns time-series data
+into bins and supports reducers such as <code>last</code>,
+<code>mean</code>, <code>median</code>, <code>min</code>,
+<code>max</code>, <code>count</code>, and <code>sem</code>.</p>
+<h2 id="exportcomponent"><code>ExportComponent</code></h2>
+<p><code>ExportComponent</code> loads export plugins from project
+config.</p>
+<p>It always ensures default export support:</p>
+<ul>
+<li>CSV export if no CSV export is configured.</li>
+<li>Notebook export if neither Notebook nor Jupyter export is
+configured.</li>
+</ul>
+<p>Actual export routes are provided by the export plugins.</p>
+<h2 id="usermodulecomponent"><code>UserModuleComponent</code></h2>
+<p><code>sd_usermodule.py</code> provides an in-process Python extension
+mechanism for SlowDash.</p>
+<p>User modules are loaded from project configuration and run in a
+<code>UserModuleThread</code>. The module can define lifecycle
+callbacks:</p>
+<pre class="text"><code>_setup(app, params) or _setup(app) or _setup()
+_initialize(params) or _initialize()
+_run()
+_loop()
+_finalize()</code></pre>
+<p>User modules can also provide API handlers, content, HTML, layouts,
+channel/data hooks, and control commands depending on which functions
+they define.</p>
+<p>The user-module thread normally uses its own event loop. It can
+optionally use the main event loop only when <code>_run()</code> and
+<code>_loop()</code> are async-compatible.</p>
+<h2 id="taskmodulecomponent"><code>TaskModuleComponent</code></h2>
+<p><code>sd_taskmodule.py</code> is the current in-process task module
+system.</p>
+<p>It extends the user-module mechanism and adds task command parsing,
+command execution, and <code>ControlSystem</code> integration.</p>
+<p>Main routes include:</p>
+<pre class="text"><code>GET  /api/control/task
+POST /api/control
+POST /api/control/task/{taskname}
+GET  /api/channels
+GET  /api/data/{channels}
+POST /api/consume/current_data</code></pre>
+<p>Task command flow:</p>
+<pre class="text"><code>POST /api/control
+    |
+    v
+TaskModuleComponent.execute_command()
+    |
+    v
+each TaskModule.process_command()
+    |
+    v
+parse command name, arguments, await/reentrant flags
+    |
+    v
+match namespace prefix/suffix
+    |
+    v
+call task function immediately or in TaskFunctionThread</code></pre>
+<p>Exported control nodes are exposed as current channels and can be
+read through <code>/api/data/{channels}</code>. Incoming current-data
+messages can be used to set exported variables through
+<code>/api/consume/current_data</code>.</p>
+<h2 id="userhtmlcomponent"><code>UserHtmlComponent</code></h2>
+<p><code>sd_userhtml.py</code> serves user-provided HTML and related
+content. It also redirects or maps user URLs to internal config/content
+APIs.</p>
+<p>This lets project-specific UI pages live in the project
+configuration/content area without changing the core server.</p>
+<h2 id="meshcomponent"><code>MeshComponent</code></h2>
+<p><code>sd_mesh.py</code> maintains a cache of current data received
+through <code>/api/consume/current_data</code>.</p>
+<p>Main roles:</p>
+<ul>
+<li>websocket attachment for selected topics;</li>
+<li><code>/api/emit/{topic}</code> re-emission and websocket
+forwarding;</li>
+<li>current-data caching;</li>
+<li><code>/api/channels</code> augmentation with cache-backed current
+channels;</li>
+<li><code>/api/data/{channels}</code> augmentation with latest cache
+values.</li>
+</ul>
+<p>This component is included before data sources so its custom response
+can merge cache data with downstream data-source responses.</p>
+<h2 id="slowmqcomponent"><code>SlowMQComponent</code></h2>
+<p><code>sd_slowmq.py</code> provides a built-in websocket pub/sub
+service.</p>
+<p>Main route:</p>
+<pre class="text"><code>WEBSOCKET /ws/slowmq</code></pre>
+<p>Each connected client has:</p>
+<ul>
+<li>a client id;</li>
+<li>an optional name;</li>
+<li>a websocket;</li>
+<li>zero or more topic-pattern subscriptions.</li>
+</ul>
+<p>Messages contain headers. The header <code>action</code> determines
+whether the message is a publish, subscribe, or unsubscribe
+operation.</p>
+<p>Topic patterns are dot-separated and support:</p>
+<ul>
+<li><code>*</code> for exactly one token;</li>
+<li><code>&gt;</code> for zero or more trailing tokens, only as the
+final token.</li>
+</ul>
+<h2 id="other-components">Other components</h2>
+<p>Other server components include:</p>
+<ul>
+<li><code>ConsoleComponent</code>: captures console output for display
+or API use.</li>
+<li><code>MiscApiComponent</code>: miscellaneous utility APIs.</li>
+<li><code>BlobStorage_File</code>: file-backed blob storage used by data
+sources.</li>
+</ul>
+<h1 id="plugin-architecture">Plugin Architecture</h1>
+<p>Plugins are normal Python modules under <code>app/plugin</code>. They
+are loaded dynamically by filename and class name.</p>
+<p>For data sources:</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> SQLite</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">parameters</span><span class="kw">:</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="at">      ...</span></span></code></pre></div>
+<p>resolves to:</p>
+<pre class="text"><code>datasource_SQLite.py
+DataSource_SQLite</code></pre>
+<p>For exports:</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">export</span><span class="kw">:</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> CSV</span></span></code></pre></div>
+<p>resolves to:</p>
+<pre class="text"><code>export_CSV.py
+Export_CSV</code></pre>
+<p><code>PluginComponent</code> also merges the nested
+<code>parameters</code> dictionary into the root parameter dictionary by
+default. This lets plugin constructors use a flattened parameter
+view.</p>
+<h1 id="data-query-communication-flow">Data Query Communication
+Flow</h1>
+<p>The most common read path is:</p>
+<pre class="text"><code>Browser or client
+    |
+    v
+GET /api/channels
+GET /api/data/{channels}?length=...&amp;to=...
+    |
+    v
+Slowlette ASGI/WSGI dispatch
+    |
+    v
+SlowDash component tree
+    |
+    +-- MeshComponent cache merge response
+    +-- UserModuleComponent hooks
+    +-- TaskModuleComponent current exports
+    +-- DataSourceComponent plugins
+    |
+    v
+Slowlette response merge
+    |
+    v
+JSON response</code></pre>
+<p>For <code>/api/data/{channels}</code>, <code>DataSource</code>
+plugins return data in the SlowDash data model. Cache components can add
+current values if:</p>
+<ul>
+<li>the requested channel is cache-backed;</li>
+<li>the cached timestamp is inside the requested time window;</li>
+<li>the existing response is absent or older than the cached value.</li>
+</ul>
+<h1 id="write-emit-and-current-data-flow">Write, Emit, and Current-Data
+Flow</h1>
+<p>Current-data updates can enter SlowDash through:</p>
+<pre class="text"><code>POST /api/emit/{topic}
+POST /api/consume/current_data
+internal app.request_emit(topic, message, sender=...)</code></pre>
+<p>Typical flow:</p>
+<pre class="text"><code>producer
+    |
+    v
+/api/emit/current_data
+    |
+    v
+app.request(&#39;/consume/current_data&#39;, data)
+    |
+    +-- MeshComponent.cache_current_data()
+    +-- TaskModuleComponent.set_variable()
+    |
+    v
+websocket forwarding to attached clients</code></pre>
+<p>The <code>sender</code> parameter is used to avoid reflecting a
+task’s own published value back into the same task variable path.</p>
+<h1 id="control-flow">Control Flow</h1>
+<p>Control commands use <code>/api/control</code>.</p>
+<p>Current in-process task flow:</p>
+<pre class="text"><code>POST /api/control
+    |
+    v
+TaskModuleComponent.execute_command()
+    |
+    v
+TaskModule.process_task_command()
+    |
+    +-- parse &quot;await&quot;, &quot;reentrant&quot;, &quot;async&quot;, &quot;parallel&quot; prefixes
+    +-- parse function arguments
+    +-- match task namespace
+    +-- bind parameters using Python function signature
+    |
+    v
+execute function synchronously, await it, or run it in a command thread</code></pre>
+<p>User modules can also participate in command processing through their
+own hooks, depending on the functions they define.</p>
+<h1 id="slowpy-library-role">SlowPy Library Role</h1>
+<p>SlowPy is used by both server-side components and user code.</p>
+<h2 id="data-object-model">Data object model</h2>
+<p>SlowPy provides Python objects that can be converted into
+SlowDash-compatible data:</p>
+<ul>
+<li>scalar values;</li>
+<li><code>TimeSeries</code>;</li>
+<li>histograms;</li>
+<li>graphs;</li>
+<li>trends;</li>
+<li>trees;</li>
+<li>tables;</li>
+<li>matplotlib-derived data via <code>slowdashify</code>.</li>
+</ul>
+<p>These objects are used by task/user code, storage writers, and APIs
+that publish current data.</p>
+<h2 id="control-nodes">Control nodes</h2>
+<p><code>ControlNode</code> in <code>slowpy/control/node.py</code> is
+the base abstraction for readable/writable control endpoints.</p>
+<p>Main methods:</p>
+<pre class="text"><code>set(value)
+get()
+aio_set(value)
+aio_get()
+has_data()
+aio_has_data()
+sleep()
+aio_sleep()
+wait()
+aio_wait()
+readonly()
+writeonly()</code></pre>
+<p>The async methods delegate to sync methods by default. If
+<code>_is_thread_safe</code> is set, sync <code>get()</code> and
+<code>set()</code> calls can be run through
+<code>asyncio.to_thread()</code>.</p>
+<p>Control modules under <code>slowpy/control/control_*.py</code>
+provide concrete device, network, message, shell, HTTP, datastore, and
+protocol integrations.</p>
+<h2 id="data-stores">Data stores</h2>
+<p>SlowPy data stores provide write-side storage helpers.</p>
+<p><code>store/factory.py</code> maps URLs to implementations:</p>
+<pre class="text"><code>postgresql:// -&gt; DataStore_PostgreSQL
+mysql://      -&gt; DataStore_MySQL
+sqlite://     -&gt; DataStore_SQLite
+influxdb2://  -&gt; DataStore_InfluxDB2
+redis://      -&gt; DataStore_Redis
+csv:///       -&gt; DataStore_CSV
+dump:///      -&gt; DataStore_TextDump</code></pre>
+<p><code>DataStore</code> supports:</p>
+<pre class="text"><code>append(values, tag=None, timestamp=None)
+update(values, tag=None, timestamp=None)
+close()</code></pre>
+<p>Values can be scalars, dictionaries of fields, data elements, or
+<code>TimeSeries</code>.</p>
+<h1 id="slowlette-internals-that-matter-to-slowdash">Slowlette Internals
+That Matter to SlowDash</h1>
+<p>Several SlowDash behaviors depend directly on Slowlette’s design:</p>
+<h3 id="multiple-handlers-can-answer-the-same-route">Multiple handlers
+can answer the same route</h3>
+<p>Slowlette intentionally calls all matching handlers in the app tree.
+This is why many components can provide <code>/api/config</code>,
+<code>/api/channels</code>, or <code>/api/data/{channels}</code>.</p>
+<h3 id="response-merging-is-part-of-the-application-model">Response
+merging is part of the application model</h3>
+<p>The merged response is not just a convenience. It is how SlowDash
+builds aggregate API responses from independently developed components
+and plugins.</p>
+<h3 id="component-order-is-meaningful">Component order is
+meaningful</h3>
+<p>Because custom responses can merge later responses,
+<code>slowdash.py</code> include order is part of the runtime
+behavior.</p>
+<h3 id="internal-api-calls-use-the-same-router">Internal API calls use
+the same router</h3>
+<p><code>App.request()</code>, <code>request_config()</code>,
+<code>request_channels()</code>, <code>request_data()</code>, and
+<code>request_emit()</code> call <code>self.slowlette(...)</code>
+directly. Internal producers and consumers therefore use the same
+routing and response merging model as external HTTP clients.</p>
+<h1 id="summary-of-main-flows">Summary of Main Flows</h1>
+<h3 id="startup">Startup</h3>
+<pre class="text"><code>slowdash.py
+  -&gt; App
+  -&gt; Project
+  -&gt; sys.path / cwd setup
+  -&gt; include components
+  -&gt; ASGI/WSGI/CGI/CLI dispatch</code></pre>
+<h3 id="api-request">API request</h3>
+<pre class="text"><code>HTTP request
+  -&gt; Slowlette server adapter
+  -&gt; Request
+  -&gt; Router
+  -&gt; matching component/plugin handlers
+  -&gt; Response list
+  -&gt; merged Response
+  -&gt; HTTP response</code></pre>
+<h3 id="data-read">Data read</h3>
+<pre class="text"><code>/api/data/{channels}
+  -&gt; data source plugins
+  -&gt; optional user/task/current-data additions
+  -&gt; merged JSON data</code></pre>
+<h3 id="config-read">Config read</h3>
+<pre class="text"><code>/api/config
+  -&gt; each component public_config()
+  -&gt; deep-merged JSON config</code></pre>
+<h3 id="current-data">Current data</h3>
+<pre class="text"><code>/api/emit/current_data
+  -&gt; /api/consume/current_data
+  -&gt; cache update and variable update hooks
+  -&gt; websocket forwarding where applicable</code></pre>
+<h3 id="plugin-loading">Plugin loading</h3>
+<pre class="text"><code>project config
+  -&gt; PluginComponent
+  -&gt; app/plugin module lookup
+  -&gt; class lookup
+  -&gt; plugin instance
+  -&gt; Slowlette include</code></pre>
+<h1 id="practical-development-notes">Practical Development Notes</h1>
+<ul>
+<li>When adding a new API component, subclass <code>Component</code> and
+include it from <code>slowdash.py</code>.</li>
+<li>When adding a new data source, subclass <code>DataSource</code> in a
+new <code>app/plugin/datasource_*.py</code> file.</li>
+<li>When adding a new exporter, add an <code>export_*.py</code>
+plugin.</li>
+<li>If an endpoint should aggregate with other components, return
+dict/list content and rely on response merging.</li>
+<li>If an endpoint should modify later component output, return a custom
+<code>slowlette.Response</code> subclass and override
+<code>merge_response()</code>.</li>
+<li>Avoid placing secrets in <code>public_config()</code>, because
+<code>/api/config</code> is exposed to clients.</li>
+<li>Be careful when changing component include order; it can change
+merge behavior.</li>
+<li>Use internal <code>App.request*()</code> helpers when server-side
+code should exercise the same route logic as external API clients.</li>
+</ul>
+
+
+</body>
+</html>

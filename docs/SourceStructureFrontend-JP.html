@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>ソース構造 - JavaScript フロントエンド</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+<header>
+<div class="title">ソース構造 - JavaScript フロントエンド</div><p>
+<div class="toc">
+<span class="toc-title">Contents</span>
+<nav id="TOC">
+<ul>
+<li><a href="#全体構造" id="toc-全体構造">全体構造</a></li>
+<li><a href="#主要ファイル" id="toc-主要ファイル">主要ファイル</a></li>
+<li><a href="#entry-page-patterns" id="toc-entry-page-patterns">Entry
+Page Patterns</a></li>
+<li><a href="#main-dashboard-runtime-flow"
+id="toc-main-dashboard-runtime-flow">Main Dashboard Runtime
+Flow</a></li>
+<li><a href="#platform-module" id="toc-platform-module">Platform
+Module</a></li>
+<li><a href="#controllerschedulerdata-requests"
+id="toc-controllerschedulerdata-requests">Controller，Scheduler，Data
+Requests</a></li>
+<li><a href="#layout-and-panel-model"
+id="toc-layout-and-panel-model">Layout and Panel Model</a></li>
+<li><a href="#built-in-panel-modules-1"
+id="toc-built-in-panel-modules-1">Built-In Panel Modules</a></li>
+<li><a href="#transformer-module"
+id="toc-transformer-module">Transformer Module</a></li>
+<li><a href="#frame-module" id="toc-frame-module">Frame Module</a></li>
+<li><a href="#jagaimo-submodule" id="toc-jagaimo-submodule">Jagaimo
+Submodule</a></li>
+<li><a href="#autocruise-submodule"
+id="toc-autocruise-submodule">Autocruise Submodule</a></li>
+<li><a href="#browser-to-server-api-flow"
+id="toc-browser-to-server-api-flow">Browser-to-Server API Flow</a></li>
+<li><a href="#data-flow-into-panels" id="toc-data-flow-into-panels">Data
+Flow into Panels</a></li>
+<li><a href="#configuration-flow-into-panels"
+id="toc-configuration-flow-into-panels">Configuration Flow into
+Panels</a></li>
+<li><a href="#extension-points" id="toc-extension-points">Extension
+Points</a></li>
+<li><a href="#main-flow-summary" id="toc-main-flow-summary">Main Flow
+Summary</a></li>
+<li><a href="#practical-development-notes"
+id="toc-practical-development-notes">Practical Development
+Notes</a></li>
+</ul>
+</nav>
+</div>
+</header>
+
+<p>この文書は，2026-06-01 に確認した最新 <code>develop</code>
+ブランチ時点の <code>app/site</code> 以下の JavaScript と HTML
+構造を説明するものです．組み込みの SlowDash site
+module，<code>jagaimo</code> と <code>autocruise</code> の
+submodule，および browser と server の通信フローを対象にします．</p>
+<h1 id="全体構造">全体構造</h1>
+<p><code>app/site</code> の frontend は，static HTML entry page と
+<code>app/site/slowjs</code> 以下の ES module で構成された browser-side
+application です．</p>
+<pre class="text"><code>HTML entry pages
+    |
+    v
+slowjs core modules
+    - platform/config loading
+    - dashboard orchestration
+    - scheduler/controller
+    - layout and panel management
+    |
+    v
+panel modules
+    - plots
+    - canvas views
+    - tables/trees/blobs
+    - HTML/href panels
+    - catalogs/download/tools/task manager
+    |
+    v
+submodules and external browser libraries
+    - jagaimo DOM/widget/plot helpers
+    - autocruise rotating dashboard viewer
+    - ace-builds editor bundle</code></pre>
+<p>Main dashboard の経路は次のようになります．</p>
+<pre class="text"><code>slowdash.html or slowplot.html
+    -&gt; slowjs/slowdash.mjs
+    -&gt; Platform
+    -&gt; SlowDash
+    -&gt; Layout
+    -&gt; Controller
+    -&gt; Scheduler
+    -&gt; Panel modules</code></pre>
+<h1 id="主要ファイル">主要ファイル</h1>
+<h3 id="html-entry-pages">HTML entry pages</h3>
+<p><code>app/site</code> には複数の page-level entry point
+があります．</p>
+<ul>
+<li><code>slowdash.html</code>: main dashboard viewer/editor entry
+point．</li>
+<li><code>slowplot.html</code>: plot-focused entry point．</li>
+<li><code>slowhome.html</code>: home/content list page．</li>
+<li><code>slowdown.html</code>: layout/dashboard display page．</li>
+<li><code>slowedit.html</code>: Ace を使う config editor．</li>
+<li><code>slowfile.html</code>: file-oriented page．</li>
+<li><code>slowplan.html</code>: planning page．</li>
+<li><code>slowcruise.html</code>: autocruise entry point．</li>
+<li><code>welcome.html</code>: welcome page．</li>
+</ul>
+<p>ほとんどの page は <code>slowjs/slowdash.css</code>
+を読み込み，<code>&lt;script type="module"&gt;</code> で
+<code>slowjs</code> から ES module を import します．</p>
+<p><code>slowcruise.html</code>
+だけは少し異なり，<code>slowjs/autocruise/autocruise.js</code> を
+classic script として読み込みます．</p>
+<h3 id="core-slowjs-modules">Core <code>slowjs</code> modules</h3>
+<ul>
+<li><code>slowdash.mjs</code>: dashboard 全体の coordinator．</li>
+<li><code>platform.mjs</code>: project/page config loading，theme
+loading，data list setup，upload/save dialog．</li>
+<li><code>control.mjs</code>:
+<code>DataRequest</code>，<code>Controller</code>，<code>Scheduler</code>，update
+loop，API fetching，websocket streaming．</li>
+<li><code>layout.mjs</code>: panel grid layout，panel creation，panel
+configuration，redraw．</li>
+<li><code>frame.mjs</code>: page frame widget，time range control，grid
+control．</li>
+<li><code>panel.mjs</code>: base <code>Panel</code> class と共通 panel
+helper．</li>
+<li><code>panel-plugin-loader.mjs</code>: built-in および optional panel
+module の dynamic loader．</li>
+<li><code>transformer.mjs</code>: panel で使う value transformation
+function．</li>
+</ul>
+<h3 id="built-in-panel-modules">Built-in panel modules</h3>
+<ul>
+<li><code>panel-plot.mjs</code>:
+time-series，histogram，graph，scatter，marker，bar，time-axis plot
+panel．</li>
+<li><code>panel-singles.mjs</code>: single-value display と status-like
+square display．</li>
+<li><code>panel-canvas.mjs</code>:
+shape，button，image，microplot，viewlet などを含む canvas-based
+process-display panel．</li>
+<li><code>panel-map.mjs</code>: map panel support．</li>
+<li><code>panel-table.mjs</code>: table，tree，blob panel．</li>
+<li><code>panel-html.mjs</code>: embedded HTML と hyperlink panel．</li>
+<li><code>panel-catalog.mjs</code>: content catalog と channel list
+panel．</li>
+<li><code>panel-download.mjs</code>: data download と SlowPy helper
+panel．</li>
+<li><code>panel-misc.mjs</code>: welcome，tools，file manager，task
+manager，cruise planner，config editor panel．</li>
+</ul>
+<h3 id="styles-and-assets">Styles and assets</h3>
+<ul>
+<li><code>slowjs/slowdash.css</code>: 共通 frontend style．</li>
+<li><code>slowjs/slowdash-light.css</code>: light theme．</li>
+<li><code>slowjs/slowdash-dark.css</code>: dark theme．</li>
+<li><code>slowjs/Warning.png</code>: canvas/panel code で使う warning
+icon．</li>
+<li><code>favicon.png</code>: site favicon．</li>
+</ul>
+<h3 id="submodules-and-external-dependencies">Submodules and external
+dependencies</h3>
+<p>Repository の <code>.gitmodules</code> では，frontend 用に次の 3 つの
+submodule が宣言されています．</p>
+<pre class="text"><code>app/site/slow-extern/ace-builds
+app/site/slowjs/jagaimo
+app/site/slowjs/autocruise</code></pre>
+<p>この文書では，SlowDash browser UI model に直接関わる
+<code>jagaimo</code> と <code>autocruise</code>
+を中心に扱います．<code>ace-builds</code> は <code>slowedit.html</code>
+で editor bundle として使われます．</p>
+<h1 id="entry-page-patterns">Entry Page Patterns</h1>
+<h3 id="dashboard-style-pages">Dashboard-style pages</h3>
+<p>Dashboard-style page は
+<code>SlowDash</code>，<code>Frame</code>，必要に応じて追加の control
+widget を import します．</p>
+<pre class="text"><code>slowdash.html
+slowplot.html
+slowfile.html
+slowhome.html
+slowplan.html</code></pre>
+<p>典型的な pattern は次のとおりです．</p>
+<ol type="1">
+<li><code>jagaimo</code> から <code>JG</code> を import する．</li>
+<li><code>slowdash.mjs</code> から <code>SlowDash</code> を import
+する．</li>
+<li><code>Frame</code> または time/grid control を import する．</li>
+<li>URL option を読む．</li>
+<li>frame/header/body element を作る．</li>
+<li><code>SlowDash</code> instance を作る．</li>
+<li>config file name，URL query，または inline config data で configure
+する．</li>
+<li>scheduler/controller loop を start する．</li>
+</ol>
+<h3 id="config-editor-pages">Config editor pages</h3>
+<p><code>slowedit.html</code> と <code>slowedit2.html</code> は editor
+page です．</p>
+<ul>
+<li><code>slowedit.html</code> は local の
+<code>slow-extern/ace-builds</code> を使います．</li>
+<li><code>slowedit2.html</code> は
+<code>https://unpkg.com/monaco-editor/...</code> から Monaco
+を読み込みます．</li>
+</ul>
+<p>どちらも次のような SlowDash config API を呼びます．</p>
+<pre class="text"><code>GET /api/config/file/{filename}
+GET /api/config/contentlist
+POST /api/config/file/{filename}</code></pre>
+<h3 id="autocruise-page">Autocruise page</h3>
+<p><code>slowcruise.html</code> は <code>autocruise</code> submodule
+を読み込みます．</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">script</span><span class="ot"> type=</span><span class="st">&quot;text/javascript&quot;</span> <span class="er">src</span><span class="ot">=</span><span class="st">&quot;slowjs/autocruise/autocruise.js&quot;</span><span class="dt">&gt;&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span> <span class="er">autocruise-configbase</span><span class="ot">=</span><span class="st">&quot;api/config/content/&quot;</span> <span class="er">autocruise-interval</span><span class="ot">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>これは <code>autocruise.js</code> を使って複数の dashboard/config
+page を巡回表示します．</p>
+<h1 id="main-dashboard-runtime-flow">Main Dashboard Runtime Flow</h1>
+<p>Main dashboard object は <code>slowdash.mjs</code> の
+<code>SlowDash</code> です．</p>
+<pre class="text"><code>new SlowDash(div, config, options)
+    |
+    +-- creates Layout
+    +-- creates Controller
+    +-- creates Scheduler</code></pre>
+<h3 id="configuration-flow">Configuration flow</h3>
+<pre class="text"><code>SlowDash.configure(config, options)
+    |
+    v
+_buildConfig(...)
+    |
+    v
+Platform.initialize(defaults, options, args)
+    |
+    +-- GET ./api/config
+    +-- optional GET ./api/config/content/{config_file}
+    +-- load theme CSS slowjs/slowdash-{theme}.css
+    |
+    v
+merged config object</code></pre>
+<p><code>config</code> には次の形式を使えます．</p>
+<ul>
+<li>URL query string．</li>
+<li>config file name．</li>
+<li>config object．</li>
+</ul>
+<p>Config が <code>panels</code> ではなく <code>items</code>
+を持つ場合，<code>SlowDash</code> はそれを canvas-style config
+とみなし，単一の canvas panel に wrap します．</p>
+<h3 id="start-flow">Start flow</h3>
+<pre class="text"><code>SlowDash.start()
+    |
+    v
+configure if needed
+    |
+    v
+Controller.configure(config)
+    |
+    v
+Layout.configure(config)
+    |
+    v
+PanelPluginLoader.load()
+    |
+    v
+build and configure panel instances
+    |
+    v
+Scheduler.start()</code></pre>
+<h1 id="platform-module">Platform Module</h1>
+<p><code>platform.mjs</code> は project/page setup を集約します．</p>
+<p>主な責務:</p>
+<ul>
+<li>URL option を parse する．</li>
+<li><code>./api/config</code> から project config を fetch する．</li>
+<li><code>./api/config/content/{config_file}</code> から page config を
+fetch する．</li>
+<li>URL 中の inline base64 config data を decode する．</li>
+<li>theme CSS を dynamic に読み込む．</li>
+<li>channel selector や content selector 用の
+<code>&lt;datalist&gt;</code> を作る．</li>
+<li>file や config を server endpoint に upload する．</li>
+<li><code>SaveConfigDialog</code> を提供する．</li>
+</ul>
+<p>主な server call:</p>
+<pre class="text"><code>GET  ./api/config
+GET  ./api/config/content/{filename}
+GET  api/channels?fields=name
+GET  ./api/config/contentlist
+POST ./api/{filename}</code></pre>
+<p>最終 config は次を deep-merge して作られます．</p>
+<pre class="text"><code>defaults
+project/page config
+explicit args</code></pre>
+<h1 id="controllerschedulerdata-requests">Controller，Scheduler，Data
+Requests</h1>
+<h3 id="datarequest"><code>DataRequest</code></h3>
+<p><code>DataRequest</code> は <code>GET /api/data</code> 用の channel
+request 群を作ります．</p>
+<p>保持するもの:</p>
+<ul>
+<li>default request option．</li>
+<li>default channel request．</li>
+<li>custom channel request．</li>
+</ul>
+<p>Time range が長すぎない場合，複数の default channel request を 1 つの
+API call にまとめられます．</p>
+<pre class="text"><code>api/data/ch1,ch2,ch3?length=...&amp;to=...&amp;resample=...</code></pre>
+<p>Custom request は，panel-specific option が default request
+と干渉しないよう，個別 request のまま扱われます．</p>
+<h3 id="controller"><code>Controller</code></h3>
+<p><code>Controller</code> は layout/panel と server data の runtime
+bridge です．</p>
+<p>主な責務:</p>
+<ul>
+<li><code>Layout</code> を configure する．</li>
+<li>panel に必要 data を問い合わせて <code>DataRequest</code>
+を作る．</li>
+<li><code>api/data/...</code> から data を fetch する．</li>
+<li>受け取った data を <code>currentData</code> に merge する．</li>
+<li><code>Layout</code> に panel 描画を依頼する．</li>
+<li><code>/api/emit/{topic}</code> に message を emit する．</li>
+<li><code>current_data</code> 用 websocket streaming を維持する．</li>
+</ul>
+<p>Data update flow:</p>
+<pre class="text"><code>Scheduler.update()
+    |
+    v
+Controller.update()
+    |
+    v
+Layout.fillDataRequest(dataRequest)
+    |
+    v
+DataRequest.queryList(existingData)
+    |
+    v
+fetch(&#39;api/data/&#39; + query)
+    |
+    v
+merge JSON response into currentData
+    |
+    v
+Layout.draw(currentData)</code></pre>
+<p>Emit flow:</p>
+<pre class="text"><code>Panel or view callback
+    |
+    v
+Controller.emit(topic, doc)
+    |
+    +-- if websocket is open and topic == current_data:
+    |       socket.send(message)
+    |
+    +-- otherwise:
+            POST ./api/emit/{topic}</code></pre>
+<h3 id="websocket-streaming">WebSocket streaming</h3>
+<p><code>Controller</code> は次の websocket に attach
+しようとします．</p>
+<pre class="text"><code>ws://.../ws/attach/current_data
+wss://.../ws/attach/current_data</code></pre>
+<p>URL は現在の page URL から作られます．WebSocket setup
+に失敗した場合，data streaming は無効化され，dashboard は HTTP polling
+を継続します．</p>
+<p>Incoming websocket message は current data として parse され，active
+view に渡されます．</p>
+<pre class="text"><code>WebSocket message
+    |
+    v
+parse JSON
+    |
+    v
+merge/update current data
+    |
+    v
+view.draw(data)</code></pre>
+<h3 id="scheduler"><code>Scheduler</code></h3>
+<p><code>Scheduler</code> は periodic update，pending update
+request，reset timing，suspend behavior，status/progress callback
+を制御します．</p>
+<p><code>SlowDash.configure()</code> により次を渡して initialize
+されます．</p>
+<ul>
+<li>update interval．</li>
+<li>reset delay．</li>
+<li><code>SlowDash._update()</code> への callback．</li>
+<li>status/progress/beat-time callback．</li>
+</ul>
+<h1 id="layout-and-panel-model">Layout and Panel Model</h1>
+<h3 id="layout"><code>Layout</code></h3>
+<p><code>Layout</code> は visual panel grid を管理します．</p>
+<p>主な責務:</p>
+<ul>
+<li><code>PanelPluginLoader</code> で panel class を読み込む．</li>
+<li>config structure を normalize する．</li>
+<li>grid と panel dimension を計算する．</li>
+<li>panel <code>&lt;div&gt;</code> element を作る．</li>
+<li>config entry ごとに適切な panel class を instantiate する．</li>
+<li>各 panel を configure する．</li>
+<li>current data packet で全 panel を draw する．</li>
+<li>editing が許可されている場合，add/delete/reconfigure interaction
+を提供する．</li>
+</ul>
+<p>Panel creation flow:</p>
+<pre class="text"><code>Layout.configure(config)
+    |
+    v
+PanelPluginLoader.load()
+    |
+    v
+_buildPanels()
+    |
+    v
+_createPanel(panelDiv, panelType)
+    |
+    v
+_configurePanels()</code></pre>
+<h3 id="panel"><code>Panel</code></h3>
+<p><code>panel.mjs</code> は base <code>Panel</code> class
+を定義します．</p>
+<p>Panel の責務:</p>
+<ul>
+<li>panel config/options/callbacks を保持する．</li>
+<li>standard configure/draw hook を提供する．</li>
+<li>settings dialog behavior を提供する．</li>
+<li>delete/reconfigure callback を提供する．</li>
+<li>各 panel が <code>DataRequest</code> に必要 data
+を追加できるようにする．</li>
+</ul>
+<p>重要 method:</p>
+<pre class="text"><code>configure(config, options, callbacks)
+fillDataRequest(dataRequest)
+draw(dataPacket, displayTimeRange)</code></pre>
+<p>Subclass はこれらを override し，具体的な display type
+を実装します．</p>
+<h3 id="panelpluginloader"><code>PanelPluginLoader</code></h3>
+<p><code>panel-plugin-loader.mjs</code> は panel module を dynamic
+import し，<code>Panel</code> を継承した exported class
+を抽出します．</p>
+<p>Core module は「add panel」UI
+の表示順を安定させるため，固定順で読み込まれます．</p>
+<pre class="text"><code>panel-plot.mjs
+panel-singles.mjs
+panel-canvas.mjs
+panel-map.mjs
+panel-table.mjs
+panel-html.mjs
+panel-catalog.mjs
+panel-download.mjs
+panel-misc.mjs</code></pre>
+<p>追加 panel plugin file は <code>add_plugin(filepath)</code>
+で追加できます．</p>
+<h1 id="built-in-panel-modules-1">Built-In Panel Modules</h1>
+<h3 id="plot-panels">Plot panels</h3>
+<p><code>panel-plot.mjs</code> は次を export します．</p>
+<ul>
+<li><code>TimeAxisPlotPanel</code></li>
+<li><code>PlotPanel</code></li>
+</ul>
+<p>内部には次の plot implementation があります．</p>
+<ul>
+<li>time-series plot．</li>
+<li>histogram．</li>
+<li>2D histogram．</li>
+<li>graph．</li>
+<li>line/marker plot．</li>
+<li>bar chart．</li>
+<li>time-series scatter plot．</li>
+</ul>
+<p>Plot widget と axis scaling には <code>jagaimo/jagaplot.mjs</code>
+を使います．</p>
+<h3 id="singles-panels">Singles panels</h3>
+<p><code>panel-singles.mjs</code> は single-value と status display
+panel を実装します．</p>
+<p>使用するもの:</p>
+<ul>
+<li>value conversion 用の <code>Transformer</code>．</li>
+<li>visual scaling 用の <code>JGPlotAxisScale</code>．</li>
+<li>configuration UI 用の tab widget．</li>
+</ul>
+<h3 id="canvas-panels">Canvas panels</h3>
+<p><code>panel-canvas.mjs</code> は canvas/process-view style dashboard
+を実装します．</p>
+<p>含まれる item class:</p>
+<ul>
+<li>image．</li>
+<li>text．</li>
+<li>shape．</li>
+<li>box と circle．</li>
+<li>valve と solenoid．</li>
+<li>grid．</li>
+<li>button．</li>
+<li>plot と microplot．</li>
+<li>viewlet．</li>
+</ul>
+<p>Canvas item は data を読み，SVG/HTML element を描画し，callback
+経由で control message を emit できます．</p>
+<h3 id="map-panels">Map panels</h3>
+<p><code>panel-map.mjs</code> は次の endpoint から map configuration
+を読み込みます．</p>
+<pre class="text"><code>GET ./api/config/file/map-{name}.json</code></pre>
+<p>Map geometry と color scale を使い，channel-based map display
+を描画します．</p>
+<h3 id="tabletreeblob-panels">Table，tree，blob panels</h3>
+<p><code>panel-table.mjs</code> は 3 つの panel class を alias 付きで
+export します．</p>
+<pre class="text"><code>TablePanel as Panel1
+TreePanel  as Panel2
+BlobPanel  as Panel3</code></pre>
+<p><code>BlobPanel</code> は次の API で blob content を fetch
+できます．</p>
+<pre class="text"><code>GET ./api/blob/{channel}?id={id}</code></pre>
+<h3 id="html-and-href-panels">HTML and href panels</h3>
+<p><code>panel-html.mjs</code> は次を export します．</p>
+<pre class="text"><code>HtmlPanel as Panel1
+HrefPanel as Panel2</code></pre>
+<p>できること:</p>
+<ul>
+<li>project config content から HTML content を読み込む．</li>
+<li>system または external content を読み込む．</li>
+<li>display 用に value を transform する．</li>
+<li><code>./api/control</code> に control message を送る．</li>
+</ul>
+<h3 id="catalog-and-channel-list-panels">Catalog and channel-list
+panels</h3>
+<p><code>panel-catalog.mjs</code> は次を提供します．</p>
+<ul>
+<li><code>CatalogPanel</code></li>
+<li><code>ChannelListPanel</code></li>
+</ul>
+<p>設定済み SlowDash content を list/open するため，次を使います．</p>
+<pre class="text"><code>GET ./api/config/contentlist
+GET ./api/config/content/{filename}</code></pre>
+<h3 id="download-and-slowpy-panels">Download and SlowPy panels</h3>
+<p><code>panel-download.mjs</code> は次を含みます．</p>
+<ul>
+<li><code>DownloadPanel</code></li>
+<li><code>SlowpyPanel</code></li>
+</ul>
+<p>Channel を list し，export/download request を作り，downloadable data
+product 用の server request を送れます．</p>
+<h3 id="miscellaneous-panels">Miscellaneous panels</h3>
+<p><code>panel-misc.mjs</code> は次を export します．</p>
+<ul>
+<li><code>WelcomePanel</code></li>
+<li><code>ToolsPanel</code></li>
+<li><code>FileManagerPanel</code></li>
+<li><code>TaskManagerPanel</code></li>
+<li><code>CruisePlannerPanel</code></li>
+<li><code>ConfigEditorPanel</code></li>
+</ul>
+<p>これらの panel は次の API を使います．</p>
+<pre class="text"><code>GET  ./api/config/filelist
+GET  ./api/config/file/{filename}
+POST ./api/config/file/{filename}
+GET  api/control/task?since={revision}
+POST ./api/control/task/{taskname}
+GET  api/console?since={revision}
+POST ./api/console/</code></pre>
+<h1 id="transformer-module">Transformer Module</h1>
+<p><code>transformer.mjs</code> は composable な value transformation
+system を提供します．</p>
+<p>内部 functor class は次のような操作を扱います．</p>
+<ul>
+<li>scalar conversion．</li>
+<li>offset．</li>
+<li>scale．</li>
+<li>formatting．</li>
+<li>matching．</li>
+<li>replacement．</li>
+<li>equality comparison．</li>
+<li>greater-than comparison．</li>
+<li>inversion．</li>
+<li>default value．</li>
+<li>“last” extraction．</li>
+<li>object field lookup．</li>
+</ul>
+<p><code>Transformer</code> は display panel で，raw channel value を
+text，color，threshold，label，その他の presentation value
+に変換するために使われます．</p>
+<h1 id="frame-module">Frame Module</h1>
+<p><code>frame.mjs</code> は page-level UI control を提供します．</p>
+<p>Export:</p>
+<ul>
+<li><code>Frame</code></li>
+<li><code>TimePullDown</code></li>
+<li><code>TimeRangePullDown</code></li>
+<li><code>GridPullDown</code></li>
+</ul>
+<p>これらは dashboard page で次を管理するために使われます．</p>
+<ul>
+<li>page header と status area．</li>
+<li>time selection．</li>
+<li>time-range selection．</li>
+<li>grid selection．</li>
+<li>layout frame behavior．</li>
+</ul>
+<h1 id="jagaimo-submodule">Jagaimo Submodule</h1>
+<p><code>app/site/slowjs/jagaimo</code> は次の repository を指す
+submodule です．</p>
+<pre class="text"><code>https://github.com/SanshiroEnomoto/jagaimo.git</code></pre>
+<p>SlowDash はこれを local frontend library として import します．</p>
+<h3 id="jagaimo.mjs"><code>jagaimo.mjs</code></h3>
+<p><code>jagaimo.mjs</code> は <code>JG</code> helper と
+<code>JGElement</code> wrapper を提供します．</p>
+<p>これは小さな DOM utility library のような役割です．</p>
+<ul>
+<li>element を select する．</li>
+<li>element を create する．</li>
+<li>DOM object を wrap する．</li>
+<li>element を append/prepend/remove する．</li>
+<li>descendant を search する．</li>
+<li>HTML，text，value，attribute，style，data を get/set する．</li>
+<li>event を bind する．</li>
+<li><code>JGDateTime</code> などの date/time helper を提供する．</li>
+</ul>
+<p>SlowDash では次のように import されます．</p>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { JG <span class="im">as</span> $<span class="op">,</span> JGDateTime } <span class="im">from</span> <span class="st">&#39;./jagaimo/jagaimo.mjs&#39;</span><span class="op">;</span></span></code></pre></div>
+<p><code>$</code> alias は <code>slowjs</code> 全体で DOM
+creation/manipulation に使われます．</p>
+<h3 id="jagawidgets.mjs"><code>jagawidgets.mjs</code></h3>
+<p><code>jagawidgets.mjs</code> は reusable UI widget を提供します．</p>
+<p>よく使われる import:</p>
+<ul>
+<li><code>JGTabWidget</code></li>
+<li><code>JGDialogWidget</code></li>
+<li><code>JGInvisibleWidget</code></li>
+<li><code>JGPopupWidget</code></li>
+<li><code>JGDraggable</code></li>
+<li><code>JGIndicatorWidget</code></li>
+<li><code>JGFileIconWidget</code></li>
+<li><code>JGHiddenWidget</code></li>
+</ul>
+<p>これらは panel settings dialog，tabbed configuration
+UI，popup，indicator，draggable canvas element，file/content control
+に使われます．</p>
+<h3 id="jagaplot.mjs"><code>jagaplot.mjs</code></h3>
+<p><code>jagaplot.mjs</code> は plotting helper を提供します．</p>
+<p>SlowDash が使うもの:</p>
+<ul>
+<li><code>JGPlotWidget</code></li>
+<li><code>JGPlot</code></li>
+<li><code>JGPlotAxisScale</code></li>
+<li><code>JGPlotColorBarScale</code></li>
+</ul>
+<p>これらは plot panel，canvas microplot，map/color-scale panel
+で使われます．</p>
+<h3 id="role-in-slowdash">Role in SlowDash</h3>
+<p>Jagaimo は application entry point ではありません．SlowDash module
+が使う browser utility layer です．</p>
+<pre class="text"><code>slowjs modules
+    |
+    +-- DOM manipulation via JG/$
+    +-- dialogs/widgets via jagawidgets
+    +-- plotting primitives via jagaplot</code></pre>
+<h1 id="autocruise-submodule">Autocruise Submodule</h1>
+<p><code>app/site/slowjs/autocruise</code> は次の repository を指す
+submodule です．</p>
+<pre class="text"><code>https://github.com/SanshiroEnomoto/autocruise.git</code></pre>
+<p>SlowDash は <code>slowcruise.html</code> からこれを使います．</p>
+<h3 id="purpose">Purpose</h3>
+<p><code>autocruise.js</code> は，通常 dashboard page の list
+を順番に巡回表示する single-file JavaScript library です．</p>
+<p>Page list は次から読み込めます．</p>
+<ul>
+<li>HTML body 内の <code>&lt;a&gt;</code> link．</li>
+<li>URL parameter で指定された JSON config file．</li>
+<li><code>autocruise-</code> prefix を持つ body attribute．</li>
+<li>URL parameter．</li>
+</ul>
+<p>SlowDash は次のように設定します．</p>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span> <span class="er">autocruise-configbase</span><span class="ot">=</span><span class="st">&quot;api/config/content/&quot;</span> <span class="er">autocruise-interval</span><span class="ot">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>これにより，たとえば次のような cruise page を開けます．</p>
+<pre class="text"><code>slowcruise.html?config=slowcruise-example.json</code></pre>
+<p>その場合，<code>autocruise.js</code> は次を fetch します．</p>
+<pre class="text"><code>api/config/content/slowcruise-example.json</code></pre>
+<h3 id="runtime-model">Runtime model</h3>
+<p>Autocruise は page body を自分の UI で置き換えます．</p>
+<ul>
+<li>header/status bar．</li>
+<li>pause/reload/popout control．</li>
+<li>configured page ごとの iframe．</li>
+<li>cycle または tile view mode．</li>
+<li><code>interval</code> に基づく timed switching．</li>
+</ul>
+<p>Flow:</p>
+<pre class="text"><code>slowcruise.html
+    |
+    v
+autocruise.js
+    |
+    +-- read body attributes
+    +-- read URL parameters
+    +-- optionally fetch config JSON
+    +-- build iframe pages
+    +-- cycle through pages</code></pre>
+<p>Autocruise は main の <code>slowjs/slowdash.mjs</code> dashboard
+runtime から独立しています．Dashboard を iframe 内の page
+として扱います．</p>
+<h1 id="browser-to-server-api-flow">Browser-to-Server API Flow</h1>
+<p>Frontend は主に relative URL で SlowDash server と通信します．</p>
+<h3 id="configuration">Configuration</h3>
+<pre class="text"><code>GET ./api/config
+GET ./api/config/content/{filename}
+GET ./api/config/contentlist
+GET ./api/config/file/{filename}
+GET ./api/config/filelist
+POST ./api/config/file/{filename}</code></pre>
+<h3 id="data">Data</h3>
+<pre class="text"><code>GET api/channels?fields=name
+GET api/data/{channels}?length=...&amp;to=...&amp;resample=...
+GET ./api/blob/{channel}?id={id}</code></pre>
+<h3 id="control-and-task-ui">Control and task UI</h3>
+<pre class="text"><code>POST ./api/control
+GET  api/control/task?since={revision}
+POST ./api/control/task/{taskname}</code></pre>
+<h3 id="console">Console</h3>
+<pre class="text"><code>GET  api/console?since={revision}
+POST ./api/console/</code></pre>
+<h3 id="current-data-streaming-and-emit">Current-data streaming and
+emit</h3>
+<pre class="text"><code>WebSocket /ws/attach/current_data
+POST      ./api/emit/{topic}</code></pre>
+<p>Dashboard は可能なら websocket streaming を使いますが，HTTP data
+polling に fallback できます．</p>
+<h1 id="data-flow-into-panels">Data Flow into Panels</h1>
+<p>Panel data flow は，historical data については pull-based，current
+data については optional push-assisted です．</p>
+<pre class="text"><code>Panel.fillDataRequest(dataRequest)
+    |
+    v
+Controller builds channel queries
+    |
+    v
+GET api/data/...
+    |
+    v
+Controller.currentData
+    |
+    v
+Layout.draw(currentData)
+    |
+    v
+Panel.draw(currentData)</code></pre>
+<p>Current-data streaming の場合:</p>
+<pre class="text"><code>server emits current_data
+    |
+    v
+WebSocket /ws/attach/current_data
+    |
+    v
+Controller receives message
+    |
+    v
+currentData update
+    |
+    v
+Layout.draw(...)</code></pre>
+<p>Panel は，自身の configured channel と data type
+を解釈する責任を持ちます．</p>
+<h1 id="configuration-flow-into-panels">Configuration Flow into
+Panels</h1>
+<p>Page config は通常 <code>/api/config/content/{filename}</code>
+から来て，次のような構造を持ちます．</p>
+<pre class="text"><code>meta
+control
+style
+panels</code></pre>
+<p>Flow:</p>
+<pre class="text"><code>Platform.fetchConfig()
+    |
+    v
+SlowDash.configure()
+    |
+    v
+Layout.configure()
+    |
+    v
+one panel config per panel instance</code></pre>
+<p>各 panel は次を受け取ります．</p>
+<ul>
+<li>自身の config entry．</li>
+<li>options 経由で継承される layout/style 情報．</li>
+<li>reconfigure，force update，suspend，popout，emit，display range
+change 用 callback．</li>
+</ul>
+<h1 id="extension-points">Extension Points</h1>
+<h3 id="adding-a-new-html-entry-page">Adding a new HTML entry page</h3>
+<p>新しい page は既存 module を import できます．</p>
+<div class="sourceCode" id="cb43"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { JG <span class="im">as</span> $ } <span class="im">from</span> <span class="st">&#39;./slowjs/jagaimo/jagaimo.mjs&#39;</span><span class="op">;</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { SlowDash } <span class="im">from</span> <span class="st">&#39;./slowjs/slowdash.mjs&#39;</span><span class="op">;</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { Frame } <span class="im">from</span> <span class="st">&#39;./slowjs/frame.mjs&#39;</span><span class="op">;</span></span></code></pre></div>
+<p>その後，<code>SlowDash</code> instance
+を作り，<code>configure()</code> / <code>start()</code> を呼べます．</p>
+<h3 id="adding-a-new-panel-type">Adding a new panel type</h3>
+<p><code>Panel</code> を継承する class を export する module
+を作ります．</p>
+<p>その class は次の panel contract を実装する必要があります．</p>
+<pre class="text"><code>configure(config, options, callbacks)
+fillDataRequest(dataRequest)
+draw(dataPacket, displayTimeRange)</code></pre>
+<p>Core loader に見つけさせるには，file を
+<code>PanelPluginLoader.core_files</code>
+に追加するか，<code>add_plugin(filepath)</code> で登録します．</p>
+<h3 id="adding-a-new-value-transform">Adding a new value transform</h3>
+<p><code>transformer.mjs</code> に functor class
+を追加し，<code>Transformer</code> がその config syntax
+を認識するようにします．</p>
+<h3 id="adding-a-new-theme">Adding a new theme</h3>
+<p>次の名前の CSS file を追加します．</p>
+<pre class="text"><code>slowjs/slowdash-{theme}.css</code></pre>
+<p>その後，project または page config で <code>style.theme</code>
+を設定します．</p>
+<h1 id="main-flow-summary">Main Flow Summary</h1>
+<h3 id="page-load">Page load</h3>
+<pre class="text"><code>HTML page
+  -&gt; imports slowjs modules
+  -&gt; Platform loads project/page config
+  -&gt; SlowDash builds Layout/Controller/Scheduler
+  -&gt; Layout loads panel modules
+  -&gt; Scheduler starts updates</code></pre>
+<h3 id="data-update">Data update</h3>
+<pre class="text"><code>Scheduler
+  -&gt; Controller.update()
+  -&gt; panels fill DataRequest
+  -&gt; fetch api/data
+  -&gt; merge currentData
+  -&gt; panels draw</code></pre>
+<h3 id="user-interaction">User interaction</h3>
+<pre class="text"><code>panel UI
+  -&gt; callback to Layout/Controller
+  -&gt; reconfigure, force update, popout, emit, or control API</code></pre>
+<h3 id="streaming">Streaming</h3>
+<pre class="text"><code>Controller
+  -&gt; WebSocket /ws/attach/current_data
+  -&gt; receive current_data
+  -&gt; redraw panels</code></pre>
+<h3 id="autocruise">Autocruise</h3>
+<pre class="text"><code>slowcruise.html
+  -&gt; autocruise.js
+  -&gt; load page list/config
+  -&gt; build iframes
+  -&gt; cycle or tile dashboard pages</code></pre>
+<h1 id="practical-development-notes">Practical Development Notes</h1>
+<ul>
+<li>通常の dashboard startup を理解する入口は <code>slowdash.mjs</code>
+が最適です．</li>
+<li>API polling，websocket streaming，scheduler behavior
+を理解する入口は <code>control.mjs</code> が最適です．</li>
+<li>Panel lifecycle は <code>layout.mjs</code> と <code>panel.mjs</code>
+が定義します．</li>
+<li>通常 dashboard に組み込まれる panel module は
+<code>panel-plugin-loader.mjs</code> が定義します．</li>
+<li>Project/page config loading と theme selection は
+<code>platform.mjs</code> が担当します．</li>
+<li><code>jagaimo</code> は local DOM/widget/plot layer
+を提供し，ほとんどの <code>slowjs</code> module が依存しています．</li>
+<li><code>autocruise</code> は独立した page-cycling runtime であり，main
+の <code>SlowDash</code> class flow の一部ではありません．</li>
+<li>Relative API path は意図的に使われています．同じ static file
+が異なる deployment base path で動作できるようにするためです．</li>
+</ul>
+
+
+</body>
+</html>

@@ -184,7 +184,7 @@ class MeshComponent(Component):
 
                 # if the cache is the only available data, take it
                 if ch not in response.content:
-                    response.content[ch] = my_data
+                    response.content[ch] = copy.deepcopy(my_data)
                     continue
 
                 # if the cached data is a time-series, take the last point

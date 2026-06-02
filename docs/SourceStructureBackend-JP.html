@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>ソース構造 - Python バックエンド</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+<header>
+<div class="title">ソース構造 - Python バックエンド</div><p>
+<div class="toc">
+<span class="toc-title">Contents</span>
+<nav id="TOC">
+<ul>
+<li><a href="#全体構造" id="toc-全体構造">全体構造</a></li>
+<li><a href="#主要ディレクトリ"
+id="toc-主要ディレクトリ">主要ディレクトリ</a></li>
+<li><a href="#application-startup-flow"
+id="toc-application-startup-flow">Application Startup Flow</a>
+<ul>
+<li><a href="#command-line-または-server-startup"
+id="toc-command-line-または-server-startup">Command-line または server
+startup</a></li>
+<li><a href="#component-include-order"
+id="toc-component-include-order">Component include order</a></li>
+</ul></li>
+<li><a href="#slowlette-routing-and-response-model"
+id="toc-slowlette-routing-and-response-model">Slowlette Routing and
+Response Model</a>
+<ul>
+<li><a href="#request-flow" id="toc-request-flow">Request flow</a></li>
+<li><a href="#decorator-と-argument-binding"
+id="toc-decorator-と-argument-binding">Decorator と argument
+binding</a></li>
+<li><a href="#response-merging" id="toc-response-merging">Response
+merging</a></li>
+</ul></li>
+<li><a href="#project-configuration-flow"
+id="toc-project-configuration-flow">Project Configuration Flow</a></li>
+<li><a href="#built-in-server-components"
+id="toc-built-in-server-components">Built-In Server Components</a>
+<ul>
+<li><a href="#component-and-plugincomponent"
+id="toc-component-and-plugincomponent"><code>Component</code> and
+<code>PluginComponent</code></a></li>
+<li><a href="#configcomponent"
+id="toc-configcomponent"><code>ConfigComponent</code></a></li>
+<li><a href="#datasourcecomponent-and-datasource"
+id="toc-datasourcecomponent-and-datasource"><code>DataSourceComponent</code>
+and <code>DataSource</code></a></li>
+<li><a href="#exportcomponent"
+id="toc-exportcomponent"><code>ExportComponent</code></a></li>
+<li><a href="#usermodulecomponent"
+id="toc-usermodulecomponent"><code>UserModuleComponent</code></a></li>
+<li><a href="#taskmodulecomponent"
+id="toc-taskmodulecomponent"><code>TaskModuleComponent</code></a></li>
+<li><a href="#userhtmlcomponent"
+id="toc-userhtmlcomponent"><code>UserHtmlComponent</code></a></li>
+<li><a href="#meshcomponent"
+id="toc-meshcomponent"><code>MeshComponent</code></a></li>
+<li><a href="#slowmqcomponent"
+id="toc-slowmqcomponent"><code>SlowMQComponent</code></a></li>
+<li><a href="#other-components" id="toc-other-components">Other
+components</a></li>
+</ul></li>
+<li><a href="#plugin-architecture" id="toc-plugin-architecture">Plugin
+Architecture</a></li>
+<li><a href="#data-query-communication-flow"
+id="toc-data-query-communication-flow">Data Query Communication
+Flow</a></li>
+<li><a href="#write-emit-and-current-data-flow"
+id="toc-write-emit-and-current-data-flow">Write, Emit, and Current-Data
+Flow</a></li>
+<li><a href="#control-flow" id="toc-control-flow">Control Flow</a></li>
+<li><a href="#slowpy-library-role" id="toc-slowpy-library-role">SlowPy
+Library Role</a>
+<ul>
+<li><a href="#data-object-model" id="toc-data-object-model">Data object
+model</a></li>
+<li><a href="#control-nodes" id="toc-control-nodes">Control
+nodes</a></li>
+<li><a href="#data-stores" id="toc-data-stores">Data stores</a></li>
+</ul></li>
+<li><a href="#slowdash-にとって重要な-slowlette-内部仕様"
+id="toc-slowdash-にとって重要な-slowlette-内部仕様">SlowDash
+にとって重要な Slowlette 内部仕様</a></li>
+<li><a href="#main-flow-summary" id="toc-main-flow-summary">Main Flow
+Summary</a></li>
+<li><a href="#development-notes" id="toc-development-notes">Development
+Notes</a></li>
+</ul>
+</nav>
+</div>
+</header>
+
+<p>この文書は，2026-06-01 に確認した最新 <code>develop</code>
+ブランチ時点の SlowDash
+のソース構造と実行時フローを説明するものです．対象は，既存実装の
+<code>app/server</code>，<code>app/plugin</code>，<code>lib/slowpy</code>，<code>lib/slowlette</code>
+です．</p>
+<p>ここでは現在のシステムだけを説明し，将来計画については扱いません．</p>
+<h1 id="全体構造">全体構造</h1>
+<p>SlowDash は主に 4 つの Python レイヤーで構成されています．</p>
+<pre class="text"><code>Client / CLI / CGI
+    |
+    v
+Slowlette
+    - ASGI/WSGI アダプタ
+    - URL ルーティング
+    - request 引数バインディング
+    - response merge
+    |
+    v
+SlowDash server components
+    - project/config 処理
+    - data source API
+    - user/task module API
+    - export API
+    - user HTML/content API
+    - real-time/current-data 補助機能
+    |
+    v
+Plugins and libraries
+    - app/plugin の data source / exporter
+    - slowpy の data object，control node，store，client helper</code></pre>
+<p>中心となる server object は <code>app/server/slowdash.py</code> の
+<code>App</code> です．<code>App</code> は <code>slowlette.App</code>
+を継承し，<code>Project</code>
+を作成し，実行環境を整えたうえで，SlowDash の各 component を Slowlette
+router に include します．</p>
+<h1 id="主要ディレクトリ">主要ディレクトリ</h1>
+<h3 id="appserver"><code>app/server</code></h3>
+<p>このディレクトリには，SlowDash の web application と組み込み API
+component が入っています．</p>
+<p>主要ファイル:</p>
+<ul>
+<li><code>slowdash.py</code>: application entry point，command-line
+entry point，component assembly，内部 API helper．</li>
+<li><code>slowdash_wsgi.py</code> と <code>slowdash.cgi</code>: WSGI/CGI
+entry point．</li>
+<li><code>sd_project.py</code>: project 探索，YAML
+読み込み，環境変数/コマンド置換，公開 project metadata．</li>
+<li><code>sd_component.py</code>: component と plugin-backed component
+の base class．</li>
+<li><code>sd_config.py</code>: <code>/api/config</code>，config
+file/content API，transient content．</li>
+<li><code>sd_datasource.py</code>: data source plugin base class と
+<code>/api/channels</code>，<code>/api/data</code>，<code>/api/blob</code>
+route．</li>
+<li><code>sd_datasource_SQL.py</code>，<code>sd_datasource_TableStore.py</code>，<code>sd_dataschema.py</code>:
+data source 共通 helper．</li>
+<li><code>sd_blobstorage.py</code>: blob storage helper．</li>
+<li><code>sd_export.py</code>: export plugin component．</li>
+<li><code>sd_usermodule.py</code>: in-process user module
+拡張システム．</li>
+<li><code>sd_taskmodule.py</code>: 現行の in-process task module
+システム．</li>
+<li><code>sd_userhtml.py</code>: user-provided HTML/content 配信．</li>
+<li><code>sd_console.py</code>: console/stdout capture．</li>
+<li><code>sd_misc_api.py</code>: その他の組み込み API endpoint．</li>
+<li><code>sd_mesh.py</code>: current-data cache と一部 topic への
+websocket attachment．</li>
+<li><code>sd_slowmq.py</code>: 組み込み websocket-based pub/sub
+component．</li>
+<li><code>sd_version.py</code>: version string．</li>
+</ul>
+<h3 id="appplugin"><code>app/plugin</code></h3>
+<p>このディレクトリには，<code>PluginComponent</code> により読み込まれる
+plugin module が入っています．</p>
+<p>Data source plugin:</p>
+<ul>
+<li><code>datasource_CSV.py</code></li>
+<li><code>datasource_SQLite.py</code></li>
+<li><code>datasource_PostgreSQL.py</code>，<code>datasource_PostgreSQL_NoAsync.py</code></li>
+<li><code>datasource_MySQL.py</code>，<code>datasource_MySQL_mysqlclient.py</code>，<code>datasource_MySQL_NoAsync.py</code></li>
+<li><code>datasource_InfluxDB2.py</code></li>
+<li><code>datasource_Redis.py</code>，<code>datasource_Redis_NoAsync.py</code></li>
+<li><code>datasource_MongoDB.py</code></li>
+<li><code>datasource_CouchDB.py</code></li>
+<li><code>datasource_Honeybee.py</code></li>
+<li><code>datasource_Dummy.py</code></li>
+<li><code>datasource_SystemResource.py</code></li>
+<li><code>datasource_YAML.py</code></li>
+</ul>
+<p>Export plugin:</p>
+<ul>
+<li><code>export_CSV.py</code></li>
+<li><code>export_Notebook.py</code></li>
+<li><code>export_Jupyter.py</code></li>
+</ul>
+<p>Plugin の file name と class name は規約で決まります．たとえば data
+source type が <code>SQLite</code> の場合は，次に対応します．</p>
+<pre class="text"><code>app/plugin/datasource_SQLite.py
+DataSource_SQLite</code></pre>
+<h3 id="libslowlette"><code>lib/slowlette</code></h3>
+<p>Slowlette は SlowDash が使用する小さな web framework です．</p>
+<p>主要ファイル:</p>
+<ul>
+<li><code>app.py</code>: <code>App</code> と <code>Slowlette</code>
+application class．</li>
+<li><code>router.py</code>: decorator，path matching，argument
+binding，sub-app dispatch，response merge．</li>
+<li><code>server.py</code>: ASGI/WSGI dispatch と開発用 server
+helper．</li>
+<li><code>request.py</code>: parse 済み HTTP request object．</li>
+<li><code>response.py</code>: response object，content merge，file
+response．</li>
+<li><code>model.py</code>: JSON request-body wrapper．</li>
+<li><code>websocket.py</code>: websocket wrapper と connection close
+処理．</li>
+<li><code>middleware.py</code>: middleware support．</li>
+</ul>
+<h3 id="libslowpy"><code>lib/slowpy</code></h3>
+<p>SlowPy は data type，control abstraction，storage writer，client
+helper，plotting helper を提供します．</p>
+<p>主要領域:</p>
+<ul>
+<li>Top-level data object:
+<ul>
+<li><code>basetypes.py</code></li>
+<li><code>histograms.py</code></li>
+<li><code>graphs.py</code></li>
+<li><code>trend.py</code></li>
+<li><code>treetable.py</code></li>
+<li><code>mpldata.py</code></li>
+<li><code>slowplot.py</code></li>
+</ul></li>
+<li>Control system:
+<ul>
+<li><code>control/node.py</code></li>
+<li><code>control/system.py</code></li>
+<li><code>control/control_*.py</code></li>
+</ul></li>
+<li>Data store:
+<ul>
+<li><code>store/store.py</code></li>
+<li><code>store/factory.py</code></li>
+<li><code>store/store_SQL.py</code></li>
+<li><code>store/store_CSV.py</code></li>
+<li><code>store/store_HDF5.py</code></li>
+<li><code>store/store_InfluxDB2.py</code></li>
+<li><code>store/store_Redis.py</code></li>
+</ul></li>
+<li>Client helper:
+<ul>
+<li><code>slowfetch.py</code></li>
+</ul></li>
+</ul>
+<p>公開 top-level <code>slowpy</code> package
+は，<code>Histogram</code>，<code>Graph</code>，<code>Trend</code>，<code>Tree</code>，<code>Table</code>，<code>TimeSeries</code>，<code>SlowFetch</code>，<code>slowdashify</code>，<code>slowplot</code>
+などのよく使う data object/helper を export します．</p>
+<h1 id="application-startup-flow">Application Startup Flow</h1>
+<h2 id="command-line-または-server-startup">Command-line または server
+startup</h2>
+<p>主な entry point は <code>app/server/slowdash.py</code> です．</p>
+<p>通常の startup sequence:</p>
+<ol type="1">
+<li>command-line option を parse する．</li>
+<li><code>App(project_dir, project_file, is_cgi, is_command, is_async)</code>
+を作成する．</li>
+<li><code>App</code> が <code>Project</code> を作成する．</li>
+<li><code>Project</code> が SlowDash system directory と project
+directory を探す．</li>
+<li><code>Project</code> が <code>SlowdashProject.yaml</code>
+を読み込む．設定によっては environment variable から初期 data source
+config を作る．</li>
+<li>project directory がある場合，<code>App</code> は process working
+directory を project directory に移動する．</li>
+<li><code>App</code> は system plugin directory，project
+directory，project の <code>config</code> directory を
+<code>sys.path</code> に追加する．</li>
+<li><code>App</code> が全 built-in component を Slowlette router に
+include する．</li>
+<li>選択された mode に応じて，ASGI，WSGI，CGI，または command-line
+internal request として実行される．</li>
+</ol>
+<h2 id="component-include-order">Component include order</h2>
+<p><code>slowdash.py</code> は component を次の順序で include
+します．</p>
+<pre class="text"><code>ConsoleComponent
+MeshComponent
+UserModuleComponent
+TaskModuleComponent
+ConfigComponent
+DataSourceComponent
+UserHtmlComponent
+ExportComponent
+MiscApiComponent
+SlowMQComponent</code></pre>
+<p>この順序は重要です．Slowlette は複数の matching handler から response
+を集めて merge するため，先に include された component が merge wrapper
+を返し，後続 component の response を加工することがあります．</p>
+<p>コード中の重要な意図:</p>
+<ul>
+<li><code>ConsoleComponent</code> は stdout を早期に capture
+するため最初に include される．</li>
+<li><code>MeshComponent</code> は data source response に cache
+を重ねるため，data source より前に include される．</li>
+<li><code>UserModuleComponent</code> と <code>TaskModuleComponent</code>
+は user/task module が API や DB
+作成に関与できるよう，<code>DataSourceComponent</code> より前に include
+される．</li>
+</ul>
+<h1 id="slowlette-routing-and-response-model">Slowlette Routing and
+Response Model</h1>
+<h2 id="request-flow">Request flow</h2>
+<p>ASGI の場合:</p>
+<pre class="text"><code>ASGI server
+    |
+    v
+slowlette.server.dispatch_asgi()
+    |
+    +-- lifespan.startup/shutdown -&gt; router.dispatch_event()
+    |
+    +-- websocket -&gt; router.websocket()
+    |
+    +-- http -&gt; read body -&gt; Request -&gt; router.dispatch()</code></pre>
+<p>WSGI の場合:</p>
+<pre class="text"><code>WSGI server
+    |
+    v
+slowlette.server.dispatch_wsgi()
+    |
+    v
+Request -&gt; asyncio.run(router.dispatch()) -&gt; WSGI response</code></pre>
+<p>Slowlette は受信 URL を <code>Request</code> に変換します．</p>
+<ul>
+<li><code>Request.path</code>: decode 済み path component．</li>
+<li><code>Request.query</code>: decode 済み query dictionary．</li>
+<li><code>Request.headers</code>: server layer から渡される header
+dictionary．</li>
+<li><code>Request.body</code>: raw body，または internal dispatch 用の
+Python object．</li>
+</ul>
+<h2 id="decorator-と-argument-binding">Decorator と argument
+binding</h2>
+<p>Handler は次のような decorator で宣言されます．</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="at">@slowlette.get</span>(<span class="st">&#39;/api/channels&#39;</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">@slowlette.post</span>(<span class="st">&#39;/api/control&#39;</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="at">@slowlette.websocket</span>(<span class="st">&#39;/ws/slowmq&#39;</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="at">@slowlette.on_event</span>(<span class="st">&#39;startup&#39;</span>)</span></code></pre></div>
+<p><code>router.py</code> の <code>PathRule</code> は decorated function
+の signature を調べ，次を bind します．</p>
+<ul>
+<li><code>{channels}</code> のような path parameter．</li>
+<li>名前で一致する query parameter．</li>
+<li><code>bytes</code> request body．</li>
+<li>JSON body wrapper．</li>
+<li>request 全体を表す <code>Request</code>．</li>
+<li><code>WebSocket</code>．</li>
+<li>path list または query dict．</li>
+</ul>
+<p>Router は sub-app を include できます．各 component はそれ自体が
+<code>slowlette.App</code> なので，component ごとに route
+を追加できます．</p>
+<h2 id="response-merging">Response merging</h2>
+<p>Slowlette dispatch は最初に一致した handler で止まりません．Component
+tree を歩き，すべての matching response を集め，下から上に merge
+します．</p>
+<p><code>Response.merge_response()</code> の default merge behavior:</p>
+<ul>
+<li>status code が大きい response が勝つ．</li>
+<li>status code が同じ場合は content を merge する．</li>
+<li>dict content は deep merge される．</li>
+<li>list content は append される．</li>
+<li>string content は newline 付きで append される．</li>
+</ul>
+<p>SlowDash は aggregate endpoint
+のためにこの仕組みに依存しています．</p>
+<ul>
+<li><code>/api/config</code> は複数 component の
+<code>public_config()</code> response から組み立てられる．</li>
+<li><code>/api/channels</code> は複数 source からの channel を combine
+できる．</li>
+<li><code>/api/data/{channels}</code> は data-source result と
+current-data cache を merge できる．</li>
+</ul>
+<p>一部 component は <code>merge_response()</code> を override した
+custom <code>Response</code> subclass を返します．たとえば current-data
+cache component は，data-source response が生成された後に current value
+を追加します．</p>
+<h1 id="project-configuration-flow">Project Configuration Flow</h1>
+<p><code>sd_project.py</code> の <code>Project</code> は project
+configuration の探索と読み込みを担当します．</p>
+<p>Configuration source:</p>
+<ol type="1">
+<li>明示的な <code>--project-dir</code> または
+<code>--project-file</code>．</li>
+<li><code>SLOWDASH_PROJECT</code>．</li>
+<li>親 directory 方向への <code>SlowdashProject.yaml</code> 探索．</li>
+<li><code>SLOWDASH_INIT_DATASOURCE_URL</code> による environment-based
+initial data source．</li>
+</ol>
+<p>Project file は <code>slowdash_project</code> dictionary
+を含む必要があります．読み込み時に，<code>Substitution</code>
+が次の形式の文字列置換を処理します．</p>
+<pre class="text"><code>${VARIABLE}
+${VARIABLE-default}
+${VARIABLE:-default-like-empty-is-null}
+$(COMMAND)
+$$</code></pre>
+<p>読み込み後:</p>
+<ul>
+<li><code>name</code> と <code>title</code> がなければ補完される．</li>
+<li><code>system</code> は <code>{}</code> が default になる．</li>
+<li><code>authentication.key</code> は <code>project.auth_list</code>
+になる．</li>
+<li><code>system.our_security_is_perfect</code> は
+<code>project.is_secure</code> を制御する．</li>
+</ul>
+<p><code>ConfigComponent</code> は <code>/api/config</code> で公開
+project metadata を返します．ただし raw project configuration は secret
+を含みうるため，そのまま公開しません．</p>
+<h1 id="built-in-server-components">Built-In Server Components</h1>
+<h2 id="component-and-plugincomponent"><code>Component</code> and
+<code>PluginComponent</code></h2>
+<p><code>Component</code> は server component の base class
+です．次を提供します．</p>
+<ul>
+<li><code>self.app</code></li>
+<li><code>self.project</code></li>
+<li><code>public_config()</code> を返す default <code>/api/config</code>
+route</li>
+</ul>
+<p><code>PluginComponent</code> は project config から component plugin
+を構築します．</p>
+<ol type="1">
+<li><code>project.config[component_type]</code> または plural form
+を読む．</li>
+<li>単一 node を list に正規化する．</li>
+<li>plugin file と class name を解決する．</li>
+<li><code>app/plugin</code> から plugin module を読み込む．</li>
+<li>plugin class を instantiate する．</li>
+<li>各 plugin を Slowlette sub-app として include する．</li>
+</ol>
+<p>App が async でない場合，利用可能なら <code>_NoAsync</code> plugin
+file が優先されます．</p>
+<h2 id="configcomponent"><code>ConfigComponent</code></h2>
+<p>主な責務:</p>
+<ul>
+<li><code>/api/config</code> を提供する．</li>
+<li>project <code>config/*-*.*</code> content を list/load する．</li>
+<li>許可された config file を serve する．</li>
+<li>generated plot content などの transient content を管理する．</li>
+</ul>
+<p><code>/api/config/contentlist</code> と
+<code>/api/config/content/{filename}</code> は，UI component が
+dashboard，plot，cruise，その他 user content
+を発見するために使われます．</p>
+<h2
+id="datasourcecomponent-and-datasource"><code>DataSourceComponent</code>
+and <code>DataSource</code></h2>
+<p><code>DataSourceComponent</code> は data source 用の plugin-backed
+component です．</p>
+<p>各 <code>DataSource</code> plugin は次の route を提供します．</p>
+<pre class="text"><code>GET /api/channels
+GET /api/data/{channels}
+GET /api/blob/{channel}
+startup
+shutdown</code></pre>
+<p>Base <code>DataSource</code> class は sync/async のどちらの plugin
+実装にも対応します．</p>
+<pre class="text"><code>initialize()       -&gt; aio_initialize()
+finalize()         -&gt; aio_finalize()
+get_channels()     -&gt; aio_get_channels()
+get_timeseries()   -&gt; aio_get_timeseries()
+get_object()       -&gt; aio_get_object()
+get_blob()         -&gt; aio_get_blob()</code></pre>
+<p>Data query flow:</p>
+<pre class="text"><code>GET /api/data/{channels}
+    |
+    v
+parse length/to/resample/reducer/filler/envelope/prior_data
+    |
+    v
+aio_get_timeseries(...)
+aio_get_object(...)
+    |
+    v
+merge time-series and object results into one dict</code></pre>
+<p><code>DataSource.resample()</code> helper は time-series data を
+bucket
+に揃え，<code>last</code>，<code>mean</code>，<code>median</code>，<code>min</code>，<code>max</code>，<code>count</code>，<code>sem</code>
+などの reducer を support します．</p>
+<h2 id="exportcomponent"><code>ExportComponent</code></h2>
+<p><code>ExportComponent</code> は project config から export plugin
+を読み込みます．</p>
+<p>また default export support を必ず追加します．</p>
+<ul>
+<li>CSV export が設定されていなければ CSV export．</li>
+<li>Notebook/Jupyter export が設定されていなければ Notebook
+export．</li>
+</ul>
+<p>実際の export route は export plugin 側が提供します．</p>
+<h2 id="usermodulecomponent"><code>UserModuleComponent</code></h2>
+<p><code>sd_usermodule.py</code> は SlowDash の in-process Python
+extension mechanism を提供します．</p>
+<p>User module は project configuration
+から読み込まれ，<code>UserModuleThread</code> 内で実行されます．Module
+は lifecycle callback を定義できます．</p>
+<pre class="text"><code>_setup(app, params) or _setup(app) or _setup()
+_initialize(params) or _initialize()
+_run()
+_loop()
+_finalize()</code></pre>
+<p>User module は，定義されている関数に応じて，API
+handler，content，HTML，layout，channel/data hook，control command
+も提供できます．</p>
+<p>User-module thread は通常，自分自身の event loop
+を使います．<code>_run()</code> と <code>_loop()</code> が
+async-compatible な場合のみ，設定により main event loop を使えます．</p>
+<h2 id="taskmodulecomponent"><code>TaskModuleComponent</code></h2>
+<p><code>sd_taskmodule.py</code> は現行の in-process task module system
+です．</p>
+<p>User-module mechanism を拡張し，task command parsing，command
+execution，<code>ControlSystem</code> integration を追加します．</p>
+<p>主な route:</p>
+<pre class="text"><code>GET  /api/control/task
+POST /api/control
+POST /api/control/task/{taskname}
+GET  /api/channels
+GET  /api/data/{channels}
+POST /api/consume/current_data</code></pre>
+<p>Task command flow:</p>
+<pre class="text"><code>POST /api/control
+    |
+    v
+TaskModuleComponent.execute_command()
+    |
+    v
+each TaskModule.process_command()
+    |
+    v
+parse command name, arguments, await/reentrant flags
+    |
+    v
+match namespace prefix/suffix
+    |
+    v
+call task function immediately or in TaskFunctionThread</code></pre>
+<p>Export された control node は current channel
+として公開され，<code>/api/data/{channels}</code> から読めます．Incoming
+current-data message は <code>/api/consume/current_data</code> を通して
+exported variable の設定にも使われます．</p>
+<h2 id="userhtmlcomponent"><code>UserHtmlComponent</code></h2>
+<p><code>sd_userhtml.py</code> は user-provided HTML と関連 content
+を配信します．また user URL を internal config/content API に redirect
+または map します．</p>
+<p>これにより，project-specific UI page を core server を変更せず
+project configuration/content area に置けます．</p>
+<h2 id="meshcomponent"><code>MeshComponent</code></h2>
+<p><code>sd_mesh.py</code> は <code>/api/consume/current_data</code>
+で受け取った current data の cache を保持します．</p>
+<p>主な役割:</p>
+<ul>
+<li>selected topic への websocket attachment．</li>
+<li><code>/api/emit/{topic}</code> の re-emission と websocket
+forwarding．</li>
+<li>current-data caching．</li>
+<li>cache-backed current channel による <code>/api/channels</code>
+augmentation．</li>
+<li>latest cache value による <code>/api/data/{channels}</code>
+augmentation．</li>
+</ul>
+<p>この component は data source より前に include されます．そのため
+custom response が data-source response と cache data を merge
+できます．</p>
+<h2 id="slowmqcomponent"><code>SlowMQComponent</code></h2>
+<p><code>sd_slowmq.py</code> は組み込み websocket pub/sub service
+を提供します．</p>
+<p>主な route:</p>
+<pre class="text"><code>WEBSOCKET /ws/slowmq</code></pre>
+<p>各 connected client は次を持ちます．</p>
+<ul>
+<li>client id．</li>
+<li>optional name．</li>
+<li>websocket．</li>
+<li>0 個以上の topic-pattern subscription．</li>
+</ul>
+<p>Message は headers を含みます．Header の <code>action</code>
+により，その message が publish，subscribe，unsubscribe
+のどれかが決まります．</p>
+<p>Topic pattern は dot-separated で，次を support します．</p>
+<ul>
+<li><code>*</code>: ちょうど 1 token に match．</li>
+<li><code>&gt;</code>: trailing token 0 個以上に match．ただし final
+token としてのみ使用可能．</li>
+</ul>
+<h2 id="other-components">Other components</h2>
+<p>その他の server component:</p>
+<ul>
+<li><code>ConsoleComponent</code>: display/API 用に console output を
+capture する．</li>
+<li><code>MiscApiComponent</code>: miscellaneous utility API．</li>
+<li><code>BlobStorage_File</code>: data source で使われる file-backed
+blob storage．</li>
+</ul>
+<h1 id="plugin-architecture">Plugin Architecture</h1>
+<p>Plugin は <code>app/plugin</code> 以下の通常の Python module
+です．Filename と class name により動的に読み込まれます．</p>
+<p>Data source の例:</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> SQLite</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">parameters</span><span class="kw">:</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="at">      ...</span></span></code></pre></div>
+<p>これは次に解決されます．</p>
+<pre class="text"><code>datasource_SQLite.py
+DataSource_SQLite</code></pre>
+<p>Export の例:</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">export</span><span class="kw">:</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> CSV</span></span></code></pre></div>
+<p>これは次に解決されます．</p>
+<pre class="text"><code>export_CSV.py
+Export_CSV</code></pre>
+<p><code>PluginComponent</code> は default で nested
+<code>parameters</code> dictionary を root parameter dictionary に merge
+します．これにより plugin constructor は flatten された parameter view
+を使えます．</p>
+<h1 id="data-query-communication-flow">Data Query Communication
+Flow</h1>
+<p>最も一般的な read path:</p>
+<pre class="text"><code>Browser or client
+    |
+    v
+GET /api/channels
+GET /api/data/{channels}?length=...&amp;to=...
+    |
+    v
+Slowlette ASGI/WSGI dispatch
+    |
+    v
+SlowDash component tree
+    |
+    +-- MeshComponent cache merge response
+    +-- UserModuleComponent hooks
+    +-- TaskModuleComponent current exports
+    +-- DataSourceComponent plugins
+    |
+    v
+Slowlette response merge
+    |
+    v
+JSON response</code></pre>
+<p><code>/api/data/{channels}</code> では，<code>DataSource</code>
+plugin が SlowDash data model 形式の data を返します．Cache component
+は次の場合に current value を追加できます．</p>
+<ul>
+<li>requested channel が cache-backed である．</li>
+<li>cached timestamp が requested time window に入っている．</li>
+<li>existing response が存在しない，または cached value より古い．</li>
+</ul>
+<h1 id="write-emit-and-current-data-flow">Write, Emit, and Current-Data
+Flow</h1>
+<p>Current-data update は次の経路で SlowDash に入れられます．</p>
+<pre class="text"><code>POST /api/emit/{topic}
+POST /api/consume/current_data
+internal app.request_emit(topic, message, sender=...)</code></pre>
+<p>典型的な flow:</p>
+<pre class="text"><code>producer
+    |
+    v
+/api/emit/current_data
+    |
+    v
+app.request(&#39;/consume/current_data&#39;, data)
+    |
+    +-- MeshComponent.cache_current_data()
+    +-- TaskModuleComponent.set_variable()
+    |
+    v
+websocket forwarding to attached clients</code></pre>
+<p><code>sender</code> parameter は，task 自身が publish した値を同じ
+task variable path に反射させないために使われます．</p>
+<h1 id="control-flow">Control Flow</h1>
+<p>Control command は <code>/api/control</code> を使います．</p>
+<p>現行 in-process task flow:</p>
+<pre class="text"><code>POST /api/control
+    |
+    v
+TaskModuleComponent.execute_command()
+    |
+    v
+TaskModule.process_task_command()
+    |
+    +-- parse &quot;await&quot;, &quot;reentrant&quot;, &quot;async&quot;, &quot;parallel&quot; prefixes
+    +-- parse function arguments
+    +-- match task namespace
+    +-- bind parameters using Python function signature
+    |
+    v
+execute function synchronously, await it, or run it in a command thread</code></pre>
+<p>User module も，定義した hook に応じて command processing
+に参加できます．</p>
+<h1 id="slowpy-library-role">SlowPy Library Role</h1>
+<p>SlowPy は server-side component と user code
+の両方から使われます．</p>
+<h2 id="data-object-model">Data object model</h2>
+<p>SlowPy は SlowDash-compatible data に変換できる Python object
+を提供します．</p>
+<ul>
+<li>scalar value．</li>
+<li><code>TimeSeries</code>．</li>
+<li>histogram．</li>
+<li>graph．</li>
+<li>trend．</li>
+<li>tree．</li>
+<li>table．</li>
+<li><code>slowdashify</code> による matplotlib-derived data．</li>
+</ul>
+<p>これらの object は task/user code，storage writer，current data を
+publish する API で使われます．</p>
+<h2 id="control-nodes">Control nodes</h2>
+<p><code>slowpy/control/node.py</code> の <code>ControlNode</code> は
+readable/writable control endpoint の base abstraction です．</p>
+<p>主な method:</p>
+<pre class="text"><code>set(value)
+get()
+aio_set(value)
+aio_get()
+has_data()
+aio_has_data()
+sleep()
+aio_sleep()
+wait()
+aio_wait()
+readonly()
+writeonly()</code></pre>
+<p>Async method は default では sync method に delegate
+します．<code>_is_thread_safe</code> が設定されている場合，sync
+<code>get()</code> と <code>set()</code> call は
+<code>asyncio.to_thread()</code> 経由で実行できます．</p>
+<p><code>slowpy/control/control_*.py</code> 以下の control module
+は，device，network，message，shell，HTTP，datastore，protocol
+integration の concrete implementation を提供します．</p>
+<h2 id="data-stores">Data stores</h2>
+<p>SlowPy data store は write-side storage helper を提供します．</p>
+<p><code>store/factory.py</code> は URL を implementation に map
+します．</p>
+<pre class="text"><code>postgresql:// -&gt; DataStore_PostgreSQL
+mysql://      -&gt; DataStore_MySQL
+sqlite://     -&gt; DataStore_SQLite
+influxdb2://  -&gt; DataStore_InfluxDB2
+redis://      -&gt; DataStore_Redis
+csv:///       -&gt; DataStore_CSV
+dump:///      -&gt; DataStore_TextDump</code></pre>
+<p><code>DataStore</code> は次を support します．</p>
+<pre class="text"><code>append(values, tag=None, timestamp=None)
+update(values, tag=None, timestamp=None)
+close()</code></pre>
+<p>Value には scalar，field dictionary，data
+element，<code>TimeSeries</code> を使えます．</p>
+<h1 id="slowdash-にとって重要な-slowlette-内部仕様">SlowDash
+にとって重要な Slowlette 内部仕様</h1>
+<p>SlowDash のいくつかの挙動は，Slowlette
+の設計に直接依存しています．</p>
+<h3 id="multiple-handlers-can-answer-the-same-route">Multiple handlers
+can answer the same route</h3>
+<p>Slowlette は app tree 内のすべての matching handler
+を呼びます．そのため，複数 component が
+<code>/api/config</code>，<code>/api/channels</code>，<code>/api/data/{channels}</code>
+を提供できます．</p>
+<h3 id="response-merging-is-part-of-the-application-model">Response
+merging is part of the application model</h3>
+<p>Merged response は単なる便利機能ではありません．独立に開発された
+component や plugin から aggregate API response
+を組み立てるための仕組みです．</p>
+<h3 id="component-order-is-meaningful">Component order is
+meaningful</h3>
+<p>Custom response は後続 component の response を merge
+できるため，<code>slowdash.py</code> の include order は runtime
+behavior の一部です．</p>
+<h3 id="internal-api-calls-use-the-same-router">Internal API calls use
+the same router</h3>
+<p><code>App.request()</code>，<code>request_config()</code>，<code>request_channels()</code>，<code>request_data()</code>，<code>request_emit()</code>
+は <code>self.slowlette(...)</code> を直接呼びます．そのため server-side
+の producer/consumer も，外部 HTTP client と同じ routing / response
+merging model を使います．</p>
+<h1 id="main-flow-summary">Main Flow Summary</h1>
+<h3 id="startup">Startup</h3>
+<pre class="text"><code>slowdash.py
+  -&gt; App
+  -&gt; Project
+  -&gt; sys.path / cwd setup
+  -&gt; include components
+  -&gt; ASGI/WSGI/CGI/CLI dispatch</code></pre>
+<h3 id="api-request">API request</h3>
+<pre class="text"><code>HTTP request
+  -&gt; Slowlette server adapter
+  -&gt; Request
+  -&gt; Router
+  -&gt; matching component/plugin handlers
+  -&gt; Response list
+  -&gt; merged Response
+  -&gt; HTTP response</code></pre>
+<h3 id="data-read">Data read</h3>
+<pre class="text"><code>/api/data/{channels}
+  -&gt; data source plugins
+  -&gt; optional user/task/current-data additions
+  -&gt; merged JSON data</code></pre>
+<h3 id="config-read">Config read</h3>
+<pre class="text"><code>/api/config
+  -&gt; each component public_config()
+  -&gt; deep-merged JSON config</code></pre>
+<h3 id="current-data">Current data</h3>
+<pre class="text"><code>/api/emit/current_data
+  -&gt; /api/consume/current_data
+  -&gt; cache update and variable update hooks
+  -&gt; websocket forwarding where applicable</code></pre>
+<h3 id="plugin-loading">Plugin loading</h3>
+<pre class="text"><code>project config
+  -&gt; PluginComponent
+  -&gt; app/plugin module lookup
+  -&gt; class lookup
+  -&gt; plugin instance
+  -&gt; Slowlette include</code></pre>
+<h1 id="development-notes">Development Notes</h1>
+<ul>
+<li>新しい API component を追加する場合は，<code>Component</code> を
+subclass し，<code>slowdash.py</code> から include する．</li>
+<li>新しい data source を追加する場合は，新しい
+<code>app/plugin/datasource_*.py</code> file で <code>DataSource</code>
+を subclass する．</li>
+<li>新しい exporter を追加する場合は，<code>export_*.py</code> plugin
+を追加する．</li>
+<li>他 component と aggregate する endpoint では，dict/list content
+を返して response merging を利用する．</li>
+<li>後続 component の output を加工する endpoint では，custom
+<code>slowlette.Response</code> subclass
+を返し，<code>merge_response()</code> を override する．</li>
+<li><code>public_config()</code> には secret
+を入れない．<code>/api/config</code> は client に公開される．</li>
+<li>Component include order の変更には注意する．merge behavior
+が変わる可能性がある．</li>
+<li>Server-side code が外部 API client と同じ route logic
+を使うべき場合は，internal <code>App.request*()</code> helper
+を使う．</li>
+</ul>
+
+
+</body>
+</html>
