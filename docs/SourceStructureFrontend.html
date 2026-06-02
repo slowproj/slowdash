@@ -75,6 +75,12 @@ code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
   <link rel="stylesheet" href="style.css" />
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({startOnLoad: true});
+</script>
+
 </head>
 
 <body>
@@ -143,11 +149,6 @@ Notes</a></li>
 </div>
 </header>
 
-<p>This document describes the current JavaScript and HTML structure
-under <code>app/site</code> as of the latest <code>develop</code> branch
-checked on 2026-06-01. It covers the built-in SlowDash site modules, the
-<code>jagaimo</code> and <code>autocruise</code> submodules, and the
-browser-to-server communication flows.</p>
 <h1 id="high-level-structure">High-Level Structure</h1>
 <p>The <code>app/site</code> frontend is a browser-side application
 built from static HTML entry pages and ES modules under
@@ -620,32 +621,35 @@ creates <code>Layout</code>, <code>Controller</code>, and
 <code>Layout</code> as its view; <code>Layout</code> creates and owns
 the <code>Panel</code> instances. <code>Platform</code> is a static
 helper (it is not instantiated).</p>
-<pre class="mermaid"><code>flowchart TD
-    HTML[&quot;HTML entry page&quot;]
-    API[(&quot;SlowDash server: ./api, /ws&quot;)]
+<pre class="mermaid">
+flowchart TD
+    HTML["HTML entry page"]
+    API[("SlowDash server: ./api, /ws")]
 
-    HTML --&gt;|new| SD[&quot;SlowDash&quot;]
-    HTML --&gt;|new| FR[&quot;Frame&quot;]
-    SD &lt;--&gt;|&quot;status / progress / beat callbacks;&lt;br/&gt;setRange() / setUpdateInterval()&quot;| FR
+    HTML -->|new| SD["SlowDash"]
+    HTML -->|new| FR["Frame"]
+    SD <-->|"status / progress / beat callbacks;<br/>setRange() / setUpdateInterval()"| FR
 
-    SD --&gt;|new| LO[&quot;Layout&quot;]
-    SD --&gt;|new| CO[&quot;Controller&quot;]
-    SD --&gt;|new| SC[&quot;Scheduler&quot;]
+    SD -->|new| LO["Layout"]
+    SD -->|new| CO["Controller"]
+    SD -->|new| SC["Scheduler"]
 
-    SD -.-&gt;|&quot;Platform.initialize()&quot;| PF[&quot;Platform (static)&quot;]
-    PF --&gt;|&quot;GET ./api/config, content, theme&quot;| API
+    SD -.->|"Platform.initialize()"| PF["Platform (static)"]
+    PF -->|"GET ./api/config, content, theme"| API
 
-    CO --&gt;|&quot;view&quot;| LO
-    CO --&gt;|&quot;fetch api/data, websocket&quot;| API
-    LO --&gt;|&quot;PanelPluginLoader.load()&quot;| PP[&quot;PanelPluginLoader&quot;]
-    LO --&gt;|&quot;creates and owns&quot;| PA[&quot;Panel (one per config entry)&quot;]</code></pre>
+    CO -->|"view"| LO
+    CO -->|"fetch api/data, websocket"| API
+    LO -->|"PanelPluginLoader.load()"| PP["PanelPluginLoader"]
+    LO -->|"creates and owns"| PA["Panel (one per config entry)"]
+</pre>
 <h2 id="startup-sequence">Startup sequence</h2>
 <p><code>configure()</code> builds the merged config through
 <code>Platform</code> and initializes the <code>Scheduler</code>;
 <code>start()</code> configures the <code>Controller</code> (and through
 it the <code>Layout</code> and <code>Panel</code>s) and starts the
 <code>Scheduler</code>.</p>
-<pre class="mermaid"><code>sequenceDiagram
+<pre class="mermaid">
+sequenceDiagram
     participant HTML as HTML page
     participant SD as SlowDash
     participant PF as Platform
@@ -654,25 +658,27 @@ it the <code>Layout</code> and <code>Panel</code>s) and starts the
     participant LO as Layout
     participant PA as Panel
 
-    HTML-&gt;&gt;SD: new SlowDash(div)
-    HTML-&gt;&gt;SD: configure(query)
-    SD-&gt;&gt;PF: Platform.initialize(defaults, options, args)
-    PF-&gt;&gt;PF: fetch ./api/config, page config, theme CSS
-    PF--&gt;&gt;SD: merged config
-    SD-&gt;&gt;SC: initialize({updateInterval, update, ...})
-    HTML-&gt;&gt;SD: start()
-    SD-&gt;&gt;CO: configure(config)
-    CO-&gt;&gt;LO: configure(config, options, callbacks)
-    LO-&gt;&gt;LO: PanelPluginLoader.load()
-    LO-&gt;&gt;PA: new Panel(div, style)
-    LO-&gt;&gt;PA: configure(config, options, callbacks)
-    SD-&gt;&gt;SC: start()</code></pre>
+    HTML->>SD: new SlowDash(div)
+    HTML->>SD: configure(query)
+    SD->>PF: Platform.initialize(defaults, options, args)
+    PF->>PF: fetch ./api/config, page config, theme CSS
+    PF-->>SD: merged config
+    SD->>SC: initialize({updateInterval, update, ...})
+    HTML->>SD: start()
+    SD->>CO: configure(config)
+    CO->>LO: configure(config, options, callbacks)
+    LO->>LO: PanelPluginLoader.load()
+    LO->>PA: new Panel(div, style)
+    LO->>PA: configure(config, options, callbacks)
+    SD->>SC: start()
+</pre>
 <h2 id="update-loop-sequence">Update-loop sequence</h2>
 <p>The <code>Scheduler</code> runs a one-second beat. When an update is
 due it calls back into <code>SlowDash._update()</code>, which asks the
 <code>Controller</code> to collect data requests from the panels, fetch
 data, and redraw.</p>
-<pre class="mermaid"><code>sequenceDiagram
+<pre class="mermaid">
+sequenceDiagram
     participant SC as Scheduler
     participant SD as SlowDash
     participant CO as Controller
@@ -681,40 +687,43 @@ data, and redraw.</p>
     participant API as server
     participant FR as Frame
 
-    SC-&gt;&gt;SC: _beat() (every 1 s)
-    SC-&gt;&gt;SD: update() -&gt; _update()
-    SD-&gt;&gt;CO: update({from, to})
-    CO-&gt;&gt;LO: fillDataRequest(dataRequest)
-    LO-&gt;&gt;PA: fillDataRequest(dataRequest)
-    CO-&gt;&gt;CO: dataRequest.queryList(currentData)
-    CO-&gt;&gt;API: GET api/data/&lt;channels&gt;?...
-    API--&gt;&gt;CO: JSON data
-    CO-&gt;&gt;CO: merge into currentData
-    CO-&gt;&gt;LO: draw(currentData)
-    LO-&gt;&gt;PA: draw(currentData, displayTimeRange)
-    SC--&gt;&gt;FR: setStatus() / setProgress() (via SlowDash callbacks)</code></pre>
+    SC->>SC: _beat() (every 1 s)
+    SC->>SD: update() -> _update()
+    SD->>CO: update({from, to})
+    CO->>LO: fillDataRequest(dataRequest)
+    LO->>PA: fillDataRequest(dataRequest)
+    CO->>CO: dataRequest.queryList(currentData)
+    CO->>API: GET api/data/...
+    API-->>CO: JSON data
+    CO->>CO: merge into currentData
+    CO->>LO: draw(currentData)
+    LO->>PA: draw(currentData, displayTimeRange)
+    SC-->>FR: setStatus() / setProgress() (via SlowDash callbacks)
+</pre>
 <h2 id="streaming-and-emit-sequence">Streaming and emit sequence</h2>
 <p>Current-data updates can also arrive over the websocket, bypassing
 the scheduler. Panel callbacks send control or current-data messages
 back through the <code>Controller</code>.</p>
-<pre class="mermaid"><code>sequenceDiagram
+<pre class="mermaid">
+sequenceDiagram
     participant API as server
     participant CO as Controller
     participant LO as Layout
     participant PA as Panel
 
-    API--&gt;&gt;CO: ws message (current_data)
-    CO-&gt;&gt;CO: parse JSON, set __meta.isCurrent
-    CO-&gt;&gt;LO: draw(data)
-    LO-&gt;&gt;PA: draw(data, displayTimeRange)
+    API-->>CO: ws message (current_data)
+    CO->>CO: parse JSON, set __meta.isCurrent
+    CO->>LO: draw(data)
+    LO->>PA: draw(data, displayTimeRange)
 
-    PA-&gt;&gt;CO: callbacks.emit(topic, message)
+    PA->>CO: callbacks.emit(topic, message)
     alt websocket open and topic == current_data
-        CO-&gt;&gt;API: socket.send(message)
+        CO->>API: socket.send(message)
     else
-        CO-&gt;&gt;API: POST ./api/emit/{topic}
-        CO-&gt;&gt;SC2: callbacks.forceUpdate()
-    end</code></pre>
+        CO->>API: POST ./api/emit/{topic}
+        CO->>SC2: callbacks.forceUpdate()
+    end
+</pre>
 <p>Here <code>SC2</code> is the same <code>Scheduler</code> shown
 earlier; <code>forceUpdate()</code> requests an immediate refresh after
 an emit.</p>
@@ -906,8 +915,8 @@ static utilities, including <code>JG.extend()</code>,
 (<code>asString()</code>) or UTC (<code>asUTCString()</code>). Plot axes
 reuse it for time-based X axes.</p>
 <p>SlowDash imports the core as:</p>
-<div class="sourceCode" id="cb39"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { JG <span class="im">as</span> $<span class="op">,</span> JGDateTime } <span class="im">from</span> <span class="st">&#39;./jagaimo/jagaimo.mjs&#39;</span><span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { JG <span class="im">as</span> $<span class="op">,</span> JGDateTime } <span class="im">from</span> <span class="st">&#39;./jagaimo/jagaimo.mjs&#39;</span><span class="op">;</span></span></code></pre></div>
 <p>The <code>$</code> alias is used throughout <code>slowjs</code> for
 DOM creation and manipulation.</p>
 <h3 id="jagawidgets.mjs"><code>jagawidgets.mjs</code></h3>
@@ -975,9 +984,9 @@ plot panels, canvas microplots, and map/color-scale panels.</p>
 <h3 id="colormap.mjs"><code>colormap.mjs</code></h3>
 <p><code>colormap.mjs</code> provides the <code>ColorMap</code> class,
 which maps a normalized scalar (0 to 1) to an RGB CSS color:</p>
-<div class="sourceCode" id="cb42"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> colorMap <span class="op">=</span> <span class="kw">new</span> <span class="fu">ColorMap</span>(<span class="st">&#39;Viridis&#39;</span>)<span class="op">;</span></span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> color <span class="op">=</span> colorMap<span class="op">.</span><span class="fu">colorNameOf</span>(<span class="fl">0.42</span>)<span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb38"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> colorMap <span class="op">=</span> <span class="kw">new</span> <span class="fu">ColorMap</span>(<span class="st">&#39;Viridis&#39;</span>)<span class="op">;</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> color <span class="op">=</span> colorMap<span class="op">.</span><span class="fu">colorNameOf</span>(<span class="fl">0.42</span>)<span class="op">;</span></span></code></pre></div>
 <p>Built-in palettes include <code>Parula</code>, <code>Viridis</code>,
 <code>Magma</code>, <code>DarkBodyRadiator</code>, <code>UW</code>,
 <code>UWGold</code>, <code>MIT</code>, <code>KIT</code>, and
@@ -1010,8 +1019,8 @@ rotates through a list of pages, usually dashboard pages.</p>
 <li>URL parameters.</li>
 </ul>
 <p>SlowDash configures it with:</p>
-<div class="sourceCode" id="cb45"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span> <span class="er">autocruise-configbase</span><span class="ot">=</span><span class="st">&quot;api/config/content/&quot;</span> <span class="er">autocruise-interval</span><span class="ot">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb41"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span> <span class="er">autocruise-configbase</span><span class="ot">=</span><span class="st">&quot;api/config/content/&quot;</span> <span class="er">autocruise-interval</span><span class="ot">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>This lets users open a cruise page such as:</p>
 <pre class="text"><code>slowcruise.html?config=slowcruise-example.json</code></pre>
 <p>and have <code>autocruise.js</code> fetch:</p>
@@ -1131,10 +1140,10 @@ display range changes.</li>
 <h1 id="extension-points">Extension Points</h1>
 <h3 id="adding-a-new-html-entry-page">Adding a new HTML entry page</h3>
 <p>A new page can import existing modules:</p>
-<div class="sourceCode" id="cb58"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { JG <span class="im">as</span> $ } <span class="im">from</span> <span class="st">&#39;./slowjs/jagaimo/jagaimo.mjs&#39;</span><span class="op">;</span></span>
-<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { SlowDash } <span class="im">from</span> <span class="st">&#39;./slowjs/slowdash.mjs&#39;</span><span class="op">;</span></span>
-<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { Frame } <span class="im">from</span> <span class="st">&#39;./slowjs/frame.mjs&#39;</span><span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb54"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { JG <span class="im">as</span> $ } <span class="im">from</span> <span class="st">&#39;./slowjs/jagaimo/jagaimo.mjs&#39;</span><span class="op">;</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { SlowDash } <span class="im">from</span> <span class="st">&#39;./slowjs/slowdash.mjs&#39;</span><span class="op">;</span></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { Frame } <span class="im">from</span> <span class="st">&#39;./slowjs/frame.mjs&#39;</span><span class="op">;</span></span></code></pre></div>
 <p>Then it can create a <code>SlowDash</code> instance and call
 <code>configure()</code> / <code>start()</code>.</p>
 <h3 id="adding-a-new-panel-type">Adding a new panel type</h3>

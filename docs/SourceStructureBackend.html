@@ -75,6 +75,12 @@ code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
   <link rel="stylesheet" href="style.css" />
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({startOnLoad: true});
+</script>
+
 </head>
 
 <body>
@@ -168,13 +174,6 @@ Notes</a></li>
 </div>
 </header>
 
-<p>This document describes the current SlowDash source structure and
-runtime flows as of the latest <code>develop</code> branch checked on
-2026-06-01. It focuses on the existing implementation under
-<code>app/server</code>, <code>app/plugin</code>,
-<code>lib/slowpy</code>, and <code>lib/slowlette</code>.</p>
-<p>It intentionally describes the current system, not planned future
-work.</p>
 <h1 id="high-level-structure">High-Level Structure</h1>
 <p>SlowDash is organized in four main Python layers:</p>
 <pre class="text"><code>Client / CLI / CGI

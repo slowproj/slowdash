@@ -2,8 +2,6 @@
 title: Source Structure - JavaScript Frontend
 ---
 
-This document describes the current JavaScript and HTML structure under `app/site` as of the latest `develop` branch checked on 2026-06-01. It covers the built-in SlowDash site modules, the `jagaimo` and `autocruise` submodules, and the browser-to-server communication flows.
-
 # High-Level Structure
 
 The `app/site` frontend is a browser-side application built from static HTML entry pages and ES modules under `app/site/slowjs`.
@@ -588,7 +586,7 @@ sequenceDiagram
     CO->>LO: fillDataRequest(dataRequest)
     LO->>PA: fillDataRequest(dataRequest)
     CO->>CO: dataRequest.queryList(currentData)
-    CO->>API: GET api/data/<channels>?...
+    CO->>API: GET api/data/...
     API-->>CO: JSON data
     CO->>CO: merge into currentData
     CO->>LO: draw(currentData)

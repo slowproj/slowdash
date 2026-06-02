@@ -2,8 +2,6 @@
 title: ソース構造 - JavaScript フロントエンド
 ---
 
-この文書は，2026-06-01 に確認した最新の `develop` ブランチ時点における `app/site` 以下の JavaScript と HTML の構造を説明します．対象は，組み込みの SlowDash サイトモジュール，`jagaimo` と `autocruise` のサブモジュール，およびブラウザとサーバー間の通信フローです．
-
 # 全体構造
 
 `app/site` のフロントエンドは，静的な HTML エントリーページと，`app/site/slowjs` 以下の ES モジュールから構成される，ブラウザ側のアプリケーションです．

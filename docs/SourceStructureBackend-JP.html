@@ -75,6 +75,12 @@ code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
   <link rel="stylesheet" href="style.css" />
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({startOnLoad: true});
+</script>
+
 </head>
 
 <body>
@@ -162,12 +168,6 @@ id="toc-開発上の実務的な注意">開発上の実務的な注意</a></li>
 </div>
 </header>
 
-<p>この文書は，2026-06-01 に確認した最新の <code>develop</code>
-ブランチ時点における SlowDash
-のソース構造と実行時の処理フローを説明します．対象は，現在の実装である
-<code>app/server</code>，<code>app/plugin</code>，<code>lib/slowpy</code>，<code>lib/slowlette</code>
-です．</p>
-<p>ここでは現行のシステムのみを説明し，将来の計画については扱いません．</p>
 <h1 id="全体構造">全体構造</h1>
 <p>SlowDash は，主に 4 つの Python レイヤーで構成されています．</p>
 <pre class="text"><code>Client / CLI / CGI

@@ -2,10 +2,6 @@
 title: Source Structure - Python Backend
 ---
 
-This document describes the current SlowDash source structure and runtime flows as of the latest `develop` branch checked on 2026-06-01. It focuses on the existing implementation under `app/server`, `app/plugin`, `lib/slowpy`, and `lib/slowlette`.
-
-It intentionally describes the current system, not planned future work.
-
 # High-Level Structure
 
 SlowDash is organized in four main Python layers:

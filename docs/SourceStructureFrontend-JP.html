@@ -75,6 +75,12 @@ code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
   <link rel="stylesheet" href="style.css" />
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({startOnLoad: true});
+</script>
+
 </head>
 
 <body>
@@ -137,11 +143,6 @@ id="toc-開発上の実務的な注意">開発上の実務的な注意</a></li>
 </div>
 </header>
 
-<p>この文書は，2026-06-01 に確認した最新の <code>develop</code>
-ブランチ時点における <code>app/site</code> 以下の JavaScript と HTML
-の構造を説明します．対象は，組み込みの SlowDash
-サイトモジュール，<code>jagaimo</code> と <code>autocruise</code>
-のサブモジュール，およびブラウザとサーバー間の通信フローです．</p>
 <h1 id="全体構造">全体構造</h1>
 <p><code>app/site</code> のフロントエンドは，静的な HTML
 エントリーページと，<code>app/site/slowjs</code> 以下の ES
@@ -618,32 +619,35 @@ id="モジュールの関係と呼び出しシーケンス">モジュールの�
 を自身のビューとして保持し，<code>Layout</code> が <code>Panel</code>
 インスタンスを生成・所有します．<code>Platform</code>
 は静的なヘルパーで，インスタンス化されません．</p>
-<pre class="mermaid"><code>flowchart TD
-    HTML[&quot;HTML entry page&quot;]
-    API[(&quot;SlowDash server: ./api, /ws&quot;)]
+<pre class="mermaid">
+flowchart TD
+    HTML["HTML entry page"]
+    API[("SlowDash server: ./api, /ws")]
 
-    HTML --&gt;|new| SD[&quot;SlowDash&quot;]
-    HTML --&gt;|new| FR[&quot;Frame&quot;]
-    SD &lt;--&gt;|&quot;status / progress / beat callbacks;&lt;br/&gt;setRange() / setUpdateInterval()&quot;| FR
+    HTML -->|new| SD["SlowDash"]
+    HTML -->|new| FR["Frame"]
+    SD <-->|"status / progress / beat callbacks;<br/>setRange() / setUpdateInterval()"| FR
 
-    SD --&gt;|new| LO[&quot;Layout&quot;]
-    SD --&gt;|new| CO[&quot;Controller&quot;]
-    SD --&gt;|new| SC[&quot;Scheduler&quot;]
+    SD -->|new| LO["Layout"]
+    SD -->|new| CO["Controller"]
+    SD -->|new| SC["Scheduler"]
 
-    SD -.-&gt;|&quot;Platform.initialize()&quot;| PF[&quot;Platform (static)&quot;]
-    PF --&gt;|&quot;GET ./api/config, content, theme&quot;| API
+    SD -.->|"Platform.initialize()"| PF["Platform (static)"]
+    PF -->|"GET ./api/config, content, theme"| API
 
-    CO --&gt;|&quot;view&quot;| LO
-    CO --&gt;|&quot;fetch api/data, websocket&quot;| API
-    LO --&gt;|&quot;PanelPluginLoader.load()&quot;| PP[&quot;PanelPluginLoader&quot;]
-    LO --&gt;|&quot;creates and owns&quot;| PA[&quot;Panel (one per config entry)&quot;]</code></pre>
+    CO -->|"view"| LO
+    CO -->|"fetch api/data, websocket"| API
+    LO -->|"PanelPluginLoader.load()"| PP["PanelPluginLoader"]
+    LO -->|"creates and owns"| PA["Panel (one per config entry)"]
+</pre>
 <h2 id="起動シーケンス">起動シーケンス</h2>
 <p><code>configure()</code> は <code>Platform</code>
 を通じてマージ済みの設定を構築し，<code>Scheduler</code>
 を初期化します．<code>start()</code> は
 <code>Controller</code>（およびそれを介して <code>Layout</code> と各
 <code>Panel</code>）を設定し，<code>Scheduler</code> を開始します．</p>
-<pre class="mermaid"><code>sequenceDiagram
+<pre class="mermaid">
+sequenceDiagram
     participant HTML as HTML page
     participant SD as SlowDash
     participant PF as Platform
@@ -652,25 +656,27 @@ id="モジュールの関係と呼び出しシーケンス">モジュールの�
     participant LO as Layout
     participant PA as Panel
 
-    HTML-&gt;&gt;SD: new SlowDash(div)
-    HTML-&gt;&gt;SD: configure(query)
-    SD-&gt;&gt;PF: Platform.initialize(defaults, options, args)
-    PF-&gt;&gt;PF: fetch ./api/config, page config, theme CSS
-    PF--&gt;&gt;SD: merged config
-    SD-&gt;&gt;SC: initialize({updateInterval, update, ...})
-    HTML-&gt;&gt;SD: start()
-    SD-&gt;&gt;CO: configure(config)
-    CO-&gt;&gt;LO: configure(config, options, callbacks)
-    LO-&gt;&gt;LO: PanelPluginLoader.load()
-    LO-&gt;&gt;PA: new Panel(div, style)
-    LO-&gt;&gt;PA: configure(config, options, callbacks)
-    SD-&gt;&gt;SC: start()</code></pre>
+    HTML->>SD: new SlowDash(div)
+    HTML->>SD: configure(query)
+    SD->>PF: Platform.initialize(defaults, options, args)
+    PF->>PF: fetch ./api/config, page config, theme CSS
+    PF-->>SD: merged config
+    SD->>SC: initialize({updateInterval, update, ...})
+    HTML->>SD: start()
+    SD->>CO: configure(config)
+    CO->>LO: configure(config, options, callbacks)
+    LO->>LO: PanelPluginLoader.load()
+    LO->>PA: new Panel(div, style)
+    LO->>PA: configure(config, options, callbacks)
+    SD->>SC: start()
+</pre>
 <h2 id="更新ループのシーケンス">更新ループのシーケンス</h2>
 <p><code>Scheduler</code> は 1 秒ごとの beat
 を回します．更新の時期になると <code>SlowDash._update()</code>
 を呼び戻し，これが <code>Controller</code>
 に対して，各パネルからのデータリクエストの収集，データの取得，再描画を依頼します．</p>
-<pre class="mermaid"><code>sequenceDiagram
+<pre class="mermaid">
+sequenceDiagram
     participant SC as Scheduler
     participant SD as SlowDash
     participant CO as Controller
@@ -679,41 +685,44 @@ id="モジュールの関係と呼び出しシーケンス">モジュールの�
     participant API as server
     participant FR as Frame
 
-    SC-&gt;&gt;SC: _beat() (every 1 s)
-    SC-&gt;&gt;SD: update() -&gt; _update()
-    SD-&gt;&gt;CO: update({from, to})
-    CO-&gt;&gt;LO: fillDataRequest(dataRequest)
-    LO-&gt;&gt;PA: fillDataRequest(dataRequest)
-    CO-&gt;&gt;CO: dataRequest.queryList(currentData)
-    CO-&gt;&gt;API: GET api/data/&lt;channels&gt;?...
-    API--&gt;&gt;CO: JSON data
-    CO-&gt;&gt;CO: merge into currentData
-    CO-&gt;&gt;LO: draw(currentData)
-    LO-&gt;&gt;PA: draw(currentData, displayTimeRange)
-    SC--&gt;&gt;FR: setStatus() / setProgress() (via SlowDash callbacks)</code></pre>
+    SC->>SC: _beat() (every 1 s)
+    SC->>SD: update() -> _update()
+    SD->>CO: update({from, to})
+    CO->>LO: fillDataRequest(dataRequest)
+    LO->>PA: fillDataRequest(dataRequest)
+    CO->>CO: dataRequest.queryList(currentData)
+    CO->>API: GET api/data/<channels>?...
+    API-->>CO: JSON data
+    CO->>CO: merge into currentData
+    CO->>LO: draw(currentData)
+    LO->>PA: draw(currentData, displayTimeRange)
+    SC-->>FR: setStatus() / setProgress() (via SlowDash callbacks)
+</pre>
 <h2 id="ストリーミングと-emit-のシーケンス">ストリーミングと emit
 のシーケンス</h2>
 <p>現在値データの更新は，スケジューラを経由せず websocket
 経由で届くこともあります．パネルのコールバックは，制御メッセージや現在値データを
 <code>Controller</code> を通じて送り返します．</p>
-<pre class="mermaid"><code>sequenceDiagram
+<pre class="mermaid">
+sequenceDiagram
     participant API as server
     participant CO as Controller
     participant LO as Layout
     participant PA as Panel
 
-    API--&gt;&gt;CO: ws message (current_data)
-    CO-&gt;&gt;CO: parse JSON, set __meta.isCurrent
-    CO-&gt;&gt;LO: draw(data)
-    LO-&gt;&gt;PA: draw(data, displayTimeRange)
+    API-->>CO: ws message (current_data)
+    CO->>CO: parse JSON, set __meta.isCurrent
+    CO->>LO: draw(data)
+    LO->>PA: draw(data, displayTimeRange)
 
-    PA-&gt;&gt;CO: callbacks.emit(topic, message)
+    PA->>CO: callbacks.emit(topic, message)
     alt websocket open and topic == current_data
-        CO-&gt;&gt;API: socket.send(message)
+        CO->>API: socket.send(message)
     else
-        CO-&gt;&gt;API: POST ./api/emit/{topic}
-        CO-&gt;&gt;SC2: callbacks.forceUpdate()
-    end</code></pre>
+        CO->>API: POST ./api/emit/{topic}
+        CO->>SC2: callbacks.forceUpdate()
+    end
+</pre>
 <p>ここで <code>SC2</code> は前掲と同じ <code>Scheduler</code>
 で，<code>forceUpdate()</code> は emit
 後に即時の再描画を要求します．</p>
@@ -909,8 +918,8 @@ $(&#39;&lt;g&gt;&#39;, &#39;svg&#39;)   SVG 名前空間で SVG 要素を生成<
 UTC（<code>asUTCString()</code>）として整形します．時間軸の X
 軸では，これが再利用されます．</p>
 <p>SlowDash では，コアを次のようにインポートします．</p>
-<div class="sourceCode" id="cb39"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { JG <span class="im">as</span> $<span class="op">,</span> JGDateTime } <span class="im">from</span> <span class="st">&#39;./jagaimo/jagaimo.mjs&#39;</span><span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { JG <span class="im">as</span> $<span class="op">,</span> JGDateTime } <span class="im">from</span> <span class="st">&#39;./jagaimo/jagaimo.mjs&#39;</span><span class="op">;</span></span></code></pre></div>
 <p><code>$</code> エイリアスは，<code>slowjs</code> 全体で DOM
 の生成・操作に使われます．</p>
 <h3 id="jagawidgets.mjs"><code>jagawidgets.mjs</code></h3>
@@ -975,9 +984,9 @@ microplot，マップ/カラースケールのパネルで使います．</p>
 <p><code>colormap.mjs</code> は <code>ColorMap</code>
 クラスを提供します．これは，正規化されたスカラー（0〜1）を RGB の CSS
 色に対応づけます．</p>
-<div class="sourceCode" id="cb42"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> colorMap <span class="op">=</span> <span class="kw">new</span> <span class="fu">ColorMap</span>(<span class="st">&#39;Viridis&#39;</span>)<span class="op">;</span></span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> color <span class="op">=</span> colorMap<span class="op">.</span><span class="fu">colorNameOf</span>(<span class="fl">0.42</span>)<span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb38"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> colorMap <span class="op">=</span> <span class="kw">new</span> <span class="fu">ColorMap</span>(<span class="st">&#39;Viridis&#39;</span>)<span class="op">;</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> color <span class="op">=</span> colorMap<span class="op">.</span><span class="fu">colorNameOf</span>(<span class="fl">0.42</span>)<span class="op">;</span></span></code></pre></div>
 <p>組み込みのパレットには
 <code>Parula</code>，<code>Viridis</code>，<code>Magma</code>，<code>DarkBodyRadiator</code>，<code>UW</code>，<code>UWGold</code>，<code>MIT</code>，<code>KIT</code>，<code>Gray</code>
 などがあり，認識できない名前の場合は，生成された虹色パレットにフォールバックします．カラーマップは，アンダーフロー/オーバーフローに別々の色を使うことも，範囲外の値を端の色にクランプすることもできます．<code>jagaplot.mjs</code>
@@ -1010,8 +1019,8 @@ JavaScript ライブラリです．</p>
 <li>URL パラメータ．</li>
 </ul>
 <p>SlowDash は，次のように設定します．</p>
-<div class="sourceCode" id="cb45"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span> <span class="er">autocruise-configbase</span><span class="ot">=</span><span class="st">&quot;api/config/content/&quot;</span> <span class="er">autocruise-interval</span><span class="ot">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb41"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span> <span class="er">autocruise-configbase</span><span class="ot">=</span><span class="st">&quot;api/config/content/&quot;</span> <span class="er">autocruise-interval</span><span class="ot">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>これにより，たとえば次のような cruise ページを開けます．</p>
 <pre class="text"><code>slowcruise.html?config=slowcruise-example.json</code></pre>
 <p>その場合，<code>autocruise.js</code> は次を取得します．</p>
@@ -1129,10 +1138,10 @@ one panel config per panel instance</code></pre>
 <h3 id="新しい-html-エントリーページの追加">新しい HTML
 エントリーページの追加</h3>
 <p>新しいページは，既存のモジュールをインポートできます．</p>
-<div class="sourceCode" id="cb58"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { JG <span class="im">as</span> $ } <span class="im">from</span> <span class="st">&#39;./slowjs/jagaimo/jagaimo.mjs&#39;</span><span class="op">;</span></span>
-<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { SlowDash } <span class="im">from</span> <span class="st">&#39;./slowjs/slowdash.mjs&#39;</span><span class="op">;</span></span>
-<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { Frame } <span class="im">from</span> <span class="st">&#39;./slowjs/frame.mjs&#39;</span><span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb54"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { JG <span class="im">as</span> $ } <span class="im">from</span> <span class="st">&#39;./slowjs/jagaimo/jagaimo.mjs&#39;</span><span class="op">;</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { SlowDash } <span class="im">from</span> <span class="st">&#39;./slowjs/slowdash.mjs&#39;</span><span class="op">;</span></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { Frame } <span class="im">from</span> <span class="st">&#39;./slowjs/frame.mjs&#39;</span><span class="op">;</span></span></code></pre></div>
 <p>その後，<code>SlowDash</code>
 のインスタンスを作り，<code>configure()</code> / <code>start()</code>
 を呼べます．</p>

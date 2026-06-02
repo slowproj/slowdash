@@ -2,10 +2,6 @@
 title: ソース構造 - Python バックエンド
 ---
 
-この文書は，2026-06-01 に確認した最新の `develop` ブランチ時点における SlowDash のソース構造と実行時の処理フローを説明します．対象は，現在の実装である `app/server`，`app/plugin`，`lib/slowpy`，`lib/slowlette` です．
-
-ここでは現行のシステムのみを説明し，将来の計画については扱いません．
-
 # 全体構造
 
 SlowDash は，主に 4 つの Python レイヤーで構成されています．
