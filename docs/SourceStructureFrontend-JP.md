@@ -563,7 +563,8 @@ sequenceDiagram
     SD->>CO: configure(config)
     CO->>LO: configure(config, options, callbacks)
     LO->>LO: PanelPluginLoader.load()
-    LO->>PA: new Panel(...); configure(...)
+    LO->>PA: new Panel(div, style)
+    LO->>PA: configure(config, options, callbacks)
     SD->>SC: start()
 ```
 
