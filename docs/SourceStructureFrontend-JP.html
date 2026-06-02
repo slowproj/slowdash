@@ -662,7 +662,8 @@ id="モジュールの関係と呼び出しシーケンス">モジュールの�
     SD-&gt;&gt;CO: configure(config)
     CO-&gt;&gt;LO: configure(config, options, callbacks)
     LO-&gt;&gt;LO: PanelPluginLoader.load()
-    LO-&gt;&gt;PA: new Panel(...); configure(...)
+    LO-&gt;&gt;PA: new Panel(div, style)
+    LO-&gt;&gt;PA: configure(config, options, callbacks)
     SD-&gt;&gt;SC: start()</code></pre>
 <h2 id="更新ループのシーケンス">更新ループのシーケンス</h2>
 <p><code>Scheduler</code> は 1 秒ごとの beat
