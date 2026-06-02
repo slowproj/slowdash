@@ -586,7 +586,7 @@ sequenceDiagram
     CO->>LO: fillDataRequest(dataRequest)
     LO->>PA: fillDataRequest(dataRequest)
     CO->>CO: dataRequest.queryList(currentData)
-    CO->>API: GET api/data/<channels>?...
+    CO->>API: GET api/data/...
     API-->>CO: JSON data
     CO->>CO: merge into currentData
     CO->>LO: draw(currentData)
