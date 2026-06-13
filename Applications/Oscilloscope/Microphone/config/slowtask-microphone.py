@@ -4,6 +4,9 @@ from slowpy.control import control_system as ctrl
 mic = ctrl.import_control_module('Microphone').microphone(block_size=1024)
 mic.is_running = False
 
+from slowpy.store import DataStore_SQLite
+datastore = DataStore_SQLite('sqlite:///Microphone.db', table="ts_data")
+
 from slowpy import Graph
 
 
@@ -37,8 +40,10 @@ async def _loop():
         await ctrl.aio_stream('mic', rms)
         await ctrl.aio_stream('mic_trace', g_trace)
         await ctrl.aio_stream('mic_fft', g_fft)
+
+        datastore.append({'mic_ts_rms': rms})
         
-        await ctrl.aio_sleep(0.5)
+        await ctrl.aio_sleep(1)
 
 
 async def start(sample_rate:int, block_size:int):
