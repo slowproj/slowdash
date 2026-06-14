@@ -1,0 +1,16 @@
+{
+    "meta": {
+        "name": "Home",
+        "title": "Home"
+    },
+    "control": {
+        "grid": { "rows": 2, "columns": 2 },
+        "inactive": true
+    },
+    "panels": [
+        { "type": "channellist", "default_filter": "", "case_sensitive": false },
+        { "type": "catalog", "catalog_type": "slowdash,slowplot,slowagent,userhtml" },
+        { "type": "taskmanager" },
+        { "type": "tools" }
+    ]
+}
