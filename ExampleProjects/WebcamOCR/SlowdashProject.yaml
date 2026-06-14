@@ -3,14 +3,20 @@ slowdash_project:
   title: Webcam OCR (Omega CN1500)
 
   data_source:
-    url: ${DB_URL:-sqlite:///WebcamOCR}
-    time_series:
-      schema: data[channel]@timestamp(unix)=value
-    object_time_series:
-      schema: photo[channel]@timestamp(unix)=value
-    blob_storage:
-      type: file
-      base_directory: data/blob
+    - url: ${DB_URL:-sqlite:///WebcamOCR}
+      time_series:
+        schema: data[channel]@timestamp(unix)=value
+      object_time_series:
+        schema: photo[channel]@timestamp(unix)=value
+      blob_storage:
+        type: file
+        base_directory: data/blob
+
+    - url: sqlite:///LabJack.db
+      time_series:
+        schema: slow_data [channel] @timestamp(unix) = value
+
+
 
   # Loaded by slowdash-agent-tools.  Adds /api/agent/* routes and surfaces
   # slowagent-NAME.json layouts in the home-page catalog.
@@ -24,5 +30,12 @@ slowdash_project:
       parameters:
         layout_file: slowagent-Omega.json
 
+    - name: LabJack
+      auto_load: true
+      
   style:
     theme: light
+
+  system:
+    our_security_is_perfect: true
+    
