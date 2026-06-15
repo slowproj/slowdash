@@ -1,8 +1,13 @@
 
 
 <form>
-  <input type="submit" name="device_control.start()" value="Start">
-  <input type="submit" name="device_control.stop()" value="Stop">
+  <b>Device Controls</b> (RPC)<br>
+  Set Point: <input type="number" name="value" value="10">
+  <input type="submit" name="randomwalk.set_value()" value="Set">
+  <p>  
+  <b>Run Controls</b> (PubSub)<br>
+  <input type="submit" name="publish control.start()" value="Start">
+  <input type="submit" name="publish control.stop()" value="Stop">
 </form>
 
 

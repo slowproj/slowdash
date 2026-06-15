@@ -19,7 +19,7 @@ class Mesh:
         sep: str|None = '.',
         single_wc: str|None = '*',
         tail_wc: str|None = '>',
-        rpc_file_prefix: str|None = None
+        name_prefix_to_drop: str|None = None
     ):
         self._on_reconnect = on_reconnect
         self._loop_timeout = loop_timeout
@@ -39,9 +39,9 @@ class Mesh:
             self._name = name
         else:
             self._name = os.path.splitext(os.path.basename(inspect.stack()[-1].filename))[0]
-            if rpc_file_prefix is not None:
-                if self._name.startswith(rpc_file_prefix):
-                    self._name = self._name[len(rpc_file_prefix):]
+            if name_prefix_to_drop is not None:
+                if self._name.startswith(name_prefix_to_drop):
+                    self._name = self._name[len(name_prefix_to_drop):]
             self._name = re.sub(r'[^a-zA-Z0-9]', '_', self._name)
 
         Mesh._mesh_sequence_id += 1

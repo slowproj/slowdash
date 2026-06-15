@@ -263,10 +263,33 @@ SlowTask のスクリプトは，独立プロセス (task process) として走�
 
 SlowTask への HTTP API は Slowlette を経由して `sd_taskprocess.py` コンポーネントにより実装されています．
 
-### GET/POST
-|Path|動作|
-|---|---|
-| GET `api/task` | Task Spec の一覧を返す |
+### GET `api/task`
+Task Spec の一覧を返す
+
+### POST `api/control`
+Mesh メッシュリクエスト
+
+- Body は HTML の Form 入力値の JSON ドキュメント（フォーム中の `<input>` の `name` と `value` を集めた object）
+- `type="submit"` の `<input>` エレメントの `name` をリクエストと解釈する
+
+#### RPC Call Request (旧形式の slowtask function call と互換)
+- Syntax: `タスク名.関数名(固定パラメータリスト)`
+- Example: `<input type="submit" name="run_controller.start(run_mode='normal')">`
+- Form 中の `type="submit"` 以外の `<input>` 要素の `name` と `value` に固定パラメータを追加したものが RPC の引数に渡される．
+- TODO: RPC のシグニチャを見て，必要なパラメータのみを選んで，型チェック・型変換もする
+- レスポンス：
+  - 成功： 200, `{ "status": "ok", "return_value": return_value }`
+  - RPC エラー (呼び出し先例外)： 200, `{ "status": "error", "message": error_message }`
+  - RPC キャンセル (呼び出し先 Async-Task Cancelled)： 200, `{ "status": "cancelled" }`
+  - その他エラー: 400 番台のエラーレスポンス
+
+#### Publish Request
+- Syntax: `publish トピック名(固定パラメータリスト)`
+- Example: `<input type="submit" name="publish my_setup.start(run_mode='normal')">`
+- Form 中の `type="submit"` 以外の `<input>` 要素の `name` と `value` に固定パラメータを追加した Key-Value Pairs の JSON obect が publish される．
+- レスポンス：
+  - 成功： 200, `{ "status": "ok" }`
+  - エラー: 400 番台のエラーレスポンス
 
 
 
@@ -283,6 +306,12 @@ Task の生存信号．Headers のメタデータのみで，Body は空．
 - Timing:
   - 指定時間間隔（`Tasklet._heartbeat_interval`，１０秒）
   - Tasklet のメインループから送出（コルーチンやスレッドではない；必ずメインと一緒に停止する）
+
+##### 第２用途
+- サーバークラッシュなどによる PubSub の接続断後の再接続は publish にトリガされるので，heartbeat 送り出しが接続断後の reconnect retry になる
+- Reconnect により，`sd.task.spec` 再送などもトリガされる
+- サーバー復帰後のシステム再開は，heartbeat interval 程度遅れることになる
+
 
 ##### JSON Schema
 Headers:
@@ -488,5 +517,7 @@ Body:
 
 # TODO
 - AsyncNATS, AsyncMQTT, AsyncRabbitMQ, AsyncRedis に on_reconnect を実装する
+- Task 終了時の unregister
 - RPC の引数型チェックと型変換
-- RPC の呼び出し前に Last Heartbeat をチェック
+- RPC の呼び出し前に Last Heartbeat をチェック，なければ unregister
+

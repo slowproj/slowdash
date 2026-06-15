@@ -7,12 +7,13 @@ from sd_component import Component
 from slowpy.mesh import Mesh
 
 
-class FunctionCallRequest:
+class MeshRequest:
     def __init__(self, doc:dict):
-        self.module_name = ''
-        self.function_name = ''
-        self.params = {}
-        self.error = None
+        self.topic_name:str|None = None
+        self.module_name:str = ''
+        self.function_name:str = ''
+        self.params:dict = {}
+        self.error:str|None = None
 
         self._parse(doc)
 
@@ -20,29 +21,41 @@ class FunctionCallRequest:
     def __str__(self):
         if self.error is not None:
             return f'Error({self.error})'
+
+        if self.topic_name is not None:
+            name = f'publish {self.topic_name}'
+        elif self.module_name:
+            name = self.module_name + '.' + (self.function_name or '[NO_FUNCTION_NAME]')
+        else:
+            name = '[INVALID_NAME]'
         
-        return (''
-            + f'{self.module_name or "[NO_MODULE_NAME]"}.{self.function_name or "[NO_FUNCTION_NAME]"}'
-            + f'({",".join([k+"="+repr(v) for k,v in self.params.items()])})'
-        )
-                
+        return name + f'({",".join([k+"="+repr(v) for k,v in self.params.items()])})'
+
+    
     def _parse(self, doc:dict):
-        module_name, function_name, params, error = '', '', {}, None
-        
+        topic_name, module_name, function_name, params = None, '', '', {}
+
         name, args = '', ''
         for key, value in doc.items():
             if len(key) > 2 and ('(' in key) and key.endswith(')'):
                 [name, args] = key.split('(', 1)
-                [module_name, function_name] = name.split('.', 1)
+                if name.lower().startswith('publish '):
+                    topic_name = name[len('publish '):]
+                else:
+                    [module_name, function_name] = name.split('.', 1)
             else:
                 params[key] = value
-
-        if len(module_name) == 0 or not module_name[0].isalpha() or not module_name.replace('_', 'a').isalnum():
-            error = f'bad module name: {name}'
-            args = ''
+                
+        if topic_name is not None:
+            if not topic_name[0].isalpha() or not topic_name.replace('_','a').replace('.','a').replace('/','a').isalnum():
+                self.error = f'bad topic name: {name}'
+                return
+        elif len(module_name) == 0 or not module_name[0].isalpha() or not module_name.replace('_', 'a').isalnum():
+            self.error = f'bad module name: {name}'
+            return
         elif len(function_name) == 0 or not function_name[0].isalpha() or not function_name.replace('_', 'a').isalnum():
-            error = f'bad function name: {name}'
-            args = ''
+            self.error = f'bad function name: {name}'
+            return
 
         arg_params = {}
         key, value = '', ''
@@ -55,12 +68,13 @@ class FunctionCallRequest:
                     in_key = False
                 elif ch == ')':
                     if (len(key) > 0):
-                        error = f'{name}: bad argument list: {args}'
+                        self.error = f'{name}: bad argument list: {args}'
+                        return
                     break
                 else:
                     if (len(key) == 0 and not ch.isalpha()) or (not ch.isalnum()):
-                        error = f'{name}: bad argument name: {args}'
-                        break
+                        self.error = f'{name}: bad argument name: {args}'
+                        return
                     key += ch
             else:
                 if ch in [ '"', "'" ]:
@@ -75,19 +89,21 @@ class FunctionCallRequest:
                     key, value = '', ''
                     in_key = True
         if len(key) > 0 or len(value) > 0:
-            error = f'{name}: bad argument list: {args}'
-
-        if error is not None:
-            self.error = re.sub(r'[^A-Za-z0-9_.,:;()= ]', '?', error)  # sanitize log message
+            self.error = f'{name}: bad argument list: {args}'
+            return
+        
+        if topic_name is not None:
+            self.topic_name = topic_name
         else:
             self.module_name = module_name
             self.function_name = function_name
-            params.update(arg_params)
-            for key, value in params.items():
-                try:
-                    self.params[key] = json.loads(value)
-                except Exception:
-                    self.params[key] = value
+            
+        params.update(arg_params)
+        for key, value in params.items():
+            try:
+                self.params[key] = json.loads(value)
+            except Exception:
+                self.params[key] = value
 
                 
 
@@ -109,13 +125,17 @@ class Task:
         return self._spec
 
 
-    async def process_command(self, request: FunctionCallRequest, mesh:Mesh) -> bool|str|None:
+    async def process_command(self, request:MeshRequest, mesh:Mesh) -> bool|str|None:
         if request.module_name != self._name:
             return None
         if request.function_name not in self._functions:
             return f'no such function: {request}'
                 
         # TODO: match the arguments
+
+        for key, value in request.params.items():
+            if not key.replace('_', 'a').isalnum():
+                return f'bad argument name: {request}'
 
         logging.info(f'Dispatch Task RPC: {request} --> {self._mesh_id}')
         try:
@@ -190,10 +210,17 @@ class TaskProcessComponent(Component):
 
         # unlike GET, only one module can process a POST request
 
-        request = FunctionCallRequest(dict(doc))
+        request = MeshRequest(dict(doc))
         if request.error is not None:
             return {'status': 'error', 'message': request.error }
         
+        if request.topic_name is not None:
+            try:
+                await self._mesh.aio_publish(request.topic_name, request.params)
+                return {'status': 'ok'}
+            except Exception as e:
+                return {'status': 'error', 'message': str(e) }
+            
         for task in self._task_table.values():
             result = await task.process_command(request, self._mesh)
             if result is not None:

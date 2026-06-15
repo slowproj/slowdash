@@ -555,21 +555,55 @@ module)をすることができます．この場合は，以下の機能のみ�
 <p>SlowTask への HTTP API は Slowlette を経由して
 <code>sd_taskprocess.py</code>
 コンポーネントにより実装されています．</p>
-<h3 id="getpost">GET/POST</h3>
-<table>
-<thead>
-<tr class="header">
-<th>Path</th>
-<th>動作</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>GET <code>api/task</code></td>
-<td>Task Spec の一覧を返す</td>
-</tr>
-</tbody>
-</table>
+<h3 id="get-apitask">GET <code>api/task</code></h3>
+<p>Task Spec の一覧を返す</p>
+<h3 id="post-apicontrol">POST <code>api/control</code></h3>
+<p>Mesh メッシュリクエスト</p>
+<ul>
+<li>Body は HTML の Form 入力値の JSON ドキュメント（フォーム中の
+<code>&lt;input&gt;</code> の <code>name</code> と <code>value</code>
+を集めた object）</li>
+<li><code>type="submit"</code> の <code>&lt;input&gt;</code>
+エレメントの <code>name</code> をリクエストと解釈する</li>
+</ul>
+<h4 id="rpc-call-request-旧形式の-slowtask-function-call-と互換">RPC
+Call Request (旧形式の slowtask function call と互換)</h4>
+<ul>
+<li>Syntax: <code>タスク名.関数名(固定パラメータリスト)</code></li>
+<li>Example:
+<code>&lt;input type="submit" name="run_controller.start(run_mode='normal')"&gt;</code></li>
+<li>Form 中の <code>type="submit"</code> 以外の
+<code>&lt;input&gt;</code> 要素の <code>name</code> と
+<code>value</code> に固定パラメータを追加したものが RPC
+の引数に渡される．</li>
+<li>TODO: RPC
+のシグニチャを見て，必要なパラメータのみを選んで，型チェック・型変換もする</li>
+<li>レスポンス：
+<ul>
+<li>成功： 200,
+<code>{ "status": "ok", "return_value": return_value }</code></li>
+<li>RPC エラー (呼び出し先例外)： 200,
+<code>{ "status": "error", "message": error_message }</code></li>
+<li>RPC キャンセル (呼び出し先 Async-Task Cancelled)： 200,
+<code>{ "status": "cancelled" }</code></li>
+<li>その他エラー: 400 番台のエラーレスポンス</li>
+</ul></li>
+</ul>
+<h4 id="publish-request">Publish Request</h4>
+<ul>
+<li>Syntax: <code>publish トピック名(固定パラメータリスト)</code></li>
+<li>Example:
+<code>&lt;input type="submit" name="publish my_setup.start(run_mode='normal')"&gt;</code></li>
+<li>Form 中の <code>type="submit"</code> 以外の
+<code>&lt;input&gt;</code> 要素の <code>name</code> と
+<code>value</code> に固定パラメータを追加した Key-Value Pairs の JSON
+obect が publish される．</li>
+<li>レスポンス：
+<ul>
+<li>成功： 200, <code>{ "status": "ok" }</code></li>
+<li>エラー: 400 番台のエラーレスポンス</li>
+</ul></li>
+</ul>
 <h1 id="pubsub-トピック構成">PubSub トピック構成</h1>
 <h2 id="sd.task">sd.task</h2>
 <ul>
@@ -577,7 +611,7 @@ module)をすることができます．この場合は，以下の機能のみ�
 subscribe すること．</li>
 </ul>
 <h3 id="sd.task.heartbeat.task_name">sd.task.heartbeat.{task_name}</h3>
-<p>Task の生存信号</p>
+<p>Task の生存信号．Headers のメタデータのみで，Body は空．</p>
 <h5 id="主な用途">主な用途</h5>
 <ul>
 <li>Sender(s): task process</li>
@@ -588,6 +622,16 @@ subscribe すること．</li>
 <li>Tasklet
 のメインループから送出（コルーチンやスレッドではない；必ずメインと一緒に停止する）</li>
 </ul></li>
+</ul>
+<h5 id="第２用途">第２用途</h5>
+<ul>
+<li>サーバークラッシュなどによる PubSub の接続断後の再接続は publish
+にトリガされるので，heartbeat 送り出しが接続断後の reconnect retry
+になる</li>
+<li>Reconnect により，<code>sd.task.spec</code>
+再送などもトリガされる</li>
+<li>サーバー復帰後のシステム再開は，heartbeat interval
+程度遅れることになる</li>
 </ul>
 <h5 id="json-schema">JSON Schema</h5>
 <p>Headers:</p>
@@ -771,7 +815,10 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb21-1"><a href=
 <ul>
 <li>AsyncNATS, AsyncMQTT, AsyncRabbitMQ, AsyncRedis に on_reconnect
 を実装する</li>
+<li>Task 終了時の unregister</li>
 <li>RPC の引数型チェックと型変換</li>
+<li>RPC の呼び出し前に Last Heartbeat をチェック，なければ
+unregister</li>
 </ul>
 
 

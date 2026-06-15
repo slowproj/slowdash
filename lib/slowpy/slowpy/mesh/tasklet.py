@@ -16,7 +16,7 @@ class Tasklet:
         self._dash = Dash()
         
         self._mesh_url = None
-        self._mesh = Mesh(name=name, on_reconnect=self.on_reconnect)
+        self._mesh = Mesh(name=name, on_reconnect=self.on_reconnect, name_prefix_to_drop='slowtask-')
         if self._name is None:
             self._name = self._mesh.name
         
