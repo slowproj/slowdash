@@ -1,6 +1,7 @@
 # Created by Sanshiro Enomoto on 23 March 2026 #
 
 import os, time, re, uuid, socket, threading, asyncio, inspect, logging
+from collections.abc import Callable
 from urllib.parse import urlsplit
 from slowpy.control import ControlNode, control_system as ctrl
 
@@ -12,13 +13,15 @@ class Mesh:
         url: str|None = None,
         *,
         name: str|None = None,
-        rpc_timeout: float = 10,
+        on_reconnect: Callable[[],None] = None,
+        rpc_timeout: float = 5,
         loop_timeout: float = 0.1,
         sep: str|None = '.',
         single_wc: str|None = '*',
         tail_wc: str|None = '>',
         rpc_file_prefix: str|None = None
     ):
+        self._on_reconnect = on_reconnect
         self._loop_timeout = loop_timeout
         self._rpc_timeout = rpc_timeout
 
@@ -32,23 +35,24 @@ class Mesh:
         self._pubargs = {}
         self._subargs = { 'timeout': self._loop_timeout }
         
+        if name is not None:
+            self._name = name
+        else:
+            self._name = os.path.splitext(os.path.basename(inspect.stack()[-1].filename))[0]
+            if rpc_file_prefix is not None:
+                if self._name.startswith(rpc_file_prefix):
+                    self._name = self._name[len(rpc_file_prefix):]
+            self._name = re.sub(r'[^a-zA-Z0-9]', '_', self._name)
+
+        Mesh._mesh_sequence_id += 1
+        self._mesh_id = f'{self._name}_{socket.gethostname()}_{os.getpid()}_{Mesh._mesh_sequence_id}'
+        self._mesh_id = re.sub(r'[^a-zA-Z0-9]', '_', self._mesh_id)
+        
         if url is not None:
             self.connect(url)
         else:
             self._pubsub = ctrl.import_control_module('AsyncLocalPubsub').async_localpubsub()
 
-        if name is None:
-            self._name = os.path.splitext(os.path.basename(inspect.stack()[1].filename))[0]
-            if rpc_file_prefix is not None:
-                if self._name.startswith(rpc_file_prefix):
-                    self._name = self._name[len(rpc_file_prefix):]
-            self._name = re.sub(r'[^a-zA-Z0-9]', '_', self._name)
-        else:
-            self._name = name
-
-        Mesh._mesh_sequence_id += 1
-        self._mesh_id = f'{self._name}_{socket.gethostname()}_{os.getpid()}_{Mesh._mesh_sequence_id}'
-        self._mesh_id = re.sub(r'[^a-zA-Z0-9]', '_', self._mesh_id)
         self._rpc_count = 0
         self._reply_queues = {}  # CorrelationID(str) -> asyncio.Queue
         self._reply_lock = asyncio.Lock()
@@ -63,19 +67,25 @@ class Mesh:
         }
 
         self._exported_nodes = {}
+
+        self._is_running = False
         
         
     def connect(self, url:str):
         if url is None:
             return
-        
+
         try:
             o = urlsplit(url)
             if o.scheme in ['slowmq', 'slowdash']:
-                self._pubsub = ctrl.import_control_module('AsyncSlowMQ').async_slowmq(f'slowmq://{o.netloc}')
+                self._pubsub = ctrl.import_control_module('AsyncSlowMQ').async_slowmq(
+                    f'slowmq://{o.netloc}', name=self._mesh_id, on_reconnect=self._on_reconnect
+                )
                 self._sep, self._single_wc, self._tail_wc = tail_wc = '.', '*', '>'
             elif o.scheme in ['slowmqs', 'slowdashs']:
-                self._pubsub = ctrl.import_control_module('AsyncSlowMQ').async_slowmq(f'slowmqs://{o.netloc}')
+                self._pubsub = ctrl.import_control_module('AsyncSlowMQ').async_slowmq(
+                    f'slowmqs://{o.netloc}', name=self._mesh_id, on_reconnect=self._on_reconnect
+                )
                 self._sep, self._single_wc, self._tail_wc = tail_wc = '.', '*', '>'
             elif o.scheme == 'nats':
                 self._pubsub = ctrl.import_control_module('AsyncNATS').async_nats(url)
@@ -94,8 +104,10 @@ class Mesh:
                     logging.error('Mesh: AMQP (RabbitMQ) requries an exchange name')
                 self._sep, self._single_wc, self._tail_wc = tail_wc = '.', '*', '#'
             else:
-                logging.error('Mesh: unknown pubsub type: %s' % o.scheme)
+                self._pubsub = ctrl.import_control_module('AsyncLocalPubsub').async_localpubsub()
+                logging.error(f'Mesh: unknown pubsub type: {o.scheme}')
         except Exception as e:
+            self._pubsub = ctrl.import_control_module('AsyncLocalPubsub').async_localpubsub()
             logging.error(e)
 
 
@@ -109,6 +121,14 @@ class Mesh:
         return self._mesh_id
     
             
+    def export_functions(self):
+        return { name:func for name,func in self._function_table.items() if not name.startswith('_sd_') }
+
+    
+    def export_variables(self):
+        return self._exported_nodes
+
+    
     def _convert_topic(self, topic:str):
         converted = topic
         
@@ -145,14 +165,20 @@ class Mesh:
         """
         
         await self.aio_stop()
+        self._is_running = True
 
         for coro in self._callback_coros:
-            task = asyncio.create_task(coro)
-            task.add_done_callback(self._callback_tasks.discard)
-            self._callback_tasks.add(task)
+            await self._start_coro(coro)
 
         
+    async def _start_coro(self, coro):
+        task = asyncio.create_task(coro)
+        task.add_done_callback(self._callback_tasks.discard)
+        self._callback_tasks.add(task)
+        
+        
     async def aio_stop(self):
+        self._is_running = False
         while self._callback_tasks:
             task = self._callback_tasks.pop()
             try:
@@ -165,31 +191,47 @@ class Mesh:
 
 
     def publisher(self, topic:str):
+        '''async-set type publisher (control node)
+        '''
         return self._pubsub.publisher(self._convert_topic(topic), **self._pubargs).json()
 
 
     def subscriber(self, topic:str):
+        '''async-get type subscription (control node)
+        '''
         return self._pubsub.subscriber(self._convert_topic(topic), **self._subargs).json()
 
 
     async def aio_publish(self, topic:str, value, *, headers:dict|None=None):
+        '''direct publish
+        '''
         return await self.publisher(topic).headers(headers or {}).aio_set(value)
 
     
     def publish(self, topic:str, value, *, headers:dict|None=None):
+        '''no-async direct publish; this needs an eventloop somewhere
+        '''
         loop = asyncio.get_running_loop()
         loop.create_task(self.aio_publish(topic, value, headers=headers))
 
     
+    async def aio_subscribe(self, topic:str, func):
+        '''callback type subscription
+        '''
+        coro = self._add_subscription_callback(func, topic)
+        if self._is_running:
+            await self._start_coro(coro)
+
+
     async def aio_call(self, name:str, *args, **kwargs):
-        reply = await self.aio_call_many(name, list(args), dict(kwargs), multiple_replies=False)
+        reply = await self.aio_call_many(name, list(args), dict(kwargs), multiple_replies=False, raise_on_timeout=True)
         if reply.get('status') == 'ok':
             return reply.get('return_value')
         else:
             raise Exception(f'Mesh: RPC remote error: {name}: {reply.get("message")}')
     
         
-    async def aio_call_many(self, name:str, args:list, kwargs:dict, *, multiple_replies=True, timeout=None):
+    async def aio_call_many(self, name:str, args:list, kwargs:dict, *, multiple_replies=True, timeout=None, raise_on_timeout=False):
         if len(name) == 0:
             return
         name = re.sub(r'[^a-zA-Z0-9\.]', '_', name)
@@ -202,8 +244,8 @@ class Mesh:
             reply_to = None
         else:
             module_name, function_name = name.rsplit('.', 1)
-            reply_to = self._sep_mesh.join(['rpc_reply', self._mesh_id])
-        topic = self._sep_mesh.join(['rpc', module_name])
+            reply_to = self._sep_mesh.join(['sd.rpc_reply', self._mesh_id])
+        topic = self._sep_mesh.join(['sd.rpc', module_name])
         correlation_id = str(self._rpc_count)  # NATS can handle only str in headers...
         headers = {
             'sender': self._name,
@@ -238,6 +280,8 @@ class Mesh:
             if now > end:
                 if len(replies) == 0:
                     logging.warning(f'Mesh: RPC timeout: {name}()')
+                    if raise_on_timeout:
+                        raise Exception(f'Mesh: RPC timeout: {name}()')
                 break
 
         async with self._reply_lock:
@@ -288,7 +332,7 @@ class Mesh:
             func._slowpy_task = True
             return func
             
-        # decorator with (): e.g., @export(*kwargs)
+        # decorator with (): e.g., @export(**kwargs)
         else:
             name = kwargs.get('name')
             def wrapper(func):
@@ -304,6 +348,7 @@ class Mesh:
         - topic: path pattern to match
         """
         def wrapper(func):
+            func._slowpy_task = True
             self._add_subscription_callback(func, topic)
             return func
         return wrapper
@@ -315,8 +360,6 @@ class Mesh:
           func: callback function
           topic: topic filter
         """
-        func._slowpy_task = True
-
         nargs = len(inspect.signature(func).parameters)
         if nargs > 2:
             logging.error(f'Invalid mesh message handler: wrong number of arguments')
@@ -339,12 +382,15 @@ class Mesh:
                         await result
             except Exception as e:
                 logging.error(f'Mesh: error in subscription callback: {func.__name__}(): {e}')
-                
-        self._callback_coros.append(handle_subscription())
 
+        coro = handle_subscription()
+        self._callback_coros.append(coro)
+
+        return coro
+    
                 
     async def _start_rpc_call_handler(self):
-        topic = self._sep_mesh.join(['rpc', self._name])
+        topic = self._sep_mesh.join(['sd.rpc', self._name])
         subscriber = self.subscriber(topic)
         try:
             while not ctrl.is_stop_requested():
@@ -370,7 +416,7 @@ class Mesh:
     
 
     async def _start_rpc_reply_handler(self):
-        topic = self._sep_mesh.join(['rpc_reply', self._mesh_id])
+        topic = self._sep_mesh.join(['sd.rpc_reply', self._mesh_id])
         subscriber = self.subscriber(topic)
         try:
             while not ctrl.is_stop_requested():

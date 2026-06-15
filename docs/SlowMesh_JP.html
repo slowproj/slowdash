@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>SlowMesh と SlowTask</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="style.css" />
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({startOnLoad: true});
+</script>
+
+</head>
+
+<body>
+
+<header>
+<div class="title">SlowMesh と SlowTask</div><p>
+<div class="toc">
+<span class="toc-title">Contents</span>
+<nav id="TOC">
+<ul>
+<li><a href="#概要" id="toc-概要">概要</a>
+<ul>
+<li><a href="#slowmesh" id="toc-slowmesh">SlowMesh</a></li>
+<li><a href="#slowtask" id="toc-slowtask">SlowTask</a></li>
+</ul></li>
+<li><a href="#slowmesh-1" id="toc-slowmesh-1">SlowMesh</a>
+<ul>
+<li><a href="#構成要素" id="toc-構成要素">構成要素</a></li>
+<li><a href="#pubsub" id="toc-pubsub">PubSub</a></li>
+<li><a href="#remote-procedure-call-rpc"
+id="toc-remote-procedure-call-rpc">Remote Procedure Call (RPC)</a></li>
+<li><a href="#key-value-store-kvs"
+id="toc-key-value-store-kvs">Key-Value Store (KVS)</a></li>
+</ul></li>
+<li><a href="#slowtask-1" id="toc-slowtask-1">SlowTask</a>
+<ul>
+<li><a href="#slowtask-の組み込み" id="toc-slowtask-の組み込み">SlowTask
+の組み込み</a></li>
+<li><a href="#slowtask-の機能" id="toc-slowtask-の機能">SlowTask
+の機能</a></li>
+<li><a href="#slowtask-の実行" id="toc-slowtask-の実行">SlowTask
+の実行</a></li>
+<li><a href="#スクリプト中で明示的に-tasklet-を使用しない場合"
+id="toc-スクリプト中で明示的に-tasklet-を使用しない場合">スクリプト中で明示的に
+Tasklet を使用しない場合</a></li>
+</ul></li>
+<li><a href="#http-api" id="toc-http-api">HTTP API</a>
+<ul>
+<li><a href="#slowtask-2" id="toc-slowtask-2">SlowTask</a></li>
+</ul></li>
+<li><a href="#pubsub-トピック構成" id="toc-pubsub-トピック構成">PubSub
+トピック構成</a>
+<ul>
+<li><a href="#sd.task" id="toc-sd.task">sd.task</a></li>
+<li><a href="#sd.rpc" id="toc-sd.rpc">sd.rpc</a></li>
+</ul></li>
+<li><a href="#todo" id="toc-todo">TODO</a></li>
+</ul>
+</nav>
+</div>
+</header>
+
+<h1 id="概要">概要</h1>
+<h2 id="slowmesh">SlowMesh</h2>
+<p>SlowMesh は，SlowDash の各コンポーネント（SlowDash サーバーと各種
+SlowTask）が協調動作するための通信基盤です．
+メッセージングバックボーンを下位通信層として使用し，その上に
+PubSub，RPC，KVS の機能を提供します．
+メッセージングバックボーンには，SlowDash が提供する組み込みの SlowMQ
+の他，NATS や MQTT，Redis，RabbitMQ
+などの広く使用されている外部システムをそのまま使うこともできます．</p>
+<p>SlowMesh は以下の３つの通信を提供します．</p>
+<ul>
+<li><strong>PubSub</strong>: SlowPy Control
+に実装されているメッセージングバックボーンインターフェースへの薄い統一ラッパー</li>
+<li><strong>Remote Procedure Call (RPC)</strong>: PubSub
+の上に構築された遠隔関数呼び出し</li>
+<li><strong>Key-Value Store (KVS)</strong>: RPC
+を使って実装された共有名前空間</li>
+</ul>
+<h2 id="slowtask">SlowTask</h2>
+<p>SlowTask は SlowMesh
+の上で独立にかつ協調して動く実行単位（おおまかには，一つの Python
+スクリプト）です．
+プロセスまたは動的ロードモジュールのいずれかとして実行できます．</p>
+<p>SlowTask には以下の機能が実装されています．</p>
+<ul>
+<li>開始時・終了時や，一定時刻，一定時間間隔でのユーザー関数呼び出し</li>
+<li>SlowMesh による通信（関数のエクスポートやデータの送り出し）</li>
+<li>HTTP 経由での SlowDash サーバーとの通信（構成情報の取得など）</li>
+</ul>
+<h1 id="slowmesh-1">SlowMesh</h1>
+<h2 id="構成要素">構成要素</h2>
+<h3 id="slowpy-mesh-ライブラリ">SlowPy Mesh ライブラリ</h3>
+<p>SlowTask スクリプトから使用されるライブラリです．</p>
+<ul>
+<li><code>slowpy.mesh.Mesh</code>: SlowMesh
+通信機能へのインターフェース</li>
+<li><code>slowpy.mesh.Tasklet</code>: Python スクリプトを SlowMesh
+上の独立タスク (SlowTask) として実行するためのアダプタ</li>
+</ul>
+<h3 id="slowdash-mesh-サービス">SlowDash Mesh サービス</h3>
+<p>SlowDash サーバー内で SlowMesh 関連のサービスを行うものです．</p>
+<ul>
+<li>KVS サービス</li>
+<li>Web API (HTTP POST による publish や WebSockets 経由の PubSub
+など）</li>
+<li>SlowMQ のブローカー</li>
+</ul>
+<h3 id="slowmq-バックボーン">SlowMQ バックボーン</h3>
+<p>SlowDash 内蔵の PubSub ブローカーです．SlowDash
+のサーバープロセスに含まれているので，何も設定せずにそのまま使用できます．
+WebSockets で実装されています．</p>
+<h2 id="pubsub">PubSub</h2>
+<h3 id="使用例">使用例</h3>
+<p>典型的には，SlowMesh は後述の Tasklet
+によって構築されたものを使います．</p>
+<h5 id="publish">Publish</h5>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>topic <span class="op">=</span> <span class="st">&#39;data.temp0&#39;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> { <span class="st">&#39;t&#39;</span>: t, <span class="st">&#39;x&#39;</span>: temp0 }</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> tasklet.mesh.aio_publish(topic, data)</span></code></pre></div>
+<h5 id="subscribe">Subscribe</h5>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.on</span>(<span class="st">&#39;data.&gt;&#39;</span>)  <span class="co"># メッセージ受信時のコールバックを指定</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> handle_data(headers, data):</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    topic <span class="op">=</span> headers.get(<span class="st">&#39;topic&#39;</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
+<h3 id="バックボーン接続">バックボーン接続</h3>
+<p>SlowPy Mesh の PubSub は，SlowPy Control
+に実装されているメッセージングバックボーンへのインターフェスに対する薄いラッパーです．
+SlowPy Control にある以下のメッセージングシステムを選べます：</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>バックボーン</th>
+<th>SlowPy モジュール</th>
+<th>ブローカー</th>
+<th>備考</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>SlowMQ</td>
+<td>control-AsyncSlowMQ.py</td>
+<td>不要 (SlowDash 組み込み)</td>
+<td>HTTP(S) ベースで，ファイアウォールを超えてアクセス可能</td>
+</tr>
+<tr class="even">
+<td>NATS</td>
+<td>control-AsyncNATS.py</td>
+<td>別に NATS Broker が必要</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>MQTT</td>
+<td>control-AsyncMQTT.py</td>
+<td>別に MQTT Broker（eclipse-mosquitto など）が必要</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>RabbitMQ</td>
+<td>control-AsyncRabbitMQ.py</td>
+<td>別に RabbitMQ Broker が必要</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Redis-PubSub</td>
+<td>control-AsyncRedis.py</td>
+<td>別に Redis サーバーが必要</td>
+<td>トピックフィルタに制限あり</td>
+</tr>
+</tbody>
+</table>
+<p>使用するバックボーンサービスは，URL により指定されます：</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>バックボーン</th>
+<th>URL 形式</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>SlowMQ (HTTP または HTTPS 上の WebSockets)</td>
+<td><code>slowmq://HOST:PORT</code> (HTTP) または
+<code>slowmqs://HOST:PORT</code> (HTTPS)</td>
+</tr>
+<tr class="even">
+<td>NATS</td>
+<td><code>nats://HOST</code></td>
+</tr>
+<tr class="odd">
+<td>MQTT</td>
+<td><code>mqtt://HOST</code></td>
+</tr>
+<tr class="even">
+<td>RabbitMQ</td>
+<td><code>rabbitmq://USER:PASS@HOST/EXCHANGE</code></td>
+</tr>
+<tr class="odd">
+<td>Redis-PubSub</td>
+<td><code>redis://HOST/DB</code></td>
+</tr>
+</tbody>
+</table>
+<p>認証情報が必要なら，<code>HOST</code> の直前に
+<code>USER:PASS@</code> を挿入してください．</p>
+<h3 id="トピックフィルタ">トピックフィルタ</h3>
+<p>NATS に準じたフィルタを使用できます．</p>
+<ul>
+<li>階層区切り文字は <code>.</code></li>
+<li><code>*</code> は任意の一階層にマッチ</li>
+<li><code>&gt;</code>
+は任意数の末尾にマッチ（最後の文字としてのみ使用可能）</li>
+</ul>
+<p>SlowMQ と NATS
+以外のバックボーンが使用された場合，これらの特殊文字は置き換えられてからライブラリに渡されます．厳密な階層を採用しない
+Redis の場合，フィルタの動作が変わる場合があります．</p>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 21%" />
+<col style="width: 18%" />
+<col style="width: 30%" />
+<col style="width: 4%" />
+<col style="width: 3%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>バックボーン</th>
+<th>階層区切り文字</th>
+<th>一階層マッチ</th>
+<th>任意数末尾階層マッチ</th>
+<th>例1</th>
+<th>例2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>(元の文字)</td>
+<td><code>.</code></td>
+<td><code>*</code></td>
+<td><code>&gt;</code></td>
+<td><code>data.store.&gt;</code></td>
+<td><code>data.*.HV.ch100</code></td>
+</tr>
+<tr class="even">
+<td>SlowMQ</td>
+<td><code>.</code></td>
+<td><code>*</code></td>
+<td><code>&gt;</code></td>
+<td><code>data.store.&gt;</code></td>
+<td><code>data.*.HV.ch100</code></td>
+</tr>
+<tr class="odd">
+<td>NATS</td>
+<td><code>.</code></td>
+<td><code>*</code></td>
+<td><code>&gt;</code></td>
+<td><code>data.store.&gt;</code></td>
+<td><code>data.*.HV.ch100</code></td>
+</tr>
+<tr class="even">
+<td>MQTT</td>
+<td><code>/</code></td>
+<td><code>+</code></td>
+<td><code>#</code></td>
+<td><code>data/store/#</code></td>
+<td><code>data/+/HV/ch100</code></td>
+</tr>
+<tr class="odd">
+<td>RabbitMQ</td>
+<td><code>.</code></td>
+<td><code>*</code></td>
+<td><code>#</code></td>
+<td><code>data.store.#</code></td>
+<td><code>data.*.HV.ch100</code></td>
+</tr>
+<tr class="even">
+<td>Redis-PubSub</td>
+<td><code>:</code></td>
+<td><code>*</code> (近似動作)</td>
+<td><code>*</code> （近似動作）</td>
+<td><code>data:store:*</code></td>
+<td><code>data:*:HV:ch100</code></td>
+</tr>
+</tbody>
+</table>
+<p>トピック名に <code>/</code> や <code>#</code>
+などを含めると，これらを特殊文字としているバックボーンを使用した場合に問題を引き起こします．
+これらの文字の使用は避けた方がいいです．</p>
+<p>なお，Mesh
+のコンストラクタオプションで，これらの文字割り当てを変えることができます．例えば，MQTT
+を中心に運用することが確定しているのであれば，SlowMesh においても MQTT
+と同じ特殊文字を割り当てておくことができます．</p>
+<h2 id="remote-procedure-call-rpc">Remote Procedure Call (RPC)</h2>
+<p>RPC は，ある SlowTask が公開した Python 関数を，他の SlowTask
+から名前で呼び出すための仕組みです． PubSub 上の
+<code>sd.rpc</code>/<code>sd.rpc_reply</code>
+トピックで実装されています． 呼び出し側は <code>reply_to</code>
+に自分宛ての返信トピック <code>sd.rpc_reply.{MeshID}</code>
+を指定し，<code>sd.rpc.{モジュール名}</code> にリクエストを publish
+します．実行側は，リクエストの <code>reply_to</code>
+で指定されたトピックに返信データを publish します．</p>
+<ul>
+<li>実行側：<code>@mesh.export</code> デコレータで関数を export</li>
+<li>使用側：<code>mesh.aio_call(name, *args, **kwargs)</code>
+で呼び出し</li>
+</ul>
+<h3 id="使用例-1">使用例</h3>
+<h5 id="実行側">実行側</h5>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.export</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> chat(line, <span class="op">*</span>, sender<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f&#39;You (&quot;</span><span class="sc">{</span>sender<span class="sc">}</span><span class="ss">&quot;) sent me &quot;</span><span class="sc">{</span>line<span class="sc">}</span><span class="ss">&quot;.&#39;</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f&#39;I will send you the current time.&#39;</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">str</span>(datetime.datetime.now())</span></code></pre></div>
+<ul>
+<li>現時点で，return value に返せるのは JSON
+にシリアライズできる値のみです．</li>
+<li>RPC は 1 秒程度を上限に return
+してください．呼び出し側はデフォルトで 5 秒でタイムアウトします．</li>
+<li>時間がかかる処理は，キューに入れるか，非同期タスクまたはスレッドなどで実行するようにしてください．</li>
+</ul>
+<h5 id="使用側">使用側</h5>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>    return_value <span class="op">=</span> <span class="cf">await</span> tasklet.mesh.aio_call(<span class="st">&#39;test-mesh-rpc.chat&#39;</span>, line, sender<span class="op">=</span><span class="st">&#39;me&#39;</span>)</span></code></pre></div>
+<ul>
+<li>最初の引数が <code>モジュール名.関数名</code>
+で，それ以降の引数が遠隔関数の引数にそのまま渡されます．</li>
+<li>現時点で，引数に渡せるのは JSON
+にシリアライズできる値のみです．</li>
+<li>エラーが発生した場合は Exception が投げられます．</li>
+<li>デフォルトのタイムアウト時間は，Mesh
+のコンストラクタパラメータで指定できます．また，<code>aio_call_many()</code>
+関数を使えば，呼び出しごとに個別のタイムアウトを設定することもできます．</li>
+</ul>
+<h3 id="controlnode-のエクスポート">ControlNode のエクスポート</h3>
+<p>RPC を使って ControlNode のリモートアクセスも実装されています．</p>
+<h5 id="実行側-1">実行側</h5>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ControlNode</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyNode(ControlNode):</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> aio_set(<span class="va">self</span>, value):</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        ...</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> aio_get(<span class="va">self</span>):</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> ...</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>tasklet.mesh.export(node_name, MyNode())</span></code></pre></div>
+<h5 id="使用側-1">使用側</h5>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>    node <span class="op">=</span> tasklet.mesh.remote_node(<span class="ss">f&#39;</span><span class="sc">{</span>module_name<span class="sc">}</span><span class="ss">.</span><span class="sc">{</span>node_name<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> node.aio_set(value)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="cf">await</span> node.aio_get())</span></code></pre></div>
+<h2 id="key-value-store-kvs">Key-Value Store (KVS)</h2>
+<p>KVS は，複数の SlowTask
+が共有する名前付きの値置き場です．状態，設定値，処理要求などをプロセス間で共有する用途を想定しています．
+<code>sd_kvs</code> モジュールに対する RPC で実装されています．</p>
+<ul>
+<li><code>mesh.aio_put(name, value)</code> で書き込み</li>
+<li><code>mesh.aio_lookup(name, default)</code> で取得</li>
+</ul>
+<h1 id="slowtask-1">SlowTask</h1>
+<p>SlowTask は SlowMesh
+の上で独立にかつ協調して動く実行単位（おおまかには，一つの Python
+スクリプト）です．プロセスまたは動的ロードモジュールのいずれかとして実行できます．</p>
+<h2 id="slowtask-の組み込み">SlowTask の組み込み</h2>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Tasklet</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>tasklet <span class="op">=</span> Tasklet()</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>...(本文)...</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    tasklet.run(slowdash_url<span class="op">=</span><span class="st">&#39;http://localhost:18881&#39;</span>)</span></code></pre></div>
+<p>SlowTask
+はシングルスレッドの非同期呼び出しで全体が並列に動くので，スクリプトの中で
+<strong><code>time.sleep()</code>
+を使うと全体が固まってしまいます</strong>． 以下の
+<code>@tasklet.loop(interval)</code>
+を使ってループを書くことにより，明示的な sleep をしないのが想定です．
+どうしても sleep をする場合は，<code>await asyncio.sleep()</code> または
+<code>await control_system.aio_sleep()</code> を使ってください．</p>
+<h2 id="slowtask-の機能">SlowTask の機能</h2>
+<h3 id="lifespan-コールバック">Lifespan コールバック</h3>
+<p>同じものを複数回使用することができます．特に，<code>@tasklet.loop(interval)</code>
+を小さい単位に複数使うことにより，スクリプトの中のループを避けることができて，スリープや終了処理などに伴う煩雑さを避けることができます．</p>
+<ul>
+<li><code>@tasklet.initialize()</code>: スクリプト開始時に呼ばれる</li>
+<li><code>@tasklet.finalize()</code>: スクリプト終了時に呼ばれる</li>
+<li><code>@tasklet.once(delay:float=0)</code>: initialize
+から指定秒数後に呼ばれる</li>
+<li><code>@tasklet.schedule(time:str, use_utc:bool=False)</code>:
+指定時刻に繰り返し呼ばれる
+<ul>
+<li><code>time</code> は <code>HH:MM:SS</code> 形式．</li>
+<li><code>HH</code> および <code>MM</code> に <code>*</code>
+を使って毎時または毎分実行を指定できる．</li>
+<li><code>,</code> で区切って複数の時刻を並べることができる．</li>
+<li>例)
+<ul>
+<li><code>@tasklet.schedule("*:00")</code>: 毎時０分</li>
+<li><code>@tasklet.schedule("08:00")</code>: 毎朝８時</li>
+<li><code>@tasklet.schedule("*:00,*:20,*:40")</code>： 毎時３回</li>
+<li><code>@tasklet.schedule("00:00,08:00,16:00", use_utc=True)</code>:
+一日３回（夏時間切り替え対応）</li>
+</ul></li>
+</ul></li>
+<li><code>@tasklet.loop(interval:float)</code>:
+指定秒数間隔で繰り返し呼ばれる</li>
+</ul>
+<h3 id="slowmesh-機能">SlowMesh 機能</h3>
+<h4 id="関数および変数のエクスポート">関数および変数のエクスポート</h4>
+<ul>
+<li><code>@tasklet.mesh.export</code>: 関数のエクスポート</li>
+<li><code>@tasklet.mesh.export(name:str)</code>:
+関数を指定した名前でエクスポート</li>
+<li><code>tasklet.mesh.export(name:str, node:slowpy.control.ControlNode)</code>:
+SlowPy Control Node のエクスポート</li>
+</ul>
+<p><strong>エクスポートした関数の実行は，即座に終了するようにして，最大
+1 秒を目安に return するようにしてください</strong>．
+呼び出し側は数秒程度でタイムアウトをします．
+時間がかかる処理は，以下の方法を検討してください：</p>
+<ul>
+<li>処理要求を変数にセットするか <code>asyncio.queue</code>
+に入れて，<code>@tasklet.loop()</code> でそれを見て処理を開始する</li>
+<li><code>asyncio.create_task()</code> に投げる</li>
+<li>TODO: <code>@export()</code> に <code>threading=True</code>
+オプションを指定して，バックグラウンドスレッドを自動生成するようにする</li>
+</ul>
+<p>処理結果は publish し，エラーの場合は alert を publish
+するまたはログに書く，というのが想定です． 必要に応じて，処理状況を逐次
+publish するか，KVS
+に状態を記録するなどずれば，呼び出し側が状況を把握できます．
+高信頼が必要な場合の高度な方法として，<code>sd.rpc.&gt;</code> を
+subscribe して，システムが期待する状態に遷移するかを監視する SlowTask
+を走らせるという手もあります．</p>
+<h4 id="データの-publish">データの Publish</h4>
+<ul>
+<li><code>tasklet.mesh.aio_publish(name:str, data, headers={})</code>:
+データを publish (async)</li>
+</ul>
+<h3 id="slowdash-mesh-サービスへのインターフェース">SlowDash Mesh
+サービスへのインターフェース</h3>
+<ul>
+<li>Heartbeat の送り出し</li>
+<li>仕様問い合わせ (<code>sd.task.introduce</code>) への応答</li>
+</ul>
+<h2 id="slowtask-の実行">SlowTask の実行</h2>
+<p>SlowTask のスクリプトは，独立プロセス (task process)
+として走らせることも，SlowDash のサーバープロセスに動的ロードして (task
+module) 走らせることもできます．</p>
+<h3 id="独立プロセス-task-process">独立プロセス (task process)</h3>
+<h3 id="動的ロードモジュール-task-module">動的ロードモジュール (task
+module)</h3>
+<h2
+id="スクリプト中で明示的に-tasklet-を使用しない場合">スクリプト中で明示的に
+Tasklet を使用しない場合</h2>
+<p>スクリプト中で明示的に Tasklet を使用しない場合でも，任意の Python
+スクリプトを SlowTask として実行（task process）または動的ロード(task
+module)をすることができます．この場合は，以下の機能のみが使用できます．</p>
+<ul>
+<li>古いスタイルの Lifespan Callbacks</li>
+<li>Function Exports</li>
+<li>Start/stop コントロール (task module のみ)</li>
+</ul>
+<h1 id="http-api">HTTP API</h1>
+<h2 id="slowtask-2">SlowTask</h2>
+<p>SlowTask への HTTP API は Slowlette を経由して
+<code>sd_taskprocess.py</code>
+コンポーネントにより実装されています．</p>
+<h3 id="getpost">GET/POST</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Path</th>
+<th>動作</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>GET <code>api/task</code></td>
+<td>Task Spec の一覧を返す</td>
+</tr>
+</tbody>
+</table>
+<h1 id="pubsub-トピック構成">PubSub トピック構成</h1>
+<h2 id="sd.task">sd.task</h2>
+<ul>
+<li>すべての SlowTask Process は <code>sd.task.control.&gt;</code> を
+subscribe すること．</li>
+</ul>
+<h3 id="sd.task.heartbeat.task_name">sd.task.heartbeat.{task_name}</h3>
+<p>Task の生存信号</p>
+<h5 id="主な用途">主な用途</h5>
+<ul>
+<li>Sender(s): task process</li>
+<li>Receiver(s): sd_taskprocess (SlowDash サーバー)，モニタサービス</li>
+<li>Timing:
+<ul>
+<li>指定時間間隔（<code>Tasklet._heartbeat_interval</code>，１０秒）</li>
+<li>Tasklet
+のメインループから送出（コルーチンやスレッドではない；必ずメインと一緒に停止する）</li>
+</ul></li>
+</ul>
+<h5 id="json-schema">JSON Schema</h5>
+<p>Headers:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;mesh_id&quot;</span><span class="ot">,</span> <span class="st">&quot;name&quot;</span><span class="ot">,</span> <span class="st">&quot;timestamp&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;mesh_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;int&quot;</span> <span class="fu">}</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Body:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{}</span></span></code></pre></div>
+<h5 id="json-example">JSON Example</h5>
+<p>Headers:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;mesh_id&quot;</span><span class="fu">:</span> <span class="er">self.mesh_id</span><span class="fu">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="er">self.name</span><span class="fu">,</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="er">int(time.time())</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="sd.task.spec.task_name">sd.task.spec.{task_name}</h3>
+<p>タスクが外部公開している関数と変数の一覧</p>
+<h5 id="主な用途-1">主な用途</h5>
+<ul>
+<li>Sender(s): task process</li>
+<li>Receiver(s): sd_taskprocess (SlowDash サーバー)</li>
+<li>Timing:
+<ul>
+<li>タスクが開始したとき</li>
+<li><code>sd.task.control.introduce</code> を受け取ったとき</li>
+</ul></li>
+</ul>
+<h5 id="json-schema-1">JSON Schema</h5>
+<p>Body:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;mesh_id&quot;</span><span class="ot">,</span> <span class="st">&quot;name&quot;</span><span class="ot">,</span> <span class="st">&quot;functions&quot;</span><span class="ot">,</span> <span class="st">&quot;variables&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;mesh_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;functions&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;array&quot;</span><span class="fu">,</span> <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span> <span class="dt">&quot;$comment&quot;</span><span class="fu">:</span> <span class="st">&quot; 将来的には引数情報も追加&quot;</span> <span class="fu">}</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}},</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;variables&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;array&quot;</span><span class="fu">,</span> <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span> <span class="dt">&quot;$comment&quot;</span><span class="fu">:</span> <span class="st">&quot;将来的には型情報も追加&quot;</span> <span class="fu">}</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}}</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h5 id="json-example-1">JSON Example</h5>
+<p>Body:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;mytask&quot;</span><span class="fu">,</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;functions&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;start&quot;</span> <span class="fu">}</span><span class="ot">,</span> <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;stop&quot;</span> <span class="fu">}</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;variables&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;status&quot;</span> <span class="fu">}</span> <span class="ot">]</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="sd.task.control.introduce">sd.task.control.introduce</h3>
+<p>すべてのタスクに <code>sd.task.spec.{name}</code> を publish
+するように要求</p>
+<h5 id="主な用途-2">主な用途</h5>
+<ul>
+<li>Sender: sd_taskprocess (SlowDash サーバー)</li>
+<li>Receiver(s): task process</li>
+<li>Timing:
+<ul>
+<li>SlowDash サーバーの開始時</li>
+<li>SlowDash サーバーが知らない Task の heartbeat を受け取ったとき</li>
+</ul></li>
+</ul>
+<h5 id="json-schema-2">JSON Schema</h5>
+<p>Body:</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[]</span><span class="fu">,</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{}</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h2 id="sd.rpc">sd.rpc</h2>
+<p>Mesh の内部で RPC の実装に使用される．</p>
+<h3 id="sd.rpc.module_name">sd.rpc.{module_name}</h3>
+<h5 id="json-schema-3">JSON Schema</h5>
+<p>Header:</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;sender&quot;</span><span class="ot">,</span> <span class="st">&quot;sender_id&quot;</span><span class="ot">,</span> <span class="st">&quot;reply_to&quot;</span><span class="ot">,</span> <span class="st">&quot;correlation_id&quot;</span><span class="ot">,</span> <span class="st">&quot;message_id&quot;</span><span class="ot">,</span> <span class="st">&quot;module&quot;</span><span class="ot">,</span> <span class="st">&quot;function&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;sender&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;sender_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;reply_to&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;correlation_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;message_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;module&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;function&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">}</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Body:</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;args&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;array&quot;</span> <span class="fu">},</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;kwargs&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span> <span class="fu">}</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h5 id="json-example-2">JSON Example</h5>
+<p>Header:</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;sender&quot;</span><span class="fu">:</span> <span class="er">self._name</span><span class="fu">,</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;sender_id&quot;</span><span class="fu">:</span> <span class="er">self._mesh_id</span><span class="fu">,</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;reply_to&quot;</span><span class="fu">:</span> <span class="er">f</span><span class="st">&quot;sd.rpc_reply.{self._mesh_id}&quot;</span><span class="fu">,</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;correlation_id&quot;</span><span class="fu">:</span> <span class="er">self._request_count</span><span class="fu">,</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;message_id&quot;</span><span class="fu">:</span> <span class="er">str(uuid.uuid4())</span><span class="fu">,</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;module&quot;</span><span class="fu">:</span> <span class="er">module_name</span><span class="fu">,</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;function&quot;</span><span class="fu">:</span> <span class="er">function_name</span><span class="fu">,</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Body:</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;args&quot;</span><span class="fu">:</span> <span class="er">args</span><span class="fu">,</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;kwargs&quot;</span><span class="fu">:</span> <span class="er">kwargs</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="sd.rpc_reply.mesh_id">sd.rpc_reply.{mesh_id}</h3>
+<p>トピック名 <code>sd.rpc_reply.{mesh_id}</code> は <code>sd.rpc</code>
+の <code>reply_to</code> で指定される． ここでの <code>mesh_id</code>
+は，RPC リクエストを送った側の MeshID.</p>
+<h5 id="json-schema-4">JSON Schema</h5>
+<p>Header:
+<code>sender</code>，<code>sender_id</code>，<code>message_id</code>
+以外はリクエストメッセージと同内容．</p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;sender&quot;</span><span class="ot">,</span> <span class="st">&quot;sender_id&quot;</span><span class="ot">,</span> <span class="st">&quot;correlation_id&quot;</span><span class="ot">,</span> <span class="st">&quot;message_id&quot;</span><span class="ot">,</span> <span class="st">&quot;module&quot;</span><span class="ot">,</span> <span class="st">&quot;function&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;sender&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;sender_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;correlation_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;message_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;module&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;function&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">}</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Body:</p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;status&quot;</span><span class="ot">,</span> <span class="st">&quot;message&quot;</span><span class="ot">,</span> <span class="st">&quot;return_value&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;enum&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;ok&quot;</span><span class="ot">,</span> <span class="st">&quot;error&quot;</span><span class="ot">,</span> <span class="st">&quot;cancelled&quot;</span> <span class="ot">]</span> <span class="fu">},</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;message&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;return_value&quot;</span><span class="fu">:</span> <span class="fu">{}</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h5 id="json-example-3">JSON Example</h5>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;sender&quot;</span><span class="fu">:</span> <span class="er">self._name</span><span class="fu">,</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;sender_id&quot;</span><span class="fu">:</span> <span class="er">self._mesh_id</span><span class="fu">,</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;correlation_id&quot;</span><span class="fu">:</span> <span class="er">correlation_id</span><span class="fu">,</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;message_id&quot;</span><span class="fu">:</span> <span class="er">str(uuid.uuid4())</span><span class="fu">,</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;module&quot;</span><span class="fu">:</span> <span class="er">module_name</span><span class="fu">,</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;function&quot;</span><span class="fu">:</span> <span class="er">function_name</span><span class="fu">,</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Body:</p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="st">&quot;ok&quot;</span><span class="fu">,</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;message&quot;</span><span class="fu">:</span> <span class="st">&quot;ok&quot;</span><span class="fu">,</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;return_value&quot;</span><span class="fu">:</span> <span class="er">result</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h1 id="todo">TODO</h1>
+<ul>
+<li>AsyncNATS, AsyncMQTT, AsyncRabbitMQ, AsyncRedis に on_reconnect
+を実装する</li>
+<li>RPC の引数型チェックと型変換</li>
+</ul>
+
+
+</body>
+</html>

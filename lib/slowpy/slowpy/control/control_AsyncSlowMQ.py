@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 19 March 2026 #
 
-import asyncio, json, uuid, time
+import asyncio, json, uuid, time, inspect
 from urllib.parse import urlencode
 
 from slowpy.control import ControlNode, ControlException
@@ -11,9 +11,10 @@ logger.setLevel(logging.INFO)
 
 
 class AsyncSlowMQNode(ControlNode):
-    def __init__(self, url:str, *, name=None):
+    def __init__(self, url:str, *, name=None, on_reconnect=None):
         self.url = url
         self.name = name
+        self.on_reconnect = on_reconnect
 
         self.connections = set()
         self.publisher_ws = None
@@ -43,7 +44,7 @@ class AsyncSlowMQNode(ControlNode):
             netloc = netloc[:-1]
         wsurl = f'{ws_prot}://{netloc}/ws/slowmq'
         if self.name is not None:
-            wsurl += '?' + urlencode({name: self.name})
+            wsurl += '?' + urlencode({'name': self.name})
             
         try:
             import websockets
@@ -102,9 +103,9 @@ class AsyncSlowMQNode(ControlNode):
         
     @classmethod
     def _node_creator_method(cls):
-        def async_slowmq(self, url:str, name:str=None):
+        def async_slowmq(self, url:str, *, name:str=None, on_reconnect=None):
             if True:
-                return AsyncSlowMQNode(url, name=name)
+                return AsyncSlowMQNode(url, name=name, on_reconnect=on_reconnect)
             
             obj_name = url
             try:
@@ -144,6 +145,13 @@ class PublisherNode(ControlNode):
                 return
             else:
                 self.slowmq_node.publisher_ws_connected = True
+                if self.slowmq_node.on_reconnect is not None:
+                    try:
+                        result = self.slowmq_node.on_reconnect()
+                        if inspect.isawaitable(result):
+                            await result
+                    except Exception:
+                        pass
 
         body, headers = (None, {})
         if type(value) is tuple:

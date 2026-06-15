@@ -1,6 +1,5 @@
 // frame.mjs //
-// Author: Sanshiro Enomoto <sanshiro@uw.edu> //
-// Created on 3 May 2022 //
+// Created by Sanshiro Enomoto on 3 May 2022
 
 import { JG as $, JGDateTime,  } from './jagaimo/jagaimo.mjs';
 import { JGPullDownWidget, JGDialogWidget } from './jagaimo/jagawidgets.mjs';

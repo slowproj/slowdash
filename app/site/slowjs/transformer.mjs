@@ -1,6 +1,5 @@
 // transformer.mjs //
-// Author: Sanshiro Enomoto <sanshiro@uw.edu> //
-// Created on 27 September 2022 //
+// Created by Sanshiro Enomoto on on 27 September 2022
 
 
 import { JG as $ } from './jagaimo/jagaimo.mjs';

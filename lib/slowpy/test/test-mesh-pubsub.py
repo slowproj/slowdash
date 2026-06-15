@@ -28,8 +28,8 @@ async def main():
             break
         else:
             try:
-                #await mesh.aio_publish('chat.all', line, headers={'sender':mesh.mesh_id})
-                mesh.publish('chat.all', line, headers={'sender':mesh.mesh_id})  # possible, not recommended
+                await mesh.aio_publish('chat.all', line, headers={'sender':mesh.mesh_id})
+                #mesh.publish('chat.all', line, headers={'sender':mesh.mesh_id})  # possible, not recommended
             except Exception as e:
                 print(f'ERROR: {e}')
             

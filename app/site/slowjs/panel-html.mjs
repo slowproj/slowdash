@@ -1,6 +1,5 @@
 // panel-misc.mjs //
-// Author: Sanshiro Enomoto <sanshiro@uw.edu> //
-// Created on 24 July 2022 //
+// Created by Sanshiro Enomoto on 24 July 2022
 
 export { HtmlPanel as Panel1, HrefPanel as Panel2 };
 

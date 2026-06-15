@@ -23,11 +23,16 @@ async def dispatch_asgi(app, scope, receive, send):
                 await app.slowlette.dispatch_event("shutdown")
                 return
             if message['type'] == 'lifespan.startup':
+                await app.slowlette.dispatch_event("pre_startup")
                 await app.slowlette.dispatch_event("startup")
                 await send({'type': 'lifespan.startup.complete'})
+                await asyncio.sleep(0.1)
+                await app.slowlette.dispatch_event("post_startup")
             elif message['type'] == 'lifespan.shutdown':
+                await app.slowlette.dispatch_event("pre_shutdown")
                 await app.slowlette.dispatch_event("shutdown")
                 await send({'type': 'lifespan.shutdown.complete'})
+                await app.slowlette.dispatch_event("post_shutdown")
 
     method = scope.get('method', '').upper()
     url = scope.get('raw_path', b'').decode()
@@ -253,13 +258,16 @@ def serve_wsgi_gunicorn(app, port, **kwargs):
 
     Request.is_async = False
 
-    
     # gunicorn SHOULD handle signals... signals cannot stop the App somehow.
     sys.stderr.write(f'Listening at port {port} (gunicorn WSGI {"HTTPS" if is_https else "HTTP"})\n')
     
+    asyncio.run(app.slowlette.dispatch_event('pre_startup'))
     asyncio.run(app.slowlette.dispatch_event('startup'))
+    asyncio.run(app.slowlette.dispatch_event('post_startup'))
     GunicornApp(app, **kwargs).run()
+    asyncio.run(app.slowlette.dispatch_event('pre_shutdown'))
     asyncio.run(app.slowlette.dispatch_event('shutdown'))
+    asyncio.run(app.slowlette.dispatch_event('post_shutdown'))
     sys.stderr.write('Terminated\n')
 
 

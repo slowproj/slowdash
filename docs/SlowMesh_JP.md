@@ -1,0 +1,492 @@
+---
+title: SlowMesh と SlowTask
+---
+
+# 概要
+## SlowMesh
+SlowMesh は，SlowDash の各コンポーネント（SlowDash サーバーと各種 SlowTask）が協調動作するための通信基盤です．
+メッセージングバックボーンを下位通信層として使用し，その上に PubSub，RPC，KVS の機能を提供します．
+メッセージングバックボーンには，SlowDash が提供する組み込みの SlowMQ の他，NATS や MQTT，Redis，RabbitMQ などの広く使用されている外部システムをそのまま使うこともできます．
+
+SlowMesh は以下の３つの通信を提供します．
+
+- **PubSub**: SlowPy Control に実装されているメッセージングバックボーンインターフェースへの薄い統一ラッパー
+- **Remote Procedure Call (RPC)**: PubSub の上に構築された遠隔関数呼び出し
+- **Key-Value Store (KVS)**: RPC を使って実装された共有名前空間
+
+## SlowTask
+SlowTask は SlowMesh の上で独立にかつ協調して動く実行単位（おおまかには，一つの Python スクリプト）です．
+プロセスまたは動的ロードモジュールのいずれかとして実行できます．
+
+SlowTask には以下の機能が実装されています．
+
+- 開始時・終了時や，一定時刻，一定時間間隔でのユーザー関数呼び出し
+- SlowMesh による通信（関数のエクスポートやデータの送り出し）
+- HTTP 経由での SlowDash サーバーとの通信（構成情報の取得など）
+
+
+
+# SlowMesh
+## 構成要素
+### SlowPy Mesh ライブラリ
+SlowTask スクリプトから使用されるライブラリです．
+
+- `slowpy.mesh.Mesh`: SlowMesh 通信機能へのインターフェース
+- `slowpy.mesh.Tasklet`: Python スクリプトを SlowMesh 上の独立タスク (SlowTask) として実行するためのアダプタ
+
+
+### SlowDash Mesh サービス
+SlowDash サーバー内で SlowMesh 関連のサービスを行うものです．
+
+- KVS サービス
+- Web API (HTTP POST による publish や WebSockets 経由の PubSub など）
+- SlowMQ のブローカー
+
+
+### SlowMQ バックボーン
+SlowDash 内蔵の PubSub ブローカーです．SlowDash のサーバープロセスに含まれているので，何も設定せずにそのまま使用できます．
+WebSockets で実装されています．
+
+
+## PubSub
+### 使用例
+典型的には，SlowMesh は後述の Tasklet によって構築されたものを使います．
+
+##### Publish
+```python
+topic = 'data.temp0'
+data = { 't': t, 'x': temp0 }
+await tasklet.mesh.aio_publish(topic, data)
+```
+
+##### Subscribe
+```python
+@tasklet.mesh.on('data.>')  # メッセージ受信時のコールバックを指定
+def handle_data(headers, data):
+    topic = headers.get('topic')
+    ...
+```
+
+### バックボーン接続
+SlowPy Mesh の PubSub は，SlowPy Control に実装されているメッセージングバックボーンへのインターフェスに対する薄いラッパーです．
+SlowPy Control にある以下のメッセージングシステムを選べます：
+
+| バックボーン | SlowPy モジュール | ブローカー | 備考 |
+|---|---|---|---|
+| SlowMQ | control-AsyncSlowMQ.py | 不要 (SlowDash 組み込み) | HTTP(S) ベースで，ファイアウォールを超えてアクセス可能 |
+| NATS | control-AsyncNATS.py | 別に NATS Broker が必要 | |
+| MQTT | control-AsyncMQTT.py | 別に MQTT Broker（eclipse-mosquitto など）が必要 | 
+| RabbitMQ | control-AsyncRabbitMQ.py | 別に RabbitMQ Broker が必要 | |
+| Redis-PubSub | control-AsyncRedis.py | 別に Redis サーバーが必要 |トピックフィルタに制限あり |
+
+使用するバックボーンサービスは，URL により指定されます：
+
+| バックボーン | URL 形式 |
+|---|---|
+| SlowMQ (HTTP または HTTPS 上の WebSockets)| `slowmq://HOST:PORT` (HTTP) または `slowmqs://HOST:PORT` (HTTPS) |
+| NATS | `nats://HOST` |
+| MQTT |  `mqtt://HOST` |
+| RabbitMQ |  `rabbitmq://USER:PASS@HOST/EXCHANGE` |
+| Redis-PubSub |  `redis://HOST/DB` |
+
+認証情報が必要なら，`HOST` の直前に `USER:PASS@` を挿入してください．
+
+### トピックフィルタ
+NATS に準じたフィルタを使用できます．
+
+- 階層区切り文字は `.`
+- `*` は任意の一階層にマッチ
+- `>` は任意数の末尾にマッチ（最後の文字としてのみ使用可能）
+
+SlowMQ と NATS 以外のバックボーンが使用された場合，これらの特殊文字は置き換えられてからライブラリに渡されます．厳密な階層を採用しない Redis の場合，フィルタの動作が変わる場合があります．
+
+| バックボーン  | 階層区切り文字 | 一階層マッチ | 任意数末尾階層マッチ | 例1 | 例2 |
+|--------------|--------------|------------|--------------------|---|--|
+| (元の文字)    | `.`          | `*`        | `>`                | `data.store.>` | `data.*.HV.ch100` |
+| SlowMQ       | `.`          | `*`        | `>`                | `data.store.>` | `data.*.HV.ch100` |
+| NATS         | `.`          | `*`        | `>`                | `data.store.>` | `data.*.HV.ch100` |
+| MQTT         | `/`          | `+`        | `#`                | `data/store/#` | `data/+/HV/ch100` |
+| RabbitMQ     | `.`          | `*`        | `#`                | `data.store.#` | `data.*.HV.ch100` |
+| Redis-PubSub | `:`          | `*` (近似動作) | `*`  （近似動作）| `data:store:*` | `data:*:HV:ch100` |
+
+トピック名に `/` や `#` などを含めると，これらを特殊文字としているバックボーンを使用した場合に問題を引き起こします．
+これらの文字の使用は避けた方がいいです．
+
+なお，Mesh のコンストラクタオプションで，これらの文字割り当てを変えることができます．例えば，MQTT を中心に運用することが確定しているのであれば，SlowMesh においても MQTT と同じ特殊文字を割り当てておくことができます．
+
+## Remote Procedure Call (RPC)
+RPC は，ある SlowTask が公開した Python 関数を，他の SlowTask から名前で呼び出すための仕組みです．
+PubSub 上の `sd.rpc`/`sd.rpc_reply` トピックで実装されています．
+呼び出し側は `reply_to` に自分宛ての返信トピック `sd.rpc_reply.{MeshID}` を指定し，`sd.rpc.{モジュール名}` にリクエストを publish します．実行側は，リクエストの `reply_to` で指定されたトピックに返信データを publish します．
+
+- 実行側：`@mesh.export` デコレータで関数を export
+- 使用側：`mesh.aio_call(name, *args, **kwargs)` で呼び出し
+
+### 使用例
+##### 実行側
+```python
+@tasklet.mesh.export
+async def chat(line, *, sender=None):
+    print(f'You ("{sender}") sent me "{line}".')
+    print(f'I will send you the current time.')
+    return str(datetime.datetime.now())
+```
+
+- 現時点で，return value に返せるのは JSON にシリアライズできる値のみです．
+- RPC は 1 秒程度を上限に return してください．呼び出し側はデフォルトで 5 秒でタイムアウトします．
+- 時間がかかる処理は，キューに入れるか，非同期タスクまたはスレッドなどで実行するようにしてください．
+
+##### 使用側
+```python
+    return_value = await tasklet.mesh.aio_call('test-mesh-rpc.chat', line, sender='me')
+```
+
+- 最初の引数が `モジュール名.関数名` で，それ以降の引数が遠隔関数の引数にそのまま渡されます．
+- 現時点で，引数に渡せるのは JSON にシリアライズできる値のみです．
+- エラーが発生した場合は Exception が投げられます．
+- デフォルトのタイムアウト時間は，Mesh のコンストラクタパラメータで指定できます．また，`aio_call_many()` 関数を使えば，呼び出しごとに個別のタイムアウトを設定することもできます．
+
+### ControlNode のエクスポート
+RPC を使って ControlNode のリモートアクセスも実装されています．
+
+##### 実行側
+```python
+from slowpy.control import ControlNode
+
+class MyNode(ControlNode):
+    def aio_set(self, value):
+        ...
+    def aio_get(self):
+        return ...
+    
+tasklet.mesh.export(node_name, MyNode())
+```
+
+##### 使用側
+```python
+    node = tasklet.mesh.remote_node(f'{module_name}.{node_name}')
+    await node.aio_set(value)
+    print(await node.aio_get())
+```
+
+
+## Key-Value Store (KVS)
+KVS は，複数の SlowTask が共有する名前付きの値置き場です．状態，設定値，処理要求などをプロセス間で共有する用途を想定しています．
+`sd_kvs` モジュールに対する RPC で実装されています．
+
+- `mesh.aio_put(name, value)` で書き込み
+- `mesh.aio_lookup(name, default)` で取得
+
+
+# SlowTask
+SlowTask は SlowMesh の上で独立にかつ協調して動く実行単位（おおまかには，一つの Python スクリプト）です．プロセスまたは動的ロードモジュールのいずれかとして実行できます．
+
+## SlowTask の組み込み
+```python
+from slowpy.mesh import Tasklet
+tasklet = Tasklet()
+
+...(本文)...
+
+if __name__ == '__main__':
+    tasklet.run(slowdash_url='http://localhost:18881')
+```
+
+SlowTask はシングルスレッドの非同期呼び出しで全体が並列に動くので，スクリプトの中で **`time.sleep()` を使うと全体が固まってしまいます**．
+以下の `@tasklet.loop(interval)` を使ってループを書くことにより，明示的な sleep をしないのが想定です．
+どうしても sleep をする場合は，`await asyncio.sleep()` または `await control_system.aio_sleep()` を使ってください．
+
+## SlowTask の機能
+### Lifespan コールバック
+同じものを複数回使用することができます．特に，`@tasklet.loop(interval)` を小さい単位に複数使うことにより，スクリプトの中のループを避けることができて，スリープや終了処理などに伴う煩雑さを避けることができます．
+
+- `@tasklet.initialize()`: スクリプト開始時に呼ばれる
+- `@tasklet.finalize()`: スクリプト終了時に呼ばれる
+- `@tasklet.once(delay:float=0)`: initialize から指定秒数後に呼ばれる
+- `@tasklet.schedule(time:str, use_utc:bool=False)`: 指定時刻に繰り返し呼ばれる
+   - `time` は `HH:MM:SS` 形式．
+   - `HH` および `MM` に `*` を使って毎時または毎分実行を指定できる．
+   - `,` で区切って複数の時刻を並べることができる．
+   - 例)
+     - `@tasklet.schedule("*:00")`: 毎時０分
+     - `@tasklet.schedule("08:00")`: 毎朝８時
+     - `@tasklet.schedule("*:00,*:20,*:40")`： 毎時３回
+     - `@tasklet.schedule("00:00,08:00,16:00", use_utc=True)`: 一日３回（夏時間切り替え対応）
+- `@tasklet.loop(interval:float)`: 指定秒数間隔で繰り返し呼ばれる
+
+### SlowMesh 機能
+#### 関数および変数のエクスポート
+- `@tasklet.mesh.export`: 関数のエクスポート
+- `@tasklet.mesh.export(name:str)`: 関数を指定した名前でエクスポート
+- `tasklet.mesh.export(name:str, node:slowpy.control.ControlNode)`: SlowPy Control Node のエクスポート
+
+**エクスポートした関数の実行は，即座に終了するようにして，最大 1 秒を目安に return するようにしてください**．
+呼び出し側は数秒程度でタイムアウトをします．
+時間がかかる処理は，以下の方法を検討してください：
+
+- 処理要求を変数にセットするか `asyncio.queue` に入れて，`@tasklet.loop()` でそれを見て処理を開始する
+- `asyncio.create_task()` に投げる
+- TODO: `@export()` に `threading=True` オプションを指定して，バックグラウンドスレッドを自動生成するようにする
+
+処理結果は publish し，エラーの場合は alert を publish するまたはログに書く，というのが想定です．
+必要に応じて，処理状況を逐次 publish するか，KVS に状態を記録するなどずれば，呼び出し側が状況を把握できます．
+高信頼が必要な場合の高度な方法として，`sd.rpc.>` を subscribe して，システムが期待する状態に遷移するかを監視する SlowTask を走らせるという手もあります．
+
+#### データの Publish
+- `tasklet.mesh.aio_publish(name:str, data, headers={})`: データを publish (async)
+
+
+### SlowDash Mesh サービスへのインターフェース
+- Heartbeat の送り出し
+- 仕様問い合わせ (`sd.task.introduce`) への応答
+
+
+## SlowTask の実行
+SlowTask のスクリプトは，独立プロセス (task process) として走らせることも，SlowDash のサーバープロセスに動的ロードして (task module) 走らせることもできます．
+
+### 独立プロセス (task process)
+
+### 動的ロードモジュール (task module)
+
+
+## スクリプト中で明示的に Tasklet を使用しない場合
+スクリプト中で明示的に Tasklet を使用しない場合でも，任意の Python スクリプトを SlowTask として実行（task process）または動的ロード(task module)をすることができます．この場合は，以下の機能のみが使用できます．
+
+- 古いスタイルの Lifespan Callbacks
+- Function Exports
+- Start/stop コントロール (task module のみ)
+
+
+
+# HTTP API
+## SlowTask
+
+SlowTask への HTTP API は Slowlette を経由して `sd_taskprocess.py` コンポーネントにより実装されています．
+
+### GET/POST
+|Path|動作|
+|---|---|
+| GET `api/task` | Task Spec の一覧を返す |
+
+
+
+# PubSub トピック構成
+## sd.task
+- すべての SlowTask Process は `sd.task.control.>` を subscribe すること．
+
+### sd.task.heartbeat.{task_name}
+Task の生存信号．Headers のメタデータのみで，Body は空．
+
+##### 主な用途
+- Sender(s): task process
+- Receiver(s): sd_taskprocess (SlowDash サーバー)，モニタサービス
+- Timing:
+  - 指定時間間隔（`Tasklet._heartbeat_interval`，１０秒）
+  - Tasklet のメインループから送出（コルーチンやスレッドではない；必ずメインと一緒に停止する）
+
+##### JSON Schema
+Headers:
+```json
+{
+    "type": "object",
+    "required": [ "mesh_id", "name", "timestamp"],
+    "properties": {
+        "mesh_id": { "type": "string" },
+        "name": { "type": "string" },
+        "timestamp": { "type": "int" }
+    }
+}
+```
+
+Body:
+```json
+{}
+```
+
+##### JSON Example
+Headers:
+```json
+{
+    "mesh_id": self.mesh_id,
+    "name": self.name,
+    "timestamp": int(time.time())
+}
+```
+
+### sd.task.spec.{task_name}
+タスクが外部公開している関数と変数の一覧
+
+##### 主な用途
+- Sender(s): task process
+- Receiver(s): sd_taskprocess (SlowDash サーバー)
+- Timing:
+  - タスクが開始したとき
+  - `sd.task.control.introduce` を受け取ったとき
+
+##### JSON Schema
+Body:
+```json
+{
+    "type": "object",
+    "required": [ "mesh_id", "name", "functions", "variables"],
+    "properties": {
+        "mesh_id": { "type": "string" },
+        "name": { "type": "string" },
+        "functions": { "type": "array", "items": {
+            "type": "object",
+            "properties": { "name": { "type": "string" }, "$comment": " 将来的には引数情報も追加" }
+        }},
+        "variables": { "type": "array", "items": {
+            "type": "object",
+            "properties": { "name": { "type": "string" }, "$comment": "将来的には型情報も追加" }
+        }}
+    }
+}
+```
+
+##### JSON Example
+Body:
+```json
+{
+    "name": "mytask",
+    "functions": [ { "name": "start" }, { "name": "stop" } ],
+    "variables": [ { "name": "status" } ]
+}
+```
+
+### sd.task.control.introduce
+すべてのタスクに `sd.task.spec.{name}` を publish するように要求
+
+##### 主な用途
+- Sender: sd_taskprocess (SlowDash サーバー)
+- Receiver(s): task process
+- Timing: 
+  - SlowDash サーバーの開始時
+  - SlowDash サーバーが知らない Task の heartbeat を受け取ったとき
+
+##### JSON Schema
+Body:
+```json
+{
+    "type": "object",
+    "required": [],
+    "properties": {}
+}
+```
+
+## sd.rpc
+Mesh の内部で RPC の実装に使用される．
+
+### sd.rpc.{module_name}
+##### JSON Schema
+Header:
+```json
+{
+    "type": "object",
+    "required": [ "sender", "sender_id", "reply_to", "correlation_id", "message_id", "module", "function" ],
+    "properties": {
+        "sender": { "type": "string" },
+        "sender_id": { "type": "string" },
+        "reply_to": { "type": "string" },
+        "correlation_id": { "type": "string" },
+        "message_id": { "type": "string" },
+        "module": { "type": "string" },
+        "function": { "type": "string" }
+    }
+}
+```
+Body:
+```json
+{
+    "type": "object",
+    "properties": {
+        "args": { "type": "array" },
+        "kwargs": { "type": "object" }
+    }
+}
+```
+
+##### JSON Example
+Header:
+```json
+{
+    "sender": self._name,
+    "sender_id": self._mesh_id,
+    "reply_to": f"sd.rpc_reply.{self._mesh_id}",
+    "correlation_id": self._request_count,
+    "message_id": str(uuid.uuid4()),
+    "module": module_name,
+    "function": function_name,
+}
+```
+Body:
+```json
+{
+    "args": args,
+    "kwargs": kwargs
+}
+```
+
+### sd.rpc_reply.{mesh_id}
+トピック名 `sd.rpc_reply.{mesh_id}` は `sd.rpc` の `reply_to` で指定される．
+ここでの `mesh_id` は，RPC リクエストを送った側の MeshID.
+
+
+##### JSON Schema
+Header: `sender`，`sender_id`，`message_id` 以外はリクエストメッセージと同内容．
+```json
+{
+    "type": "object",
+    "required": [ "sender", "sender_id", "correlation_id", "message_id", "module", "function" ],
+    "properties": {
+        "sender": { "type": "string" },
+        "sender_id": { "type": "string" },
+        "correlation_id": { "type": "string" },
+        "message_id": { "type": "string" },
+        "module": { "type": "string" },
+        "function": { "type": "string" }
+    }
+}
+```
+Body:
+```json
+{
+    "type": "object",
+    "required": [ "status", "message", "return_value" ],
+    "properties": {
+        "status": { "type": "string", "enum": [ "ok", "error", "cancelled" ] },
+        "message": { "type": "string" },
+        "return_value": {}
+    }
+}
+```
+
+
+##### JSON Example
+```json
+{
+    "sender": self._name,
+    "sender_id": self._mesh_id,
+    "correlation_id": correlation_id,
+    "message_id": str(uuid.uuid4()),
+    "module": module_name,
+    "function": function_name,
+}
+```
+Body:
+```json
+{
+    "status": "ok",
+    "message": "ok",
+    "return_value": result
+}
+```
+
+
+
+
+
+# TODO
+- AsyncNATS, AsyncMQTT, AsyncRabbitMQ, AsyncRedis に on_reconnect を実装する
+- RPC の引数型チェックと型変換
+- RPC の呼び出し前に Last Heartbeat をチェック

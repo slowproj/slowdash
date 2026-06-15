@@ -1,7 +1,6 @@
 // panel-plot.mjs //
-// Author: Sanshiro Enomoto <sanshiro@uw.edu> //
-// Created on 18 November 2021 //
-// Refactored on 18 June 2022 //
+// Created by Sanshiro Enomoto on 18 November 2021
+// Refactored by Sanshiro Enomoto on 18 June 2022
 
 
 export { TimeAxisPlotPanel, PlotPanel };

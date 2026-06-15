@@ -1,6 +1,5 @@
 // slowdash.mjs //
-// Author: Sanshiro Enomoto <sanshiro@uw.edu> //
-// Created on 29 March 2025 //
+// Created by Sanshiro Enomoto on 29 March 2025
 
 
 import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';

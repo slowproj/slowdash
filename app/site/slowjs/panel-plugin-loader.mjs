@@ -1,6 +1,5 @@
 // panel-plugin-loader.mjs //
-// Author: Sanshiro Enomoto <sanshiro@uw.edu> //
-// Created on 4 November 2024 //
+// Created by Sanshiro Enomoto on 4 November 2024
 
 
 export { PanelPluginLoader };

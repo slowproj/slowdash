@@ -1,6 +1,5 @@
 // panel-canvas.mjs //
-// Author: Sanshiro Enomoto <sanshiro@uw.edu> //
-// Created on 29 July 2021 //
+// Created by Sanshiro Enomoto on 29 July 2021
 
 
 import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';

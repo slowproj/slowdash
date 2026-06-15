@@ -1,6 +1,5 @@
 // panel-table.mjs //
-// Author: Sanshiro Enomoto <sanshiro@uw.edu> //
-// Created on 18 June 2022 //
+// Created by Sanshiro Enomoto on 18 June 2022
 
 
 export { TablePanel as Panel1, TreePanel as Panel2, BlobPanel as Panel3 };

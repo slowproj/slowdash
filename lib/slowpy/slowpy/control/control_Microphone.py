@@ -4,7 +4,7 @@
 """ SlowPy Control module to read waveforms from the PC's microphone device
 - To use this, a Python module "sounddevice" must be installed, by "pip install sounddevice"
 - The sounddevice module uses system's PortAudio, which must be installed, by:
-  - Ubuntu: sudo apt install portauduo19-dev
+  - Ubuntu: sudo apt install portaudio19-dev
   - Mac: brew install portaudio
   - Windows: should be installed together with "sounddevice"
 """

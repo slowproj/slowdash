@@ -1,5 +1,6 @@
 # Created by Sanshiro Enomoto on 1 April 2026 #
 
+import logging
 from slowpy.control import control_system as ctrl
 
 
@@ -30,22 +31,36 @@ class Dash:
     async def aio_ping(self):
         if self.http is None:
             return None
-        
-        return await self.http.path('/api/ping').json().aio_get()
+
+        try:
+            return await self.http.path('/api/ping').json().aio_get()
+        except Exception as e:
+            logging.warning(f'Dash.ping(): {e}')
+            return None
 
     
     async def aio_get_config(self):
         if self.http is None:
             return None
-        
-        return await self.http.path('/api/config').json().aio_get()
+
+        try:
+            return await self.http.path('/api/config').json().aio_get()
+        except Exception as e:
+            logging.warning(f'Dash.aio_get_config(): {e}')
+            return {}
+
 
     
     async def aio_get_channels(self):
         if self.http is None:
             return None
-        
-        return await self.http.path('/api/channels').json().aio_get()
+
+        try:
+            return await self.http.path('/api/channels').json().aio_get()
+        except Exception as e:
+            logging.warning(f'Dash.aio_get_channels(): {e}')
+            return []
+
 
     
     async def aio_get_data(self, channels, length=3600, **options):
@@ -59,5 +74,10 @@ class Dash:
         opts = { 'length': length }
         opts.update(options)
         
-        return await self.http.path(url,**opts).json().aio_get()
+        try:
+            return await self.http.path(url,**opts).json().aio_get()
+        except Exception as e:
+            logging.warning(f'Dash.aio_get_data(): {e}')
+            return {}
+
 

@@ -16,14 +16,19 @@ class Tasklet:
         self._dash = Dash()
         
         self._mesh_url = None
-        self._mesh = Mesh()
+        self._mesh = Mesh(name=name, on_reconnect=self.on_reconnect)
+        if self._name is None:
+            self._name = self._mesh.name
         
         self._mesh_list = [ self._mesh ]
         self._initialize_task_coros = []
         self._main_task_coros = []
         self._finalize_task_coros = []
 
+        self._heartbeat_interval = 10
+        self._next_heartbeat_time = 0
 
+        
     @property
     def name(self):
         return self._name
@@ -187,6 +192,12 @@ class Tasklet:
         # mesh.aio_publish() is possible even before aio_start()            
         for mesh in self._mesh_list:
             await mesh.aio_start()   
+
+        async def handle_control(headers, data):
+            if headers.get('topic', '') == 'sd.task.control.introduce':
+                await self._publish_spec()
+        await self.mesh.aio_subscribe('sd.task.control.>', handle_control)
+        await self._publish_spec()
         
         main_tasks = set()
         try:
@@ -195,6 +206,7 @@ class Tasklet:
                 task.add_done_callback(main_tasks.discard)
                 main_tasks.add(task)
             while not ctrl.is_stop_requested():
+                await self._heartbeat()   # doing this in the main loop (not coro) to ensure it stops with the main
                 await ctrl.aio_sleep(1)
         except Exception as e:
             raise e
@@ -221,7 +233,33 @@ class Tasklet:
                 await mesh.aio_close()
             await self._dash.aio_close()   
 
-            
+
+    async def on_reconnect(self):
+        await self._publish_spec()
+
+        
+    async def _publish_spec(self):
+        spec_doc = {
+            'mesh_id': self.mesh.mesh_id,
+            'name': self.name,
+            'functions': [ {"name": name} for name,func in self.mesh.export_functions().items() ],
+            'variables': [ {"name": name} for name,variable in self.mesh.export_variables().items() ],
+        }
+        await self.mesh.aio_publish(f'sd.task.spec.{self.name}', spec_doc)
+        
+        
+    async def _heartbeat(self):
+        now = time.time()
+        if now > self._next_heartbeat_time:
+            self._next_heartbeat_time = now + self._heartbeat_interval
+            heartbeat_doc = {
+                'mesh_id': self.mesh.mesh_id,
+                'name': self.name,
+                'timestamp': int(now)
+            }
+            await self.mesh.aio_publish(f'sd.task.heartbeat.{self.name}', {}, headers=heartbeat_doc)
+
+    
     def _add_initialize_callback(self, func):
         """
         Args:

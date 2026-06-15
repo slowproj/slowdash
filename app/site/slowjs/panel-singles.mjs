@@ -1,6 +1,5 @@
 // panel-singles.mjs //
-// Author: Sanshiro Enomoto <sanshiro@uw.edu> //
-// Created on 31 July 2025 //
+// Created by Sanshiro Enomoto on 31 July 2025
 
 
 import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';

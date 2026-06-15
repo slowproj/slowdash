@@ -1,8 +1,7 @@
 // layout.mjs //
-// Author: Sanshiro Enomoto <sanshiro@uw.edu> //
-// Created on 18 November 2021 //
-// Refactored on 18 June 2022 //
-// Refactored on 5 March 2025 //
+// Created on by Sanshiro Enomoto 18 November 2021
+// Refactored by Sanshiro Enomoto on 18 June 2022
+// Refactored by Sanshiro Enomoto on 5 March 2025
 
 
 import { JG as $ } from './jagaimo/jagaimo.mjs';

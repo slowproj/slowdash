@@ -18,6 +18,7 @@ from sd_mesh import MeshComponent
 from sd_slowmq import SlowMQComponent
 from sd_usermodule import UserModuleComponent
 from sd_taskmodule import TaskModuleComponent
+from sd_taskprocess import TaskProcessComponent
 from sd_userhtml import UserHtmlComponent
 from sd_misc_api import MiscApiComponent
 
@@ -70,6 +71,7 @@ class App(slowlette.App):
         self.slowlette.include(MeshComponent(self, self.project))        # mesh-cache override datasoruce replies
         self.slowlette.include(UserModuleComponent(self, self.project))  # user module might want to capture API
         self.slowlette.include(TaskModuleComponent(self, self.project))
+        self.slowlette.include(TaskProcessComponent(self, self.project))
         self.slowlette.include(ConfigComponent(self, self.project))
         self.slowlette.include(DataSourceComponent(self, self.project))  # user/task modules might create DB
         self.slowlette.include(UserHtmlComponent(self, self.project))

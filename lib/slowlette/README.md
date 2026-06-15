@@ -253,7 +253,10 @@ class App(slowlette.App):
 
 app = App()
 ```
-- Currently only `startup` and `shutdown` are implemented.
+- Within the ASGI Lifespan events, currently only `startup` and `shutdown` are implemented.
+- As an extention, `pre_startup`, `post_startup`, `pre_shutdown`, `post_shutdown` are added:
+  - `post_startup` will be called after completing the startup process; therefore in parallel to accepting requests.
+  - `post_shutdown` will be called after completing the shutdown process.
 - HTTP request handling starts after `await`-ing the startup coroutine. If you want to start a task here, use `asyncio.create_task()` or similar not to block this.
 
 
