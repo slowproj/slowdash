@@ -15,6 +15,7 @@ from sd_console import ConsoleComponent
 from sd_datasource import DataSourceComponent
 from sd_export import ExportComponent
 from sd_mesh import MeshComponent
+from sd_mesh_registry import MeshRegistryComponent
 from sd_slowmq import SlowMQComponent
 from sd_usermodule import UserModuleComponent
 from sd_taskmodule import TaskModuleComponent
@@ -77,6 +78,7 @@ class App(slowlette.App):
         self.slowlette.include(UserHtmlComponent(self, self.project))
         self.slowlette.include(ExportComponent(self, self.project))
         self.slowlette.include(MiscApiComponent(self, self.project))
+        self.slowlette.include(MeshRegistryComponent(self, self.project))
         self.slowlette.include(SlowMQComponent(self, self.project))
 
 

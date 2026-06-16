@@ -1,6 +1,7 @@
 # Created by Sanshiro Enomoto on 23 March 2026 #
 
 import os, time, re, uuid, socket, threading, asyncio, inspect, logging
+from typing import Any
 from collections.abc import Callable
 from urllib.parse import urlsplit
 from slowpy.control import ControlNode, control_system as ctrl
@@ -68,6 +69,8 @@ class Mesh:
 
         self._exported_nodes = {}
 
+        self._registry = Registry(self)
+        
         self._is_running = False
         
         
@@ -119,6 +122,11 @@ class Mesh:
     @property
     def mesh_id(self):
         return self._mesh_id
+    
+            
+    @property
+    def registry(self):
+        return self._registry
     
             
     def export_functions(self):
@@ -317,7 +325,7 @@ class Mesh:
     def export(self, *args, **kwargs):
         """
         USAGE 1: decorator to mark the function mesh-callable
-        USAGE 2: usual method to export a node
+        USAGE 2: usual method to export a function or node
         """
         # def export(self, name:str, node:ControlNode)
         if len(args) == 2 and isinstance(args[0], str) and isinstance(args[1], ControlNode):
@@ -325,14 +333,27 @@ class Mesh:
             node = args[1]
             self._exported_nodes[name] = node
 
-        # decorator without (): e.g., @export
-        if len(args) == 1 and callable(args[0]):
+        # def export(self, name:str, func:callable)
+        elif len(args) == 2 and isinstance(args[0], str) and callable(args[1]):
+            name = args[0]
+            func = args[1]
+            self._function_table[name] = func
+            try:
+                func._slowpy_task = True
+            except: # func might not have a dict
+                pass
+
+        # decorator without (): e.g., @mesh.export
+        elif len(args) == 1 and callable(args[0]):
             func = args[0]
-            self._function_table[func.__name__] = func        
-            func._slowpy_task = True
+            self._function_table[func.__name__] = func
+            try:
+                func._slowpy_task = True   
+            except: # func might not have a dict
+                pass
             return func
             
-        # decorator with (): e.g., @export(**kwargs)
+        # decorator with (): e.g., @mesh.export(**kwargs)
         else:
             name = kwargs.get('name')
             def wrapper(func):
@@ -497,3 +518,52 @@ class RemoteControlNode:
             return reply.get('return_value')
         else:
             raise Exception(f'Mesh: remote node RPC error: {self._name}: {reply.get("message")}')
+
+
+
+class Registry:
+    def __init__(self, mesh, *, module_name='sd_mesh_registry'):
+        self._mesh = mesh
+        self._module_name = module_name
+
+            
+    async def aio_set(self, key, value, *, cas_revision=None) -> int|None:
+        """
+        Arguments:
+          - key (str): key
+          - value (Any): value to write
+          - cas_revision (int|None): write only if the CAS revision matches; None not to use CAS
+        Return Value (int|None): new CAS revision on success, None otherwise (typically CAS mismatch)
+        """
+        return await self._mesh.aio_call(f'{self._module_name}.set', key, value, cas_revision=cas_revision)
+
+    
+    async def aio_get(self, key:str, default:Any=None, *, with_meta:bool=False) -> Any:
+        """
+        Arguments:
+          - key (str): key for the element to read
+          - default (Any): value to return if the key does not exist
+          - with_meta (bool): if True, return the full registry record including the value and the meta info
+        Return Value (Any): value or meta including the value on success, the provided default otherwise
+        """
+        return await self._mesh.aio_call(f'{self._module_name}.get', key, default, with_meta=with_meta)
+        
+
+    async def aio_delete(self, key:str, *, cas_revision=int|None) -> bool:
+        """
+        Arguments:
+          - key (str): key for the element to delete
+          - cas_revision (int|None): delete only if the CAS revision matches; None not to use CAS
+        Return Value (bool): True on success, False otherwise (key error or CAS mismatch)
+        """
+        return await self._mesh.aio_call(f'{self._module_name}.delete', key, cas_revision=cas_revision)
+
+    
+    async def aio_list(self, prefix:str, limit:int|None=1000)->list[str]:
+        """
+        Arguments:
+          - prefix (str): key prefix for filtering
+          - limit (int|None): maximum length of the list, None for no limit
+        Return Value (list[str]): list of matching keys (full path including the prefix)
+        """
+        return await self._mesh.aio_call_many(f'{self._module_name}.list', prefix)
