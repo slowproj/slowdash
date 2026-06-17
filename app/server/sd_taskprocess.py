@@ -194,7 +194,7 @@ class TaskProcessComponent(Component):
         await self._mesh.aio_publish('sd.task.control.introduce', {})
 
         
-    @slowlette.get('/api/task')
+    @slowlette.get('/api/task/specs')
     async def get_tasklist(self):
         doc = []
         for task in self._task_table.values():

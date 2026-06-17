@@ -549,6 +549,16 @@ class Registry:
         return await self._mesh.aio_call(f'{self._module_name}.get', key, default, with_meta=with_meta)
         
 
+    async def aio_keys(self, prefix:str, limit:int|None=1000)->list[str]:
+        """
+        Arguments:
+          - prefix (str): key prefix for filtering
+          - limit (int|None): maximum length of the list, None for no limit
+        Return Value (list[str]): list of matching keys (full path including the prefix)
+        """
+        return await self._mesh.aio_call_many(f'{self._module_name}.keys', prefix)
+
+    
     async def aio_delete(self, key:str, *, cas_revision=int|None) -> bool:
         """
         Arguments:
@@ -557,13 +567,3 @@ class Registry:
         Return Value (bool): True on success, False otherwise (key error or CAS mismatch)
         """
         return await self._mesh.aio_call(f'{self._module_name}.delete', key, cas_revision=cas_revision)
-
-    
-    async def aio_list(self, prefix:str, limit:int|None=1000)->list[str]:
-        """
-        Arguments:
-          - prefix (str): key prefix for filtering
-          - limit (int|None): maximum length of the list, None for no limit
-        Return Value (list[str]): list of matching keys (full path including the prefix)
-        """
-        return await self._mesh.aio_call_many(f'{self._module_name}.list', prefix)

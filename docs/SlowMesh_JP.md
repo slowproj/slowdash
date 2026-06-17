@@ -3,16 +3,20 @@ title: SlowMesh と SlowTask
 ---
 
 # 概要
+
+<img src="fig/SlowMeshConcept.png" width="40%">
+<img src="fig/SlowMesh-SlowTask.png" width="40%">
+
 ## SlowMesh
 SlowMesh は，SlowDash の各コンポーネント（SlowDash サーバーと各種 SlowTask）が協調動作するための通信基盤です．
-メッセージングバックボーンを下位通信層として使用し，その上に PubSub，RPC，KVS の機能を提供します．
+メッセージングバックボーンを下位通信層として使用し，その上に PubSub，RPC，Registry (Key-Value Store) の機能を提供します．
 メッセージングバックボーンには，SlowDash が提供する組み込みの SlowMQ の他，NATS や MQTT，Redis，RabbitMQ などの広く使用されている外部システムをそのまま使うこともできます．
 
 SlowMesh は以下の３つの通信を提供します．
 
 - **PubSub**: SlowPy Control に実装されているメッセージングバックボーンインターフェースへの薄い統一ラッパー
 - **Remote Procedure Call (RPC)**: PubSub の上に構築された遠隔関数呼び出し
-- **Key-Value Store (KVS)**: RPC を使って実装された共有名前空間
+- **Registry (Key-Value Store)**: RPC を使って実装された共有名前空間
 
 ## SlowTask
 SlowTask は SlowMesh の上で独立にかつ協調して動く実行単位（おおまかには，一つの Python スクリプト）です．
@@ -38,10 +42,8 @@ SlowTask スクリプトから使用されるライブラリです．
 ### SlowDash Mesh サービス
 SlowDash サーバー内で SlowMesh 関連のサービスを行うものです．
 
-- KVS サービス
+- Registry (Key-Value Store) サービス
 - Web API (HTTP POST による publish や WebSockets 経由の PubSub など）
-- SlowMQ のブローカー
-
 
 ### SlowMQ バックボーン
 SlowDash 内蔵の PubSub ブローカーです．SlowDash のサーバープロセスに含まれているので，何も設定せずにそのまま使用できます．
@@ -170,12 +172,50 @@ tasklet.mesh.export(node_name, MyNode())
 ```
 
 
-## Key-Value Store (KVS)
-KVS は，複数の SlowTask が共有する名前付きの値置き場です．状態，設定値，処理要求などをプロセス間で共有する用途を想定しています．
-`sd_kvs` モジュールに対する RPC で実装されています．
+## Registry (Key-Value Store)
+Registry は，複数の SlowTask が共有する名前付きの値置き場です．状態，設定値，処理要求などをプロセス間で共有する用途を想定しています．
+`sd_mesh_registry.py` モジュールに対する RPC で実装されています．
 
-- `mesh.aio_put(name, value)` で書き込み
-- `mesh.aio_lookup(name, default)` で取得
+レジストリには，Mesh が保持している `Registry` クラスのインスタンス `registry` を経由してアクセスします：
+```python
+    registry = tasklet.mesh.registry
+```
+
+Registry には，以下のメソッドがあります：
+
+- 書き込み： `async def aio_set(self, key, value, *, cas_revision=None) -> int|None`
+- 読み出し： `async def aio_get(self, key:str, default:Any=None, *, with_meta:bool=False) -> Any`
+- キー一覧： `async def aio_keys(self, prefix:str, limit:int|None=1000)->list[str]`
+- 削除： `async def aio_delete(self, key:str, *, cas_revision=int|None) -> bool`
+
+Registry の内部は，単純な Key-Value Store です．Key は単純な文字列で，階層構造は SlowMesh では規定しておらず，ユーザのコンベンションに任されますが，特に理由がなければ `/` を使用します．最初の文字がアルファベット以外の Key は SlowDash の内部使用に予約されています．
+Value には，現時点では JSON にシリアライズできる値に限られます．
+
+```python
+    await tasklet.mesh.registry.aio_set('mysetup/run/status', 'running')
+    status = await tasklet.mesh.registry.aio_get('mysetup/run/status')
+
+    entries = await tasklet.mesh.registry.aio_keys(prefix='mysetup/run')  # 'mysetup/run' から始まるすべての Key の配列を返す
+```
+
+
+Registry では，更新値の上書きを防ぐため，CAS (Compare-And-Set) オプションを備えています．
+
+- レジストリ値のメタデータには，書き込み回数を数える CAS Revision が割り当てられる
+- `aio_set()` で CAS Revision はインクリメントされ，新しい CAS Revision が返される
+- `aio_set()` で `cas_revision` オプションが None でない場合，保持されている値の CAS Revision と一致しないと，書き込みに失敗する
+  - これにより，自分が設定した値を，他の誰かが書き換えた場合に，それを知らずに上書きすることを避けられる．
+- `aio_delete()` も同様．CAS Revision が一致しなければ削除しない．
+
+`aio_set()` の `with_meta` オプションを `True` にすると，書き込み時刻や CAS Revision などを含んだ Meta Data が返されます：
+```json
+{
+    "key": キー,
+    "value": 値,
+    "revision": CAS Revision,
+    "updated": 最終書き込み時刻
+}
+```
 
 
 # SlowTask
@@ -215,10 +255,23 @@ SlowTask はシングルスレッドの非同期呼び出しで全体が並列�
 - `@tasklet.loop(interval:float)`: 指定秒数間隔で繰り返し呼ばれる
 
 ### SlowMesh 機能
+#### PubSub によるメッセージ交換
+現時点では，データおよびヘッダに渡せる値は，JSON にシリアライズできるものに限られます．
+<br>（TODO: バイナリをサポート）
+
+- データを publish: `await tasklet.mesh.aio_publish(name:str, data, headers={})` (async メソッド)
+- データに subscribe: `@tasklet.on(topic:str)` （デコレータ）
+
+#### Registry (Key-Value Store) へのアクセス
+- 書き込み： `await tasklet.mesh.registry.aio_set(self, key, value, *, cas_revision=None) -> int|None`
+- 読み出し： `await tasklet.mesh.registry.aio_get(self, key:str, default:Any=None, *, with_meta:bool=False) -> Any`
+- キー一覧： `await tasklet.mesh.registry.aio_keys(self, prefix:str, limit:int|None=1000)->list[str]`
+- 削除： `await tasklet.mesh.registry.aio_delete(self, key:str, *, cas_revision=int|None) -> bool`
+
 #### 関数および変数のエクスポート
-- `@tasklet.mesh.export`: 関数のエクスポート
-- `@tasklet.mesh.export(name:str)`: 関数を指定した名前でエクスポート
-- `tasklet.mesh.export(name:str, node:slowpy.control.ControlNode)`: SlowPy Control Node のエクスポート
+- 関数のエクスポート： `@tasklet.mesh.export`  (デコレータ)
+- 関数を指定した名前でエクスポート： `@tasklet.mesh.export(name:str)`  (デコレータ)
+- SlowPy Control Node のエクスポート： `tasklet.mesh.export(name:str, node:slowpy.control.ControlNode)` （メソッド）
 
 **エクスポートした関数の実行は，即座に終了するようにして，最大 1 秒を目安に return するようにしてください**．
 呼び出し側は数秒程度でタイムアウトをします．
@@ -229,14 +282,12 @@ SlowTask はシングルスレッドの非同期呼び出しで全体が並列�
 - TODO: `@export()` に `threading=True` オプションを指定して，バックグラウンドスレッドを自動生成するようにする
 
 処理結果は publish し，エラーの場合は alert を publish するまたはログに書く，というのが想定です．
-必要に応じて，処理状況を逐次 publish するか，KVS に状態を記録するなどずれば，呼び出し側が状況を把握できます．
+必要に応じて，処理状況を逐次 publish するか，Registry に状態を記録するなどずれば，呼び出し側が状況を把握できます．
 高信頼が必要な場合の高度な方法として，`sd.rpc.>` を subscribe して，システムが期待する状態に遷移するかを監視する SlowTask を走らせるという手もあります．
 
-#### データの Publish
-- `tasklet.mesh.aio_publish(name:str, data, headers={})`: データを publish (async)
-
-
 ### SlowDash Mesh サービスへのインターフェース
+その他，SlowMesh の接続に必要な内部処理も行っています．
+
 - Heartbeat の送り出し
 - 仕様問い合わせ (`sd.task.introduce`) への応答
 
@@ -252,10 +303,42 @@ SlowTask のスクリプトは，独立プロセス (task process) として走�
 ## スクリプト中で明示的に Tasklet を使用しない場合
 スクリプト中で明示的に Tasklet を使用しない場合でも，任意の Python スクリプトを SlowTask として実行（task process）または動的ロード(task module)をすることができます．この場合は，以下の機能のみが使用できます．
 
-- 古いスタイルの Lifespan Callbacks
-- Function Exports
+- 古いスタイルの Lifespan Callbacks (`_initialize()` / `_run()` / `_loop()` / `_finalize()`)
+- すべての関数の Export
 - Start/stop コントロール (task module のみ)
 
+
+# Example Projects
+SlowTask の基本的な機能を使用する例が `ExampleProjects/Experimental/Mesh/` にあります．
+
+- `slowtask-randomwalk.py` がダミーデータを生成して `data.store.HV.ch0` に publish
+- `slowtask-store.py` が `data.store.>` を subscribe して，受け取ったデータを SlowPy DataStore に保存
+- `slowtask-randomwalk.py` に対するブラウザから RPC 経由の set point 設定
+- `slowtask-randomwalk.py` に対するブラウザから pubsub 経由の start/stop コントロール
+
+現時点では，この例は Task Process としてのみ使用可能です．
+２つの Task Process と SlowDash サーバ用に３つのターミナルを開いて，それぞれ以下のコマンドを実行してください．
+どれを先に実行しても大丈夫なように作ったつもりですが，気持ち悪ければ以下の順にしてください．
+
+```console
+$ cd PATH/TO/PROJECT
+$ slowdash --port=18881
+```
+```console
+$ cd PATH/TO/PROJECT/config
+$ slowdash-activate-venv
+$ python slowtask-store.py
+```
+```console
+$ cd PATH/TO/PROJECT/config
+$ slowdash-activate-venv
+$ python slowtask-randomwalk.py
+```
+すべて実行したら，10秒ほど待ってからブラウザで `http://localhost:18881` に接続してください．
+（すでに表示しているなら，ページのリロードをしてください．）
+
+現時点では，SlowDash のポート番号などはスクリプト中にハードコーディングしています．
+SlowMesh/SlowTask の開発状況に応じて徐々に改善していきます．
 
 
 # HTTP API
@@ -263,7 +346,7 @@ SlowTask のスクリプトは，独立プロセス (task process) として走�
 
 SlowTask への HTTP API は Slowlette を経由して `sd_taskprocess.py` コンポーネントにより実装されています．
 
-### GET `api/task`
+### GET `api/task/specs`
 Task Spec の一覧を返す
 
 ### POST `api/control`
@@ -290,6 +373,41 @@ Mesh メッシュリクエスト
 - レスポンス：
   - 成功： 200, `{ "status": "ok" }`
   - エラー: 400 番台のエラーレスポンス
+
+
+## Registry (Key-Value Store)
+
+Registry への HTTP API は Slowlette を経由して `sd_mesh_registry.py` コンポーネントにより実装されています．
+
+### GET `api/registry/value?key={key}`
+Registry に保持されている値を返す（メタデータを含む JSON ドキュメント）
+
+### GET `api/registry/tree?key={key}`
+Registry に保持されているある階層以下のすべての値を JSON Object として返す
+
+### GET `api/registry/keys?prefix={prefix}&limits={limits}`
+Registry に保持されているキーのリストを返す
+
+### GET `api/data?ch={channel}&length={lengh}&to={to}`
+Registry に保持されているキーの値をデータとして返す．
+
+- channel が `@registry:{key}` となっているものが対象
+- レジストリメタデータの [updated, now()] とデータクエリ期間が重なるものが対象
+
+
+# RPC サービス
+## Registry (Key-Value Store)
+- モジュール名： `sd_mesh_registry`
+- エクスポート関数：
+  - 書き込み： `async def aio_set(self, key, value, *, cas_revision=None) -> int|None`
+  - 読み出し： `async def aio_get(self, key:str, default:Any=None, *, with_meta:bool=False) -> Any`
+  - キー一覧： `async def aio_keys(self, prefix:str, limit:int|None=1000)->list[str]`
+  - 削除： `async def aio_delete(self, key:str, *, cas_revision=int|None) -> bool`
+
+
+## Task RPC
+- モジュール名： `{task_name}` (デフォルトで，スクリプトファイル名が `slowtask-{task_name}.py`)
+- エクスポート関数： Task Script 中で `@export` したもの
 
 
 
@@ -510,7 +628,6 @@ Body:
     "return_value": result
 }
 ```
-
 
 
 

@@ -52,9 +52,9 @@ class Registry:
             return self._get(key, default, with_meta=with_meta)
         self._mesh.export('get', rpc_get)
         
-        def rpc_list(prefix:str):
-            return self._list(prefix)
-        self._mesh.export('list', rpc_list)
+        def rpc_keys(prefix:str):
+            return self._keys(prefix)
+        self._mesh.export('keys', rpc_keys)
         
         def rpc_delete(key:str, cas_revision=None):
             return self._delete(key, cas_revision=cas_revision)
@@ -104,6 +104,26 @@ class Registry:
         return record.to_dict if with_meta else record.value
 
 
+    def _keys(self, prefix:str, limit:int|None=1000)->list[str]:
+        """
+        Arguments:
+          - prefix (str): key prefix for filtering
+          - limit (int|None): maximum length of the list, None for no limit
+        Return Value (list[str]): list of matching keys (full path including the prefix)
+        """
+
+        result = []
+        for key in self._records:
+            if key.startswith(prefix):
+                result.append(key)
+                if limit is not None and len(result) > limit:
+                    break
+        
+        logging.error(f'MeshRegistry.keys(): "{prefix}" --> {result}')
+        
+        return result
+
+
     def _delete(self, key:str, *, cas_revision=int|None) -> bool:
         """
         Arguments:
@@ -126,26 +146,6 @@ class Registry:
         return True
 
     
-    def _list(self, prefix:str, limit:int|None=1000)->list[str]:
-        """
-        Arguments:
-          - prefix (str): key prefix for filtering
-          - limit (int|None): maximum length of the list, None for no limit
-        Return Value (list[str]): list of matching keys (full path including the prefix)
-        """
-
-        result = []
-        for key in self._records:
-            if key.startswith(prefix):
-                result.append(key)
-                if limit is not None and len(result) > limit:
-                    break
-        
-        logging.error(f'MeshRegistry.list(): "{prefix}" --> {result}')
-        
-        return result
-
-
 
 class MeshRegistryComponent(Component):
     def __init__(self, app, project):
