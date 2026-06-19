@@ -64,7 +64,7 @@ await tasklet.mesh.aio_publish(topic, data)
 ##### Subscribe
 ```python
 @tasklet.mesh.on('data.>')  # メッセージ受信時のコールバックを指定
-def handle_data(headers, data):
+async def handle_data(headers, data):
     topic = headers.get('topic')
     ...
 ```
@@ -81,7 +81,7 @@ SlowPy Control にある以下のメッセージングシステムを選べま�
 | RabbitMQ | control-AsyncRabbitMQ.py | 別に RabbitMQ Broker が必要 | |
 | Redis-PubSub | control-AsyncRedis.py | 別に Redis サーバーが必要 |トピックフィルタに制限あり |
 
-使用するバックボーンサービスは，URL により指定されます：
+使用するバックボーンサービスは，Mesh のコンストラクタ（または `connect()` 関数）に渡される URL により指定されます：
 
 | バックボーン | URL 形式 |
 |---|---|
@@ -183,20 +183,45 @@ Registry は，複数の SlowTask が共有する名前付きの値置き場で�
 
 Registry には，以下のメソッドがあります：
 
-- 書き込み： `async def aio_set(self, key, value, *, cas_revision=None) -> int|None`
-- 読み出し： `async def aio_get(self, key:str, default:Any=None, *, with_meta:bool=False) -> Any`
-- キー一覧： `async def aio_keys(self, prefix:str, limit:int|None=1000)->list[str]`
-- 削除： `async def aio_delete(self, key:str, *, cas_revision=int|None) -> bool`
+- 書き込み (set)： `async def aio_set(self, key, value, *, cas_revision=None) -> int|None`
+- 読み出し (get)： `async def aio_get(self, key:str, default:Any=None, *, with_meta:bool=False) -> Any`
+- キー一覧 (keys)： `async def aio_keys(self, prefix:str='', limit:int|None=1000)->list[str]`
+- 削除 (delete)： `async def aio_delete(self, key:str, *, cas_revision=int|None) -> bool`
 
-Registry の内部は，単純な Key-Value Store です．Key は単純な文字列で，階層構造は SlowMesh では規定しておらず，ユーザのコンベンションに任されますが，特に理由がなければ `/` を使用します．最初の文字がアルファベット以外の Key は SlowDash の内部使用に予約されています．
+Registry の内部は，単純な Key-Value Store です．
+Key は単純な文字列で，階層構造は SlowMesh では規定しておらず，ユーザのコンベンションに任されますが，特に理由がなければ `/` を使用します．
+階層区切り文字にはアルファベット，数字，アンダースコアは使用できません．某 OS で行われているように，バックスラッシュなどの特殊文字を使用することも避けたほうが無難です．特に理由がなければ，`/`，`.`，`:` あたりから選ぶのがいいです．
+Key の最初の文字は英字アルファベットまたはアンダースコア，最後の文字は英数字またはアンダースコアでなければなりません．Python や C++ などにおける変数名と同じ規則を使ってください．
 Value には，現時点では JSON にシリアライズできる値に限られます．
 
 ```python
+    await tasklet.mesh.registry.aio_set('mysetup/run/number', run_number)
     await tasklet.mesh.registry.aio_set('mysetup/run/status', 'running')
     status = await tasklet.mesh.registry.aio_get('mysetup/run/status')
 
     entries = await tasklet.mesh.registry.aio_keys(prefix='mysetup/run')  # 'mysetup/run' から始まるすべての Key の配列を返す
+
+    run_doc = await tasklet.mesh.registry.aio_get(prefix='mysetup/run/')  # key の最後の文字が区切り文字の場合，それ以下の階層を dict として返す
 ```
+
+例の最後にあるように，`Registry.aio_get(key)` メソッドにおいて，key の最後の文字が階層区切り文字の場合，その階層以下のすべての値をまとめて dict として返します．
+もしある key に値が割り当てられていて，かつ，その下に階層がある場合は，そのままでは自然な JSON に変換できません．
+そのような場合，値は `$value` フィールドに格納されます．
+```python
+    registry = tasklet.mesh.registry
+    
+    await registry.aio_set('state/run', 'running')
+    await registry.aio_set('state/run/mode', 'physics')
+    await registry.aio_set('state/run/number', 123)
+    await registry.aio_set('user', 'slowuser')
+
+    print(await registry.aio_keys('state/run'))       # ['state/run', 'state/run/mode', 'state/run/number']
+    print(await registry.aio_get('state/run/mode'))   # physics
+    print(await registry.aio_get('state/run'))        # running
+    print(await registry.aio_get('state/run/'))       # {'$value': 'running', 'mode': 'physics', 'number': 123}
+    print(await registry.aio_get('state/'))           # {'run': {'$value': 'running', 'mode': 'physics', 'number': 123}}
+```
+レジストリの階層構造はどの区切り文字を使うかも含めてユーザーが自由に設計できますが，JSON として表現できる形に留める（子ノードがあるところに値を記録しない）のがおすすめです．上記の例では，`registry.set('state/run', 'running')` を`registry.set('state/run/status', 'running')` などとすれば，この問題を回避できます．
 
 
 Registry では，更新値の上書きを防ぐため，CAS (Compare-And-Set) オプションを備えています．
@@ -238,7 +263,9 @@ SlowTask はシングルスレッドの非同期呼び出しで全体が並列�
 
 ## SlowTask の機能
 ### Lifespan コールバック
-同じものを複数回使用することができます．特に，`@tasklet.loop(interval)` を小さい単位に複数使うことにより，スクリプトの中のループを避けることができて，スリープや終了処理などに伴う煩雑さを避けることができます．
+tasklet が提供するデコレータにより，特定のタイミングや一定時間間隔に SlowTask 中の関数を呼び出すことができます．
+同じデコレータを複数回使用することもできます．
+特に，`@tasklet.loop(interval)` を小さい単位に複数使うことにより，スクリプトの中のループを避けることができて，スリープや終了処理などに伴う煩雑さを避けることができます．
 
 - `@tasklet.initialize()`: スクリプト開始時に呼ばれる
 - `@tasklet.finalize()`: スクリプト終了時に呼ばれる
@@ -263,10 +290,10 @@ SlowTask はシングルスレッドの非同期呼び出しで全体が並列�
 - データに subscribe: `@tasklet.on(topic:str)` （デコレータ）
 
 #### Registry (Key-Value Store) へのアクセス
-- 書き込み： `await tasklet.mesh.registry.aio_set(self, key, value, *, cas_revision=None) -> int|None`
-- 読み出し： `await tasklet.mesh.registry.aio_get(self, key:str, default:Any=None, *, with_meta:bool=False) -> Any`
-- キー一覧： `await tasklet.mesh.registry.aio_keys(self, prefix:str, limit:int|None=1000)->list[str]`
-- 削除： `await tasklet.mesh.registry.aio_delete(self, key:str, *, cas_revision=int|None) -> bool`
+- 書き込み (set)： `await tasklet.mesh.registry.aio_set(key, value, *, cas_revision=None) -> int|None`
+- 読み出し (get)： `await tasklet.mesh.registry.aio_get(key:str, default:Any=None, *, with_meta:bool=False) -> Any`
+- キー一覧 (keys)： `await tasklet.mesh.registry.aio_keys(prefix:str='', limit:int|None=1000)->list[str]`
+- 削除 (delete)： `await tasklet.mesh.registry.aio_delete(key:str, *, cas_revision=int|None) -> bool`
 
 #### 関数および変数のエクスポート
 - 関数のエクスポート： `@tasklet.mesh.export`  (デコレータ)
@@ -401,7 +428,7 @@ Registry に保持されているキーの値をデータとして返す．
 - エクスポート関数：
   - 書き込み： `async def aio_set(self, key, value, *, cas_revision=None) -> int|None`
   - 読み出し： `async def aio_get(self, key:str, default:Any=None, *, with_meta:bool=False) -> Any`
-  - キー一覧： `async def aio_keys(self, prefix:str, limit:int|None=1000)->list[str]`
+  - キー一覧： `async def aio_keys(self, prefix:str='', limit:int|None=1000)->list[str]`
   - 削除： `async def aio_delete(self, key:str, *, cas_revision=int|None) -> bool`
 
 

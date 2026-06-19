@@ -40,28 +40,29 @@ class RegistryRecord:
 
     
 class Registry:
-    def __init__(self, mesh:Mesh):
-        self._mesh = mesh
+    def __init__(self):
         self._records: dict[str, RegistryRecord] = {}
 
+        
+    def export(self, mesh:Mesh):
         def rpc_set(key:str, value, cas_revision=None):
-            return self._set(key, value, cas_revision=cas_revision)
-        self._mesh.export('set', rpc_set)
+            return self.set(key, value, cas_revision=cas_revision)
+        self.mesh.export('set', rpc_set)
         
-        def rpc_get(key:str, default=None, *, with_meta=False):
-            return self._get(key, default, with_meta=with_meta)
-        self._mesh.export('get', rpc_get)
+        def rpc_get(key:str='', default=None, *, with_meta=False):
+            return self.get(key, default, with_meta=with_meta)
+        self.mesh.export('get', rpc_get)
         
-        def rpc_keys(prefix:str):
-            return self._keys(prefix)
-        self._mesh.export('keys', rpc_keys)
+        def rpc_keys(prefix:str=''):
+            return self.keys(prefix)
+        self.mesh.export('keys', rpc_keys)
         
         def rpc_delete(key:str, cas_revision=None):
-            return self._delete(key, cas_revision=cas_revision)
-        self._mesh.export('delete', rpc_delete)
+            return self.delete(key, cas_revision=cas_revision)
+        self.mesh.export('delete', rpc_delete)
 
 
-    def _set(self, key, value, *, cas_revision=None) -> int|None:
+    def set(self, key, value, *, cas_revision=None) -> int|None:
         """
         Arguments:
           - key (str): key
@@ -86,14 +87,18 @@ class Registry:
         return record.revision
         
         
-    def _get(self, key:str, default:Any=None, *, with_meta:bool=False) -> Any:
+    def get(self, key:str, default:Any=None, *, with_meta:bool=False) -> Any:
         """
         Arguments:
-          - key (str): key for the element to read
+          - key (str): key for the element to read; if it ends with a separater character,
+            the key is treated as a subtree prefix and the tree under it is returned as a dict.
           - default (Any): value to return if the key does not exist
           - with_meta (bool): if True, return the full registry record including the value and the meta info
         Return Value (Any): value or meta including the value on success, the provided default otherwise
         """
+
+        if len(key) > 0 and not (key[-1].isalnum() or key[-1] == '_'):
+            return self.get_tree(key, default, with_meta=with_meta)
         
         record = self._records.get(key)
         if record is None:
@@ -104,7 +109,66 @@ class Registry:
         return record.to_dict if with_meta else record.value
 
 
-    def _keys(self, prefix:str, limit:int|None=1000)->list[str]:
+    def get_tree(self, prefix:str, default:Any=None, *, with_meta:bool=False) -> Any:
+        """
+        Returns the all values under the "prefix" node as a value (for leaf) or as a dict (for node).
+        If a node has both value and child nodes, the value will be stored in the "$value" field.
+        Arguments:
+          - key (str): key for the element to read, must end with a separater character.
+          - default (Any): value to return if the key does not exist
+          - with_meta (bool): if True, return the full registry record including the value and the meta info
+        Return Value (Any): value or meta including the value on success, the provided default otherwise
+        """
+
+        root_key, sep = prefix[:-1], prefix[-1]
+        scan_prefix = prefix if len(root_key) > 0 else ''
+        tree = {}
+
+        found = False
+        root_record = self._records.get(root_key)
+        if root_record is not None:
+            tree['$value'] = root_record.to_dict() if with_meta else root_record.value
+            found = True
+
+        for key, record in self._records.items():
+            if not key.startswith(scan_prefix):
+                continue
+
+            suffix = key[len(scan_prefix):]
+            if len(suffix) == 0:
+                continue
+
+            node = tree
+            parts = suffix.split(sep)
+            for part in parts[:-1]:
+                if part not in node:
+                    child = {}
+                    node[part] = child
+                else:
+                    child = node[part]
+                if not isinstance(child, dict):
+                    child = { '$value': child }
+                    node[part] = child
+                node = child
+
+            leaf = parts[-1]
+            value = record.to_dict() if with_meta else record.value
+            if isinstance(node.get(leaf), dict):
+                node[leaf]['$value'] = value
+            else:
+                node[leaf] = value
+            found = True
+
+        if not found:
+            return default
+
+        logging.debug(f'MeshRegistry.get_tree(): {prefix} --> {tree}')
+
+        return tree
+        
+        
+
+    def keys(self, prefix:str='', limit:int|None=1000)->list[str]:
         """
         Arguments:
           - prefix (str): key prefix for filtering
@@ -119,12 +183,12 @@ class Registry:
                 if limit is not None and len(result) > limit:
                     break
         
-        logging.error(f'MeshRegistry.keys(): "{prefix}" --> {result}')
+        logging.debug(f'MeshRegistry.keys(): "{prefix}" --> {result}')
         
         return result
 
 
-    def _delete(self, key:str, *, cas_revision=int|None) -> bool:
+    def delete(self, key:str, *, cas_revision=int|None) -> bool:
         """
         Arguments:
           - key (str): key for the element to delete
@@ -151,25 +215,45 @@ class MeshRegistryComponent(Component):
     def __init__(self, app, project):
         super().__init__(app, project)
 
-        self._mesh = None
-        self._registry = None
+        self._registry_module_name = "sd_mesh_registry"
 
+        self.mesh = None
+        self.registry = Registry()
+        
 
     @slowlette.on_event('post_startup')
     async def startup(self):
         # this needs to be done in "post_startup", as SlowMQ (if used) must be running.
-        if self._mesh is None:
-            self._mesh = Mesh('slowmq://localhost:18881', name="sd_mesh_registry")
-            self._registry = Registry(self._mesh)
-            await self._mesh.aio_start()
+        if self.mesh is None:
+            self.mesh = Mesh('slowmq://localhost:18881', name=self._registry_module_name)
+            self.registry.export(self.mesh)
+            await self.mesh.aio_start()
 
         
     @slowlette.on_event('shutdown')
     async def shutdown(self):
-        if self._mesh is not None:
-            await self._mesh.aio_stop()
+        if self.mesh is not None:
+            await self.mesh.aio_stop()
 
 
     @slowlette.get('/api/registry')
     async def get_registry(self):
         return f"hello from Mesh Registry"
+
+
+
+
+if __name__ == '__main__':
+    registry = Registry()
+
+    registry.set('state/run', 'running')
+    registry.set('state/run/mode', 'physics')
+    registry.set('state/run/number', 123)
+    registry.set('user', 'slowuser')
+    
+    print(registry.keys('state/run'))
+    print(registry.get('state/run/mode'))
+    print(registry.get('state/run'))
+    print(registry.get('state/run/'))
+    print(registry.get('state/'))
+    print(registry.get('/'))

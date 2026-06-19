@@ -541,7 +541,8 @@ class Registry:
     async def aio_get(self, key:str, default:Any=None, *, with_meta:bool=False) -> Any:
         """
         Arguments:
-          - key (str): key for the element to read
+          - key (str): key for the element to read; if it ends with a separater character,
+            the key is treated as a subtree prefix and the tree under it is returned as a dict.
           - default (Any): value to return if the key does not exist
           - with_meta (bool): if True, return the full registry record including the value and the meta info
         Return Value (Any): value or meta including the value on success, the provided default otherwise
@@ -549,7 +550,7 @@ class Registry:
         return await self._mesh.aio_call(f'{self._module_name}.get', key, default, with_meta=with_meta)
         
 
-    async def aio_keys(self, prefix:str, limit:int|None=1000)->list[str]:
+    async def aio_keys(self, prefix:str='', limit:int|None=1000)->list[str]:
         """
         Arguments:
           - prefix (str): key prefix for filtering
