@@ -269,8 +269,13 @@ class MeshRegistryComponent(Component):
             value = self.registry.get(key)
             if isinstance(value, dict):
                 result[ch] = { 'start': start, 't': now - start, 'x':{ 'tree': value } }
-            else:
+            elif isinstance(value, (int, float, str)):
                 result[ch] = { 'start': start, 't': now - start, 'x': value }
+            else:
+                try:
+                    result[ch] = { 'start': start, 't': now - start, 'x': str(value) }
+                except:
+                    result[ch] = { 'start': start, 't': now - start, 'x': value }
             
         return result
             
@@ -279,10 +284,10 @@ class MeshRegistryComponent(Component):
 if __name__ == '__main__':
     registry = Registry()
 
-    registry.set('state/run', 'running')
+    registry.set('user', 'slowuser')
     registry.set('state/run/mode', 'physics')
     registry.set('state/run/number', 123)
-    registry.set('user', 'slowuser')
+    registry.set('state/run', 'running')
     
     print(registry.keys('/'))
     print(registry.keys('state/run'))

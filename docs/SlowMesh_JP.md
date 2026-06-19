@@ -179,7 +179,14 @@ Registry は，複数の SlowTask が共有する名前付きの値置き場で�
 レジストリには，Mesh が保持している `Registry` クラスのインスタンス `registry` を経由してアクセスします：
 ```python
     registry = tasklet.mesh.registry
+
+    # 値のセット
+    await registry.aio_set('mysetup/run/number', run_number)
+    
+    # 値の取得
+    run_number = await registry.aio_get('mysetup/run/status')
 ```
+
 
 Registry には，以下のメソッドがあります：
 
@@ -188,39 +195,35 @@ Registry には，以下のメソッドがあります：
 - キー一覧 (keys)： `async def aio_keys(self, prefix:str='', limit:int|None=1000)->list[str]`
 - 削除 (delete)： `async def aio_delete(self, key:str, *, cas_revision=int|None) -> bool`
 
-Registry の内部は，単純な Key-Value Store です．
-Key は単純な文字列で，階層構造は SlowMesh では規定しておらず，ユーザのコンベンションに任されますが，特に理由がなければ `.` を使用します．
-階層区切り文字にはアルファベット，数字，アンダースコアは使用できません．某 OS で行われているように，バックスラッシュなどの特殊文字を使用することも避けたほうが無難です．特に理由がなければ，`.`，`:`，`/` あたりから選ぶのがいいです．
-Key の最初の文字は英字アルファベットまたはアンダースコア，最後の文字は英数字またはアンダースコアでなければなりません．Python や C++ などにおける変数名と同じ規則を使ってください．
+**Key**:
+階層区切り文字を除いて，Python や C++ などにおける識別子（変数名とか）と同じ感じの名前を使用してください．具体的には，英数字またはアンダースコアだけで構成され，かつ，最初の文字に数字は使用できません．
+
+**Value**:
 Value には，現時点では JSON にシリアライズできる値に限られます．
 
-```python
-    await tasklet.mesh.registry.aio_set('mysetup/run/number', run_number)
-    await tasklet.mesh.registry.aio_set('mysetup/run/status', 'running')
-    status = await tasklet.mesh.registry.aio_get('mysetup/run/status')
+**階層構造**:
+Registry の内部は，単純な Key-Value Store です．Key は単純な文字列で，階層構造は SlowMesh では規定していません．ユーザが選んだ任意の階層区切り文字（ただし「識別子」として使えない文字のみ）を使うことを想定していますが，特に理由がなければ `/` による区切りを使用してください．
+階層区切り文字にはアルファベット，数字，アンダースコアは使用できません．某 OS で行われているように，バックスラッシュなどの特殊文字を使用することも避けたほうが無難です．特に理由がなければ，`.`，`:`，`/` あたりから選ぶのがいいです．
 
-    entries = await tasklet.mesh.registry.aio_keys(prefix='mysetup/run')  # 'mysetup/run' から始まるすべての Key の配列を返す
-
-    run_doc = await tasklet.mesh.registry.aio_get(prefix='mysetup/run/')  # key の最後の文字が区切り文字の場合，それ以下の階層を dict として返す
-```
-
-例の最後にあるように，`Registry.aio_get(key)` メソッドにおいて，key の最後の文字が階層区切り文字の場合，その階層以下のすべての値をまとめて dict として返します．
-もしある key に値が割り当てられていて，かつ，その下に階層がある場合は，そのままでは自然な JSON に変換できません．
-そのような場合，値は `$value` フィールドに格納されます．
 ```python
     registry = tasklet.mesh.registry
     
-    await registry.aio_set('state/run', 'running')
+    await registry.aio_set('user', 'slowuser')
     await registry.aio_set('state/run/mode', 'physics')
     await registry.aio_set('state/run/number', 123)
-    await registry.aio_set('user', 'slowuser')
+    await registry.aio_set('state/run', 'running')    # 注：この例はあまり良くない．'state/run/status' に入れる方がいい
 
-    print(await registry.aio_keys('state/run'))       # ['state/run', 'state/run/mode', 'state/run/number']
-    print(await registry.aio_get('state/run/mode'))   # physics
-    print(await registry.aio_get('state/run'))        # running
-    print(await registry.aio_get('state/run/'))       # {'$value': 'running', 'mode': 'physics', 'number': 123}
-    print(await registry.aio_get('state/'))           # {'run': {'$value': 'running', 'mode': 'physics', 'number': 123}}
+    print(await registry.aio_keys('state/run'))       # -->  ['state/run/mode', 'state/run/number', 'state\run']
+    print(await registry.aio_get('state/run/mode'))   # -->  physics
+    print(await registry.aio_get('state/run'))        # -->  running
+    print(await registry.aio_get('state/run/'))       # -->  {'mode': 'physics', 'number': 123, '$value': 'running'}
+    print(await registry.aio_get('/'))                # -->  {'user': 'slowuser', 'state': {'run': {'mode': 'physics', 'number': 123, '$value': 'running'}}}
 ```
+
+最後の２つの例にあるように，`Registry.aio_get(key)` メソッドにおいて，key の最後の文字が英数字またはアンダースコアでない場合，その文字を階層区切り文字と解釈し，key の階層以下のすべての値を階層構造にまとめて，結果を dict として返します．
+
+`state/run` のように，ある key に値が割り当てられていて，かつ，その下に階層がある場合は，そのままでは自然な dict や JSON に変換できません（ノードが値と子ノードの両方をもつことができないため）．そのような場合，値は `$value` フィールドに格納されます．
+
 レジストリの階層構造はどの区切り文字を使うかも含めてユーザーが自由に設計できますが，JSON として表現できる形に留める（子ノードがあるところに値を記録しない）のがおすすめです．上記の例では，`registry.set('state/run', 'running')` を`registry.set('state/run/status', 'running')` などとすれば，この問題を回避できます．
 
 Registry では，更新値の上書きを防ぐため，CAS (Compare-And-Set) オプションを備えています．
@@ -253,6 +256,9 @@ $ curl "http://localhost:18881/api/data/@registry:state/run/"
     }
 }
 ```
+
+レジストリの key の先頭に区切り文字を付加しないように注意してください（この例では `@registry:/state/run/` は誤り）．SlowMesh の Key-Value Store において，区切り文字は特別な意味を持たない（get() で dict への整形に利用されるだけ）ため，先頭に区切り文字があると別の key になってしまいます．
+
 
 # SlowTask
 SlowTask は SlowMesh の上で独立にかつ協調して動く実行単位（おおまかには，一つの Python スクリプト）です．プロセスまたは動的ロードモジュールのいずれかとして実行できます．
