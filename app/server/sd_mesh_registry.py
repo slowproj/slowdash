@@ -62,7 +62,7 @@ class Registry:
         mesh.export('delete', rpc_delete)
 
 
-    def set(self, key, value, *, cas_revision=None) -> int|None:
+    def set(self, key, value, *, cas_revision:int|None=None) -> int|None:
         """
         Arguments:
           - key (str): key

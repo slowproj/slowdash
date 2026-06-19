@@ -527,7 +527,7 @@ class Registry:
         self._module_name = module_name
 
             
-    async def aio_set(self, key, value, *, cas_revision=None) -> int|None:
+    async def aio_set(self, key, value, *, cas_revision:int|None=None) -> int|None:
         """
         Arguments:
           - key (str): key

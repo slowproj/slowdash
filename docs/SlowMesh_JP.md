@@ -190,10 +190,10 @@ Registry は，複数の SlowTask が共有する名前付きの値置き場で�
 
 Registry には，以下のメソッドがあります：
 
-- 書き込み (set)： `async def aio_set(self, key, value, *, cas_revision=None) -> int|None`
+- 書き込み (set)： `async def aio_set(self, key, value, *, cas_revision:int|None=None) -> int|None`
 - 読み出し (get)： `async def aio_get(self, key:str, default:Any=None, *, with_meta:bool=False) -> Any`
 - キー一覧 (keys)： `async def aio_keys(self, prefix:str='', limit:int|None=1000)->list[str]`
-- 削除 (delete)： `async def aio_delete(self, key:str, *, cas_revision=int|None) -> bool`
+- 削除 (delete)： `async def aio_delete(self, key:str, *, cas_revision:int|None=None) -> bool`
 
 **Key**:
 階層区切り文字を除いて，Python や C++ などにおける識別子（変数名とか）と同じ感じの名前を使用してください．具体的には，英数字またはアンダースコアだけで構成され，かつ，最初の文字に数字は使用できません．
@@ -307,10 +307,10 @@ tasklet が提供するデコレータにより，特定のタイミングや一
 - データに subscribe: `@tasklet.on(topic:str)` （デコレータ）
 
 #### Registry (Key-Value Store) へのアクセス
-- 書き込み (set)： `await tasklet.mesh.registry.aio_set(key, value, *, cas_revision=None) -> int|None`
+- 書き込み (set)： `await tasklet.mesh.registry.aio_set(key, value, *, cas_revision:int|None=None) -> int|None`
 - 読み出し (get)： `await tasklet.mesh.registry.aio_get(key:str, default:Any=None, *, with_meta:bool=False) -> Any`
 - キー一覧 (keys)： `await tasklet.mesh.registry.aio_keys(prefix:str='', limit:int|None=1000)->list[str]`
-- 削除 (delete)： `await tasklet.mesh.registry.aio_delete(key:str, *, cas_revision=int|None) -> bool`
+- 削除 (delete)： `await tasklet.mesh.registry.aio_delete(key:str, *, cas_revision:int|None=None) -> bool`
 
 #### 関数および変数のエクスポート
 - 関数のエクスポート： `@tasklet.mesh.export`  (デコレータ)
@@ -440,10 +440,10 @@ Registry に保持されているキーの値をデータとして返す（デ�
 ## Registry (Key-Value Store)
 - モジュール名： `sd_mesh_registry`
 - エクスポート関数：
-  - 書き込み： `async def aio_set(self, key, value, *, cas_revision=None) -> int|None`
+  - 書き込み： `async def aio_set(self, key, value, *, cas_revision:int|None=None) -> int|None`
   - 読み出し： `async def aio_get(self, key:str, default:Any=None, *, with_meta:bool=False) -> Any`
   - キー一覧： `async def aio_keys(self, prefix:str='', limit:int|None=1000)->list[str]`
-  - 削除： `async def aio_delete(self, key:str, *, cas_revision=int|None) -> bool`
+  - 削除： `async def aio_delete(self, key:str, *, cas_revision:int|None=None) -> bool`
 
 
 ## Task RPC

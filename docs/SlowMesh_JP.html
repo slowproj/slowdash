@@ -468,13 +468,13 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a hr
 <p>Registry には，以下のメソッドがあります：</p>
 <ul>
 <li>書き込み (set)：
-<code>async def aio_set(self, key, value, *, cas_revision=None) -&gt; int|None</code></li>
+<code>async def aio_set(self, key, value, *, cas_revision:int|None=None) -&gt; int|None</code></li>
 <li>読み出し (get)：
 <code>async def aio_get(self, key:str, default:Any=None, *, with_meta:bool=False) -&gt; Any</code></li>
 <li>キー一覧 (keys)：
 <code>async def aio_keys(self, prefix:str='', limit:int|None=1000)-&gt;list[str]</code></li>
 <li>削除 (delete)：
-<code>async def aio_delete(self, key:str, *, cas_revision=int|None) -&gt; bool</code></li>
+<code>async def aio_delete(self, key:str, *, cas_revision:int|None=None) -&gt; bool</code></li>
 </ul>
 <p><strong>Key</strong>: 階層区切り文字を除いて，Python や C++
 などにおける識別子（変数名とか）と同じ感じの名前を使用してください．具体的には，英数字またはアンダースコアだけで構成され，かつ，最初の文字に数字は使用できません．</p>
@@ -629,13 +629,13 @@ SlowTask 中の関数を呼び出すことができます．
 Store) へのアクセス</h4>
 <ul>
 <li>書き込み (set)：
-<code>await tasklet.mesh.registry.aio_set(key, value, *, cas_revision=None) -&gt; int|None</code></li>
+<code>await tasklet.mesh.registry.aio_set(key, value, *, cas_revision:int|None=None) -&gt; int|None</code></li>
 <li>読み出し (get)：
 <code>await tasklet.mesh.registry.aio_get(key:str, default:Any=None, *, with_meta:bool=False) -&gt; Any</code></li>
 <li>キー一覧 (keys)：
 <code>await tasklet.mesh.registry.aio_keys(prefix:str='', limit:int|None=1000)-&gt;list[str]</code></li>
 <li>削除 (delete)：
-<code>await tasklet.mesh.registry.aio_delete(key:str, *, cas_revision=int|None) -&gt; bool</code></li>
+<code>await tasklet.mesh.registry.aio_delete(key:str, *, cas_revision:int|None=None) -&gt; bool</code></li>
 </ul>
 <h4 id="関数および変数のエクスポート">関数および変数のエクスポート</h4>
 <ul>
@@ -807,13 +807,13 @@ obect が publish される．</li>
 <li>エクスポート関数：
 <ul>
 <li>書き込み：
-<code>async def aio_set(self, key, value, *, cas_revision=None) -&gt; int|None</code></li>
+<code>async def aio_set(self, key, value, *, cas_revision:int|None=None) -&gt; int|None</code></li>
 <li>読み出し：
 <code>async def aio_get(self, key:str, default:Any=None, *, with_meta:bool=False) -&gt; Any</code></li>
 <li>キー一覧：
 <code>async def aio_keys(self, prefix:str='', limit:int|None=1000)-&gt;list[str]</code></li>
 <li>削除：
-<code>async def aio_delete(self, key:str, *, cas_revision=int|None) -&gt; bool</code></li>
+<code>async def aio_delete(self, key:str, *, cas_revision:int|None=None) -&gt; bool</code></li>
 </ul></li>
 </ul>
 <h2 id="task-rpc">Task RPC</h2>
