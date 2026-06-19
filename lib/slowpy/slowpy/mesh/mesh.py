@@ -515,10 +515,12 @@ class RemoteControlNode:
             expected_replies=1, timeout=self._timeout
         )
 
-        if reply.get('status') == 'ok':
-            return reply.get('return_value')
-        else:
-            raise Exception(f'Mesh: remote node RPC error: {self._name}: {reply.get("message")}')
+        if len(reply) != 1:
+            raise Exception(f'Mesh: remote node RPC error: {self._name}.aio_set(): no reply')
+        if reply[0].get('status').lower() != 'ok':
+            raise Exception(f'Mesh: remote node RPC error: {self._name}.aio_set(): {reply[0].get("message")}')
+
+        return reply[0].get('return_value')
 
     
     async def aio_get(self):
@@ -528,10 +530,12 @@ class RemoteControlNode:
             expected_replies=1, timeout=self._timeout
         )
 
-        if reply.get('status') == 'ok':
-            return reply.get('return_value')
-        else:
-            raise Exception(f'Mesh: remote node RPC error: {self._name}: {reply.get("message")}')
+        if len(reply) != 1:
+            raise Exception(f'Mesh: remote node RPC error: {self._name}.aio_get(): no reply')
+        if reply[0].get('status').lower() != 'ok':
+            raise Exception(f'Mesh: remote node RPC error: {self._name}.aio_get(): {reply[0].get("message")}')
+
+        return reply[0].get('return_value')
 
 
 

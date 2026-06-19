@@ -150,7 +150,7 @@ class Task:
             logging.error(f'RPC ERROR: {e}')
             return {'status': 'error', 'message': f'RPC error: {e}' }
 
-        if len(reply) < 0:
+        if len(reply) < 1:
             return {'status': 'error', 'message': f'RPC error: no reply' }
         
         return {'status': 'ok', 'message': 'success', 'return_value': reply[0].get('return_value') }
