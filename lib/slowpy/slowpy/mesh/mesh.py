@@ -559,7 +559,7 @@ class Registry:
           - limit (int|None): maximum length of the list, None for no limit
         Return Value (list[str]): list of matching keys (full path including the prefix)
         """
-        return await self._mesh.aio_call(f'{self._module_name}.keys', prefix)
+        return await self._mesh.aio_call(f'{self._module_name}.keys', prefix, limit=limit)
 
     
     async def aio_delete(self, key:str, *, cas_revision:int|None=None) -> bool:
