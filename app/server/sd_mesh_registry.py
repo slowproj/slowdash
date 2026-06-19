@@ -220,7 +220,8 @@ class MeshRegistryComponent(Component):
     def __init__(self, app, project):
         super().__init__(app, project)
 
-        self._registry_module_name = "sd_mesh_registry"
+        self._registry_module_name = 'sd_mesh_registry'
+        self._registry_data_prefix = '@registry:'
 
         self.mesh = None
         self.registry = Registry()
@@ -234,11 +235,6 @@ class MeshRegistryComponent(Component):
             self.registry.export(self.mesh)
             await self.mesh.aio_start()
 
-            self.registry.set('state/run', 'running')
-            self.registry.set('state/run/mode', 'physics')
-            self.registry.set('state/run/number', 123)
-            self.registry.set('user', 'slowuser')
-            
         
     @slowlette.on_event('shutdown')
     async def shutdown(self):
@@ -258,18 +254,24 @@ class MeshRegistryComponent(Component):
 
 
     @slowlette.get('/api/data/{*}')
-    async def api_get_data(self, request:slowlette.Request):
+    async def api_get_data(self, request:slowlette.Request, length:float=3600, to:float=0):
         path_channels = request.path_str[len('/api/data/'):]   # channel name might contain "/"
         channels = path_channels.split(',') if path_channels else []
-        opts = request.query
 
+        now = time.time()
+        start = (to if to > 0 else to + now) - length
+        
         result = {}
         for ch in channels:
-            if not ch.startswith('@sd.registry:'):
+            if not ch.startswith(self._registry_data_prefix):
                 continue
-            key = ch[len('@sd.registry:'):]
-            result[key] = self.registry.get(key)
-
+            key = ch[len(self._registry_data_prefix):]
+            value = self.registry.get(key)
+            if isinstance(value, dict):
+                result[ch] = { 'start': start, 't': now - start, 'x':{ 'tree': value } }
+            else:
+                result[ch] = { 'start': start, 't': now - start, 'x': value }
+            
         return result
             
 

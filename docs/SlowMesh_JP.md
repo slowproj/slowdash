@@ -241,10 +241,17 @@ Registry では，更新値の上書きを防ぐため，CAS (Compare-And-Set) �
 }
 ```
 
-レジストリに記録された値は，SlowDash App から，データベース上のデータと同じ形式で読むことができます．
-channel 名に `@sd.registry:{key}` を指定してください．
+レジストリに記録された値は，SlowDash App から，データベース上のデータと同じ形式(API と戻り値)で読むことができます．
+channel 名に `@registry:{key}` を指定してください．
 ```console
-slowdash data/@registry:state/run
+$ curl "http://localhost:18881/api/data/@registry:state/"
+{
+    "@registry:state/": {
+        "start": 1781858837.4758086,
+        "t": 3600.0,
+        "x": {"tree": {"run": {"$value": "running", "mode": "physics", "number": 123}}}
+    }
+}
 ```
 
 # SlowTask

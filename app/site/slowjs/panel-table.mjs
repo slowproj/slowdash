@@ -361,7 +361,7 @@ class TreePanel extends Panel {
         if (dataPacket.__meta?.isCurrent ?? false) {
             this.currentDataTime = dataPacket.__meta.currentDataTime;
         }
-        
+
         this.contentDiv.empty();
         if (Array.isArray(data)) {
             if (data.length < 1) {
@@ -379,6 +379,7 @@ class TreePanel extends Panel {
                 return;
             }
         }
+
         if (! data.tree) {
             this.contentDiv.html('No Tree Content');
             return;

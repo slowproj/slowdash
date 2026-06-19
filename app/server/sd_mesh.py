@@ -159,7 +159,7 @@ class MeshComponent(Component):
     class CacheDataMergerResponse(slowlette.Response):
         def __init__(self, channels, length, to, cache):
             super().__init__(content=None)
-            self.channels = channels.split(',') if channels else []
+            self.channels = [ ch for ch in (channels.split(',') if channels else []) if not ch.startswith('@') ]
             self.to = to if to > 0 else to + time.time() + 3
             self.frm = self.to - length
             self.cache = cache

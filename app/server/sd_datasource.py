@@ -44,7 +44,7 @@ class DataSource(ComponentPlugin):
         opts = request.query
         
         try:
-            channels = path_channels.split(',') if path_channels else []
+            channels = [ ch for ch in (path_channels.split(',') if path_channels else []) if not ch.startswith('@') ]
             length = float(opts.get('length', 3600))
             to = float(opts.get('to', 0))
             resample = float(opts.get('resample', -1))
