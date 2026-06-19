@@ -232,16 +232,33 @@ class Mesh:
 
 
     async def aio_call(self, name:str, *args, **kwargs):
-        reply = await self.aio_call_many(name, list(args), dict(kwargs), multiple_replies=False, raise_on_timeout=True)
-        if reply.get('status') == 'ok':
-            return reply.get('return_value')
-        else:
-            raise Exception(f'Mesh: RPC remote error: {name}: {reply.get("message")}')
+        reply = await self.aio_call_many(name, list(args), dict(kwargs), expected_replies=1, raise_on_timeout=True)
+        if len(reply) != 1:
+            raise Exception(f'Mesh: RPC error: {name}: no reply')
+        if reply[0].get('status').lower() != 'ok':
+            raise Exception(f'Mesh: RPC remote error: {name}: {reply[0].get("message")}')
+        
+        return reply[0].get('return_value')
     
         
-    async def aio_call_many(self, name:str, args:list, kwargs:dict, *, multiple_replies=True, timeout=None, raise_on_timeout=False):
+    async def aio_call_many(self, name:str, args:list, kwargs:dict, *, expected_replies:int|None=None, timeout:float|None=None, raise_on_timeout:bool=False):
+        """ invokes a RPC call which might be received by multiple PRC handlers
+        Arguments:
+          - name (str): name of the remote function, "{module_name}.{function_name}"
+          - args (list[Any]): ordered argments
+          - kwargs (dict[str,Any]): keyword argments
+          - expected_replies (int|None): the number of expected replies, None for unknown/unlimited (controlled by timeout)
+          - timeout (float|None): maximum time to wait for replies, None for the default Mesh-global RPC timeout        
+          - raise_on_timeout (bool): if True, an exception will be raised; otherwise, will return a shorter repliy list
+        Return Value (list[dict[str,Any]]): list of replies
+        """
+        
         if len(name) == 0:
-            return
+            if raise_on_timeout:
+                raise Exception(f'Mesh: RPC timeout: empty RPC name: {name}()')
+            else:
+                return []
+        
         name = re.sub(r'[^a-zA-Z0-9\.]', '_', name)
         self._rpc_count += 1
         
@@ -281,13 +298,13 @@ class Mesh:
             while not ctrl.is_stop_requested():
                 try:
                     replies.append(await asyncio.wait_for(reply_queue.get(), timeout=self._loop_timeout))
-                    if not multiple_replies:
+                    if expected_replies is not None and len(replies) >= expected_replies:
                         break
                 except (asyncio.TimeoutError, asyncio.QueueEmpty):
                     pass
                 now = time.monotonic()
                 if now > end:
-                    if len(replies) == 0:
+                    if expected_replies is not None and len(replies) < expected_replies:
                         logging.warning(f'Mesh: RPC timeout: {name}()')
                         if raise_on_timeout:
                             raise Exception(f'Mesh: RPC timeout: {name}()')
@@ -297,12 +314,7 @@ class Mesh:
             async with self._reply_lock:
                 del self._reply_queues[correlation_id]
 
-        if multiple_replies:
-            return replies
-        elif len(replies) > 0:
-            return replies[0]
-        else:
-            return None
+        return replies
 
 
     async def node_call(self, *argc, **argv):
@@ -500,7 +512,7 @@ class RemoteControlNode:
         reply = await self._mesh.aio_call_many(
             f'{self._module_name}._sd_node_call',
             [], { 'node_name': self._node_name, 'method': 'set', 'value': value },
-            multiple_replies=False, timeout=self._timeout
+            expected_replies=1, timeout=self._timeout
         )
 
         if reply.get('status') == 'ok':
@@ -513,7 +525,7 @@ class RemoteControlNode:
         reply = await self._mesh.aio_call_many(
             f'{self._module_name}._sd_node_call',
             [], { 'node_name': self._node_name, 'method': 'get' },
-            multiple_replies=False, timeout=self._timeout
+            expected_replies=1, timeout=self._timeout
         )
 
         if reply.get('status') == 'ok':

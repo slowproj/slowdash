@@ -141,16 +141,19 @@ class Task:
 
         logging.info(f'Dispatch Task RPC: {request} --> {self._mesh_id}')
         try:
-            return_value = await mesh.aio_call_many(
+            reply = await mesh.aio_call_many(
                 f'{request.module_name}.{request.function_name}',
                 args=[], kwargs=request.params,
-                multiple_replies=False, timeout=5, raise_on_timeout=True
+                expected_replies=1, timeout=5, raise_on_timeout=True
             )
         except Exception as e:
             logging.error(f'RPC ERROR: {e}')
             return {'status': 'error', 'message': f'RPC error: {e}' }
 
-        return {'status': 'ok', 'message': 'success', 'return_value': return_value }
+        if len(reply) < 0:
+            return {'status': 'error', 'message': f'RPC error: no reply' }
+        
+        return {'status': 'ok', 'message': 'success', 'return_value': reply[0].get('return_value') }
             
 
 
