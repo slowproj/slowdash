@@ -560,7 +560,7 @@ class Registry:
         return await self._mesh.aio_call_many(f'{self._module_name}.keys', prefix)
 
     
-    async def aio_delete(self, key:str, *, cas_revision=int|None) -> bool:
+    async def aio_delete(self, key:str, *, cas_revision:int|None=None) -> bool:
         """
         Arguments:
           - key (str): key for the element to delete

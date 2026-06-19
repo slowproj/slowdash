@@ -234,7 +234,7 @@ Registry では，更新値の上書きを防ぐため，Compare-And-Set (CAS) �
   - これにより，自分が設定した値を，他の誰かが書き換えた場合に，それを知らずに上書きすることを避けられる．
 - `aio_delete()` も同様．CAS Revision が一致しなければ削除しない．
 
-`aio_set()` の `with_meta` オプションを `True` にすると，書き込み時刻や CAS Revision などを含んだ Meta Data が返されます：
+`aio_get()` の `with_meta` オプションを `True` にすると，書き込み時刻や CAS Revision などを含んだ Meta Data が返されます：
 ```json
 {
     "key": キー,

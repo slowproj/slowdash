@@ -106,7 +106,7 @@ class Registry:
 
         logging.debug(f'MeshRegistry.get(): "{key}" --> {record}')
         
-        return record.to_dict if with_meta else record.value
+        return record.to_dict() if with_meta else record.value
 
 
     def get_tree(self, prefix:str, default:Any=None, *, with_meta:bool=False) -> Any:
@@ -193,7 +193,7 @@ class Registry:
         return result
 
 
-    def delete(self, key:str, *, cas_revision=int|None) -> bool:
+    def delete(self, key:str, *, cas_revision:int|None=None) -> bool:
         """
         Arguments:
           - key (str): key for the element to delete
