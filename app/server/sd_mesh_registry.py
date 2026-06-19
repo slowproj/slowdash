@@ -185,7 +185,7 @@ class Registry:
         for key in self._records:
             if key.startswith(scan_prefix):
                 result.append(key)
-                if limit is not None and len(result) > limit:
+                if limit is not None and len(result) >= limit:
                     break
         
         logging.debug(f'MeshRegistry.keys(): "{prefix}" --> {result}')
@@ -249,8 +249,8 @@ class MeshRegistryComponent(Component):
 
 
     @slowlette.get('/api/registry/value')
-    async def api_get_value(self, key:str):
-        return self.registry.get(key)
+    async def api_get_value(self, key:str, with_meta:bool=False):
+        return self.registry.get(key, with_meta=with_meta)
 
 
     @slowlette.get('/api/data/{*}')

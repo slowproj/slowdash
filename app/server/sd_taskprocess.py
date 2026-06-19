@@ -42,7 +42,9 @@ class MeshRequest:
                 if name.lower().startswith('publish '):
                     topic_name = name[len('publish '):]
                 else:
-                    [module_name, function_name] = name.split('.', 1)
+                    split_names = name.split('.', 1)
+                    if len(split_names) == 2:
+                        [module_name, function_name] = split_names
             else:
                 params[key] = value
                 
@@ -125,17 +127,17 @@ class Task:
         return self._spec
 
 
-    async def process_command(self, request:MeshRequest, mesh:Mesh) -> bool|str|None:
+    async def process_command(self, request:MeshRequest, mesh:Mesh):
         if request.module_name != self._name:
             return None
         if request.function_name not in self._functions:
-            return f'no such function: {request}'
+            return {'status': 'error', 'message': f'no such function: {request}' }
                 
         # TODO: match the arguments
 
         for key, value in request.params.items():
             if not key.replace('_', 'a').isalnum():
-                return f'bad argument name: {request}'
+                return {'status': 'error', 'message': f'bad argument name: {request}' }
 
         logging.info(f'Dispatch Task RPC: {request} --> {self._mesh_id}')
         try:
@@ -146,13 +148,9 @@ class Task:
             )
         except Exception as e:
             logging.error(f'RPC ERROR: {e}')
-            return str(e)
+            return {'status': 'error', 'message': f'RPC error: {e}' }
 
-        if isinstance(return_value, dict) and return_value.get('status', 'ok').lower() != 'ok':
-            return return_value
-        
-        return True
-        
+        return {'status': 'ok', 'message': 'success', 'return_value': return_value }
             
 
 
@@ -228,12 +226,4 @@ class TaskProcessComponent(Component):
         else:
             return None
 
-        if isinstance(result, bool):
-            if result:
-                return {'status': 'ok'}
-            else:
-                return {'status': 'error'}
-        elif isinstance(result, str):
-            return {'status': 'error', 'message': result}
-                
         return result

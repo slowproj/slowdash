@@ -271,29 +271,31 @@ class Mesh:
 
         reply_queue = asyncio.Queue()
         self._reply_queues[correlation_id] = reply_queue
-        
-        await self.aio_publish(topic, body, headers=headers)
 
-        replies = []
-        start = time.monotonic()
-        end = start + (timeout or self._rpc_timeout)
-        while not ctrl.is_stop_requested():
-            try:
-                replies.append(await asyncio.wait_for(reply_queue.get(), timeout=self._loop_timeout))
-                if not multiple_replies:
+        try:
+            await self.aio_publish(topic, body, headers=headers)
+
+            replies = []
+            start = time.monotonic()
+            end = start + (timeout or self._rpc_timeout)
+            while not ctrl.is_stop_requested():
+                try:
+                    replies.append(await asyncio.wait_for(reply_queue.get(), timeout=self._loop_timeout))
+                    if not multiple_replies:
+                        break
+                except (asyncio.TimeoutError, asyncio.QueueEmpty):
+                    pass
+                now = time.monotonic()
+                if now > end:
+                    if len(replies) == 0:
+                        logging.warning(f'Mesh: RPC timeout: {name}()')
+                        if raise_on_timeout:
+                            raise Exception(f'Mesh: RPC timeout: {name}()')
                     break
-            except (asyncio.TimeoutError, asyncio.QueueEmpty):
-                pass
-            now = time.monotonic()
-            if now > end:
-                if len(replies) == 0:
-                    logging.warning(f'Mesh: RPC timeout: {name}()')
-                    if raise_on_timeout:
-                        raise Exception(f'Mesh: RPC timeout: {name}()')
-                break
 
-        async with self._reply_lock:
-            del self._reply_queues[correlation_id]
+        finally:
+            async with self._reply_lock:
+                del self._reply_queues[correlation_id]
 
         if multiple_replies:
             return replies
@@ -557,7 +559,7 @@ class Registry:
           - limit (int|None): maximum length of the list, None for no limit
         Return Value (list[str]): list of matching keys (full path including the prefix)
         """
-        return await self._mesh.aio_call_many(f'{self._module_name}.keys', prefix)
+        return await self._mesh.aio_call(f'{self._module_name}.keys', prefix)
 
     
     async def aio_delete(self, key:str, *, cas_revision:int|None=None) -> bool:

@@ -424,7 +424,7 @@ Mesh メッシュリクエスト
 Registry への HTTP API は Slowlette を経由して `sd_mesh_registry.py` コンポーネントにより実装されています．
 
 ### GET `api/registry/value?key={key}`
-Registry に保持されている値を返す（メタデータを含む JSON ドキュメント）
+Registry に保持されている値を返す（`with_meta=true` でメタデータを含む JSON ドキュメント）
 
 ### GET `api/registry/keys?prefix={prefix}&limit={limit}`
 Registry に保持されているキーのリストを返す
