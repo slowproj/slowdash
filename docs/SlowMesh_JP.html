@@ -480,8 +480,9 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a hr
 などにおける識別子（変数名とか）と同じ感じの名前を使用してください．具体的には，英数字またはアンダースコアだけで構成され，かつ，最初の文字に数字は使用できません．</p>
 <p><strong>Value</strong>: Value には，現時点では JSON
 にシリアライズできる値に限られます．</p>
-<p><strong>階層構造</strong>: Registry の内部は，単純な Key-Value Store
-です．Key は単純な文字列で，階層構造は SlowMesh
+<p><strong>階層構造</strong>: Registry
+の内部は，階層構造を持たない単純な Key-Value Store です．Key
+は単なる文字列で，階層構造は SlowMesh
 では規定していません．ユーザが選んだ任意の階層区切り文字（ただし「識別子」として使えない文字のみ）を使うことを想定していますが，特に理由がなければ
 <code>/</code> による区切りを使用してください．
 階層区切り文字にはアルファベット，数字，アンダースコアは使用できません．某
@@ -506,16 +507,16 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb8-1"><a hr
 の最後の文字が英数字またはアンダースコアでない場合，その文字を階層区切り文字と解釈し，key
 の階層以下のすべての値を階層構造にまとめて，結果を dict
 として返します．</p>
-<p><code>state/run</code> のように，ある key
+<p>この例の <code>state/run</code> のように，ある key
 に値が割り当てられていて，かつ，その下に階層がある場合は，そのままでは自然な
 dict や JSON
-に変換できません（ノードが値と子ノードの両方をもつことができないため）．そのような場合，値は
+に変換できません（一つのノードが値と子ノードの両方をもつことができないため）．そのような場合，値は
 <code>$value</code> フィールドに格納されます．</p>
 <p>レジストリの階層構造はどの区切り文字を使うかも含めてユーザーが自由に設計できますが，JSON
 として表現できる形に留める（子ノードがあるところに値を記録しない）のがおすすめです．上記の例では，<code>registry.set('state/run', 'running')</code>
 を<code>registry.set('state/run/status', 'running')</code>
 などとすれば，この問題を回避できます．</p>
-<p>Registry では，更新値の上書きを防ぐため，CAS (Compare-And-Set)
+<p>Registry では，更新値の上書きを防ぐため，Compare-And-Set (CAS)
 オプションを備えています．</p>
 <ul>
 <li>レジストリ値のメタデータには，書き込み回数を数える CAS Revision
