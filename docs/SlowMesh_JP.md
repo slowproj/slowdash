@@ -189,8 +189,8 @@ Registry には，以下のメソッドがあります：
 - 削除 (delete)： `async def aio_delete(self, key:str, *, cas_revision=int|None) -> bool`
 
 Registry の内部は，単純な Key-Value Store です．
-Key は単純な文字列で，階層構造は SlowMesh では規定しておらず，ユーザのコンベンションに任されますが，特に理由がなければ `/` を使用します．
-階層区切り文字にはアルファベット，数字，アンダースコアは使用できません．某 OS で行われているように，バックスラッシュなどの特殊文字を使用することも避けたほうが無難です．特に理由がなければ，`/`，`.`，`:` あたりから選ぶのがいいです．
+Key は単純な文字列で，階層構造は SlowMesh では規定しておらず，ユーザのコンベンションに任されますが，特に理由がなければ `.` を使用します．
+階層区切り文字にはアルファベット，数字，アンダースコアは使用できません．某 OS で行われているように，バックスラッシュなどの特殊文字を使用することも避けたほうが無難です．特に理由がなければ，`.`，`:`，`/` あたりから選ぶのがいいです．
 Key の最初の文字は英字アルファベットまたはアンダースコア，最後の文字は英数字またはアンダースコアでなければなりません．Python や C++ などにおける変数名と同じ規則を使ってください．
 Value には，現時点では JSON にシリアライズできる値に限られます．
 
@@ -223,7 +223,6 @@ Value には，現時点では JSON にシリアライズできる値に限ら�
 ```
 レジストリの階層構造はどの区切り文字を使うかも含めてユーザーが自由に設計できますが，JSON として表現できる形に留める（子ノードがあるところに値を記録しない）のがおすすめです．上記の例では，`registry.set('state/run', 'running')` を`registry.set('state/run/status', 'running')` などとすれば，この問題を回避できます．
 
-
 Registry では，更新値の上書きを防ぐため，CAS (Compare-And-Set) オプションを備えています．
 
 - レジストリ値のメタデータには，書き込み回数を数える CAS Revision が割り当てられる
@@ -242,6 +241,11 @@ Registry では，更新値の上書きを防ぐため，CAS (Compare-And-Set) �
 }
 ```
 
+レジストリに記録された値は，SlowDash App から，データベース上のデータと同じ形式で読むことができます．
+channel 名に `@sd.registry:{key}` を指定してください．
+```console
+slowdash data/@registry:state/run
+```
 
 # SlowTask
 SlowTask は SlowMesh の上で独立にかつ協調して動く実行単位（おおまかには，一つの Python スクリプト）です．プロセスまたは動的ロードモジュールのいずれかとして実行できます．
@@ -409,17 +413,14 @@ Registry への HTTP API は Slowlette を経由して `sd_mesh_registry.py` コ
 ### GET `api/registry/value?key={key}`
 Registry に保持されている値を返す（メタデータを含む JSON ドキュメント）
 
-### GET `api/registry/tree?key={key}`
-Registry に保持されているある階層以下のすべての値を JSON Object として返す
-
-### GET `api/registry/keys?prefix={prefix}&limits={limits}`
+### GET `api/registry/keys?prefix={prefix}&limit={limit}`
 Registry に保持されているキーのリストを返す
 
 ### GET `api/data?ch={channel}&length={lengh}&to={to}`
-Registry に保持されているキーの値をデータとして返す．
+Registry に保持されているキーの値をデータとして返す（データベースからのデータと同形式）．
 
 - channel が `@registry:{key}` となっているものが対象
-- レジストリメタデータの [updated, now()] とデータクエリ期間が重なるものが対象
+- TODO: レジストリメタデータの [updated, now()] とデータクエリ期間が重なるものが対象
 
 
 # RPC サービス

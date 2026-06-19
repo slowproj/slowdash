@@ -38,10 +38,13 @@ class DataSource(ComponentPlugin):
         return await self.aio_get_channels(force_rescan=force_rescan)
 
     
-    @slowlette.get('/api/data/{channels}')
-    async def api_get_data(self, channels:str, opts:dict):
+    @slowlette.get('/api/data/{*}')
+    async def api_get_data(self, request:slowlette.Request):
+        path_channels = request.path_str[len('/api/data/'):]   # channel name might contain "/"
+        opts = request.query
+        
         try:
-            channels = channels.split(',') if channels else []
+            channels = path_channels.split(',') if path_channels else []
             length = float(opts.get('length', 3600))
             to = float(opts.get('to', 0))
             resample = float(opts.get('resample', -1))

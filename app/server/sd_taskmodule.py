@@ -517,8 +517,10 @@ class TaskModuleComponent(Component):
             super().merge_response(response)
 
             
-    @slowlette.get('/api/data/{channels}')
-    async def api_get_data(self, channels:str, length:float=3600, to:float=0):
+    @slowlette.get('/api/data/{*}')
+    async def api_get_data(self, request:slowlette.Request, length:float=3600, to:float=0):
+        channels = request.path_str[len('/api/data/'):]   # channel name might contain "/"
+        
         now = time.time()
         if (to < 0) or (to > 0 and (now > to+1 or now < to - length)):
             return {}

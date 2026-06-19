@@ -46,9 +46,12 @@ class Export_Jupyter(export_Notebook.Export_Notebook):
         })
         return config
 
+    
         
-    @slowlette.post('/api/export/jupyter/{channels}')
-    def export_jupyter(self, channels:str, opts:dict, doc:slowlette.DictJSON):
+    @slowlette.post('/api/export/jupyter/{*}')
+    def export_jupyter(self, request:slowlette.Request, opts:dict, doc:slowlette.DictJSON):
+        channels = request.path_str[len('/api/export/jupyter/'):]   # channel name might contain "/"
+        
         filename = doc.get('filename', None)
         if filename is None or not filename.replace('_', '0').replace('-', '0').replace('.', '0').isalnum():
             logging.warning(f'Jupyter post: bad file name: {filename}')

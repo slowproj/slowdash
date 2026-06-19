@@ -652,8 +652,10 @@ class UserModuleComponent(Component):
         return result
 
         
-    @slowlette.get('/api/data/{channels}')
-    async def api_data(self, channels:str, opts:dict):
+    @slowlette.get('/api/data/{*}')
+    async def api_data(self, request:slowlette.Request, opts:dict):
+        channels = request.path_str[len('/api/data/'):]   # channel name might contain "/"
+        
         if len(self.usermodule_list) == 0:
             return None
         

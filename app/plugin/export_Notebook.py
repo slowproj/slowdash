@@ -21,13 +21,15 @@ class Export_Notebook(ComponentPlugin):
         }
 
 
-    @slowlette.get('/api/export/python/{channels}')
-    def export_python(self, channels:str, opts:dict):
+    @slowlette.get('/api/export/python/{*}')
+    def export_python(self, request:slowlette.Request, opts:dict):
+        channels = request.path_str[len('/api/export/python/'):]   # channel name might contain "/"
         return self.generate_python(channels, opts)
 
     
-    @slowlette.get('/api/export/notebook/{channels}')
-    def export_notebook(self, channels:str, opts:dict):
+    @slowlette.get('/api/export/notebook/{*}')
+    def export_notebook(self, request:slowlette.Request, opts:dict):
+        channels = request.path_str[len('/api/export/notebook/'):]   # channel name might contain "/"
         notebook = self.generate_notebook(channels, opts)
         return json.dumps(notebook, indent=4)
 

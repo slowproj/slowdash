@@ -176,8 +176,8 @@ app = App()
 The `Request` object has the following attributes:
 
 - `method` (str): request method (`GET` etc.)
-- `path` (list[str]): URL path
-- `query` (dict[str,str]): URL query
+- `path` (list[str]): URL path (also, `path_str` for raw decoded path string)
+- `query` (dict[str,str]): URL query (also, `query_str` for raw decoded query string)
 - `headers` (dict[str,str]): HTTP request header items
 - `body` (bytes): request body
 

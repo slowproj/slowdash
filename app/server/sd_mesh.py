@@ -234,6 +234,7 @@ class MeshComponent(Component):
         return self.CacheChannelMergerResponse(self.current_data_cache)
 
     
-    @slowlette.get('/api/data/{channels}')
-    async def get_cache_data(self, channels:str, length:float=3600, to:float=0):
+    @slowlette.get('/api/data/{*}')
+    async def get_cache_data(self, request:slowlette.Request, length:float=3600, to:float=0):
+        channels = request.path_str[len('/api/data/'):]   # channel name might contain "/"
         return self.CacheDataMergerResponse(channels, length, to, self.current_data_cache)

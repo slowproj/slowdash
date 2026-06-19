@@ -12,8 +12,10 @@ class Export_CSV(ComponentPlugin):
         super().__init__(app, project, params)
 
 
-    @slowlette.get('/api/export/csv/{channels}')
-    async def export_csv(self, channels:str, opts:dict, timezone:str='local', resample:float=0):
+    @slowlette.get('/api/export/csv/{*}')
+    async def export_csv(self, request:slowlette.Request, opts:dict, timezone:str='local', resample:float=0):
+        channels = request.path_str[len('/api/export/csv/'):]   # channel name might contain "/"
+        
         if len(timezone) == 0:
             timezone = 'local'
             

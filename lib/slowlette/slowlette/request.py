@@ -15,8 +15,11 @@ class Request:
         self.aborted = False
 
         u = urlparse(url)
-        self.path = [ unquote(p) for p in u.path.split('/') ]
-        self.query = { unquote(key): unquote(value) for key, value in parse_qsl(u.query) }
+        self.path_str = u.path
+        self.query_str = u.query
+        
+        self.path = [ unquote(p) for p in self.path_str.split('/') ]
+        self.query = { unquote(key): unquote(value) for key, value in parse_qsl(self.query_str) }
         while self.path.count(''):
             self.path.remove('')
 

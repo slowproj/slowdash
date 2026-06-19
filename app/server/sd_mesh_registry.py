@@ -47,19 +47,19 @@ class Registry:
     def export(self, mesh:Mesh):
         def rpc_set(key:str, value, cas_revision=None):
             return self.set(key, value, cas_revision=cas_revision)
-        self.mesh.export('set', rpc_set)
+        mesh.export('set', rpc_set)
         
         def rpc_get(key:str='', default=None, *, with_meta=False):
             return self.get(key, default, with_meta=with_meta)
-        self.mesh.export('get', rpc_get)
+        mesh.export('get', rpc_get)
         
         def rpc_keys(prefix:str=''):
             return self.keys(prefix)
-        self.mesh.export('keys', rpc_keys)
+        mesh.export('keys', rpc_keys)
         
         def rpc_delete(key:str, cas_revision=None):
             return self.delete(key, cas_revision=cas_revision)
-        self.mesh.export('delete', rpc_delete)
+        mesh.export('delete', rpc_delete)
 
 
     def set(self, key, value, *, cas_revision=None) -> int|None:
@@ -176,9 +176,14 @@ class Registry:
         Return Value (list[str]): list of matching keys (full path including the prefix)
         """
 
+        if len(prefix) == 1 and not (prefix[-1].isalnum() or prefix[-1] == '_'):
+            scan_prefix = ''
+        else:
+            scan_prefix = prefix
+        
         result = []
         for key in self._records:
-            if key.startswith(prefix):
+            if key.startswith(scan_prefix):
                 result.append(key)
                 if limit is not None and len(result) > limit:
                     break
@@ -229,6 +234,11 @@ class MeshRegistryComponent(Component):
             self.registry.export(self.mesh)
             await self.mesh.aio_start()
 
+            self.registry.set('state/run', 'running')
+            self.registry.set('state/run/mode', 'physics')
+            self.registry.set('state/run/number', 123)
+            self.registry.set('user', 'slowuser')
+            
         
     @slowlette.on_event('shutdown')
     async def shutdown(self):
@@ -236,11 +246,32 @@ class MeshRegistryComponent(Component):
             await self.mesh.aio_stop()
 
 
-    @slowlette.get('/api/registry')
-    async def get_registry(self):
-        return f"hello from Mesh Registry"
+    @slowlette.get('/api/registry/keys')
+    async def api_get_keys(self, prefix:str='', limit:int=100):
+        logging.error(self.registry.keys(prefix, limit=limit))
+        return self.registry.keys(prefix, limit=limit)
 
 
+    @slowlette.get('/api/registry/value')
+    async def api_get_value(self, key:str):
+        return self.registry.get(key)
+
+
+    @slowlette.get('/api/data/{*}')
+    async def api_get_data(self, request:slowlette.Request):
+        path_channels = request.path_str[len('/api/data/'):]   # channel name might contain "/"
+        channels = path_channels.split(',') if path_channels else []
+        opts = request.query
+
+        result = {}
+        for ch in channels:
+            if not ch.startswith('@sd.registry:'):
+                continue
+            key = ch[len('@sd.registry:'):]
+            result[key] = self.registry.get(key)
+
+        return result
+            
 
 
 if __name__ == '__main__':
@@ -251,6 +282,7 @@ if __name__ == '__main__':
     registry.set('state/run/number', 123)
     registry.set('user', 'slowuser')
     
+    print(registry.keys('/'))
     print(registry.keys('state/run'))
     print(registry.get('state/run/mode'))
     print(registry.get('state/run'))
