@@ -381,9 +381,68 @@ $ python slowtask-randomwalk.py
 すべて実行したら，10秒ほど待ってからブラウザで `http://localhost:18881` に接続してください．
 （すでに表示しているなら，ページのリロードをしてください．）
 
+SlowDash App プロセスを走らせたままタスクプロセスの停止・再実行をしても大丈夫なはずです．
+
 現時点では，SlowDash のポート番号などはスクリプト中にハードコーディングしています．
 SlowMesh/SlowTask の開発状況に応じて徐々に改善していきます．
 
+#### 読み出しタスク（`slowtask-randomwalk.py`）
+RandomWalk タスクでは，tasklet のループコールバックで 1 秒ごとにダミーデータを読み出し，それを `data.store.HV.ch0` トピックに publish します．
+```python
+@tasklet.loop(interval=1.0)
+def loop():
+    if not device.is_running:
+        return
+    data = device.ch(0).get()
+    tasklet.mesh.publish('data.store.HV.ch0', {'V0': data})
+```
+
+読み出しのスタート・ストップは PubSub の `control.start` および `control.stop` によりコントロールされます．
+また，スタート・ストップの際には，動作状態をレジストリに記録しています．
+```python
+@tasklet.mesh.on('control.start')
+async def start(params):
+    device.is_running = True
+    await tasklet.mesh.registry.aio_set('randomwalk/run/status', 'running')
+
+@tasklet.mesh.on('control.stop')
+async def stop(params):
+    device.is_running = False
+    await tasklet.mesh.registry.aio_set('randomwalk/run/status', 'idle')
+```
+
+RandomWalk 仮想デバイスのセットポイントは， export した RPC で設定されます．
+```python
+@tasklet.mesh.export
+def set_value(value:float):
+    device.ch(0).set(value)
+```
+
+#### データ保存タスク（`slowtask-store.py`）
+RandomWalk タスク が publish したデータは，store タスクによって subscribe され，データベースに記録されます．
+```python
+@tasklet.mesh.on('data.store.>')
+def store(data_record):
+    datastore.append(data_record)
+```
+
+#### Web フォーム（`html-startstop.html`）
+ブラウザの Web フォームからスタート・ストップの publish やセットポイント設定の RPC を行っています．
+```html
+<form>
+  <b>Device Controls</b> (Function Call)<br>
+  Set Point: <input type="number" name="value" value="10">
+  <input type="submit" name="randomwalk.set_value()" value="Set">
+  <p>  
+  <b>Run Controls</b> (Publish)<br>
+  <input type="submit" name="publish control.start()" value="Start">
+  <input type="submit" name="publish control.stop()" value="Stop">
+</form>
+```
+ボタン（`<input type="submit">`）の `name` 属性でボタンをクリックしたときの動作を記述しています．
+
+- `publish トピック(名前付き引数リスト)`: 指定のトピックに publish する．データは引数リストと他の `<input>` 要素を Key-Value Pair の JSON にしたものになる．
+- `モジュール名.関数名(名前付き引数リスト)`: 指定の遠隔関数を呼び出す．呼び出し関数の引数は，ここに書かれた引数リストと他の `<input>` 要素を合わせたものになる．
 
 # HTTP API
 ## SlowTask
