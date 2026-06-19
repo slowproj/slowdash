@@ -1,0 +1,57 @@
+{
+    "control": {
+        "range": { "length": 900, "to": 0 },
+        "reload": 2,
+        "mode": "normal",
+        "grid": { "rows": "2", "columns": "2" }
+    },
+    "style": { },
+    "panels": [
+        { "type": "html", "location": "project", "file": "satrtstop", "title": "" },
+        {
+            "type": "timeseries",
+            "plots": [
+                {
+                    "type": "timeseries",
+                    "channel": "V0",
+                    "color": "#009090",
+                    "label": "",
+                    "format": "%.5g",
+                    "opacity": 1,
+                    "marker_type": "circle",
+                    "marker_size": 2,
+                    "line_width": 1,
+                    "line_type": "connect",
+                    "include_prior_point": false,
+                    "fill_opacity": 0,
+                    "fill_envelope": false,
+                    "fill_baseline": 1e-100,
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
+            "legend": { "style": "side", "position": "right" }
+        },
+        { "type": "tree", "channel": "@registry:randomwalk/" },
+        {
+            "type": "singles",
+            "item_type": "square",
+            "items": [
+                {
+                    "channel": "@registry:randomwalk/run/status",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    }
+                }
+            ],
+            "color": { "base": "rgb(0, 0, 0)", "normal": "#06b6d4", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.1 },
+            "grid": { "rows": 0, "columns": 0 },
+            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+            "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false }
+        }
+    ],
+    "meta": { "name": "control", "title": "", "description": "" }
+}
