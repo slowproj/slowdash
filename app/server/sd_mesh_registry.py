@@ -97,7 +97,10 @@ class Registry:
         Return Value (Any): value or meta including the value on success, the provided default otherwise
         """
 
-        if len(key) > 0 and not (key[-1].isalnum() or key[-1] == '_'):
+        if key is None or len(key) == 0:
+            key = '/'
+        
+        if not (key[-1].isalnum() or key[-1] == '_'):
             return self.get_tree(key, default, with_meta=with_meta)
         
         record = self._records.get(key)
@@ -222,6 +225,7 @@ class MeshRegistryComponent(Component):
 
         self._registry_module_name = 'sd_mesh_registry'
         self._registry_data_prefix = '@registry:'
+        self._pubsub_cache_prefix = '.pubsub.'
 
         self.mesh = None
         self.registry = Registry()
@@ -233,6 +237,7 @@ class MeshRegistryComponent(Component):
         if self.mesh is None:
             self.mesh = Mesh('slowmq://localhost:18881', name=self._registry_module_name)
             self.registry.export(self.mesh)
+            await self._setup_pubsub_cache()
             await self.mesh.aio_start()
 
         
@@ -242,9 +247,16 @@ class MeshRegistryComponent(Component):
             await self.mesh.aio_stop()
 
 
+    async def _setup_pubsub_cache(self):
+        async def handle_message(headers, data):
+            topic = headers.get('topic')
+            if topic is not None and not topic.startswith('sd.rpc'):
+                self.registry.set(self._pubsub_cache_prefix + topic, data)
+        await self.mesh.aio_subscribe('>', handle_message)
+
+        
     @slowlette.get('/api/registry/keys')
     async def api_get_keys(self, prefix:str='', limit:int=100):
-        logging.error(self.registry.keys(prefix, limit=limit))
         return self.registry.keys(prefix, limit=limit)
 
 
@@ -288,11 +300,22 @@ if __name__ == '__main__':
     registry.set('state/run/mode', 'physics')
     registry.set('state/run/number', 123)
     registry.set('state/run', 'running')
-    
+
     print(registry.keys('/'))
     print(registry.keys('state/run'))
+    print(registry.keys('.'))
     print(registry.get('state/run/mode'))
     print(registry.get('state/run'))
     print(registry.get('state/run/'))
     print(registry.get('state/'))
     print(registry.get('/'))
+
+    print('########## PubSub cache')
+    registry.set('.pubsub.foo.bar.buz', 'a')
+    registry.set('.pubsub.foo.bar.qux', 'b')
+    registry.set('.pubsub.foo.buz', 'c')
+    print(registry.get('.pubsub.'))
+    print(registry.get('.'))
+    print(registry.get('.pubsub/'))
+    print(registry.get('/'))
+
