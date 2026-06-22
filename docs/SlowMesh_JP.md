@@ -43,6 +43,7 @@ SlowTask スクリプトから使用されるライブラリです．
 SlowDash サーバー内で SlowMesh 関連のサービスを行うものです．
 
 - Registry (Key-Value Store) サービス
+- Pubsub Last-Value Cache (PubSub の`>` トピックを subscribe して受信データをレジストリの `.pubsub.{topic})` に保持）
 - Web API (HTTP POST による publish や WebSockets 経由の PubSub など）
 
 ### SlowMQ バックボーン
@@ -260,6 +261,38 @@ $ curl "http://localhost:18881/api/data/@registry:state/run/"
 レジストリの key の先頭に区切り文字を付加しないように注意してください（この例では `@registry:/state/run/` は誤り）．SlowMesh の Key-Value Store において，区切り文字は特別な意味を持たない（get() で dict への整形に利用されるだけ）ため，先頭に区切り文字があると別の key になってしまいます．
 
 
+### PubSub Last-Value Cache
+レジストリサービス（`sd-mesh-registry.py`）は，PubSub の全トピック（または指定されたトピック）を subscribe してその内容を保持することにより，PubSub Last-Value Cache を実装します．これにより，遅れて接続した Task が，それまでに Publish されたステータス情報などにアクセスできます．
+TODO: さらに，この内容を定期的に保存することにより，SlowDash サーバークラッシュ後の復帰で，コンテキストを復元できます．
+
+デフォルトでは，PubSub Cache は，レジストリの `$pubsub.{トピック名}`に保存されます．ここで，意図的にレジストリの推奨区切り文字とは異なる文字を使用しています．
+
+例えば，レジストリの内容が以下のようになっていた場合，
+
+```json
+{
+  "$pubsub.sd.task.spec.test_mesh_slowtask": {
+    "mesh_id": "test_mesh_slowtask_vs13_158097_1",
+    "name": "test_mesh_slowtask",
+    "functions": [ { "name": "start" }, { "name": "display" } ],
+    "variables": []
+  },
+  "$pubsub.sd.task.heartbeat.test_mesh_slowtask": {},
+  "$pubsub.sd.task.spec.store": {
+    "mesh_id": "store_vs13_214629_1",
+    "name": "store",
+    "functions": [],
+    "variables": []
+  },
+  "$pubsub.sd.task.heartbeat.store": {},
+  ...
+```
+
+- `$pubsub.sd.task.spec.test_mesh_slowtask.` を get すれば，そのタスクの Spec を一つの dict / JSON として取得できます．
+- `$pubsub.sd.heartbeat.` を get すれば，すべてのタスクの Heartbeat を一つの dict / JSON として取得できます．
+
+（サブブランチを含めて dict/JSON で取得するための，最後の `.` を忘れないように注意してください．）
+
 # SlowTask
 SlowTask は SlowMesh の上で独立にかつ協調して動く実行単位（おおまかには，一つの Python スクリプト）です．プロセスまたは動的ロードモジュールのいずれかとして実行できます．
 
@@ -443,6 +476,18 @@ def store(data_record):
 
 - `publish トピック(名前付き引数リスト)`: 指定のトピックに publish する．データは引数リストと他の `<input>` 要素を Key-Value Pair の JSON にしたものになる．
 - `モジュール名.関数名(名前付き引数リスト)`: 指定の遠隔関数を呼び出す．呼び出し関数の引数は，ここに書かれた引数リストと他の `<input>` 要素を合わせたものになる．
+
+
+#### SlowPlot レイアウト （`slowplot-control.json`）
+以下のものを並べたものです．
+
+- 読み出しタスクのコントロールのための Web フォーム (`html-startstop.html`）
+- Store タスクにより保存されたデータのプロット
+- レジストリに保持されている値の表示
+  - `randomwalk` 以下全体を Tree として表示 (`@registry:randomwalk/`)
+  - `randomwalk/run/status` の値を Single Scalar として表示 （`@registry:randomwalk/run/status`）
+  - PubSub Last-Value Cache 全体を Tree として表示 （`@registry:.pubsub.`）
+
 
 # HTTP API
 ## SlowTask

@@ -225,7 +225,7 @@ class MeshRegistryComponent(Component):
 
         self._registry_module_name = 'sd_mesh_registry'
         self._registry_data_prefix = '@registry:'
-        self._pubsub_cache_prefix = '.pubsub.'
+        self._pubsub_cache_prefix = '$pubsub.'
 
         self.mesh = None
         self.registry = Registry()
