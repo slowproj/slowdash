@@ -39,7 +39,8 @@ class DataSource_MySQL_NoAsync(DataSource_SQL):
         try:
             conn = mysql.connect(
                 host=self.host, port=self.port, user=self.user,
-                password=self.password, database=self.database
+                password=self.password, database=self.database,
+                autocommit=True
             )
         except Exception as e:
             logging.error("MySQL: %s: %s" % (self.url, str(e)))
