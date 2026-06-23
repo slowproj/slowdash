@@ -43,7 +43,7 @@ SlowTask スクリプトから使用されるライブラリです．
 SlowDash サーバー内で SlowMesh 関連のサービスを行うものです．
 
 - Registry (Key-Value Store) サービス
-- Pubsub Last-Value Cache (PubSub の`>` トピックを subscribe して受信データをレジストリの `.pubsub.{topic})` に保持）
+- Pubsub Last-Value Cache (PubSub の`>` トピックを subscribe して受信データをレジストリの `$pubsub.{topic})` に保持）
 - Web API (HTTP POST による publish や WebSockets 経由の PubSub など）
 
 ### SlowMQ バックボーン
@@ -289,7 +289,7 @@ TODO: さらに，この内容を定期的に保存することにより，SlowD
 ```
 
 - `$pubsub.sd.task.spec.test_mesh_slowtask.` を get すれば，そのタスクの Spec を一つの dict / JSON として取得できます．
-- `$pubsub.sd.heartbeat.` を get すれば，すべてのタスクの Heartbeat を一つの dict / JSON として取得できます．
+- `$pubsub.sd.task.heartbeat.` を get すれば，すべてのタスクの Heartbeat を一つの dict / JSON として取得できます．
 
 （サブブランチを含めて dict/JSON で取得するための，最後の `.` を忘れないように注意してください．）
 
@@ -486,7 +486,7 @@ def store(data_record):
 - レジストリに保持されている値の表示
   - `randomwalk` 以下全体を Tree として表示 (`@registry:randomwalk/`)
   - `randomwalk/run/status` の値を Single Scalar として表示 （`@registry:randomwalk/run/status`）
-  - PubSub Last-Value Cache 全体を Tree として表示 （`@registry:.pubsub.`）
+  - PubSub Last-Value Cache 全体を Tree として表示 （`@registry:$pubsub.`）
 
 
 # HTTP API

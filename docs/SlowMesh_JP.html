@@ -189,7 +189,7 @@ PubSub，RPC，Registry (Key-Value Store) の機能を提供します．
 <ul>
 <li>Registry (Key-Value Store) サービス</li>
 <li>Pubsub Last-Value Cache (PubSub の<code>&gt;</code> トピックを
-subscribe して受信データをレジストリの <code>.pubsub.{topic})</code>
+subscribe して受信データをレジストリの <code>$pubsub.{topic})</code>
 に保持）</li>
 <li>Web API (HTTP POST による publish や WebSockets 経由の PubSub
 など）</li>
@@ -595,8 +595,9 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb11-1"><a href=
 <ul>
 <li><code>$pubsub.sd.task.spec.test_mesh_slowtask.</code> を get
 すれば，そのタスクの Spec を一つの dict / JSON として取得できます．</li>
-<li><code>$pubsub.sd.heartbeat.</code> を get すれば，すべてのタスクの
-Heartbeat を一つの dict / JSON として取得できます．</li>
+<li><code>$pubsub.sd.task.heartbeat.</code> を get
+すれば，すべてのタスクの Heartbeat を一つの dict / JSON
+として取得できます．</li>
 </ul>
 <p>（サブブランチを含めて dict/JSON で取得するための，最後の
 <code>.</code> を忘れないように注意してください．）</p>
@@ -845,7 +846,7 @@ Key-Value Pair の JSON にしたものになる．</li>
 <li><code>randomwalk/run/status</code> の値を Single Scalar として表示
 （<code>@registry:randomwalk/run/status</code>）</li>
 <li>PubSub Last-Value Cache 全体を Tree として表示
-（<code>@registry:.pubsub.</code>）</li>
+（<code>@registry:$pubsub.</code>）</li>
 </ul></li>
 </ul>
 <h1 id="http-api">HTTP API</h1>
