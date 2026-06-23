@@ -58,7 +58,6 @@ class AsyncMySQLServer(SQLBaseServer):
             async with self.pool.acquire() as conn:
                 async with conn.cursor() as cursor:
                     await cursor.execute(sql, params)
-                    await conn.commit()
         except Exception as e:
             if not self.connection_error_reported:
                 logging.error(f'MySQL Async Execute Error: {e}')
@@ -81,7 +80,6 @@ class AsyncMySQLServer(SQLBaseServer):
             async with self.pool.acquire() as conn:
                 async with conn.cursor(aiomysql.DictCursor) as cursor:
                     await cursor.execute(sql, params)
-                    await conn.commit()
                     rows = await cursor.fetchall()
         except Exception as e:
             if not self.connection_error_reported:
@@ -124,7 +122,8 @@ class DataSource_MySQL(DataSource_SQL):
 
         try:
             pool = await aiomysql.create_pool(
-                host=self.host, port=self.port, user=self.user, password=self.password, db=self.database
+                host=self.host, port=self.port, user=self.user, password=self.password, db=self.database,
+                autocommit=True
             )
         except Exception as e:
             logging.error(f'AsyncMySQL: {self.url}: {e}')
