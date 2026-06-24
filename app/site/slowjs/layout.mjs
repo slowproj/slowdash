@@ -344,6 +344,7 @@ export class Layout {
                 this.callbacks.forceUpdate();
             },
             suspendUpdate: (duration) => {
+                console.log('###', duration);
                 this.callbacks.suspend(duration);
             },
             popout: (p) => {

@@ -300,6 +300,11 @@ class TreePanel extends Panel {
             expandedDepth: Infinity,
             sortKeys: false,
         });
+        this.treeWidgetDiv.bind('click', e=> {
+            if (this.callbacks?.suspendUpdate) {
+                this.callbacks.suspendUpdate();
+            }
+        });
 
         this.titleDiv.css({
             'font-family': 'sans-serif',
