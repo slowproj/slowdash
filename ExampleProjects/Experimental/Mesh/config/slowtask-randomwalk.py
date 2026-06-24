@@ -7,11 +7,11 @@ device = ctrl.import_control_module('DummyDevice').randomwalk_device()
 device.is_running = False
 
 
-
 @tasklet.initialize()
 async def initialize():
     await tasklet.mesh.registry.aio_set('randomwalk/run/status', 'initialized')
 
+    
 @tasklet.loop(interval=1.0)
 def loop():
     if not device.is_running:

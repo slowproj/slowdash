@@ -825,12 +825,15 @@ class="sourceCode html"><code class="sourceCode html"><span id="cb20-1"><a href=
 <code>name</code>
 属性でボタンをクリックしたときの動作を記述しています．</p>
 <ul>
-<li><code>publish トピック(名前付き引数リスト)</code>: 指定のトピックに
-publish する．データは引数リストと他の <code>&lt;input&gt;</code> 要素を
-Key-Value Pair の JSON にしたものになる．</li>
-<li><code>モジュール名.関数名(名前付き引数リスト)</code>:
-指定の遠隔関数を呼び出す．呼び出し関数の引数は，ここに書かれた引数リストと他の
-<code>&lt;input&gt;</code> 要素を合わせたものになる．</li>
+<li><code>randomwalk.set_value()</code>: randomwalk タスクの
+<code>set_value()</code>
+関数の遠隔呼び出しをする．渡される関数の引数は，ここに書かれた引数リスト（この例では空）と他の
+<code>&lt;input&gt;</code> 要素の name-value
+対を合わせたものになる．</li>
+<li><code>publish control.start()</code>: <code>control.start</code>
+トピックに publish する．publish
+データは引数リスト（この例では空）と他の <code>&lt;input&gt;</code>
+要素の name-value 対を JSON にしたものになる．</li>
 </ul>
 <h4 id="slowplot-レイアウト-slowplot-control.json">SlowPlot レイアウト
 （<code>slowplot-control.json</code>）</h4>

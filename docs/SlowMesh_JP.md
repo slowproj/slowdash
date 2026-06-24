@@ -474,8 +474,8 @@ def store(data_record):
 ```
 ボタン（`<input type="submit">`）の `name` 属性でボタンをクリックしたときの動作を記述しています．
 
-- `publish トピック(名前付き引数リスト)`: 指定のトピックに publish する．データは引数リストと他の `<input>` 要素を Key-Value Pair の JSON にしたものになる．
-- `モジュール名.関数名(名前付き引数リスト)`: 指定の遠隔関数を呼び出す．呼び出し関数の引数は，ここに書かれた引数リストと他の `<input>` 要素を合わせたものになる．
+- `randomwalk.set_value()`: randomwalk タスクの `set_value()` 関数の遠隔呼び出しをする．渡される関数の引数は，ここに書かれた引数リスト（この例では空）と他の `<input>` 要素の name-value 対を合わせたものになる．
+- `publish control.start()`: `control.start` トピックに publish する．publish データは引数リスト（この例では空）と他の `<input>` 要素の name-value 対を JSON にしたものになる．
 
 
 #### SlowPlot レイアウト （`slowplot-control.json`）
@@ -484,8 +484,8 @@ def store(data_record):
 - 読み出しタスクのコントロールのための Web フォーム (`html-startstop.html`）
 - Store タスクにより保存されたデータのプロット
 - レジストリに保持されている値の表示
-  - `randomwalk` 以下全体を Tree として表示 (`@registry:randomwalk/`)
   - `randomwalk/run/status` の値を Single Scalar として表示 （`@registry:randomwalk/run/status`）
+  - `randomwalk` 以下全体を Tree として表示 (`@registry:randomwalk/`)
   - PubSub Last-Value Cache 全体を Tree として表示 （`@registry:$pubsub.`）
 
 

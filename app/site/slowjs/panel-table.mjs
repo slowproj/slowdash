@@ -6,6 +6,7 @@ export { TablePanel as Panel1, TreePanel as Panel2, BlobPanel as Panel3 };
 
 
 import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
+import { JGTreeWidget } from './jagaimo/jagawidgets.mjs';
 import { Panel, bindInput } from './panel.mjs';
 
 
@@ -291,7 +292,14 @@ class TreePanel extends Panel {
 
         this.titleDiv = $('<div>').appendTo(div);
         this.contentDiv = $('<div>').appendTo(div);        
+        this.treeWidgetDiv = $('<div>').appendTo(div);
         this.currentDataTime = -1;
+
+        this.treeWidget = new JGTreeWidget(this.treeWidgetDiv, null, {
+            rootLabel: '/',
+            expandedDepth: Infinity,
+            sortKeys: false,
+        });
 
         this.titleDiv.css({
             'font-family': 'sans-serif',
@@ -303,6 +311,17 @@ class TreePanel extends Panel {
             'overflow': 'hidden',
         });
         this.contentDiv.css({
+            position: 'relative',
+            width:'calc(100% - 12px)',
+            height:'calc(100% - 20px - 2em)',
+            'margin-top': '10px',
+            'margin-left': '10px',
+            'margin-bottom': '5em',
+            padding:0,
+            overflow:'auto',
+        });
+        this.treeWidgetDiv.css({
+            display: 'none',
             position: 'relative',
             width:'calc(100% - 12px)',
             height:'calc(100% - 20px - 2em)',
@@ -402,6 +421,8 @@ class TreePanel extends Panel {
         
         if (max_depth == 1) {
             // simple list of key-value pairs
+            this.treeWidgetDiv.css('display', 'none');
+            this.contentDiv.css('display', 'block');
             let table = $('<table>').addClass('sd-data-table').appendTo(this.contentDiv);
             let tr = $('<tr>').appendTo(table);
             for (let [key, value] of Object.entries(tree)) {
@@ -412,6 +433,8 @@ class TreePanel extends Panel {
         }
         else if ((min_depth == 2) && (max_depth == 2)) {
             // multiple lists of key-value pairs => sections
+            this.treeWidgetDiv.css('display', 'none');
+            this.contentDiv.css('display', 'block');
             let table = $('<table>').addClass('sd-data-table').appendTo(this.contentDiv);
             let tr = $('<tr>').appendTo(table);
             for (let [section, subtree] of Object.entries(tree)) {
@@ -425,14 +448,10 @@ class TreePanel extends Panel {
             }
         }
         else {
-            // general tree
-            let table = $('<table>').addClass('sd-data-table').appendTo(this.contentDiv);
-            let tr = $('<tr>').appendTo(table);
-            for (let [key, value] of Object.entries(tree)) {
-                let tr = $('<tr>').appendTo(table);
-                tr.append($('<th>').text(key));
-                tr.append($('<td>').text(JSON.stringify(value)));
-            }
+            // general tree => collapsible tree
+            this.contentDiv.css('display', 'none');
+            this.treeWidgetDiv.css('display', 'block');
+            this.treeWidget.setData(tree);
         }
     }
 };

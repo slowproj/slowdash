@@ -407,15 +407,15 @@ class ConfigComponent(Component):
             len(name) == 0 or name.startswith('.') or
             not name.replace('_', '0').replace('-', '0').replace('.', '0').isalnum()
         ):
-            logging.info(f'ConfigFile: sanity check failed')
+            logging.info(f'ConfigFile: sanity check failed: {filename}')
             return None, None
 
         filepath = os.path.join(self.project_dir, 'config', filename)
         if os.path.exists(filepath) and not os.path.isfile(filepath):
-            logging.info(f'ConfigFile: not a file')
+            logging.info(f'ConfigFile: not a file: {filepath}')
             return None, None
         if (access_flag is not None) and (not os.access(filepath, access_flag)):
-            logging.info(f'ConfigFile: permission denied by access flag')
+            logging.info(f'ConfigFile: permission denied by access flag: {filepath}')
             return None, None
 
         return filepath, ext.lower()

@@ -32,7 +32,6 @@
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
             "legend": { "style": "side", "position": "right" }
         },
-        { "type": "tree", "channel": "@registry:randomwalk/" },
         {
             "type": "singles",
             "item_type": "square",
@@ -53,6 +52,7 @@
             "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
             "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false }
         },
+        { "type": "tree", "channel": "@registry:randomwalk/", "title": "Registry Values" },
         { "type": "tree", "channel": "@registry:$pubsub.", "title": "PubSub Last Value Cache" }
     ],
     "meta": { "name": "control", "title": "", "description": "" }
