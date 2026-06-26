@@ -109,11 +109,11 @@ class Tasklet:
         return wrapper
         
 
-    def loop(self, interval:float=0):
+    def loop(self, interval:float=0, *, ticks:None|int|dict[str,int]=None):
         """decorator to add a tasklet task
         """
         def wrapper(func):
-            self._add_loop_callback(func, interval)
+            self._add_loop_callback(func, interval, ticks=ticks)
             return func
         return wrapper
         
@@ -327,25 +327,51 @@ class Tasklet:
         self._main_task_coros.append(go_once())
 
                 
-    def _add_loop_callback(self, func, interval:float):
+    def _add_loop_callback(self, func, interval:float, *, ticks:None|int|dict[str,int]=None):
         """
         Args:
           func: callback function
           interval: func execution intervals. Zero for no wait, negative to run the func only once.
+          ticks (None|int|dict[str|int]): if set, callback receives tick flag(s) (True on every ticks loop interations)
         """
+        class TickFlags(dict):
+            def __getattr__(self, name):
+                try:
+                    return self[name]
+                except KeyError:
+                    raise AttributeError(name) from None
+
+        def make_tick_flags(tick_count):
+            if ticks is None:
+                return None
+            if isinstance(ticks, dict):
+                return TickFlags({ name: tick_count % int(period) == 0 for name, period in ticks.items() })
+            
+            return tick_count % ticks == 0
+                    
+
+        
         async def go_loop():
             try:
                 last_execusion_time = time.monotonic()
+                tick_count = 0
                 while not ctrl.is_stop_requested():
+                    ticks_elapsed = 1
                     if interval > 0:
                         now = time.monotonic()
                         lapse = now - last_execusion_time
                         if lapse < interval:
                             await asyncio.sleep(min(interval-lapse, 0.5))
                             continue
-                        last_execusion_time += int(lapse / interval) * interval
-                    
-                    result = func()
+                        ticks_elapsed = int(lapse / interval)
+                        last_execusion_time += ticks_elapsed * interval
+                    tick_count += ticks_elapsed
+
+                    if ticks is None:
+                        result = func()
+                    else:
+                        result = func(make_tick_flags(tick_count))
+                        
                     if asyncio.iscoroutine(result):
                         await result
                     else:

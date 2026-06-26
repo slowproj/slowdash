@@ -200,7 +200,7 @@ Registry には，以下のメソッドがあります：
 階層区切り文字を除いて，Python や C++ などにおける識別子（変数名とか）と同じ感じの名前を使用してください．具体的には，英数字またはアンダースコアだけで構成され，かつ，最初の文字に数字は使用できません．
 
 **Value**:
-Value には，現時点では JSON にシリアライズできる値に限られます．
+Value には，現時点では JSON にシリアライズできる値だけが使用できます．
 
 **階層構造**:
 Registry の内部は，階層構造を持たない単純な Key-Value Store です．Key は単なる文字列で，階層構造は SlowMesh では規定していません．ユーザが選んだ任意の階層区切り文字（ただし「識別子」として使えない文字のみ）を使うことを想定していますが，特に理由がなければ `/` による区切りを使用してください．
@@ -214,7 +214,7 @@ Registry の内部は，階層構造を持たない単純な Key-Value Store で
     await registry.aio_set('state/run/number', 123)
     await registry.aio_set('state/run', 'running')    # 注：この例はあまり良くない．'state/run/status' に入れる方がいい
 
-    print(await registry.aio_keys('state/run'))       # -->  ['state/run/mode', 'state/run/number', 'state\run']
+    print(await registry.aio_keys('state/run'))       # -->  ['state/run/mode', 'state/run/number', 'state/run']
     print(await registry.aio_get('state/run/mode'))   # -->  physics
     print(await registry.aio_get('state/run'))        # -->  running
     print(await registry.aio_get('state/run/'))       # -->  {'mode': 'physics', 'number': 123, '$value': 'running'}
@@ -227,13 +227,13 @@ Registry の内部は，階層構造を持たない単純な Key-Value Store で
 
 レジストリの階層構造はどの区切り文字を使うかも含めてユーザーが自由に設計できますが，JSON として表現できる形に留める（子ノードがあるところに値を記録しない）のがおすすめです．上記の例では，`registry.set('state/run', 'running')` を`registry.set('state/run/status', 'running')` などとすれば，この問題を回避できます．
 
-Registry では，更新値の上書きを防ぐため，Compare-And-Set (CAS) オプションを備えています．
+Registry では，他人が書いたものを意図せず上書きすることを防ぐため，Compare-And-Set (CAS) オプションを備えています．
 
 - レジストリ値のメタデータには，書き込み回数を数える CAS Revision が割り当てられる
 - `aio_set()` で CAS Revision はインクリメントされ，新しい CAS Revision が返される
-- `aio_set()` で `cas_revision` オプションが None でない場合，保持されている値の CAS Revision と一致しないと，書き込みに失敗する
-  - これにより，自分が設定した値を，他の誰かが書き換えた場合に，それを知らずに上書きすることを避けられる．
-- `aio_delete()` も同様．CAS Revision が一致しなければ削除しない．
+- `aio_set()` で `cas_revision` オプションが None でない場合，オプションの値と保持されている値の CAS Revision と一致しないと，書き込みに失敗する
+  - これにより，自分が設定した値を，他の誰かが書き換えた場合に，それを知らずに上書きすることを避けられる
+- `aio_delete()` も同様．CAS Revision が一致しなければ削除に失敗する
 
 `aio_get()` の `with_meta` オプションを `True` にすると，書き込み時刻や CAS Revision などを含んだ Meta Data が返されます：
 ```json
@@ -245,7 +245,13 @@ Registry では，更新値の上書きを防ぐため，Compare-And-Set (CAS) �
 }
 ```
 
-レジストリに記録された値は，SlowDash App から，データベース上のデータと同じ形式(同じ Web API と同じ戻り値フォーマット)で読むことができます．
+レジストリに記録された値は，WebAPI からもアクセスできます．詳しくは，以下の HTTP API の章を参照してください．
+```console
+$ curl "http://localhost:18881/api/registry/value?key=state/run"
+{"$value": "running", "mode": "physics", "number": 123}
+```
+
+また、データベース上のデータと同じ形式（同じ Web API と同じ戻り値フォーマット）で読むこともできます．
 channel 名に `@registry:{key}` を指定してください．
 ```console
 $ curl "http://localhost:18881/api/data/@registry:state/run/"
@@ -321,17 +327,76 @@ tasklet が提供するデコレータにより，特定のタイミングや一
 - `@tasklet.finalize()`: スクリプト終了時に呼ばれる
 - `@tasklet.once(delay:float=0)`: initialize から指定秒数後に呼ばれる
 - `@tasklet.schedule(time:str, use_utc:bool=False)`: 指定時刻に繰り返し呼ばれる
-   - `time` は `HH:MM:SS` 形式．
-   - `HH` および `MM` に `*` を使って毎時または毎分実行を指定できる．
-   - `,` で区切って複数の時刻を並べることができる．
-   - 例)
-     - `@tasklet.schedule("*:00")`: 毎時０分
-     - `@tasklet.schedule("08:00")`: 毎朝８時
-     - `@tasklet.schedule("*:00,*:20,*:40")`： 毎時３回
-     - `@tasklet.schedule("00:00,08:00,16:00", use_utc=True)`: 一日３回（夏時間切り替え対応）
-- `@tasklet.loop(interval:float)`: 指定秒数間隔で繰り返し呼ばれる
+- `@tasklet.loop(interval:float, ticks=None)`: 指定秒数間隔で繰り返し呼ばれる
+
+#### 定時実行
+`@tasklet.schedule(time)` デコレータにより，ユーザー関数を指定時刻に繰り返し呼び出すようにできます．
+
+```python
+@tasklet.schedule("08:00"):
+def do_this_every_morning():
+   # 毎朝８時に実行
+```
+
+引数の `time` は `HH:MM` 形式で指定します．`HH` および `MM` には，ワイルドカード `*` を指定でき，また，複数の時刻設定を `,` 区切りで並べることができます．夏時間への切替時に周期が変わらないようにするためには，`use_utc` を `True` にして，時刻を UTC で指定してください．
+
+例）
+
+- `@tasklet.schedule("08:00")`: 毎朝８時
+- `@tasklet.schedule("00:00,08:00,16:00")`: 一日３回
+- `@tasklet.schedule("*:00")`: 毎時０分
+- `@tasklet.schedule("*:*")`: 毎分
+- `@tasklet.schedule("*:00,*:20,*:40")`： 毎時３回
+- `@tasklet.schedule("08:00", use_utc=True)`: 毎日 UTC ８時
+
+`use_utc` が指定されない限り，時刻はローカル時刻ですが，Docker などのコンテナの中などで実行される場合は，ローカル時刻が UTC となっていることが多いことに注意してください．
+
+#### ユーザループ
+`@tasklet.loop(interval)` デコレータにより，ユーザー関数を指定周期で繰り返し呼び出すようにできます．
+
+```python
+@tasklet.loop(interval=1):
+async def my_work():   # この関数は１秒（interval の値）ごとに呼ばれる
+    #... do my work
+```
+
+さらに，`@tasklet.loop` に `ticks` を指定し，ユーザー関数に `tick` 引数を追加すると，`ticks` に指定した回数ごとに `tick` の値が True になります．
+```python
+@tasklet.loop(interval=1, ticks=10):
+async def my_work(tick):
+    # １秒毎にデータを読み，全てのデータをストリームに流す
+    data = await HV.ch(0).aio_get()
+    await tasklet.mesh.aio_publish('data.stream.HV.ch00', data)
+    
+    # データベースへの記録は１０回に１回
+    if tick:
+        await tasklet.mesh.aio_publish('data.store.HV.ch00', data)
+```
+
+複数の tick 周期を指定することもできます．
+```python
+@tasklet.loop(interval=1, ticks={"transient_store":10, "store":60}):
+async def my_work(tick):
+    # １秒毎にデータを読み，全てのデータをストリームに流す
+    data = await HV.ch(0).aio_get()
+    await tasklet.mesh.aio_publish('data.stream.HV.ch00', data)
+    
+    # 一時データベース（短期間高密度）への記録は１０回に１回
+    if tick.transient_store:
+        await tasklet.mesh.aio_publish('data.transient_store.HV.ch00', data)
+        
+    # 永続データベースへの記録は６０回に１回
+    if tick.store:
+        await tasklet.mesh.aio_publish('data.store.HV.ch00', data)
+```
+
+繰り返しますが，ユーザー関数の中で `time.sleep()` は使わないでください．(`await control_system.aio_sleep()` は可）．
+`@tasklet.loop()` を使うことにより，ほとんどの sleep をなくすことができるはずです．
 
 ### SlowMesh 機能
+
+SlowTask は，内部に接続済 SlowMesh を保持していて，これを介して SlowMesh の通信機能を使用できます．
+
 #### PubSub によるメッセージ交換
 現時点では，データおよびヘッダに渡せる値は，JSON にシリアライズできるものに限られます．
 <br>（TODO: バイナリをサポート）
@@ -458,6 +523,8 @@ RandomWalk タスク が publish したデータは，store タスクによっ�
 def store(data_record):
     datastore.append(data_record)
 ```
+複数のプロセスがデータを publish しても，全てのデータはこの一箇所でデータベースに記録されるので，例えば SQLite のようなトランザクションを持っていないデータベースに書く場合でも，競合を避けることができます．
+また，データフォーマット（テーブルスキーマ）の記述も一箇所にまとめられます．
 
 #### Web フォーム（`html-startstop.html`）
 ブラウザの Web フォームからスタート・ストップの publish やセットポイント設定の RPC を行っています．

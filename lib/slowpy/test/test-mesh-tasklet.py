@@ -33,15 +33,19 @@ def late():
     print("I'm joining now")
 
 
-@tasklet.loop(interval=3)
-def hello():
-    print("I'm still working")
-    
-    
 @tasklet.loop(interval=5)
 async def get_data():
     print(await tasklet.dash.aio_get_data('ch0',length=30))
 
+    
+@tasklet.loop(interval=3, ticks={'do_A':3, 'do_B': 5})
+def do_the_work(tick):
+    print("I'm still working")
+    if tick.do_A:
+        print("I am doing A")
+    if tick.do_B:
+        print("I am doing B")
+    
     
     
 @tasklet.mesh.on('data.>')

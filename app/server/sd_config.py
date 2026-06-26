@@ -411,11 +411,16 @@ class ConfigComponent(Component):
             return None, None
 
         filepath = os.path.join(self.project_dir, 'config', filename)
-        if os.path.exists(filepath) and not os.path.isfile(filepath):
-            logging.info(f'ConfigFile: not a file: {filepath}')
-            return None, None
-        if (access_flag is not None) and (not os.access(filepath, access_flag)):
-            logging.info(f'ConfigFile: permission denied by access flag: {filepath}')
-            return None, None
+        if os.path.exists(filepath):
+            if not os.path.isfile(filepath):
+                logging.info(f'ConfigFile: not a file: {filepath}')
+                return None, None
+            if (access_flag is not None) and (not os.access(filepath, access_flag)):
+                logging.info(f'ConfigFile: permission denied by access flag: {filepath}')
+                return None, None
+        else:
+            if access_flag in (os.R_OK, os.X_OK):
+                return None, None
+            # TODO: for os.W_OK, check the parent directory
 
         return filepath, ext.lower()

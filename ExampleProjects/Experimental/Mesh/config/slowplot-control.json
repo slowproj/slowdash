@@ -29,8 +29,8 @@
                     "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
                 }
             ],
-            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
-            "legend": { "style": "side", "position": "right" }
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 3, "ymax": 20 },
+            "legend": { "style": "transparent", "position": "left" }
         },
         {
             "type": "singles",

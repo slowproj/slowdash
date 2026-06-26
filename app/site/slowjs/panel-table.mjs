@@ -296,7 +296,8 @@ class TreePanel extends Panel {
         this.currentDataTime = -1;
 
         this.treeWidget = new JGTreeWidget(this.treeWidgetDiv, null, {
-            rootLabel: '/',
+            //rootLabel: '&#x1f332;',  // tree
+            rootLabel: '&#x1f423;',    // hatching chick
             expandedDepth: Infinity,
             sortKeys: false,
         });
