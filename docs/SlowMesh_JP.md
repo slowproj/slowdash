@@ -45,6 +45,7 @@ SlowDash サーバー内で SlowMesh 関連のサービスを行うものです�
 - Registry (Key-Value Store) サービス
 - Pubsub Last-Value Cache (PubSub の`>` トピックを subscribe して受信データをレジストリの `$pubsub.{topic})` に保持）
 - Web API (HTTP POST による publish や WebSockets 経由の PubSub など）
+- TODO: Control History (PubSub の`control.>` と `sd.rpc.>` トピックを subscribe して受信データをデータベースに保存）
 
 ### SlowMQ バックボーン
 SlowDash 内蔵の PubSub ブローカーです．SlowDash のサーバープロセスに含まれているので，何も設定せずにそのまま使用できます．
@@ -441,17 +442,18 @@ SlowTask は，内部に接続済 SlowMesh を保持していて，これを介�
 SlowTask のスクリプトは，独立プロセス (task process) として走らせることも，SlowDash のサーバープロセスに動的ロードして (task module) 走らせることもできます．
 
 ### 独立プロセス (task process)
-そのまま通常の Python スクリプトとして実行してください．SlowPy が venv の中でインストールされている場合（標準インストール），先に venv を有効にしてください．
-
-```console
-$ slowdash-activate-venv
-$ python3 {タスクスクリプト}.py
-```
-
-または，`slowdash-task` コマンドから実行することもできます．この場合，venv の設定は必要ありません．
+`slowdash-task` コマンドから実行してください．独立プロセスが走り，その中でタスクがロードされます．
+SlowDash サーバーの URL は自動で取得されます．（TODO: 現時点ではハードコーディング）
 
 ```console
 $ slowdask-task {タスクスクリプト}.py
+```
+
+そのまま通常の Python スクリプトとして実行することもできます．この場合は，SlowPy の venv の有効化や，SlowDash サーバー URL の明示的設定が必要です．
+
+```console
+$ slowdash-activate-venv
+$ python3 {タスクスクリプト}.py --slowdash-url=http://localhost:18881
 ```
 
 ### TODO: 動的ロードモジュール (task module)
@@ -470,8 +472,8 @@ SlowDash の設定ファイルから，動的ロードを設定します．SlowT
 スクリプト中で明示的に Tasklet を使用しない場合でも，任意の Python スクリプトを SlowTask として実行（task process）または動的ロード(task module)をすることができます．この場合は，以下の機能のみが使用できます．
 
 - 古いスタイルの Lifespan Callbacks (`_initialize()` / `_run()` / `_loop()` / `_finalize()`)
-- すべての関数の Export
-- Start/stop コントロール (task module のみ)
+- すべての関数の export （他のタスクやブラウザからの呼び出し）
+- TODO: start/stop コントロール
 
 
 # Example Projects
@@ -492,13 +494,11 @@ $ slowdash --port=18881
 ```
 ```console
 $ cd PATH/TO/PROJECT
-$ slowdash-activate-venv
-$ python config/slowtask-store.py
+$ slowdash-task config/slowtask-store.py
 ```
 ```console
 $ cd PATH/TO/PROJECT
-$ slowdash-activate-venv
-$ python config/slowtask-randomwalk.py
+$ slowdash-task config/slowtask-randomwalk.py
 ```
 すべて実行したら，10秒ほど待ってからブラウザで `http://localhost:18881` に接続してください．
 （すでに表示しているなら，ページのリロードをしてください．）
@@ -652,7 +652,7 @@ Registry に保持されているキーの値をデータとして返す（デ�
 - すべての SlowTask Process は `sd.task.control.>` を subscribe すること．
 
 ### sd.task.heartbeat.{task_name}
-Task の生存信号．Headers のメタデータのみで，Body は空．
+Task の生存信号．Body に記録されるのは expire (= time-of-heartbeat + heartbeat-interval)．Expire が現在時刻よりも古ければ，Heartbeat が出ていないとみなす．
 
 ##### 主な用途
 - Sender(s): task process
@@ -666,24 +666,30 @@ Task の生存信号．Headers のメタデータのみで，Body は空．
 - Reconnect により，`sd.task.spec` 再送などもトリガされる
 - サーバー復帰後のシステム再開は，heartbeat interval 程度遅れることになる
 
+##### 第３用途
+- TODO: サーバーは知らないタスクから Heartbeat を受け取った場合，PubSub に `sd.task.control.introduce` を publish する
+
 
 ##### JSON Schema
 Headers:
 ```json
 {
     "type": "object",
-    "required": [ "mesh_id", "name", "timestamp"],
+    "required": [ "mesh_id", "name" ],
     "properties": {
         "mesh_id": { "type": "string" },
-        "name": { "type": "string" },
-        "timestamp": { "type": "int" }
+        "name": { "type": "string" }
     }
 }
 ```
 
 Body:
 ```json
-{}
+    "type": "object",
+    "required": [ "expire"],
+    "properties": {
+        "expire": { "type": "int" }
+    }
 ```
 
 ##### JSON Example
@@ -715,14 +721,16 @@ Body:
     "properties": {
         "mesh_id": { "type": "string" },
         "name": { "type": "string" },
-        "functions": { "type": "array", "items": {
+        "functions": {
+            "type": "obect",
+            "properties": {},
+            "$comment": " 将来的には引数情報を追加"
+        },
+        "variables": {
             "type": "object",
-            "properties": { "name": { "type": "string" }, "$comment": " 将来的には引数情報も追加" }
-        }},
-        "variables": { "type": "array", "items": {
-            "type": "object",
-            "properties": { "name": { "type": "string" }, "$comment": "将来的には型情報も追加" }
-        }}
+            "properties": { "type": { "type": "string", "enum": [ "node" ] } }
+            "$comment": " 将来的には dataclass type などを追加するかも．readonly とかも．"
+        }
     }
 }
 ```
@@ -732,8 +740,8 @@ Body:
 ```json
 {
     "name": "mytask",
-    "functions": [ { "name": "start" }, { "name": "stop" } ],
-    "variables": [ { "name": "status" } ]
+    "functions": { "start": {}, "stop": {} },
+    "variables": { "status": { "type": "node" } }
 }
 ```
 

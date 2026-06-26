@@ -12,12 +12,12 @@ def load_task_module(path:str, *, name:str|None=None, argv:list[str]|None=None):
     if not name:
         name = os.path.splitext(os.path.basename(path))[0]
         if name.startswith('slowtask-'):
-            name = name[len('slowatsk-'):]
+            name = name[len('slowtask-'):]
         name = re.sub(r'[^a-zA-Z0-9]', '_', name)
 
     module_name = name
     if module_name in sys.modules:
-        module_name = f'_slowtask_{module_mame}_{abs(hash(path))}'
+        module_name = f'_slowtask_{module_name}_{abs(hash(path))}'
     
     spec = importlib.util.spec_from_file_location(module_name, path)
     if spec is None or spec.loader is None:

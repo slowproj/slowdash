@@ -2,6 +2,9 @@ slowdash_project:
   name: SlowMesh_Test
   
   data_source:
-    url: sqlite:///TestData
-    time_series:
-      schema: slowdata [channel] @timestamp(unix) = value
+    - url: sqlite:///TestData
+      time_series:
+        schema: slowdata [channel] @timestamp(unix) = value
+    - url: sqlite:///TestData2
+      time_series:
+        schema: slowdata [channel] @timestamp(unix) = value

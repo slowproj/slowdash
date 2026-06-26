@@ -27,6 +27,23 @@
                     "fill_envelope": false,
                     "fill_baseline": 1e-100,
                     "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                },
+                {
+                    "type": "timeseries",
+                    "channel": "V1",
+                    "color": "#dd8000",
+                    "label": "",
+                    "format": "%.5g",
+                    "opacity": 1,
+                    "marker_type": "circle",
+                    "marker_size": 2,
+                    "line_width": 1,
+                    "line_type": "connect",
+                    "include_prior_point": false,
+                    "fill_opacity": 0,
+                    "fill_envelope": false,
+                    "fill_baseline": 1e-100,
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
                 }
             ],
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 3, "ymax": 20 },

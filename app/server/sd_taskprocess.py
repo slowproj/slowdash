@@ -115,8 +115,8 @@ class Task:
         
         self._mesh_id = self._spec['mesh_id']
         self._name = self._spec.get('name', self._mesh_id)
-        self._functions = set([ f['name'] for f in self._spec.get('functions', []) ])
-        self._variables = set([ v['name'] for v in self._spec.get('variables', []) ])
+        self._functions = set([ name for name, func in self._spec.get('functions', {}).items() ])
+        self._variables = set([ name for name, var in self._spec.get('variables', {}).items() ])
 
     @property
     def name(self):
@@ -152,10 +152,10 @@ class Task:
 
         if len(reply) < 1:
             return {'status': 'error', 'message': f'RPC error: no reply' }
-        
-        return {'status': 'ok', 'message': 'success', 'return_value': reply[0].get('return_value') }
-            
 
+        return reply[0]
+
+    
 
 class TaskProcessComponent(Component):
     def __init__(self, app, project):

@@ -1,16 +1,16 @@
 
 <form>
   <b>Device Controls</b> (Function Call)<br>
-  Set Point: <input type="number" name="value" value="10">
+  V1 Set Point: <input type="number" name="value" value="10">
   <input type="submit" name="randomwalk.set_value()" value="Set">
   <p>  
-  <b>Run Controls</b> (Publish)<br>
+  <b>Run Controls (V1)</b> (Publish)<br>
   <input type="submit" name="publish control.start()" value="Start">
   <input type="submit" name="publish control.stop()" value="Stop">
   <p>  
-  <b>Run Controls</b> (No-Mesh Task)<br>
-  <input type="submit" name="nomesh.start()" value="Start">
-  <input type="submit" name="nomesh.stop()" value="Stop">
+  <b>Run Controls (V2)</b> (No-Tasklet Function Call)<br>
+  <input type="submit" name="no_tasklet.start()" value="Start">
+  <input type="submit" name="no_tasklet.stop()" value="Stop">
 </form>
 
 

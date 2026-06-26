@@ -177,6 +177,17 @@ class Tasklet:
             else:
                 loop_delay = 0
             self._add_loop_callback(func_loop, loop_delay)
+
+        for name, func in module.__dict__.items():
+            if name.startswith('_'):
+                continue
+            if not inspect.isfunction(func):  # alternatively, "not callable(func)" for a wider scope
+                continue
+            if func.__module__ != module.__name__:
+                continue
+            if hasattr(func, '_slow_task'):
+                continue
+            self._mesh.export(name, func)
         
 
     async def _start(self):
@@ -251,8 +262,8 @@ class Tasklet:
         spec_doc = {
             'mesh_id': self.mesh.mesh_id,
             'name': self.name,
-            'functions': [ {"name": name} for name,func in self.mesh.export_functions().items() ],
-            'variables': [ {"name": name} for name,variable in self.mesh.export_variables().items() ],
+            'functions': { name: {} for name,func in self.mesh.export_functions().items() },
+            'variables': { name: { 'type': 'node' } for name,variable in self.mesh.export_variables().items() },
         }
         await self.mesh.aio_publish(f'sd.task.spec.{self.name}', spec_doc)
         
@@ -261,12 +272,14 @@ class Tasklet:
         now = time.time()
         if now > self._next_heartbeat_time:
             self._next_heartbeat_time = now + self._heartbeat_interval
-            heartbeat_doc = {
+            headers = {
                 'mesh_id': self.mesh.mesh_id,
                 'name': self.name,
-                'timestamp': int(now)
             }
-            await self.mesh.aio_publish(f'sd.task.heartbeat.{self.name}', {}, headers=heartbeat_doc)
+            body = {
+                'expire': int(self._next_heartbeat_time) + 1
+            }
+            await self.mesh.aio_publish(f'sd.task.heartbeat.{self.name}', body, headers=headers)
 
     
     def _add_initialize_callback(self, func):

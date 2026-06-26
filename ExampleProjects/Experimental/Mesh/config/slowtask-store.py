@@ -14,6 +14,5 @@ def store(data_record):
     datastore.append(data_record)
 
 
-    
 if __name__ == '__main__':
     tasklet.run(slowdash_url='http://localhost:18881')

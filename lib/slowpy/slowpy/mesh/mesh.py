@@ -45,9 +45,7 @@ class Mesh:
         self._reply_queues = {}  # CorrelationID(str) -> asyncio.Queue
         self._reply_lock = asyncio.Lock()
         
-        self._callback_coros = []
-        self._callback_coros.append(self._start_rpc_call_handler())
-        self._callback_coros.append(self._start_rpc_reply_handler())
+        self._subscription_coros = []
         self._callback_tasks = set()
 
         self._function_table = {  # FunctionName:str -> function
@@ -179,7 +177,10 @@ class Mesh:
         await self.aio_stop()
         self._is_running = True
 
-        for coro in self._callback_coros:
+        await self._start_coro(self._start_rpc_call_handler())
+        await self._start_coro(self._start_rpc_reply_handler())
+        
+        for coro in self._subscription_coros:
             await self._start_coro(coro)
 
         
@@ -423,7 +424,7 @@ class Mesh:
                 logging.error(f'Mesh: error in subscription callback: {func.__name__}(): {e}')
 
         coro = handle_subscription()
-        self._callback_coros.append(coro)
+        self._subscription_coros.append(coro)
 
         return coro
     
