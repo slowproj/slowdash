@@ -5,7 +5,7 @@ tasklet = Tasklet()
 
 
 from slowpy.store import DataStore_SQLite
-datastore = DataStore_SQLite('sqlite:///../TestData.db', table='slowdata')
+datastore = DataStore_SQLite('sqlite:///TestData.db', table='slowdata')
 
 
 @tasklet.mesh.on('data.store.>')

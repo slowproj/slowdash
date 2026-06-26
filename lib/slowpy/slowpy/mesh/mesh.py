@@ -25,6 +25,7 @@ class Mesh:
         self._on_reconnect = on_reconnect
         self._loop_timeout = loop_timeout
         self._rpc_timeout = rpc_timeout
+        self._name_prefix_to_drop = name_prefix_to_drop
 
         self._sep_mesh = sep
         self._single_wc_mesh = single_wc
@@ -36,24 +37,10 @@ class Mesh:
         self._pubargs = {}
         self._subargs = { 'timeout': self._loop_timeout }
         
-        if name is not None:
-            self._name = name
-        else:
-            self._name = os.path.splitext(os.path.basename(inspect.stack()[-1].filename))[0]
-            if name_prefix_to_drop is not None:
-                if self._name.startswith(name_prefix_to_drop):
-                    self._name = self._name[len(name_prefix_to_drop):]
-            self._name = re.sub(r'[^a-zA-Z0-9]', '_', self._name)
-
-        Mesh._mesh_sequence_id += 1
-        self._mesh_id = f'{self._name}_{socket.gethostname()}_{os.getpid()}_{Mesh._mesh_sequence_id}'
-        self._mesh_id = re.sub(r'[^a-zA-Z0-9]', '_', self._mesh_id)
+        self._name = name
+        self._mesh_id = None
+        self._is_running = False
         
-        if url is not None:
-            self.connect(url)
-        else:
-            self._pubsub = ctrl.import_control_module('AsyncLocalPubsub').async_localpubsub()
-
         self._rpc_count = 0
         self._reply_queues = {}  # CorrelationID(str) -> asyncio.Queue
         self._reply_lock = asyncio.Lock()
@@ -71,13 +58,30 @@ class Mesh:
 
         self._registry = Registry(self)
         
-        self._is_running = False
+        if url is not None:
+            self.connect(url, name)
+        else:
+            self._pubsub = ctrl.import_control_module('AsyncLocalPubsub').async_localpubsub()
+
         
-        
-    def connect(self, url:str):
+    def connect(self, url:str, name:str|None=None):
         if url is None:
             return
 
+        if name is not None:
+            self._name = name
+        elif self._name is None:
+            self._name = os.path.splitext(os.path.basename(inspect.stack()[-1].filename))[0]
+            if self._name_prefix_to_drop is not None:
+                if self._name.startswith(self._name_prefix_to_drop):
+                    self._name = self._name[len(self._name_prefix_to_drop):]
+            self._name = re.sub(r'[^a-zA-Z0-9]', '_', self._name)
+
+        if self._mesh_id is None:
+            Mesh._mesh_sequence_id += 1
+            self._mesh_id = f'{self._name}_{socket.gethostname()}_{os.getpid()}_{Mesh._mesh_sequence_id}'
+            self._mesh_id = re.sub(r'[^a-zA-Z0-9]', '_', self._mesh_id)
+        
         try:
             o = urlsplit(url)
             if o.scheme in ['slowmq', 'slowdash']:

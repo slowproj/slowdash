@@ -302,7 +302,10 @@ TODO: さらに，この内容を定期的に保存することにより，SlowD
 # SlowTask
 SlowTask は SlowMesh の上で独立にかつ協調して動く実行単位（おおまかには，一つの Python スクリプト）です．プロセスまたは動的ロードモジュールのいずれかとして実行できます．
 
-## SlowTask の組み込み
+## SlowTask の作成
+Python スクリプトを SlowTask として使用するには，実行アダプタ Tasklet を組み込みます．
+（あるいは，機能制限が付きますが，生の Python スクリプトをそのまま編集せずに SlowDash から実行する方法もあります．）
+
 ```python
 from slowpy.mesh import Tasklet
 tasklet = Tasklet()
@@ -438,8 +441,29 @@ SlowTask は，内部に接続済 SlowMesh を保持していて，これを介�
 SlowTask のスクリプトは，独立プロセス (task process) として走らせることも，SlowDash のサーバープロセスに動的ロードして (task module) 走らせることもできます．
 
 ### 独立プロセス (task process)
+そのまま通常の Python スクリプトとして実行してください．SlowPy が venv の中でインストールされている場合（標準インストール），先に venv を有効にしてください．
 
-### 動的ロードモジュール (task module)
+```console
+$ slowdash-activate-venv
+$ python3 {タスクスクリプト}.py
+```
+
+または，`slowdash-task` コマンドから実行することもできます．この場合，venv の設定は必要ありません．
+
+```console
+$ slowdask-task {タスクスクリプト}.py
+```
+
+### TODO: 動的ロードモジュール (task module)
+SlowDash の設定ファイルから，動的ロードを設定します．SlowTask のファイルは，`slowtask-{タスク名}.py` というファイル名で SlowDash プロジェクトの `config` ディレクトリ，TODO: または SlowDash インストレーションの `plugin` ディレクトリに存在しなければなりません．
+プロジェクトの `SlowdashProject.yaml` ファイルに以下のようなエントリを作成してください．
+`auto_load` を `true` に設定すると，SlowDash の開始時にタスクを自動で開始できます．
+
+```yaml
+  task:
+    name: {タスク名}
+    auto_load: true
+```
 
 
 ## スクリプト中で明示的に Tasklet を使用しない場合
@@ -467,14 +491,14 @@ $ cd PATH/TO/PROJECT
 $ slowdash --port=18881
 ```
 ```console
-$ cd PATH/TO/PROJECT/config
+$ cd PATH/TO/PROJECT
 $ slowdash-activate-venv
-$ python slowtask-store.py
+$ python config/slowtask-store.py
 ```
 ```console
-$ cd PATH/TO/PROJECT/config
+$ cd PATH/TO/PROJECT
 $ slowdash-activate-venv
-$ python slowtask-randomwalk.py
+$ python config/slowtask-randomwalk.py
 ```
 すべて実行したら，10秒ほど待ってからブラウザで `http://localhost:18881` に接続してください．
 （すでに表示しているなら，ページのリロードをしてください．）

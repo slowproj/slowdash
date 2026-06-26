@@ -8,8 +8,10 @@ from .mesh import Mesh
 
 
 class Tasklet:
-    def __init__(self, name:str|None=None):
+    def __init__(self, name:str|None=None, *, use_oldstyle_callbacks=False):
         self._name = name
+        self._use_oldstyle_callbacks = use_oldstyle_callbacks
+        
         self._params = {}
         
         self._dash_url = None
@@ -17,8 +19,6 @@ class Tasklet:
         
         self._mesh_url = None
         self._mesh = Mesh(name=name, on_reconnect=self.on_reconnect, name_prefix_to_drop='slowtask-')
-        if self._name is None:
-            self._name = self._mesh.name
         
         self._mesh_list = [ self._mesh ]
         self._initialize_task_coros = []
@@ -51,7 +51,7 @@ class Tasklet:
         return mesh
 
 
-    def run(self, params:dict|None=None, slowdash_url:str|None=None, mesh_url:str|None=None):
+    def run(self, params:dict|None=None, *, slowdash_url:str|None=None, mesh_url:str|None=None, name:str|None=None, module=None):
         self._params = copy.deepcopy(params)
         self._dash_url = slowdash_url or self._dash_url
         self._mesh_url = mesh_url or self._mesh_url
@@ -61,12 +61,16 @@ class Tasklet:
             elif self._dash_url.startswith('https://'):
                 self._mesh_url = 'slowmqs' + self._dash_url[5:]
 
-        caller_frame = inspect.currentframe().f_back
-        modname = caller_frame.f_globals.get('__name__')
-        module = sys.modules.get(modname)
+        if name is not None:
+            self._name = name
+        if module is None:
+            caller_frame = inspect.currentframe().f_back
+            modname = caller_frame.f_globals.get('__name__')
+            module = sys.modules.get(modname)
         if module is None:
             logging.error(f'Tasklet: unable to get module: {modname}')
-        else:
+
+        if self._use_oldstyle_callbacks:
             self._scan_oldstyle_callbacks(module)
             
         ctrl.stop_by_signal()
@@ -133,6 +137,9 @@ class Tasklet:
     #### Internal Methods ####
 
     def _scan_oldstyle_callbacks(self, module):
+        if module is None:
+            return
+        
         def _get_func(name):
             if (name in module.__dict__) and callable(module.__dict__[name]):
                 func = module.__dict__[name]
@@ -176,7 +183,9 @@ class Tasklet:
         if self._dash_url is not None:
             self._dash.connect(self._dash_url)
         if self._mesh_url is not None:
-            self._mesh.connect(self._mesh_url)
+            self._mesh.connect(self._mesh_url, name=self._name)
+            if self._name is None:
+                self._name = self._mesh.name
         
         try:
             await asyncio.gather(*self._initialize_task_coros)

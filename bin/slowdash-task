@@ -1,0 +1,14 @@
+#! /bin/bash
+
+SLOWDASH_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+if [ -d "$SLOWDASH_DIR/venv" ]; then
+   echo Running in venv at "$SLOWDASH_DIR/venv" >&2
+   source "$SLOWDASH_DIR/venv/bin/activate"
+else
+   echo Running without venv
+   export PYTHONPATH="$SLOWDASH_DIR/lib/slowpy:$PYTHONPATH"
+   export PYTHONPATH="$SLOWDASH_DIR/lib/slowlette:$PYTHONPATH"
+fi
+
+python3 "$SLOWDASH_DIR/app/server/slowdash-task.py" "$@"
