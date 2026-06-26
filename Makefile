@@ -10,7 +10,6 @@ PIP_OPTIONAL_DATA = numpy matplotlib lmfit scikit-image
 
 
 SLOWDASH_DIR = $(shell pwd)
-SLOWDASH_BIN = "$(SLOWDASH_DIR)/bin/slowdash"
 SLOWDASH_ENV = "$(SLOWDASH_DIR)/bin/slowdash-bashrc"
 GIT = $(shell which git)
 
@@ -35,39 +34,7 @@ slowdash:
 		echo ""; \
 	fi
 
-	@if [ ! -d "$(SLOWDASH_DIR)/bin" ]; then mkdir "$(SLOWDASH_DIR)/bin"; fi
 	@if [ -d .git/hooks ]; then ln -fs ../../.git-hooks/pre-commit .git/hooks; fi
-
-	@echo '#! /bin/bash' > $(SLOWDASH_BIN)
-	@echo '' >> $(SLOWDASH_BIN)
-	@echo 'SLOWDASH_DIR="$(SLOWDASH_DIR)"' >> $(SLOWDASH_BIN)
-	@echo '' >> $(SLOWDASH_BIN)
-	@echo 'if [ -d "$$SLOWDASH_DIR/venv" ]; then' >> $(SLOWDASH_BIN)
-	@echo '   echo Running in venv at "$$SLOWDASH_DIR/venv" >&2' >> $(SLOWDASH_BIN)
-	@echo '   source "$$SLOWDASH_DIR/venv/bin/activate"' >> $(SLOWDASH_BIN)
-	@echo 'else' >> $(SLOWDASH_BIN)
-	@echo '   echo Running without venv' >> $(SLOWDASH_BIN)
-	@echo '   export PYTHONPATH="$$SLOWDASH_DIR/lib/slowpy:$$PYTHONPATH"' >> $(SLOWDASH_BIN)
-	@echo '   export PYTHONPATH="$$SLOWDASH_DIR/lib/slowlette:$$PYTHONPATH"' >> $(SLOWDASH_BIN)
-	@echo 'fi' >> $(SLOWDASH_BIN)
-	@echo '' >> $(SLOWDASH_BIN)
-	@echo 'use_slowdog=0' >> $(SLOWDASH_BIN)
-	@echo 'args=()' >> $(SLOWDASH_BIN)
-	@echo 'for arg in "$$@"; do' >> $(SLOWDASH_BIN)
-	@echo '    if [[ "$$arg" == "--slowdog" ]]; then' >> $(SLOWDASH_BIN)
-	@echo '        use_slowdog=1' >> $(SLOWDASH_BIN)
-	@echo '    else' >> $(SLOWDASH_BIN)
-	@echo '        args+=("$$arg")' >> $(SLOWDASH_BIN)
-	@echo '    fi' >> $(SLOWDASH_BIN)
-	@echo 'done' >> $(SLOWDASH_BIN)
-	@echo '' >> $(SLOWDASH_BIN)
-	@echo 'if [[ $$use_slowdog = 1 ]];  then' >> $(SLOWDASH_BIN)
-	@echo '    python3 $$SLOWDASH_DIR/utils/slowdog.py $$SLOWDASH_DIR/app/server/slowdash.py "$${args[@]}"' >> $(SLOWDASH_BIN)
-	@echo 'else' >> $(SLOWDASH_BIN)
-	@echo '    python3 "$$SLOWDASH_DIR/app/server/slowdash.py" "$${args[@]}"' >> $(SLOWDASH_BIN)
-	@echo 'fi' >> $(SLOWDASH_BIN)
-	@echo '' >> $(SLOWDASH_BIN)
-	@chmod 755 $(SLOWDASH_BIN)
 
 	@echo 'export SLOWDASH_DIR=$(SLOWDASH_DIR)' > $(SLOWDASH_ENV)
 	@echo 'alias slowdash="$$SLOWDASH_DIR/bin/slowdash"' >> $(SLOWDASH_ENV)

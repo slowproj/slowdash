@@ -1,0 +1,29 @@
+#! /bin/bash
+
+SLOWDASH_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+if [ -d "$SLOWDASH_DIR/venv" ]; then
+   echo Running in venv at "$SLOWDASH_DIR/venv" >&2
+   source "$SLOWDASH_DIR/venv/bin/activate"
+else
+   echo Running without venv
+   export PYTHONPATH="$SLOWDASH_DIR/lib/slowpy:$PYTHONPATH"
+   export PYTHONPATH="$SLOWDASH_DIR/lib/slowlette:$PYTHONPATH"
+fi
+
+use_slowdog=0
+args=()
+for arg in "$@"; do
+    if [[ "$arg" == "--slowdog" ]]; then
+        use_slowdog=1
+    else
+        args+=("$arg")
+    fi
+done
+
+if [[ $use_slowdog = 1 ]];  then
+    python3 $SLOWDASH_DIR/utils/slowdog.py $SLOWDASH_DIR/app/server/slowdash.py "${args[@]}"
+else
+    python3 "$SLOWDASH_DIR/app/server/slowdash.py" "${args[@]}"
+fi
+
