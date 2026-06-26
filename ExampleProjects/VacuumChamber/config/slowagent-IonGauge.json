@@ -2,20 +2,20 @@
   "meta": {
     "name": "IonGauge",
     "title": "KJLC 354 Ion Gauge Pressure",
-    "description": "Live OCR of a KJLC® 354 Series Ion Gauge with Integrated Controller & Display. Reads the chamber pressure shown on the front-panel display as a single floating-point value in Torr."
+    "description": "Live OCR of a KJLC\u00ae 354 Series Ion Gauge with Integrated Controller & Display. Reads the chamber pressure shown on the front-panel display as a single floating-point value in Torr."
   },
   "capture": {
-    "source": "http://10.0.0.1/camera.jpg",
-    "cycle_seconds": 30,
+    "source": "http://10.0.0.91/~sanshiro/photo.jpg",
+    "cycle_seconds": 60.0,
     "frames_per_cycle": 5,
     "frame_interval": 1.0,
     "batch_dir": "last_images"
   },
   "llm": {
-    "model": "claude-opus-4-7",
+    "model": "claude-haiku-4-5",
     "max_tokens": 256,
-    "prompt": "These photos are of the front panel of a KJLC® 354 Series Ion Gauge with Integrated Controller & Display. The display shows the current vacuum chamber pressure as a number in scientific notation (for example \"1.23 E-7\" or \"8.50-08\", meaning 1.23×10⁻⁷ Torr or 8.50×10⁻⁸ Torr).\n\nRead the pressure value shown on the display. The unit is Torr.\n\nReturn a JSON object with a single key \"pressure\" mapped to the numeric pressure as a standard floating-point number (e.g., {\"pressure\": 1.23e-7}). Do NOT return the value as a string.\n\nIf the display is off, shows dashes or an error code, or the value cannot be read confidently from any of the provided frames, return {\"pressure\": null}.",
-    "example_prompt": "These photos are of the front panel of a KJLC® 354 Series Ion Gauge with Integrated Controller & Display. The display shows the current vacuum chamber pressure as a number in scientific notation (for example \"1.23 E-7\" or \"8.50-08\", meaning 1.23×10⁻⁷ Torr or 8.50×10⁻⁸ Torr).\n\nRead the pressure value shown on the display. The unit is Torr.\n\nReturn a JSON object with a single key \"pressure\" mapped to the numeric pressure as a standard floating-point number (e.g., {\"pressure\": 1.23e-7}). Do NOT return the value as a string.\n\nIf the display is off, shows dashes or an error code, or the value cannot be read confidently from any of the provided frames, return {\"pressure\": null}."
+    "prompt": "These photos are of the front panel of a KJLC\u00ae 354 Series Ion Gauge with Integrated Controller & Display. The display shows the current vacuum chamber pressure as a number in scientific notation (for example \"1.23 E-7\" or \"8.50-08\", meaning 1.23\u00d710\u207b\u2077 Torr or 8.50\u00d710\u207b\u2078 Torr).\n\nRead the pressure value shown on the display. The unit is Torr.\n\nReturn a JSON object with a single key \"pressure\" mapped to the numeric pressure as a standard floating-point number (e.g., {\"pressure\": 1.23e-7}). Do NOT return the value as a string.\n\nIf the display is off, shows dashes or an error code, or the value cannot be read confidently from any of the provided frames, return {\"pressure\": null}.",
+    "example_prompt": "These photos are of the front panel of a KJLC\u00ae 354 Series Ion Gauge with Integrated Controller & Display. The display shows the current vacuum chamber pressure as a number in scientific notation (for example \"1.23 E-7\" or \"8.50-08\", meaning 1.23\u00d710\u207b\u2077 Torr or 8.50\u00d710\u207b\u2078 Torr).\n\nRead the pressure value shown on the display. The unit is Torr.\n\nReturn a JSON object with a single key \"pressure\" mapped to the numeric pressure as a standard floating-point number (e.g., {\"pressure\": 1.23e-7}). Do NOT return the value as a string.\n\nIf the display is off, shows dashes or an error code, or the value cannot be read confidently from any of the provided frames, return {\"pressure\": null}."
   },
   "channels": [
     {
@@ -23,12 +23,19 @@
       "label": "Chamber Pressure (Torr)",
       "color": "#009090",
       "ymin": 1e-11,
-      "ymax": 1e-2,
+      "ymax": 0.01,
       "connected": true
     }
   ],
   "plot": {
     "length": 86400,
-    "reload": 5
+    "reload": 5,
+    "axes": {
+      "title": "Chamber Pressure",
+      "ytitle": "Pressure (Torr)",
+      "ymin": 1e-11,
+      "ymax": 0.01,
+      "ylog": true
+    }
   }
 }

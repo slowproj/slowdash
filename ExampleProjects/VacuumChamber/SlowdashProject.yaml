@@ -3,7 +3,7 @@ slowdash_project:
   title: Webcam OCR Vacuum Test Chamber Pressure Monitoring
 
   data_source:
-    url: ${DB_URL:-sqlite:///VacuumChamber}
+    url: ${DB_URL:-sqlite:///WebcamOCR.db}
     time_series:
       schema: data[channel]@timestamp(unix)=value
     object_time_series:
