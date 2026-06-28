@@ -662,12 +662,12 @@ Task の生存信号．Body に記録されるのは expire (= time-of-heartbeat
   - Tasklet のメインループから送出（コルーチンやスレッドではない；必ずメインと一緒に停止する）
 
 ##### 第２用途
+- TODO: サーバーは知らないタスクから Heartbeat を受け取った場合，PubSub に `sd.task.control.introduce` を publish する
+
+##### 第３用途
 - サーバークラッシュなどによる PubSub の接続断後の再接続は publish にトリガされるので，heartbeat 送り出しが接続断後の reconnect retry になる
 - Reconnect により，`sd.task.spec` 再送などもトリガされる
 - サーバー復帰後のシステム再開は，heartbeat interval 程度遅れることになる
-
-##### 第３用途
-- TODO: サーバーは知らないタスクから Heartbeat を受け取った場合，PubSub に `sd.task.control.introduce` を publish する
 
 
 ##### JSON Schema
@@ -675,10 +675,11 @@ Headers:
 ```json
 {
     "type": "object",
-    "required": [ "mesh_id", "name" ],
+    "required": [ "mesh_id", "name", "timestamp" ],
     "properties": {
         "mesh_id": { "type": "string" },
-        "name": { "type": "string" }
+        "name": { "type": "string" },
+        "timestamp": { "type": "int" }
     }
 }
 ```
@@ -723,8 +724,16 @@ Body:
         "name": { "type": "string" },
         "functions": {
             "type": "obect",
-            "properties": {},
-            "$comment": " 将来的には引数情報を追加"
+            "properties": {
+                "kwargs": {
+                    "type": "object",
+                    "properties": {
+                        "type": { "type": "string", "enum": [ "int", "float", "str", "bool" ] },
+                        "default": { }
+                    }
+                },
+                "arbitrary_keywords": { "type": "bool" }
+            },
         },
         "variables": {
             "type": "object",
@@ -740,7 +749,15 @@ Body:
 ```json
 {
     "name": "mytask",
-    "functions": { "start": {}, "stop": {} },
+    "functions": {
+        "start": {
+            "kwargs": { "run_number": { "type": "int", "default": -1 } },
+            "arbitrary_keywords": false
+        },
+        "stop": {
+            "arbitrary_keywords": false
+        }
+    },
     "variables": { "status": { "type": "node" } }
 }
 ```

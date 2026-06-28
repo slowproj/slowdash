@@ -259,12 +259,41 @@ class Tasklet:
 
         
     async def _publish_spec(self):
+        functions = {}
+        for func_name, func in self.mesh.export_functions().items():
+            signature = inspect.signature(func)
+            kwargs, arbitrary_keywords, has_non_pod = {}, False, False
+            for arg_name, attr in signature.parameters.items():
+                if attr.kind == inspect.Parameter.VAR_KEYWORD:
+                    arbitrary_keywords = True
+                    continue
+                
+                kwargs[arg_name] = {}
+                arg_type = None
+                if attr.annotation is not inspect.Parameter.empty:
+                    arg_type = attr.annotation
+                elif attr.default is not inspect.Parameter.empty and attr.default is not None:
+                    arg_type = type(attr.default)
+                if arg_type in (int, float, str, bool):
+                    kwargs[arg_name]['type'] = arg_type.__name__
+                    if attr.default is not inspect.Parameter.empty:
+                        kwargs[arg_name]['default'] = attr.default
+                else:
+                    has_non_pod = True
+
+            if not has_non_pod:
+                functions[func_name] = {
+                    'kwargs': kwargs,
+                    'arbitrary_keywords': arbitrary_keywords
+                }
+
         spec_doc = {
             'mesh_id': self.mesh.mesh_id,
             'name': self.name,
-            'functions': { name: {} for name,func in self.mesh.export_functions().items() },
+            'functions': functions,
             'variables': { name: { 'type': 'node' } for name,variable in self.mesh.export_variables().items() },
         }
+        
         await self.mesh.aio_publish(f'sd.task.spec.{self.name}', spec_doc)
         
         
@@ -275,6 +304,7 @@ class Tasklet:
             headers = {
                 'mesh_id': self.mesh.mesh_id,
                 'name': self.name,
+                'timestamp': now
             }
             body = {
                 'expire': int(self._next_heartbeat_time) + 1

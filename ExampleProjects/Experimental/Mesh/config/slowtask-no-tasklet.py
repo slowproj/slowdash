@@ -23,7 +23,7 @@ def _loop():
     time.sleep(1)
 
 
-def set_value(value:float):
+def set_value(value:float=0):
     print(f'set: {value}')
     device.ch(0).set(value)
 
