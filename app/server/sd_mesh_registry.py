@@ -262,7 +262,15 @@ class MeshRegistryComponent(Component):
 
     @slowlette.get('/api/registry/value')
     async def api_get_value(self, key:str, with_meta:bool=False):
-        return self.registry.get(key, with_meta=with_meta)
+        value = self.registry.get(key, with_meta=with_meta)
+        if value is not None:
+            return value
+        elif with_meta:
+            return {}
+        elif len(key) > 0 and not (key[-1].isalnum() or key[-1] == '_'):
+            return {}
+        else:
+            return None
 
 
     @slowlette.get('/api/data/{*}')
@@ -270,24 +278,30 @@ class MeshRegistryComponent(Component):
         path_channels = request.path_str[len('/api/data/'):]   # channel name might contain "/"
         channels = path_channels.split(',') if path_channels else []
 
+        result = {}
         now = time.time()
         start = (to if to > 0 else to + now) - length
         
-        result = {}
         for ch in channels:
             if not ch.startswith(self._registry_data_prefix):
                 continue
             key = ch[len(self._registry_data_prefix):]
+            
             value = self.registry.get(key)
+            if value is None:
+                continue
+            
             if isinstance(value, dict):
-                result[ch] = { 'start': start, 't': now - start, 'x':{ 'tree': value } }
+                x = { 'tree': value }
             elif isinstance(value, (int, float, str)):
-                result[ch] = { 'start': start, 't': now - start, 'x': value }
+                x = value
             else:
                 try:
-                    result[ch] = { 'start': start, 't': now - start, 'x': str(value) }
+                    x = str(value)
                 except:
-                    result[ch] = { 'start': start, 't': now - start, 'x': value }
+                    x = value
+                    
+            result[ch] = { 'start': start, 't': now - start, 'x': x }
             
         return result
             

@@ -527,7 +527,7 @@ class Tasklet:
                 main_tasks.add(task)
             while not ctrl.is_stop_requested():
                 await self._heartbeat()   # doing this in the main loop (not coro) to ensure it stops with the main
-                await ctrl.aio_sleep(1)
+                await ctrl.aio_sleep(0.1)
         except Exception as e:
             raise e    
         

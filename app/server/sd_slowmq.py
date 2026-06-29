@@ -136,7 +136,7 @@ class SlowMQComponent(Component):
             self._subscribers[topic] = set()
             
         self._subscribers[topic].add(client_id)
-        logging.info(f'SlowMQ Subscription: {topic} <- {self._clients[client_id]["name"]}')
+        logging.info(f'SlowMQ Subscription: {topic} <- {self._clients.get(client_id, {}).get('name')}')
 
         websocket = self._websockets.get(client_id)
         reply_to = headers.get('message_id')
@@ -162,7 +162,7 @@ class SlowMQComponent(Component):
             return False
 
         self._subscribers[topic].discard(client_id)
-        logging.info(f'SlowMQ Cancel Subscription: {topic} <- {self._clients[client_id]["name"]}')
+        logging.info(f'SlowMQ Cancel Subscription: {topic} <- {self._clients.get(client_id, {}).get('name')}')
 
         if len(self._subscribers[topic]) == 0:
             self._subscribers.pop(topic, None)

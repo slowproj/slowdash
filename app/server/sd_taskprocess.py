@@ -1,6 +1,7 @@
-# Created by Sanshiro Enomoto on 3 July 2026 #
+# Created by Sanshiro Enomoto on 3 June 2026 #
 
 import sys, os, time, re, json, asyncio, copy, logging
+from typing import Any
 
 import slowlette
 from sd_component import Component
@@ -94,34 +95,112 @@ class MeshRequest:
             self.error = f'{name}: bad argument list: {args}'
             return
         
-        if topic_name is not None:
-            self.topic_name = topic_name
-        else:
-            self.module_name = module_name
-            self.function_name = function_name
-            
         params.update(arg_params)
         for key, value in params.items():
+            if not key.replace('_', 'a').isalnum():
+                self.error = f'{name}: bad parameter name: {key}'
+                self.params = {}
+                return
             try:
                 self.params[key] = json.loads(value)
             except Exception:
                 self.params[key] = value
 
+        if topic_name is not None:
+            self.topic_name = topic_name
+        else:
+            self.module_name = module_name
+            self.function_name = function_name
                 
 
-class Task:
+class TaskFunctionProxy:
+    class Argument:
+        def __init__(self, arg_name:str, arg_spec:dict):
+            self.name = arg_name
+            
+            value_type = arg_spec.get('type')
+            if value_type == 'int':
+                self.Type = int
+            elif value_type == 'float':
+                self.Type = float
+            elif value_type == 'str':
+                self.Type = str
+            elif value_type == 'bool':
+                self.Type = bool
+            else:
+                self.Type = None
+
+            self.has_default = ('default' in arg_spec)
+            self.default_value = arg_spec.get('defalut')
+
+            
+        def apply(self, params:dict[str,Any]):
+            if self.name not in params:
+                if self.has_default:
+                    return self.default_value
+                else:
+                    raise Exception(f'keyword argument required: {self.name}')
+
+            value = params.get(self.name)
+            if self.Type is None:
+                return value
+            
+            try:
+                return self.Type(value)
+            except:
+                raise Exception(f'"{self.name}": expected a {self.Type.__name__}, received: {value}')
+                
+
+    def __init__(self, name:str, func_spec:dict):
+        self.name = name
+        self.has_arbitrary_keywords = func_spec.get('arbitrary_keywords', False)
+        self.kwargs = {
+            arg_name: self.Argument(arg_name, arg_spec)
+            for arg_name, arg_spec in func_spec.get('kwargs', {}).items()
+        }
+
+
+    def match_kwargs(self, params:dict[str,Any]):
+        kwargs = {}
+        for arg_name, arg in self.kwargs.items():
+            kwargs[arg_name] = arg.apply(params)
+            
+        if self.has_arbitrary_keywords:
+            for param_name, param_value in params.items():
+                if param_name not in args:
+                    kwargs[param_name] = param_value
+
+        return kwargs
+            
+
+
+class TaskVariableProxy:
+    def __init__(self, name:str, var_spec:dict):
+        pass
+
+
+    
+class TaskProxy:
     def __init__(self, taskspec:dict):
         self._spec = copy.deepcopy(taskspec)
         
         self._mesh_id = self._spec['mesh_id']
         self._name = self._spec.get('name', self._mesh_id)
-        self._functions = set([ name for name, func in self._spec.get('functions', {}).items() ])
-        self._variables = set([ name for name, var in self._spec.get('variables', {}).items() ])
+        self._functions = {
+            func_name: TaskFunctionProxy(func_name, func_spec)
+            for func_name, func_spec in self._spec.get('functions', {}).items()
+        }
+        self._variables = {
+            var_name: TaskVariableProxy(var_name, var_spec)
+            for var_name, var_spec in self._spec.get('variables', {}).items()
+        }
 
+        
     @property
     def name(self):
         return self._name
 
+    
     @property
     def spec(self):
         return self._spec
@@ -130,27 +209,30 @@ class Task:
     async def process_command(self, request:MeshRequest, mesh:Mesh):
         if request.module_name != self._name:
             return None
-        if request.function_name not in self._functions:
+        
+        function = self._functions.get(request.function_name, None)
+        if function is None:
+            logging.warning(f'Task Command: no such function: {request}')
             return {'status': 'error', 'message': f'no such function: {request}' }
-                
-        # TODO: match the arguments
-
-        for key, value in request.params.items():
-            if not key.replace('_', 'a').isalnum():
-                return {'status': 'error', 'message': f'bad argument name: {request}' }
-
+        try:
+            kwargs = function.match_kwargs(request.params)
+        except Exception as e:
+            logging.warning(f'Task Command: function parameter mismatch: {request}: {e}')
+            return {'status': 'error', 'message': f'function parameter mismatch: {e}' }
+            
         logging.info(f'Dispatch Task RPC: {request} --> {self._mesh_id}')
         try:
             reply = await mesh.aio_call_many(
                 f'{request.module_name}.{request.function_name}',
-                args=[], kwargs=request.params,
+                args=[], kwargs=kwargs,
                 expected_replies=1, timeout=5, raise_on_timeout=True
             )
         except Exception as e:
-            logging.error(f'RPC ERROR: {e}')
+            logging.warning(f'Task Command: RPC error: {request}: {e}')
             return {'status': 'error', 'message': f'RPC error: {e}' }
 
         if len(reply) < 1:
+            logging.warning(f'Task Command: RPC error: {request}: no reply')
             return {'status': 'error', 'message': f'RPC error: no reply' }
 
         return reply[0]
@@ -185,8 +267,8 @@ class TaskProcessComponent(Component):
         async def process_task_spec(headers, data):
             mesh_id = data.get('mesh_id')
             if mesh_id is not None and len(mesh_id) > 0:
-                self._task_table[mesh_id] = Task(data)
-            logging.info(f'Task spec received: {data}')
+                self._task_table[mesh_id] = TaskProxy(data)
+                logging.info(f'Task spec received: {data}')
             
         await self._mesh.aio_subscribe('sd.task.spec.>', process_task_spec)
         
@@ -194,8 +276,8 @@ class TaskProcessComponent(Component):
             mesh_id = data.get('mesh_id')
             if mesh_id is not None and len(mesh_id) > 0:
                 if mesh_id in self._task_table:
-                    del self._task_table[mesh_id]
-            logging.info(f'Task removed: {mesh_id}')
+                    self._task_table.pop(mesh_id, None)
+                    logging.info(f'Task removed: {mesh_id}')
             
         await self._mesh.aio_subscribe('sd.task.exit.>', process_task_exit)
         
@@ -215,15 +297,12 @@ class TaskProcessComponent(Component):
     @slowlette.post('/api/control')
     async def execute_command(self, doc:slowlette.DictJSON):
         logging.info(f'Task Command: {doc}')
-        if not self._task_table:
-            return None
-
         # unlike GET, only one module can process a POST request
 
         request = MeshRequest(dict(doc))
         if request.error is not None:
             return {'status': 'error', 'message': request.error }
-        
+
         if request.topic_name is not None:
             try:
                 await self._mesh.aio_publish(request.topic_name, request.params)

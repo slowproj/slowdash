@@ -18,7 +18,6 @@ def _loop():
     if device.is_running:
         data = device.ch(1).get()
         store({'V1': data})
-        print(data)
 
     time.sleep(1)
 

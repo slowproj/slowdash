@@ -147,7 +147,7 @@ class TablePanel extends Panel {
                 }
                 else {
                     this.table.empty();
-                    this.table.html('<tr><td>No Table Data</td></tr>');
+                    this.table.html('<tr><td style="color:gray">No Table Data</td></tr>');
                 }
             }
             return;
@@ -185,7 +185,7 @@ class TablePanel extends Panel {
             }
         }
         if (! data.table) {
-            this.table.html('<tr><td>No Table Content</td></tr>');		
+            this.table.html('<tr><td style="color:gray">No Table Content</td></tr>');
             return false;
         }
         const table = data;
@@ -378,7 +378,7 @@ class TreePanel extends Panel {
                 }
                 else {
                     this.contentDiv.empty();
-                    this.contentDiv.html('No Tree Data');
+                    this.contentDiv.html('<span style="color:gray">No Tree Data</span>');
                 }
             }
             return;
@@ -390,12 +390,13 @@ class TreePanel extends Panel {
         this.contentDiv.empty();
         if (Array.isArray(data)) {
             if (data.length < 1) {
-                this.contentDiv.html('Empty Tree Data');
+                this.contentDiv.html('<span style="color:gray">Empty Tree Data</span>');
                 return;
             }
             data = data[data.length-1];
         }
         if (typeof(data) == "string") {
+            console.log(data);
             try {
                 data = JSON.parse(data);
             }
@@ -406,7 +407,7 @@ class TreePanel extends Panel {
         }
 
         if (! data.tree) {
-            this.contentDiv.html('No Tree Content');
+            this.contentDiv.html('<span style="color:gray">No Tree Content</span>');
             return;
         }
         const tree = data.tree;
@@ -425,10 +426,21 @@ class TreePanel extends Panel {
         const max_depth = depth_list.reduce((a,b)=>Math.max(a,b), 0);
         const min_depth = depth_list.reduce((a,b)=>Math.min(a,b), max_depth);
         
-        if (max_depth == 1) {
-            // simple list of key-value pairs
+        if (max_depth <= 2) {
+            // simple list of key-value pairs, or multiple lists of key-value pairs
             this.treeWidgetDiv.css('display', 'none');
             this.contentDiv.css('display', 'block');
+        }
+        else {
+            // general tree => collapsible tree
+            this.contentDiv.css('display', 'none');
+            this.treeWidgetDiv.css('display', 'block');
+        }
+        
+        if (max_depth == 0) {
+            $('<span>').text('---').appendTo(this.contentDiv);
+        }
+        else if (max_depth == 1) {
             let table = $('<table>').addClass('sd-data-table').appendTo(this.contentDiv);
             let tr = $('<tr>').appendTo(table);
             for (let [key, value] of Object.entries(tree)) {
@@ -438,9 +450,6 @@ class TreePanel extends Panel {
             }
         }
         else if ((min_depth == 2) && (max_depth == 2)) {
-            // multiple lists of key-value pairs => sections
-            this.treeWidgetDiv.css('display', 'none');
-            this.contentDiv.css('display', 'block');
             let table = $('<table>').addClass('sd-data-table').appendTo(this.contentDiv);
             let tr = $('<tr>').appendTo(table);
             for (let [section, subtree] of Object.entries(tree)) {
@@ -454,9 +463,6 @@ class TreePanel extends Panel {
             }
         }
         else {
-            // general tree => collapsible tree
-            this.contentDiv.css('display', 'none');
-            this.treeWidgetDiv.css('display', 'block');
             this.treeWidget.setData(tree);
         }
     }
@@ -563,7 +569,7 @@ class BlobPanel extends Panel {
                 }
                 else {
                     this.table.empty();
-                    this.contentDiv.text('No Blob Data');
+                    this.contentDiv.html('<span style="color:gray">No Blob Data</span>');
                 }
             }
             return;
