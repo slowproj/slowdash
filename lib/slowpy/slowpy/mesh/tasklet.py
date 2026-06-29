@@ -1,16 +1,301 @@
 # Created by Sanshiro Enomoto on 13 August 2025 #
 
-import sys, time, copy, asyncio, inspect, traceback, logging
+import sys, time, copy, queue, asyncio, threading, inspect, builtins, traceback, logging
 from datetime import datetime, timezone
 from slowpy.control import control_system as ctrl
 from .dash import Dash
 from .mesh import Mesh
 
 
+
+class _TaskletStdout:
+    """Instance of this class will replace sys.stdout or sys.stderr
+    - print() is overriden in TaskletStdioBridge separately, so that the content is not divided into multiple packets
+    """
+    
+    def __init__(self, bridge, stream_name, original):
+        self._bridge = bridge
+        self._stream_name = stream_name
+        self._original = original
+        self.encoding = getattr(original, 'encoding', None)
+        self.errors = getattr(original, 'errors', None)
+
+
+    def write(self, text):
+        if not isinstance(text, str):
+            text = str(text)
+            
+        try:
+            self._original.write(text)
+        except Exception:
+            pass
+        self._bridge.put_output(self._stream_name, text)
+        
+        return len(text)
+
+    
+    def flush(self):
+        try:
+            self._original.flush()
+        except Exception:
+            pass
+
+        
+    def isatty(self):
+        try:
+            return self._original.isatty()
+        except Exception:
+            return False
+
+    
+    def __getattr__(self, name):
+        return getattr(self._original, name)
+
+
+
+class _TaskletStdioBridge:
+    def __init__(self, tasklet, *, max_input_queue=1000, max_output_queue=1000):
+        self._tasklet = tasklet
+        self._max_input_queue = max_input_queue
+        self._max_output_queue = max_output_queue
+        
+        self._separate_stderr = False
+        self._accept_by_taskname = False
+
+        self._input_queue = queue.Queue(maxsize=max_input_queue)
+        self._output_queue = queue.Queue(maxsize=max_output_queue)
+        self._stop_event = threading.Event()
+        self._stdin_thread = None
+        self._publisher_task = None
+
+        self._orig_stdout = None
+        self._orig_stderr = None
+        self._orig_print = None
+        self._orig_input = None
+        self._installed = False
+        
+
+    @property
+    def stdin_topics(self):
+        topics = []
+        
+        mesh_id = self._tasklet.mesh.mesh_id
+        if mesh_id:
+            topics.append(f'sd.task.stdin.{mesh_id}')
+            
+        if self._accept_by_taskname and self._tasklet.name:
+            topics.append(f'sd.task.stdin.{self._tasklet.name}')
+            
+        return topics
+
+
+    @property
+    def stdout_topics(self):
+        mesh_id = self._tasklet.mesh.mesh_id
+        if mesh_id:
+            return [ f'sd.task.stdout.{mesh_id}' ]
+        else:
+            return []
+
+
+    @property
+    def stderr_topics(self):
+        if not self._separate_stderr:
+            return self.stdout_topics
+        
+        mesh_id = self._tasklet.mesh.mesh_id
+        if mesh_id:
+            return [ f'sd.task.stderr.{mesh_id}' ]
+        else:
+            return []
+
+
+    def install(self):
+        if self._installed:
+            return
+
+        self._orig_stdout = sys.stdout
+        self._orig_stderr = sys.stderr
+        self._orig_print = builtins.print
+        self._orig_input = builtins.input
+
+        sys.stdout = _TaskletStdout(self, 'stdout', self._orig_stdout)
+        sys.stderr = _TaskletStdout(self, 'stderr', self._orig_stderr)
+        builtins.print = self.print
+        builtins.input = self.input
+        
+        self._installed = True
+        self._start_stdin_thread()
+
+
+    def restore(self):
+        self._stop_event.set()
+        
+        if self._installed:
+            sys.stdout = self._orig_stdout
+            sys.stderr = self._orig_stderr
+            builtins.print = self._orig_print
+            builtins.input = self._orig_input
+            
+        self._installed = False
+
+
+    async def aio_start(self):
+        for topic in self.stdin_topics:
+            await self._tasklet.mesh.aio_subscribe(topic, self._handle_stdin_message)
+        self.publisher_task = asyncio.create_task(self._publish_output())
+
+
+    async def aio_stop(self):
+        if self._publisher_task is not None:
+            self._publisher_task.cancel()
+            try:
+                await self._publisher_task
+            except Exception:
+                pass
+            except:
+                pass
+
+            self._publisher_task = None
+
+
+    def put_output(self, stream, text):
+        if len(text) == 0:
+            return
+
+        record = {
+            'stream': stream,
+            'kind': 'text',
+            'text': text,
+            'timestamp': time.time(),
+            'task': self._tasklet.name,
+            'mesh_id': self._tasklet.mesh.mesh_id
+        }
+        try:
+            self._output_queue.put_nowait(record)
+        except queue.Full:
+            logging.warning(f'Tasklet stdout/stderr queue full; dropping output')
+
+
+    def print(self, *values, sep=' ', end='\n', file=None, flush=False):
+        if file is None:
+            stream_name = 'stdout'
+            original = self._orig_stdout
+        elif file is sys.stdout:
+            stream_name = 'stdout'
+            original = self._orig_stdout
+        elif file is sys.stderr:
+            stream_name = 'stderr'
+            original = self._orig_stderr
+        else:
+            return self._orig_print(
+                *values, sep=sep, end=end, file=file, flush=flush
+            )
+
+        text = sep.join(str(value) for value in values) + end
+
+        try:
+            original.write(text)
+            if flush:
+                original.flush()
+        except Exception:
+            pass
+
+        self.put_output(stream_name, text)
+
+        
+    def input(self, prompt=''):
+        if prompt:
+            sys.stdout.write(str(prompt))
+            sys.stdout.flush()
+            
+        while not ctrl.is_stop_requested() and not self._stop_event.is_set():
+            try:
+                item = self._input_queue.get(timeout=0.1)
+                return item.get('line', '')
+            except queue.Empty:
+                pass
+
+        logging.debug(f'Tasklet Console: input cancelled')
+        return None
+    
+
+    def _start_stdin_thread(self):
+        stdin = sys.__stdin__
+        if stdin is None or getattr(stdin, 'clsoed', False):
+            return
+
+        def read_stdin():
+            while not ctrl.is_stop_requested() and not self._stop_event.is_set():
+                try:
+                    line = stdin.readline()
+                except Exception:
+                    break
+                if line == '':
+                    break
+                
+                self._put_input(line, source='local')
+
+        self._stdin_thread = threading.Thread(target=read_stdin, daemon=True)
+        self._stdin_thread.start()
+
+
+    def _put_input(self, line, *, source, headers=None):
+        if isinstance(line, bytes):
+            line = line.decode(errors='replace')
+        elif not isinstance(line, str):
+            line = str(line)
+        line = line.removesuffix('\n').removesuffix('\r')
+
+        item = {
+            'source': source,
+            'line': line,
+            'timestamp': time.time(),
+            'headers': headers
+        }
+
+        try:
+            self._input_queue.put_nowait(item)
+        except queue.Full:
+            logging.warining('Tasklet stdin queue is fill; dropping input')
+
+
+    def _handle_stdin_message(self, handers, data):
+        line = data
+        if isinstance(data, dict):
+            line = data.get('line', data.get('text', ''))
+            
+        self._put_input(line, source='mesh', headers=headers)
+
+
+    async def _publish_output(self):
+        while not ctrl.is_stop_requested() and not self._stop_event.is_set():
+            try:
+                record = self._output_queue.get_nowait()
+            except queue.Empty:
+                await asyncio.sleep(0.05)
+                continue
+            
+            topics = self.stderr_topics if record.get('stream') == 'stderr' else self.stdout_topics
+            headers = {
+                'sender': self._tasklet.name,
+                'sender_id': self._tasklet.mesh.mesh_id,
+                'stream': record.get('stream')
+            }
+            
+            for topic in topics:
+                try:
+                    await self._tasklet.mesh.aio_publish(topic, record, headers=headers)
+                except Exception as e:
+                    logging.warning(f'Tasklet stdio publish failed: {e}')
+
+            
+
 class Tasklet:
-    def __init__(self, name:str|None=None, *, use_oldstyle_callbacks=False):
+    def __init__(self, name:str|None=None, *, use_oldstyle_callbacks=False, mesh_stdio=True):
         self._name = name
         self._use_oldstyle_callbacks = use_oldstyle_callbacks
+        self._mesh_stdio_enabled = mesh_stdio
         
         self._params = {}
         
@@ -28,6 +313,8 @@ class Tasklet:
         self._heartbeat_interval = 10
         self._next_heartbeat_time = 0
 
+        self._stio_bridge = None
+        
         
     @property
     def name(self):
@@ -197,11 +484,21 @@ class Tasklet:
             self._mesh.connect(self._mesh_url, name=self._name)
             if self._name is None:
                 self._name = self._mesh.name
+
+        if self._mesh_stdio_enabled and self._mesh_url is not None:
+            self._stdio_bridge = _TaskletStdioBridge(self)
+            self._stdio_bridge.install()
+            await self._stdio_bridge.aio_start()
         
+        for mesh in self._mesh_list:
+            await mesh.aio_start()   
+
         try:
             await asyncio.gather(*self._initialize_task_coros)
         except Exception as e:
             try:
+                if self._stdio_bridge is not None:
+                    self._stdio_bridge.restore()
                 for mesh in self._mesh_list:
                     await mesh.aio_close()   
                 await self._dash.aio_close()
@@ -209,16 +506,12 @@ class Tasklet:
                 pass
             raise e
 
-        # mesh.aio_publish() is possible even before aio_start()            
-        for mesh in self._mesh_list:
-            await mesh.aio_start()   
-
         async def handle_control(headers, data):
             if headers.get('topic', '') == 'sd.task.control.introduce':
                 await self._publish_spec()
         await self.mesh.aio_subscribe('sd.task.control.>', handle_control)
         await self._publish_spec()
-        
+
         main_tasks = set()
         try:
             for coro in self._main_task_coros:
@@ -229,7 +522,7 @@ class Tasklet:
                 await self._heartbeat()   # doing this in the main loop (not coro) to ensure it stops with the main
                 await ctrl.aio_sleep(1)
         except Exception as e:
-            raise e
+            raise e    
         
         finally:
             while main_tasks:
@@ -249,9 +542,11 @@ class Tasklet:
             except:
                 pass
 
+            if self._stdio_bridge is not None:
+                self._stdio_bridge.restore()
             for mesh in self._mesh_list:
                 await mesh.aio_close()
-            await self._dash.aio_close()   
+            await self._dash.aio_close()
 
 
     async def on_reconnect(self):
@@ -292,6 +587,11 @@ class Tasklet:
             'name': self.name,
             'functions': functions,
             'variables': { name: { 'type': 'node' } for name,variable in self.mesh.export_variables().items() },
+            'stdio': {
+                'stdin': self._stdio_bridge.stdin_topics if self._stdio_bridge is not None else [],
+                'stdout': self._stdio_bridge.stdout_topics if self._stdio_bridge is not None else [],
+                'stderr': self._stdio_bridge.stderr_topics if self._stdio_bridge is not None else []
+            }
         }
         
         await self.mesh.aio_publish(f'sd.task.spec.{self.name}', spec_doc)
