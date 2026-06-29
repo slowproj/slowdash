@@ -16,7 +16,9 @@ class SlowMQComponent(Component):
         self._websockets = {}     # client_id:int -> websocket
         self._clients = {}        # client_id:int -> { 'name': NAME }
         self._subscribers = {}    # topic_pattern:str -> set[client_id:int]
+        self._send_failures = {}  # client_id:int -> consective failure count
 
+        self._max_send_failures = 5
         
 
     def public_config(self):
@@ -65,9 +67,11 @@ class SlowMQComponent(Component):
         
         if name is None:
             name = f'AnonymousClient{client_id:02d}'
+            
         self._clients[client_id] = { 'name': name }
-
         self._websockets[client_id] = websocket
+        self._send_failures[client_id] = 0
+        
         logging.info(f'SlowMQ WebSocket Connected: {name} (id:{client_id})')
 
         return client_id
@@ -75,6 +79,8 @@ class SlowMQComponent(Component):
         
     async def remove_client(self, client_id:int):
         self._websockets.pop(client_id, None)
+        self._send_failures.pop(client_id, None)
+        
         for topic in list(self._subscribers):
             await self.unsubscribe(client_id, topic)
         self._clients.pop(client_id, None)
@@ -168,12 +174,32 @@ class SlowMQComponent(Component):
                 for client_id in subscribers:
                     websocket = self._websockets.get(client_id)
                     if websocket is not None:
-                        receivers.append(websocket)
+                        receivers.append((client_id, websocket))
 
-        try:
-            await asyncio.gather(*(ws.send(message) for ws in receivers), return_exceptions=True)
-        except Exception as e:
-            logging.warning(f'SlowMQ Publish (topic:{topic}): {e}')
+        results = await asyncio.gather(*(ws.send(message) for _, ws in receivers), return_exceptions=True)
+        
+        stale_clients = []
+        for (client_id, _), result in zip(receivers, results):
+            if not isinstance(result, Exception):
+                self._send_failures[client_id] = 0
+            else:
+                count = self._send_failures.get(client_id, 0) + 1
+                self._send_failures[client_id] = count
+                client_name = self._clients.get(cilent_id, {}).get('name')
+                logging.warning(f'SlowMQ Publish (topic:{topic}, client:{client_name}, n:{count}): {result}')
+                if count > self._max_send_failures:
+                    stale_clients.append(client_id)
+
+        for client_id in stale_clients:            
+            websocket = self._websockets.get(client_id)
+            if websocket is not None:
+                try:
+                    await websocket.close()
+                except Exception:
+                    pass                
+            client_name = self._clients.get(cilent_id, {}).get('name')
+            await self.remove_client(client_id)
+            logging.warning(f'SlowMQ: Client removed due to too many send failures: {client_name}')
                     
         
     def validate_topic_pattern(self, pattern:str):
