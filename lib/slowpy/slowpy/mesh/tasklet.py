@@ -164,12 +164,12 @@ class _TaskletStdioBridge:
             return
 
         record = {
+            'task': self._tasklet.name,
+            'mesh_id': self._tasklet.mesh.mesh_id,
+            'timestamp': time.time(),
             'stream': stream,
             'kind': 'text',
             'text': text,
-            'timestamp': time.time(),
-            'task': self._tasklet.name,
-            'mesh_id': self._tasklet.mesh.mesh_id
         }
         try:
             self._output_queue.put_nowait(record)
@@ -278,8 +278,8 @@ class _TaskletStdioBridge:
             
             topics = self.stderr_topics if record.get('stream') == 'stderr' else self.stdout_topics
             headers = {
-                'sender': self._tasklet.name,
-                'sender_id': self._tasklet.mesh.mesh_id,
+                'name': self._tasklet.name,
+                'mesh_id': self._tasklet.mesh.mesh_id,
                 'stream': record.get('stream')
             }
             
@@ -499,7 +499,7 @@ class Tasklet:
             if self._stdio_bridge is not None:
                 try:
                     self._stdio_bridge.restore()
-                    await self._stdio_bridge.aio_close()
+                    await self._stdio_bridge.aio_stop()
                 except Exception:
                     pass
             for mesh in self._mesh_list:
@@ -560,7 +560,7 @@ class Tasklet:
             if self._stdio_bridge is not None:
                 try:
                     self._stdio_bridge.restore()
-                    await self._stdio_bridge.aio_close()
+                    await self._stdio_bridge.aio_stop()
                 except Exception:
                     pass
             for mesh in self._mesh_list:
@@ -610,6 +610,7 @@ class Tasklet:
         spec_doc = {
             'mesh_id': self.mesh.mesh_id,
             'name': self.name,
+            'timestamp': time.time(),
             'functions': functions,
             'variables': { name: { 'type': 'node' } for name,variable in self.mesh.export_variables().items() },
             'stdio': {
@@ -619,7 +620,7 @@ class Tasklet:
             }
         }
         
-        await self.mesh.aio_publish(f'sd.task.spec.{self.name}', spec_doc)
+        await self.mesh.aio_publish(f'sd.task.spec.{self.name}.{self.mesh.mesh_id}', spec_doc)
         
         
     async def _publish_exit(self):
@@ -628,7 +629,7 @@ class Tasklet:
             'name': self.name,
             'timestamp': time.time()
         }
-        await self.mesh.aio_publish(f'sd.task.exit.{self.mesh.mesh_id}', doc)
+        await self.mesh.aio_publish(f'sd.task.exit.{self.name}.{self.mesh.mesh_id}', doc)
 
         
     async def _heartbeat(self):
@@ -643,7 +644,7 @@ class Tasklet:
             body = {
                 'expire': int(self._next_heartbeat_time) + 1
             }
-            await self.mesh.aio_publish(f'sd.task.heartbeat.{self.name}', body, headers=headers)
+            await self.mesh.aio_publish(f'sd.task.heartbeat.{self.name}.{self.mesh.mesh_id}', body, headers=headers)
 
     
     def _add_initialize_callback(self, func):

@@ -431,11 +431,19 @@ SlowTask は，内部に接続済 SlowMesh を保持していて，これを介�
 必要に応じて，処理状況を逐次 publish するか，Registry に状態を記録するなどずれば，呼び出し側が状況を把握できます．
 高信頼が必要な場合の高度な方法として，`sd.rpc.>` を subscribe して，システムが期待する状態に遷移するかを監視する SlowTask を走らせるという手もあります．
 
+### 標準入出力の SlowMesh PubSub へのリダイレクト
+Tasklet のコンストラクタの `mesh_stdio` パラメータに `True` を渡す（デフォルト）と，ユーザースクリプト中の `print()` や `input()` などの標準入出力が PubSub にリダイレクトされます．TODO: これは，SlowDash サーバーを介して，Web Console へ接続されます．
+
+- `print()` および `stdout`/`stderr` への `write()`: コンソール出力および `sd.task.stdout.{メッシュID}` へ publish
+- `input()`: コンソール入力または `sd.task.stdin.{メッシュID}` へのメッセージから読み込み
+
+
 ### SlowDash Mesh サービスへのインターフェース
 その他，SlowMesh の接続に必要な内部処理も行っています．
 
 - Heartbeat の送り出し
 - 仕様問い合わせ (`sd.task.introduce`) への応答
+- 終了時の `sd.task.exit` への通知
 
 
 ## SlowTask の実行
@@ -651,7 +659,7 @@ Registry に保持されているキーの値をデータとして返す（デ�
 ## sd.task
 - すべての SlowTask Process は `sd.task.control.>` を subscribe すること．
 
-### sd.task.heartbeat.{task_name}
+### sd.task.heartbeat.{task_name}.{mesh_id}
 Task の生存信号．Body に記録されるのは expire (= time-of-heartbeat + heartbeat-interval)．Expire が現在時刻よりも古ければ，Heartbeat が出ていないとみなす．
 
 ##### 主な用途
@@ -710,7 +718,31 @@ Body:
 }
 ```
 
-### sd.task.spec.{task_name}
+### sd.task.exit.{task_name}.{mesh_id}
+タスクの終了を通知
+
+##### 主な用途
+- Sender: task process
+- Receiver(s): sd_taskprocess (SlowDash サーバー)，モニタサービス
+- Timing: 
+  - Task 終了時
+
+##### JSON Schema
+Body:
+```json
+{
+    "type": "object",
+    "required": [ "mesh_id", "name" ],
+    "properties": {
+        "mesh_id": { "type": "string" },
+        "name": { "type": "string" },
+        "timestamp": { "type": "int" }
+    }
+}
+```
+
+
+### sd.task.spec.{task_name}.{mesh_id}
 タスクが外部公開している関数と変数の一覧
 
 ##### 主な用途
@@ -725,10 +757,11 @@ Body:
 ```json
 {
     "type": "object",
-    "required": [ "mesh_id", "name", "functions", "variables"],
+    "required": [ "mesh_id", "name", "timestamp", "functions", "variables" ],
     "properties": {
         "mesh_id": { "type": "string" },
         "name": { "type": "string" },
+        "timestamp": { "type": "int" },
         "functions": {
             "type": "obect",
             "properties": {
@@ -746,6 +779,14 @@ Body:
             "type": "object",
             "properties": { "type": { "type": "string", "enum": [ "node" ] } }
             "$comment": " 将来的には dataclass type などを追加するかも．readonly とかも．"
+        },
+        "stdio": {
+            "type": "object",
+            "properties": {
+                "stdout": { "type": "string", "$comment": "stdout が publish されるトピック名" }, 
+                "stderr": { "type": "string", "$comment": "stderr が publish されるトピック名" }, 
+                "stdin": { "type": "string", "$comment": "subscribe の受信が stdin へ送られるトピック名" }, 
+            }
         }
     }
 }
@@ -770,7 +811,7 @@ Body:
 ```
 
 ### sd.task.control.introduce
-すべてのタスクに `sd.task.spec.{name}` を publish するように要求
+すべてのタスクに `sd.task.spec.{task_name}.{mesh_id}` を publish するように要求
 
 ##### 主な用途
 - Sender: sd_taskprocess (SlowDash サーバー)
@@ -789,28 +830,56 @@ Body:
 }
 ```
 
-### sd.task.exit
-タスクの終了を通知
+### sd.task.stdout.{task_name}.{mesh_id}
+タスクの stdout/stderr へ出力のリダイレクト
 
 ##### 主な用途
 - Sender: task process
-- Receiver(s): sd_taskprocess (SlowDash サーバー)，モニタサービス
-- Timing: 
-  - Task 終了時
+- Receiver(s): SlowDash Server (Web Console)
+
+##### JSON Schema
+Headers:
+```json
+    "type": "object",
+    "required": [ "name", "mesh_id", "stream" ],
+    "properties": {
+        "mesh_id": { "type": "string" },
+        "name": { "type": "string" },
+        "stream": { "type": "string", "enum": [ "stdout", "stderr" ] }
+    }
+```
+
+Body:
+```json
+{
+    "type": "object",
+    "required": [ "name", "mesh_id", "timestamp", "stream", "kind", "text" ],
+    "properties": {
+        "mesh_id": { "type": "string" },
+        "name": { "type": "string" },
+        "timestamp": { "type": "int" },
+        "stream": { "type": "string", "enum": [ "stdout", "stderr" }
+        "kind": { "type": "string", "enum": [ "text"] }
+        "text": { "type": "string" }
+    }
+```    
+
+### sd.task.stdin.{mesh_id}
+タスクの input() 入力への PubSub からの注入
+
+##### 主な用途
+- Sender(s): SlowDash Server (Web Console)
+- Receiver: task process
 
 ##### JSON Schema
 Body:
 ```json
 {
     "type": "object",
-    "required": [ "mesh_id", "name" ],
     "properties": {
-        "mesh_id": { "type": "string" },
-        "name": { "type": "string" },
-        "timestamp": { "type": "int" }
+        "text": { "type": "string" }
     }
-}
-```
+```    
 
 
 ## sd.rpc
@@ -926,7 +995,4 @@ Body:
 
 # TODO
 - AsyncNATS, AsyncMQTT, AsyncRabbitMQ, AsyncRedis に on_reconnect を実装する
-- Task 終了時の unregister
-- RPC の引数型チェックと型変換
 - RPC の呼び出し前に Last Heartbeat をチェック，なければ unregister
-
