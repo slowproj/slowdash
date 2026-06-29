@@ -185,9 +185,9 @@ class SlowMQComponent(Component):
             else:
                 count = self._send_failures.get(client_id, 0) + 1
                 self._send_failures[client_id] = count
-                client_name = self._clients.get(cilent_id, {}).get('name')
+                client_name = self._clients.get(client_id, {}).get('name')
                 logging.warning(f'SlowMQ Publish (topic:{topic}, client:{client_name}, n:{count}): {result}')
-                if count > self._max_send_failures:
+                if count >= self._max_send_failures:
                     stale_clients.append(client_id)
 
         for client_id in stale_clients:            
@@ -197,7 +197,7 @@ class SlowMQComponent(Component):
                     await websocket.close()
                 except Exception:
                     pass                
-            client_name = self._clients.get(cilent_id, {}).get('name')
+            client_name = self._clients.get(client_id, {}).get('name')
             await self.remove_client(client_id)
             logging.warning(f'SlowMQ: Client removed due to too many send failures: {client_name}')
                     
