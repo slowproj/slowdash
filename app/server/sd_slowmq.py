@@ -16,7 +16,7 @@ class SlowMQComponent(Component):
         self._websockets = {}     # client_id:int -> websocket
         self._clients = {}        # client_id:int -> { 'name': NAME }
         self._subscribers = {}    # topic_pattern:str -> set[client_id:int]
-        self._send_failures = {}  # client_id:int -> consective failure count
+        self._send_failures = {}  # client_id:int -> consecutive failure count
 
         self._max_send_failures = 5
         
@@ -79,10 +79,13 @@ class SlowMQComponent(Component):
         
     async def remove_client(self, client_id:int):
         self._websockets.pop(client_id, None)
+
+        for topic in list(self._subscribers.keys()):
+            self._subscribers[topic].discard(client_id)
+            if len(self._subscribers[topic]) == 0:
+                self._subscribers.pop(topic, None)
+            
         self._send_failures.pop(client_id, None)
-        
-        for topic in list(self._subscribers):
-            await self.unsubscribe(client_id, topic)
         self._clients.pop(client_id, None)
             
         
@@ -162,16 +165,16 @@ class SlowMQComponent(Component):
         logging.info(f'SlowMQ Cancel Subscription: {topic} <- {self._clients[client_id]["name"]}')
 
         if len(self._subscribers[topic]) == 0:
-            del self._subscribers[topic]
+            self._subscribers.pop(topic, None)
     
         return True
 
     
     async def publish(self, topic:str, message, headers):
         receivers = []
-        for topic_pattern, subscribers in self._subscribers.items():
+        for topic_pattern, subscribers in list(self._subscribers.items()):
             if self.topic_match(topic_pattern, topic):
-                for client_id in subscribers:
+                for client_id in list(subscribers):
                     websocket = self._websockets.get(client_id)
                     if websocket is not None:
                         receivers.append((client_id, websocket))
