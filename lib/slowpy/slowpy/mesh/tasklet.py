@@ -143,7 +143,7 @@ class _TaskletStdioBridge:
     async def aio_start(self):
         for topic in self.stdin_topics:
             await self._tasklet.mesh.aio_subscribe(topic, self._handle_stdin_message)
-        self.publisher_task = asyncio.create_task(self._publish_output())
+        self._publisher_task = asyncio.create_task(self._publish_output())
 
 
     async def aio_stop(self):
@@ -222,7 +222,7 @@ class _TaskletStdioBridge:
 
     def _start_stdin_thread(self):
         stdin = sys.__stdin__
-        if stdin is None or getattr(stdin, 'clsoed', False):
+        if stdin is None or getattr(stdin, 'closed', False):
             return
 
         def read_stdin():
@@ -257,10 +257,10 @@ class _TaskletStdioBridge:
         try:
             self._input_queue.put_nowait(item)
         except queue.Full:
-            logging.warining('Tasklet stdin queue is fill; dropping input')
+            logging.warning('Tasklet stdin queue is fill; dropping input')
 
 
-    def _handle_stdin_message(self, handers, data):
+    def _handle_stdin_message(self, headers, data):
         line = data
         if isinstance(data, dict):
             line = data.get('line', data.get('text', ''))
@@ -313,7 +313,7 @@ class Tasklet:
         self._heartbeat_interval = 10
         self._next_heartbeat_time = 0
 
-        self._stio_bridge = None
+        self._stdio_bridge = None
         
         
     @property
