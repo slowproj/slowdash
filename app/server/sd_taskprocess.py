@@ -190,6 +190,15 @@ class TaskProcessComponent(Component):
             
         await self._mesh.aio_subscribe('sd.task.spec.>', process_task_spec)
         
+        async def process_task_exit(headers, data):
+            mesh_id = data.get('mesh_id')
+            if mesh_id is not None and len(mesh_id) > 0:
+                if mesh_id in self._task_table:
+                    del self._task_table[mesh_id]
+            logging.info(f'Task removed: {mesh_id}')
+            
+        await self._mesh.aio_subscribe('sd.task.exit.>', process_task_exit)
+        
         
     async def _request_taskspec(self):
         await self._mesh.aio_publish('sd.task.control.introduce', {})

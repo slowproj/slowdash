@@ -12,15 +12,17 @@ class SlowMQComponent(Component):
         
         self.enabled = app.is_async
         
-        self.websockets = {}     # client_id:int -> websocket
-        self.clients = {}        # client_id:int -> dict[name:NAME]
-        self.subscribers = {}    # topic_pattern:str -> set[client_id:int]
+        self._next_client_id = 0
+        self._websockets = {}     # client_id:int -> websocket
+        self._clients = {}        # client_id:int -> { 'name': NAME }
+        self._subscribers = {}    # topic_pattern:str -> set[client_id:int]
+
         
 
     def public_config(self):
         return { 'slowmq': {
             'enabled': self.enabled,
-            'attached': { topic:len(clients) for topic,clients in self.subscribers.items() },
+            'attached': { topic:len(clients) for topic,clients in self._subscribers.items() },
         }}
 
     
@@ -33,7 +35,7 @@ class SlowMQComponent(Component):
             return None
 
         client_id = await self.add_client(name, websocket)
-        name = self.clients[client_id].get('name')
+        name = self._clients[client_id].get('name')
         
         try:
             while True:
@@ -58,26 +60,28 @@ class SlowMQComponent(Component):
 
         
     async def add_client(self, name:str, websocket)->int:
-        client_id = len(self.clients)
+        client_id = self._next_client_id
+        self._next_client_id += 1
+        
         if name is None:
             name = f'AnonymousClient{client_id:02d}'
-        self.clients[client_id] = { 'name': name }
+        self._clients[client_id] = { 'name': name }
 
-        self.websockets[client_id] = websocket
+        self._websockets[client_id] = websocket
         logging.info(f'SlowMQ WebSocket Connected: {name} (id:{client_id})')
 
         return client_id
         
         
     async def remove_client(self, client_id:int):
-        self.websockets.pop(client_id, None)
-        for topic in list(self.subscribers):
+        self._websockets.pop(client_id, None)
+        for topic in list(self._subscribers):
             await self.unsubscribe(client_id, topic)
-        self.clients.pop(client_id, None)
+        self._clients.pop(client_id, None)
             
         
     async def reply_error(self, client_id:int, headers, message):
-        websocket = self.websockets.get(client_id)
+        websocket = self._websockets.get(client_id)
         if websocket is None:
             return
         reply_to = headers.get('message_id', None)
@@ -119,13 +123,13 @@ class SlowMQComponent(Component):
             await self.reply_error(client_id, headers, str(e))
             return False
         
-        if topic not in self.subscribers:
-            self.subscribers[topic] = set()
+        if topic not in self._subscribers:
+            self._subscribers[topic] = set()
             
-        self.subscribers[topic].add(client_id)
-        logging.info(f'SlowMQ Subscription: {topic} <- {self.clients[client_id]["name"]}')
+        self._subscribers[topic].add(client_id)
+        logging.info(f'SlowMQ Subscription: {topic} <- {self._clients[client_id]["name"]}')
 
-        websocket = self.websockets.get(client_id)
+        websocket = self._websockets.get(client_id)
         reply_to = headers.get('message_id')
         if websocket is not None and reply_to is not None:
             await websocket.send(json.dumps({
@@ -136,35 +140,40 @@ class SlowMQComponent(Component):
                 'data': None
             }))
                                  
-        
         return True
         
     
     async def unsubscribe(self, client_id:int, topic:str, headers=None):
-        if topic not in self.subscribers:
+        if topic not in self._subscribers:
             await self.reply_error(client_id, headers or {}, f'unknown topic "{topic}"')
             return False
 
-        if client_id not in self.subscribers[topic]:
+        if client_id not in self._subscribers[topic]:
             await self.reply_error(client_id, headers or {}, f'not registered to the topic "{topic}"')
             return False
 
-        self.subscribers[topic].discard(client_id)
-        logging.info(f'SlowMQ Cancel Subscription: {topic} <- {self.clients[client_id]["name"]}')
-        
+        self._subscribers[topic].discard(client_id)
+        logging.info(f'SlowMQ Cancel Subscription: {topic} <- {self._clients[client_id]["name"]}')
+
+        if len(self._subscribers[topic]) == 0:
+            del self._subscribers[topic]
+    
         return True
 
     
     async def publish(self, topic:str, message, headers):
         receivers = []
-        for topic_pattern, subscribers in self.subscribers.items():
+        for topic_pattern, subscribers in self._subscribers.items():
             if self.topic_match(topic_pattern, topic):
                 for client_id in subscribers:
-                    websocket = self.websockets.get(client_id)
+                    websocket = self._websockets.get(client_id)
                     if websocket is not None:
                         receivers.append(websocket)
 
-        await asyncio.gather(*(ws.send(message) for ws in receivers))
+        try:
+            await asyncio.gather(*(ws.send(message) for ws in receivers), return_exceptions=True)
+        except Exception as e:
+            logging.warning(f'SlowMQ Publish (topic:{topic}): {e}')
                     
         
     def validate_topic_pattern(self, pattern:str):

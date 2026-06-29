@@ -496,11 +496,18 @@ class Tasklet:
         try:
             await asyncio.gather(*self._initialize_task_coros)
         except Exception as e:
-            try:
-                if self._stdio_bridge is not None:
+            if self._stdio_bridge is not None:
+                try:
                     self._stdio_bridge.restore()
-                for mesh in self._mesh_list:
+                    await self._stdio_bridge.aio_close()
+                except Exception:
+                    pass
+            for mesh in self._mesh_list:
+                try:
                     await mesh.aio_close()   
+                except Exception:
+                    pass
+            try:
                 await self._dash.aio_close()
             except Exception:
                 pass
@@ -525,6 +532,14 @@ class Tasklet:
             raise e    
         
         finally:
+            try:
+                await self._publish_exit()
+            except Exception as e:
+                print(e)
+                pass
+            except:
+                pass
+                
             while main_tasks:
                 task = main_tasks.pop()
                 try:
@@ -543,10 +558,20 @@ class Tasklet:
                 pass
 
             if self._stdio_bridge is not None:
-                self._stdio_bridge.restore()
+                try:
+                    self._stdio_bridge.restore()
+                    await self._stdio_bridge.aio_close()
+                except Exception:
+                    pass
             for mesh in self._mesh_list:
-                await mesh.aio_close()
-            await self._dash.aio_close()
+                try:
+                    await mesh.aio_close()
+                except Exception:
+                    pass
+            try:
+                await self._dash.aio_close()
+            except Exception:
+                pass
 
 
     async def on_reconnect(self):
@@ -596,6 +621,15 @@ class Tasklet:
         
         await self.mesh.aio_publish(f'sd.task.spec.{self.name}', spec_doc)
         
+        
+    async def _publish_exit(self):
+        doc = {
+            'mesh_id': self.mesh.mesh_id,
+            'name': self.name,
+            'timestamp': time.time()
+        }
+        await self.mesh.aio_publish(f'sd.task.exit.{self.mesh.mesh_id}', doc)
+
         
     async def _heartbeat(self):
         now = time.time()

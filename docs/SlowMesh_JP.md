@@ -703,6 +703,13 @@ Headers:
 }
 ```
 
+Body:
+```json
+{
+    "expire": int(time.time()) + self.interval
+}
+```
+
 ### sd.task.spec.{task_name}
 タスクが外部公開している関数と変数の一覧
 
@@ -781,6 +788,30 @@ Body:
     "properties": {}
 }
 ```
+
+### sd.task.exit
+タスクの終了を通知
+
+##### 主な用途
+- Sender: task process
+- Receiver(s): sd_taskprocess (SlowDash サーバー)，モニタサービス
+- Timing: 
+  - Task 終了時
+
+##### JSON Schema
+Body:
+```json
+{
+    "type": "object",
+    "required": [ "mesh_id", "name" ],
+    "properties": {
+        "mesh_id": { "type": "string" },
+        "name": { "type": "string" },
+        "timestamp": { "type": "int" }
+    }
+}
+```
+
 
 ## sd.rpc
 Mesh の内部で RPC の実装に使用される．
