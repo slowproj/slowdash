@@ -70,7 +70,7 @@
             "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false }
         },
         { "type": "tree", "channel": "@registry:$pubsub.", "title": "PubSub Last Value Cache (Registry Values)" },
-        { "type": "html", "location": "project", "file": "store", "title": "Disk Usage (config content HTML)", "reload": true },
+        { "type": "html", "location": "project", "file": "disk_usage", "title": "Disk Usage (config content HTML)", "reload": true },
         {
             "type": "singles",
             "item_type": "square",

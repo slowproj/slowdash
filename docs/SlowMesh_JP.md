@@ -459,6 +459,25 @@ SlowTask は，内部に接続済 SlowMesh を保持していて，これを介�
 必要に応じて，処理状況を逐次 publish するか，Registry に状態を記録するなどずれば，呼び出し側が状況を把握できます．
 高信頼が必要な場合の高度な方法として，`sd.rpc.>` を subscribe して，システムが期待する状態に遷移するかを監視する SlowTask を走らせるという手もあります．
 
+### config コンテンツの動的生成
+`@content(name:str)` デコレータにより，通常は SlowDash プロジェクトの `config` 以下に置かれるファイルの内容を動的に生成することができます．以下の例では，ブラウザからは HTML ファイル `html-disk_usage.html` が `config` に存在するかのように見え，かつ，リロードする度に内容が変わるものです．ブラウザの HTML フォームで `On update: reload HTML` をチェックすることにより，データ更新のたびに新しい HTML が生成され表示されるようにすることができます．
+
+```python
+@tasklet.content('config/html-disk_usage.html')
+def html_disk_usage():
+    total, used, free = tuple((int(x*1e-8)/10.0) for x in shutil.disk_usage('.'))
+    return f'''
+    <table>
+      <tr><td>Total</td><td>{total} GB</td></tr>
+      <tr><td>Used</td><td>{used} GB</td></tr>
+      <tr><td>Free</td><td>{free} GB</td></tr>
+    </table>    
+    '''
+```
+
+`config/slowplot-XXX.json` も同じように生成できるので，HTML フォームと合わせて，SlowTask から，それを使うための完全なレイアウトを提供することができます．SlowTask 自体は普通の Python スクリプトなので，その中で例えば Jinja などのテンプレートエンジンを組み合わせて，動的な SlowDash レイアウトや HTML ページを作成することもできます．
+
+
 ### 標準入出力の SlowMesh PubSub へのリダイレクト
 Tasklet のコンストラクタの `mesh_stdio` パラメータに `True` を渡す（デフォルト）と，ユーザースクリプト中の `print()` や `input()` などの標準入出力が PubSub にリダイレクトされます．TODO: これは，SlowDash サーバーを介して，Web Console へ接続されます．
 
@@ -587,6 +606,7 @@ def store(data_record):
 複数のプロセスがデータを publish しても，全てのデータはこの一箇所でデータベースに記録されるので，例えば SQLite のようなトランザクションを持っていないデータベースに書く場合でも，競合を避けることができます．
 また，データフォーマット（テーブルスキーマ）の記述も一箇所にまとめられます．
 
+##### 追加その１
 この例の Store タスクは，ディスク容量を返す ControlNode のインスタンス `disk_usage` をエクスポートしていて，外部からの「データ要求」でそれを返します．
 ```python
 import shutil
@@ -610,6 +630,31 @@ tasklet.mesh.export('disk_usage', DiskUsageNode())
 SlowTask の HTTP API により，タスクから export された変数は，データベースに保存されているデータと同様にアクセスできます．（タイムスタンプが「現時刻」のデータが一点だけ保存されているように見える．）
 
 publish が基本的にデータ生成元からの push なのに対して，ControlNode の export は，外部からの pull 要求でデータを返すインターフェースです．「必要なときに最新値を得る」用途に向いています．
+
+
+##### 追加その２
+この例の Store タスクは，通常は SlowDash プロジェクトの `config` 以下に置かれるファイルを動的に生成する例も含まれています．
+`@content(name)` で，コンテンツ名と，それを生成する関数を結びつけています．
+
+```python
+@tasklet.content('config/html-disk_usage.html')
+def html_disk_usage():
+    total, used, free = tuple((int(x*1e-8)/10.0) for x in shutil.disk_usage('.'))
+    used_percent = int(100 * used/total) if total > 0 else 100
+    return f'''
+    <span style="font-size:300%">{used_percent}</span>
+    <span style="font-size:250%">% used</span>
+    <p>
+    <table>
+      <tr><td>Total</td><td>{total} GB</td></tr>
+      <tr><td>Used</td><td>{used} GB</td></tr>
+      <tr><td>Free</td><td>{free} GB</td></tr>
+    </table>    
+    '''
+```
+
+ブラウザの HTML フォームで "On update: reload HTML" をチェックすると，データ更新のたびにこのコンテンツ生成関数が呼ばれるので，データを含んだ HTML ページを動的に生成することができます．
+
 
 #### Web フォーム（`html-startstop.html`）
 ブラウザの Web フォームからスタート・ストップの publish やセットポイント設定の RPC を行っています．
@@ -636,6 +681,7 @@ publish が基本的にデータ生成元からの push なのに対して，Con
 - 読み出しタスクのコントロールのための Web フォーム (`html-startstop.html`）
 - Store タスクによりデータベースに保存されたデータのプロット (普通の `V0` データチャンネル)
 - Store タスクが export した disk_usage の表示 (`store.data_usage` データチャンネル)
+- Store タスクが動的生成した HTML コンテンツ (disk usage テーブル） の表示 (動的生成 `config/html-disk_usage.html` ファイルコンテンツ）
 - レジストリに保持されている値の表示
   - `randomwalk/run/status` の値を Single Scalar として表示 （`@registry:randomwalk/run/status` データチャンネル）
   - `randomwalk` 以下全体を Tree として表示 (`@registry:randomwalk/` データチャンネル)
