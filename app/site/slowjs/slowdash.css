@@ -11,6 +11,8 @@
 
     --sd-header-bg:          lightgray;
     --sd-header-color:       black;
+    
+    --sd-scrollbar-color:    gray;
 
     /* Panels and info pads */
     --sd-panel-border:       transparent;
@@ -475,4 +477,16 @@ svg .clickableShape:hover {
     .jaga-popup {
         font-size: 1rem;
     }
+}
+
+
+::-webkit-scrollbar {
+    width: 5px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--sd-scrollbar-color);
+    border-radius: 2px;
 }

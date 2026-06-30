@@ -215,6 +215,7 @@ export class Layout {
             'position': 'relative',
             'width':    this.dimension.layoutWidth  + 'px',
             'height':   this.dimension.layoutHeight + 'px',
+            'box-sizing': 'border-box',
             'overflow': 'auto',
             'display':  'flex',
             'flex-wrap': 'wrap',
@@ -316,8 +317,9 @@ export class Layout {
     
     async _configurePanels() {
         $('.sd-panel').css({
-            'width': (this.dimension.panelWidth-12)+'px',
-            'height': (this.dimension.panelHeight-12)+'px',
+            'width': (this.dimension.panelWidth-10)+'px',
+            'height': (this.dimension.panelHeight-10)+'px',
+            'box-sizing': 'border-box',
             'position': 'relative',
             'margin': '5px',
             'padding': 0,
