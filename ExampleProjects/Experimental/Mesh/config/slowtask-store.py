@@ -23,7 +23,7 @@ from slowpy.control import ControlNode
 
 class DiskUsageNode(ControlNode):
     async def aio_get(self):
-        total, used, free = ((int(float(x)*1e-8)/10) for x in shutil.disk_usage('.'))
+        total, used, free = tuple((int(x*1e-8)/10.0) for x in shutil.disk_usage('.'))
         return {
             'tree': {
                 'total_GB': total,
@@ -34,6 +34,26 @@ class DiskUsageNode(ControlNode):
         }
 
 tasklet.mesh.export('disk_usage', DiskUsageNode())
+
+
+
+#### Config Content Generation (HTML) ####
+
+@tasklet.content('config/html-store.html')
+def html_store():
+    total, used, free = tuple((int(x*1e-8)/10.0) for x in shutil.disk_usage('.'))
+    used_percent = int(100 * used/total) if total > 0 else 100
+    return f'''
+    <span style="font-size:300%">{used_percent}</span>
+    <span style="font-size:250%">% used</span>
+    <p>
+    <table>
+      <tr><td>Total</td><td>{total} GB</td></tr>
+      <tr><td>Used</td><td>{used} GB</td></tr>
+      <tr><td>Free</td><td>{free} GB</td></tr>
+    </table>    
+    '''
+
 
 
 #### Standalone Execution  ####

@@ -962,8 +962,8 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb29-1"><a h
 SQLite
 のようなトランザクションを持っていないデータベースに書く場合でも，競合を避けることができます．
 また，データフォーマット（テーブルスキーマ）の記述も一箇所にまとめられます．</p>
-<p>Store タスクは，ディスク容量を返す ControlNode のインスタンス
-<code>disk_usage</code>
+<p>この例の Store タスクは，ディスク容量を返す ControlNode
+のインスタンス <code>disk_usage</code>
 をエクスポートしていて，外部からの「データ要求」でそれを返します．</p>
 <div class="sourceCode" id="cb30"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shutil</span>
@@ -971,13 +971,13 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb30-1"><a h
 <span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DiskUsageNode(ControlNode):</span>
 <span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">async</span> <span class="kw">def</span> aio_get(<span class="va">self</span>):</span>
-<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>        total, used, free <span class="op">=</span> shutil.disk_usage(<span class="st">&#39;.&#39;</span>)</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>        total, used, free <span class="op">=</span> <span class="bu">tuple</span>((<span class="bu">int</span>(x<span class="op">*</span><span class="fl">1e-8</span>)<span class="op">/</span><span class="fl">10.0</span>) <span class="cf">for</span> x <span class="kw">in</span> shutil.disk_usage(<span class="st">&#39;.&#39;</span>))</span>
 <span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> {</span>
 <span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>            <span class="st">&#39;tree&#39;</span>: {</span>
-<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;total_GB&#39;</span>: <span class="bu">int</span>(<span class="bu">float</span>(total)<span class="op">*</span><span class="fl">1e-8</span>)<span class="op">/</span><span class="fl">10.0</span>,</span>
-<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;used_GB&#39;</span>: <span class="bu">int</span>(<span class="bu">float</span>(used)<span class="op">*</span><span class="fl">1e-8</span>)<span class="op">/</span><span class="fl">10.0</span>,</span>
-<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;free_GB&#39;</span>: <span class="bu">int</span>(<span class="bu">float</span>(free)<span class="op">*</span><span class="fl">1e-8</span>)<span class="op">/</span><span class="fl">10.0</span>,</span>
-<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;used_percent&#39;</span>: <span class="bu">int</span>(<span class="dv">100</span> <span class="op">*</span> <span class="bu">float</span>(used)<span class="op">/</span><span class="bu">float</span>(total) <span class="cf">if</span> <span class="bu">float</span>(total) <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="dv">100</span>)</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;total_GB&#39;</span>: total,</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;used_GB&#39;</span>: used,</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;free_GB&#39;</span>: free,</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>                <span class="st">&#39;used_percent&#39;</span>: <span class="bu">int</span>(<span class="dv">100</span> <span class="op">*</span> used<span class="op">/</span>total) <span class="cf">if</span> total <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="dv">100</span></span>
 <span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>            }</span>
 <span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>        }</span>
 <span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a></span>
@@ -1040,9 +1040,12 @@ class="sourceCode html"><code class="sourceCode html"><span id="cb31-1"><a href=
 <p>SlowTask への HTTP API は Slowlette を経由して
 <code>sd_taskprocess.py</code>
 コンポーネントにより実装されています．</p>
-<h3 id="get-apitaskspecs">GET <code>api/task/specs</code></h3>
+<h3 id="task-コントロール">Task コントロール</h3>
+<h4 id="get-apitaskspecs">GET <code>api/task/specs</code></h4>
 <p>Task Spec の一覧を返す</p>
-<h3 id="post-apicontrol">POST <code>api/control</code></h3>
+<h3
+id="一般コントロールインターフェース">一般コントロールインターフェース</h3>
+<h4 id="post-apicontrol">POST <code>api/control</code></h4>
 <p>Mesh メッシュリクエスト</p>
 <ul>
 <li>Body は HTML の Form 入力値の JSON ドキュメント（フォーム中の
@@ -1051,8 +1054,8 @@ class="sourceCode html"><code class="sourceCode html"><span id="cb31-1"><a href=
 <li><code>type="submit"</code> の <code>&lt;input&gt;</code>
 エレメントの <code>name</code> をリクエストと解釈する</li>
 </ul>
-<h4 id="rpc-call-request-旧形式の-slowtask-function-call-と互換">RPC
-Call Request (旧形式の slowtask function call と互換)</h4>
+<h5 id="rpc-call-request-旧形式の-slowtask-function-call-と互換">RPC
+Call Request (旧形式の slowtask function call と互換)</h5>
 <ul>
 <li>Syntax: <code>タスク名.関数名(固定パラメータリスト)</code></li>
 <li>Example:
@@ -1074,7 +1077,7 @@ Call Request (旧形式の slowtask function call と互換)</h4>
 <li>その他エラー: 400 番台のエラーレスポンス</li>
 </ul></li>
 </ul>
-<h4 id="publish-request">Publish Request</h4>
+<h5 id="publish-request">Publish Request</h5>
 <ul>
 <li>Syntax: <code>publish トピック名(固定パラメータリスト)</code></li>
 <li>Example:
@@ -1089,11 +1092,12 @@ obect が publish される．</li>
 <li>エラー: 400 番台のエラーレスポンス</li>
 </ul></li>
 </ul>
-<h3 id="get-apichannels">GET <code>api/channels</code></h3>
+<h3 id="一般データインターフェース">一般データインターフェース</h3>
+<h4 id="get-apichannels">GET <code>api/channels</code></h4>
 <p>Task が export
 している変数の名前をデータベース中のデータと同じ形式でリストして返す</p>
-<h3 id="get-apidatachannelslengthlenghtoto">GET
-<code>api/data/{channels}?length={lengh}&amp;to={to}</code></h3>
+<h4 id="get-apidatachannelslengthlenghtoto">GET
+<code>api/data/{channels}?length={lengh}&amp;to={to}</code></h4>
 <p>Task が export
 している変数の値をデータベース中のデータと同じ形式で返す</p>
 <ul>
@@ -1101,19 +1105,31 @@ obect が publish される．</li>
 で指定されるクエリ期間が現在時刻を含んでいる場合のみ値を返す（典型的には
 <code>to</code> が <code>0</code> のクエリ）</li>
 </ul>
+<h3 id="一般-config-インターフェース">一般 config インターフェース</h3>
+<h4 id="get-apiconfigcontentlist">GET
+<code>api/config/contentlist</code></h4>
+<p>Task が提供している contents のうち，名前が <code>config/</code>
+で始まるものについて，SlowDash Project の <code>config</code>
+以下にあるファイルと同様のリストを生成して返す</p>
+<h4 id="get-apiconfigcontentcontent_name">GET
+<code>api/config/content/{content_name}</code></h4>
+<p>Task が提供している contents のうち，名前が <code>config/</code>
+で始まるものについて，その内容を返す</p>
 <h2 id="registry-key-value-store-1">Registry (Key-Value Store)</h2>
 <p>Registry への HTTP API は Slowlette を経由して
 <code>sd_mesh_registry.py</code>
 コンポーネントにより実装されています．</p>
-<h3 id="get-apiregistryvaluekeykey">GET
-<code>api/registry/value?key={key}</code></h3>
+<h3 id="registry-アクセス">Registry アクセス</h3>
+<h4 id="get-apiregistryvaluekeykey">GET
+<code>api/registry/value?key={key}</code></h4>
 <p>Registry に保持されている値を返す（<code>with_meta=true</code>
 でメタデータを含む JSON ドキュメント）</p>
-<h3 id="get-apiregistrykeysprefixprefixlimitlimit">GET
-<code>api/registry/keys?prefix={prefix}&amp;limit={limit}</code></h3>
+<h4 id="get-apiregistrykeysprefixprefixlimitlimit">GET
+<code>api/registry/keys?prefix={prefix}&amp;limit={limit}</code></h4>
 <p>Registry に保持されているキーのリストを返す</p>
-<h3 id="get-apidatachannelslengthlenghtoto-1">GET
-<code>api/data/{channels}?length={lengh}&amp;to={to}</code></h3>
+<h3 id="一般データインターフェース-1">一般データインターフェース</h3>
+<h4 id="get-apidatachannelslengthlenghtoto-1">GET
+<code>api/data/{channels}?length={lengh}&amp;to={to}</code></h4>
 <p>Registry
 に保持されているキーの値をデータとして返す（データベースからのデータと同形式）．</p>
 <ul>
@@ -1142,8 +1158,12 @@ obect が publish される．</li>
 <li>モジュール名： <code>{task_name}</code>
 (デフォルトで，スクリプトファイル名が
 <code>slowtask-{task_name}.py</code>)</li>
-<li>エクスポート関数： Task Script 中で <code>@export</code>
-したもの</li>
+<li>エクスポート関数：
+<ul>
+<li>Task Script 中で <code>@export</code> したもの</li>
+<li>Task Contents を取得するための
+<code>_sd_get_content(name:str)</code></li>
+</ul></li>
 </ul>
 <h1 id="pubsub-トピック構成">PubSub トピック構成</h1>
 <h2 id="sd.task">sd.task</h2>

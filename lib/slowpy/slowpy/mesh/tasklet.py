@@ -2,6 +2,7 @@
 
 import sys, time, copy, json, queue, asyncio, threading, inspect, builtins, traceback, logging
 from datetime import datetime, timezone
+from pathlib import Path
 from slowpy.control import control_system as ctrl
 from .dash import Dash
 from .mesh import Mesh
@@ -310,10 +311,12 @@ class Tasklet:
         self._main_task_coros = []
         self._finalize_task_coros = []
 
-        self._heartbeat_interval = 10
+        self._heartbeat_interval = 5
         self._next_heartbeat_time = 0
 
         self._stdio_bridge = None
+        
+        self._content_generators = {}
         
         
     @property
@@ -359,6 +362,8 @@ class Tasklet:
 
         if self._use_oldstyle_callbacks:
             self._scan_oldstyle_callbacks(module)
+
+        self._export_content_generators()
             
         ctrl.stop_by_signal()
         try:
@@ -421,6 +426,21 @@ class Tasklet:
         return wrapper
         
 
+    #### Other Decorators ####
+
+    def content(self, name:str, *, content_type:str|None=None):
+        """decorator to declare a content generator
+        Args:
+        name (str): name of the content, e.g., "config/html-mytask" / "config/slowplot-mytask"
+        content_type (str|None): content MIME type; None for automatically detect from the name
+        """
+        def wrapper(func):
+            self._content_generators[name] = (content_type, func)
+            func._slowpy_task = True
+            return func
+        return wrapper
+
+    
     #### Internal Methods ####
 
     def _scan_oldstyle_callbacks(self, module):
@@ -475,7 +495,17 @@ class Tasklet:
             if hasattr(func, '_slow_task'):
                 continue
             self._mesh.export(name, func)
-        
+
+
+    def _export_content_generators(self):
+        async def handle_get_content(name:str):
+            content_type, func = self._content_generators.get(name)
+            if func is None:
+                return None
+            return func()
+
+        self._mesh.export('_sd_get_content', handle_get_content)
+
 
     async def _start(self):
         if self._dash_url is not None:
@@ -581,6 +611,9 @@ class Tasklet:
     async def _publish_spec(self):
         functions = {}
         for func_name, func in self.mesh.export_functions().items():
+            if len(func_name) == 0 or not func_name[0].isalpha():
+                continue
+            
             signature = inspect.signature(func)
             kwargs, arbitrary_keywords, has_non_pod = {}, False, False
             for arg_name, attr in signature.parameters.items():
@@ -634,13 +667,28 @@ class Tasklet:
                     variables[var_name]['data_type'] = 'graph'
                 elif 'table' in value:
                     variables[var_name]['data_type'] = 'table'
-            
+
+        contents = {}
+        for name, (content_type, func) in self._content_generators.items():
+            if content_type is None:
+                ext = Path(name).suffix
+                if ext == '.html':
+                    content_type = 'text/html'
+                elif ext == '.json':
+                    content_type = 'application/json'
+                elif ext == '.yaml':
+                    content_type = 'application/yaml'
+                else:
+                    content_type = 'application/octet-stream'
+            contents[name] = { 'content_type': content_type }
+                    
         spec_doc = {
             'mesh_id': self.mesh.mesh_id,
             'name': self.name,
             'timestamp': time.time(),
             'functions': functions,
             'variables': variables,
+            'contents': contents,
             'stdio': {
                 'stdin': self._stdio_bridge.stdin_topics if self._stdio_bridge is not None else [],
                 'stdout': self._stdio_bridge.stdout_topics if self._stdio_bridge is not None else [],

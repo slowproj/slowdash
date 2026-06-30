@@ -587,20 +587,20 @@ def store(data_record):
 複数のプロセスがデータを publish しても，全てのデータはこの一箇所でデータベースに記録されるので，例えば SQLite のようなトランザクションを持っていないデータベースに書く場合でも，競合を避けることができます．
 また，データフォーマット（テーブルスキーマ）の記述も一箇所にまとめられます．
 
-Store タスクは，ディスク容量を返す ControlNode のインスタンス `disk_usage` をエクスポートしていて，外部からの「データ要求」でそれを返します．
+この例の Store タスクは，ディスク容量を返す ControlNode のインスタンス `disk_usage` をエクスポートしていて，外部からの「データ要求」でそれを返します．
 ```python
 import shutil
 from slowpy.control import ControlNode
 
 class DiskUsageNode(ControlNode):
     async def aio_get(self):
-        total, used, free = shutil.disk_usage('.')
+        total, used, free = tuple((int(x*1e-8)/10.0) for x in shutil.disk_usage('.'))
         return {
             'tree': {
-                'total_GB': int(float(total)*1e-8)/10.0,
-                'used_GB': int(float(used)*1e-8)/10.0,
-                'free_GB': int(float(free)*1e-8)/10.0,
-                'used_percent': int(100 * float(used)/float(total) if float(total) > 0 else 100)
+                'total_GB': total,
+                'used_GB': used,
+                'free_GB': free,
+                'used_percent': int(100 * used/total) if total > 0 else 100
             }
         }
 
@@ -647,16 +647,18 @@ publish が基本的にデータ生成元からの push なのに対して，Con
 
 SlowTask への HTTP API は Slowlette を経由して `sd_taskprocess.py` コンポーネントにより実装されています．
 
-### GET `api/task/specs`
+### Task コントロール
+#### GET `api/task/specs`
 Task Spec の一覧を返す
 
-### POST `api/control`
+### 一般コントロールインターフェース
+#### POST `api/control`
 Mesh メッシュリクエスト
 
 - Body は HTML の Form 入力値の JSON ドキュメント（フォーム中の `<input>` の `name` と `value` を集めた object）
 - `type="submit"` の `<input>` エレメントの `name` をリクエストと解釈する
 
-#### RPC Call Request (旧形式の slowtask function call と互換)
+##### RPC Call Request (旧形式の slowtask function call と互換)
 - Syntax: `タスク名.関数名(固定パラメータリスト)`
 - Example: `<input type="submit" name="run_controller.start(run_mode='normal')">`
 - Form 中の `type="submit"` 以外の `<input>` 要素の `name` と `value` に固定パラメータを追加したものが RPC の引数に渡される．
@@ -667,7 +669,7 @@ Mesh メッシュリクエスト
   - RPC キャンセル (呼び出し先 Async-Task Cancelled)： 200, `{ "status": "cancelled" }`
   - その他エラー: 400 番台のエラーレスポンス
 
-#### Publish Request
+##### Publish Request
 - Syntax: `publish トピック名(固定パラメータリスト)`
 - Example: `<input type="submit" name="publish my_setup.start(run_mode='normal')">`
 - Form 中の `type="submit"` 以外の `<input>` 要素の `name` と `value` に固定パラメータを追加した Key-Value Pairs の JSON obect が publish される．
@@ -675,26 +677,42 @@ Mesh メッシュリクエスト
   - 成功： 200, `{ "status": "ok" }`
   - エラー: 400 番台のエラーレスポンス
 
-### GET `api/channels`
+
+### 一般データインターフェース
+
+#### GET `api/channels`
 Task が export している変数の名前をデータベース中のデータと同じ形式でリストして返す
 
-### GET `api/data/{channels}?length={lengh}&to={to}`
+#### GET `api/data/{channels}?length={lengh}&to={to}`
 Task が export している変数の値をデータベース中のデータと同じ形式で返す
 
 - length と to で指定されるクエリ期間が現在時刻を含んでいる場合のみ値を返す（典型的には `to` が `0` のクエリ）
+
+
+### 一般 config インターフェース
+
+#### GET `api/config/contentlist`
+Task が提供している contents のうち，名前が `config/` で始まるものについて，SlowDash Project の `config` 以下にあるファイルと同様のリストを生成して返す
+
+#### GET `api/config/content/{content_name}`
+Task が提供している contents のうち，名前が `config/` で始まるものについて，その内容を返す
 
 
 ## Registry (Key-Value Store)
 
 Registry への HTTP API は Slowlette を経由して `sd_mesh_registry.py` コンポーネントにより実装されています．
 
-### GET `api/registry/value?key={key}`
+### Registry アクセス
+
+#### GET `api/registry/value?key={key}`
 Registry に保持されている値を返す（`with_meta=true` でメタデータを含む JSON ドキュメント）
 
-### GET `api/registry/keys?prefix={prefix}&limit={limit}`
+#### GET `api/registry/keys?prefix={prefix}&limit={limit}`
 Registry に保持されているキーのリストを返す
 
-### GET `api/data/{channels}?length={lengh}&to={to}`
+### 一般データインターフェース
+
+#### GET `api/data/{channels}?length={lengh}&to={to}`
 Registry に保持されているキーの値をデータとして返す（データベースからのデータと同形式）．
 
 - channel が `@registry:{key}` となっているものが対象
@@ -713,7 +731,9 @@ Registry に保持されているキーの値をデータとして返す（デ�
 
 ## Task RPC
 - モジュール名： `{task_name}` (デフォルトで，スクリプトファイル名が `slowtask-{task_name}.py`)
-- エクスポート関数： Task Script 中で `@export` したもの
+- エクスポート関数：
+  - Task Script 中で `@export` したもの
+  - Task Contents を取得するための `_sd_get_content(name:str)`
 
 
 

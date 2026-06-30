@@ -2,6 +2,7 @@
 
 import sys, os, time, re, json, asyncio, copy, logging
 from typing import Any
+from pathlib import Path
 
 import slowlette
 from sd_component import Component
@@ -205,6 +206,10 @@ class TaskProxy:
             var_name: TaskVariableProxy(f'{self._name}.{var_name}', var_spec)
             for var_name, var_spec in self._spec.get('variables', {}).items()
         }
+        self._contents = {
+            cont_name: { 'content_type': cont_spec.get('content_type') }
+            for cont_name, cont_spec in self._spec.get('contents', {}).items()
+        }
 
         
     @property
@@ -215,6 +220,11 @@ class TaskProxy:
     @property
     def spec(self):
         return self._spec
+
+
+    @property
+    def contents(self):
+        return self._contents
 
 
     async def process_command(self, request:MeshRequest, mesh:Mesh):
@@ -277,6 +287,34 @@ class TaskProxy:
             return { 'status': 'error', 'message': f'Remote Variable Read Error: {name}: {e}'}
 
         return { 'status': 'ok', 'return_value': value }
+
+    
+    async def get_content(self, name:str, mesh:Mesh):
+        if name not in self._contents:
+            return None
+
+        try:
+            reply = await mesh.aio_call_many(
+                f'{self._name}._sd_get_content',
+                args=[name], kwargs={},
+                expected_replies=1, timeout=5, raise_on_timeout=True
+            )
+        except Exception as e:
+            logging.warning(f'Task Content: RPC error: {self._name}._sd_get_content("{name}"): {e}')
+            return None
+
+        if len(reply) < 1:
+            logging.warning(f'Task Content: RPC error: {self._name}._sd_get_content("{name}"): no reply')
+            return None
+
+        if reply[0].get('status').lower() != 'ok':
+            logging.warning(f'Task Content: {self._name}._sd_get_content("{name}"): {reply[0].get("message")}')
+
+        content_type = self._contents[name].get('content_type')
+        content = reply[0].get('return_value')
+        
+        return content_type, content
+        
         
     
 
@@ -286,6 +324,8 @@ class TaskProcessComponent(Component):
 
         self._mesh = None
         self._task_table: dict[str, TaskProcess] = {}   # { mesh_id: task }
+
+        self._content_table: dict[str,str] = {}   # { content_name: file_name }
 
 
     @slowlette.on_event('post_startup')
@@ -443,3 +483,50 @@ class TaskProcessComponent(Component):
 
         return self.DataMergerResponse(record)
     
+
+    @slowlette.get('/api/config/contentlist')
+    async def api_get_content_list(self):
+        self._content_table = {}
+
+        doc = []
+        for task in self._task_table.values():
+            for content_file_name in task.contents:
+                if not content_file_name.startswith('config/'):
+                    continue
+                config_file = content_file_name[len('config/'):]
+                root_name = Path(config_file).stem
+                kind, name = root_name.split('-', 1)
+                if kind not in [ 'slowdash', 'slowplot', 'slowcruise', 'html' ]:
+                    continue
+                
+                doc.append({
+                    'type': kind,
+                    'name': name,
+                    'mtime': int(time.time()),
+                    'title': '',
+                    'description': '',
+                    'config_file': config_file,
+                    'config_error': '',
+                    'config_error_line': '',
+                })
+                self._content_table[f'{kind}-{name}'] = content_file_name
+                        
+        return doc
+
+    
+    @slowlette.get('/api/config/content/{content_name}')
+    async def api_get_content(self, content_name:str):
+        content_file_name = self._content_table.get(content_name)
+        if content_file_name is None:
+            return None
+        
+        for task in self._task_table.values():
+            result = await task.get_content(content_file_name, self._mesh)
+            if result is not None:
+                break
+        else:
+            return None
+
+        content_type, content = result
+        return slowlette.Response(200, content_type=content_type, content=content)
+
