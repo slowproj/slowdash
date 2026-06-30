@@ -113,6 +113,7 @@ class MeshRequest:
             self.function_name = function_name
                 
 
+            
 class TaskFunctionProxy:
     class Argument:
         def __init__(self, arg_name:str, arg_spec:dict):
@@ -167,7 +168,7 @@ class TaskFunctionProxy:
             
         if self.has_arbitrary_keywords:
             for param_name, param_value in params.items():
-                if param_name not in args:
+                if param_name not in kwargs:
                     kwargs[param_name] = param_value
 
         return kwargs
@@ -176,9 +177,19 @@ class TaskFunctionProxy:
 
 class TaskVariableProxy:
     def __init__(self, name:str, var_spec:dict):
-        pass
+        self.name = name
+        self.spec = copy.deepcopy(var_spec)
+        
+        self._remote_node = None
 
 
+    async def aio_get(self, mesh:Mesh):
+        if not self._remote_node:
+            self._remote_node = mesh.remote_node(self.name)
+
+        return await self._remote_node.aio_get()
+            
+            
     
 class TaskProxy:
     def __init__(self, taskspec:dict):
@@ -191,7 +202,7 @@ class TaskProxy:
             for func_name, func_spec in self._spec.get('functions', {}).items()
         }
         self._variables = {
-            var_name: TaskVariableProxy(var_name, var_spec)
+            var_name: TaskVariableProxy(f'{self._name}.{var_name}', var_spec)
             for var_name, var_spec in self._spec.get('variables', {}).items()
         }
 
@@ -237,6 +248,36 @@ class TaskProxy:
 
         return reply[0]
 
+    
+    async def get_channels(self):
+        channels = []
+        for var in self._variables.values():
+            data_type = var.spec.get('data_type')
+            if data_type is not None:
+                channels.append({ 'name': var.name, 'type': data_type })
+            else:
+                channels.append({ 'name': var.name })
+                                
+        return channels
+
+    
+    async def get_data(self, name:str, mesh:Mesh):
+        if not name.startswith(self._name + '.'):
+            return None
+
+        var_name = name[len(self._name)+1:]
+        variable = self._variables.get(var_name, None)
+        if variable is None:
+            return None
+
+        logging.debug(f'Dispatch Variable Get: {name} --> {self._mesh_id}')
+        try:
+            value = await variable.aio_get(mesh)
+        except Exception as e:
+            return { 'status': 'error', 'message': f'Remote Variable Read Error: {name}: {e}'}
+
+        return { 'status': 'ok', 'return_value': value }
+        
     
 
 class TaskProcessComponent(Component):
@@ -318,3 +359,87 @@ class TaskProcessComponent(Component):
             return None
 
         return result
+
+
+    @slowlette.get('/api/channels')
+    async def api_channels(self):
+        channels = []
+        for task in self._task_table.values():
+            channels.extend(await task.get_channels())
+
+        return channels
+
+    
+    class DataMergerResponse(slowlette.Response):
+        def __init__(self, record):
+            super().__init__(content=None)
+            self.record = record
+
+            
+        def merge_response(self, response) -> None:
+            """append the "current" data from this task to the response (typiaclly data from storage)
+               - only if the channel does not exist, or
+               - the last data point is older than the "current" data (it always should be, though)
+            """
+            if response.content is None:
+                response.content = {}
+            elif type(response.content) is not dict:
+                self.content = self.record
+                super().merge_response(response)
+                return
+
+            for ch in self.record:
+                if ch not in response.content:
+                    response.content[ch] = self.record[ch]
+                    continue
+
+                data, my_data = response.content[ch], self.record[ch]
+                t0, my_t0 = data.get('start', 0), my_data['start']
+                t, my_t = data.get('t', None), my_data['t']
+                if type(t) is list:
+                    if len(t) == 0 or t0 + t[-1] < my_t0 + my_t:
+                        data['t'].append(my_t + my_t0 - t0)
+                        data['x'].append(my_data['x'])
+                elif t is not None:
+                    if t0 + t < my_t0 + my_t:
+                        data['t'] = [ t, my_t + my_t0 - t0 ]
+                        data['x'] = [ data.get('x', None), my_data['x'] ]
+                else:
+                    data['start'] = my_t0
+                    data['t'] = my_t
+                    data['x'] = my_data['x']
+
+            self.content = None
+            if len(response.content) > 0:
+                response.status_code = 200
+                
+            super().merge_response(response)
+
+            
+    @slowlette.get('/api/data/{*}')
+    async def api_get_data(self, request:slowlette.Request, length:float=3600, to:float=0):
+        channels = request.path_str[len('/api/data/'):]   # channel name might contain "/"
+        
+        now = time.time()
+        if (to < 0) or (to > 0 and (now > to+1 or now < to - length)):
+            return {}
+        
+        record = {}
+        start = (to if to > 0 else int(now) + to) - length
+        for ch in channels.split(',') if channels else []:
+            for task in self._task_table.values():
+                reply = await task.get_data(ch, self._mesh)
+                if reply is None:
+                    continue
+                if reply.get('status') != 'ok':
+                    logging.warning(f'Task: {reply.get('message')}')
+                    continue
+                
+                record[ch] = {
+                    'start': start, 'length': length,
+                    't': now - start,
+                    'x': reply.get('return_value')
+                }
+
+        return self.DataMergerResponse(record)
+    

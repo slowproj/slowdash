@@ -313,6 +313,7 @@ tasklet = Tasklet()
 
 ...(本文)...
 
+# もしスクリプトを単体実行したいなら
 if __name__ == '__main__':
     tasklet.run(slowdash_url='http://localhost:18881')
 ```
@@ -320,6 +321,33 @@ if __name__ == '__main__':
 SlowTask はシングルスレッドの非同期呼び出しで全体が並列に動くので，スクリプトの中で **`time.sleep()` を使うと全体が固まってしまいます**．
 以下の `@tasklet.loop(interval)` を使ってループを書くことにより，明示的な sleep をしないのが想定です．
 どうしても sleep をする場合は，`await asyncio.sleep()` または `await control_system.aio_sleep()` を使ってください．
+
+SlowTask を独立プロセスとして実行するには，通常は `slowdash-task` コマンドを使います．
+```console
+$ slowdash-task  slowask-mytask.py
+```
+
+もしスクリプト中で `if __name__ == '__main__': tasklet.run()` をしているなら，通常の Python スクリプトとしての実行もできます，
+```console
+$ slowdash-activate-venv
+$ python slowtask-mytask.py
+```
+
+## SlowTask の識別
+各 SlowTask の実行インスタンス（走っているスクリプト）は，TaskName と MeshID の２つの名前を持ちます．
+
+- TaskName: ユーザーによってつけられる名前（またはデフォルトでファイル名）．実行前に予測可能．同じ名前のタスクが複数あり得ることが想定されている．
+- MeshID: システムによって実行時につけられる名前．実行時まで予測不能．同じ MeshID のタスクが同一メッシュ内に複数存在しないことが保証されている．
+
+RPC 呼び出しなどは，呼び出し先の名前が事前に分かる TaskName を使います．もし同一の TaskName を持つタスクが複数存在する場合，全てのタスクに対して RPC 呼び出しが行われます．一方で，RPC 返信などは，呼び出し元の MeshID が使われ，呼び出したタスクだけに返信が戻るようになっています．
+多くの場面で，ユーザースクリプトは TaskName を使い，内部では MeshID が使われています．
+
+デフォルトでは，同じスクリプトを複数同時実行すると同じ TaskName になりますが，ユーザーは常に TaskName を明示的に指定することができます．TaskName の指定方法には，以下のようなものがあります．
+
+- タスクスクリプトのファイル名（デフォルト）
+- `Tasklet.run()` の `name` 引数
+- `slowdash-task` コマンドの `--name` パラメータ
+- `SlowdashProject.yaml` の `task` セクションの `name` パラメータ
 
 ## SlowTask の機能
 ### Lifespan コールバック
@@ -491,6 +519,7 @@ SlowTask の基本的な機能を使用する例が `ExampleProjects/Experimenta
 - `slowtask-store.py` が `data.store.>` を subscribe して，受け取ったデータを SlowPy DataStore に保存
 - `slowtask-randomwalk.py` に対するブラウザから RPC 経由の set point 設定
 - `slowtask-randomwalk.py` に対するブラウザから pubsub 経由の start/stop コントロール
+- `slowtask-store.py` が `disk_usage` 変数をエクスポート，ブラウザがデータとして表示
 
 現時点では，この例は Task Process としてのみ使用可能です．
 ２つの Task Process と SlowDash サーバ用に３つのターミナルを開いて，それぞれ以下のコマンドを実行してください．
@@ -558,6 +587,30 @@ def store(data_record):
 複数のプロセスがデータを publish しても，全てのデータはこの一箇所でデータベースに記録されるので，例えば SQLite のようなトランザクションを持っていないデータベースに書く場合でも，競合を避けることができます．
 また，データフォーマット（テーブルスキーマ）の記述も一箇所にまとめられます．
 
+Store タスクは，ディスク容量を返す ControlNode のインスタンス `disk_usage` をエクスポートしていて，外部からの「データ要求」でそれを返します．
+```python
+import shutil
+from slowpy.control import ControlNode
+
+class DiskUsageNode(ControlNode):
+    async def aio_get(self):
+        total, used, free = shutil.disk_usage('.')
+        return {
+            'tree': {
+                'total_GB': int(float(total)*1e-8)/10.0,
+                'used_GB': int(float(used)*1e-8)/10.0,
+                'free_GB': int(float(free)*1e-8)/10.0,
+                'used_percent': int(100 * float(used)/float(total) if float(total) > 0 else 100)
+            }
+        }
+
+tasklet.mesh.export('disk_usage', DiskUsageNode())
+```
+
+SlowTask の HTTP API により，タスクから export された変数は，データベースに保存されているデータと同様にアクセスできます．（タイムスタンプが「現時刻」のデータが一点だけ保存されているように見える．）
+
+publish が基本的にデータ生成元からの push なのに対して，ControlNode の export は，外部からの pull 要求でデータを返すインターフェースです．「必要なときに最新値を得る」用途に向いています．
+
 #### Web フォーム（`html-startstop.html`）
 ブラウザの Web フォームからスタート・ストップの publish やセットポイント設定の RPC を行っています．
 ```html
@@ -581,11 +634,12 @@ def store(data_record):
 以下のものを並べたものです．
 
 - 読み出しタスクのコントロールのための Web フォーム (`html-startstop.html`）
-- Store タスクにより保存されたデータのプロット
+- Store タスクによりデータベースに保存されたデータのプロット (普通の `V0` データチャンネル)
+- Store タスクが export した disk_usage の表示 (`store.data_usage` データチャンネル)
 - レジストリに保持されている値の表示
-  - `randomwalk/run/status` の値を Single Scalar として表示 （`@registry:randomwalk/run/status`）
-  - `randomwalk` 以下全体を Tree として表示 (`@registry:randomwalk/`)
-  - PubSub Last-Value Cache 全体を Tree として表示 （`@registry:$pubsub.`）
+  - `randomwalk/run/status` の値を Single Scalar として表示 （`@registry:randomwalk/run/status` データチャンネル）
+  - `randomwalk` 以下全体を Tree として表示 (`@registry:randomwalk/` データチャンネル)
+  - PubSub Last-Value Cache 全体を Tree として表示 （`@registry:$pubsub.` データチャンネル）
 
 
 # HTTP API
@@ -621,6 +675,14 @@ Mesh メッシュリクエスト
   - 成功： 200, `{ "status": "ok" }`
   - エラー: 400 番台のエラーレスポンス
 
+### GET `api/channels`
+Task が export している変数の名前をデータベース中のデータと同じ形式でリストして返す
+
+### GET `api/data/{channels}?length={lengh}&to={to}`
+Task が export している変数の値をデータベース中のデータと同じ形式で返す
+
+- length と to で指定されるクエリ期間が現在時刻を含んでいる場合のみ値を返す（典型的には `to` が `0` のクエリ）
+
 
 ## Registry (Key-Value Store)
 
@@ -632,7 +694,7 @@ Registry に保持されている値を返す（`with_meta=true` でメタデー
 ### GET `api/registry/keys?prefix={prefix}&limit={limit}`
 Registry に保持されているキーのリストを返す
 
-### GET `api/data?ch={channel}&length={lengh}&to={to}`
+### GET `api/data/{channels}?length={lengh}&to={to}`
 Registry に保持されているキーの値をデータとして返す（データベースからのデータと同形式）．
 
 - channel が `@registry:{key}` となっているものが対象
@@ -764,6 +826,7 @@ Body:
         "timestamp": { "type": "int" },
         "functions": {
             "type": "obect",
+            "required": [],
             "properties": {
                 "kwargs": {
                     "type": "object",
@@ -777,8 +840,11 @@ Body:
         },
         "variables": {
             "type": "object",
-            "properties": { "type": { "type": "string", "enum": [ "node" ] } }
-            "$comment": " 将来的には dataclass type などを追加するかも．readonly とかも．"
+            "required": [ "type" ],
+            "properties": {
+                "type": { "type": "string", "enum": [ "control_node" ], $comment": " 将来的には dataclass type などを追加するかも．readonly とかも．" }
+                "data_type": { "type": "string", "enum": [ "numeric", "string", "tree", "table", "histogram", "graph" ] },
+                "probe_value": {}
         },
         "stdio": {
             "type": "object",

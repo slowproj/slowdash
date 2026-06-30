@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 13 August 2025 #
 
-import sys, time, copy, queue, asyncio, threading, inspect, builtins, traceback, logging
+import sys, time, copy, json, queue, asyncio, threading, inspect, builtins, traceback, logging
 from datetime import datetime, timezone
 from slowpy.control import control_system as ctrl
 from .dash import Dash
@@ -607,12 +607,40 @@ class Tasklet:
                     'arbitrary_keywords': arbitrary_keywords
                 }
 
+        variables = {}
+        for var_name, var in self.mesh.export_variables().items():
+            variables[var_name] = { 'type': 'control_node' }
+            try:
+                value = await var.aio_get()
+            except Exception:
+                continue
+            
+            try:
+                _ = json.dumps(value)
+                variables[var_name]['probe_value'] = value
+            except Exception:
+                pass
+            
+            if isinstance(value, (int, float)):
+                variables[var_name]['data_type'] = 'numeric'
+            elif isinstance(value, str):
+                variables[var_name]['data_type'] = 'string'
+            elif isinstance(value, dict):
+                if 'tree' in value:
+                    variables[var_name]['data_type'] = 'tree'
+                elif 'bins' in value:
+                    variables[var_name]['data_type'] = 'histogram'
+                elif 'y' in value:
+                    variables[var_name]['data_type'] = 'graph'
+                elif 'table' in value:
+                    variables[var_name]['data_type'] = 'table'
+            
         spec_doc = {
             'mesh_id': self.mesh.mesh_id,
             'name': self.name,
             'timestamp': time.time(),
             'functions': functions,
-            'variables': { name: { 'type': 'node' } for name,variable in self.mesh.export_variables().items() },
+            'variables': variables,
             'stdio': {
                 'stdin': self._stdio_bridge.stdin_topics if self._stdio_bridge is not None else [],
                 'stdout': self._stdio_bridge.stdout_topics if self._stdio_bridge is not None else [],

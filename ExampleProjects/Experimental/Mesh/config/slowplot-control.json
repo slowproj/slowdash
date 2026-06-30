@@ -7,7 +7,7 @@
     },
     "style": { },
     "panels": [
-        { "type": "html", "location": "project", "file": "satrtstop", "title": "" },
+        { "type": "html", "location": "project", "file": "satrtstop", "title": "PubSub and RPC Controls" },
         {
             "type": "timeseries",
             "plots": [
@@ -46,7 +46,7 @@
                     "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
                 }
             ],
-            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 3, "ymax": 20 },
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 3, "ymax": 20, "title": "Stored Data from Database" },
             "legend": { "style": "transparent", "position": "left" }
         },
         {
@@ -61,7 +61,7 @@
                         "warn": { "min": 0, "max": 0 },
                         "error": { "min": 0, "max": 0 }
                     },
-                    "label": "Run Status"
+                    "label": "Run Status (streaming data)"
                 }
             ],
             "color": { "base": "rgb(0, 0, 0)", "normal": "#06b6d4", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.1 },
@@ -69,8 +69,29 @@
             "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
             "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false }
         },
-        { "type": "tree", "channel": "@registry:randomwalk/", "title": "Registry Values" },
-        { "type": "tree", "channel": "@registry:$pubsub.", "title": "PubSub Last Value Cache" }
+        { "type": "tree", "channel": "@registry:randomwalk/", "title": "Registry Values (virtual data channel)" },
+        { "type": "tree", "channel": "@registry:$pubsub.", "title": "PubSub Last Value Cache" },
+        {
+            "type": "singles",
+            "item_type": "square",
+            "items": [
+                {
+                    "channel": "store.disk_usage['used_percent']",
+                    "gauge": { "min": 0, "max": 100 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 80 },
+                        "warn": { "min": 0, "max": 95 },
+                        "error": { "min": 0, "max": 100 }
+                    },
+                    "format": "%d %",
+                    "label": "Disk Usage (exported node)"
+                }
+            ],
+            "color": { "base": "rgb(0, 0, 0)", "normal": "#06b6d4", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.1 },
+            "grid": { "rows": 0, "columns": 0 },
+            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+            "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false }
+        }
     ],
     "meta": { "name": "control", "title": "", "description": "" }
 }
