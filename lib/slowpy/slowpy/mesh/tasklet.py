@@ -129,7 +129,7 @@ class _TaskletStdioRouter:
             if not self._thread_warning_shown:
                 logging.warning(
                     'Tasklet: stdout from unknown thread. ' +
-                    'Call Tasklet.attach_remote_stdio_to_current_thread() in a new thread, AND' +
+                    'Call Tasklet.attach_remote_stdio_to_current_thread() in a new thread, AND ' +
                     'call Tasklet.detach_remote_stdio_from_current_thread() before terminating the thread'
                 )
                 self._thread_warning_shown = True
