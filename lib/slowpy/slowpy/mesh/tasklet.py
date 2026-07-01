@@ -116,7 +116,7 @@ class _TaskletStdioRouter:
     def write(self, stream, text):
         original = self._orig_stderr if stream == 'stderr' else self._orig_stdout
         if original is None:
-            original = sys.__stderr__ if stream == 'stderr' else sys.__stdout__x
+            original = sys.__stderr__ if stream == 'stderr' else sys.__stdout__
 
         try:
             original.write(text)
@@ -145,7 +145,7 @@ class _TaskletStdioRouter:
         if file is None or file is sys.stdout:
             stream_name = 'stdout'
             original = self._orig_stdout
-        elif file is sys.stdout:
+        elif file is sys.stderr:
             stream_name = 'stderr'
             original = self._orig_stderr
         else:
@@ -187,7 +187,7 @@ class _TaskletStdioRouter:
 
                 bridges = self._registered_bridges()
                 if len(bridges) == 1:
-                    briges.pop().put_input(line, source='local')
+                    bridges.pop().put_input(line, source='local')
                 else:
                     # Local input() to multiple tasks/bridges; input will not be delivered due to ambiguity.
                     # Inputs from PubSub are still delivered even with multiple tasks/bridges.
@@ -248,7 +248,7 @@ class _TaskletStdioBridge:
             return []
 
         
-    def clsoe(self):
+    def close(self):
         self._stop_event.set()
         
 
