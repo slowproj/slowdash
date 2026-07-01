@@ -14,8 +14,8 @@ class _TaskletStdout:
     - print() is overriden in TaskletStdioBridge separately, so that the content is not divided into multiple packets
     """
     
-    def __init__(self, bridge, stream_name, original):
-        self._bridge = bridge
+    def __init__(self, router, stream_name, original):
+        self._router = router
         self._stream_name = stream_name
         self._original = original
         self.encoding = getattr(original, 'encoding', None)
@@ -25,12 +25,8 @@ class _TaskletStdout:
     def write(self, text):
         if not isinstance(text, str):
             text = str(text)
-            
-        try:
-            self._original.write(text)
-        except Exception:
-            pass
-        self._bridge.put_output(self._stream_name, text)
+
+        self._router.write(self._stream_name, text)
         
         return len(text)
 
@@ -54,6 +50,154 @@ class _TaskletStdout:
 
 
 
+class _TaskletStdioRouter:
+    """Process-wide stdio router for all Tasklet instances in the process.
+    - ThreadID is used to distinguish Task I/Os.
+    """
+
+    def __init__(self):
+        self._threading_bridges = {}
+
+        self._orig_stdout = None
+        self._orig_stderr = None
+        self._orig_print = None
+        self._orig_input = None
+
+        self._stdin_thread = None
+        self._stop_event = threading.Event()
+        self._lock = threading.RLock()
+        self._installed = False
+
+        self._thread_warning_shown = False
+
+
+    def install_once(self):
+        with self._lock:
+            if self._installed:
+                return
+
+            self._orig_stdout = sys.stdout
+            self._orig_stderr = sys.stderr
+            self._orig_print = builtins.print
+            self._orig_input = builtins.input
+
+            sys.stdout = _TaskletStdout(self, 'stdout', self._orig_stdout)
+            sys.stderr = _TaskletStdout(self, 'stderr', self._orig_stderr)
+            builtins.print = self.print
+            builtins.input = self.input
+        
+            self._installed = True
+            self._start_stdin_thread()
+
+
+    def register_current_thread(self, bridge):
+        self.install_once()
+        with self._lock:
+            self._threading_bridges[threading.get_ident()] = bridge
+
+
+    def unregister_current_thread(self, bridge):
+        with self._lock:
+            thread_id = threading.get_ident()
+            if self._threading_bridges.get(thread_id) is bridge:
+                del self._threading_bridges[thread_id]
+
+
+    def _current_bridge(self):
+        with self._lock:
+            return self._threading_bridges.get(threading.get_ident())
+
+
+    def _registered_bridges(self):
+        with self._lock:
+            return set(self._threading_bridges.values())
+
+
+    def write(self, stream, text):
+        original = self._orig_stderr if stream == 'stderr' else self._orig_stdout
+        if original is None:
+            original = sys.__stderr__ if stream == 'stderr' else sys.__stdout__x
+
+        try:
+            original.write(text)
+        except Exception:
+            pass
+
+        bridge = self._current_bridge()
+        if bridge is None:
+            # if a user creates a new thread, the thread_id becomes unknown...
+            if not self._thread_warning_shown:
+                logging.warning(
+                    'Tasklet: stdout from unknown thread. ' +
+                    'Call Tasklet.attach_remote_stdio_to_current_thread() in a new thread, AND' +
+                    'call Tasklet.detach_remote_stdio_from_current_thread() before terminating the thread'
+                )
+                self._thread_warning_shown = True
+        else:
+            bridge.put_output(stream, text)
+
+
+    def print(self, *values, sep=' ', end='\n', file=None, flush=False):
+        bridge = self._current_bridge()
+        if bridge is None:
+            return self._orig_print(*values, sep=sep, end=end, file=file, flush=flush)
+
+        if file is None or file is sys.stdout:
+            stream_name = 'stdout'
+            original = self._orig_stdout
+        elif file is sys.stdout:
+            stream_name = 'stderr'
+            original = self._orig_stderr
+        else:
+            return self._orig_print(*values, sep=sep, end=end, file=file, flush=flush)
+
+        text = sep.join(str(value) for value in values) + end
+
+        try:
+            original.write(text)
+            if flush:
+                original.flush()
+        except Exception:
+            pass
+
+        bridge.put_output(stream_name, text)
+
+
+    def input(self, prompt=''):
+        bridge = self._current_bridge()
+        if bridge is None:
+            return self._orig_input(prompt)
+
+        return bridge.input(prompt)
+        
+        
+    def _start_stdin_thread(self):
+        stdin = sys.__stdin__
+        if stdin is None or getattr(stdin, 'closed', False):
+            return
+
+        def read_stdin():
+            while not ctrl.is_stop_requested() and not self._stop_event.is_set():
+                try:
+                    line = stdin.readline()
+                except Exception:
+                    break
+                if line == '':
+                    break
+
+                bridges = self._registered_bridges()
+                if len(bridges) == 1:
+                    briges.pop().put_input(line, source='local')
+                else:
+                    # Local input() to multiple tasks/bridges; input will not be delivered due to ambiguity.
+                    # Inputs from PubSub are still delivered even with multiple tasks/bridges.
+                    logging.warning('Tasklet: local input() to multiple tasks/bridges: input is discarded')
+
+        self._stdin_thread = threading.Thread(target=read_stdin, daemon=True)
+        self._stdin_thread.start()
+
+        
+    
 class _TaskletStdioBridge:
     def __init__(self, tasklet, *, max_input_queue=1000, max_output_queue=1000):
         self._tasklet = tasklet
@@ -66,15 +210,8 @@ class _TaskletStdioBridge:
         self._input_queue = queue.Queue(maxsize=max_input_queue)
         self._output_queue = queue.Queue(maxsize=max_output_queue)
         self._stop_event = threading.Event()
-        self._stdin_thread = None
         self._publisher_task = None
 
-        self._orig_stdout = None
-        self._orig_stderr = None
-        self._orig_print = None
-        self._orig_input = None
-        self._installed = False
-        
 
     @property
     def stdin_topics(self):
@@ -110,36 +247,10 @@ class _TaskletStdioBridge:
         else:
             return []
 
-
-    def install(self):
-        if self._installed:
-            return
-
-        self._orig_stdout = sys.stdout
-        self._orig_stderr = sys.stderr
-        self._orig_print = builtins.print
-        self._orig_input = builtins.input
-
-        sys.stdout = _TaskletStdout(self, 'stdout', self._orig_stdout)
-        sys.stderr = _TaskletStdout(self, 'stderr', self._orig_stderr)
-        builtins.print = self.print
-        builtins.input = self.input
         
-        self._installed = True
-        self._start_stdin_thread()
-
-
-    def restore(self):
+    def clsoe(self):
         self._stop_event.set()
         
-        if self._installed:
-            sys.stdout = self._orig_stdout
-            sys.stderr = self._orig_stderr
-            builtins.print = self._orig_print
-            builtins.input = self._orig_input
-            
-        self._installed = False
-
 
     async def aio_start(self):
         for topic in self.stdin_topics:
@@ -178,33 +289,6 @@ class _TaskletStdioBridge:
             logging.warning(f'Tasklet stdout/stderr queue full; dropping output')
 
 
-    def print(self, *values, sep=' ', end='\n', file=None, flush=False):
-        if file is None:
-            stream_name = 'stdout'
-            original = self._orig_stdout
-        elif file is sys.stdout:
-            stream_name = 'stdout'
-            original = self._orig_stdout
-        elif file is sys.stderr:
-            stream_name = 'stderr'
-            original = self._orig_stderr
-        else:
-            return self._orig_print(
-                *values, sep=sep, end=end, file=file, flush=flush
-            )
-
-        text = sep.join(str(value) for value in values) + end
-
-        try:
-            original.write(text)
-            if flush:
-                original.flush()
-        except Exception:
-            pass
-
-        self.put_output(stream_name, text)
-
-        
     def input(self, prompt=''):
         if prompt:
             sys.stdout.write(str(prompt))
@@ -219,29 +303,9 @@ class _TaskletStdioBridge:
 
         logging.debug(f'Tasklet Console: input cancelled')
         return None
+
     
-
-    def _start_stdin_thread(self):
-        stdin = sys.__stdin__
-        if stdin is None or getattr(stdin, 'closed', False):
-            return
-
-        def read_stdin():
-            while not ctrl.is_stop_requested() and not self._stop_event.is_set():
-                try:
-                    line = stdin.readline()
-                except Exception:
-                    break
-                if line == '':
-                    break
-                
-                self._put_input(line, source='local')
-
-        self._stdin_thread = threading.Thread(target=read_stdin, daemon=True)
-        self._stdin_thread.start()
-
-
-    def _put_input(self, line, *, source, headers=None):
+    def put_input(self, line, *, source, headers=None):
         if isinstance(line, bytes):
             line = line.decode(errors='replace')
         elif not isinstance(line, str):
@@ -266,7 +330,7 @@ class _TaskletStdioBridge:
         if isinstance(data, dict):
             line = data.get('line', data.get('text', ''))
             
-        self._put_input(line, source='mesh', headers=headers)
+        self.put_input(line, source='mesh', headers=headers)
 
 
     async def _publish_output(self):
@@ -293,6 +357,8 @@ class _TaskletStdioBridge:
             
 
 class Tasklet:
+    _stdio_router = _TaskletStdioRouter()
+    
     def __init__(self, name:str|None=None, *, use_oldstyle_callbacks=False, mesh_stdio=True):
         self._name = name
         self._use_oldstyle_callbacks = use_oldstyle_callbacks
@@ -375,7 +441,15 @@ class Tasklet:
     def is_stop_requested(self):
         return ctrl.is_stop_requested()
     
-        
+
+    def attach_remote_stdio_to_current_thread(self):
+        Tasklet._stdio_router.register_current_thread(self._stdio_bridge)
+    
+    
+    def detach_remote_stdio_from_current_thread(self):
+        Tasklet._stdio_router.unregister_current_thread(self._stdio_bridge)
+    
+    
     #### Callback Decorators ####
         
     def initialize(self):
@@ -517,7 +591,7 @@ class Tasklet:
 
         if self._mesh_stdio_enabled and self._mesh_url is not None:
             self._stdio_bridge = _TaskletStdioBridge(self)
-            self._stdio_bridge.install()
+            Tasklet._stdio_router.register_current_thread(self._stdio_bridge)
             await self._stdio_bridge.aio_start()
         
         for mesh in self._mesh_list:
@@ -528,7 +602,8 @@ class Tasklet:
         except Exception as e:
             if self._stdio_bridge is not None:
                 try:
-                    self._stdio_bridge.restore()
+                    Tasklet._stdio_router.unregister_current_thread(self._stdio_bridge)
+                    self._stdio_bridge.close()
                     await self._stdio_bridge.aio_stop()
                 except Exception:
                     pass
@@ -589,7 +664,8 @@ class Tasklet:
 
             if self._stdio_bridge is not None:
                 try:
-                    self._stdio_bridge.restore()
+                    Tasklet._stdio_router.unregister_current_thread(self._stdio_bridge)
+                    self._stdio_bridge.close()
                     await self._stdio_bridge.aio_stop()
                 except Exception:
                     pass

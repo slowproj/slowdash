@@ -1128,3 +1128,5 @@ Body:
 # TODO
 - AsyncNATS, AsyncMQTT, AsyncRabbitMQ, AsyncRedis に on_reconnect を実装する
 - RPC の呼び出し前に Last Heartbeat をチェック，なければ unregister
+- レジストリを SlowTask でも動かせるようにする
+- MyMesh: SlowTask を SlowMesh なしで動かした場合に使う．コンソールから接続し，!!! から始まる行を拾う
