@@ -35,8 +35,9 @@ SlowTask には以下の機能が実装されています．
 ### SlowPy Mesh ライブラリ
 SlowTask スクリプトから使用されるライブラリです．
 
-- `slowpy.mesh.Mesh`: SlowMesh 通信機能へのインターフェース
-- `slowpy.mesh.Tasklet`: Python スクリプトを SlowMesh 上の独立タスク (SlowTask) として実行するためのアダプタ
+- Mesh (`slowpy.mesh.mesh.py`): SlowMesh 通信機能へのインターフェース
+- Tasklet (`slowpy.mesh.tasklet.py`): Python スクリプトを SlowMesh 上の独立タスク (SlowTask) として実行するためのアダプタ
+- MeshStdio (`slowpy.mesh.stdio.py`): Python スクリプトの標準入出力を Mesh の PubSub にリダイレクトするブリッジ
 
 
 ### SlowDash Mesh サービス
@@ -299,6 +300,48 @@ TODO: さらに，この内容を定期的に保存することにより，SlowD
 - `$pubsub.sd.task.heartbeat.` を get すれば，すべてのタスクの Heartbeat を一つの dict / JSON として取得できます．
 
 （サブブランチを含めて dict/JSON で取得するための，最後の `.` を忘れないように注意してください．）
+
+
+## 標準入出力リダイレクト (MeshStdio)
+MeshStdio を使うと，print() の出力などの標準出力が SlowMesh にも publish され，input() などの標準入力が subscribe からも取得されるようになります．
+これにより，SlowTask の標準入出力を PubSub 経由で読み書きできるようになります．
+WebUI に SlowTask のコンソールをもたせるなどの用途を想定しています．
+
+```python
+    from mesh.stdio import MeshStdio
+    mesh_stdio = MeshStdio(self._mesh, topic_prefix='sd.task')
+    
+    await mesh_stdio.aio_start()
+    # この間，print() が publish され，input() が subscribe から取得される
+    await mesh_stio.aio_stop()
+    
+```
+`print()` または `sys.stdio` / `sys.stderr` に書かれたメッセージは，SlowMesh の指定トピックに publish され，かつ，ローカルの標準（エラー）出力にも書き出されます．同様に，`input()` または `stdin` からの取得リクエストは，SlowMesh への subscription またはローカルの標準入力の両方から読み出されます（先に来た方が受け取られる）．
+
+PubSub に使われるトピック名は，`{prefix}.{stream}.{mesh_id}` です．例えば，Prefix が `sd.task` の場合の標準出力（stdout）のトピック名は，`sd.task.stdout.{mesh_id}` となります．
+
+複数の MeshStdio を，それぞれ別々のスレッド上で作成し，start できます．その場合，入出力の振り分けは，スレッド ID により行われます．
+（MeshStdio を start したスレッドで print() したものは，その MeshStdio インスタンスに渡される．）
+SlowTask を動的ロードモジュールとして使った場合，複数の SlowTask が SlowDash サーバープロセスの中で動作しますが，その場合，各 SlowTask は別々のスレッドで動くので，それぞれが MeshStdio を持つことができます．
+
+入出力チャンネルがスレッド ID に紐付けられるため，SlowTask の中で新たにスレッドを実行する場合には，そのスレッドに MeshStdio を明示的にアタッチし，スレッドの終了前に明示的にデタッチする必要があります．
+```
+def thread_run():
+    mesh_stdio.attach_current_thread()
+    # ...
+    mesh_stdio.detach_current_thread()
+```
+    
+このように複数のスレッドにまたがって複数の MeshStdio が走っている場合には，ローカルの input() から来る入力をどのスレッドに渡すのかの不定性があります．
+MeshStdio では，以下のルールで処理されます：
+
+- 動作中の MeshStdio が一つしかない場合，ローカルの input() からの入力はそれに渡される
+- ローカルの input() からの入力があった時点で，すでに input() 待ちをしているスレッドがある場合，それに入力が渡される．複数ある場合は，最後に input 待ちをしたスレッドに渡される．
+- そうでない場合（複数の MeshStdio が走っているが，そのどれも input() 待ちをしていない場合），入力は破棄される
+
+このルールは，ローカルの input() のみに適用され，宛先が明示されている SlowMesh の PubSub からの入力は，全て適切に割り振られることに注意してください．
+ここで記述した振る舞いは，一つのプロセスの中で複数の MeshStdio があって，それらに対してローカルからの入力があった場合の動作です．
+
 
 # SlowTask
 SlowTask は SlowMesh の上で独立にかつ協調して動く実行単位（おおまかには，一つの Python スクリプト）です．プロセスまたは動的ロードモジュールのいずれかとして実行できます．

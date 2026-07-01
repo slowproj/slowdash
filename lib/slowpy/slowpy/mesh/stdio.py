@@ -65,6 +65,8 @@ class _MeshStdioRouter:
         self._lock = threading.RLock()
         self._installed = False
 
+        self._local_input_bridge = None
+        
         self._thread_warning_shown = False
 
 
@@ -165,7 +167,14 @@ class _MeshStdioRouter:
         if bridge is None:
             return self._orig_input(prompt)
 
-        return bridge.input(prompt)
+        with self._lock:
+            self._local_input_bridge = bridge
+        try:
+            return bridge.input(prompt)
+        finally:
+            with self._lock:
+                if self._local_input_bridge is bridge:
+                    self._local_input_bridge = None
         
         
     def _start_stdin_thread(self):
@@ -182,13 +191,17 @@ class _MeshStdioRouter:
                 if line == '':
                     break
 
-                bridges = self._registered_bridges()
-                if len(bridges) == 1:
-                    bridges.pop().put_input(line, source='local')
+                if self._local_input_bridge is not None:
+                    self._local_input_bridge.put_input(line, source='local')
                 else:
-                    # Local input() to multiple MeshStdio bridges; input will not be delivered due to ambiguity.
-                    # Inputs from PubSub are still delivered even with multiple MeshStdio bridges.
-                    logging.warning('MeshStdio: local input() to multiple MeshStdio bridges: input is discarded')
+                    bridges = self._registered_bridges()
+                    if len(bridges) == 1:
+                        bridges.pop().put_input(line, source='local')
+                    else:
+                        # Local input() to multiple MeshStdio bridges; input will not be delivered due to ambiguity,
+                        # unless there exist a bridge waiting for an input.
+                        # All inputs from PubSub are still delivered correctly even with multiple MeshStdio bridges.
+                        logging.warning('MeshStdio: local input() to multiple MeshStdio bridges: input is discarded')
 
         self._stdin_thread = threading.Thread(target=read_stdin, daemon=True)
         self._stdin_thread.start()
@@ -196,8 +209,9 @@ class _MeshStdioRouter:
         
     
 class _MeshStdioBridge:
-    def __init__(self, mesh:Mesh, *, max_input_queue:int=1000, max_output_queue:int=1000):
+    def __init__(self, mesh:Mesh, *, topic_prefix:str|None=None, max_input_queue:int=1000, max_output_queue:int=1000):
         self._mesh = mesh
+        self._topic_prefix = topic_prefix or 'slowmesh'
         self._max_input_queue = max_input_queue
         self._max_output_queue = max_output_queue
         
@@ -215,7 +229,7 @@ class _MeshStdioBridge:
         
         mesh_id = self._mesh.mesh_id
         if mesh_id:
-            topics.append(f'sd.task.stdin.{mesh_id}')
+            topics.append(f'{self._topic_prefix}.stdin.{mesh_id}')
             
         return topics
 
@@ -224,7 +238,7 @@ class _MeshStdioBridge:
     def stdout_topics(self):
         mesh_id = self._mesh.mesh_id
         if mesh_id:
-            return [ f'sd.task.stdout.{mesh_id}' ]
+            return [ f'{self._topic_prefix}.stdout.{mesh_id}' ]
         else:
             return []
 
@@ -236,7 +250,7 @@ class _MeshStdioBridge:
         
         mesh_id = self._mesh.mesh_id
         if mesh_id:
-            return [ f'sd.task.stderr.{mesh_id}' ]
+            return [ f'{self.topic_prefix}.stderr.{mesh_id}' ]
         else:
             return []
 
@@ -350,8 +364,10 @@ class _MeshStdioBridge:
 class MeshStdio:
     _stdio_router = _MeshStdioRouter()
 
-    def __init__(self, mesh:Mesh):
+    def __init__(self, mesh:Mesh, topic_prefix:str|None=None):
         self._mesh = mesh
+        self._topic_prefix = topic_prefix
+        
         self._stdio_bridge = None
 
         
@@ -365,7 +381,7 @@ class MeshStdio:
 
     
     async def aio_start(self):
-        self._stdio_bridge = _MeshStdioBridge(self._mesh)
+        self._stdio_bridge = _MeshStdioBridge(self._mesh, topic_prefix=self._topic_prefix)
         self.attach_current_thread()
         await self._stdio_bridge.aio_start()
 

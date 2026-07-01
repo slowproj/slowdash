@@ -26,7 +26,7 @@ class Tasklet:
         self._mesh = Mesh(name=name, on_reconnect=self.on_reconnect, name_prefix_to_drop='slowtask-')
         
         if mesh_stdio:
-            self._mesh_stdio = MeshStdio(self._mesh)
+            self._mesh_stdio = MeshStdio(self._mesh, topic_prefix='sd.task')
         else:
             self._mesh_stdio = None
         
