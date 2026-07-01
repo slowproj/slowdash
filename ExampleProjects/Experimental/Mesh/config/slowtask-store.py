@@ -39,6 +39,8 @@ tasklet.mesh.export('disk_usage', DiskUsageNode())
 
 #### Config Content Generation (HTML) ####
 
+import datetime
+
 @tasklet.content('config/html-disk_usage.html')
 def html_disk_usage():
     total, used, free = tuple((int(x*1e-8)/10.0) for x in shutil.disk_usage('.'))
@@ -51,7 +53,9 @@ def html_disk_usage():
       <tr><td>Total</td><td>{total} GB</td></tr>
       <tr><td>Used</td><td>{used} GB</td></tr>
       <tr><td>Free</td><td>{free} GB</td></tr>
-    </table>    
+    </table>
+    <p>
+    As of {str(datetime.datetime.now())}
     '''
 
 

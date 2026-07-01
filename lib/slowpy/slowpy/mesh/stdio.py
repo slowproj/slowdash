@@ -250,7 +250,7 @@ class _MeshStdioBridge:
         
         mesh_id = self._mesh.mesh_id
         if mesh_id:
-            return [ f'{self.topic_prefix}.stderr.{mesh_id}' ]
+            return [ f'{self._topic_prefix}.stderr.{mesh_id}' ]
         else:
             return []
 

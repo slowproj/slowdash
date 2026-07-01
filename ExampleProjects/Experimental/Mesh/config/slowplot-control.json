@@ -61,7 +61,7 @@
                         "warn": { "min": 0, "max": 0 },
                         "error": { "min": 0, "max": 0 }
                     },
-                    "label": "Run Status (streaming data)"
+                    "label": "Run Status (registry value)"
                 }
             ],
             "color": { "base": "rgb(0, 0, 0)", "normal": "#06b6d4", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.1 },
