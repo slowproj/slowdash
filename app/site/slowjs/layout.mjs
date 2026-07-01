@@ -141,22 +141,27 @@ export class Layout {
 
     
     _setupDimensions() {
-        if (this.layoutDiv.css('width')) {
-            this.dimension.layoutWidth = this.layoutDiv.boundingClientWidth();
+        this.layoutDiv.css({
+            'position': 'relative',
+            'scrollbar-gutter': 'stable',
+            'overflow': 'auto',
+            'display':  'flex',
+            'flex-wrap': 'wrap',
+        });
+
+        if (! this.layoutDiv.css('width')) {
+            this.layoutDiv.css('width', '100%');
         }
-        else {
-            this.dimension.layoutWidth = document.documentElement.clientWidth;
-        }
+        this.dimension.layoutWidth = this.layoutDiv.clientWidth();
         if (this.layoutDiv.css('height')) {
-            this.dimension.layoutHeight = this.layoutDiv.boundingClientHeight();
+            this.dimension.layoutHeight = this.layoutDiv.clientHeight();
         }
         else {
             this.dimension.layoutHeight = document.documentElement.clientHeight - this.layoutDiv.pageY();
         }
-
-        const scrollBarWidth = 20; // this does not exist yet, so <html>.clientWidth does not include it
-        const layoutInnerWidth = this.dimension.layoutWidth - scrollBarWidth;
-        const layoutInnerHeight = this.dimension.layoutHeight /*- scrollBarWidth */ - 2; // 4 for panel border on hover
+        
+        const layoutInnerWidth = this.dimension.layoutWidth /*- scrollBarWidth*/ - 2;
+        const layoutInnerHeight = this.dimension.layoutHeight /*- scrollBarWidth */ - 2;
 
         const configuredCols = parseInt(this.config.control.grid.columns ?? 1);
         const configuredRows = parseInt(this.config.control.grid.rows ?? 1);
@@ -195,7 +200,7 @@ export class Layout {
         // guaranteeing each panel is at least minPanelWidth × minPanelHeight.
         this.dimension.panelWidth  = Math.floor(layoutInnerWidth  / effectiveCols);
         this.dimension.panelHeight = Math.floor(layoutInnerHeight / effectiveRows);
-
+        
         // Font scaling: reduce label size at high column counts to prevent overlap.
         // Use effectiveCols (what is actually displayed) rather than configuredCols.
         if (effectiveCols < 3) {
@@ -212,13 +217,7 @@ export class Layout {
         // overflow: auto provides scrollbars if (despite clamping) panels still
         // overflow — e.g. because more panels exist than effectiveCols × effectiveRows.
         this.layoutDiv.css({
-            'position': 'relative',
-            'width':    this.dimension.layoutWidth  + 'px',
             'height':   this.dimension.layoutHeight + 'px',
-            'box-sizing': 'border-box',
-            'overflow': 'auto',
-            'display':  'flex',
-            'flex-wrap': 'wrap',
         });
     }
 
@@ -317,8 +316,8 @@ export class Layout {
     
     async _configurePanels() {
         $('.sd-panel').css({
-            'width': (this.dimension.panelWidth-10)+'px',
-            'height': (this.dimension.panelHeight-10)+'px',
+            'width': (this.dimension.panelWidth-11)+'px',
+            'height': (this.dimension.panelHeight-11)+'px',
             'box-sizing': 'border-box',
             'position': 'relative',
             'margin': '5px',
