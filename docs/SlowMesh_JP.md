@@ -525,7 +525,7 @@ def html_disk_usage():
 Tasklet のコンストラクタの `mesh_stdio` パラメータに `True` を渡す（デフォルト）と，ユーザースクリプト中の `print()` や `input()` などの標準入出力が PubSub にリダイレクトされます．TODO: これは，SlowDash サーバーを介して，Web Console へ接続されます．
 
 - `print()` および `stdout`/`stderr` への `write()`: コンソール出力および `sd.task.stdout.{メッシュID}` へ publish
-- `input()`: コンソール入力または `sd.task.stdin.{メッシュID}` へのメッセージから読み込み
+- `input()`: コンソール入力または `sd.task.stdin.{メッシュID}` からのメッセージから読み込み
 
 
 ### SlowDash Mesh サービスへのインターフェース
@@ -605,7 +605,7 @@ $ slowdash-task config/slowtask-randomwalk.py
 SlowDash App プロセスを走らせたままタスクプロセスの停止・再実行をしても大丈夫なはずです．
 
 現時点では，SlowDash のポート番号などはスクリプト中にハードコーディングしています．
-SlowMesh/SlowTask の開発状況に応じて徐々に改善していきます．
+TODO: SlowMesh/SlowTask の開発状況に応じて徐々に改善していきます．
 
 #### 読み出しタスク（`slowtask-randomwalk.py`）
 RandomWalk タスクでは，tasklet のループコールバックで 1 秒ごとにダミーデータを読み出し，それを `data.store.HV.ch0` トピックに publish します．
@@ -685,14 +685,14 @@ def html_disk_usage():
     total, used, free = tuple((int(x*1e-8)/10.0) for x in shutil.disk_usage('.'))
     used_percent = int(100 * used/total) if total > 0 else 100
     return f'''
-    <span style="font-size:300%">{used_percent}</span>
-    <span style="font-size:250%">% used</span>
-    <p>
-    <table>
-      <tr><td>Total</td><td>{total} GB</td></tr>
-      <tr><td>Used</td><td>{used} GB</td></tr>
-      <tr><td>Free</td><td>{free} GB</td></tr>
-    </table>    
+        <span style="font-size:300%">{used_percent}</span>
+        <span style="font-size:250%">% used</span>
+        <p>
+        <table>
+          <tr><td>Total</td><td>{total} GB</td></tr>
+          <tr><td>Used</td><td>{used} GB</td></tr>
+          <tr><td>Free</td><td>{free} GB</td></tr>
+        </table>    
     '''
 ```
 

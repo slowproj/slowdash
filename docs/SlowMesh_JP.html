@@ -919,7 +919,8 @@ Console へ接続されます．</p>
 への <code>write()</code>: コンソール出力および
 <code>sd.task.stdout.{メッシュID}</code> へ publish</li>
 <li><code>input()</code>: コンソール入力または
-<code>sd.task.stdin.{メッシュID}</code> へのメッセージから読み込み</li>
+<code>sd.task.stdin.{メッシュID}</code>
+からのメッセージから読み込み</li>
 </ul>
 <h3 id="slowdash-mesh-サービスへのインターフェース">SlowDash Mesh
 サービスへのインターフェース</h3>
@@ -1008,7 +1009,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <p>SlowDash App
 プロセスを走らせたままタスクプロセスの停止・再実行をしても大丈夫なはずです．</p>
 <p>現時点では，SlowDash
-のポート番号などはスクリプト中にハードコーディングしています．
+のポート番号などはスクリプト中にハードコーディングしています． TODO:
 SlowMesh/SlowTask の開発状況に応じて徐々に改善していきます．</p>
 <h4
 id="読み出しタスクslowtask-randomwalk.py">読み出しタスク（<code>slowtask-randomwalk.py</code>）</h4>
@@ -1092,14 +1093,14 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb34-1"><a h
 <span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    total, used, free <span class="op">=</span> <span class="bu">tuple</span>((<span class="bu">int</span>(x<span class="op">*</span><span class="fl">1e-8</span>)<span class="op">/</span><span class="fl">10.0</span>) <span class="cf">for</span> x <span class="kw">in</span> shutil.disk_usage(<span class="st">&#39;.&#39;</span>))</span>
 <span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    used_percent <span class="op">=</span> <span class="bu">int</span>(<span class="dv">100</span> <span class="op">*</span> used<span class="op">/</span>total) <span class="cf">if</span> total <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="dv">100</span></span>
 <span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ss">f&#39;&#39;&#39;</span></span>
-<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="ss">    &lt;span style=&quot;font-size:300%&quot;&gt;</span><span class="sc">{</span>used_percent<span class="sc">}</span><span class="ss">&lt;/span&gt;</span></span>
-<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a><span class="ss">    &lt;span style=&quot;font-size:250%&quot;&gt;% used&lt;/span&gt;</span></span>
-<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a><span class="ss">    &lt;p&gt;</span></span>
-<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a><span class="ss">    &lt;table&gt;</span></span>
-<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a><span class="ss">      &lt;tr&gt;&lt;td&gt;Total&lt;/td&gt;&lt;td&gt;</span><span class="sc">{</span>total<span class="sc">}</span><span class="ss"> GB&lt;/td&gt;&lt;/tr&gt;</span></span>
-<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a><span class="ss">      &lt;tr&gt;&lt;td&gt;Used&lt;/td&gt;&lt;td&gt;</span><span class="sc">{</span>used<span class="sc">}</span><span class="ss"> GB&lt;/td&gt;&lt;/tr&gt;</span></span>
-<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a><span class="ss">      &lt;tr&gt;&lt;td&gt;Free&lt;/td&gt;&lt;td&gt;</span><span class="sc">{</span>free<span class="sc">}</span><span class="ss"> GB&lt;/td&gt;&lt;/tr&gt;</span></span>
-<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a><span class="ss">    &lt;/table&gt;    </span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="ss">        &lt;span style=&quot;font-size:300%&quot;&gt;</span><span class="sc">{</span>used_percent<span class="sc">}</span><span class="ss">&lt;/span&gt;</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a><span class="ss">        &lt;span style=&quot;font-size:250%&quot;&gt;% used&lt;/span&gt;</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a><span class="ss">        &lt;p&gt;</span></span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a><span class="ss">        &lt;table&gt;</span></span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a><span class="ss">          &lt;tr&gt;&lt;td&gt;Total&lt;/td&gt;&lt;td&gt;</span><span class="sc">{</span>total<span class="sc">}</span><span class="ss"> GB&lt;/td&gt;&lt;/tr&gt;</span></span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a><span class="ss">          &lt;tr&gt;&lt;td&gt;Used&lt;/td&gt;&lt;td&gt;</span><span class="sc">{</span>used<span class="sc">}</span><span class="ss"> GB&lt;/td&gt;&lt;/tr&gt;</span></span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a><span class="ss">          &lt;tr&gt;&lt;td&gt;Free&lt;/td&gt;&lt;td&gt;</span><span class="sc">{</span>free<span class="sc">}</span><span class="ss"> GB&lt;/td&gt;&lt;/tr&gt;</span></span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a><span class="ss">        &lt;/table&gt;    </span></span>
 <span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a><span class="ss">    &#39;&#39;&#39;</span></span></code></pre></div>
 <p>ブラウザの HTML フォームで “On update: reload HTML”
 をチェックすると，データ更新のたびにこのコンテンツ生成関数が呼ばれるので，データを含んだ
