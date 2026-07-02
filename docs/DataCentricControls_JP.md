@@ -37,7 +37,7 @@ RPC によるコントロールと異なり，PubSub メッセージによるコ
     "consequences": [
         {
             "topic": data_topic, 
-            "condition" {
+            "condition": {
                 "range": [low, high]
             },
             "delay": max_time_to_data
@@ -46,7 +46,7 @@ RPC によるコントロールと異なり，PubSub メッセージによるコ
     ],
     
     "issued_by": mesh_id,
-    "timestamp": timesamp
+    "timestamp": timestamp
 }
 ```
 
@@ -75,7 +75,7 @@ RPC によるコントロールと異なり，PubSub メッセージによるコ
 
 ## データ形式
 ### トピック: `data.{category}.{channel}`
-- `catetory` は，データ生成側が，データがどのように使われるかの期待を示す．
+- `category` は，データ生成側が，データがどのように使われるかの期待を示す．
   - `monitor`: 主に実時間モニタを目的とした高頻度データ
   - `store`: 永続記録装置に記録することを期待した必要データ
   
@@ -92,7 +92,7 @@ RPC によるコントロールと異なり，PubSub メッセージによるコ
 - コントロールメッセージの `consequences` と同じデータモニタが適用される
 - モニタは，`next_delivery` を超えてデータが来ない場合はエラーとする
 - `next_delivery` が存在しない場合は，モニタはタイムアウトチェックをしない
-- `next_delivery` に `None` または非正値を指定すると，このトピックに対するモニタが停止する<
+- `next_delivery` に `None`/`null` または非正値を指定すると，このトピックに対するモニタが停止する
 
 
 ## モニタ
@@ -119,7 +119,7 @@ RPC によるコントロールと異なり，PubSub メッセージによるコ
 - `message_id` は，コントロール送出タスクの Message ID．ヘッダから取得する．
 
 ### トピック: `monitor.{category}.{channel}`
-- `catetory` は，`data` トピックと同じ
+- `category` は，`data` トピックと同じ
 
 ```json
 {

@@ -138,16 +138,16 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;consequences&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;topic&quot;</span><span class="fu">:</span> <span class="er">data_topic</span><span class="fu">,</span> </span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;condition&quot;</span> <span class="er">{</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;condition&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;range&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="er">low</span><span class="ot">,</span> <span class="er">high</span><span class="ot">]</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span><span class="ot">,</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;delay&quot;</span><span class="er">:</span> <span class="er">max_time_to_data</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        <span class="er">}</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>            <span class="fu">},</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;delay&quot;</span><span class="fu">:</span> <span class="er">max_time_to_data</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span></span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        <span class="er">....</span></span>
 <span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span><span class="fu">,</span></span>
 <span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;issued_by&quot;</span><span class="fu">:</span> <span class="er">mesh_id</span><span class="fu">,</span></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="er">timesamp</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="er">timestamp</span></span>
 <span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <ul>
 <li><p><code>effective_at</code>
@@ -191,7 +191,7 @@ severity レベル．デフォルト <code>error</code></li>
 <h3 id="トピック-data.category.channel">トピック:
 <code>data.{category}.{channel}</code></h3>
 <ul>
-<li><code>catetory</code>
+<li><code>category</code>
 は，データ生成側が，データがどのように使われるかの期待を示す．
 <ul>
 <li><code>monitor</code>: 主に実時間モニタを目的とした高頻度データ</li>
@@ -214,8 +214,8 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="
 を超えてデータが来ない場合はエラーとする</li>
 <li><code>next_delivery</code>
 が存在しない場合は，モニタはタイムアウトチェックをしない</li>
-<li><code>next_delivery</code> に <code>None</code>
-または非正値を指定すると，このトピックに対するモニタが停止する&lt;</li>
+<li><code>next_delivery</code> に <code>None</code>/<code>null</code>
+または非正値を指定すると，このトピックに対するモニタが停止する</li>
 </ul>
 <h2 id="モニタ">モニタ</h2>
 <p>モニタタスクが <code>control.&gt;</code> と <code>data.&gt;</code> を
@@ -252,7 +252,7 @@ ID．ヘッダから取得する．</li>
 <h3 id="トピック-monitor.category.channel">トピック:
 <code>monitor.{category}.{channel}</code></h3>
 <ul>
-<li><code>catetory</code> は，<code>data</code> トピックと同じ</li>
+<li><code>category</code> は，<code>data</code> トピックと同じ</li>
 </ul>
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>

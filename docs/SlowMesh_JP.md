@@ -73,7 +73,7 @@ async def handle_data(headers, data):
 ```
 
 ### バックボーン接続
-SlowPy Mesh の PubSub は，SlowPy Control に実装されているメッセージングバックボーンへのインターフェスに対する薄いラッパーです．
+SlowPy Mesh の PubSub は，SlowPy Control に実装されているメッセージングバックボーンへのインターフーェスに対する薄いラッパーです．
 SlowPy Control にある以下のメッセージングシステムを選べます：
 
 | バックボーン | SlowPy モジュール | ブローカー | 備考 |
@@ -313,7 +313,7 @@ WebUI に SlowTask のコンソールをもたせるなどの用途を想定し�
     
     await mesh_stdio.aio_start()
     # この間，print() が publish され，input() が subscribe から取得される
-    await mesh_stio.aio_stop()
+    await mesh_stdio.aio_stop()
     
 ```
 `print()` または `sys.stdio` / `sys.stderr` に書かれたメッセージは，SlowMesh の指定トピックに publish され，かつ，ローカルの標準（エラー）出力にも書き出されます．同様に，`input()` または `stdin` からの取得リクエストは，SlowMesh への subscription またはローカルの標準入力の両方から読み出されます（先に来た方が受け取られる）．
@@ -325,7 +325,7 @@ PubSub に使われるトピック名は，`{prefix}.{stream}.{mesh_id}` です�
 SlowTask を動的ロードモジュールとして使った場合，複数の SlowTask が SlowDash サーバープロセスの中で動作しますが，その場合，各 SlowTask は別々のスレッドで動くので，それぞれが MeshStdio を持つことができます．
 
 入出力チャンネルがスレッド ID に紐付けられるため，SlowTask の中で新たにスレッドを実行する場合には，そのスレッドに MeshStdio を明示的にアタッチし，スレッドの終了前に明示的にデタッチする必要があります．
-```
+```python
 def thread_run():
     mesh_stdio.attach_current_thread()
     # ...
@@ -367,7 +367,7 @@ SlowTask はシングルスレッドの非同期呼び出しで全体が並列�
 
 SlowTask を独立プロセスとして実行するには，通常は `slowdash-task` コマンドを使います．
 ```console
-$ slowdash-task  slowask-mytask.py
+$ slowdash-task  slowtask-mytask.py
 ```
 
 もしスクリプト中で `if __name__ == '__main__': tasklet.run()` をしているなら，通常の Python スクリプトとしての実行もできます，
@@ -499,7 +499,7 @@ SlowTask は，内部に接続済 SlowMesh を保持していて，これを介�
 - TODO: `@export()` に `threading=True` オプションを指定して，バックグラウンドスレッドを自動生成するようにする
 
 処理結果は publish し，エラーの場合は alert を publish するまたはログに書く，というのが想定です．
-必要に応じて，処理状況を逐次 publish するか，Registry に状態を記録するなどずれば，呼び出し側が状況を把握できます．
+必要に応じて，処理状況を逐次 publish するか，Registry に状態を記録するなどすれば，呼び出し側が状況を把握できます．
 高信頼が必要な場合の高度な方法として，`sd.rpc.>` を subscribe して，システムが期待する状態に遷移するかを監視する SlowTask を走らせるという手もあります．
 
 ### config コンテンツの動的生成
@@ -544,7 +544,7 @@ SlowTask のスクリプトは，独立プロセス (task process) として走�
 SlowDash サーバーの URL は自動で取得されます．（TODO: 現時点ではハードコーディング）
 
 ```console
-$ slowdask-task {タスクスクリプト}.py
+$ slowdash-task {タスクスクリプト}.py
 ```
 
 そのまま通常の Python スクリプトとして実行することもできます．この場合は，SlowPy の venv の有効化や，SlowDash サーバー URL の明示的設定が必要です．
@@ -761,7 +761,7 @@ Mesh メッシュリクエスト
 ##### Publish Request
 - Syntax: `publish トピック名(固定パラメータリスト)`
 - Example: `<input type="submit" name="publish my_setup.start(run_mode='normal')">`
-- Form 中の `type="submit"` 以外の `<input>` 要素の `name` と `value` に固定パラメータを追加した Key-Value Pairs の JSON obect が publish される．
+- Form 中の `type="submit"` 以外の `<input>` 要素の `name` と `value` に固定パラメータを追加した Key-Value Pairs の JSON object が publish される．
 - レスポンス：
   - 成功： 200, `{ "status": "ok" }`
   - エラー: 400 番台のエラーレスポンス
@@ -772,7 +772,7 @@ Mesh メッシュリクエスト
 #### GET `api/channels`
 Task が export している変数の名前をデータベース中のデータと同じ形式でリストして返す
 
-#### GET `api/data/{channels}?length={lengh}&to={to}`
+#### GET `api/data/{channels}?length={length}&to={to}`
 Task が export している変数の値をデータベース中のデータと同じ形式で返す
 
 - length と to で指定されるクエリ期間が現在時刻を含んでいる場合のみ値を返す（典型的には `to` が `0` のクエリ）
@@ -801,7 +801,7 @@ Registry に保持されているキーのリストを返す
 
 ### 一般データインターフェース
 
-#### GET `api/data/{channels}?length={lengh}&to={to}`
+#### GET `api/data/{channels}?length={length}&to={to}`
 Registry に保持されているキーの値をデータとして返す（データベースからのデータと同形式）．
 
 - channel が `@registry:{key}` となっているものが対象
@@ -865,11 +865,13 @@ Headers:
 
 Body:
 ```json
+{
     "type": "object",
-    "required": [ "expire"],
+    "required": [ "expire" ],
     "properties": {
         "expire": { "type": "int" }
     }
+}
 ```
 
 ##### JSON Example
@@ -934,7 +936,7 @@ Body:
         "name": { "type": "string" },
         "timestamp": { "type": "int" },
         "functions": {
-            "type": "obect",
+            "type": "object",
             "required": [],
             "properties": {
                 "kwargs": {
@@ -951,7 +953,7 @@ Body:
             "type": "object",
             "required": [ "type" ],
             "properties": {
-                "type": { "type": "string", "enum": [ "control_node" ], $comment": " 将来的には dataclass type などを追加するかも．readonly とかも．" }
+                "type": { "type": "string", "enum": [ "control_node" ], "$comment": " 将来的には dataclass type などを追加するかも．readonly とかも．" },
                 "data_type": { "type": "string", "enum": [ "numeric", "string", "tree", "table", "histogram", "graph" ] },
                 "probe_value": {}
         },
@@ -960,7 +962,7 @@ Body:
             "properties": {
                 "stdout": { "type": "string", "$comment": "stdout が publish されるトピック名" }, 
                 "stderr": { "type": "string", "$comment": "stderr が publish されるトピック名" }, 
-                "stdin": { "type": "string", "$comment": "subscribe の受信が stdin へ送られるトピック名" }, 
+                "stdin": { "type": "string", "$comment": "subscribe の受信が stdin へ送られるトピック名" }
             }
         }
     }
@@ -1015,6 +1017,7 @@ Body:
 ##### JSON Schema
 Headers:
 ```json
+{
     "type": "object",
     "required": [ "name", "mesh_id", "stream" ],
     "properties": {
@@ -1022,6 +1025,7 @@ Headers:
         "name": { "type": "string" },
         "stream": { "type": "string", "enum": [ "stdout", "stderr" ] }
     }
+}
 ```
 
 Body:
@@ -1033,10 +1037,11 @@ Body:
         "mesh_id": { "type": "string" },
         "name": { "type": "string" },
         "timestamp": { "type": "int" },
-        "stream": { "type": "string", "enum": [ "stdout", "stderr" }
-        "kind": { "type": "string", "enum": [ "text"] }
+        "stream": { "type": "string", "enum": [ "stdout", "stderr" ] },
+        "kind": { "type": "string", "enum": [ "text" ] },
         "text": { "type": "string" }
     }
+}
 ```    
 
 ### sd.task.stdin.{mesh_id}
