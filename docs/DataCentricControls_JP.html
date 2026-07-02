@@ -92,7 +92,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <nav id="TOC">
 <ul>
 <li><a href="#概要" id="toc-概要">概要</a></li>
-<li><a href="#実装" id="toc-実装">実装</a></li>
+<li><a href="#実装" id="toc-実装">実装</a>
+<ul>
+<li><a href="#コントロールメッセージ"
+id="toc-コントロールメッセージ">コントロールメッセージ</a></li>
+<li><a href="#データ形式" id="toc-データ形式">データ形式</a></li>
+<li><a href="#モニタ" id="toc-モニタ">モニタ</a></li>
+</ul></li>
 </ul>
 </nav>
 </div>
@@ -110,7 +116,7 @@ SlowDash のやり方です．
 メッセージによるコントロールでは，戻り値が存在しないため，コマンドの成功またはエラーを直接取得することができません．
 コントロールが成功したかどうかは，モニタタスクが，システムが望む状態に移行したかどうかを監視することにより行います．</p>
 <p>典型的には，コントロールを出すタスクがコントロールを Publish
-し，モニタがそれを感知したら，そのことを発出タスクに通知し，それ以降の責任はモニタが引き受けます．
+し，モニタがそれを傍受したら，そのことを発出タスクに通知し，それ以降の責任はモニタが引き受けます．
 コントロールメッセージには，直接の操作対象に加え，その結果として期待するシステム状態も記述されます．
 この仕組みにより，モニタが期待するシステム状態が変化する状況においても，データ監視条件をコントロールに応じて変化させることができます．</p>
 <p>一度モニタが始動すると，状態を示すデータは継続的にモニタされるようになります．
@@ -118,33 +124,36 @@ SlowDash のやり方です．
 通常，データの読み出し間隔は，データ生成元が知っているはずなので，このようにすることによりモニタ側に事前にデータ間隔を伝える必要がなくなります．
 最初の一点までの時間は，コントロール側が指定します．</p>
 <h1 id="実装">実装</h1>
-<h3 id="コントロールメッセージ">コントロールメッセージ</h3>
-<h4 id="トピック-control.target">トピック:
-<code>control.{target}</code></h4>
-<h4 id="内容">内容</h4>
+<h2 id="コントロールメッセージ">コントロールメッセージ</h2>
+<h3 id="トピック-control.target">トピック:
+<code>control.{target}</code></h3>
 <div class="sourceCode" id="cb1"><pre
 class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;target&quot;</span><span class="fu">:</span> <span class="er">target</span><span class="fu">,</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="er">value</span><span class="fu">,</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;effective_at&quot;</span><span class="fu">:</span> <span class="er">timestamp</span><span class="fu">,</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;consequences&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;topic&quot;</span><span class="fu">:</span> <span class="er">data_topic</span><span class="fu">,</span> </span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;condition&quot;</span> <span class="er">{</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;range&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="er">low</span><span class="ot">,</span> <span class="er">high</span><span class="ot">]</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span><span class="ot">,</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;delay&quot;</span><span class="er">:</span> <span class="er">max_time_to_data</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        <span class="er">}</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        <span class="er">....</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;issued_by&quot;</span><span class="fu">:</span> <span class="er">mesh_id</span><span class="fu">,</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="er">timesamp</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;deadline&quot;</span><span class="fu">:</span> <span class="er">timestamp</span><span class="fu">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;consequences&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;topic&quot;</span><span class="fu">:</span> <span class="er">data_topic</span><span class="fu">,</span> </span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;condition&quot;</span> <span class="er">{</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;range&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="er">low</span><span class="ot">,</span> <span class="er">high</span><span class="ot">]</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;delay&quot;</span><span class="er">:</span> <span class="er">max_time_to_data</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        <span class="er">}</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        <span class="er">....</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;issued_by&quot;</span><span class="fu">:</span> <span class="er">mesh_id</span><span class="fu">,</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="er">timesamp</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <ul>
 <li><p><code>effective_at</code>
 でコマンドを実行する時間を指定．指定がなければ即実行</p></li>
+<li><p><code>deadline</code>
+までにコマンド実行を完了できなければエラー</p></li>
 <li><p><code>consequences</code>
 はモニタに使われる．もちろん．コントロール実行側がエラーやアラームを出しても良い．</p></li>
 <li><p><code>consequences/condition</code>
@@ -178,9 +187,9 @@ severity レベル．デフォルト <code>error</code></li>
 が指定されている場合，<code>{name}.{topic}</code>
 に対して上書きする．</p></li>
 </ul>
-<h3 id="データ形式">データ形式</h3>
-<h4 id="トピック-data.category.channel">トピック:
-<code>data.{category}.{channel}</code></h4>
+<h2 id="データ形式">データ形式</h2>
+<h3 id="トピック-data.category.channel">トピック:
+<code>data.{category}.{channel}</code></h3>
 <ul>
 <li><code>catetory</code>
 は，データ生成側が，データがどのように使われるかの期待を示す．
@@ -190,7 +199,6 @@ severity レベル．デフォルト <code>error</code></li>
 永続記録装置に記録することを期待した必要データ</li>
 </ul></li>
 </ul>
-<h4 id="内容-1">内容</h4>
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;channel&quot;</span><span class="fu">:</span> <span class="er">channel</span><span class="fu">,</span></span>
@@ -209,13 +217,18 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="
 <li><code>next_delivery</code> に <code>None</code>
 または非正値を指定すると，このトピックに対するモニタが停止する&lt;</li>
 </ul>
-<h3 id="モニタ">モニタ</h3>
+<h2 id="モニタ">モニタ</h2>
 <p>モニタタスクが <code>control.&gt;</code> と <code>data.&gt;</code> を
 subscribe し，状態をチェック．
 期待どおりの状態・状態遷移が起きない場合はアラームを出す．</p>
 <ul>
-<li>モニタがコントロール発行元に Acknowledged
-を送るようにしてもいい．これにより，送り出し側は，結果がモニタされたことを確認して安心できる．</li>
+<li>モニタがコントロールメッセージを傍受したら，発行元に Acknowledged
+を送る．
+<ul>
+<li>これにより，送り出し側は，結果がモニタされたことを確認して安心できる．</li>
+<li>Acknowledge
+が来なかったら，メッシュが不通かモニタが死んでいるということ．</li>
+</ul></li>
 <li>モニタはアラーム状態を時系列データとして送り出す．
 <ul>
 <li><code>monitor.{category}.{channel}</code></li>
@@ -224,6 +237,30 @@ subscribe し，状態をチェック．
 タスクがこれを記録しても良い．過去のデータに対するアラーム状態を取得できる．</li>
 </ul></li>
 </ul>
+<h3 id="トピック-acknowledge.mesh_id">トピック:
+<code>acknowledge.{mesh_id}</code></h3>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;message_id&quot;</span><span class="fu">:</span> <span class="er">message_id</span><span class="fu">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;issued_by&quot;</span><span class="fu">:</span> <span class="er">self.mesh_id</span><span class="fu">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="er">timestamp</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<ul>
+<li><code>message_id</code> は，コントロール送出タスクの Message
+ID．ヘッダから取得する．</li>
+</ul>
+<h3 id="トピック-monitor.category.channel">トピック:
+<code>monitor.{category}.{channel}</code></h3>
+<ul>
+<li><code>catetory</code> は，<code>data</code> トピックと同じ</li>
+</ul>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;channel&quot;</span><span class="fu">:</span> <span class="er">channel</span><span class="fu">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="er">timestamp</span><span class="fu">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;severity&quot;</span><span class="fu">:</span> <span class="er">severity</span><span class="fu">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;message&quot;</span><span class="fu">:</span> <span class="er">message</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 
 
 </body>
