@@ -969,9 +969,20 @@ Tasklet を使用しない場合</h2>
 スクリプトを SlowTask として実行（task process）または動的ロード(task
 module)をすることができます．この場合は，以下の機能のみが使用できます．</p>
 <ul>
-<li>古いスタイルの Lifespan Callbacks (<code>_initialize()</code> /
-<code>_run()</code> / <code>_loop()</code> /
-<code>_finalize()</code>)</li>
+<li>古いスタイルのコールバック：
+<ul>
+<li><code>_initialize(params={})</code>:
+<code>@tasklet.initailze()</code> と同等</li>
+<li><code>_finalize()</code>: <code>@tasklet.finalize()</code>
+と同等</li>
+<li><code>_run()</code>: <code>@tasklet.once()</code> と同等</li>
+<li><code>_loop()</code>: <code>@tasklet.loop(interval=0)</code>
+と同等</li>
+<li><code>_get_html()</code>:
+<code>@tasklet.content('config/html-{name}.html')</code> と同等</li>
+<li><code>_get_layout()</code>:
+<code>@tasklet.content('config/slowplot-{name}.json')</code> と同等</li>
+</ul></li>
 <li>すべての関数の export （他のタスクやブラウザからの呼び出し）</li>
 <li>TODO: start/stop コントロール</li>
 </ul>

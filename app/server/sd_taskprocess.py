@@ -198,6 +198,8 @@ class TaskProxy:
         
         self._mesh_id = self._spec['mesh_id']
         self._name = self._spec.get('name', self._mesh_id)
+        self._heartbeat_expire = self._spec.get('timestamp', time.time()) + self._spec.get('heartbeat_interval', 0)
+        
         self._functions = {
             func_name: TaskFunctionProxy(func_name, func_spec)
             for func_name, func_spec in self._spec.get('functions', {}).items()
@@ -350,7 +352,7 @@ class TaskProcessComponent(Component):
             if mesh_id is not None and len(mesh_id) > 0:
                 self._task_table[mesh_id] = TaskProxy(data)
                 logging.info(f'Task spec received: {data}')
-            
+                
         await self._mesh.aio_subscribe('sd.task.spec.>', process_task_spec)
         
         async def process_task_exit(headers, data):
@@ -359,18 +361,41 @@ class TaskProcessComponent(Component):
                 if mesh_id in self._task_table:
                     self._task_table.pop(mesh_id, None)
                     logging.info(f'Task removed: {mesh_id}')
-            
+                
         await self._mesh.aio_subscribe('sd.task.exit.>', process_task_exit)
+        
+        async def process_task_heartbeat(headers, data):
+            mesh_id = headers.get('mesh_id')
+            if mesh_id is not None and len(mesh_id) > 0:
+                if mesh_id not in self._task_table:
+                    logging.warning(f'Heartbeat from an unknown task: {mesh_id}')
+                    await self._mesh.aio_publish('sd.task.control.introduce', {})
+                else:
+                    self._task_table[mesh_id]._heartbeat_expire = data.get('expire', 0)
+            
+        await self._mesh.aio_subscribe('sd.task.heartbeat.>', process_task_heartbeat)
         
         
     async def _request_taskspec(self):
         await self._mesh.aio_publish('sd.task.control.introduce', {})
 
         
+    async def _check_task_heartbeats(self):
+        now = time.time() - 5
+        dead_tasks = []
+        for mesh_id, task in self._task_table.items():
+            if task._heartbeat_expire < now:
+                dead_tasks.append(mesh_id)
+                logging.warning(f'No Heartbeat from Task: {task.name}')
+        for mesh_id in dead_tasks:
+            self._task_table.pop(mesh_id, None)
+
+            
     @slowlette.get('/api/task/specs')
     async def get_tasklist(self):
         doc = []
-        for task in self._task_table.values():
+        await self._check_task_heartbeats()
+        for task in list(self._task_table.values()):
             doc.append(task.spec)
         return doc
 
@@ -391,7 +416,8 @@ class TaskProcessComponent(Component):
             except Exception as e:
                 return {'status': 'error', 'message': str(e) }
             
-        for task in self._task_table.values():
+        await self._check_task_heartbeats()
+        for task in list(self._task_table.values()):
             result = await task.process_command(request, self._mesh)
             if result is not None:
                 break
@@ -404,7 +430,8 @@ class TaskProcessComponent(Component):
     @slowlette.get('/api/channels')
     async def api_channels(self):
         channels = []
-        for task in self._task_table.values():
+        await self._check_task_heartbeats()
+        for task in list(self._task_table.values()):
             channels.extend(await task.get_channels())
 
         return channels
@@ -464,10 +491,12 @@ class TaskProcessComponent(Component):
         if (to < 0) or (to > 0 and (now > to+1 or now < to - length)):
             return {}
         
+        await self._check_task_heartbeats()
+        
         record = {}
         start = (to if to > 0 else int(now) + to) - length
         for ch in channels.split(',') if channels else []:
-            for task in self._task_table.values():
+            for task in list(self._task_table.values()):
                 reply = await task.get_data(ch, self._mesh)
                 if reply is None:
                     continue
@@ -488,8 +517,10 @@ class TaskProcessComponent(Component):
     async def api_get_content_list(self):
         self._content_table = {}
 
+        await self._check_task_heartbeats()
+        
         doc = []
-        for task in self._task_table.values():
+        for task in list(self._task_table.values()):
             for content_file_name in task.contents:
                 if not content_file_name.startswith('config/'):
                     continue
@@ -520,7 +551,8 @@ class TaskProcessComponent(Component):
         if content_file_name is None:
             return None
         
-        for task in self._task_table.values():
+        await self._check_task_heartbeats()
+        for task in list(self._task_table.values()):
             result = await task.get_content(content_file_name, self._mesh)
             if result is not None:
                 break

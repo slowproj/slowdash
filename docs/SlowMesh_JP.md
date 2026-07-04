@@ -570,11 +570,11 @@ SlowDash の設定ファイルから，動的ロードを設定します．SlowT
 スクリプト中で明示的に Tasklet を使用しない場合でも，任意の Python スクリプトを SlowTask として実行（task process）または動的ロード(task module)をすることができます．この場合は，以下の機能のみが使用できます．
 
 - 古いスタイルのコールバック：
-  - `_initialize()`: `@tasklet.initailze()` と同等
+  - `_initialize(params={})`: `@tasklet.initailze()` と同等
   - `_finalize()`: `@tasklet.finalize()` と同等
   - `_run()`: `@tasklet.once()` と同等
   - `_loop()`: `@tasklet.loop(interval=0)` と同等
-  - `_get_html()`: `@tasklet.content('config/html-{name}.htlm')` と同等
+  - `_get_html()`: `@tasklet.content('config/html-{name}.html')` と同等
   - `_get_layout()`: `@tasklet.content('config/slowplot-{name}.json')` と同等
 - すべての関数の export （他のタスクやブラウザからの呼び出し）
 - TODO: start/stop コントロール
@@ -757,7 +757,7 @@ Mesh メッシュリクエスト
 - Syntax: `タスク名.関数名(固定パラメータリスト)`
 - Example: `<input type="submit" name="run_controller.start(run_mode='normal')">`
 - Form 中の `type="submit"` 以外の `<input>` 要素の `name` と `value` に固定パラメータを追加したものが RPC の引数に渡される．
-- TODO: RPC のシグニチャを見て，必要なパラメータのみを選んで，型チェック・型変換もする
+- RPC のシグニチャを見て，必要なパラメータのみを選んで，型チェック・型変換もする
 - レスポンス：
   - 成功： 200, `{ "status": "ok", "return_value": return_value }`
   - RPC エラー (呼び出し先例外)： 200, `{ "status": "error", "message": error_message }`
@@ -847,7 +847,7 @@ Task の生存信号．Body に記録されるのは expire (= time-of-heartbeat
   - Tasklet のメインループから送出（コルーチンやスレッドではない；必ずメインと一緒に停止する）
 
 ##### 第２用途
-- TODO: サーバーは知らないタスクから Heartbeat を受け取った場合，PubSub に `sd.task.control.introduce` を publish する
+- サーバーは知らないタスクから Heartbeat を受け取った場合，PubSub に `sd.task.control.introduce` を publish する
 
 ##### 第３用途
 - サーバークラッシュなどによる PubSub の接続断後の再接続は publish にトリガされるので，heartbeat 送り出しが接続断後の reconnect retry になる
@@ -1181,6 +1181,5 @@ Body:
 
 # TODO
 - AsyncNATS, AsyncMQTT, AsyncRabbitMQ, AsyncRedis に on_reconnect を実装する
-- RPC の呼び出し前に Last Heartbeat をチェック，なければ unregister
 - レジストリを SlowTask でも動かせるようにする
 - MyMesh: SlowTask を SlowMesh なしで動かした場合に使う．コンソールから接続し，!!! から始まる行を拾う

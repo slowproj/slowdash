@@ -51,7 +51,6 @@ def _get_html():
     '''
 
     
-    
 if __name__ == '__main__':
     _initialize()
     

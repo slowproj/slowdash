@@ -403,11 +403,12 @@ class Tasklet:
                 else:
                     content_type = 'application/octet-stream'
             contents[name] = { 'content_type': content_type }
-                    
+
         spec_doc = {
             'mesh_id': self.mesh.mesh_id,
             'name': self.name,
             'timestamp': time.time(),
+            'heartbeat_interval': self._heartbeat_interval,
             'functions': functions,
             'variables': variables,
             'contents': contents,
