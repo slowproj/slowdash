@@ -38,13 +38,13 @@ class RetainerAutocide:
             prctl.restype = ctypes.c_int
             PR_SET_PDEATHSIG = 1
             if prctl(PR_SET_PDEATHSIG, self._autocide_signal, 0, 0, 0) != 0:
-                logging.warning(f'RetainerAutocide: {self._name}: Linux-style parent watch not available: pctrl(): {os.strerror(errno)}')
+                logging.warning(f'RetainerAutocide: {self._name}: Linux-style parent watch not available: prctl(): {os.strerror(ctypes.get_errno())}')
                 return False
         except Exception as e:
             logging.warning(f'RetainerAutocide: {self._name}: Linux-style parent watch not available: {e}')
             return False
         
-        logging.info(f'RetainerAutocide: {self._name}: Linux-style parent watch successfully set up')
+        logging.info(f'RetainerAutocide: {self._name}: watching PID {self._parent_pid} using prctl()')
 
         if os.getppid() != self._parent_pid:
             # parent already died
@@ -67,7 +67,7 @@ class RetainerAutocide:
 
                 time.sleep(self._interval)
 
-        logging.info(f'RetainerAutocide: {self._name}: using parent watch polling loop')
+        logging.info(f'RetainerAutocide: {self._name}: watching PID {self._parent_pid} using a polling loop')
         threading.Thread(target=watch, name='parent-death-watch',  daemon=True).start()
                 
 
