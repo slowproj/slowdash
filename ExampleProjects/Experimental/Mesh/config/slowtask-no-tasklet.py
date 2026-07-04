@@ -1,5 +1,5 @@
 
-import time, threading
+import time, datetime, threading
 
 from slowpy.control import control_system as ctrl
 device = ctrl.import_control_module('DummyDevice').randomwalk_device()
@@ -42,6 +42,15 @@ def store(data_record):
     datastore.append(data_record)
 
 
+
+def _get_html():
+    return f'''
+        <span style="font-size:300%">
+        Time: {str(datetime.datetime.now())}
+        </span>
+    '''
+
+    
     
 if __name__ == '__main__':
     _initialize()

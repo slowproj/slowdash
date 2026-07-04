@@ -569,7 +569,13 @@ SlowDash の設定ファイルから，動的ロードを設定します．SlowT
 ## スクリプト中で明示的に Tasklet を使用しない場合
 スクリプト中で明示的に Tasklet を使用しない場合でも，任意の Python スクリプトを SlowTask として実行（task process）または動的ロード(task module)をすることができます．この場合は，以下の機能のみが使用できます．
 
-- 古いスタイルの Lifespan Callbacks (`_initialize()` / `_run()` / `_loop()` / `_finalize()`)
+- 古いスタイルのコールバック：
+  - `_initialize()`: `@tasklet.initailze()` と同等
+  - `_finalize()`: `@tasklet.finalize()` と同等
+  - `_run()`: `@tasklet.once()` と同等
+  - `_loop()`: `@tasklet.loop(interval=0)` と同等
+  - `_get_html()`: `@tasklet.content('config/html-{name}.htlm')` と同等
+  - `_get_layout()`: `@tasklet.content('config/slowplot-{name}.json')` と同等
 - すべての関数の export （他のタスクやブラウザからの呼び出し）
 - TODO: start/stop コントロール
 

@@ -207,6 +207,16 @@ class Tasklet:
                 loop_delay = 0
             self._add_loop_callback(func_loop, loop_delay)
 
+        # content generators
+        func_html = _get_func('_get_html')
+        if func_html:
+            self._content_generators[f'config/html-{self.name}.html'] = ('text/html', func_html)
+            
+        func_layout = _get_func('_get_layout')
+        if func_layout:
+            self._content_generators[f'config/slowplot-{self.name}.json'] = ('application/json', func_layout)
+            
+        # normal function exports
         for name, func in module.__dict__.items():
             if name.startswith('_'):
                 continue
