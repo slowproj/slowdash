@@ -1,12 +1,13 @@
 # Created by Sanshiro Enomoto on 3 June 2026 #
 
-import sys, os, time, re, json, asyncio, copy, logging
+import sys, os, time, copy, re, json, asyncio, importlib.util, logging
 from typing import Any
 from pathlib import Path
 
 import slowlette
 from sd_component import Component
-from slowpy.mesh import Mesh
+from slowpy.mesh import Mesh, Tasklet
+
 
 
 class MeshRequest:
@@ -562,3 +563,46 @@ class TaskProcessComponent(Component):
         content_type, content = result
         return slowlette.Response(200, content_type=content_type, content=content)
 
+
+
+def load_task_module(path:str, *, name:str, argv:list[str]|None=None):
+    path = os.path.abspath(path)
+    if not os.path.isfile(path):
+        raise FileNotFoundError(path)
+
+    module_name = name
+    if module_name in sys.modules:
+        module_name = f'_slowtask_{module_name}_{abs(hash(path))}'
+    
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f'unable to load task script: {path}')
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+
+    script_dir = os.path.dirname(path)
+    old_argv = sys.argv
+    old_path = list(sys.path)
+    sys.argv = [path] + list(argv or [])
+    if script_dir not in sys.path:
+        sys.path.insert(0, script_dir)
+
+    try:
+        spec.loader.exec_module(module)
+    except Exception:
+        sys.modules.pop(module_name, None)
+        raise
+    finally:
+        sys.argv = old_argv
+        sys.path[:] = old_path
+
+    for value in module.__dict__.values():
+        if isinstance(value, Tasklet):
+            tasklet = value
+            break
+    else:
+        tasklet = Tasklet(use_oldstyle_callbacks=True)
+        module.Tasklet = Tasklet
+        module.tasklet = tasklet
+        
+    return module, tasklet

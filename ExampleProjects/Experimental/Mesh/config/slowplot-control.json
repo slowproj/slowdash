@@ -92,7 +92,7 @@
             "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
             "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false }
         },
-        { "type": "html", "location": "project", "file": "no_tasklet", "title": "" }
+        { "type": "html", "location": "project", "file": "no_tasklet", "title": "", "reload": true }
     ],
     "meta": { "name": "control", "title": "", "description": "" }
 }

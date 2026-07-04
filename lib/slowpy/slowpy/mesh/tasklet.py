@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 13 August 2025 #
 
-import sys, time, copy, json, asyncio, inspect, traceback, logging
+import sys, os, time, copy, json, threading, asyncio, inspect, signal, traceback, logging
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -10,6 +10,73 @@ from .mesh import Mesh
 from .stdio import MeshStdio
 from .dash import Dash
 
+
+class RetainerAutocide:
+    def __init__(self, name:str, interval:float=5.0, autocide_signal=signal.SIGKILL):
+        self._name = name
+        self._interval = interval
+        self._autocide_signal = int(autocide_signal)
+        self._parent_pid = os.getppid()  # capture the parent pid as soon as possible before the parent dies
+
+
+    def start(self):
+        if os.name == 'nt':
+            logging.error(f'RetainerAutocide: {self._name}: not implemented for Windows')
+            return
+
+        if not self._setup_linux_pdeathsig():  # this does not work for macos (ok on WSL)
+            self._start_parent_polling_watch()
+
+
+    def _setup_linux_pdeathsig(self)->bool:
+        import ctypes, ctypes.util
+        try:
+            libc_name = ctypes.util.find_library('c') or 'libc.so.6'
+            libc = ctypes.CDLL(libc_name, use_errno=True)
+            prctl = libc.prctl
+            prctl.argtypes = [ ctypes.c_int, ctypes.c_ulong, ctypes.c_ulong,  ctypes.c_ulong, ctypes.c_ulong ]
+            prctl.restype = ctypes.c_int
+            PR_SET_PDEATHSIG = 1
+            if prctl(PR_SET_PDEATHSIG, self._autocide_signal, 0, 0, 0) != 0:
+                logging.warning(f'RetainerAutocide: {self._name}: Linux-style parent watch not available: pctrl(): {os.strerror(errno)}')
+                return False
+        except Exception as e:
+            logging.warning(f'RetainerAutocide: {self._name}: Linux-style parent watch not available: {e}')
+            return False
+        
+        logging.info(f'RetainerAutocide: {self._name}: Linux-style parent watch successfully set up')
+
+        if os.getppid() != self._parent_pid:
+            # parent already died
+            self._terminate()
+
+        return True
+
+            
+    def _start_parent_polling_watch(self):
+        def watch():
+            while True:
+                if os.getppid() != self._parent_pid:
+                    self._terminate()
+                try:
+                    os.kill(self._parent_pid, 0)
+                except ProcessLookupError:
+                    self._terminate()
+                except Exception:
+                    pass
+
+                time.sleep(self._interval)
+
+        logging.info(f'RetainerAutocide: {self._name}: using parent watch polling loop')
+        threading.Thread(target=watch, name='parent-death-watch',  daemon=True).start()
+                
+
+    def _terminate(self):
+        if self._autocide_signal > 0:
+            os.kill(os.getpid(), self._autocide_signal)
+        else:
+            os._exit(1)
+            
 
 
 class Tasklet:
@@ -39,7 +106,7 @@ class Tasklet:
         self._next_heartbeat_time = 0
 
         self._content_generators = {}
-        
+
         
     @property
     def name(self):
