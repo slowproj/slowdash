@@ -397,7 +397,9 @@ class TaskProcessComponent(Component):
         doc = []
         await self._check_task_heartbeats()
         for task in list(self._task_table.values()):
-            doc.append(task.spec)
+            spec = copy.deepcopy(task.spec)
+            spec['heartbeat_expire'] = task._heartbeat_expire
+            doc.append(spec)
         return doc
 
     
