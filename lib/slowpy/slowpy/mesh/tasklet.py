@@ -12,6 +12,12 @@ from .dash import Dash
 
 
 class RetainerAutocide:
+    """terminate the process when the parent process dies, even unexpectedly by SIGKILL
+    - Implemented using prctl(), available only on Linux (and WSL).
+    - If prctl() is not available, such as on macos, a fallback is a pollilng loop to watch the parent.
+    - This does not work on Windows; use WSL on Windows.
+    """
+    
     def __init__(self, name:str, interval:float=5.0, autocide_signal=signal.SIGKILL):
         self._name = name
         self._interval = interval

@@ -1,0 +1,13 @@
+{
+    "control": {
+        "range": { "length": 900, "to": 0 },
+        "reload": 10,
+        "mode": "normal",
+        "grid": { "rows": 1, "columns": 1 }
+    },
+    "style": { },
+    "panels": [
+        { "type": "task" }
+    ],
+    "meta": { "name": "task", "title": "Task Manager", "description": "" }
+}

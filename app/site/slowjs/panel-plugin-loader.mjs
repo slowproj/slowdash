@@ -21,6 +21,7 @@ class PanelPluginLoader {
             './panel-html.mjs',
             './panel-catalog.mjs',
             './panel-download.mjs',
+            './panel-task.mjs',
             './panel-misc.mjs',
         ];
         this.plugin_files = [
