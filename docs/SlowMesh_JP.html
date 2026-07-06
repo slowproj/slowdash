@@ -1196,7 +1196,7 @@ Call Request (旧形式の slowtask function call と互換)</h5>
 <code>&lt;input&gt;</code> 要素の <code>name</code> と
 <code>value</code> に固定パラメータを追加したものが RPC
 の引数に渡される．</li>
-<li>TODO: RPC
+<li>RPC
 のシグニチャを見て，必要なパラメータのみを選んで，型チェック・型変換もする</li>
 <li>レスポンス：
 <ul>
@@ -1293,8 +1293,8 @@ object が publish される．</li>
 <li>エクスポート関数：
 <ul>
 <li>Task Script 中で <code>@export</code> したもの</li>
-<li>Task Contents を取得するための
-<code>_sd_get_content(name:str)</code></li>
+<li><code>_sd_stop()</code>: 停止リクエスト</li>
+<li><code>_sd_get_content(name:str)</code>: Task Contents を取得</li>
 </ul></li>
 </ul>
 <h1 id="pubsub-トピック構成">PubSub トピック構成</h1>
@@ -1321,9 +1321,8 @@ heartbeat-interval)．Expire が現在時刻よりも古ければ，Heartbeat
 </ul>
 <h5 id="第２用途">第２用途</h5>
 <ul>
-<li>TODO: サーバーは知らないタスクから Heartbeat
-を受け取った場合，PubSub に <code>sd.task.control.introduce</code> を
-publish する</li>
+<li>サーバーは知らないタスクから Heartbeat を受け取った場合，PubSub に
+<code>sd.task.control.introduce</code> を publish する</li>
 </ul>
 <h5 id="第３用途">第３用途</h5>
 <ul>
@@ -1633,8 +1632,6 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb54-1"><a href=
 <ul>
 <li>AsyncNATS, AsyncMQTT, AsyncRabbitMQ, AsyncRedis に on_reconnect
 を実装する</li>
-<li>RPC の呼び出し前に Last Heartbeat をチェック，なければ
-unregister</li>
 <li>レジストリを SlowTask でも動かせるようにする</li>
 <li>MyMesh: SlowTask を SlowMesh
 なしで動かした場合に使う．コンソールから接続し，!!!

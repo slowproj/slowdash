@@ -94,11 +94,11 @@ class TaskPanel extends Panel {
         if (this._task_catalog == null) {
             this._task_catalog = {};
             try {
-                const response = await fetch('api/control/task?since=0');
-                const record = await response.json();
-                for (const params of record.tasks) {
-                    this._task_catalog[params.name] = {
-                        file_name: 'slowtask-' + params.name + '.py',
+                const response = await fetch('api/task/catalog');
+                const doc = await response.json();
+                for (const [name, params] of Object.entries(doc)) {
+                    this._task_catalog[name] = {
+                        file_path: params.file_path
                     }
                 }
             }
@@ -112,15 +112,15 @@ class TaskPanel extends Panel {
         let running_tasks = new Set();
         try {
             const response = await fetch('api/task/specs');
-            const record = await response.json();
+            const doc = await response.json();
             const now = $.time();
-            for (const task_spec of record) {
+            for (const task_spec of doc) {
                 const catalog = this._task_catalog[task_spec.name];
                 const running = (task_spec.heartbeat_expire >= now - 1);
                 task_list.push({
                     name: task_spec.name,
                     mesh_id: task_spec.mesh_id,
-                    file_name: catalog ? catalog.file_name : null,
+                    file_path: catalog ? catalog.file_path : null,
                     status: running ? 'running' : 'ghost',
                 });
                 running_tasks.add(task_spec.name);
@@ -130,19 +130,43 @@ class TaskPanel extends Panel {
             console.log("Error on fetching taskspec: ", e);
         }
 
-        for (const [task_name, task_params] of Object.entries(this._task_catalog)) {
-            if (running_tasks.has(task_name)) {
-                continue;
+        for (const [name, params] of Object.entries(this._task_catalog)) {
+            if (! running_tasks.has(name)) {
+                task_list.push({
+                    name: name,
+                    mesh_id: null,
+                    file_path: params.file_path,
+                    status: 'inactive',
+                });
             }
-            task_list.push({
-                name: task_name,
-                mesh_id: null,
-                file_name: task_params.file_name,
-                status: 'inactive',
-            });
         }
         
         this._render_task_table(task_list);
+    }
+
+    
+    async _send_control(taskname, action, event=null) {
+        const url = `./api/task/control/${taskname}`;
+        try {
+            this.indicator.open("sending command...", "&#x23f3;", event?.clientX ?? null, event?.clientY ?? null);
+            let response = await fetch(url, {
+                method: 'POST',
+                body: `{"action":"${action}"}`
+            });
+            if (! response.ok) {
+                throw new Error(response.status + " " + response.statusText);
+            }
+            const reply = await response.json();
+            if (reply.status != 'ok') {
+                this.indicator.close("error: " + (reply.message ?? 'unknown error'), "&#x274c;", 5000);
+            }
+            else {
+                this.indicator.close("ok", "&#x2705;", 1000);
+            }
+        }
+        catch (e) {
+            this.indicator.close("error: " + e.message, "&#x274c;", 5000);
+        }
     }
 
     
@@ -152,8 +176,8 @@ class TaskPanel extends Panel {
         $('<th>').text("Name").appendTo(tr);
         $('<th>').text("Status").appendTo(tr);
         $('<th>').text("Control").appendTo(tr);
-        $('<th>').text("Mesh ID").appendTo(tr);
         $('<th>').text("File").appendTo(tr);
+        $('<th>').text("Mesh ID").appendTo(tr);
         tr.appendTo(this.table);
         const bg = window.getComputedStyle(tr.get()).getPropertyValue('background-color');
         tr.find('th').css({position: 'sticky', top:0, left:0, background: bg});
@@ -183,9 +207,14 @@ class TaskPanel extends Panel {
             $('<td>').appendTo(tr).text(task.name);
             $('<td>').appendTo(tr).html(status_label);
             $('<td>').appendTo(tr).append(buttons);
+            $('<td>').appendTo(tr).text(task.file_path ?? '-');
             $('<td>').appendTo(tr).text(task.mesh_id ?? '-');
-            $('<td>').appendTo(tr).text(task.file_name ?? '-');
             tr.appendTo(this.table);
+
+            tr.find('button').bind('click', e=>{
+                const action = $(e.target).text().toLowerCase();
+                this._send_control(task.name, action, e);
+            });
         }
     }
 }

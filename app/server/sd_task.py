@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 3 June 2026 #
 
-import sys, os, time, copy, re, json, asyncio, importlib.util, logging
+import sys, os, glob, time, copy, re, json, asyncio, importlib.util, logging
 from typing import Any
 from pathlib import Path
 
@@ -200,6 +200,7 @@ class TaskProxy:
         self._mesh_id = self._spec['mesh_id']
         self._name = self._spec.get('name', self._mesh_id)
         self._heartbeat_expire = self._spec.get('timestamp', time.time()) + self._spec.get('heartbeat_interval', 0)
+        self._is_dead = False
         
         self._functions = {
             func_name: TaskFunctionProxy(func_name, func_spec)
@@ -258,6 +259,28 @@ class TaskProxy:
         if len(reply) < 1:
             logging.warning(f'Task Command: RPC error: {request}: no reply')
             return {'status': 'error', 'message': f'RPC error: no reply' }
+
+        return reply[0]
+
+    
+    async def stop(self, mesh:Mesh):
+        try:
+            reply = await mesh.aio_call_many(
+                f'{self._name}._sd_stop',
+                args=[], kwargs={},
+                expected_replies=1, timeout=5, raise_on_timeout=True
+            )
+        except Exception as e:
+            logging.warning(f'Task Stop: RPC error: {self._name}._sd_stop(): {e}')
+            return {'status': 'error', 'message': f'RPC error: {e}' }
+
+        if len(reply) < 1:
+            logging.warning(f'Task Stop: RPC error: {self._name}._sd_stop(): no reply')
+            return {'status': 'error', 'message': f'RPC error: {e}' }
+
+        if reply[0].get('status').lower() != 'ok':
+            logging.warning(f'Task Stop: {self._name}._sd_stop(): {reply[0].get("message")}')
+            return {'status': 'error', 'message': reply[0].get("message")}
 
         return reply[0]
 
@@ -321,14 +344,16 @@ class TaskProxy:
         
     
 
-class TaskProcessComponent(Component):
+class TaskComponent(Component):
     def __init__(self, app, project):
         super().__init__(app, project)
 
         self._mesh = None
-        self._task_table: dict[str, TaskProcess] = {}   # { mesh_id: task }
+        self._task_table: dict[str, TaskProxy] = {}   # { mesh_id: task }
+        self._content_table: dict[str,str] = {}       # { content_name: file_name }
 
-        self._content_table: dict[str,str] = {}   # { content_name: file_name }
+        self._task_catalog: dict[str, dict] = {}      # { task_name, config }
+        self._load_task_catalog()
 
 
     @slowlette.on_event('post_startup')
@@ -347,6 +372,75 @@ class TaskProcessComponent(Component):
             await self._mesh.aio_stop()
 
 
+    def _load_task_catalog(self):
+        task_nodes = self.project.config.get('task', None)
+        if task_nodes is None:
+            task_nodes = self.project.config.get('tasks', [])  # suger added...
+        if not isinstance(task_nodes, list):
+            task_nodes = [ task_nodes ]
+                    
+        self._task_catalog = {}
+
+        # task entries from config
+        for node in task_nodes:
+            if not isinstance(node, dict):
+                logging.error(f'bad task configuration: not a dict: {node}')
+                continue
+            if self.app.is_cgi and not node.get('enabled_for_cgi', False):
+                continue
+            if self.app.is_command and not node.get('enabled_for_commandline', True):
+                continue
+            if 'name' not in node:
+                logging.error(f'bad task configuration: name is required: {node}')
+                continue
+
+            name = node['name']
+            file_path = f'config/slowtask-{name}.py'
+            if not os.path.isfile(file_path):
+                logging.error(f'unable to find task script: {node}')
+                continue
+            
+            self._task_catalog[name] = {
+                'name': name,
+                'file_path': file_path,
+                'auto_start': node.get('auto_start', node.get('auto_load', False)),
+                'auto_stop': node.get('auto_stop', True),
+            }
+            
+        # task entries from files
+        for file_path in glob.glob(os.path.join(self.project.project_dir, 'config', 'slowtask-*.py')):
+            rootname, ext = os.path.splitext(os.path.basename(file_path))
+            kind, name = rootname.split('-', 1)
+            if name not in self._task_catalog:
+                self._task_catalog[name] = {
+                    'name': name,
+                    'file_path': f'config/slowtask-{name}.py',
+                    'auto_start': False,
+                    'auto_stop': True,
+                }
+
+        
+    async def _start_task(self, taskname:str):
+        return True
+
+    
+    async def _stop_task(self, taskname:str):
+        await self._check_task_heartbeats()
+        for task in list(self._task_table.values()):
+            if task._name != taskname or task._is_dead:
+                continue
+            result = await task.stop(self._mesh)
+            break
+        else:
+            return None
+
+        return result
+
+    
+    async def _kill_task(self, taskname:str):
+        return True
+
+    
     async def _subscribe_taskspec(self):
         async def process_task_spec(headers, data):
             mesh_id = data.get('mesh_id')
@@ -383,19 +477,26 @@ class TaskProcessComponent(Component):
         
     async def _check_task_heartbeats(self):
         now = time.time() - 5
-        dead_tasks = []
         for mesh_id, task in self._task_table.items():
             if task._heartbeat_expire < now:
-                dead_tasks.append(mesh_id)
-                logging.warning(f'No Heartbeat from Task: {task.name}')
-        for mesh_id in dead_tasks:
-            self._task_table.pop(mesh_id, None)
+                if not task._is_dead:
+                    logging.warning(f'No Heartbeat from Task: {task.name}')
+                task._is_dead = True
+            else:
+                if task._is_dead:
+                    logging.info(f'Heartbeat recovered from Task: {task.name}')
+                task._is_dead = False
 
             
+    @slowlette.get('/api/task/catalog')
+    async def get_task_catalog(self):
+        self._load_task_catalog()
+        return self._task_catalog
+
+    
     @slowlette.get('/api/task/specs')
-    async def get_tasklist(self):
+    async def get_task_specs(self):
         doc = []
-        await self._check_task_heartbeats()
         for task in list(self._task_table.values()):
             spec = copy.deepcopy(task.spec)
             spec['heartbeat_expire'] = task._heartbeat_expire
@@ -403,6 +504,29 @@ class TaskProcessComponent(Component):
         return doc
 
     
+    @slowlette.post('/api/task/control/{taskname}')
+    async def control_task(self, taskname:str, doc:slowlette.DictJSON):
+        action = doc.get('action', None)
+        logging.info(f'Task Control: {taskname}.{action}()')
+
+        if action == 'start':
+            try:
+                await self._start_task(taskname)
+            except Exception as e:
+                return { 'status': 'error', 'message': f'Task start failed: {taskname}: {e}' }
+        elif action == 'stop':
+            return await self._stop_task(taskname)
+        elif action == 'kill':
+            try:
+                await self._kill_task(taskname)
+            except Exception as e:
+                return { 'status': 'error', 'message': f'Task stop failed: {taskname}: {e}' }
+        else:
+            return { 'status': 'error', 'message': f'Unknown task control: {action}' }
+        
+        return {'status': 'ok'}
+    
+
     @slowlette.post('/api/control')
     async def execute_command(self, doc:slowlette.DictJSON):
         logging.info(f'Task Command: {doc}')
@@ -421,6 +545,8 @@ class TaskProcessComponent(Component):
             
         await self._check_task_heartbeats()
         for task in list(self._task_table.values()):
+            if task._is_dead:
+                continue
             result = await task.process_command(request, self._mesh)
             if result is not None:
                 break
@@ -435,7 +561,8 @@ class TaskProcessComponent(Component):
         channels = []
         await self._check_task_heartbeats()
         for task in list(self._task_table.values()):
-            channels.extend(await task.get_channels())
+            if not task._is_dead:
+                channels.extend(await task.get_channels())
 
         return channels
 
@@ -500,6 +627,8 @@ class TaskProcessComponent(Component):
         start = (to if to > 0 else int(now) + to) - length
         for ch in channels.split(',') if channels else []:
             for task in list(self._task_table.values()):
+                if task._is_dead:
+                    continue
                 reply = await task.get_data(ch, self._mesh)
                 if reply is None:
                     continue
@@ -524,6 +653,8 @@ class TaskProcessComponent(Component):
         
         doc = []
         for task in list(self._task_table.values()):
+            if task._is_dead:
+                continue
             for content_file_name in task.contents:
                 if not content_file_name.startswith('config/'):
                     continue
@@ -556,6 +687,8 @@ class TaskProcessComponent(Component):
         
         await self._check_task_heartbeats()
         for task in list(self._task_table.values()):
+            if task._is_dead:
+                continue
             result = await task.get_content(content_file_name, self._mesh)
             if result is not None:
                 break

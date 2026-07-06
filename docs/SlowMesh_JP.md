@@ -828,8 +828,8 @@ Registry に保持されているキーの値をデータとして返す（デ�
 - モジュール名： `{task_name}` (デフォルトで，スクリプトファイル名が `slowtask-{task_name}.py`)
 - エクスポート関数：
   - Task Script 中で `@export` したもの
-  - Task Contents を取得するための `_sd_get_content(name:str)`
-
+  - `_sd_stop()`: 停止リクエスト
+  - `_sd_get_content(name:str)`: Task Contents を取得
 
 
 # PubSub トピック構成

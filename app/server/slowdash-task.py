@@ -2,7 +2,7 @@
 
 import os, re, argparse, logging
 from slowpy.mesh import RetainerAutocide
-from sd_taskprocess import load_task_module
+from sd_task import load_task_module
 
 
 def main(argv=None):

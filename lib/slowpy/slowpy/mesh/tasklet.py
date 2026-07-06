@@ -158,6 +158,7 @@ class Tasklet:
         if self._use_oldstyle_callbacks:
             self._scan_oldstyle_callbacks(module)
 
+        self._export_stop_function()
         self._export_content_generators()
             
         ctrl.stop_by_signal()
@@ -300,6 +301,13 @@ class Tasklet:
             if hasattr(func, '_slow_task'):
                 continue
             self._mesh.export(name, func)
+
+
+    def _export_stop_function(self):
+        async def handle_stop():
+            logging.info('terminated by RPC stop()')
+            ctrl.stop()
+        self._mesh.export('_sd_stop', handle_stop)
 
 
     def _export_content_generators(self):
