@@ -37,8 +37,7 @@ slowdash:
 	@if [ -d .git/hooks ]; then ln -fs ../../.git-hooks/pre-commit .git/hooks; fi
 
 	@echo 'export SLOWDASH_DIR=$(SLOWDASH_DIR)' > $(SLOWDASH_ENV)
-	@echo 'alias slowdash="$$SLOWDASH_DIR/bin/slowdash"' >> $(SLOWDASH_ENV)
-	@echo 'alias slowdash-task="$$SLOWDASH_DIR/bin/slowdash-task"' >> $(SLOWDASH_ENV)
+	@echo 'export PATH=$$SLOWDASH_DIR/bin:$$PATH' >> $(SLOWDASH_ENV)
 	@echo 'alias slowdash-activate-venv="source $$SLOWDASH_DIR/venv/bin/activate"' >> $(SLOWDASH_ENV)
 
 	@echo "generating requirements.txt..."
