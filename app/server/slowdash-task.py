@@ -43,7 +43,7 @@ def main(argv=None):
         name = os.path.splitext(os.path.basename(path))[0]
         if name.startswith('slowtask-'):
             name = name[len('slowtask-'):]
-        name = re.sub(r'[^a-zA-Z0-9]', '_', name)
+        name = re.sub(r'[^a-zA-Z0-9\-]', '_', name)
 
     autocider = RetainerAutocide(name)
     autocider.start()

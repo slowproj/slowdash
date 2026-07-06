@@ -11,4 +11,4 @@ else
    export PYTHONPATH="$SLOWDASH_DIR/lib/slowlette:$PYTHONPATH"
 fi
 
-python3 "$SLOWDASH_DIR/app/server/slowdash-task.py" "$@"
+exec python3 "$SLOWDASH_DIR/app/server/slowdash-task.py" "$@"

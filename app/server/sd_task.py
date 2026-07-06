@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 3 June 2026 #
 
-import sys, os, glob, time, copy, re, json, asyncio, importlib.util, logging
+import sys, os, glob, time, subprocess, copy, re, json, asyncio, importlib.util, logging
 from typing import Any
 from pathlib import Path
 
@@ -349,12 +349,14 @@ class TaskComponent(Component):
         super().__init__(app, project)
 
         self._mesh = None
-        self._task_table: dict[str, TaskProxy] = {}   # { mesh_id: task }
-        self._content_table: dict[str,str] = {}       # { content_name: file_name }
+        self._task_table: dict[str, TaskProxy] = {}   # { mesh_id => task }
+        self._content_table: dict[str,str] = {}       # { content_name => file_name }
 
-        self._task_catalog: dict[str, dict] = {}      # { task_name, config }
+        self._task_catalog: dict[str, dict] = {}      # { task_name => config }
         self._load_task_catalog()
 
+        self._proc_set_table: dict[str, set[subprocess.Popen]] = {}  
+        
 
     @slowlette.on_event('post_startup')
     async def startup(self):
@@ -395,14 +397,16 @@ class TaskComponent(Component):
                 continue
 
             name = node['name']
-            file_path = f'config/slowtask-{name}.py'
+            file_path = node.get('file_path', f'config/slowtask-{name}.py')
             if not os.path.isfile(file_path):
                 logging.error(f'unable to find task script: {node}')
                 continue
+            command = node.get('command', f'slowdash-task {file_path} --name={name}')
             
             self._task_catalog[name] = {
                 'name': name,
                 'file_path': file_path,
+                'command': command,
                 'auto_start': node.get('auto_start', node.get('auto_load', False)),
                 'auto_stop': node.get('auto_stop', True),
             }
@@ -415,31 +419,80 @@ class TaskComponent(Component):
                 self._task_catalog[name] = {
                     'name': name,
                     'file_path': f'config/slowtask-{name}.py',
+                    'command': f'slowdash-task config/slowtask-{name}.py',
                     'auto_start': False,
                     'auto_stop': True,
                 }
 
         
-    async def _start_task(self, taskname:str):
-        return True
+    async def _start_task(self, task_name:str):
+        if task_name not in self._task_catalog:
+            return { 'status': 'error', 'message': f'not such task: {task_name}' }
+        command = self._task_catalog[task_name].get('command')
+        if command is None or len(command) == 0:
+            return { 'status': 'error', 'message': f'no command found to start task: {task_name}' }
+
+        self._check_task_heartbeats()
+        for task in list(self._task_table.values()):
+            if task._name == task_name:
+                return { 'status': 'error', 'message': f'task already running: {task_name}' }
+        
+        try:
+            proc = subprocess.Popen('exec ' + command, shell=True)
+        except Exception as e:
+            return { 'status': 'error', 'message': f'Popen: {e}' }
+        
+        if task_name not in self._proc_set_table:
+            self._proc_set_table[task_name] = set()
+        self._proc_set_table[task_name].add(proc)
+            
+        return { 'status': 'ok' }
 
     
-    async def _stop_task(self, taskname:str):
-        await self._check_task_heartbeats()
+    async def _stop_task(self, task_name:str):
+        self._check_task_heartbeats()
         for task in list(self._task_table.values()):
-            if task._name != taskname or task._is_dead:
+            if task._name != task_name or task._is_dead:
                 continue
             result = await task.stop(self._mesh)
             break
         else:
-            return None
+            return { 'status': 'error', 'message': f'not such task: {task_name}' }
 
         return result
 
     
-    async def _kill_task(self, taskname:str):
-        return True
+    async def _kill_task(self, task_name:str):
+        proc_set = self._proc_set_table.get(task_name, set())
+        if len(proc_set) == 0:
+            return { 'status': 'error', 'message': f'not such task: {task_name}' }
 
+        for proc in proc_set:
+            try:
+                proc.kill()
+                logging.info(f"I've killed a Task process: {task_name} (pid={proc.pid})")
+            except Exception as e:
+                logging.error(f'unable to kill a Task process: {task_name}: {e}')
+
+        self._check_task_proc()
+        await self._purge_task(task_name)
+        
+        return { 'status': 'ok' }
+
+    
+    async def _purge_task(self, task_name:str):
+        for task in list(self._task_table.values()):
+            if task._name != task_name:
+                continue
+            doc = {
+                'mesh_id': task._mesh_id,
+                'name': task._name,
+                'timestamp': time.time()
+            }
+            await self._mesh.aio_publish(f'sd.task.exit.{task._name}.{task._mesh_id}', doc)
+
+        return { 'status': 'ok' }
+    
     
     async def _subscribe_taskspec(self):
         async def process_task_spec(headers, data):
@@ -475,12 +528,13 @@ class TaskComponent(Component):
         await self._mesh.aio_publish('sd.task.control.introduce', {})
 
         
-    async def _check_task_heartbeats(self):
+    def _check_task_heartbeats(self):
         now = time.time() - 5
         for mesh_id, task in self._task_table.items():
             if task._heartbeat_expire < now:
                 if not task._is_dead:
                     logging.warning(f'No Heartbeat from Task: {task.name}')
+                    self._check_task_proc()
                 task._is_dead = True
             else:
                 if task._is_dead:
@@ -488,19 +542,32 @@ class TaskComponent(Component):
                 task._is_dead = False
 
             
+    def _check_task_proc(self):
+        for task_name, proc_set in self._proc_set_table.items():
+            for proc in list(proc_set):
+                return_code = proc.poll()
+                if return_code is not None:
+                    logging.info(f'Task Process found terminated: {task_name} ({proc.pid}): return_code={return_code}')
+                    proc_set.discard(proc)
+
+                    
     @slowlette.get('/api/task/catalog')
     async def get_task_catalog(self):
         self._load_task_catalog()
         return self._task_catalog
 
     
-    @slowlette.get('/api/task/specs')
-    async def get_task_specs(self):
+    @slowlette.get('/api/task/status')
+    async def get_task_status(self):
         doc = []
+        self._check_task_proc()
         for task in list(self._task_table.values()):
-            spec = copy.deepcopy(task.spec)
-            spec['heartbeat_expire'] = task._heartbeat_expire
-            doc.append(spec)
+            doc.append({
+                'name': task._name,
+                'proc_id': [ proc.pid for proc in self._proc_set_table.get(task._name, []) ],
+                'heartbeat_expire': task._heartbeat_expire,
+                'spec': copy.deepcopy(task.spec),
+            })
         return doc
 
     
@@ -510,17 +577,13 @@ class TaskComponent(Component):
         logging.info(f'Task Control: {taskname}.{action}()')
 
         if action == 'start':
-            try:
-                await self._start_task(taskname)
-            except Exception as e:
-                return { 'status': 'error', 'message': f'Task start failed: {taskname}: {e}' }
+            return await self._start_task(taskname)
         elif action == 'stop':
             return await self._stop_task(taskname)
         elif action == 'kill':
-            try:
-                await self._kill_task(taskname)
-            except Exception as e:
-                return { 'status': 'error', 'message': f'Task stop failed: {taskname}: {e}' }
+            return await self._kill_task(taskname)
+        elif action == 'purge':
+            return await self._purge_task(taskname)
         else:
             return { 'status': 'error', 'message': f'Unknown task control: {action}' }
         
@@ -543,7 +606,7 @@ class TaskComponent(Component):
             except Exception as e:
                 return {'status': 'error', 'message': str(e) }
             
-        await self._check_task_heartbeats()
+        self._check_task_heartbeats()
         for task in list(self._task_table.values()):
             if task._is_dead:
                 continue
@@ -559,7 +622,7 @@ class TaskComponent(Component):
     @slowlette.get('/api/channels')
     async def api_channels(self):
         channels = []
-        await self._check_task_heartbeats()
+        self._check_task_heartbeats()
         for task in list(self._task_table.values()):
             if not task._is_dead:
                 channels.extend(await task.get_channels())
@@ -621,7 +684,7 @@ class TaskComponent(Component):
         if (to < 0) or (to > 0 and (now > to+1 or now < to - length)):
             return {}
         
-        await self._check_task_heartbeats()
+        self._check_task_heartbeats()
         
         record = {}
         start = (to if to > 0 else int(now) + to) - length
@@ -649,7 +712,7 @@ class TaskComponent(Component):
     async def api_get_content_list(self):
         self._content_table = {}
 
-        await self._check_task_heartbeats()
+        self._check_task_heartbeats()
         
         doc = []
         for task in list(self._task_table.values()):
@@ -685,7 +748,7 @@ class TaskComponent(Component):
         if content_file_name is None:
             return None
         
-        await self._check_task_heartbeats()
+        self._check_task_heartbeats()
         for task in list(self._task_table.values()):
             if task._is_dead:
                 continue

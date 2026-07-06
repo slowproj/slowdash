@@ -392,6 +392,8 @@ RPC 呼び出しなどは，呼び出し先の名前が事前に分かる TaskNa
 - `slowdash-task` コマンドの `--name` パラメータ
 - `SlowdashProject.yaml` の `task` セクションの `name` パラメータ
 
+TaskName には，英数字および `_` と `-` 以外の文字は使用できません．これらの文字が含まれる場合は，`_` に置き換えられます．
+
 ## SlowTask の機能
 ### Lifespan コールバック
 tasklet が提供するデコレータにより，特定のタイミングや一定時間間隔に SlowTask 中の関数を呼び出すことができます．
@@ -743,8 +745,20 @@ def html_disk_usage():
 SlowTask への HTTP API は Slowlette を経由して `sd_taskprocess.py` コンポーネントにより実装されています．
 
 ### Task コントロール
-#### GET `api/task/specs`
-Task Spec の一覧を返す
+#### GET `api/task/catalog`
+タスクのコンフィギュレーションやスクリプトファイルなどから，タスク設定の一覧を返す．
+
+#### GET `api/task/status`
+Task Spec を含む全ての実行中タスクのステータス一覧を返す．
+
+#### POST `api/task/control/{taskname}`
+指定したタスクの開始，停止，強制終了を行う
+
+- Body は `action` フィールドのみ．`action` の値は，`start` / `stop` / `kill` のいずれか．
+  - `start` は，catalog に `command` がある場合のみ．`Popen()` により子プロセスとして実行される．
+  - `stop` は，SlowMesh 上に Heartbeat がある場合のみ．SlowMesh RPC で Tasklet の `_sd_stop()` 関数が呼ばれる．
+  - `kill` は，status に `pid` がある場合のみ（外部で起動された SlowTask は kill できない）．SIGKILL が送られる．
+    - `command` が `ssh` でも，RetainerAutocide が設定されている場合 (`slowdash-task` のデフォルト)，ssh の子プロセスとしての SlowTask も kill されるはず．
 
 ### 一般コントロールインターフェース
 #### POST `api/control`

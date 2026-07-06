@@ -4,7 +4,7 @@
 export { TaskPanel };
 
 
-import { JG as $ } from './jagaimo/jagaimo.mjs';
+import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
 import { JGIndicatorWidget } from './jagaimo/jagawidgets.mjs';
 import { Panel } from './panel.mjs';
 
@@ -98,12 +98,13 @@ class TaskPanel extends Panel {
                 const doc = await response.json();
                 for (const [name, params] of Object.entries(doc)) {
                     this._task_catalog[name] = {
-                        file_path: params.file_path
+                        file_path: params.file_path,
+                        command: params.command,
                     }
                 }
             }
             catch (e) {
-                console.log("Error on fetching taskspec: ", e);
+                console.log("Error on fetching task catalog: ", e);
             }
         }
 
@@ -111,32 +112,39 @@ class TaskPanel extends Panel {
         
         let running_tasks = new Set();
         try {
-            const response = await fetch('api/task/specs');
+            const response = await fetch('api/task/status');
             const doc = await response.json();
             const now = $.time();
-            for (const task_spec of doc) {
-                const catalog = this._task_catalog[task_spec.name];
-                const running = (task_spec.heartbeat_expire >= now - 1);
+            for (const task of doc) {
+                const catalog = this._task_catalog[task.name];
+                const running = (task.heartbeat_expire >= now - 1);
+                const heartbeat = task.heartbeat_expire - task.spec.heartbeat_interval;
                 task_list.push({
-                    name: task_spec.name,
-                    mesh_id: task_spec.mesh_id,
-                    file_path: catalog ? catalog.file_path : null,
+                    name: task.name,
                     status: running ? 'running' : 'ghost',
+                    heartbeat: (new JGDateTime(heartbeat)).asString('%a, %H:%M:%S'),
+                    file_path: catalog ? catalog.file_path : null,
+                    command: catalog ? catalog.command : null,
+                    proc_id: task.proc_id,
+                    mesh_id: task.spec.mesh_id,
                 });
-                running_tasks.add(task_spec.name);
+                running_tasks.add(task.name);
             }
         }
         catch (e) {
-            console.log("Error on fetching taskspec: ", e);
+            console.log("Error on fetching task status: ", e);
         }
 
         for (const [name, params] of Object.entries(this._task_catalog)) {
             if (! running_tasks.has(name)) {
                 task_list.push({
                     name: name,
-                    mesh_id: null,
-                    file_path: params.file_path,
                     status: 'inactive',
+                    heartbeat: null,
+                    file_path: params.file_path,
+                    command: params.command,
+                    proc_id: null,
+                    mesh_id: null,
                 });
             }
         }
@@ -175,8 +183,10 @@ class TaskPanel extends Panel {
         let tr = $('<tr>');
         $('<th>').text("Name").appendTo(tr);
         $('<th>').text("Status").appendTo(tr);
+        $('<th>').text("Heartbeat").appendTo(tr);
         $('<th>').text("Control").appendTo(tr);
-        $('<th>').text("File").appendTo(tr);
+        $('<th>').text("Command").appendTo(tr);
+        $('<th>').text("Proc ID").appendTo(tr);
         $('<th>').text("Mesh ID").appendTo(tr);
         tr.appendTo(this.table);
         const bg = window.getComputedStyle(tr.get()).getPropertyValue('background-color');
@@ -187,6 +197,7 @@ class TaskPanel extends Panel {
             let startButton = $('<button>').text('Start').appendTo(buttons).css('margin-right', '0.5em');
             let stopButton = $('<button>').text('Stop').appendTo(buttons).css('margin-right', '0.5em');
             let killButton = $('<button>').text('Kill').appendTo(buttons).css('margin-right', '0.5em');
+            let purgeButton = $('<button>').text('Purge').appendTo(buttons).css('margin-right', '0.5em');
             let status_label = task.status;
             if (task.status == 'inactive') {
                 stopButton.enabled(false);
@@ -200,18 +211,28 @@ class TaskPanel extends Panel {
             else if (task.status == 'ghost') {
                 startButton.enabled(false);
                 stopButton.enabled(false);
+                purgeButton.enabled(true);
                 status_label = '&#x1f47b; ghost';
+            }
+            if (task.proc_id == null || task.proc_id.length == 0) {
+                killButton.enabled(false);
+            }
+            if (task.status != 'ghost') {
+                purgeButton.enabled(false);
             }
                 
             let tr = $('<tr>');
             $('<td>').appendTo(tr).text(task.name);
             $('<td>').appendTo(tr).html(status_label);
+            $('<td>').appendTo(tr).text(task.heartbeat ?? '');
             $('<td>').appendTo(tr).append(buttons);
-            $('<td>').appendTo(tr).text(task.file_path ?? '-');
-            $('<td>').appendTo(tr).text(task.mesh_id ?? '-');
+            $('<td>').appendTo(tr).text(task.command ?? '');
+            $('<td>').appendTo(tr).text((task.proc_id ?? []).join(','));
+            $('<td>').appendTo(tr).text(task.mesh_id ?? '');
             tr.appendTo(this.table);
 
             tr.find('button').bind('click', e=>{
+                tr.find('button').enabled(false);
                 const action = $(e.target).text().toLowerCase();
                 this._send_control(task.name, action, e);
             });

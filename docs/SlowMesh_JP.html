@@ -743,6 +743,9 @@ MeshID の２つの名前を持ちます．</p>
 <li><code>SlowdashProject.yaml</code> の <code>task</code> セクションの
 <code>name</code> パラメータ</li>
 </ul>
+<p>TaskName には，英数字および <code>_</code> と <code>-</code>
+以外の文字は使用できません．これらの文字が含まれる場合は，<code>_</code>
+に置き換えられます．</p>
 <h2 id="slowtask-の機能">SlowTask の機能</h2>
 <h3 id="lifespan-コールバック">Lifespan コールバック</h3>
 <p>tasklet が提供するデコレータにより，特定のタイミングや一定時間間隔に
@@ -1173,8 +1176,34 @@ class="sourceCode html"><code class="sourceCode html"><span id="cb35-1"><a href=
 <code>sd_taskprocess.py</code>
 コンポーネントにより実装されています．</p>
 <h3 id="task-コントロール">Task コントロール</h3>
-<h4 id="get-apitaskspecs">GET <code>api/task/specs</code></h4>
-<p>Task Spec の一覧を返す</p>
+<h4 id="get-apitaskcatalog">GET <code>api/task/catalog</code></h4>
+<p>タスクのコンフィギュレーションやスクリプトファイルなどから，タスク設定の一覧を返す．</p>
+<h4 id="get-apitaskstatus">GET <code>api/task/status</code></h4>
+<p>Task Spec を含む全ての実行中タスクのステータス一覧を返す．</p>
+<h4 id="post-apitaskcontroltaskname">POST
+<code>api/task/control/{taskname}</code></h4>
+<p>指定したタスクの開始，停止，強制終了を行う</p>
+<ul>
+<li>Body は <code>action</code> フィールドのみ．<code>action</code>
+の値は，<code>start</code> / <code>stop</code> / <code>kill</code>
+のいずれか．
+<ul>
+<li><code>start</code> は，catalog に <code>command</code>
+がある場合のみ．<code>Popen()</code>
+により子プロセスとして実行される．</li>
+<li><code>stop</code> は，SlowMesh 上に Heartbeat
+がある場合のみ．SlowMesh RPC で Tasklet の <code>_sd_stop()</code>
+関数が呼ばれる．</li>
+<li><code>kill</code> は，status に <code>pid</code>
+がある場合のみ（外部で起動された SlowTask は kill できない）．SIGKILL
+が送られる．
+<ul>
+<li><code>command</code> が <code>ssh</code> でも，RetainerAutocide
+が設定されている場合 (<code>slowdash-task</code> のデフォルト)，ssh
+の子プロセスとしての SlowTask も kill されるはず．</li>
+</ul></li>
+</ul></li>
+</ul>
 <h3
 id="一般コントロールインターフェース">一般コントロールインターフェース</h3>
 <h4 id="post-apicontrol">POST <code>api/control</code></h4>
