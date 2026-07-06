@@ -73,12 +73,12 @@ class Mesh:
             if self._name_prefix_to_drop is not None:
                 if self._name.startswith(self._name_prefix_to_drop):
                     self._name = self._name[len(self._name_prefix_to_drop):]
-            self._name = re.sub(r'[^a-zA-Z0-9\-]', '_', self._name)
+            self._name = re.sub(r'[^a-zA-Z0-9]', '_', self._name)
 
         if self._mesh_id is None:
             Mesh._mesh_sequence_id += 1
             self._mesh_id = f'{self._name}_{socket.gethostname()}_{os.getpid()}_{Mesh._mesh_sequence_id}'
-            self._mesh_id = re.sub(r'[^a-zA-Z0-9\-]', '_', self._mesh_id)
+            self._mesh_id = re.sub(r'[^a-zA-Z0-9]', '_', self._mesh_id)
         
         try:
             o = urlsplit(url)
@@ -264,7 +264,7 @@ class Mesh:
             else:
                 return []
         
-        name = re.sub(r'[^a-zA-Z0-9\-\.]', '_', name)
+        name = re.sub(r'[^a-zA-Z0-9\.]', '_', name)
         self._rpc_count += 1
         
         dots = name.count('.')

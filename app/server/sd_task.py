@@ -396,7 +396,7 @@ class TaskComponent(Component):
                 logging.error(f'bad task configuration: name is required: {node}')
                 continue
 
-            name = node['name']
+            name = re.sub(r'[^a-zA-Z0-9]', '_', node['name'])
             file_path = node.get('file_path', f'config/slowtask-{name}.py')
             if not os.path.isfile(file_path):
                 logging.error(f'unable to find task script: {node}')
@@ -415,6 +415,7 @@ class TaskComponent(Component):
         for file_path in glob.glob(os.path.join(self.project.project_dir, 'config', 'slowtask-*.py')):
             rootname, ext = os.path.splitext(os.path.basename(file_path))
             kind, name = rootname.split('-', 1)
+            name = re.sub(r'[^a-zA-Z0-9]', '_', name)
             if name not in self._task_catalog:
                 self._task_catalog[name] = {
                     'name': name,
