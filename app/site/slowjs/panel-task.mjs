@@ -200,26 +200,18 @@ class TaskPanel extends Panel {
             let purgeButton = $('<button>').text('Purge').appendTo(buttons).css('margin-right', '0.5em');
             let status_label = task.status;
             if (task.status == 'inactive') {
-                stopButton.enabled(false);
-                killButton.enabled(false);
                 status_label = '&#x2615; inactive';                
             }
             else if (task.status == 'running') {
-                startButton.enabled(false);
                 status_label = '&#x1f3c3; running';
             }
             else if (task.status == 'ghost') {
-                startButton.enabled(false);
-                stopButton.enabled(false);
-                purgeButton.enabled(true);
                 status_label = '&#x1f47b; ghost';
             }
-            if (task.proc_id == null || task.proc_id.length == 0) {
-                killButton.enabled(false);
-            }
-            if (task.status != 'ghost') {
-                purgeButton.enabled(false);
-            }
+            startButton.enabled(task.status == 'inactive');
+            stopButton.enabled(task.status == 'running');
+            killButton.enabled(task.proc_id != null && task.proc_id.length > 0);
+            purgeButton.enabled(task.status == 'ghost');
                 
             let tr = $('<tr>');
             $('<td>').appendTo(tr).text(task.name);

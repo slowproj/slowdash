@@ -414,13 +414,13 @@ class TaskComponent(Component):
         # task entries from files
         for file_path in glob.glob(os.path.join(self.project.project_dir, 'config', 'slowtask-*.py')):
             rootname, ext = os.path.splitext(os.path.basename(file_path))
-            kind, name = rootname.split('-', 1)
-            name = re.sub(r'[^a-zA-Z0-9]', '_', name)
+            kind, file_name = rootname.split('-', 1)
+            name = re.sub(r'[^a-zA-Z0-9]', '_', file_name)
             if name not in self._task_catalog:
                 self._task_catalog[name] = {
                     'name': name,
-                    'file_path': f'config/slowtask-{name}.py',
-                    'command': f'slowdash-task config/slowtask-{name}.py',
+                    'file_path': f'config/slowtask-{file_name}.py',
+                    'command': f'slowdash-task config/slowtask-{file_name}.py',
                     'auto_start': False,
                     'auto_stop': True,
                 }
