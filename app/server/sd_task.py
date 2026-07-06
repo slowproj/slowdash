@@ -367,6 +367,10 @@ class TaskComponent(Component):
             await self._mesh.aio_start()
             await self._request_taskspec()
 
+        for task in self._task_catalog.values():
+            if task.get('auto_start', False):
+                await self._start_task(task['name'])
+
         
     @slowlette.on_event('shutdown')
     async def shutdown(self):
@@ -408,7 +412,7 @@ class TaskComponent(Component):
                 'file_path': file_path,
                 'command': command,
                 'auto_start': node.get('auto_start', node.get('auto_load', False)),
-                'auto_stop': node.get('auto_stop', True),
+                #'auto_stop': node.get('auto_stop', True),
             }
             
         # task entries from files
@@ -422,7 +426,7 @@ class TaskComponent(Component):
                     'file_path': f'config/slowtask-{file_name}.py',
                     'command': f'slowdash-task config/slowtask-{file_name}.py',
                     'auto_start': False,
-                    'auto_stop': True,
+                    #'auto_stop': True,
                 }
 
         

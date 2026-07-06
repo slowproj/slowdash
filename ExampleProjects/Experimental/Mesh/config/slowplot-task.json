@@ -7,7 +7,7 @@
     },
     "style": { },
     "panels": [
-        { "type": "task" }
+        { "type": "task", "short_form": false }
     ],
     "meta": { "name": "task", "title": "Task Manager", "description": "" }
 }

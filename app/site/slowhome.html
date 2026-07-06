@@ -37,7 +37,8 @@
                 catalog_type: 'slowdash,slowplot,slowcruise,userhtml'
             },
             {
-                type: 'taskmanager',
+                type: "task",
+                short_form: true,
             },
             {
                 type: 'tools',
@@ -78,25 +79,7 @@
         });
 
         
-        triggerServerUpdate();  // no await
         slowdash.start();
-    }
-
-
-    async function triggerServerUpdate() {
-        try {
-            let response = await fetch('./api/update/tasklist', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json; charset=utf-8' },
-                body: '',
-            });
-            if (! response.ok) {
-                throw new Error(response.status + " " + response.statusText);
-            }
-        }
-        catch (e) {
-            console.log(e);
-        }
     }
 
     window.addEventListener('DOMContentLoaded', main);

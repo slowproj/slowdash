@@ -8,3 +8,11 @@ slowdash_project:
     - url: sqlite:///TestData2
       time_series:
         schema: slowdata [channel] @timestamp(unix) = value
+
+
+  tasks:
+    - name: randomwalk
+      auto_start: true
+
+    - name: store
+      auto_start: true

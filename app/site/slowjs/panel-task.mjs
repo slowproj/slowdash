@@ -26,8 +26,11 @@ class TaskPanel extends Panel {
         this.frameDiv = $('<div>').appendTo(div);        
         this.titleDiv = $('<div>').appendTo(this.frameDiv);
         this.contentDiv = $('<div>').appendTo(this.frameDiv);
+        this.remarkDiv = $('<div>').appendTo(this.contentDiv);
         this.tableDiv = $('<div>').appendTo(this.contentDiv);
         
+        this.remarkDiv.css('margin-bottom','0.5em').html('Work in progress: <span style="color:red">Reload the page to update</span> for now').prependTo(this.tableDiv).hide();
+
         this.table = $('<table>').appendTo(this.tableDiv);
         this.table.html('<tr><td></td></tr><tr><td>loading task list...</td></tr>');
         this.indicator = new JGIndicatorWidget($('<div>').appendTo(div));
@@ -74,14 +77,21 @@ class TaskPanel extends Panel {
             border: 'none',
         });
         
-        this.titleDiv.html('SlowTask Status');
+        this.titleDiv.html('SlowTasks');
     }
 
     
     configure(config, options={}, callbacks={}) {
         super.configure(config, options, callbacks);
+
+        this._short_form = config.short_form ?? false;
         this.is_secure = options.is_secure;
         this._task_catalog = null;
+
+
+        if (this._short_form) {
+            this.remarkDiv.show();
+        }
     }
 
 
@@ -148,6 +158,9 @@ class TaskPanel extends Panel {
                 });
             }
         }
+
+        // fix the order, not to be affected by the running status
+        task_list.sort((a,b) => a.name.localeCompare(b.name));
         
         this._render_task_table(task_list);
     }
@@ -185,9 +198,11 @@ class TaskPanel extends Panel {
         $('<th>').text("Status").appendTo(tr);
         $('<th>').text("Heartbeat").appendTo(tr);
         $('<th>').text("Control").appendTo(tr);
-        $('<th>').text("Command").appendTo(tr);
-        $('<th>').text("Proc ID").appendTo(tr);
-        $('<th>').text("Mesh ID").appendTo(tr);
+        if (! this._short_form) {
+            $('<th>').text("Command").appendTo(tr);
+            $('<th>').text("Proc ID").appendTo(tr);
+            $('<th>').text("Mesh ID").appendTo(tr);
+        }
         tr.appendTo(this.table);
         const bg = window.getComputedStyle(tr.get()).getPropertyValue('background-color');
         tr.find('th').css({position: 'sticky', top:0, left:0, background: bg});
@@ -218,9 +233,11 @@ class TaskPanel extends Panel {
             $('<td>').appendTo(tr).html(status_label);
             $('<td>').appendTo(tr).text(task.heartbeat ?? '');
             $('<td>').appendTo(tr).append(buttons);
-            $('<td>').appendTo(tr).text(task.command ?? '');
-            $('<td>').appendTo(tr).text((task.proc_id ?? []).join(','));
-            $('<td>').appendTo(tr).text(task.mesh_id ?? '');
+            if (! this._short_form) {
+                $('<td>').appendTo(tr).text(task.command ?? '');
+                $('<td>').appendTo(tr).text((task.proc_id ?? []).join(','));
+                $('<td>').appendTo(tr).text(task.mesh_id ?? '');
+            }
             tr.appendTo(this.table);
 
             tr.find('button').bind('click', e=>{
