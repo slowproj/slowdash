@@ -11,7 +11,6 @@ from sd_version import slowdash_version
 from sd_component import Component
 from sd_project import Project
 from sd_config import ConfigComponent
-from sd_console import ConsoleComponent
 from sd_datasource import DataSourceComponent
 from sd_export import ExportComponent
 from sd_mesh import MeshComponent
@@ -67,14 +66,13 @@ class App(slowlette.App):
             
         ### API Components: see the Slowlette documentation for the mechanism ###
         
-        self.slowlette.include(ConsoleComponent(self, self.project))     # this must be the first to capture stdout
-        self.slowlette.include(MeshComponent(self, self.project))        # mesh-cache override datasoruce replies
         self.slowlette.include(UserModuleComponent(self, self.project))  # user module might want to capture API
+        self.slowlette.include(MeshComponent(self, self.project))        # mesh-cache override datasoruce replies
         self.slowlette.include(TaskComponent(self, self.project))
-        self.slowlette.include(ConfigComponent(self, self.project))
         self.slowlette.include(DataSourceComponent(self, self.project))  # user/task modules might create DB
         self.slowlette.include(UserHtmlComponent(self, self.project))
         self.slowlette.include(ExportComponent(self, self.project))
+        self.slowlette.include(ConfigComponent(self, self.project))
         self.slowlette.include(MiscApiComponent(self, self.project))
         self.slowlette.include(MeshRegistryComponent(self, self.project))
         self.slowlette.include(SlowMQComponent(self, self.project))
