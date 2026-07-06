@@ -347,7 +347,8 @@ MeshStdio では，以下のルールで処理されます：
 SlowTask は SlowMesh の上で独立にかつ協調して動く実行単位（おおまかには，一つの Python スクリプト）です．
 別プロセスとして動作し，SlowDash サーバーから管理することも，SlowDash サーバーとは独立に走らせることもできます．
 
-## SlowTask の作成
+## SlowTask の作成と実行
+### スクリプト
 Python スクリプトを SlowTask として使用するには，実行アダプタ Tasklet を組み込みます．
 （あるいは，機能制限が付きますが，生の Python スクリプトをそのまま編集せずに SlowDash から実行する方法もあります．）
 
@@ -366,6 +367,8 @@ SlowTask はシングルスレッドの非同期呼び出しで全体が並列�
 以下の `@tasklet.loop(interval)` を使ってループを書くことにより，明示的な sleep をしないのが想定です．
 どうしても sleep をする場合は，`await asyncio.sleep()` または `await control_system.aio_sleep()` を使ってください．
 
+
+### 実行
 SlowTask のスクリプトファイルを，`slowtask-{名前}.py` という名前で SlowDash プロジェクトの `config` 以下に置くと，SlowDash サーバーに認識され，起動や停止を行えるようになります．
 また，`SlowdashProject.yaml` ファイルに `task(s)` エントリを作って，`auto_start` を設定すると，SlowDash サーバー起動時に SlowTask も自動でスタートできます．
 ```yaml
@@ -385,10 +388,18 @@ $ slowdash-activate-venv
 $ python slowtask-mytask.py
 ```
 
+SlowDash サーバーからは，以下のような SlowTask の起動や停止を行えます：
+
+- **Start**: SlowTask を子プロセスとして開始する．開始コマンドは，`SlowdashPoject.yaml` ファイルで指定できる．デフォルトは `slowdash-task` コマンドによるローカル実行．
+- **Stop**: タスクに Heartbeat がある場合，SlowMesh 経由で タスクの `_sd_stop()` 関数を呼ぶ．
+- **Kill**: タスクをサーバーから子プロセスとして実行した場合，子プロセスに KILL シグナルを送る．
+- **Purge**: Heartbeat がなくなったタスクに代わって `sd.task.exit` を publish して，SlowMesh から抹消する．
+
+
 独立に開始した SlowTask プロセスでも，SlowDash サーバーから停止操作 (stop) を行えます．ただし，サーバーからの強制終了 (kill) はできません．
 
 SlowDash サーバーの中から起動された SlowTask プロセスは，デフォルトで，SlowDash プロセスが終了したときに自動で終了します．
-（サーバーの強制終了時でも，SlowTask プロセスは強制終了されます．）
+（サーバーのクラッシュや強制終了でも，SlowTask プロセスは強制終了されます．）
 独立に開始した SlowTask プロセスは，SlowDash サーバーが止まっても走り続け，次に同じ接続 URL の SlowDash サーバーが開始したときに，自動的に再接続されます．
 
 
@@ -495,7 +506,7 @@ SlowTask は，内部に接続済 SlowMesh を保持していて，これを介�
 <br>（TODO: バイナリをサポート）
 
 - データを publish: `await tasklet.mesh.aio_publish(name:str, data, headers={})` (async メソッド)
-- データに subscribe: `@tasklet.on(topic:str)` （デコレータ）
+- データに subscribe: `@tasklet.mesh.on(topic:str)` （デコレータ）
 
 #### Registry (Key-Value Store) へのアクセス
 - 書き込み (set)： `await tasklet.mesh.registry.aio_set(key, value, *, cas_revision:int|None=None) -> int|None`
@@ -551,6 +562,7 @@ Tasklet のコンストラクタの `mesh_stdio` パラメータに `True` を�
 
 - Heartbeat の送り出し
 - 仕様問い合わせ (`sd.task.introduce`) への応答
+- 終了要求 `_sd_stop()` 関数のエクスポート
 - 終了時の `sd.task.exit` への通知
 
 
@@ -1183,3 +1195,6 @@ Body:
 - AsyncNATS, AsyncMQTT, AsyncRabbitMQ, AsyncRedis に on_reconnect を実装する
 - レジストリを SlowTask でも動かせるようにする
 - MyMesh: SlowTask を SlowMesh なしで動かした場合に使う．コンソールから接続し，!!! から始まる行を拾う
+- Task RPC Proxy
+- PubSub Message unpacking
+- dataclass の export

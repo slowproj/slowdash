@@ -10,9 +10,3 @@ slowdash_project:
         schema: slowdata [channel] @timestamp(unix) = value
 
 
-  tasks:
-    - name: randomwalk
-      auto_start: true
-
-    - name: store
-      auto_start: true

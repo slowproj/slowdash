@@ -110,8 +110,8 @@ id="toc-標準入出力リダイレクト-meshstdio">標準入出力リダイレ
 </ul></li>
 <li><a href="#slowtask-1" id="toc-slowtask-1">SlowTask</a>
 <ul>
-<li><a href="#slowtask-の作成" id="toc-slowtask-の作成">SlowTask
-の作成</a></li>
+<li><a href="#slowtask-の作成と実行"
+id="toc-slowtask-の作成と実行">SlowTask の作成と実行</a></li>
 <li><a href="#slowtask-の識別" id="toc-slowtask-の識別">SlowTask
 の識別</a></li>
 <li><a href="#slowtask-の機能" id="toc-slowtask-の機能">SlowTask
@@ -682,7 +682,8 @@ SlowMesh の PubSub
 スクリプト）です． 別プロセスとして動作し，SlowDash
 サーバーから管理することも，SlowDash
 サーバーとは独立に走らせることもできます．</p>
-<h2 id="slowtask-の作成">SlowTask の作成</h2>
+<h2 id="slowtask-の作成と実行">SlowTask の作成と実行</h2>
+<h3 id="スクリプト">スクリプト</h3>
 <p>Python スクリプトを SlowTask として使用するには，実行アダプタ Tasklet
 を組み込みます． （あるいは，機能制限が付きますが，生の Python
 スクリプトをそのまま編集せずに SlowDash
@@ -704,6 +705,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a h
 を使ってループを書くことにより，明示的な sleep をしないのが想定です．
 どうしても sleep をする場合は，<code>await asyncio.sleep()</code> または
 <code>await control_system.aio_sleep()</code> を使ってください．</p>
+<h3 id="実行">実行</h3>
 <p>SlowTask のスクリプトファイルを，<code>slowtask-{名前}.py</code>
 という名前で SlowDash プロジェクトの <code>config</code>
 以下に置くと，SlowDash
@@ -726,16 +728,31 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <div class="sourceCode" id="cb18"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python slowtask-mytask.py</span></span></code></pre></div>
+<p>SlowDash サーバーからは，以下のような SlowTask
+の起動や停止を行えます：</p>
+<ul>
+<li><strong>Start</strong>: SlowTask
+を子プロセスとして開始する．開始コマンドは，<code>SlowdashPoject.yaml</code>
+ファイルで指定できる．デフォルトは <code>slowdash-task</code>
+コマンドによるローカル実行．</li>
+<li><strong>Stop</strong>: タスクに Heartbeat がある場合，SlowMesh
+経由で タスクの <code>_sd_stop()</code> 関数を呼ぶ．</li>
+<li><strong>Kill</strong>:
+タスクをサーバーから子プロセスとして実行した場合，子プロセスに KILL
+シグナルを送る．</li>
+<li><strong>Purge</strong>: Heartbeat がなくなったタスクに代わって
+<code>sd.task.exit</code> を publish して，SlowMesh から抹消する．</li>
+</ul>
 <p>独立に開始した SlowTask プロセスでも，SlowDash サーバーから停止操作
 (stop) を行えます．ただし，サーバーからの強制終了 (kill)
 はできません．</p>
 <p>SlowDash サーバーの中から起動された SlowTask
 プロセスは，デフォルトで，SlowDash
 プロセスが終了したときに自動で終了します．
-（サーバーの強制終了時でも，SlowTask プロセスは強制終了されます．）
-独立に開始した SlowTask プロセスは，SlowDash
-サーバーが止まっても走り続け，次に同じ接続 URL の SlowDash
-サーバーが開始したときに，自動的に再接続されます．</p>
+（サーバーのクラッシュや強制終了でも，SlowTask
+プロセスは強制終了されます．） 独立に開始した SlowTask
+プロセスは，SlowDash サーバーが止まっても走り続け，次に同じ接続 URL の
+SlowDash サーバーが開始したときに，自動的に再接続されます．</p>
 <h2 id="slowtask-の識別">SlowTask の識別</h2>
 <p>各 SlowTask の実行インスタンス（走っているスクリプト）は，TaskName と
 MeshID の２つの名前を持ちます．</p>
@@ -863,7 +880,7 @@ SlowMesh の通信機能を使用できます．</p>
 <li>データを publish:
 <code>await tasklet.mesh.aio_publish(name:str, data, headers={})</code>
 (async メソッド)</li>
-<li>データに subscribe: <code>@tasklet.on(topic:str)</code>
+<li>データに subscribe: <code>@tasklet.mesh.on(topic:str)</code>
 （デコレータ）</li>
 </ul>
 <h4 id="registry-key-value-store-へのアクセス">Registry (Key-Value
@@ -953,6 +970,7 @@ Console へ接続されます．</p>
 <ul>
 <li>Heartbeat の送り出し</li>
 <li>仕様問い合わせ (<code>sd.task.introduce</code>) への応答</li>
+<li>終了要求 <code>_sd_stop()</code> 関数のエクスポート</li>
 <li>終了時の <code>sd.task.exit</code> への通知</li>
 </ul>
 <h2
@@ -1655,6 +1673,9 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb52-1"><a href=
 <li>MyMesh: SlowTask を SlowMesh
 なしで動かした場合に使う．コンソールから接続し，!!!
 から始まる行を拾う</li>
+<li>Task RPC Proxy</li>
+<li>PubSub Message unpacking</li>
+<li>dataclass の export</li>
 </ul>
 
 
