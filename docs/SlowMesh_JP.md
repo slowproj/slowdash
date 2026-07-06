@@ -344,7 +344,8 @@ MeshStdio では，以下のルールで処理されます：
 
 
 # SlowTask
-SlowTask は SlowMesh の上で独立にかつ協調して動く実行単位（おおまかには，一つの Python スクリプト）です．プロセスまたは動的ロードモジュールのいずれかとして実行できます．
+SlowTask は SlowMesh の上で独立にかつ協調して動く実行単位（おおまかには，一つの Python スクリプト）です．
+別プロセスとして動作し，SlowDash サーバーから管理することも，SlowDash サーバーとは独立に走らせることもできます．
 
 ## SlowTask の作成
 Python スクリプトを SlowTask として使用するには，実行アダプタ Tasklet を組み込みます．
@@ -365,7 +366,15 @@ SlowTask はシングルスレッドの非同期呼び出しで全体が並列�
 以下の `@tasklet.loop(interval)` を使ってループを書くことにより，明示的な sleep をしないのが想定です．
 どうしても sleep をする場合は，`await asyncio.sleep()` または `await control_system.aio_sleep()` を使ってください．
 
-SlowTask を独立プロセスとして実行するには，通常は `slowdash-task` コマンドを使います．
+SlowTask のスクリプトファイルを，`slowtask-{名前}.py` という名前で SlowDash プロジェクトの `config` 以下に置くと，SlowDash サーバーに認識され，起動や停止を行えるようになります．
+また，`SlowdashProject.yaml` ファイルに `task(s)` エントリを作って，`auto_start` を設定すると，SlowDash サーバー起動時に SlowTask も自動でスタートできます．
+```yaml
+  tasks:
+    - name: {名前}
+      auto_start: true
+```
+
+SlowTask を SlowDash サーバーから独立したプロセスとして実行するには，通常は `slowdash-task` コマンドを使います．
 ```console
 $ slowdash-task  slowtask-mytask.py
 ```
@@ -375,6 +384,13 @@ $ slowdash-task  slowtask-mytask.py
 $ slowdash-activate-venv
 $ python slowtask-mytask.py
 ```
+
+独立に開始した SlowTask プロセスでも，SlowDash サーバーから停止操作 (stop) を行えます．ただし，サーバーからの強制終了 (kill) はできません．
+
+SlowDash サーバーの中から起動された SlowTask プロセスは，デフォルトで，SlowDash プロセスが終了したときに自動で終了します．
+（サーバーの強制終了時でも，SlowTask プロセスは強制終了されます．）
+独立に開始した SlowTask プロセスは，SlowDash サーバーが止まっても走り続け，次に同じ接続 URL の SlowDash サーバーが開始したときに，自動的に再接続されます．
+
 
 ## SlowTask の識別
 各 SlowTask の実行インスタンス（走っているスクリプト）は，TaskName と MeshID の２つの名前を持ちます．
@@ -538,39 +554,11 @@ Tasklet のコンストラクタの `mesh_stdio` パラメータに `True` を�
 - 終了時の `sd.task.exit` への通知
 
 
-## SlowTask の実行
-SlowTask のスクリプトは，独立プロセス (task process) として走らせることも，SlowDash のサーバープロセスに動的ロードして (task module) 走らせることもできます．
-
-### 独立プロセス (task process)
-`slowdash-task` コマンドから実行してください．独立プロセスが走り，その中でタスクがロードされます．
-SlowDash サーバーの URL は自動で取得されます．（TODO: 現時点ではハードコーディング）
-
-```console
-$ slowdash-task {タスクスクリプト}.py
-```
-
-そのまま通常の Python スクリプトとして実行することもできます．この場合は，SlowPy の venv の有効化や，SlowDash サーバー URL の明示的設定が必要です．
-
-```console
-$ slowdash-activate-venv
-$ python3 {タスクスクリプト}.py --slowdash-url=http://localhost:18881
-```
-
-### TODO: 動的ロードモジュール (task module)
-SlowDash の設定ファイルから，動的ロードを設定します．SlowTask のファイルは，`slowtask-{タスク名}.py` というファイル名で SlowDash プロジェクトの `config` ディレクトリ，TODO: または SlowDash インストレーションの `plugin` ディレクトリに存在しなければなりません．
-プロジェクトの `SlowdashProject.yaml` ファイルに以下のようなエントリを作成してください．
-`auto_load` を `true` に設定すると，SlowDash の開始時にタスクを自動で開始できます．
-
-```yaml
-  task:
-    name: {タスク名}
-    auto_load: true
-```
-
-
 ## スクリプト中で明示的に Tasklet を使用しない場合
-スクリプト中で明示的に Tasklet を使用しない場合でも，任意の Python スクリプトを SlowTask として実行（task process）または動的ロード(task module)をすることができます．この場合は，以下の機能のみが使用できます．
+スクリプト中で明示的に Tasklet を使用しない場合でも，任意の Python スクリプトを SlowTask として使用することができます．この場合は，以下の機能のみが使用できます．
 
+- SlowDash サーバーからの start/stop/kill コントロール
+- すべての関数の export （他のタスクやブラウザからの呼び出し）
 - 古いスタイルのコールバック：
   - `_initialize(params={})`: `@tasklet.initailze()` と同等
   - `_finalize()`: `@tasklet.finalize()` と同等
@@ -578,8 +566,6 @@ SlowDash の設定ファイルから，動的ロードを設定します．SlowT
   - `_loop()`: `@tasklet.loop(interval=0)` と同等
   - `_get_html()`: `@tasklet.content('config/html-{name}.html')` と同等
   - `_get_layout()`: `@tasklet.content('config/slowplot-{name}.json')` と同等
-- すべての関数の export （他のタスクやブラウザからの呼び出し）
-- TODO: start/stop コントロール
 
 
 # Example Projects
