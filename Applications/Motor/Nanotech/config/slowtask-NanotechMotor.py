@@ -24,7 +24,7 @@ async def _initialize(params):
 
     modbus = ctrl.import_control_module('Modbus').modbus(ip)
     modbus.import_control_module('NanotechMotor')
-    c5e = modbus.nanotech_C5E()
+    c5e = modbus.nanotech_C5E(firmware_version=params.get('firmware_version', 2039+1))
 
     try:
         print(f'NanotechMotor: Initial State: {await c5e.status().aio_get()}')

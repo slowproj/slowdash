@@ -14,6 +14,5 @@ slowdash_project:
     auto_load: true
     parameters:
       IP: "192.168.80.57"
-      MAC: "44-AA-E8-00-BF-ED"
-      CIDR: ""
       db_url: ${DB_URL}
+      firmware_version: 2039
