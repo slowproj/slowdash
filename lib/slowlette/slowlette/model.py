@@ -80,11 +80,28 @@ class JSON:
 
 
 
-class DictJSON(JSON):
+class DictJSON(dict):
     """same as JSON, but the content must be a valid dict
     """
     def __init__(self, body):
-        super().__init__(body)
-        if type(self.data) is not dict:
-            self.data = None
-            logging.error('Slowlette: JSON decoding error: dict is expected')
+        try:
+            if type(body) is bytes:
+                data = json.loads(body.decode())
+            else:
+                data = body
+        except Exception as e:
+            logging.error(f'Slowlette: JSON decoding error: {e}')
+            self._is_valid = False
+            return
+
+        if type(data) is not dict:
+            logging.error(f'Slowlette: DictJSON content is not a dict: {e}')
+            self._is_valid = False
+            return
+            
+        super().__init__(data)
+        self._is_valid = True
+
+            
+    def value(self):
+        return dict(self) if self._is_valid else None
