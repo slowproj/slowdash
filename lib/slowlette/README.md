@@ -212,8 +212,8 @@ app = App()
 ```
 - The request body is parsed as `dict` in JSON and the value is set to the (last) argument of a type `slowlette.DictJSON`.
 - If the content cannot be parsed as a dict, the handler will not be called and an error response (400) will be returned.
-- The DictJSON object (`doc`) implements most common dict operations, such as `doc[key]`, `key in doc`, `for key in doc:`, `doc.get(value, default)`, `doc.items()`, ...
-- use `doc.value()` or `dict(doc)` to get a native Python dict object.
+- DictJSON is a subclass of dict, therefore all the dict functions are available.
+
 
 #### for any data in JSON
 ```python

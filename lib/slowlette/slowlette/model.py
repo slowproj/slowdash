@@ -10,7 +10,7 @@ class JSON:
       - If a request-handler parameter is of this type, Slowlette interprets the body as JSON.
         - Example:
           | @Slowlette.post('/doc')
-          | def process_doc(doc: JsonDocument):
+          | def process_doc(doc: JSON):
           |   param1 = doc.get('param1', 0)
       - If the parsing fails, it returns response 400 (Bad Request) and the handler will not be called.
       - If the content data is a dict or list, JSON object can be used as dict or list for common methods,
@@ -81,7 +81,7 @@ class JSON:
 
 
 class DictJSON(dict):
-    """same as JSON, but the content must be a valid dict
+    """same as JSON, but the content must be a valid dict, and the instance is a dict
     """
     def __init__(self, body):
         try:
