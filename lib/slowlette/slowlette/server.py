@@ -20,6 +20,7 @@ async def dispatch_asgi(app, scope, receive, send):
             try:
                 message = await receive()
             except asyncio.CancelledError:
+                await app.slowlette.dispatch_event("pre_shutdown")
                 await app.slowlette.dispatch_event("shutdown")
                 return
             if message['type'] == 'lifespan.startup':

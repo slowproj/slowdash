@@ -373,7 +373,7 @@ class TaskComponent(Component):
 
         
     @slowlette.on_event('shutdown')
-    async def shutdown(self):
+    async def shutdown(self):        
         if self._mesh is not None:
             await self._mesh.aio_stop()
 

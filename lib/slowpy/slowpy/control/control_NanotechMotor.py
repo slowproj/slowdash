@@ -6,7 +6,7 @@ import slowpy.control as spc
 
 class Nanotech_C5E(spc.ControlNode):
     class WriteRegisters:
-        def __init__(self, modbus, firmware_version:int=2039):
+        def __init__(self, modbus, firmware_version:int=2039+1):
             if firmware_version <= 2039:
                 offset_after_6002 = 2
             else:
@@ -57,7 +57,7 @@ class Nanotech_C5E(spc.ControlNode):
             
             
     class ReadRegisters:
-        def __init__(self, modbus, firmware_version:int=2039):
+        def __init__(self, modbus, firmware_version:int=2039+1):
             self.status = modbus.register(5000)
             self.mode = modbus.register(5001)
             self.position_h = modbus.register(5002)
