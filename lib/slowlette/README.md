@@ -288,13 +288,21 @@ import slowlette
 class App(slowlette.App):
     @slowlette.eventstream('/events')
     async def events(self, eventstream:slowlette.EventStream):
-        await eventstream.send('hello', event='greeting', id='1')
-        await eventstream.send({'count':2}
-        await eventstream.close()
-
+        await eventstream.accept()
+        disconnect_task = asyncio.create_task(eventstream.wait_disconnected())
+        try:
+            while not disconnect_task.done():
+                data = { 'time': time.strftime('%H:%M:%S') }
+                await eventstream.send(data, event='tick')
+                asyncio.sleep(1)
+            await disconnect_task
+        except slowlette.EventStreamConnectionClosed:
+            print("EventStream Closed by client")
+            
 app = App()
 ```
 - SSE is available only with ASGI.
+
 
 
 ### Multiple Handlers for the same URL
