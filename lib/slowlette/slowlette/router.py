@@ -68,10 +68,10 @@ class PathRule:
 
         if self.method == 'WEBSOCKET':
             if self.websocket_param is None:
-                logging.error('Slowlette_PathRule: no WebSocket arg for websocket handler')
+                raise TypeError('Slowlette_PathRule: no WebSocket arg for websocket handler')
         else:
             if self.websocket_param is not None:
-                logging.error('Slowlette_PathRule: WebSocket arg for non-websocket handler')
+                raise TypeError('Slowlette_PathRule: WebSocket arg for non-websocket handler')
 
 
     def match(self, request:Request):
@@ -355,7 +355,11 @@ class Router:
         self.middlewares.remove(app)
 
 
-    async def websocket(self, request:Request, websocket:WebSocket) -> None:
+    async def websocket(self, request:Request, websocket:WebSocket) -> bool:
+        """
+        return value: True if the request is handled, otherwise False
+        """
+        
         def iscoroutinecallable(obj):
             if inspect.iscoroutinefunction(obj):
                 return True
@@ -378,10 +382,15 @@ class Router:
                 await handler(self.app, **args)
             except asyncio.CancelledError:
                 pass
+            
+            return True
 
         for subapp in self.subapps:
             if not request.aborted:
-                await subapp.slowlette.websocket(request, websocket)
+                if await subapp.slowlette.websocket(request, websocket):
+                    return True
+
+        return False
 
         
     def __call__(self, request:Request, body=None) -> Response:
