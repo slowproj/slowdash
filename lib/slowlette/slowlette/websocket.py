@@ -5,14 +5,22 @@ class WebSocket:
     def __init__(self, receive_func, send_func):
         self.receive_func = receive_func
         self.send_func = send_func
+        self.is_accepted = False
+        self.is_closed = False
 
 
     async def accept(self):
+        if self.is_accepted:
+            return
         await self.send_func({'type': 'websocket.accept'})
+        self.is_accepted = True
 
 
     async def close(self, code=1000):
+        if self.is_closed:
+            return
         await self.send_func({'type': 'websocket.close', 'code': code})
+        self.is_closed = True
 
         
     async def receive(self):

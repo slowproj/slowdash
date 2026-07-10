@@ -281,6 +281,22 @@ app = App()
 - WebSocket is available only with ASGI.
 
 
+### Server-Sent Events (SSE)
+```python
+import slowlette
+
+class App(slowlette.App):
+    @slowlette.sse('/events')
+    async def events(self, sse:slowlette.ServerSentEvent):
+        await sse.send('hello', event='greeting', id='1')
+        await sse.send({'count':2}
+        await sse.close()
+
+app = App()
+```
+- SSE is available only with ASGI.
+
+
 ### Multiple Handlers for the same URL
 ```python
 import slowlette

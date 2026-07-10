@@ -8,6 +8,7 @@ from .model import JSON, DictJSON
 from .request import Request
 from .response import Response
 from .websocket import WebSocket
+from .eventstream import EventStream
 
 
 class PathRule:
@@ -26,6 +27,7 @@ class PathRule:
         self.json_dict_body_param = None
         self.request_param = None
         self.websocket_param = None
+        self.eventstream_param = None
         self.path_param = None
         self.query_param = None
 
@@ -59,6 +61,8 @@ class PathRule:
                 self.json_dict_body_param = pname
             elif param.annotation is WebSocket:   # for websocket; to receive WebSocket connection
                 self.websocket_param = pname
+            elif param.annotation is EventStream: # for SSE; to send server-sent events
+                self.eventstream_param = pname
             elif param.annotation is list:  # to store URL path
                 self.path_param = pname
             elif param.annotation is dict:  # to store URL query
@@ -73,6 +77,13 @@ class PathRule:
             if self.websocket_param is not None:
                 raise TypeError('Slowlette_PathRule: WebSocket arg for non-websocket handler')
 
+        if self.method == 'EVENTSTREAM':
+            if self.eventstream_param is None:
+                raise TypeError('Slowlette_PathRule: no EventStream arg for EventStream handler')
+        else:
+            if self.eventstream_param is not None:
+                raise TypeError('Slowlette_PathRule: EventStream arg for non-EventStream handler')
+
 
     def match(self, request:Request):
         # do not process aborted requests
@@ -80,7 +91,7 @@ class PathRule:
             return None
         
         # method match
-        if (request.method != self.method) and ((self.method != '*') or (request.method == 'WEBSOCKET')):
+        if (request.method != self.method) and ((self.method != '*') or (request.method in ['WEBSOCKET', 'EVENTSTREAM'])):
             return None
         
         # length match
@@ -238,6 +249,18 @@ def websocket(path_rule:str):
     return wrapper
 
 
+def eventstream(path_rule:str):
+    """decorator to make a Event Stream (SSE) entry point
+    Args:
+      - path_rule: path pattern to match
+    """
+    def wrapper(func):
+        if not hasattr(func, 'slowlette_path_rule'):
+            func.slowlette_path_rule = PathRule(path_rule, 'eventstream', func)
+        return func
+    return wrapper
+
+
 
 class Router:
     def __init__(self, app):
@@ -388,6 +411,44 @@ class Router:
         for subapp in self.subapps:
             if not request.aborted:
                 if await subapp.slowlette.websocket(request, websocket):
+                    return True
+
+        return False
+
+        
+    async def eventstream(self, request:Request, eventstream:EventStream) -> bool:
+        """
+        return value: True if the request is handled, otherwise False
+        """
+        
+        def iscoroutinecallable(obj):
+            if inspect.iscoroutinefunction(obj):
+                return True
+            if hasattr(obj, '__call__'):
+                return inspect.iscoroutinefunction(obj.__call__)
+            return False
+
+        for handler in self.handlers:
+            args = handler.slowlette_path_rule.match(request)
+            if args is None:
+                continue
+            request.abort()        
+
+            if not iscoroutinecallable(handler):
+                logging.error('Event-Stream handler must be async')
+                return None
+
+            args[handler.slowlette_path_rule.eventstream_param] = eventstream
+            try:
+                await handler(self.app, **args)
+            except asyncio.CancelledError:
+                pass
+            
+            return True
+
+        for subapp in self.subapps:
+            if not request.aborted:
+                if await subapp.slowlette.eventstream(request, eventstream):
                     return True
 
         return False

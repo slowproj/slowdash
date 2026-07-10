@@ -7,6 +7,7 @@ from wsgiref.simple_server import make_server, WSGIRequestHandler
 
 from .request import Request
 from .websocket import WebSocket
+from .eventstream import EventStream
 from .router import Router
 
 
@@ -45,14 +46,22 @@ async def dispatch_asgi(app, scope, receive, send):
     if scope['type'] == 'websocket':
         logging.info(f'WEBSOCKET: {url}')
         websocket = WebSocket(receive, send)
-        handled = await app.slowlette.websocket(
-            Request(url, method='WEBSOCKET', headers=headers), websocket
-        )
+        handled = await app.slowlette.websocket(Request(url, method='WEBSOCKET', headers=headers), websocket)
         if not handled:
             await websocket.close()
+        return
     elif scope['type'] != 'http':
         logging.warning(f'ASGI Request not handled: type={scope["type"]}')
         return
+
+    accept = headers.get('accept', '')
+    if method == 'POST' and 'text/event-stream' in accept:
+        eventstream = EventStream(receive, send)
+        handled = await app.slowlette.eventstream(Request(url, method='EVENTSTREAM', headers=headers), eventstream)
+        if handled:
+            if not eventstream.closed:
+                await eventstream.close()
+            return
     
     body = None
     MAX_CONTENT_LENGTH = 1024*1024*1024
