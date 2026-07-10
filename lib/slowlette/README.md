@@ -294,7 +294,7 @@ class App(slowlette.App):
             while not disconnect_task.done():
                 data = { 'time': time.strftime('%H:%M:%S') }
                 await eventstream.send(data, event='tick')
-                asyncio.sleep(1)
+                await asyncio.sleep(1)
             await disconnect_task
         except slowlette.EventStreamConnectionClosed:
             print("EventStream Closed by client")
