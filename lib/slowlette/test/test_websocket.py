@@ -17,7 +17,7 @@ class App(slowlette.App):
             while True:
                 message = await websocket.receive()
                 await websocket.send(f'Received: {message}')
-        except slowlette.ConnectionClosed:
+        except slowlette.WebSocketConnectionClosed:
             print("WebSocket Closed")
 
 

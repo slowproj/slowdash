@@ -44,8 +44,9 @@ async def dispatch_asgi(app, scope, receive, send):
 
     if scope['type'] == 'websocket':
         logging.info(f'WEBSOCKET: {url}')
+        websocket = WebSocket(receive, send)
         handled = await app.slowlette.websocket(
-            Request(url, method='WEBSOCKET', headers=headers), WebSocket(receive, send)
+            Request(url, method='WEBSOCKET', headers=headers), websocket
         )
         if not handled:
             await websocket.close()

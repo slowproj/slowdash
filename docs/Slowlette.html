@@ -75,6 +75,12 @@ code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
   <link rel="stylesheet" href="style.css" />
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({startOnLoad: true});
+</script>
+
 </head>
 
 <body>
@@ -291,8 +297,10 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb12-1"><a h
 <ul>
 <li><code>method</code> (str): request method (<code>GET</code>
 etc.)</li>
-<li><code>path</code> (list[str]): URL path</li>
-<li><code>query</code> (dict[str,str]): URL query</li>
+<li><code>path</code> (list[str]): URL path (also, <code>path_str</code>
+for raw decoded path string)</li>
+<li><code>query</code> (dict[str,str]): URL query (also,
+<code>query_str</code> for raw decoded query string)</li>
 <li><code>headers</code> (dict[str,str]): HTTP request header items</li>
 <li><code>body</code> (bytes): request body</li>
 </ul>
@@ -328,12 +336,8 @@ value is set to the (last) argument of a type
 <code>slowlette.DictJSON</code>.</li>
 <li>If the content cannot be parsed as a dict, the handler will not be
 called and an error response (400) will be returned.</li>
-<li>The DictJSON object (<code>doc</code>) implements most common dict
-operations, such as <code>doc[key]</code>, <code>key in doc</code>,
-<code>for key in doc:</code>, <code>doc.get(value, default)</code>,
-<code>doc.items()</code>, …</li>
-<li>use <code>doc.value()</code> or <code>dict(doc)</code> to get a
-native Python dict object.</li>
+<li>DictJSON is a subclass of dict, therefore all the dict functions are
+available.</li>
 </ul>
 <h4 id="for-any-data-in-json">for any data in JSON</h4>
 <div class="sourceCode" id="cb15"><pre
@@ -381,8 +385,17 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb16-1"><a h
 <span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App()</span></code></pre></div>
 <ul>
-<li>Currently only <code>startup</code> and <code>shutdown</code> are
-implemented.</li>
+<li>Within the ASGI Lifespan events, currently only <code>startup</code>
+and <code>shutdown</code> are implemented.</li>
+<li>As an extention, <code>pre_startup</code>,
+<code>post_startup</code>, <code>pre_shutdown</code>,
+<code>post_shutdown</code> are added:
+<ul>
+<li><code>post_startup</code> will be called after completing the
+startup process; therefore in parallel to accepting requests.</li>
+<li><code>post_shutdown</code> will be called after completing the
+shutdown process.</li>
+</ul></li>
 <li>HTTP request handling starts after <code>await</code>-ing the
 startup coroutine. If you want to start a task here, use
 <code>asyncio.create_task()</code> or similar not to block this.</li>
@@ -398,9 +411,9 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb17-1"><a h
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> websocket.accept()</span>
 <span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
 <span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">while</span> <span class="va">True</span>:</span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>                message <span class="op">=</span> <span class="cf">await</span> websocket.receive_text()</span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>                <span class="cf">await</span> websocket.send_text(<span class="ss">f&#39;Received: </span><span class="sc">{</span>message<span class="sc">}</span><span class="ss">&#39;</span>)</span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> slowlette.ConnectionClosed:</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>                message <span class="op">=</span> <span class="cf">await</span> websocket.receive()</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>                <span class="cf">await</span> websocket.send(<span class="ss">f&#39;Received: </span><span class="sc">{</span>message<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> slowlette.WebSocketConnectionClosed:</span>
 <span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="st">&quot;WebSocket Closed&quot;</span>)</span>
 <span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App()</span></code></pre></div>
@@ -475,10 +488,10 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb21-1"><a h
 <span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.prefix <span class="op">=</span> <span class="st">&#39;api&#39;</span></span>
 <span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.route</span>(<span class="st">&#39;/{*}&#39;</span>)</span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> handle(request: Request):</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> handle(<span class="va">self</span>, request: slowlette.Request):</span>
 <span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">len</span>(request.path) <span class="op">&gt;</span> <span class="dv">0</span> <span class="kw">and</span> request.path[<span class="dv">0</span>] <span class="op">==</span> <span class="va">self</span>.prefix:</span>
 <span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>            request.path <span class="op">=</span> request.path[<span class="dv">1</span>:]</span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Response()</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> slowlette.Response()</span>
 <span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> App(slowlette.App):</span>
 <span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
@@ -518,7 +531,7 @@ like: <code>api:$2a$12$D2.....</code>, which is the same key format used
 by Apache (type “2a”). A key can be generated by:</p>
 <pre><code>key = slowlette.BasicAuthentication.generate_key(&#39;api&#39;, &#39;slow&#39;)</code></pre>
 <h4 id="file-server">File Server</h4>
-<p><code>FileServer(filedir, *, prefix='', index_file=None, exclude=None, drop_exclude_prefix=False, ext_allow=None, ext_deny=None)</code></p>
+<p><code>FileServer(filedir, *, prefix='', index_file=None, exclude=None, ext_allow=None, ext_deny=None)</code></p>
 <p>The file server handles GET requests to send back files stored in
 <code>filedir</code>. The request path, optionally with
 <code>prefix</code> that will be dropped, is the relative path from the
@@ -537,10 +550,8 @@ non-Windows. POST and DELETE are not implemented.</p>
 (i.e., <code>/</code>)</li>
 <li><code>exclude</code> (str): URL path not to be handled (e.g.,
 prefix=<code>/app</code>, exclude=<code>/app/api</code>)</li>
-<li><code>drop_exclude_prefix</code> (bool): if True, the prefix is
-removed from the requet path if the request is for an excluded path
-(e.g., for exclude <code>/api</code>, the request path of
-<code>api/userlist</code> becomes <code>/userlist</code>)</li>
+<li><code>not_found_is_error</code> (bool): if true return an error
+response (404) if file does not exist, otherwise propagate</li>
 <li><code>ext_allow</code> (list[str]): a list of file extensions to
 allow accessing</li>
 <li><code>ext_deny</code> (list[str]): a list of file extensions not to
@@ -554,16 +565,17 @@ method, as explained above.</p>
 class="sourceCode python"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyExclusiveApp:</span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">class</span> MyExclusiveResponse(Response):</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">def</span> merge_response(<span class="va">self</span>, response:Response)<span class="op">-&gt;</span><span class="va">None</span>:</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>            <span class="co"># example: do not merge the responses from the subsequent handlers</span></span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">pass</span></span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.route</span>(<span class="st">&#39;/hello&#39;</span>)</span>
-<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> hello(<span class="va">self</span>):</span>
-<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>        response <span class="op">=</span> <span class="va">self</span>.MyExclusiveResponse()</span>
-<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>        response.append(<span class="st">&#39;hello, there is no one else here.&#39;</span>)</span>
-<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> response</span></code></pre></div>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">class</span> MyExclusiveResponse(slowlette.Response):</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, status_code<span class="op">=</span><span class="dv">0</span>, <span class="op">*</span>, content_type<span class="op">=</span><span class="va">None</span>, content<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>            <span class="bu">super</span>().<span class="fu">__init__</span>(satus_code, conent_type<span class="op">=</span>content_type, content<span class="op">=</span>conent)</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">def</span> merge_response(<span class="va">self</span>, response:slowlette.Response)<span class="op">-&gt;</span><span class="va">None</span>:</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>            <span class="co"># example: do not merge the responses from the subsequent handlers</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>            <span class="cf">pass</span></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">@slowlette.route</span>(<span class="st">&#39;/hello&#39;</span>)</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> hello(<span class="va">self</span>):</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.MyExclusiveResponse(content<span class="op">=</span><span class="st">&#39;hello, there is no one else here.&#39;</span>)</span></code></pre></div>
 <p>This method is useful if the method returns a data structure that
 requires a certain way to merge other data.</p>
 <p>In addition to that, a user app class can override a method to
@@ -575,16 +587,19 @@ method:</p>
 class="sourceCode python"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowlette</span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyRouter(slowlette.Router):</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> merge_responses(<span class="va">self</span>, responses: <span class="bu">list</span>[Response]) <span class="op">-&gt;</span> Response:</span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>        response <span class="op">=</span> Response()</span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> r <span class="kw">in</span> responses:</span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>            response <span class="op">=</span> ....   <span class="co"># aggregate responses here</span></span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> response</span></code></pre></div>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, app):</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>(app)</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> merge_responses(<span class="va">self</span>, responses: <span class="bu">list</span>[Response]) <span class="op">-&gt;</span> Response:</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>        response <span class="op">=</span> Response()</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> r <span class="kw">in</span> responses:</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>            response <span class="op">=</span> ....   <span class="co"># aggregate responses here</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> response</span></code></pre></div>
 <p>Then use this as a <code>slowlette</code> of the user app:</p>
 <div class="sourceCode" id="cb26"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyApp(slowlette.App):</span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.slowlette <span class="op">=</span> MyRouter()</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.slowlette <span class="op">=</span> MyRouter(<span class="va">self</span>)</span>
 <span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span></code></pre></div>
 <p>Calling <code>super().__init__()</code> later is a little bit more
 efficient, as it does not replace <code>self.slowlette</code> if it is
@@ -603,7 +618,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb27-1"><a h
 <span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>key <span class="op">=</span> slowlette.BasicAuthentication.generate_key(username<span class="op">=</span><span class="st">&#39;api&#39;</span>, password<span class="op">=</span><span class="st">&#39;slow&#39;</span>)</span>
 <span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>app <span class="op">=</span> App()</span>
-<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>app.add_middleware(slowlette.BasicAuthentication(auth_list<span class="op">=</span>[key]))</span></code></pre></div>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>app.slowlette.add_middleware(slowlette.BasicAuthentication(auth_list<span class="op">=</span>[key]))</span></code></pre></div>
 <p>If HTTP is used, nothing will be returned, as the access is denied.
 (Add <code>-v</code> option to see details.)</p>
 <div class="sourceCode" id="cb28"><pre
