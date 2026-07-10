@@ -25,7 +25,7 @@ class WebSocket:
             else:
                 return None
         if message['type'] == 'websocket.disconnect':
-            raise ConnectionClosed()
+            raise WebSocketConnectionClosed()
 
         
     async def send(self, data):
@@ -36,6 +36,6 @@ class WebSocket:
 
 
 
-class ConnectionClosed(Exception):
+class WebSocketConnectionClosed(Exception):
     pass
 

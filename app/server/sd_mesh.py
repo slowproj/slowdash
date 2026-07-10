@@ -50,7 +50,7 @@ class MeshComponent(Component):
                         await self.app.request(f'/emit/{topic}', message)
                     except Exception as e:
                         logging.error(f'Error on re-emitting a message in topic "{topic}": {e}')
-        except slowlette.ConnectionClosed:
+        except slowlette.WebSocketConnectionClosed:
             logging.info("WebSocket Closed")
         except Exception as e:
             logging.info(f"WebSocket Closed by error: {e}")

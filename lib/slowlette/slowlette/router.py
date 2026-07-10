@@ -7,7 +7,7 @@ from urllib.parse import urlparse, parse_qsl, unquote
 from .model import JSON, DictJSON
 from .request import Request
 from .response import Response
-from .websocket import WebSocket, ConnectionClosed
+from .websocket import WebSocket
 
 
 class PathRule:

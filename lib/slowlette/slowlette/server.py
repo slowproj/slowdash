@@ -48,7 +48,7 @@ async def dispatch_asgi(app, scope, receive, send):
             Request(url, method='WEBSOCKET', headers=headers), WebSocket(receive, send)
         )
         if not handled:
-            websocket.close()
+            await websocket.close()
     elif scope['type'] != 'http':
         logging.warning(f'ASGI Request not handled: type={scope["type"]}')
         return

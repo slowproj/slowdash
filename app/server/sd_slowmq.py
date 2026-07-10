@@ -52,7 +52,7 @@ class SlowMQComponent(Component):
                     else:
                         logging.debug(f'SlowMQ Message Received: {name}: {repr(message)}')
                     await self.handle_message(client_id, headers, message)
-        except slowlette.ConnectionClosed:
+        except slowlette.WebSocketConnectionClosed:
             logging.info(f'SlowMQ WebSocket Closed: {name}')
         except Exception as e:
             logging.warning(f'SlowMQ WebSocket Closed by error: {e}')
