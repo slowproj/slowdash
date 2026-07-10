@@ -2,7 +2,7 @@
 from .model import JSON, DictJSON
 from .request import Request
 from .response import Response, FileResponse
-from .router import Router, get, post, delete, route, on_event, websocket
+from .router import Router, get, post, delete, route, on_event, websocket, eventstream
 from .websocket import WebSocket, WebSocketConnectionClosed
 from .eventstream import EventStream, EventStreamConnectionClosed
 from .middleware import BasicAuthentication, FileServer

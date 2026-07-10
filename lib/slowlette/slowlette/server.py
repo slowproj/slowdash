@@ -55,11 +55,11 @@ async def dispatch_asgi(app, scope, receive, send):
         return
 
     accept = headers.get('accept', '')
-    if method == 'POST' and 'text/event-stream' in accept:
+    if method == 'GET' and 'text/event-stream' in accept:
         eventstream = EventStream(receive, send)
         handled = await app.slowlette.eventstream(Request(url, method='EVENTSTREAM', headers=headers), eventstream)
         if handled:
-            if not eventstream.closed:
+            if not eventstream.is_closed:
                 await eventstream.close()
             return
     

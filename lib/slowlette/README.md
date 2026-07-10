@@ -281,16 +281,16 @@ app = App()
 - WebSocket is available only with ASGI.
 
 
-### Server-Sent Events (SSE)
+### Event-Stream / Server-Sent Events (SSE)
 ```python
 import slowlette
 
 class App(slowlette.App):
-    @slowlette.sse('/events')
-    async def events(self, sse:slowlette.ServerSentEvent):
-        await sse.send('hello', event='greeting', id='1')
-        await sse.send({'count':2}
-        await sse.close()
+    @slowlette.eventstream('/events')
+    async def events(self, eventstream:slowlette.EventStream):
+        await eventstream.send('hello', event='greeting', id='1')
+        await eventstream.send({'count':2}
+        await eventstream.close()
 
 app = App()
 ```
