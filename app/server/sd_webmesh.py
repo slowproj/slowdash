@@ -84,6 +84,7 @@ class WebMeshComponent(Component):
             self._client_queue_table[client_id] = queue
             self._client_stop_table[client_id] = stop_event
             
+        queue_task = None
         disconnect_task = asyncio.create_task(eventstream.wait_disconnected())
         stop_task = asyncio.create_task(stop_event.wait())
         
@@ -122,11 +123,15 @@ class WebMeshComponent(Component):
         except slowlette.EventStreamConnectionClosed:
             logging.info(f'EventStream Closed by client: {client_id}')
         finally:
-            disconnect_task.cancel()
-            stop_task.cancel()
+            tasks = [ task for task in (queue_task, disconnect_task, stop_task) if task is not None ]
+            for task in tasks:
+                if not task.done():
+                    task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+                    
             async with self._queue_lock:
-                self._client_queue_table.pop(client_id)
-                self._client_stop_table.pop(client_id)
+                self._client_queue_table.pop(client_id, None)
+                self._client_stop_table.pop(client_id, None)
 
                 empty_topics = []
                 for topic, clients in self._topic_client_table.items():
