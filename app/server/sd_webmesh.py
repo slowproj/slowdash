@@ -19,6 +19,7 @@ class WebMeshComponent(Component):
         self._queue_lock = asyncio.Lock()
         self._topic_client_table: dict[str,set[str]] = {}     # topic -> set of client_id
         self._client_queue_table: dict[str, asyncio.Queue] = {}   # client_id -> input message queue
+        self._client_stop_table: dict[str, asyncio.Event] = {}   # client_id -> stop event (on quque full)
 
         
     def public_config(self):
@@ -50,19 +51,18 @@ class WebMeshComponent(Component):
     async def _subscribe_mesh(self):
         async def process_message(headers, data):
             topic = headers.get('topic')
-            bad_clients = set()
             async with self._queue_lock:
-                for client_id in self._topic_client_table.get(topic, set()):
+                for client_id in tuple(self._topic_client_table.get(topic, set())):
                     queue = self._client_queue_table.get(client_id)
-                    if queue:
-                        if queue.qsize() < self._max_queue_size:
-                            await queue.put((headers, data))
-                        else:
-                            bad_clients.add(client_id)
+                    stop_event = self._client_stop_table.get(client_id)
+                    if queue is None or stop_event is None:
+                        continue
+                    try:
+                        queue.put_nowait((headers, data))
+                    except asyncio.QueueFull:
+                        logging.warning(f'WebMesh client queue full; detaching {clinent_id}')
+                        stop_event.set()
 
-            for client_id in bad_clients:
-                await self.detach_client(client_id)
-                
         await self._mesh.aio_subscribe('data.>', process_message)
         await self._mesh.aio_subscribe('sd.task.stdout.>', process_message)
         
@@ -74,27 +74,37 @@ class WebMeshComponent(Component):
             logging.info(f"EventStream Connected")
         except Exception as e:
             logging.warning(f"EventStream Accept Failed: {e}")
+            return
 
         client_id = secrets.token_urlsafe(32)
-        queue = asyncio.Queue()
-        self._client_queue_table[client_id] = queue
+        queue = asyncio.Queue(maxsize=self._max_queue_size)
+        stop_event = asyncio.Event()
+
+        async with self._queue_lock:
+            self._client_queue_table[client_id] = queue
+            self._client_stop_table[client_id] = stop_event
+            
         disconnect_task = asyncio.create_task(eventstream.wait_disconnected())
+        stop_task = asyncio.create_task(stop_event.wait())
+        
         try:
             await eventstream.send({'client_id': client_id}, event='register')
             
             while True:
-                queue_task = asyncio.create_task(queue.get())                
-                done, pending = await asyncio.wait(
-                    [queue_task, disconnect_task],
+                queue_task = asyncio.create_task(queue.get())
+                
+                done, _ = await asyncio.wait(
+                    [ queue_task, disconnect_task, stop_task ],
                     return_when=asyncio.FIRST_COMPLETED,
                 )
                 if disconnect_task in done:
                     queue_task.cancel()
-                    await disconnect_task
-                if queue_task not in done:
-                    continue
+                    await disconnect_task   # cause ConnectionClosed
+                if stop_task in done:
+                    queue_task.cancel()
+                    break
                 
-                headers, body = await queue_task
+                headers, body = queue_task.result()
                 topic = headers.get('topic', '')
                 if topic.startswith('data'):
                     event = 'data'
@@ -110,26 +120,26 @@ class WebMeshComponent(Component):
                     data = { 'headers': headers, 'body': body }
                 await eventstream.send(data, event=event)
         except slowlette.EventStreamConnectionClosed:
-            logging.info("EventStream Closed by client")
+            logging.info(f"EventStream Closed by client: {client_id}")
         finally:
+            disconnect_task.cancel()
+            stop_task.cancel()
             async with self._queue_lock:
                 self._client_queue_table.pop(client_id)
-                for client_set in self._topic_client_table.values():
-                    client_set.discard(client_id)
+                self._client_stop_table.pop(client_id)
+
+                empty_topics = []
+                for topic, clients in self._topic_client_table.items():
+                    clients.discard(client_id)
+                    if not clients:
+                        empty_topics.append(topic)
+                for topic in empty_topics:
+                    self._topic_client_table.pop(topic, None)
             
-            disconnect_task.cancel()
             try:
                 await eventstream.close()
             except Exception:
                 pass
-
-            
-    async def detach_client(self, client_id):
-        async with self._queue_lock:
-            self._client_queue_table.pop(client_id)
-            for client_set in self._topic_client_table.values():
-                client_set.discard(client_id)
-        
 
             
     @slowlette.post('/api/webmesh/subscribe')

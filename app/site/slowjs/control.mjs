@@ -465,7 +465,7 @@ export class Controller {
         }
         
         this.sse.onopen = () => {
-            console.log("SSE Connected");
+            ;
         };
         this.sse.onclose = () => {
             console.log("SSE Closed");
@@ -484,10 +484,9 @@ export class Controller {
                 console.error("SSE Error: bad register event: " + err);
                 return;
             }
-            console.log('SSE client_id' + this.sse.client_id);
+            console.log('SSE Connected: client_id=' + this.sse.client_id);
 
             const subscribe_url = url.toString() + 'api/webmesh/subscribe?client_id=' + this.sse.client_id;
-            console.log(subscribe_url);
             const subscribe_message = {
                 'topic': 'data.store.HV.ch0',
             };
