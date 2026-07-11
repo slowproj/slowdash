@@ -174,4 +174,3 @@ class WebMeshComponent(Component):
         await self._mesh.aio_publish(topic, doc)
             
         return { 'status': 'ok' }
-            

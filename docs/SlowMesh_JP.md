@@ -52,6 +52,9 @@ SlowDash サーバー内で SlowMesh 関連のサービスを行うものです�
 SlowDash 内蔵の PubSub ブローカーです．SlowDash のサーバープロセスに含まれているので，何も設定せずにそのまま使用できます．
 WebSockets で実装されています．
 
+### WebMesh HTTP ブリッジ
+SlowMesh への Publish / Subscribe を，HTTP からアクセスできるようにします．Publish は通常の POST リクエスト， Subscribe は Server-Sent Events (SSE) で実装されています．
+
 
 ## PubSub
 ### 使用例
@@ -341,6 +344,56 @@ MeshStdio では，以下のルールで処理されます：
 
 このルールは，ローカルの input() のみに適用され，宛先が明示されている SlowMesh の PubSub からの入力は，全て適切に割り振られることに注意してください．
 ここで記述した振る舞いは，一つのプロセスの中で複数の MeshStdio があって，それらに対してローカルからの入力があった場合の動作です．
+
+## WebMesh
+WebMesh は，SlowDash サーバープロセスの一部で，SlowMesh に対する Publish / Subscribe を HTTP から行えるようにします．
+Publish は通常の POST リクエスト，Subscribe は Server-Sent Events (SSE) を用いて実装されています．
+
+### Subscribe
+Subscribe するためには，まず `event/webmesh/attach` に SSE 接続をして，SSE 経由で配布される  `register` イベントからクライアントIDを取得します．
+
+```javascript
+    let sse = new EventSource('http://localhost:18881/event/webmesh/attach');
+    let client_id = null;
+    sse.addEventListener("register", (event) => {
+        client_id = JSON.parse(event.data).client_id;
+    }
+```
+
+そして，このクライアントIDを使用して，トピックを subscribe します．
+```javascript
+    const subscribe_url = 'http://localhost:18881/api/webmesh/subscribe?client_id=' + client_id;
+    const subscribe_message = {
+       'topic': 'data.store.HV.ch0',
+    };
+    fetch(subscribe_url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json; charset=utf-8' },
+        body: JSON.stringify(subscribe_message),
+    });
+```
+
+`data.>` トピックは `data` イベントとして，`sd.task.stdout.>` トピックは `stdout` イベントとして送信されます．
+```javascript
+    sse.addEventListener("data", (event) => {
+        let data = JSON.parse(event.data);
+    });
+```
+
+### Publish
+Publish は，`api/webmesh/publish/{topic}` に POST するだけです．
+```javascript
+    const topic = 'control/start';
+    const message = {
+       'run_number': 10,
+       'length': 3600,
+    };
+    fetch('http://localhost:18881/api/webmesh/post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json; charset=utf-8' },
+        body: JSON.stringify(message),
+    });
+```
 
 
 # SlowTask
@@ -824,6 +877,26 @@ Registry に保持されているキーの値をデータとして返す（デ�
 
 - channel が `@registry:{key}` となっているものが対象
 - TODO: レジストリメタデータの [updated, now()] とデータクエリ期間が重なるものが対象
+
+
+## WebMesh
+WebMesh は，SlowMesh の PubSub を HTTP 経由で行えるようにするブリッジです．Slowlette を経由して `sd_webmesh.py` コンポーネントにより実装されています．
+
+#### EventSource(`event/webmesh/attach`)
+SSE 接続チャンネルを作成する．
+
+  - `register` イベント： サーバーが ClientID を配布
+  - `data` イベント： `data.>` トピックのメッセージ
+  - `stdout` イベント： `sd.task.stdout.>` トピックのメッセージ
+
+#### POST `api/webmesh/subscribe?client_id={client_id}`
+SlowMesh に Subscribe するトピックを指定する．複数回呼び出しが可能．
+POST する body に JSON で `topic` を指定．
+
+#### POST `api/webmesh/publish/{topic}`
+SlowMesh へ publish する．
+
+
 
 
 # RPC サービス
