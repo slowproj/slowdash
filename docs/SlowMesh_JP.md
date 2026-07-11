@@ -45,7 +45,7 @@ SlowDash サーバー内で SlowMesh 関連のサービスを行うものです�
 
 - Registry (Key-Value Store) サービス
 - Pubsub Last-Value Cache (PubSub の`>` トピックを subscribe して受信データをレジストリの `$pubsub.{topic})` に保持）
-- Web API (HTTP POST による publish や WebSockets 経由の PubSub など）
+- WebMesh API (HTTP POST による publish や SSE による subscribe など）
 - TODO: Control History (PubSub の`control.>` と `sd.rpc.>` トピックを subscribe して受信データをデータベースに保存）
 
 ### SlowMQ バックボーン
@@ -383,12 +383,12 @@ Subscribe するためには，まず `event/webmesh/attach` に SSE 接続を�
 ### Publish
 Publish は，`api/webmesh/publish/{topic}` に POST するだけです．
 ```javascript
-    const topic = 'control/start';
+    const topic = 'control.start';
     const message = {
        'run_number': 10,
        'length': 3600,
     };
-    fetch('http://localhost:18881/api/webmesh/post', {
+    fetch('http://localhost:18881/api/webmesh/publish/' + encodeURIComponent(topic), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json; charset=utf-8' },
         body: JSON.stringify(message),

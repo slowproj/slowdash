@@ -198,7 +198,7 @@ SlowMesh 上の独立タスク (SlowTask) として実行するためのアダ�
 <li>Pubsub Last-Value Cache (PubSub の<code>&gt;</code> トピックを
 subscribe して受信データをレジストリの <code>$pubsub.{topic})</code>
 に保持）</li>
-<li>Web API (HTTP POST による publish や WebSockets 経由の PubSub
+<li>WebMesh API (HTTP POST による publish や SSE による subscribe
 など）</li>
 <li>TODO: Control History (PubSub の<code>control.&gt;</code> と
 <code>sd.rpc.&gt;</code> トピックを subscribe
@@ -720,12 +720,12 @@ class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb17
 <p>Publish は，<code>api/webmesh/publish/{topic}</code> に POST
 するだけです．</p>
 <div class="sourceCode" id="cb18"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> topic <span class="op">=</span> <span class="st">&#39;control/start&#39;</span><span class="op">;</span></span>
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> topic <span class="op">=</span> <span class="st">&#39;control.start&#39;</span><span class="op">;</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> message <span class="op">=</span> {</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>       <span class="st">&#39;run_number&#39;</span><span class="op">:</span> <span class="dv">10</span><span class="op">,</span></span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>       <span class="st">&#39;length&#39;</span><span class="op">:</span> <span class="dv">3600</span><span class="op">,</span></span>
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    }<span class="op">;</span></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">fetch</span>(<span class="st">&#39;http://localhost:18881/api/webmesh/post&#39;</span><span class="op">,</span> {</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">fetch</span>(<span class="st">&#39;http://localhost:18881/api/webmesh/publish/&#39;</span> <span class="op">+</span> <span class="pp">encodeURIComponent</span>(topic)<span class="op">,</span> {</span>
 <span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">method</span><span class="op">:</span> <span class="st">&#39;POST&#39;</span><span class="op">,</span></span>
 <span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">headers</span><span class="op">:</span> { <span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/json; charset=utf-8&#39;</span> }<span class="op">,</span></span>
 <span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">body</span><span class="op">:</span> <span class="bu">JSON</span><span class="op">.</span><span class="fu">stringify</span>(message)<span class="op">,</span></span>
