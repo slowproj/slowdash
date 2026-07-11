@@ -25,7 +25,7 @@ class WebMeshComponent(Component):
     def public_config(self):
         return { 'webmesh': {
             'enabled': self.enabled,
-            'attached': { topic:len(clients) for topic, clients in self._topic_client_table.items() },
+            'attached': { topic:[cid[0:4] for cid in clients] for topic, clients in self._topic_client_table.items() },
         }}
 
 
@@ -69,14 +69,14 @@ class WebMeshComponent(Component):
         
     @slowlette.eventstream('/event/webmesh/attach')
     async def attach(self, eventstream:slowlette.EventStream):
+        client_id = secrets.token_urlsafe(32)
         try:
             await eventstream.accept()
-            logging.info(f'EventStream Connected')
+            logging.info(f'EventStream Connected: {client_id}')
         except Exception as e:
             logging.warning(f'EventStream Accept Failed: {e}')
             return
 
-        client_id = secrets.token_urlsafe(32)
         queue = asyncio.Queue(maxsize=self._max_queue_size)
         stop_event = asyncio.Event()
 
@@ -144,17 +144,15 @@ class WebMeshComponent(Component):
             
     @slowlette.post('/api/webmesh/subscribe')
     async def subscribe(self, client_id:str, doc:slowlette.DictJSON):
-        if client_id not in self._client_queue_table:
-            return { 'status': 'error', 'message': f'unknown client id: {client_id}' }
         topic = doc.get('topic')
         if topic is None or len(topic) == 0:
             return { 'status': 'error', 'message': f'bad topic name: {topic}' }
         
         async with self._queue_lock:
-            if topic not in self._topic_client_table:
-                self._topic_client_table[topic] = set([client_id])
-            else:
-                self._topic_client_table[topic].add(client_id)
+            if client_id not in self._client_queue_table:
+                return { 'status': 'error', 'message': f'unknown client id: {client_id}' }
+
+            self._topic_client_table.setdefault(topic, set()).add(client_id)
 
         return { 'status': 'ok' }
             
