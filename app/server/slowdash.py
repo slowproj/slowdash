@@ -13,7 +13,7 @@ from sd_project import Project
 from sd_config import ConfigComponent
 from sd_datasource import DataSourceComponent
 from sd_export import ExportComponent
-from sd_mesh import MeshComponent
+from sd_webmesh import WebMeshComponent
 from sd_mesh_registry import MeshRegistryComponent
 from sd_slowmq import SlowMQComponent
 from sd_usermodule import UserModuleComponent
@@ -67,7 +67,7 @@ class App(slowlette.App):
         ### API Components: see the Slowlette documentation for the mechanism ###
         
         self.slowlette.include(UserModuleComponent(self, self.project))  # user module might want to capture API
-        self.slowlette.include(MeshComponent(self, self.project))        # mesh-cache override datasoruce replies
+        self.slowlette.include(WebMeshComponent(self, self.project))     # mesh-cache override datasoruce replies
         self.slowlette.include(TaskComponent(self, self.project))
         self.slowlette.include(DataSourceComponent(self, self.project))  # user/task modules might create DB
         self.slowlette.include(UserHtmlComponent(self, self.project))

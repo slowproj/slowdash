@@ -138,7 +138,9 @@ export class Controller {
         this.isUpdateRunning = false;
 
         this.socket = null;
-        this._setupStreaming();
+        //this._setupStreaming();
+        this.sse = null;
+        this._setupNewStreaming();
 
         this.loggedErrors = new Set();
     }
@@ -432,6 +434,80 @@ export class Controller {
             }
             this.view.draw(data);
         }
+    }
+
+    async _setupNewStreaming() {
+        if (this.sse !== null) {
+            return;
+        }
+        
+        let url = new URL(window.location.href);
+        url.search = '';
+        url.hash = '';
+        
+        if (url.pathname.match(/\.[a-zA-Z0-9]+$/)) {  
+            // last path element has an extension (file) -> remove the file name
+            url.pathname = url.pathname.replace(/\/[^/]*$/, '/');
+        }
+        else {
+            url.pathname += (url.pathname.endsWith('/') ? '' : '/');
+        }
+
+        try {
+            this.sse = new EventSource(url.toString() + 'event/webmesh/attach');
+        }
+        catch(error) {
+            this.sse.close();
+            this.sse = null;
+            console.error("SSE setup error: " + error);
+            console.log("Data streaming is disabled.");
+            return;
+        }
+        
+        this.sse.onopen = () => {
+            console.log("SSE Connected");
+        };
+        this.sse.onclose = () => {
+            console.log("SSE Closed");
+            this.socket = null;
+        };
+        this.sse.onerror = () => {
+            this.sse.close();
+            this.sse = null;
+            console.error("SSE Error: Data streaming is closed.");
+        };
+        this.sse.addEventListener("register", (event) => {
+            try {
+                this.sse.client_id = JSON.parse(event.data).client_id;
+            }
+            catch (err){
+                console.error("SSE Error: bad register event: " + err);
+                return;
+            }
+            console.log('SSE client_id' + this.sse.client_id);
+
+            const subscribe_url = url.toString() + 'api/webmesh/subscribe?client_id=' + this.sse.client_id;
+            console.log(subscribe_url);
+            const subscribe_message = {
+                'topic': 'data.store.HV.ch0',
+            };
+            fetch(subscribe_url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json; charset=utf-8' },
+                body: JSON.stringify(subscribe_message),
+            });
+        });
+        this.sse.addEventListener("data", (event) => {
+            let data = null;
+            try {
+                data = JSON.parse(event.data);
+            }
+            catch (err) {
+                console.error('badly formatted data: ' + event.data);
+                return;
+            }
+            console.log('SSE data received', data);
+        });
     }
 };
 

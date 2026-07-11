@@ -362,7 +362,7 @@ class TaskComponent(Component):
     async def startup(self):
         # this needs to be done in "post_startup", as SlowMQ (if used) must be running.
         if self._mesh is None:
-            self._mesh = Mesh('slowmq://localhost:18881', name="sd_taskprocess")        
+            self._mesh = Mesh('slowmq://localhost:18881', name='sd_task')        
             await self._subscribe_taskspec()
             await self._mesh.aio_start()
             await self._request_taskspec()

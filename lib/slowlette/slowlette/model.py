@@ -90,7 +90,7 @@ class DictJSON(dict):
             else:
                 data = body
         except Exception as e:
-            logging.error(f'Slowlette: JSON decoding error: {e}')
+            logging.error(f'Slowlette: JSON decoding error: {e}: {body}')
             self._is_valid = False
             return
 
