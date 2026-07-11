@@ -10,6 +10,9 @@ from slowpy.mesh import Mesh
 class WebMeshComponent(Component):
     def __init__(self, app, project):
         super().__init__(app, project)
+
+        self._max_queue_size = 10
+        
         self.enabled = app.is_async
         self._mesh = None
 
@@ -27,6 +30,9 @@ class WebMeshComponent(Component):
 
     @slowlette.on_event('post_startup')
     async def startup(self):
+        if not self.enabled:
+            return
+        
         # this needs to be done in "post_startup", as SlowMQ (if used) must be running.
         if self._mesh is None:
             self._mesh = Mesh('slowmq://localhost:18881', name='sd_webmesh')
@@ -37,17 +43,25 @@ class WebMeshComponent(Component):
     @slowlette.on_event('shutdown')
     async def shutdown(self):        
         if self._mesh is not None:
-            await self._mesh.aio_stop()
+            await self._mesh.aio_close()
+            self._mesh = None
 
 
     async def _subscribe_mesh(self):
         async def process_message(headers, data):
             topic = headers.get('topic')
-            for client in self._topic_client_table.get(topic, set()):
-                async with self._queue_lock:
-                    queue = self._client_queue_table.get(client)
+            bad_clients = set()
+            async with self._queue_lock:
+                for client_id in self._topic_client_table.get(topic, set()):
+                    queue = self._client_queue_table.get(client_id)
                     if queue:
-                        await queue.put((headers, data))
+                        if queue.qsize() < self._max_queue_size:
+                            await queue.put((headers, data))
+                        else:
+                            bad_clients.add(client_id)
+
+            for client_id in bad_clients:
+                await self.detach_client(client_id)
                 
         await self._mesh.aio_subscribe('data.>', process_message)
         await self._mesh.aio_subscribe('sd.task.stdout.>', process_message)
@@ -60,7 +74,6 @@ class WebMeshComponent(Component):
             logging.info(f"EventStream Connected")
         except Exception as e:
             logging.warning(f"EventStream Accept Failed: {e}")
-            return None
 
         client_id = secrets.token_urlsafe(32)
         queue = asyncio.Queue()
@@ -89,26 +102,34 @@ class WebMeshComponent(Component):
                 elif topic.startswith('sd.task.stdout'):
                     event = 'stdout'
                     data = {
-                        'source': header.get('mesh_id'),
+                        'source': headers.get('mesh_id'),
                         'text': body.get('text')
                     }
                 else:
                     event = 'mesh'
-                    data = { headers: headers, body: body }
+                    data = { 'headers': headers, 'body': body }
                 await eventstream.send(data, event=event)
         except slowlette.EventStreamConnectionClosed:
             logging.info("EventStream Closed by client")
         finally:
             async with self._queue_lock:
                 self._client_queue_table.pop(client_id)
-            for client_set in self._topic_client_table.values():
-                client_set.discard(client_id)
+                for client_set in self._topic_client_table.values():
+                    client_set.discard(client_id)
             
             disconnect_task.cancel()
             try:
                 await eventstream.close()
             except Exception:
                 pass
+
+            
+    async def detach_client(self, client_id):
+        async with self._queue_lock:
+            self._client_queue_table.pop(client_id)
+            for client_set in self._topic_client_table.values():
+                client_set.discard(client_id)
+        
 
             
     @slowlette.post('/api/webmesh/subscribe')
@@ -123,6 +144,9 @@ class WebMeshComponent(Component):
             self._topic_client_table[topic] = set([client_id])
         else:
             self._topic_client_table[topic].add(client_id)
+
+        return { 'status': 'ok' }
+            
             
 
     @slowlette.post('/api/webmesh/publish/{topic}')
@@ -130,6 +154,10 @@ class WebMeshComponent(Component):
         if topic is None or len(topic) == 0:
             return { 'status': 'error', 'message': f'bad topic name: {topic}' }
         
-        if self._mesh:
-            await self._mesh.aio_publish(topic, doc)
-    
+        if not self._mesh:
+            return { 'status': 'error', 'message': f'SlowMesh not running' }
+
+        await self._mesh.aio_publish(topic, doc)
+            
+        return { 'status': 'ok' }
+            
