@@ -44,16 +44,13 @@ SlowTask スクリプトから使用されるライブラリです．
 SlowDash サーバー内で SlowMesh 関連のサービスを行うものです．
 
 - Registry (Key-Value Store) サービス
-- Pubsub Last-Value Cache (PubSub の`>` トピックを subscribe して受信データをレジストリの `$pubsub.{topic})` に保持）
-- WebMesh API (HTTP POST による publish や SSE による subscribe など）
+- Pubsub Last-Value Cache (PubSub の`>` トピックを subscribe して受信データをレジストリの `$pubsub.{topic}` に保持）
+- WebMesh API: HTTP POST による publish と Server-Sent Events (SSE) による subscribe
 - TODO: Control History (PubSub の`control.>` と `sd.rpc.>` トピックを subscribe して受信データをデータベースに保存）
 
 ### SlowMQ バックボーン
 SlowDash 内蔵の PubSub ブローカーです．SlowDash のサーバープロセスに含まれているので，何も設定せずにそのまま使用できます．
 WebSockets で実装されています．
-
-### WebMesh HTTP ブリッジ
-SlowMesh への Publish / Subscribe を，HTTP からアクセスできるようにします．Publish は通常の POST リクエスト， Subscribe は Server-Sent Events (SSE) で実装されています．
 
 
 ## PubSub
