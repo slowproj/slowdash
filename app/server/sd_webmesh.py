@@ -60,7 +60,7 @@ class WebMeshComponent(Component):
                     try:
                         queue.put_nowait((headers, data))
                     except asyncio.QueueFull:
-                        logging.warning(f'WebMesh client queue full; detaching {clinent_id}')
+                        logging.warning(f'WebMesh client queue full; detaching {client_id}')
                         stop_event.set()
 
         await self._mesh.aio_subscribe('data.>', process_message)
@@ -71,9 +71,9 @@ class WebMeshComponent(Component):
     async def attach(self, eventstream:slowlette.EventStream):
         try:
             await eventstream.accept()
-            logging.info(f"EventStream Connected")
+            logging.info(f'EventStream Connected')
         except Exception as e:
-            logging.warning(f"EventStream Accept Failed: {e}")
+            logging.warning(f'EventStream Accept Failed: {e}')
             return
 
         client_id = secrets.token_urlsafe(32)
@@ -120,7 +120,7 @@ class WebMeshComponent(Component):
                     data = { 'headers': headers, 'body': body }
                 await eventstream.send(data, event=event)
         except slowlette.EventStreamConnectionClosed:
-            logging.info(f"EventStream Closed by client: {client_id}")
+            logging.info(f'EventStream Closed by client: {client_id}')
         finally:
             disconnect_task.cancel()
             stop_task.cancel()
@@ -150,10 +150,11 @@ class WebMeshComponent(Component):
         if topic is None or len(topic) == 0:
             return { 'status': 'error', 'message': f'bad topic name: {topic}' }
         
-        if topic not in self._topic_client_table:
-            self._topic_client_table[topic] = set([client_id])
-        else:
-            self._topic_client_table[topic].add(client_id)
+        async with self._queue_lock:
+            if topic not in self._topic_client_table:
+                self._topic_client_table[topic] = set([client_id])
+            else:
+                self._topic_client_table[topic].add(client_id)
 
         return { 'status': 'ok' }
             
