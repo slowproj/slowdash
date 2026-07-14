@@ -7,6 +7,24 @@ from urllib.parse import urlsplit
 from slowpy.control import ControlNode, control_system as ctrl
 
 
+class Packet:
+    def __init__(self):
+        pass
+
+    def pack(self):
+        """
+        - return value: tuple of (headers, body)
+        """
+        return (None, None)
+
+
+    @classmethod
+    def unpack(cls, headers, body):
+        return Packet()
+
+
+
+    
 class Mesh:
     _mesh_sequence_id = 0
     
@@ -218,6 +236,10 @@ class Mesh:
     async def aio_publish(self, topic:str, value, *, headers:dict|None=None):
         '''direct publish
         '''
+        if isinstance(value, Packet):
+            h, b = value.pack()
+            return await self.publisher(topic).headers(h).aio_set(b)
+    
         return await self.publisher(topic).headers(headers or {}).aio_set(value)
 
     
@@ -400,7 +422,9 @@ class Mesh:
           func: callback function
           topic: topic filter
         """
-        nargs = len(inspect.signature(func).parameters)
+        
+        params = inspect.signature(func).parameters
+        nargs = len(params)
         if nargs > 2:
             logging.error(f'Invalid mesh message handler: wrong number of arguments')
             return None
@@ -415,7 +439,12 @@ class Mesh:
                     if nargs == 0:
                         result = func()
                     elif nargs == 1:
-                        result = func(data)
+                        p0 = [ v for v in params.values() ][0]
+                        annotation = p0.annotation
+                        if issubclass(annotation, Packet):
+                            result = func(annotation.unpack(headers, data))
+                        else:
+                            result = func(data)
                     elif nargs == 2:
                         result = func(headers, data)
                     if asyncio.iscoroutine(result):

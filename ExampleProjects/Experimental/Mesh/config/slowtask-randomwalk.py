@@ -1,5 +1,5 @@
 
-from slowpy.mesh import Tasklet
+from slowpy.mesh import Tasklet, DataPacket
 tasklet = Tasklet()
 
 from slowpy.control import control_system as ctrl
@@ -20,7 +20,7 @@ def loop():
     data = device.ch(0).get()
     print(data)
         
-    tasklet.mesh.publish('data.store.HV.ch0', {'V0': data})
+    tasklet.mesh.publish('data.store.HV.ch0', DataPacket({'V0': data}))
 
 
 @tasklet.mesh.export

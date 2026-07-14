@@ -1,5 +1,5 @@
 
-from slowpy.mesh import Tasklet
+from slowpy.mesh import Tasklet, DataPacket
 tasklet = Tasklet()
 
 
@@ -10,9 +10,9 @@ datastore = DataStore_SQLite('sqlite:///TestData.db', table='slowdata')
 
 
 @tasklet.mesh.on('data.store.>')
-def store(data_record):
-    print(f'STORE: {data_record}')
-    datastore.append(data_record)
+def store(data:DataPacket):
+    print(f'STORE DATA: {data.values}')
+    datastore.append(data.values)
 
     
 #### Control Node Export  ####

@@ -59,18 +59,44 @@ WebSockets で実装されています．
 
 ##### Publish
 ```python
-topic = 'data.temp0'
-data = { 't': t, 'x': temp0 }
+topic = 'data.store.temp0'
+data = { 'temp0': { 't': t, 'x': temp0 } }
 await tasklet.mesh.aio_publish(topic, data)
 ```
 
 ##### Subscribe
 ```python
-@tasklet.mesh.on('data.>')  # メッセージ受信時のコールバックを指定
+@tasklet.mesh.on('data.store.>')  # メッセージ受信時のコールバックを指定
 async def handle_data(headers, data):
     topic = headers.get('topic')
     ...
 ```
+
+### Mesh Packet
+データに対する Schema が定義されている一部のトピックに対しては，SlowMesh のパケットに変換する Packet が利用できます．
+Packet 経由でメッセージをやり取りする方が，実際に SlowMesh でやりとりする Schema の詳細に依存せず，また，構築や解読の手間が省けて便利です．
+
+##### Publish
+```python
+from slowpy.mesh import DataPacket
+
+topic = 'data.temp0'
+data = { 't': t, 'x': temp0 }
+await tasklet.mesh.aio_publish(topic, DataPacket({'temp0': temp0}))
+```
+
+##### Subscribe
+```python
+from slowpy.mesh import DataPacket
+
+@tasklet.mesh.on('data.>')  # メッセージ受信時のコールバックを指定
+async def handle_data(data:DataPacket):
+    for ch, value in data.values.items():
+        ...
+```
+
+Packet は，`slowpy/mesh/packet` に定義されています．
+
 
 ### バックボーン接続
 SlowPy Mesh の PubSub は，SlowPy Control に実装されているメッセージングバックボーンへのインターフーェスに対する薄いラッパーです．
@@ -342,7 +368,7 @@ MeshStdio では，以下のルールで処理されます：
 このルールは，ローカルの input() のみに適用され，宛先が明示されている SlowMesh の PubSub からの入力は，全て適切に割り振られることに注意してください．
 ここで記述した振る舞いは，一つのプロセスの中で複数の MeshStdio があって，それらに対してローカルからの入力があった場合の動作です．
 
-## WebMesh
+## HTTP ブリッジ (WebMesh)
 WebMesh は，SlowDash サーバープロセスの一部で，SlowMesh に対する Publish / Subscribe を HTTP から行えるようにします．
 Publish は通常の POST リクエスト，Subscribe は Server-Sent Events (SSE) を用いて実装されています．
 
@@ -520,11 +546,13 @@ async def my_work():   # この関数は１秒（interval の値）ごとに呼�
 async def my_work(tick):
     # １秒毎にデータを読み，全てのデータをストリームに流す
     data = await HV.ch(0).aio_get()
-    await tasklet.mesh.aio_publish('data.stream.HV.ch00', data)
+    packet = DataPacket(data, tag='HV.ch00')
+    
+    await tasklet.mesh.aio_publish('data.stream.HV.ch00', packet)
     
     # データベースへの記録は１０回に１回
     if tick:
-        await tasklet.mesh.aio_publish('data.store.HV.ch00', data)
+        await tasklet.mesh.aio_publish('data.store.HV.ch00', packet)
 ```
 
 複数の tick 周期を指定することもできます．
@@ -533,15 +561,17 @@ async def my_work(tick):
 async def my_work(tick):
     # １秒毎にデータを読み，全てのデータをストリームに流す
     data = await HV.ch(0).aio_get()
-    await tasklet.mesh.aio_publish('data.stream.HV.ch00', data)
+    packet = DataPacket(data, tag='HV.ch00')
+    
+    await tasklet.mesh.aio_publish('data.stream.HV.ch00', packet)
     
     # 一時データベース（短期間高密度）への記録は１０回に１回
     if tick.transient_store:
-        await tasklet.mesh.aio_publish('data.transient_store.HV.ch00', data)
+        await tasklet.mesh.aio_publish('data.transient_store.HV.ch00', packet)
         
     # 永続データベースへの記録は６０回に１回
     if tick.store:
-        await tasklet.mesh.aio_publish('data.store.HV.ch00', data)
+        await tasklet.mesh.aio_publish('data.store.HV.ch00', packet)
 ```
 
 繰り返しますが，ユーザー関数の中で `time.sleep()` は使わないでください．(`await control_system.aio_sleep()` は可）．
@@ -555,8 +585,8 @@ SlowTask は，内部に接続済 SlowMesh を保持していて，これを介�
 現時点では，データおよびヘッダに渡せる値は，JSON にシリアライズできるものに限られます．
 <br>（TODO: バイナリをサポート）
 
-- データを publish: `await tasklet.mesh.aio_publish(name:str, data, headers={})` (async メソッド)
-- データに subscribe: `@tasklet.mesh.on(topic:str)` （デコレータ）
+- データを publish: `await tasklet.mesh.aio_publish(name:str, packet:XXXPacket)` (async メソッド)
+- データに subscribe: `@tasklet.mesh.on(topic:str)` （デコレータ；本体関数で `packet:XXXPacket` を受け取る）
 
 #### Registry (Key-Value Store) へのアクセス
 - 書き込み (set)： `await tasklet.mesh.registry.aio_set(key, value, *, cas_revision:int|None=None) -> int|None`
