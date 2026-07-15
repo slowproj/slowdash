@@ -226,10 +226,10 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a hr
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
 <h3 id="meshpacket">MeshPacket</h3>
 <p>データに対する Schema
-が定義されている一部のトピックに対しては，SlowMesh のパケットに変換する
+が定義されている一部のトピックに対しては，規定されたスキーマのデータを読み書きするための
 MeshPacket が利用できます． MeshPacket
-経由でメッセージ内容を読み書きすれば，スクリプトが Schema
-の詳細に依存せず，また，構築や解読の手間が省けて便利です．</p>
+経由でメッセージ内容を読み書きすれば，ユーザーのスクリプトが Schema
+の詳細に依存せず，また，メッセージの構築や解読の手間が省けて便利です．</p>
 <p>MeshPacket は，<code>slowpy/mesh/packet</code> に定義されています．
 現時点で，以下の MeshPacket が利用可能です．</p>
 <table>
@@ -246,7 +246,7 @@ MeshPacket が利用できます． MeshPacket
 <tbody>
 <tr class="odd">
 <td><code>data.*.&gt;</code></td>
-<td><code>DataPacket(values, *, tag:str|None=None, timestamp:float|None=None</code></td>
+<td><code>DataPacket(values, *, tag:str|None=None, timestamp:float|None=None</code>)</td>
 </tr>
 <tr class="even">
 <td><code>control.&gt;</code></td>

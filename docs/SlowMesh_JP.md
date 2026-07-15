@@ -73,19 +73,16 @@ async def handle_data(headers, data):
 ```
 
 ### MeshPacket
-データに対する Schema が定義されている一部のトピックに対しては，SlowMesh のパケットに変換する MeshPacket が利用できます．
-MeshPacket 経由でメッセージ内容を読み書きすれば，スクリプトが Schema の詳細に依存せず，また，構築や解読の手間が省けて便利です．
-
+データに対する Schema が定義されている一部のトピックに対しては，規定されたスキーマのデータを読み書きするための MeshPacket が利用できます．
+MeshPacket 経由でメッセージ内容を読み書きすれば，ユーザーのスクリプトが Schema の詳細に依存せず，また，メッセージの構築や解読の手間が省けて便利です．
 
 MeshPacket は，`slowpy/mesh/packet` に定義されています．
 現時点で，以下の MeshPacket が利用可能です．
 
 |トピック|MeshPacket コンストラクタ|
 |---|----|
-|`data.*.>` | `DataPacket(values, *, tag:str|None=None, timestamp:float|None=None` |
+|`data.*.>` | `DataPacket(values, *, tag:str|None=None, timestamp:float|None=None`) |
 |`control.>` | `ControlPacket()` TODO:未実装 |
-
-
 
 以下，`data.>` トピックに対する MeshPacket である mesh.DataPacket を例に説明します．
 
