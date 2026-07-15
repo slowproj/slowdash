@@ -12,7 +12,7 @@ datastore = DataStore_SQLite('sqlite:///TestData.db', table='slowdata')
 @tasklet.mesh.on('data.store.>')
 def store(data:DataPacket):
     print(f'STORE DATA: {data.values}')
-    datastore.append(data.values)
+    datastore.append(data.values, tag=data.tag, timestamp=data.timestamp)
 
     
 #### Control Node Export  ####

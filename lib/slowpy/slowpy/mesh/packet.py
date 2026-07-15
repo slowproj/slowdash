@@ -3,12 +3,12 @@
 import time, logging
 from typing import Any
 
-from .mesh import Packet
+from .mesh import MeshPacket
 from ..store import DataStore
 from ..basetypes import TimeSeries
 
 
-class DataPacket(Packet):
+class DataPacket(MeshPacket):
     def __init__(self, values, tag=None, timestamp=None):
         '''
         Creates a SlowMesh packet for the "data.>" topics.
@@ -63,7 +63,7 @@ class DataPacket(Packet):
     def unpack(cls, headers, body):
         if not isinstance(body, dict):
             logging.error('mesh.DataPacket: received non-dict body')
-            return Packet()
+            return MeshPacket()
 
         tag = None
         timestamp = None

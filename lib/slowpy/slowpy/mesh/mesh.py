@@ -7,24 +7,6 @@ from urllib.parse import urlsplit
 from slowpy.control import ControlNode, control_system as ctrl
 
 
-class Packet:
-    def __init__(self):
-        pass
-
-    def pack(self):
-        """
-        - return value: tuple of (headers, body)
-        """
-        return (None, None)
-
-
-    @classmethod
-    def unpack(cls, headers, body):
-        return Packet()
-
-
-
-    
 class Mesh:
     _mesh_sequence_id = 0
     
@@ -236,7 +218,7 @@ class Mesh:
     async def aio_publish(self, topic:str, value, *, headers:dict|None=None):
         '''direct publish
         '''
-        if isinstance(value, Packet):
+        if isinstance(value, MeshPacket):
             h, b = value.pack()
             return await self.publisher(topic).headers(h).aio_set(b)
     
@@ -441,7 +423,7 @@ class Mesh:
                     elif nargs == 1:
                         p0 = [ v for v in params.values() ][0]
                         annotation = p0.annotation
-                        if issubclass(annotation, Packet):
+                        if issubclass(annotation, MeshPacket):
                             result = func(annotation.unpack(headers, data))
                         else:
                             result = func(data)
@@ -620,3 +602,21 @@ class Registry:
         Return Value (bool): True on success, False otherwise (key error or CAS mismatch)
         """
         return await self._mesh.aio_call(f'{self._module_name}.delete', key, cas_revision=cas_revision)
+
+
+
+class MeshPacket:
+    def __init__(self):
+        pass
+
+    def pack(self):
+        """
+        - return value: tuple of (headers, body)
+        """
+        return (None, None)
+
+
+    @classmethod
+    def unpack(cls, headers, body):
+        return MeshPacket()
+    

@@ -72,9 +72,22 @@ async def handle_data(headers, data):
     ...
 ```
 
-### Mesh Packet
-データに対する Schema が定義されている一部のトピックに対しては，SlowMesh のパケットに変換する Packet が利用できます．
-Packet 経由でメッセージをやり取りする方が，実際に SlowMesh でやりとりする Schema の詳細に依存せず，また，構築や解読の手間が省けて便利です．
+### MeshPacket
+データに対する Schema が定義されている一部のトピックに対しては，SlowMesh のパケットに変換する MeshPacket が利用できます．
+MeshPacket 経由でメッセージ内容を読み書きすれば，スクリプトが Schema の詳細に依存せず，また，構築や解読の手間が省けて便利です．
+
+
+MeshPacket は，`slowpy/mesh/packet` に定義されています．
+現時点で，以下の MeshPacket が利用可能です．
+
+|トピック|MeshPacket コンストラクタ|
+|---|----|
+|`data.*.>` | `DataPacket(values, *, tag:str|None=None, timestamp:float|None=None` |
+|`control.>` | `ControlPacket()` TODO:未実装 |
+
+
+
+以下，`data.>` トピックに対する MeshPacket である mesh.DataPacket を例に説明します．
 
 ##### Publish
 ```python
@@ -84,6 +97,9 @@ topic = 'data.temp0'
 data = { 't': t, 'x': temp0 }
 await tasklet.mesh.aio_publish(topic, DataPacket({'temp0': temp0}))
 ```
+ここで，`DataPacket` のコンストラクタパラーメータは，`DataStore.append()` と同じです．
+つまり，データストアに直接記録するのと，SlowMesh に publish するのは，ほぼ同じ書き方になります．
+
 
 ##### Subscribe
 ```python
@@ -95,7 +111,7 @@ async def handle_data(data:DataPacket):
         ...
 ```
 
-Packet は，`slowpy/mesh/packet` に定義されています．
+DataPacket には，コンストラクタのパラメータと同名のプロパティが定義されています．
 
 
 ### バックボーン接続
@@ -701,7 +717,7 @@ def loop():
     if not device.is_running:
         return
     data = device.ch(0).get()
-    tasklet.mesh.publish('data.store.HV.ch0', {'V0': data})
+    tasklet.mesh.publish('data.store.HV.ch0', DataPacket({'V0': data}))
 ```
 
 読み出しのスタート・ストップは PubSub の `control.start` および `control.stop` によりコントロールされます．
@@ -729,9 +745,10 @@ def set_value(value:float):
 RandomWalk タスク が publish したデータは，store タスクによって subscribe され，データベースに記録されます．
 ```python
 @tasklet.mesh.on('data.store.>')
-def store(data_record):
-    datastore.append(data_record)
+def store(data:DataPacket):
+    datastore.append(data.values, tag=data.tag, timestamp=data.timestamp)
 ```
+
 複数のプロセスがデータを publish しても，全てのデータはこの一箇所でデータベースに記録されるので，例えば SQLite のようなトランザクションを持っていないデータベースに書く場合でも，競合を避けることができます．
 また，データフォーマット（テーブルスキーマ）の記述も一箇所にまとめられます．
 
