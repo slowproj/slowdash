@@ -72,45 +72,6 @@ async def handle_data(headers, data):
     ...
 ```
 
-### MeshPacket
-データに対する Schema が定義されている一部のトピックに対しては，規定されたスキーマのデータを読み書きするための MeshPacket が利用できます．
-MeshPacket 経由でメッセージ内容を読み書きすれば，ユーザーのスクリプトが Schema の詳細に依存せず，また，メッセージの構築や解読の手間が省けて便利です．
-
-MeshPacket は，`slowpy/mesh/packet` に定義されています．
-現時点で，以下の MeshPacket が利用可能です．
-
-|トピック|MeshPacket コンストラクタ|
-|---|----|
-|`data.*.>` | `DataPacket(values, *, tag:str|None=None, timestamp:float|None=None`) |
-|`control.>` | `ControlPacket()` TODO:未実装 |
-
-以下，`data.>` トピックに対する MeshPacket である mesh.DataPacket を例に説明します．
-
-##### Publish
-```python
-from slowpy.mesh import DataPacket
-
-topic = 'data.temp0'
-data = { 't': t, 'x': temp0 }
-await tasklet.mesh.aio_publish(topic, DataPacket({'temp0': temp0}))
-```
-ここで，`DataPacket` のコンストラクタパラーメータは，`DataStore.append()` と同じです．
-つまり，データストアに直接記録するのと，SlowMesh に publish するのは，ほぼ同じ書き方になります．
-
-
-##### Subscribe
-```python
-from slowpy.mesh import DataPacket
-
-@tasklet.mesh.on('data.>')  # メッセージ受信時のコールバックを指定
-async def handle_data(data:DataPacket):
-    for ch, value in data.values.items():
-        ...
-```
-
-DataPacket には，コンストラクタのパラメータと同名のプロパティが定義されています．
-
-
 ### バックボーン接続
 SlowPy Mesh の PubSub は，SlowPy Control に実装されているメッセージングバックボーンへのインターフーェスに対する薄いラッパーです．
 SlowPy Control にある以下のメッセージングシステムを選べます：
@@ -157,6 +118,57 @@ SlowMQ と NATS 以外のバックボーンが使用された場合，これら�
 これらの文字の使用は避けた方がいいです．
 
 なお，Mesh のコンストラクタオプションで，これらの文字割り当てを変えることができます．例えば，MQTT を中心に運用することが確定しているのであれば，SlowMesh においても MQTT と同じ特殊文字を割り当てておくことができます．
+
+### MeshPacket
+データに対する Schema が定義されている一部のトピックに対しては，規定されたスキーマのデータを読み書きするための MeshPacket が利用できます．
+MeshPacket 経由でメッセージ内容を読み書きすれば，ユーザーのスクリプトが Schema の詳細に依存せず，また，メッセージの構築や解読の手間が省けて便利です．
+
+MeshPacket は，`slowpy/mesh/packet` に定義されています．
+現時点で，以下の MeshPacket が利用可能です．
+
+|トピック|MeshPacket コンストラクタ|
+|---|----|
+|`data.*.>` | `DataPacket(values, *, tag:str|None=None, timestamp:float|None=None`) |
+|`control.>` | `ControlPacket()` TODO:未実装 |
+
+#### データトピックの例
+以下，`data.>` トピックに対する MeshPacket である mesh.DataPacket を例に説明します．このトピックに流すデータは [Data Model](DataModel.html) に説明されている SlowDash フォーマットを使用します．以下のように，ちょっと複雑です：
+```json
+{
+    channel: {
+       "start": t0,      # 時間原点 (optional)
+       "t": time,        # TimeSeries データでは配列
+       "x": value        # TimeSeries データでは配列
+    }
+    ...                  # 他のチャンネル
+}
+```
+
+##### Publish
+```python
+from slowpy.mesh import DataPacket
+
+topic = 'data.temp0'
+data = { 't': t, 'x': temp0 }
+await tasklet.mesh.aio_publish(topic, DataPacket({'temp0': temp0}))
+```
+ここで，`DataPacket` のコンストラクタパラーメータは，`DataStore.append()` と同じです．
+つまり，データストアに直接記録するのと，SlowMesh に publish するのは，ほぼ同じ書き方になります．
+
+
+##### Subscribe
+```python
+from slowpy.mesh import DataPacket
+
+@tasklet.mesh.on('data.>')  # メッセージ受信時のコールバックを指定
+async def handle_data(data:DataPacket):
+    t = data.timestamp
+    for ch, value in data.values.items():
+        ...
+```
+
+DataPacket には，コンストラクタのパラメータと同名のプロパティが定義されています．
+
 
 ## Remote Procedure Call (RPC)
 RPC は，ある SlowTask が公開した Python 関数を，他の SlowTask から名前で呼び出すための仕組みです．
