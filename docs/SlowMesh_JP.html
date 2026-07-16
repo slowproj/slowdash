@@ -439,14 +439,14 @@ mesh.DataPacket を例に説明します．このトピックに流すデータ�
 href="DataModel.html">Data Model</a> に説明されている SlowDash
 フォーマットを使用します．以下のように，ちょっと複雑です：</p>
 <div class="sourceCode" id="cb3"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="er">channel</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>       <span class="dt">&quot;start&quot;</span><span class="fu">:</span> <span class="er">t0</span><span class="fu">,</span>      <span class="er">#</span> <span class="er">時間原点</span> <span class="er">(optional)</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>       <span class="dt">&quot;t&quot;</span><span class="fu">:</span> <span class="er">time</span><span class="fu">,</span>        <span class="er">#</span> <span class="er">TimeSeries</span> <span class="er">データでは配列</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>       <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="er">value</span>        <span class="er">#</span> <span class="er">TimeSeries</span> <span class="er">データでは配列</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="er">...</span>                  <span class="er">#</span> <span class="er">他のチャンネル</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">channel</span><span class="op">:</span> {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>       <span class="st">&quot;start&quot;</span><span class="op">:</span> t0<span class="op">,</span>      # <span class="fu">時間原点</span> (optional)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>       <span class="st">&quot;t&quot;</span><span class="op">:</span> time<span class="op">,</span>        # TimeSeries データでは配列</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>       <span class="st">&quot;x&quot;</span><span class="op">:</span> value        # TimeSeries データでは配列</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">...</span>                  # 他のチャンネル</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <h5 id="publish-1">Publish</h5>
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> DataPacket</span>

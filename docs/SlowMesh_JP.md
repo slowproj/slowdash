@@ -133,7 +133,7 @@ MeshPacket は，`slowpy/mesh/packet` に定義されています．
 
 #### データトピックの例
 以下，`data.>` トピックに対する MeshPacket である mesh.DataPacket を例に説明します．このトピックに流すデータは [Data Model](DataModel.html) に説明されている SlowDash フォーマットを使用します．以下のように，ちょっと複雑です：
-```json
+```javascript
 {
     channel: {
        "start": t0,      # 時間原点 (optional)
