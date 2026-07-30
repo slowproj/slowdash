@@ -128,12 +128,12 @@ MeshPacket は，`slowpy/mesh/packet` に定義されています．
 
 |トピック|MeshPacket コンストラクタ|
 |---|----|
-|`data.*.>` | `DataPacket(values, *, tag:str|None=None, timestamp:float|None=None`) |
+|`data.*.>` | `DataPacket(values, *, tag:str|None=None, timestamp:float|None=None)` |
 |`control.>` | `ControlPacket()` TODO:未実装 |
 
 #### データトピックの例
 以下，`data.>` トピックに対する MeshPacket である mesh.DataPacket を例に説明します．このトピックに流すデータは [Data Model](DataModel.html) に説明されている SlowDash フォーマットを使用します．以下のように，ちょっと複雑です：
-```javascript
+```python
 {
     channel: {
        "start": t0,      # 時間原点 (optional)
@@ -289,7 +289,7 @@ Registry では，他人が書いたものを意図せず上書きすること�
 - `aio_delete()` も同様．CAS Revision が一致しなければ削除に失敗する
 
 `aio_get()` の `with_meta` オプションを `True` にすると，書き込み時刻や CAS Revision などを含んだ Meta Data が返されます：
-```json
+```python
 {
     "key": キー,
     "value": 値,
