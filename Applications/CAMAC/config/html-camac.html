@@ -1,0 +1,139 @@
+
+<form>
+  <h3>CAMAC Setup</h3>
+  <table>
+    <tr><th>Station</th><th>LAM</th><th>Readout Channels</th></tr>
+    <tr>
+      <td><select name="module_0">
+        <option selected>1</option>
+        <option>2</option>
+        <option>3</option>
+        <option>4</option>
+        <option>5</option>
+        <option>6</option>
+        <option>7</option>
+        <option>8</option>
+      </select></td><td>
+        <input type="radio" name="lam" value="0" checked>
+      </td><td>
+        <input type="checkbox" name="ch0_0">0 
+        <input type="checkbox" name="ch0_1">1 
+        <input type="checkbox" name="ch0_2">2 
+        <input type="checkbox" name="ch0_3">3
+        <input type="checkbox" name="ch0_4">4 
+        <input type="checkbox" name="ch0_5">5 
+        <input type="checkbox" name="ch0_6">6 
+        <input type="checkbox" name="ch0_7">7
+        <input type="checkbox" name="ch0_8">8
+        <input type="checkbox" name="ch0_9">9
+        <input type="checkbox" name="ch0_10">10
+        <input type="checkbox" name="ch0_11">11
+        <input type="checkbox" name="ch0_12">12
+        <input type="checkbox" name="ch0_13">13
+        <input type="checkbox" name="ch0_14">14
+        <input type="checkbox" name="ch0_15">15
+    </td></tr>
+    <tr>
+      <td><select name="module_1">
+        <option>1</option>
+        <option selected>2</option>
+        <option>3</option>
+        <option>4</option>
+        <option>5</option>
+        <option>6</option>
+        <option>7</option>
+        <option>8</option>
+      </select></td><td>
+        <input type="radio" name="lam" value="1">
+      </td><td>
+        <input type="checkbox" name="ch1_0">0 
+        <input type="checkbox" name="ch1_1">1 
+        <input type="checkbox" name="ch1_2">2 
+        <input type="checkbox" name="ch1_3">3
+        <input type="checkbox" name="ch1_4">4 
+        <input type="checkbox" name="ch1_5">5 
+        <input type="checkbox" name="ch1_6">6 
+        <input type="checkbox" name="ch1_7">7
+        <input type="checkbox" name="ch1_8">8
+        <input type="checkbox" name="ch1_9">9
+        <input type="checkbox" name="ch1_10">10
+        <input type="checkbox" name="ch1_11">11
+        <input type="checkbox" name="ch1_12">12
+        <input type="checkbox" name="ch1_13">13
+        <input type="checkbox" name="ch1_14">14
+        <input type="checkbox" name="ch1_15">15
+    </td></tr>
+    <tr>
+      <td><select name="module_2">
+        <option>1</option>
+        <option>2</option>
+        <option selected>3</option>
+        <option>4</option>
+        <option>5</option>
+        <option>6</option>
+        <option>7</option>
+        <option>8</option>
+      </select></td><td>
+        <input type="radio" name="lam" value="2">
+      </td><td>
+        <input type="checkbox" name="ch2_0">0 
+        <input type="checkbox" name="ch2_1">1 
+        <input type="checkbox" name="ch2_2">2 
+        <input type="checkbox" name="ch2_3">3
+        <input type="checkbox" name="ch2_4">4 
+        <input type="checkbox" name="ch2_5">5 
+        <input type="checkbox" name="ch2_6">6 
+        <input type="checkbox" name="ch2_7">7
+        <input type="checkbox" name="ch2_8">8
+        <input type="checkbox" name="ch2_9">9
+        <input type="checkbox" name="ch2_10">10
+        <input type="checkbox" name="ch2_11">11
+        <input type="checkbox" name="ch2_12">12
+        <input type="checkbox" name="ch2_13">13
+        <input type="checkbox" name="ch2_14">14
+        <input type="checkbox" name="ch2_15">15
+    </td></tr>
+    <tr>
+      <td><select name="module_3">
+        <option>1</option>
+        <option>2</option>
+        <option>3</option>
+        <option selected>4</option>
+        <option>5</option>
+        <option>6</option>
+        <option>7</option>
+        <option>8</option>
+      </select></td><td>
+        <input type="radio" name="lam" value="3">
+      </td><td>
+        <input type="checkbox" name="ch3_0">0 
+        <input type="checkbox" name="ch3_1">1 
+        <input type="checkbox" name="ch3_2">2 
+        <input type="checkbox" name="ch3_3">3
+        <input type="checkbox" name="ch3_4">4 
+        <input type="checkbox" name="ch3_5">5 
+        <input type="checkbox" name="ch3_6">6 
+        <input type="checkbox" name="ch3_7">7
+        <input type="checkbox" name="ch3_8">8
+        <input type="checkbox" name="ch3_9">9
+        <input type="checkbox" name="ch3_10">10
+        <input type="checkbox" name="ch3_11">11
+        <input type="checkbox" name="ch3_12">12
+        <input type="checkbox" name="ch3_13">13
+        <input type="checkbox" name="ch3_14">14
+        <input type="checkbox" name="ch3_15">15
+    </td></tr>
+  </table>
+    
+  <h3>Run Control</h3>
+  Run Number: <input name="run_number" type="number" step="1" value="Start" sd-value="run_setting['run_number']" sd-live="true" style="width:10em"><br>
+  <input type="checkbox" name="stop_after" sd-value="run_setting['stop_after']">Stop after
+  <input type="number" name="run_length" style="width:10em" sd-value="run_setting['run_length']"> s<br>
+  <input type="checkbox" name="repeat" sd-value="run_setting['repeat']"]>Then repeat<br>
+  <input type="checkbox" name="offline" sd-value="run_setting['offline']"]>Offline<br>
+  <p>
+  <div style="font-size:150%">
+    <input type="submit" name="camac.start()" value="Start" sd-enabled="run_status['running']->invert()">
+    <input type="submit" name="camac.stop()" value="Stop" sd-enabled="run_status['running']">
+  </div> 
+</form>
