@@ -14,23 +14,51 @@ class CamacNode(spc.ControlNode):
         self._dummy = DummyDevice() if dummy else None
         
         self._is_open = False
+        self._is_error = False
 
 
-
-    def open(self):
-        if self._is_open:
+    def open(self, crate:int|None=None):
+        if self._dummy is not None:
             return True
-        self._is_open = True
 
+        if self._is_error:
+            return False
+        
+        if not self._is_open:
+            self._is_open = True
+            
+            status = COPEN()
+            if status != 0:
+                self._is_error = True
+                logging.error(f"COPEN(): {os.strerror(status)}")
+                return False
+            
+            if crate is None:
+                crate = self.crate
+            self.crate = None
+                
+        if crate is not None and self.crate != crate:
+            self.crate = crate
+            status = CSETCR(self.crate)
+            if status != 0:
+                logging.error(f"CSETCR(): {os.strerror(status)}")
+        
+        return True
+        
+
+    def close(self):
         if self._dummy is not None:
             return
+
+        if self._is_open:
+            status = CCLOSE()
+            if status != 0:
+                logging.error(f"CCLOSE(): {os.strerror(status)}")
+                
+        self._is_open = False
+        self._is_error = False
+
         
-        status = COPEN()
-        if status != 0:
-            raise spc.ControlException(f"COPEN(): {os.strerror(status)}")
-        CSETCR(self.crate)
-
-
     ## child nodes ##
     def module(self, station:int):
         return ModuleNode(self, station)
@@ -167,6 +195,7 @@ class ModuleNode(spc.ControlVariableNode):
         if x == 0:
             #raise spc.ControlException(f"CAMAC.do_command(): CAMAC(): No-X from station {n} (F{f})")
             logging.error(f"CAMAC.do_command(): CAMAC(): No-X from station {n} (F{f})")
+            return None
         if q == 0:
             return None
         
@@ -465,4 +494,4 @@ if __name__ == '__main__':
         for address in range(0, 2):
             print(module.channel(address).get())
         #module.clear()
-        module.command(10).get()
+        module.command(function=10).get()

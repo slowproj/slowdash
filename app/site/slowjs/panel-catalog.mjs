@@ -34,6 +34,7 @@ export class CatalogPanel extends Panel {
             let config = {
                 type: 'catalog',
                 catalog_type: table.find('input').val(),
+                border: 'none',
             };
             on_done(config);
         });
@@ -52,7 +53,7 @@ export class CatalogPanel extends Panel {
             height:'calc(100% - 44px)',
             margin: '10px 10px 10px 10px',
             padding:'10px',
-            border: 'thin solid',
+            border: 'none',
             'border-radius': '5px',
             overflow:'auto',
         });
@@ -81,6 +82,8 @@ export class CatalogPanel extends Panel {
         else {
             this.cachePath = null;
         }
+
+        this.frameDiv.css('border', this.config.border);
         
         this.content_types = this.config.catalog_type.split(/[ ,;]+/);
         this._load();
@@ -251,6 +254,7 @@ export class ChannelListPanel extends Panel {
             let config = {
                 default_filter: '',
                 case_sensitive: true,
+                border: 'none',
             };
             on_done(config);
         });
@@ -272,7 +276,7 @@ export class ChannelListPanel extends Panel {
             height:'calc(100% - 44px)',
             margin: '10px 10px 10px 10px',
             padding:'10px',
-            border: 'thin solid',
+            border: 'none',
             'border-radius': '5px',
             overflow:'auto',
         });
@@ -292,7 +296,7 @@ export class ChannelListPanel extends Panel {
         this.contentDiv.css({
             position: 'relative',
             width:'calc(100% - 10px)',
-            height:'calc(100% - 10px - 4.5em)',
+            height:'calc(100% - 10px - 5em)',
             margin: 0,
             padding:0,
             overflow:'auto',
@@ -348,6 +352,8 @@ export class ChannelListPanel extends Panel {
         else {
             this.cachePath = null;
         }
+
+        this.frameDiv.css('border', this.config.border);
         
         let filterInput = this.searchDiv.find('input').at(0).val(this.config.default_filter);;
         let caseSensitiveInput = this.searchDiv.find('input').at(1).val(this.config.case_sensitive);

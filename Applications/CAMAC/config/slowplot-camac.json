@@ -1,0 +1,137 @@
+{
+    "control": {
+        "range": { "length": 60, "to": 0 },
+        "reload": 60,
+        "mode": "normal",
+        "grid": { "rows": "2", "columns": "3" }
+    },
+    "style": { },
+    "panels": [
+        { "type": "html", "location": "project", "file": "camac", "title": "" },
+        {
+            "type": "singles",
+            "item_type": "square",
+            "items": [
+                {
+                    "channel": "run_status['running']->replace(false,0)->replace(true,1)",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0.5 },
+                        "warn": { "min": 0, "max": 1.5 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "label": "Data Taking",
+                    "text_transform": "replace(0,'Idling')->replace(1,'Running')"
+                },
+                {
+                    "channel": "run_setting['offline']->invert()->replace(false,0)->replace(true,1)",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0.5 },
+                        "warn": { "min": 0, "max": 1.5 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "label": "File Recording",
+                    "text_transform": "replace(0,'Recording Off')->replace(1,'Recording On')"
+                },
+                {
+                    "channel": "run_status['lapse']",
+                    "gauge": { "min": 0, "max": 300 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 1000 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "format": "%d s",
+                    "label": "Lapse"
+                },
+                {
+                    "channel": "rate_trend",
+                    "gauge": { "min": 0, "max": 20 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 15 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 1000 }
+                    },
+                    "label": "Rate",
+                    "format": "%f cps"
+                }
+            ],
+            "color": { "base": "rgb(0, 0, 0)", "normal": "#9a9996", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.3 },
+            "grid": { "rows": 2, "columns": 2 },
+            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+            "ranges": { "apply_to_value": false, "apply_to_gauge": false, "apply_to_tile": true }
+        },
+        {
+            "type": "channellist",
+            "default_filter": "",
+            "case_sensitive": false
+        },
+        {
+            "type": "timeseries",
+            "plots": [
+                { "type": "timeseries", "channel": "rate_trend", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 0, "line_type": "connect", "fill_opacity": 0, "fill_envelope": false, "fill_baseline": "1e-100" }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 0, "ymax": 40 },
+            "legend": { "style": "side" }
+        },
+        {
+            "type": "plot",
+            "plots": [
+                { "type": "histogram", "channel": "nhits_hist", "color": "#009090", "opacity": 0.2, "label": "", "format": "%.5g" }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
+            "legend": { "style": "side" }
+        },
+        { "type": "tree", "channel": "run_setting" },
+        { "type": "tree", "channel": "run_status", "title": "Run Status" },
+        {
+            "type": "singles",
+            "item_type": "square",
+            "items": [
+                {
+                    "channel": "adc00",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    }
+                },
+                {
+                    "channel": "adc01",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    }
+                },
+                {
+                    "channel": "adc02",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    }
+                },
+                {
+                    "channel": "adc03",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    }
+                }
+            ],
+            "color": { "base": "rgb(0, 0, 0)", "normal": "#06b6d4", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.1 },
+            "grid": { "rows": 0, "columns": 0 },
+            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+            "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false }
+        },
+        { "type": "canvas", "config_name": "adc" }
+    ],
+    "meta": { "name": "run_control", "title": "", "description": "" }
+}
