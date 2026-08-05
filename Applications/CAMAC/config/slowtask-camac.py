@@ -17,6 +17,7 @@ class RunSettings:
     repeat: bool = False
     offline: bool = False
 run_settings = RunSettings()
+
         
 @dataclass
 class RunStatus:
@@ -41,11 +42,6 @@ def load_run_settings():
                 setattr(run_settings, k, v)
     except Exception as e:
         logging.error(e)
-
-
-async def stream_status():
-    await ctrl.aio_stream('run_settings', run_settings)
-    await ctrl.aio_stream('run_status', run_status)
         
     
 async def _initialize():
@@ -53,7 +49,8 @@ async def _initialize():
 
     now = time.time()
     run_status.timestamp = now
-    await stream_status()
+    await ctrl.aio_stream('run_settings', run_settings)
+    await ctrl.aio_stream('run_status', run_status)
 
 
 async def _finalize():
@@ -70,26 +67,32 @@ async def _loop():
     if run_settings.run_length > 0 and run_status.lapse >= run_settings.run_length:
         await stop_run()
         if run_settings.repeat:
+            if not run_settings.offline and run_settings.run_number > 0:
+                run_settings.run_number += 1
+                save_run_settings()
+                await ctrl.aio_stream('run_settings', run_settings)
             await start_run()
     elif now >= run_status.timestamp + 1:
         run_status.timestamp = now
-        await stream_status()
+        await ctrl.aio_stream('run_status', run_status)
         
     if run_status.running:
         await do_run_loop()
     
 
-
 async def start(run_name:str, run_number:int, run_length:float, repeat:bool, offline:bool, **kwargs):
     if run_status.running:
         return False
-    
+
     run_settings.run_name = run_name
     run_settings.run_number = int(run_number)
     run_settings.run_length = float(run_length)
     run_settings.repeat = repeat
     run_settings.offline = offline
 
+    save_run_settings()
+    await ctrl.aio_stream('run_settings', run_settings)
+    
     try:
         await do_configure(**kwargs)
     except Exception as e:
@@ -102,27 +105,39 @@ async def start(run_name:str, run_number:int, run_length:float, repeat:bool, off
     return True
 
 
-async def stop():
-    if not await stop_run():
+async def stop(run_name:str, run_number:int, run_length:float, repeat:bool, offline:bool, **kwargs):
+    if not run_status.running:
         return False
+    
+    result = await stop_run()
 
-    return True
+    run_settings.run_name = run_name
+    run_settings.run_number = int(run_number)
+    run_settings.run_length = float(run_length)
+    run_settings.repeat = repeat
+    run_settings.offline = offline    
+    if not run_settings.offline and run_settings.run_number > 0:
+        run_settings.run_number += 1
+        
+    await ctrl.aio_stream('run_settings', run_settings)
+    save_run_settings()
+        
+    return result
 
     
 async def start_run():
     if run_status.running:
         return False
     
-    save_run_settings()
     if not await do_run_start():
         return False
-    run_status.running = True
 
     now = time.time()
-    run_status.start_time = now
     run_status.timestamp = now
+    run_status.running = True
+    run_status.start_time = now
     run_status.lapse = 0
-    await stream_status()
+    await ctrl.aio_stream('run_status', run_status)
 
     return True
     
@@ -131,18 +146,14 @@ async def stop_run():
     if not run_status.running:
         return False
     
+    now = time.time()
+    run_status.timestamp = now
     run_status.running = False
+    await ctrl.aio_stream('run_status', run_status)
+    
     if not await do_run_stop():
         pass
     
-    if not run_settings.offline and run_settings.run_number > 0:
-        run_settings.run_number += 1
-    save_run_settings()
-        
-    now = time.time()
-    run_status.timestamp = now
-    await stream_status()
-        
     return True
 
 
@@ -152,7 +163,7 @@ Measurement Specific Stuff
 """
 
 ctrl.import_control_module('CAMAC')
-camac = ctrl.camac(crate=1, dummy=True)
+camac = ctrl.camac(crate=1, dummy=False)
 
 import slowpy as slp
 rate_trend = slp.RateTrend(length=300, tick=1)
