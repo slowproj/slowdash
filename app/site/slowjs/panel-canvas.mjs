@@ -956,8 +956,18 @@ export class CanvasPanel extends Panel {
                     `);
                     return null;
                 }
-                this.canvasConfig = await response.json();
-                console.log(url, "loaded");
+                if (! (response.length > 0)) {
+                    console.error('Bad configuration content: ' + config.config_name + ': empty content');
+                }
+                else {
+                    try {
+                        this.canvasConfig = await response.json();
+                        console.log(url, "loaded");
+                    }
+                    catch (e) {
+                        console.error('Bad configuration content: ' + config.config_name + ': ' + e);
+                    }
+                }
             }
             else {
                 //this.canvasConfig = this.canvasConfig;

@@ -1,32 +1,32 @@
 
-<form>
+<form sd-value="camac_settings">
   <h3>CAMAC Setup</h3>
   <table>
     <tr><th>Crate</th><td>
       <select name="crate">
-        <option selected>1</option>
-        <option>2</option>
-        <option>3</option>
-        <option>4</option>
-        <option>5</option>
-        <option>6</option>
-        <option>7</option>
+        <option value="1" selected>1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
       </select>
     </td></tr>
   </table>
   <table>
-    <tr><th>Name</th><th>Station</th><th>LAM</th><th>Readout Channels</th><th>Histogram Range</th></tr>
+    <tr><th>Name</th><th>Station (N)</th><th>LAM</th><th>Readout Channels (A)</th><th>Histogram Range</th></tr>
     <tr>
       <td><input name="name0" value="module0" style="width:5em"></td>
       <td><select name="station0">
-        <option selected>1</option>
-        <option>2</option>
-        <option>3</option>
-        <option>4</option>
-        <option>5</option>
-        <option>6</option>
-        <option>7</option>
-        <option>8</option>
+        <option value="1" selected>1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
       </select></td><td>
         <input type="radio" name="lam" value="0" checked>
       </td><td>
@@ -43,14 +43,14 @@
     <tr>
       <td><input name="name1" value="module1" style="width:5em"></td>
       <td><select name="station1">
-        <option>1</option>
-        <option selected>2</option>
-        <option>3</option>
-        <option>4</option>
-        <option>5</option>
-        <option>6</option>
-        <option>7</option>
-        <option>8</option>
+        <option value="1">1</option>
+        <option value="2" selected>2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
       </select></td><td>
         <input type="radio" name="lam" value="1">
       </td><td>
@@ -67,14 +67,14 @@
     <tr>
       <td><input name="name2" value="module2" style="width:5em"></td>
       <td><select name="station2">
-        <option>1</option>
-        <option>2</option>
-        <option selected>3</option>
-        <option>4</option>
-        <option>5</option>
-        <option>6</option>
-        <option>7</option>
-        <option>8</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3" selected>3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
       </select></td><td>
         <input type="radio" name="lam" value="2">
       </td><td>
@@ -91,14 +91,14 @@
     <tr>
       <td><input name="name3" value="module3" style="width:5em"></td>
       <td><select name="station3">
-        <option>1</option>
-        <option>2</option>
-        <option>3</option>
-        <option selected>4</option>
-        <option>5</option>
-        <option>6</option>
-        <option>7</option>
-        <option>8</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4" selected>4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
       </select></td><td>
         <input type="radio" name="lam" value="3">
       </td><td>
@@ -117,22 +117,22 @@
   <h3>Run Control</h3>
   <table>
     <tr>
-      <td>Run Name</td>
-      <td><input name="run_name" value="Run" sd-value="run_settings['run_name']" style="width:10em"></td>
+      <td>Measurement</td>
+      <td><input name="measurement" value="Camac" sd-value="run_settings['measurement']" style="width:10em"></td>
       <td style="font-size:80%">(used for data file name)</td>
     </tr><tr>
       <td>Run Number</td>
       <td><input name="run_number" type="number" step="1" value="1" sd-value="run_settings['run_number']" sd-live="true" style="width:10em"></td>
-      <td><input type="checkbox" name="offline" sd-value="run_settings['offline']"]>Offline</td>
+      <td><input type="checkbox" name="offline" sd-value="run_settings['offline']">Offline</td>
     </tr><tr>
       <td>Run Length (sec):</td>
       <td><input type="number" name="run_length" style="width:10em" value="0" sd-value="run_settings['run_length']"></td>
-      <td><input type="checkbox" name="repeat" sd-value="run_settings['repeat']"]>Repeat</td>
+      <td><input type="checkbox" name="repeat" sd-value="run_settings['repeat']">Repeat</td>
     </tr>
   </table>
   <p>
   <div style="font-size:150%">
-    <input type="submit" name="camac.start()" value="Start" sd-enabled="run_status['running']->invert()">
-    <input type="submit" name="camac.stop()" value="Stop" sd-enabled="run_status['running']">
+    <input type="submit" name="await camac.start()" value="Start" sd-enabled="run_status['running']->invert()">
+    <input type="submit" name="await camac.stop()" value="Stop" sd-enabled="run_status['running']">
   </div> 
 </form>

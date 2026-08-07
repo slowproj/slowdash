@@ -298,7 +298,7 @@ class DataSource_TableStore(DataSource):
         
         if schema.time is None and not schema.is_for_obj:
             return result
-            
+                    
         target_channels = []
         for name in channels:
             if not name.replace('.', '').replace('_', '').replace('-', '').replace(':', '').isalnum():

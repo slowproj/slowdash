@@ -1,0 +1,93 @@
+{
+    "control": {
+        "range": { "length": 10800, "to": 0 },
+        "reload": -1,
+        "mode": "normal",
+        "grid": { "rows": 2, "columns": 2 }
+    },
+    "style": { },
+    "panels": [
+        { "type": "html", "location": "project", "file": "camac", "title": "" },
+        {
+            "type": "singles",
+            "item_type": "square",
+            "items": [
+                {
+                    "channel": "run_status['running']->replace(false,0)->replace(true,1)",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0.5 },
+                        "warn": { "min": 0, "max": 1.5 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "label": "Data Taking",
+                    "text_transform": "replace(0,'Idling')->replace(1,'Running')"
+                },
+                {
+                    "channel": "run_settings['offline']->invert()->replace(false,0)->replace(true,1)",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0.5 },
+                        "warn": { "min": 0, "max": 1.5 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "label": "File Recording",
+                    "text_transform": "replace(0,'Recording Off')->replace(1,'Recording On')"
+                },
+                {
+                    "channel": "run_status['run_name']",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 1 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "label": "Run Name"
+                },
+                {
+                    "channel": "run_status['lapse']",
+                    "gauge": { "min": 0, "max": 3600 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "format": "%d s",
+                    "label": "Lapse"
+                }
+            ],
+            "color": { "base": "#000000", "normal": "#9a9996", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.3 },
+            "grid": { "rows": 2, "columns": 2 },
+            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 20 },
+            "ranges": { "apply_to_value": false, "apply_to_gauge": false, "apply_to_tile": true },
+            "title": "Lastest Run Status"
+        },
+        { "type": "channellist", "default_filter": "", "case_sensitive": false },
+        {
+            "type": "timeseries",
+            "plots": [
+                {
+                    "type": "timeseries",
+                    "channel": "rate",
+                    "color": "#009090",
+                    "label": "",
+                    "format": "%.5g",
+                    "opacity": 1,
+                    "marker_type": "circle",
+                    "marker_size": 2,
+                    "line_width": 1,
+                    "line_type": "connect",
+                    "fill_opacity": 0.2,
+                    "fill_envelope": true,
+                    "fill_baseline": "1e-100",
+                    "include_prior_point": false,
+                    "resampling": { "buckets": 100, "threshold": 600, "reducer": "mean", "envelope": true }
+                }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 0, "ymax": 40, "title": "Trigger Rate", "ytitle": "(cps)" },
+            "legend": { "style": "box", "position": "right" }
+        },
+        { "type": "tree", "channel": "run_status", "title": "Run Status" }
+    ],
+    "meta": { "name": "camac", "title": "", "description": "" }
+}

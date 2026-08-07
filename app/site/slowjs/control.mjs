@@ -419,7 +419,7 @@ export class Controller {
             catch (error) {
                 if (! this.loggedErrors.has('socket')) {
                     this.loggedErrors.add('socket');
-                    console.error(error);
+                    console.error('invalid data packet (WebSocket): ', err);
                     console.log(event.data);
                 }
                 return;

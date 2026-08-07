@@ -184,7 +184,7 @@ class HtmlPanel extends Panel {
         for (let type of [ 'sd-value', 'sd-enabled' ]) {
             for (let element of this.contentDiv.find(`[${type}]`).enumerate()) {
                 const metric = element.attr(`${type}`);
-                const isInput = (['INPUT', 'SELECT'].includes(element.get().tagName));
+                const isInput = (['INPUT', 'SELECT', 'FORM'].includes(element.get().tagName));
                 const isButton = (
                     (element.get().tagName == 'BUTTON') ||
                     (isInput && ((element.attr('type') ?? '').toUpperCase() == 'SUBMIT'))
@@ -238,15 +238,23 @@ class HtmlPanel extends Panel {
             doc[submit_name] = true
         }
         for (let input of form.find('input,select').enumerate()) {
-            if ((input.attr('type') ?? '').toUpperCase() != 'SUBMIT') {
-                const name = input.attr('name');
-                if (name) {
-                    const value = input.val();
-                    if (((input.attr('type') ?? '').toUpperCase() == 'RADIO') && (value === false)) {
-                        continue;
-                    }
+            const type = (input.attr('type') ?? '').toUpperCase();
+            if (type == 'SUBMIT') {
+                continue;
+            }
+            const name = input.attr('name');
+            if (! name) {
+                continue;
+            }
+            const value = input.val();
+            
+            if (type == 'RADIO') {
+                if (value !== false) {
                     doc[name] = value;
                 }
+            }
+            else {
+                doc[name] = value;
             }
         }
 
@@ -285,6 +293,13 @@ class HtmlPanel extends Panel {
     
     
     _updateContents(dataPacket, displayTimeRange) {
+        const values = this._extractDataValues(dataPacket, displayTimeRange);
+        this._fillElementValues(values);
+    }
+
+    
+    _extractDataValues(dataPacket, displayTimeRange) {
+        const isResponseToSubmit = ! (dataPacket.__meta?.isPartial || dataPacket.__meta?.isCurrent);
         let values = {};
         for (let variable of this.variables) {
             if (! variable.waiting) {
@@ -295,11 +310,8 @@ class HtmlPanel extends Panel {
                 if (variable.channel in dataPacket) {
                     data = dataPacket[variable.channel];
                 }
-                else if (dataPacket.__meta?.isPartial || false) {
-                    continue;
-                }
             }
-            if (! variable.live) {
+            if (! variable.live && isResponseToSubmit) {
                 variable.waiting = false;
             }
             if (data?.x == null) {
@@ -312,7 +324,12 @@ class HtmlPanel extends Panel {
                 values[variable.metric] = x;
             }
         }
+
+        return values;
+    }
+    
         
+    _fillElementValues(values) {
         for (let type of [ 'sd-value', 'sd-enabled' ]) {
             for (let element of this.contentDiv.find(`[${type}]`).enumerate()) {
                 const metric = element.attr(`${type}`);
@@ -320,9 +337,14 @@ class HtmlPanel extends Panel {
                     continue;
                 }
                 const value = values[metric];
+                
                 if (type == 'sd-value') {
-                    if (['INPUT', 'SELECT'].includes(element.get().tagName)) {
+                    const tagName = element.get().tagName;
+                    if (['INPUT', 'SELECT'].includes(tagName)) {
                         element.val(value);
+                    }
+                    else if (tagName == 'FORM') {
+                        this._fillFormValues(element, value);
                     }
                     else {
                         element.text(value);
@@ -330,6 +352,24 @@ class HtmlPanel extends Panel {
                 }
                 else if (type == 'sd-enabled') {
                     element.enabled(value);
+                }
+            }
+        }
+    }
+
+    
+    _fillFormValues(form, formValueTree) {
+        if (! $.isDict(formValueTree) || ! ('tree' in formValueTree)) {
+            console.error('bad data type (not dict) for a form vaule');
+            return;
+        }
+        const values = formValueTree['tree'];
+        
+        for (const key in values) {
+            for (let element of form.find(`[name="${key}"]`).enumerate()) {
+                const tagName = element.get().tagName;
+                if (['INPUT', 'SELECT'].includes(tagName)) {
+                    element.val(values[key]);
                 }
             }
         }

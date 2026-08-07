@@ -69,9 +69,9 @@ class DataStore:
             for i in range(len(ts.t)):
                 fields, values = [], []
                 for k in range(len(ts.fields)):
-                    if ts.values[i][k] is not None:
+                    if ts.values[k][i] is not None:
                         fields.append(ts.fields[k])
-                        values.append(ts.values[i][k])
+                        values.append(ts.values[k][i])
                 if len(fields) > 0:
                     records.append((ts.start+ts.t[i], fields, values))
                 
@@ -80,7 +80,9 @@ class DataStore:
                 if handle is not None:
                     try:
                         for row in records:
-                            self._write_one(handle, timestamp=row[0], tag=tag, fields=row[1], values=row[2], update=update)
+                            #self._write_one(handle, timestamp=row[0], tag=tag, fields=row[1], values=row[2], update=update)
+                            # TODO: currently using "tag:field"-formatted values in the tag field of a long format confuses sd_datasource, as sd_datasource assumes "tag:field" channel data would be stored in a wide format
+                            self._write_one(handle, timestamp=row[0], tag=tag, fields=None, values=[row[2][0]], update=update)
                     except Exception as e:
                         logging.warning(f'DataStore: error on writing a time-series value: {e}')
                     finally:

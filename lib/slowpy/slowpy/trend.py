@@ -55,7 +55,7 @@ class Trend(DataElement):
         self.start_index = self.current_index
         
         
-    def evolve(self, t=None, complete=False):
+    def _evolve(self, t=None, complete=False):
         if t is None:
             t = time.time()
             
@@ -81,7 +81,7 @@ class Trend(DataElement):
         if t is None:
             t = time.time()
             
-        self.evolve(t)
+        self._evolve(t)
         k = int(self.current_index % self.nbins)
         
         self.count[k] += weight
