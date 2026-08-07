@@ -197,7 +197,7 @@ Measurement Specific Stuff
 """
 
 ctrl.import_control_module('CAMAC')
-camac = ctrl.camac(crate=1, dummy=True)
+camac = ctrl.camac(crate=1, dummy=False)
 
 import slowpy as slp
 rate_trend = slp.RateTrend(length=3600, tick=1)
