@@ -3,19 +3,20 @@
 CAMAC DAQ for Hoshin CAMAC controller
 
 ### Requirement
-- **camdrv2 CAMAC Device Driver**: [https://github.com/SanshiroEnomoto/camdrv2](https://github.com/SanshiroEnomoto/camdrv2)
+- **camdrv2** CAMAC Device Driver: [https://github.com/SanshiroEnomoto/camdrv2](https://github.com/SanshiroEnomoto/camdrv2)
 
 ### Usage
 #### Using pre-built App
 - Up to four "standard" modules (`F0` to read, `F9` to clear, `F22` to enable LAM), up to 8 channels each
 - Trigger by LAM from one of the four modules
 - Readout using the standard `F0` function on LAM
-- The data is stored in HDF5 files, one file per run.
+- Data is stored in HDF5 files, one file per run.
 
 ```bash
 cd PATH/TO/SLOWDASH/Applications/DAQ/CAMAC
 slowdash --port=18881
 ```
+Then open a web browser and go to `http://localhost:18881`.
 
 #### Making your App
 Use the `SlowPy CAMAC` module:
