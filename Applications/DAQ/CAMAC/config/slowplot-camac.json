@@ -1,7 +1,7 @@
 {
     "control": {
-        "range": { "length": 10800, "to": 0 },
-        "reload": -1,
+        "range": { "length": 3600, "to": 0 },
+        "reload": 2,
         "mode": "normal",
         "grid": { "rows": 2, "columns": 2 }
     },
@@ -81,7 +81,7 @@
                     "fill_envelope": true,
                     "fill_baseline": "1e-100",
                     "include_prior_point": false,
-                    "resampling": { "buckets": 100, "threshold": 600, "reducer": "mean", "envelope": true }
+                    "resampling": { "buckets": 200, "threshold": 600, "reducer": "mean", "envelope": true }
                 }
             ],
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 0, "ymax": 40, "title": "Trigger Rate", "ytitle": "(cps)" },
