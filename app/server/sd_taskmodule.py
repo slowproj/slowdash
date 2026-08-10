@@ -298,8 +298,11 @@ class TaskModule(UserModule):
                     return {'status': 'error', 'message': f'incompatible parameter value: {name}: {repr(value)}'}
             else:
                 kwargs[name] = value
+                
         if var_keyword_param is not None:
-            kwargs[var_keyword_param] = { k:v for k,v in params.items() if k not in kwargs }
+            for k, v in params.items():
+                if k not in kwargs:
+                    kwargs[k] = v
 
         return kwargs
 

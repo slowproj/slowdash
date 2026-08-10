@@ -1,6 +1,0 @@
-slowdash_project:
-  name: CAMAC
-
-  task:
-    - name: camac
-      auto_load: true
