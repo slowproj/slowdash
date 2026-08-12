@@ -1,8 +1,8 @@
 ip = '192.168.50.176'
 firmware_version = 1825
 
-from slowpy.control import control_system as ctrl
 
+from slowpy.control import control_system as ctrl
 
 async def main():
     modbus = ctrl.import_control_module('Modbus').modbus(ip)

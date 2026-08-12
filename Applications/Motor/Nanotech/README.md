@@ -32,13 +32,20 @@ Edit the `cfg.txt` file.
 After editing the `CFG.txt` file, power-cycle the device.
 
 ### Running Auto Setup
+Edit the first two lines of `utils/run_auto_setup.py`:
+```python
+ip = '192.168.50.176'
+firmware_version = 1825
+```
+
+Then run it in the SlowPy venv:
 ```
 cd PATH/TO/THIS/APP/utils
 slowdash-activate-venv
 python run_auto_setup.py
 ```
 
-Then power-cycle the device again.
+On completion, power-cycle the device again.
 
 
 ### SlowDash Project Setup
