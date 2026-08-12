@@ -68,11 +68,11 @@ class LabJackU3(spc.ControlNode):
     
     @classmethod
     def _node_creator_method(cls):
-        def labjack_U3(self):
+        def labjack_U3(self, fio_config=0x0f):
             try:
                 self.labjack_U3_node
             except:
-                self.labjack_U3_node = LabJackU3()
+                self.labjack_U3_node = LabJackU3(fio_config=fio_config)
             return self.labjack_U3_node
 
         return labjack_U3

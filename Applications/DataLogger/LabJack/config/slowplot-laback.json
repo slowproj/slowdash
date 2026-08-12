@@ -1,0 +1,62 @@
+{
+    "control": {
+        "range": { "length": 300, "to": 0 },
+        "reload": 2,
+        "mode": "normal",
+        "grid": { "rows": "2", "columns": "2" }
+    },
+    "style": { },
+    "panels": [
+        { "type": "tree", "channel": "labjack_config", "title": "LabJack Device Configuration" },
+        { "type": "html", "location": "project", "file": "labjack", "title": "" },
+        {
+            "type": "timeseries",
+            "plots": [
+                {
+                    "type": "timeseries",
+                    "channel": "ain00",
+                    "color": "#009090",
+                    "label": "",
+                    "format": "%.5g",
+                    "opacity": 1,
+                    "marker_type": "circle",
+                    "marker_size": 2,
+                    "line_width": 1,
+                    "line_type": "connect",
+                    "include_prior_point": false,
+                    "fill_opacity": 0,
+                    "fill_envelope": false,
+                    "fill_baseline": 1e-100,
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
+            "legend": { "style": "side", "position": "right" }
+        },
+        {
+            "type": "timeseries",
+            "plots": [
+                {
+                    "type": "timeseries",
+                    "channel": "ain01",
+                    "color": "#009090",
+                    "label": "",
+                    "format": "%.5g",
+                    "opacity": 1,
+                    "marker_type": "circle",
+                    "marker_size": 2,
+                    "line_width": 1,
+                    "line_type": "connect",
+                    "include_prior_point": false,
+                    "fill_opacity": 0,
+                    "fill_envelope": false,
+                    "fill_baseline": 1e-100,
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
+            "legend": { "style": "side", "position": "right" }
+        }
+    ],
+    "meta": { "name": "laback", "title": "", "description": "" }
+}
