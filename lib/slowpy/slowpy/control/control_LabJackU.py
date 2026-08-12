@@ -1,8 +1,8 @@
 # Created by Sanshiro Enomoto on 10 September 2024 #
 
-"""SlowPy/Control LabJack plugin for U6 and U12
+"""SlowPy/Control LabJack plugin for U3, U6 and U12
 - This uses LabJack Python Library, LabJackPython. Install it by `pip install LabJackPython`.
-- LabJack Python for U6/U12 uses the LabJack Exodriver library available at the LabJack web page.
+- LabJack Python for U3/U6/U12 uses the LabJack Exodriver library available at the LabJack web page.
   [Web Page](https://support.labjack.com/docs/exodriver-downloads-for-ud-series-linux-and-macos-)
   [Download (Apr 2026)](https://github.com/labjack/exodriver/archive/refs/heads/master.zip)
   $ sudo apt install libusb-1.0-0-dev
@@ -14,6 +14,132 @@
 import slowpy.control as spc
 
 
+class LabJackU3(spc.ControlNode):
+    def __init__(self, fio_config=0x0f):
+        """
+        Argments:
+        fio_config: bit pattern representing which FIO channels are used for Analog (otherwise Digital)
+        """
+        import u3 as LJP_U3
+        self.LJP_U3 = LJP_U3
+        self.u3 = LJP_U3.U3()
+
+        self.u3.configIO(FIOAnalog=fio_config)
+        
+
+    def close(self):
+        if self.u3:
+            self.u3.close()
+            self.u3 = None
+            
+        
+    ## child nodes ##
+    def config(self):
+        return LabjackU3_Config(self)
+    
+    def ain(self, ch:int)->float:
+        """Analog In
+        Arguments (see U3.getAIN())
+          ch (int): 0..7
+        """
+        return LabjackU3_AnalogIn(self, ch)
+
+    def aout(self, ch):
+        """Analog Out (DAC)
+        Arguments:
+          ch (int): 0..1
+        """
+        return LabjackU3_AnalogOut(self, ch)
+    
+    def din(self, ch):
+        """Digital In
+        Arguments:
+          ch (int): 4..7: FIO4..7
+        """
+        return LabjackU3_DigitalIn(self, ch)
+    
+    def dout(self, ch):
+        """Digital Out
+        Arguments:
+          ch (int): 4..7: FIO4..7
+        """
+        return LabjackU3_DigitalOut(self, ch)
+
+    
+    @classmethod
+    def _node_creator_method(cls):
+        def labjack_U3(self):
+            try:
+                self.labjack_U3_node
+            except:
+                self.labjack_U3_node = LabJackU3()
+            return self.labjack_U3_node
+
+        return labjack_U3
+
+        
+class LabjackU3_Config(spc.ControlVariableNode):
+    def __init__(self, labjack_node):
+        self.labjack_node = labjack_node
+            
+    def get(self):
+        return self.labjack_node.u3.configU3()
+
+    
+class LabjackU3_AnalogIn(spc.ControlVariableNode):
+    def __init__(self, labjack_node, ch):
+        self.labjack_node = labjack_node
+        self.ch = int(ch)
+            
+    def get(self):
+        return self.labjack_node.u3.getAIN(self.ch)
+
+    
+class LabjackU3_AnalogOut(spc.ControlVariableNode):
+    def __init__(self, labjack_node, ch):
+        self.labjack_node = labjack_node
+        self.ch = int(ch)
+        self.value = None
+            
+    def set(self, value):
+        self.value = float(value)
+        if self.ch == 0:
+            bits = self.labjack_node.u3.voltageToDACBits(self.value, dacNumber=0, is16Bits=False)
+            self.labjack_node.u3.getFeedback(self.labjack_node.LJP_U3.DAC0_8(bits))
+        elif self.ch == 1:
+            bits = self.labjack_node.u3.voltageToDACBits(self.value, dacNumber=1, is16Bits=False)
+            self.labjack_node.u3.getFeedback(self.labjack_node.LJP_U3.DAC1_8(bits))
+        else:
+            self.value = None
+            
+    def get(self):
+        return self.value
+
+    
+class LabjackU3_DigitalIn(spc.ControlVariableNode):
+    def __init__(self, labjack_node, ch):
+        self.labjack_node = labjack_node
+        self.ch = int(ch)
+            
+    def get(self):
+        return self.labjack_node.u3.getDIState(self.ch)
+
+
+class LabjackU3_DigitalOut(spc.ControlVariableNode):
+    def __init__(self, labjack_node, ch):
+        self.labjack_node = labjack_node
+        self.ch = int(ch)
+        self.value = None
+            
+    def set(self, value):
+        self.value = 1 if bool(value) else 0
+        self.labjack_node.u3.setDOState(self.ch, self.value)
+
+    def get(self):
+        return self.value
+
+
+    
 class LabJackU6(spc.ControlNode):
     def __init__(self):
         import u6 as LJP_U6
@@ -35,11 +161,11 @@ class LabJackU6(spc.ControlNode):
         """Analog In
         Arguments (see U6.getAIN())
           ch (int): 0..13
-          resolutoin(int): { 0:default, 1:16bit, ..., 8:19bit }
+          resolution(int): { 0:default, 1:16bit, ..., 8:19bit }
           gain (int): { 0:x1, 1:x10, 2:x100, 3:x1000, 15:auto_range }
           differential (bool): if True, channel ch+1 (odd) is paired for negative input
         """
-        return LabjackU6_AnalogIn(self, ch, gain=gain, differential=differential)
+        return LabjackU6_AnalogIn(self, ch, resolution=resolution, gain=gain, differential=differential)
 
     def aout(self, ch):
         """Analog Out (DAC)
@@ -90,14 +216,20 @@ class LabjackU6_Config(spc.ControlVariableNode):
 
     
 class LabjackU6_AnalogIn(spc.ControlVariableNode):
-    def __init__(self, labjack_node, ch, *, gain, differential):
+    def __init__(self, labjack_node, ch, *, resolution, gain, differential):
         self.labjack_node = labjack_node
         self.ch = int(ch)
+        self.resolution = int(resolution)
         self.gain = int(gain)
         self.differential = bool(differential)
             
     def get(self):
-        return self.labjack_node.u6.getAIN(self.ch, gainIndex=self.gain, differential=self.differential)
+        return self.labjack_node.u6.getAIN(
+            self.ch,
+            resolutionIndex=self.resolution,
+            gainIndex=self.gain,
+            differential=self.differential
+        )
 
     
 class LabjackU6_AnalogOut(spc.ControlVariableNode):
@@ -172,6 +304,16 @@ class LabJackU12(spc.ControlNode):
         import u12
         self.u12 = u12.U12()
         
+        self.u12._aout0 = 0
+        self.u12._aout1 = 0
+
+        
+    def close(self):
+        if self.u12:
+            self.u12.close()
+            self.u12 = None
+            
+        
     ## child nodes ##
     def ain(self, ch:int, gain:int=0)->float:
         """Analog In
@@ -214,7 +356,8 @@ class LabjackU12_AnalogIn(spc.ControlVariableNode):
         self.u12 = u12
         self.ch = int(ch)
         self.gain = int(gain)
-            
+
+        
     def get(self):
         return self.u12.eAnalogIn(channel=self.ch, gain=self.gain).get('voltage', None)
 
@@ -224,9 +367,6 @@ class LabjackU12_AnalogOut(spc.ControlVariableNode):
     def __init__(self, u12, ch):
         self.u12 = u12
         self.ch = int(ch)
-
-        self.u12._aout0 = 0
-        self.u12._aout1 = 0
         
             
     def set(self, value):
@@ -275,7 +415,22 @@ class LabjackU12_DigitalOut(spc.ControlVariableNode):
 
 
 if __name__ == '__main__':
-    if True: # U6
+    if True: # U3
+        labjack = LabJackU3()
+        print(f'Config: {labjack.config().get()}')
+
+        # DIO
+        labjack.dout(4).set(False) # FIO4
+        for ch in range(4,8):  # FIO4..7
+            print(f'DIN{ch}: {labjack.din(ch).get()}')
+            
+        # AIO
+        labjack.aout(0).set(3.21)
+        for ch in range(4):
+            print(f'AIN{ch}: {labjack.ain(ch).get()}')
+
+            
+    elif False: # U6
         labjack = LabJackU6()
         print(f'Config: {labjack.config().get()}')
 
@@ -287,9 +442,9 @@ if __name__ == '__main__':
         # AIO
         labjack.aout(0).set(3.21)
         for ch in range(8):
-            print(f'AIN{ch}: {labjack.ain(ch, gain=0)}')
+            print(f'AIN{ch}: {labjack.ain(ch, gain=0).get()}')
         for ch in range(4):
-            print(f'AIND{2*ch}{2*ch+1}: {labjack.ain(2*ch, gain=0, differential=True)}')
+            print(f'AIND{2*ch}{2*ch+1}: {labjack.ain(2*ch, gain=0, differential=True).get()}')
 
         # Temperature
         print(f'Temperature: {labjack.temperature().get()}')
@@ -302,10 +457,10 @@ if __name__ == '__main__':
             time.sleep(0.2)
             
             
-    elif True: # U12
+    elif False: # U12
         labjack = LabJackU12()
         for ch in range(8):
-            print(f'AIN{ch}: {labjack.ain(ch)}')
+            print(f'AIN{ch}: {labjack.ain(ch).get()}')
         for ch in range(8,12):
-            print(f'AIN{ch}: {labjack.ain(ch, gain=7)}')
+            print(f'AIN{ch}: {labjack.ain(ch, gain=7).get()}')
         
