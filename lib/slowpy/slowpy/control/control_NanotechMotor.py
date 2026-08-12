@@ -414,8 +414,7 @@ class NanotechC5E_StatusNode(spc.ControlVariableNode):
         
 
 if __name__ == '__main__':
-    ip = '192.168.50.148'
-    import sys
+    ip = '192.168.50.176'
     logging.basicConfig(level=logging.INFO)
     
     async def main(ip):    
@@ -428,15 +427,15 @@ if __name__ == '__main__':
             await c5e.cia402.initialize()
         except Exception as e:
             print(f"ERROR: {e}")
-            sys.exit(-1)
+            return
 
         start_time = time.time()
         start_position = await c5e.position().aio_get()
         print(await c5e.status().aio_get())
     
-        #await c5e.auto_setup_mode().aio_set(True)
-        await c5e.profile_position_mode(max_velocity=2*60).aio_set(2*360*3)
-        await c5e.velocity_mode(-120).aio_set(3)
+        await c5e.auto_setup_mode().aio_set(True)
+        #await c5e.profile_position_mode(max_velocity=2*60).aio_set(2*360*3)
+        #await c5e.velocity_mode(-120).aio_set(3)
     
         #await c5e.cia402.disable_operation()
         await c5e.cia402.switch_off()
