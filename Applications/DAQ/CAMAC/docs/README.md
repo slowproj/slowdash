@@ -51,7 +51,7 @@ If other operations are needed, perform them manually with `command()`.
 #### Reading the data file
 The `hdf5-to-csv.py` script at `slowdash/utils` convert a HDF5 file to CSV.
 
-Also, a simple version of a CSV converter, `hdf5-dump.py`, located at the `Applications/DAQ/CAMAC` can be used as a template to write your own analysis scripts. The outline of the script looks like:
+Also, a simple version of a CSV converter, `hdf5-dump.py`, located at the `Applications/DAQ/CAMAC/utils` can be used as a template to write your own analysis scripts. The outline of the script looks like:
 ```python
     with h5py.File(file_name, 'r') as f:
         dataset_names = list(f.keys())
