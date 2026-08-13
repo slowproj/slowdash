@@ -741,7 +741,7 @@ Data Transform is still in an experimental stage and may change in the future, b
 ```
 Other frequently used Data Transforms for `sd-enabled` include `->gt(thresh)` / `->lt(thresh)` for numeric comparisons and `->match(pattern)` for string matching.
 
-## Run Analysis in the Script and Send to the Browser
+## Run Analysis in the Script and Send Results to Browsers
 (The code used here is in `ExampleProjects/QuickTour/03_RealDeviceControl/04_Analysis`.)
 
 The SlowPy library includes lightweight analysis data objects such as histograms, and histograms built with them can also be streamed to the browser. 

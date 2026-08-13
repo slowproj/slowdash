@@ -10,8 +10,9 @@
       div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
   <style type="text/css">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -75,6 +76,12 @@ code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
   <link rel="stylesheet" href="style.css" />
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({startOnLoad: true});
+</script>
+
 </head>
 
 <body>
@@ -131,9 +138,9 @@ Browser</a></li>
 <li><a href="#sending-status-information-from-the-script-to-the-browser"
 id="toc-sending-status-information-from-the-script-to-the-browser">Sending
 Status Information from the Script to the Browser</a></li>
-<li><a href="#run-analysis-in-the-script-and-send-to-the-browser"
-id="toc-run-analysis-in-the-script-and-send-to-the-browser">Run Analysis
-in the Script and Send to the Browser</a></li>
+<li><a href="#run-analysis-in-the-script-and-send-results-to-browsers"
+id="toc-run-analysis-in-the-script-and-send-results-to-browsers">Run
+Analysis in the Script and Send Results to Browsers</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -244,7 +251,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <col style="width: 26%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>datetime (DATETIME/TEXT)</th>
 <th>timestamp (INTEGER)</th>
 <th>channel (VARCHAR(100))</th>
@@ -252,31 +259,31 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>2023-04-11 23:52:13</td>
 <td>1681257133</td>
 <td>ch00</td>
 <td>0.187859</td>
 </tr>
-<tr class="even">
+<tr>
 <td>2023-04-11 23:52:13</td>
 <td>1681257133</td>
 <td>ch01</td>
 <td>-0.418021</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>2023-04-11 23:52:13</td>
 <td>1681257133</td>
 <td>ch02</td>
 <td>0.482607</td>
 </tr>
-<tr class="even">
+<tr>
 <td>2023-04-11 23:52:13</td>
 <td>1681257133</td>
 <td>ch03</td>
 <td>1.733749</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>…</td>
 <td></td>
 <td></td>
@@ -475,25 +482,25 @@ command sets, and we have confirmed the following models (verified by
 ChatGPT, August 2025):</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Manufacturer</th>
 <th>Model</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Keysight / Agilent</td>
 <td>34460A DMM</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Tektronix / Keithley</td>
 <td>DMM6500</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Rigol</td>
 <td>DM3058</td>
 </tr>
-<tr class="even">
+<tr>
 <td>BK Precision</td>
 <td>5492B DMM</td>
 </tr>
@@ -504,29 +511,29 @@ voltage readout. You can therefore use the same example code. The
 following models are confirmed (ChatGPT, August 2025):</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Manufacturer</th>
 <th>Model</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Keysight / Agilent</td>
 <td>E363x / E364x</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Tektronix / Keithley</td>
 <td>2230G / 2231A</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Rohde &amp; Schwarz</td>
 <td>NGA100 series</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Rigol</td>
 <td>DP800 / DP2000</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>BK Precision</td>
 <td>9180 / 9190</td>
 </tr>
@@ -557,24 +564,24 @@ Programmable Instruments) text-based protocol. The commands we’ll use
 here are as follows:</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Action</th>
 <th>Command</th>
 <th>Example Response</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Get device ID</td>
 <td><code>*IDN?</code></td>
 <td><code>Keysight Technologies,34460A...</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Reset settings</td>
 <td><code>*RST</code></td>
 <td>(no response)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Read DC voltage</td>
 <td><code>MEAS:VOLT:DC?</code></td>
 <td><code>3.24</code></td>
@@ -831,8 +838,8 @@ The filename must start with <code>html-</code> and have the
 <code>.html</code> extension.</p>
 <div class="sourceCode" id="cb41"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.start()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Start&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.stop()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Stop&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;testdaq.start()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Start&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;testdaq.stop()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Stop&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span>    </span></code></pre></div>
 <p>Here, we simply create two buttons corresponding to the two
 functions. In each button’s <code>name</code> attribute, specify which
@@ -881,11 +888,11 @@ On the HTML side, we only add input elements. A checkbox is used for the
 boolean.</p>
 <div class="sourceCode" id="cb43"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;checkbox&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;auto_stop&quot;</span><span class="dt">&gt;</span>Stop After:</span>
-<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;run_length&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;checkbox&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;auto_stop&quot;</span><span class="dt">&gt;</span>Stop After:</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;run_length&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.start()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Start&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.stop()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Stop&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;testdaq.start()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Start&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;testdaq.stop()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Stop&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span>    </span></code></pre></div>
 <p>The <code>name</code> attribute of each <code>&lt;input&gt;</code>
 element becomes the parameter name on the script side. In the script,
@@ -984,18 +991,18 @@ experimental stage and may change in the future, but the basic features
 used here are likely to remain.</p>
 <div class="sourceCode" id="cb46"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;checkbox&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;auto_stop&quot;</span><span class="dt">&gt;</span>Stop After:</span>
-<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;run_length&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;checkbox&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;auto_stop&quot;</span><span class="dt">&gt;</span>Stop After:</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;run_length&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.start()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Start&quot;</span> <span class="er">sd-enabled</span><span class="ot">=</span><span class="st">&quot;run_status[&#39;running&#39;]-&gt;invert()&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.stop()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Stop&quot;</span> <span class="er">sd-enabled</span><span class="ot">=</span><span class="st">&quot;run_status[&#39;running&#39;]&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;testdaq.start()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Start&quot;</span><span class="ot"> sd-enabled</span><span class="op">=</span><span class="st">&quot;run_status[&#39;running&#39;]-&gt;invert()&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;testdaq.stop()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Stop&quot;</span><span class="ot"> sd-enabled</span><span class="op">=</span><span class="st">&quot;run_status[&#39;running&#39;]&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span>    </span></code></pre></div>
 <p>Other frequently used Data Transforms for <code>sd-enabled</code>
 include <code>-&gt;gt(thresh)</code> / <code>-&gt;lt(thresh)</code> for
 numeric comparisons and <code>-&gt;match(pattern)</code> for string
 matching.</p>
-<h2 id="run-analysis-in-the-script-and-send-to-the-browser">Run Analysis
-in the Script and Send to the Browser</h2>
+<h2 id="run-analysis-in-the-script-and-send-results-to-browsers">Run
+Analysis in the Script and Send Results to Browsers</h2>
 <p>(The code used here is in
 <code>ExampleProjects/QuickTour/03_RealDeviceControl/04_Analysis</code>.)</p>
 <p>The SlowPy library includes lightweight analysis data objects such as
