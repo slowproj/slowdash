@@ -17,23 +17,12 @@ Additional U6 features include:
 * Programmable gain
 * Differential analog input
 
----
-
 ## Setup Procedure
-
-LabJack documentation:
-[https://support.labjack.com/docs/exodriver-downloads-for-ud-series-linux-and-macos-](https://support.labjack.com/docs/exodriver-downloads-for-ud-series-linux-and-macos-)
-
-### Python Package
-Install LabJackPython with:
-
-```bash
-pip install LabJackPython
-```
 
 ### Low-Level USB Driver Installation
 
-On Linux, a LabJack low-level USB driver/library is required.
+LabJack documentation:
+[https://support.labjack.com/docs/exodriver-downloads-for-ud-series-linux-and-macos-](https://support.labjack.com/docs/exodriver-downloads-for-ud-series-linux-and-macos-)
 
 First install the USB development package:
 
@@ -42,15 +31,34 @@ sudo apt install libusb-1.0-0-dev
 ```
 
 Then download and install the LabJack Exodriver package, for example:
+Download link (Apr 2026): [https://github.com/labjack/exodriver/archive/refs/heads/master.zip](https://github.com/labjack/exodriver/archive/refs/heads/master.zip)
 
 ```bash
 cd exodriver-master
 sudo ./install.sh
 ```
 
-## Basic Usage
+### Python Package
+Install LabJackPython with:
 
-### U3
+```bash
+slowdash-activate-venv
+pip install LabJackPython
+```
+
+
+## Testing
+```
+slowdash-activate-venv
+cd PATH/TO/SLOWDASH/lib/slowpy/slowpy/control
+python control_LabJackU.py   # edit the file before running
+```
+
+
+## Usage
+
+### Creating an Instance
+#### U3
 
 ```python
 from control_LabJackU import LabJackU3
@@ -72,7 +80,7 @@ A different configuration can be specified explicitly:
 labjack = LabJackU3(fio_config=0x03)
 ```
 
-### U6
+#### U6
 
 ```python
 from control_LabJackU import LabJackU6
@@ -80,7 +88,7 @@ from control_LabJackU import LabJackU6
 labjack = LabJackU6()
 ```
 
-### U12
+#### U12
 
 ```python
 from control_LabJackU import LabJackU12
@@ -88,7 +96,7 @@ from control_LabJackU import LabJackU12
 labjack = LabJackU12()
 ```
 
-## Common Interface
+### Common Interface
 
 U3, U6, and U12 provide a common high-level interface:
 
@@ -102,9 +110,9 @@ labjack.dout(ch).set(value)
 
 This hides much of the device-specific API difference in LabJackPython.
 
-## Analog Input
+### Analog Input
 
-### U3
+#### U3
 
 Read an analog input with:
 
@@ -124,9 +132,7 @@ AIN2 = FIO2
 AIN3 = FIO3
 ```
 
----
-
-### U6
+#### U6
 
 Basic analog input:
 
@@ -169,7 +175,7 @@ differential:
 
 These values are passed to LabJackPython as `resolutionIndex`, `gainIndex`, and `differential`.
 
-#### Differential Input Example
+##### Differential Input Example
 
 Read AIN0 relative to AIN1:
 
@@ -191,7 +197,7 @@ value = labjack.ain(
 ).get()
 ```
 
-### U12
+#### U12
 
 Single-ended analog input:
 
@@ -232,7 +238,7 @@ gain = 0 ... 7
 
 Internally, the plugin uses LabJackPython's `eAnalogIn()`.
 
-## Analog Output
+### Analog Output
 
 Analog output is set using:
 
@@ -246,7 +252,7 @@ For example, to set DAC0 to 3.21 V:
 labjack.aout(0).set(3.21)
 ```
 
-### U3
+#### U3
 
 ```python
 labjack.aout(0).set(2.5)
@@ -255,7 +261,7 @@ labjack.aout(1).set(1.0)
 
 The U3 implementation uses `voltageToDACBits()` together with `DAC0_8` and `DAC1_8`.
 
-### U6
+#### U6
 
 ```python
 labjack.aout(0).set(2.5)
@@ -264,7 +270,7 @@ labjack.aout(1).set(1.0)
 
 The U6 implementation uses the 16-bit DAC feedback commands.
 
-### U12
+#### U12
 
 ```python
 labjack.aout(0).set(2.5)
@@ -273,9 +279,9 @@ labjack.aout(1).set(1.0)
 
 Since U12 `eAnalogOut()` sets both DAC0 and DAC1 at the same time, the plugin stores the current values internally.
 
-## Digital Input
+### Digital Input
 
-### U3
+#### U3
 
 ```python
 state = labjack.din(4).get()
@@ -290,7 +296,7 @@ for ch in range(4, 8):
 
 The implementation uses `getDIState()`.
 
-### U6
+#### U6
 
 ```python
 state = labjack.din(0).get()
@@ -304,7 +310,7 @@ Channel numbering:
 16 ... 19   CIO0 ... CIO3
 ```
 
-### U12
+#### U12
 
 ```python
 state = labjack.din(0).get()
@@ -318,7 +324,7 @@ state = labjack.dbin(0).get()
 
 The implementation uses `eDigitalIn()`.
 
-## Digital Output
+### Digital Output
 
 Digital outputs are controlled with:
 
@@ -334,7 +340,7 @@ labjack.dout(ch).set(1)
 labjack.dout(ch).set(0)
 ```
 
-### U3
+#### U3
 
 ```python
 labjack.dout(4).set(True)
@@ -343,7 +349,7 @@ labjack.dout(4).set(False)
 
 The U3 implementation uses `setDOState()`.
 
-### U6
+#### U6
 
 ```python
 labjack.dout(0).set(True)
@@ -351,7 +357,7 @@ labjack.dout(0).set(True)
 
 The U6 implementation also uses `setDOState()`.
 
-### U12
+#### U12
 
 ```python
 labjack.dout(0).set(True)
@@ -374,9 +380,8 @@ print(temperature)
 
 The implementation reads the internal temperature channel and applies the LabJack calibration function.
 
----
 
-## LED Control (U6 only)
+### LED Control (U6 only)
 
 The U6 LED can be controlled with:
 
@@ -399,26 +404,26 @@ for i in range(10):
     time.sleep(0.2)
 ```
 
-## Configuration Information
+### Configuration Information
 
 These return the results of LabJackPython's `configU3()` and `configU6()` calls.
 
-### U3:
+#### U3:
 
 ```python
 print(labjack.config().get())
 ```
 
-### U6:
+#### U6:
 
 ```python
 print(labjack.config().get())
 ```
 
 
-## Complete Examples
+### Complete Examples
 
-### U3
+#### U3
 
 ```python
 from control_LabJackU import LabJackU3
@@ -444,7 +449,7 @@ for ch in range(4):
 labjack.close()
 ```
 
-### U6
+#### U6
 
 ```python
 from control_LabJackU import LabJackU6
@@ -490,7 +495,7 @@ print("Temperature:", labjack.temperature().get())
 labjack.close()
 ```
 
-### U12
+#### U12
 
 ```python
 from control_LabJackU import LabJackU12
@@ -519,8 +524,8 @@ labjack.close()
 | `aout(ch).set(v)`     | Yes | Yes | Yes |
 | `din(ch).get()`       | Yes | Yes | Yes |
 | `dout(ch).set(v)`     | Yes | Yes | Yes |
-| `config().get()`      | Yes | Yes | —   |
-| `temperature().get()` | —   | Yes | —   |
-| `led().set(v)`        | —   | Yes | —   |
+| `config().get()`      | Yes | Yes | -   |
+| `temperature().get()` | -   | Yes | -   |
+| `led().set(v)`        | -   | Yes | -   |
+| `dbout(ch).set(v)`    | -   | -   | Yes |
 
----
