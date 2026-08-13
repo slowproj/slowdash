@@ -520,12 +520,12 @@ labjack.close()
 
 | Interface | Function              | U3  | U6  | U12 |
 | --------- | --------------------- | --- | --- | --- |
-| Analog Input | `ain(ch).get()`       | Yes | Yes | Yes |
+| Analog Input | `v=ain(ch).get()`       | Yes | Yes | Yes |
 | Analog Output | `aout(ch).set(v)`     | Yes | Yes | Yes |
-| Digital Input | `din(ch).get()`       | Yes | Yes | Yes |
+| Digital Input | `v=din(ch).get()`       | Yes | Yes | Yes |
 | Digital Output | `dout(ch).set(v)`     | Yes | Yes | Yes |
-| Configuration Info | `config().get()`      | Yes | Yes | -   |
-| Internal Temperature | `temperature().get()` | -   | Yes | -   |
+| Configuration Info | `info=config().get()`      | Yes | Yes | -   |
+| Internal Temperature | `temp=temperature().get()` | -   | Yes | -   |
 | LED conrol | `led().set(v)`        | -   | Yes | -   |
+| DB25 Digital Input | `v=dbout(ch).get()`    | -   | -   | Yes |
 | DB25 Digital Output | `dbout(ch).set(v)`    | -   | -   | Yes |
-

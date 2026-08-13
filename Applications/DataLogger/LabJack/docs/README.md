@@ -36,6 +36,3 @@ slowdash-activate-venv
 cd PATH/TO/SLOWDASH/lib/slowpy/slowpy/control
 python control_LabJackU.py   # edit the file before running
 ```
-
-
-## Testing
