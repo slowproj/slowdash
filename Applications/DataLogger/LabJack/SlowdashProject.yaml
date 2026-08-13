@@ -1,5 +1,6 @@
 slowdash_project:
   name: LabJack
+  
   data_source:
     url: sqlite:///SlowDataStore
     time_series:

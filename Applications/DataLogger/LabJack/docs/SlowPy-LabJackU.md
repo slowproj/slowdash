@@ -17,7 +17,7 @@ Additional U6 features include:
 * Programmable gain
 * Differential analog input
 
-## Setup Procedure
+## LabJack Library Installation
 
 ### Low-Level USB Driver Installation
 
@@ -518,14 +518,14 @@ labjack.close()
 
 ## Supported Interface Summary
 
-| Function              | U3  | U6  | U12 |
-| --------------------- | --- | --- | --- |
-| `ain(ch).get()`       | Yes | Yes | Yes |
-| `aout(ch).set(v)`     | Yes | Yes | Yes |
-| `din(ch).get()`       | Yes | Yes | Yes |
-| `dout(ch).set(v)`     | Yes | Yes | Yes |
-| `config().get()`      | Yes | Yes | -   |
-| `temperature().get()` | -   | Yes | -   |
-| `led().set(v)`        | -   | Yes | -   |
-| `dbout(ch).set(v)`    | -   | -   | Yes |
+| Interface | Function              | U3  | U6  | U12 |
+| --------- | --------------------- | --- | --- | --- |
+| Analog Input | `ain(ch).get()`       | Yes | Yes | Yes |
+| Analog Output | `aout(ch).set(v)`     | Yes | Yes | Yes |
+| Digital Input | `din(ch).get()`       | Yes | Yes | Yes |
+| Digital Output | `dout(ch).set(v)`     | Yes | Yes | Yes |
+| Configuration Info | `config().get()`      | Yes | Yes | -   |
+| Internal Temperature | `temperature().get()` | -   | Yes | -   |
+| LED conrol | `led().set(v)`        | -   | Yes | -   |
+| DB25 Digital Output | `dbout(ch).set(v)`    | -   | -   | Yes |
 

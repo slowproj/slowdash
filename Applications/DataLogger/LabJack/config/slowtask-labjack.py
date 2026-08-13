@@ -45,6 +45,18 @@ async def _loop():
         datastore.append(ain, tag='ain%02d'%ch)
 
 
+async def start(readout_interval:float):
+    run_status.readout_interval = readout_interval
+    run_status.last_readout_time = 0
+    run_status.running = True
+    await ctrl.aio_stream('run_status', run_status)
+    
+
+async def stop():
+    run_status.running = False
+    await ctrl.aio_stream('run_status', run_status)
+    
+
 def _get_html():
     return '''
     <h3>Run Control</h3>
@@ -58,18 +70,6 @@ def _get_html():
     </form>
     '''
         
-
-async def start(readout_interval:float):
-    run_status.readout_interval = readout_interval
-    run_status.last_readout_time = 0
-    run_status.running = True
-    await ctrl.aio_stream('run_status', run_status)
-    
-
-async def stop():
-    run_status.running = False
-    await ctrl.aio_stream('run_status', run_status)
-    
 
     
 if __name__ == '__main__':
