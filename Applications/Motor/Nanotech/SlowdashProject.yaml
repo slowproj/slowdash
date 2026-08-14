@@ -13,6 +13,7 @@ slowdash_project:
     name: NanotechMotor
     auto_load: true
     parameters:
-      IP: "192.168.50.176"
+      #IP: "192.168.50.176"
+      MAC: "44:aa:e8:00:1f:f4"
       firmware_version: 1825
       db_url: ${DB_URL}

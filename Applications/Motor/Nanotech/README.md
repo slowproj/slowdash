@@ -19,14 +19,16 @@ Edit the `cfg.txt` file.
 3202:00=0x0008  ; open loop (bit 0, 0:open-loop; 1:closed-loop), current reduction (bit 3)
 ```
 
-#### For closed-loop mode with an encoder
+#### For closed-loop mode with an encoder that does not have index (I) output
 ```
-2030:00=50      ; pole-pair count, 50 is for 1.8 deg
-2031:00=1800    ; max motor current in mA; 5.5 A per motor spec
-6075:00=1800    ; motor rated current
-
-3202:00=0x0001    ; closed loop (bit 0, 0:open-loop; 1:closed-loop)
+3202:00=0x0019    ; closed loop (bit 0, 0:open-loop; 1:closed-loop), current reduction (bit 3), enable auto alignment (bit 4)
 2059:00=0x0000    ; encoder configuration (bit 1, 0:differential, 1:single-ended)
+3203:00=3         ; feedback selection : number of entries
+3203:01=0         ; feedback selection : not using 1st (sensorless)
+3203:02=0         ; feedback selection : not using 2nd (hall sensor)
+3203:03=7         ; feedback selection : using 3rd (encoder) for position (bit 0), velocity (bit 1) and closed-loop communication (bit 2)
+60E6:03=16384     ; encoder resolution x4
+60EB:03=1         ; motor revolutions for the encoder resolution value above
 ```
 
 After editing the `CFG.txt` file, power-cycle the device.
