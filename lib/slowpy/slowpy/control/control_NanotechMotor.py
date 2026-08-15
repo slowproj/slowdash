@@ -6,7 +6,7 @@ import slowpy.control as spc
 
 class Nanotech_C5E(spc.ControlNode):
     class WriteRegisters:
-        def __init__(self, modbus, firmware_version:int=2039+1):
+        def __init__(self, modbus, firmware_version):
             if firmware_version <= 2039:
                 offset_after_6002 = 2
             else:
@@ -57,7 +57,7 @@ class Nanotech_C5E(spc.ControlNode):
             
             
     class ReadRegisters:
-        def __init__(self, modbus, firmware_version:int=2039+1):
+        def __init__(self, modbus, firmware_version):
             self.status = modbus.register(5000)
             self.mode = modbus.register(5001)
             self.error = modbus.register(4997)
@@ -165,8 +165,16 @@ class Nanotech_C5E(spc.ControlNode):
                 logging.info("Nanotech_C5E: Switched Off")
                 
             
-    def __init__(self, modbus, firmware_version:int=2039):
+    def __init__(self, modbus):
         self.modbus = modbus
+
+        self.id_node = NanotechC5E_IdNode(self)
+        id_firmware = self.id_node.get().get('firmware_version', '')
+        if id_firmware.startswith('FIR-v'):
+            firmware_version = int(id_firmware[len('FIR_v'):len('FIR_v2213')])
+        else:
+            firmware_version = 2213
+        
         self.wreg = Nanotech_C5E.WriteRegisters(modbus, firmware_version)
         self.rreg = Nanotech_C5E.ReadRegisters(modbus, firmware_version)
         self.cia402 = Nanotech_C5E.CiA402(self.wreg, self.rreg)
@@ -199,6 +207,10 @@ class Nanotech_C5E(spc.ControlNode):
     def velocity(self):
         return self.velocity_node
 
+    # nanotech_C5E().id()
+    def id(self):
+        return self.id_node
+
     # nanotech_C5E().status()
     def status(self):
         return self.status_node
@@ -210,13 +222,13 @@ class Nanotech_C5E(spc.ControlNode):
     
     @classmethod
     def _node_creator_method(cls):
-        def nanotech_C5E(self, firmware_version:int=2039):
+        def nanotech_C5E(self):
             if self.__class__.__name__ != 'ModbusNode':
                 raise spc.ControlException('Nanotech_C5E must be attached to a Modbus Node')
             try:
                 self.nanotech_C5E_node
             except:
-                self.nanotech_C5E_node = Nanotech_C5E(self, firmware_version)
+                self.nanotech_C5E_node = Nanotech_C5E(self)
             return self.nanotech_C5E_node
 
         return nanotech_C5E
@@ -383,6 +395,29 @@ class NanotechC5E_VelocityNode(spc.ControlVariableNode):
             else:
                 return velocity - 0x10000
 
+
+class NanotechC5E_IdNode(spc.ControlVariableNode):
+    def __init__(self, c5e):
+        try:
+            ip = c5e.modbus.host
+            http = spc.control_system.http(f'http://{ip}')
+            self.id = {
+                'model': http.path('/od/1008/00').json().get(),
+                'hardware_version': http.path('/od/1009/00').json().get(),
+                'firmware_version': http.path('/od/100a/00').json().get(),
+                'MAC': http.path('/od/200f/00').json().get(),
+            }
+        except Exception as e:
+            logging.error(f'NanotechC5E: {e}')
+            self.id = {}
+            
+
+    def get(self):
+        return self.id
+        
+    async def aio_get(self):
+        return self.id
+        
 
 class NanotechC5E_StatusNode(spc.ControlVariableNode):
     def __init__(self, c5e):

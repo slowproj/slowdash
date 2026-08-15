@@ -24,14 +24,15 @@ async def _initialize(params):
 
     modbus = ctrl.import_control_module('Modbus').modbus(ip)
     modbus.import_control_module('NanotechMotor')
-    c5e = modbus.nanotech_C5E(firmware_version=params.get('firmware_version', 2039+1))
 
+    c5e = None
     try:
+        c5e = modbus.nanotech_C5E()
+        print(f'NanotechMotor: {await c5e.id().aio_get()}')
         print(f'NanotechMotor: Initial State: {await c5e.status().aio_get()}')
         await c5e.cia402.initialize()
     except Exception as e:
         print(f'NanotechMotor: {e}')
-        c5e = None
 
     db_url = params.get('db_url', 'sqlite:///SlowMotor')
     try:
@@ -40,7 +41,10 @@ async def _initialize(params):
     except Exception as e:
         print(e)
         datastore = None
+        
     if c5e is not None:
+        await ctrl.aio_stream('device_id', {'tree': c5e.id().get()})
+        await ctrl.aio_stream('status', c5e.status())
         c5e.last_log_time = time.monotonic()
     
 

@@ -1,4 +1,4 @@
-# Nanotech C5E Motor Controller
+# Nanotech C5-E Motor Controller (Modbus TCP)
 
 ## Device Setup
 Connect the device via USB.
@@ -70,7 +70,4 @@ slowdash_project:
     parameters:
       IP: "192.168.50.176"  # or use MAC: "44:aa:e8:00:1f:f4"
       db_url: ${DB_URL}
-      firmware_version: 2213
 ```
-
-The firmware version is important as the register mapping was changed after FIR-v2039.

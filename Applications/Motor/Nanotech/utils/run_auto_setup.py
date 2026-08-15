@@ -7,8 +7,9 @@ from slowpy.control import control_system as ctrl
 async def main():
     modbus = ctrl.import_control_module('Modbus').modbus(ip)
     modbus.import_control_module('NanotechMotor')
-    c5e = modbus.nanotech_C5E(firmware_version=firmware_version)
+    c5e = modbus.nanotech_C5E()
     print('C5E Firmware Version: %s' % firmware_version)
+    print(c5e.id().get())
     
     try:
         await c5e.cia402.initialize()
