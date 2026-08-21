@@ -510,11 +510,11 @@ device = MyMemoryDevice()
 def get_idn():
     return 'MyMemoryDevice'
 
-@server.scpi('V')
+@server.scpi('Volt')
 def set_V(value:float):
     device.value = value
     
-@server.scpi('MEASure:V?')
+@server.scpi('MEASure:Volt?')
 def get_V():
     return device.value
 
@@ -522,9 +522,41 @@ def get_V():
 server.start(port=5025)
 ```
 
-Standard commands like `*OPC?` and `SYSTem:ERRor?` are already implemented in the server, and command concatenation (`;`) is automatically handled.
+This implements the following SCPI commands (commands are case-insensitive):
 
-If you add this script to `/etc/rc.local` or a similar startup mechanism, your Raspberry Pi can act as a real SCPI device accessible over the network.
+| Command | Action | Example command | Example response |
+|---|---|---|---|
+| `*IDN?` | Returns the device ID | `*IDN?` | `MyMemoryDevice` |
+| `Volt <Value>` | Sets the value | `V 10` | (none) |
+| `MEASure:Volt?` | Gets the value | `MEAS:V?` | `10` |
+| `*OPC?` | Waits for command completion and returns the status | `*OPC?` | `1` |
+| `SYSTem:ERRor?` | Returns an error message | `SYST:ERR?` | `invalid command: IDN?` <br>(after entering `IDN?` instead of `*IDN?`) |
+
+SlowPy's SCPI server uses decorators to associate SCPI commands with their handlers.
+When a handler argument has a type annotation, as in `set_V(value:float)` in this example, its type is checked and the value is converted when the handler is called.
+Features such as SCPI command concatenation are processed before the handler is called.
+Default handlers are provided for some standard commands, including `*OPC?` and `SYSTem:ERRor?`.
+
+Configure the script to run automatically at system startup, either by registering it with systemd or adding it to `/etc/rc.local`, and the Raspberry Pi can be used as an SCPI device.
+For example, to use systemd on a Raspberry Pi, create a file such as `myscpi.service` in `/etc/systemd/system` with the following contents, then run `sudo systemctl enable myscpi.service`. 
+(This example runs the script in the SlowDash virtual environment.)
+
+```ini
+[Unit]
+Description=My SCPI Server
+
+[Service]
+Type=simple
+User=MY_USER_NAME
+WorkingDirectory=/PATH/TO/PROJECT
+ExecStart=/PATH/TO/SLOWDASH/venv/bin/python /PATH/TO/PROJECT/myscpi.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
 This is convenient not only for using the attached hardware through GPIB/I2C/SPI, but also for integrating USB devices (even with a vendor-provided library) as Ethernet-SCPI devices.
 
 

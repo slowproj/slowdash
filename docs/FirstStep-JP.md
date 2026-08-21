@@ -667,11 +667,11 @@ device = MyMemoryDevice()
 def get_idn():
     return 'MyMemoryDevice'
 
-@server.scpi('V')
+@server.scpi('Volt')
 def set_V(value:float):
     device.value = value
     
-@server.scpi('MEASure:V?')
+@server.scpi('MEASure:Volt?')
 def get_V():
     return device.value
 
@@ -679,12 +679,39 @@ def get_V():
 server.start(port=5025)
 ```
 
-デコレータを使って SCPI コマンドとハンドラを結びつけています．
+これにより以下の SCPI コマンドが実装されます（コマンドは大文字小文字を区別しません）：
+
+|コマンド | 動作 | コマンド例 | 戻り値例 |
+|---|---|---|---|
+| `*IDN?` | デバイスIDを返す | `*IDN?` | `MyMemoryDevice` |
+| `Volt <Value>` | 値を設定する |  `V 10` | (なし) |
+| `MEASure:Volt?` | 値を取得する |  `MEAS:V?` | `10` |
+| `*OPC?` | コマンドの完了を待ち，ステータスを返す | `*OPC?` | `1` |
+| `SYSTem:ERRor?` | エラーメッセージを返す |  `SYST:ERR?` | `invalid command: IDN?` <br>(前に `*IDN?` を `IDN?` とした) |
+
+SlowPy の SCPI Server では，デコレータを使って SCPI コマンドとハンドラを結びつけています．
 この例の `set_V(value:float)` のように，ハンドラ関数の引数に型アノテーションをつけると，呼び出し時に型チェックと型変換を行います．
 SCPI のコマンド連結などはハンドラが呼び出される前に処理されます．
 `*OPC?` や `SYSTem:ERRor?` などの一部の標準コマンドに対してはデフォルトのハンドラ実装があります．
 
 systemd に登録するか `/etc/rc.local` に書くかなどにより，作成したスクリプトをシステム起動時に自動で実行するようにすれば，これが SCPI デバイスとして使えるようになります．
+例えば，Raspberry-Pi で systemd を使う場合，以下のような内容のファイルを `myscpi.service` のような名前で `/etc/systemd/system` に置いて，`sudo systemctrl enable myscpi.service` とします．（この例では，SlowDash の venv の中で実行するようにしています．）
+
+```ini
+[Unit]
+Description=My SCPI Server
+
+[Service]
+Type=simple
+User=MY_USER_NAME
+WorkingDirectory=/PATH/TO/PROJECT
+ExecStart=/PATH/TO/SLOWDASH/venv/bin/python /PATH/TO/PROJECT/myscpi.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
 
 ## Web GUI からコントロールする
 上の２つの例では，最初に SlowDash をデータブラウザとして使用し，次に SlowPy ライブラリを使ってデータを取得しましたが，それぞれ別のものでした．ここでは，これらを統合し，ブラウザからデバイスをコントロールしてデータを取得し，それをデーターベース経由または直接ストリーミングでブラウザに送って表示するようにしてみます．

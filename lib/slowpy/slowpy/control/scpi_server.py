@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 17 May 2024 #
 
 
-import sys, time, os, subprocess, threading, signal, typing, inspect, traceback
+import sys, time, os, subprocess, threading, signal, typing, inspect, logging, traceback
 import socket, selectors
 from slowpy.control import ControlSystem
 
@@ -316,7 +316,7 @@ class ScpiServer:
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # allow immediate re-bind even during TIME_WAIT
-        sock.bind((self.host, self.port))
+        sock.bind(("0.0.0.0", self.port))
         sock.listen(10)
         
         print("listening at %s:%d" % (self.host, self.port))
