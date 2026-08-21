@@ -497,29 +497,32 @@ For Ethernet devices using HiSLIP, also use VISA with an address like: `TCPIP0::
 The SlowPy library also includes a server-side SCPI interface, allowing any Python program to act as an SCPI-controllable device, making it fully compatible with SlowDash monitoring, control, and data storage.
 
 ```python
-from slowpy.control import ScpiServer, ScpiAdapter
+from slowpy.control import ScpiServer
+server = ScpiServer()
 
-class MyDevice(ScpiAdapter):
+
+class MyMemoryDevice:
     def __init__(self):
-        super().__init__(idn='MyDevice')
+        self.value = 0
+device = MyMemoryDevice()
 
-    def do_command(self, cmd_path, params):
-        # cmd_path: list of strings, uppercase SCPI path parts (split by :)
-        # params:   list of strings, uppercase SCPI parameters (split by ,)
-        if cmd_path[0].startswith('DATA'):
-            return <data_value>
-        elif ...:
-            ...
-        return None  # Unknown command
+@server.scpi('*IDN?')
+def get_idn():
+    return 'MyMemoryDevice'
 
-device = MyDevice()
-server = ScpiServer(device, port=5025)
-server.start()
+@server.scpi('V')
+def set_V(value:float):
+    device.value = value
+    
+@server.scpi('MEASure:V?')
+def get_V():
+    return device.value
+
+
+server.start(port=5025)
 ```
 
-In `do_command()`, simply read the command and return a string value.
-Return an empty string `""` for commands with no response, or `None` for invalid commands.
-Standard commands like `*IDN?` and `*OPC?` are already implemented in the base class, and command concatenation (`;`) is automatically handled.
+Standard commands like `*OPC?` and `SYSTem:ERRor?` are already implemented in the server, and command concatenation (`;`) is automatically handled.
 
 If you add this script to `/etc/rc.local` or a similar startup mechanism, your Raspberry Pi can act as a real SCPI device accessible over the network.
 This is convenient not only for using the attached hardware through GPIB/I2C/SPI, but also for integrating USB devices (even with a vendor-provided library) as Ethernet-SCPI devices.

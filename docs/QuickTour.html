@@ -728,30 +728,32 @@ allowing any Python program to act as an SCPI-controllable device,
 making it fully compatible with SlowDash monitoring, control, and data
 storage.</p>
 <div class="sourceCode" id="cb39"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ScpiServer, ScpiAdapter</span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyDevice(ScpiAdapter):</span>
-<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
-<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>(idn<span class="op">=</span><span class="st">&#39;MyDevice&#39;</span>)</span>
-<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> do_command(<span class="va">self</span>, cmd_path, params):</span>
-<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>        <span class="co"># cmd_path: list of strings, uppercase SCPI path parts (split by :)</span></span>
-<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>        <span class="co"># params:   list of strings, uppercase SCPI parameters (split by ,)</span></span>
-<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> cmd_path[<span class="dv">0</span>].startswith(<span class="st">&#39;DATA&#39;</span>):</span>
-<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="op">&lt;</span>data_value<span class="op">&gt;</span></span>
-<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> ...:</span>
-<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a>            ...</span>
-<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">None</span>  <span class="co"># Unknown command</span></span>
-<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> MyDevice()</span>
-<span id="cb39-17"><a href="#cb39-17" aria-hidden="true" tabindex="-1"></a>server <span class="op">=</span> ScpiServer(device, port<span class="op">=</span><span class="dv">5025</span>)</span>
-<span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a>server.start()</span></code></pre></div>
-<p>In <code>do_command()</code>, simply read the command and return a
-string value. Return an empty string <code>""</code> for commands with
-no response, or <code>None</code> for invalid commands. Standard
-commands like <code>*IDN?</code> and <code>*OPC?</code> are already
-implemented in the base class, and command concatenation
-(<code>;</code>) is automatically handled.</p>
+class="sourceCode python"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ScpiServer</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>server <span class="op">=</span> ScpiServer()</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyMemoryDevice:</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.value <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> MyMemoryDevice()</span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a><span class="at">@server.scpi</span>(<span class="st">&#39;*IDN?&#39;</span>)</span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_idn():</span>
+<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&#39;MyMemoryDevice&#39;</span></span>
+<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a><span class="at">@server.scpi</span>(<span class="st">&#39;V&#39;</span>)</span>
+<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V(value:<span class="bu">float</span>):</span>
+<span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a>    device.value <span class="op">=</span> value</span>
+<span id="cb39-17"><a href="#cb39-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a><span class="at">@server.scpi</span>(<span class="st">&#39;MEASure:V?&#39;</span>)</span>
+<span id="cb39-19"><a href="#cb39-19" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_V():</span>
+<span id="cb39-20"><a href="#cb39-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> device.value</span>
+<span id="cb39-21"><a href="#cb39-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-22"><a href="#cb39-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-23"><a href="#cb39-23" aria-hidden="true" tabindex="-1"></a>server.start(port<span class="op">=</span><span class="dv">5025</span>)</span></code></pre></div>
+<p>Standard commands like <code>*OPC?</code> and
+<code>SYSTem:ERRor?</code> are already implemented in the server, and
+command concatenation (<code>;</code>) is automatically handled.</p>
 <p>If you add this script to <code>/etc/rc.local</code> or a similar
 startup mechanism, your Raspberry Pi can act as a real SCPI device
 accessible over the network. This is convenient not only for using the

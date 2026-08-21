@@ -10,8 +10,9 @@
       div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
   <style type="text/css">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -75,6 +76,12 @@ code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
   <link rel="stylesheet" href="style.css" />
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({startOnLoad: true});
+</script>
+
 </head>
 
 <body>
@@ -495,7 +502,7 @@ ISO 表記の文字列）のものと，整数の UNIX
 <col style="width: 26%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>datetime (DATETIME/TEXT)</th>
 <th>timestamp (INTEGER)</th>
 <th>channel (VARCHAR(100))</th>
@@ -503,31 +510,31 @@ ISO 表記の文字列）のものと，整数の UNIX
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>2023-04-11 23:52:13</td>
 <td>1681257133</td>
 <td>ch00</td>
 <td>0.187859</td>
 </tr>
-<tr class="even">
+<tr>
 <td>2023-04-11 23:52:13</td>
 <td>1681257133</td>
 <td>ch01</td>
 <td>-0.418021</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>2023-04-11 23:52:13</td>
 <td>1681257133</td>
 <td>ch02</td>
 <td>0.482607</td>
 </tr>
-<tr class="even">
+<tr>
 <td>2023-04-11 23:52:13</td>
 <td>1681257133</td>
 <td>ch03</td>
 <td>1.733749</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>…</td>
 <td></td>
 <td></td>
@@ -684,25 +691,25 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href=
 調べ，2025年8月）：</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>メーカー</th>
 <th>モデル</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Keysight / Agilent</td>
 <td>34460A DMM</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Tektronics / Keithley</td>
 <td>DMM6500</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Rigol</td>
 <td>DM3058</td>
 </tr>
-<tr class="even">
+<tr>
 <td>BK Precision</td>
 <td>5492B DMM</td>
 </tr>
@@ -712,29 +719,29 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href=
 以下は確認済のモデルです（ChatGPT 調べ，2025年8月）</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>メーカー</th>
 <th>モデル</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Keysight / Agilent</td>
 <td>E363x/E364x</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Tektronics / Keithley</td>
 <td>2230G/2231A</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Rhode&amp;Schwarz</td>
 <td>NGA100 など</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Rigol</td>
 <td>DP800, DP2000</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>BK Precision</td>
 <td>9180/9190</td>
 </tr>
@@ -771,24 +778,24 @@ SCPI コマンドです．</p>
 <col style="width: 35%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>動作</th>
 <th>コマンド</th>
 <th>戻り値例</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>デバイスIDの取得</td>
 <td><code>*IDN?</code></td>
 <td><code>Keysight Technologies,34460A...</code> みたいな感じ</td>
 </tr>
-<tr class="even">
+<tr>
 <td>設定リセット</td>
 <td><code>*RST</code></td>
 <td>たぶんなし</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>DC 電圧値の読み出し</td>
 <td><code>MEAS:VOLT:DC?</code></td>
 <td><code>3.24</code> みたいな感じ</td>
@@ -959,33 +966,35 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb42-1"><a h
 Python プログラムに SCPI を使ったコントロールを追加し，SlowDash
 のデータ保存やモニタ，コントロールなどに直接接続できます．</p>
 <div class="sourceCode" id="cb43"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ScpiServer, ScpiAdapter</span>
-<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyDevice(ScpiAdapter):</span>
-<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
-<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>(idn<span class="op">=</span><span class="st">&#39;MyDevice&#39;</span>)</span>
-<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> do_command(<span class="va">self</span>, cmd_path, params):</span>
-<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>        <span class="co"># cmd_path: 文字列の配列．SCPI のコマンド部分を大文字にして : で区切ったもの．</span></span>
-<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>        <span class="co"># params: 文字列の配列．SCPI のパラメータ部分を大文字にして , で区切ったもの．</span></span>
-<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> cmd_path[<span class="dv">0</span>].startswith(<span class="st">&#39;DATA&#39;</span>):</span>
-<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> データ値</span>
-<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> ...</span>
-<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a>            ...</span>
-<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">None</span>    <span class="co"># 知らないコマンドだった場合</span></span>
-<span id="cb43-17"><a href="#cb43-17" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb43-18"><a href="#cb43-18" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> MyDevice()</span>
-<span id="cb43-19"><a href="#cb43-19" aria-hidden="true" tabindex="-1"></a>server <span class="op">=</span> ScpiServer(device, port<span class="op">=</span><span class="dv">5025</span>)</span>
-<span id="cb43-20"><a href="#cb43-20" aria-hidden="true" tabindex="-1"></a>server.start()</span></code></pre></div>
-<p><code>do_command()</code>
-の中でコマンドを読んで値を返すだけです．返り値がない場合は空文字
-<code>""</code> を返してください． 無効なコマンドの場合は
-<code>None</code> を返してください． <code>*IDN?</code> や
-<code>*OPC?</code>
-などの一部の標準コマンドは親クラスで実装されています． SCPI
-のコマンド連結なども親クラスで処理されます．</p>
+class="sourceCode python"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ScpiServer</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>server <span class="op">=</span> ScpiServer()</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyMemoryDevice:</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.value <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> MyMemoryDevice()</span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a><span class="at">@server.scpi</span>(<span class="st">&#39;*IDN?&#39;</span>)</span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_idn():</span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&#39;MyMemoryDevice&#39;</span></span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a><span class="at">@server.scpi</span>(<span class="st">&#39;V&#39;</span>)</span>
+<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V(value:<span class="bu">float</span>):</span>
+<span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a>    device.value <span class="op">=</span> value</span>
+<span id="cb43-17"><a href="#cb43-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb43-18"><a href="#cb43-18" aria-hidden="true" tabindex="-1"></a><span class="at">@server.scpi</span>(<span class="st">&#39;MEASure:V?&#39;</span>)</span>
+<span id="cb43-19"><a href="#cb43-19" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_V():</span>
+<span id="cb43-20"><a href="#cb43-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> device.value</span>
+<span id="cb43-21"><a href="#cb43-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-22"><a href="#cb43-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-23"><a href="#cb43-23" aria-hidden="true" tabindex="-1"></a>server.start(port<span class="op">=</span><span class="dv">5025</span>)</span></code></pre></div>
+<p>デコレータを使って SCPI コマンドとハンドラを結びつけています．
+この例の <code>set_V(value:float)</code>
+のように，ハンドラ関数の引数に型アノテーションをつけると，呼び出し時に型チェックと型変換を行います．
+SCPI のコマンド連結などはハンドラが呼び出される前に処理されます．
+<code>*OPC?</code> や <code>SYSTem:ERRor?</code>
+などの一部の標準コマンドに対してはデフォルトのハンドラ実装があります．</p>
 <p>systemd に登録するか <code>/etc/rc.local</code>
 に書くかなどにより，作成したスクリプトをシステム起動時に自動で実行するようにすれば，これが
 SCPI デバイスとして使えるようになります．</p>
@@ -1065,8 +1074,8 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb44-1"><a h
 <code>.html</code> である必要があります．</p>
 <div class="sourceCode" id="cb45"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.start()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Start&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.stop()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Stop&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;testdaq.start()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Start&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;testdaq.stop()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Stop&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span>    </span></code></pre></div>
 <p>ここでは，それぞれの関数に対応したボタンを２つ作成しているだけです．それぞれのボタンの
 <code>name</code>
@@ -1114,11 +1123,11 @@ Channel List
 側の変更は，入力要素を追加するだけです．真偽値にはチェックボックスを使っています．</p>
 <div class="sourceCode" id="cb47"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;checkbox&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;auto_stop&quot;</span><span class="dt">&gt;</span>Stop After:</span>
-<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;run_length&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;checkbox&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;auto_stop&quot;</span><span class="dt">&gt;</span>Stop After:</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;run_length&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.start()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Start&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.stop()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Stop&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;testdaq.start()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Start&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;testdaq.stop()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Stop&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span>    </span></code></pre></div>
 <p><code>&lt;input&gt;</code> エレメントの <code>name</code>
 属性が，スクリプト側の仮引数の名前になります．
@@ -1216,11 +1225,11 @@ Data Transform
 についてはまだ試験実装段階で，将来変更する可能性がありますが，ここで使う程度の基本的な部分についてはそのままになる可能性が高いです．</p>
 <div class="sourceCode" id="cb50"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;checkbox&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;auto_stop&quot;</span><span class="dt">&gt;</span>Stop After:</span>
-<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;run_length&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;checkbox&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;auto_stop&quot;</span><span class="dt">&gt;</span>Stop After:</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;run_length&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.start()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Start&quot;</span> <span class="er">sd-enabled</span><span class="ot">=</span><span class="st">&quot;run_status[&#39;running&#39;]-&gt;invert()&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.stop()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Stop&quot;</span> <span class="er">sd-enabled</span><span class="ot">=</span><span class="st">&quot;run_status[&#39;running&#39;]&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;testdaq.start()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Start&quot;</span><span class="ot"> sd-enabled</span><span class="op">=</span><span class="st">&quot;run_status[&#39;running&#39;]-&gt;invert()&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;testdaq.stop()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Stop&quot;</span><span class="ot"> sd-enabled</span><span class="op">=</span><span class="st">&quot;run_status[&#39;running&#39;]&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span>    </span></code></pre></div>
 <p><code>sd-enabled</code> 属性でよく使われる他の Data Transform
 としては，数値の大小を判定する <code>-&gt;gt(thresh)</code> /
@@ -1467,48 +1476,50 @@ slowdash を削除し，<code>nginx/defaults.conf</code> の
 も使っている旨を伝えれば，設定ファイルを一通り書いてくれます．暗号化していないもとのポートを塞いでおくのを忘れないでください．参考までに，上記の例で
 Nginx を Docker Compose
 内でリバースプロキシとして使用する場合の設定ファイルを示します．だいたい似たような感じになると思います．</p>
-<pre class="conf"><code>server {
-    listen 443 ssl;
-    http2 on;
-    server_name localhost;   # これは自分のホスト名に変える
+<div class="sourceCode" id="cb66"><pre
+class="sourceCode conf"><code class="sourceCode toml"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="dt">server</span> <span class="er">{</span></span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">listen</span> <span class="dt">443</span> <span class="dt">ssl</span><span class="er">;</span></span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">http2</span> <span class="dt">on</span><span class="er">;</span></span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">server_name</span> <span class="dt">localhost</span><span class="er">;</span>   <span class="co"># これは自分のホスト名に変える</span></span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ssl_certificate</span> <span class="er">/</span><span class="dt">etc</span><span class="er">/</span><span class="dt">nginx</span><span class="er">/</span><span class="dt">certs</span><span class="er">/</span><span class="dt">fullchain.pem</span><span class="er">;</span></span>
+<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ssl_certificate_key</span> <span class="er">/</span><span class="dt">etc</span><span class="er">/</span><span class="dt">nginx</span><span class="er">/</span><span class="dt">certs</span><span class="er">/</span><span class="dt">privkey.pem</span><span class="er">;</span></span>
+<span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-9"><a href="#cb66-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ssl_protocols</span> <span class="dt">TLSv1.2</span> <span class="dt">TLSv1.3</span><span class="er">;</span></span>
+<span id="cb66-10"><a href="#cb66-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ssl_ciphers</span> <span class="dt">EECDH</span><span class="er">+</span><span class="dt">AESGCM</span><span class="er">:</span><span class="dt">EDH</span><span class="er">+</span><span class="dt">AESGCM</span><span class="er">;</span></span>
+<span id="cb66-11"><a href="#cb66-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ssl_prefer_server_ciphers</span> <span class="dt">off</span><span class="er">;</span></span>
+<span id="cb66-12"><a href="#cb66-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-13"><a href="#cb66-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">auth_basic</span> <span class="dt">&quot;SlowDash Password Required&quot;</span><span class="er">;</span></span>
+<span id="cb66-14"><a href="#cb66-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">auth_basic_user_file</span> <span class="er">/</span><span class="dt">etc</span><span class="er">/</span><span class="dt">nginx</span><span class="er">/</span><span class="dt">.htpasswd</span><span class="er">;</span></span>
+<span id="cb66-15"><a href="#cb66-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-16"><a href="#cb66-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">location</span> <span class="er">/</span><span class="dt">slowdash</span><span class="er">/</span> <span class="er">{</span></span>
+<span id="cb66-17"><a href="#cb66-17" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_pass</span> <span class="dt">http</span><span class="er">://</span><span class="dt">slowdash</span><span class="er">:</span><span class="dt">18881</span><span class="er">/;</span></span>
+<span id="cb66-18"><a href="#cb66-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-19"><a href="#cb66-19" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_http_version</span> <span class="dt">1.1</span><span class="er">;</span></span>
+<span id="cb66-20"><a href="#cb66-20" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_set_header</span> <span class="dt">Upgrade</span> <span class="er">$</span><span class="dt">http_upgrade</span><span class="er">;</span></span>
+<span id="cb66-21"><a href="#cb66-21" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_set_header</span> <span class="dt">Connection</span> <span class="dt">&quot;upgrade&quot;</span><span class="er">;</span></span>
+<span id="cb66-22"><a href="#cb66-22" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb66-23"><a href="#cb66-23" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_set_header</span> <span class="dt">Host</span> <span class="er">$</span><span class="dt">host</span><span class="er">;</span></span>
+<span id="cb66-24"><a href="#cb66-24" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_set_header</span> <span class="dt">X-Real-IP</span> <span class="er">$</span><span class="dt">remote_addr</span><span class="er">;</span></span>
+<span id="cb66-25"><a href="#cb66-25" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_set_header</span> <span class="dt">X-Forwarded-For</span> <span class="er">$</span><span class="dt">proxy_add_x_forwarded_for</span><span class="er">;</span></span>
+<span id="cb66-26"><a href="#cb66-26" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_set_header</span> <span class="dt">X-Forwarded-Proto</span> <span class="er">$</span><span class="dt">scheme</span><span class="er">;</span></span>
+<span id="cb66-27"><a href="#cb66-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-28"><a href="#cb66-28" aria-hidden="true" tabindex="-1"></a>        <span class="co"># SlowDash では Long Polling を使っているので，タイムアウトは長くする</span></span>
+<span id="cb66-29"><a href="#cb66-29" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_read_timeout</span> <span class="dt">8640000s</span><span class="er">;</span>  <span class="co"># 1000 days for long polling used in SlowDash</span></span>
+<span id="cb66-30"><a href="#cb66-30" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_send_timeout</span> <span class="dt">8640000s</span><span class="er">;</span>  <span class="co"># 1000 days for long polling used in SlowDash</span></span>
+<span id="cb66-31"><a href="#cb66-31" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_connect_timeout</span> <span class="dt">10s</span><span class="er">;</span></span>
+<span id="cb66-32"><a href="#cb66-32" aria-hidden="true" tabindex="-1"></a>    <span class="er">}</span></span>
+<span id="cb66-33"><a href="#cb66-33" aria-hidden="true" tabindex="-1"></a><span class="er">}</span></span>
+<span id="cb66-34"><a href="#cb66-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-35"><a href="#cb66-35" aria-hidden="true" tabindex="-1"></a><span class="co"># HTTP への接続は HTTPS に転送する</span></span>
+<span id="cb66-36"><a href="#cb66-36" aria-hidden="true" tabindex="-1"></a><span class="dt">server</span> <span class="er">{</span></span>
+<span id="cb66-37"><a href="#cb66-37" aria-hidden="true" tabindex="-1"></a>    <span class="dt">listen</span> <span class="dt">80</span><span class="er">;</span></span>
+<span id="cb66-38"><a href="#cb66-38" aria-hidden="true" tabindex="-1"></a>    <span class="dt">server_name</span> <span class="dt">localhost</span><span class="er">;</span></span>
+<span id="cb66-39"><a href="#cb66-39" aria-hidden="true" tabindex="-1"></a>    <span class="dt">return</span> <span class="dt">301</span> <span class="dt">https</span><span class="er">://$</span><span class="dt">host</span><span class="er">$</span><span class="dt">request_uri</span><span class="er">;</span></span>
+<span id="cb66-40"><a href="#cb66-40" aria-hidden="true" tabindex="-1"></a><span class="er">}</span></span></code></pre></div>
+<div style="margin-bottom:10rem">
 
-    ssl_certificate /etc/nginx/certs/fullchain.pem;
-    ssl_certificate_key /etc/nginx/certs/privkey.pem;
-
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers EECDH+AESGCM:EDH+AESGCM;
-    ssl_prefer_server_ciphers off;
-
-    auth_basic &quot;SlowDash Password Required&quot;;
-    auth_basic_user_file /etc/nginx/.htpasswd;
-
-    location /slowdash/ {
-        proxy_pass http://slowdash:18881/;
-
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection &quot;upgrade&quot;;
-        
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        # SlowDash では Long Polling を使っているので，タイムアウトは長くする
-        proxy_read_timeout 8640000s;  # 1000 days for long polling used in SlowDash
-        proxy_send_timeout 8640000s;  # 1000 days for long polling used in SlowDash
-        proxy_connect_timeout 10s;
-    }
-}
-
-# HTTP への接続は HTTPS に転送する
-server {
-    listen 80;
-    server_name localhost;
-    return 301 https://$host$request_uri;
-}</code></pre>
-<div style="margin-bottom:10rem"/>
-
+</div>
 
 
 </body>
