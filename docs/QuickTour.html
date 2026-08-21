@@ -729,7 +729,7 @@ making it fully compatible with SlowDash monitoring, control, and data
 storage.</p>
 <div class="sourceCode" id="cb39"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ScpiServer</span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>server <span class="op">=</span> ScpiServer()</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>scpi <span class="op">=</span> ScpiServer()</span>
 <span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyMemoryDevice:</span>
@@ -737,20 +737,20 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb39-1"><a h
 <span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.value <span class="op">=</span> <span class="dv">0</span></span>
 <span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> MyMemoryDevice()</span>
 <span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a><span class="at">@server.scpi</span>(<span class="st">&#39;*IDN?&#39;</span>)</span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a><span class="at">@scpi.on</span>(<span class="st">&#39;*IDN?&#39;</span>)</span>
 <span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_idn():</span>
 <span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&#39;MyMemoryDevice&#39;</span></span>
 <span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a><span class="at">@server.scpi</span>(<span class="st">&#39;Volt&#39;</span>)</span>
+<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a><span class="at">@scpi.on</span>(<span class="st">&#39;Volt&#39;</span>)</span>
 <span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V(value:<span class="bu">float</span>):</span>
 <span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a>    device.value <span class="op">=</span> value</span>
 <span id="cb39-17"><a href="#cb39-17" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a><span class="at">@server.scpi</span>(<span class="st">&#39;MEASure:Volt?&#39;</span>)</span>
+<span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a><span class="at">@scpi.on</span>(<span class="st">&#39;MEASure:Volt?&#39;</span>)</span>
 <span id="cb39-19"><a href="#cb39-19" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_V():</span>
 <span id="cb39-20"><a href="#cb39-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> device.value</span>
 <span id="cb39-21"><a href="#cb39-21" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb39-22"><a href="#cb39-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-23"><a href="#cb39-23" aria-hidden="true" tabindex="-1"></a>server.start(port<span class="op">=</span><span class="dv">5025</span>)</span></code></pre></div>
+<span id="cb39-23"><a href="#cb39-23" aria-hidden="true" tabindex="-1"></a>scpi.start(port<span class="op">=</span><span class="dv">5025</span>)</span></code></pre></div>
 <p>This implements the following SCPI commands (commands are
 case-insensitive):</p>
 <table>

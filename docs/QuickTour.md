@@ -498,7 +498,7 @@ The SlowPy library also includes a server-side SCPI interface, allowing any Pyth
 
 ```python
 from slowpy.control import ScpiServer
-server = ScpiServer()
+scpi = ScpiServer()
 
 
 class MyMemoryDevice:
@@ -506,20 +506,20 @@ class MyMemoryDevice:
         self.value = 0
 device = MyMemoryDevice()
 
-@server.scpi('*IDN?')
+@scpi.on('*IDN?')
 def get_idn():
     return 'MyMemoryDevice'
 
-@server.scpi('Volt')
+@scpi.on('Volt')
 def set_V(value:float):
     device.value = value
     
-@server.scpi('MEASure:Volt?')
+@scpi.on('MEASure:Volt?')
 def get_V():
     return device.value
 
 
-server.start(port=5025)
+scpi.start(port=5025)
 ```
 
 This implements the following SCPI commands (commands are case-insensitive):

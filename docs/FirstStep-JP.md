@@ -655,7 +655,7 @@ SlowPy ライブラリには SCPI のサーバー側インターフェースの�
 
 ```python
 from slowpy.control import ScpiServer
-server = ScpiServer()
+scpi = ScpiServer()
 
 
 class MyMemoryDevice:
@@ -663,20 +663,20 @@ class MyMemoryDevice:
         self.value = 0
 device = MyMemoryDevice()
 
-@server.scpi('*IDN?')
+@scpi.on('*IDN?')
 def get_idn():
     return 'MyMemoryDevice'
 
-@server.scpi('Volt')
+@scpi.on('Volt')
 def set_V(value:float):
     device.value = value
     
-@server.scpi('MEASure:Volt?')
+@scpi.on('MEASure:Volt?')
 def get_V():
     return device.value
 
 
-server.start(port=5025)
+scpi.start(port=5025)
 ```
 
 これにより以下の SCPI コマンドが実装されます（コマンドは大文字小文字を区別しません）：
@@ -695,7 +695,8 @@ SCPI のコマンド連結などはハンドラが呼び出される前に処理
 `*OPC?` や `SYSTem:ERRor?` などの一部の標準コマンドに対してはデフォルトのハンドラ実装があります．
 
 systemd に登録するか `/etc/rc.local` に書くかなどにより，作成したスクリプトをシステム起動時に自動で実行するようにすれば，これが SCPI デバイスとして使えるようになります．
-例えば，Raspberry-Pi で systemd を使う場合，以下のような内容のファイルを `myscpi.service` のような名前で `/etc/systemd/system` に置いて，`sudo systemctrl enable myscpi.service` とします．（この例では，SlowDash の venv の中で実行するようにしています．）
+例えば，Raspberry-Pi で systemd を使う場合，以下のような内容のファイルを `myscpi.service` のような名前で `/etc/systemd/system` に置いて，`sudo systemctl enable myscpi.service` とします．
+（この例では，SlowDash の venv の中で実行するようにしています．）
 
 ```ini
 [Unit]

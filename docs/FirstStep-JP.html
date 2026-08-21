@@ -967,7 +967,7 @@ Python プログラムに SCPI を使ったコントロールを追加し，Slow
 のデータ保存やモニタ，コントロールなどに直接接続できます．</p>
 <div class="sourceCode" id="cb43"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ScpiServer</span>
-<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>server <span class="op">=</span> ScpiServer()</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>scpi <span class="op">=</span> ScpiServer()</span>
 <span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyMemoryDevice:</span>
@@ -975,20 +975,20 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb43-1"><a h
 <span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.value <span class="op">=</span> <span class="dv">0</span></span>
 <span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> MyMemoryDevice()</span>
 <span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a><span class="at">@server.scpi</span>(<span class="st">&#39;*IDN?&#39;</span>)</span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a><span class="at">@scpi.on</span>(<span class="st">&#39;*IDN?&#39;</span>)</span>
 <span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_idn():</span>
 <span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&#39;MyMemoryDevice&#39;</span></span>
 <span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a><span class="at">@server.scpi</span>(<span class="st">&#39;Volt&#39;</span>)</span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a><span class="at">@scpi.on</span>(<span class="st">&#39;Volt&#39;</span>)</span>
 <span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V(value:<span class="bu">float</span>):</span>
 <span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a>    device.value <span class="op">=</span> value</span>
 <span id="cb43-17"><a href="#cb43-17" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb43-18"><a href="#cb43-18" aria-hidden="true" tabindex="-1"></a><span class="at">@server.scpi</span>(<span class="st">&#39;MEASure:Volt?&#39;</span>)</span>
+<span id="cb43-18"><a href="#cb43-18" aria-hidden="true" tabindex="-1"></a><span class="at">@scpi.on</span>(<span class="st">&#39;MEASure:Volt?&#39;</span>)</span>
 <span id="cb43-19"><a href="#cb43-19" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_V():</span>
 <span id="cb43-20"><a href="#cb43-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> device.value</span>
 <span id="cb43-21"><a href="#cb43-21" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb43-22"><a href="#cb43-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb43-23"><a href="#cb43-23" aria-hidden="true" tabindex="-1"></a>server.start(port<span class="op">=</span><span class="dv">5025</span>)</span></code></pre></div>
+<span id="cb43-23"><a href="#cb43-23" aria-hidden="true" tabindex="-1"></a>scpi.start(port<span class="op">=</span><span class="dv">5025</span>)</span></code></pre></div>
 <p>これにより以下の SCPI
 コマンドが実装されます（コマンドは大文字小文字を区別しません）：</p>
 <table>
@@ -1053,9 +1053,8 @@ SCPI デバイスとして使えるようになります． 例えば，Raspberr
 systemd を使う場合，以下のような内容のファイルを
 <code>myscpi.service</code> のような名前で
 <code>/etc/systemd/system</code>
-に置いて，<code>sudo systemctrl enable myscpi.service</code>
-とします．（この例では，SlowDash の venv
-の中で実行するようにしています．）</p>
+に置いて，<code>sudo systemctl enable myscpi.service</code> とします．
+（この例では，SlowDash の venv の中で実行するようにしています．）</p>
 <div class="sourceCode" id="cb44"><pre
 class="sourceCode ini"><code class="sourceCode ini"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
 <span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">My SCPI Server</span></span>

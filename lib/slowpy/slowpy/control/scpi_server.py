@@ -296,7 +296,7 @@ class ScpiServer:
         self.port = port
         
 
-    def scpi(self, cmd:str):
+    def on(self, cmd:str):
         """decorator to assign a SCIP command handler
         """
         def wrapper(func):

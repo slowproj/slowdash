@@ -5,30 +5,30 @@ device = RandomWalkDevice(n=2)
 
 
 from slowpy.control import ScpiServer
-server = ScpiServer()
+scpi = ScpiServer()
 
 
-@server.scpi('*IDN?')
+@scpi.on('*IDN?')
 def get_idn():
     return 'RandomWalk'
 
 
-@server.scpi('V0')
+@scpi.on('V0')
 def set_V0(value:float):
     device.write(0, value)
 
 
-@server.scpi('V1')
+@scpi.on('V1')
 def set_V1(value:float):
     device.write(1, value)
 
 
-@server.scpi('MEASure:V0?')
+@scpi.on('MEASure:V0?')
 def get_V0():
     return device.read(0)
 
 
-@server.scpi('MEASure:V1?')
+@scpi.on('MEASure:V1?')
 def get_V1():
     return device.read(1)
 
@@ -43,4 +43,4 @@ if __name__ == '__main__':
     )
     (opts, args) = optionparser.parse_args()
 
-    server.start(port=opts.port)
+    scpi.start(port=opts.port)
