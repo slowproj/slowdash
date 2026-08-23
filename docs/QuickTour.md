@@ -497,31 +497,66 @@ For Ethernet devices using HiSLIP, also use VISA with an address like: `TCPIP0::
 The SlowPy library also includes a server-side SCPI interface, allowing any Python program to act as an SCPI-controllable device, making it fully compatible with SlowDash monitoring, control, and data storage.
 
 ```python
-from slowpy.control import ScpiServer, ScpiAdapter
+from slowpy.control import ScpiServer
+scpi = ScpiServer()
 
-class MyDevice(ScpiAdapter):
+
+class MyMemoryDevice:
     def __init__(self):
-        super().__init__(idn='MyDevice')
+        self.value = 0
+device = MyMemoryDevice()
 
-    def do_command(self, cmd_path, params):
-        # cmd_path: list of strings, uppercase SCPI path parts (split by :)
-        # params:   list of strings, uppercase SCPI parameters (split by ,)
-        if cmd_path[0].startswith('DATA'):
-            return <data_value>
-        elif ...:
-            ...
-        return None  # Unknown command
+@scpi.on('*IDN?')
+def get_idn():
+    return 'MyMemoryDevice'
 
-device = MyDevice()
-server = ScpiServer(device, port=5025)
-server.start()
+@scpi.on('Volt')
+def set_V(value:float):
+    device.value = value
+    
+@scpi.on('MEASure:Volt?')
+def get_V():
+    return device.value
+
+
+scpi.start(port=5025)
 ```
 
-In `do_command()`, simply read the command and return a string value.
-Return an empty string `""` for commands with no response, or `None` for invalid commands.
-Standard commands like `*IDN?` and `*OPC?` are already implemented in the base class, and command concatenation (`;`) is automatically handled.
+This implements the following SCPI commands (commands are case-insensitive):
 
-If you add this script to `/etc/rc.local` or a similar startup mechanism, your Raspberry Pi can act as a real SCPI device accessible over the network.
+| Command | Action | Example command | Example response |
+|---|---|---|---|
+| `*IDN?` | Returns the device ID | `*IDN?` | `MyMemoryDevice` |
+| `Volt <Value>` | Sets the value | `V 10` | (none) |
+| `MEASure:Volt?` | Gets the value | `MEAS:V?` | `10` |
+| `*OPC?` | Waits for command completion and returns the status | `*OPC?` | `1` |
+| `SYSTem:ERRor?` | Returns an error message | `SYST:ERR?` | `invalid command: IDN?` <br>(after entering `IDN?` instead of `*IDN?`) |
+
+SlowPy's SCPI server uses decorators to associate SCPI commands with their handlers.
+When a handler argument has a type annotation, as in `set_V(value:float)` in this example, its type is checked and the value is converted when the handler is called.
+Features such as SCPI command concatenation are processed before the handler is called.
+Default handlers are provided for some standard commands, including `*OPC?` and `SYSTem:ERRor?`.
+
+Configure the script to run automatically at system startup, either by registering it with systemd or adding it to `/etc/rc.local`, and the Raspberry Pi can be used as an SCPI device.
+For example, to use systemd on a Raspberry Pi, create a file such as `myscpi.service` in `/etc/systemd/system` with the following contents, then run `sudo systemctl enable myscpi.service`. 
+(This example runs the script in the SlowDash virtual environment.)
+
+```ini
+[Unit]
+Description=My SCPI Server
+
+[Service]
+Type=simple
+User=MY_USER_NAME
+WorkingDirectory=/PATH/TO/PROJECT
+ExecStart=/PATH/TO/SLOWDASH/venv/bin/python /PATH/TO/PROJECT/myscpi.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
 This is convenient not only for using the attached hardware through GPIB/I2C/SPI, but also for integrating USB devices (even with a vendor-provided library) as Ethernet-SCPI devices.
 
 
@@ -741,7 +776,7 @@ Data Transform is still in an experimental stage and may change in the future, b
 ```
 Other frequently used Data Transforms for `sd-enabled` include `->gt(thresh)` / `->lt(thresh)` for numeric comparisons and `->match(pattern)` for string matching.
 
-## Run Analysis in the Script and Send to the Browser
+## Run Analysis in the Script and Send Results to Browsers
 (The code used here is in `ExampleProjects/QuickTour/03_RealDeviceControl/04_Analysis`.)
 
 The SlowPy library includes lightweight analysis data objects such as histograms, and histograms built with them can also be streamed to the browser. 

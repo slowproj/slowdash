@@ -124,7 +124,8 @@
                     "fill_opacity": 0,
                     "fill_envelope": false,
                     "fill_baseline": 1e-100,
-                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false },
+                    "include_prior_point": false
                 }
             ],
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": -200, "ymax": 90 },
@@ -147,12 +148,14 @@
                     "fill_opacity": 0,
                     "fill_envelope": false,
                     "fill_baseline": 1e-100,
-                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false },
+                    "include_prior_point": false
                 }
             ],
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 240000, "ymax": 270000 },
             "legend": { "style": "side", "position": "left" }
-        }
+        },
+        { "type": "tree", "channel": "device_id", "title": "Device ID" }
     ],
     "meta": { "name": "NanotechMotor", "title": "", "description": "" }
 }

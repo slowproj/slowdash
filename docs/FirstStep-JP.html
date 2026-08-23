@@ -10,8 +10,9 @@
       div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
   <style type="text/css">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -75,6 +76,12 @@ code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
   <link rel="stylesheet" href="style.css" />
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({startOnLoad: true});
+</script>
+
 </head>
 
 <body>
@@ -495,7 +502,7 @@ ISO 表記の文字列）のものと，整数の UNIX
 <col style="width: 26%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>datetime (DATETIME/TEXT)</th>
 <th>timestamp (INTEGER)</th>
 <th>channel (VARCHAR(100))</th>
@@ -503,31 +510,31 @@ ISO 表記の文字列）のものと，整数の UNIX
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>2023-04-11 23:52:13</td>
 <td>1681257133</td>
 <td>ch00</td>
 <td>0.187859</td>
 </tr>
-<tr class="even">
+<tr>
 <td>2023-04-11 23:52:13</td>
 <td>1681257133</td>
 <td>ch01</td>
 <td>-0.418021</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>2023-04-11 23:52:13</td>
 <td>1681257133</td>
 <td>ch02</td>
 <td>0.482607</td>
 </tr>
-<tr class="even">
+<tr>
 <td>2023-04-11 23:52:13</td>
 <td>1681257133</td>
 <td>ch03</td>
 <td>1.733749</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>…</td>
 <td></td>
 <td></td>
@@ -684,25 +691,25 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href=
 調べ，2025年8月）：</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>メーカー</th>
 <th>モデル</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Keysight / Agilent</td>
 <td>34460A DMM</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Tektronics / Keithley</td>
 <td>DMM6500</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Rigol</td>
 <td>DM3058</td>
 </tr>
-<tr class="even">
+<tr>
 <td>BK Precision</td>
 <td>5492B DMM</td>
 </tr>
@@ -712,29 +719,29 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href=
 以下は確認済のモデルです（ChatGPT 調べ，2025年8月）</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>メーカー</th>
 <th>モデル</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Keysight / Agilent</td>
 <td>E363x/E364x</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Tektronics / Keithley</td>
 <td>2230G/2231A</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Rhode&amp;Schwarz</td>
 <td>NGA100 など</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Rigol</td>
 <td>DP800, DP2000</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>BK Precision</td>
 <td>9180/9190</td>
 </tr>
@@ -771,24 +778,24 @@ SCPI コマンドです．</p>
 <col style="width: 35%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>動作</th>
 <th>コマンド</th>
 <th>戻り値例</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>デバイスIDの取得</td>
 <td><code>*IDN?</code></td>
 <td><code>Keysight Technologies,34460A...</code> みたいな感じ</td>
 </tr>
-<tr class="even">
+<tr>
 <td>設定リセット</td>
 <td><code>*RST</code></td>
 <td>たぶんなし</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>DC 電圧値の読み出し</td>
 <td><code>MEAS:VOLT:DC?</code></td>
 <td><code>3.24</code> みたいな感じ</td>
@@ -959,36 +966,109 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb42-1"><a h
 Python プログラムに SCPI を使ったコントロールを追加し，SlowDash
 のデータ保存やモニタ，コントロールなどに直接接続できます．</p>
 <div class="sourceCode" id="cb43"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ScpiServer, ScpiAdapter</span>
-<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyDevice(ScpiAdapter):</span>
-<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
-<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>(idn<span class="op">=</span><span class="st">&#39;MyDevice&#39;</span>)</span>
-<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> do_command(<span class="va">self</span>, cmd_path, params):</span>
-<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>        <span class="co"># cmd_path: 文字列の配列．SCPI のコマンド部分を大文字にして : で区切ったもの．</span></span>
-<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>        <span class="co"># params: 文字列の配列．SCPI のパラメータ部分を大文字にして , で区切ったもの．</span></span>
-<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> cmd_path[<span class="dv">0</span>].startswith(<span class="st">&#39;DATA&#39;</span>):</span>
-<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> データ値</span>
-<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> ...</span>
-<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a>            ...</span>
-<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">None</span>    <span class="co"># 知らないコマンドだった場合</span></span>
-<span id="cb43-17"><a href="#cb43-17" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb43-18"><a href="#cb43-18" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> MyDevice()</span>
-<span id="cb43-19"><a href="#cb43-19" aria-hidden="true" tabindex="-1"></a>server <span class="op">=</span> ScpiServer(device, port<span class="op">=</span><span class="dv">5025</span>)</span>
-<span id="cb43-20"><a href="#cb43-20" aria-hidden="true" tabindex="-1"></a>server.start()</span></code></pre></div>
-<p><code>do_command()</code>
-の中でコマンドを読んで値を返すだけです．返り値がない場合は空文字
-<code>""</code> を返してください． 無効なコマンドの場合は
-<code>None</code> を返してください． <code>*IDN?</code> や
-<code>*OPC?</code>
-などの一部の標準コマンドは親クラスで実装されています． SCPI
-のコマンド連結なども親クラスで処理されます．</p>
+class="sourceCode python"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ScpiServer</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>scpi <span class="op">=</span> ScpiServer()</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyMemoryDevice:</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.value <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> MyMemoryDevice()</span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a><span class="at">@scpi.on</span>(<span class="st">&#39;*IDN?&#39;</span>)</span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_idn():</span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&#39;MyMemoryDevice&#39;</span></span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a><span class="at">@scpi.on</span>(<span class="st">&#39;Volt&#39;</span>)</span>
+<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V(value:<span class="bu">float</span>):</span>
+<span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a>    device.value <span class="op">=</span> value</span>
+<span id="cb43-17"><a href="#cb43-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb43-18"><a href="#cb43-18" aria-hidden="true" tabindex="-1"></a><span class="at">@scpi.on</span>(<span class="st">&#39;MEASure:Volt?&#39;</span>)</span>
+<span id="cb43-19"><a href="#cb43-19" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_V():</span>
+<span id="cb43-20"><a href="#cb43-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> device.value</span>
+<span id="cb43-21"><a href="#cb43-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-22"><a href="#cb43-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-23"><a href="#cb43-23" aria-hidden="true" tabindex="-1"></a>scpi.start(port<span class="op">=</span><span class="dv">5025</span>)</span></code></pre></div>
+<p>これにより以下の SCPI
+コマンドが実装されます（コマンドは大文字小文字を区別しません）：</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>コマンド</th>
+<th>動作</th>
+<th>コマンド例</th>
+<th>戻り値例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>*IDN?</code></td>
+<td>デバイスIDを返す</td>
+<td><code>*IDN?</code></td>
+<td><code>MyMemoryDevice</code></td>
+</tr>
+<tr>
+<td><code>Volt &lt;Value&gt;</code></td>
+<td>値を設定する</td>
+<td><code>V 10</code></td>
+<td>(なし)</td>
+</tr>
+<tr>
+<td><code>MEASure:Volt?</code></td>
+<td>値を取得する</td>
+<td><code>MEAS:V?</code></td>
+<td><code>10</code></td>
+</tr>
+<tr>
+<td><code>*OPC?</code></td>
+<td>コマンドの完了を待ち，ステータスを返す</td>
+<td><code>*OPC?</code></td>
+<td><code>1</code></td>
+</tr>
+<tr>
+<td><code>SYSTem:ERRor?</code></td>
+<td>エラーメッセージを返す</td>
+<td><code>SYST:ERR?</code></td>
+<td><code>invalid command: IDN?</code> <br>(前に <code>*IDN?</code> を
+<code>IDN?</code> とした)</td>
+</tr>
+</tbody>
+</table>
+<p>SlowPy の SCPI Server では，デコレータを使って SCPI
+コマンドとハンドラを結びつけています． この例の
+<code>set_V(value:float)</code>
+のように，ハンドラ関数の引数に型アノテーションをつけると，呼び出し時に型チェックと型変換を行います．
+SCPI のコマンド連結などはハンドラが呼び出される前に処理されます．
+<code>*OPC?</code> や <code>SYSTem:ERRor?</code>
+などの一部の標準コマンドに対してはデフォルトのハンドラ実装があります．</p>
 <p>systemd に登録するか <code>/etc/rc.local</code>
 に書くかなどにより，作成したスクリプトをシステム起動時に自動で実行するようにすれば，これが
-SCPI デバイスとして使えるようになります．</p>
+SCPI デバイスとして使えるようになります． 例えば，Raspberry-Pi で
+systemd を使う場合，以下のような内容のファイルを
+<code>myscpi.service</code> のような名前で
+<code>/etc/systemd/system</code>
+に置いて，<code>sudo systemctl enable myscpi.service</code> とします．
+（この例では，SlowDash の venv の中で実行するようにしています．）</p>
+<div class="sourceCode" id="cb44"><pre
+class="sourceCode ini"><code class="sourceCode ini"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">My SCPI Server</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="dt">Type</span><span class="ot">=</span><span class="st">simple</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a><span class="dt">User</span><span class="ot">=</span><span class="st">MY_USER_NAME</span></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a><span class="dt">WorkingDirectory</span><span class="ot">=</span><span class="st">/PATH/TO/PROJECT</span></span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/PATH/TO/SLOWDASH/venv/bin/python /PATH/TO/PROJECT/myscpi.py</span></span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a><span class="dt">Restart</span><span class="ot">=</span><span class="st">on-failure</span></span>
+<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a><span class="dt">RestartSec</span><span class="ot">=</span><span class="dv">5</span></span>
+<span id="cb44-11"><a href="#cb44-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-12"><a href="#cb44-12" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb44-13"><a href="#cb44-13" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">multi-user.target</span></span></code></pre></div>
 <h2 id="web-gui-からコントロールする">Web GUI からコントロールする</h2>
 <p>上の２つの例では，最初に SlowDash をデータブラウザとして使用し，次に
 SlowPy
@@ -1019,39 +1099,39 @@ Python スクリプトの関数を呼び出す</li>
 <p>まず，上記の例で作成したデバイスからの読み出しスクリプトに，読み出しの開始と停止の機能を追加します．今回は，<code>slowtask-testdaq.py</code>
 というファイル名にして，<code>config</code>
 ディレクトリに保存します．</p>
-<div class="sourceCode" id="cb44"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dataclasses <span class="im">import</span> dataclass</span>
-<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
-<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RunStatus:</span>
-<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>    running: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span></span>
-<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>run_status <span class="op">=</span> RunStatus()</span>
-<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
-<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;192.168.1.34&#39;</span>, <span class="dv">5025</span>).scpi()</span>
-<span id="cb44-11"><a href="#cb44-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb44-12"><a href="#cb44-12" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_SQLite</span>
-<span id="cb44-13"><a href="#cb44-13" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_SQLite(<span class="st">&#39;sqlite:///QuickTourTestData.db&#39;</span>, table<span class="op">=</span><span class="st">&quot;testdata&quot;</span>)</span>
-<span id="cb44-14"><a href="#cb44-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb44-15"><a href="#cb44-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb44-16"><a href="#cb44-16" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
-<span id="cb44-17"><a href="#cb44-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> run_status.running:</span>
-<span id="cb44-18"><a href="#cb44-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
-<span id="cb44-19"><a href="#cb44-19" aria-hidden="true" tabindex="-1"></a>            volt <span class="op">=</span> <span class="bu">float</span>(device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get() <span class="kw">or</span> <span class="st">&#39;nan&#39;</span>)</span>
-<span id="cb44-20"><a href="#cb44-20" aria-hidden="true" tabindex="-1"></a>            datastore.append({<span class="st">&#39;volt&#39;</span>: volt})</span>
-<span id="cb44-21"><a href="#cb44-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
-<span id="cb44-22"><a href="#cb44-22" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f&#39;ERROR: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&#39;</span>)</span>
-<span id="cb44-23"><a href="#cb44-23" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb44-24"><a href="#cb44-24" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span>
-<span id="cb44-25"><a href="#cb44-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb44-26"><a href="#cb44-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb44-27"><a href="#cb44-27" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> start():</span>
-<span id="cb44-28"><a href="#cb44-28" aria-hidden="true" tabindex="-1"></a>    run_status.running <span class="op">=</span> <span class="va">True</span></span>
-<span id="cb44-29"><a href="#cb44-29" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb44-30"><a href="#cb44-30" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb44-31"><a href="#cb44-31" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> stop():</span>
-<span id="cb44-32"><a href="#cb44-32" aria-hidden="true" tabindex="-1"></a>    run_status.running <span class="op">=</span> <span class="va">False</span></span></code></pre></div>
+<div class="sourceCode" id="cb45"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dataclasses <span class="im">import</span> dataclass</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RunStatus:</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>    running: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>run_status <span class="op">=</span> RunStatus()</span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;192.168.1.34&#39;</span>, <span class="dv">5025</span>).scpi()</span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_SQLite</span>
+<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_SQLite(<span class="st">&#39;sqlite:///QuickTourTestData.db&#39;</span>, table<span class="op">=</span><span class="st">&quot;testdata&quot;</span>)</span>
+<span id="cb45-14"><a href="#cb45-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-15"><a href="#cb45-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-16"><a href="#cb45-16" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
+<span id="cb45-17"><a href="#cb45-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> run_status.running:</span>
+<span id="cb45-18"><a href="#cb45-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
+<span id="cb45-19"><a href="#cb45-19" aria-hidden="true" tabindex="-1"></a>            volt <span class="op">=</span> <span class="bu">float</span>(device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get() <span class="kw">or</span> <span class="st">&#39;nan&#39;</span>)</span>
+<span id="cb45-20"><a href="#cb45-20" aria-hidden="true" tabindex="-1"></a>            datastore.append({<span class="st">&#39;volt&#39;</span>: volt})</span>
+<span id="cb45-21"><a href="#cb45-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
+<span id="cb45-22"><a href="#cb45-22" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f&#39;ERROR: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb45-23"><a href="#cb45-23" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb45-24"><a href="#cb45-24" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span>
+<span id="cb45-25"><a href="#cb45-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-26"><a href="#cb45-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-27"><a href="#cb45-27" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> start():</span>
+<span id="cb45-28"><a href="#cb45-28" aria-hidden="true" tabindex="-1"></a>    run_status.running <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb45-29"><a href="#cb45-29" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb45-30"><a href="#cb45-30" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb45-31"><a href="#cb45-31" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> stop():</span>
+<span id="cb45-32"><a href="#cb45-32" aria-hidden="true" tabindex="-1"></a>    run_status.running <span class="op">=</span> <span class="va">False</span></span></code></pre></div>
 <p>データクラス <code>run_status</code>
 で，現在のランの状態を管理します．この後，ここにいろいろな状態変数を追加していきますが，今は「動作中」を示すフラグ
 <code>running</code>
@@ -1063,11 +1143,11 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb44-1"><a h
 というファイルを作成し，<code>config</code>
 以下に配置します．ファイル名は，<code>html-</code> で始まり，拡張子は
 <code>.html</code> である必要があります．</p>
-<div class="sourceCode" id="cb45"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.start()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Start&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.stop()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Stop&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span>    </span></code></pre></div>
+<div class="sourceCode" id="cb46"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;testdaq.start()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Start&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;testdaq.stop()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Stop&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span>    </span></code></pre></div>
 <p>ここでは，それぞれの関数に対応したボタンを２つ作成しているだけです．それぞれのボタンの
 <code>name</code>
 属性で，そのボタンがクリックされたときにどのファイルのどの関数を呼ぶかを指定しています．<code>name</code>
@@ -1081,19 +1161,19 @@ SlowTask セクションに <code>testdaq</code>
 毎回手動でスタートするのが面倒な場合は，<code>SlowdashProject.yaml</code>
 に以下のように書くと，スクリプトを slowdash
 開始時に自動で開始するようにできます．</p>
-<div class="sourceCode" id="cb46"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> QuickTour</span></span>
-<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">title</span><span class="kw">:</span><span class="at"> SlowDash Quick Tour</span></span>
-<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span></span>
-<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> sqlite:///QuickTourTestData.db</span></span>
-<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span></span>
-<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> testdata [channel] @timestamp(unix) = value</span></span>
-<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">task</span><span class="kw">:</span></span>
-<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> testdaq</span></span>
-<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">auto_load</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div>
+<div class="sourceCode" id="cb47"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> QuickTour</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">title</span><span class="kw">:</span><span class="at"> SlowDash Quick Tour</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> sqlite:///QuickTourTestData.db</span></span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span></span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> testdata [channel] @timestamp(unix) = value</span></span>
+<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">task</span><span class="kw">:</span></span>
+<span id="cb47-11"><a href="#cb47-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> testdaq</span></span>
+<span id="cb47-12"><a href="#cb47-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">auto_load</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div>
 <p>スクリプトが無事に走ったら，New Plot Layout
 で新しいレイアウトを作成し，Add New Panel から HTML Form を選んで，HTML
 ファイルに testdaq
@@ -1112,55 +1192,55 @@ Channel List
 追加する変数は，実数値のランの長さ <code>run_length</code>
 と，自動停止を行うかの真偽値 <code>auto_stop</code> です． HTML
 側の変更は，入力要素を追加するだけです．真偽値にはチェックボックスを使っています．</p>
-<div class="sourceCode" id="cb47"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;checkbox&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;auto_stop&quot;</span><span class="dt">&gt;</span>Stop After:</span>
-<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;run_length&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.start()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Start&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.stop()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Stop&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span>    </span></code></pre></div>
+<div class="sourceCode" id="cb48"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;checkbox&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;auto_stop&quot;</span><span class="dt">&gt;</span>Stop After:</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;run_length&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;testdaq.start()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Start&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;testdaq.stop()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Stop&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span>    </span></code></pre></div>
 <p><code>&lt;input&gt;</code> エレメントの <code>name</code>
 属性が，スクリプト側の仮引数の名前になります．
 スクリプト側では，ボタンを押したときに呼ばれる関数に，引数を追加します．
 自動停止などを行うために，RunStatus
 に必要なフィールドをいくつか追加しています．</p>
-<div class="sourceCode" id="cb48"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
-<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RunStatus:</span>
-<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>    auto_stop: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span></span>
-<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>    run_length: <span class="bu">float</span> <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>    start_time: <span class="bu">float</span> <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>    running: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span></span>
-<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a>run_status <span class="op">=</span> RunStatus()</span>
-<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb48-9"><a href="#cb48-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb48-10"><a href="#cb48-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
-<span id="cb48-11"><a href="#cb48-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> run_status.running:</span>
-<span id="cb48-12"><a href="#cb48-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
-<span id="cb48-13"><a href="#cb48-13" aria-hidden="true" tabindex="-1"></a>            volt <span class="op">=</span> <span class="bu">float</span>(device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get() <span class="kw">or</span> <span class="st">&#39;nan&#39;</span>)</span>
-<span id="cb48-14"><a href="#cb48-14" aria-hidden="true" tabindex="-1"></a>            datastore.append({<span class="st">&#39;volt&#39;</span>: volt})</span>
-<span id="cb48-15"><a href="#cb48-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
-<span id="cb48-16"><a href="#cb48-16" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f&#39;ERROR: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&#39;</span>)</span>
-<span id="cb48-17"><a href="#cb48-17" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb48-18"><a href="#cb48-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> run_status.auto_stop:</span>
-<span id="cb48-19"><a href="#cb48-19" aria-hidden="true" tabindex="-1"></a>            now <span class="op">=</span> time.time()</span>
-<span id="cb48-20"><a href="#cb48-20" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> now <span class="op">-</span> run_status.start_time <span class="op">&gt;=</span> run_status.run_length:</span>
-<span id="cb48-21"><a href="#cb48-21" aria-hidden="true" tabindex="-1"></a>                run_status.running <span class="op">=</span> <span class="va">False</span></span>
-<span id="cb48-22"><a href="#cb48-22" aria-hidden="true" tabindex="-1"></a>                        </span>
-<span id="cb48-23"><a href="#cb48-23" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span>
-<span id="cb48-24"><a href="#cb48-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb48-25"><a href="#cb48-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb48-26"><a href="#cb48-26" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> start(auto_stop:<span class="bu">bool</span>, run_length:<span class="bu">float</span>):</span>
-<span id="cb48-27"><a href="#cb48-27" aria-hidden="true" tabindex="-1"></a>    run_status.auto_stop <span class="op">=</span> auto_stop</span>
-<span id="cb48-28"><a href="#cb48-28" aria-hidden="true" tabindex="-1"></a>    run_status.run_length <span class="op">=</span> run_length</span>
-<span id="cb48-29"><a href="#cb48-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb48-30"><a href="#cb48-30" aria-hidden="true" tabindex="-1"></a>    run_status.start_time <span class="op">=</span> time.time()</span>
-<span id="cb48-31"><a href="#cb48-31" aria-hidden="true" tabindex="-1"></a>    run_status.running <span class="op">=</span> <span class="va">True</span></span>
-<span id="cb48-32"><a href="#cb48-32" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb48-33"><a href="#cb48-33" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb48-34"><a href="#cb48-34" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> stop():</span>
-<span id="cb48-35"><a href="#cb48-35" aria-hidden="true" tabindex="-1"></a>    run_status.running <span class="op">=</span> <span class="va">False</span></span></code></pre></div>
+<div class="sourceCode" id="cb49"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RunStatus:</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>    auto_stop: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>    run_length: <span class="bu">float</span> <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>    start_time: <span class="bu">float</span> <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>    running: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>run_status <span class="op">=</span> RunStatus()</span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
+<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> run_status.running:</span>
+<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
+<span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a>            volt <span class="op">=</span> <span class="bu">float</span>(device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get() <span class="kw">or</span> <span class="st">&#39;nan&#39;</span>)</span>
+<span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a>            datastore.append({<span class="st">&#39;volt&#39;</span>: volt})</span>
+<span id="cb49-15"><a href="#cb49-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
+<span id="cb49-16"><a href="#cb49-16" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f&#39;ERROR: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb49-17"><a href="#cb49-17" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb49-18"><a href="#cb49-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> run_status.auto_stop:</span>
+<span id="cb49-19"><a href="#cb49-19" aria-hidden="true" tabindex="-1"></a>            now <span class="op">=</span> time.time()</span>
+<span id="cb49-20"><a href="#cb49-20" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> now <span class="op">-</span> run_status.start_time <span class="op">&gt;=</span> run_status.run_length:</span>
+<span id="cb49-21"><a href="#cb49-21" aria-hidden="true" tabindex="-1"></a>                run_status.running <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb49-22"><a href="#cb49-22" aria-hidden="true" tabindex="-1"></a>                        </span>
+<span id="cb49-23"><a href="#cb49-23" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span>
+<span id="cb49-24"><a href="#cb49-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-25"><a href="#cb49-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-26"><a href="#cb49-26" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> start(auto_stop:<span class="bu">bool</span>, run_length:<span class="bu">float</span>):</span>
+<span id="cb49-27"><a href="#cb49-27" aria-hidden="true" tabindex="-1"></a>    run_status.auto_stop <span class="op">=</span> auto_stop</span>
+<span id="cb49-28"><a href="#cb49-28" aria-hidden="true" tabindex="-1"></a>    run_status.run_length <span class="op">=</span> run_length</span>
+<span id="cb49-29"><a href="#cb49-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-30"><a href="#cb49-30" aria-hidden="true" tabindex="-1"></a>    run_status.start_time <span class="op">=</span> time.time()</span>
+<span id="cb49-31"><a href="#cb49-31" aria-hidden="true" tabindex="-1"></a>    run_status.running <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb49-32"><a href="#cb49-32" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb49-33"><a href="#cb49-33" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb49-34"><a href="#cb49-34" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> stop():</span>
+<span id="cb49-35"><a href="#cb49-35" aria-hidden="true" tabindex="-1"></a>    run_status.running <span class="op">=</span> <span class="va">False</span></span></code></pre></div>
 <p>この例のように，引数に型情報を追加すると，関数呼び出しの前に型チェックと型変換が自動で行われ，型が合わない場合には，関数が呼ばれる前にブラウザにエラーが返されるようになります．</p>
 <h3
 id="スクリプトからブラウザにステータス情報を送る">スクリプトからブラウザにステータス情報を送る</h3>
@@ -1179,22 +1259,22 @@ id="スクリプトからブラウザにステータス情報を送る">スク�
 なども使えます． 数値や文字列はスカラデータとして，dataclass や dict は
 Tree 型データとして扱われます．</p>
 <p>以下の例では，一秒ごとに Run Status を送るようにしています．</p>
-<div class="sourceCode" id="cb49"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
-<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> run_status.running:</span>
-<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
-<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>            volt <span class="op">=</span> <span class="bu">float</span>(device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get() <span class="kw">or</span> <span class="st">&#39;nan&#39;</span>)</span>
-<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>            datastore.append({<span class="st">&#39;volt&#39;</span>: volt})</span>
-<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
-<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f&#39;ERROR: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&#39;</span>)</span>
-<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> run_status.auto_stop:</span>
-<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a>            now <span class="op">=</span> time.time()</span>
-<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> now <span class="op">-</span> run_status.start_time <span class="op">&gt;=</span> run_status.run_length:</span>
-<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a>                run_status.running <span class="op">=</span> <span class="va">False</span></span>
-<span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a>    ctrl.stream(<span class="st">&#39;run_status&#39;</span>, run_status)</span>
-<span id="cb49-15"><a href="#cb49-15" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb50"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> run_status.running:</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>            volt <span class="op">=</span> <span class="bu">float</span>(device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get() <span class="kw">or</span> <span class="st">&#39;nan&#39;</span>)</span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>            datastore.append({<span class="st">&#39;volt&#39;</span>: volt})</span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f&#39;ERROR: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> run_status.auto_stop:</span>
+<span id="cb50-10"><a href="#cb50-10" aria-hidden="true" tabindex="-1"></a>            now <span class="op">=</span> time.time()</span>
+<span id="cb50-11"><a href="#cb50-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> now <span class="op">-</span> run_status.start_time <span class="op">&gt;=</span> run_status.run_length:</span>
+<span id="cb50-12"><a href="#cb50-12" aria-hidden="true" tabindex="-1"></a>                run_status.running <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb50-13"><a href="#cb50-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-14"><a href="#cb50-14" aria-hidden="true" tabindex="-1"></a>    ctrl.stream(<span class="st">&#39;run_status&#39;</span>, run_status)</span>
+<span id="cb50-15"><a href="#cb50-15" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span></code></pre></div>
 <p>Run Status は dataclass なので，ブラウザ側は Tree
 データとしてそのまま表示できます． SlowDash を走らせなおすか，SlowTask
 のパネルからこのスクリプトを Stop して Start しなおすと，Data Channels
@@ -1214,14 +1294,14 @@ Panel -&gt; Tree -&gt; <code>run_status</code>
 フィールドを取り出して，必要に応じてロジック反転（<code>invert()</code>）を行います．
 Data Transform
 についてはまだ試験実装段階で，将来変更する可能性がありますが，ここで使う程度の基本的な部分についてはそのままになる可能性が高いです．</p>
-<div class="sourceCode" id="cb50"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;checkbox&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;auto_stop&quot;</span><span class="dt">&gt;</span>Stop After:</span>
-<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;run_length&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.start()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Start&quot;</span> <span class="er">sd-enabled</span><span class="ot">=</span><span class="st">&quot;run_status[&#39;running&#39;]-&gt;invert()&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;testdaq.stop()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Stop&quot;</span> <span class="er">sd-enabled</span><span class="ot">=</span><span class="st">&quot;run_status[&#39;running&#39;]&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span>    </span></code></pre></div>
+<div class="sourceCode" id="cb51"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;checkbox&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;auto_stop&quot;</span><span class="dt">&gt;</span>Stop After:</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;run_length&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;testdaq.start()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Start&quot;</span><span class="ot"> sd-enabled</span><span class="op">=</span><span class="st">&quot;run_status[&#39;running&#39;]-&gt;invert()&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;testdaq.stop()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Stop&quot;</span><span class="ot"> sd-enabled</span><span class="op">=</span><span class="st">&quot;run_status[&#39;running&#39;]&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span>    </span></code></pre></div>
 <p><code>sd-enabled</code> 属性でよく使われる他の Data Transform
 としては，数値の大小を判定する <code>-&gt;gt(thresh)</code> /
 <code>-&gt;lt(thresh)</code> や，文字列に対する
@@ -1234,28 +1314,28 @@ id="スクリプトで解析を行ってブラウザに送る">スクリプト�
 <p>SlowPy
 ライブラリには軽量なヒストグラムなどの解析データオブジェクトが含まれていて，これを使って構築したヒストグラムなどもブラウザにストリーミングすることができます．（普通にデータベースに保存することもできます．）
 以下は，1秒ごとにデータを読み出し，それをデータベースに記録するとともに，ヒストグラムも更新してブラウザにリアルタイムに送る例です．</p>
-<div class="sourceCode" id="cb51"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy <span class="im">import</span> Histogram</span>
-<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>histogram <span class="op">=</span> Histogram(nbins<span class="op">=</span><span class="dv">20</span>, range_min<span class="op">=-</span><span class="dv">10</span>, range_max<span class="op">=</span><span class="dv">10</span>)</span>
-<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
-<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> run_status.running:</span>
-<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
-<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a>            volt <span class="op">=</span> <span class="bu">float</span>(device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get() <span class="kw">or</span> <span class="st">&#39;nan&#39;</span>)</span>
-<span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a>            datastore.append({<span class="st">&#39;volt&#39;</span>: volt})</span>
-<span id="cb51-10"><a href="#cb51-10" aria-hidden="true" tabindex="-1"></a>            histogram.fill(volt)</span>
-<span id="cb51-11"><a href="#cb51-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
-<span id="cb51-12"><a href="#cb51-12" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f&#39;ERROR: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&#39;</span>)</span>
-<span id="cb51-13"><a href="#cb51-13" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb51-14"><a href="#cb51-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> run_status.auto_stop:</span>
-<span id="cb51-15"><a href="#cb51-15" aria-hidden="true" tabindex="-1"></a>            now <span class="op">=</span> time.time()</span>
-<span id="cb51-16"><a href="#cb51-16" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> now <span class="op">-</span> run_status.start_time <span class="op">&gt;=</span> run_status.run_length:</span>
-<span id="cb51-17"><a href="#cb51-17" aria-hidden="true" tabindex="-1"></a>                run_status.running <span class="op">=</span> <span class="va">False</span></span>
-<span id="cb51-18"><a href="#cb51-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb51-19"><a href="#cb51-19" aria-hidden="true" tabindex="-1"></a>    ctrl.stream(<span class="st">&#39;run_status&#39;</span>, run_status)</span>
-<span id="cb51-20"><a href="#cb51-20" aria-hidden="true" tabindex="-1"></a>    ctrl.stream(<span class="st">&#39;hist01&#39;</span>, histogram)</span>
-<span id="cb51-21"><a href="#cb51-21" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb52"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy <span class="im">import</span> Histogram</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>histogram <span class="op">=</span> Histogram(nbins<span class="op">=</span><span class="dv">20</span>, range_min<span class="op">=-</span><span class="dv">10</span>, range_max<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> run_status.running:</span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a>            volt <span class="op">=</span> <span class="bu">float</span>(device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get() <span class="kw">or</span> <span class="st">&#39;nan&#39;</span>)</span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a>            datastore.append({<span class="st">&#39;volt&#39;</span>: volt})</span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a>            histogram.fill(volt)</span>
+<span id="cb52-11"><a href="#cb52-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
+<span id="cb52-12"><a href="#cb52-12" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f&#39;ERROR: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb52-13"><a href="#cb52-13" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb52-14"><a href="#cb52-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> run_status.auto_stop:</span>
+<span id="cb52-15"><a href="#cb52-15" aria-hidden="true" tabindex="-1"></a>            now <span class="op">=</span> time.time()</span>
+<span id="cb52-16"><a href="#cb52-16" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> now <span class="op">-</span> run_status.start_time <span class="op">&gt;=</span> run_status.run_length:</span>
+<span id="cb52-17"><a href="#cb52-17" aria-hidden="true" tabindex="-1"></a>                run_status.running <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb52-18"><a href="#cb52-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-19"><a href="#cb52-19" aria-hidden="true" tabindex="-1"></a>    ctrl.stream(<span class="st">&#39;run_status&#39;</span>, run_status)</span>
+<span id="cb52-20"><a href="#cb52-20" aria-hidden="true" tabindex="-1"></a>    ctrl.stream(<span class="st">&#39;hist01&#39;</span>, histogram)</span>
+<span id="cb52-21"><a href="#cb52-21" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span></code></pre></div>
 <p>SlowDash を走らせなおすか，SlowTask のパネルからこのスクリプトを Stop
 して Start しなおすと，Data Channels に <code>current histogram</code>
 型のデータとして <code>hist01</code> が表示されます． レイアウトにも，
@@ -1276,50 +1356,50 @@ href="https://github.com/slowproj/slowdash/pkgs/container/slowdash">ghcr.io/slow
 です．これをボリュームマウントして使ってください．以下は，<code>SlowdashProject.yaml</code>
 ファイルが作ってあるプロジェクトディレクトリからコンテナの SlowDash
 サーバーを実行する例です．</p>
-<div class="sourceCode" id="cb52"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash</span></span></code></pre></div>
+<div class="sourceCode" id="cb53"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash</span></span></code></pre></div>
 <p>毎回打つのは大変なので，<code>docker-compose.yaml</code>
 を使うのが簡単です．SlowDash の <code>ExampleProjects</code>
 以下にあるプロジェクト例には，すべて <code>docker-compose.yaml</code>
 ファイルが含まれています．</p>
-<div class="sourceCode" id="cb53"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
-<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
-<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowdash</span></span>
-<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
-<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> .:/project</span></span>
-<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
-<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881:18881&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb54"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowdash</span></span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> .:/project</span></span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881:18881&quot;</span></span></code></pre></div>
 <p>このファイルがある場所で <code>docker compose up</code>
 とすればイメージがダウンロードされ，実行が開始されます．（初回は少し時間がかかります．）</p>
-<div class="sourceCode" id="cb54"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span></code></pre></div>
+<div class="sourceCode" id="cb55"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span></code></pre></div>
 <p>SlowDash のコマンドを使用したい場合，<code>docker run</code> または
 <code>docker compose up</code>
 でコンテナを走らせてから，<code>docker exec</code>
 でコンテナの中から実行してください．</p>
-<div class="sourceCode" id="cb55"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker ps</span></span>
-<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>CONTAINER ID   IMAGE         COMMAND                   CREATED          STATUS         PORTS       NAMES</span>
-<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>70e0b99483ae   slowdash      &quot;/slowdash/app/docke…&quot;   10 seconds ago   Up 9 seconds   18881/tcp   elastic_jackson</span>
-<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker exec -it 70e    slowdash config -i4       （70e は上の行で表示されているコンテナID； -i4 は整形オプション）</span></span>
-<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>    &quot;slowdash&quot;: {</span>
-<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a>        &quot;version&quot;: &quot;250128 \&quot;Skykomish\&quot;&quot;</span>
-<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
+<div class="sourceCode" id="cb56"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker ps</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>CONTAINER ID   IMAGE         COMMAND                   CREATED          STATUS         PORTS       NAMES</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>70e0b99483ae   slowdash      &quot;/slowdash/app/docke…&quot;   10 seconds ago   Up 9 seconds   18881/tcp   elastic_jackson</span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker exec -it 70e    slowdash config -i4       （70e は上の行で表示されているコンテナID； -i4 は整形オプション）</span></span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>    &quot;slowdash&quot;: {</span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a>        &quot;version&quot;: &quot;250128 \&quot;Skykomish\&quot;&quot;</span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
 <h1 id="slowdash-のアップデート">SlowDash のアップデート</h1>
 <h2 id="直接インストール">直接インストール</h2>
 <p>Make を使って更新をできます：</p>
-<div class="sourceCode" id="cb56"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH</span></span>
-<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make update</span></span></code></pre></div>
+<div class="sourceCode" id="cb57"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make update</span></span></code></pre></div>
 <p>手動で行う場合は，<code>git pull</code>
 の際に<code>--recurse-submodule</code>
 を忘れないようにしてください．</p>
-<div class="sourceCode" id="cb57"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH</span></span>
-<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ git pull --recurse-submodules</span></span>
-<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make</span></span></code></pre></div>
+<div class="sourceCode" id="cb58"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ git pull --recurse-submodules</span></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make</span></span></code></pre></div>
 <p>この <code>--recurse-submodules</code>
 を忘れることがとても多いです．そして，その場合には，異なるバージョンのソースが混ざるので，それに気づかないとデバッグがとても難しくなります．上記の
 <code>make update</code> を使うのがおすすめです．</p>
@@ -1327,12 +1407,12 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <p>latest タグの SlowDash
 コンテナを使っている場合，<code>docker pull</code>
 コマンドで最新のものに置き換えることができます．</p>
-<div class="sourceCode" id="cb58"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker pull slowproj/slowdash</span></span></code></pre></div>
+<div class="sourceCode" id="cb59"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker pull slowproj/slowdash</span></span></code></pre></div>
 <p>または，compose のディレクトリから compose
 コマンドで行うこともできます．</p>
-<div class="sourceCode" id="cb59"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose pull</span></span></code></pre></div>
+<div class="sourceCode" id="cb60"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose pull</span></span></code></pre></div>
 <p>使用中の SlowDash バージョンが SlowDash
 のホーム画面の左上に表示されているので，ここでちゃんと更新されたかを確認できます．</p>
 <h1 id="動作確認用テスト環境">動作確認用テスト環境</h1>
@@ -1340,10 +1420,10 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 などを集めたコンテナが <code>slowdash/utils/testbench</code>
 にあります．
 システム開発時に本番用のデータベースを使いたくない場合や，開発用サーバのインストールが面倒な場合に，すぐに使えてすぐに消せて便利です．</p>
-<div class="sourceCode" id="cb60"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH/utils/testbench</span></span>
-<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span>
-<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down   （終了後データを消す）</span></span></code></pre></div>
+<div class="sourceCode" id="cb61"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH/utils/testbench</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down   （終了後データを消す）</span></span></code></pre></div>
 <p>PostgreSQL, MySQL, InfluxDB, Redis, MQTT, Jupyter
 などがすべて使えるようになります．
 （これらがすでに走っている場合は，ポートが衝突してエラーになるので，コメントアウトかポート番号の変更が必要です．）</p>
@@ -1361,23 +1441,23 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <p>もし内部の人を信用できない場合，最低限として，基本認証を使ってパスワードを設定することはできます．
 <code>SlowdashProject.yaml</code> に <code>authentication</code>
 エントリを追加し，パスワードハッシュを指定してください．</p>
-<div class="sourceCode" id="cb61"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a><span class="at">  ...</span></span>
-<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">authentication</span><span class="kw">:</span></span>
-<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> Basic</span></span>
-<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">key</span><span class="kw">:</span><span class="at"> slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS</span></span></code></pre></div>
+<div class="sourceCode" id="cb62"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a><span class="at">  ...</span></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">authentication</span><span class="kw">:</span></span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> Basic</span></span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">key</span><span class="kw">:</span><span class="at"> slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS</span></span></code></pre></div>
 <p>パスワードハッシュは，Apache の bcrypt
 と同じ形式ですが，<code>slowdash/utils</code> にある
 <code>slowdash-generate-key.py</code>
 プログラムで作ることもできます．</p>
-<div class="sourceCode" id="cb62"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash</span></span>
-<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>    &quot;type&quot;: &quot;Basic&quot;,</span>
-<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>    &quot;key&quot;: &quot;slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS&quot;</span>
-<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb63"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 PATH/TO/SLOWDASH/utils/slowdash-generate-key.py slow dash</span></span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>    &quot;type&quot;: &quot;Basic&quot;,</span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>    &quot;key&quot;: &quot;slow:$2a$12$UWLc20NG5E3drX35cfA/5eFxuDVC0U79dGg4UP/mo55cj222/vuRS&quot;</span>
+<span id="cb63-5"><a href="#cb63-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>ここでのパスワードは，暗号化せずにやりとりされるので，基本認証を使う場合は
 HTTPS を使って通信を暗号化する必要があります．
 これは，外部のリバースプロキシを使って行うことが想定されています．</p>
@@ -1385,10 +1465,10 @@ HTTPS を使って通信を暗号化する必要があります．
 モードで使っている場合は，リバースプロキシの代わりに，組み込みの HTTPS
 サーバーを使うこともできます．SSL/TLS 鍵ファイルと認証ファイルを指定して
 <code>slowdash</code> を起動してください．</p>
-<div class="sourceCode" id="cb63"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash  --port=18881  --ssl-keyfile=KEY_FILE  --ssl-certfile=CERT_FILE</span></span>
-<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>...</span>
-<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>Listening at port 18881 (ASGI HTTPS)</span></code></pre></div>
+<div class="sourceCode" id="cb64"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash  --port=18881  --ssl-keyfile=KEY_FILE  --ssl-certfile=CERT_FILE</span></span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>Listening at port 18881 (ASGI HTTPS)</span></code></pre></div>
 <p>ただし，この機能は将来の SlowDash
 では削除されるかもしれません．長期使用するシステムでは，ちゃんとしたリバースプロキシを使用するのがいいと思います．</p>
 <h1 id="リバースプロキシ">リバースプロキシ</h1>
@@ -1404,41 +1484,41 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 を含めてリバースプロキシとする例が
 <code>ExampleProjects/ReverseProxy</code>
 にあります．多くの場合，証明書類を置き換えるだけでそのまま使えるはずです．</p>
-<div class="sourceCode" id="cb64"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
-<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">nginx</span><span class="kw">:</span></span>
-<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">build</span><span class="kw">:</span><span class="at"> ./nginx</span></span>
-<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
-<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;80:80&quot;</span></span>
-<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;443:443&quot;</span></span>
-<span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span></span>
-<span id="cb64-8"><a href="#cb64-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> slowdash</span></span>
-<span id="cb64-9"><a href="#cb64-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb64-10"><a href="#cb64-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
-<span id="cb64-11"><a href="#cb64-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowdash</span></span>
-<span id="cb64-12"><a href="#cb64-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">expose</span><span class="kw">:</span></span>
-<span id="cb64-13"><a href="#cb64-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881&quot;</span></span>
-<span id="cb64-14"><a href="#cb64-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
-<span id="cb64-15"><a href="#cb64-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> .:/project</span></span></code></pre></div>
+<div class="sourceCode" id="cb65"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">nginx</span><span class="kw">:</span></span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">build</span><span class="kw">:</span><span class="at"> ./nginx</span></span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;80:80&quot;</span></span>
+<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;443:443&quot;</span></span>
+<span id="cb65-7"><a href="#cb65-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span></span>
+<span id="cb65-8"><a href="#cb65-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> slowdash</span></span>
+<span id="cb65-9"><a href="#cb65-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-10"><a href="#cb65-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
+<span id="cb65-11"><a href="#cb65-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowdash</span></span>
+<span id="cb65-12"><a href="#cb65-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">expose</span><span class="kw">:</span></span>
+<span id="cb65-13"><a href="#cb65-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881&quot;</span></span>
+<span id="cb65-14"><a href="#cb65-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb65-15"><a href="#cb65-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> .:/project</span></span></code></pre></div>
 <p>ここでは SlowDash
 のポートは外部に接続されていないことに注意してください．</p>
 <p><code>ExampleProjects/ReverseProxy/Nginx</code>
 の下には，<code>nginx</code> という名前で Nginx
 の設定ファイルがあります（Apache の方もほぼ同様です）．</p>
-<div class="sourceCode" id="cb65"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ tree Nginx</span></span>
-<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>Nginx/</span>
-<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>├── SlowdashProject.yaml</span>
-<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>├── docker-compose.yaml</span>
-<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a>└── nginx</span>
-<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a>    ├── Dockerfile</span>
-<span id="cb65-7"><a href="#cb65-7" aria-hidden="true" tabindex="-1"></a>    ├── certs</span>
-<span id="cb65-8"><a href="#cb65-8" aria-hidden="true" tabindex="-1"></a>    │   ├── fullchain.pem</span>
-<span id="cb65-9"><a href="#cb65-9" aria-hidden="true" tabindex="-1"></a>    │   └── privkey.pem</span>
-<span id="cb65-10"><a href="#cb65-10" aria-hidden="true" tabindex="-1"></a>    ├── default.conf</span>
-<span id="cb65-11"><a href="#cb65-11" aria-hidden="true" tabindex="-1"></a>    ├── generate-htpasswd.sh</span>
-<span id="cb65-12"><a href="#cb65-12" aria-hidden="true" tabindex="-1"></a>    ├── generate-selfsigned-certificates.sh</span>
-<span id="cb65-13"><a href="#cb65-13" aria-hidden="true" tabindex="-1"></a>    └── htpasswd</span></code></pre></div>
+<div class="sourceCode" id="cb66"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ tree Nginx</span></span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>Nginx/</span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>├── SlowdashProject.yaml</span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a>├── docker-compose.yaml</span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a>└── nginx</span>
+<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a>    ├── Dockerfile</span>
+<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a>    ├── certs</span>
+<span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a>    │   ├── fullchain.pem</span>
+<span id="cb66-9"><a href="#cb66-9" aria-hidden="true" tabindex="-1"></a>    │   └── privkey.pem</span>
+<span id="cb66-10"><a href="#cb66-10" aria-hidden="true" tabindex="-1"></a>    ├── default.conf</span>
+<span id="cb66-11"><a href="#cb66-11" aria-hidden="true" tabindex="-1"></a>    ├── generate-htpasswd.sh</span>
+<span id="cb66-12"><a href="#cb66-12" aria-hidden="true" tabindex="-1"></a>    ├── generate-selfsigned-certificates.sh</span>
+<span id="cb66-13"><a href="#cb66-13" aria-hidden="true" tabindex="-1"></a>    └── htpasswd</span></code></pre></div>
 <p>使用する前に，<code>nginx</code>
 サブディレクトリもコピーし，さらに，その下の <code>certs</code>
 に証明書類を，<code>htpassword</code>
@@ -1467,48 +1547,50 @@ slowdash を削除し，<code>nginx/defaults.conf</code> の
 も使っている旨を伝えれば，設定ファイルを一通り書いてくれます．暗号化していないもとのポートを塞いでおくのを忘れないでください．参考までに，上記の例で
 Nginx を Docker Compose
 内でリバースプロキシとして使用する場合の設定ファイルを示します．だいたい似たような感じになると思います．</p>
-<pre class="conf"><code>server {
-    listen 443 ssl;
-    http2 on;
-    server_name localhost;   # これは自分のホスト名に変える
+<div class="sourceCode" id="cb67"><pre
+class="sourceCode conf"><code class="sourceCode toml"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="dt">server</span> <span class="er">{</span></span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">listen</span> <span class="dt">443</span> <span class="dt">ssl</span><span class="er">;</span></span>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">http2</span> <span class="dt">on</span><span class="er">;</span></span>
+<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">server_name</span> <span class="dt">localhost</span><span class="er">;</span>   <span class="co"># これは自分のホスト名に変える</span></span>
+<span id="cb67-5"><a href="#cb67-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-6"><a href="#cb67-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ssl_certificate</span> <span class="er">/</span><span class="dt">etc</span><span class="er">/</span><span class="dt">nginx</span><span class="er">/</span><span class="dt">certs</span><span class="er">/</span><span class="dt">fullchain.pem</span><span class="er">;</span></span>
+<span id="cb67-7"><a href="#cb67-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ssl_certificate_key</span> <span class="er">/</span><span class="dt">etc</span><span class="er">/</span><span class="dt">nginx</span><span class="er">/</span><span class="dt">certs</span><span class="er">/</span><span class="dt">privkey.pem</span><span class="er">;</span></span>
+<span id="cb67-8"><a href="#cb67-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-9"><a href="#cb67-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ssl_protocols</span> <span class="dt">TLSv1.2</span> <span class="dt">TLSv1.3</span><span class="er">;</span></span>
+<span id="cb67-10"><a href="#cb67-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ssl_ciphers</span> <span class="dt">EECDH</span><span class="er">+</span><span class="dt">AESGCM</span><span class="er">:</span><span class="dt">EDH</span><span class="er">+</span><span class="dt">AESGCM</span><span class="er">;</span></span>
+<span id="cb67-11"><a href="#cb67-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ssl_prefer_server_ciphers</span> <span class="dt">off</span><span class="er">;</span></span>
+<span id="cb67-12"><a href="#cb67-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-13"><a href="#cb67-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">auth_basic</span> <span class="dt">&quot;SlowDash Password Required&quot;</span><span class="er">;</span></span>
+<span id="cb67-14"><a href="#cb67-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">auth_basic_user_file</span> <span class="er">/</span><span class="dt">etc</span><span class="er">/</span><span class="dt">nginx</span><span class="er">/</span><span class="dt">.htpasswd</span><span class="er">;</span></span>
+<span id="cb67-15"><a href="#cb67-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-16"><a href="#cb67-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">location</span> <span class="er">/</span><span class="dt">slowdash</span><span class="er">/</span> <span class="er">{</span></span>
+<span id="cb67-17"><a href="#cb67-17" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_pass</span> <span class="dt">http</span><span class="er">://</span><span class="dt">slowdash</span><span class="er">:</span><span class="dt">18881</span><span class="er">/;</span></span>
+<span id="cb67-18"><a href="#cb67-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-19"><a href="#cb67-19" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_http_version</span> <span class="dt">1.1</span><span class="er">;</span></span>
+<span id="cb67-20"><a href="#cb67-20" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_set_header</span> <span class="dt">Upgrade</span> <span class="er">$</span><span class="dt">http_upgrade</span><span class="er">;</span></span>
+<span id="cb67-21"><a href="#cb67-21" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_set_header</span> <span class="dt">Connection</span> <span class="dt">&quot;upgrade&quot;</span><span class="er">;</span></span>
+<span id="cb67-22"><a href="#cb67-22" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb67-23"><a href="#cb67-23" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_set_header</span> <span class="dt">Host</span> <span class="er">$</span><span class="dt">host</span><span class="er">;</span></span>
+<span id="cb67-24"><a href="#cb67-24" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_set_header</span> <span class="dt">X-Real-IP</span> <span class="er">$</span><span class="dt">remote_addr</span><span class="er">;</span></span>
+<span id="cb67-25"><a href="#cb67-25" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_set_header</span> <span class="dt">X-Forwarded-For</span> <span class="er">$</span><span class="dt">proxy_add_x_forwarded_for</span><span class="er">;</span></span>
+<span id="cb67-26"><a href="#cb67-26" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_set_header</span> <span class="dt">X-Forwarded-Proto</span> <span class="er">$</span><span class="dt">scheme</span><span class="er">;</span></span>
+<span id="cb67-27"><a href="#cb67-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-28"><a href="#cb67-28" aria-hidden="true" tabindex="-1"></a>        <span class="co"># SlowDash では Long Polling を使っているので，タイムアウトは長くする</span></span>
+<span id="cb67-29"><a href="#cb67-29" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_read_timeout</span> <span class="dt">8640000s</span><span class="er">;</span>  <span class="co"># 1000 days for long polling used in SlowDash</span></span>
+<span id="cb67-30"><a href="#cb67-30" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_send_timeout</span> <span class="dt">8640000s</span><span class="er">;</span>  <span class="co"># 1000 days for long polling used in SlowDash</span></span>
+<span id="cb67-31"><a href="#cb67-31" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_connect_timeout</span> <span class="dt">10s</span><span class="er">;</span></span>
+<span id="cb67-32"><a href="#cb67-32" aria-hidden="true" tabindex="-1"></a>    <span class="er">}</span></span>
+<span id="cb67-33"><a href="#cb67-33" aria-hidden="true" tabindex="-1"></a><span class="er">}</span></span>
+<span id="cb67-34"><a href="#cb67-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-35"><a href="#cb67-35" aria-hidden="true" tabindex="-1"></a><span class="co"># HTTP への接続は HTTPS に転送する</span></span>
+<span id="cb67-36"><a href="#cb67-36" aria-hidden="true" tabindex="-1"></a><span class="dt">server</span> <span class="er">{</span></span>
+<span id="cb67-37"><a href="#cb67-37" aria-hidden="true" tabindex="-1"></a>    <span class="dt">listen</span> <span class="dt">80</span><span class="er">;</span></span>
+<span id="cb67-38"><a href="#cb67-38" aria-hidden="true" tabindex="-1"></a>    <span class="dt">server_name</span> <span class="dt">localhost</span><span class="er">;</span></span>
+<span id="cb67-39"><a href="#cb67-39" aria-hidden="true" tabindex="-1"></a>    <span class="dt">return</span> <span class="dt">301</span> <span class="dt">https</span><span class="er">://$</span><span class="dt">host</span><span class="er">$</span><span class="dt">request_uri</span><span class="er">;</span></span>
+<span id="cb67-40"><a href="#cb67-40" aria-hidden="true" tabindex="-1"></a><span class="er">}</span></span></code></pre></div>
+<div style="margin-bottom:10rem">
 
-    ssl_certificate /etc/nginx/certs/fullchain.pem;
-    ssl_certificate_key /etc/nginx/certs/privkey.pem;
-
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers EECDH+AESGCM:EDH+AESGCM;
-    ssl_prefer_server_ciphers off;
-
-    auth_basic &quot;SlowDash Password Required&quot;;
-    auth_basic_user_file /etc/nginx/.htpasswd;
-
-    location /slowdash/ {
-        proxy_pass http://slowdash:18881/;
-
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection &quot;upgrade&quot;;
-        
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        # SlowDash では Long Polling を使っているので，タイムアウトは長くする
-        proxy_read_timeout 8640000s;  # 1000 days for long polling used in SlowDash
-        proxy_send_timeout 8640000s;  # 1000 days for long polling used in SlowDash
-        proxy_connect_timeout 10s;
-    }
-}
-
-# HTTP への接続は HTTPS に転送する
-server {
-    listen 80;
-    server_name localhost;
-    return 301 https://$host$request_uri;
-}</code></pre>
-<div style="margin-bottom:10rem"/>
-
+</div>
 
 
 </body>

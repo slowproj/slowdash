@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 17 May 2024 #
 
 
-import sys, time, os, subprocess, threading, signal, traceback
+import sys, time, os, subprocess, threading, signal, typing, inspect, logging, traceback
 import socket, selectors
 from slowpy.control import ControlSystem
 
@@ -9,6 +9,7 @@ from slowpy.control import ControlSystem
 class ScpiAdapter:
     def __init__(self, idn='Slow SCPI Device', **kwargs):
         self.idn = idn
+        self.handlers = []
         self.bound_nodes = []
         
         self.is_running = False
@@ -31,11 +32,81 @@ class ScpiAdapter:
             self.bound_nodes.append((cmds, node))
 
 
+    def add_handler(self, cmd:str, func):
+        path_list = []
+        for p in cmd.split(':'):
+            path = ''
+            for ch in p:
+                if ch.islower():
+                    break
+                path += ch
+            if len(path) == 0:
+                path = p.upper()
+            path_list.append(path)
+            
+        self.handlers.append((path_list, func))
+
+
     # to be used internally or by subclasses
     def push_error(self, error):
         self.errors.append(error)
 
 
+    # to be used internally
+    def _handle_command(self, command, params):
+        target_func = None
+        for name_path, func in self.handlers:
+            if len(name_path) != len(command):
+                continue
+            for k in range(len(name_path)):
+                if not command[k].startswith(name_path[k]):
+                    break
+            else:
+                target_func = func
+                break
+
+        if target_func is None:
+            return None
+
+        func_params = inspect.signature(target_func).parameters
+        if len(params) != len(func_params):
+            e = f'bad number of parameters (expected {len(func_params)}, received "{params}")'
+            print(f'ERROR: {e}')
+            self.push_error(f'command error: {":".join(command)}: {e}')
+            return ''
+
+        args = []
+        type_hints = typing.get_type_hints(target_func)
+        for index, name in enumerate(func_params):
+            annotation = type_hints.get(name)
+            if annotation is not None:
+                try:
+                    if annotation is bool:
+                        if params[index].upper() in [ '1', 'TRUE', 'ON' ]:
+                            args.append(True)
+                        elif params[index].upper() in [ '0', 'FALSE', 'OFF' ]:
+                            args.append(False)
+                        else:
+                            raise ValueError
+                    else:
+                        args.append(annotation(params[index]))
+                except Exception as e:
+                    e = f'bad parameter (expected a {annotation.__name__}, received "{params[index]}")'
+                    print(f'ERROR: {e}')
+                    self.push_error(f'command error: {":".join(command)}: {e}')
+                    return ''
+            else:
+                args.append(params[index])
+                    
+        try:
+            value = target_func(*args)
+            return str(value) if value is not None else ''
+        except Exception as e:
+            print(f'ERROR: {e}')
+            self.push_error(f'command error: {":".join(command)}: {e}')
+            return ''
+
+        
     # to be used internally
     def _process_node_command(self, command, params):
         target_node = None
@@ -64,7 +135,7 @@ class ScpiAdapter:
             self.push_error('command error: %s: %s' % (str(e), ':'.join(command)))
             return ''
 
-    
+        
     ### Override the methods below as needed ###
         
     def do_RST(self):
@@ -90,6 +161,10 @@ class ScpiAdapter:
 
     
     def process_command(self, command, params):
+        reply = self._handle_command(command, params)
+        if reply is not None:
+            return reply
+        
         # device specific SCPI commands
         reply = self.do_command(command, params)
         if reply is not None:
@@ -138,7 +213,6 @@ class ScpiConnection(threading.Thread):
         
     def stop(self):
         self.stop_event.set()
-        del self.selectors
 
         
     def run(self):
@@ -153,8 +227,11 @@ class ScpiConnection(threading.Thread):
                     break
                 else:
                     continue
-            
-            packet = self.sock.recv(1024)
+
+            try:
+                packet = self.sock.recv(1024)
+            except (ConnectionResetError, OSError):
+                break
             if len(packet) == 0 or self.stop_event.is_set():
                 break
 
@@ -164,12 +241,14 @@ class ScpiConnection(threading.Thread):
                         line.append(ch)
                 else:
                     reply = self.process_command(bytes(line).decode('utf-8'))
-                    try:
-                        self.sock.sendall((reply+self.line_terminator).encode('utf-8'))
-                    except:
-                        break
+                    if reply is not None:
+                        try:
+                            self.sock.sendall((reply+self.line_terminator).encode('utf-8'))
+                        except OSError:
+                            break
                     line.clear()
-                    
+
+        self.selectors.close()
         self.sock.close()
         print("connection closed")
 
@@ -178,7 +257,7 @@ class ScpiConnection(threading.Thread):
         replies = []
         cmd_path = []
         for cmd in command.split(';'):
-            split = cmd.strip().upper().split()
+            split = cmd.strip().split()
             if len(split) == 0 or len(split[0]) == 0:
                 continue
             this_cmd_path, params = split[0], ' '.join(split[1:])
@@ -187,60 +266,79 @@ class ScpiConnection(threading.Thread):
                 cmd_path = this_cmd_path[1:].split(':')
             else:
                 cmd_path = cmd_path[:-1] + this_cmd_path.split(':')
-            cmd_path = [ node.strip() for node in cmd_path ]
-            params = [ node.strip() for node in params.split(',') ]
+            cmd_path = [ node.strip().upper() for node in cmd_path ]
+            if len(params) > 0:
+                params = [ node.strip() for node in params.split(',') ]
+            else:
+                params = []
 
             try:
                 reply = self.scpi_adapter.process_command(cmd_path, params)
             except Exception as e:
                 print('ERROR: %s' % str(e))
                 print(traceback.format_exc())
+                reply = ''
             print("scpi: [%s] -> [%s]" % (cmd.strip(), reply))
+                
             if cmd_path[-1][-1] == '?':
                 replies.append(str(reply) if reply is not None else '')
 
-        return ';'.join(replies)
+        return ';'.join(replies) if len(replies) > 0 else None
 
     
 
 class ScpiServer:
-    def __init__(self, scpi_adapter, port, line_terminator='\x0d'):
-        self.scpi_adapter = scpi_adapter
+    def __init__(self, scpi_adapter=None, *, port:int=5025, line_terminator:str='\x0d'):
+        self.scpi_adapter = scpi_adapter or ScpiAdapter()
         self.line_terminator = line_terminator
         
         self.host = subprocess.check_output("hostname -I | cut -d' ' -f1", shell=True).decode('utf-8').splitlines()[0]
         self.port = port
         
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # allow immediate re-bind even during TIME_WAIT
-        self.sock.bind((self.host, port))
-        self.sock.listen(10)
-        self.connections = []
 
+    def on(self, cmd:str):
+        """decorator to assign a SCIP command handler
+        """
+        def wrapper(func):
+            self.scpi_adapter.add_handler(cmd, func)
+            return func
+        return wrapper
         
-    def start(self):
+        
+    def start(self, *, port:int|None=None):
+        if port is not None:
+            self.port = port
+            
         def signal_handler(signum, frame):
             raise InterruptedError
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)
-            
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # allow immediate re-bind even during TIME_WAIT
+        sock.bind(("0.0.0.0", self.port))
+        sock.listen(10)
+        
         print("listening at %s:%d" % (self.host, self.port))
         print("line terminator is: x%02x" % ord(self.line_terminator))
         print("type Ctrl-c to stop")
+
+        connections = []
         try:
             while True:
-                sock, addr = self.sock.accept()
-                conn = ScpiConnection(self.scpi_adapter, sock, addr, self.line_terminator)
+                client_sock, addr = sock.accept()
+                conn = ScpiConnection(self.scpi_adapter, client_sock, addr, self.line_terminator)
                 print("connection accepted")
                 conn.start()
-                self.connections.append(conn)
+                connections = [conn for conn in connections if conn.is_alive()]                
+                connections.append(conn)
         except InterruptedError:
             print('terminating...')
 
         ControlSystem.stop()
 
-        for conn in self.connections:
+        for conn in connections:
             conn.stop()
             conn.join()
-        self.sock.close()
+        sock.close()
         print("server closed")
