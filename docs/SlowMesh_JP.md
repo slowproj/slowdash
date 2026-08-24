@@ -3,6 +3,10 @@ title: SlowMesh と SlowTask
 ---
 
 # 概要
+SlowDash は，SlowDash サーバーの元で複数の SlowTask が協調して動作する分散並列システムです．
+SlowMesh は，SlowDash サーバーおよび SlowTask 間のメッセージ交換通信基盤です．
+SlowTask は，典型的には一つの Python スクリプトで，ユーザーによって書かれるものと，再利用可能なものを集めたライブラリに入っているものがあります．
+SlowTask は SlowMesh の通信およびメッシュ上の各機能にアクセスするために，SlowPy ライブラリを使用します．
 
 <img src="fig/SlowMeshConcept.png" width="40%">
 <img src="fig/SlowMesh-SlowTask.png" width="40%">
@@ -20,13 +24,14 @@ SlowMesh は以下の３つの通信を提供します．
 
 ## SlowTask
 SlowTask は SlowMesh の上で独立にかつ協調して動く実行単位（おおまかには，一つの Python スクリプト）です．
-プロセスまたは動的ロードモジュールのいずれかとして実行できます．
+SlowDash サーバーと一緒に起動・終了することも，SlowDash サーバーとは独立に自分のタイミングで開始・終了することもできます．
+SlowDash サーバーとは別の PC 上に走らせることもできます．
 
 SlowTask には以下の機能が実装されています．
 
 - 開始時・終了時や，一定時刻，一定時間間隔でのユーザー関数呼び出し
 - SlowMesh による通信（関数のエクスポートやデータの送り出し）
-- HTTP 経由での SlowDash サーバーとの通信（構成情報の取得など）
+- HTTP 経由での SlowDash サーバーとの通信（初期構成情報の取得など）
 
 
 
@@ -38,13 +43,14 @@ SlowTask スクリプトから使用されるライブラリです．
 - Mesh (`slowpy.mesh.mesh.py`): SlowMesh 通信機能へのインターフェース
 - Tasklet (`slowpy.mesh.tasklet.py`): Python スクリプトを SlowMesh 上の独立タスク (SlowTask) として実行するためのアダプタ
 - MeshStdio (`slowpy.mesh.stdio.py`): Python スクリプトの標準入出力を Mesh の PubSub にリダイレクトするブリッジ
+- MeshPakcet (`slowpy.mesh.packet.py`): SlowMesh で交換するメッセージのシリアライズ・デシリアライズ
 
 
 ### SlowDash Mesh サービス
 SlowDash サーバー内で SlowMesh 関連のサービスを行うものです．
 
 - Registry (Key-Value Store) サービス
-- Pubsub Last-Value Cache (PubSub の`>` トピックを subscribe して受信データをレジストリの `$pubsub.{topic}` に保持）
+- Pubsub Last-Value Cache (PubSub の全トピックを subscribe して受信データをレジストリの特殊パス（`$pubsub.{topic}`） に保持）
 - WebMesh API: HTTP POST による publish と Server-Sent Events (SSE) による subscribe
 - TODO: Control History (PubSub の`control.>` と `sd.rpc.>` トピックを subscribe して受信データをデータベースに保存）
 
@@ -114,13 +120,13 @@ SlowMQ と NATS 以外のバックボーンが使用された場合，これら�
 | RabbitMQ     | `.`          | `*`        | `#`                | `data.store.#` | `data.*.HV.ch100` |
 | Redis-PubSub | `:`          | `*` (近似動作) | `*`  （近似動作）| `data:store:*` | `data:*:HV:ch100` |
 
-トピック名に `/` や `#` などを含めると，これらを特殊文字としているバックボーンを使用した場合に問題を引き起こします．
+トピック名に `/`, `#`,`+`, `:` などを含めると，これらを特殊文字としているバックボーンを使用した場合に問題を引き起こします．
 これらの文字の使用は避けた方がいいです．
 
 なお，Mesh のコンストラクタオプションで，これらの文字割り当てを変えることができます．例えば，MQTT を中心に運用することが確定しているのであれば，SlowMesh においても MQTT と同じ特殊文字を割り当てておくことができます．
 
 ### MeshPacket
-データに対する Schema が定義されている一部のトピックに対しては，規定されたスキーマのデータを読み書きするための MeshPacket が利用できます．
+メッセージに対する Schema が定義されている一部のトピックに対しては，規定されたスキーマのデータを読み書きするための MeshPacket が利用できます．
 MeshPacket 経由でメッセージ内容を読み書きすれば，ユーザーのスクリプトが Schema の詳細に依存せず，また，メッセージの構築や解読の手間が省けて便利です．
 
 MeshPacket は，`slowpy/mesh/packet` に定義されています．
@@ -149,7 +155,7 @@ MeshPacket は，`slowpy/mesh/packet` に定義されています．
 from slowpy.mesh import DataPacket
 
 topic = 'data.temp0'
-data = { 't': t, 'x': temp0 }
+temp0 = thermometer.ch(0).get()
 await tasklet.mesh.aio_publish(topic, DataPacket({'temp0': temp0}))
 ```
 ここで，`DataPacket` のコンストラクタパラーメータは，`DataStore.append()` と同じです．
@@ -694,26 +700,32 @@ SlowTask の基本的な機能を使用する例が `ExampleProjects/Experimenta
 - `slowtask-randomwalk.py` に対するブラウザから pubsub 経由の start/stop コントロール
 - `slowtask-store.py` が `disk_usage` 変数をエクスポート，ブラウザがデータとして表示
 
-現時点では，この例は Task Process としてのみ使用可能です．
-２つの Task Process と SlowDash サーバ用に３つのターミナルを開いて，それぞれ以下のコマンドを実行してください．
-どれを先に実行しても大丈夫なように作ったつもりですが，気持ち悪ければ以下の順にしてください．
+`SlowdashProject.yaml` で，これらの SlowTask はサーバーと同時に自動スタートし，終了時に自動停止するように構成されています．
 
-```console
-$ cd PATH/TO/PROJECT
-$ slowdash --port=18881
+```yaml
+slowdash_project:
+  name: SlowMesh_Test
+  
+  data_source:
+    - url: sqlite:///TestData
+      time_series:
+        schema: slowdata [channel] @timestamp(unix) = value
+
+  tasks:
+    - name: randomwalk
+      auto_start: true
+
+    - name: store
+      auto_start: true
 ```
+
+`auto_start` を `false` にするかコメントアウトすると，これらの SlowTask はサーバーとは独立になります．
+この場合，この SlowTask を実行するためには，新しいターミナルを開いて `slowdash-task` コマンドを使用してください．
+SlowDash サーバープロセスを走らせたまタスクプロセスの停止・再実行をしても大丈夫なはずです．
 ```console
 $ cd PATH/TO/PROJECT
 $ slowdash-task config/slowtask-store.py
 ```
-```console
-$ cd PATH/TO/PROJECT
-$ slowdash-task config/slowtask-randomwalk.py
-```
-すべて実行したら，10秒ほど待ってからブラウザで `http://localhost:18881` に接続してください．
-（すでに表示しているなら，ページのリロードをしてください．）
-
-SlowDash App プロセスを走らせたままタスクプロセスの停止・再実行をしても大丈夫なはずです．
 
 現時点では，SlowDash のポート番号などはスクリプト中にハードコーディングしています．
 TODO: SlowMesh/SlowTask の開発状況に応じて徐々に改善していきます．
@@ -743,7 +755,7 @@ async def stop(params):
     await tasklet.mesh.registry.aio_set('randomwalk/run/status', 'idle')
 ```
 
-RandomWalk 仮想デバイスのセットポイントは， export した RPC で設定されます．
+RandomWalk 仮想デバイスのセットポイントは， （機能デモのために）export した RPC で設定されます．
 ```python
 @tasklet.mesh.export
 def set_value(value:float):
