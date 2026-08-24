@@ -39,6 +39,7 @@ slowdash:
 	@echo 'export SLOWDASH_DIR=$(SLOWDASH_DIR)' > $(SLOWDASH_ENV)
 	@echo 'export PATH=$$SLOWDASH_DIR/bin:$$PATH' >> $(SLOWDASH_ENV)
 	@echo 'alias slowdash-activate-venv="source $$SLOWDASH_DIR/venv/bin/activate"' >> $(SLOWDASH_ENV)
+	@echo 'unalias slowdash 2> /dev/null' >> $(SLOWDASH_ENV)
 
 	@echo "generating requirements.txt..."
 	@echo "# SlowDash requirements #" > requirements.txt
