@@ -864,8 +864,52 @@ SlowTask への HTTP API は Slowlette を経由して `sd_taskprocess.py` コ�
 #### GET `api/task/catalog`
 タスクのコンフィギュレーションやスクリプトファイルなどから，タスク設定の一覧を返す．
 
+```json
+{
+  "randomwalk": {
+    "name": "randomwalk",
+    "file_path": "config/slowtask-randomwalk.py",
+    "command": "slowdash-task config/slowtask-randomwalk.py --name=randomwalk",
+    "auto_start": true
+  },
+  "store": {
+    "name": "store",
+    "file_path": "config/slowtask-store.py",
+    "command": "slowdash-task config/slowtask-store.py --name=store",
+    "auto_start": true
+  },
+}
+```
+
 #### GET `api/task/status`
 Task Spec を含む全ての実行中タスクのステータス一覧を返す．
+
+```json
+[
+  {
+    "name": "store",
+    "proc_id": [ 17769 ],
+    "heartbeat_expire": 1787536123,
+    "spec": {
+      "mesh_id": "store_vp13_17769_1",
+      "name": "store",
+      "timestamp": 1787535529.8033955,
+      "heartbeat_interval": 5,
+      "functions": {},
+      "variables": { ... },
+      "contents": { ... },
+      "stdio": {
+        "stdin": [ "sd.task.stdin.store_vp13_17769_1" ],
+        "stdout": [ "sd.task.stdout.store_vp13_17769_1" ],
+        "stderr": [ "sd.task.stdout.store_vp13_17769_1" ]
+      }
+    }
+  },
+  {
+    "name": "randomwalk",
+    ...
+```
+
 
 #### POST `api/task/control/{taskname}`
 指定したタスクの開始，停止，強制終了を行う
