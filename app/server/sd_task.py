@@ -353,7 +353,6 @@ class TaskComponent(Component):
         self._content_table: dict[str,str] = {}       # { content_name => file_name }
 
         self._task_catalog: dict[str, dict] = {}      # { task_name => config }
-        self._load_task_catalog()
 
         self._proc_set_table: dict[str, set[subprocess.Popen]] = {}  
         
@@ -361,12 +360,13 @@ class TaskComponent(Component):
     @slowlette.on_event('post_startup')
     async def startup(self):
         # this needs to be done in "post_startup", as SlowMQ (if used) must be running.
-        if self._mesh is None:
-            self._mesh = Mesh('slowmq://localhost:18881', name='sd_task')        
+        if self._mesh is None and self.project.mesh_url is not None:
+            self._mesh = Mesh(self.project.mesh_url, name='sd_task')        
             await self._subscribe_taskspec()
             await self._mesh.aio_start()
             await self._request_taskspec()
 
+        self._load_task_catalog()
         for task in self._task_catalog.values():
             if task.get('auto_start', False):
                 await self._start_task(task['name'])
@@ -380,14 +380,14 @@ class TaskComponent(Component):
 
 
     def _load_task_catalog(self):
+        self._task_catalog = {}
+
         task_nodes = self.project.config.get('task', None)
         if task_nodes is None:
             task_nodes = self.project.config.get('tasks', [])  # suger added...
         if not isinstance(task_nodes, list):
             task_nodes = [ task_nodes ]
                     
-        self._task_catalog = {}
-
         # task entries from config
         for node in task_nodes:
             if not isinstance(node, dict):
@@ -406,14 +406,16 @@ class TaskComponent(Component):
             if not os.path.isfile(file_path):
                 logging.error(f'unable to find task script: {node}')
                 continue
+            
             command = node.get('command', f'slowdash-task {file_path} --name={name}')
+            if self.project.mesh_url is not None:
+                command += f' --mesh={self.project.mesh_url}'
             
             self._task_catalog[name] = {
                 'name': name,
                 'file_path': file_path,
                 'command': command,
                 'auto_start': node.get('auto_start', node.get('auto_load', False)),
-                #'auto_stop': node.get('auto_stop', True),
             }
             
         # task entries from files
@@ -422,12 +424,14 @@ class TaskComponent(Component):
             kind, file_name = rootname.split('-', 1)
             name = re.sub(r'[^a-zA-Z0-9]', '_', file_name)
             if name not in self._task_catalog:
+                command = f'slowdash-task config/slowtask-{file_name}.py'
+                if self.project.mesh_url is not None:
+                    command += f' --mesh={self.project.mesh_url}'
                 self._task_catalog[name] = {
                     'name': name,
                     'file_path': f'config/slowtask-{file_name}.py',
-                    'command': f'slowdash-task config/slowtask-{file_name}.py',
+                    'command': command,
                     'auto_start': False,
-                    #'auto_stop': True,
                 }
 
         
@@ -444,6 +448,7 @@ class TaskComponent(Component):
                 return { 'status': 'error', 'message': f'task already running: {task_name}' }
         
         try:
+            logging.info(f'starting task: {command}')
             proc = subprocess.Popen('exec ' + command, shell=True)
         except Exception as e:
             return { 'status': 'error', 'message': f'Popen: {e}' }
@@ -559,7 +564,7 @@ class TaskComponent(Component):
                     
     @slowlette.get('/api/task/catalog')
     async def get_task_catalog(self):
-        self._load_task_catalog()
+        self._load_task_catalog()  # force reloading
         return self._task_catalog
 
     

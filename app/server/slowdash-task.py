@@ -1,22 +1,21 @@
 # Created by Sanshiro Enomoto on 26 June 2026 #
 
-import os, re, argparse, logging
+import os, sys, re, argparse, logging
 from slowpy.mesh import RetainerAutocide
 from sd_task import load_task_module
 
 
-def main(argv=None):
+def main():
     parser = argparse.ArgumentParser(description = 'Run a Python script as a SlowTask')
     parser.add_argument('script', help='user task script to load')
-    parser.add_argument('--name', help='task name; defauts to the script filename')
-    parser.add_argument('--slowdash-url', help='SlowDash URL, e.g., http://localhost:18881')
+    parser.add_argument('--name', action='store', dest='name', help='task name; defauts to the script filename')
+    parser.add_argument('--mesh', action='store', dest='mesh', help='SlowMesh URL, e.g., slowmq://localhost:18881')
     parser.add_argument(
         '--logging',
         action='store', dest='loglevel', default='default', choices=['default', 'debug', 'info', 'warning', 'error'],
         help='logging level'
     )
-    parser.add_argument('script_args', nargs=argparse.REMAINDER, help='arguments passed to the user script')
-    args = parser.parse_args(argv)
+    args, script_args = parser.parse_known_args()
 
     loglevel_name = args.loglevel.upper()
     if loglevel_name == 'DEFAULT':
@@ -35,7 +34,7 @@ def main(argv=None):
 
     path = args.script
     name = args.name
-    script_args = args.script_args
+    mesh_url = args.mesh
     if script_args[:1] == ['--']:
         script_args = script_args[1:]
 
@@ -48,13 +47,10 @@ def main(argv=None):
     autocider = RetainerAutocide(name)
     autocider.start()
 
-    slowdash_url = args.slowdash_url
-    if not slowdash_url:
-        slowdash_url='http://localhost:18881'
     
     module, tasklet = load_task_module(path=path, name=name, argv=script_args)
 
-    tasklet.run(slowdash_url=slowdash_url, name=name, module=module)
+    tasklet.run(name=name, module=module, mesh_url=mesh_url)
 
     
 

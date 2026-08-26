@@ -167,16 +167,16 @@ alias slowdash-activate-venv="source $SLOWDASH_DIR/venv/bin/activate"
 設定ファイルの `source` は，新しいターミナルを開くたびに毎回必要です．
 SlowDash を継続的に使うなら，上記の source コマンドを `.bashrc` (Mac では `.zshrc`) などに書いておくと毎回やる必要がなくなります．なお，複数のバージョンの SlowDash インストールを使い分けるなら，上記の source だけで全てを切り替えることができます．
 
-インストールが成功したかは，`slowdash` コマンドを実行してチェックできます．
+インストールが成功したかは，`slowdash --help` コマンドを実行してチェックできます．
 (`slowdash` コマンドは `slowdash/bin` の下にあります）
 ```console
-$ slowdash
+$ slowdash --help
 Running in venv at /PATH/TO/SLOWDASH/venv
 usage: 
-  Web-Server Mode:      slowdash.py [Options] --port=PORT
+  Web-Server Mode:      slowdash.py [Options]
   Command-line Mode:    slowdash.py [Options] COMMAND
 
-Slowdash Version 250128 "Skykomish"
+SlowDash Version 260823 "Mamquam"
 
 positional arguments:
   COMMAND               API query string. Ex) "config", "channels", "data/CHANNELS?length=LENGTH"

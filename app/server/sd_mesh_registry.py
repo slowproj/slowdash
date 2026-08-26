@@ -233,9 +233,14 @@ class MeshRegistryComponent(Component):
 
     @slowlette.on_event('post_startup')
     async def startup(self):
+        self.registry.set('$server.url', self.project.server_url)
+        
         # this needs to be done in "post_startup", as SlowMQ (if used) must be running.
         if self.mesh is None:
-            self.mesh = Mesh('slowmq://localhost:18881', name=self._registry_module_name)
+            if self.project.mesh_url is None:
+                logging.error(f'WebMesh: Mesh URL is not set')
+            else:
+                self.mesh = Mesh(self.project.mesh_url, name=self._registry_module_name)
             self.registry.export(self.mesh)
             await self._setup_pubsub_cache()
             await self.mesh.aio_start()

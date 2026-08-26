@@ -174,6 +174,10 @@ class Mesh:
         - The created tasks can be stopped by aio_stop().
         """
         
+        if self._mesh_id is None:
+            logging.error('Mesh not connected')
+            return
+                
         await self.aio_stop()
         self._is_running = True
 
@@ -241,7 +245,11 @@ class Mesh:
 
 
     async def aio_call(self, name:str, *args, **kwargs):
-        reply = await self.aio_call_many(name, list(args), dict(kwargs), expected_replies=1, raise_on_timeout=True)
+        try:
+            reply = await self.aio_call_many(name, list(args), dict(kwargs), expected_replies=1, raise_on_timeout=True)
+        except Exception as e:
+            raise e
+        
         if len(reply) != 1:
             raise Exception(f'Mesh: RPC error: {name}: no reply')
         if reply[0].get('status').lower() != 'ok':
@@ -261,6 +269,9 @@ class Mesh:
           - raise_on_timeout (bool): if True, an exception will be raised; otherwise, will return a shorter repliy list
         Return Value (list[dict[str,Any]]): list of replies
         """
+        
+        if self._mesh_id is None:
+            raise Exception(f'Mesh: RPC error: Mesh not connected')
         
         if len(name) == 0:
             if raise_on_timeout:
@@ -569,7 +580,10 @@ class Registry:
           - cas_revision (int|None): write only if the CAS revision matches; None not to use CAS
         Return Value (int|None): new CAS revision on success, None otherwise (typically CAS mismatch)
         """
-        return await self._mesh.aio_call(f'{self._module_name}.set', key, value, cas_revision=cas_revision)
+        try:
+            return await self._mesh.aio_call(f'{self._module_name}.set', key, value, cas_revision=cas_revision)
+        except Exception as e:
+            raise Exception(f'Registry.aio_set(): {e}')
 
     
     async def aio_get(self, key:str, default:Any=None, *, with_meta:bool=False) -> Any:
@@ -581,7 +595,10 @@ class Registry:
           - with_meta (bool): if True, return the full registry record including the value and the meta info
         Return Value (Any): value or meta including the value on success, the provided default otherwise
         """
-        return await self._mesh.aio_call(f'{self._module_name}.get', key, default, with_meta=with_meta)
+        try:
+            return await self._mesh.aio_call(f'{self._module_name}.get', key, default, with_meta=with_meta)
+        except Exception as e:
+            raise Exception(f'Registry.aio_get(): {e}')
         
 
     async def aio_keys(self, prefix:str='', limit:int|None=1000)->list[str]:
@@ -591,7 +608,10 @@ class Registry:
           - limit (int|None): maximum length of the list, None for no limit
         Return Value (list[str]): list of matching keys (full path including the prefix)
         """
-        return await self._mesh.aio_call(f'{self._module_name}.keys', prefix, limit=limit)
+        try:
+            return await self._mesh.aio_call(f'{self._module_name}.keys', prefix, limit=limit)
+        except Exception as e:
+            raise Exception(f'Registry.aio_keys(): {e}')
 
     
     async def aio_delete(self, key:str, *, cas_revision:int|None=None) -> bool:
@@ -601,7 +621,10 @@ class Registry:
           - cas_revision (int|None): delete only if the CAS revision matches; None not to use CAS
         Return Value (bool): True on success, False otherwise (key error or CAS mismatch)
         """
-        return await self._mesh.aio_call(f'{self._module_name}.delete', key, cas_revision=cas_revision)
+        try:
+            return await self._mesh.aio_call(f'{self._module_name}.delete', key, cas_revision=cas_revision)
+        except Exception as e:
+            raise Exception(f'Registry.aio_delete(): {e}')
 
 
 

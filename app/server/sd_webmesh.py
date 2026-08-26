@@ -36,9 +36,12 @@ class WebMeshComponent(Component):
         
         # this needs to be done in "post_startup", as SlowMQ (if used) must be running.
         if self._mesh is None:
-            self._mesh = Mesh('slowmq://localhost:18881', name='sd_webmesh')
-            await self._mesh.aio_start()
-            await self._subscribe_mesh()
+            if self.project.mesh_url is None:
+                logging.error(f'WebMesh: Mesh URL is not set')
+            else:
+                self._mesh = Mesh(self.project.mesh_url, name='sd_webmesh')
+                await self._mesh.aio_start()
+                await self._subscribe_mesh()
             
         
     @slowlette.on_event('shutdown')

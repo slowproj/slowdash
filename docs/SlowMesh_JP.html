@@ -138,9 +138,18 @@ id="toc-registry-key-value-store-1">Registry (Key-Value Store)</a></li>
 id="toc-registry-key-value-store-2">Registry (Key-Value Store)</a></li>
 <li><a href="#task-rpc" id="toc-task-rpc">Task RPC</a></li>
 </ul></li>
+<li><a href="#予約済み-registry" id="toc-予約済み-registry">予約済み
+Registry</a>
+<ul>
+<li><a href="#slowdash-サーバー情報"
+id="toc-slowdash-サーバー情報">SlowDash サーバー情報</a></li>
+<li><a href="#pubsub-last-value-cache-1"
+id="toc-pubsub-last-value-cache-1">PubSub Last-Value Cache</a></li>
+</ul></li>
 <li><a href="#pubsub-トピック構成" id="toc-pubsub-トピック構成">PubSub
 トピック構成</a>
 <ul>
+<li><a href="#data" id="toc-data">data</a></li>
 <li><a href="#sd.task" id="toc-sd.task">sd.task</a></li>
 <li><a href="#sd.rpc" id="toc-sd.rpc">sd.rpc</a></li>
 </ul></li>
@@ -1538,7 +1547,29 @@ POST する body に JSON で <code>topic</code> を指定．</p>
 <li><code>_sd_get_content(name:str)</code>: Task Contents を取得</li>
 </ul></li>
 </ul>
+<h1 id="予約済み-registry">予約済み Registry</h1>
+<h2 id="slowdash-サーバー情報">SlowDash サーバー情報</h2>
+<ul>
+<li><code>$server.url</code></li>
+</ul>
+<h2 id="pubsub-last-value-cache-1">PubSub Last-Value Cache</h2>
+<ul>
+<li><code>$pubsub.{トピック}</code></li>
+</ul>
 <h1 id="pubsub-トピック構成">PubSub トピック構成</h1>
+<h2 id="data">data</h2>
+<h3 id="トピック名構成">トピック名構成</h3>
+<ul>
+<li><code>data.store.{チャンネル名}</code>: 永続データ</li>
+<li><code>data.stream.{チャンネル名}</code>: モニタデータ</li>
+</ul>
+<h3 id="meshpacket-1">MeshPacket</h3>
+<p><code>DataPacket(values, *, tag:str|None=None, timestamp:float|None=None)</code></p>
+<ul>
+<li><code>DataStore.append()</code> と同じ引数</li>
+</ul>
+<h3 id="フォーマット">フォーマット</h3>
+<p>SlowDash 標準データフォーマット</p>
 <h2 id="sd.task">sd.task</h2>
 <ul>
 <li>すべての SlowTask Process は <code>sd.task.control.&gt;</code> を
@@ -1871,6 +1902,7 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb60-1"><a href=
 <span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h1 id="todo">TODO</h1>
 <ul>
+<li>Tasklet Initialize params</li>
 <li>AsyncNATS, AsyncMQTT, AsyncRabbitMQ, AsyncRedis に on_reconnect
 を実装する</li>
 <li>レジストリを SlowTask でも動かせるようにする</li>

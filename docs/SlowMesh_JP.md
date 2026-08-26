@@ -1006,8 +1006,6 @@ POST する body に JSON で `topic` を指定．
 SlowMesh へ publish する．
 
 
-
-
 # RPC サービス
 ## Registry (Key-Value Store)
 - モジュール名： `sd_mesh_registry`
@@ -1026,7 +1024,30 @@ SlowMesh へ publish する．
   - `_sd_get_content(name:str)`: Task Contents を取得
 
 
+# 予約済み Registry
+## SlowDash サーバー情報
+- `$server.url`
+
+## PubSub Last-Value Cache
+- `$pubsub.{トピック}`
+
+
+
 # PubSub トピック構成
+## data
+### トピック名構成
+- `data.store.{チャンネル名}`: 永続データ
+- `data.stream.{チャンネル名}`: モニタデータ
+
+### MeshPacket
+`DataPacket(values, *, tag:str|None=None, timestamp:float|None=None)`
+
+- `DataStore.append()` と同じ引数
+
+### フォーマット
+SlowDash 標準データフォーマット
+
+
 ## sd.task
 - すべての SlowTask Process は `sd.task.control.>` を subscribe すること．
 
@@ -1374,6 +1395,7 @@ Body:
 
 
 # TODO
+- Tasklet Initialize params
 - AsyncNATS, AsyncMQTT, AsyncRabbitMQ, AsyncRedis に on_reconnect を実装する
 - レジストリを SlowTask でも動かせるようにする
 - MyMesh: SlowTask を SlowMesh なしで動かした場合に使う．コンソールから接続し，!!! から始まる行を拾う

@@ -1,19 +1,26 @@
 # Created by Sanshiro Enomoto on 19 Mar 2022 #
 
-import sys, os, subprocess, yaml, enum, logging
+import sys, os, socket, subprocess, yaml, enum, logging
 from sd_version import slowdash_version
 
 
 class Project:
-    def __init__(self, project_dir=None, project_file=None):
+    def __init__(self, project_dir=None, project_file=None, port=None):
         self.version = slowdash_version
         self.sys_dir = Project.find_sys_dir()
         self.project_dir = project_dir if project_dir is not None else Project.find_project_dir()
+        self.port = port
         self.config_file = project_file if project_file is not None else 'SlowdashProject.yaml'
-        self.is_secure = False
         
-        self.config = None
+        self.mesh_url = None
+        self.is_secure = False
         self.auth_list = None
+        
+        self.hostname = socket.gethostname()
+        self.server_url = f'http://{self.hostname}:{self.port}'
+
+        self.config = None
+        
         self.update()
         
 
@@ -60,13 +67,13 @@ class Project:
 
 
     def update(self):
-        project_conf = None
+        project_config = None
         if self.project_dir is None:
             db_url = os.environ.get('SLOWDASH_INIT_DATASOURCE_URL', None)
             if db_url is None:
                 logging.error('unable to find Slowdash Project Dir: specify it with the --project-dir option, set the SLOWDASH_PROJECT environmental variable, or run the slowdash command at a project directory')
                 return
-            project_conf = {
+            project_config = {
                 'name': 'SlowDash',
                 'data_source': {
                     'url': db_url,
@@ -75,7 +82,7 @@ class Project:
             }
             ts_schema = os.environ.get('SLOWDASH_INIT_TIMESERIES_SCHEMA', None)
             if ts_schema is not None:
-                project_conf['data_source']['parameters'] = {
+                project_config['data_source']['parameters'] = {
                     'time_series': { 'schema': ts_schema }
                 }
         else:
@@ -85,19 +92,19 @@ class Project:
                 return
             with open(os.path.join(config_file)) as f:
                 try:
-                    config = yaml.safe_load(f)
+                    config_doc = yaml.safe_load(f)
                 except Exception as e:
                     logging.error('Invalid project file syntax: %s' % str(e))
-                    config = {}
-                if type(config) != dict:
-                    config = {}
+                    config_doc = {}
+                if type(config_doc) != dict:
+                    config_doc = {}
                     
-            project_conf = config.get("slowdash_project", None)
-            if project_conf is None or type(project_conf) is not dict:
+            project_config = config_doc.get("slowdash_project", None)
+            if project_config is None or type(project_config) is not dict:
                 logging.error('invalid project file: %s' % config_file)
                 return
             
-        self.config = Substitution().process(project_conf)
+        self.config = Substitution().process(project_config)
 
         if 'name' not in self.config:
             name = os.path.basename(self.project_dir)
@@ -131,7 +138,11 @@ class Project:
             self.auth_list = [ auth_key ]
         else:
             self.auth_list = auth_key
-
+            
+        self.mesh_url = self.config.get('mesh', {}).get('url', None)
+        if self.mesh_url is None:
+            self.mesh_url = f'slowmq://{self.hostname}:{self.port}'
+            
 
             
 class Substitution:

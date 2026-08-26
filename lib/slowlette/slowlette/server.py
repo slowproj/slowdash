@@ -44,7 +44,7 @@ async def dispatch_asgi(app, scope, receive, send):
     headers = { k.decode():v.decode() for k,v in scope['headers'] }
 
     if scope['type'] == 'websocket':
-        logging.info(f'WEBSOCKET: {url}')
+        logging.debug(f'WEBSOCKET: {url}')
         websocket = WebSocket(receive, send)
         handled = await app.slowlette.websocket(Request(url, method='WEBSOCKET', headers=headers), websocket)
         if not handled:

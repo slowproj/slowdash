@@ -114,13 +114,13 @@ $ source bin/slowdash-bashrc
 ## Verifying Installation
 Verify your installation by running:
 ```console
-$ slowdash
+$ slowdash -h
 Running in venv at /PATH/TO/SLOWDASH/venv
 usage: 
-  Web-Server Mode:      slowdash.py [Options] --port=PORT
+  Web-Server Mode:      slowdash.py [Options]
   Command-line Mode:    slowdash.py [Options] COMMAND
 
-SlowDash Version 250128 "Skykomish"
+SlowDash Version 260823 "Mamquam"
 
 positional arguments:
   COMMAND               API query string. Ex) "config", "channels", "data/CHANNELS?length=LENGTH"

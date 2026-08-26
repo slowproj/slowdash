@@ -24,7 +24,7 @@ from sd_misc_api import MiscApiComponent
 
 
 class App(slowlette.App):
-    def __init__(self, project_dir=None, project_file=None, is_cgi=False, is_command=False, is_async=True):
+    def __init__(self, project_dir=None, project_file=None, port=None, is_command=False, is_async=True, is_cgi=False):
         """
         Parameters:
           - project_dir: if not None, specifies the project directory with disabling the default behavior.
@@ -42,7 +42,7 @@ class App(slowlette.App):
 
         if project_dir is not None:
             project_dir = os.path.abspath(os.path.join(os.getcwd(), project_dir))
-        self.project = Project(project_dir, project_file)
+        self.project = Project(project_dir, project_file, port)
         self.project_dir = self.project.project_dir
 
         
@@ -168,7 +168,7 @@ if __name__ == '__main__':
     parser = ArgumentParser(
         description = f'SlowDash Version {slowdash_version}',
         usage = ('\n'
-            + '  Web-Server Mode:      %(prog)s [Options] --port=PORT\n'
+            + '  Web-Server Mode:      %(prog)s [Options]\n'
             + '  Command-line Mode:    %(prog)s [Options] COMMAND'
         )
     )
@@ -178,7 +178,7 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '-p', '--port',
-        action='store', dest='port', type=int, default=0,
+        action='store', dest='port', type=int, default=18881,
         help='port number for web connection; command-line mode without this option'
     )
     parser.add_argument(
@@ -218,10 +218,6 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
 
-    if args.COMMAND is None and args.port <= 0:
-        parser.print_help()
-        sys.exit(-1)
-
     loglevel_name = args.loglevel.upper()
     if loglevel_name == 'DEFAULT':
         if args.port <= 0:
@@ -243,9 +239,10 @@ if __name__ == '__main__':
     app = App(
         project_dir = args.project_dir,
         project_file = args.project_file,
-        is_cgi = False,
-        is_command = (args.port<=0),
-        is_async = not args.wsgi
+        port = args.port,
+        is_command = args.COMMAND is not None,
+        is_async = not args.wsgi,
+        is_cgi = False
     )    
     if (args.port > 0) and (app.project.auth_list is not None):
         app.slowlette.add_middleware(slowlette.BasicAuthentication(auth_list=app.project.auth_list))
@@ -255,7 +252,7 @@ if __name__ == '__main__':
         exclude=['/api', '/userhtml'],
     ))
 
-    if args.port <= 0:
+    if args.COMMAND is not None:
         # command-line mode
         async def main():
             json_opts = { 'indent': args.indent }

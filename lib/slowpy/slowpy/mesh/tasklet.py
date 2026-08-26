@@ -128,7 +128,7 @@ class Tasklet:
 
         
     def external_mesh(self, mesh_url:str, **kwargs):
-        """returns a mesh object to communicate with an external SlowMesh
+        """returns a mesh object to communicate with an external Mesh
         -  This mesh will be started and stopped together with the main mesh.
         """
         mesh = Mesh(mesh_url, **kwargs)
@@ -136,9 +136,9 @@ class Tasklet:
         return mesh
 
 
-    def run(self, params:dict|None=None, *, slowdash_url:str|None=None, mesh_url:str|None=None, name:str|None=None, module=None):
+    def run(self, params:dict|None=None, *, dash_url:str|None=None, mesh_url:str|None=None, name:str|None=None, module=None):
         self._params = copy.deepcopy(params)
-        self._dash_url = slowdash_url or self._dash_url
+        self._dash_url = dash_url or self._dash_url
         self._mesh_url = mesh_url or self._mesh_url
         if self._mesh_url is None and self._dash_url is not None:
             if self._dash_url.startswith('http://'):
@@ -321,12 +321,12 @@ class Tasklet:
 
 
     async def _start(self):
-        if self._dash_url is not None:
-            self._dash.connect(self._dash_url)
-        if self._mesh_url is not None:
-            self._mesh.connect(self._mesh_url, name=self._name)
-            if self._name is None:
-                self._name = self._mesh.name
+        if self._mesh_url is None:
+            logging.error(f'Tasklet Error: {self._name}: Mesh URL not provided')
+            return
+        self._mesh.connect(self._mesh_url, name=self._name)
+        if self._name is None:
+            self._name = self._mesh.name
 
         if self._mesh_stdio is not None and self._mesh_url is not None:
             await self._mesh_stdio.aio_start()
@@ -334,6 +334,14 @@ class Tasklet:
         for mesh in self._mesh_list:
             await mesh.aio_start()   
 
+        if self._dash_url is None:
+            try:
+                self._dash_url = await mesh.registry.aio_get('$server.url', None)
+            except Exception as e:
+                pass
+        if self._dash_url is not None:
+            self._dash.connect(self._dash_url)
+            
         try:
             await asyncio.gather(*self._initialize_task_coros)
         except Exception as e:
