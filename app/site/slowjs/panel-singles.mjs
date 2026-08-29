@@ -56,34 +56,21 @@ class SingleDisplayItem {
 
     
     update(dataPacket) {
-        if (! dataPacket || ! this.config.channel) {
-            return;
-        }
-        
-        const ts = dataPacket[this.metric.channel];
-        if (! ts) {
-            if (
-                (dataPacket.__meta?.isPartial ?? false) ||
-                (Panel._dataPacketIncludes(dataPacket, this.currentDataTime))
-            ) {
+        const ts = dataPacket[this.metric?.channel ?? this.config.channel];
+        const [time, value] = Panel._getLastTX(ts, this.metric?.transform, dataPacket.__meta.range);
+        if (! value) {
+            if (dataPacket.__meta.isStreaming || Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
                 // keep the current data (no update); otherwise draw "---"
                 return;
             }
         }
-        else if (dataPacket.__meta?.isCurrent ?? false) {
-            this.currentDataTime = dataPacket.__meta.currentDataTime;
+        if (time < this.currentDataTime) {
+            return;
         }
-
-        // TODO: get only the value in the valid time range
-        const [time, value] = Panel._getLastTX(ts, this.metric.transform);
-        let time_text, value_text;
-        if (time === null) {
-            time_text = '---';
-        }
-        else {
-            const time_format = this.panelConfig.time_format || '%a, %H:%M';
-            time_text = (new JGDateTime(time)).asString(time_format);
-        }        
+        this.currentDataTime = time;
+        
+        let time_text = (new JGDateTime(time)).asString(this.panelConfig.time_format || '%a, %H:%M:%S');
+        let value_text;
         if (value === null) {
             value_text = '---';
         }

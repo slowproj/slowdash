@@ -237,19 +237,25 @@ export class Panel {
         return (from <= timestamp && to >= timestamp);
     }
 
-    // TODO: get only the value in the valid time range
-    static _getLastTX(timeseries, transform=null) {
-        let time=null, value=null;
-
-        const [t, x] = [ timeseries?.t, timeseries?.x ];
-        if (t == null) {
-            return [time, value];
+    
+    static _getLastTX(timeseries, transform=null, range=null) {
+        let to = range?.to ?? 0;
+        if (to <= 0) {
+            to += $.time();
         }
         
+        let time=null, value=null;
+        const [t, x] = [ timeseries?.t, timeseries?.x ];
+        if (t == null) {
+            return [to, value];
+        }
+
+        const time_margin = 3.0;
+        const t1 = to - (timeseries.start ?? 0) + time_margin;
         if (Array.isArray(t)) {
             let k = t.length - 1;
             while (k >= 0) {
-                if ((x[k] != null) && ! Number.isNaN(x[k])) {
+                if ((t[k] <= t1) && (x[k] != null) && ! Number.isNaN(x[k])) {
                     break;
                 }
                 k--;
@@ -260,8 +266,13 @@ export class Panel {
             }
         }
         else {
-            time = t + (timeseries.start ?? 0);
-            value = x;
+            if (t < t1) {
+                time = t + (timeseries.start ?? 0);
+                value = x;
+            }
+            else {
+                return [null, null];
+            }
         }
 
         if (typeof(value) == "string") {

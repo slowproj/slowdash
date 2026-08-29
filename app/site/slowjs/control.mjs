@@ -199,8 +199,8 @@ export class QueryReceiver extends DataReceiver {
             }
 
             const data = this.parseDataJson(textdata);
-            const isPartial = (i < queryList.length-1);
-            onReceiveData(id, data, isPartial);
+            const isComplete = (i+1 >= queryList.length);
+            onReceiveData(id, data, isComplete);
         }
 
         return status;
@@ -368,8 +368,15 @@ export class Controller {
         this.isUpdateRunning = false;
         
         this.queryReceiver = new QueryReceiver();
-        this.streamingReceiver = new StreamingReceiver((data) => {
-            console.log('SSE data received', data);
+        this.streamingReceiver = new StreamingReceiver((dataPacket) => {
+            if ((this.currentData == null) || (this.currentData.__meta?.range.to !== 0)) {
+                return;
+            }
+            dataPacket.__meta = {
+                range: this.currentData.range,
+                isStreaming: true,
+            };
+            this.view.draw(dataPacket);
         });
     }
 
@@ -454,9 +461,7 @@ export class Controller {
             this.currentData = {
                 __meta: {
                     range: range,
-                    isPartial: false,
-                    isCurrent: false,
-                    currentDataTime: null,
+                    isStreaming: false,
                 }
             };
         }
@@ -482,14 +487,12 @@ export class Controller {
             this.isUpdateRunning = false;
             return {code:200, text:'OK'};
         }
-        this.currentData.__meta.isPartial = true;
 
-        const status = this.queryReceiver.receive(queryList, (id, data, isPartial) => {
+        const status = this.queryReceiver.receive(queryList, (id, data, isComplete) => {
             for (const ch in data) {
                 this.currentData[id ?? ch] = data[ch];
             }
-            this.currentData.__meta.isPartial = isPartial;
-            if (! isPartial) {
+            if (isComplete) {
                 this.view.draw(this.currentData);
             }
         });

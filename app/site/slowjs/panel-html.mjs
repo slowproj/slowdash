@@ -121,14 +121,14 @@ class HtmlPanel extends Panel {
     }
 
     
-    draw(data, displayTimeRange=null) {
-        if (this.config.reload ?? false) {
+    draw(dataPacket, displayTimeRange=null) {
+        if ((this.config.reload ?? false) && (! dataPacket.__meta.isStreaming)) {
             this._loadPage().then(()=>{
-                this._updateContents(data, displayTimeRange);
+                this._updateContents(dataPacket, displayTimeRange);
             });
         }
         else {
-            this._updateContents(data, displayTimeRange);
+            this._updateContents(dataPacket, displayTimeRange);
         }
     }
 
@@ -298,27 +298,26 @@ class HtmlPanel extends Panel {
 
     
     _extractDataValues(dataPacket, displayTimeRange) {
-        const isResponseToSubmit = ! (dataPacket.__meta?.isPartial || dataPacket.__meta?.isCurrent);
+        const isResponseToSubmit = ! dataPacket.__meta.isStreaming;
         let values = {};
         for (let variable of this.variables) {
             if (! variable.waiting) {
                 continue;
             }
-            let data = null;
+            let ts = null;
             if (variable.channel) {
                 if (variable.channel in dataPacket) {
-                    data = dataPacket[variable.channel];
+                    ts = dataPacket[variable.channel];
                 }
             }
             if (! variable.live && isResponseToSubmit) {
                 variable.waiting = false;
             }
-            if (data?.x == null) {
+            if (ts?.x == null) {
                 continue
             }
 
-            // TODO: get only the value in the valid time range
-            const [t, x] = Panel._getLastTX(data, variable.transform);
+            const [t, x] = Panel._getLastTX(ts, variable.transform, dataPacket.__meta.range);
             if (x !== null) {
                 values[variable.metric] = x;
             }
@@ -543,17 +542,17 @@ class HrefPanel extends Panel {
     }
 
     
-    draw(data, displayTimeRange=null) {
+    draw(dataPacket, displayTimeRange=null) {
         if ((this.config.reload === false) && this.iframe.attr('src')) {
             return;
         }
-        if (data && (data?.__meta?.isPartial ?? false)) {
+        if (dataPacket.__meta.isStreaming) {
             return;
         }
 
         let this_url = this.config.url;
         if (this.config.query_range === true) {
-            const range = this._findDataTimeRange(data, displayTimeRange);
+            const range = this._findDataTimeRange(dataPacket, displayTimeRange);
             if (this_url.indexOf('?') > 0) {
                 this_url += '&';
             }

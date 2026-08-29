@@ -351,7 +351,7 @@ export class MapPanel extends Panel {
 
     
     draw(dataPacket, displayTimeRange=null) {
-        if ((dataPacket === null) || (dataPacket.__meta?.isPartial ?? false)) {
+        if (dataPacket === null) {
             return;
         }
         if (! this.config.channel) {
@@ -361,25 +361,20 @@ export class MapPanel extends Panel {
             return; 
        }
 
-        let data = dataPacket[this.config.channel]?.x;
+        const ts = dataPacket[this.metric?.channel ?? this.config.channel];
+        let [time, data] = Panel._getLastTX(ts, this.metric?.transform, dataPacket.__meta.range);
         if (! data) {
-            if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
-                return; // keep the drawing from the last "current"
+            if (dataPacket.__meta.isStreaming || Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
+                // keep the current data (no update); otherwise draw "---"
+                return;
             }
             data = { 'x': [], 'y': [] };
         }
-        if (dataPacket.__meta?.isCurrent ?? false) {
-            this.currentDataTime = dataPacket.__meta.currentDataTime;
+        if (time < this.currentDataTime) {
+            return;
         }
+        this.currentDataTime = time;
         
-        if (Array.isArray(data)) {
-            if (data.length > 0) {
-                data = data[data.length-1];
-            }
-            else {
-                data = { 'x': [], 'y': [] };
-            }
-        }
         if (typeof(data) == "string") {
             try {
                 data = JSON.parse(data);

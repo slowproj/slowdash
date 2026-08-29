@@ -59,7 +59,7 @@ class TablePanel extends Panel {
                     channel: table.find('input').val(),
                     data_type: data_type,
                     reversed: (data_type == 'table_object' ? false : true),
-                    max_lines: 100,
+                    max_lines: 20,
                 };
                 on_done(config);
             });
@@ -106,13 +106,18 @@ class TablePanel extends Panel {
     
     async configure(config, options={}, callbacks={}) {
         super.configure(config, options, callbacks);
+
+        if (this.config.data_type === undefined) {
+            this.config.data_type = 'table_object';
+        }
+        
         this.titleDiv.text(this.config.title);
     }
 
     
     openSettings(div) {
         let inputsDiv = $('<div>').appendTo(div);
-        const datalist = (this.config.data_type??'table_object') == 'table_object' ? 'sd-table-datalist' : 'sd-all-datalist';
+        const datalist = this.config.data_type == 'table_object' ? 'sd-table-datalist' : 'sd-all-datalist';
         inputsDiv.html(`
             <table style="margin-top:1em">
               <tr><th>channel</th><td><input list="${datalist}"></td></tr>
@@ -132,63 +137,55 @@ class TablePanel extends Panel {
     
     fillDataRequest(dataRequest) {
         if (this.config.channel) {
-            dataRequest.append(this.config.channel);
+            const fromStreaming = (this.config.data_type == 'table_object');
+            dataRequest.append(this.config.channel, true, fromStreaming);
         }
     }
     
 
     draw(dataPacket, displayTimeRange=null) {
-        let data = dataPacket[this.config.channel]?.x;
-        if (! data) {
-            if (! (dataPacket.__meta?.isPartial ?? false)) {
-                if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
-                    // keep the current data; otherwise draw blank
-                    ;
-                }
-                else {
-                    this.table.empty();
-                    this.table.html('<tr><td style="color:gray">No Table Data</td></tr>');
-                }
+        const ts = dataPacket[this.metric?.channel ?? this.config.channel];
+        if (this.config.data_type == 'table_object') {
+            this.draw_table_object(ts);
+        }
+        else if (! dataPacket.__meta.isStreaming) {
+            this.draw_value_table(ts);
+        }
+    }
+
+
+    draw_table_object(ts) {
+        const [time, value] = Panel._getLastTX(ts, this.metric?.transform, dataPacket.__meta.range);
+        if (! value) {
+            if (dataPacket.__meta.isStreaming || Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
+                ; // keep the current data (no update)
+            }
+            else {
+                this.table.empty();
+                this.table.html('<tr><td style="color:gray">No Table Data</td></tr>');
             }
             return;
         }
-        if (dataPacket.__meta?.isCurrent ?? false) {
-            this.currentDataTime = dataPacket.__meta.currentDataTime;
+        if (time < this.currentDataTime) {
+            return;
         }
+        this.currentDataTime = time;
         
         this.table.empty();
-        if ((this.config.data_type??'table_object') == 'table_object') {
-            if (this.draw_table_object(data)) {
-                return;
-            }
-            this.table.empty();
-        }
-        this.draw_value_table(dataPacket[this.config.channel]);
-    }
-
-    
-    draw_table_object(data) {
-        if (Array.isArray(data)) {
-            if (data.length < 1) {
-                this.table.html('<tr><td>Empty Table</td></tr>');		
-                return true;
-            }
-            data = data[data.length-1];
-        }
-        if (typeof(data) == "string") {
+        if (typeof(value) == "string") {
             try {
-                data = JSON.parse(data);
+                value = JSON.parse(value);
             }
             catch(error) {
                 this.table.html('<tr><td>Table Data Error: ' + error.message + '</td></tr>');		
                 return false;
             }
         }
-        if (! data.table) {
+        if (! value.table) {
             this.table.html('<tr><td style="color:gray">No Table Content</td></tr>');
             return false;
         }
-        const table = data;
+        const table = value;
 
         if (table.columns) {
             let tr = $('<tr>').appendTo(this.table);
@@ -211,9 +208,15 @@ class TablePanel extends Panel {
     }
 
 
-    draw_value_table(dataPacket) {
-        let [t, x] = [ dataPacket.t, dataPacket.x ];
-        const t0 = dataPacket.start ?? 0;
+    draw_value_table(ts) {
+        this.table.empty();
+        if (! ts) {
+            this.table.html('<tr><td style="color:gray">No Table Data</td></tr>');
+            return;
+        }
+        
+        let [t, x] = [ ts.t, ts.x ];
+        const t0 = ts.start ?? 0;
         if (! Array.isArray(t)) {
             t = [ t ];
             x = [ x ];
@@ -226,9 +229,9 @@ class TablePanel extends Panel {
         tr.append($('<th>').text(this.config.channel));
         tr.find('th').css({position: 'sticky', top:0, left:0, background: bg});
 
-        const max_n = this.config.max_lines ?? 100;
-        const n = Math.min(t.length, max_n);
-        for (let i = 0; i < n; i++) {
+        const n = t.length;
+        const max_n = Math.min(this.config.max_lines ?? 20, n);
+        for (let i = 0; i < max_n; i++) {
             const k = (this.config.reversed ?? false) ? n-i-1 : i;
             let tr = $('<tr>').appendTo(this.table);
             const datetime = (new JGDateTime(t0 + t[k])).asString('%Y-%m-%d %H:%M:%S %Z');
@@ -245,7 +248,7 @@ class TablePanel extends Panel {
             tr.append($('<td>').text(value));
         }
         
-        const m = t.length - max_n;
+        const m = n - max_n;
         if (m > 0) {
             $('<tr>').append($('<td>').text(`... ${m} more lines`)).append($('<td>').text('...')).appendTo(this.table);
         }
@@ -369,36 +372,27 @@ class TreePanel extends Panel {
     
 
     draw(dataPacket, displayTimeRange=null) {
-        let data = dataPacket[this.config.channel]?.x;
-        if (! data) {
-            if (! (dataPacket.__meta?.isPartial ?? false)) {
-                if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
-                    // keep the current data; otherwise draw blank
-                    ;
-                }
-                else {
-                    this.contentDiv.empty();
-                    this.contentDiv.html('<span style="color:gray">No Tree Data</span>');
-                }
+        const ts = dataPacket[this.metric?.channel ?? this.config.channel];
+        const [time, value] = Panel._getLastTX(ts, this.metric?.transform, dataPacket.__meta.range);
+        if (! value) {
+            if (dataPacket.__meta.isStreaming || Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
+                ; // keep the current data (no update)
+            }
+            else {
+                this.contentDiv.empty();
+                this.contentDiv.html('<span style="color:gray">No Tree Data</span>');
             }
             return;
         }
-        if (dataPacket.__meta?.isCurrent ?? false) {
-            this.currentDataTime = dataPacket.__meta.currentDataTime;
+        if (time < this.currentDataTime) {
+            return;
         }
-
+        this.currentDataTime = time;
+        
         this.contentDiv.empty();
-        if (Array.isArray(data)) {
-            if (data.length < 1) {
-                this.contentDiv.html('<span style="color:gray">Empty Tree Data</span>');
-                return;
-            }
-            data = data[data.length-1];
-        }
-        if (typeof(data) == "string") {
-            console.log(data);
+        if (typeof(value) == "string") {
             try {
-                data = JSON.parse(data);
+                value = JSON.parse(value);
             }
             catch(error) {
                 this.contentDiv.html('Tree Data Error: ' + error.message);
@@ -406,11 +400,11 @@ class TreePanel extends Panel {
             }
         }
 
-        if (! data.tree) {
+        if (! value.tree) {
             this.contentDiv.html('<span style="color:gray">No Tree Content</span>');
             return;
         }
-        const tree = data.tree;
+        const tree = value.tree;
 
         function scan_depth(node, base=0) {
             if (! $.isDict(node)) {
@@ -560,56 +554,42 @@ class BlobPanel extends Panel {
     
 
     draw(dataPacket, displayTimeRange=null) {
-        let data = dataPacket[this.config.channel];
-        if (! data) {
-            if (! (dataPacket.__meta?.isPartial ?? false)) {
-                if (Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
-                    // keep the current data; otherwise draw blank
-                    ;
-                }
-                else {
-                    this.table.empty();
-                    this.contentDiv.html('<span style="color:gray">No Blob Data</span>');
-                }
+        const ts = dataPacket[this.metric?.channel ?? this.config.channel];
+        const [time, value] = Panel._getLastTX(ts, this.metric?.transform, dataPacket.__meta.range);
+        if (! value) {
+            if (dataPacket.__meta.isStreaming || Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
+                ; // keep the current data (no update)
+            }
+            else {
+                this.contentDiv.empty();
+                this.contentDiv.html('<span style="color:gray">No Blob Data</span>');
             }
             return;
         }
-        if (dataPacket.__meta?.isCurrent ?? false) {
-            this.currentDataTime = dataPacket.__meta.currentDataTime;
+        if (time < this.currentDataTime) {
+            return;
         }
-
-        let t = null, x = null;
-        if (Array.isArray(data.x)) {
-            if (data.x.length < 1) {
-                this.contentDiv.text('Empty Blob Data');
-                return;
-            }
-            t = data.start + data.t[data.t.length-1];
-            x = data.x[data.x.length-1];
-        }
-        else {
-            t = data.start + data.t;
-            x = data.x;
-        }
-        if (typeof(x) == "string") {
+        this.currentDataTime = time;
+        
+        if (typeof(value) == "string") {
             try {
-                x = JSON.parse(x);
+                value = JSON.parse(value);
             }
             catch(error) {
-                this.contentDiv.text(x);
+                this.contentDiv.text(value);
             }
         }
 
         this.titleDiv.text(new JGDateTime(t).asString(this.config.title));
         this.contentDiv.empty();
         
-        if (! x?.mime || ! x?.id) {
-            this.contentDiv.text(JSON.stringify(x));
+        if (! value?.mime || ! value?.id) {
+            this.contentDiv.text(JSON.stringify(value));
             return;
         }
 
-        const url = './api/blob/' + this.config.channel + '?id=' + x.id;
-        if (x.mime.split('/')[0].toLowerCase() == 'image') {
+        const url = './api/blob/' + this.config.channel + '?id=' + value.id;
+        if (value.mime.split('/')[0].toLowerCase() == 'image') {
             let a = $('<a>').appendTo(this.contentDiv);
             a.attr({'href': url, 'target': '_blank'});
             let img = $('<img>').appendTo(a);

@@ -1,7 +1,7 @@
 {
     "control": {
         "range": { "length": 900, "to": 0 },
-        "reload": 10,
+        "reload": 5,
         "mode": "normal",
         "grid": { "rows": 2, "columns": 3 }
     },
@@ -26,7 +26,7 @@
                     "fill_opacity": 0,
                     "fill_envelope": false,
                     "fill_baseline": 1e-100,
-                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false },
+                    "resampling": { "buckets": 60, "threshold": 600, "reducer": "last", "envelope": false },
                     "source": { "query": true, "stream": false }
                 },
                 {
@@ -106,8 +106,7 @@
                         "normal": { "min": 0, "max": 0 },
                         "warn": { "min": 0, "max": 0 },
                         "error": { "min": 0, "max": 0 }
-                    },
-                    "label": ""
+                    }
                 }
             ],
             "color": { "base": "rgb(0, 0, 0)", "normal": "#06b6d4", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.1 },
@@ -115,7 +114,8 @@
             "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
             "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false },
             "title": "From Streaming"
-        }
+        },
+        { "type": "table", "channel": "HV.ch0.V", "data_type": "value_table", "reversed": true, "max_lines": 100 }
     ],
     "meta": { "name": "control", "title": "", "description": "" }
 }

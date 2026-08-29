@@ -90,17 +90,16 @@ class CanvasItem {
         }
 
         const ts = dataPacket[this.metric.channel];
-        const isPartial = (dataPacket?.meta?.isPartial ?? false) || (dataPacket?.meta?.isCurrent ?? false);
-        if (! ts && isPartial) {
+        if (! ts && dataPacket.isStreaming) {
             return;
         }
         
-        let [time, value] = Panel._getLastTX(ts);
-        if (time == null) {
-            [time, value] = this.last_tx;
+        let [time, value] = Panel._getLastTX(ts, null, dataPacket.__meta.range);
+        if ((this.last_tx[0] == null) || (this.last_tx[0] < time)) {
+            this.last_tx = [time, value];
         }
         else {
-            this.last_tx = [time, value];
+            [time, value] = this.last_tx;
         }
         
         const tolerable_gap = this.metric['tolerable-gap'] ?? CanvasItem.defaults['tolerable-gap'];
@@ -109,9 +108,6 @@ class CanvasItem {
             to += $.time();
         }
         if ((time == null) || (to == null) || (time + tolerable_gap < to)) {
-            if (isPartial) {
-                return;  // no gap check for partial or current packets
-            }
             [time, value] = [null, null];
         }
 
@@ -584,20 +580,17 @@ class PlotItem extends CanvasItem {
         if (this.metric?.channel === undefined) {
             return;
         }
+        if (dataPacket.__meta.isStreaming) {
+            return;
+        }
+        
         let ts = dataPacket[this.metric.channel];
-
         if (! ts?.t || ! (ts.t.length > 0)) {
-            if (dataPacket?.__meta?.isCurrent ?? false) {
-                return;
-            }
-            else {
-                ts = { t: [], x: [] };
-            }
-            //TODO: also check the case that the last "current" value is still valid
+            ts = { t: [], x: [] };
         }
 
-        let to = dataPacket?.__meta?.range?.to ?? $.time();
-        let from = dataPacket?.__meta?.range?.from ?? -3600;
+        let to = dataPacket.__meta.range.to;
+        let from = dataPacket.__meta.range.from;
         if (to <= 0) {
             to = $.time() + to;
         }
@@ -645,6 +638,7 @@ class PlotItem extends CanvasItem {
         });
     }
 };
+
 
 
 class MicroPlotItem extends PlotItem {

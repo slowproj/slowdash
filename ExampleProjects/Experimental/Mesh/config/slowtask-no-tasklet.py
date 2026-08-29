@@ -17,7 +17,9 @@ def _initialize():
 def _loop():
     if device.is_running:
         data = device.ch(1).get()
-        store(data, tag='HV.ch1.V')
+        
+        print(f'STORE: {data}')
+        datastore.append(data, tag='HV.ch1.V')
 
     time.sleep(1)
 
@@ -35,11 +37,6 @@ def start(**params):
 def stop(**params):
     print(f'stop: {params}')
     device.is_running = False
-
-
-def store(data_record):
-    print(f'STORE: {data_record}')
-    datastore.append(data_record)
 
 
 
