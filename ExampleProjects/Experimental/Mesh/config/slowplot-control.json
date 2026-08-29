@@ -1,7 +1,7 @@
 {
     "control": {
         "range": { "length": 900, "to": 0 },
-        "reload": 2,
+        "reload": 10,
         "mode": "normal",
         "grid": { "rows": 2, "columns": 3 }
     },
@@ -13,7 +13,7 @@
             "plots": [
                 {
                     "type": "timeseries",
-                    "channel": "V0",
+                    "channel": "HV.ch0.V",
                     "color": "#009090",
                     "label": "",
                     "format": "%.5g",
@@ -26,11 +26,12 @@
                     "fill_opacity": 0,
                     "fill_envelope": false,
                     "fill_baseline": 1e-100,
-                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false },
+                    "source": { "query": true, "stream": false }
                 },
                 {
                     "type": "timeseries",
-                    "channel": "V1",
+                    "channel": "HV.ch1.V",
                     "color": "#dd8000",
                     "label": "",
                     "format": "%.5g",
@@ -43,7 +44,8 @@
                     "fill_opacity": 0,
                     "fill_envelope": false,
                     "fill_baseline": 1e-100,
-                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false },
+                    "source": { "query": true, "stream": false }
                 }
             ],
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 3, "ymax": 20, "title": "Stored Data from Database" },
@@ -92,7 +94,28 @@
             "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
             "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false }
         },
-        { "type": "html", "location": "project", "file": "no_tasklet", "title": "", "reload": true }
+        { "type": "html", "location": "project", "file": "no_tasklet", "title": "", "reload": true },
+        {
+            "type": "singles",
+            "item_type": "square",
+            "items": [
+                {
+                    "channel": "HV.ch0.V",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "label": ""
+                }
+            ],
+            "color": { "base": "rgb(0, 0, 0)", "normal": "#06b6d4", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.1 },
+            "grid": { "rows": 0, "columns": 0 },
+            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+            "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false },
+            "title": "From Streaming"
+        }
     ],
     "meta": { "name": "control", "title": "", "description": "" }
 }

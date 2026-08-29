@@ -35,6 +35,12 @@ class Plot {
         this.panel = panel;
         this.requestDataIds = {};
 
+        if (this.config.source === undefined) {
+            this.config.source = {
+                'query': true,
+                'stream': false,
+            };
+        }
         if (this.config.label === undefined) {
             this.config.label = '';
         }
@@ -92,8 +98,12 @@ class Plot {
     openSettings(div) {
         div.html(`
             <table>
+              <tr><th>Input</th><td></td></tr>
               <tr><td>Channel</td><td><input list="sd-numeric-timeseries-datalist"></td></tr>
-              <tr><td>Label</td><td><input placeholder="auto">, format: <input placeholder="%f"></td></tr>
+              <tr><td>Source</td><td>
+                <label><input type="checkbox">query (pull)</label>
+                <label><input type="checkbox">stream (push)</label>
+              </td></tr>
             </table>
         `);
         
@@ -111,15 +121,21 @@ class Plot {
             bindInput(this.config, 'channel', div.find('input').at(k++).css('width', '20em'));
         }
         
-        bindInput(this.config, 'label', div.find('input').at(k++).css('width', '10em'));
-        bindInput(this.config, 'format', div.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config.source, 'query', div.find('input').at(k++));
+        bindInput(this.config.source, 'stream', div.find('input').at(k++));
         
         if (this.config.resampling) {
             $('<tr>').html(`
               <td>Resampling</td>
               <td>
-                buckets: <input placeholder="600" type="number" step="1">,
-                <select>
+                threshold: <input placeholder="7200" type="number" step="any"> (s)
+              </td>
+            `).appendTo(table);
+            $('<tr>').html(`
+              <td></td>
+              <td>
+                n-buckets: <input placeholder="600" type="number" step="1">,
+                reducer: <select>
                     <option value="last">last</option>
                     <option value="mean">mean</option>
                     <option value="median">median</option>
@@ -129,21 +145,18 @@ class Plot {
                     <option value="min">min</option>
                     <option value="max">max</option>
                 </select>
-                ${this.config.resampling.envelope!==undefined ? ', <label><input type="checkbox">envelope</label>' : ''}
               </td>
             `).appendTo(table);
             $('<tr>').html(`
               <td></td>
-              <td>
-                threshold: <input placeholder="7200" type="number" step="any"> (s)
-              </td>
+              <td>${this.config.resampling.envelope!==undefined ? '<label><input type="checkbox">min/max envelope</label> <span style="font-size:70%">(use with a small n-buckets)</span>' : ''}</td>
             `).appendTo(table);
+            bindInput(this.config.resampling, 'threshold', div.find('input').at(k++).css('width', '5em'));
             bindInput(this.config.resampling, 'buckets', div.find('input').at(k++).css('width', '5em'));
-            bindInput(this.config.resampling, 'reducer', div.find('select').at(ks++).css('width', '4em'));
+            bindInput(this.config.resampling, 'reducer', div.find('select').at(ks++).css('width', '5em'));
             if (this.config.resampling.envelope !== undefined) {
                 bindInput(this.config.resampling, 'envelope', div.find('input').at(k++), true);
             }
-            bindInput(this.config.resampling, 'threshold', div.find('input').at(k++).css('width', '5em'));
 
             let comment = $('<div>').appendTo(div).css({
                 'margin-top': '2em',
@@ -152,6 +165,13 @@ class Plot {
             });
             comment.html('<b>Resampling Threshold</b>: 0 to enable always, -1 to disable');
         }
+        
+        table.append($('<tr>').html(`<th>Drawing</th><td></td>`));
+        table.append($('<tr>').html(`
+            <td>Label</td><td><input placeholder="auto">, format: <input placeholder="%f"></td>
+        `));
+        bindInput(this.config, 'label', div.find('input').at(k++).css('width', '10em'));
+        bindInput(this.config, 'format', div.find('input').at(k++).css('width', '5em'));
         
         if (this.config.color) {
             table.append($('<tr>').html(`
@@ -184,9 +204,12 @@ class Plot {
                     customOptions.resamplingThreshold = threshold;
                 }
                 if (this.config.include_prior_point) {
-                    customOptions.prior_data = 2;  // 2: always include one prior data (if exists)
+                    customOptions.priorData = 2;  // 2: always include one prior data (if exists)
                 }
-                this.requestDataIds[field] = dataRequest.append(this.config[field], customOptions);
+                this.requestDataIds[field] = dataRequest.append(
+                    this.config[field], customOptions,
+                    this.config.source.query, this.config.source.stream
+                );
             }
         }
     }
@@ -683,10 +706,10 @@ class LineMarkerPlot extends GraphPlot {
             config.include_prior_point = false;
         }
         if (config.fill_opacity === undefined) {
-            config.fill_opacity = 0;
+            config.fill_opacity = 0.2;
         }
         if (config.fill_envelope === undefined) {
-            config.fill_envelope = false;
+            config.fill_envelope = true;
         }
         if (config.fill_baseline === undefined) {
             config.fill_baseline = 1e-100;
@@ -1208,13 +1231,13 @@ class PlotPanel extends Panel {
             this.config.axes.zlog = false;
         }
         if (this.config.legend === undefined) {
-            this.config.legend = { style: null };
+            this.config.legend = {};
         }
         if (! ['side', 'box', 'transparent', 'hidden', 'none'].includes(this.config.legend.style)) {
-            this.config.legend.style = 'side';
+            this.config.legend.style = 'transparent';
         }
         if (! ['left', 'right'].includes(this.config.legend.position)) {
-            this.config.legend.position = 'right';
+            this.config.legend.position = 'left';
         }
         if (this.config.plots === undefined) {
             this.config.plots = [];

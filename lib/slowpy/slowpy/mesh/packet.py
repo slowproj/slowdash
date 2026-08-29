@@ -27,9 +27,9 @@ class DataPacket(MeshPacket):
         self.timestamp = timestamp
 
 
-    def pack(self):
+    def pack(self, topic:str):
         '''
-        - return value: tuple of (headers, body)
+        - return value: tuple of (topic, headers, body)
         '''
             
         headers, body = {}, {}
@@ -37,8 +37,8 @@ class DataPacket(MeshPacket):
         if isinstance(self.values, TimeSeries):
             if self.tag is None:
                 logging.error(f'mesh.DataPacket: tag is required for time-series data type')
-                return (None, None)
-        
+                return (topic, None, None)
+
             fields = self.values.fields
             values = self.values.values
             body = { self.tag: { fields[i]: values[i] for i in range(len(fields)) } }
@@ -51,12 +51,15 @@ class DataPacket(MeshPacket):
                 prefix = f'{self.tag}:' if self.tag is not None else ''
                 body = { prefix+field: { 't':t ,'x': x } for field, x in self.values.items() }
             elif self.tag is not None:
-                body = { tag: { 't':t ,'x': value } }
+                body = { self.tag: { 't':t ,'x': self.values } }
             else:
                 logging.error(f'mesh.DataPacket: unknown data type: {type(self.values)}')
                 body = {}
+                
+        if self.tag is not None:
+            topic = '.'.join([topic, self.tag])
             
-        return (headers, body)
+        return (topic, headers, body)
 
             
     @classmethod

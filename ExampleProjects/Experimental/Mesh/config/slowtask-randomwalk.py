@@ -20,7 +20,7 @@ def loop():
     data = device.ch(0).get()
     print(data)
         
-    tasklet.mesh.publish('data.store.HV.ch0', DataPacket({'V0': data}))
+    tasklet.mesh.publish('data.store', DataPacket(data, tag='HV.ch0.V'))
 
 
 @tasklet.mesh.export

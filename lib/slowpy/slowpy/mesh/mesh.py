@@ -223,8 +223,8 @@ class Mesh:
         '''direct publish
         '''
         if isinstance(value, MeshPacket):
-            h, b = value.pack()
-            return await self.publisher(topic).headers(h).aio_set(b)
+            t, h, b = value.pack(topic)
+            return await self.publisher(t).headers(h).aio_set(b)
     
         return await self.publisher(topic).headers(headers or {}).aio_set(value)
 
@@ -632,11 +632,11 @@ class MeshPacket:
     def __init__(self):
         pass
 
-    def pack(self):
+    def pack(self, topic):
         """
-        - return value: tuple of (headers, body)
+        - return value: tuple of (topic, headers, body)
         """
-        return (None, None)
+        return (topic, None, None)
 
 
     @classmethod

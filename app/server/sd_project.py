@@ -16,8 +16,11 @@ class Project:
         self.is_secure = False
         self.auth_list = None
         
-        self.hostname = socket.gethostname()
-        self.server_url = f'http://{self.hostname}:{self.port}'
+        if self.port is not None:
+            self.hostname = socket.gethostname()
+            self.server_url = f'http://{self.hostname}:{self.port}'
+        else:
+            self.server_url = None
 
         self.config = None
         
@@ -141,7 +144,8 @@ class Project:
             
         self.mesh_url = self.config.get('mesh', {}).get('url', None)
         if self.mesh_url is None:
-            self.mesh_url = f'slowmq://{self.hostname}:{self.port}'
+            if self.port is not None:
+                self.mesh_url = f'slowmq://{self.hostname}:{self.port}'
             
 
             

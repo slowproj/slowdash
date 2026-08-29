@@ -17,7 +17,7 @@ def _initialize():
 def _loop():
     if device.is_running:
         data = device.ch(1).get()
-        store({'V1': data})
+        store(data, tag='HV.ch1.V')
 
     time.sleep(1)
 

@@ -54,6 +54,9 @@ class WebMeshComponent(Component):
     async def _subscribe_mesh(self):
         async def process_message(headers, data):
             topic = headers.get('topic')
+            if topic.startswith('data.'):
+                topic = 'data.*.' + '.'.join(topic.split('.')[2:])
+                
             async with self._queue_lock:
                 for client_id in tuple(self._topic_client_table.get(topic, set())):
                     queue = self._client_queue_table.get(client_id)
@@ -123,8 +126,10 @@ class WebMeshComponent(Component):
                     event = 'mesh'
                     data = { 'headers': headers, 'body': body }
                 await eventstream.send(data, event=event)
+                
         except slowlette.EventStreamConnectionClosed:
             logging.info(f'EventStream Closed by client: {client_id}')
+            
         finally:
             tasks = [ task for task in (queue_task, disconnect_task, stop_task) if task is not None ]
             for task in tasks:
@@ -150,12 +155,21 @@ class WebMeshComponent(Component):
                 pass
 
             
-    @slowlette.post('/api/webmesh/subscribe')
-    async def subscribe(self, client_id:str, doc:slowlette.DictJSON):
-        topic = doc.get('topic')
-        if topic is None or len(topic) == 0:
-            return { 'status': 'error', 'message': f'bad topic name: {topic}' }
-        
+    @slowlette.post('/api/webmesh/subscribe/{event}')
+    async def subscribe(self, event:str, client_id:str, doc:slowlette.DictJSON):
+        if event == 'data':
+            channel = doc.get('channel')
+            if channel is None or len(channel) == 0:
+                return { 'status': 'error', 'message': f'bad channel name: {channel}' }
+            topic = f'data.*.{channel}'
+        elif event == 'stdout':
+            task = doc.get('task')
+            if task is None or len(task) == 0:
+                return { 'status': 'error', 'message': f'bad task name: {task}' }
+            topic = f'sd.task.stdout.{task}'
+        else:
+            return { 'status': 'error', 'message': f'bad streaming event name: {event}' }
+
         async with self._queue_lock:
             if client_id not in self._client_queue_table:
                 return { 'status': 'error', 'message': f'unknown client id: {client_id}' }
@@ -164,6 +178,19 @@ class WebMeshComponent(Component):
 
         return { 'status': 'ok' }
             
+
+    @slowlette.post('/api/webmesh/unsubscribe')
+    async def unsubscribe(self, client_id:str):
+        async with self._queue_lock:
+            empty_topics = []
+            for topic, clients in self._topic_client_table.items():
+                clients.discard(client_id)
+                if not clients:
+                    empty_topics.append(topic)
+            for topic in empty_topics:
+                self._topic_client_table.pop(topic, None)
+        
+        return { 'status': 'ok' }
             
 
     @slowlette.post('/api/webmesh/publish/{topic}')

@@ -416,6 +416,13 @@ class Tasklet:
 
 
     async def on_reconnect(self):
+        if self._dash_url is None:
+            try:
+                self._dash_url = await mesh.registry.aio_get('$server.url', None)
+                self._dash.connect(self._dash_url)
+            except Exception as e:
+                pass
+            
         await self._publish_spec()
 
         

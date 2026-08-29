@@ -79,5 +79,3 @@ class Dash:
         except Exception as e:
             logging.warning(f'Dash.aio_get_data(): {e}')
             return {}
-
-

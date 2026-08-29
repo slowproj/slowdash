@@ -154,9 +154,9 @@ MeshPacket は，`slowpy/mesh/packet` に定義されています．
 ```python
 from slowpy.mesh import DataPacket
 
-topic = 'data.temp0'
+topic = 'data.store'
 temp0 = thermometer.ch(0).get()
-await tasklet.mesh.aio_publish(topic, DataPacket({'temp0': temp0}))
+await tasklet.mesh.aio_publish(topic, DataPacket(temp0, tag='temp0'))  # トピック名 data.store.temp0 で publish される
 ```
 ここで，`DataPacket` のコンストラクタパラーメータは，`DataStore.append()` と同じです．
 つまり，データストアに直接記録するのと，SlowMesh に publish するのは，ほぼ同じ書き方になります．
@@ -467,7 +467,7 @@ tasklet = Tasklet()
 
 # もしスクリプトを単体実行したいなら
 if __name__ == '__main__':
-    tasklet.run(slowdash_url='http://localhost:18881')
+    tasklet.run(mesh_url='slowmq://localhost:18881')
 ```
 
 SlowTask はシングルスレッドの非同期呼び出しで全体が並列に動くので，スクリプトの中で **`time.sleep()` を使うと全体が固まってしまいます**．
@@ -477,6 +477,7 @@ SlowTask はシングルスレッドの非同期呼び出しで全体が並列�
 
 ### 実行
 SlowTask のスクリプトファイルを，`slowtask-{名前}.py` という名前で SlowDash プロジェクトの `config` 以下に置くと，SlowDash サーバーに認識され，起動や停止を行えるようになります．
+
 また，`SlowdashProject.yaml` ファイルに `task(s)` エントリを作って，`auto_start` を設定すると，SlowDash サーバー起動時に SlowTask も自動でスタートできます．
 ```yaml
   tasks:
@@ -486,7 +487,7 @@ SlowTask のスクリプトファイルを，`slowtask-{名前}.py` という名
 
 SlowTask を SlowDash サーバーから独立したプロセスとして実行するには，通常は `slowdash-task` コマンドを使います．
 ```console
-$ slowdash-task  slowtask-mytask.py
+$ slowdash-task  slowtask-mytask.py --mesh=slowmq://localhost:18881
 ```
 
 もしスクリプト中で `if __name__ == '__main__': tasklet.run()` をしているなら，通常の Python スクリプトとしての実行もできます，
@@ -700,7 +701,11 @@ SlowTask の基本的な機能を使用する例が `ExampleProjects/Experimenta
 - `slowtask-randomwalk.py` に対するブラウザから pubsub 経由の start/stop コントロール
 - `slowtask-store.py` が `disk_usage` 変数をエクスポート，ブラウザがデータとして表示
 
+### 実行
+#### タスクをサーバーと一緒に自動開始・自動停止
 `SlowdashProject.yaml` で，これらの SlowTask はサーバーと同時に自動スタートし，終了時に自動停止するように構成されています．
+タスクが暴走した場合でも，サーバーはタスクをシグナルにより強制終了させることができます．
+サーバーがクラッシュしたり，外部から即時強制終了 (SIGKILL) された場合でも，タスクは自動で終了します．
 
 ```yaml
 slowdash_project:
@@ -719,16 +724,32 @@ slowdash_project:
       auto_start: true
 ```
 
-`auto_start` を `false` にするかコメントアウトすると，これらの SlowTask はサーバーとは独立になります．
-この場合，この SlowTask を実行するためには，新しいターミナルを開いて `slowdash-task` コマンドを使用してください．
-SlowDash サーバープロセスを走らせたまタスクプロセスの停止・再実行をしても大丈夫なはずです．
 ```console
-$ cd PATH/TO/PROJECT
-$ slowdash-task config/slowtask-store.py
+$ slowdash --port=18881
 ```
 
-現時点では，SlowDash のポート番号などはスクリプト中にハードコーディングしています．
-TODO: SlowMesh/SlowTask の開発状況に応じて徐々に改善していきます．
+#### タスクを手動で開始，サーバーと一緒に終了
+`auto_start` を `false` にするかコメントアウトすると，これらのタスクは自動では開始されません．
+この場合，SlowDash のタスクコントロールパネルからスタートをクリックして開始できます．
+コントロールパネルから開始されたタスクは，サーバー終了時に自動で終了します．
+また，タスクが暴走した場合でも，サーバーはシグナルを使って強制終了させることができます．
+
+#### タスクをサーバーとは独立に実行
+自動開始が設定されていない，またはそもそもタスクエントリが書かれていないタスクは，サーバーと独立に実行できます．
+この場合，この SlowTask を実行するためには，新しいターミナルを開いて `slowdash-task` コマンドを使用してください．
+タスクが SlowMesh にアクセスできる限り，タスクプロセスを別PCや別コンテナ上で実行しても構いません．
+SlowDash サーバープロセスを走らせたままタスクプロセスの停止・再実行をしても大丈夫なはずです．
+また，タスクプロセスを走らせたまま SlowDash サーバーの停止・再実行をしても自動再接続をするはずです．
+```console
+$ cd PATH/TO/PROJECT
+$ slowdash-task config/slowtask-store.py --mesh=slowmq://localhost:18881
+```
+この場合でも，SlowDash のタスクコントロールパネルから，タスクの「終了要求」を出すことができます．
+もしタスクが Tasklet で実装されていて，暴走していなければ，通常はこれできれいに終了します．
+サーバーと独立に開始されたタスクは，サーバーからのシグナルによる強制終了はできません．
+
+
+### 構成要素
 
 #### 読み出しタスク（`slowtask-randomwalk.py`）
 RandomWalk タスクでは，tasklet のループコールバックで 1 秒ごとにダミーデータを読み出し，それを `data.store.HV.ch0` トピックに publish します．
@@ -798,7 +819,6 @@ SlowTask の HTTP API により，タスクから export された変数は，�
 
 publish が基本的にデータ生成元からの push なのに対して，ControlNode の export は，外部からの pull 要求でデータを返すインターフェースです．「必要なときに最新値を得る」用途に向いています．
 
-
 ##### 追加その２
 この例の Store タスクは，通常は SlowDash プロジェクトの `config` 以下に置かれるファイルを動的に生成する例も含まれています．
 `@content(name)` で，コンテンツ名と，それを生成する関数を結びつけています．
@@ -822,7 +842,6 @@ def html_disk_usage():
 
 ブラウザの HTML フォームで "On update: reload HTML" をチェックすると，データ更新のたびにこのコンテンツ生成関数が呼ばれるので，データを含んだ HTML ページを動的に生成することができます．
 
-
 #### Web フォーム（`html-startstop.html`）
 ブラウザの Web フォームからスタート・ストップの publish やセットポイント設定の RPC を行っています．
 ```html
@@ -840,7 +859,6 @@ def html_disk_usage():
 
 - `randomwalk.set_value()`: randomwalk タスクの `set_value()` 関数の遠隔呼び出しをする．渡される関数の引数は，ここに書かれた引数リスト（この例では空）と他の `<input>` 要素の name-value 対を合わせたものになる．
 - `publish control.start()`: `control.start` トピックに publish する．publish データは引数リスト（この例では空）と他の `<input>` 要素の name-value 対を JSON にしたものになる．
-
 
 #### SlowPlot レイアウト （`slowplot-control.json`）
 以下のものを並べたものです．

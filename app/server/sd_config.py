@@ -104,6 +104,7 @@ class ConfigComponent(Component):
         doc['project'] = {
             'name': self.project.config.get('name', 'Untitled Project'),
             'title': self.project.config.get('title', ''),
+            'server_url': self.project.server_url,
             'is_secure': self.project.is_secure,
             'is_cgi': self.app.is_cgi,
             'is_command': self.app.is_command,

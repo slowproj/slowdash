@@ -8,9 +8,10 @@ import { JG as $, JGDateTime,  } from './jagaimo/jagaimo.mjs';
 
 
 export class DataRequest {
-    #defaultOptions = {};
-    #defaultRequests = {};
-    #customRequests = {};
+    #defaultOptions;
+    #defaultRequests;
+    #customRequests;
+    #streamingChannels;
     
     constructor(length, to, defaultOptions={}) {
         const defaults = {
@@ -20,7 +21,7 @@ export class DataRequest {
             reducer: 'last',
             filler: 'fillna',
             envelope: 0,
-            prior_data: 0,
+            priorData: 0,
             resamplingBuckets: 600,
             resamplingThreshold: 7200,
         };
@@ -28,10 +29,19 @@ export class DataRequest {
         
         this.#defaultRequests = {};
         this.#customRequests = {};
+        
+        this.#streamingChannels = new Set();
     }
 
     
-    append(channel, customOptions={}) {
+    append(channel, customOptions={}, fromQuery=true, fromStreaming=true) {
+        if (fromStreaming) {
+            this.#streamingChannels.add(channel);
+        }
+        if (! fromQuery) {
+            return;
+        }
+        
         let { resamplingThreshold, resamplingBuckets, ...requestOpts } = this.#defaultOptions;
 
         for (const name in this.#defaultOptions) {
@@ -89,6 +99,11 @@ export class DataRequest {
     }
 
     
+    streamingChannelList() {
+        return Array.from(this.#streamingChannels);
+    }
+
+    
     queryList(existingData, thresholdToCombimeRequests=5*86500) {
         let list = [];
 
@@ -125,6 +140,221 @@ export class DataRequest {
 
 
 
+class DataReceiver {
+    #loggedErrors;
+    
+    constructor() {
+        this.#loggedErrors = new Set();
+    }
+
+    
+    parseDataJson(textdata) {
+        if (textdata.length <= 2) {
+            return {};
+        }
+        
+        let data = {};
+        try {
+            data = JSON.parse(textdata.replace(/(:|{|\[|,)\s*NaN/g, '$1"NaN"'), (k,v) => {
+                return (v === 'NaN') ? NaN : v;
+            });
+        }
+        catch (err) {
+            if (! this.#loggedErrors.has('data')) {
+                this.#loggedErrors.add('data');
+                console.error('invalid data packet: ', err);
+                console.log(textdata);
+            }
+        }
+
+        return data;
+    }
+};
+
+
+
+export class QueryReceiver extends DataReceiver {    
+    constructor() {
+        super();
+    }
+
+    
+    async receive(queryList, onReceiveData) {
+        let status = { code:200, text:'OK' };
+        for (let i = 0; i < queryList.length; i++) {
+            const [id, query] = queryList[i];
+                                          
+            let textdata = '';
+            try {
+                const response = await fetch('api/data/' + query);
+                if (! response.ok) {
+                    status = { code: response.status, text: response.statusText };
+                }
+                else {
+                    textdata = await response.text();
+                }
+            }
+            catch (err) {
+                status = { code: -1, text: 'SlowDash server not reachable' };
+            }
+
+            const data = this.parseDataJson(textdata);
+            const isPartial = (i < queryList.length-1);
+            onReceiveData(id, data, isPartial);
+        }
+
+        return status;
+    }
+};
+
+
+
+export class StreamingReceiver extends DataReceiver {
+    #onReceiveData;
+    #url;
+    #sse;
+    #clientId;
+    #subscriptionList;
+    
+    constructor(onReceiveData) {
+        super();
+        
+        this.#onReceiveData = onReceiveData;
+
+        this.#url = null;
+        this.#sse = null;
+        this.#clientId = null;
+        this.#subscriptionList = new Set();
+
+        this.#setup();
+    }
+
+
+    async subscribe(channels) {
+        if (this.#clientId == null) {
+            console.error("SSE subscription: no client_id received");
+            return;
+        }
+        const url = this.#url.toString() + 'api/webmesh/subscribe/data?client_id=' + this.#clientId;
+        
+        for (const channel of channels) {
+            if (this.#subscriptionList.has(channel)) {
+                continue;
+            }
+            
+            const Message = {
+                'channel': channel,
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json; charset=utf-8' },
+                    body: JSON.stringify(Message),
+                });
+                if (! response.ok) {
+                    console.error("SSE subscription failed: " + response.statusText);
+                }
+                else {
+                    this.#subscriptionList.add(channel);
+                    console.log("SSE subscription: " + channel);
+                }
+            }
+            catch (err) {
+                console.error("SSE subscription failed: server not reachable");
+            }
+        }
+    }
+
+    
+    async unsubscribe() {
+        if (this.#clientId == null) {
+            return;
+        }
+        if (this.#subscriptionList.size == 0) {
+            return;
+        }
+        this.#subscriptionList.clear();
+        
+        const url = this.#url.toString() + 'api/webmesh/unsubscribe?client_id=' + this.#clientId;
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json; charset=utf-8' },
+                body: '',
+            });
+            if (! response.ok) {
+                console.error("SSE unsubscription failed: " + response.statusText);
+            }
+            else {
+                console.log("SSE unsubscription completed");
+            }
+        }
+        catch (err) {
+            console.error("SSE unsubscription failed: server not reachable");
+        }
+    }
+
+    
+    #setup() {
+        if (this.#sse != null) {
+            return;
+        }
+        
+        this.#url = new URL(window.location.href);
+        this.#url.search = '';
+        this.#url.hash = '';
+        if (this.#url.pathname.match(/\.[a-zA-Z0-9]+$/)) {  
+            // the last path element has an extension (file) -> remove the file name
+            this.#url.pathname = this.#url.pathname.replace(/\/[^/]*$/, '/');
+        }
+        else {
+            this.#url.pathname += (this.#url.pathname.endsWith('/') ? '' : '/');
+        }
+
+        try {
+            this.#sse = new EventSource(this.#url.toString() + 'event/webmesh/attach');
+        }
+        catch(error) {
+            this.#sse.close();
+            this.#sse = null;
+            console.error("SSE setup error: " + error);
+            console.log("Data streaming is disabled.");
+            return;
+        }
+        
+        this.#sse.onopen = () => {
+            ;
+        };
+        this.#sse.onclose = () => {
+            console.log("SSE Closed");
+            this.#sse = null;
+        };
+        this.#sse.addEventListener("register", (event) => {
+            try {
+                this.#clientId = JSON.parse(event.data).client_id;
+            }
+            catch (err){
+                console.error("SSE Error: bad register event: " + err);
+                return;
+            }
+            console.log('SSE Connected: client_id=' + this.#clientId);
+        });
+        
+        this.#sse.addEventListener("data", (event) => {
+            this.#onReceiveData(this.parseDataJson(event.data));
+        });
+
+        this.#sse.onerror = () => {
+            this.#sse.close();
+            this.#sse = null;
+            console.error("SSE Error: Data streaming is closed.");
+        };
+    }
+};
+
+
+
 export class Controller {
     constructor(view) {  // "view" is an instance of "Layout" or "Panel"
         this.callbacks = {
@@ -136,13 +366,11 @@ export class Controller {
         this.view = view;
         this.currentData = null;
         this.isUpdateRunning = false;
-
-        this.socket = null;
-        //this._setupStreaming();
-        this.sse = null;
-        this._setupNewStreaming();
-
-        this.loggedErrors = new Set();
+        
+        this.queryReceiver = new QueryReceiver();
+        this.streamingReceiver = new StreamingReceiver((data) => {
+            console.log('SSE data received', data);
+        });
     }
 
     
@@ -164,7 +392,9 @@ export class Controller {
         const view_callbacks = {
             changeDisplayTimeRange: (displayRange) => {
                 // displayRange can be null for a default range
-                this.view.draw(this.currentData, displayRange);
+                if (this.currentData !== null) {
+                    this.view.draw(this.currentData, displayRange);
+                }
                 this.callbacks.changeDisplayTimeRange(displayRange);
             },
             reconfigure: async () => {
@@ -181,6 +411,11 @@ export class Controller {
         };
         await this.view.configure(config, this.options, view_callbacks);
 
+        this.streamingReceiver.unsubscribe();
+        let dataRequest = new DataRequest(10, 0);
+        this.view.fillDataRequest(dataRequest);
+        this.streamingReceiver.subscribe(dataRequest.streamingChannelList());
+        
         if (this.currentData !== null) {
             this.update();
         }
@@ -249,7 +484,7 @@ export class Controller {
         }
         this.currentData.__meta.isPartial = true;
 
-        const status = this.#executeQuery(queryList, (id, data, isPartial) => {
+        const status = this.queryReceiver.receive(queryList, (id, data, isPartial) => {
             for (const ch in data) {
                 this.currentData[id ?? ch] = data[ch];
             }
@@ -260,74 +495,20 @@ export class Controller {
         });
         this.isUpdateRunning = false;
         
-        // re-establishing web-socket after server-recovery
-        if ((this.socket === null) && (status.code > 0)) {
-            this._setupStreaming();
-        }
-        
-        return status;
-    }
-
-    
-    async #executeQuery(queryList, onReceiveData) {
-        let status = { code:200, text:'OK' };
-        for (let i = 0; i < queryList.length; i++) {
-            const [id, query] = queryList[i];
-                                          
-            let textdata = '';
-            try {
-                const response = await fetch('api/data/' + query);
-                if (! response.ok) {
-                    status = { code: response.status, text: response.statusText };
-                }
-                else {
-                    textdata = await response.text();
-                }
-            }
-            catch (err) {
-                status = { code: -1, text: 'SlowDash server not reachable' };
-            }
-
-            let data = {};
-            if (textdata.length > 2) {
-                try {
-                    data = JSON.parse(textdata.replace(/(:|{|\[|,)\s*NaN/g, '$1"NaN"'), (k,v) => {
-                        return (v === 'NaN') ? NaN : v;
-                    });
-                }
-                catch (err) {
-                    if (! this.loggedErrors.has('data')) {
-                        this.loggedErrors.add('data');
-                        console.error('invalid data packet: ', err);
-                        console.log(textdata);
-                    }
-                }
-            }
-
-            const isPartial = (i < queryList.length-1);
-            onReceiveData(id, data, isPartial);
-        }
-
         return status;
     }
 
     
     async emit(topic, doc) {
-        const socket_available = (this.socket && (this.socket.readyState === WebSocket.OPEN));
+        const url = './api/emit/' + topic;
         const message = (typeof doc === 'string') ? doc : JSON.stringify(doc);
         
-        if (socket_available && (topic === 'current_data')) {
-            this.socket.send(message);
-        }
-        else {
-            const url = './api/emit/' + topic;
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json; charset=utf-8' },
-                body: message,
-            });
-            this.callbacks.forceUpdate();
-        }
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json; charset=utf-8' },
+            body: message,
+        });
+        this.callbacks.forceUpdate();
     }
 
     
@@ -353,161 +534,7 @@ export class Controller {
         let url = window.location.origin + window.location.pathname;
         url += '?configdata=' + btoa(JSON.stringify(popout_config));
         window.open(url);
-    }
-
-    
-    _setupStreaming() {
-        if (this.socket !== null) {
-            return;
-        }
-
-        let url = new URL(window.location.href);
-        url.protocol = (url.protocol === 'https:' ? 'wss:' : 'ws:');
-        url.search = '';
-        url.hash = '';
-        
-        if (url.pathname.match(/\.[a-zA-Z0-9]+$/)) {  
-            // last path element has an extension (file) -> remove the file name
-            url.pathname = url.pathname.replace(/\/[^/]*$/, '/');
-        }
-        else {
-            url.pathname += (url.pathname.endsWith('/') ? '' : '/');
-        }
-        url.pathname += 'ws/attach/current_data';
-
-        // if HTTPS is used and WebSocket is not WSS, an error occurs here
-        try {
-            this.socket = new WebSocket(url.toString());
-        }
-        catch(error) {
-            this.socket = null;
-            console.error("WebSocket setup error: " + error);
-            console.log("Maybe web-socket entry (/ws) is not forwarded by reverse proxy?");
-            console.log("Data streaming is disabled.");
-            return;
-        }
-        
-        this.socket.onopen = () => {
-            console.log("Web Socket Connected");
-        };
-        this.socket.onclose = () => {
-            console.log("Web Socket Closed");
-            this.socket = null;
-        };
-        this.socket.onerror = (error) => {
-            console.error("Web Socket Error: " + error);
-        };
-        this.socket.onmessage = (event) => {
-            const now = $.time();
-            const to = this.currentData?.__meta?.range?.to ?? null;
-            if (to !== 0) {
-                if ((to === null) || (to < 0)) {
-                    return;
-                }
-                if (to < now-1) {
-                    return;
-                }
-            }
-
-            let data;
-            try {
-                //data = JSON.parse(event.data.replace(/(?<!")\bNaN\b(?!")/g, '"NaN"'), (k,v) => {
-                data = JSON.parse(event.data.replace(/(:|{|\[|,)\s*NaN/g, '$1"NaN"'), (k,v) => {
-                    if (v === 'NaN') return NaN;
-                    return v;
-                });
-            }
-            catch (error) {
-                if (! this.loggedErrors.has('socket')) {
-                    this.loggedErrors.add('socket');
-                    console.error('invalid data packet (WebSocket): ', err);
-                    console.log(event.data);
-                }
-                return;
-            }
-
-            data['__meta'] = {
-                isCurrent: true,
-                isPartial: true,
-                currentDataTime: now,
-                range: { to: to, from: this.currentData?.__meta?.range?.from ?? -10 }
-            }
-            this.view.draw(data);
-        }
-    }
-
-    async _setupNewStreaming() {
-        if (this.sse !== null) {
-            return;
-        }
-        
-        let url = new URL(window.location.href);
-        url.search = '';
-        url.hash = '';
-        
-        if (url.pathname.match(/\.[a-zA-Z0-9]+$/)) {  
-            // last path element has an extension (file) -> remove the file name
-            url.pathname = url.pathname.replace(/\/[^/]*$/, '/');
-        }
-        else {
-            url.pathname += (url.pathname.endsWith('/') ? '' : '/');
-        }
-
-        try {
-            this.sse = new EventSource(url.toString() + 'event/webmesh/attach');
-        }
-        catch(error) {
-            this.sse.close();
-            this.sse = null;
-            console.error("SSE setup error: " + error);
-            console.log("Data streaming is disabled.");
-            return;
-        }
-        
-        this.sse.onopen = () => {
-            ;
-        };
-        this.sse.onclose = () => {
-            console.log("SSE Closed");
-            this.socket = null;
-        };
-        this.sse.onerror = () => {
-            this.sse.close();
-            this.sse = null;
-            console.error("SSE Error: Data streaming is closed.");
-        };
-        this.sse.addEventListener("register", (event) => {
-            try {
-                this.sse.client_id = JSON.parse(event.data).client_id;
-            }
-            catch (err){
-                console.error("SSE Error: bad register event: " + err);
-                return;
-            }
-            console.log('SSE Connected: client_id=' + this.sse.client_id);
-
-            const subscribe_url = url.toString() + 'api/webmesh/subscribe?client_id=' + this.sse.client_id;
-            const subscribe_message = {
-                'topic': 'data.store.HV.ch0',
-            };
-            fetch(subscribe_url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json; charset=utf-8' },
-                body: JSON.stringify(subscribe_message),
-            });
-        });
-        this.sse.addEventListener("data", (event) => {
-            let data = null;
-            try {
-                data = JSON.parse(event.data);
-            }
-            catch (err) {
-                console.error('badly formatted data: ' + event.data);
-                return;
-            }
-            console.log('SSE data received', data);
-        });
-    }
+    }    
 };
 
 
