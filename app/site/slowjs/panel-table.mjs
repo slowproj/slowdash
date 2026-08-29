@@ -166,7 +166,7 @@ class TablePanel extends Panel {
             }
             return;
         }
-        if (time < this.currentDataTime) {
+        if (dataPacket.__meta.range.to == 0 && time < this.currentDataTime) {
             return;
         }
         this.currentDataTime = time;
@@ -384,7 +384,7 @@ class TreePanel extends Panel {
             }
             return;
         }
-        if (time < this.currentDataTime) {
+        if (dataPacket.__meta.range.to == 0 && time < this.currentDataTime) {
             return;
         }
         this.currentDataTime = time;
@@ -566,7 +566,7 @@ class BlobPanel extends Panel {
             }
             return;
         }
-        if (time < this.currentDataTime) {
+        if (dataPacket.__meta.range.to == 0 && time < this.currentDataTime) {
             return;
         }
         this.currentDataTime = time;

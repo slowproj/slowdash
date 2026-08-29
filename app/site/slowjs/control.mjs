@@ -257,7 +257,7 @@ export class StreamingReceiver extends DataReceiver {
                 }
                 else {
                     this.#subscriptionList.add(channel);
-                    console.log("SSE subscription: " + channel);
+                    //console.log("SSE subscription: " + channel);
                 }
             }
             catch (err) {
@@ -287,7 +287,7 @@ export class StreamingReceiver extends DataReceiver {
                 console.error("SSE unsubscription failed: " + response.statusText);
             }
             else {
-                console.log("SSE unsubscription completed");
+                //console.log("SSE unsubscription completed");
             }
         }
         catch (err) {
@@ -369,11 +369,11 @@ export class Controller {
         
         this.queryReceiver = new QueryReceiver();
         this.streamingReceiver = new StreamingReceiver((dataPacket) => {
-            if ((this.currentData == null) || (this.currentData.__meta?.range.to !== 0)) {
+            if ((this.currentData == null) || (this.currentData.__meta.range.to !== 0)) {
                 return;
             }
             dataPacket.__meta = {
-                range: this.currentData.range,
+                range: this.currentData.__meta.range,
                 isStreaming: true,
             };
             this.view.draw(dataPacket);

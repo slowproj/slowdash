@@ -90,7 +90,7 @@ class Plot {
         }
     }
     
-    openSettings(div) {
+    openPlotSettings(div, divName) {
         div.html(`
             <table>
               <tr><th>Input</th><td></td></tr>
@@ -105,11 +105,11 @@ class Plot {
             table.find('tr:first-child').remove();
             table.prepend($('<tr>').html(`<td>Channel Y</td><td><input list="sd-numeric-timeseries-datalist"></td>`));
             table.prepend($('<tr>').html(`<td>Channel X</td><td><input list="sd-numeric-timeseries-datalist"></td>`));
-            bindInput(this.config, 'channelX', div.find('input').at(k++).css('width', '20em'));
-            bindInput(this.config, 'channelY', div.find('input').at(k++).css('width', '20em'));
+            bindInput(this.config, 'channelX', table.find('input').at(k++).css('width', '20em'));
+            bindInput(this.config, 'channelY', table.find('input').at(k++).css('width', '20em'));
         }
         else {
-            bindInput(this.config, 'channel', div.find('input').at(k++).css('width', '20em'));
+            bindInput(this.config, 'channel', table.find('input').at(k++).css('width', '20em'));
         }
         
         if (this.config.resampling) {
@@ -135,38 +135,39 @@ class Plot {
                 </select>
               </td>
             `).appendTo(table);
-            $('<tr>').html(`
-              <td></td>
-              <td>${this.config.resampling.envelope!==undefined ? '<label><input type="checkbox">min/max envelope</label> <span style="font-size:70%">(use with a small n-buckets)</span>' : ''}</td>
-            `).appendTo(table);
-            bindInput(this.config.resampling, 'threshold', div.find('input').at(k++).css('width', '5em'));
-            bindInput(this.config.resampling, 'buckets', div.find('input').at(k++).css('width', '5em'));
-            bindInput(this.config.resampling, 'reducer', div.find('select').at(ks++).css('width', '5em'));
+            bindInput(this.config.resampling, 'threshold', table.find('input').at(k++).css('width', '5em'));
+            bindInput(this.config.resampling, 'buckets', table.find('input').at(k++).css('width', '5em'));
+            bindInput(this.config.resampling, 'reducer', table.find('select').at(ks++).css('width', '5em'));
             if (this.config.resampling.envelope !== undefined) {
-                bindInput(this.config.resampling, 'envelope', div.find('input').at(k++), true);
-            }
+                $('<tr>').html(`
+                  <td></td>
+                  <td>${this.config.resampling.envelope!==undefined ? '<label><input type="checkbox">min/max envelope</label> <span style="font-size:70%">(use with a small n-buckets)</span>' : ''}</td>
+                `).appendTo(table);
+                bindInput(this.config.resampling, 'envelope', table.find('input').at(k++), true);
 
-            let comment = $('<div>').appendTo(div).css({
-                'margin-top': '2em',
-                'margin-left': '1em',
-                'font-size':'70%'
-            });
-            comment.html('<b>Resampling Threshold</b>: 0 to enable always, -1 to disable');
+                $('<div>').appendTo(div).css({
+                    'margin-top': '2em',
+                    'margin-left': '1em',
+                    'font-size':'70%'
+                }).html(
+                    '<b>Resampling Threshold</b>: 0 to enable always, -1 to disable'
+                );
+            }
         }
         
         table.append($('<tr>').html(`<th>Drawing</th><td></td>`));
         table.append($('<tr>').html(`
             <td>Label</td><td><input placeholder="auto">, format: <input placeholder="%f"></td>
         `));
-        bindInput(this.config, 'label', div.find('input').at(k++).css('width', '10em'));
-        bindInput(this.config, 'format', div.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config, 'label', table.find('input').at(k++).css('width', '10em'));
+        bindInput(this.config, 'format', table.find('input').at(k++).css('width', '5em'));
         
         if (this.config.color) {
             table.append($('<tr>').html(`
               <tr><td>Color</td><td><input type="color">, Opacity: <input type="number" step="0.05" min="0" max="1" placeholder="1"></td></tr>
             `));
-            bindInput(this.config, 'color', div.find('input').at(k++).css('width', '5em'));
-            bindInput(this.config, 'opacity', div.find('input').at(k++).css('width', '5em'));
+            bindInput(this.config, 'color', table.find('input').at(k++).css('width', '5em'));
+            bindInput(this.config, 'opacity', table.find('input').at(k++).css('width', '5em'));
         }
     }
     
@@ -275,7 +276,7 @@ class HistogramPlot extends Plot {
             this.histogram.counts = [];
             return true;
         }
-        if (time < this.currentDataTime) {
+        if (dataPacket.__meta.range.to == 0 && time < this.currentDataTime) {
             return false;
         }
         this.currentDataTime = time;
@@ -337,8 +338,8 @@ class TimeseriesHistogramPlot extends HistogramPlot {
         }
     }
     
-    openSettings(div) {
-        super.openSettings(div);
+    openPlotSettings(div, divName) {
+        super.openPlotSettings(div, divName);
         let table = div.find('table');
         let tr = $('<tr>').appendTo(table);
         $('<td>').text('Bins').appendTo(tr);
@@ -448,8 +449,8 @@ class Histogram2dPlot extends Plot {
         this.axes.addHistogram2d(this.histogram2d);
     }
 
-    openSettings(div) {
-        super.openSettings(div);
+    openPlotSettings(div, divName) {
+        super.openPlotSettings(div, divName);
     }
     
     setStyle(style) {
@@ -467,7 +468,7 @@ class Histogram2dPlot extends Plot {
             this.histogram2d.counts = [];
             return true;
         }
-        if (time < this.currentDataTime) {
+        if (dataPacket.__meta.range.to == 0 && time < this.currentDataTime) {
             return false;
         }
         this.currentDataTime = time;
@@ -552,8 +553,8 @@ class GraphPlot extends Plot {
         super.setStyle(style);
     }
 
-    openSettings(div) {
-        super.openSettings(div);
+    openPlotSettings(div, divName) {
+        super.openPlotSettings(div, divName);
     }
     
     update(dataPacket) {
@@ -567,7 +568,7 @@ class GraphPlot extends Plot {
             this.graph.y = [];
             return true;
         }
-        if (time < this.currentDataTime) {
+        if (dataPacket.__meta.range.to == 0 && time < this.currentDataTime) {
             return false;
         }
         this.currentDataTime = time;
@@ -709,16 +710,20 @@ class LineMarkerPlot extends GraphPlot {
         }
     }
 
-    openSettings(div) {
-        super.openSettings(div);
+    openPlotSettings(div, divName) {
+        super.openPlotSettings(div, divName);
         let table = div.find('table');
         let k = table.find('input').size(), ks = table.find('select').size();
         table.append($('<tr>').html(`
-            <td>Marker</td><td>type: ${marker_select},
-            size: <input type="number" step="any" min="0"></td>
+            <td>Marker</td><td>
+               type: ${marker_select},
+               size: <input type="number" step="any" min="0">
+            </td>
         `));
         table.append($('<tr>').html(`
-            <td>Line</td><td>width: <input type="number" step="any" min="0"></td>
+            <td>Line</td><td>
+              width: <input type="number" step="any" min="0">
+            </td>
         `));
         table.append($('<tr>').html(`
             <td></td><td>
@@ -731,23 +736,26 @@ class LineMarkerPlot extends GraphPlot {
         `));
         table.append($('<tr>').html(`
             <td>Fill</td><td>
-                <label><input type="radio" name="fill_envelope">envelope</label>
-                <label><input type="radio" name="fill_envelope">baseline</label>:
-                <input type="number" step="any"></td>
+                <label><input type="radio" name="${divName}_fill_envelope">envelope</label>
+                <label><input type="radio" name="${divName}_fill_envelope">baseline</label>:
+                <input type="number" step="any">
+            </td>
         `));
         table.append($('<tr>').html(`
-            <td></td><td>opacity: <input type="number" step="0.05" min="0" max="1"></td>
+            <td></td><td>
+              opacity: <input type="number" step="0.05" min="0" max="1">
+            </td>
         `));
 
-        bindInput(this.config, 'marker_type', div.find('select').at(ks++).css('width', '7em'));
-        bindInput(this.config, 'marker_size', div.find('input').at(k++).css('width', '5em'));
-        bindInput(this.config, 'line_width', div.find('input').at(k++).css('width', '5em'));
-        bindInput(this.config, 'line_type', div.find('select').at(ks++).css('width', '7em'));
-        bindInput(this.config, 'include_prior_point', div.find('input').at(k++));
-        bindInput(this.config, 'fill_envelope', div.find('input').at(k++), true);
-        bindInput(this.config, 'fill_envelope', div.find('input').at(k++), false);
-        bindInput(this.config, 'fill_baseline', div.find('input').at(k++).css('width', '5em'));
-        bindInput(this.config, 'fill_opacity', div.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config, 'marker_type', table.find('select').at(ks++).css('width', '7em'));
+        bindInput(this.config, 'marker_size', table.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config, 'line_width', table.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config, 'line_type', table.find('select').at(ks++).css('width', '7em'));
+        bindInput(this.config, 'include_prior_point', table.find('input').at(k++));
+        bindInput(this.config, 'fill_envelope', table.find('input').at(k++), true);
+        bindInput(this.config, 'fill_envelope', table.find('input').at(k++), false);
+        bindInput(this.config, 'fill_baseline', table.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config, 'fill_opacity', table.find('input').at(k++).css('width', '5em'));
     }
 };
 
@@ -777,15 +785,15 @@ class BarChartPlot extends GraphPlot {
         }
     }
 
-    openSettings(div) {
-        super.openSettings(div);
+    openPlotSettings(div, divName) {
+        super.openPlotSettings(div, divName);
         let table = div.find('table');
         let k = table.find('input').size();
         table.append($('<tr>').html(`<td>Bar</td><td>width: <input></td>`));
         table.append($('<tr>').html(`<td>Bar Label</td><td>format: <input></td>`));
 
-        bindInput(this.config, 'bar_width', div.find('input').at(k++).css('width', '5em'));
-        bindInput(this.config, 'bar_label_format', div.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config, 'bar_width', table.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config, 'bar_label_format', table.find('input').at(k++).css('width', '5em'));
     }
 };
 
@@ -867,8 +875,8 @@ class TimeseriesScatterPlot extends GraphPlot {
         }
     }
 
-    openSettings(div) {
-        super.openSettings(div);
+    openPlotSettings(div, divName) {
+        super.openPlotSettings(div, divName);
         let table = div.find('table');
         let k = table.find('input').size(), ks = table.find('select').size();
         table.append($('<tr>').html(`
@@ -884,12 +892,12 @@ class TimeseriesScatterPlot extends GraphPlot {
             <input type="color"></td>
         `));
 
-        bindInput(this.config, 'line_width', div.find('input').at(k++).css('width', '5em'));
-        bindInput(this.config, 'marker_type', div.find('select').at(ks++).css('width', '7em'));
-        bindInput(this.config, 'marker_size', div.find('input').at(k++).css('width', '5em'));
-        bindInput(this.config, 'lastpoint_type', div.find('select').at(ks++).css('width', '7em'));
-        bindInput(this.config, 'lastpoint_size', div.find('input').at(k++).css('width', '5em'));
-        bindInput(this.config, 'lastpoint_color', div.find('input').at(k++).css('width', '2em'));
+        bindInput(this.config, 'line_width', table.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config, 'marker_type', table.find('select').at(ks++).css('width', '7em'));
+        bindInput(this.config, 'marker_size', table.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config, 'lastpoint_type', table.find('select').at(ks++).css('width', '7em'));
+        bindInput(this.config, 'lastpoint_size', table.find('input').at(k++).css('width', '5em'));
+        bindInput(this.config, 'lastpoint_color', table.find('input').at(k++).css('width', '2em'));
     }
 
     
@@ -1483,11 +1491,11 @@ class PlotPanel extends Panel {
             <hr style="margin-bottom:2ex">
         `);
         let tabsDiv = $('<div>').appendTo(drawingsDiv);
-        for (let plot of this.plots) {
+        this.plots.forEach((plot, index) => {
             let label = plot.getLabel();
             let pageDiv = $('<div>').addClass('jaga-tabPage').attr('label', label).appendTo(tabsDiv);
-            plot.openSettings(pageDiv);
-        }
+            plot.openPlotSettings(pageDiv, `page${index}`);
+        });
         let tabs = new JGTabWidget(tabsDiv);
         tabs.openPage(-1);
 
@@ -1888,11 +1896,11 @@ class TimeAxisPlotPanel extends PlotPanel {
             <hr style="margin-bottom:2ex">
         `);
         let tabsDiv = $('<div>').appendTo(drawingsDiv);
-        for (let plot of this.plots) {
+        this.plots.forEach((plot, index) => {
             let label = plot.getLabel();
             let pageDiv = $('<div>').addClass('jaga-tabPage').attr('label', label).appendTo(tabsDiv);
-            plot.openSettings(pageDiv);
-        }
+            plot.openPlotSettings(pageDiv, `page${index}`);
+        });
         let tabs = new JGTabWidget(tabsDiv);
         tabs.openPage(-1);
 

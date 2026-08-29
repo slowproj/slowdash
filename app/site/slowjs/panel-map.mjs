@@ -370,7 +370,7 @@ export class MapPanel extends Panel {
             }
             data = { 'x': [], 'y': [] };
         }
-        if (time < this.currentDataTime) {
+        if (dataPacket.__meta.range.to == 0 && time < this.currentDataTime) {
             return;
         }
         this.currentDataTime = time;

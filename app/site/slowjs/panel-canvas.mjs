@@ -95,7 +95,7 @@ class CanvasItem {
         }
         
         let [time, value] = Panel._getLastTX(ts, null, dataPacket.__meta.range);
-        if ((this.last_tx[0] == null) || (this.last_tx[0] < time)) {
+        if ((this.last_tx[0] == null) || (dataPacket.__meta.range.to == 0 && this.last_tx[0] < time)) {
             this.last_tx = [time, value];
         }
         else {

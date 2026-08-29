@@ -23,10 +23,10 @@
                     "line_width": 1,
                     "line_type": "connect",
                     "include_prior_point": false,
-                    "fill_opacity": 0,
-                    "fill_envelope": false,
+                    "fill_opacity": 0.2,
+                    "fill_envelope": true,
                     "fill_baseline": 1e-100,
-                    "resampling": { "buckets": 60, "threshold": 600, "reducer": "last", "envelope": false },
+                    "resampling": { "buckets": 60, "threshold": 600, "reducer": "last", "envelope": true },
                     "source": { "query": true, "stream": false }
                 },
                 {
