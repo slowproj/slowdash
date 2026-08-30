@@ -4,7 +4,7 @@ Slowlette is a Web-server micro-framework in Python. Like FastAPI (or Flask), UR
 
 
 ## Dependencies
-- Python >=3.9
+- Python >=3.10
 - uvicorn to use ASGI 
 - (nothing is necessary for WSGI, though gunicorn can be used)
 

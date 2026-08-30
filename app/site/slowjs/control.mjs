@@ -418,7 +418,7 @@ export class Controller {
         };
         await this.view.configure(config, this.options, view_callbacks);
 
-        this.streamingReceiver.unsubscribe();
+        await this.streamingReceiver.unsubscribe();
         let dataRequest = new DataRequest(10, 0);
         this.view.fillDataRequest(dataRequest);
         this.streamingReceiver.subscribe(dataRequest.streamingChannelList());

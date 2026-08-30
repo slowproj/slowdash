@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "slowlette"
+version = "0.1.0"
+description = "Micro Web Framework"
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Sanshiro Enomoto" }
+]
+dependencies = [
+    "uvicorn",
+]
+
+[project.optional-dependencies]
+auth = [
+    "bcrypt",
+]
+
+[tool.setuptools.packages.find]
+include = ["slowlette*"]

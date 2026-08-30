@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "slowpy"
+version = "0.4.0"
+description = "SlowDash Python Library"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "Sanshiro Enomoto" }
+]
+dependencies = [
+    "numpy",
+    "matplotlib",
+]
+
+[project.optional-dependencies]
+pandas = [
+    "pandas",
+]
+
+postgres = [
+    "psycopg2-binary",
+]
+
+mysql = [
+    "mysql-connector-python",
+]
+
+influxdb = [
+    "influxdb-client",
+]
+
+redis = [
+    "redis",
+]
+
+hdf5 = [
+    "h5py",
+]
+
+all = [
+    "pandas",
+    "psycopg2-binary",
+    "mysql-connector-python",
+    "influxdb-client",
+    "redis",
+    "h5py",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["slowpy*"]
