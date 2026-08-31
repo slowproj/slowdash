@@ -455,7 +455,7 @@ export class ChannelListPanel extends Panel {
 
             let href = './slowplot.html?channel=' + entry.name;
             if ((entry.type || 'numeric') == 'numeric') {
-                if (entry.current ?? false) {
+                if (entry.streaming ?? false) {
                     href += '/singles/&length=300&reload=10&grid=2x2';
                 }
                 else {
@@ -465,11 +465,11 @@ export class ChannelListPanel extends Panel {
             else if (['histogram', 'ts-histogram', 'histogram2d', 'graph', 'table', 'tree', 'blob'].includes(entry.type)) {
                 href += '/' + entry.type + '&length=300&reload=10&grid=1x1';
             }
-            else if (entry.type == 'timeseries' && entry.current) {
+            else if (entry.type == 'timeseries' && entry.streaming) {
                 href += '&length=300&reload=10&grid=2x1';
             }
             else {  // others, such as "string"
-                if (entry.current) {
+                if (entry.streaming) {
                     href += '/singles/&length=300&reload=10&grid=2x2';
                 }
                 else {
@@ -479,12 +479,12 @@ export class ChannelListPanel extends Panel {
             let a = $('<a>').attr('href', href).text(entry.name).attr('target', '_blank');
             $('<td>').append(a).appendTo(tr);
             
-            if (entry.current ?? false) {
+            if (entry.streaming ?? false) {
                 if (entry.type == 'timeseries') {
-                    $('<td>').text('current numeric timeseries').appendTo(tr);
+                    $('<td>').text('numeric timeseries streaming').appendTo(tr);
                 }
                 else {
-                    $('<td>').text('current ' + (entry.type ?? 'numeric')).appendTo(tr);
+                    $('<td>').text((entry.type ?? 'numeric') + ' streaming').appendTo(tr);
                 }
             }
             else {

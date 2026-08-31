@@ -7,6 +7,79 @@ from sd_component import Component
 from slowpy.mesh import Mesh
 
 
+class DataCache:
+    def __init__(self):
+        self._channel_table = {}
+        self._last_data = {}
+
+
+    def process_data(self, channel:str, data):
+        self._last_data[channel] = data
+        if channel in self._channel_table:
+            return
+        
+        x = data.get(channel, {}).get('x', {})
+        datatype = 'unknown'
+        if type(x) is list:
+            for i in range(len(x)):
+                if x[-(i+1)] is None:
+                    continue
+                x = x[-(i+1)]
+                break
+            else:
+                x = None
+        if x is None:
+            pass
+        elif type(x) in [ int, float ]:
+            datatype = 'numeric'
+        elif type(x) is dict:
+            if 'y' in x:
+                datatype = 'graph'
+            elif 'bins' in x:
+                datatype = 'histogram'
+            elif 'table' in x:
+                datatype = 'table'
+            elif 'tree' in x:
+                datatype = 'tree'
+        else:
+            try:
+                float(x)
+                datatype = 'numeric'
+            except:
+                pass
+
+        self._channel_table[channel] = { 'name': channel, 'type': datatype, 'streaming': True }
+
+        
+    @property
+    def channel_table(self):
+        return self._channel_table
+
+        
+
+class ChannelMergerResponse(slowlette.Response):
+    def __init__(self, data_cache:DataCache):
+        super().__init__(content=[])
+        self._data_cache = data_cache
+
+            
+    def merge_response(self, response) -> None:
+        if response.content is None:
+            response.content = []
+        elif type(response.content) is not list:
+            logging.error(f'WebMesh:ChannelMergerResponse: bad response data type to merge: {type(resonse.content)}')
+            super().merge_response(response)
+            return
+            
+        existing_channels = set([ ch.get('name', '__') for ch in response.content ])
+        self.content = [
+            ch for name, ch in self._data_cache.channel_table.items()
+            if name not in existing_channels
+        ]
+        super().merge_response(response)
+
+
+            
 class WebMeshComponent(Component):
     def __init__(self, app, project):
         super().__init__(app, project)
@@ -20,6 +93,8 @@ class WebMeshComponent(Component):
         self._topic_client_table: dict[str,set[str]] = {}     # topic -> set of client_id
         self._client_queue_table: dict[str, asyncio.Queue] = {}   # client_id -> input message queue
         self._client_stop_table: dict[str, asyncio.Event] = {}   # client_id -> stop event (on quque full)
+
+        self._data_cache = DataCache()
 
         
     def public_config(self):
@@ -55,7 +130,9 @@ class WebMeshComponent(Component):
         async def process_message(headers, data):
             topic = headers.get('topic')
             if topic.startswith('data.'):
-                topic = 'data.*.' + '.'.join(topic.split('.')[2:])
+                channel = '.'.join(topic.split('.')[2:])
+                self._data_cache.process_data(channel, data)
+                topic = f'data.*.{channel}'
                 
             async with self._queue_lock:
                 for client_id in tuple(self._topic_client_table.get(topic, set())):
@@ -204,3 +281,8 @@ class WebMeshComponent(Component):
         await self._mesh.aio_publish(topic, doc)
             
         return { 'status': 'ok' }
+
+
+    @slowlette.get('/api/channels')
+    async def get_stream_channels(self):
+        return ChannelMergerResponse(self._data_cache)

@@ -402,6 +402,7 @@ MeshStdio では，以下のルールで処理されます：
 ## HTTP ブリッジ (WebMesh)
 WebMesh は，SlowDash サーバープロセスの一部で，SlowMesh に対する Publish / Subscribe を HTTP から行えるようにします．
 Publish は通常の POST リクエスト，Subscribe は Server-Sent Events (SSE) を用いて実装されています．
+現時点では，`data.*.` などの指定のトピックのみ subscribe 可能です．
 
 ### Subscribe
 Subscribe するためには，まず `event/webmesh/attach` に SSE 接続をして，SSE 経由で配布される  `register` イベントからクライアントIDを取得します．
@@ -414,11 +415,11 @@ Subscribe するためには，まず `event/webmesh/attach` に SSE 接続を�
     }
 ```
 
-そして，このクライアントIDを使用して，トピックを subscribe します．
+そして，このクライアントIDを使用して，を subscribe します．
 ```javascript
-    const subscribe_url = 'http://localhost:18881/api/webmesh/subscribe?client_id=' + client_id;
+    const subscribe_url = 'http://localhost:18881/api/webmesh/subscribe/data?client_id=' + client_id;
     const subscribe_message = {
-       'topic': 'data.store.HV.ch0',
+       'channel': 'HV.ch0.V',
     };
     fetch(subscribe_url, {
         method: 'POST',
@@ -427,7 +428,7 @@ Subscribe するためには，まず `event/webmesh/attach` に SSE 接続を�
     });
 ```
 
-`data.>` トピックは `data` イベントとして，`sd.task.stdout.>` トピックは `stdout` イベントとして送信されます．
+`data.*.>` トピックは `data` イベントとして，`sd.task.stdout.>` トピックは `stdout` イベントとして送信されます．
 ```javascript
     sse.addEventListener("data", (event) => {
         let data = JSON.parse(event.data);
@@ -1009,19 +1010,30 @@ Registry に保持されているキーの値をデータとして返す（デ�
 ## WebMesh
 WebMesh は，SlowMesh の PubSub を HTTP 経由で行えるようにするブリッジです．Slowlette を経由して `sd_webmesh.py` コンポーネントにより実装されています．
 
+### PubSub
+
 #### EventSource(`event/webmesh/attach`)
 SSE 接続チャンネルを作成する．
 
   - `register` イベント： サーバーが ClientID を配布
-  - `data` イベント： `data.>` トピックのメッセージ
+  - `data` イベント： `data.*.>` トピックのメッセージ
   - `stdout` イベント： `sd.task.stdout.>` トピックのメッセージ
 
-#### POST `api/webmesh/subscribe?client_id={client_id}`
-SlowMesh に Subscribe するトピックを指定する．複数回呼び出しが可能．
-POST する body に JSON で `topic` を指定．
+#### POST `api/webmesh/subscribe/data?client_id={client_id}`
+データストリーミングのために Subscribe するチャンネルを指定する．複数回呼び出しが可能．
+POST する body に JSON で `channel` を指定．
+
+#### POST `api/webmesh/unsubscribe`
+すべての subscribe を取り消す
 
 #### POST `api/webmesh/publish/{topic}`
 SlowMesh へ publish する．
+
+### 一般データインターフェース
+
+#### GET `api/channels`
+`data.*` トピックに流れているデータのチャンネル一覧を返す
+
 
 
 # RPC サービス

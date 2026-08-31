@@ -67,13 +67,13 @@ class App(slowlette.App):
         ### API Components: see the Slowlette documentation for the mechanism ###
         
         self.slowlette.include(UserModuleComponent(self, self.project))  # user module might want to capture API
+        self.slowlette.include(WebMeshComponent(self, self.project))     # stream data channels will be inserted
         self.slowlette.include(DataSourceComponent(self, self.project))  # user/task modules might create DB
         self.slowlette.include(UserHtmlComponent(self, self.project))
         self.slowlette.include(ExportComponent(self, self.project))
         self.slowlette.include(ConfigComponent(self, self.project))
         self.slowlette.include(MiscApiComponent(self, self.project))
         self.slowlette.include(TaskComponent(self, self.project))
-        self.slowlette.include(WebMeshComponent(self, self.project))
         self.slowlette.include(MeshRegistryComponent(self, self.project))
         self.slowlette.include(SlowMQComponent(self, self.project))
 

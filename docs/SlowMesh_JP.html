@@ -475,9 +475,9 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a hr
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> DataPacket</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>topic <span class="op">=</span> <span class="st">&#39;data.temp0&#39;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>topic <span class="op">=</span> <span class="st">&#39;data.store&#39;</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>temp0 <span class="op">=</span> thermometer.ch(<span class="dv">0</span>).get()</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> tasklet.mesh.aio_publish(topic, DataPacket({<span class="st">&#39;temp0&#39;</span>: temp0}))</span></code></pre></div>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> tasklet.mesh.aio_publish(topic, DataPacket(temp0, tag<span class="op">=</span><span class="st">&#39;temp0&#39;</span>))  <span class="co"># トピック名 data.store.temp0 で publish される</span></span></code></pre></div>
 <p>ここで，<code>DataPacket</code>
 のコンストラクタパラーメータは，<code>DataStore.append()</code>
 と同じです． つまり，データストアに直接記録するのと，SlowMesh に publish
@@ -773,7 +773,8 @@ SlowMesh の PubSub
 <p>WebMesh は，SlowDash サーバープロセスの一部で，SlowMesh に対する
 Publish / Subscribe を HTTP から行えるようにします． Publish は通常の
 POST リクエスト，Subscribe は Server-Sent Events (SSE)
-を用いて実装されています．</p>
+を用いて実装されています． 現時点では，<code>data.*.</code>
+などの指定のトピックのみ subscribe 可能です．</p>
 <h3 id="subscribe-2">Subscribe</h3>
 <p>Subscribe するためには，まず <code>event/webmesh/attach</code> に SSE
 接続をして，SSE 経由で配布される <code>register</code>
@@ -784,19 +785,18 @@ class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb18
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    sse<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&quot;register&quot;</span><span class="op">,</span> (<span class="bu">event</span>) <span class="kw">=&gt;</span> {</span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>        client_id <span class="op">=</span> <span class="bu">JSON</span><span class="op">.</span><span class="fu">parse</span>(<span class="bu">event</span><span class="op">.</span><span class="at">data</span>)<span class="op">.</span><span class="at">client_id</span><span class="op">;</span></span>
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    }</span></code></pre></div>
-<p>そして，このクライアントIDを使用して，トピックを subscribe
-します．</p>
+<p>そして，このクライアントIDを使用して，を subscribe します．</p>
 <div class="sourceCode" id="cb19"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> subscribe_url <span class="op">=</span> <span class="st">&#39;http://localhost:18881/api/webmesh/subscribe?client_id=&#39;</span> <span class="op">+</span> client_id<span class="op">;</span></span>
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> subscribe_url <span class="op">=</span> <span class="st">&#39;http://localhost:18881/api/webmesh/subscribe/data?client_id=&#39;</span> <span class="op">+</span> client_id<span class="op">;</span></span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> subscribe_message <span class="op">=</span> {</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>       <span class="st">&#39;topic&#39;</span><span class="op">:</span> <span class="st">&#39;data.store.HV.ch0&#39;</span><span class="op">,</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>       <span class="st">&#39;channel&#39;</span><span class="op">:</span> <span class="st">&#39;HV.ch0.V&#39;</span><span class="op">,</span></span>
 <span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    }<span class="op">;</span></span>
 <span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">fetch</span>(subscribe_url<span class="op">,</span> {</span>
 <span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">method</span><span class="op">:</span> <span class="st">&#39;POST&#39;</span><span class="op">,</span></span>
 <span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">headers</span><span class="op">:</span> { <span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/json; charset=utf-8&#39;</span> }<span class="op">,</span></span>
 <span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">body</span><span class="op">:</span> <span class="bu">JSON</span><span class="op">.</span><span class="fu">stringify</span>(subscribe_message)<span class="op">,</span></span>
 <span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span></code></pre></div>
-<p><code>data.&gt;</code> トピックは <code>data</code>
+<p><code>data.*.&gt;</code> トピックは <code>data</code>
 イベントとして，<code>sd.task.stdout.&gt;</code> トピックは
 <code>stdout</code> イベントとして送信されます．</p>
 <div class="sourceCode" id="cb20"><pre
@@ -1527,23 +1527,32 @@ object が publish される．</li>
 <p>WebMesh は，SlowMesh の PubSub を HTTP
 経由で行えるようにするブリッジです．Slowlette を経由して
 <code>sd_webmesh.py</code> コンポーネントにより実装されています．</p>
+<h3 id="pubsub-1">PubSub</h3>
 <h4
 id="eventsourceeventwebmeshattach">EventSource(<code>event/webmesh/attach</code>)</h4>
 <p>SSE 接続チャンネルを作成する．</p>
 <ul>
 <li><code>register</code> イベント： サーバーが ClientID を配布</li>
-<li><code>data</code> イベント： <code>data.&gt;</code>
+<li><code>data</code> イベント： <code>data.*.&gt;</code>
 トピックのメッセージ</li>
 <li><code>stdout</code> イベント： <code>sd.task.stdout.&gt;</code>
 トピックのメッセージ</li>
 </ul>
-<h4 id="post-apiwebmeshsubscribeclient_idclient_id">POST
-<code>api/webmesh/subscribe?client_id={client_id}</code></h4>
-<p>SlowMesh に Subscribe するトピックを指定する．複数回呼び出しが可能．
-POST する body に JSON で <code>topic</code> を指定．</p>
+<h4 id="post-apiwebmeshsubscribedataclient_idclient_id">POST
+<code>api/webmesh/subscribe/data?client_id={client_id}</code></h4>
+<p>データストリーミングのために Subscribe
+するチャンネルを指定する．複数回呼び出しが可能． POST する body に JSON
+で <code>channel</code> を指定．</p>
+<h4 id="post-apiwebmeshunsubscribe">POST
+<code>api/webmesh/unsubscribe</code></h4>
+<p>すべての subscribe を取り消す</p>
 <h4 id="post-apiwebmeshpublishtopic">POST
 <code>api/webmesh/publish/{topic}</code></h4>
 <p>SlowMesh へ publish する．</p>
+<h3 id="一般データインターフェース-2">一般データインターフェース</h3>
+<h4 id="get-apichannels-1">GET <code>api/channels</code></h4>
+<p><code>data.*</code>
+トピックに流れているデータのチャンネル一覧を返す</p>
 <h1 id="rpc-サービス">RPC サービス</h1>
 <h2 id="registry-key-value-store-2">Registry (Key-Value Store)</h2>
 <ul>

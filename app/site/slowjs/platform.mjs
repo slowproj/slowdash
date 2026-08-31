@@ -176,7 +176,7 @@ export class Platform {
             }
             all_datalist.append($('<option>').attr('value', entry.name).text(entry.name));
             if (((entry.type??'') == '') || (entry.type == 'numeric')) {
-                if (! (entry.current??false)) {
+                if (! (entry.streaming??false)) {
                     timeseries_datalist.append($('<option>').attr('value', entry.name).text(entry.name));
                 }
                 numeric_datalist.append($('<option>').attr('value', entry.name).text(entry.name));
