@@ -14,5 +14,8 @@ slowdash_project:
     - name: randomwalk
       auto_start: true
 
+    - name: histogram
+      auto_start: true
+      
     - name: store
       auto_start: true

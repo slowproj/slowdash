@@ -69,7 +69,7 @@ class SingleDisplayItem {
         }
         this.currentDataTime = time;
         
-        let time_text = (new JGDateTime(time)).asString(this.panelConfig.time_format || '%a, %H:%M:%S');
+        let time_text = (new JGDateTime(time)).asString(this.panelConfig.time_format || '%b %d, %H:%M:%S %Z');
         let value_text;
         if (value === null) {
             value_text = '---';

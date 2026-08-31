@@ -12,7 +12,7 @@ async def initialize():
     await tasklet.mesh.registry.aio_set('randomwalk/run/status', 'initialized')
 
     
-@tasklet.loop(interval=1.0)
+@tasklet.loop(interval=0.5)
 def loop():
     if not device.is_running:
         return

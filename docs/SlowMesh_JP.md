@@ -696,8 +696,9 @@ Tasklet のコンストラクタの `mesh_stdio` パラメータに `True` を�
 # Example Projects
 SlowTask の基本的な機能を使用する例が `ExampleProjects/Experimental/Mesh/` にあります．
 
-- `slowtask-randomwalk.py` がダミーデータを生成して `data.store.HV.ch0` に publish
+- `slowtask-randomwalk.py` がダミーデータを生成して `data.store.HV.ch0.V` に publish
 - `slowtask-store.py` が `data.store.>` を subscribe して，受け取ったデータを SlowPy DataStore に保存
+- `slowtask-histogram.py` が `data.*.>` を subscribe して，受け取ったデータのヒストグラムを作成して `data.stream.histogram.{Channel}` に publish
 - `slowtask-randomwalk.py` に対するブラウザから RPC 経由の set point 設定
 - `slowtask-randomwalk.py` に対するブラウザから pubsub 経由の start/stop コントロール
 - `slowtask-store.py` が `disk_usage` 変数をエクスポート，ブラウザがデータとして表示
@@ -706,7 +707,7 @@ SlowTask の基本的な機能を使用する例が `ExampleProjects/Experimenta
 #### タスクをサーバーと一緒に自動開始・自動停止
 `SlowdashProject.yaml` で，これらの SlowTask はサーバーと同時に自動スタートし，終了時に自動停止するように構成されています．
 タスクが暴走した場合でも，サーバーはタスクをシグナルにより強制終了させることができます．
-サーバーがクラッシュしたり，外部から即時強制終了 (SIGKILL) された場合でも，タスクは自動で終了します．
+サーバーがクラッシュしたり，外部から即時強制終了 (SIGKILL) された場合でも，タスクは自動で同時終了します．
 
 ```yaml
 slowdash_project:
@@ -721,6 +722,9 @@ slowdash_project:
     - name: randomwalk
       auto_start: true
 
+    - name: histogram
+      auto_start: true
+      
     - name: store
       auto_start: true
 ```
@@ -753,14 +757,14 @@ $ slowdash-task config/slowtask-store.py --mesh=slowmq://localhost:18881
 ### 構成要素
 
 #### 読み出しタスク（`slowtask-randomwalk.py`）
-RandomWalk タスクでは，tasklet のループコールバックで 1 秒ごとにダミーデータを読み出し，それを `data.store.HV.ch0` トピックに publish します．
+RandomWalk タスクでは，tasklet のループコールバックで 1 秒ごとにダミーデータを読み出し，それを `data.store.HV.ch0.V` トピックに publish します．
 ```python
 @tasklet.loop(interval=1.0)
 def loop():
     if not device.is_running:
         return
     data = device.ch(0).get()
-    tasklet.mesh.publish('data.store.HV.ch0', DataPacket({'V0': data}))
+    tasklet.mesh.publish('data.store', DataPacket(data, tag='HV.ch0.V'))
 ```
 
 読み出しのスタート・ストップは PubSub の `control.start` および `control.stop` によりコントロールされます．
@@ -777,7 +781,7 @@ async def stop(params):
     await tasklet.mesh.registry.aio_set('randomwalk/run/status', 'idle')
 ```
 
-RandomWalk 仮想デバイスのセットポイントは， （機能デモのために）export した RPC で設定されます．
+RandomWalk 仮想デバイスのセットポイントは， （機能デモのために）export した RPC で設定されます．実際には，Start/Stop と同様に PubSub を使用しても構いません．
 ```python
 @tasklet.mesh.export
 def set_value(value:float):
@@ -843,6 +847,31 @@ def html_disk_usage():
 
 ブラウザの HTML フォームで "On update: reload HTML" をチェックすると，データ更新のたびにこのコンテンツ生成関数が呼ばれるので，データを含んだ HTML ページを動的に生成することができます．
 
+#### データ解析タスク（`slowtask-histogram.py`）
+RandomWalk タスク が publish したデータは，Histogram タスクによって subscribe され，解析されます．
+解析結果のヒストグラムは，`data.stream.histogram.{Channel}` に publish されます．
+
+```python
+@tasklet.mesh.on('data.*.HV.>')
+def process_data(headers, body):
+    for channel, data in body.items():
+        if channel not in histograms:
+            print(f'creating a histogram for channel {channel}')
+            histograms[channel] = Histogram(100, -50, 50)
+        histograms[channel].fill(data.get('x', []))
+
+
+@tasklet.loop(interval=1)
+def stream_hist():
+    for channel, hist in histograms.items():
+        tasklet.mesh.publish('data.stream', DataPacket(hist, tag=f'histogram.{channel}'))
+```
+
+データ頻度に関係なく一定周期でヒストグラムを publish するために，到着データ解析とヒストグラムの publish は別のコールバックになっています．
+データ保存タスクは `data.store.>` しか subscribe していないので，`data.stream` に publish したこのデータは保存されず，オンラインディスプレイのみに表示されます．
+
+
+
 #### Web フォーム（`html-startstop.html`）
 ブラウザの Web フォームからスタート・ストップの publish やセットポイント設定の RPC を行っています．
 ```html
@@ -865,7 +894,9 @@ def html_disk_usage():
 以下のものを並べたものです．
 
 - 読み出しタスクのコントロールのための Web フォーム (`html-startstop.html`）
-- Store タスクによりデータベースに保存されたデータのプロット (普通の `V0` データチャンネル)
+- Store タスクによりデータベースに保存されたデータのプロット (`HV.ch0.V` の時系列プロット）
+- Histogram タスクによりストリーミングされるオンライン解析結果の表示(`data.stream.histogram.HV.ch0.V` プロット)
+- RandomWalk タスクが publish したデータをストリーミングチャンネル経由で直接受信した値の表示(`HV.ch0.V` の Single Value Display)
 - Store タスクが export した disk_usage の表示 (`store.data_usage` データチャンネル)
 - Store タスクが動的生成した HTML コンテンツ (disk usage テーブル） の表示 (動的生成 `config/html-disk_usage.html` ファイルコンテンツ）
 - レジストリに保持されている値の表示

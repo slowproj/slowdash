@@ -220,7 +220,7 @@ export class Panel {
     }
 
 
-    static _dataPacketIncludes(dataPacket, timestamp) {
+    static _dataPacketIncludes(dataPacket, timestamp, err=2.0) {
         const range = dataPacket.__meta?.range ?? null;
         if (range === null) {
             return false;
@@ -234,7 +234,7 @@ export class Panel {
             from += to;
         }
 
-        return (from <= timestamp && to >= timestamp);
+        return (from-err <= timestamp && to+err >= timestamp);
     }
 
     
