@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 3 June 2023 #
 
 import time, atexit, logging
-from ..basetypes import TimeSeries
+from ..basetypes import TimeSeries, DataElement
 
 
 class DataStore:
@@ -93,7 +93,10 @@ class DataStore:
             if type(t) in [ int, float ] and t <= 0:
                 t += time.time()
             
-            if type(values) is dict:
+            if isinstance(values, DataElement):
+                fields = None
+                values = [ values.to_json() ]
+            elif type(values) is dict:
                 fields = [ k for k in values.keys() ]
                 values = [ v for v in values.values() ]
             else:

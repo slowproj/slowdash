@@ -18,8 +18,8 @@ class DataCache:
         if channel in self._channel_table:
             return
         
-        x = data.get(channel, {}).get('x', {})
-        datatype = 'unknown'
+        datatype = None
+        x = data.get(channel, {}).get('x', None)
         if type(x) is list:
             for i in range(len(x)):
                 if x[-(i+1)] is None:
@@ -28,6 +28,7 @@ class DataCache:
                 break
             else:
                 x = None
+                
         if x is None:
             pass
         elif type(x) in [ int, float ]:
@@ -48,6 +49,10 @@ class DataCache:
             except:
                 pass
 
+        if datatype is None:
+            logging.warning(f'Unknown data type: channel={channel}, value={x}')
+            datatype = 'unknown'
+            
         self._channel_table[channel] = { 'name': channel, 'type': datatype, 'streaming': True }
 
         

@@ -3,11 +3,11 @@
         "range": { "length": 900, "to": 0 },
         "reload": 5,
         "mode": "normal",
-        "grid": { "rows": 2, "columns": 3 }
+        "grid": { "rows": 2, "columns": 4 }
     },
     "style": { },
     "panels": [
-        { "type": "html", "location": "project", "file": "satrtstop", "title": "PubSub and RPC Controls" },
+        { "type": "html", "location": "project", "file": "satrtstop", "title": "PubSub and RPC Controls", "scaling": 2 },
         {
             "type": "timeseries",
             "plots": [
@@ -52,6 +52,15 @@
             "legend": { "style": "transparent", "position": "left" }
         },
         {
+            "type": "plot",
+            "plots": [
+                { "type": "histogram", "channel": "hist.HV.ch0.V", "color": "#009090", "opacity": 0.2, "label": "", "format": "%.5g" },
+                { "type": "histogram", "channel": "hist.HV.ch1.V", "color": "#dd8000", "opacity": 0.2, "label": "", "format": "%.5g" }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "xmin": -60, "xmax": 60, "ymin": 0, "ymax": 90, "zmin": 0, "zmax": 1, "title": "Online Analysis Streaming" },
+            "legend": { "style": "transparent", "position": "left" }
+        },
+        {
             "type": "singles",
             "item_type": "square",
             "items": [
@@ -63,13 +72,14 @@
                         "warn": { "min": 0, "max": 0 },
                         "error": { "min": 0, "max": 0 }
                     },
-                    "label": "Run Status (registry value)"
+                    "label": "Run Status"
                 }
             ],
             "color": { "base": "rgb(0, 0, 0)", "normal": "#06b6d4", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.1 },
             "grid": { "rows": 0, "columns": 0 },
             "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
-            "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false }
+            "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false },
+            "title": "Registry Value"
         },
         { "type": "tree", "channel": "@registry:$pubsub.", "title": "PubSub Last Value Cache (Registry Values)" },
         { "type": "html", "location": "project", "file": "disk_usage", "title": "Disk Usage (config content HTML)", "reload": true },
@@ -86,15 +96,15 @@
                         "error": { "min": 0, "max": 100 }
                     },
                     "format": "%d %",
-                    "label": "Disk Usage (exported node)"
+                    "label": "Disk Usage"
                 }
             ],
             "color": { "base": "rgb(0, 0, 0)", "normal": "#06b6d4", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.1 },
             "grid": { "rows": 0, "columns": 0 },
             "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
-            "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false }
+            "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false },
+            "title": "exported node"
         },
-        { "type": "html", "location": "project", "file": "no_tasklet", "title": "", "reload": true },
         {
             "type": "singles",
             "item_type": "square",
@@ -115,7 +125,7 @@
             "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false },
             "title": "From Streaming"
         },
-        { "type": "table", "channel": "HV.ch0.V", "data_type": "value_table", "reversed": true, "max_lines": 100 }
+        { "type": "table", "channel": "HV.ch0.V", "data_type": "value_table", "reversed": true, "max_lines": 20, "title": "Data Tablue" }
     ],
     "meta": { "name": "control", "title": "", "description": "" }
 }

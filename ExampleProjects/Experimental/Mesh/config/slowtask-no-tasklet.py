@@ -20,6 +20,8 @@ def _loop():
         
         print(f'STORE: {data}')
         datastore.append(data, tag='HV.ch1.V')
+        
+        tasklet.mesh.publish('data.stream.HV.ch1.V', {'HV.ch1.V':{'t': time.time(), 'x': data}})
 
     time.sleep(1)
 
@@ -40,14 +42,6 @@ def stop(**params):
 
 
 
-def _get_html():
-    return f'''
-        <span style="font-size:300%">
-        Time: {str(datetime.datetime.now())}
-        </span>
-    '''
-
-    
 if __name__ == '__main__':
     _initialize()
     

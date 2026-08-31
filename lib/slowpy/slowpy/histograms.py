@@ -55,15 +55,26 @@ class Histogram(DataElement):
             for k in range(len(value)):
                 self.fill(value[k], weight[k])
             return
+        if value is None:
+            return
+        
+        try:
+            x = float(value)
+        except Exception as e:
+            raise Exception(f'Histogram.fill(): bad value to fill: {value}')
+        try:
+            w = float(weight)
+        except Exception as e:
+            raise Exception(f'Histogram.fill(): bad weight value to fill: {weight}')
                 
-        bin = self.scale.get_bin_of(value)
+        bin = self.scale.get_bin_of(x)
         if bin is not None:
-            self.counts[bin] += float(weight)
+            self.counts[bin] += float(w)
         else:
-            if value < self.scale.min:
-                self.underflow += float(weight)
-            if value >= self.scale.max:
-                self.overflow += float(weight)
+            if x < self.scale.min:
+                self.underflow += float(w)
+            if x >= self.scale.max:
+                self.overflow += float(w)
 
                 
     def rebin(self, nbins, range_min, range_max):

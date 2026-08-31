@@ -4,8 +4,9 @@ import time, logging
 from typing import Any
 
 from .mesh import MeshPacket
+from .. import DataElement
 from ..store import DataStore
-from ..basetypes import TimeSeries
+from ..basetypes import TimeSeries, DataElement
 
 
 class DataPacket(MeshPacket):
@@ -47,7 +48,13 @@ class DataPacket(MeshPacket):
             if type(t) in [ int, float ] and t <= 0:
                 t += time.time()
                 
-            if type(self.values) is dict:
+            if isinstance(self.values, DataElement):
+                if self.tag is None:
+                    logging.error(f'mesh.DataPacket: tag is required for DataElement data')
+                    body = {}
+                else:
+                    body = { self.tag: { 't':t ,'x': self.values.to_json() } }
+            elif type(self.values) is dict:
                 prefix = f'{self.tag}:' if self.tag is not None else ''
                 body = { prefix+field: { 't':t ,'x': x } for field, x in self.values.items() }
             elif self.tag is not None:

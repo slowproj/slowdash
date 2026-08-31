@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 23 March 2026 #
 
-import os, time, re, uuid, socket, threading, asyncio, inspect, logging
+import os, time, re, uuid, socket, threading, asyncio, inspect, logging, traceback
 from typing import Any
 from collections.abc import Callable
 from urllib.parse import urlsplit
@@ -444,6 +444,10 @@ class Mesh:
                         await result
             except Exception as e:
                 logging.error(f'Mesh: error in subscription callback: {func.__name__}(): {e}')
+                tb = traceback.format_exc()
+                if tb is not None and len(tb.strip()) > 0:
+                    logging.info(tb)
+                    print(tb)
 
         coro = handle_subscription()
         self._subscription_coros.append(coro)

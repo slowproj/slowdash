@@ -15,4 +15,4 @@ slowdash_project:
       auto_start: true
 
     - name: store
-#      auto_start: true
+      auto_start: true
