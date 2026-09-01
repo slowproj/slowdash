@@ -241,10 +241,17 @@ export class StreamingReceiver extends DataReceiver {
                 continue;
             }
 
-            const event = (channel[0] == '@') ? channel.substr(1) : 'data';  // '@task' / '@stdout' / 'data'
-            const message = (event == 'data') ? { 'channel': channel,} : {};
+            let event, message;
+            if (['@task', '@stdout'].includes(channel)) {
+                event = channel.substr(1);
+                message = {};
+            }
+            else {
+                event = 'data';
+                message ={ 'channel': channel,};
+            }
+            
             const url = this.#url.toString() + 'api/webmesh/subscribe/' + event + '?client_id=' + this.#clientId;
-
             try {
                 const response = await fetch(url, {
                     method: 'POST',
