@@ -242,8 +242,8 @@ export class StreamingReceiver extends DataReceiver {
             }
 
             let event, message;
-            if (['@task', '@stdout'].includes(channel)) {
-                event = channel.substr(1);
+            if (['@task:', '@stdout:'].includes(channel)) {
+                event = channel.substr(1, channel.length-2);
                 message = {};
             }
             else {
@@ -351,11 +351,11 @@ export class StreamingReceiver extends DataReceiver {
             this.#onReceiveData(this.parseDataJson(event.data));
         });
         this.#sse.addEventListener("task", (event) => {
-            this.#onReceiveData({"@task": this.parseDataJson(event.data)});
+            this.#onReceiveData({"@task:": this.parseDataJson(event.data)});
         });
         this.#sse.addEventListener("stdout", (event) => {
             //console.log("STDOUT received: ", this.parseDataJson(event.data));
-            this.#onReceiveData({"@stdout": this.parseDataJson(event.data)});
+            this.#onReceiveData({"@stdout:": this.parseDataJson(event.data)});
         });
 
         this.#sse.onerror = () => {

@@ -4,39 +4,49 @@ tasklet = Tasklet()
 
 from slowpy import Histogram
 histograms = {}
-updated = False
+is_running = False
 
 
 @tasklet.mesh.on('data.*.HV.>')
-def process_data(headers, body):
+async def process_data(headers, body):
+    if not is_running:
+        return
+    
     for channel, data in body.items():
         if channel not in histograms:
             print(f'creating a histogram for channel {channel}')
             histograms[channel] = Histogram(100, -50, 50)
         histograms[channel].fill(data.get('x', []))
 
-    global updated
-    updated = True
-
     
 @tasklet.loop(interval=1)
-def stream_hist():
-    global updated
-    if not updated:
+async def stream_hist():
+    if not is_running:
         return
-    updated = False
     
     for channel, hist in histograms.items():
-        tasklet.mesh.publish('data.stream', DataPacket(hist, tag=f'histogram.{channel}'))
+        await tasklet.mesh.aio_publish('data.stream', DataPacket(hist, tag=f'histogram.{channel}'))
 
+
+@tasklet.initialize()
+async def initialize():
+    global is_running
+    is_running = (await tasklet.mesh.registry.aio_get('setup/run/status', 'dead') == 'running')
+    
 
 @tasklet.mesh.on('control.start')
 async def start():
     for h in histograms.values():
         h.clear()
     
-    global updated
-    updated = True
+    global is_running
+    is_running = True
+    
+
+@tasklet.mesh.on('control.stop')
+async def stop():
+    global is_running
+    is_running = False
     
 
 

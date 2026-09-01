@@ -9,7 +9,7 @@ device.is_running = False
 
 @tasklet.initialize()
 async def initialize():
-    await tasklet.mesh.registry.aio_set('randomwalk/run/status', 'initialized')
+    await tasklet.mesh.registry.aio_set('setup/run/status', 'initialized')
 
     
 @tasklet.loop(interval=0.5)
@@ -33,14 +33,14 @@ def set_value(value:float):
 async def start(params):
     print(f'start: {params}')
     device.is_running = True
-    await tasklet.mesh.registry.aio_set('randomwalk/run/status', 'running')
+    await tasklet.mesh.registry.aio_set('setup/run/status', 'running')
 
 
 @tasklet.mesh.on('control.stop')
 async def stop(params):
     print(f'stop: {params}')
     device.is_running = False
-    await tasklet.mesh.registry.aio_set('randomwalk/run/status', 'idle')
+    await tasklet.mesh.registry.aio_set('setup/run/status', 'idle')
 
 
     

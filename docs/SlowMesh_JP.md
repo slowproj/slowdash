@@ -773,12 +773,12 @@ def loop():
 @tasklet.mesh.on('control.start')
 async def start(params):
     device.is_running = True
-    await tasklet.mesh.registry.aio_set('randomwalk/run/status', 'running')
+    await tasklet.mesh.registry.aio_set('setup/run/status', 'running')
 
 @tasklet.mesh.on('control.stop')
 async def stop(params):
     device.is_running = False
-    await tasklet.mesh.registry.aio_set('randomwalk/run/status', 'idle')
+    await tasklet.mesh.registry.aio_set('setup/run/status', 'idle')
 ```
 
 RandomWalk 仮想デバイスのセットポイントは， （機能デモのために）export した RPC で設定されます．実際には，Start/Stop と同様に PubSub を使用しても構いません．
@@ -854,6 +854,9 @@ RandomWalk タスク が publish したデータは，Histogram タスクによ�
 ```python
 @tasklet.mesh.on('data.*.HV.>')
 def process_data(headers, body):
+    if not is_running:
+        return
+    
     for channel, data in body.items():
         if channel not in histograms:
             print(f'creating a histogram for channel {channel}')
@@ -863,13 +866,32 @@ def process_data(headers, body):
 
 @tasklet.loop(interval=1)
 def stream_hist():
+    if not is_running:
+        return
+    
     for channel, hist in histograms.items():
         tasklet.mesh.publish('data.stream', DataPacket(hist, tag=f'histogram.{channel}'))
 ```
-
 データ頻度に関係なく一定周期でヒストグラムを publish するために，到着データ解析とヒストグラムの publish は別のコールバックになっています．
-データ保存タスクは `data.store.>` しか subscribe していないので，`data.stream` に publish したこのデータは保存されず，オンラインディスプレイのみに表示されます．
+データ保存タスクは `data.store.>` にしか subscribe していないので，`data.stream` に publish したこのデータは保存されず，オンラインディスプレイのみに表示されます．
 
+`is_running` ステータスは，start/stop の subscribe に加えて，RandomWalk がレジストリにセットしたものを initialize で読むことにとより，解析プロセスを停止・再開した場合でも正しくステータスを処理できるようになっています．
+```python
+@tasklet.initialize()
+async def initialize():
+    global is_running
+    is_running = (await tasklet.mesh.registry.aio_get('setup/run/status', 'dead') == 'running')
+
+@tasklet.mesh.on('control.start')
+async def start():
+    global is_running
+    is_running = True
+
+@tasklet.mesh.on('control.stop')
+async def stop():
+    global is_running
+    is_running = False
+```
 
 
 #### Web フォーム（`html-startstop.html`）

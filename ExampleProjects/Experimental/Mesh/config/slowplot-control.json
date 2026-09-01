@@ -1,6 +1,6 @@
 {
     "control": {
-        "range": { "length": 900, "to": 0 },
+        "range": { "length": 300, "to": 0 },
         "reload": 2,
         "mode": "normal",
         "grid": { "rows": 2, "columns": 3 }
@@ -26,7 +26,7 @@
                     "fill_opacity": 0.2,
                     "fill_envelope": true,
                     "fill_baseline": 1e-100,
-                    "resampling": { "buckets": 60, "threshold": 600, "reducer": "last", "envelope": true },
+                    "resampling": { "buckets": 60, "threshold": 1800, "reducer": "last", "envelope": true },
                     "source": { "query": true, "stream": false }
                 },
                 {
@@ -65,7 +65,7 @@
             "item_type": "square",
             "items": [
                 {
-                    "channel": "@registry:randomwalk/run/status",
+                    "channel": "@registry:setup/run/status",
                     "gauge": { "min": 0, "max": 0 },
                     "ranges": {
                         "normal": { "min": 0, "max": 0 },
@@ -83,7 +83,7 @@
                         "error": { "min": 0, "max": 0 }
                     },
                     "label": "HV.ch0.V (Streaming Push)",
-                    "format": ""
+                    "format": "%.2f"
                 },
                 {
                     "channel": "store.disk_usage['used_percent']",

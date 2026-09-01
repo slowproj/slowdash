@@ -88,13 +88,13 @@ class TaskPanel extends Panel {
 
 
     fillDataRequest(dataRequest) {
-        dataRequest.append('@task');
-        dataRequest.append('@stdout');
+        dataRequest.append('@task:');
+        dataRequest.append('@stdout:');
     }
 
     
     draw(dataPacket, displayTimeRange=null) {
-        if ((this._task_catalog == null)  || ('@task' in dataPacket)) {
+        if ((this._task_catalog == null)  || ('@task:' in dataPacket)) {
             this._load_tasklist();
         }
     }
