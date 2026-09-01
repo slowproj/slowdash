@@ -11,7 +11,7 @@ import { Panel } from './panel.mjs';
 
 class TaskPanel extends Panel {
     static describe() {
-        return { type: 'task', label: '' };
+        return { type: 'task', label: 'Task Manager' };
     }
 
     
@@ -26,11 +26,8 @@ class TaskPanel extends Panel {
         this.frameDiv = $('<div>').appendTo(div);        
         this.titleDiv = $('<div>').appendTo(this.frameDiv);
         this.contentDiv = $('<div>').appendTo(this.frameDiv);
-        this.remarkDiv = $('<div>').appendTo(this.contentDiv);
         this.tableDiv = $('<div>').appendTo(this.contentDiv);
         
-        this.remarkDiv.css('margin-bottom','0.5em').html('Work in progress: <span style="color:red">Reload the page to update</span> for now').prependTo(this.tableDiv).hide();
-
         this.table = $('<table>').appendTo(this.tableDiv);
         this.table.html('<tr><td></td></tr><tr><td>loading task list...</td></tr>');
         this.indicator = new JGIndicatorWidget($('<div>').appendTo(div));
@@ -57,7 +54,7 @@ class TaskPanel extends Panel {
         this.contentDiv.css({
             position: 'relative',
             width:'100%',
-            height:'calc(100% - 10px - 25px)',
+            height:'calc(100% - 10px - 30px)',
             margin: 0,
             padding:0,
             overflow:'hidden',
@@ -87,16 +84,19 @@ class TaskPanel extends Panel {
         this._short_form = config.short_form ?? false;
         this.is_secure = options.is_secure;
         this._task_catalog = null;
-
-
-        if (this._short_form) {
-            this.remarkDiv.show();
-        }
     }
 
 
-    draw(data, displayTimeRange=null) {
-        this._load_tasklist();
+    fillDataRequest(dataRequest) {
+        dataRequest.append('@task');
+        dataRequest.append('@stdout');
+    }
+
+    
+    draw(dataPacket, displayTimeRange=null) {
+        if ((this._task_catalog == null)  || ('@task' in dataPacket)) {
+            this._load_tasklist();
+        }
     }
 
     

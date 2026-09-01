@@ -217,6 +217,11 @@ class TaskProxy:
 
         
     @property
+    def mesh_id(self):
+        return self._mesh_id
+
+    
+    @property
     def name(self):
         return self._name
 
@@ -442,7 +447,8 @@ class TaskComponent(Component):
         if command is None or len(command) == 0:
             return { 'status': 'error', 'message': f'no command found to start task: {task_name}' }
 
-        self._check_task_heartbeats()
+        await self._check_task_heartbeats()
+        
         for task in list(self._task_table.values()):
             if task._name == task_name:
                 return { 'status': 'error', 'message': f'task already running: {task_name}' }
@@ -461,7 +467,7 @@ class TaskComponent(Component):
 
     
     async def _stop_task(self, task_name:str):
-        self._check_task_heartbeats()
+        await self._check_task_heartbeats()
         for task in list(self._task_table.values()):
             if task._name != task_name or task._is_dead:
                 continue
@@ -485,7 +491,7 @@ class TaskComponent(Component):
             except Exception as e:
                 logging.error(f'unable to kill a Task process: {task_name}: {e}')
 
-        self._check_task_proc()
+        await self._check_task_proc()
         await self._purge_task(task_name)
         
         return { 'status': 'ok' }
@@ -509,8 +515,9 @@ class TaskComponent(Component):
         async def process_task_spec(headers, data):
             mesh_id = data.get('mesh_id')
             if mesh_id is not None and len(mesh_id) > 0:
-                self._task_table[mesh_id] = TaskProxy(data)
                 logging.info(f'Task spec received: {data}')
+                self._task_table[mesh_id] = TaskProxy(data)
+                await self._notify_life_event(mesh_id, 'spec received')
                 
         await self._mesh.aio_subscribe('sd.task.spec.>', process_task_spec)
         
@@ -518,8 +525,9 @@ class TaskComponent(Component):
             mesh_id = data.get('mesh_id')
             if mesh_id is not None and len(mesh_id) > 0:
                 if mesh_id in self._task_table:
-                    self._task_table.pop(mesh_id, None)
                     logging.info(f'Task removed: {mesh_id}')
+                    self._task_table.pop(mesh_id, None)
+                    await self._notify_life_event(mesh_id, 'exit')
                 
         await self._mesh.aio_subscribe('sd.task.exit.>', process_task_exit)
         
@@ -539,21 +547,35 @@ class TaskComponent(Component):
         await self._mesh.aio_publish('sd.task.control.introduce', {})
 
         
-    def _check_task_heartbeats(self):
+    async def _notify_life_event(self, mesh_id:str, event_name:str):
+        body = {
+            'mesh_id': mesh_id,
+            'timestamp': time.time(),
+            'event': event_name,
+        }
+        try:
+            await self._mesh.aio_publish(f'sd.task.life_event.{mesh_id}', body)
+        except Exception:
+            pass
+            
+
+    async def _check_task_heartbeats(self):
         now = time.time() - 5
         for mesh_id, task in self._task_table.items():
             if task._heartbeat_expire < now:
                 if not task._is_dead:
+                    task._is_dead = True
                     logging.warning(f'No Heartbeat from Task: {task.name}')
-                    self._check_task_proc()
-                task._is_dead = True
+                    await self._check_task_proc()
+                    await self._notify_life_event(task.mesh_id, 'heatbeat stop')
             else:
                 if task._is_dead:
+                    task._is_dead = False
                     logging.info(f'Heartbeat recovered from Task: {task.name}')
-                task._is_dead = False
+                    await self._notify_life_event(task.mesh_id, 'heatbeat recovery')
 
             
-    def _check_task_proc(self):
+    async def _check_task_proc(self):
         for task_name, proc_set in self._proc_set_table.items():
             for proc in list(proc_set):
                 return_code = proc.poll()
@@ -571,7 +593,7 @@ class TaskComponent(Component):
     @slowlette.get('/api/task/status')
     async def get_task_status(self):
         doc = []
-        self._check_task_proc()
+        await self._check_task_proc()
         for task in list(self._task_table.values()):
             doc.append({
                 'name': task._name,
@@ -588,18 +610,18 @@ class TaskComponent(Component):
         logging.info(f'Task Control: {taskname}.{action}()')
 
         if action == 'start':
-            return await self._start_task(taskname)
+            result = await self._start_task(taskname)
         elif action == 'stop':
-            return await self._stop_task(taskname)
+            result = await self._stop_task(taskname)
         elif action == 'kill':
-            return await self._kill_task(taskname)
+            result = await self._kill_task(taskname)
         elif action == 'purge':
-            return await self._purge_task(taskname)
+            result = await self._purge_task(taskname)
         else:
-            return { 'status': 'error', 'message': f'Unknown task control: {action}' }
+            result = { 'status': 'error', 'message': f'Unknown task control: {action}' }
         
-        return {'status': 'ok'}
-    
+        return result
+
 
     @slowlette.post('/api/control')
     async def execute_command(self, doc:slowlette.DictJSON):
@@ -617,7 +639,8 @@ class TaskComponent(Component):
             except Exception as e:
                 return {'status': 'error', 'message': str(e) }
             
-        self._check_task_heartbeats()
+        await self._check_task_heartbeats()
+            
         for task in list(self._task_table.values()):
             if task._is_dead:
                 continue
@@ -633,7 +656,9 @@ class TaskComponent(Component):
     @slowlette.get('/api/channels')
     async def api_channels(self):
         channels = []
-        self._check_task_heartbeats()
+
+        await self._check_task_heartbeats()
+            
         for task in list(self._task_table.values()):
             if not task._is_dead:
                 channels.extend(await task.get_channels())
@@ -695,7 +720,7 @@ class TaskComponent(Component):
         if (to < 0) or (to > 0 and (now > to+1 or now < to - length)):
             return {}
         
-        self._check_task_heartbeats()
+        await self._check_task_heartbeats()
         
         record = {}
         start = (to if to > 0 else int(now) + to) - length
@@ -723,7 +748,7 @@ class TaskComponent(Component):
     async def api_get_content_list(self):
         self._content_table = {}
 
-        self._check_task_heartbeats()
+        await self._check_task_heartbeats()
         
         doc = []
         for task in list(self._task_table.values()):
@@ -759,7 +784,8 @@ class TaskComponent(Component):
         if content_file_name is None:
             return None
         
-        self._check_task_heartbeats()
+        await self._check_task_heartbeats()
+        
         for task in list(self._task_table.values()):
             if task._is_dead:
                 continue

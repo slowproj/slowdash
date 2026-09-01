@@ -235,22 +235,21 @@ export class StreamingReceiver extends DataReceiver {
             console.error("SSE subscription: no client_id received");
             return;
         }
-        const url = this.#url.toString() + 'api/webmesh/subscribe/data?client_id=' + this.#clientId;
         
         for (const channel of channels) {
             if (this.#subscriptionList.has(channel)) {
                 continue;
             }
-            
-            const Message = {
-                'channel': channel,
-            };
+
+            const event = (channel[0] == '@') ? channel.substr(1) : 'data';  // '@task' / '@stdout' / 'data'
+            const message = (event == 'data') ? { 'channel': channel,} : {};
+            const url = this.#url.toString() + 'api/webmesh/subscribe/' + event + '?client_id=' + this.#clientId;
 
             try {
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json; charset=utf-8' },
-                    body: JSON.stringify(Message),
+                    body: JSON.stringify(message),
                 });
                 if (! response.ok) {
                     console.error("SSE subscription failed: " + response.statusText);
@@ -343,6 +342,13 @@ export class StreamingReceiver extends DataReceiver {
         
         this.#sse.addEventListener("data", (event) => {
             this.#onReceiveData(this.parseDataJson(event.data));
+        });
+        this.#sse.addEventListener("task", (event) => {
+            this.#onReceiveData({"@task": this.parseDataJson(event.data)});
+        });
+        this.#sse.addEventListener("stdout", (event) => {
+            //console.log("STDOUT received: ", this.parseDataJson(event.data));
+            this.#onReceiveData({"@stdout": this.parseDataJson(event.data)});
         });
 
         this.#sse.onerror = () => {

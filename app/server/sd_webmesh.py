@@ -138,6 +138,10 @@ class WebMeshComponent(Component):
                 channel = '.'.join(topic.split('.')[2:])
                 self._data_cache.process_data(channel, data)
                 topic = f'data.*.{channel}'
+            elif topic.startswith('sd.task.life_event'):
+                topic = f'sd.task.life_event'
+            elif topic.startswith('sd.task.stdout'):
+                topic = f'sd.task.stdout'
                 
             async with self._queue_lock:
                 for client_id in tuple(self._topic_client_table.get(topic, set())):
@@ -152,6 +156,7 @@ class WebMeshComponent(Component):
                         stop_event.set()
 
         await self._mesh.aio_subscribe('data.>', process_message)
+        await self._mesh.aio_subscribe('sd.task.life_event.>', process_message)
         await self._mesh.aio_subscribe('sd.task.stdout.>', process_message)
         
         
@@ -197,6 +202,9 @@ class WebMeshComponent(Component):
                 topic = headers.get('topic', '')
                 if topic.startswith('data'):
                     event = 'data'
+                    data = body
+                elif topic.startswith('sd.task.life_event'):
+                    event = 'task'
                     data = body
                 elif topic.startswith('sd.task.stdout'):
                     event = 'stdout'
@@ -244,11 +252,10 @@ class WebMeshComponent(Component):
             if channel is None or len(channel) == 0:
                 return { 'status': 'error', 'message': f'bad channel name: {channel}' }
             topic = f'data.*.{channel}'
+        elif event == 'task':
+            topic = f'sd.task.life_event'
         elif event == 'stdout':
-            task = doc.get('task')
-            if task is None or len(task) == 0:
-                return { 'status': 'error', 'message': f'bad task name: {task}' }
-            topic = f'sd.task.stdout.{task}'
+            topic = f'sd.task.stdout'
         else:
             return { 'status': 'error', 'message': f'bad streaming event name: {event}' }
 
