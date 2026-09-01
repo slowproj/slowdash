@@ -7,7 +7,7 @@
     },
     "style": { },
     "panels": [
-        { "type": "html", "location": "project", "file": "satrtstop", "title": "PubSub and RPC Controls", "scaling": null },
+        { "type": "html", "location": "project", "file": "satrtstop", "title": "PubSub and RPC Controls", "scaling": 1 },
         {
             "type": "timeseries",
             "plots": [
