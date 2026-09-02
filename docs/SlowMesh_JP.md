@@ -1311,6 +1311,32 @@ Body:
 }
 ```
 
+### sd.task.life_event.{mesh_id}
+タスクの実行状態の変化を通知
+
+##### 主な用途
+- Sender(s): sd_taskprocess (SlowDash サーバー)
+- Receiver(s): タスクモニタなど
+- Timing:
+  - サーバーが task spec を受け取ったとき
+  - サーバーが task exit を受け取ったとき
+  - サーバーの監視で heatbeat が失われたとき・復活したとき
+  - SlowTask ローダーがスクリプトのロードに失敗したとき
+
+##### JSON Schema
+Body:
+```json
+{
+    "type": "object",
+    "required": [ "mesh_id", "timestamp", "event" ],
+    "properties": {
+        "mesh_id": { "type": "string" },
+        "timestamp": { "type": "int" },
+        "event": { "type": "string" },
+    }
+}
+```    
+
 ### sd.task.stdout.{task_name}.{mesh_id}
 タスクの stdout/stderr へ出力のリダイレクト
 

@@ -10,13 +10,14 @@ mesh_url = 'slowmq://localhost:18881'
 #mesh_url = 'amqp://slowdash:slowdash@localhost/SlowMesh'
 
 mesh = Mesh(mesh_url)
+print(f'Mesh Connected. I am {mesh.mesh_id}')
 
 
 @mesh.export
 def chat(line, *, sender=None):
     print(f'You ("{sender}") sent me "{line}".')
     print(f'I will send you the current time.')
-    return str(datetime.datetime.now())
+    return f'Hi {sender}, it is {datetime.datetime.now()} now'
 
 
 async def main():

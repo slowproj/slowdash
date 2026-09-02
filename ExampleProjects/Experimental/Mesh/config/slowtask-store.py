@@ -62,4 +62,4 @@ def html_disk_usage():
 #### Standalone Execution  ####
     
 if __name__ == '__main__':
-    tasklet.run(slowdash_url='http://localhost:18881')
+    tasklet.run(mesh_url='slowmq://localhost:18881')

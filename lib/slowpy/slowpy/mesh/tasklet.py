@@ -86,23 +86,20 @@ class RetainerAutocide:
 
 
 class Tasklet:
-    def __init__(self, name:str|None=None, *, use_oldstyle_callbacks=False, mesh_stdio=True):
+    def __init__(self, name:str|None=None, *, mesh_url:str|None=None, use_mesh_stdio:bool=True, use_oldstyle_callbacks:bool=False):
         self._name = name
+        self._mesh_url = mesh_url
         self._use_oldstyle_callbacks = use_oldstyle_callbacks
-        
+
+        self._module = None
+        self._mesh = Mesh(self._mesh_url)
         self._params = {}
-        
-        self._dash_url = None
-        self._dash = Dash()
-        
-        self._mesh_url = None
-        self._mesh = Mesh(name=name, on_reconnect=self.on_reconnect, name_prefix_to_drop='slowtask-')
-        
-        if mesh_stdio:
+
+        if use_mesh_stdio:
             self._mesh_stdio = MeshStdio(self._mesh, topic_prefix='sd.task')
         else:
             self._mesh_stdio = None
-        
+
         self._mesh_list = [ self._mesh ]
         self._initialize_task_coros = []
         self._main_task_coros = []
@@ -113,6 +110,8 @@ class Tasklet:
 
         self._content_generators = {}
 
+        self._dash = Dash()
+        
         
     @property
     def name(self):
@@ -133,41 +132,41 @@ class Tasklet:
         """
         mesh = Mesh(mesh_url, **kwargs)
         self._mesh_list.append(mesh)
+        
         return mesh
 
 
-    def run(self, params:dict|None=None, *, dash_url:str|None=None, mesh_url:str|None=None, name:str|None=None, module=None):
-        self._params = copy.deepcopy(params)
-        self._dash_url = dash_url or self._dash_url
+    def run(self, params:dict|None=None, *, name:str|None=None, mesh_url:str|None=None):
+        self._params = copy.deepcopy(params or {})
+        self._name = name or self._name
         self._mesh_url = mesh_url or self._mesh_url
-        if self._mesh_url is None and self._dash_url is not None:
-            if self._dash_url.startswith('http://'):
-                self._mesh_url = 'slowmq' + self._dash_url[4:]
-            elif self._dash_url.startswith('https://'):
-                self._mesh_url = 'slowmqs' + self._dash_url[5:]
-
-        if name is not None:
-            self._name = name
-        if module is None:
-            caller_frame = inspect.currentframe().f_back
-            modname = caller_frame.f_globals.get('__name__')
-            module = sys.modules.get(modname)
+        
+        caller_frame = inspect.currentframe().f_back
+        modname = caller_frame.f_globals.get('__name__')
+        module = sys.modules.get(modname)
         if module is None:
             logging.error(f'Tasklet: unable to get module: {modname}')
-
-        if self._use_oldstyle_callbacks:
-            self._scan_oldstyle_callbacks(module)
-
-        self._export_stop_function()
-        self._export_content_generators()
+            return
+        self._module = module
             
-        ctrl.stop_by_signal()
         try:
             asyncio.run(self._start())
         except asyncio.CancelledError:
             pass
             
 
+    async def run_module(self, module, name:str, params:dict, mesh_url:str):
+        self._module = module
+        self._name = name
+        self._params = copy.deepcopy(params or {})
+        self._mesh_url = mesh_url or self._mesh_url
+        
+        try:
+            await self._start()
+        except asyncio.CancelledError:
+            pass
+        
+        
     def is_stop_requested(self):
         return ctrl.is_stop_requested()
     
@@ -322,31 +321,36 @@ class Tasklet:
 
     async def _start(self):
         if self._mesh_url is None:
-            logging.error(f'Tasklet Error: {self._name}: Mesh URL not provided')
+            logging.error(f'Tasklet: Mesh URL is not provided')
             return
-        self._mesh.connect(self._mesh_url, name=self._name)
+        self._mesh.connect(self._mesh_url, self._name)
         if self._name is None:
             self._name = self._mesh.name
-
-        if self._mesh_stdio is not None and self._mesh_url is not None:
+        
+        ctrl.stop_by_signal()
+        self._mesh.add_reconnect_callback(self.on_reconnect)
+        
+        if self._use_oldstyle_callbacks:
+            self._scan_oldstyle_callbacks(self._module)
+        self._export_stop_function()
+        self._export_content_generators()
+        
+        if self._mesh_stdio:
             await self._mesh_stdio.aio_start()
         
         for mesh in self._mesh_list:
             await mesh.aio_start()   
 
-        if self._dash_url is None:
-            try:
-                self._dash_url = await mesh.registry.aio_get('$server.url', None)
-            except Exception as e:
-                pass
-        if self._dash_url is not None:
-            self._dash.connect(self._dash_url)
+        try:
+            dash_url = await mesh.registry.aio_get('$server.url', None)
+            if dash_url is not None:
+                self._dash.connect(self.dash)
+        except Exception as e:
+            pass
             
         try:
             await asyncio.gather(*self._initialize_task_coros)
         except Exception as e:
-            if self._mesh_stdio is not None:
-                await self._mesh_stdio.aio_stop()
             for mesh in self._mesh_list:
                 try:
                     await mesh.aio_close()   
@@ -361,7 +365,7 @@ class Tasklet:
         async def handle_control(headers, data):
             if headers.get('topic', '') == 'sd.task.control.introduce':
                 await self._publish_spec()
-        await self.mesh.aio_subscribe('sd.task.control.>', handle_control)
+        await self._mesh.aio_subscribe('sd.task.control.>', handle_control)
         await self._publish_spec()
 
         main_tasks = set()
@@ -403,7 +407,10 @@ class Tasklet:
                 pass
 
             if self._mesh_stdio is not None:
-                await self._mesh_stdio.aio_stop()
+                try:
+                    await self._mesh_stdio.aio_stop()
+                except Exception:
+                    pass
             for mesh in self._mesh_list:
                 try:
                     await mesh.aio_close()
@@ -509,8 +516,6 @@ class Tasklet:
             'variables': variables,
             'contents': contents,
         }
-        if self._mesh_stdio:
-            spec_doc['stdio'] = self._mesh_stdio.spec        
         
         await self.mesh.aio_publish(f'sd.task.spec.{self.name}.{self.mesh.mesh_id}', spec_doc)
         

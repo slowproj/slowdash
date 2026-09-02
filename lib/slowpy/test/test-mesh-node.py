@@ -9,6 +9,7 @@ mesh_url = 'slowmq://localhost:18881'
 #mesh_url = 'amqp://slowdash:slowdash@localhost/SlowMesh'
 
 mesh = Mesh(mesh_url)
+print(f'Mesh Connected. I am {mesh.mesh_id}')
 
 
 from slowpy.control import ControlNode
@@ -21,7 +22,7 @@ class EchoNode(ControlNode):
         self.value = value
 
     def get(self):
-        return f'you said "{self.value}"'
+        return f'{mesh.mesh_id} replying, you said "{self.value}"'
 
     
 mesh.export('echo', EchoNode())

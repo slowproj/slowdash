@@ -3,6 +3,7 @@
 /utils/testbench/
 /requirements.txt
 __pycache__/
+dist/
 .vscode/
 *.egg-info
 *~

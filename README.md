@@ -122,11 +122,12 @@ To stop the service, press `Ctrl`-`c` `in the terminal.
 
 </details>
 
+
 ## Documentation
-- Comprehensive documentation is available on our [GitHub Pages](https://slowproj.github.io/slowdash/)
-- Additional resources on our GitHub Wiki:
-  - [Development Status and Updates](https://github.com/slowproj/slowdash/wiki/Status-and-Updates)
-  - [Feature Ideas](https://github.com/slowproj/slowdash/wiki/Feature-Ideas) - Contributions welcome!
+- [GitHub Pages](https://slowproj.github.io/slowdash/): Main Documentation
+- [Development Status and Updates](https://github.com/slowproj/slowdash/wiki/Status-and-Updates)
+- [Gemini Code Wiki](https://codewiki.google/github.com/slowproj/slowdash): AI explains SlowDash
+
 
 ## Docker Image Options
 All the example projects under `slowdash/ExampleProjects` can be executed with Docker Compose.

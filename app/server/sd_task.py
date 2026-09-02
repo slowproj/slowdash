@@ -550,7 +550,7 @@ class TaskComponent(Component):
     async def _notify_life_event(self, mesh_id:str, event_name:str):
         body = {
             'mesh_id': mesh_id,
-            'timestamp': time.time(),
+            'timestamp': int(time.time()),
             'event': event_name,
         }
         try:

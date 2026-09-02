@@ -14,18 +14,14 @@ class Mesh:
         url: str|None = None,
         *,
         name: str|None = None,
-        on_reconnect: Callable[[],None] = None,
         rpc_timeout: float = 5,
         loop_timeout: float = 0.1,
         sep: str|None = '.',
         single_wc: str|None = '*',
-        tail_wc: str|None = '>',
-        name_prefix_to_drop: str|None = None
+        tail_wc: str|None = '>'
     ):
-        self._on_reconnect = on_reconnect
         self._loop_timeout = loop_timeout
         self._rpc_timeout = rpc_timeout
-        self._name_prefix_to_drop = name_prefix_to_drop
 
         self._sep_mesh = sep
         self._single_wc_mesh = single_wc
@@ -41,17 +37,17 @@ class Mesh:
         self._mesh_id = None
         self._is_running = False
         
+        self._reconnect_callbacks = []
+        
         self._rpc_count = 0
         self._reply_queues = {}  # CorrelationID(str) -> asyncio.Queue
         self._reply_lock = asyncio.Lock()
-        
-        self._subscription_coros = []
+
         self._callback_tasks = set()
-
+        self._subscription_callbacks = [] # tuple(topic:str, func:Callable)
         self._function_table = {  # FunctionName:str -> function
-            '_sd_node_call': self.node_call
+            '_sd_node_call': self._handle_node_call
         }
-
         self._exported_nodes = {}
 
         self._registry = Registry(self)
@@ -62,6 +58,10 @@ class Mesh:
             self._pubsub = ctrl.import_control_module('AsyncLocalPubsub').async_localpubsub()
 
         
+    def add_reconnect_callback(self, func):
+        self._reconnect_callbacks.append(func)
+
+                
     def connect(self, url:str, name:str|None=None):
         if url is None:
             return
@@ -70,11 +70,14 @@ class Mesh:
             self._name = name
         elif self._name is None:
             self._name = os.path.splitext(os.path.basename(inspect.stack()[-1].filename))[0]
-            if self._name_prefix_to_drop is not None:
-                if self._name.startswith(self._name_prefix_to_drop):
-                    self._name = self._name[len(self._name_prefix_to_drop):]
             self._name = re.sub(r'[^a-zA-Z0-9]', '_', self._name)
 
+        async def on_reconnect():
+            for f in self._reconnect_callbacks:
+                result = f()
+                if asyncio.iscoroutine(result):
+                    await result
+            
         if self._mesh_id is None:
             Mesh._mesh_sequence_id += 1
             self._mesh_id = f'{self._name}_{socket.gethostname()}_{os.getpid()}_{Mesh._mesh_sequence_id}'
@@ -84,12 +87,12 @@ class Mesh:
             o = urlsplit(url)
             if o.scheme in ['slowmq', 'slowdash']:
                 self._pubsub = ctrl.import_control_module('AsyncSlowMQ').async_slowmq(
-                    f'slowmq://{o.netloc}', name=self._mesh_id, on_reconnect=self._on_reconnect
+                    f'slowmq://{o.netloc}', name=self._mesh_id, on_reconnect=on_reconnect
                 )
                 self._sep, self._single_wc, self._tail_wc = tail_wc = '.', '*', '>'
             elif o.scheme in ['slowmqs', 'slowdashs']:
                 self._pubsub = ctrl.import_control_module('AsyncSlowMQ').async_slowmq(
-                    f'slowmqs://{o.netloc}', name=self._mesh_id, on_reconnect=self._on_reconnect
+                    f'slowmqs://{o.netloc}', name=self._mesh_id, on_reconnect=on_reconnect
                 )
                 self._sep, self._single_wc, self._tail_wc = tail_wc = '.', '*', '>'
             elif o.scheme == 'nats':
@@ -138,7 +141,7 @@ class Mesh:
     def export_variables(self):
         return self._exported_nodes
 
-    
+
     def _convert_topic(self, topic:str):
         converted = topic
         
@@ -183,10 +186,9 @@ class Mesh:
 
         await self._start_coro(self._start_rpc_call_handler())
         await self._start_coro(self._start_rpc_reply_handler())
-        
-        for coro in self._subscription_coros:
-            await self._start_coro(coro)
-
+        for topic, func in self._subscription_callbacks:
+            await self._start_coro(self._start_subscription_handler(topic, func))
+                        
         
     async def _start_coro(self, coro):
         task = asyncio.create_task(coro)
@@ -239,9 +241,10 @@ class Mesh:
     async def aio_subscribe(self, topic:str, func):
         '''callback type subscription
         '''
-        coro = self._add_subscription_callback(func, topic)
         if self._is_running:
-            await self._start_coro(coro)
+            await self._start_coro(self._start_subscription_handler(topic, func))
+        else:
+            self._subscription_callbacks.append((topic, func))
 
 
     async def aio_call(self, name:str, *args, **kwargs):
@@ -337,25 +340,22 @@ class Mesh:
         return replies
 
 
-    async def node_call(self, *argc, **argv):
-        node_name = argv.get('node_name')
-        method = argv.get('method')
-        node = self._exported_nodes.get(node_name)
-        if node is None:
-            raise Exception(f'unknown node: "{node_name}"')
-
-        if method == 'set':
-            return await node.aio_set(argv.get('value'))
-        if method == 'get':
-            return await node.aio_get()
-        
-        raise Exception(f'bad node method: {node_name}.{method}()')
-
-    
     def remote_node(self, name:str):
         return RemoteControlNode(self, name)
         
         
+    def on(self, topic:str):
+        """decorator to make a subscriptoin message handler
+        Args:
+        - topic: path pattern to match
+        """
+        def wrapper(func):
+            self._subscription_callbacks.append((topic, func))
+            func._slowpy_task = True
+            return func
+        return wrapper
+
+
     def export(self, *args, **kwargs):
         """
         USAGE 1: decorator to mark the function mesh-callable
@@ -397,64 +397,43 @@ class Mesh:
             return wrapper
         
         
-    def on(self, topic:str):
-        """decorator to make a subscriptoin message handler
-        Args:
-        - topic: path pattern to match
-        """
-        def wrapper(func):
-            func._slowpy_task = True
-            self._add_subscription_callback(func, topic)
-            return func
-        return wrapper
-
-
-    def _add_subscription_callback(self, func, topic:str):
-        """
-        Args:
-          func: callback function
-          topic: topic filter
-        """
-        
+    async def _start_subscription_handler(self, topic, func):
         params = inspect.signature(func).parameters
         nargs = len(params)
         if nargs > 2:
             logging.error(f'Invalid mesh message handler: wrong number of arguments')
             return None
 
-        async def handle_subscription():
-            subscriber = self.subscriber(topic)
-            try:
-                while not ctrl.is_stop_requested():
-                    headers, data = await subscriber.aio_get()
-                    if data is None:
-                        continue
-                    if nargs == 0:
-                        result = func()
-                    elif nargs == 1:
-                        p0 = [ v for v in params.values() ][0]
-                        annotation = p0.annotation
-                        if issubclass(annotation, MeshPacket):
-                            result = func(annotation.unpack(headers, data))
-                        else:
-                            result = func(data)
-                    elif nargs == 2:
-                        result = func(headers, data)
-                    if asyncio.iscoroutine(result):
-                        await result
-            except Exception as e:
-                logging.error(f'Mesh: error in subscription callback: {func.__name__}(): {e}')
-                tb = traceback.format_exc()
-                if tb is not None and len(tb.strip()) > 0:
-                    logging.info(tb)
-                    print(tb)
-
-        coro = handle_subscription()
-        self._subscription_coros.append(coro)
-
-        return coro
-    
+        subscriber = self.subscriber(topic)
+        try:
+            while not ctrl.is_stop_requested():
+                headers, data = await subscriber.aio_get()
+                if data is None:
+                    continue
                 
+                if nargs == 0:
+                    result = func()
+                elif nargs == 1:
+                    p0 = [ v for v in params.values() ][0]
+                    annotation = p0.annotation
+                    if issubclass(annotation, MeshPacket):
+                        result = func(annotation.unpack(headers, data))
+                    else:
+                        result = func(data)
+                elif nargs == 2:
+                    result = func(headers, data)
+                    
+                if asyncio.iscoroutine(result):
+                    await result
+                    
+        except Exception as e:
+            logging.error(f'Mesh: error in subscription callback: {func.__name__}(): {e}')
+            tb = traceback.format_exc()
+            if tb is not None and len(tb.strip()) > 0:
+                logging.error(tb)
+                print(tb)
+
+                        
     async def _start_rpc_call_handler(self):
         topic = self._sep_mesh.join(['sd.rpc', self._name])
         subscriber = self.subscriber(topic)
@@ -462,6 +441,8 @@ class Mesh:
             while not ctrl.is_stop_requested():
                 headers, data = await subscriber.aio_get()
                 if data is None:
+                    continue
+                if headers.get('sender_id') == self._mesh_id:
                     continue
                 result = await self._execute_rpc_function(
                     headers.get('function'), *data.get('args',[]), **data.get('kwargs',{})
@@ -524,6 +505,21 @@ class Mesh:
             return { 'status': 'error', 'message': 'other errors', 'return_value': None }
 
 
+    async def _handle_node_call(self, *args, **kwargs):
+        node_name = kwargs.get('node_name')
+        method = kwargs.get('method')
+        node = self._exported_nodes.get(node_name)
+        if node is None:
+            raise Exception(f'unknown node: "{node_name}"')
+
+        if method == 'set':
+            return await node.aio_set(kwargs.get('value'))
+        if method == 'get':
+            return await node.aio_get()
+        
+        raise Exception(f'bad node method: {node_name}.{method}()')
+
+    
 
 class RemoteControlNode:
     def __init__(self, mesh, name, *, timeout=None):
