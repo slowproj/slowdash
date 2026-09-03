@@ -242,7 +242,7 @@ export class StreamingReceiver extends DataReceiver {
             }
 
             let event, message;
-            if (['@task:', '@stdout:'].includes(channel)) {
+            if (['@task_event:', '@heartbeat:', '@stdout:'].includes(channel)) {
                 event = channel.substr(1, channel.length-2);
                 message = {};
             }
@@ -350,8 +350,11 @@ export class StreamingReceiver extends DataReceiver {
         this.#sse.addEventListener("data", (event) => {
             this.#onReceiveData(this.parseDataJson(event.data));
         });
-        this.#sse.addEventListener("task", (event) => {
-            this.#onReceiveData({"@task:": this.parseDataJson(event.data)});
+        this.#sse.addEventListener("task_event", (event) => {
+            this.#onReceiveData({"@task_event:": this.parseDataJson(event.data)});
+        });
+        this.#sse.addEventListener("heartbeat", (event) => {
+            this.#onReceiveData({"@heartbeat:": this.parseDataJson(event.data)});
         });
         this.#sse.addEventListener("stdout", (event) => {
             this.#onReceiveData({"@stdout:": this.parseDataJson(event.data)});

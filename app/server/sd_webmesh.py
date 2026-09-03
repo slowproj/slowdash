@@ -140,6 +140,8 @@ class WebMeshComponent(Component):
                 topic = f'data.*.{channel}'
             elif topic.startswith('sd.task.life_event'):
                 topic = f'sd.task.life_event'
+            elif topic.startswith('sd.task.heartbeat'):
+                topic = f'sd.task.heartbeat'
             elif topic.startswith('sd.task.stdout'):
                 topic = f'sd.task.stdout'
                 
@@ -157,6 +159,7 @@ class WebMeshComponent(Component):
 
         await self._mesh.aio_subscribe('data.>', process_message)
         await self._mesh.aio_subscribe('sd.task.life_event.>', process_message)
+        await self._mesh.aio_subscribe('sd.task.heartbeat.>', process_message)
         await self._mesh.aio_subscribe('sd.task.stdout.>', process_message)
         
         
@@ -206,6 +209,9 @@ class WebMeshComponent(Component):
                 elif topic.startswith('sd.task.life_event'):
                     event = 'task'
                     data = body
+                elif topic.startswith('sd.task.heartbeat'):
+                    event = 'heartbeat'
+                    data = body
                 elif topic.startswith('sd.task.stdout'):
                     event = 'stdout'
                     data = {
@@ -252,8 +258,10 @@ class WebMeshComponent(Component):
             if channel is None or len(channel) == 0:
                 return { 'status': 'error', 'message': f'bad channel name: {channel}' }
             topic = f'data.*.{channel}'
-        elif event == 'task':
+        elif event == 'taskevent':
             topic = f'sd.task.life_event'
+        elif event == 'heartbeat':
+            topic = f'sd.task.heartbeat'
         elif event == 'stdout':
             topic = f'sd.task.stdout'
         else:

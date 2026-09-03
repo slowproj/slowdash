@@ -105,13 +105,14 @@ class TaskPanel extends Panel {
 
 
     fillDataRequest(dataRequest) {
-        dataRequest.append('@task:');
+        dataRequest.append('@task_event:');
+        dataRequest.append('@heartbeat:');
         dataRequest.append('@stdout:');
     }
 
     
     draw(dataPacket, displayTimeRange=null) {
-        if ((this._taskCatalog == null)  || ('@task:' in dataPacket)) {
+        if ((this._taskCatalog == null)  || ('@task:' in dataPacket) || ('@heartbeat:' in dataPacket)) {
             this._loadTaskList();
         }
         else if ('@stdout:' in dataPacket) {
@@ -228,10 +229,10 @@ class TaskPanel extends Panel {
                 status_label = '&#x1f3c3; running';
             }
             else if (task.status == 'crashed') {
-                status_label = '&#x1f6a8; crashed';
+                status_label = '<span style="color:#d81b60">&#x1f6a8; crashed</span>';
             }
             else if (task.status == 'ghost') {
-                status_label = '&#x1f47b; ghost';
+                status_label = '<span style="color:#d81b60">&#x1f47b; ghost</span>';
             }
             startButton.enabled(['inactive', 'crashed'].includes(task.status));
             stopButton.enabled(task.status == 'running');
