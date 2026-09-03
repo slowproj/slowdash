@@ -21,17 +21,20 @@ class TaskPanel extends Panel {
     
     constructor(div, style={}) {
         super(div, style);
-        this.is_secure = false;
+        this._isSecure = false;
         
         this.frameDiv = $('<div>').appendTo(div);        
         this.titleDiv = $('<div>').appendTo(this.frameDiv);
         this.contentDiv = $('<div>').appendTo(this.frameDiv);
         this.tableDiv = $('<div>').appendTo(this.contentDiv);
+        this.consoleDiv = $('<div>').appendTo(this.contentDiv);
         
         this.table = $('<table>').appendTo(this.tableDiv);
         this.table.html('<tr><td></td></tr><tr><td>loading task list...</td></tr>');
         this.indicator = new JGIndicatorWidget($('<div>').appendTo(div));
 
+        this._consoleLines = [];
+        
         this.frameDiv.css({
             width:'calc(100% - 44px)',
             height:'calc(100% - 44px)',
@@ -62,7 +65,7 @@ class TaskPanel extends Panel {
         this.tableDiv.css({
             position: 'relative',
             width:'calc(100% - 14px)',
-            height:'calc(50% - 5px)',
+            height:'calc(60% - 5px)',
             margin: 0,
             padding:0,
             overflow:'auto',
@@ -73,6 +76,19 @@ class TaskPanel extends Panel {
             padding: 0,
             border: 'none',
         });
+        this.consoleDiv.css({
+            position: 'relative',
+            width:'calc(100% - 14px)',
+            height:'calc(40% - 10px)',
+            margin: 0,
+            padding: '5px',
+            overflow:'auto',
+            border: 'thin solid gray',
+            'border-radius': '5px',
+            'white-space': 'pre',
+            'font-family': 'monospace',
+            'font-size': '100%',
+        });
         
         this.titleDiv.html('SlowTasks');
     }
@@ -81,9 +97,10 @@ class TaskPanel extends Panel {
     configure(config, options={}, callbacks={}) {
         super.configure(config, options, callbacks);
 
-        this._short_form = config.short_form ?? false;
-        this.is_secure = options.is_secure;
-        this._task_catalog = null;
+        this._shortForm = config.short_form ?? false;
+        this._isSecure = options.is_secure;
+        
+        this._taskCatalog = null;
     }
 
 
@@ -94,20 +111,23 @@ class TaskPanel extends Panel {
 
     
     draw(dataPacket, displayTimeRange=null) {
-        if ((this._task_catalog == null)  || ('@task:' in dataPacket)) {
-            this._load_tasklist();
+        if ((this._taskCatalog == null)  || ('@task:' in dataPacket)) {
+            this._loadTaskList();
+        }
+        else if ('@stdout:' in dataPacket) {
+            this._handleStdout(dataPacket['@stdout:']);
         }
     }
 
     
-    async _load_tasklist() {
-        if (this._task_catalog == null) {
-            this._task_catalog = {};
+    async _loadTaskList() {
+        if (this._taskCatalog == null) {
+            this._taskCatalog = {};
             try {
                 const response = await fetch('api/task/catalog');
                 const doc = await response.json();
                 for (const [name, params] of Object.entries(doc)) {
-                    this._task_catalog[name] = {
+                    this._taskCatalog[name] = {
                         file_path: params.file_path,
                         command: params.command,
                     }
@@ -118,7 +138,7 @@ class TaskPanel extends Panel {
             }
         }
 
-        let task_list = []; // note that there can exist multiple task instances of a task file
+        let taskList = []; // note that there can exist multiple task instances of a task file
         
         let running_tasks = new Set();
         try {
@@ -126,10 +146,10 @@ class TaskPanel extends Panel {
             const doc = await response.json();
             const now = $.time();
             for (const task of doc) {
-                const catalog = this._task_catalog[task.name];
+                const catalog = this._taskCatalog[task.name];
                 const running = (task.heartbeat_expire >= now - 1);
                 const heartbeat = task.heartbeat_expire - task.spec.heartbeat_interval;
-                task_list.push({
+                taskList.push({
                     name: task.name,
                     status: running ? 'running' : 'ghost',
                     heartbeat: (new JGDateTime(heartbeat)).asString('%a, %H:%M:%S'),
@@ -145,9 +165,9 @@ class TaskPanel extends Panel {
             console.log("Error on fetching task status: ", e);
         }
 
-        for (const [name, params] of Object.entries(this._task_catalog)) {
+        for (const [name, params] of Object.entries(this._taskCatalog)) {
             if (! running_tasks.has(name)) {
-                task_list.push({
+                taskList.push({
                     name: name,
                     status: 'inactive',
                     heartbeat: null,
@@ -160,13 +180,13 @@ class TaskPanel extends Panel {
         }
 
         // fix the order, not to be affected by the running status
-        task_list.sort((a,b) => a.name.localeCompare(b.name));
+        taskList.sort((a,b) => a.name.localeCompare(b.name));
         
-        this._render_task_table(task_list);
+        this._renderTaskTable(taskList);
     }
 
     
-    async _send_control(taskname, action, event=null) {
+    async _sendControl(taskname, action, event=null) {
         const url = `./api/task/control/${taskname}`;
         try {
             this.indicator.open("sending command...", "&#x23f3;", event?.clientX ?? null, event?.clientY ?? null);
@@ -191,14 +211,14 @@ class TaskPanel extends Panel {
     }
 
     
-    _render_task_table(task_list) {
+    _renderTaskTable(taskList) {
         this.table.empty();
         let tr = $('<tr>');
         $('<th>').text("Name").appendTo(tr);
         $('<th>').text("Status").appendTo(tr);
         $('<th>').text("Heartbeat").appendTo(tr);
         $('<th>').text("Control").appendTo(tr);
-        if (! this._short_form) {
+        if (! this._shortForm) {
             $('<th>').text("Command").appendTo(tr);
             $('<th>').text("Proc ID").appendTo(tr);
             $('<th>').text("Mesh ID").appendTo(tr);
@@ -207,7 +227,7 @@ class TaskPanel extends Panel {
         const bg = window.getComputedStyle(tr.get()).getPropertyValue('background-color');
         tr.find('th').css({position: 'sticky', top:0, left:0, background: bg});
 
-        for (const task of task_list) {
+        for (const task of taskList) {
             let buttons = $('<span>');
             let startButton = $('<button>').text('Start').appendTo(buttons).css('margin-right', '0.5em');
             let stopButton = $('<button>').text('Stop').appendTo(buttons).css('margin-right', '0.5em');
@@ -233,7 +253,7 @@ class TaskPanel extends Panel {
             $('<td>').appendTo(tr).html(status_label);
             $('<td>').appendTo(tr).text(task.heartbeat ?? '');
             $('<td>').appendTo(tr).append(buttons);
-            if (! this._short_form) {
+            if (! this._shortForm) {
                 $('<td>').appendTo(tr).text(task.command ?? '');
                 $('<td>').appendTo(tr).text((task.proc_id ?? []).join(','));
                 $('<td>').appendTo(tr).text(task.mesh_id ?? '');
@@ -243,8 +263,22 @@ class TaskPanel extends Panel {
             tr.find('button').bind('click', e=>{
                 tr.find('button').enabled(false);
                 const action = $(e.target).text().toLowerCase();
-                this._send_control(task.name, action, e);
+                this._sendControl(task.name, action, e);
             });
         }
+    }
+
+
+    _handleStdout(data) {
+        const now = new Date().toLocaleTimeString();
+        if (this._consoleLines.length > 100) {
+            this._consoleLines.shift();
+        }
+        for (let line of data.text.split('\n')) {
+            this._consoleLines.push(now + '  ' + (data.source + ': ').padEnd(20, ' ') + line.trimEnd());
+        }
+
+        this.consoleDiv.text(this._consoleLines.join('\n'));
+        this.consoleDiv.get().scrollTop = this.consoleDiv.get().scrollHeight;
     }
 }

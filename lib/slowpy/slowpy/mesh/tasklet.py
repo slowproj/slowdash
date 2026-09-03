@@ -516,6 +516,8 @@ class Tasklet:
             'variables': variables,
             'contents': contents,
         }
+        if self._mesh_stdio:
+            spec_doc['stdio'] = self._mesh_stdio.spec
         
         await self.mesh.aio_publish(f'sd.task.spec.{self.name}.{self.mesh.mesh_id}', spec_doc)
         

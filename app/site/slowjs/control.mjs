@@ -354,7 +354,6 @@ export class StreamingReceiver extends DataReceiver {
             this.#onReceiveData({"@task:": this.parseDataJson(event.data)});
         });
         this.#sse.addEventListener("stdout", (event) => {
-            //console.log("STDOUT received: ", this.parseDataJson(event.data));
             this.#onReceiveData({"@stdout:": this.parseDataJson(event.data)});
         });
 

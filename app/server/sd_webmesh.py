@@ -209,7 +209,7 @@ class WebMeshComponent(Component):
                 elif topic.startswith('sd.task.stdout'):
                     event = 'stdout'
                     data = {
-                        'source': headers.get('mesh_id'),
+                        'source': body.get('name'),
                         'text': body.get('text')
                     }
                 else:

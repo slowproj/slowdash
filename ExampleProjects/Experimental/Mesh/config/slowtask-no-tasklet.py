@@ -35,7 +35,7 @@ def start(**params):
     print(f'start: {params}')
     device.is_running = True
 
-
+@@
 def stop(**params):
     print(f'stop: {params}')
     device.is_running = False

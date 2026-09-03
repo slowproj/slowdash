@@ -51,7 +51,7 @@ async def main():
     mesh, mesh_stdio = None, None
     try:
         mesh = Mesh(name=name, url=mesh_url)
-        mesh_stdio = MeshStdio(mesh, topic_prefix='sd.task')
+        mesh_stdio = MeshStdio(mesh, name=name, topic_prefix='sd.task')
         await mesh.aio_start()
         await mesh_stdio.aio_start()
         await asyncio.sleep(0.1) # have stdio start

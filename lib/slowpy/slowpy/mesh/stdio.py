@@ -209,8 +209,9 @@ class _MeshStdioRouter:
         
     
 class _MeshStdioBridge:
-    def __init__(self, mesh:Mesh, *, topic_prefix:str|None=None, max_input_queue:int=1000, max_output_queue:int=1000):
+    def __init__(self, mesh:Mesh, *, name:str|None=None, topic_prefix:str|None=None, max_input_queue:int=1000, max_output_queue:int=1000):
         self._mesh = mesh
+        self._name = name
         self._topic_prefix = topic_prefix or 'slowmesh'
         self._max_input_queue = max_input_queue
         self._max_output_queue = max_output_queue
@@ -225,22 +226,12 @@ class _MeshStdioBridge:
 
     @property
     def stdin_topics(self):
-        topics = []
-        
-        mesh_id = self._mesh.mesh_id
-        if mesh_id:
-            topics.append(f'{self._topic_prefix}.stdin.{mesh_id}')
-            
-        return topics
+        return [ f'{self._topic_prefix}.stdin.{self._mesh.mesh_id}' ]
 
 
     @property
     def stdout_topics(self):
-        mesh_id = self._mesh.mesh_id
-        if mesh_id:
-            return [ f'{self._topic_prefix}.stdout.{mesh_id}' ]
-        else:
-            return []
+        return [ f'{self._topic_prefix}.stdout.{self._mesh.mesh_id}' ]
 
 
     @property
@@ -248,11 +239,7 @@ class _MeshStdioBridge:
         if not self._separate_stderr:
             return self.stdout_topics
         
-        mesh_id = self._mesh.mesh_id
-        if mesh_id:
-            return [ f'{self._topic_prefix}.stderr.{mesh_id}' ]
-        else:
-            return []
+        return [ f'{self._topic_prefix}.stderr.{self._mesh.mesh_id}' ]
 
         
     def close(self):
@@ -284,6 +271,7 @@ class _MeshStdioBridge:
 
         record = {
             'mesh_id': self._mesh.mesh_id,
+            'name': self._name or self._mesh.mesh_id,
             'timestamp': time.time(),
             'stream': stream,
             'kind': 'text',
@@ -364,8 +352,9 @@ class _MeshStdioBridge:
 class MeshStdio:
     _stdio_router = _MeshStdioRouter()
 
-    def __init__(self, mesh:Mesh, topic_prefix:str|None=None):
+    def __init__(self, mesh:Mesh, name:str|None=None, topic_prefix:str|None=None):
         self._mesh = mesh
+        self._name = name
         self._topic_prefix = topic_prefix
         
         self._stdio_bridge = None
@@ -381,7 +370,7 @@ class MeshStdio:
 
     
     async def aio_start(self):
-        self._stdio_bridge = _MeshStdioBridge(self._mesh, topic_prefix=self._topic_prefix)
+        self._stdio_bridge = _MeshStdioBridge(self._mesh, name=self._name, topic_prefix=self._topic_prefix)
         self.attach_current_thread()
         await self._stdio_bridge.aio_start()
 
