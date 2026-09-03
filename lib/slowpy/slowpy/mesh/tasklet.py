@@ -89,16 +89,12 @@ class Tasklet:
     def __init__(self, name:str|None=None, *, mesh_url:str|None=None, use_mesh_stdio:bool=True, use_oldstyle_callbacks:bool=False):
         self._name = name
         self._mesh_url = mesh_url
+        self._use_mesh_stdio = use_mesh_stdio
         self._use_oldstyle_callbacks = use_oldstyle_callbacks
 
         self._module = None
         self._mesh = Mesh(self._mesh_url)
         self._params = {}
-
-        if use_mesh_stdio:
-            self._mesh_stdio = MeshStdio(self._mesh, topic_prefix='sd.task')
-        else:
-            self._mesh_stdio = None
 
         self._mesh_list = [ self._mesh ]
         self._initialize_task_coros = []
@@ -110,6 +106,7 @@ class Tasklet:
 
         self._content_generators = {}
 
+        self._mesh_stdio = None
         self._dash = Dash()
         
         
@@ -335,7 +332,8 @@ class Tasklet:
         self._export_stop_function()
         self._export_content_generators()
         
-        if self._mesh_stdio:
+        if self._use_mesh_stdio:
+            self._mesh_stdio = MeshStdio(self._mesh, name=self._name, topic_prefix='sd.task')
             await self._mesh_stdio.aio_start()
         
         for mesh in self._mesh_list:

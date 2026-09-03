@@ -140,47 +140,33 @@ class TaskPanel extends Panel {
 
         let taskList = []; // note that there can exist multiple task instances of a task file
         
-        let running_tasks = new Set();
         try {
             const response = await fetch('api/task/status');
             const doc = await response.json();
             const now = $.time();
             for (const task of doc) {
                 const catalog = this._taskCatalog[task.name];
+                const last_event = task.last_life_event.event ?? 'inactive';
+                const inactive = ['inactive', 'exit'].includes(last_event);
+                const crashed = last_event.endsWith('failed');
                 const running = (task.heartbeat_expire >= now - 1);
-                const heartbeat = task.heartbeat_expire - task.spec.heartbeat_interval;
+                const status = inactive ? 'inactive' : (crashed ? 'crashed' : (running ? 'running' : 'ghost'));
+                const heartbeat = task.spec ? (task.heartbeat_expire - task.spec.heartbeat_interval) : -1;
                 taskList.push({
                     name: task.name,
-                    status: running ? 'running' : 'ghost',
-                    heartbeat: (new JGDateTime(heartbeat)).asString('%a, %H:%M:%S'),
+                    status: status,
+                    heartbeat: (heartbeat > 0) ? (new JGDateTime(heartbeat)).asString('%a, %H:%M:%S') : '',
                     file_path: catalog ? catalog.file_path : null,
                     command: catalog ? catalog.command : null,
                     proc_id: task.proc_id,
-                    mesh_id: task.spec.mesh_id,
+                    mesh_id: task.spec?.mesh_id ?? '',
+                    last_event: inactive ? '' : last_event,
                 });
-                running_tasks.add(task.name);
             }
         }
         catch (e) {
             console.log("Error on fetching task status: ", e);
         }
-
-        for (const [name, params] of Object.entries(this._taskCatalog)) {
-            if (! running_tasks.has(name)) {
-                taskList.push({
-                    name: name,
-                    status: 'inactive',
-                    heartbeat: null,
-                    file_path: params.file_path,
-                    command: params.command,
-                    proc_id: null,
-                    mesh_id: null,
-                });
-            }
-        }
-
-        // fix the order, not to be affected by the running status
-        taskList.sort((a,b) => a.name.localeCompare(b.name));
         
         this._renderTaskTable(taskList);
     }
@@ -219,9 +205,10 @@ class TaskPanel extends Panel {
         $('<th>').text("Heartbeat").appendTo(tr);
         $('<th>').text("Control").appendTo(tr);
         if (! this._shortForm) {
-            $('<th>').text("Command").appendTo(tr);
             $('<th>').text("Proc ID").appendTo(tr);
             $('<th>').text("Mesh ID").appendTo(tr);
+            $('<th>').text("Life Event").appendTo(tr);
+            $('<th>').text("Command").appendTo(tr);
         }
         tr.appendTo(this.table);
         const bg = window.getComputedStyle(tr.get()).getPropertyValue('background-color');
@@ -240,10 +227,13 @@ class TaskPanel extends Panel {
             else if (task.status == 'running') {
                 status_label = '&#x1f3c3; running';
             }
+            else if (task.status == 'crashed') {
+                status_label = '&#x1f6a8; crashed';
+            }
             else if (task.status == 'ghost') {
                 status_label = '&#x1f47b; ghost';
             }
-            startButton.enabled(task.status == 'inactive');
+            startButton.enabled(['inactive', 'crashed'].includes(task.status));
             stopButton.enabled(task.status == 'running');
             killButton.enabled(task.proc_id != null && task.proc_id.length > 0);
             purgeButton.enabled(task.status == 'ghost');
@@ -254,9 +244,10 @@ class TaskPanel extends Panel {
             $('<td>').appendTo(tr).text(task.heartbeat ?? '');
             $('<td>').appendTo(tr).append(buttons);
             if (! this._shortForm) {
-                $('<td>').appendTo(tr).text(task.command ?? '');
                 $('<td>').appendTo(tr).text((task.proc_id ?? []).join(','));
                 $('<td>').appendTo(tr).text(task.mesh_id ?? '');
+                $('<td>').appendTo(tr).text(task.last_event ?? '');
+                $('<td>').appendTo(tr).text(task.command ?? '');
             }
             tr.appendTo(this.table);
 
@@ -275,7 +266,10 @@ class TaskPanel extends Panel {
             this._consoleLines.shift();
         }
         for (let line of data.text.split('\n')) {
-            this._consoleLines.push(now + '  ' + (data.source + ': ').padEnd(20, ' ') + line.trimEnd());
+            line = line.trimEnd();
+            if (line.length > 0) {
+                this._consoleLines.push(now + '  ' + (data.source + ': ').padEnd(20, ' ') + line);
+            }
         }
 
         this.consoleDiv.text(this._consoleLines.join('\n'));

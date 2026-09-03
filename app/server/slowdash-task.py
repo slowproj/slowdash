@@ -70,7 +70,6 @@ async def main():
         try:
             module, tasklet = load_task_module(path=path, name=name, argv=script_args)
             await notify_life_event(name, mesh.mesh_id, 'script loaded')
-            print(f'### script loaded: {name}')
         except Exception as e:
             await notify_life_event(name, mesh.mesh_id, 'script loading failed')
             tb = traceback.format_exc()

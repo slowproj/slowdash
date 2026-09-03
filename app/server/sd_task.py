@@ -345,8 +345,7 @@ class TaskProxy:
         content = reply[0].get('return_value')
         
         return content_type, content
-        
-        
+                
     
 
 class TaskComponent(Component):
@@ -359,15 +358,16 @@ class TaskComponent(Component):
 
         self._task_catalog: dict[str, dict] = {}      # { task_name => config }
 
-        self._proc_set_table: dict[str, set[subprocess.Popen]] = {}  
-        
+        self._proc_set_table: dict[str, set[subprocess.Popen]] = {}     # { task_name => [ process ] }
+        self._life_event_table: dict[str, str] = {}   # { task_name => last_life_event }
+
 
     @slowlette.on_event('post_startup')
     async def startup(self):
         # this needs to be done in "post_startup", as SlowMQ (if used) must be running.
         if self._mesh is None and self.project.mesh_url is not None:
             self._mesh = Mesh(self.project.mesh_url, name='sd_task')        
-            await self._subscribe_taskspec()
+            await self._subscribe_task_topics()
             await self._mesh.aio_start()
             await self._request_taskspec()
 
@@ -511,7 +511,7 @@ class TaskComponent(Component):
         return { 'status': 'ok' }
     
     
-    async def _subscribe_taskspec(self):
+    async def _subscribe_task_topics(self):
         async def process_task_spec(headers, data):
             mesh_id = data.get('mesh_id')
             if mesh_id is not None and len(mesh_id) > 0:
@@ -543,6 +543,13 @@ class TaskComponent(Component):
             
         await self._mesh.aio_subscribe('sd.task.heartbeat.>', process_task_heartbeat)
         
+        async def process_life_event(headers, data):
+            task_name = data.get('name')
+            if task_name is not None:
+                self._life_event_table[task_name] = data
+                
+        await self._mesh.aio_subscribe('sd.task.life_event.>', process_life_event)
+
         
     async def _request_taskspec(self):
         await self._mesh.aio_publish('sd.task.control.introduce', {})
@@ -556,6 +563,7 @@ class TaskComponent(Component):
             'event': event_name,
         }
         try:
+            self._life_event_table[task.name] = body
             await self._mesh.aio_publish(f'sd.task.life_event.{task.name}.{task.mesh_id}', body)
         except Exception:
             pass
@@ -594,16 +602,27 @@ class TaskComponent(Component):
     
     @slowlette.get('/api/task/status')
     async def get_task_status(self):
-        doc = []
+        doc = {}
+        for task_name in self._task_catalog.keys():
+            doc[task_name] = {
+                'name': task_name,
+                'proc_id': [],
+                'heartbeat_expire': 0,
+                'last_life_event': self._life_event_table.get(task_name, {}),
+                'spec': {}
+            }
+        
         await self._check_task_proc()
         for task in list(self._task_table.values()):
-            doc.append({
+            doc[task._name] = {
                 'name': task._name,
                 'proc_id': [ proc.pid for proc in self._proc_set_table.get(task._name, []) ],
                 'heartbeat_expire': task._heartbeat_expire,
+                'last_life_event': self._life_event_table.get(task._name, {}),
                 'spec': copy.deepcopy(task.spec),
-            })
-        return doc
+            }
+                
+        return list(doc.values())
 
     
     @slowlette.post('/api/task/control/{taskname}')
