@@ -516,8 +516,9 @@ class TaskComponent(Component):
             mesh_id = data.get('mesh_id')
             if mesh_id is not None and len(mesh_id) > 0:
                 logging.info(f'Task spec received: {data}')
-                self._task_table[mesh_id] = TaskProxy(data)
-                await self._notify_life_event(mesh_id, 'spec received')
+                task = TaskProxy(data)
+                await self._notify_life_event(task, 'spec received')
+                self._task_table[mesh_id] = task
                 
         await self._mesh.aio_subscribe('sd.task.spec.>', process_task_spec)
         
@@ -526,8 +527,8 @@ class TaskComponent(Component):
             if mesh_id is not None and len(mesh_id) > 0:
                 if mesh_id in self._task_table:
                     logging.info(f'Task removed: {mesh_id}')
-                    self._task_table.pop(mesh_id, None)
-                    await self._notify_life_event(mesh_id, 'exit')
+                    task = self._task_table.pop(mesh_id, None)
+                    await self._notify_life_event(task, 'exit')
                 
         await self._mesh.aio_subscribe('sd.task.exit.>', process_task_exit)
         
@@ -547,14 +548,15 @@ class TaskComponent(Component):
         await self._mesh.aio_publish('sd.task.control.introduce', {})
 
         
-    async def _notify_life_event(self, mesh_id:str, event_name:str):
+    async def _notify_life_event(self, task:TaskProxy, event_name:str):
         body = {
-            'mesh_id': mesh_id,
+            'mesh_id': task.mesh_id,
+            'name': task.name,
             'timestamp': int(time.time()),
             'event': event_name,
         }
         try:
-            await self._mesh.aio_publish(f'sd.task.life_event.{mesh_id}', body)
+            await self._mesh.aio_publish(f'sd.task.life_event.{task.name}.{task.mesh_id}', body)
         except Exception:
             pass
             
@@ -567,12 +569,12 @@ class TaskComponent(Component):
                     task._is_dead = True
                     logging.warning(f'No Heartbeat from Task: {task.name}')
                     await self._check_task_proc()
-                    await self._notify_life_event(task.mesh_id, 'heatbeat stop')
+                    await self._notify_life_event(task, 'heatbeat stop')
             else:
                 if task._is_dead:
                     task._is_dead = False
                     logging.info(f'Heartbeat recovered from Task: {task.name}')
-                    await self._notify_life_event(task.mesh_id, 'heatbeat recovery')
+                    await self._notify_life_event(task, 'heatbeat recovery')
 
             
     async def _check_task_proc(self):

@@ -930,7 +930,7 @@ async def stop():
 # HTTP API
 ## SlowTask
 
-SlowTask への HTTP API は Slowlette を経由して `sd_taskprocess.py` コンポーネントにより実装されています．
+SlowTask への HTTP API は Slowlette を経由して `sd_task.py` コンポーネントにより実装されています．
 
 ### Task コントロール
 #### GET `api/task/catalog`
@@ -1139,7 +1139,7 @@ Task の生存信号．Body に記録されるのは expire (= time-of-heartbeat
 
 ##### 主な用途
 - Sender(s): task process
-- Receiver(s): sd_taskprocess (SlowDash サーバー)，モニタサービス
+- Receiver(s): sd_task (SlowDash サーバー)，モニタサービス
 - Timing:
   - 指定時間間隔（`Tasklet._heartbeat_interval`，１０秒）
   - Tasklet のメインループから送出（コルーチンやスレッドではない；必ずメインと一緒に停止する）
@@ -1151,7 +1151,6 @@ Task の生存信号．Body に記録されるのは expire (= time-of-heartbeat
 - サーバークラッシュなどによる PubSub の接続断後の再接続は publish にトリガされるので，heartbeat 送り出しが接続断後の reconnect retry になる
 - Reconnect により，`sd.task.spec` 再送などもトリガされる
 - サーバー復帰後のシステム再開は，heartbeat interval 程度遅れることになる
-
 
 ##### JSON Schema
 Headers:
@@ -1195,36 +1194,12 @@ Body:
 }
 ```
 
-### sd.task.exit.{task_name}.{mesh_id}
-タスクの終了を通知
-
-##### 主な用途
-- Sender: task process
-- Receiver(s): sd_taskprocess (SlowDash サーバー)，モニタサービス
-- Timing: 
-  - Task 終了時
-
-##### JSON Schema
-Body:
-```json
-{
-    "type": "object",
-    "required": [ "mesh_id", "name" ],
-    "properties": {
-        "mesh_id": { "type": "string" },
-        "name": { "type": "string" },
-        "timestamp": { "type": "int" }
-    }
-}
-```
-
-
 ### sd.task.spec.{task_name}.{mesh_id}
 タスクが外部公開している関数と変数の一覧
 
 ##### 主な用途
 - Sender(s): task process
-- Receiver(s): sd_taskprocess (SlowDash サーバー)
+- Receiver(s): sd_task (SlowDash サーバー)
 - Timing:
   - タスクが開始したとき
   - `sd.task.control.introduce` を受け取ったとき
@@ -1291,15 +1266,39 @@ Body:
 }
 ```
 
+### sd.task.exit.{task_name}.{mesh_id}
+タスクの終了を通知
+
+##### 主な用途
+- Sender: task process
+- Receiver(s): sd_task (SlowDash サーバー)，モニタサービス
+- Timing: 
+  - Task 終了時
+
+##### JSON Schema
+Body:
+```json
+{
+    "type": "object",
+    "required": [ "mesh_id", "name" ],
+    "properties": {
+        "mesh_id": { "type": "string" },
+        "name": { "type": "string" },
+        "timestamp": { "type": "int" }
+    }
+}
+```
+
+
 ### sd.task.control.introduce
 すべてのタスクに `sd.task.spec.{task_name}.{mesh_id}` を publish するように要求
 
 ##### 主な用途
-- Sender: sd_taskprocess (SlowDash サーバー)
+- Sender: sd_task (SlowDash サーバー)
 - Receiver(s): task process
 - Timing: 
   - SlowDash サーバーの開始時
-  - SlowDash サーバーが知らない Task の heartbeat を受け取ったとき
+  - SlowDash サーバーが知らないタスクの heartbeat を受け取ったとき
 
 ##### JSON Schema
 Body:
@@ -1311,17 +1310,19 @@ Body:
 }
 ```
 
-### sd.task.life_event.{mesh_id}
-タスクの実行状態の変化を通知
+### sd.task.life_event.{task_name}.{mesh_id}
+タスクの外部監視による実行状態の変化を通知
 
 ##### 主な用途
-- Sender(s): sd_taskprocess (SlowDash サーバー)
-- Receiver(s): タスクモニタなど
+- Sender(s): sd_task (SlowDash サーバー) / slowdash-task （スクリプトローダ）
+- Receiver(s): sd_webmesh 経由のタスクモニタなど
 - Timing:
-  - サーバーが task spec を受け取ったとき
-  - サーバーが task exit を受け取ったとき
-  - サーバーの監視で heatbeat が失われたとき・復活したとき
-  - SlowTask ローダーがスクリプトのロードに失敗したとき
+  - SlowTask ローダーがスクリプトをロードしたとき (`script loaded`)
+  - SlowTask ローダーがスクリプトのロードに失敗したとき (`script loading failed`)
+  - サーバーが task spec を受け取ったとき (`spec received`)
+  - サーバーが task exit を受け取ったとき (`exit`)
+  - サーバーの監視で heatbeat が失われたとき (`heartbeat stop`)
+  - サーバーの監視で heatbeat が復活したとき (`heartbeat recovery`)
 
 ##### JSON Schema
 Body:
@@ -1331,18 +1332,20 @@ Body:
     "required": [ "mesh_id", "timestamp", "event" ],
     "properties": {
         "mesh_id": { "type": "string" },
+        "name": { "type": "string" },
         "timestamp": { "type": "int" },
         "event": { "type": "string" },
     }
 }
 ```    
 
+
 ### sd.task.stdout.{task_name}.{mesh_id}
 タスクの stdout/stderr へ出力のリダイレクト
 
 ##### 主な用途
 - Sender: task process
-- Receiver(s): SlowDash Server (Web Console)
+- Receiver(s): sd_webmesh 経由のタスクモニタや Web Console など
 
 ##### JSON Schema
 Headers:
@@ -1378,7 +1381,7 @@ Body:
 タスクの input() 入力への PubSub からの注入
 
 ##### 主な用途
-- Sender(s): SlowDash Server (Web Console)
+- Sender(s): sd_webmesh 経由のタスクモニタや Web Console など
 - Receiver: task process
 
 ##### JSON Schema
@@ -1509,5 +1512,4 @@ Body:
 - レジストリを SlowTask でも動かせるようにする
 - MyMesh: SlowTask を SlowMesh なしで動かした場合に使う．コンソールから接続し，!!! から始まる行を拾う
 - Task RPC Proxy
-- PubSub Message unpacking
 - dataclass の export

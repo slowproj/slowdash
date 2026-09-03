@@ -10,7 +10,7 @@ datastore = DataStore_SQLite('sqlite:///TestData2.db', table='slowdata')
 
 
 def _initialize():
-    print("Initialized")
+#    print("Initialized")
     device.ch(1).set(-5)
 
     
