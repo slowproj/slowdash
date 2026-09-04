@@ -21,15 +21,38 @@ export class SlowDash {
         this.init_options = options;
         
         this.config = null;
-        
-        this.layout = new Layout(div);
+
+        this.layoutDiv = $('<div>').appendTo(div);
+        this.layout = new Layout(this.layoutDiv);
         this.controller = new Controller(this.layout);
         this.scheduler = new Scheduler();
 
         this.currentDisplayTimeRange = null;
         this.resetDelay = 0;
+
+        this.serverConnected = true;
+
+        this.serverStatusDiv = $('<div>').appendTo(div.closest('body'));
+        this.serverStatusDiv.css({
+            //'display':'none',  // to show, 'display': 'flex'
+            'display': 'flex',
+            'position': 'fixed',
+            'z-index': 1000,
+            'top': '0',
+            'left': '0',
+            'width': '100%',
+            'height': '100%',
+            'color': 'red',
+            'opacity': 0.2,
+            'font-size': '10vw',
+            'justify-content': 'center',
+            'align-items': 'center',
+            'text-align': 'center',
+            'line-height': 1.0,
+            'transform': 'rotate(-10deg)',
+        });
+        this.serverStatusDiv.html('No Server<br>Connection');
     }
-    
 
     setCallbacks(callbacks) {
         $.extend(this.callbacks, callbacks);
@@ -127,6 +150,14 @@ export class SlowDash {
             },
             suspend: (duration=300) => {
                 this.scheduler.suspend(duration);
+            },
+            onServerConnect: () => {
+                this.serverConnected = true;
+                this.serverStatusDiv.css('display', 'none');
+            },
+            onServerDisconnect: () => {
+                this.serverConnected = false;
+                this.serverStatusDiv.css('display', 'flex');
             },
         });
             
@@ -319,6 +350,10 @@ export class SlowDash {
 
     // this is called by Scheduler, this calls controller.update()
     async _update() {
+        if (! this.serverConnected) {
+            return;
+        }
+        
         let length = this.config.control?.range?.length ?? 0;
         if (! (length > 0)) {
             length = 3600;

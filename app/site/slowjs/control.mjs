@@ -211,20 +211,28 @@ export class QueryReceiver extends DataReceiver {
 
 export class StreamingReceiver extends DataReceiver {
     #onReceiveData;
+    #callbacks;
     #url;
     #sse;
     #clientId;
     #subscriptionList;
+    #subscriptionRequestList;
     
-    constructor(onReceiveData) {
-        super();
+    constructor(onReceiveData, callbacks={}) {
+        const default_callbacks = {
+            onServerConnect: () => {}, 
+            onServerDisconnect: () => {},
+        };
         
+        super();
         this.#onReceiveData = onReceiveData;
+        this.#callbacks = $.extend({}, default_callbacks, callbacks);
 
         this.#url = null;
         this.#sse = null;
         this.#clientId = null;
         this.#subscriptionList = new Set();
+        this.#subscriptionRequestList = new Set();
 
         this.#setup();
     }
@@ -232,9 +240,20 @@ export class StreamingReceiver extends DataReceiver {
 
     async subscribe(channels) {
         if (this.#clientId == null) {
-            console.error("SSE subscription: no client_id received");
+            //console.log('StreamingReceiver: client-id is null, deferring subscription');
+            for (const channel of channels) {
+                this.#subscriptionRequestList.add(channel);
+            }
             return;
         }
+
+        if (this.#subscriptionRequestList.size > 0) {
+            //console.log('StreamingReceiver: subscription for deferred channels', this.#subscriptionRequestList);
+            for (const channel of this.#subscriptionRequestList) {
+                channels.push(channel);
+            }
+        }
+        this.#subscriptionRequestList.clear();
         
         for (const channel of channels) {
             if (this.#subscriptionList.has(channel)) {
@@ -304,8 +323,9 @@ export class StreamingReceiver extends DataReceiver {
     
     #setup() {
         if (this.#sse != null) {
-            return;
+            return true;
         }
+        this.#clientId = null;
         
         this.#url = new URL(window.location.href);
         this.#url.search = '';
@@ -324,9 +344,10 @@ export class StreamingReceiver extends DataReceiver {
         catch(error) {
             this.#sse.close();
             this.#sse = null;
+            this.#clientId = null;
             console.error("SSE setup error: " + error);
             console.log("Data streaming is disabled.");
-            return;
+            return false;
         }
         
         this.#sse.onopen = () => {
@@ -335,6 +356,11 @@ export class StreamingReceiver extends DataReceiver {
         this.#sse.onclose = () => {
             console.log("SSE Closed");
             this.#sse = null;
+            this.#callbacks.onServerDisconnect();
+            for (const channel of this.#subscriptionList) {
+                this.#subscriptionRequestList.add(channel);
+            }
+            this.#subscriptionList.clear();
         };
         this.#sse.addEventListener("register", (event) => {
             try {
@@ -345,6 +371,8 @@ export class StreamingReceiver extends DataReceiver {
                 return;
             }
             console.log('SSE Connected: client_id=' + this.#clientId);
+            this.#callbacks.onServerConnect();
+            this.subscribe([]);
         });
         
         this.#sse.addEventListener("data", (event) => {
@@ -361,10 +389,21 @@ export class StreamingReceiver extends DataReceiver {
         });
 
         this.#sse.onerror = () => {
+            if (this.#clientId != null) {
+                console.error("SSE Error: Data streaming is closed on error.");
+            }
             this.#sse.close();
             this.#sse = null;
-            console.error("SSE Error: Data streaming is closed.");
+            this.#clientId = null;
+            for (const channel of this.#subscriptionList) {
+                this.#subscriptionRequestList.add(channel);
+            }
+            this.#subscriptionList.clear();
+            this.#callbacks.onServerDisconnect();
+            setTimeout(()=>{this.#setup();}, 1000);
         };
+
+        return true;
     }
 };
 
@@ -376,23 +415,16 @@ export class Controller {
             changeDisplayTimeRange: (displayRange) => {},
             forceUpdate: () => {},
             suspend: (duration) => {},
+            onServerConnect: () => {},
+            onServerDisconnect: () => {},
         };
         
         this.view = view;
         this.currentData = null;
         this.isUpdateRunning = false;
-        
+
         this.queryReceiver = new QueryReceiver();
-        this.streamingReceiver = new StreamingReceiver((dataPacket) => {
-            if ((this.currentData == null) || (this.currentData.__meta.range.to !== 0)) {
-                return;
-            }
-            dataPacket.__meta = {
-                range: this.currentData.__meta.range,
-                isStreaming: true,
-            };
-            this.view.draw(dataPacket);
-        });
+        this.streamingReceiver = null;
     }
 
     
@@ -433,7 +465,25 @@ export class Controller {
         };
         await this.view.configure(config, this.options, view_callbacks);
 
-        await this.streamingReceiver.unsubscribe();
+        if (this.streamingReceiver == null) {
+            let handleStreamingData = (dataPacket) => {
+                if ((this.currentData == null) || (this.currentData.__meta.range.to !== 0)) {
+                    return;
+                }
+                dataPacket.__meta = {
+                    range: this.currentData.__meta.range,
+                    isStreaming: true,
+                };
+                this.view.draw(dataPacket);
+            };
+            this.streamingReceiver = new StreamingReceiver(handleStreamingData, {
+                onServerConnect: () => { this.callbacks.onServerConnect(); },
+                onServerDisconnect: () => { this.callbacks.onServerDisconnect(); },
+            });
+        }
+        else {
+            await this.streamingReceiver.unsubscribe();
+        }
         let dataRequest = new DataRequest(10, 0);
         this.view.fillDataRequest(dataRequest);
         this.streamingReceiver.subscribe(dataRequest.streamingChannelList());

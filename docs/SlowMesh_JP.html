@@ -927,6 +927,18 @@ MeshID の２つの名前を持ちます．</p>
 <p>TaskName には，英数字および <code>_</code>
 以外の文字は使用できません．これらの文字が含まれる場合は，<code>_</code>
 に置き換えられます．</p>
+<p>同じスクリプトを複数走らせたい場合，<code>SlowdashProject.yaml</code>
+ファイル内に同じスクリプトで名前の異なる複数のエントリを作ることができます．</p>
+<p>多数のタスクを同時に自動で走らせたい場合は，<code>slowdash-task</code>
+コマンドを <code>--name=NAME</code> オプション付きで多数実行するような
+Python スクリプト (Spawn Script)
+を作成し，<code>SlowdashProject.yaml</code>
+からはそれだけを起動するようにすることもできます． この構成では，Spawn
+スクリプトの中で初期値の設定や SubPub や RPC
+によるコマンドの分配も細かく指定できるようになります．
+<code>slowdash-task</code>
+コマンドは，それを起動した親プロセスが終了すると自分も自動で終了するので，Spawn
+スクリプトが終了すればそこから起動されたタスクはすべて自動終了します．</p>
 <h2 id="slowtask-の機能">SlowTask の機能</h2>
 <h3 id="lifespan-コールバック">Lifespan コールバック</h3>
 <p>tasklet が提供するデコレータにより，特定のタイミングや一定時間間隔に
@@ -1871,9 +1883,9 @@ id="sd.task.life_event.task_name.mesh_id">sd.task.life_event.{task_name}.{mesh_i
 <li>サーバーが task exit を受け取ったとき (<code>completed</code> /
 <code>died in error</code>)</li>
 <li>サーバーの監視で heatbeat が失われたとき
-(<code>heartbeat stop</code>)</li>
+(<code>heartbeat stopped</code>)</li>
 <li>サーバーの監視で heatbeat が復活したとき
-(<code>heartbeat recovery</code>)</li>
+(<code>heartbeat recovered</code>)</li>
 </ul></li>
 </ul>
 <h5 id="json-schema-4">JSON Schema</h5>
