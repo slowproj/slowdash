@@ -1280,11 +1280,12 @@ Body:
 ```json
 {
     "type": "object",
-    "required": [ "mesh_id", "name" ],
+    "required": [ "mesh_id", "name", "timestamp", "had_error" ],
     "properties": {
         "mesh_id": { "type": "string" },
         "name": { "type": "string" },
-        "timestamp": { "type": "int" }
+        "timestamp": { "type": "int" },
+        "had_error": { "type": "bool" }
     }
 }
 ```
@@ -1319,10 +1320,10 @@ Body:
 - Timing:
   - SlowTask ローダーがスクリプトをロードしたとき (`script loaded`)
   - SlowTask ローダーがスクリプトのロードに失敗したとき (`script loading failed`)
-  - サーバーが task spec を受け取ったとき (`spec received`)
-  - サーバーが task exit を受け取ったとき (`exit`)
-  - サーバーの監視で heatbeat が失われたとき (`heartbeat stop`)
-  - サーバーの監視で heatbeat が復活したとき (`heartbeat recovery`)
+  - サーバーが task spec を受け取ったとき (`registered`)
+  - サーバーが task exit を受け取ったとき (`completed` / `died in error`)
+  - サーバーの監視で heatbeat が失われたとき (`heartbeat stopped`)
+  - サーバーの監視で heatbeat が復活したとき (`heartbeat recovered`)
 
 ##### JSON Schema
 Body:

@@ -207,7 +207,7 @@ class WebMeshComponent(Component):
                     event = 'data'
                     data = body
                 elif topic.startswith('sd.task.life_event'):
-                    event = 'task'
+                    event = 'task_event'
                     data = body
                 elif topic.startswith('sd.task.heartbeat'):
                     event = 'heartbeat'
@@ -258,7 +258,7 @@ class WebMeshComponent(Component):
             if channel is None or len(channel) == 0:
                 return { 'status': 'error', 'message': f'bad channel name: {channel}' }
             topic = f'data.*.{channel}'
-        elif event == 'taskevent':
+        elif event == 'task_event':
             topic = f'sd.task.life_event'
         elif event == 'heartbeat':
             topic = f'sd.task.heartbeat'

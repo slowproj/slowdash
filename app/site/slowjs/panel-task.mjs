@@ -112,7 +112,7 @@ class TaskPanel extends Panel {
 
     
     draw(dataPacket, displayTimeRange=null) {
-        if ((this._taskCatalog == null)  || ('@task:' in dataPacket) || ('@heartbeat:' in dataPacket)) {
+        if ((this._taskCatalog == null)  || ('@task_event:' in dataPacket) || ('@heartbeat:' in dataPacket)) {
             this._loadTaskList();
         }
         else if ('@stdout:' in dataPacket) {
@@ -148,8 +148,8 @@ class TaskPanel extends Panel {
             for (const task of doc) {
                 const catalog = this._taskCatalog[task.name];
                 const last_event = task.last_life_event.event ?? 'inactive';
-                const inactive = ['inactive', 'exit'].includes(last_event);
-                const crashed = last_event.endsWith('failed');
+                const inactive = ['inactive', 'completed'].includes(last_event);
+                const crashed = last_event.endsWith('error') || last_event.endsWith('failed');
                 const running = (task.heartbeat_expire >= now - 1);
                 const status = inactive ? 'inactive' : (crashed ? 'crashed' : (running ? 'running' : 'ghost'));
                 const heartbeat = task.spec ? (task.heartbeat_expire - task.spec.heartbeat_interval) : -1;

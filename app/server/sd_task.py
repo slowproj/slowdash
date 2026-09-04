@@ -490,6 +490,11 @@ class TaskComponent(Component):
                 logging.info(f"I've killed a Task process: {task_name} (pid={proc.pid})")
             except Exception as e:
                 logging.error(f'unable to kill a Task process: {task_name}: {e}')
+            finally:
+                try:
+                    proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    logging.error(f'timeout on wait() after kill(): {task_name}: {e}')
 
         await self._check_task_proc()
         await self._purge_task(task_name)
@@ -504,7 +509,8 @@ class TaskComponent(Component):
             doc = {
                 'mesh_id': task._mesh_id,
                 'name': task._name,
-                'timestamp': time.time()
+                'timestamp': time.time(),
+                'had_error': False,
             }
             await self._mesh.aio_publish(f'sd.task.exit.{task._name}.{task._mesh_id}', doc)
 
@@ -517,7 +523,7 @@ class TaskComponent(Component):
             if mesh_id is not None and len(mesh_id) > 0:
                 logging.info(f'Task spec received: {data}')
                 task = TaskProxy(data)
-                await self._notify_life_event(task, 'spec received')
+                await self._notify_life_event(task, 'registered')
                 self._task_table[mesh_id] = task
                 
         await self._mesh.aio_subscribe('sd.task.spec.>', process_task_spec)
@@ -526,9 +532,12 @@ class TaskComponent(Component):
             mesh_id = data.get('mesh_id')
             if mesh_id is not None and len(mesh_id) > 0:
                 if mesh_id in self._task_table:
-                    logging.info(f'Task removed: {mesh_id}')
                     task = self._task_table.pop(mesh_id, None)
-                    await self._notify_life_event(task, 'exit')
+                    logging.info(f'Task removed: {task.mesh_id}')
+                    if data.get('had_error', False):
+                        await self._notify_life_event(task, 'died in error')
+                    else:
+                        await self._notify_life_event(task, 'completed')
                 
         await self._mesh.aio_subscribe('sd.task.exit.>', process_task_exit)
         
@@ -577,12 +586,12 @@ class TaskComponent(Component):
                     task._is_dead = True
                     logging.warning(f'No Heartbeat from Task: {task.name}')
                     await self._check_task_proc()
-                    await self._notify_life_event(task, 'heatbeat stop')
+                    await self._notify_life_event(task, 'heatbeat stopped')
             else:
                 if task._is_dead:
                     task._is_dead = False
                     logging.info(f'Heartbeat recovered from Task: {task.name}')
-                    await self._notify_life_event(task, 'heatbeat recovery')
+                    await self._notify_life_event(task, 'heatbeat recovered')
 
             
     async def _check_task_proc(self):

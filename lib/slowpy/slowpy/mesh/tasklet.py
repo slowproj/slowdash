@@ -86,14 +86,24 @@ class RetainerAutocide:
 
 
 class Tasklet:
-    def __init__(self, name:str|None=None, *, mesh_url:str|None=None, use_mesh_stdio:bool=True, use_oldstyle_callbacks:bool=False):
+    def __init__(self,
+        name:str|None=None,
+        *,
+        mesh_url:str|None=None,
+        stop_on_error:bool=True,
+        use_mesh_stdio:bool=True,
+        use_oldstyle_callbacks:bool=False
+    ):
         self._name = name
         self._mesh_url = mesh_url
         self._use_mesh_stdio = use_mesh_stdio
         self._use_oldstyle_callbacks = use_oldstyle_callbacks
+        
+        self._stop_on_error = stop_on_error
+        self._had_error = False
 
         self._module = None
-        self._mesh = Mesh(self._mesh_url)
+        self._mesh = Mesh(self._mesh_url, stop_on_error=self._stop_on_error)
         self._params = {}
 
         self._mesh_list = [ self._mesh ]
@@ -400,20 +410,24 @@ class Tasklet:
             try:
                 await asyncio.gather(*self._finalize_task_coros)
             except Exception as e:
-                self._handle_error(f'error during clean up: {e}')
+                self._handle_error(f'During clean up: {e}')
             except:
                 pass
 
             if self._mesh_stdio is not None:
+                await asyncio.sleep(0.1) # have stdio flush the messages
                 try:
                     await self._mesh_stdio.aio_stop()
                 except Exception:
                     pass
+                await asyncio.sleep(0.1) # have mesh flush the stdio messages
+                
             for mesh in self._mesh_list:
                 try:
                     await mesh.aio_close()
                 except Exception:
                     pass
+                
             try:
                 await self._dash.aio_close()
             except Exception:
@@ -524,7 +538,8 @@ class Tasklet:
         doc = {
             'mesh_id': self.mesh.mesh_id,
             'name': self.name,
-            'timestamp': time.time()
+            'timestamp': time.time(),
+            'had_error': self.had_error,
         }
         await self.mesh.aio_publish(f'sd.task.exit.{self.name}.{self.mesh.mesh_id}', doc)
 
@@ -560,7 +575,7 @@ class Tasklet:
                 if asyncio.iscoroutine(result):
                     await result
             except Exception as e:
-                self._handle_error(f'Tasklet error: {func.__name__}(): {e}')
+                self._handle_error(f'Initialize-callback: {func.__name__}(): {e}')
 
         func._slowpy_task = True
         self._initialize_task_coros.append(go_initialize())
@@ -577,7 +592,7 @@ class Tasklet:
                 if asyncio.iscoroutine(result):
                     await result
             except Exception as e:
-                self._handle_error(f'Tasklet error: {func.__name__}(): {e}')
+                self._handle_error(f'Finalize-callback: {func.__name__}(): {e}')
 
         func._slowpy_task = True
         self._finalize_task_coros.append(go_finalize())
@@ -606,7 +621,7 @@ class Tasklet:
                         await asyncio.sleep(0.01)
                     break
             except Exception as e:
-                self._handle_error(f'Tasklet error: {func.__name__}(): {e}')
+                self._handle_error(f'Once-callback: {func.__name__}(): {e}')
                 
         self._main_task_coros.append(go_once())
 
@@ -664,7 +679,7 @@ class Tasklet:
                     if interval < 0:
                         break
             except Exception as e:
-                self._handle_error(f'Tasklet error: {func.__name__}(): {e}')
+                self._handle_error(f'Loop-callback: {func.__name__}(): {e}')
                 
         func._slowpy_task = True
         self._main_task_coros.append(go_loop())
@@ -742,19 +757,26 @@ class Tasklet:
                         await ctrl.aio_sleep(100) # make sure the next check is on a different HH:MM
 
             except Exception as e:
-                self._handle_error(f'Tasklet error: {func.__name__}(): {e}')
+                self._handle_error(f'Schedule-callback: {func.__name__}(): {e}')
                 
         func._slowpy_task = True
         self._main_task_coros.append(go_schedule())
 
                 
     def _handle_error(self, message):
-        logging.error(message)
-        #if sys.exc_info()[0] is not None:
+        logging.error(f'Tasklet error: {message}')
         try:
             tb = traceback.format_exc()
             if tb is not None and len(tb.strip()) > 0:
-                logging.warning(tb)
+                logging.error(tb)
         except:
             pass
-    
+        
+        if self._stop_on_error:
+            self._had_error = True
+            ctrl.stop()
+
+            
+    @property
+    def had_error(self):
+        return self._had_error or self._mesh._had_error

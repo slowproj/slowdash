@@ -1,7 +1,6 @@
 # Created by Sanshiro Enomoto on 13 August 2025 #
 
 import sys, time, queue, asyncio, threading, builtins, logging
-from slowpy.control import control_system as ctrl
 from .mesh import Mesh
 
 
@@ -183,7 +182,7 @@ class _MeshStdioRouter:
             return
 
         def read_stdin():
-            while not ctrl.is_stop_requested() and not self._stop_event.is_set():
+            while not self._stop_event.is_set():
                 try:
                     line = stdin.readline()
                 except Exception:
@@ -288,7 +287,7 @@ class _MeshStdioBridge:
             sys.stdout.write(str(prompt))
             sys.stdout.flush()
             
-        while not ctrl.is_stop_requested() and not self._stop_event.is_set():
+        while not self._stop_event.is_set():
             try:
                 item = self._input_queue.get(timeout=0.1)
                 return item.get('line', '')
@@ -328,7 +327,7 @@ class _MeshStdioBridge:
 
 
     async def _publish_output(self):
-        while not ctrl.is_stop_requested() and not self._stop_event.is_set():
+        while not self._stop_event.is_set():
             try:
                 record = self._output_queue.get_nowait()
             except queue.Empty:

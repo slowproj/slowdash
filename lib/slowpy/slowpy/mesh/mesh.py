@@ -16,12 +16,16 @@ class Mesh:
         name: str|None = None,
         rpc_timeout: float = 5,
         loop_timeout: float = 0.1,
+        stop_on_error = True,
         sep: str|None = '.',
         single_wc: str|None = '*',
         tail_wc: str|None = '>'
     ):
         self._loop_timeout = loop_timeout
         self._rpc_timeout = rpc_timeout
+        
+        self._stop_on_error = stop_on_error
+        self._had_error = False
 
         self._sep_mesh = sep
         self._single_wc_mesh = single_wc
@@ -328,11 +332,18 @@ class Mesh:
                 now = time.monotonic()
                 if now > end:
                     if expected_replies is not None and len(replies) < expected_replies:
-                        logging.warning(f'Mesh: RPC timeout: {name}()')
                         if raise_on_timeout:
-                            raise Exception(f'Mesh: RPC timeout: {name}()')
+                            raise Exception(f'RPC timeout')
+                        else:
+                            logging.warning(f'Mesh: RPC timeout: {name}()')
                     break
 
+        except Exception as e:
+            logging.warning(f'Mesh: RPC error: {name}(): {e}')
+            if self._stop_on_error:
+                self._had_error = True
+                ctrl.stop()
+                
         finally:
             async with self._reply_lock:
                 del self._reply_queues[correlation_id]
@@ -432,6 +443,9 @@ class Mesh:
             if tb is not None and len(tb.strip()) > 0:
                 logging.error(tb)
                 print(tb)
+            if self._stop_on_error:
+                self._had_error = True
+                ctrl.stop()
 
                         
     async def _start_rpc_call_handler(self):
@@ -498,10 +512,21 @@ class Mesh:
                 result = await result
             return { 'status': 'ok', 'message': 'ok', 'return_value': result }
         except Exception as e:
+            logging.error(f'Mesh: error in RPC callback: {func.__name__}(): {e}')
+            tb = traceback.format_exc()
+            if tb is not None and len(tb.strip()) > 0:
+                logging.error(tb)
+                print(tb)
+            if self._stop_on_error:
+                self._had_error = True
+                ctrl.stop()
             return { 'status': 'error', 'message': str(e), 'return_value': None }
         except asyncio.CancelledError:
             return { 'status': 'cancelled', 'message': 'cancelled', 'return_value': None }
         except:
+            if self._stop_on_error:
+                self._had_error = True
+                ctrl.stop()
             return { 'status': 'error', 'message': 'other errors', 'return_value': None }
 
 
