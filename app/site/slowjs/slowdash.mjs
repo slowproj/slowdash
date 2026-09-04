@@ -22,8 +22,7 @@ export class SlowDash {
         
         this.config = null;
 
-        this.layoutDiv = $('<div>').appendTo(div);
-        this.layout = new Layout(this.layoutDiv);
+        this.layout = new Layout(div);
         this.controller = new Controller(this.layout);
         this.scheduler = new Scheduler();
 
@@ -34,8 +33,7 @@ export class SlowDash {
 
         this.serverStatusDiv = $('<div>').appendTo(div.closest('body'));
         this.serverStatusDiv.css({
-            //'display':'none',  // to show, 'display': 'flex'
-            'display': 'flex',
+            'display':'none',  // to show, 'display': 'flex'
             'position': 'fixed',
             'z-index': 1000,
             'top': '0',
