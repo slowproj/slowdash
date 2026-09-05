@@ -77,6 +77,9 @@ class HtmlPanel extends Panel {
 
         this.indicator = new JGIndicatorWidget($('<div>').appendTo(div));
         this.variables = [];
+        this.senderId = crypto.randomUUID();
+
+        this._setupEventHandlers();
     }
 
     
@@ -84,6 +87,7 @@ class HtmlPanel extends Panel {
         await super.configure(config, options, callbacks);
         this.titleDiv.text(this.config.title ?? '');
         this.variables = [];
+        this.formNames = [];
 
         const base = ((this.config.location??'') == 'system' ? './' : './api/config/content/');
         this.url = base + 'html-' + config.file;
@@ -113,11 +117,14 @@ class HtmlPanel extends Panel {
 
 
     fillDataRequest(dataRequest) {
-        for (let variable of this.variables) {
-            if (variable.channel && variable.waiting) {
+        for (const variable of this.variables) {
+            if (variable.channel) {
                 dataRequest.append(variable.channel);
             }
         }
+        for (const formName of this.formNames) {
+            dataRequest.append(`@mesh:form.inputs.${formName}`);
+        }            
     }
 
     
@@ -176,67 +183,92 @@ class HtmlPanel extends Panel {
 
 
     _render(html) {
-        //...TODO: remove event handlers
         this.contentDiv.html(html);  // CSS in <head> works here
 
         this.variables = [];
-        for (let type of [ 'sd-value', 'sd-enabled' ]) {
-            for (let element of this.contentDiv.find(`[${type}]`).enumerate()) {
+        this.formNames = [];
+        
+        for (const type of [ 'sd-value', 'sd-enabled' ]) {
+            for (const element of this.contentDiv.find(`[${type}]`).enumerate()) {
                 const metric = element.attr(`${type}`);
-                const isInput = (['INPUT', 'SELECT', 'FORM'].includes(element.get().tagName));
+                const isInput = (['INPUT', 'SELECT'].includes(element.get().tagName));
                 const isButton = (
                     (element.get().tagName == 'BUTTON') ||
                     (isInput && ((element.attr('type') ?? '').toUpperCase() == 'SUBMIT'))
                 );                
-                let isLive = element.attr('sd-live');  // if not live, values are updated only after SUBMIT
-                if ((isLive === undefined) || (isLive === null)) {
-                    isLive = isButton || ! isInput;   // <input> is not live by default
-                }
                 this.variables.push($.extend(
                     {
                         type: type,
                         metric: metric,
-                        live: !! isLive,
-                        waiting: true,
                     },
                     Transformer.decompose(metric)
                 ));
-                if (isLive) {
-                    element.bind('change', e=> {
-                        const record = {};
-                        record[metric] = {
-                            't': $.time(),
-                            'x': element.val(),
-                        };
-                        this.callbacks.emit('current_data', record);
-                    });
-                }
             }
         }
-        
-        this.contentDiv.find('input[type="submit" i]').bind('click', e=>{
+
+        for (const form of this.contentDiv.find('form').enumerate()) {
+            const formName = form.attr('name');
+            if (! formName) {
+                continue;
+            }
+            this.formNames.push(formName);
+        }        
+    }
+
+    
+    _setupEventHandlers() {
+        this.contentDiv.bind('submit', e=>{
             e.preventDefault();
-            const confirm_msg = $(e.target).attr('sd-confirm');
+        });
+        
+        this.contentDiv.bind('click', e=>{
+            let button = $(e.target).closest('button');
+            if (button.size() == 0) {
+                button = $(e.target).closest('input[type="submit" i]');
+            }
+            if (button.size() == 0) {
+                return;
+            }
+            e.preventDefault();
+            
+            const confirm_msg = button.attr('sd-confirm');
             if (confirm_msg) {
                 if (! confirm(confirm_msg)) {
                     return;
                 }
             }
-            this._submit($(e.target).attr('name'), $(e.target).closest('form'), e);
+            this._submit(button.attr('name'), button.closest('form'), e);
         });
         
-        this.contentDiv.find('form').bind('submit', e=>{
-            e.preventDefault();
+        this.contentDiv.bind('change', e => {
+            const element = $(e.target);
+            const form = element.closest('form');
+            const elementName = element.attr('name');
+            const formName = form.attr('name');
+            if (! elementName || ! formName) {
+                return;
+            }
+            
+            const topic = 'form.inputs.' + formName;
+            const message = {
+                'sender_id': this.senderId,
+                'form': formName,
+                'values': {
+                    [elementName]: element.val(),
+                }
+            };
+            console.log(message);
+            this.callbacks.publish(topic, message);
         });
     }
-
+                             
     
     async _submit(submit_name, form, event) {
         let doc = {};
         if (submit_name) {
             doc[submit_name] = true
         }
-        for (let input of form.find('input,select').enumerate()) {
+        for (const input of form.find('input,select').enumerate()) {
             const type = (input.attr('type') ?? '').toUpperCase();
             if (type == 'SUBMIT') {
                 continue;
@@ -257,10 +289,6 @@ class HtmlPanel extends Panel {
             }
         }
 
-        for (let variable of this.variables) {
-            variable.waiting = true;
-        }
-        
         const url = './api/control';
         this.indicator.open("Sending Command...", "&#x23f3;", event?.clientX ?? null, event?.clientY ?? null);
         try {
@@ -294,27 +322,28 @@ class HtmlPanel extends Panel {
     _updateContents(dataPacket, displayTimeRange) {
         const values = this._extractDataValues(dataPacket, displayTimeRange);
         this._fillElementValues(values);
+
+        for (const formName of this.formNames) {
+            const formInputs = dataPacket[`@mesh:form.inputs.${formName}`];
+            if ((! formInputs) || (formInputs.sender_id === this.senderId)) {
+                continue;
+            }
+            this._SetFormInputValues(formInputs);
+        }
     }
 
     
     _extractDataValues(dataPacket, displayTimeRange) {
-        const isResponseToSubmit = ! dataPacket.__meta.isStreaming;
         let values = {};
-        for (let variable of this.variables) {
-            if (! variable.waiting) {
-                continue;
-            }
-            let ts = null;
+        for (const variable of this.variables) {
+            const ts = null;
             if (variable.channel) {
                 if (variable.channel in dataPacket) {
                     ts = dataPacket[variable.channel];
                 }
             }
-            if (! variable.live && isResponseToSubmit) {
-                variable.waiting = false;
-            }
-            if (ts?.x == null) {
-                continue
+            if (ts?.x == null) { 
+               continue
             }
 
             const [t, x] = Panel._getLastTX(ts, variable.transform, dataPacket.__meta.range);
@@ -328,7 +357,7 @@ class HtmlPanel extends Panel {
     
         
     _fillElementValues(values) {
-        for (let type of [ 'sd-value', 'sd-enabled' ]) {
+        for (const type of [ 'sd-value', 'sd-enabled' ]) {
             for (let element of this.contentDiv.find(`[${type}]`).enumerate()) {
                 const metric = element.attr(`${type}`);
                 if (! (metric in values)) {
@@ -340,9 +369,6 @@ class HtmlPanel extends Panel {
                     const tagName = element.get().tagName;
                     if (['INPUT', 'SELECT'].includes(tagName)) {
                         element.val(value);
-                    }
-                    else if (tagName == 'FORM') {
-                        this._fillFormValues(element, value);
                     }
                     else {
                         element.text(value);
@@ -356,19 +382,16 @@ class HtmlPanel extends Panel {
     }
 
     
-    _fillFormValues(form, formValueTree) {
-        if (! $.isDict(formValueTree) || ! ('tree' in formValueTree)) {
-            console.error('bad data type (not dict) for a form vaule');
-            return;
-        }
-        const values = formValueTree['tree'];
-        
-        for (const key in values) {
-            for (let element of form.find(`[name="${key}"]`).enumerate()) {
-                const tagName = element.get().tagName;
-                if (['INPUT', 'SELECT'].includes(tagName)) {
-                    element.val(values[key]);
-                }
+    _SetFormInputValues(formInputs) {
+        const formName = formInputs.form;
+        let form = this.contentDiv.find(`form[name="${formName}"]`);
+        for (const name in formInputs.values) {
+            let inputs = form.find(`[name=${name}]`);
+            try {
+                inputs.val(formInputs.values[name]);
+            }
+            catch(e) {
+                console.warn(`HTML Panel: unable to set an input value: ${e}: ${formInputs}`);
             }
         }
     }

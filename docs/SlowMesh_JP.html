@@ -150,6 +150,7 @@ id="toc-pubsub-last-value-cache-1">PubSub Last-Value Cache</a></li>
 トピック構成</a>
 <ul>
 <li><a href="#data" id="toc-data">data</a></li>
+<li><a href="#form" id="toc-form">form</a></li>
 <li><a href="#sd.task" id="toc-sd.task">sd.task</a></li>
 <li><a href="#sd.rpc" id="toc-sd.rpc">sd.rpc</a></li>
 </ul></li>
@@ -774,7 +775,7 @@ SlowMesh の PubSub
 Publish / Subscribe を HTTP から行えるようにします． Publish は通常の
 POST リクエスト，Subscribe は Server-Sent Events (SSE)
 を用いて実装されています． 現時点では，<code>data.*.</code>
-などの指定のトピックのみ subscribe 可能です．</p>
+などの一部のトピックのみ subscribe 可能です．</p>
 <h3 id="subscribe-2">Subscribe</h3>
 <p>Subscribe するためには，まず <code>event/webmesh/attach</code> に SSE
 接続をして，SSE 経由で配布される <code>register</code>
@@ -787,17 +788,15 @@ class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb18
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    }</span></code></pre></div>
 <p>そして，このクライアントIDを使用して，topic を subscribe します．</p>
 <div class="sourceCode" id="cb19"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> subscribe_url <span class="op">=</span> <span class="st">&#39;http://localhost:18881/api/webmesh/subscribe&#39;</span><span class="op">;</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> subscribe_message <span class="op">=</span> {</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>       <span class="st">&#39;client_id&#39;</span><span class="op">:</span> client_id<span class="op">,</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>       <span class="st">&#39;topic&#39;</span><span class="op">:</span> <span class="st">&#39;data.*.HV.ch0.V&#39;</span><span class="op">,</span></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    }<span class="op">;</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">fetch</span>(subscribe_url<span class="op">,</span> {</span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">method</span><span class="op">:</span> <span class="st">&#39;POST&#39;</span><span class="op">,</span></span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">headers</span><span class="op">:</span> { <span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/json; charset=utf-8&#39;</span> }<span class="op">,</span></span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">body</span><span class="op">:</span> <span class="bu">JSON</span><span class="op">.</span><span class="fu">stringify</span>(subscribe_message)<span class="op">,</span></span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span></code></pre></div>
-<p>受信データは <code>message</code>
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>    <span class="fu">fetch</span>(<span class="st">&#39;http://localhost:18881/api/webmesh/subscribe&#39;</span><span class="op">,</span> {</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>        <span class="dt">method</span><span class="op">:</span> <span class="st">&#39;POST&#39;</span><span class="op">,</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>        <span class="dt">headers</span><span class="op">:</span> { <span class="st">&#39;Content-Type&#39;</span><span class="op">:</span> <span class="st">&#39;application/json; charset=utf-8&#39;</span> }<span class="op">,</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">body</span><span class="op">:</span> <span class="bu">JSON</span><span class="op">.</span><span class="fu">stringify</span>({</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>           <span class="st">&#39;client_id&#39;</span><span class="op">:</span> client_id<span class="op">,</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>           <span class="st">&#39;topic&#39;</span><span class="op">:</span> <span class="st">&#39;data.*.HV.ch0.V&#39;</span><span class="op">,</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>        })</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span></code></pre></div>
+<p>データは <code>message</code>
 イベントとしてブラウザへ送信されます．</p>
 <div class="sourceCode" id="cb20"><pre
 class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>    sse<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&quot;message&quot;</span><span class="op">,</span> (<span class="bu">event</span>) <span class="kw">=&gt;</span> {</span>
@@ -807,11 +806,13 @@ class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb20
 <span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">...</span></span>
 <span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span></code></pre></div>
 <p>現在実装されている subscribe 可能なトピックは以下のとおりです．
-現在のところ，ストリーミングで指定するトピックには，SlowMesh SubPub
-のフィルタは使用できません． 指定トピック中の <code>*</code> や
-<code>&gt;</code> はそのまま使ってください．</p>
+現在のところ，ストリーミングで指定するトピック名には，SlowMesh PubSub
+のトピックフィルタは使用できません． 以下のトピック名中の <code>*</code>
+や <code>&gt;</code> はそのまま使ってください．<code>{channel}</code>
+の部分は置き換えてください．</p>
 <ul>
 <li><code>data.*.{channel}</code></li>
+<li><code>form.inputs.{form_name}</code></li>
 <li><code>sd.task.life_event.&gt;</code></li>
 <li><code>sd.task.heartbeat.&gt;</code></li>
 <li><code>sd.task.stdout.&gt;</code></li>
@@ -1392,17 +1393,21 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb41-1"><a h
 <p>ブラウザの Web フォームからスタート・ストップの publish
 やセットポイント設定の RPC を行っています．</p>
 <div class="sourceCode" id="cb42"><pre
-class="sourceCode html"><code class="sourceCode html"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+class="sourceCode html"><code class="sourceCode html"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;run_control&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">b</span><span class="dt">&gt;</span>Device Controls<span class="dt">&lt;/</span><span class="kw">b</span><span class="dt">&gt;</span> (Function Call)<span class="dt">&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>  Set Point: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;value&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;randomwalk.set_value()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Set&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>  V0 Set Point: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V0_setpoint&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;randomwalk.set_value()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
 <span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span>  </span>
-<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">b</span><span class="dt">&gt;</span>Run Controls<span class="dt">&lt;/</span><span class="kw">b</span><span class="dt">&gt;</span> (Publish)<span class="dt">&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;publish control.start()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Start&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;publish control.stop()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Stop&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
-<p>ボタン（<code>&lt;input type="submit"&gt;</code>）の
-<code>name</code>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">b</span><span class="dt">&gt;</span>Run Controls (V0)<span class="dt">&lt;/</span><span class="kw">b</span><span class="dt">&gt;</span> (Publish)<span class="dt">&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;publish control.start()&quot;</span><span class="dt">&gt;</span>Start<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;publish control.stop()&quot;</span><span class="dt">&gt;</span>Stop<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span>  </span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">b</span><span class="dt">&gt;</span>Run Controls (V1)<span class="dt">&lt;/</span><span class="kw">b</span><span class="dt">&gt;</span> (No-Tasklet Function Call)<span class="dt">&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;no_tasklet.start()&quot;</span><span class="dt">&gt;</span>Start<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;no_tasklet.stop()&quot;</span><span class="dt">&gt;</span>Stop<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb42-13"><a href="#cb42-13" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>ボタン（<code>&lt;button&gt;</code> または
+<code>&lt;input type="submit"&gt;</code>）の <code>name</code>
 属性でボタンをクリックしたときの動作を記述しています．</p>
 <ul>
 <li><code>randomwalk.set_value()</code>: randomwalk タスクの
@@ -1415,6 +1420,12 @@ class="sourceCode html"><code class="sourceCode html"><span id="cb42-1"><a href=
 データは引数リスト（この例では空）と他の <code>&lt;input&gt;</code>
 要素の name-value 対を JSON にしたものになる．</li>
 </ul>
+<p>また，<code>&lt;form&gt;</code> 要素に <code>name</code>
+を指定することにより，その中の <code>&lt;input&gt;</code> の
+<code>change</code>
+イベントに対して，<code>form.input.{form_name}</code>
+トピックにその内容が publish され，また，このトピックを subscribe
+することによって，他のブラウザの同じフォームが値を変更したときにそれが即座に反映されるようになっています．</p>
 <h4 id="slowplot-レイアウト-slowplot-control.json">SlowPlot レイアウト
 （<code>slowplot-control.json</code>）</h4>
 <p>以下のものを並べたものです．</p>
@@ -1524,17 +1535,18 @@ id="一般コントロールインターフェース">一般コントロール�
 <li>Body は HTML の Form 入力値の JSON ドキュメント（フォーム中の
 <code>&lt;input&gt;</code> の <code>name</code> と <code>value</code>
 を集めた object）</li>
-<li><code>type="submit"</code> の <code>&lt;input&gt;</code>
-エレメントの <code>name</code> をリクエストと解釈する</li>
+<li><code>&lt;button&gt;</code> （または <code>type="submit"</code> の
+<code>&lt;input&gt;</code>） エレメントの <code>name</code>
+をリクエストと解釈する</li>
 </ul>
 <h5 id="rpc-call-request-旧形式の-slowtask-function-call-と互換">RPC
 Call Request (旧形式の slowtask function call と互換)</h5>
 <ul>
 <li>Syntax: <code>タスク名.関数名(固定パラメータリスト)</code></li>
 <li>Example:
-<code>&lt;input type="submit" name="run_controller.start(run_mode='normal')"&gt;</code></li>
-<li>Form 中の <code>type="submit"</code> 以外の
-<code>&lt;input&gt;</code> 要素の <code>name</code> と
+<code>&lt;button name="run_controller.start(run_mode='normal')"&gt;</code></li>
+<li>Form 中の <code>&lt;input&gt;</code>
+要素（<code>type="submit"</code> のものを除く）の <code>name</code> と
 <code>value</code> に固定パラメータを追加したものが RPC
 の引数に渡される．</li>
 <li>RPC
@@ -1554,9 +1566,9 @@ Call Request (旧形式の slowtask function call と互換)</h5>
 <ul>
 <li>Syntax: <code>publish トピック名(固定パラメータリスト)</code></li>
 <li>Example:
-<code>&lt;input type="submit" name="publish my_setup.start(run_mode='normal')"&gt;</code></li>
-<li>Form 中の <code>type="submit"</code> 以外の
-<code>&lt;input&gt;</code> 要素の <code>name</code> と
+<code>&lt;button name="publish my_setup.start(run_mode='normal')"&gt;</code></li>
+<li>Form 中の <code>&lt;input&gt;</code>
+要素（<code>type="submit"</code> のものを除く）の <code>name</code> と
 <code>value</code> に固定パラメータを追加した Key-Value Pairs の JSON
 object が publish される．</li>
 <li>レスポンス：
@@ -1679,18 +1691,62 @@ id="eventsourceeventwebmeshattach">EventSource(<code>event/webmesh/attach</code>
 </ul>
 <h1 id="pubsub-トピック構成">PubSub トピック構成</h1>
 <h2 id="data">data</h2>
-<h3 id="トピック名構成">トピック名構成</h3>
+<h3
+id="data.store.channel_name-data.stream.channel_name">data.store.{channel_name}
+/ data.stream.{channel_name}</h3>
+<h5 id="トピック名構成">トピック名構成</h5>
 <ul>
 <li><code>data.store.{チャンネル名}</code>: 永続データ</li>
 <li><code>data.stream.{チャンネル名}</code>: モニタデータ</li>
 </ul>
-<h3 id="meshpacket-1">MeshPacket</h3>
+<h5 id="meshpacket-1">MeshPacket</h5>
 <p><code>DataPacket(values, *, tag:str|None=None, timestamp:float|None=None)</code></p>
 <ul>
 <li><code>DataStore.append()</code> と同じ引数</li>
 </ul>
-<h3 id="フォーマット">フォーマット</h3>
+<h5 id="フォーマット">フォーマット</h5>
 <p>SlowDash 標準データフォーマット</p>
+<h2 id="form">form</h2>
+<h3 id="form.inputs.form_name">form.inputs.{form_name}</h3>
+<h5 id="主な用途">主な用途</h5>
+<ul>
+<li>目的
+<ul>
+<li>ブラウザフォームの入力値の変化をすべてのブラウザに通知する</li>
+<li>ブラウザフォームの入力値をレジストリに保存して，新たに開いたときの初期値にする</li>
+<li>ブラウザフォームの操作を即座に制御に反映させる</li>
+</ul></li>
+<li>Sender(s): sd_task (SlowDash サーバー)</li>
+<li>Receiver(s): sd_task (SlowDash サーバー)，Registry, task
+process</li>
+<li>Timing:
+<ul>
+<li>ブラウザフォームの INPUT フィールドの change イベント</li>
+</ul></li>
+</ul>
+<h5 id="json-schema">JSON Schema</h5>
+<p>Body:</p>
+<div class="sourceCode" id="cb45"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;sender_id&quot;</span><span class="ot">,</span> <span class="st">&quot;form&quot;</span><span class="ot">,</span> <span class="st">&quot;values&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;sender_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;form&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;values&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span> <span class="fu">}</span></span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h5 id="json-example">JSON Example</h5>
+<p>Body:</p>
+<div class="sourceCode" id="cb46"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;sender_id&quot;</span><span class="fu">:</span> <span class="st">&quot;eab2b828-006b-4d87-a01e-4d308ca71226&quot;</span><span class="fu">,</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;form&quot;</span><span class="fu">:</span> <span class="st">&quot;run_control&quot;</span><span class="fu">,</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;values&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;V0_setpoint&quot;</span><span class="fu">:</span> <span class="dv">100</span><span class="fu">,</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;V1_setpoint&quot;</span><span class="fu">:</span> <span class="dv">80</span></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a><span class="er">​</span><span class="fu">}</span></span></code></pre></div>
 <h2 id="sd.task">sd.task</h2>
 <ul>
 <li>すべての SlowTask Process は <code>sd.task.control.&gt;</code> を
@@ -1701,7 +1757,7 @@ id="sd.task.heartbeat.task_name.mesh_id">sd.task.heartbeat.{task_name}.{mesh_id}
 <p>Task の生存信号．Body に記録されるのは expire (= time-of-heartbeat +
 heartbeat-interval)．Expire が現在時刻よりも古ければ，Heartbeat
 が出ていないとみなす．</p>
-<h5 id="主な用途">主な用途</h5>
+<h5 id="主な用途-1">主な用途</h5>
 <ul>
 <li>Sender(s): task process</li>
 <li>Receiver(s): sd_task (SlowDash サーバー)，モニタサービス</li>
@@ -1727,44 +1783,44 @@ heartbeat-interval)．Expire が現在時刻よりも古ければ，Heartbeat
 <li>サーバー復帰後のシステム再開は，heartbeat interval
 程度遅れることになる</li>
 </ul>
-<h5 id="json-schema">JSON Schema</h5>
-<p>Headers:</p>
-<div class="sourceCode" id="cb45"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
-<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;mesh_id&quot;</span><span class="ot">,</span> <span class="st">&quot;name&quot;</span><span class="ot">,</span> <span class="st">&quot;timestamp&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;mesh_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;int&quot;</span> <span class="fu">}</span></span>
-<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
-<p>Body:</p>
-<div class="sourceCode" id="cb46"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
-<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;expire&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;expire&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;int&quot;</span> <span class="fu">}</span></span>
-<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
-<h5 id="json-example">JSON Example</h5>
+<h5 id="json-schema-1">JSON Schema</h5>
 <p>Headers:</p>
 <div class="sourceCode" id="cb47"><pre
 class="sourceCode json"><code class="sourceCode json"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;mesh_id&quot;</span><span class="fu">:</span> <span class="er">self.mesh_id</span><span class="fu">,</span></span>
-<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="er">self.name</span><span class="fu">,</span></span>
-<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="er">int(time.time())</span></span>
-<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;mesh_id&quot;</span><span class="ot">,</span> <span class="st">&quot;name&quot;</span><span class="ot">,</span> <span class="st">&quot;timestamp&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;mesh_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;int&quot;</span> <span class="fu">}</span></span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>Body:</p>
 <div class="sourceCode" id="cb48"><pre
 class="sourceCode json"><code class="sourceCode json"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;expire&quot;</span><span class="fu">:</span> <span class="er">int(time.time())</span> <span class="er">+</span> <span class="er">self.interval</span></span>
-<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;expire&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;expire&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;int&quot;</span> <span class="fu">}</span></span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h5 id="json-example-1">JSON Example</h5>
+<p>Headers:</p>
+<div class="sourceCode" id="cb49"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;mesh_id&quot;</span><span class="fu">:</span> <span class="er">self.mesh_id</span><span class="fu">,</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="er">self.name</span><span class="fu">,</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="er">int(time.time())</span></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Body:</p>
+<div class="sourceCode" id="cb50"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;expire&quot;</span><span class="fu">:</span> <span class="er">int(time.time())</span> <span class="er">+</span> <span class="er">self.interval</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h3
 id="sd.task.spec.task_name.mesh_id">sd.task.spec.{task_name}.{mesh_id}</h3>
 <p>タスクが外部公開している関数と変数の一覧</p>
-<h5 id="主な用途-1">主な用途</h5>
+<h5 id="主な用途-2">主な用途</h5>
 <ul>
 <li>Sender(s): task process</li>
 <li>Receiver(s): sd_task (SlowDash サーバー)</li>
@@ -1774,68 +1830,68 @@ id="sd.task.spec.task_name.mesh_id">sd.task.spec.{task_name}.{mesh_id}</h3>
 <li><code>sd.task.control.introduce</code> を受け取ったとき</li>
 </ul></li>
 </ul>
-<h5 id="json-schema-1">JSON Schema</h5>
+<h5 id="json-schema-2">JSON Schema</h5>
 <p>Body:</p>
-<div class="sourceCode" id="cb49"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
-<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;mesh_id&quot;</span><span class="ot">,</span> <span class="st">&quot;name&quot;</span><span class="ot">,</span> <span class="st">&quot;timestamp&quot;</span><span class="ot">,</span> <span class="st">&quot;functions&quot;</span><span class="ot">,</span> <span class="st">&quot;variables&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;mesh_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;int&quot;</span> <span class="fu">},</span></span>
-<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;functions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
-<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[]</span><span class="fu">,</span></span>
-<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;kwargs&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
-<span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb49-15"><a href="#cb49-15" aria-hidden="true" tabindex="-1"></a>                        <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;enum&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;int&quot;</span><span class="ot">,</span> <span class="st">&quot;float&quot;</span><span class="ot">,</span> <span class="st">&quot;str&quot;</span><span class="ot">,</span> <span class="st">&quot;bool&quot;</span> <span class="ot">]</span> <span class="fu">},</span></span>
-<span id="cb49-16"><a href="#cb49-16" aria-hidden="true" tabindex="-1"></a>                        <span class="dt">&quot;default&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="fu">}</span></span>
-<span id="cb49-17"><a href="#cb49-17" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">}</span></span>
-<span id="cb49-18"><a href="#cb49-18" aria-hidden="true" tabindex="-1"></a>                <span class="fu">},</span></span>
-<span id="cb49-19"><a href="#cb49-19" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;arbitrary_keywords&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;bool&quot;</span> <span class="fu">}</span></span>
-<span id="cb49-20"><a href="#cb49-20" aria-hidden="true" tabindex="-1"></a>            <span class="fu">},</span></span>
-<span id="cb49-21"><a href="#cb49-21" aria-hidden="true" tabindex="-1"></a>        <span class="fu">},</span></span>
-<span id="cb49-22"><a href="#cb49-22" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;variables&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb49-23"><a href="#cb49-23" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
-<span id="cb49-24"><a href="#cb49-24" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;type&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb49-25"><a href="#cb49-25" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb49-26"><a href="#cb49-26" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;enum&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;control_node&quot;</span> <span class="ot">]</span><span class="fu">,</span> <span class="dt">&quot;$comment&quot;</span><span class="fu">:</span> <span class="st">&quot; 将来的には dataclass type などを追加するかも．readonly とかも．&quot;</span> <span class="fu">},</span></span>
-<span id="cb49-27"><a href="#cb49-27" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;data_type&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;enum&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;numeric&quot;</span><span class="ot">,</span> <span class="st">&quot;string&quot;</span><span class="ot">,</span> <span class="st">&quot;tree&quot;</span><span class="ot">,</span> <span class="st">&quot;table&quot;</span><span class="ot">,</span> <span class="st">&quot;histogram&quot;</span><span class="ot">,</span> <span class="st">&quot;graph&quot;</span> <span class="ot">]</span> <span class="fu">},</span></span>
-<span id="cb49-28"><a href="#cb49-28" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;probe_value&quot;</span><span class="fu">:</span> <span class="fu">{}</span></span>
-<span id="cb49-29"><a href="#cb49-29" aria-hidden="true" tabindex="-1"></a>        <span class="fu">},</span></span>
-<span id="cb49-30"><a href="#cb49-30" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;stdio&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb49-31"><a href="#cb49-31" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
-<span id="cb49-32"><a href="#cb49-32" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb49-33"><a href="#cb49-33" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;stdout&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;$comment&quot;</span><span class="fu">:</span> <span class="st">&quot;stdout が publish されるトピック名&quot;</span> <span class="fu">},</span> </span>
-<span id="cb49-34"><a href="#cb49-34" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;stderr&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;$comment&quot;</span><span class="fu">:</span> <span class="st">&quot;stderr が publish されるトピック名&quot;</span> <span class="fu">},</span> </span>
-<span id="cb49-35"><a href="#cb49-35" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;stdin&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;$comment&quot;</span><span class="fu">:</span> <span class="st">&quot;subscribe の受信が stdin へ送られるトピック名&quot;</span> <span class="fu">}</span></span>
-<span id="cb49-36"><a href="#cb49-36" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
-<span id="cb49-37"><a href="#cb49-37" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span></span>
-<span id="cb49-38"><a href="#cb49-38" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb49-39"><a href="#cb49-39" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
-<h5 id="json-example-1">JSON Example</h5>
+<div class="sourceCode" id="cb51"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;mesh_id&quot;</span><span class="ot">,</span> <span class="st">&quot;name&quot;</span><span class="ot">,</span> <span class="st">&quot;timestamp&quot;</span><span class="ot">,</span> <span class="st">&quot;functions&quot;</span><span class="ot">,</span> <span class="st">&quot;variables&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;mesh_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;int&quot;</span> <span class="fu">},</span></span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;functions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb51-10"><a href="#cb51-10" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[]</span><span class="fu">,</span></span>
+<span id="cb51-11"><a href="#cb51-11" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb51-12"><a href="#cb51-12" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;kwargs&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb51-13"><a href="#cb51-13" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb51-14"><a href="#cb51-14" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb51-15"><a href="#cb51-15" aria-hidden="true" tabindex="-1"></a>                        <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;enum&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;int&quot;</span><span class="ot">,</span> <span class="st">&quot;float&quot;</span><span class="ot">,</span> <span class="st">&quot;str&quot;</span><span class="ot">,</span> <span class="st">&quot;bool&quot;</span> <span class="ot">]</span> <span class="fu">},</span></span>
+<span id="cb51-16"><a href="#cb51-16" aria-hidden="true" tabindex="-1"></a>                        <span class="dt">&quot;default&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="fu">}</span></span>
+<span id="cb51-17"><a href="#cb51-17" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">}</span></span>
+<span id="cb51-18"><a href="#cb51-18" aria-hidden="true" tabindex="-1"></a>                <span class="fu">},</span></span>
+<span id="cb51-19"><a href="#cb51-19" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;arbitrary_keywords&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;bool&quot;</span> <span class="fu">}</span></span>
+<span id="cb51-20"><a href="#cb51-20" aria-hidden="true" tabindex="-1"></a>            <span class="fu">},</span></span>
+<span id="cb51-21"><a href="#cb51-21" aria-hidden="true" tabindex="-1"></a>        <span class="fu">},</span></span>
+<span id="cb51-22"><a href="#cb51-22" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;variables&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb51-23"><a href="#cb51-23" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb51-24"><a href="#cb51-24" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;type&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb51-25"><a href="#cb51-25" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb51-26"><a href="#cb51-26" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;enum&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;control_node&quot;</span> <span class="ot">]</span><span class="fu">,</span> <span class="dt">&quot;$comment&quot;</span><span class="fu">:</span> <span class="st">&quot; 将来的には dataclass type などを追加するかも．readonly とかも．&quot;</span> <span class="fu">},</span></span>
+<span id="cb51-27"><a href="#cb51-27" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;data_type&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;enum&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;numeric&quot;</span><span class="ot">,</span> <span class="st">&quot;string&quot;</span><span class="ot">,</span> <span class="st">&quot;tree&quot;</span><span class="ot">,</span> <span class="st">&quot;table&quot;</span><span class="ot">,</span> <span class="st">&quot;histogram&quot;</span><span class="ot">,</span> <span class="st">&quot;graph&quot;</span> <span class="ot">]</span> <span class="fu">},</span></span>
+<span id="cb51-28"><a href="#cb51-28" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;probe_value&quot;</span><span class="fu">:</span> <span class="fu">{}</span></span>
+<span id="cb51-29"><a href="#cb51-29" aria-hidden="true" tabindex="-1"></a>        <span class="fu">},</span></span>
+<span id="cb51-30"><a href="#cb51-30" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;stdio&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb51-31"><a href="#cb51-31" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb51-32"><a href="#cb51-32" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb51-33"><a href="#cb51-33" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;stdout&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;$comment&quot;</span><span class="fu">:</span> <span class="st">&quot;stdout が publish されるトピック名&quot;</span> <span class="fu">},</span> </span>
+<span id="cb51-34"><a href="#cb51-34" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;stderr&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;$comment&quot;</span><span class="fu">:</span> <span class="st">&quot;stderr が publish されるトピック名&quot;</span> <span class="fu">},</span> </span>
+<span id="cb51-35"><a href="#cb51-35" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&quot;stdin&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;$comment&quot;</span><span class="fu">:</span> <span class="st">&quot;subscribe の受信が stdin へ送られるトピック名&quot;</span> <span class="fu">}</span></span>
+<span id="cb51-36"><a href="#cb51-36" aria-hidden="true" tabindex="-1"></a>            <span class="fu">}</span></span>
+<span id="cb51-37"><a href="#cb51-37" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span></span>
+<span id="cb51-38"><a href="#cb51-38" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb51-39"><a href="#cb51-39" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h5 id="json-example-2">JSON Example</h5>
 <p>Body:</p>
-<div class="sourceCode" id="cb50"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;mytask&quot;</span><span class="fu">,</span></span>
-<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;functions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;start&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;kwargs&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;run_number&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;int&quot;</span><span class="fu">,</span> <span class="dt">&quot;default&quot;</span><span class="fu">:</span> <span class="dv">-1</span> <span class="fu">}</span> <span class="fu">},</span></span>
-<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;arbitrary_keywords&quot;</span><span class="fu">:</span> <span class="kw">false</span></span>
-<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a>        <span class="fu">},</span></span>
-<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;stop&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;arbitrary_keywords&quot;</span><span class="fu">:</span> <span class="kw">false</span></span>
-<span id="cb50-10"><a href="#cb50-10" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span></span>
-<span id="cb50-11"><a href="#cb50-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">},</span></span>
-<span id="cb50-12"><a href="#cb50-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;variables&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;node&quot;</span> <span class="fu">}</span> <span class="fu">}</span></span>
-<span id="cb50-13"><a href="#cb50-13" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb52"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;mytask&quot;</span><span class="fu">,</span></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;functions&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;start&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;kwargs&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;run_number&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;int&quot;</span><span class="fu">,</span> <span class="dt">&quot;default&quot;</span><span class="fu">:</span> <span class="dv">-1</span> <span class="fu">}</span> <span class="fu">},</span></span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;arbitrary_keywords&quot;</span><span class="fu">:</span> <span class="kw">false</span></span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a>        <span class="fu">},</span></span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;stop&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;arbitrary_keywords&quot;</span><span class="fu">:</span> <span class="kw">false</span></span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span></span>
+<span id="cb52-11"><a href="#cb52-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">},</span></span>
+<span id="cb52-12"><a href="#cb52-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;variables&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;node&quot;</span> <span class="fu">}</span> <span class="fu">}</span></span>
+<span id="cb52-13"><a href="#cb52-13" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h3
 id="sd.task.exit.task_name.mesh_id">sd.task.exit.{task_name}.{mesh_id}</h3>
 <p>タスクの終了を通知</p>
-<h5 id="主な用途-2">主な用途</h5>
+<h5 id="主な用途-3">主な用途</h5>
 <ul>
 <li>Sender: task process</li>
 <li>Receiver(s): sd_task (SlowDash サーバー)，モニタサービス</li>
@@ -1844,23 +1900,23 @@ id="sd.task.exit.task_name.mesh_id">sd.task.exit.{task_name}.{mesh_id}</h3>
 <li>Task 終了時</li>
 </ul></li>
 </ul>
-<h5 id="json-schema-2">JSON Schema</h5>
+<h5 id="json-schema-3">JSON Schema</h5>
 <p>Body:</p>
-<div class="sourceCode" id="cb51"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
-<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;mesh_id&quot;</span><span class="ot">,</span> <span class="st">&quot;name&quot;</span><span class="ot">,</span> <span class="st">&quot;timestamp&quot;</span><span class="ot">,</span> <span class="st">&quot;had_error&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;mesh_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;int&quot;</span> <span class="fu">},</span></span>
-<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;had_error&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;bool&quot;</span> <span class="fu">}</span></span>
-<span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb51-10"><a href="#cb51-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb53"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;mesh_id&quot;</span><span class="ot">,</span> <span class="st">&quot;name&quot;</span><span class="ot">,</span> <span class="st">&quot;timestamp&quot;</span><span class="ot">,</span> <span class="st">&quot;had_error&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;mesh_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;int&quot;</span> <span class="fu">},</span></span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;had_error&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;bool&quot;</span> <span class="fu">}</span></span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h3 id="sd.task.control.introduce">sd.task.control.introduce</h3>
 <p>すべてのタスクに <code>sd.task.spec.{task_name}.{mesh_id}</code> を
 publish するように要求</p>
-<h5 id="主な用途-3">主な用途</h5>
+<h5 id="主な用途-4">主な用途</h5>
 <ul>
 <li>Sender: sd_task (SlowDash サーバー)</li>
 <li>Receiver(s): task process</li>
@@ -1870,18 +1926,18 @@ publish するように要求</p>
 <li>SlowDash サーバーが知らないタスクの heartbeat を受け取ったとき</li>
 </ul></li>
 </ul>
-<h5 id="json-schema-3">JSON Schema</h5>
+<h5 id="json-schema-4">JSON Schema</h5>
 <p>Body:</p>
-<div class="sourceCode" id="cb52"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
-<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[]</span><span class="fu">,</span></span>
-<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{}</span></span>
-<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb54"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[]</span><span class="fu">,</span></span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{}</span></span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h3
 id="sd.task.life_event.task_name.mesh_id">sd.task.life_event.{task_name}.{mesh_id}</h3>
 <p>タスクの外部監視による実行状態の変化を通知</p>
-<h5 id="主な用途-4">主な用途</h5>
+<h5 id="主な用途-5">主な用途</h5>
 <ul>
 <li>Sender(s): sd_task (SlowDash サーバー) / slowdash-task
 （スクリプトローダ）</li>
@@ -1901,168 +1957,166 @@ id="sd.task.life_event.task_name.mesh_id">sd.task.life_event.{task_name}.{mesh_i
 (<code>heartbeat recovered</code>)</li>
 </ul></li>
 </ul>
-<h5 id="json-schema-4">JSON Schema</h5>
-<p>Body:</p>
-<div class="sourceCode" id="cb53"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
-<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;mesh_id&quot;</span><span class="ot">,</span> <span class="st">&quot;timestamp&quot;</span><span class="ot">,</span> <span class="st">&quot;event&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;mesh_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;int&quot;</span> <span class="fu">},</span></span>
-<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;event&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
-<h3
-id="sd.task.stdout.task_name.mesh_id">sd.task.stdout.{task_name}.{mesh_id}</h3>
-<p>タスクの stdout/stderr へ出力のリダイレクト</p>
-<h5 id="主な用途-5">主な用途</h5>
-<ul>
-<li>Sender: task process</li>
-<li>Receiver(s): sd_webmesh 経由のタスクモニタや Web Console など</li>
-</ul>
 <h5 id="json-schema-5">JSON Schema</h5>
-<p>Headers:</p>
-<div class="sourceCode" id="cb54"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
-<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;name&quot;</span><span class="ot">,</span> <span class="st">&quot;mesh_id&quot;</span><span class="ot">,</span> <span class="st">&quot;stream&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;mesh_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;stream&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;enum&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;stdout&quot;</span><span class="ot">,</span> <span class="st">&quot;stderr&quot;</span> <span class="ot">]</span> <span class="fu">}</span></span>
-<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>Body:</p>
 <div class="sourceCode" id="cb55"><pre
 class="sourceCode json"><code class="sourceCode json"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
-<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;name&quot;</span><span class="ot">,</span> <span class="st">&quot;mesh_id&quot;</span><span class="ot">,</span> <span class="st">&quot;timestamp&quot;</span><span class="ot">,</span> <span class="st">&quot;stream&quot;</span><span class="ot">,</span> <span class="st">&quot;kind&quot;</span><span class="ot">,</span> <span class="st">&quot;text&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;mesh_id&quot;</span><span class="ot">,</span> <span class="st">&quot;timestamp&quot;</span><span class="ot">,</span> <span class="st">&quot;event&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
 <span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
 <span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;mesh_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
 <span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
 <span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;int&quot;</span> <span class="fu">},</span></span>
-<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;stream&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;enum&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;stdout&quot;</span><span class="ot">,</span> <span class="st">&quot;stderr&quot;</span> <span class="ot">]</span> <span class="fu">},</span></span>
-<span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;kind&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;enum&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;text&quot;</span> <span class="ot">]</span> <span class="fu">},</span></span>
-<span id="cb55-10"><a href="#cb55-10" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;text&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">}</span></span>
-<span id="cb55-11"><a href="#cb55-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb55-12"><a href="#cb55-12" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;event&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb55-10"><a href="#cb55-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3
+id="sd.task.stdout.task_name.mesh_id">sd.task.stdout.{task_name}.{mesh_id}</h3>
+<p>タスクの stdout/stderr へ出力のリダイレクト</p>
+<h5 id="主な用途-6">主な用途</h5>
+<ul>
+<li>Sender: task process</li>
+<li>Receiver(s): sd_webmesh 経由のタスクモニタや Web Console など</li>
+</ul>
+<h5 id="json-schema-6">JSON Schema</h5>
+<p>Headers:</p>
+<div class="sourceCode" id="cb56"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;name&quot;</span><span class="ot">,</span> <span class="st">&quot;mesh_id&quot;</span><span class="ot">,</span> <span class="st">&quot;stream&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;mesh_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;stream&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;enum&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;stdout&quot;</span><span class="ot">,</span> <span class="st">&quot;stderr&quot;</span> <span class="ot">]</span> <span class="fu">}</span></span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb56-9"><a href="#cb56-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Body:</p>
+<div class="sourceCode" id="cb57"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;name&quot;</span><span class="ot">,</span> <span class="st">&quot;mesh_id&quot;</span><span class="ot">,</span> <span class="st">&quot;timestamp&quot;</span><span class="ot">,</span> <span class="st">&quot;stream&quot;</span><span class="ot">,</span> <span class="st">&quot;kind&quot;</span><span class="ot">,</span> <span class="st">&quot;text&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;mesh_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;int&quot;</span> <span class="fu">},</span></span>
+<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;stream&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;enum&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;stdout&quot;</span><span class="ot">,</span> <span class="st">&quot;stderr&quot;</span> <span class="ot">]</span> <span class="fu">},</span></span>
+<span id="cb57-9"><a href="#cb57-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;kind&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;enum&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;text&quot;</span> <span class="ot">]</span> <span class="fu">},</span></span>
+<span id="cb57-10"><a href="#cb57-10" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;text&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">}</span></span>
+<span id="cb57-11"><a href="#cb57-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb57-12"><a href="#cb57-12" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h3 id="sd.task.stdin.mesh_id">sd.task.stdin.{mesh_id}</h3>
 <p>タスクの input() 入力への PubSub からの注入</p>
-<h5 id="主な用途-6">主な用途</h5>
+<h5 id="主な用途-7">主な用途</h5>
 <ul>
 <li>Sender(s): sd_webmesh 経由のタスクモニタや Web Console など</li>
 <li>Receiver: task process</li>
 </ul>
-<h5 id="json-schema-6">JSON Schema</h5>
-<p>Body:</p>
-<div class="sourceCode" id="cb56"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
-<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;text&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">}</span></span>
-<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span></code></pre></div>
-<h2 id="sd.rpc">sd.rpc</h2>
-<p>Mesh の内部で RPC の実装に使用される．</p>
-<h3 id="sd.rpc.module_name">sd.rpc.{module_name}</h3>
 <h5 id="json-schema-7">JSON Schema</h5>
-<p>Header:</p>
-<div class="sourceCode" id="cb57"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
-<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;sender&quot;</span><span class="ot">,</span> <span class="st">&quot;sender_id&quot;</span><span class="ot">,</span> <span class="st">&quot;reply_to&quot;</span><span class="ot">,</span> <span class="st">&quot;correlation_id&quot;</span><span class="ot">,</span> <span class="st">&quot;message_id&quot;</span><span class="ot">,</span> <span class="st">&quot;module&quot;</span><span class="ot">,</span> <span class="st">&quot;function&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;sender&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;sender_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;reply_to&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;correlation_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb57-9"><a href="#cb57-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;message_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb57-10"><a href="#cb57-10" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;module&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb57-11"><a href="#cb57-11" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;function&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">}</span></span>
-<span id="cb57-12"><a href="#cb57-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb57-13"><a href="#cb57-13" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>Body:</p>
 <div class="sourceCode" id="cb58"><pre
 class="sourceCode json"><code class="sourceCode json"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
 <span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;args&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;array&quot;</span> <span class="fu">},</span></span>
-<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;kwargs&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span> <span class="fu">}</span></span>
-<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
-<h5 id="json-example-2">JSON Example</h5>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;text&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">}</span></span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span></code></pre></div>
+<h2 id="sd.rpc">sd.rpc</h2>
+<p>Mesh の内部で RPC の実装に使用される．</p>
+<h3 id="sd.rpc.module_name">sd.rpc.{module_name}</h3>
+<h5 id="json-schema-8">JSON Schema</h5>
 <p>Header:</p>
 <div class="sourceCode" id="cb59"><pre
 class="sourceCode json"><code class="sourceCode json"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;sender&quot;</span><span class="fu">:</span> <span class="er">self._name</span><span class="fu">,</span></span>
-<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;sender_id&quot;</span><span class="fu">:</span> <span class="er">self._mesh_id</span><span class="fu">,</span></span>
-<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;reply_to&quot;</span><span class="fu">:</span> <span class="er">f</span><span class="st">&quot;sd.rpc_reply.{self._mesh_id}&quot;</span><span class="fu">,</span></span>
-<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;correlation_id&quot;</span><span class="fu">:</span> <span class="er">self._request_count</span><span class="fu">,</span></span>
-<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;message_id&quot;</span><span class="fu">:</span> <span class="er">str(uuid.uuid4())</span><span class="fu">,</span></span>
-<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;module&quot;</span><span class="fu">:</span> <span class="er">module_name</span><span class="fu">,</span></span>
-<span id="cb59-8"><a href="#cb59-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;function&quot;</span><span class="fu">:</span> <span class="er">function_name</span><span class="fu">,</span></span>
-<span id="cb59-9"><a href="#cb59-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;sender&quot;</span><span class="ot">,</span> <span class="st">&quot;sender_id&quot;</span><span class="ot">,</span> <span class="st">&quot;reply_to&quot;</span><span class="ot">,</span> <span class="st">&quot;correlation_id&quot;</span><span class="ot">,</span> <span class="st">&quot;message_id&quot;</span><span class="ot">,</span> <span class="st">&quot;module&quot;</span><span class="ot">,</span> <span class="st">&quot;function&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;sender&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;sender_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;reply_to&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb59-8"><a href="#cb59-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;correlation_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb59-9"><a href="#cb59-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;message_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb59-10"><a href="#cb59-10" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;module&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb59-11"><a href="#cb59-11" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;function&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">}</span></span>
+<span id="cb59-12"><a href="#cb59-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb59-13"><a href="#cb59-13" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>Body:</p>
 <div class="sourceCode" id="cb60"><pre
 class="sourceCode json"><code class="sourceCode json"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;args&quot;</span><span class="fu">:</span> <span class="er">args</span><span class="fu">,</span></span>
-<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;kwargs&quot;</span><span class="fu">:</span> <span class="er">kwargs</span></span>
-<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;args&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;array&quot;</span> <span class="fu">},</span></span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;kwargs&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span> <span class="fu">}</span></span>
+<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb60-7"><a href="#cb60-7" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h5 id="json-example-3">JSON Example</h5>
+<p>Header:</p>
+<div class="sourceCode" id="cb61"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;sender&quot;</span><span class="fu">:</span> <span class="er">self._name</span><span class="fu">,</span></span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;sender_id&quot;</span><span class="fu">:</span> <span class="er">self._mesh_id</span><span class="fu">,</span></span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;reply_to&quot;</span><span class="fu">:</span> <span class="er">f</span><span class="st">&quot;sd.rpc_reply.{self._mesh_id}&quot;</span><span class="fu">,</span></span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;correlation_id&quot;</span><span class="fu">:</span> <span class="er">self._request_count</span><span class="fu">,</span></span>
+<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;message_id&quot;</span><span class="fu">:</span> <span class="er">str(uuid.uuid4())</span><span class="fu">,</span></span>
+<span id="cb61-7"><a href="#cb61-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;module&quot;</span><span class="fu">:</span> <span class="er">module_name</span><span class="fu">,</span></span>
+<span id="cb61-8"><a href="#cb61-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;function&quot;</span><span class="fu">:</span> <span class="er">function_name</span><span class="fu">,</span></span>
+<span id="cb61-9"><a href="#cb61-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Body:</p>
+<div class="sourceCode" id="cb62"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;args&quot;</span><span class="fu">:</span> <span class="er">args</span><span class="fu">,</span></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;kwargs&quot;</span><span class="fu">:</span> <span class="er">kwargs</span></span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h3 id="sd.rpc_reply.mesh_id">sd.rpc_reply.{mesh_id}</h3>
 <p>トピック名 <code>sd.rpc_reply.{mesh_id}</code> は <code>sd.rpc</code>
 の <code>reply_to</code> で指定される． ここでの <code>mesh_id</code>
 は，RPC リクエストを送った側の MeshID.</p>
-<h5 id="json-schema-8">JSON Schema</h5>
+<h5 id="json-schema-9">JSON Schema</h5>
 <p>Header:
 <code>sender</code>，<code>sender_id</code>，<code>message_id</code>
 以外はリクエストメッセージと同内容．</p>
-<div class="sourceCode" id="cb61"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
-<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;sender&quot;</span><span class="ot">,</span> <span class="st">&quot;sender_id&quot;</span><span class="ot">,</span> <span class="st">&quot;correlation_id&quot;</span><span class="ot">,</span> <span class="st">&quot;message_id&quot;</span><span class="ot">,</span> <span class="st">&quot;module&quot;</span><span class="ot">,</span> <span class="st">&quot;function&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;sender&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;sender_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb61-7"><a href="#cb61-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;correlation_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb61-8"><a href="#cb61-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;message_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb61-9"><a href="#cb61-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;module&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb61-10"><a href="#cb61-10" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;function&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">}</span></span>
-<span id="cb61-11"><a href="#cb61-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb61-12"><a href="#cb61-12" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
-<p>Body:</p>
-<div class="sourceCode" id="cb62"><pre
-class="sourceCode json"><code class="sourceCode json"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
-<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;status&quot;</span><span class="ot">,</span> <span class="st">&quot;message&quot;</span><span class="ot">,</span> <span class="st">&quot;return_value&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;enum&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;ok&quot;</span><span class="ot">,</span> <span class="st">&quot;error&quot;</span><span class="ot">,</span> <span class="st">&quot;cancelled&quot;</span> <span class="ot">]</span> <span class="fu">},</span></span>
-<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;message&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;return_value&quot;</span><span class="fu">:</span> <span class="fu">{}</span></span>
-<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
-<h5 id="json-example-3">JSON Example</h5>
 <div class="sourceCode" id="cb63"><pre
 class="sourceCode json"><code class="sourceCode json"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;sender&quot;</span><span class="fu">:</span> <span class="er">self._name</span><span class="fu">,</span></span>
-<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;sender_id&quot;</span><span class="fu">:</span> <span class="er">self._mesh_id</span><span class="fu">,</span></span>
-<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;correlation_id&quot;</span><span class="fu">:</span> <span class="er">correlation_id</span><span class="fu">,</span></span>
-<span id="cb63-5"><a href="#cb63-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;message_id&quot;</span><span class="fu">:</span> <span class="er">str(uuid.uuid4())</span><span class="fu">,</span></span>
-<span id="cb63-6"><a href="#cb63-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;module&quot;</span><span class="fu">:</span> <span class="er">module_name</span><span class="fu">,</span></span>
-<span id="cb63-7"><a href="#cb63-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;function&quot;</span><span class="fu">:</span> <span class="er">function_name</span><span class="fu">,</span></span>
-<span id="cb63-8"><a href="#cb63-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;sender&quot;</span><span class="ot">,</span> <span class="st">&quot;sender_id&quot;</span><span class="ot">,</span> <span class="st">&quot;correlation_id&quot;</span><span class="ot">,</span> <span class="st">&quot;message_id&quot;</span><span class="ot">,</span> <span class="st">&quot;module&quot;</span><span class="ot">,</span> <span class="st">&quot;function&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb63-5"><a href="#cb63-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;sender&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb63-6"><a href="#cb63-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;sender_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb63-7"><a href="#cb63-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;correlation_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb63-8"><a href="#cb63-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;message_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb63-9"><a href="#cb63-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;module&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb63-10"><a href="#cb63-10" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;function&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">}</span></span>
+<span id="cb63-11"><a href="#cb63-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb63-12"><a href="#cb63-12" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <p>Body:</p>
 <div class="sourceCode" id="cb64"><pre
 class="sourceCode json"><code class="sourceCode json"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="st">&quot;ok&quot;</span><span class="fu">,</span></span>
-<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;message&quot;</span><span class="fu">:</span> <span class="st">&quot;ok&quot;</span><span class="fu">,</span></span>
-<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;return_value&quot;</span><span class="fu">:</span> <span class="er">result</span></span>
-<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;status&quot;</span><span class="ot">,</span> <span class="st">&quot;message&quot;</span><span class="ot">,</span> <span class="st">&quot;return_value&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;enum&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;ok&quot;</span><span class="ot">,</span> <span class="st">&quot;error&quot;</span><span class="ot">,</span> <span class="st">&quot;cancelled&quot;</span> <span class="ot">]</span> <span class="fu">},</span></span>
+<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;message&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;return_value&quot;</span><span class="fu">:</span> <span class="fu">{}</span></span>
+<span id="cb64-8"><a href="#cb64-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb64-9"><a href="#cb64-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h5 id="json-example-4">JSON Example</h5>
+<div class="sourceCode" id="cb65"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;sender&quot;</span><span class="fu">:</span> <span class="er">self._name</span><span class="fu">,</span></span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;sender_id&quot;</span><span class="fu">:</span> <span class="er">self._mesh_id</span><span class="fu">,</span></span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;correlation_id&quot;</span><span class="fu">:</span> <span class="er">correlation_id</span><span class="fu">,</span></span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;message_id&quot;</span><span class="fu">:</span> <span class="er">str(uuid.uuid4())</span><span class="fu">,</span></span>
+<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;module&quot;</span><span class="fu">:</span> <span class="er">module_name</span><span class="fu">,</span></span>
+<span id="cb65-7"><a href="#cb65-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;function&quot;</span><span class="fu">:</span> <span class="er">function_name</span><span class="fu">,</span></span>
+<span id="cb65-8"><a href="#cb65-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Body:</p>
+<div class="sourceCode" id="cb66"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;status&quot;</span><span class="fu">:</span> <span class="st">&quot;ok&quot;</span><span class="fu">,</span></span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;message&quot;</span><span class="fu">:</span> <span class="st">&quot;ok&quot;</span><span class="fu">,</span></span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;return_value&quot;</span><span class="fu">:</span> <span class="er">result</span></span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h1 id="todo">TODO</h1>
 <ul>
 <li>Tasklet Initialize params</li>
-<li>AsyncNATS, AsyncMQTT, AsyncRabbitMQ, AsyncRedis に on_reconnect
-を実装する</li>
 <li>レジストリを SlowTask でも動かせるようにする</li>
 <li>MyMesh: SlowTask を SlowMesh
 なしで動かした場合に使う．コンソールから接続し，!!!

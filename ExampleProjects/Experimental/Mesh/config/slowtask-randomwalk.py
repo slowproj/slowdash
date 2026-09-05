@@ -24,9 +24,9 @@ def loop():
 
 
 @tasklet.mesh.export
-def set_value(value:float):
-    print(f'set: {value}')
-    device.ch(0).set(value)
+def set_value(V0_setpoint:float):
+    print(f'set: {V0_setpoint}')
+    device.ch(0).set(V0_setpoint)
 
     
 @tasklet.mesh.on('control.start')

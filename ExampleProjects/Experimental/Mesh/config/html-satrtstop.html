@@ -1,14 +1,14 @@
 
-<form>
+<form name="run_control">
   <b>Device Controls</b> (Function Call)<br>
-  V1 Set Point: <input type="number" name="value" value="10">
-  <input type="submit" name="randomwalk.set_value()" value="Set">
+  V0 Set Point: <input type="number" name="V0_setpoint" value="10">
+  <button name="randomwalk.set_value()">Set</button>
   <p>  
   <b>Run Controls (V0)</b> (Publish)<br>
-  <input type="submit" name="publish control.start()" value="Start">
-  <input type="submit" name="publish control.stop()" value="Stop">
+  <button name="publish control.start()">Start</button>
+  <button name="publish control.stop()">Stop</button>
   <p>  
   <b>Run Controls (V1)</b> (No-Tasklet Function Call)<br>
-  <input type="submit" name="no_tasklet.start()" value="Start">
-  <input type="submit" name="no_tasklet.stop()" value="Stop">
+  <button name="no_tasklet.start()">Start</button>
+  <button name="no_tasklet.stop()">Stop</button>
 </form>

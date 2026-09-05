@@ -278,15 +278,21 @@ export class StreamingReceiver extends DataReceiver {
                     body: body,
                 });
                 if (! response.ok) {
-                    console.error("SSE subscription failed: " + response.statusText);
+                    console.error('SSE subscription failed: ' + response.statusText);
                 }
                 else {
-                    this.#subscriptionList.add(channel);
-                    //console.log("SSE subscription: " + channel);
+                    const reply = await response.json();
+                    if (reply.status == 'ok') {
+                        this.#subscriptionList.add(channel);
+                        //console.log('SSE subscription: ' + channel);
+                    }
+                    else {
+                        console.error('SSE subscription failed: ' + reply.message);
+                    }
                 }
             }
             catch (err) {
-                console.error("SSE subscription failed: server not reachable");
+                console.error('SSE subscription failed: ' + err);
             }
         }
     }
@@ -309,14 +315,20 @@ export class StreamingReceiver extends DataReceiver {
                 body: '',
             });
             if (! response.ok) {
-                console.error("SSE unsubscription failed: " + response.statusText);
+                console.error('SSE unsubscription failed: ' + response.statusText);
             }
             else {
-                //console.log("SSE unsubscription completed");
+                const reply = await response.json();
+                if (reply.status == 'ok') {
+                    //console.log('SSE unsubscription completed');
+                }
+                else {
+                    console.error('SSE unsubscription failed: ' + reply.message);
+                }
             }
         }
         catch (err) {
-            console.error("SSE unsubscription failed: server not reachable");
+            console.error('SSE unsubscription failed: server not reachable');
         }
     }
 
@@ -345,8 +357,8 @@ export class StreamingReceiver extends DataReceiver {
             this.#sse.close();
             this.#sse = null;
             this.#clientId = null;
-            console.error("SSE setup error: " + error);
-            console.log("Data streaming is disabled.");
+            console.error('SSE setup error: ' + error);
+            console.log('Data streaming is disabled.');
             return false;
         }
         
@@ -354,7 +366,7 @@ export class StreamingReceiver extends DataReceiver {
             ;
         };
         this.#sse.onclose = () => {
-            console.log("SSE Closed");
+            console.log('SSE Closed');
             this.#sse = null;
             this.#callbacks.onServerDisconnect();
             for (const channel of this.#subscriptionList) {
@@ -362,12 +374,12 @@ export class StreamingReceiver extends DataReceiver {
             }
             this.#subscriptionList.clear();
         };
-        this.#sse.addEventListener("register", (event) => {
+        this.#sse.addEventListener('register', (event) => {
             try {
                 this.#clientId = JSON.parse(event.data).client_id;
             }
             catch (err){
-                console.error("SSE Error: bad register event: " + err);
+                console.error('SSE Error: bad register event: ' + err);
                 return;
             }
             console.log('SSE Connected: client_id=' + this.#clientId);
@@ -375,7 +387,7 @@ export class StreamingReceiver extends DataReceiver {
             this.subscribe([]);
         });
         
-        this.#sse.addEventListener("message", (event) => {
+        this.#sse.addEventListener('message', (event) => {
             const message = this.parseDataJson(event.data);
             const topic = message.subscribed_topic;
             if (topic.startsWith('data.')) {
@@ -388,7 +400,7 @@ export class StreamingReceiver extends DataReceiver {
 
         this.#sse.onerror = () => {
             if (this.#clientId != null) {
-                console.error("SSE Error: Data streaming is closed on error.");
+                console.error('SSE Error: Data streaming is closed on error.');
             }
             this.#sse.close();
             this.#sse = null;
@@ -455,8 +467,8 @@ export class Controller {
             popout: (panel) => {
                 this.#popoutPanel(panel);
             },
-            emit: (topic, message) => {
-                this.emit(topic, message);
+            publish: (topic, message) => {
+                this.publish(topic, message);
             },
             forceUpdate: this.callbacks.forceUpdate,
             suspend: this.callbacks.suspend,
@@ -565,8 +577,8 @@ export class Controller {
     }
 
     
-    async emit(topic, doc) {
-        const url = './api/emit/' + topic;
+    async publish(topic, doc) {
+        const url = './api/webmesh/publish/' + encodeURIComponent(topic);
         const message = (typeof doc === 'string') ? doc : JSON.stringify(doc);
         
         const response = await fetch(url, {
@@ -574,7 +586,13 @@ export class Controller {
             headers: { 'Content-Type': 'application/json; charset=utf-8' },
             body: message,
         });
-        this.callbacks.forceUpdate();
+        const reply = await response.json();
+        if (reply.status == 'ok') {
+            //console.log('SSE published');
+        }
+        else {
+            console.error('SSE publishing failed: ' + reply.message);
+        }
     }
 
     
@@ -589,8 +607,8 @@ export class Controller {
         const range = this.currentData?.__meta?.range;
         if (range) {
             popout_config.control.range = {
-                "length": Math.round(range.to-range.from),
-                "to": Math.round(range.to)
+                'length': Math.round(range.to-range.from),
+                'to': Math.round(range.to)
             };
         }
         else {

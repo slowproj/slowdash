@@ -402,7 +402,7 @@ MeshStdio では，以下のルールで処理されます：
 ## HTTP ブリッジ (WebMesh)
 WebMesh は，SlowDash サーバープロセスの一部で，SlowMesh に対する Publish / Subscribe を HTTP から行えるようにします．
 Publish は通常の POST リクエスト，Subscribe は Server-Sent Events (SSE) を用いて実装されています．
-現時点では，`data.*.` などの指定のトピックのみ subscribe 可能です．
+現時点では，`data.*.` などの一部のトピックのみ subscribe 可能です．
 
 ### Subscribe
 Subscribe するためには，まず `event/webmesh/attach` に SSE 接続をして，SSE 経由で配布される  `register` イベントからクライアントIDを取得します．
@@ -417,19 +417,17 @@ Subscribe するためには，まず `event/webmesh/attach` に SSE 接続を�
 
 そして，このクライアントIDを使用して，topic を subscribe します．
 ```javascript
-    const subscribe_url = 'http://localhost:18881/api/webmesh/subscribe';
-    const subscribe_message = {
-       'client_id': client_id,
-       'topic': 'data.*.HV.ch0.V',
-    };
-    fetch(subscribe_url, {
+    fetch('http://localhost:18881/api/webmesh/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json; charset=utf-8' },
-        body: JSON.stringify(subscribe_message),
+        body: JSON.stringify({
+           'client_id': client_id,
+           'topic': 'data.*.HV.ch0.V',
+        })
     });
 ```
 
-受信データは `message` イベントとしてブラウザへ送信されます．
+データは `message` イベントとしてブラウザへ送信されます．
 ```javascript
     sse.addEventListener("message", (event) => {
         const message = JSON.parse(event.data);
@@ -440,10 +438,11 @@ Subscribe するためには，まず `event/webmesh/attach` に SSE 接続を�
 ```
 
 現在実装されている subscribe 可能なトピックは以下のとおりです．
-現在のところ，ストリーミングで指定するトピックには，SlowMesh SubPub のフィルタは使用できません．
-指定トピック中の `*` や `>` はそのまま使ってください．
+現在のところ，ストリーミングで指定するトピック名には，SlowMesh PubSub のトピックフィルタは使用できません．
+以下のトピック名中の `*` や `>` はそのまま使ってください．`{channel}` の部分は置き換えてください．
 
 - `data.*.{channel}`
+- `form.inputs.{form_name}`
 - `sd.task.life_event.>`
 - `sd.task.heartbeat.>`
 - `sd.task.stdout.>`
@@ -917,20 +916,26 @@ async def stop():
 #### Web フォーム（`html-startstop.html`）
 ブラウザの Web フォームからスタート・ストップの publish やセットポイント設定の RPC を行っています．
 ```html
-<form>
+<form name="run_control">
   <b>Device Controls</b> (Function Call)<br>
-  Set Point: <input type="number" name="value" value="10">
-  <input type="submit" name="randomwalk.set_value()" value="Set">
+  V0 Set Point: <input type="number" name="V0_setpoint" value="10">
+  <button name="randomwalk.set_value()">Set</button>
   <p>  
-  <b>Run Controls</b> (Publish)<br>
-  <input type="submit" name="publish control.start()" value="Start">
-  <input type="submit" name="publish control.stop()" value="Stop">
+  <b>Run Controls (V0)</b> (Publish)<br>
+  <button name="publish control.start()">Start</button>
+  <button name="publish control.stop()">Stop</button>
+  <p>  
+  <b>Run Controls (V1)</b> (No-Tasklet Function Call)<br>
+  <button name="no_tasklet.start()">Start</button>
+  <button name="no_tasklet.stop()">Stop</button>
 </form>
 ```
-ボタン（`<input type="submit">`）の `name` 属性でボタンをクリックしたときの動作を記述しています．
+ボタン（`<button>` または `<input type="submit">`）の `name` 属性でボタンをクリックしたときの動作を記述しています．
 
 - `randomwalk.set_value()`: randomwalk タスクの `set_value()` 関数の遠隔呼び出しをする．渡される関数の引数は，ここに書かれた引数リスト（この例では空）と他の `<input>` 要素の name-value 対を合わせたものになる．
 - `publish control.start()`: `control.start` トピックに publish する．publish データは引数リスト（この例では空）と他の `<input>` 要素の name-value 対を JSON にしたものになる．
+
+また，`<form>` 要素に `name` を指定することにより，その中の `<input>` の `change` イベントに対して，`form.input.{form_name}` トピックにその内容が publish され，また，このトピックを subscribe することによって，他のブラウザの同じフォームが値を変更したときにそれが即座に反映されるようになっています．
 
 #### SlowPlot レイアウト （`slowplot-control.json`）
 以下のものを並べたものです．
@@ -1017,12 +1022,12 @@ Task Spec を含む全ての実行中タスクのステータス一覧を返す�
 Mesh メッシュリクエスト
 
 - Body は HTML の Form 入力値の JSON ドキュメント（フォーム中の `<input>` の `name` と `value` を集めた object）
-- `type="submit"` の `<input>` エレメントの `name` をリクエストと解釈する
+- `<button>` （または `type="submit"` の `<input>`） エレメントの `name` をリクエストと解釈する
 
 ##### RPC Call Request (旧形式の slowtask function call と互換)
 - Syntax: `タスク名.関数名(固定パラメータリスト)`
-- Example: `<input type="submit" name="run_controller.start(run_mode='normal')">`
-- Form 中の `type="submit"` 以外の `<input>` 要素の `name` と `value` に固定パラメータを追加したものが RPC の引数に渡される．
+- Example: `<button name="run_controller.start(run_mode='normal')">`
+- Form 中の `<input>` 要素（`type="submit"` のものを除く）の `name` と `value` に固定パラメータを追加したものが RPC の引数に渡される．
 - RPC のシグニチャを見て，必要なパラメータのみを選んで，型チェック・型変換もする
 - レスポンス：
   - 成功： 200, `{ "status": "ok", "return_value": return_value }`
@@ -1032,8 +1037,8 @@ Mesh メッシュリクエスト
 
 ##### Publish Request
 - Syntax: `publish トピック名(固定パラメータリスト)`
-- Example: `<input type="submit" name="publish my_setup.start(run_mode='normal')">`
-- Form 中の `type="submit"` 以外の `<input>` 要素の `name` と `value` に固定パラメータを追加した Key-Value Pairs の JSON object が publish される．
+- Example: `<button name="publish my_setup.start(run_mode='normal')">`
+- Form 中の `<input>` 要素（`type="submit"` のものを除く）の `name` と `value` に固定パラメータを追加した Key-Value Pairs の JSON object が publish される．
 - レスポンス：
   - 成功： 200, `{ "status": "ok" }`
   - エラー: 400 番台のエラーレスポンス
@@ -1138,17 +1143,59 @@ SlowMesh へ publish する．
 
 # PubSub トピック構成
 ## data
-### トピック名構成
+### data.store.{channel_name} / data.stream.{channel_name}
+##### トピック名構成
 - `data.store.{チャンネル名}`: 永続データ
 - `data.stream.{チャンネル名}`: モニタデータ
 
-### MeshPacket
+##### MeshPacket
 `DataPacket(values, *, tag:str|None=None, timestamp:float|None=None)`
 
 - `DataStore.append()` と同じ引数
 
-### フォーマット
+##### フォーマット
 SlowDash 標準データフォーマット
+
+
+## form
+### form.inputs.{form_name}
+
+##### 主な用途
+- 目的
+  - ブラウザフォームの入力値の変化をすべてのブラウザに通知する
+  - ブラウザフォームの入力値をレジストリに保存して，新たに開いたときの初期値にする
+  - ブラウザフォームの操作を即座に制御に反映させる
+- Sender(s): sd_task (SlowDash サーバー)
+- Receiver(s): sd_task (SlowDash サーバー)，Registry, task process
+- Timing:
+  - ブラウザフォームの INPUT フィールドの change イベント
+  
+##### JSON Schema
+Body:
+```json
+{
+    "type": "object",
+    "required": [ "sender_id", "form", "values" ],
+    "properties": {
+        "sender_id": { "type": "string" },
+        "form": { "type": "string" },
+        "values": { "type": "object" }
+    }
+}
+```
+
+##### JSON Example
+Body:
+```json
+{
+    "sender_id": "eab2b828-006b-4d87-a01e-4d308ca71226",
+    "form": "run_control",
+    "values": {
+        "V0_setpoint": 100,
+        "V1_setpoint": 80
+    }
+​}
+```
 
 
 ## sd.task
