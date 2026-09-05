@@ -415,11 +415,12 @@ Subscribe するためには，まず `event/webmesh/attach` に SSE 接続を�
     }
 ```
 
-そして，このクライアントIDを使用して，を subscribe します．
+そして，このクライアントIDを使用して，topic を subscribe します．
 ```javascript
-    const subscribe_url = 'http://localhost:18881/api/webmesh/subscribe/data?client_id=' + client_id;
+    const subscribe_url = 'http://localhost:18881/api/webmesh/subscribe';
     const subscribe_message = {
-       'channel': 'HV.ch0.V',
+       'client_id': client_id,
+       'topic': 'data.*.HV.ch0.V',
     };
     fetch(subscribe_url, {
         method: 'POST',
@@ -428,12 +429,25 @@ Subscribe するためには，まず `event/webmesh/attach` に SSE 接続を�
     });
 ```
 
-`data.*.>` トピックは `data` イベントとして，`sd.task.stdout.>` トピックは `stdout` イベントとして送信されます．
+受信データは `message` イベントとしてブラウザへ送信されます．
 ```javascript
-    sse.addEventListener("data", (event) => {
-        let data = JSON.parse(event.data);
+    sse.addEventListener("message", (event) => {
+        const message = JSON.parse(event.data);
+        const headers = message.headers;
+        const body = message.body;
+        ...
     });
 ```
+
+現在実装されている subscribe 可能なトピックは以下のとおりです．
+現在のところ，ストリーミングで指定するトピックには，SlowMesh SubPub のフィルタは使用できません．
+指定トピック中の `*` や `>` はそのまま使ってください．
+
+- `data.*.{channel}`
+- `sd.task.life_event.>`
+- `sd.task.heartbeat.>`
+- `sd.task.stdout.>`
+
 
 ### Publish
 Publish は，`api/webmesh/publish/{topic}` に POST するだけです．
@@ -1515,7 +1529,6 @@ Body:
 
 # TODO
 - Tasklet Initialize params
-- AsyncNATS, AsyncMQTT, AsyncRabbitMQ, AsyncRedis に on_reconnect を実装する
 - レジストリを SlowTask でも動かせるようにする
 - MyMesh: SlowTask を SlowMesh なしで動かした場合に使う．コンソールから接続し，!!! から始まる行を拾う
 - Task RPC Proxy

@@ -90,6 +90,7 @@ class Tasklet:
         name:str|None=None,
         *,
         mesh_url:str|None=None,
+        dash_url:str|None=None,
         stop_on_error:bool=True,
         use_mesh_stdio:bool=True,
         use_oldstyle_callbacks:bool=False
@@ -117,6 +118,8 @@ class Tasklet:
         self._content_generators = {}
 
         self._mesh_stdio = None
+
+        self._dash_url = dash_url
         self._dash = Dash()
         
         
@@ -326,16 +329,13 @@ class Tasklet:
         self._mesh.export('_sd_get_content', handle_get_content)
 
 
-    async def _start(self):
+    async def _start(self):        
         if self._mesh_url is None:
             logging.error(f'Tasklet: Mesh URL is not provided')
             return
         self._mesh.connect(self._mesh_url, self._name)
         if self._name is None:
             self._name = self._mesh.name
-        
-        ctrl.stop_by_signal()
-        self._mesh.add_reconnect_callback(self.on_reconnect)
         
         if self._use_oldstyle_callbacks:
             self._scan_oldstyle_callbacks(self._module)
@@ -349,13 +349,21 @@ class Tasklet:
         for mesh in self._mesh_list:
             await mesh.aio_start()   
 
-        try:
-            dash_url = await mesh.registry.aio_get('$server.url', None)
-            if dash_url is not None:
-                self._dash.connect(self.dash)
-        except Exception as e:
-            pass
+        async def handle_control(headers, data):
+            if headers.get('topic', '') == 'sd.task.control.introduce':
+                await self._publish_spec()
+        await self._mesh.aio_subscribe('sd.task.control.>', handle_control)
+        await self._publish_spec()
+
+        if self._dash_url is None:
+            try:
+                self._dash_url = await mesh.registry.aio_get('$server.url', None)
+            except Exception as e:
+                pass
+        if self._dash_url is not None:
+            self._dash.connect(self._dash_url)
             
+        ctrl.stop_by_signal()
         try:
             await asyncio.gather(*self._initialize_task_coros)
         except Exception as e:
@@ -369,12 +377,6 @@ class Tasklet:
             except Exception:
                 pass
             raise e
-
-        async def handle_control(headers, data):
-            if headers.get('topic', '') == 'sd.task.control.introduce':
-                await self._publish_spec()
-        await self._mesh.aio_subscribe('sd.task.control.>', handle_control)
-        await self._publish_spec()
 
         main_tasks = set()
         try:
@@ -434,17 +436,6 @@ class Tasklet:
                 pass
 
 
-    async def on_reconnect(self):
-        if self._dash_url is None:
-            try:
-                self._dash_url = await mesh.registry.aio_get('$server.url', None)
-                self._dash.connect(self._dash_url)
-            except Exception as e:
-                pass
-            
-        await self._publish_spec()
-
-        
     async def _publish_spec(self):
         functions = {}
         for func_name, func in self.mesh.export_functions().items():

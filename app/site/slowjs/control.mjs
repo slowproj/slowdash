@@ -246,7 +246,6 @@ export class StreamingReceiver extends DataReceiver {
             }
             return;
         }
-
         if (this.#subscriptionRequestList.size > 0) {
             //console.log('StreamingReceiver: subscription for deferred channels', this.#subscriptionRequestList);
             for (const channel of this.#subscriptionRequestList) {
@@ -260,22 +259,23 @@ export class StreamingReceiver extends DataReceiver {
                 continue;
             }
 
-            let event, message;
-            if (['@task_event:', '@heartbeat:', '@stdout:'].includes(channel)) {
-                event = channel.substr(1, channel.length-2);
-                message = {};
+            let topic;
+            if (channel.startsWith('@mesh:')) {
+                topic = channel.substr(6);
             }
             else {
-                event = 'data';
-                message ={ 'channel': channel,};
+                topic = 'data.*.' + channel;
             }
+            const body = JSON.stringify({
+                'client_id': this.#clientId,
+                'topic': topic,
+            });
             
-            const url = this.#url.toString() + 'api/webmesh/subscribe/' + event + '?client_id=' + this.#clientId;
             try {
-                const response = await fetch(url, {
+                const response = await fetch(this.#url.toString() + 'api/webmesh/subscribe', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json; charset=utf-8' },
-                    body: JSON.stringify(message),
+                    body: body,
                 });
                 if (! response.ok) {
                     console.error("SSE subscription failed: " + response.statusText);
@@ -375,17 +375,15 @@ export class StreamingReceiver extends DataReceiver {
             this.subscribe([]);
         });
         
-        this.#sse.addEventListener("data", (event) => {
-            this.#onReceiveData(this.parseDataJson(event.data));
-        });
-        this.#sse.addEventListener("task_event", (event) => {
-            this.#onReceiveData({"@task_event:": this.parseDataJson(event.data)});
-        });
-        this.#sse.addEventListener("heartbeat", (event) => {
-            this.#onReceiveData({"@heartbeat:": this.parseDataJson(event.data)});
-        });
-        this.#sse.addEventListener("stdout", (event) => {
-            this.#onReceiveData({"@stdout:": this.parseDataJson(event.data)});
+        this.#sse.addEventListener("message", (event) => {
+            const message = this.parseDataJson(event.data);
+            const topic = message.subscribed_topic;
+            if (topic.startsWith('data.')) {
+                this.#onReceiveData(message.body);
+            }
+            else {
+                this.#onReceiveData({[`@mesh:${topic}`]: message.body});
+            }
         });
 
         this.#sse.onerror = () => {

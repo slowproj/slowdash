@@ -12,48 +12,54 @@ class DataCache:
         self._channel_table = {}
         self._last_data = {}
 
-
-    def process_data(self, channel:str, data):
-        self._last_data[channel] = data
-        if channel in self._channel_table:
-            return
         
+    def find_data_type(self, value):
         datatype = None
-        x = data.get(channel, {}).get('x', None)
-        if type(x) is list:
-            for i in range(len(x)):
-                if x[-(i+1)] is None:
+        if type(value) is list:
+            for i in range(len(value)):
+                if value[-(i+1)] is None:
                     continue
-                x = x[-(i+1)]
+                value = value[-(i+1)]
                 break
             else:
-                x = None
+                value = None
                 
-        if x is None:
+        if value is None:
             pass
-        elif type(x) in [ int, float ]:
+        elif type(value) in [ int, float ]:
             datatype = 'numeric'
-        elif type(x) is dict:
-            if 'y' in x:
+        elif type(value) is dict:
+            if 'y' in value:
                 datatype = 'graph'
-            elif 'bins' in x:
+            elif 'bins' in value:
                 datatype = 'histogram'
-            elif 'table' in x:
+            elif 'table' in value:
                 datatype = 'table'
-            elif 'tree' in x:
+            elif 'tree' in value:
                 datatype = 'tree'
         else:
             try:
-                float(x)
+                float(value)
                 datatype = 'numeric'
             except:
                 pass
 
-        if datatype is None:
-            logging.warning(f'Unknown data type: channel={channel}, value={x}')
-            datatype = 'unknown'
+        return datatype
+
+                
+    def process_data(self, body):
+        for channel, data in body.items():
+            self._last_data[channel] = data
+            if channel in self._channel_table:
+                return
+
+            value = data.get('x', None)
+            datatype = self.find_data_type(value)
+            if datatype is None:
+                logging.warning(f'Unknown data type: channel={channel}, value={value}')
+                datatype = 'unknown'
             
-        self._channel_table[channel] = { 'name': channel, 'type': datatype, 'streaming': True }
+            self._channel_table[channel] = { 'name': channel, 'type': datatype, 'streaming': True }
 
         
     @property
@@ -101,11 +107,18 @@ class WebMeshComponent(Component):
 
         self._data_cache = DataCache()
 
+        self._topic_list = [
+            'sd.task.life_event.>', 'sd.task.heartbeat.>', 'sd.task.stdout.>'
+        ]
+
         
     def public_config(self):
         return { 'webmesh': {
             'enabled': self.enabled,
-            'attached': { topic:[cid[0:4] for cid in clients] for topic, clients in self._topic_client_table.items() },
+            'attached': {
+                topic: [ client_id[0:4] for client_id in clients ]
+                for topic, clients in self._topic_client_table.items()
+            },
         }}
 
 
@@ -132,35 +145,36 @@ class WebMeshComponent(Component):
 
 
     async def _subscribe_mesh(self):
-        async def process_message(headers, data):
+        async def handle_message(headers, body):
             topic = headers.get('topic')
+
+            # temporary topic matching
+            subscribed_topic = topic
             if topic.startswith('data.'):
                 channel = '.'.join(topic.split('.')[2:])
-                self._data_cache.process_data(channel, data)
-                topic = f'data.*.{channel}'
-            elif topic.startswith('sd.task.life_event'):
-                topic = f'sd.task.life_event'
-            elif topic.startswith('sd.task.heartbeat'):
-                topic = f'sd.task.heartbeat'
-            elif topic.startswith('sd.task.stdout'):
-                topic = f'sd.task.stdout'
-                
+                self._data_cache.process_data(body)
+                subscribed_topic = f'data.*.{channel}'
+            else:
+                for prefix in self._topic_list:
+                    if topic.startswith(prefix[:-1]):
+                        subscribed_topic = prefix
+                        break
+
             async with self._queue_lock:
-                for client_id in tuple(self._topic_client_table.get(topic, set())):
+                for client_id in tuple(self._topic_client_table.get(subscribed_topic, set())):
                     queue = self._client_queue_table.get(client_id)
                     stop_event = self._client_stop_table.get(client_id)
                     if queue is None or stop_event is None:
                         continue
                     try:
-                        queue.put_nowait((headers, data))
+                        queue.put_nowait((subscribed_topic, headers, body))
                     except asyncio.QueueFull:
                         logging.warning(f'WebMesh client queue full; detaching {client_id}')
                         stop_event.set()
-
-        await self._mesh.aio_subscribe('data.>', process_message)
-        await self._mesh.aio_subscribe('sd.task.life_event.>', process_message)
-        await self._mesh.aio_subscribe('sd.task.heartbeat.>', process_message)
-        await self._mesh.aio_subscribe('sd.task.stdout.>', process_message)
+                        
+        await self._mesh.aio_subscribe('data.>', handle_message)
+        for topic in self._topic_list:
+            await self._mesh.aio_subscribe(topic, handle_message)
         
         
     @slowlette.eventstream('/event/webmesh/attach')
@@ -201,27 +215,13 @@ class WebMeshComponent(Component):
                     queue_task.cancel()
                     break
                 
-                headers, body = queue_task.result()
-                topic = headers.get('topic', '')
-                if topic.startswith('data'):
-                    event = 'data'
-                    data = body
-                elif topic.startswith('sd.task.life_event'):
-                    event = 'task_event'
-                    data = body
-                elif topic.startswith('sd.task.heartbeat'):
-                    event = 'heartbeat'
-                    data = body
-                elif topic.startswith('sd.task.stdout'):
-                    event = 'stdout'
-                    data = {
-                        'source': body.get('name'),
-                        'text': body.get('text')
-                    }
-                else:
-                    event = 'mesh'
-                    data = { 'headers': headers, 'body': body }
-                await eventstream.send(data, event=event)
+                subscribed_topic, headers, body = queue_task.result()
+                message = {
+                    'subscribed_topic': subscribed_topic,
+                    'headers':headers,
+                    'body':body
+                }
+                await eventstream.send(message, event='message')
                 
         except slowlette.EventStreamConnectionClosed:
             logging.info(f'EventStream Closed by client: {client_id}')
@@ -251,21 +251,13 @@ class WebMeshComponent(Component):
                 pass
 
             
-    @slowlette.post('/api/webmesh/subscribe/{event}')
-    async def subscribe(self, event:str, client_id:str, doc:slowlette.DictJSON):
-        if event == 'data':
-            channel = doc.get('channel')
-            if channel is None or len(channel) == 0:
-                return { 'status': 'error', 'message': f'bad channel name: {channel}' }
-            topic = f'data.*.{channel}'
-        elif event == 'task_event':
-            topic = f'sd.task.life_event'
-        elif event == 'heartbeat':
-            topic = f'sd.task.heartbeat'
-        elif event == 'stdout':
-            topic = f'sd.task.stdout'
-        else:
-            return { 'status': 'error', 'message': f'bad streaming event name: {event}' }
+    @slowlette.post('/api/webmesh/subscribe')
+    async def subscribe(self, client_id:str, doc:slowlette.DictJSON):
+        client_id = doc.get('client_id')
+        topic = doc.get('topic')
+
+        if not (topic.startswith('data.*.') or topic in self._topic_list):
+            return { 'status': 'error', 'message': f'invalid topic: {topic}' }
 
         async with self._queue_lock:
             if client_id not in self._client_queue_table:

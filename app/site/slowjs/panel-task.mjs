@@ -105,46 +105,51 @@ class TaskPanel extends Panel {
 
 
     fillDataRequest(dataRequest) {
-        dataRequest.append('@task_event:');
-        dataRequest.append('@heartbeat:');
-        dataRequest.append('@stdout:');
+        dataRequest.append('@mesh:sd.task.life_event.>');
+        dataRequest.append('@mesh:sd.task.heartbeat.>');
+        dataRequest.append('@mesh:sd.task.stdout.>');
     }
 
     
     draw(dataPacket, displayTimeRange=null) {
-        if ((this._taskCatalog == null)  || ('@task_event:' in dataPacket) || ('@heartbeat:' in dataPacket)) {
+        if (
+            (this._taskCatalog == null)  ||
+            ('@mesh:sd.task.life_event.>' in dataPacket) || ('@mesh:sd.task.heartbeat.>' in dataPacket)
+        ){
             this._loadTaskList();
         }
-        else if ('@stdout:' in dataPacket) {
-            this._handleStdout(dataPacket['@stdout:']);
+        else if ('@mesh:sd.task.stdout.>' in dataPacket) {
+            this._handleStdout(dataPacket['@mesh:sd.task.stdout.>']);
         }
     }
 
     
     async _loadTaskList() {
-        if (this._taskCatalog == null) {
-            this._taskCatalog = {};
-            try {
-                const response = await fetch('api/task/catalog');
-                const doc = await response.json();
-                for (const [name, params] of Object.entries(doc)) {
-                    this._taskCatalog[name] = {
-                        file_path: params.file_path,
-                        command: params.command,
-                    }
-                }
-            }
-            catch (e) {
-                console.log("Error on fetching task catalog: ", e);
-            }
-        }
-
         let taskList = []; // note that there can exist multiple task instances of a task file
         
         try {
             const response = await fetch('api/task/status');
             const doc = await response.json();
             const now = $.time();
+
+            // do this after the status document, as this.configure() might have been called during await fetch()
+            if (this._taskCatalog == null) {
+                this._taskCatalog = {};
+                try {
+                    const response = await fetch('api/task/catalog');
+                    const doc = await response.json();
+                    for (const [name, params] of Object.entries(doc)) {
+                        this._taskCatalog[name] = {
+                            file_path: params.file_path,
+                            command: params.command,
+                        }
+                    }
+                }
+                catch (e) {
+                    console.log("Error on fetching task catalog: ", e);
+                }
+            }
+            
             for (const task of doc) {
                 const catalog = this._taskCatalog[task.name];
                 const last_event = task.last_life_event.event ?? 'inactive';
@@ -269,7 +274,7 @@ class TaskPanel extends Panel {
         for (let line of data.text.split('\n')) {
             line = line.trimEnd();
             if (line.length > 0) {
-                this._consoleLines.push(now + '  ' + (data.source + ': ').padEnd(20, ' ') + line);
+                this._consoleLines.push(now + '  ' + (data.name + ': ').padEnd(20, ' ') + line);
             }
         }
 

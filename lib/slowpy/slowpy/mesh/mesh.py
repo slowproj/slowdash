@@ -41,8 +41,6 @@ class Mesh:
         self._mesh_id = None
         self._is_running = False
         
-        self._reconnect_callbacks = []
-        
         self._rpc_count = 0
         self._reply_queues = {}  # CorrelationID(str) -> asyncio.Queue
         self._reply_lock = asyncio.Lock()
@@ -62,10 +60,6 @@ class Mesh:
             self._pubsub = ctrl.import_control_module('AsyncLocalPubsub').async_localpubsub()
 
         
-    def add_reconnect_callback(self, func):
-        self._reconnect_callbacks.append(func)
-
-                
     def connect(self, url:str, name:str|None=None):
         if url is None:
             return
@@ -76,12 +70,6 @@ class Mesh:
             self._name = os.path.splitext(os.path.basename(inspect.stack()[-1].filename))[0]
             self._name = re.sub(r'[^a-zA-Z0-9]', '_', self._name)
 
-        async def on_reconnect():
-            for f in self._reconnect_callbacks:
-                result = f()
-                if asyncio.iscoroutine(result):
-                    await result
-            
         if self._mesh_id is None:
             Mesh._mesh_sequence_id += 1
             self._mesh_id = f'{self._name}_{socket.gethostname()}_{os.getpid()}_{Mesh._mesh_sequence_id}'
@@ -91,12 +79,12 @@ class Mesh:
             o = urlsplit(url)
             if o.scheme in ['slowmq', 'slowdash']:
                 self._pubsub = ctrl.import_control_module('AsyncSlowMQ').async_slowmq(
-                    f'slowmq://{o.netloc}', name=self._mesh_id, on_reconnect=on_reconnect
+                    f'slowmq://{o.netloc}', name=self._mesh_id
                 )
                 self._sep, self._single_wc, self._tail_wc = tail_wc = '.', '*', '>'
             elif o.scheme in ['slowmqs', 'slowdashs']:
                 self._pubsub = ctrl.import_control_module('AsyncSlowMQ').async_slowmq(
-                    f'slowmqs://{o.netloc}', name=self._mesh_id, on_reconnect=on_reconnect
+                    f'slowmqs://{o.netloc}', name=self._mesh_id
                 )
                 self._sep, self._single_wc, self._tail_wc = tail_wc = '.', '*', '>'
             elif o.scheme == 'nats':
