@@ -176,6 +176,7 @@ class DataReceiver {
 export class QueryReceiver extends DataReceiver {    
     constructor() {
         super();
+        this._fetching = false;
     }
 
     

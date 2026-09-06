@@ -95,6 +95,17 @@
                     },
                     "label": "Disk Usage (Node Variable Pull)",
                     "format": "%.1f %"
+                },
+                {
+                    "channel": "HV.ch1.V",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "label": "HV.ch1.V (Stored Data Read)",
+                    "format": "%.2f"
                 }
             ],
             "color": { "base": "rgb(0, 0, 0)", "normal": "#06b6d4", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.1 },

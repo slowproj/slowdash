@@ -935,7 +935,7 @@ async def stop():
 - `randomwalk.set_value()`: randomwalk タスクの `set_value()` 関数の遠隔呼び出しをする．渡される関数の引数は，ここに書かれた引数リスト（この例では空）と他の `<input>` 要素の name-value 対を合わせたものになる．
 - `publish control.start()`: `control.start` トピックに publish する．publish データは引数リスト（この例では空）と他の `<input>` 要素の name-value 対を JSON にしたものになる．
 
-また，`<form>` 要素に `name` を指定することにより，その中の `<input>` の `change` イベントに対して，`form.input.{form_name}` トピックにその内容が publish され，また，このトピックを subscribe することによって，他のブラウザの同じフォームが値を変更したときにそれが即座に反映されるようになっています．
+また，`<form>` 要素に `name` を指定することにより，その中の `<input>` の `change` イベントに対して，`form.input.{form_name}` トピックに変更後の値が publish されるようになり，同時に，このトピックを subscribe して，他のブラウザの同じフォームが値を変更したときにそれが即座に反映されるようになっています．
 
 #### SlowPlot レイアウト （`slowplot-control.json`）
 以下のものを並べたものです．

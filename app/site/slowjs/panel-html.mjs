@@ -78,6 +78,7 @@ class HtmlPanel extends Panel {
         this.indicator = new JGIndicatorWidget($('<div>').appendTo(div));
         this.variables = [];
         this.senderId = crypto.randomUUID();
+        this._initialValuesReceived = false;
 
         this._setupEventHandlers();
     }
@@ -92,7 +93,8 @@ class HtmlPanel extends Panel {
         const base = ((this.config.location??'') == 'system' ? './' : './api/config/content/');
         this.url = base + 'html-' + config.file;
         this.url += '?content_type=html';
-    
+
+        this._initialValuesReceived = false;
         await this._loadPage();
     }
 
@@ -124,7 +126,10 @@ class HtmlPanel extends Panel {
         }
         for (const formName of this.formNames) {
             dataRequest.append(`@mesh:form.inputs.${formName}`);
-        }            
+        }
+        if (! this._initialValuesReceived) {
+            dataRequest.append(`@registry:$pubsub.form.inputs.`);
+        }
     }
 
     
@@ -257,7 +262,6 @@ class HtmlPanel extends Panel {
                     [elementName]: element.val(),
                 }
             };
-            console.log(message);
             this.callbacks.publish(topic, message);
         });
     }
@@ -323,6 +327,21 @@ class HtmlPanel extends Panel {
         const values = this._extractDataValues(dataPacket, displayTimeRange);
         this._fillElementValues(values);
 
+        // input values from the PubSub Cache in Registry (for initial loading)
+        if (! this._initialValuesReceived) {
+            const formInputsRegistry = dataPacket[`@registry:$pubsub.form.inputs.`]?.x?.tree;
+            if (formInputsRegistry) {
+                this._initialValuesReceived = true;
+                for (const formName of this.formNames) {
+                    const formInputs = formInputsRegistry[formName];
+                    if (formInputs) {
+                        this._SetFormInputValues(formInputs);
+                    }
+                }
+            }
+        }
+        
+        // updated input values from streaming
         for (const formName of this.formNames) {
             const formInputs = dataPacket[`@mesh:form.inputs.${formName}`];
             if ((! formInputs) || (formInputs.sender_id === this.senderId)) {
