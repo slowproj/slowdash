@@ -725,6 +725,29 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb18-1"><a href=
 </ul>
 <p>（サブブランチを含めて dict/JSON で取得するための，最後の
 <code>&gt;</code> を忘れないように注意してください．）</p>
+<h3 id="persistency">Persistency</h3>
+<p>レジストリの指定のパスを persistent
+と指定することにより，そのパスおよびそれ以下のパスへの書き込みが起こる度に，Persistent
+パス以下全体をファイルに保存するようにできます．作成されるファイル名は
+<code>registry-{path}.json</code> で，その中に，JSON
+フォーマットで，フラットな１エントリ１キーで
+<code>{subpath}: {record}</code>
+の形式で書き出されます．（<code>{path}.&gt;</code>
+形式で木構造化しないのは，dict
+値を保持するエントリの形を保存するためです．）
+書き出されたレジストリ値は，次にレジストリサーバー（SlowDash
+サーバー）がスタートしたとき，自動で読み込まれます．</p>
+<p>TODO: 現時点で，CAS
+などの値以外のメタ情報は保存はされますが，読み込みはされません．</p>
+<p>TODO: 現時点で，presistent にする Path のリストは
+<code>Registry</code> クラスの <code>self._persistent_nodes</code>
+に以下のものがハードコーディングされています．</p>
+<ul>
+<li><code>pubsub.form.inputs.</code></li>
+</ul>
+<p>Note: レジストリの区切り文字に <code>/</code>
+を使用すると，ここでひどい目にあいます．
+ファイル名は適切にエスケープされますが，見苦しいです．</p>
 <h2 id="標準入出力リダイレクト-meshstdio">標準入出力リダイレクト
 (MeshStdio)</h2>
 <p>MeshStdio を使うと，print() の出力などの標準出力が SlowMesh にも
@@ -750,7 +773,7 @@ subscription
 <p>PubSub
 に使われるトピック名は，<code>{prefix}.{stream}.{mesh_id}</code>
 です．例えば，Prefix が <code>sd.task</code>
-の場合の標準出力（stdout）のトピック名は，<code>sd.task.stdout.{mesh_id}</code>
+の場合の標準出力（stdout）のトピック名は，<code>sd.task.stdout.{task_name}.{mesh_id}</code>
 となります．</p>
 <p>複数の MeshStdio を，それぞれ別々のスレッド上で作成し，start
 できます．その場合，入出力の振り分けは，スレッド ID により行われます．
@@ -1147,10 +1170,9 @@ Console へ接続されます．</p>
 <ul>
 <li><code>print()</code> および <code>stdout</code>/<code>stderr</code>
 への <code>write()</code>: コンソール出力および
-<code>sd.task.stdout.{メッシュID}</code> へ publish</li>
+<code>sd.task.stdout.{task_name}{mesh_id}</code> へ publish</li>
 <li><code>input()</code>: コンソール入力または
-<code>sd.task.stdin.{メッシュID}</code>
-からのメッセージから読み込み</li>
+<code>sd.task.stdin.{mesh_id}</code> からのメッセージから読み込み</li>
 </ul>
 <h3 id="slowdash-mesh-サービスへのインターフェース">SlowDash Mesh
 サービスへのインターフェース</h3>
@@ -1511,9 +1533,9 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb47-1"><a href=
 <span id="cb47-12"><a href="#cb47-12" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;variables&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="er">...</span> <span class="fu">},</span></span>
 <span id="cb47-13"><a href="#cb47-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;contents&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="er">...</span> <span class="fu">},</span></span>
 <span id="cb47-14"><a href="#cb47-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;stdio&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb47-15"><a href="#cb47-15" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;stdin&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;sd.task.stdin.store_vp13_17769_1&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb47-16"><a href="#cb47-16" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;stdout&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;sd.task.stdout.store_vp13_17769_1&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb47-17"><a href="#cb47-17" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;stderr&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;sd.task.stdout.store_vp13_17769_1&quot;</span> <span class="ot">]</span></span>
+<span id="cb47-15"><a href="#cb47-15" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;stdin&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;sd.task.stdin.store.store_vp13_17769_1&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb47-16"><a href="#cb47-16" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;stdout&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;sd.task.stdout.store.store_vp13_17769_1&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb47-17"><a href="#cb47-17" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;stderr&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;sd.task.stdout.store.store_vp13_17769_1&quot;</span> <span class="ot">]</span></span>
 <span id="cb47-18"><a href="#cb47-18" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
 <span id="cb47-19"><a href="#cb47-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
 <span id="cb47-20"><a href="#cb47-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span><span class="ot">,</span></span>
@@ -1622,8 +1644,8 @@ object が publish される．</li>
 <code>sd_mesh_registry.py</code>
 コンポーネントにより実装されています．</p>
 <h3 id="registry-アクセス">Registry アクセス</h3>
-<h4 id="get-apiregistryvaluekeykey">GET
-<code>api/registry/value?key={key}</code></h4>
+<h4 id="get-apiregistryvaluekey">GET
+<code>api/registry/value/{key}</code></h4>
 <p>Registry に保持されている値を返す（<code>with_meta=true</code>
 でメタデータを含む JSON ドキュメント）</p>
 <h4 id="get-apiregistrykeysprefixprefixlimitlimit">GET
@@ -1798,7 +1820,8 @@ heartbeat-interval)．Expire が現在時刻よりも古ければ，Heartbeat
 <ul>
 <li>指定時間間隔（<code>Tasklet._heartbeat_interval</code>，１０秒）</li>
 <li>Tasklet
-のメインループから送出（コルーチンやスレッドではない；必ずメインと一緒に停止する）</li>
+のメインループから送出（コルーチンやスレッドではない；必ずメインと一緒に停止する．ユーザーが
+<code>time.sleep()</code> しても止まる．）</li>
 </ul></li>
 </ul>
 <h5 id="第２用途">第２用途</h5>

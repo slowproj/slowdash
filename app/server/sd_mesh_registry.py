@@ -43,13 +43,17 @@ class Registry:
     def __init__(self):
         self.sep = '.'
         self.tail_wc = '>'
+        self._records: dict[str, RegistryRecord] = {}
         
         self._persistent_nodes = set([
             'pubsub.form.inputs.'
         ])
         
-        self._records: dict[str, RegistryRecord] = {}
-        self._load_persistent_nodes()
+        for filename in glob.glob('registry-*.json'):
+            path = self._load_nodes(filename)
+            if path is not None:
+                self._persistent_nodes.add(f'{path}{self.sep}')
+                logging.info(f'Registry: persistent values loaded: {path}: {self.get_tree(path)}')
 
         
     def export(self, mesh:Mesh):
@@ -102,7 +106,9 @@ class Registry:
 
         logging.debug(f'MeshRegistry.set(): "{key}"={repr(value)} -> {record}')
 
-        self._save_persistent_node_of(key)
+        for path in self._persistent_nodes:
+            if key.startswith(path):
+                self._save_nodes(path)
         
         return record.revision
         
@@ -262,46 +268,40 @@ class Registry:
         return True
 
 
-    def _load_persistent_nodes(self) -> None:
-        for filename in glob.glob('registry-*.json'):
-            path = filename[len('registry-'):][:-len('.json')]
-            try:
-                with open(filename, 'r', encoding='utf-8') as f:
-                    for line in f:
-                        key, value_json = line.split(':', 1)
-                        try:
-                            key = key.strip()
-                            value  = json.loads(value_json)
-                        except Exception as e:
-                            logging.warning(f'Bad registry value to load in "{filename}": "{value_json}": {e}')
-                            continue
-                        if len(key) == 0:
-                            self.set(path, value)
-                        else:
-                            self.set(f'{path}.{key}', value)
-            except Exception as e:
-                logging.warning(f'Unable to load registry values from file: {filename}: {e}')
-                continue
+    def _load_nodes(self, filename:str) -> str:
+        path = filename[len('registry-'):][:-len('.json')]
+        try:
+            with open(filename, 'r') as f:
+                doc = json.load(f)
+        except Exception as e:
+            logging.warning(f'Unable to load registry values from file: {filename}: {e}')
+            return None
+                
+        for subpath, value in doc.items():
+            if subpath == '$root':
+                key = path
+            else:
+                key = f'{path}.{subpath}'
+                    
+            self.set(key, value.get('value'))   # TODO: no meta for now...
 
-            self._persistent_nodes.add(f'{path}{self.sep}')
-            logging.info(f'Registry: persistent values loaded: {path}: {self.get_tree(path)}')
+        return path
             
         
-    def _save_persistent_node_of(self, key:str) -> None:
-        for path in self._persistent_nodes:
-            if not key.startswith(path):
-                continue
-            
-            try:
-                with open(f'registry-{path[:-1]}.json', 'w') as f:
-                    for k in self.keys(path):
-                        if ':' in k:
-                            logging.warning(f'bad registry key (skipped): "{k}"')
-                            continue
-                        v = self.get(k)
-                        f.write(f'{k[len(path):]}: {json.dumps(v)}\n')
-            except Exception as e:
-                logging.warning(f'Unable to save registry values to file: {path}: {e}')
+    def _save_nodes(self, path:str) -> None:
+        doc = {}
+        for key in self.keys(path):
+            subpath = key[len(path):]
+            if len(subpath) == 0:
+                subpath = '$root'
+            value = self.get(key, with_meta=True)
+            value.pop('key')
+            doc[subpath] = value
+        try:
+            with open(f'registry-{path[:-1]}.json', 'w') as f:
+                json.dump(doc, f)
+        except Exception as e:
+            logging.warning(f'Unable to save registry values to file: {path}: {e}')
                 
     
 
