@@ -1145,6 +1145,16 @@ SlowMesh へ publish する．
 
 
 # RPC サービス
+## ユーザー自由使用領域
+#### Export モジュール名 （SlowMesh Task Name）
+- `sd_` から始まるものを除くすべてがユーザー領域
+
+#### Export 関数名 (モジュール内 export 関数)
+- 先頭が `_` で始まるものを除くすべてがユーザー領域
+  - 先頭が `_sd_` で始まるものは SlowMesh のコア機能で使用
+  - `_setup()`, `_initialize()`, `_finalize()`, `_loop()`, `_run()` は No-Tasklet Task の予約済みコールバック（後方互換）
+
+
 ## Registry (Key-Value Store)
 - モジュール名： `sd_mesh_registry`
 - エクスポート関数：
@@ -1162,7 +1172,7 @@ SlowMesh へ publish する．
   - `_sd_get_content(name:str)`: Task Contents を取得
 
 
-# 予約済み Registry
+# Registry サービス
 ## ユーザー自由使用領域
 - 大文字から始まるすべての名前 （`P8.>` や `KamLAND.>` など）
 - `setup.>`

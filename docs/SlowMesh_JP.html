@@ -134,15 +134,17 @@ id="toc-registry-key-value-store-1">Registry (Key-Value Store)</a></li>
 </ul></li>
 <li><a href="#rpc-サービス" id="toc-rpc-サービス">RPC サービス</a>
 <ul>
+<li><a href="#ユーザー自由使用領域"
+id="toc-ユーザー自由使用領域">ユーザー自由使用領域</a></li>
 <li><a href="#registry-key-value-store-2"
 id="toc-registry-key-value-store-2">Registry (Key-Value Store)</a></li>
 <li><a href="#task-rpc" id="toc-task-rpc">Task RPC</a></li>
 </ul></li>
-<li><a href="#予約済み-registry" id="toc-予約済み-registry">予約済み
-Registry</a>
+<li><a href="#registry-サービス" id="toc-registry-サービス">Registry
+サービス</a>
 <ul>
-<li><a href="#ユーザー自由使用領域"
-id="toc-ユーザー自由使用領域">ユーザー自由使用領域</a></li>
+<li><a href="#ユーザー自由使用領域-1"
+id="toc-ユーザー自由使用領域-1">ユーザー自由使用領域</a></li>
 <li><a href="#slowdash-サーバー情報"
 id="toc-slowdash-サーバー情報">SlowDash サーバー情報</a></li>
 <li><a href="#pubsub-last-value-cache-1"
@@ -151,8 +153,8 @@ id="toc-pubsub-last-value-cache-1">PubSub Last-Value Cache</a></li>
 <li><a href="#pubsub-トピック構成" id="toc-pubsub-トピック構成">PubSub
 トピック構成</a>
 <ul>
-<li><a href="#ユーザー自由使用領域-1"
-id="toc-ユーザー自由使用領域-1">ユーザー自由使用領域</a></li>
+<li><a href="#ユーザー自由使用領域-2"
+id="toc-ユーザー自由使用領域-2">ユーザー自由使用領域</a></li>
 <li><a href="#data" id="toc-data">data</a></li>
 <li><a href="#form" id="toc-form">form</a></li>
 <li><a href="#sd.task" id="toc-sd.task">sd.task</a></li>
@@ -1692,6 +1694,24 @@ id="eventsourceeventwebmeshattach">EventSource(<code>event/webmesh/attach</code>
 <p><code>data.*</code>
 トピックに流れているデータのチャンネル一覧を返す</p>
 <h1 id="rpc-サービス">RPC サービス</h1>
+<h2 id="ユーザー自由使用領域">ユーザー自由使用領域</h2>
+<h4 id="export-モジュール名-slowmesh-task-name">Export モジュール名
+（SlowMesh Task Name）</h4>
+<ul>
+<li><code>sd_</code> から始まるものを除くすべてがユーザー領域</li>
+</ul>
+<h4 id="export-関数名-モジュール内-export-関数">Export 関数名
+(モジュール内 export 関数)</h4>
+<ul>
+<li>先頭が <code>_</code> で始まるものを除くすべてがユーザー領域
+<ul>
+<li>先頭が <code>_sd_</code> で始まるものは SlowMesh
+のコア機能で使用</li>
+<li><code>_setup()</code>, <code>_initialize()</code>,
+<code>_finalize()</code>, <code>_loop()</code>, <code>_run()</code> は
+No-Tasklet Task の予約済みコールバック（後方互換）</li>
+</ul></li>
+</ul>
 <h2 id="registry-key-value-store-2">Registry (Key-Value Store)</h2>
 <ul>
 <li>モジュール名： <code>sd_mesh_registry</code></li>
@@ -1719,8 +1739,8 @@ id="eventsourceeventwebmeshattach">EventSource(<code>event/webmesh/attach</code>
 <li><code>_sd_get_content(name:str)</code>: Task Contents を取得</li>
 </ul></li>
 </ul>
-<h1 id="予約済み-registry">予約済み Registry</h1>
-<h2 id="ユーザー自由使用領域">ユーザー自由使用領域</h2>
+<h1 id="registry-サービス">Registry サービス</h1>
+<h2 id="ユーザー自由使用領域-1">ユーザー自由使用領域</h2>
 <ul>
 <li>大文字から始まるすべての名前 （<code>P8.&gt;</code> や
 <code>KamLAND.&gt;</code> など）</li>
@@ -1737,7 +1757,7 @@ id="eventsourceeventwebmeshattach">EventSource(<code>event/webmesh/attach</code>
 <li><code>pubsub.{トピック}</code></li>
 </ul>
 <h1 id="pubsub-トピック構成">PubSub トピック構成</h1>
-<h2 id="ユーザー自由使用領域-1">ユーザー自由使用領域</h2>
+<h2 id="ユーザー自由使用領域-2">ユーザー自由使用領域</h2>
 <ul>
 <li>大文字から始まるすべての名前 （<code>P8.&gt;</code> や
 <code>KamLAND.&gt;</code> など）</li>
