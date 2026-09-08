@@ -15,13 +15,16 @@ class Request:
         self.aborted = False
 
         u = urlparse(url)
-        self.path_str = u.path
-        self.query_str = u.query
+        self.path_raw_str = u.path
+        self.query_raw_str = u.query
         
-        self.path = [ unquote(p) for p in self.path_str.split('/') ]
-        self.query = { unquote(key): unquote(value) for key, value in parse_qsl(self.query_str) }
+        self.path = [ unquote(p) for p in self.path_raw_str.split('/') ]
+        self.query = { unquote(key): unquote(value) for key, value in parse_qsl(self.query_raw_str) }
         while self.path.count(''):
             self.path.remove('')
+
+        self.path_str = '/' + '/'.join(self.path)
+        self.query_str = '&'.join([f'{k}={v}' for k,v in self.query.items()])
 
 
     def abort(self):
@@ -29,4 +32,4 @@ class Request:
 
 
     def __str__(self):
-        return f"{self.method} /{'/'.join(self.path)}{'?' if len(self.query)>0 else ''}{'&'.join(['%s=%s'%(k,v) for k,v in self.query.items()])}"
+        return f"{self.method} {self.path_str}{'?' if len(self.query)>0 else ''}{self.query_str}"

@@ -115,7 +115,7 @@
             "title": "Registry, Streaming & Node Pull"
         },
         { "type": "html", "location": "project", "file": "disk_usage", "title": "Disk Usage (config content HTML)", "reload": true },
-        { "type": "tree", "channel": "@registry:$pubsub.", "title": "PubSub Last Value Cache (Registry Values)" }
+        { "type": "tree", "channel": "@registry:pubsub.>", "title": "PubSub Last Value Cache (Registry Values)" }
     ],
     "meta": { "name": "control", "title": "", "description": "" }
 }

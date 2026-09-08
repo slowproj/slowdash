@@ -357,7 +357,7 @@ class Tasklet:
 
         if self._dash_url is None:
             try:
-                self._dash_url = await mesh.registry.aio_get('$server.url', None)
+                self._dash_url = await mesh.registry.aio_get('server.url', None)
             except Exception as e:
                 pass
         if self._dash_url is not None:

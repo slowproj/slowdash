@@ -50,7 +50,7 @@ SlowTask スクリプトから使用されるライブラリです．
 SlowDash サーバー内で SlowMesh 関連のサービスを行うものです．
 
 - Registry (Key-Value Store) サービス
-- Pubsub Last-Value Cache (PubSub の全トピックを subscribe して受信データをレジストリの特殊パス（`$pubsub.{topic}`） に保持）
+- Pubsub Last-Value Cache (PubSub の全トピックを subscribe して受信データをレジストリに保持）
 - WebMesh API: HTTP POST による publish と Server-Sent Events (SSE) による subscribe
 - TODO: Control History (PubSub の`control.>` と `sd.rpc.>` トピックを subscribe して受信データをデータベースに保存）
 
@@ -241,10 +241,10 @@ Registry は，複数の SlowTask が共有する名前付きの値置き場で�
     registry = tasklet.mesh.registry
 
     # 値のセット
-    await registry.aio_set('mysetup/run/number', run_number)
+    await registry.aio_set('setup.run.number', run_number)
     
     # 値の取得
-    run_number = await registry.aio_get('mysetup/run/status')
+    run_number = await registry.aio_get('setup.run.status')
 ```
 
 
@@ -255,36 +255,56 @@ Registry には，以下のメソッドがあります：
 - キー一覧 (keys)： `async def aio_keys(self, prefix:str='', limit:int|None=1000)->list[str]`
 - 削除 (delete)： `async def aio_delete(self, key:str, *, cas_revision:int|None=None) -> bool`
 
+**階層構造**:
+Key は階層区切り文字（デフォルトは `.`）で区切られる階層構造を持ちます．階層区切り文字は変更できますが，変更しないほうが無難です．
+
 **Key**:
 階層区切り文字を除いて，Python や C++ などにおける識別子（変数名とか）と同じ感じの名前を使用してください．具体的には，英数字またはアンダースコアだけで構成され，かつ，最初の文字に数字は使用できません．
 
 **Value**:
 Value には，現時点では JSON にシリアライズできる値だけが使用できます．
 
-**階層構造**:
-Registry の内部は，階層構造を持たない単純な Key-Value Store です．Key は単なる文字列で，階層構造は SlowMesh では規定していません．ユーザが選んだ任意の階層区切り文字（ただし「識別子」として使えない文字のみ）を使うことを想定していますが，特に理由がなければ `/` による区切りを使用してください．
-階層区切り文字にはアルファベット，数字，アンダースコアは使用できません．某 OS で行われているように，バックスラッシュなどの特殊文字を使用することも避けたほうが無難です．特に理由がなければ，`.`，`:`，`/` あたりから選ぶのがいいです．
+**グループ化**:
+Key の最後に `>` 文字を付加することにより，指定した階層以下のエントリをまとめてひとつの dict として扱うことができます．
+
 
 ```python
     registry = tasklet.mesh.registry
     
     await registry.aio_set('user', 'slowuser')
-    await registry.aio_set('state/run/mode', 'physics')
-    await registry.aio_set('state/run/number', 123)
-    await registry.aio_set('state/run', 'running')    # 注：この例はあまり良くない．'state/run/status' に入れる方がいい
+    await registry.aio_set('state.run.mode', 'physics')
+    await registry.aio_set('state.run.number', 123)
+    await registry.aio_set('state.run', 'running')    # 注：この例はあまり良くない．'state.run.status' に入れる方がいい
 
-    print(await registry.aio_keys('state/run'))       # -->  ['state/run/mode', 'state/run/number', 'state/run']
-    print(await registry.aio_get('state/run/mode'))   # -->  physics
-    print(await registry.aio_get('state/run'))        # -->  running
-    print(await registry.aio_get('state/run/'))       # -->  {'mode': 'physics', 'number': 123, '$value': 'running'}
-    print(await registry.aio_get('/'))                # -->  {'user': 'slowuser', 'state': {'run': {'mode': 'physics', 'number': 123, '$value': 'running'}}}
+    print(await registry.aio_keys('state.run'))       # -->  ['state.run.mode', 'state.run.number', 'state.run']
+    print(await registry.aio_get('state.run.mode'))   # -->  physics
+    print(await registry.aio_get('state.run'))        # -->  running
+    print(await registry.aio_get('state.run.>'))      # -->  {'mode': 'physics', 'number': 123, '$value': 'running'}
+    print(await registry.aio_get('.>'))               # -->  {'user': 'slowuser', 'state': {'run': {'mode': 'physics', 'number': 123, '$value': 'running'}}}
 ```
 
-最後の２つの例にあるように，`Registry.aio_get(key)` メソッドにおいて，key の最後の文字が英数字またはアンダースコアでない場合，その文字を階層区切り文字と解釈し，key の階層以下のすべての値を階層構造にまとめて，結果を dict として返します．
+最後の２つの例にあるように，`Registry.aio_get(key)` メソッドにおいて，`key` の最後に `>` を付けると，その名前の階層以下の全ノードをまとめて結果を dict として返します．
+この例の `state.run` のように，ある key に値が割り当てられていて，かつ，その下に階層がある場合は，そのままでは自然な dict や JSON に変換できません（一つのノードが値と子ノードの両方をもつことができないため）．そのような場合，値は `$value` フィールドに格納されます．
+一般的には，このような状況を避けるようにする方が無難です（子ノードがあるところに値を記録しない）．上記の例では，`registry.set('state/run', 'running')` を`registry.set('state/run/status', 'running')` などとすれば，この問題を回避できます．
 
-この例の `state/run` のように，ある key に値が割り当てられていて，かつ，その下に階層がある場合は，そのままでは自然な dict や JSON に変換できません（一つのノードが値と子ノードの両方をもつことができないため）．そのような場合，値は `$value` フィールドに格納されます．
+`aio_get` と同様に，`Registry.aio_set(key, value)` において，`key` の最後に `>` をつけて value に dict を渡すと，その名前の階層以下に dict を展開したノードを作成します．つまり，以下の２つは同じ動作をします．
+```python
+    doc = {'run': {'mode': 'physics', 'number': 123 }, 'running': True }
+    await registry.aio_set('state>', doc)
+```
+```python
+    await registry.aio_set('state.run.mode', 'physics')
+    await registry.aio_set('state.run.number', 123)
+    await registry.aio_set('state.running', True)
+```
+（値が dict でない場合は `>` は無視されます.)
 
-レジストリの階層構造はどの区切り文字を使うかも含めてユーザーが自由に設計できますが，JSON として表現できる形に留める（子ノードがあるところに値を記録しない）のがおすすめです．上記の例では，`registry.set('state/run', 'running')` を`registry.set('state/run/status', 'running')` などとすれば，この問題を回避できます．
+そして，これは，以下とは異なることに注意してください．以下では，一つのノードの中に全体を一つの dict 値として格納しています．
+```python
+    doc = {'run': {'mode': 'physics', 'number': 123 }, 'running': True }
+    await registry.aio_set('state', doc)
+```
+どちらの場合でも，`aio_get('state.>')` は同じ結果を返しますが，`aio_get('state.run.number')` の振る舞いは異なり，後者の場合では None またはデフォルト値が返されます（そのようなノードは存在しないため）．また，混在させると，dict 値として書いた方が `$value` フィールドに入ることになります．（普段は `>` をつけて展開して保存する方がトラブルが少ないですが，配列を含んだ dict などを記録する場合には，後者のように展開しない保存が必要になります．）
 
 Registry では，他人が書いたものを意図せず上書きすることを防ぐため，Compare-And-Set (CAS) オプションを備えています．
 
@@ -306,16 +326,16 @@ Registry では，他人が書いたものを意図せず上書きすること�
 
 レジストリに記録された値は，WebAPI からもアクセスできます．詳しくは，以下の HTTP API の章を参照してください．
 ```console
-$ curl "http://localhost:18881/api/registry/value?key=state/run"
+$ curl "http://localhost:18881/api/registry/value?key=state.run"
 {"$value": "running", "mode": "physics", "number": 123}
 ```
 
 また、データベース上のデータと同じ形式（同じ Web API と同じ戻り値フォーマット）で読むこともできます．
 channel 名に `@registry:{key}` を指定してください．
 ```console
-$ curl "http://localhost:18881/api/data/@registry:state/run/"
+$ curl "http://localhost:18881/api/data/@registry:state.run"
 {
-    "@registry:state/run/": {
+    "@registry:state.run": {
         "start": 1781858837.4758086,
         "t": 3600.0,
         "x": {"tree": {"$value": "running", "mode": "physics", "number": 123}}
@@ -323,40 +343,37 @@ $ curl "http://localhost:18881/api/data/@registry:state/run/"
 }
 ```
 
-レジストリの key の先頭に区切り文字を付加しないように注意してください（この例では `@registry:/state/run/` は誤り）．SlowMesh の Key-Value Store において，区切り文字は特別な意味を持たない（get() で dict への整形に利用されるだけ）ため，先頭に区切り文字があると別の key になってしまいます．
-
-
 ### PubSub Last-Value Cache
 レジストリサービス（`sd-mesh-registry.py`）は，PubSub の全トピック（または指定されたトピック）を subscribe してその内容を保持することにより，PubSub Last-Value Cache を実装します．これにより，遅れて接続した Task が，それまでに Publish されたステータス情報などにアクセスできます．
 TODO: さらに，この内容を定期的に保存することにより，SlowDash サーバークラッシュ後の復帰で，コンテキストを復元できます．
 
-デフォルトでは，PubSub Cache は，レジストリの `$pubsub.{トピック名}`に保存されます．ここで，意図的にレジストリの推奨区切り文字とは異なる文字を使用しています．
+デフォルトでは，PubSub Cache は，レジストリの `pubsub.{トピック名}`に保存されます．
 
 例えば，レジストリの内容が以下のようになっていた場合，
 
 ```json
 {
-  "$pubsub.sd.task.spec.test_mesh_slowtask": {
+  "pubsub.sd.task.spec.test_mesh_slowtask": {
     "mesh_id": "test_mesh_slowtask_vs13_158097_1",
     "name": "test_mesh_slowtask",
     "functions": [ { "name": "start" }, { "name": "display" } ],
     "variables": []
   },
-  "$pubsub.sd.task.heartbeat.test_mesh_slowtask": {},
-  "$pubsub.sd.task.spec.store": {
+  "pubsub.sd.task.heartbeat.test_mesh_slowtask": {},
+  "pubsub.sd.task.spec.store": {
     "mesh_id": "store_vs13_214629_1",
     "name": "store",
     "functions": [],
     "variables": []
   },
-  "$pubsub.sd.task.heartbeat.store": {},
+  "pubsub.sd.task.heartbeat.store": {},
   ...
 ```
 
-- `$pubsub.sd.task.spec.test_mesh_slowtask.` を get すれば，そのタスクの Spec を一つの dict / JSON として取得できます．
-- `$pubsub.sd.task.heartbeat.` を get すれば，すべてのタスクの Heartbeat を一つの dict / JSON として取得できます．
+- `pubsub.sd.task.spec.test_mesh_slowtask.>` を get すれば，そのタスクの Spec を一つの dict / JSON として取得できます．
+- `pubsub.sd.task.heartbeat.>` を get すれば，すべてのタスクの Heartbeat を一つの dict / JSON として取得できます．
 
-（サブブランチを含めて dict/JSON で取得するための，最後の `.` を忘れないように注意してください．）
+（サブブランチを含めて dict/JSON で取得するための，最後の `>` を忘れないように注意してください．）
 
 
 ## 標準入出力リダイレクト (MeshStdio)
@@ -375,7 +392,7 @@ WebUI に SlowTask のコンソールをもたせるなどの用途を想定し�
 ```
 `print()` または `sys.stdio` / `sys.stderr` に書かれたメッセージは，SlowMesh の指定トピックに publish され，かつ，ローカルの標準（エラー）出力にも書き出されます．同様に，`input()` または `stdin` からの取得リクエストは，SlowMesh への subscription またはローカルの標準入力の両方から読み出されます（先に来た方が受け取られる）．
 
-PubSub に使われるトピック名は，`{prefix}.{stream}.{mesh_id}` です．例えば，Prefix が `sd.task` の場合の標準出力（stdout）のトピック名は，`sd.task.stdout.{mesh_id}` となります．
+PubSub に使われるトピック名は，`{prefix}.{stream}.{mesh_id}` です．例えば，Prefix が `sd.task` の場合の標準出力（stdout）のトピック名は，`sd.task.stdout.{task_name}.{mesh_id}` となります．
 
 複数の MeshStdio を，それぞれ別々のスレッド上で作成し，start できます．その場合，入出力の振り分けは，スレッド ID により行われます．
 （MeshStdio を start したスレッドで print() したものは，その MeshStdio インスタンスに渡される．）
@@ -685,8 +702,8 @@ def html_disk_usage():
 ### 標準入出力の SlowMesh PubSub へのリダイレクト
 Tasklet のコンストラクタの `mesh_stdio` パラメータに `True` を渡す（デフォルト）と，ユーザースクリプト中の `print()` や `input()` などの標準入出力が PubSub にリダイレクトされます．TODO: これは，SlowDash サーバーを介して，Web Console へ接続されます．
 
-- `print()` および `stdout`/`stderr` への `write()`: コンソール出力および `sd.task.stdout.{メッシュID}` へ publish
-- `input()`: コンソール入力または `sd.task.stdin.{メッシュID}` からのメッセージから読み込み
+- `print()` および `stdout`/`stderr` への `write()`: コンソール出力および `sd.task.stdout.{task_name}{mesh_id}` へ publish
+- `input()`: コンソール入力または `sd.task.stdin.{mesh_id}` からのメッセージから読み込み
 
 
 ### SlowDash Mesh サービスへのインターフェース
@@ -949,7 +966,7 @@ async def stop():
 - レジストリに保持されている値の表示
   - `randomwalk/run/status` の値を Single Scalar として表示 （`@registry:randomwalk/run/status` データチャンネル）
   - `randomwalk` 以下全体を Tree として表示 (`@registry:randomwalk/` データチャンネル)
-  - PubSub Last-Value Cache 全体を Tree として表示 （`@registry:$pubsub.` データチャンネル）
+  - PubSub Last-Value Cache 全体を Tree として表示 （`@registry:pubsub.>` データチャンネル）
 
 
 # HTTP API
@@ -996,9 +1013,9 @@ Task Spec を含む全ての実行中タスクのステータス一覧を返す�
       "variables": { ... },
       "contents": { ... },
       "stdio": {
-        "stdin": [ "sd.task.stdin.store_vp13_17769_1" ],
-        "stdout": [ "sd.task.stdout.store_vp13_17769_1" ],
-        "stderr": [ "sd.task.stdout.store_vp13_17769_1" ]
+        "stdin": [ "sd.task.stdin.store.store_vp13_17769_1" ],
+        "stdout": [ "sd.task.stdout.store.store_vp13_17769_1" ],
+        "stderr": [ "sd.task.stdout.store.store_vp13_17769_1" ]
       }
     }
   },
@@ -1070,7 +1087,7 @@ Registry への HTTP API は Slowlette を経由して `sd_mesh_registry.py` コ
 
 ### Registry アクセス
 
-#### GET `api/registry/value?key={key}`
+#### GET `api/registry/value/{key}`
 Registry に保持されている値を返す（`with_meta=true` でメタデータを含む JSON ドキュメント）
 
 #### GET `api/registry/keys?prefix={prefix}&limit={limit}`
@@ -1133,15 +1150,27 @@ SlowMesh へ publish する．
 
 
 # 予約済み Registry
+## ユーザー自由使用領域
+- 大文字から始まるすべての名前 （`P8.>` や `KamLAND.>` など）
+- `setup.>`
+- `user.>`
+- `test.>`
+
 ## SlowDash サーバー情報
-- `$server.url`
+- `server.url`
 
 ## PubSub Last-Value Cache
-- `$pubsub.{トピック}`
-
+- `pubsub.{トピック}`
 
 
 # PubSub トピック構成
+## ユーザー自由使用領域
+- 大文字から始まるすべての名前 （`P8.>` や `KamLAND.>` など）
+- `setup.>`
+- `user.>`
+- `test.>`
+
+
 ## data
 ### data.store.{channel_name} / data.stream.{channel_name}
 ##### トピック名構成
@@ -1209,7 +1238,7 @@ Task の生存信号．Body に記録されるのは expire (= time-of-heartbeat
 - Receiver(s): sd_task (SlowDash サーバー)，モニタサービス
 - Timing:
   - 指定時間間隔（`Tasklet._heartbeat_interval`，１０秒）
-  - Tasklet のメインループから送出（コルーチンやスレッドではない；必ずメインと一緒に停止する）
+  - Tasklet のメインループから送出（コルーチンやスレッドではない；必ずメインと一緒に停止する．ユーザーが `time.sleep()` しても止まる．）
 
 ##### 第２用途
 - サーバーは知らないタスクから Heartbeat を受け取った場合，PubSub に `sd.task.control.introduce` を publish する

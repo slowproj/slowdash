@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 15 July 2026 #
 
-import time, logging
+import time, json, glob, logging
 from dataclasses import dataclass, field, asdict
 from typing import Any
 
@@ -41,7 +41,15 @@ class RegistryRecord:
     
 class Registry:
     def __init__(self):
+        self.sep = '.'
+        self.tail_wc = '>'
+        
+        self._persistent_nodes = set([
+            'pubsub.form.inputs.'
+        ])
+        
         self._records: dict[str, RegistryRecord] = {}
+        self._load_persistent_nodes()
 
         
     def export(self, mesh:Mesh):
@@ -62,14 +70,24 @@ class Registry:
         mesh.export('delete', rpc_delete)
 
 
-    def set(self, key, value, *, cas_revision:int|None=None) -> int|None:
+    def set(self, key:str, value, *, cas_revision:int|None=None) -> int|None:
         """
         Arguments:
-          - key (str): key
+          - key (str): key for the element; if it ends with a tail wildcard character ('>'),
+            the value is treated as a dict of subvalues and stored under a subtree prefixed by the key.
           - value (Any): value to write
-          - cas_revision (int|None): write only if the CAS revision matches; None not to use CAS
+          - cas_revision (int|None): write only if the CAS revision matches; None not to use CAS.
+            Currently CAS is not implemented for set with subvalues (set_tree).
         Return Value (int|None): new CAS revision on success, None otherwise (typically CAS mismatch)
         """
+
+        if len(key) > 0 and key[-1] == self.tail_wc:
+            return self.set_tree(key[:-1], value)
+
+        if len(key) > 0 and key[0] == self.sep:
+            key = key[1:]
+        if len(key) > 0 and key[-1] != self.sep:   # key must always ends with a sep
+            key += self.sep
         
         record = self._records.get(key)
         if record is None:
@@ -83,6 +101,8 @@ class Registry:
             record.update(value)
 
         logging.debug(f'MeshRegistry.set(): "{key}"={repr(value)} -> {record}')
+
+        self._save_persistent_node_of(key)
         
         return record.revision
         
@@ -90,18 +110,20 @@ class Registry:
     def get(self, key:str, default:Any=None, *, with_meta:bool=False) -> Any:
         """
         Arguments:
-          - key (str): key for the element to read; if it ends with a separater character,
+          - key (str): key for the element to read; if it ends with a tail wildcard character ('>'),
             the key is treated as a subtree prefix and the tree under it is returned as a dict.
           - default (Any): value to return if the key does not exist
           - with_meta (bool): if True, return the full registry record including the value and the meta info
         Return Value (Any): value or meta including the value on success, the provided default otherwise
         """
 
-        if key is None or len(key) == 0:
-            key = '/'
-        
-        if not (key[-1].isalnum() or key[-1] == '_'):
-            return self.get_tree(key, default, with_meta=with_meta)
+        if len(key) > 0 and key[-1] == self.tail_wc:
+            return self.get_tree(key[:-1], default, with_meta=with_meta)
+
+        if len(key) > 0 and key[0] == self.sep:
+            key = key[1:]
+        if len(key) > 0 and key[-1] != self.sep:
+            key += self.sep
         
         record = self._records.get(key)
         if record is None:
@@ -112,6 +134,19 @@ class Registry:
         return record.to_dict() if with_meta else record.value
 
 
+    def set_tree(self, path:str, doc) -> None:
+        if len(path) > 0 and path[0] == self.sep:
+            path = path[1:]
+        if len(path) > 0 and path[-1] != self.sep:
+            path += self.sep
+        
+        if not isinstance(doc, dict):
+            self.set(path, doc)
+        else:
+            for key in doc:
+                self.set_tree(f'{path}{key}{self.sep}', doc[key])
+                
+            
     def get_tree(self, prefix:str, default:Any=None, *, with_meta:bool=False) -> Any:
         """
         Returns the all values under the "prefix" node as a value (for leaf) or as a dict (for node).
@@ -123,27 +158,26 @@ class Registry:
         Return Value (Any): value or meta including the value on success, the provided default otherwise
         """
 
-        root_key, sep = prefix[:-1], prefix[-1]
-        scan_prefix = prefix if len(root_key) > 0 else ''
         tree = {}
 
-        found = False
-        root_record = self._records.get(root_key)
-        if root_record is not None:
-            tree['$value'] = root_record.to_dict() if with_meta else root_record.value
-            found = True
-
+        if len(prefix) > 0 and prefix[0] == self.sep:
+            prefix = prefix[1:]
+        if len(prefix) > 0 and prefix[-1] != self.sep:
+            prefix += self.sep
+        
         for key, record in self._records.items():
-            if not key.startswith(scan_prefix):
+            if not key.startswith(prefix):
                 continue
 
-            suffix = key[len(scan_prefix):]
+            suffix = key[len(prefix):]
             if len(suffix) == 0:
                 continue
+            parts = suffix.split(self.sep)
+            if len(parts) < 2:
+                continue  # should not happen
 
             node = tree
-            parts = suffix.split(sep)
-            for part in parts[:-1]:
+            for part in parts[:-2]:   # parts[-1] is empty as suffix always ends with a sep
                 if part not in node:
                     child = {}
                     node[part] = child
@@ -154,16 +188,21 @@ class Registry:
                     node[part] = child
                 node = child
 
-            leaf = parts[-1]
+            leaf = parts[-2]
             value = record.to_dict() if with_meta else record.value
             if isinstance(node.get(leaf), dict):
                 node[leaf]['$value'] = value
             else:
                 node[leaf] = value
-            found = True
 
-        if not found:
-            return default
+        root_record = self._records.get(prefix)
+        if root_record is not None:
+            if len(tree) == 0:
+                tree = root_record.to_dict() if with_meta else root_record.value  # this is not a tree
+            else:
+                tree['$value'] = root_record.to_dict() if with_meta else root_record.value
+        elif len(tree) == 0:
+            tree = default
 
         logging.debug(f'MeshRegistry.get_tree(): {prefix} --> {tree}')
 
@@ -179,15 +218,15 @@ class Registry:
         Return Value (list[str]): list of matching keys (full path including the prefix)
         """
 
-        if len(prefix) == 1 and not (prefix[-1].isalnum() or prefix[-1] == '_'):
-            scan_prefix = ''
-        else:
-            scan_prefix = prefix
-        
+        if len(prefix) > 0 and prefix[0] == self.sep:
+            prefix = prefix[1:]
+        if len(prefix) > 0 and prefix[-1] != self.sep:
+            prefix += self.sep
+
         result = []
         for key in self._records:
-            if key.startswith(scan_prefix):
-                result.append(key)
+            if key.startswith(prefix):
+                result.append(key.strip('.'))
                 if limit is not None and len(result) >= limit:
                     break
         
@@ -204,6 +243,11 @@ class Registry:
         Return Value (bool): True on success, False otherwise (key error or CAS mismatch)
         """
         
+        if len(key) > 0 and key[0] == self.sep:
+            key = key[1:]
+        if len(key) > 0 and key[-1] != self.sep:
+            key += self.sep
+        
         record = self._records.get(key)
         if record is None:
             return False
@@ -217,6 +261,48 @@ class Registry:
         
         return True
 
+
+    def _load_persistent_nodes(self) -> None:
+        for filename in glob.glob('registry-*.json'):
+            path = filename[len('registry-'):][:-len('.json')]
+            try:
+                with open(filename, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        key, value_json = line.split(':', 1)
+                        try:
+                            key = key.strip()
+                            value  = json.loads(value_json)
+                        except Exception as e:
+                            logging.warning(f'Bad registry value to load in "{filename}": "{value_json}": {e}')
+                            continue
+                        if len(key) == 0:
+                            self.set(path, value)
+                        else:
+                            self.set(f'{path}.{key}', value)
+            except Exception as e:
+                logging.warning(f'Unable to load registry values from file: {filename}: {e}')
+                continue
+
+            self._persistent_nodes.add(f'{path}{self.sep}')
+            logging.info(f'Registry: persistent values loaded: {path}: {self.get_tree(path)}')
+            
+        
+    def _save_persistent_node_of(self, key:str) -> None:
+        for path in self._persistent_nodes:
+            if not key.startswith(path):
+                continue
+            
+            try:
+                with open(f'registry-{path[:-1]}.json', 'w') as f:
+                    for k in self.keys(path):
+                        if ':' in k:
+                            logging.warning(f'bad registry key (skipped): "{k}"')
+                            continue
+                        v = self.get(k)
+                        f.write(f'{k[len(path):]}: {json.dumps(v)}\n')
+            except Exception as e:
+                logging.warning(f'Unable to save registry values to file: {path}: {e}')
+                
     
 
 class MeshRegistryComponent(Component):
@@ -225,7 +311,8 @@ class MeshRegistryComponent(Component):
 
         self._registry_module_name = 'sd_mesh_registry'
         self._registry_data_prefix = '@registry:'
-        self._pubsub_cache_prefix = '$pubsub.'
+        self._pubsub_cache_prefix = 'pubsub'
+        self._server_prefix = 'server'
 
         self.mesh = None
         self.registry = Registry()
@@ -233,7 +320,7 @@ class MeshRegistryComponent(Component):
 
     @slowlette.on_event('post_startup')
     async def startup(self):
-        self.registry.set('$server.url', self.project.server_url)
+        self.registry.set(f'{self._server_prefix}.url', self.project.server_url)
         
         # this needs to be done in "post_startup", as SlowMQ (if used) must be running.
         if self.mesh is None:
@@ -256,17 +343,17 @@ class MeshRegistryComponent(Component):
         async def handle_message(headers, data):
             topic = headers.get('topic')
             if topic is not None and not topic.startswith('sd.rpc'):
-                self.registry.set(self._pubsub_cache_prefix + topic, data)
+                self.registry.set(f'{self._pubsub_cache_prefix}.{topic}', data)
         await self.mesh.aio_subscribe('>', handle_message)
 
         
-    @slowlette.get('/api/registry/keys')
-    async def api_get_keys(self, prefix:str='', limit:int=100):
-        return self.registry.keys(prefix, limit=limit)
+    @slowlette.get('/api/registry/keys/{path}')
+    async def api_get_keys(self, path:str='.', limit:int=100):
+        return self.registry.keys(path, limit=limit)
 
 
-    @slowlette.get('/api/registry/value')
-    async def api_get_value(self, key:str, with_meta:bool=False):
+    @slowlette.get('/api/registry/value/{key}')
+    async def api_get_value(self, key:str='.>', with_meta:bool=False):
         value = self.registry.get(key, with_meta=with_meta)
         if value is not None:
             return value
@@ -282,7 +369,7 @@ class MeshRegistryComponent(Component):
     async def api_get_data(self, request:slowlette.Request, length:float=3600, to:float=0):
         path_channels = request.path_str[len('/api/data/'):]   # channel name might contain "/"
         channels = path_channels.split(',') if path_channels else []
-
+        
         result = {}
         now = time.time()
         start = (to if to > 0 else to + now) - length
@@ -315,26 +402,15 @@ class MeshRegistryComponent(Component):
 if __name__ == '__main__':
     registry = Registry()
 
-    registry.set('user', 'slowuser')
-    registry.set('state/run/mode', 'physics')
-    registry.set('state/run/number', 123)
-    registry.set('state/run', 'running')
+    registry.set('user', {'name':'slowuser', 'email':'user@slow.com'})
+    registry.set('state.run>', {'mode':'physics', 'number': 123})
+    registry.set('state.run', 'running')
 
-    print(registry.keys('/'))
-    print(registry.keys('state/run'))
-    print(registry.keys('.'))
-    print(registry.get('state/run/mode'))
-    print(registry.get('state/run'))
-    print(registry.get('state/run/'))
-    print(registry.get('state/'))
-    print(registry.get('/'))
-
-    print('########## PubSub cache')
-    registry.set('.pubsub.foo.bar.buz', 'a')
-    registry.set('.pubsub.foo.bar.qux', 'b')
-    registry.set('.pubsub.foo.buz', 'c')
-    print(registry.get('.pubsub.'))
-    print(registry.get('.'))
-    print(registry.get('.pubsub/'))
-    print(registry.get('/'))
-
+    print(f"registry.keys('.'): {registry.keys('.')}")
+    print(f"registry.keys('state.run')): {registry.keys('state.run')}")
+    
+    print(f"registry.get('>')): {registry.get('>')}")
+    print(f"registry.get('user')): {registry.get('user')}")
+    print(f"registry.get('state.run.mode')): {registry.get('state.run.mode')}")
+    print(f"registry.get('state.run')): {registry.get('state.run')}")
+    print(f"registry.get('state.run.>')): {registry.get('state.run.>')}")
