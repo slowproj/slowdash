@@ -102,6 +102,8 @@ SlowPy Control にある以下のメッセージングシステムを選べま�
 
 認証情報が必要なら，`HOST` の直前に `USER:PASS@` を挿入してください．
 
+QoS 設定（at-most-once / at-least-once / exactly-one）などは，基本的にはバックボーンのデフォルトを使用し，必要に応じて，バックボーンを直接設定することを想定しています．（現時点では，この部分のツメは甘いです．）性能を含め，システムの発展に応じてバックボーンを切り替えていくような運用を想定しています（SlowMQ や Redis から始めて，性能または機能が足りなくなったら NATS に移行する，など）．
+
 ### トピックフィルタ
 NATS に準じたフィルタを使用できます．
 
@@ -120,10 +122,11 @@ SlowMQ と NATS 以外のバックボーンが使用された場合，これら�
 | RabbitMQ     | `.`          | `*`        | `#`                | `data.store.#` | `data.*.HV.ch100` |
 | Redis-PubSub | `:`          | `*` (近似動作) | `*`  （近似動作）| `data:store:*` | `data:*:HV:ch100` |
 
-トピック名に `/`, `#`,`+`, `:` などを含めると，これらを特殊文字としているバックボーンを使用した場合に問題を引き起こします．
+トピック名に `/`, `#`, `+`, `:` などを含めると，これらを特殊文字としているバックボーンを使用した場合に問題を引き起こします．
 これらの文字の使用は避けた方がいいです．
+（原理的にはエスケープできますが，メッセージごとの処理になり，有用度とパフォーマンス影響を考えて，将来にエスケープが実装される可能性は低いです．）
 
-なお，Mesh のコンストラクタオプションで，これらの文字割り当てを変えることができます．例えば，MQTT を中心に運用することが確定しているのであれば，SlowMesh においても MQTT と同じ特殊文字を割り当てておくことができます．
+Mesh のコンストラクタオプションでこれらの文字割り当てを変えることができますが，Mesh を使用している他の部分（ユーザースクリプト）にも影響するので，変えないほうが無難です．
 
 ### MeshPacket
 メッセージに対する Schema が定義されている一部のトピックに対しては，規定されたスキーマのデータを読み書きするための MeshPacket が利用できます．
@@ -138,14 +141,14 @@ MeshPacket は，`slowpy/mesh/packet` に定義されています．
 |`control.>` | `ControlPacket()` TODO:未実装 |
 
 #### データトピックの例
-以下，`data.>` トピックに対する MeshPacket である mesh.DataPacket を例に説明します．このトピックに流すデータは [Data Model](DataModel.html) に説明されている SlowDash フォーマットを使用します．以下のように，ちょっと複雑です：
+以下，`data.>` トピックに対する MeshPacket である mesh.DataPacket を例に説明します．このトピックに流すデータは [Data Model](DataModel.html) に説明されている SlowDash フォーマットを使用します．以下のように，ちょっとだけ複雑です：
 ```python
 {
     channel: {
        "start": t0,      # 時間原点 (optional)
        "t": time,        # TimeSeries データでは配列
        "x": value        # TimeSeries データでは配列
-    }
+    },
     ...                  # 他のチャンネル
 }
 ```
@@ -208,6 +211,23 @@ async def chat(line, *, sender=None):
 - エラーが発生した場合は Exception が投げられます．
 - デフォルトのタイムアウト時間は，Mesh のコンストラクタパラメータで指定できます．また，`aio_call_many()` 関数を使えば，呼び出しごとに個別のタイムアウトを設定することもできます．
 
+##### Advanced 使用例
+同じ名前の Task が複数存在する場合，一つの RPC 呼び出しに複数の応答があります．
+この場合，`aio_call()` は最初の応答のみ返し，それ以降の応答を受信した場合には警告が表示されます．
+複数の応答をすべて受け取りたい場合は，`aio_call()` の代わりに `aio_call_many()` を使用してください．
+`expected_replies` にタスクの数を指定すると，すべてのタスクからの応答を受け取ってから，reply の list を返します．
+```python
+    async def aio_call_many(self, name:str, args:list, kwargs:dict, *, expected_replies:int|None=None, timeout:float|None=None, raise_on_timeout:bool=False)
+```
+reply は，以下のようなフィールドを持つ dict です：
+```python
+ { 'status': 'ok', 'message': 'ok', 'return_value': result }
+```
+`status` には `ok` の他に `error` と `cancelled` があり，エラーの場合は `message` にエラーメッセージが入ります．
+（TOOD: reply に mesh_id や correlation_id を入れる）
+
+`aio_call()` は，`expected_replies` を `1`，`raise_on_timeout` を `True` にして `aio_call_many()` を呼んでいるだけです．
+
 ### ControlNode のエクスポート
 RPC を使って ControlNode のリモートアクセスも実装されています．
 
@@ -262,7 +282,7 @@ Key は階層区切り文字（デフォルトは `.`）で区切られる階層
 階層区切り文字を除いて，Python や C++ などにおける識別子（変数名とか）と同じ感じの名前を使用してください．具体的には，英数字またはアンダースコアだけで構成され，かつ，最初の文字に数字は使用できません．
 
 **Value**:
-Value には，現時点では JSON にシリアライズできる値だけが使用できます．
+Value には，現時点では JSON にシリアライズできる値だけが使用できます．(TODO: 画像などの blob をサポート?)
 
 **グループ化**:
 Key の最後に `>` 文字を付加することにより，指定した階層以下のエントリをまとめてひとつの dict として扱うことができます．
@@ -304,7 +324,7 @@ Key の最後に `>` 文字を付加することにより，指定した階層�
     doc = {'run': {'mode': 'physics', 'number': 123 }, 'running': True }
     await registry.aio_set('state', doc)
 ```
-どちらの場合でも，`aio_get('state.>')` は同じ結果を返しますが，`aio_get('state.run.number')` の振る舞いは異なり，後者の場合では None またはデフォルト値が返されます（そのようなノードは存在しないため）．また，混在させると，dict 値として書いた方が `$value` フィールドに入ることになります．（普段は `>` をつけて展開して保存する方がトラブルが少ないですが，配列を含んだ dict などを記録する場合には，後者のように展開しない保存が必要になります．）
+どちらの場合でも，`aio_get('state.>')` は同じ結果を返しますが，`aio_get('state.run.number')` の振る舞いは異なり，後者の場合では None またはデフォルト値が返されます（そのようなノードは存在しないため）．また，混在させると，dict 値として書いた方が `$value` フィールドに入ることになります．（普段は `>` をつけて展開して保存する方がトラブルが少ないですが，配列を含んだ dict などを記録する場合には，後者のように展開しない保存が必要になります．また，後述する PubSub Cache のように，元データが dict の場合もあります．）
 
 Registry では，他人が書いたものを意図せず上書きすることを防ぐため，Compare-And-Set (CAS) オプションを備えています．
 
@@ -1177,6 +1197,7 @@ SlowMesh へ publish する．
 - 大文字から始まるすべての名前 （`P8.>` や `KamLAND.>` など）
 - `setup.>`
 - `user.>`
+- `my.>`
 - `test.>`
 
 ## SlowDash サーバー情報
@@ -1191,6 +1212,7 @@ SlowMesh へ publish する．
 - 大文字から始まるすべての名前 （`P8.>` や `KamLAND.>` など）
 - `setup.>`
 - `user.>`
+- `my.>`
 - `test.>`
 
 
