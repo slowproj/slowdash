@@ -77,7 +77,7 @@ class HtmlPanel extends Panel {
 
         this.indicator = new JGIndicatorWidget($('<div>').appendTo(div));
         this.variables = [];
-        this.senderId = crypto.randomUUID();
+        this.senderId = [...crypto.getRandomValues(new Uint32Array(4))].map(x=>x.toString(16).padStart(8,'0')).join('-');
         this._initialValuesReceived = false;
 
         this._setupEventHandlers();

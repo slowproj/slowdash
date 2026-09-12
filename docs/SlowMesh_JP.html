@@ -642,8 +642,8 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb13-1"><a h
 dict や JSON
 に変換できません（一つのノードが値と子ノードの両方をもつことができないため）．そのような場合，値は
 <code>$value</code> フィールドに格納されます．
-一般的には，このような状況を避けるようにする方が無難です（子ノードがあるところに値を記録しない）．上記の例では，<code>registry.set('state/run', 'running')</code>
-を<code>registry.set('state/run/status', 'running')</code>
+一般的には，このような状況を避けるようにする方が無難です（子ノードがあるところに値を記録しない）．上記の例では，<code>registry.set('state.run', 'running')</code>
+を<code>registry.set('state.run.status', 'running')</code>
 などとすれば，この問題を回避できます．</p>
 <p><code>aio_get</code>
 と同様に，<code>Registry.aio_set(key, value)</code>

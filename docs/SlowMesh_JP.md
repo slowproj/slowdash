@@ -305,7 +305,7 @@ Key の最後に `>` 文字を付加することにより，指定した階層�
 
 最後の２つの例にあるように，`Registry.aio_get(key)` メソッドにおいて，`key` の最後に `>` を付けると，その名前の階層以下の全ノードをまとめて結果を dict として返します．
 この例の `state.run` のように，ある key に値が割り当てられていて，かつ，その下に階層がある場合は，そのままでは自然な dict や JSON に変換できません（一つのノードが値と子ノードの両方をもつことができないため）．そのような場合，値は `$value` フィールドに格納されます．
-一般的には，このような状況を避けるようにする方が無難です（子ノードがあるところに値を記録しない）．上記の例では，`registry.set('state/run', 'running')` を`registry.set('state/run/status', 'running')` などとすれば，この問題を回避できます．
+一般的には，このような状況を避けるようにする方が無難です（子ノードがあるところに値を記録しない）．上記の例では，`registry.set('state.run', 'running')` を`registry.set('state.run.status', 'running')` などとすれば，この問題を回避できます．
 
 `aio_get` と同様に，`Registry.aio_set(key, value)` において，`key` の最後に `>` をつけて value に dict を渡すと，その名前の階層以下に dict を展開したノードを作成します．つまり，以下の２つは同じ動作をします．
 ```python
@@ -842,12 +842,12 @@ def loop():
 @tasklet.mesh.on('control.start')
 async def start(params):
     device.is_running = True
-    await tasklet.mesh.registry.aio_set('setup/run/status', 'running')
+    await tasklet.mesh.registry.aio_set('setup.run.status', 'running')
 
 @tasklet.mesh.on('control.stop')
 async def stop(params):
     device.is_running = False
-    await tasklet.mesh.registry.aio_set('setup/run/status', 'idle')
+    await tasklet.mesh.registry.aio_set('setup.run.status', 'idle')
 ```
 
 RandomWalk 仮想デバイスのセットポイントは， （機能デモのために）export した RPC で設定されます．実際には，Start/Stop と同様に PubSub を使用しても構いません．
@@ -949,7 +949,7 @@ def stream_hist():
 @tasklet.initialize()
 async def initialize():
     global is_running
-    is_running = (await tasklet.mesh.registry.aio_get('setup/run/status', 'dead') == 'running')
+    is_running = (await tasklet.mesh.registry.aio_get('setup.run.status', 'dead') == 'running')
 
 @tasklet.mesh.on('control.start')
 async def start():
@@ -997,7 +997,7 @@ async def stop():
 - Store タスクが export した disk_usage の表示 (`store.data_usage` データチャンネル)
 - Store タスクが動的生成した HTML コンテンツ (disk usage テーブル） の表示 (動的生成 `config/html-disk_usage.html` ファイルコンテンツ）
 - レジストリに保持されている値の表示
-  - `randomwalk/run/status` の値を Single Scalar として表示 （`@registry:randomwalk/run/status` データチャンネル）
+  - `randomwalk.run.status` の値を Single Scalar として表示 （`@registry:randomwalk.run.status` データチャンネル）
   - `randomwalk` 以下全体を Tree として表示 (`@registry:randomwalk/` データチャンネル)
   - PubSub Last-Value Cache 全体を Tree として表示 （`@registry:pubsub.>` データチャンネル）
 
@@ -1654,3 +1654,4 @@ Body:
 - MyMesh: SlowTask を SlowMesh なしで動かした場合に使う．コンソールから接続し，!!! から始まる行を拾う
 - Task RPC Proxy
 - dataclass の export
+- RampingNode の即時リターン

@@ -658,8 +658,8 @@ and have child nodes). In such a case, the value is stored in the
 <code>$value</code> field. In general, it is safer to avoid this
 situation (do not store a value at a node that has child nodes). In the
 example above, changing
-<code>registry.set('state/run', 'running')</code> to something such as
-<code>registry.set('state/run/status', 'running')</code> avoids the
+<code>registry.set('state.run', 'running')</code> to something such as
+<code>registry.set('state.run.status', 'running')</code> avoids the
 issue.</p>
 <p>Like <code>aio_get</code>, if
 <code>Registry.aio_set(key, value)</code> is called with
