@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 3 June 2026 #
 
-import sys, os, glob, time, subprocess, copy, re, json, asyncio, importlib.util, logging
+import sys, os, glob, time, subprocess, shlex, copy, re, json, asyncio, importlib.util, logging
 from typing import Any
 from pathlib import Path
 
@@ -415,6 +415,9 @@ class TaskComponent(Component):
             command = node.get('command', f'slowdash-task {file_path} --name={name}')
             if self.project.mesh_url is not None:
                 command += f' --mesh={self.project.mesh_url}'
+            if 'params' in node:
+                params = shlex.quote(json.dumps(node['params']))
+                command += f' --params={params}'
             
             self._task_catalog[name] = {
                 'name': name,

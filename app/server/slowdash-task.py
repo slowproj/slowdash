@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 26 June 2026 #
 
-import os, sys, time, re, argparse, asyncio, logging, traceback
+import os, sys, time, re, json, argparse, asyncio, logging, traceback
 from slowpy.mesh import RetainerAutocide, Mesh, MeshStdio
 from sd_task import load_task_module
 
@@ -10,6 +10,7 @@ async def main():
     parser.add_argument('script', help='user task script to load')
     parser.add_argument('--name', action='store', dest='name', help='task name; defauts to the script filename')
     parser.add_argument('--mesh', action='store', dest='mesh', help='SlowMesh URL, e.g., slowmq://localhost:18881')
+    parser.add_argument('--params', action='store', dest='params', default='{}', help='JSON string for task parameters')
     parser.add_argument(
         '--logging',
         action='store', dest='loglevel', default='default', choices=['default', 'debug', 'info', 'warning', 'error'],
@@ -38,6 +39,13 @@ async def main():
     if script_args[:1] == ['--']:
         script_args = script_args[1:]
 
+    params = {}
+    try:
+        params = json.loads(args.params)
+    except Exception as e:
+        print(f'bad JSON for params: {args.params}')
+        sys.exit(-1)
+    
     if not name:
         name = os.path.splitext(os.path.basename(path))[0]
         if name.startswith('slowtask-'):
@@ -88,7 +96,6 @@ async def main():
         except Exception as e:
             print(e)
             
-    params = {}
     try:
         await tasklet.run_module(module=module, name=name, params=params, mesh_url=mesh_url)
     except Exception as e:

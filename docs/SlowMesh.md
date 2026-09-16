@@ -547,6 +547,7 @@ In addition, if a `task(s)` entry is created in `SlowdashProject.yaml` and `auto
   tasks:
     - name: {name}
       auto_start: true
+      params: {parameters for initialize()}
 ```
 
 To run a SlowTask as a process independent of the SlowDash server, normally use the `slowdash-task` command.
@@ -796,6 +797,9 @@ slowdash_project:
       
     - name: store
       auto_start: true
+      params:
+        db_url: sqlite:///TestData
+        table: slowdata
 ```
 
 ```console
@@ -1650,7 +1654,6 @@ Body:
 
 
 # TODO
-- Tasklet Initialize params
 - Make it possible to run the Registry as a SlowTask as well
 - MyMesh: used when running a SlowTask without SlowMesh. Connect from the console and capture lines beginning with `!!!`
 - Task RPC Proxy

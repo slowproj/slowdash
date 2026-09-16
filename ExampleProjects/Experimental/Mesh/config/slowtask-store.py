@@ -5,8 +5,17 @@ tasklet = Tasklet()
 
 #### Data Store Service (Subscribe and Store) ####
 
-from slowpy.store import DataStore_SQLite
-datastore = DataStore_SQLite('sqlite:///TestData.db', table='slowdata')
+from slowpy.store import create_datastore_from_url
+datastore = None
+
+@tasklet.initialize()
+def initialize(params:dict):
+    db_url = params.get('db_url', 'sqlite:///slowstore.db')
+    table = params.get('table', 'slowdata')
+    print(f'DB={db_url}, table={table}')
+
+    global datastore
+    datastore = create_datastore_from_url(db_url, table=table)
 
 
 @tasklet.mesh.on('data.store.>')

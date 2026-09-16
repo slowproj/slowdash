@@ -542,19 +542,20 @@ SlowTask はシングルスレッドの非同期呼び出しで全体が並列�
 ### 実行
 SlowTask のスクリプトファイルを，`slowtask-{名前}.py` という名前で SlowDash プロジェクトの `config` 以下に置くと，SlowDash サーバーに認識され，起動や停止を行えるようになります．
 
-また，`SlowdashProject.yaml` ファイルに `task(s)` エントリを作って，`auto_start` を設定すると，SlowDash サーバー起動時に SlowTask も自動でスタートできます．
+また，`SlowdashProject.yaml` ファイルに `task(s)` エントリを作って，`auto_start` を設定すると，SlowDash サーバー起動時に SlowTask も自動でスタートできます．また，ここで，タスクスクリプトの `@initialize` コールバックに渡すパラメータも記述できます．
 ```yaml
   tasks:
     - name: {名前}
       auto_start: true
+      params: {initialize() に渡されるパラメータ}
 ```
 
-SlowTask を SlowDash サーバーから独立したプロセスとして実行するには，通常は `slowdash-task` コマンドを使います．
+SlowTask を SlowDash サーバーから独立したプロセスとして実行するには，通常は `slowdash-task` コマンドを使います．`--params` オプションに JSON 文字列を渡すことにより．タスクパラメータも渡すことができます．この場合は，JSON 文字列がシェルによって誤って処理されないようにするために，全体をシングルクオートで囲ってください．
 ```console
-$ slowdash-task  slowtask-mytask.py --mesh=slowmq://localhost:18881
+$ slowdash-task  slowtask-mytask.py --mesh=slowmq://localhost:18881 --params='{"p1":10,"p2":20}'
 ```
 
-もしスクリプト中で `if __name__ == '__main__': tasklet.run()` をしているなら，通常の Python スクリプトとしての実行もできます，
+もしスクリプト中で `if __name__ == '__main__': tasklet.run()` をしているなら，通常の Python スクリプトとしての実行もできます．ただし，この場合は，タスクパラメータを渡すことはできません．
 ```console
 $ slowdash-activate-venv
 $ python slowtask-mytask.py
@@ -796,6 +797,9 @@ slowdash_project:
       
     - name: store
       auto_start: true
+      params:
+        db_url: sqlite:///TestData
+        table: slowdata
 ```
 
 ```console
@@ -1649,7 +1653,6 @@ Body:
 
 
 # TODO
-- Tasklet Initialize params
 - レジストリを SlowTask でも動かせるようにする
 - MyMesh: SlowTask を SlowMesh なしで動かした場合に使う．コンソールから接続し，!!! から始まる行を拾う
 - Task RPC Proxy
