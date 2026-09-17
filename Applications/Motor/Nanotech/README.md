@@ -3,10 +3,6 @@
 ## Device Setup
 Connect the device via USB.
 
-### Firmware Version
-See `info.bin` file. The version name is in the form of `FIR-vxxxx-Rxxxx`.
-
-
 ### Configuration
 Edit the `cfg.txt` file.
 
@@ -37,7 +33,6 @@ After editing the `CFG.txt` file, power-cycle the device.
 Edit the first two lines of `utils/run_auto_setup.py`:
 ```python
 ip = '192.168.50.176'
-firmware_version = 1825
 ```
 
 Then run it in the SlowPy venv:
@@ -51,7 +46,7 @@ On completion, power-cycle the device again.
 
 
 ### SlowDash Project Setup
-Edit `SlowdashProject.yaml` for the IP address and firmware version.
+Edit `SlowdashProject.yaml` for the IP address:
 ```yaml
 slowdash_project:
   name: Nanotech_Motor
