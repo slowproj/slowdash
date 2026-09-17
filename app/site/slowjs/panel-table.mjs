@@ -137,8 +137,9 @@ class TablePanel extends Panel {
     
     fillDataRequest(dataRequest) {
         if (this.config.channel) {
+            const fromQuery = true;
             const fromStreaming = (this.config.data_type == 'table_object');
-            dataRequest.append(this.config.channel, true, fromStreaming);
+            dataRequest.append(this.config.channel, {}, fromQuery, fromStreaming);
         }
     }
     
@@ -146,7 +147,7 @@ class TablePanel extends Panel {
     draw(dataPacket, displayTimeRange=null) {
         const ts = dataPacket[this.metric?.channel ?? this.config.channel];
         if (this.config.data_type == 'table_object') {
-            this.draw_table_object(ts);
+            this.draw_table_object(ts, dataPacket);
         }
         else if (! dataPacket.__meta.isStreaming) {
             this.draw_value_table(ts);
@@ -154,7 +155,7 @@ class TablePanel extends Panel {
     }
 
 
-    draw_table_object(ts) {
+    draw_table_object(ts, dataPacket) {
         const [time, value] = Panel._getLastTX(ts, this.metric?.transform, dataPacket.__meta.range);
         if (! value) {
             if (dataPacket.__meta.isStreaming || Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
@@ -170,7 +171,7 @@ class TablePanel extends Panel {
             return;
         }
         this.currentDataTime = time;
-        
+
         this.table.empty();
         if (typeof(value) == "string") {
             try {

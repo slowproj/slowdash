@@ -7,12 +7,12 @@ import slowpy.control as spc
 
 
 class ControlSystem(spc.ControlNode):
-    # this will be set by sd_taskmodule.py when a module that imports this is loaded to SlowDash App
-    _slowdash_app = None
+    # this will be set by tasklet
+    _mesh = None
     
-    # note that these class variables are app-wide: multiple task modules will share these.
-    _slowdash_exports = []   # not including aio_publish()
-    _slowdash_channels = {}  # including export() and aio_publish()
+    _mesh_error_shown = False
+    _mesh_unnamed_count = 1
+
     
     def __init__(self):
         self.import_control_module('Ethernet')
@@ -22,11 +22,6 @@ class ControlSystem(spc.ControlNode):
         self.import_control_module('DataStore')
 
         
-    @classmethod
-    def app(cls):
-        return cls._slowdash_app
-
-
     @classmethod
     def stop(cls):
         cls._system_stop_event.set()
@@ -48,28 +43,6 @@ class ControlSystem(spc.ControlNode):
 
         
     @classmethod
-    def export(cls, obj, name:str=None):
-        node = cls._get_export_node(obj, name)
-        if node is not None:
-            cls._slowdash_exports.append((name, node))
-            cls._register_channel(name, node.get())
-            node.__slowdash_export_name = name
-            
-        return node
-
-
-    @classmethod
-    async def aio_export(cls, obj, name:str=None):
-        node = cls._get_export_node(obj, name)
-        if node is not None:
-            cls._slowdash_exports.append((name, node))
-            cls._register_channel(name, await node.aio_get())
-            node.__slowdash_export_name = name
-            
-        return node
-
-
-    @classmethod
     async def aio_stream(cls, name:str, value):
         return await cls.aio_publish(value, name=name)
 
@@ -82,18 +55,22 @@ class ControlSystem(spc.ControlNode):
     
     @classmethod
     async def aio_publish(cls, obj, name:str|None=None):
-        if cls.app() is None:
+        if cls._mesh is None:
+            if not cls._mesh_error_shown:
+                logging.error('Mesh not attached to the SlowPy Control system')
+                cls._mesh_error_shown = True
             return
-
+        
         # name
-        export_name = getattr(obj, '__slowdash_export_name', None)
-        publish_name = name if name is not None else export_name
+        mesh_name = getattr(obj, '__slowmesh_data_name', None)
+        publish_name = name if name is not None else mesh_name
         if publish_name is None:
-            name = cls._make_name()
+            cls._mesh_unnamed_count += 1
+            name = f'unnamed{cls._mesh_unnamed_count:02d}'
             publish_name = name
-        if name is not None and name != export_name:
+        if name is not None and name != mesh_name:
             try:
-                setattr(obj, '__slowdash_export_name', name)   # using setattr() for dataclass
+                setattr(obj, '__slowmesh_data_name', name)   # using setattr() for dataclass
             except:
                 pass  # obj does not have setattr()  (such as an interger)
 
@@ -139,74 +116,10 @@ class ControlSystem(spc.ControlNode):
             record = { publish_name: value }
         else:
             record = { publish_name: { 't': time.time(), 'x': value } }
-        await cls.app().request_emit('current_data', record, sender=f'taskmodule_{publish_name}')
-
-        
-    @classmethod
-    def _get_export_node(cls, obj, name:str):
-        if name is None:
-            name = getattr(obj, '__slowdash_export_name', None)
-        if name is None:
-            name = cls._make_name()
-        try:
-            setattr(obj, '__slowdash_export_name', name)  # using setattr() for dataclass
-        except:
-            pass
-        
-        node = None
-        if isinstance(obj, type):
-            logging.error(f'exporting a type is not allowed')
-        elif isinstance(obj, spc.ControlNode):
-            node = obj
-        elif callable(getattr(obj, 'to_json', None)):
-            node = _SlowpyElementExportAdapterNode(obj)
-        elif type(obj) is dict:
-            node = _DictExportAdapterNode(obj)
-        elif dataclasses.is_dataclass(obj):
-            node = _DataclassInstanceExportAdapterNode(obj)
-        else:
-            try:
-                vars(obj)
-                node = _ClassInstanceExportAdapterNode(obj)
-            except:
-                logging.error(f'exporting a bad type object: {type(obj)}')
-
-        return node
-
-                
-    @classmethod
-    def _register_channel(cls, name, value, value_is_ts=False):
-        if type(value) is not dict:
-            cls._slowdash_channels[name] = {'name': name, 'current': True}
-            return
             
-        if value_is_ts:
-            datatype = 'timeseries'
-        elif 'table' in value:
-            datatype = 'table'
-        elif 'tree' in value:
-            datatype = 'tree'
-        elif 'bins' in value:
-            datatype = 'histogram'
-        elif 'ybins' in value:
-            datatype = 'histogram2d'
-        elif 'y' in value:
-            datatype = 'graph'
-        else:
-            datatype = 'tree'
-            
-        cls._slowdash_channels[name] = {'name': name, 'type': datatype, 'current': True}
+        await cls._mesh.aio_publish(f'data.stream.{publish_name}', record)
 
 
-    _unnamed_count = 1
-
-    @classmethod
-    def _make_name(cls):
-        name = f'unnamed{cls._unnamed_count:02d}'
-        cls._unnamed_count += 1
-        return name
-            
-    
     # child nodes
     def value(self, initial_value=None):
         return spc.ValueNode(initial_value)
@@ -244,129 +157,4 @@ class ValueNode(spc.ControlVariableNode):
         return self._value
 
     
-    # DEPRECIATED (July 2025): use ControlSystem.aio_publish(obj) instead
-    async def deliver(self):
-        return await ControlSystem.aio_publish(self)
-
-
-                                         
-class _DictExportAdapterNode(spc.ControlVariableNode):
-    def __init__(self, value=None):
-        if not type(value) is dict:
-            logging.error('dict value expected')
-            self._value = None
-        else:
-            self._value = value
-            
-        
-    def set(self, value):
-        if not type(value) is dict:
-            logging.error('dict value expected')
-            return
-        tree = value.get('tree',value)
-        
-        for k, v in tree.items():
-            if k in self._value and self._value[k] is not None:
-                try:
-                    self._value[k] = type(self._value)(v)
-                except:
-                    self._value[k] = v
-            else:
-                self._value[k] = v
-
-            
-    def get(self):
-        if self._value is not None:
-            return { 'tree': self._value }
-        else:
-            return { 'tree': {} }
-
-        
-
-class _DataclassInstanceExportAdapterNode(spc.ControlVariableNode):
-    def __init__(self, value=None):
-        if not dataclasses.is_dataclass(value) or isinstance(value, type):
-            logging.error('dataclass instance expected')
-            self._value = None
-        else:
-            self._value = value
-            
-
-    def set(self, value):
-        if not type(value) is dict:
-            logging.error('dict value expected')
-            return
-        tree = value.get('tree', value)
-
-        ann = type(self._value).__annotations__
-        for k, v in tree.items():
-            if k not in ann:
-                logging.error(f'undefined field "{k}" for dataclass "{type(self._value)}"')
-                continue
-            try:
-                vv = ann[k](v)
-            except:
-                logging.error(f'unable to convert value "{v}" to field "{k}" of dataclass "{type(self._value)}" (type {ann[k]})')
-            try:
-                setattr(self._value, k, vv)
-            except:
-                logging.error(f'unable to assign value "{v}" to field "{k}" of dataclass "{type(self._value)}"')
-        
-            
-    def get(self):
-        if self._value is not None:
-            return { 'tree': dataclasses.asdict(self._value) }
-        else:
-            return { 'tree': {} }
-
-
-        
-class _ClassInstanceExportAdapterNode(spc.ControlVariableNode):
-    def __init__(self, value=None):
-        try:
-            vars(value)
-            self._value = value
-        except:
-            logging.error('class instance expected')
-            self._value = None
-
-            
-    def set(self, value):
-        if not type(value) is dict:
-            logging.error('dict value expected')
-            return
-        tree = value.get('tree', value)
-        
-        for k, v in tree.items():
-            if hasattr(self._value, k) and getattr(self._value, k) is not None:
-                try:
-                    ValueType = type(getattr(self._value, k))
-                    setattr(self._value, k, ValueType(v))
-                except:
-                    setattr(self._value, k, v)
-            else:
-                setattr(self._value, k, v)
-
-            
-    def get(self):
-        if self._value is not None:
-            return { 'tree': { k:v for k,v in vars(self._value).items() if not k.endswith('__slowdash_export_name') } }
-        else:
-            return { 'tree': {} }
-
-
-
-class _SlowpyElementExportAdapterNode(spc.ControlVariableNode):
-    def __init__(self, value=None):
-        self._value = value
-
-        
-    def set(self, value):
-        logging.error('SlowPy elements are read-only')
-
-
-    def get(self):
-        return self._value.to_json()
-
-
 control_system = ControlSystem()

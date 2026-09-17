@@ -1,8 +1,52 @@
 # Created by Sanshiro Enomoto on 26 June 2026 #
 
-import os, sys, time, re, json, argparse, asyncio, logging, traceback
-from slowpy.mesh import RetainerAutocide, Mesh, MeshStdio
-from sd_task import load_task_module
+import os, sys, time, re, json, argparse, asyncio, importlib.util, logging, traceback
+from slowpy.mesh import Tasklet, RetainerAutocide, Mesh, MeshStdio
+
+
+def load_task_module(path:str, *, name:str, argv:list[str]|None=None):
+    path = os.path.abspath(path)
+    if not os.path.isfile(path):
+        raise FileNotFoundError(path)
+
+    module_name = name
+    if module_name in sys.modules:
+        module_name = f'_slowtask_{module_name}_{abs(hash(path))}'
+    
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f'unable to load task script: {path}')
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+
+    script_dir = os.path.dirname(path)
+    old_argv = sys.argv
+    old_path = list(sys.path)
+    sys.argv = [path] + list(argv or [])
+    if script_dir not in sys.path:
+        sys.path.insert(0, script_dir)
+
+    try:
+        spec.loader.exec_module(module)
+    except Exception:
+        sys.modules.pop(module_name, None)
+        raise
+    finally:
+        sys.argv = old_argv
+        sys.path[:] = old_path
+
+    for value in module.__dict__.values():
+        if isinstance(value, Tasklet):
+            tasklet = value
+            break
+    else:
+        tasklet = Tasklet(use_oldstyle_callbacks=True)
+        module._sd_tasklet = tasklet
+        exec('from slowpy.control import ControlSystem', module.__dict__)
+        exec('ControlSystem._mesh = _sd_tasklet._mesh', module.__dict__)
+        
+    return module, tasklet
+
 
 
 async def main():

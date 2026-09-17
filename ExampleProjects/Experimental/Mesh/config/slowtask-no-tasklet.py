@@ -21,7 +21,7 @@ def _loop():
         print(f'STORE: {data}')
         datastore.append(data, tag='HV.ch1.V')
         
-        tasklet.mesh.publish('data.stream.HV.ch1.V', {'HV.ch1.V':{'t': time.time(), 'x': data}})
+        _sd_tasklet.mesh.publish('data.stream.HV.ch1.V', {'HV.ch1.V':{'t': time.time(), 'x': data}})
 
     time.sleep(1)
 

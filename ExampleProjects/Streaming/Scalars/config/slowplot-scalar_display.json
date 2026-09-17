@@ -66,8 +66,9 @@
                 { "type": "histogram", "channel": "hist", "color": "#009090", "opacity": 0.2, "label": "", "format": "%.5g" }
             ],
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
-            "legend": { "style": "side" }
-        }
+            "legend": { "style": "side", "position": "left" }
+        },
+        { "type": "tree", "channel": "@registry:>" }
     ],
     "meta": { "name": "scalar_display", "title": "", "description": "" }
 }

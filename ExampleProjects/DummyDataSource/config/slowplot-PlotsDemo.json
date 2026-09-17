@@ -23,7 +23,9 @@
                     "line_type": "connect",
                     "fill_opacity": 0,
                     "fill_baseline": "1e-100",
-                    "fill_envelope": false
+                    "fill_envelope": false,
+                    "include_prior_point": false,
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
                 },
                 {
                     "type": "timeseries",
@@ -38,7 +40,9 @@
                     "line_type": "connect",
                     "fill_opacity": 0,
                     "fill_baseline": "1e-100",
-                    "fill_envelope": false
+                    "fill_envelope": false,
+                    "include_prior_point": false,
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
                 },
                 {
                     "type": "timeseries",
@@ -53,7 +57,9 @@
                     "line_type": "last",
                     "fill_opacity": 0,
                     "fill_baseline": "1e-100",
-                    "fill_envelope": false
+                    "fill_envelope": false,
+                    "include_prior_point": false,
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
                 }
             ],
             "axes": { "ylog": false, "xfixed": false, "yfixed": false, "ymin": -200, "ymax": 400, "title": "Time-Series Graph", "ytitle": "", "xlog": false, "zlog": false },
@@ -69,7 +75,8 @@
                     "opacity": 0.2,
                     "label": "",
                     "format": "%.5g",
-                    "bins": { "n": null, "min": null, "max": null }
+                    "bins": { "n": null, "min": null, "max": null },
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last" }
                 },
                 {
                     "type": "ts-histogram",
@@ -78,7 +85,8 @@
                     "opacity": 0.2,
                     "label": "",
                     "format": "%.5g",
-                    "bins": { "n": null, "min": null, "max": null }
+                    "bins": { "n": null, "min": null, "max": null },
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last" }
                 },
                 {
                     "type": "ts-histogram",
@@ -87,17 +95,54 @@
                     "opacity": 0.2,
                     "label": "",
                     "format": "%.5g",
-                    "bins": { "n": null, "min": null, "max": null }
+                    "bins": { "n": null, "min": null, "max": null },
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last" }
                 }
             ],
-            "axes": { "ylog": false, "xfixed": false, "yfixed": false, "xmin": 0, "xmax": 200, "ymin": 0, "ymax": 30, "title": "Time-Series Projection Histograms", "xlog": false, "zlog": false },
-            "legend": { "style": "box", "position": "right" }
+            "axes": { "ylog": false, "xfixed": false, "yfixed": false, "xmin": 0, "xmax": 200, "ymin": 0, "ymax": 30, "title": "Time-Series Projection Histograms", "xlog": false, "zlog": false, "zmin": 0, "zmax": 1 },
+            "legend": { "style": "transparent", "position": "left" }
         },
         {
             "type": "plot",
             "plots": [
-                { "type": "ts-scatter", "channelX": "ch0", "channelY": "ch1", "opacity": 0.3, "color": "#009090", "line_width": 1, "marker_size": 3, "marker_type": "circle", "label": "", "format": "%f, %f", "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100", "lastpoint_type": "opencircle", "lastpoint_size": 6, "lastpoint_color": "#e01b24" },
-                { "type": "ts-scatter", "channelX": "ch2", "channelY": "ch3", "color": "#dd8000", "opacity": 0.5, "label": "", "format": "%f, %f", "marker_type": "circle", "marker_size": 3, "line_width": 0, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100", "lastpoint_type": "opencircle", "lastpoint_size": 6, "lastpoint_color": "#e01b24" }
+                {
+                    "type": "ts-scatter",
+                    "channelX": "ch0",
+                    "channelY": "ch1",
+                    "opacity": 0.3,
+                    "color": "#009090",
+                    "line_width": 1,
+                    "marker_size": 3,
+                    "marker_type": "circle",
+                    "label": "",
+                    "format": "%f, %f",
+                    "line_type": "connect",
+                    "fill_opacity": 0,
+                    "fill_baseline": "1e-100",
+                    "lastpoint_type": "opencircle",
+                    "lastpoint_size": 6,
+                    "lastpoint_color": "#e01b24",
+                    "resampling": { "buckets": null, "threshold": 0, "reducer": "last" }
+                },
+                {
+                    "type": "ts-scatter",
+                    "channelX": "ch2",
+                    "channelY": "ch3",
+                    "color": "#dd8000",
+                    "opacity": 0.5,
+                    "label": "",
+                    "format": "%f, %f",
+                    "marker_type": "circle",
+                    "marker_size": 3,
+                    "line_width": 0,
+                    "line_type": "connect",
+                    "fill_opacity": 0,
+                    "fill_baseline": "1e-100",
+                    "lastpoint_type": "opencircle",
+                    "lastpoint_size": 6,
+                    "lastpoint_color": "#e01b24",
+                    "resampling": { "buckets": null, "threshold": 0, "reducer": "last" }
+                }
             ],
             "axes": { "ylog": false, "xfixed": false, "yfixed": false, "xmin": -300, "xmax": 200, "ymin": 30, "ymax": 200, "xtitle": "Ch0 , Ch2", "ytitle": "Ch 1 , Ch3", "title": "Time-Series Scatters", "xlog": false, "zlog": false, "zmin": 0, "zmax": 1 },
             "legend": { "style": "hidden", "position": "right" }
@@ -113,7 +158,7 @@
         {
             "type": "plot",
             "plots": [
-                { "type": "graph", "channel": "hitmap", "color": "#009090", "opacity": 1, "line_width": "0", "marker_size": 3, "marker_type": "circle", "label": "", "format": "%.5g", "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100", "fill_envelope": false }
+                { "type": "graph", "channel": "hitmap", "color": "#009090", "opacity": 1, "line_width": "0", "marker_size": 3, "marker_type": "circle", "label": "", "format": "%.5g", "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100", "fill_envelope": false, "include_prior_point": false }
             ],
             "axes": { "ylog": false, "xfixed": true, "yfixed": false, "xmin": -1, "xmax": 30, "ymin": 0, "ymax": 20, "title": "Graph", "xtitle": "Channel", "ytitle": "Hit Rate (cps)", "xlog": false, "zlog": false },
             "legend": { "style": "hidden", "position": "right" }

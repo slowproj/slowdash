@@ -121,7 +121,9 @@ class Tasklet:
 
         self._dash_url = dash_url
         self._dash = Dash()
-        
+
+        ctrl._mesh = self._mesh
+
         
     @property
     def name(self):
@@ -177,10 +179,24 @@ class Tasklet:
             pass
         
         
+    #### Bridging to SlowPy Control ####
+
+    def stop(self):
+        return ctrl.stop()
+    
+
     def is_stop_requested(self):
         return ctrl.is_stop_requested()
     
 
+    def stop_by_signal(self, signal_number=signal.SIGINT):
+        return ctrl.stop_by_signal(signal_number)
+
+    
+    async def aio_sleep(self, duration_sec):
+        return await ctrl.aio_sleep(duration_sec)
+    
+        
     #### Callback Decorators ####
         
     def initialize(self):
@@ -315,7 +331,7 @@ class Tasklet:
     def _export_stop_function(self):
         async def handle_stop():
             logging.info('terminated by RPC stop()')
-            ctrl.stop()
+            self.stop()
         self._mesh.export('_sd_stop', handle_stop)
 
 
@@ -363,7 +379,7 @@ class Tasklet:
         if self._dash_url is not None:
             self._dash.connect(self._dash_url)
             
-        ctrl.stop_by_signal()
+        self.stop_by_signal()
         try:
             await asyncio.gather(*self._initialize_task_coros)
         except Exception as e:
@@ -384,9 +400,9 @@ class Tasklet:
                 task = asyncio.create_task(coro)
                 task.add_done_callback(main_tasks.discard)
                 main_tasks.add(task)
-            while not ctrl.is_stop_requested():
+            while not self.is_stop_requested():
                 await self._heartbeat()   # doing this in the main loop (not coro) to ensure it stops with the main
-                await ctrl.aio_sleep(0.1)
+                await self.aio_sleep(0.1)
         except Exception as e:
             raise e    
         
@@ -599,7 +615,7 @@ class Tasklet:
         async def go_once():
             try:
                 start = time.monotonic()
-                while not ctrl.is_stop_requested():
+                while not self.is_stop_requested():
                     now = time.monotonic()
                     if now - start < delay:
                         await asyncio.sleep(0.1)
@@ -645,7 +661,7 @@ class Tasklet:
             try:
                 last_execusion_time = time.monotonic()
                 tick_count = 0
-                while not ctrl.is_stop_requested():
+                while not self.is_stop_requested():
                     ticks_elapsed = 1
                     if interval > 0:
                         now = time.monotonic()
@@ -729,10 +745,10 @@ class Tasklet:
             next_t = time_list[next_k]
             
             try:
-                while not ctrl.is_stop_requested():
+                while not self.is_stop_requested():
                     t = now()
                     if t != next_t:
-                        await ctrl.aio_sleep(1)
+                        await self.aio_sleep(1)
                         continue
 
                     next_k += 1
@@ -745,7 +761,7 @@ class Tasklet:
                         await result
 
                     if len(time_list) == 1: # once a day -> same HH:MM time
-                        await ctrl.aio_sleep(100) # make sure the next check is on a different HH:MM
+                        await self.aio_sleep(100) # make sure the next check is on a different HH:MM
 
             except Exception as e:
                 self._handle_error(f'Schedule-callback: {func.__name__}(): {e}')
@@ -765,7 +781,7 @@ class Tasklet:
         
         if self._stop_on_error:
             self._had_error = True
-            ctrl.stop()
+            self.stop()
 
             
     @property

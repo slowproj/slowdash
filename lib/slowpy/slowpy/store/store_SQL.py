@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 3 June 2023 #
 
 
-import os, sys, time, logging, traceback
+import os, sys, time, json, logging, traceback
 from urllib.parse import urlparse
 from .store import DataStore
 
@@ -73,13 +73,17 @@ class TableFormat:
         if type(value) in [int, float]:
             self.insert_numeric_data(cur, timestamp, channel, value)
         elif type(value) in [str, bool]:
-            self.insert_text_data(cur, timestamp, channel, value)
+            self.insert_text_data(cur, timestamp, channel, str(value))
         else:
             try:
                 fval = float(value)
                 self.insert_numeric_data(cur, timestamp, channel, fval) # Decimal, Fraction, numpy.int64, ...
             except:
-                self.insert_text_data(cur, timestamp, channel, value)   # complex goes here, though it is a Number
+                try:
+                    jval = json.dumps(value)
+                    self.insert_text_data(cur, timestamp, channel, jval)
+                except:
+                    self.insert_text_data(cur, timestamp, channel, str(value))   # complex goes here, though it is a Number
             
     # to be implemented in a subclass
     def insert_numeric_data(self, cur, timestamp, channel, value):

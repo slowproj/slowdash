@@ -115,7 +115,7 @@ class DataSource_Dummy(DataSource):
 
             result[name] = {
                 'start': to-length, 'length': length,
-                't': to,
+                't': length-1,
                 'x': {
                     'bins': { 'min': binmin, 'max': binmax },
                     'counts': counts,
@@ -154,7 +154,7 @@ class DataSource_Dummy(DataSource):
             
             result[name] = {
                 'start': to-length, 'length': length,
-                't': to,
+                't': length-1,
                 'x': {
                     'xbins': { 'min': xbins.get('min'), 'max': xbins.get('max') },
                     'ybins': { 'min': ybins.get('min'), 'max': ybins.get('max') },
@@ -179,7 +179,7 @@ class DataSource_Dummy(DataSource):
                 
             result[name] = {
                 'start': to-length, 'length': length,
-                't': to,
+                't': length-1,
                 'x': { 'x': x, 'y': y, 'y_err': y_err }
             }
 
@@ -219,7 +219,7 @@ class DataSource_Dummy(DataSource):
                     ])
             result[self.log_channel_name] = {
                 'start': to-length, 'length': length,
-                't': to,
+                't': length-1,
                 'x': {
                     'columns': ['time', 'status', 'message'],
                     'table': table
