@@ -1,14 +1,10 @@
-ip = '192.168.50.103'
-firmware_version = 1825
+ip = '192.168.50.174'
 
-
-from slowpy.control import control_system as ctrl
 
 async def main():
-    modbus = ctrl.import_control_module('Modbus').modbus(ip)
-    modbus.import_control_module('NanotechMotor')
-    c5e = modbus.nanotech_C5E()
-    print('C5E Firmware Version: %s' % firmware_version)
+    from slowpy.control import control_system as ctrl
+    ctrl.import_control_module('NanotechMotor')
+    c5e = ctrl.nanotech_C5E(ip)
     print(c5e.id().get())
     
     try:

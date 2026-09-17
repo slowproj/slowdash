@@ -22,17 +22,17 @@ async def _initialize(params):
     await ctrl.aio_stream('connection', f'Found at {ip}')
     print(f'Nanotech Controller at {ip}')
 
-    modbus = ctrl.import_control_module('Modbus').modbus(ip)
-    modbus.import_control_module('NanotechMotor')
-
     c5e = None
     try:
-        c5e = modbus.nanotech_C5E()
+        c5e = ctrl.import_control_module('NanotechMotor').nanotech_C5E(ip)
+        device_id = await c5e.id().aio_get()
+        await ctrl.aio_stream('connection', f'Found at {ip}, {device_id.get("model")} {device_id.get("firmware_version")}')
         print(f'NanotechMotor: {await c5e.id().aio_get()}')
         print(f'NanotechMotor: Initial State: {await c5e.status().aio_get()}')
-        await c5e.cia402.initialize()
+        await c5e.do_initialize()
     except Exception as e:
         print(f'NanotechMotor: {e}')
+        await ctrl.aio_stream('errors', f'{e}')
 
     db_url = params.get('db_url', 'sqlite:///SlowMotor')
     try:
@@ -52,9 +52,16 @@ async def _loop():
     if c5e is not None:
         position = await c5e.position().aio_get()
         velocity = await c5e.velocity().aio_get()
+        status = await c5e.status().aio_get()
         await ctrl.aio_stream('position', position)
         await ctrl.aio_stream('velocity', velocity)
         await ctrl.aio_stream('status', c5e.status())
+        if ',WARN,' in status:
+            error = await c5e.error().aio_get()
+        else:
+            error = 'no errors'
+        await ctrl.aio_stream('errors', error)
+        
         if datastore is not None:
             now = time.monotonic()
             if c5e.is_moving or (now - c5e.last_log_time > 10):
@@ -63,6 +70,7 @@ async def _loop():
                     'position': position,
                     'velocity': velocity,
                 })
+                
     await asyncio.sleep(1)
     
     
@@ -103,6 +111,29 @@ async def sd_switch_off():
     await c5e.do_switch_off()
     await ctrl.aio_stream('status', c5e.status())
 
+
+async def sd_initialize():
+    if c5e is None:
+        return False
+    
+    await c5e.do_initialize()
+    await ctrl.aio_stream('status', c5e.status())
+
+
+async def sd_get_object(address:str, subaddress:str='0'):
+    if address.startswith('0x'):
+        addr = int(address, 16)
+    else:
+        addr = int(f'0x{address}', 16)
+    if subaddress.startswith('0x'):
+        subaddr = int(subaddress, 16)
+    else:
+        subaddr = int(f'0x{subaddress}', 16)
+    reply = await c5e.object(addr, subaddr).aio_get()
+    msg = f'{addr:04x}:{subaddr:02x}: {reply}'
+    print(f'C5E: {msg}')
+    await ctrl.aio_stream('reply', msg)
+    
     
 
 async def _get_html():
@@ -111,6 +142,7 @@ async def _get_html():
     |   <table>
     |     <tr><td>Connection</td><td colspan="2" ><span sd-value="connection">not connected</span></td></tr>
     |     <tr><td>Status</td><td colspan="2" ><span sd-value="status">unknown</span></td></tr>
+    |     <tr><td>Errors</td><td colspan="2" ><span sd-value="errors">-</span></td></tr>
     |     <tr><td>Current Position</td><td colspan="2"><span sd-value="position">unknown</span></td></tr>
     |     <tr><td>Current Velocity</td><td colspan="2"><span sd-value="velocity">unknown</span></td></tr>
     |     <tr><td>---</td><td></td><td></td></tr>
@@ -122,6 +154,8 @@ async def _get_html():
     |     <input type="submit" name="parallel NanotechMotor.sd_move()" value="Move">
     |     <input type="submit" name="parallel NanotechMotor.sd_halt()" value="Stop">
     |     <input type="submit" name="parallel NanotechMotor.sd_switch_off()" value="Switch Off">
+    |     /
+    |     <input type="submit" name="parallel NanotechMotor.sd_initialize()" value="Reset">
     |   </div>
     | </form>
     '''

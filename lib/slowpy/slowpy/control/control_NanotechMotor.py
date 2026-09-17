@@ -54,7 +54,7 @@ class Nanotech_C5E(spc.ControlNode):
         async def write_velocity(self, velocity:int):
             self.velocity.set(velocity & 0xffff)
             await asyncio.sleep(0.1)
-            
+
             
     class ReadRegisters:
         def __init__(self, modbus, firmware_version):
@@ -104,79 +104,91 @@ class Nanotech_C5E(spc.ControlNode):
         def __init__(self, wreg, rreg):
             self.wreg = wreg
             self.rreg = rreg
-            self.status = None
             
         async def is_ready_to_switch_on(self):
-            if self.status is None:
-                self.status = await self.rreg.read_status()
-                if self.status is None:
-                    return False
-            return (self.status & 0x06) == 0x06
+            status = await self.rreg.read_status()
+            if status is None:
+                return False
+            return (status & 0x6f) == 0x21
 
         async def is_switched_on(self):
-            if self.status is None:
-                self.status = await self.rreg.read_status()
-                if self.status is None:
-                    return False
-            return (self.status & 0x07) == 0x07
+            status = await self.rreg.read_status()
+            if status is None:
+                return False
+            return (status & 0x6f) == 0x23
 
         async def is_operation_enabled(self):
-            if self.status is None:
-                self.status = await self.rreg.read_status()
-                if self.status is None:
-                    return False
-            return (self.status & 0x0f) == 0x0f
+            status = await self.rreg.read_status()
+            if status is None:
+                return False
+            return (status & 0x6f) == 0x27
+    
+        async def is_quick_stop_active(self):
+            status = await self.rreg.read_status()
+            return (status & 0x6f) == 0x07
+    
+        async def is_fault(self):
+            status = await self.rreg.read_status()
+            return (status & 0x08) == 0x08
     
         async def initialize(self):
-            await self.wreg.write_control(0x0000)
-            self.status = 0
+            await self.wreg.write_control(0x0004)
+            await self.wreg.write_control(0x0084)  # clear fault
+            await self.wreg.write_control(0x0004)
             logging.info("Nanotech_C5E: Initialized")
 
         async def be_ready_to_switch_on(self):
             if not await self.is_ready_to_switch_on():
                 await self.wreg.write_control(0x0006)
-                self.status = 0x0006
                 logging.info("Nanotech_C5E: Ready to Switch-On")
                 
         async def switch_on(self):
             await self.be_ready_to_switch_on()
             if not await self.is_switched_on():
                 await self.wreg.write_control(0x0007)
-                self.status = 0x0007
                 logging.info("Nanotech_C5E: Switched On")
                 
         async def enable_operation(self):
             await self.switch_on()
             if not await self.is_operation_enabled():
                 await self.wreg.write_control(0x000f)
-                self.status = 0x000f
                 logging.info("Nanotech_C5E: Operation Enabled")
                 
         async def disable_operation(self):
             if await self.is_operation_enabled():
                 await self.wreg.write_control(0x0007)
-                self.status = 0x0007
                 logging.info("Nanotech_C5E: Operation Disabled")
                 
         async def switch_off(self):
-            if await self.is_switched_on():
-                await self.wreg.write_control(0x0006)
-                self.status = 0x0006
-                logging.info("Nanotech_C5E: Switched Off")
+            if await self.is_quick_stop_active():
+                # clear Quick-Stop Active
+                await self.wreg.write_control(0x000b)
+                await self.wreg.write_control(0x000f)
+            await self.wreg.write_control(0x0006)
+            logging.info("Nanotech_C5E: Switched Off")
                 
             
-    def __init__(self, modbus):
-        self.modbus = modbus
+    def __init__(self, ip):
+        try:
+            self.modbus = spc.control_system.import_control_module('Modbus').modbus(ip)
+        except Exception as e:
+            logging.error(f'NanotechMotor: unable to connect through Modbus: {e}')
+            self.modbus = None
+        try:
+            self.http = spc.control_system.http(f'http://{ip}')
+        except Exception as e:
+            logging.error(f'NanotechMotor: unable to connect through HTTP: {e}')
+            self.http = None
 
-        self.id_node = NanotechC5E_IdNode(self)
+        self.id_node = NanotechC5E_IdNode(self.http)
         id_firmware = self.id_node.get().get('firmware_version', '')
         if id_firmware.startswith('FIR-v'):
             firmware_version = int(id_firmware[len('FIR_v'):len('FIR_v2213')])
         else:
             firmware_version = 2213
         
-        self.wreg = Nanotech_C5E.WriteRegisters(modbus, firmware_version)
-        self.rreg = Nanotech_C5E.ReadRegisters(modbus, firmware_version)
+        self.wreg = Nanotech_C5E.WriteRegisters(self.modbus, firmware_version)
+        self.rreg = Nanotech_C5E.ReadRegisters(self.modbus, firmware_version)
         self.cia402 = Nanotech_C5E.CiA402(self.wreg, self.rreg)
 
         self.current_mode = None
@@ -219,17 +231,15 @@ class Nanotech_C5E(spc.ControlNode):
     def error(self):
         return self.error_node
 
+    # nanotech_C5E().object(addr, subaddr=0).get()
+    def object(self, address:int, subaddress:int=0):
+        return NanotechC5E_ObjectNode(self, address, subaddress)
+
     
     @classmethod
     def _node_creator_method(cls):
-        def nanotech_C5E(self):
-            if self.__class__.__name__ != 'ModbusNode':
-                raise spc.ControlException('Nanotech_C5E must be attached to a Modbus Node')
-            try:
-                self.nanotech_C5E_node
-            except:
-                self.nanotech_C5E_node = Nanotech_C5E(self)
-            return self.nanotech_C5E_node
+        def nanotech_C5E(self, ip:str):
+            return Nanotech_C5E(ip)
 
         return nanotech_C5E
 
@@ -299,7 +309,9 @@ class Nanotech_C5E(spc.ControlNode):
             return
         end_time = time.monotonic() + duration
         while self.is_moving and time.monotonic() < end_time:
-            await asyncio.sleep(0.1)
+            if await self.cia402.is_quick_stop_active():
+                break
+            await asyncio.sleep(0.5)
 
         if self.is_moving:
             await self.do_halt()
@@ -314,6 +326,11 @@ class Nanotech_C5E(spc.ControlNode):
         
     async def do_switch_off(self):
         await self.cia402.switch_off()
+        self.is_moving = False
+
+        
+    async def do_initialize(self):
+        await self.cia402.initialize()
         self.is_moving = False
 
         
@@ -397,19 +414,18 @@ class NanotechC5E_VelocityNode(spc.ControlVariableNode):
 
 
 class NanotechC5E_IdNode(spc.ControlVariableNode):
-    def __init__(self, c5e):
+    def __init__(self, http):
+        self.id = {}
         try:
-            ip = c5e.modbus.host
-            http = spc.control_system.http(f'http://{ip}')
-            self.id = {
-                'model': http.path('/od/1008/00').json().get(),
-                'hardware_version': http.path('/od/1009/00').json().get(),
-                'firmware_version': http.path('/od/100a/00').json().get(),
-                'MAC': http.path('/od/200f/00').json().get(),
-            }
+            if http is not None:
+                self.id = {
+                    'model': http.path('/od/1008/00').json().get(),
+                    'hardware_version': http.path('/od/1009/00').json().get(),
+                    'firmware_version': http.path('/od/100a/00').json().get(),
+                    'MAC': http.path('/od/200f/00').json().get(),
+                }
         except Exception as e:
             logging.error(f'NanotechC5E: {e}')
-            self.id = {}
             
 
     def get(self):
@@ -457,7 +473,8 @@ class NanotechC5E_StatusNode(spc.ControlVariableNode):
         status.append('SO' if status_code & 0x0002 else '-')
         status.append('RTSO' if status_code & 0x0001 else '-')
 
-        status.append('MOVING' if self.c5e.is_moving else '-')
+        is_moving = self.c5e.is_moving and (status_code & 0x0020 != 0)
+        status.append('MOVING' if is_moving else '-')
         
         return f'{status_code:04x}h:{",".join(status)}'
         
@@ -469,39 +486,64 @@ class NanotechC5E_ErrorNode(spc.ControlVariableNode):
     async def aio_get(self):
         error_code = await self.c5e.rreg.read_error()
         if error_code == 0:
-            return '00h: No errors'
-            
-        errors = []
-        if (error_code >> 0) & 0x01: error.append('Watchdog reset')
-        if (error_code >> 1) & 0x01: error.append('Input voltage too high')
-        if (error_code >> 2) & 0x01: error.append('Output current too high')
-        if (error_code >> 3) & 0x01: error.append('Input voltage too low')
-        if (error_code >> 4) & 0x01: error.append('Field-bus error')
-        if (error_code >> 5) & 0x01: error.append('-')
-        if (error_code >> 6) & 0x01: error.append('CANopen NMT error')
-        if (error_code >> 7) & 0x01: error.append('Sensor 1 defective')
-        if (error_code >> 8) & 0x01: error.append('Sensor 2 defective')
-        if (error_code >> 9) & 0x01: error.append('Sensor 3 defect')
-        if (error_code >> 10) & 0x01: error.append('Positive limit exceeded')
-        if (error_code >> 11) & 0x01: error.append('Negative lmit exceeded')
-        if (error_code >> 12) & 0x01: error.append('Overtemperature')
-        if (error_code >> 13) & 0x01: error.append('???')
-        if (error_code >> 14) & 0x01: error.append('Memory full')
-        if (error_code >> 15) & 0x01: error.append('MotorBlocked')
-
-        return f'{error_code:02x}h: {",".join(errors)}'
+            return 'No errors'
         
+        if error_code == 0x1000: error = 'General error'
+        if error_code == 0x2300: error = 'Current at the controller output too large'
+        if error_code == 0x3100: error = 'Overvoltage/undervoltage at controller input'
+        if error_code == 0x4200: error = 'Temperature error within the controller'
+        if error_code == 0x5440: error = 'Interlok error'
+        if error_code == 0x6010: error = 'Software reset (watchdog)'
+        if error_code == 0x6100: error = 'Internal software error, generic'
+        if error_code == 0x6320: error = 'Rated current must be set'
+        if error_code == 0x7113: error = 'Warning: Ballast registor thermally overloaded'
+        if error_code == 0x7121: error = 'Motor blocked'
+        if error_code == 0x7200: error = 'Internal error'
+        if error_code == 0x7305: error = 'Sensor 1 faulty'
+        if error_code == 0x7306: error = 'Sensor 2 faulty'
+        if error_code == 0x7307: error = 'Sensor n(>2) faulty'
+        if error_code == 0x7600: error = 'Warning: Nonvolatile memory full or corrupt'
+        if error_code == 0x8100: error = 'Error during fieldbus monitoring'
+        if error_code == 0x8400: error = 'Error in speed monitoring: slippage error too large'
+        if error_code == 0x8611: error = 'Position monitoring error: Following error too large'
+        if error_code == 0x8612: error = 'Position monitoring error: Limit switch exceeded'
+            
+        return f'{error} (code {error_code:02x}h)'
 
+        
+class NanotechC5E_ObjectNode(spc.ControlVariableNode):
+    def __init__(self, c5e, address:int, subaddress:int):
+        self.c5e = c5e
+        self.path = f'/od/{address:04x}/{subaddress:02x}'
+
+        
+    def get(self):
+        if self.c5e.http is None:
+            return None
+        
+        try:
+            return self.c5e.http.path(self.path).json().get()
+        except Exception as e:
+            logging.error(f'NanotechC5E: unable to HTTP-GET CANopen Object at {self.path}: {e}')
+
+        
+    async def aio_get(self):
+        return self.get()
+
+
+    
+    
 if __name__ == '__main__':
     ip = '192.168.50.176'
     logging.basicConfig(level=logging.INFO)
     
     async def main(ip):    
         from slowpy.control import control_system as ctrl
-        modbus = ctrl.import_control_module('Modbus').modbus(ip)
-        c5e = modbus.import_control_module('NanotechMotor').nanotech_C5E()
+        ctrl.import_control_module('NanotechMotor')
+        c5e = ctrl.nanotech_C5E(ip)
+        print(f'C5E ID: {c5e.id().get()}')
         
-        print('Initial State: %s' % await c5e.status().aio_get())
+        print(f'Initial State: {await c5e.status().aio_get()}')
         try:
             await c5e.cia402.initialize()
         except Exception as e:
@@ -521,8 +563,8 @@ if __name__ == '__main__':
         
         stop_time = time.time()
         stop_position = await c5e.position().aio_get()
-        print("Lapse: ", stop_time-start_time)
-        print("Move: ", start_position, " -> ", stop_position, ": ", (stop_position-start_position))
+        print(f'Lapse: {stop_time-start_time}')
+        print(f'Move: {start_position} -> {stop_position} : {stop_position-start_position}')
         print(await c5e.status().aio_get())
 
     asyncio.run(main(ip))

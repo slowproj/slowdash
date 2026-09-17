@@ -1,7 +1,7 @@
 {
     "control": {
         "range": { "length": 900, "to": 0 },
-        "reload": 5,
+        "reload": 2,
         "mode": "normal",
         "grid": { "rows": "2", "columns": "2" }
     },
@@ -79,13 +79,24 @@
                     "text_transform": "gt(0.5)->replace(true,'Yes')->replace(false,'No')"
                 },
                 {
+                    "channel": "status->match(',QS,',1,0)",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0.5 },
+                        "warn": { "min": 0, "max": 0.5 },
+                        "error": { "min": 0, "max": 10 }
+                    },
+                    "label": "Quick Stop",
+                    "text_transform": "gt(0.5)->replace(true,'Yes')->replace(false,'No')"
+                },
+                {
                     "channel": "status->match(',WARN,',1,0)",
                     "label": "Warning",
                     "gauge": { "min": 0, "max": 0 },
                     "ranges": {
                         "normal": { "min": 0, "max": 0.5 },
-                        "warn": { "min": 0, "max": 10 },
-                        "error": { "min": 0, "max": 0 }
+                        "warn": { "min": 0, "max": 0.5 },
+                        "error": { "min": 0, "max": 10 }
                     },
                     "text_transform": "gt(0.5)->replace(true,'Yes')->replace(false,'No')"
                 },
@@ -95,14 +106,14 @@
                     "gauge": { "min": 0, "max": 0 },
                     "ranges": {
                         "normal": { "min": 0, "max": 0.5 },
-                        "warn": { "min": 0, "max": 10 },
-                        "error": { "min": 0, "max": 0 }
+                        "warn": { "min": 0, "max": 0.5 },
+                        "error": { "min": 0, "max": 10 }
                     },
                     "text_transform": "gt(0.5)->replace(true,'Yes')->replace(false,'No')"
                 }
             ],
             "color": { "base": "rgb(0, 0, 0)", "normal": "#06b6d4", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.1 },
-            "grid": { "rows": 2, "columns": 4 },
+            "grid": { "rows": 2, "columns": 5 },
             "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
             "ranges": { "apply_to_value": false, "apply_to_gauge": false, "apply_to_tile": true },
             "title": "Motor Status"
