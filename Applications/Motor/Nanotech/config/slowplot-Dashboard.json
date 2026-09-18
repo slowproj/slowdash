@@ -7,7 +7,7 @@
     },
     "style": { },
     "panels": [
-        { "type": "html", "location": "project", "file": "NanotechMotor", "title": "Motor Control" },
+        { "type": "html", "location": "project", "file": "controller", "title": "Motor Control" },
         {
             "type": "singles",
             "item_type": "square",

@@ -136,7 +136,18 @@ async def sd_get_object(address:str, subaddress:str='0'):
     
     
 
-async def _get_html():
+def _get_html_list():
+    return [ 'controller', 'objects' ]
+
+
+def _get_html(name):
+    if name == 'controller':
+        return _get_html_controller()
+    else:
+        return _get_html_objects()
+
+    
+def _get_html_controller():
     html = f'''
     | <form>
     |   <table>
@@ -162,7 +173,57 @@ async def _get_html():
     return re.sub('^[ ]*\\|', '', html, flags=re.MULTILINE)
     
 
+
+
+def _get_html_objects():
+    objs = {
+        'Motor': {
+            'Pole Pair Count': { 'addr': 0x2030, 'comment': '50 for 1.8 deg', 'hex2dec': True },
+            'Max Motor Current': { 'addr': 0x2031, 'comment': 'mA', 'hex2dec': True },
+            'Motor Rated Current': { 'addr': 0x6075, 'comment': 'mA', 'hex2dec': True },
+            'Motor Drive Submode': { 'addr': 0x3202, 'comment': '08h for open loop<br>19h for closed loop' },
+        },
+        'Encoder': {
+            'Configuration': { 'addr': 0x2059, 'comment': '0:differential<br>1:single-ended' },
+            'Increments': { 'addr': 0x60e6, 'subaddr': 3, 'comment': 'resolution x4', 'hex2dec': True },
+            'Resolution': { 'addr': 0x60eb, 'subaddr': 3, 'comment': 'resolution / revolution', 'hex2dec': True },
+        },
+        'Switches': {
+            'Functions Enabled': { 'addr': 0x3240, 'subaddr': 1, 'comment': '1 to enable,<br>bits3-0: Iinterlock-Home-PosLimit-NegLimit' },
+            'Input Inverted': { 'addr': 0x3240, 'subaddr': 2, 'comment': '1 to invert (NC),<br>bits3-0: Iinterlock-Home-PosLimit-NegLimit' },
+            'Limit Switch Option': { 'addr': 0x3701, 'comment': '-1: no reaction,<br>0: stop immediately,<br> 1: stop, 2: quick stop, <br>5,6: stop and keep energized' },
+        },
+        'Protections': {
+            'Following Window': { 'addr': 0x6065, 'comment': 'deviation threshold, in motor steps???', 'hex2dec': True },
+            'Following Time Out': { 'addr': 0x6066, 'comment': 'max allowed deviation length, ms', 'hex2dec': True },
+            'Deviation Error Option': { 'addr': 0x3700, 'comment': '-1: no reaction,<br>0: stop immediately,<br> 1: stop, 2: quick stop' },
+        },
+    }
     
+    html = ''
+    for title, group in objs.items():
+        html += f'<h3>{title}</h3>'
+        html += '<table class="sd-data-table" style="width:95%">'
+        html += '<tr><th style="width:16em">Name</th><th style="width:8em">Address</th><th style="width:8em">Value</th><th style="width:30em">Comment</th></tr>'
+        for name, entry in group.items():
+            addr = entry['addr']
+            subaddr = entry.get('subaddr', 0)
+            value = c5e.object(addr, subaddr).get()
+            if entry.get('hex2dec'):
+                try:
+                    value = int(f'0x{value}', 16)
+                except:
+                    value = f'{value}h'
+            else:
+                value = f'{value}h'
+            comment = entry.get('comment', '')
+            html += f'<tr><th>{name}</th><td>{addr:04X}:{subaddr:02X}</td><td>{value}</td><td>{comment}</td></tr>'
+        html += '</table>'
+    
+    return html
+
+
+
 if __name__ == '__main__':
     from slowpy.dash import Tasklet
     Tasklet().run()
