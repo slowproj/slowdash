@@ -1,1 +1,1 @@
-slowdash_version = '260917 "Mamquam"'
+slowdash_version = '260918 "Mamquam"'

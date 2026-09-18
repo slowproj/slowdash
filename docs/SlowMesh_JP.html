@@ -943,15 +943,15 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb27-1"><a h
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">tasks</span><span class="kw">:</span></span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at">名前</span><span class="kw">}</span></span>
 <span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">auto_start</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">params</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at">initialize() に渡されるパラメータ</span><span class="kw">}</span></span></code></pre></div>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">parameters</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at">initialize() に渡されるパラメータ</span><span class="kw">}</span></span></code></pre></div>
 <p>SlowTask を SlowDash
 サーバーから独立したプロセスとして実行するには，通常は
-<code>slowdash-task</code> コマンドを使います．<code>--params</code>
+<code>slowdash-task</code> コマンドを使います．<code>--parameters</code>
 オプションに JSON
 文字列を渡すことにより．タスクパラメータも渡すことができます．この場合は，JSON
 文字列がシェルによって誤って処理されないようにするために，全体をシングルクオートで囲ってください．</p>
 <div class="sourceCode" id="cb29"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-task  slowtask-mytask.py --mesh=slowmq://localhost:18881 --params=&#39;{&quot;p1&quot;:10,&quot;p2&quot;:20}&#39;</span></span></code></pre></div>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-task  slowtask-mytask.py --mesh=slowmq://localhost:18881 --parameters=&#39;{&quot;p1&quot;:10,&quot;p2&quot;:20}&#39;</span></span></code></pre></div>
 <p>もしスクリプト中で
 <code>if __name__ == '__main__': tasklet.run()</code>
 をしているなら，通常の Python
@@ -1230,7 +1230,7 @@ Tasklet を使用しない場合</h2>
 <li>すべての関数の export （他のタスクやブラウザからの呼び出し）</li>
 <li>古いスタイルのコールバック：
 <ul>
-<li><code>_initialize(params={})</code>:
+<li><code>_initialize(parameters={})</code>:
 <code>@tasklet.initailze()</code> と同等</li>
 <li><code>_finalize()</code>: <code>@tasklet.finalize()</code>
 と同等</li>
@@ -1287,7 +1287,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb36-1"><a href=
 <span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span></span>
 <span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> store</span></span>
 <span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">auto_start</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
-<span id="cb36-18"><a href="#cb36-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">params</span><span class="kw">:</span></span>
+<span id="cb36-18"><a href="#cb36-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">parameters</span><span class="kw">:</span></span>
 <span id="cb36-19"><a href="#cb36-19" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">db_url</span><span class="kw">:</span><span class="at"> sqlite:///TestData</span></span>
 <span id="cb36-20"><a href="#cb36-20" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">table</span><span class="kw">:</span><span class="at"> slowdata</span></span></code></pre></div>
 <div class="sourceCode" id="cb37"><pre
@@ -2231,7 +2231,6 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb71-1"><a href=
 <span id="cb71-5"><a href="#cb71-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h1 id="todo">TODO</h1>
 <ul>
-<li>Tasklet Initialize params</li>
 <li>レジストリを SlowTask でも動かせるようにする</li>
 <li>MyMesh: SlowTask を SlowMesh
 なしで動かした場合に使う．コンソールから接続し，!!!

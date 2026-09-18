@@ -1,7 +1,9 @@
 # Created by Sanshiro Enomoto on 26 June 2026 #
 
 import os, sys, time, re, json, argparse, asyncio, importlib.util, logging, traceback
+
 from slowpy.mesh import Tasklet, RetainerAutocide, Mesh, MeshStdio
+from slowpy.control import ControlSystem
 
 
 def load_task_module(path:str, *, name:str, argv:list[str]|None=None):
@@ -26,6 +28,8 @@ def load_task_module(path:str, *, name:str, argv:list[str]|None=None):
     if script_dir not in sys.path:
         sys.path.insert(0, script_dir)
 
+    preset_module(module)
+
     try:
         spec.loader.exec_module(module)
     except Exception:
@@ -35,17 +39,30 @@ def load_task_module(path:str, *, name:str, argv:list[str]|None=None):
         sys.argv = old_argv
         sys.path[:] = old_path
 
+    tasklet = None
     for value in module.__dict__.values():
         if isinstance(value, Tasklet):
             tasklet = value
+            print(f"FOUND")
             break
     else:
+        print(f"INJECTED")
         tasklet = Tasklet(use_oldstyle_callbacks=True)
         module._sd_tasklet = tasklet
-        exec('from slowpy.control import ControlSystem', module.__dict__)
-        exec('ControlSystem._mesh = _sd_tasklet._mesh', module.__dict__)
+        
+    ControlSystem._mesh = tasklet._mesh
         
     return module, tasklet
+
+
+
+def preset_module(module):
+    try:
+        exec('import matplotlib', module.__dict__)
+        exec('matplotlib.use("Agg")', module.__dict__)
+        logging.info('Matplotlib GUI is disabled; using "Agg"')
+    except Exception:
+        logging.info('Matplotlib not available')
 
 
 

@@ -547,12 +547,12 @@ SlowTask のスクリプトファイルを，`slowtask-{名前}.py` という名
   tasks:
     - name: {名前}
       auto_start: true
-      params: {initialize() に渡されるパラメータ}
+      parameters: {initialize() に渡されるパラメータ}
 ```
 
-SlowTask を SlowDash サーバーから独立したプロセスとして実行するには，通常は `slowdash-task` コマンドを使います．`--params` オプションに JSON 文字列を渡すことにより．タスクパラメータも渡すことができます．この場合は，JSON 文字列がシェルによって誤って処理されないようにするために，全体をシングルクオートで囲ってください．
+SlowTask を SlowDash サーバーから独立したプロセスとして実行するには，通常は `slowdash-task` コマンドを使います．`--parameters` オプションに JSON 文字列を渡すことにより．タスクパラメータも渡すことができます．この場合は，JSON 文字列がシェルによって誤って処理されないようにするために，全体をシングルクオートで囲ってください．
 ```console
-$ slowdash-task  slowtask-mytask.py --mesh=slowmq://localhost:18881 --params='{"p1":10,"p2":20}'
+$ slowdash-task  slowtask-mytask.py --mesh=slowmq://localhost:18881 --parameters='{"p1":10,"p2":20}'
 ```
 
 もしスクリプト中で `if __name__ == '__main__': tasklet.run()` をしているなら，通常の Python スクリプトとしての実行もできます．ただし，この場合は，タスクパラメータを渡すことはできません．
@@ -755,7 +755,7 @@ Tasklet のコンストラクタの `mesh_stdio` パラメータに `True` を�
 - SlowDash サーバーからの start/stop/kill コントロール
 - すべての関数の export （他のタスクやブラウザからの呼び出し）
 - 古いスタイルのコールバック：
-  - `_initialize(params={})`: `@tasklet.initailze()` と同等
+  - `_initialize(parameters={})`: `@tasklet.initailze()` と同等
   - `_finalize()`: `@tasklet.finalize()` と同等
   - `_run()`: `@tasklet.once()` と同等
   - `_loop()`: `@tasklet.loop(interval=0)` と同等
@@ -797,7 +797,7 @@ slowdash_project:
       
     - name: store
       auto_start: true
-      params:
+      parameters:
         db_url: sqlite:///TestData
         table: slowdata
 ```

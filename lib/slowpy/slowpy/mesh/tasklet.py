@@ -122,8 +122,6 @@ class Tasklet:
         self._dash_url = dash_url
         self._dash = Dash()
 
-        ctrl._mesh = self._mesh
-
         
     @property
     def name(self):

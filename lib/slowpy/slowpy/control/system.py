@@ -7,7 +7,7 @@ import slowpy.control as spc
 
 
 class ControlSystem(spc.ControlNode):
-    # this will be set by tasklet
+    # this will be injected by slowdash-task.py
     _mesh = None
     
     _mesh_error_shown = False
@@ -59,6 +59,7 @@ class ControlSystem(spc.ControlNode):
             if not cls._mesh_error_shown:
                 logging.error('Mesh not attached to the SlowPy Control system')
                 cls._mesh_error_shown = True
+                print(f"##### CONTROL: {cls._mesh}")
             return
         
         # name

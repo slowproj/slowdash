@@ -547,7 +547,7 @@ In addition, if a `task(s)` entry is created in `SlowdashProject.yaml` and `auto
   tasks:
     - name: {name}
       auto_start: true
-      params: {parameters for initialize()}
+      parameters: {parameters for initialize()}
 ```
 
 To run a SlowTask as a process independent of the SlowDash server, normally use the `slowdash-task` command.
@@ -755,7 +755,7 @@ Even when Tasklet is not explicitly used in a script, an arbitrary Python script
 - start/stop/kill control from the SlowDash server
 - Export of all functions (for calls from other tasks or browsers)
 - Old-style callbacks:
-  - `_initialize(params={})`: equivalent to `@tasklet.initailze()`
+  - `_initialize(parameters={})`: equivalent to `@tasklet.initailze()`
   - `_finalize()`: equivalent to `@tasklet.finalize()`
   - `_run()`: equivalent to `@tasklet.once()`
   - `_loop()`: equivalent to `@tasklet.loop(interval=0)`
@@ -797,7 +797,7 @@ slowdash_project:
       
     - name: store
       auto_start: true
-      params:
+      parameters:
         db_url: sqlite:///TestData
         table: slowdata
 ```

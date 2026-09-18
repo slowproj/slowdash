@@ -951,7 +951,7 @@ starts.</p>
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">tasks</span><span class="kw">:</span></span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at">name</span><span class="kw">}</span></span>
 <span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">auto_start</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">params</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at">parameters for initialize()</span><span class="kw">}</span></span></code></pre></div>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">parameters</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="at">parameters for initialize()</span><span class="kw">}</span></span></code></pre></div>
 <p>To run a SlowTask as a process independent of the SlowDash server,
 normally use the <code>slowdash-task</code> command.</p>
 <div class="sourceCode" id="cb29"><pre
@@ -1242,7 +1242,7 @@ following functions are available.</p>
 browsers)</li>
 <li>Old-style callbacks:
 <ul>
-<li><code>_initialize(params={})</code>: equivalent to
+<li><code>_initialize(parameters={})</code>: equivalent to
 <code>@tasklet.initailze()</code></li>
 <li><code>_finalize()</code>: equivalent to
 <code>@tasklet.finalize()</code></li>
@@ -1302,7 +1302,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb36-1"><a href=
 <span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span></span>
 <span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> store</span></span>
 <span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">auto_start</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
-<span id="cb36-18"><a href="#cb36-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">params</span><span class="kw">:</span></span>
+<span id="cb36-18"><a href="#cb36-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">parameters</span><span class="kw">:</span></span>
 <span id="cb36-19"><a href="#cb36-19" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">db_url</span><span class="kw">:</span><span class="at"> sqlite:///TestData</span></span>
 <span id="cb36-20"><a href="#cb36-20" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">table</span><span class="kw">:</span><span class="at"> slowdata</span></span></code></pre></div>
 <div class="sourceCode" id="cb37"><pre
@@ -2262,7 +2262,6 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb71-1"><a href=
 <span id="cb71-5"><a href="#cb71-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h1 id="todo">TODO</h1>
 <ul>
-<li>Tasklet Initialize params</li>
 <li>Make it possible to run the Registry as a SlowTask as well</li>
 <li>MyMesh: used when running a SlowTask without SlowMesh. Connect from
 the console and capture lines beginning with <code>!!!</code></li>

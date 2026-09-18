@@ -206,8 +206,8 @@ class ControlNode:
     #     return repr(self.get())
 
     
-    def __str__(self):
-        return str(self.get())
+    #def __str__(self):
+    #    return str(self.get())
 
     
     def __bool__(self):
@@ -311,10 +311,10 @@ class ControlNode:
 
             dirname = os.path.sep.join(module_dir.split(os.path.sep)[-2:])
             logging.info(f"SlowPy Control: loaded control module {module_name} (@{dirname})")
-
             
             return module
-            
+
+        
         with lock_importing:
             module = sys.modules.get(module_name, None)
             if module is None:
