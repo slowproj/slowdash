@@ -148,8 +148,8 @@ class Tasklet:
         return mesh
 
 
-    def run(self, params:dict|None=None, *, name:str|None=None, mesh_url:str|None=None):
-        self._params = copy.deepcopy(params or {})
+    def run(self, parameters:dict|None=None, *, name:str|None=None, mesh_url:str|None=None):
+        self._params = copy.deepcopy(parameters or {})
         self._name = name or self._name
         self._mesh_url = mesh_url or self._mesh_url
         
@@ -167,10 +167,10 @@ class Tasklet:
             pass
             
 
-    async def run_module(self, module, name:str, params:dict, mesh_url:str):
+    async def run_module(self, module, name:str, parameters:dict, mesh_url:str):
         self._module = module
         self._name = name
-        self._params = copy.deepcopy(params or {})
+        self._params = copy.deepcopy(parameters or {})
         self._mesh_url = mesh_url or self._mesh_url
         
         try:

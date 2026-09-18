@@ -415,9 +415,9 @@ class TaskComponent(Component):
             command = node.get('command', f'slowdash-task {file_path} --name={name}')
             if self.project.mesh_url is not None:
                 command += f' --mesh={self.project.mesh_url}'
-            if 'params' in node:
-                params = shlex.quote(json.dumps(node['params']))
-                command += f' --params={params}'
+            if 'parameters' in node:
+                params = shlex.quote(json.dumps(node['parameters']))
+                command += f' --parameters={params}'
             
             self._task_catalog[name] = {
                 'name': name,
@@ -792,6 +792,8 @@ class TaskComponent(Component):
                     continue
                 config_file = content_file_name[len('config/'):]
                 root_name = Path(config_file).stem
+                if '-' not in root_name:
+                    continue
                 kind, name = root_name.split('-', 1)
                 if kind not in [ 'slowdash', 'slowplot', 'slowcruise', 'html' ]:
                     continue

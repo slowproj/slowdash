@@ -54,7 +54,7 @@ async def main():
     parser.add_argument('script', help='user task script to load')
     parser.add_argument('--name', action='store', dest='name', help='task name; defauts to the script filename')
     parser.add_argument('--mesh', action='store', dest='mesh', help='SlowMesh URL, e.g., slowmq://localhost:18881')
-    parser.add_argument('--params', action='store', dest='params', default='{}', help='JSON string for task parameters')
+    parser.add_argument('--parameters', action='store', dest='parameters', default='{}', help='JSON string for task parameters')
     parser.add_argument(
         '--logging',
         action='store', dest='loglevel', default='default', choices=['default', 'debug', 'info', 'warning', 'error'],
@@ -83,11 +83,11 @@ async def main():
     if script_args[:1] == ['--']:
         script_args = script_args[1:]
 
-    params = {}
+    parameters = {}
     try:
-        params = json.loads(args.params)
+        parameters = json.loads(args.parameters)
     except Exception as e:
-        print(f'bad JSON for params: {args.params}')
+        print(f'bad JSON for parameters: {args.parameters}')
         sys.exit(-1)
     
     if not name:
@@ -141,7 +141,7 @@ async def main():
             print(e)
             
     try:
-        await tasklet.run_module(module=module, name=name, params=params, mesh_url=mesh_url)
+        await tasklet.run_module(module=module, name=name, parameters=parameters, mesh_url=mesh_url)
     except Exception as e:
         logging.error(f'slowdash-task: error on loading: {e}')
             

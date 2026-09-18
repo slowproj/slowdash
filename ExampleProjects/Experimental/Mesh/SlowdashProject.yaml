@@ -19,6 +19,6 @@ slowdash_project:
       
     - name: store
       auto_start: true
-      params:
+      parameters:
         db_url: sqlite:///TestData
         table: slowdata

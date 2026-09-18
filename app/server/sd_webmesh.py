@@ -26,9 +26,11 @@ class DataCache:
                 
         if value is None:
             pass
-        elif type(value) in [ int, float ]:
+        elif isinstance(value, (int, float)):
             datatype = 'numeric'
-        elif type(value) is dict:
+        elif isinstance(value, str):
+            datatype = 'string'
+        elif isinstance(value, dict):
             if 'y' in value:
                 datatype = 'graph'
             elif 'bins' in value:
