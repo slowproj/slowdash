@@ -43,10 +43,8 @@ def load_task_module(path:str, *, name:str, argv:list[str]|None=None):
     for value in module.__dict__.values():
         if isinstance(value, Tasklet):
             tasklet = value
-            print(f"FOUND")
             break
     else:
-        print(f"INJECTED")
         tasklet = Tasklet(use_oldstyle_callbacks=True)
         module._sd_tasklet = tasklet
         
@@ -104,6 +102,7 @@ async def main():
     try:
         parameters = json.loads(args.parameters)
     except Exception as e:
+        logging.error(f'bad JSON for parameters: {args.parameters}')
         print(f'bad JSON for parameters: {args.parameters}')
         sys.exit(-1)
     

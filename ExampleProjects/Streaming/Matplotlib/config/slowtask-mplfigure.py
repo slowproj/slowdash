@@ -5,7 +5,7 @@ from slowpy.control import control_system as ctrl
 
 
 # this function is called periodically by SlowDash (if used in SlowDash GUI)
-async def _loop():
+def _loop():
     x = np.linspace(0, 10, 100)
     y1 = np.random.normal(7, 3, len(x))
     y2 = np.random.normal(3, 5, len(x))
@@ -33,8 +33,8 @@ async def _loop():
 
     
     # If used from SlowDash (no GUI mode), this prints an error message but it should not be harmful.
-    # Remove this line if this script will not be used stand-alone.
-    plt.show()
+    # Remove this line if this script is not be used stand-alone.
+    #plt.show()
 
     # This will create a SlowDash layout config (slowplot-XXX) and send the content data to SlowDash.
     ctrl.stream('mpl', fig)

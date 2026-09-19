@@ -274,7 +274,7 @@ class ControlNode:
 
         if not hasattr(cls, name):
             setattr(cls, name, method)
-            logging.info(f'SlowPy Control: imported control node {cls.__name__}.{name}')
+            logging.debug(f'SlowPy Control: imported control node {name}.{cls.__name__}')
 
             
     @dualmethod

@@ -43,6 +43,23 @@ class ControlSystem(spc.ControlNode):
 
         
     @classmethod
+    def _get_name(cls, obj, name:str|None=None):
+        data_name = getattr(obj, '__slowmesh_data_name', None)
+        mesh_name = name if name is not None else data_name
+        if mesh_name is None:
+            cls._mesh_unnamed_count += 1
+            name = f'unnamed{cls._mesh_unnamed_count:02d}'
+            mesh_name = name
+        if name is not None and name != data_name:
+            try:
+                setattr(obj, '__slowmesh_data_name', name)   # using setattr() for dataclass
+            except:
+                pass  # obj does not have setattr()  (such as an interger)
+
+        return mesh_name
+
+            
+    @classmethod
     async def aio_stream(cls, name:str, value):
         return await cls.aio_publish(value, name=name)
 
@@ -59,22 +76,8 @@ class ControlSystem(spc.ControlNode):
             if not cls._mesh_error_shown:
                 logging.error('Mesh not attached to the SlowPy Control system')
                 cls._mesh_error_shown = True
-                print(f"##### CONTROL: {cls._mesh}")
             return
         
-        # name
-        mesh_name = getattr(obj, '__slowmesh_data_name', None)
-        publish_name = name if name is not None else mesh_name
-        if publish_name is None:
-            cls._mesh_unnamed_count += 1
-            name = f'unnamed{cls._mesh_unnamed_count:02d}'
-            publish_name = name
-        if name is not None and name != mesh_name:
-            try:
-                setattr(obj, '__slowmesh_data_name', name)   # using setattr() for dataclass
-            except:
-                pass  # obj does not have setattr()  (such as an interger)
-
         # special handling for Matplotlib figure
         config, data = slp.slowdashify(obj, name)
         if data is not None:
@@ -113,13 +116,35 @@ class ControlSystem(spc.ControlNode):
             logging.error(f'bad value type to publish: {type(obj)}')
             return
 
+        mesh_name = cls._get_name(obj, name)        
         if value_is_ts:
-            record = { publish_name: value }
+            record = { mesh_name: value }
         else:
-            record = { publish_name: { 't': time.time(), 'x': value } }
+            record = { mesh_name: { 't': time.time(), 'x': value } }
             
-        await cls._mesh.aio_publish(f'data.stream.{publish_name}', record)
+        await cls._mesh.aio_publish(f'data.stream.{mesh_name}', record)
 
+
+    @classmethod
+    async def aio_export(cls, obj, name:str|None=None):
+        return cls.export(obj, name)
+
+    
+    @classmethod
+    def export(cls, obj, name:str|None=None):
+        if cls._mesh is None:
+            if not cls._mesh_error_shown:
+                logging.error('Mesh not attached to the SlowPy Control system')
+                cls._mesh_error_shown = True
+            return
+
+        if not isinstance(obj, spc.ControlNode):
+            logging.error(f'Bad data type to export: {name} ({type(obj)})')
+            return
+            
+        mesh_name = cls._get_name(obj, name)
+        cls._mesh.export(mesh_name, obj)
+        
 
     # child nodes
     def value(self, initial_value=None):

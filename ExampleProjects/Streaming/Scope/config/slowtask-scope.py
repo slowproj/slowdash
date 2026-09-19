@@ -1,23 +1,28 @@
-import time
-import numpy as np
 
 from slowpy.control import control_system as ctrl
-fx = ctrl.value(3.2)
-fy = ctrl.value(2.0)
+from slowpy.mesh import Tasklet
+tasklet = Tasklet()
 
-from slowpy import Graph
 from slowpy.store import DataStore_Redis
 datastore = DataStore_Redis('redis://localhost/1')
-next_store_time = 0
 
+import time
+import numpy as np
+from slowpy import Graph
 
-async def _initialize():
-    ctrl.export(fx, name='fx.current')
-    ctrl.export(fy, name='fy.current')
-    
-    
+fx, fy = 3.2, 2.0
 t0 = 0
-async def _loop():
+
+
+@tasklet.mesh.on('form.inputs.scope_control.>')
+async def control(doc):
+    global fx, fy
+    fx = doc.get('values', {}).get('fx', fx)
+    fy = doc.get('values', {}).get('fy', fy)
+
+
+@tasklet.loop(interval=0.5, ticks=20)
+async def loop(ticks):
     global t0
 
     t0 += 0.05
@@ -30,16 +35,35 @@ async def _loop():
     g_y.add_point(t, x2)
     g_xy.add_point(x1, x2)
 
-    await ctrl.aio_stream('x.current', g_x)
-    await ctrl.aio_stream('y.current', g_y)
-    await ctrl.aio_stream('xy.current', g_xy)
+    await ctrl.aio_stream('fx.stream', fx)
+    await ctrl.aio_stream('fy.stream', fy)
+    await ctrl.aio_stream('x.stream', g_x)
+    await ctrl.aio_stream('y.stream', g_y)
+    await ctrl.aio_stream('xy.stream', g_xy)
 
-    global next_store_time
-    now = time.time()
-    if now > next_store_time:
+    if ticks:
         datastore.update(g_x, tag='x')
         datastore.update(g_y, tag='y')
         datastore.update(g_xy, tag='xy')
-        next_store_time = now + 5
+
         
-    await ctrl.aio_sleep(0.5)
+@tasklet.content('config/html-control.html')
+def html():
+    return '''
+    <form name="scope_control">
+      <datalist id="markers">
+        <option value="0.1"></option><option value="5"></option><option value="9.9"></option>
+      </datalist>
+      <table>
+        <tr>
+          <td>Fx</td>
+          <td><input name="fx" type="range" min="0.1" max="9.9" step="0.1" list="markers"></td>
+          <td><span sd-value="fx.stream" style="font-size:150%">---</span></td>
+        </tr><tr>
+          <td>Fy</td>
+          <td><input name="fy" type="range" min="0.1" max="9.9" step="0.1" list="markers"></td>
+          <td><span sd-value="fy.stream" style="font-size:150%">---</span></td>
+        </tr>
+      </table>
+    </form>
+    '''

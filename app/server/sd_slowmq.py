@@ -53,10 +53,10 @@ class SlowMQComponent(Component):
                         logging.debug(f'SlowMQ Message Received: {name}: {repr(message)}')
                     await self.handle_message(client_id, headers, message)
         except slowlette.WebSocketConnectionClosed:
-            logging.info(f'SlowMQ WebSocket Closed: {name}')
+            logging.debug(f'SlowMQ WebSocket Closed: {name}')
         except Exception as e:
             logging.warning(f'SlowMQ WebSocket Closed by error: {e}')
-            logging.info(traceback.format_exc())
+            logging.warning(traceback.format_exc())
         finally:
             await self.remove_client(client_id)
 
@@ -72,7 +72,7 @@ class SlowMQComponent(Component):
         self._websockets[client_id] = websocket
         self._send_failures[client_id] = 0
         
-        logging.info(f'SlowMQ WebSocket Connected: {name} (id:{client_id})')
+        logging.debug(f'SlowMQ WebSocket Connected: {name} (id:{client_id})')
 
         return client_id
         
@@ -136,7 +136,7 @@ class SlowMQComponent(Component):
             self._subscribers[topic] = set()
             
         self._subscribers[topic].add(client_id)
-        logging.info(f'SlowMQ Subscription: {topic} <- {self._clients.get(client_id, {}).get('name')}')
+        logging.debug(f'SlowMQ Subscription: {topic} <- {self._clients.get(client_id, {}).get('name')}')
 
         websocket = self._websockets.get(client_id)
         reply_to = headers.get('message_id')
@@ -162,7 +162,7 @@ class SlowMQComponent(Component):
             return False
 
         self._subscribers[topic].discard(client_id)
-        logging.info(f'SlowMQ Cancel Subscription: {topic} <- {self._clients.get(client_id, {}).get('name')}')
+        logging.debug(f'SlowMQ Cancel Subscription: {topic} <- {self._clients.get(client_id, {}).get('name')}')
 
         if len(self._subscribers[topic]) == 0:
             self._subscribers.pop(topic, None)

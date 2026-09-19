@@ -187,7 +187,7 @@ class WebMeshComponent(Component):
         client_id = secrets.token_urlsafe(32)
         try:
             await eventstream.accept()
-            logging.info(f'EventStream Connected: {client_id}')
+            logging.debug(f'EventStream Connected: {client_id}')
         except Exception as e:
             logging.warning(f'EventStream Accept Failed: {e}')
             return
@@ -229,7 +229,7 @@ class WebMeshComponent(Component):
                 await eventstream.send(message, event='message')
                 
         except slowlette.EventStreamConnectionClosed:
-            logging.info(f'EventStream Closed by client: {client_id}')
+            logging.debug(f'EventStream Closed by client: {client_id}')
             
         finally:
             tasks = [ task for task in (queue_task, disconnect_task, stop_task) if task is not None ]

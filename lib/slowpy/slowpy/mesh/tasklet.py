@@ -50,7 +50,7 @@ class RetainerAutocide:
             logging.warning(f'RetainerAutocide: {self._name}: Linux-style parent watch not available: {e}')
             return False
         
-        logging.info(f'RetainerAutocide: {self._name}: watching PID {self._parent_pid} using prctl()')
+        logging.debug(f'RetainerAutocide: {self._name}: watching PID {self._parent_pid} using prctl()')
 
         if os.getppid() != self._parent_pid:
             # parent already died
@@ -73,7 +73,7 @@ class RetainerAutocide:
 
                 time.sleep(self._interval)
 
-        logging.info(f'RetainerAutocide: {self._name}: watching PID {self._parent_pid} using a polling loop')
+        logging.debug(f'RetainerAutocide: {self._name}: watching PID {self._parent_pid} using a polling loop')
         threading.Thread(target=watch, name='parent-death-watch',  daemon=True).start()
                 
 
@@ -724,7 +724,7 @@ class Tasklet:
 
         name = func.__name__
         times = [ f"{int(t/100):02d}:{int(t)%100:02d}" for t in time_list ]
-        logging.info(f'Tasklet: scheduled {name}() at {",".join(times)}')
+        logging.debug(f'Tasklet: scheduled {name}() at {",".join(times)}')
 
         def now():
             if use_utc:

@@ -53,7 +53,7 @@ class AsyncSlowMQNode(ControlNode):
             logger.warning(f'AsyncSlowMQ Error: {self.url}: {e}')
             ws = None
         else:
-            logger.info(f'AsyncSlowMQ: connected: {self.url}')
+            logger.debug(f'AsyncSlowMQ: connected: {self.url}')
 
         if ws is not None:
             self.connections.add(ws)

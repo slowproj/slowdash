@@ -323,7 +323,7 @@ class HtmlPanel extends Panel {
     _updateContents(dataPacket, displayTimeRange) {
         const values = this._extractDataValues(dataPacket, displayTimeRange);
         this._fillElementValues(values);
-
+        
         // input values from the PubSub Cache in Registry (for initial loading)
         if (! this._initialValuesReceived) {
             const formInputsRegistry = dataPacket[`@registry:pubsub.form.inputs.>`]?.x?.tree;
@@ -362,7 +362,7 @@ class HtmlPanel extends Panel {
     _extractDataValues(dataPacket, displayTimeRange) {
         let values = {};
         for (const variable of this.variables) {
-            const ts = null;
+            let ts = null;
             if (variable.channel) {
                 if (variable.channel in dataPacket) {
                     ts = dataPacket[variable.channel];

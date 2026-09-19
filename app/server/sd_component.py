@@ -196,6 +196,6 @@ class PluginComponent(Component):
             return None
 
         instance.class_name = class_name
-        logging.info(f'loaded plugin {class_name}')
+        logging.debug(f'loaded plugin {class_name}')
 
         return instance

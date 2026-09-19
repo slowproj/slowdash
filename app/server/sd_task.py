@@ -250,7 +250,7 @@ class TaskProxy:
             logging.warning(f'Task Command: function parameter mismatch: {request}: {e}')
             return {'status': 'error', 'message': f'function parameter mismatch: {e}' }
             
-        logging.info(f'Dispatch Task RPC: {request} --> {self._mesh_id}')
+        logging.debug(f'Dispatch Task RPC: {request} --> {self._mesh_id}')
         try:
             reply = await mesh.aio_call_many(
                 f'{request.module_name}.{request.function_name}',
@@ -524,7 +524,7 @@ class TaskComponent(Component):
         async def process_task_spec(headers, data):
             mesh_id = data.get('mesh_id')
             if mesh_id is not None and len(mesh_id) > 0:
-                logging.info(f'Task spec received: {data}')
+                logging.debug(f'Task spec received: {data}')
                 task = TaskProxy(data)
                 await self._notify_life_event(task, 'registered')
                 self._task_table[mesh_id] = task
