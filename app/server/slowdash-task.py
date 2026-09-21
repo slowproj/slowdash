@@ -2,6 +2,7 @@
 
 import os, sys, time, re, json, argparse, asyncio, importlib.util, logging, traceback
 
+import slowpy
 from slowpy.mesh import Tasklet, RetainerAutocide, Mesh, MeshStdio
 from slowpy.control import ControlSystem
 
@@ -46,9 +47,9 @@ def load_task_module(path:str, *, name:str, argv:list[str]|None=None):
             break
     else:
         tasklet = Tasklet(use_oldstyle_callbacks=True)
-        module._sd_tasklet = tasklet
         
-    ControlSystem._mesh = tasklet._mesh
+    module._sd_tasklet = tasklet
+    ControlSystem._tasklet = tasklet
         
     return module, tasklet
 

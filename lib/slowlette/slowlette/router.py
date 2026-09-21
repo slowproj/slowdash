@@ -304,7 +304,7 @@ class Router:
             else:
                 request = Request(request, method='POST', body=body)
 
-        # from a nestd-tree (sub)apps, create a linear response list before merging them
+        # from a nested-tree (sub)apps, create a linear response list before merging them
         response_list = [ Response() ]
         await self._dispatch_branch(request, response_list)
         
@@ -326,7 +326,9 @@ class Router:
                     response = await response
             except asyncio.CancelledError:
                 response = None
-            if not isinstance(response, Response):
+            if response is None:
+                response = Response()
+            elif not isinstance(response, Response):
                 status_code = handler.slowlette_path_rule.status_code
                 response = Response(status_code, content=response)
             if response.status_code > 0:

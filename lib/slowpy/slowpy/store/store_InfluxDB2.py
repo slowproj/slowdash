@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 14 June 2023 #
 
-import time, datetime, traceback, logging
+import time, datetime, json, traceback, logging
 from .store import DataStore
 
 
@@ -136,7 +136,11 @@ class DataStore_InfluxDB2(DataStore):
             if type(values[i]) in [ int, float ]:
                 point = point.field(fields[i], values[i])
             else:
-                point = point.field(fields[i], str(values[i]))
+                try:
+                    str_value =  json.dumps(values[i])
+                except:
+                    str_value = str(values[i])
+                point = point.field(fields[i], str_value)
             
         #print(point)
         self.write_api.write(self.bucket, self.org, point)

@@ -145,7 +145,7 @@ class DataSource_CSV(DataSource_TableStore):
         return value
 
         
-    async def _execute_query(self, table_name, time_col, time_type, time_from, time_to, tag_col, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False):
+    async def _execute_query(self, table_name, time_col, time_type, time_from, time_to, tag_col, tag_values, fields, resampling=None, reducer=None, stop=None, lastonly=False, use_server_resampling=True):
         columns, table = [], []
 
         time_from, time_to = int(time_from), int(time_to)
@@ -167,7 +167,7 @@ class DataSource_CSV(DataSource_TableStore):
                         record = self._split(line)
                         if len(record) != len(columns):
                             continue
-                        time_val = int(record[time_column]) if time_column is not None else int(time.time())
+                        time_val = float(record[time_column]) if time_column is not None else int(time.time())
                         if time_column is not None and (time_val < time_from or time_val >= time_to):
                             continue
                         row = [ time_val ]

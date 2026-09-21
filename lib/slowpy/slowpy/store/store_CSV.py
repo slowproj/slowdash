@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 16 May 2024 #
 
 
-import os, sys, time, logging
+import os, sys, time, json, logging
 from .store import DataStore
 
 
@@ -25,8 +25,8 @@ class DataStore_CSV(DataStore):
         if not os.path.isdir(dirname):
             try:
                 os.makedirs(dirname)
-            except:
-                logging.error('unable to create directory: ' + dirname)
+            except Exception as e:
+                logging.error(f'unable to create directory {dirname}: {e}')
 
         if table is not None:
             filename = os.path.join(dirname, table+".csv")
@@ -36,7 +36,7 @@ class DataStore_CSV(DataStore):
                 if is_new:
                     self.csv_file.write('timestamp,channel,value\n')
             except Exception as e:
-                logging.error('unable to create a CSV file: %s: %s' % (filename, str(e)))
+                logging.error(f'unable to create a CSV file: {filename}: {e}')
                 self.csv_file = None
 
             
@@ -73,8 +73,11 @@ class DataStore_CSV(DataStore):
         channels = self._channels(tag, fields)
         for i in range(min(len(channels), len(values))):
             ch = self._escape(channels[i])
-            value = self._escape(str(values[i]))
-            self.csv_file.write("%d,%s,%s\n" % (int(timestamp), ch, value))
+            try:
+                str_value =  self._escape(json.dumps(values[i]))
+            except Exception as e:
+                str_value = self._escape(str(values[i]))
+            self.csv_file.write(f'{timestamp:.3f},{ch},{str_value}\n')
         self.csv_file.flush()
 
         

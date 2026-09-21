@@ -85,7 +85,6 @@ class ConfigComponent(Component):
     def __init__(self, app, project):
         super().__init__(app, project)
         self.project_dir = self.project.project_dir
-        self.transient_contents = {}
         
 
     @slowlette.get('/api/config')
@@ -150,25 +149,26 @@ class ConfigComponent(Component):
                 'config_error_line': meta_info.get('config_error_line', '')
             })
 
-        return doc + [ v.get('_entry', {}) for v in self.transient_contents.values() ]
+        return doc
 
         
     @slowlette.get('/api/config/content/{filename}')
     async def get_content(self, filename:str, content_type:str='json'):
-        if filename in self.transient_contents:
-            return self.transient_contents[filename].get('_content', {})
-        
         meta, content = await self._load_content(filename, content_type)
         if meta is None:
             return None   # not in my list -> use Slowlette aggregation
         
         filepath, ext = self._get_filepath_ext(filename, os.R_OK)
-        if filepath is not None:
-            try:
-                pathlib.Path(filepath).touch()
-            except Exception:
-                # this requires W_OK, might fail from CGI etc. Errors here is not serious
-                pass
+        if filepath is None:
+            return None   # does not exist -> use Slowlette aggregation
+        if filepath is False:
+            return slowlette.Response(400)
+        
+        try:
+            pathlib.Path(filepath).touch()
+        except Exception:
+            # this requires W_OK, might fail from CGI etc. Errors here is not serious
+            pass
             
         if content is None:
             return slowlette.Response(400)
@@ -210,11 +210,10 @@ class ConfigComponent(Component):
         
     @slowlette.get('/api/config/file/{filename}')
     async def get_file(self, filename:str):
-        if filename in self.transient_contents:
-            return json.dumps(self.transient_contents[filename].get('_content', ''), indent=4)
-        
         filepath, ext = self._get_filepath_ext(filename, os.R_OK)
         if filepath is None:
+            return None
+        if filepath is False:
             logging.warning(f'GET config/file: {filename}: access denied')
             return slowlette.Response(404)
 
@@ -225,31 +224,16 @@ class ConfigComponent(Component):
         return slowlette.FileResponse(filepath)
 
         
-    @slowlette.post('/api/config/transient/content/{filetype}/{name}')
-    async def post_transient_content(self, filetype: str, name:str, body:slowlette.DictJSON):
-        filename = f'{filetype}-{name}.json'
-        self.transient_contents[filename] = {
-            '_entry': {
-                'type': filetype,
-                'name': name,
-                'mtime': int(time.time()),
-                'title': name,
-                'description': '',
-                'config_file': filename,
-            },
-            '_content': dict(body)
-        }
-        
-        
     @slowlette.post('/api/config/file/{filename}')
     async def post_file(self, filename: str, body:bytes, overwrite:str='no'):
         if self.project_dir is None:
             return slowlette.Response(403)   # Forbidden
         
         filepath, ext = self._get_filepath_ext(filename)
-        if filepath is None:
+        if filepath is False or filepath is None:
             logging.warning(f'POST config/file: {filename}: access denied')
             return slowlette.Response(400)
+        
         if not self.project.is_secure:
             if ext not in [ '.json', '.yaml', '.html', '.csv', '.svg', '.png', '.jpg', '.jpeg' ]:
                 return slowlette.Response(403)  # Forbidden
@@ -309,6 +293,8 @@ class ConfigComponent(Component):
     async def delete_file(self, filename: str):
         filepath, ext = self._get_filepath_ext(filename, os.W_OK)
         if filepath is None:
+            return None
+        if filepath is False:
             logging.warning(f'DELETE config/file: {filename}: access denied')
             return slowlette.Response(404)  # Not Found
         if not self.project.is_secure:
@@ -335,6 +321,8 @@ class ConfigComponent(Component):
             
         if filepath is None:
             return None, None  # no such file (at the accessible locations)
+        if filepath is False:
+            return { 'config_error': 'permission denied' }, None
         if os.path.getsize(filepath) <= 0:
             return { 'config_error': 'empty file' }, None
 
@@ -397,6 +385,12 @@ class ConfigComponent(Component):
 
             
     def _get_filepath_ext(self, filename, access_flag=None):
+        '''
+        returns (None, None) if the file does not exist
+        returns (False, False) if permission is denied
+        returns (filepath, ext.lower()) otherwise
+        '''
+        
         if self.project_dir is None:
             logging.info(f'ConfigFile: no project dir')
             return None, None
@@ -408,20 +402,22 @@ class ConfigComponent(Component):
             len(name) == 0 or name.startswith('.') or
             not name.replace('_', '0').replace('-', '0').replace('.', '0').isalnum()
         ):
-            logging.info(f'ConfigFile: sanity check failed: {filename}')
-            return None, None
+            logging.warning(f'ConfigFile: sanity check failed: {filename}')
+            return False, False
 
         filepath = os.path.join(self.project_dir, 'config', filename)
-        if os.path.exists(filepath):
-            if not os.path.isfile(filepath):
-                logging.info(f'ConfigFile: not a file: {filepath}')
-                return None, None
-            if (access_flag is not None) and (not os.access(filepath, access_flag)):
-                logging.info(f'ConfigFile: permission denied by access flag: {filepath}')
-                return None, None
-        else:
+        if not os.path.exists(filepath):
             if access_flag in (os.R_OK, os.X_OK):
                 return None, None
-            # TODO: for os.W_OK, check the parent directory
+            else:
+                # TODO: for os.W_OK, check the parent directory
+                pass
+        elif not os.path.isfile(filepath):
+            logging.warning(f'ConfigFile: not a file: {filepath}')
+            return False, False
+        
+        if (access_flag is not None) and (not os.access(filepath, access_flag)):
+            logging.info(f'ConfigFile: permission denied by access flag: {filepath}')
+            return False, False
 
         return filepath, ext.lower()

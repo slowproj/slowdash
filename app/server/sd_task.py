@@ -343,7 +343,7 @@ class TaskProxy:
 
         content_type = self._contents[name].get('content_type')
         content = reply[0].get('return_value')
-        
+
         return content_type, content
                 
     
@@ -813,18 +813,47 @@ class TaskComponent(Component):
         return doc
 
     
-    @slowlette.get('/api/config/content/{content_name}')
-    async def api_get_content(self, content_name:str):
-        content_file_name = self._content_table.get(content_name)
-        if content_file_name is None:
+    @slowlette.get('/api/config/content/{filename}')
+    async def api_get_content(self, filename:str):
+        root_name = Path(filename).stem
+        if '-' not in root_name:
             return None
+        kind, name = root_name.split('-', 1)
+        if kind not in [ 'slowdash', 'slowplot', 'slowcruise', 'html' ]:
+            return None
+        content_name = f'{kind}-{name}'
+
+        content_filename = self._content_table.get(content_name)
+        if content_filename is None:
+            await self.api_get_content_list()
+            content_filename = self._content_table.get(content_name)
+            if content_filename is None:
+                return None
         
         await self._check_task_heartbeats()
         
         for task in list(self._task_table.values()):
             if task._is_dead:
                 continue
-            result = await task.get_content(content_file_name, self._mesh)
+            result = await task.get_content(content_filename, self._mesh)
+            if result is not None:
+                break
+        else:
+            return None
+
+        content_type, content = result
+        
+        return slowlette.Response(200, content_type=content_type, content=content)
+
+
+    @slowlette.get('/api/config/file/{filename}')
+    async def get_file(self, filename:str):
+        await self._check_task_heartbeats()
+        
+        for task in list(self._task_table.values()):
+            if task._is_dead:
+                continue
+            result = await task.get_content(os.path.join('config', filename), self._mesh)
             if result is not None:
                 break
         else:

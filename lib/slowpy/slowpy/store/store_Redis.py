@@ -82,7 +82,11 @@ class DataStore_Redis(DataStore):
     
     def write_element(self, channel, value):
         try:
-            self.redis.set(channel, str(value))
+            str_value =  json.dumps(value)
+        except:
+            str_value = str(value)
+        try:
+            self.redis.set(channel, str_value)
         except Exception as e:
             logging.error('RedisTS.set(): %s' % str(e))
             
@@ -116,7 +120,11 @@ class DataStore_Redis(DataStore):
         index = int((timestamp % self.objts_retention_length) / self.objts_timebin)
         objname = '%s_%s_%d' % (objts_prefix, channel, int(index))
         try:
-            self.redis.set(objname, str(value))
+            str_value =  json.dumps(value)
+        except:
+            str_value = str(value)
+        try:
+            self.redis.set(objname, str_value)
         except Exception as e:
             logging.error(e)
         try:

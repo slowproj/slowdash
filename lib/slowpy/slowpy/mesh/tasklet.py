@@ -3,6 +3,8 @@
 import sys, os, time, copy, json, threading, asyncio, inspect, signal, traceback, logging
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
+from collections.abc import Callable
 
 from slowpy.control import control_system as ctrl
 
@@ -102,6 +104,7 @@ class Tasklet:
         
         self._stop_on_error = stop_on_error
         self._had_error = False
+        self._spec_published = False
 
         self._module = None
         self._mesh = Mesh(self._mesh_url, stop_on_error=self._stop_on_error)
@@ -177,6 +180,20 @@ class Tasklet:
             pass
         
         
+    async def add_content(self, name:str, content_type:str, func:Callable):
+        """decorator to declare a content generator
+        Args:
+          name (str): name of the content, e.g., "config/html-mytask" / "config/slowplot-mytask"
+          content_type (str): content MIME type
+          func (callable): content generator function
+        """
+        is_new = name not in self._content_generators
+        self._content_generators[name] = (content_type, func)
+        
+        if is_new and self._spec_published:
+            await self._publish_spec()
+            
+    
     #### Bridging to SlowPy Control ####
 
     def stop(self):
@@ -338,7 +355,10 @@ class Tasklet:
             content_type, func = self._content_generators.get(name)
             if func is None:
                 return None
-            return func()
+            content = func()
+            if asyncio.iscoroutine(content):
+                await content
+            return content
 
         self._mesh.export('_sd_get_content', handle_get_content)
 
@@ -450,7 +470,7 @@ class Tasklet:
                 pass
 
 
-    async def _publish_spec(self):
+    async def _publish_spec(self):        
         functions = {}
         for func_name, func in self.mesh.export_functions().items():
             if len(func_name) == 0 or not func_name[0].isalpha():
@@ -537,6 +557,7 @@ class Tasklet:
             spec_doc['stdio'] = self._mesh_stdio.spec
         
         await self.mesh.aio_publish(f'sd.task.spec.{self.name}.{self.mesh.mesh_id}', spec_doc)
+        self._spec_published = True
         
         
     async def _publish_exit(self):

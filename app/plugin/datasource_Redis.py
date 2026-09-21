@@ -87,7 +87,7 @@ class KeyValueSource:
                 continue
             record[ch] = {
                 'start': start, 'length': length,
-                't': to,
+                't': to - start,
                 'x': { 'tree': value }
             }
                 
@@ -142,7 +142,7 @@ class ObjectSource(KeyValueSource):
             
             record[ch] = {
                 'start': start, 'length': length,
-                't': to,
+                't': to - start,
                 'x': obj if obj is not None else {}
             }
 

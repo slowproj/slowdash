@@ -1,14 +1,14 @@
 # Created by Sanshiro Enomoto on 17 May 2024 #
 
 
-import time, signal, dataclasses, asyncio, logging
+import time, signal, dataclasses, copy, json, asyncio, logging
 import slowpy as slp
 import slowpy.control as spc
 
 
 class ControlSystem(spc.ControlNode):
     # this will be injected by slowdash-task.py
-    _mesh = None
+    _tasklet = None
     
     _mesh_error_shown = False
     _mesh_unnamed_count = 1
@@ -72,7 +72,7 @@ class ControlSystem(spc.ControlNode):
     
     @classmethod
     async def aio_publish(cls, obj, name:str|None=None):
-        if cls._mesh is None:
+        if cls._tasklet is None:
             if not cls._mesh_error_shown:
                 logging.error('Mesh not attached to the SlowPy Control system')
                 cls._mesh_error_shown = True
@@ -82,9 +82,13 @@ class ControlSystem(spc.ControlNode):
         config, data = slp.slowdashify(obj, name)
         if data is not None:
             now = time.time()
-            packet = { k: { 't': now, 'x': v } for k,v in data.items() }
-            await cls.app().request(f'/config/transient/content/slowplot/{name}', config)
-            await cls.app().request_emit('current_data', packet, sender=f'taskmodule_{name}')
+            await cls._tasklet.add_content(
+                f'config/slowplot-{name}.json', 'application/json',
+                lambda conf=copy.deepcopy(config): json.dumps(conf)
+            )
+            for k, v in data.items():
+                record = { k: { 't': now, 'x': v } }
+                await cls._tasklet.mesh.aio_publish(f'data.stream.{k}', record)
             return
 
         # special handling for ControlNode
@@ -122,7 +126,7 @@ class ControlSystem(spc.ControlNode):
         else:
             record = { mesh_name: { 't': time.time(), 'x': value } }
             
-        await cls._mesh.aio_publish(f'data.stream.{mesh_name}', record)
+        await cls._tasklet.mesh.aio_publish(f'data.stream.{mesh_name}', record)
 
 
     @classmethod
@@ -132,7 +136,7 @@ class ControlSystem(spc.ControlNode):
     
     @classmethod
     def export(cls, obj, name:str|None=None):
-        if cls._mesh is None:
+        if cls._tasklet is None:
             if not cls._mesh_error_shown:
                 logging.error('Mesh not attached to the SlowPy Control system')
                 cls._mesh_error_shown = True
@@ -143,7 +147,7 @@ class ControlSystem(spc.ControlNode):
             return
             
         mesh_name = cls._get_name(obj, name)
-        cls._mesh.export(mesh_name, obj)
+        cls._tasklet.mesh.export(mesh_name, obj)
         
 
     # child nodes

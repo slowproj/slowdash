@@ -21,7 +21,7 @@ async def control(doc):
     fy = doc.get('values', {}).get('fy', fy)
 
 
-@tasklet.loop(interval=0.5, ticks=20)
+@tasklet.loop(interval=0.5, ticks=10)
 async def loop(ticks):
     global t0
 
