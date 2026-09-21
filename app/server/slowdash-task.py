@@ -63,9 +63,22 @@ def preset_module_for_matplotlib(module):
         logging.info('Matplotlib not available')
         return
 
-    from matplotlib import pyplot as plt
+    from matplotlib import pyplot
+    from matplotlib.figure import Figure
+    orig_Figure_savefig = Figure.savefig
     
-    def mpl_stream(*args, **kwargs):
+    async def stream(tasklet, figs):
+        now = time.time()
+        for name, config, data in figs:
+            await tasklet.add_content(
+                f'config/slowplot-{name}.json', 'application/json',
+                lambda conf=copy.deepcopy(config): json.dumps(conf)   # using the default value to capture it
+            )
+            for k, v in data.items():
+                record = { k: { 't': now, 'x': v } }
+                await tasklet.mesh.aio_publish(f'data.stream.{k}', record)
+                    
+    def stream_pyplot_show(*args, **kwargs):
         try:
             tasklet = module._sd_tasklet
         except:
@@ -73,31 +86,40 @@ def preset_module_for_matplotlib(module):
         if tasklet is None:
             return
 
-        now = time.time()
+        # collect figures before "async", which can happen later (after pyplot destroys the figures)
         figs = []
-        for num in plt.get_fignums():
-            fig = plt.figure(num)
+        for num in pyplot.get_fignums():
+            fig = pyplot.figure(num)
             name = f'{tasklet.name}.fig{num}'
             config, data = slowpy.slowdashify(fig, name)
             if data is None:
                 continue
             figs.append((name, config, data))
-            plt.close()
-
-        async def send_stream(figs):
-            for name, config, data in figs:
-                await tasklet.add_content(
-                    f'config/slowplot-{name}.json', 'application/json',
-                    lambda conf=copy.deepcopy(config): json.dumps(conf)
-                )
-                for k, v in data.items():
-                    record = { k: { 't': now, 'x': v } }
-                    await tasklet.mesh.aio_publish(f'data.stream.{k}', record)
-
-        asyncio.get_running_loop().create_task(send_stream(figs))
+            pyplot.close()
+        asyncio.get_running_loop().create_task(stream(tasklet, figs))
             
+    def stream_figure_show(self, *args, **kwargs):
+        try:
+            tasklet = module._sd_tasklet
+        except:
+            tasklet = None
+        if tasklet is None:
+            return
 
-    plt.show = mpl_stream
+        fig = self
+        name = f'{tasklet.name}'
+        config, data = slowpy.slowdashify(fig, name)
+        pyplot.close(fig)
+        if data is not None:
+            asyncio.get_running_loop().create_task(stream(tasklet, [(name, config, data)]))
+    
+    def stream_figure_savefig(self, *args, **kwargs):
+        orig_Figure_savefig(self, *args, **kwargs)
+        stream_figure_show(self, *args, **kwargs)
+    
+    pyplot.show = stream_pyplot_show
+    Figure.show = stream_figure_show
+    Figure.savefig = stream_figure_savefig
     logging.info('Matplotlib pyplot.show() is overriden by slowdash')
 
 

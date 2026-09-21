@@ -78,19 +78,6 @@ class ControlSystem(spc.ControlNode):
                 cls._mesh_error_shown = True
             return
         
-        # special handling for Matplotlib figure
-        config, data = slp.slowdashify(obj, name)
-        if data is not None:
-            now = time.time()
-            await cls._tasklet.add_content(
-                f'config/slowplot-{name}.json', 'application/json',
-                lambda conf=copy.deepcopy(config): json.dumps(conf)
-            )
-            for k, v in data.items():
-                record = { k: { 't': now, 'x': v } }
-                await cls._tasklet.mesh.aio_publish(f'data.stream.{k}', record)
-            return
-
         # special handling for ControlNode
         if isinstance(obj, spc.ControlNode):
             obj = await obj.aio_get()

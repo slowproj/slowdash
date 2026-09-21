@@ -1060,11 +1060,11 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb28-1"><a h
 <span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    ctrl.stream(<span class="st">&#39;V0&#39;</span>, V0)   <span class="co"># pushing to consumers</span></span>
 <span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span></code></pre></div>
 <p>The types of values that can be streamed include numeric, string,
-dict, Python dataclass, SlowPy Node, SlowPy Data Element (histogram
-etc), and Matplotlib Figure (described below).</p>
+dict, Python dataclass, SlowPy Control Node, and SlowPy Data Element
+(histogram etc).</p>
 <h2 id="matplotlib-integration">Matplotlib Integration</h2>
-<p>Instances of Matplotlib Figure can be directly pushed to SlowDash
-layouts.</p>
+<p>Instances of Matplotlib Figure can be directly streamed to SlowDash
+layouts without modifying the scripts.</p>
 <div class="sourceCode" id="cb29"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -1075,11 +1075,15 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb29-1"><a h
 <span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>    plt.show()   <span class="co"># matplotlib.pyplot.show is overriden by SlowDash</span></span>
 <span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>    time.sleep(<span class="dv">1</span>)</span></code></pre></div>
-<p>When a Matplotlib figure is streamed, a SlowDash layout (usually a
-<code>slowplot-XXX.json</code> file under <code>config</code>) is
-created dynamically for the same axes layout as the figure. The plotting
-objects in the figure are extracted and converted to SlowDash objects
-before streaming.</p>
+<p>Here <code>matplotlib.pyplot.show()</code> is overriden by SlowDash
+and the figure contents are extracted. A SlowDash layout (usually a
+<code>slowplot-XXX.json</code> file under <code>confing</code>) is
+created dynamically for the same axes layout as the figure, and the
+plotting objects in the figure are extracted and converted to SlowDash
+objects before streaming. Instead of <code>pyplot.show()</code> as in
+the example, <code>Figure.show()</code> or
+<code>Figure.savefig(name)</code> can also be used for SlowDash
+streaming.</p>
 <p>More examples can be found in
 <code>ExampleProjects/Streaming/Matplotlib</code>.</p>
 

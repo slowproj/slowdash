@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 def _loop():
     # dummy data
-    time.sleep(0.5)  # mimic device trigger
+    time.sleep(0.5)  # mimic device triggers
     x = np.linspace(0, 10, 100)
     y1 = np.random.normal(7, 3, len(x))
     y2 = np.random.normal(3, 5, len(x))
@@ -32,7 +32,10 @@ def _loop():
     axes[0,1].set_ylim(-25, 30)
     axes[0,0].set_xlabel("X")
 
-    plt.show()
+    # one of the following lines will send the figure(s) to SlowDash
+    #fig.show()
+    fig.savefig("slowfig.png")
+    #plt.show()
 
 
 if __name__ == '__main__':
