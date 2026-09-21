@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 26 June 2026 #
 
-import os, sys, time, re, json, argparse, asyncio, importlib.util, logging, traceback
+import os, sys, time, re, json, copy, argparse, asyncio, importlib.util, logging, traceback
 
 import slowpy
 from slowpy.mesh import Tasklet, RetainerAutocide, Mesh, MeshStdio
@@ -29,7 +29,7 @@ def load_task_module(path:str, *, name:str, argv:list[str]|None=None):
     if script_dir not in sys.path:
         sys.path.insert(0, script_dir)
 
-    preset_module(module)
+    preset_module_for_matplotlib(module)
 
     try:
         spec.loader.exec_module(module)
@@ -54,14 +54,51 @@ def load_task_module(path:str, *, name:str, argv:list[str]|None=None):
     return module, tasklet
 
 
-
-def preset_module(module):
+def preset_module_for_matplotlib(module):
     try:
-        exec('import matplotlib', module.__dict__)
-        exec('matplotlib.use("Agg")', module.__dict__)
+        import matplotlib
+        matplotlib.use("Agg")
         logging.info('Matplotlib GUI is disabled; using "Agg"')
     except Exception:
         logging.info('Matplotlib not available')
+        return
+
+    from matplotlib import pyplot as plt
+    
+    def mpl_stream(*args, **kwargs):
+        try:
+            tasklet = module._sd_tasklet
+        except:
+            tasklet = None
+        if tasklet is None:
+            return
+
+        now = time.time()
+        figs = []
+        for num in plt.get_fignums():
+            fig = plt.figure(num)
+            name = f'{tasklet.name}.fig{num}'
+            config, data = slowpy.slowdashify(fig, name)
+            if data is None:
+                continue
+            figs.append((name, config, data))
+            plt.close()
+
+        async def send_stream(figs):
+            for name, config, data in figs:
+                await tasklet.add_content(
+                    f'config/slowplot-{name}.json', 'application/json',
+                    lambda conf=copy.deepcopy(config): json.dumps(conf)
+                )
+                for k, v in data.items():
+                    record = { k: { 't': now, 'x': v } }
+                    await tasklet.mesh.aio_publish(f'data.stream.{k}', record)
+
+        asyncio.get_running_loop().create_task(send_stream(figs))
+            
+
+    plt.show = mpl_stream
+    logging.info('Matplotlib pyplot.show() is overriden by slowdash')
 
 
 

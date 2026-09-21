@@ -10,8 +10,9 @@
       div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
   <style type="text/css">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -75,6 +76,12 @@ code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
   <link rel="stylesheet" href="style.css" />
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({startOnLoad: true});
+</script>
+
 </head>
 
 <body>
@@ -229,8 +236,8 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a hr
 <p>and write a SlowDash HTML panel like this:</p>
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  Voltage output: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;value&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_Vout()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Set&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  Voltage output: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;value&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_Vout()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Set&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>Then, clicking the <code>Set</code> button will call the function
 <code>set_Vout()</code> with a parameter from the <code>value</code>
@@ -774,35 +781,35 @@ overriding the methods shown in the table.</p>
 <col style="width: 18%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Command</th>
 <th>Description</th>
 <th>To Override</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>*IDN?</code></td>
 <td>returns the ID given in the <code>__init__(idn=ID)</code>
 method</td>
 <td>—</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>*OPC?</code></td>
 <td>returns the value of <code>self.is_running</code></td>
 <td><code>do_OPC(self)</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>SYST:ERR?</code></td>
 <td>returns the errors set by <code>self.push_error(msg)</code></td>
 <td>—</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>*CLS</code></td>
 <td>clears the errors</td>
 <td><code>do_CLS(self)</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>*RST</code></td>
 <td>clears the errors and set <code>self.is_running</code> False</td>
 <td><code>do_RST(self)</code></td>
@@ -890,7 +897,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb19-1"><a h
 function will call the function:</p>
 <div class="sourceCode" id="cb20"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.destroy_apparatus()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Finish&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.destroy_apparatus()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Finish&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>Here, the parentheses at the end of the button name indicate that
 this button is bound to a SlowTask function.</p>
@@ -912,9 +919,9 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb22-1"><a h
 <p>and these parameter values are taken from the form input values:</p>
 <div class="sourceCode" id="cb23"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  Voltage: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;voltage&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;ramping&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;1&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V0()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Set&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  Voltage: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;voltage&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;ramping&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;1&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_V0()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Set&quot;</span><span class="dt">&gt;</span></span>
 <span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <p>By using the type notation in the SlowTask function as shown above,
 the parameter values are converted to the specified types. If the value
@@ -926,15 +933,15 @@ called.</p>
 <p>It is possible to place multiple buttons in one form:</p>
 <div class="sourceCode" id="cb24"><pre
 class="sourceCode html"><code class="sourceCode html"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;ramping&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;1&quot;</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;width:5em&quot;</span><span class="dt">&gt;</span>/sec</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;ramping&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;1&quot;</span><span class="ot"> style</span><span class="op">=</span><span class="st">&quot;width:5em&quot;</span><span class="dt">&gt;</span>/sec</span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  V0: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V0&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;reentrant test.set_V0()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Set&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  V1: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V1&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;reentrant test.set_V1()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Set&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  V2: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V2&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;reentrant test.set_V2()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Set&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  V3: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V3&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;reentrant test.set_V3()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Set&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  V0: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V0&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;reentrant test.set_V0()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Set&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  V1: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V1&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;reentrant test.set_V1()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Set&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  V2: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V2&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;reentrant test.set_V2()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Set&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  V3: <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;V3&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;reentrant test.set_V3()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Set&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
 <span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_all()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Set All&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;reentrant test.stop()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Stop Ramping&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span>    </span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;test.set_all()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Set All&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;reentrant test.stop()&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;Stop Ramping&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span>    </span>
 <span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
 <div class="sourceCode" id="cb25"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V0(V0:<span class="bu">float</span>, ramping:<span class="bu">float</span>):</span>
@@ -1007,31 +1014,31 @@ will be created, and these functions are called in a sequence:</p>
 <col style="width: 50%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>function</th>
 <th>description</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>_initialize(params)</code></td>
 <td>called once when the script is loaded. The <code>params</code>
 values are given by the SlowDash configuration.</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>_run()</code></td>
 <td>called once after <code>_initialize()</code>. If <code>_run()</code>
 is defined, <code>_halt()</code> should also be defined to stop the
 <code>_run()</code> function. <code>_halt()</code> will be called by
 SlowDash when the user stops the system.</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>_loop()</code></td>
 <td>called repeatedly after <code>_initialize()</code>, until the user
 stops the system. To control the intervals, the function usually
 contains <code>time.sleep()</code> or equivalent.</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>_finalize()</code></td>
 <td>called once after <code>_run()</code> or <code>_loop()</code></td>
 </tr>
@@ -1060,16 +1067,14 @@ etc), and Matplotlib Figure (described below).</p>
 layouts.</p>
 <div class="sourceCode" id="cb29"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>    fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">2</span>)</span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">#... draw plots in the usual way</span></span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>    ctrl.stream(<span class="st">&#39;mpl&#39;</span>, fig)</span>
-<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>    plt.close()  <span class="co"># If a figure is created in a loop, it must be closed every time.</span></span>
-<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span></code></pre></div>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">2</span>)</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">#... draw plots in the usual way</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>    plt.show()   <span class="co"># matplotlib.pyplot.show is overriden by SlowDash</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>    time.sleep(<span class="dv">1</span>)</span></code></pre></div>
 <p>When a Matplotlib figure is streamed, a SlowDash layout (usually a
 <code>slowplot-XXX.json</code> file under <code>config</code>) is
 created dynamically for the same axes layout as the figure. The plotting

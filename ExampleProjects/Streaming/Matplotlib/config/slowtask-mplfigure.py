@@ -1,11 +1,12 @@
 
+import time
 import numpy as np
 import matplotlib.pyplot as plt
-from slowpy.control import control_system as ctrl
 
 
-# this function is called periodically by SlowDash (if used in SlowDash GUI)
 def _loop():
+    # dummy data
+    time.sleep(0.5)  # mimic device trigger
     x = np.linspace(0, 10, 100)
     y1 = np.random.normal(7, 3, len(x))
     y2 = np.random.normal(3, 5, len(x))
@@ -31,23 +32,8 @@ def _loop():
     axes[0,1].set_ylim(-25, 30)
     axes[0,0].set_xlabel("X")
 
-    
-    # If used from SlowDash (no GUI mode), this prints an error message but it should not be harmful.
-    # Remove this line if this script is not be used stand-alone.
-    #plt.show()
-
-    # This will create a SlowDash layout config (slowplot-XXX) and send the content data to SlowDash.
-    ctrl.stream('mpl', fig)
-
-    # If a figure is created in a loop, it must be closed every time.
-    plt.close()
-
-    # loop delay
-    ctrl.sleep(0.5)
+    plt.show()
 
 
-    
-# for standalone running
 if __name__ == '__main__':
-    import asyncio
-    asyncio.run(_loop())
+    _loop()

@@ -652,16 +652,14 @@ The types of values that can be streamed include numeric, string, dict, Python d
 Instances of Matplotlib Figure can be directly pushed to SlowDash layouts. 
 ```python
 import matplotlib.pyplot as plt
-from slowpy.control import control_system as ctrl
 
 def _loop():
     fig, axes = plt.subplots(2, 2)
     #... draw plots in the usual way
 
-    ctrl.stream('mpl', fig)
-
-    plt.close()  # If a figure is created in a loop, it must be closed every time.
-    ctrl.sleep(1)
+    plt.show()   # matplotlib.pyplot.show is overriden by SlowDash
+    
+    time.sleep(1)
 ```
 When a Matplotlib figure is streamed, a SlowDash layout (usually a `slowplot-XXX.json` file under `config`) is created dynamically for the same axes layout as the figure.
 The plotting objects in the figure are extracted and converted to SlowDash objects before streaming.
