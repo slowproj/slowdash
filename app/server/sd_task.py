@@ -708,7 +708,8 @@ class TaskComponent(Component):
         def merge_response(self, response) -> None:
             """append the "current" data from this task to the response (typiaclly data from storage)
                - only if the channel does not exist, or
-               - the last data point is older than the "current" data (it always should be, though)
+               - the last data point is older than the "current" data (it always should be, though).
+               - multiple time-series records are not combined, as resampling cannot be consistent
             """
             if response.content is None:
                 response.content = {}
@@ -726,11 +727,17 @@ class TaskComponent(Component):
                 t0, my_t0 = data.get('start', 0), my_data['start']
                 t, my_t = data.get('t', None), my_data['t']
                 if type(t) is list:
-                    if len(t) == 0 or t0 + t[-1] < my_t0 + my_t:
+                    if type(my_t) is list:
+                        # do not combine multiple time-series records
+                        pass
+                    elif len(t) == 0 or t0 + t[-1] < my_t0 + my_t:
                         data['t'].append(my_t + my_t0 - t0)
                         data['x'].append(my_data['x'])
                 elif t is not None:
-                    if t0 + t < my_t0 + my_t:
+                    if type(my_t) is list:
+                        # do not combine multiple time-series records
+                        pass
+                    elif t0 + t < my_t0 + my_t:
                         data['t'] = [ t, my_t + my_t0 - t0 ]
                         data['x'] = [ data.get('x', None), my_data['x'] ]
                 else:

@@ -11,9 +11,9 @@
             "type": "plot",
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "xmin": 60, "xmax": 80, "ymin": 0.5, "ymax": 3, "zmin": 0, "zmax": 1, "title": "Last 60 sec Trend (streaming)", "xtitle": "lapse from start (s)" },
             "plots": [
-                { "type": "graph", "channel": "trend", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 3, "line_width": 0, "line_type": "connect", "fill_opacity": 0.2, "fill_baseline": "1e-100", "fill_type": false, "fill_envelope": true }
+                { "type": "graph", "channel": "trend", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 3, "line_width": 0, "line_type": "connect", "fill_opacity": 0.2, "fill_baseline": "1e-100", "fill_type": false, "fill_envelope": true, "include_prior_point": false }
             ],
-            "legend": { "style": "none" }
+            "legend": { "style": "none", "position": "left" }
         },
         {
             "type": "singles",
@@ -27,15 +27,32 @@
                 }
             ],
             "grid": { "rows": 0, "columns": 2 },
-            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 }
+            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+            "color": { "base": "rgb(0, 0, 0)", "normal": "#06b6d4", "warn": "#f59e0b", "error": "#d81b60" }
         },
         {
             "type": "timeseries",
             "plots": [
-                { "type": "timeseries", "channel": "trend_ts", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 3, "line_width": 0, "line_type": "connect", "fill_opacity": 0.2, "fill_envelope": true, "fill_baseline": "1e-100" }
+                {
+                    "type": "timeseries",
+                    "channel": "trend_ts",
+                    "color": "#009090",
+                    "label": "",
+                    "format": "%.5g",
+                    "opacity": 1,
+                    "marker_type": "circle",
+                    "marker_size": 3,
+                    "line_width": 0,
+                    "line_type": "connect",
+                    "fill_opacity": 0.2,
+                    "fill_envelope": true,
+                    "fill_baseline": "1e-100",
+                    "include_prior_point": false,
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                }
             ],
-            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": -2, "ymax": 10, "title": "Time-Series from Trend (streaming)" },
-            "legend": { "style": "none" }
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": -2, "ymax": 10, "title": "Last 60 sec Time-Series from Trend (streaming)" },
+            "legend": { "style": "none", "position": "left" }
         },
         {
             "type": "singles",
@@ -50,15 +67,33 @@
             ],
             "grid": { "rows": 0, "columns": 2 },
             "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
-            "title": ""
+            "title": "",
+            "color": { "base": "rgb(0, 0, 0)", "normal": "#06b6d4", "warn": "#f59e0b", "error": "#d81b60" }
         },
         {
             "type": "timeseries",
             "plots": [
-                { "type": "timeseries", "channel": "x", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 3, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100", "fill_type": "baseline", "fill_envelope": false }
+                {
+                    "type": "timeseries",
+                    "channel": "x",
+                    "color": "#009090",
+                    "label": "",
+                    "format": "%.5g",
+                    "opacity": 1,
+                    "marker_type": "circle",
+                    "marker_size": 3,
+                    "line_width": 1,
+                    "line_type": "connect",
+                    "fill_opacity": 0,
+                    "fill_baseline": "1e-100",
+                    "fill_type": "baseline",
+                    "fill_envelope": false,
+                    "include_prior_point": false,
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                }
             ],
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": -8, "ymax": 7, "title": "Stored Time-Series" },
-            "legend": { "style": "none" }
+            "legend": { "style": "none", "position": "left" }
         },
         {
             "type": "singles",
@@ -72,7 +107,8 @@
                 }
             ],
             "grid": { "rows": 0, "columns": 2 },
-            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 }
+            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+            "color": { "base": "rgb(0, 0, 0)", "normal": "#06b6d4", "warn": "#f59e0b", "error": "#d81b60" }
         }
     ],
     "meta": { "name": "trend", "title": "", "description": "" }

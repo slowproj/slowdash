@@ -3,9 +3,6 @@ from slowpy.control import control_system as ctrl
 from slowpy.mesh import Tasklet
 tasklet = Tasklet()
 
-from slowpy.store import DataStore_Redis
-datastore = DataStore_Redis('redis://localhost/1')
-
 import time
 import numpy as np
 from slowpy import Graph
@@ -14,18 +11,18 @@ fx, fy = 3.2, 2.0
 t0 = 0
 
 
-@tasklet.mesh.on('form.inputs.scope_control.>')
+@tasklet.mesh.on('form.inputs.control.>')
 async def control(doc):
     global fx, fy
     fx = doc.get('values', {}).get('fx', fx)
     fy = doc.get('values', {}).get('fy', fy)
 
 
-@tasklet.loop(interval=0.5, ticks=10)
-async def loop(ticks):
+@tasklet.loop(interval=0.2)
+async def loop():
     global t0
 
-    t0 += 0.05
+    t0 += 0.1
     t = np.linspace(0, 1, 100)
     x1 = np.random.normal(np.cos((t+t0)*float(fx)*6.28), 0.0003)
     x2 = np.random.normal(np.sin((t+t0)*float(fy)*6.28), 0.0003)
@@ -41,16 +38,11 @@ async def loop(ticks):
     await ctrl.aio_stream('y.stream', g_y)
     await ctrl.aio_stream('xy.stream', g_xy)
 
-    if ticks:
-        datastore.update(g_x, tag='x')
-        datastore.update(g_y, tag='y')
-        datastore.update(g_xy, tag='xy')
-
         
 @tasklet.content('config/html-control.html')
 def html():
     return '''
-    <form name="scope_control">
+    <form name="control">
       <datalist id="markers">
         <option value="0.1"></option><option value="5"></option><option value="9.9"></option>
       </datalist>

@@ -172,7 +172,7 @@ class Plot {
     }
     
     fillDataRequest(dataRequest) {
-        const readsStreaming = ! this.isForTimeSeries;
+        const readsStreaming = true;
         
         for (const field of ['channel', 'channelX', 'channelY']) {
             if (this.config[field] !== undefined) {
@@ -903,15 +903,9 @@ class TimeseriesScatterPlot extends GraphPlot {
     
     update(dataPacket) {
         if (dataPacket.__meta.isStreaming) {
-            return false;
+            //return false;
         }
-        
-        this.setStat('');
-        this.graph.x = [];
-        this.graph.y = [];
-        this.lastpoint_graph.x = [];
-        this.lastpoint_graph.y = [];
-        
+
         let ts0 = dataPacket[this.requestDataIds.channelX ?? ' '];
         let ts1 = dataPacket[this.requestDataIds.channelY ?? ' '];
         if (! ts0 || ! ts1) {
@@ -924,6 +918,12 @@ class TimeseriesScatterPlot extends GraphPlot {
             return true;
         }
 
+        this.setStat('');
+        this.graph.x = [];
+        this.graph.y = [];
+        this.lastpoint_graph.x = [];
+        this.lastpoint_graph.y = [];
+        
         const n = Math.min(ts0.x.length, ts1.x.length);
         
         let [xmin, xmax, ymin, ymax] = [null, null, null, null];
@@ -969,13 +969,9 @@ class TimeseriesPlot extends LineMarkerPlot {
     
     update(dataPacket) {
         if (dataPacket.__meta.isStreaming) {
-            return false;
+            //return false;
         }
-        
-        this.setStat('');
-        this.graph.x = [];
-        this.graph.y = [];
-        
+
         let ts = dataPacket[this.requestDataIds.channel ?? ' '];
         if (! ts) {
             return true;
@@ -984,6 +980,10 @@ class TimeseriesPlot extends LineMarkerPlot {
             return true;
         }
 
+        this.setStat('');
+        this.graph.x = [];
+        this.graph.y = [];
+        
         const t0 = dataPacket[this.requestDataIds.channel ?? ' '].start;
         for (let k = 0; k < ts.x.length; k++) {
             this.graph.x.push(t0 + ts.t[k]);
