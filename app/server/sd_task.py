@@ -45,6 +45,12 @@ class MeshRequest:
                 if name.lower().startswith('publish '):
                     topic_name = name[len('publish '):]
                 else:
+                    # for backwards compatibility
+                    for modifier in [ 'await ', 'reentrant ', 'async ', 'parallel ' ]:
+                        if name.lower().startswith(modifier):
+                            logging.warning(f'RPC modifier "{modifier}" is obsolete')
+                            name = name[len(modifier):]
+                            break
                     split_names = name.split('.', 1)
                     if len(split_names) == 2:
                         [module_name, function_name] = split_names

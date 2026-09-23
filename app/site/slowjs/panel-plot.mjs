@@ -360,9 +360,6 @@ class TimeseriesHistogramPlot extends HistogramPlot {
     }
     
     update(dataPacket) {
-        this.setStat('');
-        this.histogram.counts = [];
-        
         let ts = dataPacket[this.requestDataIds.channel ?? ' '];
         if (! ts) {
             return true;
@@ -373,6 +370,9 @@ class TimeseriesHistogramPlot extends HistogramPlot {
         if (! (Array.isArray(ts.x))) {
             ts.x = [ ts.x ];
         }
+        
+        this.setStat('');
+        this.histogram.counts = [];
         
         let nbins = parseInt(this.config.bins?.n ?? null);
         let min = parseFloat(this.config.bins?.min ?? null);

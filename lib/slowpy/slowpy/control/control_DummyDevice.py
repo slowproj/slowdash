@@ -21,10 +21,14 @@ def poisson(mean):
 
 class RandomWalkDeviceNode(spc.ControlNode):
     def __init__(self, walk, decay, n=16):
+        super().__init__()
+        self._is_thread_safe = True
+        
         self.device = spc.RandomWalkDevice(n=n, walk=walk, decay=decay, tick=0)
         self.ch_node = [ RandomWalkChannelNode(self.device, ch) for ch in range(n) ]
         self.walk_node = RandomWalkConfigNode(self.device, 'walk')
         self.decay_node = RandomWalkConfigNode(self.device, 'decay')
+        
         
     ## child nodes ##
     # randomwalk_device().ch(0)
@@ -58,6 +62,9 @@ class RandomWalkDeviceNode(spc.ControlNode):
     
 class RandomWalkChannelNode(spc.ControlVariableNode):
     def __init__(self, device, channel):
+        super().__init__()
+        self._is_thread_safe = True
+        
         self.device = device
         self.channel = channel
 
@@ -73,6 +80,9 @@ class RandomWalkChannelNode(spc.ControlVariableNode):
     
 class RandomWalkConfigNode(spc.ControlVariableNode):
     def __init__(self, device, param_name):
+        super().__init__()
+        self._is_thread_safe = True
+        
         self.device = device
         self.param_name = param_name
 
@@ -88,6 +98,9 @@ class RandomWalkConfigNode(spc.ControlVariableNode):
 
 class RandomEventDeviceNode(spc.ControlNode):
     def __init__(self, n=16, rate=10, occupancy=0.7, t_mean=100, q_mean=100, q_sigma=10):
+        super().__init__()
+        self._is_thread_safe = True
+        
         self.n = n
         self.rate = rate
         self.random_hit = spc.RandomHitDevice(n=n, occupancy=occupancy)
@@ -138,6 +151,9 @@ class RandomEventDeviceNode(spc.ControlNode):
 
 class RandomSingleEventDeviceNode(spc.ControlNode):
     def __init__(self, n=16, rate=10, occupancy=0.7, t_mean=100, q_mean=100, q_sigma=10):
+        super().__init__()
+        self._is_thread_safe = True
+        
         self.n = n
         self.random_trigger_interval = spc.RandomTimeDevice(n=1, time_constant=1.0/rate)
         self.random_hit = spc.RandomHitDevice(n=n, occupancy=occupancy)

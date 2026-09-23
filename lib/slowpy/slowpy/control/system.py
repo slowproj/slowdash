@@ -74,7 +74,7 @@ class ControlSystem(spc.ControlNode):
     async def aio_publish(cls, obj, name:str|None=None):
         if cls._tasklet is None:
             if not cls._mesh_error_shown:
-                logging.error('Mesh not attached to the SlowPy Control system')
+                logging.error('ControlSysten: Tasklet not attached (publish)')
                 cls._mesh_error_shown = True
             return
         
@@ -125,7 +125,7 @@ class ControlSystem(spc.ControlNode):
     def export(cls, obj, name:str|None=None):
         if cls._tasklet is None:
             if not cls._mesh_error_shown:
-                logging.error('Mesh not attached to the SlowPy Control system')
+                logging.error('ControlSysten: Tasklet not attached (export)')
                 cls._mesh_error_shown = True
             return
 

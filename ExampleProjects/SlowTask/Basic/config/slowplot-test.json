@@ -7,26 +7,129 @@
     },
     "style": { },
     "panels": [
+        { "type": "table", "channel": "ramping.status", "reversed": false, "title": "Current Status", "data_type": "table_object" },
+        { "type": "html", "location": "project", "file": "test", "title": "Control" },
         {
             "type": "timeaxis",
             "plots": [
-                { "type": "timeseries", "channel": "ch00", "color": "#009090", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" },
-                { "type": "timeseries", "channel": "ch01", "color": "#dd8000", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" },
-                { "type": "timeseries", "channel": "ch02", "color": "#4169e1", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" },
-                { "type": "timeseries", "channel": "ch03", "color": "#b030b0", "label": "", "format": "%.5g", "opacity": 1, "marker_type": "circle", "marker_size": 2, "line_width": 1, "line_type": "connect", "fill_opacity": 0, "fill_baseline": "1e-100" }
+                {
+                    "type": "timeseries",
+                    "channel": "ch00",
+                    "color": "#009090",
+                    "label": "",
+                    "format": "%.5g",
+                    "opacity": 1,
+                    "marker_type": "circle",
+                    "marker_size": 2,
+                    "line_width": 1,
+                    "line_type": "connect",
+                    "fill_opacity": 0,
+                    "fill_baseline": "1e-100",
+                    "include_prior_point": false,
+                    "fill_envelope": true,
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                },
+                {
+                    "type": "timeseries",
+                    "channel": "ch01",
+                    "color": "#dd8000",
+                    "label": "",
+                    "format": "%.5g",
+                    "opacity": 1,
+                    "marker_type": "circle",
+                    "marker_size": 2,
+                    "line_width": 1,
+                    "line_type": "connect",
+                    "fill_opacity": 0,
+                    "fill_baseline": "1e-100",
+                    "include_prior_point": false,
+                    "fill_envelope": true,
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                },
+                {
+                    "type": "timeseries",
+                    "channel": "ch02",
+                    "color": "#4169e1",
+                    "label": "",
+                    "format": "%.5g",
+                    "opacity": 1,
+                    "marker_type": "circle",
+                    "marker_size": 2,
+                    "line_width": 1,
+                    "line_type": "connect",
+                    "fill_opacity": 0,
+                    "fill_baseline": "1e-100",
+                    "include_prior_point": false,
+                    "fill_envelope": true,
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                },
+                {
+                    "type": "timeseries",
+                    "channel": "ch03",
+                    "color": "#b030b0",
+                    "label": "",
+                    "format": "%.5g",
+                    "opacity": 1,
+                    "marker_type": "circle",
+                    "marker_size": 2,
+                    "line_width": 1,
+                    "line_type": "connect",
+                    "fill_opacity": 0,
+                    "fill_baseline": "1e-100",
+                    "include_prior_point": false,
+                    "fill_envelope": true,
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                }
             ],
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 0, "ymax": 2 },
-            "legend": { "style": "side" }
+            "legend": { "style": "transparent", "position": "left" }
         },
-        { "type": "table", "channel": "test.Status", "reversed": false, "title": "Current Status" },
-        { "type": "html", "location": "project", "file": "test", "title": "Control" },
         {
             "type": "plot",
             "plots": [
-                { "type": "ts-histogram", "channel": "ch01", "color": "#dd8000", "opacity": 0.2, "label": "", "format": "%.5g" }
+                {
+                    "type": "ts-histogram",
+                    "channel": "ch00",
+                    "color": "#009090",
+                    "opacity": 0.2,
+                    "label": "",
+                    "format": "%.5g",
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last" },
+                    "bins": { "n": null, "min": null, "max": null }
+                },
+                {
+                    "type": "ts-histogram",
+                    "channel": "ch01",
+                    "color": "#dd8000",
+                    "opacity": 0.2,
+                    "label": "",
+                    "format": "%.5g",
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last" },
+                    "bins": { "n": null, "min": null, "max": null }
+                },
+                {
+                    "type": "ts-histogram",
+                    "channel": "ch02",
+                    "color": "#4169e1",
+                    "opacity": 0.2,
+                    "label": "",
+                    "format": "%.5g",
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last" },
+                    "bins": { "n": null, "min": null, "max": null }
+                },
+                {
+                    "type": "ts-histogram",
+                    "channel": "ch03",
+                    "color": "#b030b0",
+                    "opacity": 0.2,
+                    "label": "",
+                    "format": "%.5g",
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last" },
+                    "bins": { "n": null, "min": null, "max": null }
+                }
             ],
-            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false },
-            "legend": { "style": "side" }
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "xmin": -9, "xmax": 40, "ymin": 0, "ymax": 50, "zmin": 0, "zmax": 1 },
+            "legend": { "style": "none", "position": "left" }
         }
     ],
     "meta": { "name": "test", "title": "", "description": "" }

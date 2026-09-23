@@ -157,22 +157,17 @@ class ConfigComponent(Component):
         meta, content = await self._load_content(filename, content_type)
         if meta is None:
             return None   # not in my list -> use Slowlette aggregation
-        
-        filepath, ext = self._get_filepath_ext(filename, os.R_OK)
-        if filepath is None:
-            return None   # does not exist -> use Slowlette aggregation
-        if filepath is False:
-            return slowlette.Response(400)
-        
-        try:
-            pathlib.Path(filepath).touch()
-        except Exception:
-            # this requires W_OK, might fail from CGI etc. Errors here is not serious
-            pass
-            
         if content is None:
             return slowlette.Response(400)
-
+        
+        filepath, ext = self._get_filepath_ext(filename, os.R_OK)
+        if filepath is not None:
+            try:
+                pathlib.Path(filepath).touch()
+            except Exception:
+                # this requires W_OK, might fail from CGI etc. Errors here is not serious
+                pass
+            
         return content
 
 

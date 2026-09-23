@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 from collections.abc import Callable
 
-from slowpy.control import control_system as ctrl
+from slowpy.control import ControlSystem
 
 from .mesh import Mesh
 from .stdio import MeshStdio
@@ -161,7 +161,9 @@ class Tasklet:
             logging.error(f'Tasklet: unable to get module: {modname}')
             return
         self._module = module
-            
+
+        ControlSystem._tasklet = self
+        
         try:
             asyncio.run(self._start())
         except asyncio.CancelledError:
@@ -197,19 +199,19 @@ class Tasklet:
     #### Bridging to SlowPy Control ####
 
     def stop(self):
-        return ctrl.stop()
+        return ControlSystem.stop()
     
 
     def is_stop_requested(self):
-        return ctrl.is_stop_requested()
+        return ControlSystem.is_stop_requested()
     
 
     def stop_by_signal(self, signal_number=signal.SIGINT):
-        return ctrl.stop_by_signal(signal_number)
+        return ControlSystem.stop_by_signal(signal_number)
 
     
     async def aio_sleep(self, duration_sec):
-        return await ctrl.aio_sleep(duration_sec)
+        return await ControlSystem.aio_sleep(duration_sec)
     
         
     #### Callback Decorators ####
@@ -366,8 +368,9 @@ class Tasklet:
     async def _start(self):        
         if self._mesh_url is None:
             logging.error(f'Tasklet: Mesh URL is not provided')
-            return
-        self._mesh.connect(self._mesh_url, self._name)
+            #return  # use null mesh
+        else:
+            self._mesh.connect(self._mesh_url, self._name)
         if self._name is None:
             self._name = self._mesh.name
         

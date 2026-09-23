@@ -52,6 +52,72 @@ class RegisterNode(spc.ControlNode):
             pass  # already taken care of in _update_output()
 
 
+    # overriding the "node <= value" operator for node.set(value).
+    def __le__(self, value):
+        if isinstance(value, spc.ControlNode):
+            self.set(value.get())
+        else:
+            self.set(value)
+            
+        return self._error_to_bool
+    
+    class ErrorToBool:
+        def __bool__(self):
+            raise spc.ControlException(
+                'node-set operator "<=" is used in bool context; ' +
+                'if this is intended, do like float(node) <= value.'
+            )
+        
+    _error_to_bool = ErrorToBool()
+
+
+    # to be used by external code
+    def __call__(self, value=None):
+        if value is not None:
+            if isinstance(value, spc.ControlNode):
+                return self.set(value.get())
+            else:
+                return self.set(value)
+        else:
+            return self.get()
+
+        
+    def __eq__(self, value):
+        if isinstance(value, spc.ControlNode):
+            return self.get() == value.get()
+        else:
+            return self.get() == value
+
+        
+    def __ne__(self, value):
+        if isinstance(value, spc.ControlNode):
+            return self.get() != value.get()
+        else:
+            return self.get() != value
+
+
+    def __repr__(self):
+        return repr(self.get())
+
+    
+    def __str__(self):
+        return str(self.get())
+
+    
+    def __bool__(self):
+        return bool(self.get())
+
+    
+    def __int__(self):
+        # raises an exception if the value cannot be converted to an int
+        return int(self.get())
+
+    
+    def __float__(self):
+        # raises an exception if the value cannot be converted to a float
+        return float(self.get())
+
+
             
 def reg(node=None):
     if node is None:
@@ -104,7 +170,7 @@ class Clock(threading.Thread):
         self.modules.append(module)
 
         
-    def initialize(self, params={}):
+    def initialize(self):
         for module in self.modules:
             for name, member in inspect.getmembers(module, inspect.ismethod):
                 if str(inspect.signature(member)) == str(inspect.signature(always(None))):

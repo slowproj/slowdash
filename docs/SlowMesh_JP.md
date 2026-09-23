@@ -1658,3 +1658,5 @@ Body:
 - Task RPC Proxy
 - dataclass の export
 - RampingNode の即時リターン
+- MeshStdio/WebMesh で input()
+

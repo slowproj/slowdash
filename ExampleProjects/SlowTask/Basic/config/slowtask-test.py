@@ -1,83 +1,72 @@
-import time, logging
-from slowpy.control import control_system as ctrl
-import slowpy.store as sls
+from slowpy.mesh import Tasklet
+tasklet = Tasklet()
 
+from slowpy.control import control_system as ctrl
 device = ctrl.import_control_module('DummyDevice').randomwalk_device()
 ch0, ch1, ch2, ch3 = [ device.ch(ch) for ch in range(4) ]
 print("Random-Walk Device Loaded")
 
+import slowpy.store
+datastore = slowpy.store.create_datastore_from_url('sqlite:///SlowTaskTest.db', 'test')
 
 
-#name = input('who are you?')
-#print('hello, ' + name)
+@tasklet.mesh.export()
+def set(ch:int, V0:float, V1:float, V2:float, V3:float, ramping:float):
+    if ch == 0:
+        ch0.ramping(ramping).set(V0)
+    elif ch == 1:
+        ch1.ramping(ramping).set(V1)
+    elif ch == 2:
+        ch2.ramping(ramping).set(V2)
+    elif ch == 3:
+        ch3.ramping(ramping).set(V3)
 
-
-
-### Accepting Controls ###
-
-def set_V0(V0:float, ramping:float=10):
-    ch0.ramping(ramping).set(V0)
-
-def set_V1(V1:float, ramping:float=10):
-    ch1.ramping(ramping).set(V1)
-
-def set_V2(V2:float, ramping:float=10):
-    ch2.ramping(ramping).set(V2)
-
-def set_V3(V3:float, ramping:float=10):
-    ch3.ramping(ramping).set(V3)
-
+        
+@tasklet.mesh.export()
 def stop():
-    ch0.ramping().status().set(0)
-    ch1.ramping().status().set(0)
-    ch2.ramping().status().set(0)
-    ch3.ramping().status().set(0)
+    ch0.ramping().set(None)
+    ch1.ramping().set(None)
+    ch2.ramping().set(None)
+    ch3.ramping().set(None)
 
 
-
-### Storing Data ###
-
-# SQLite needs to be used from only one thread.
-# The _initialize(), _run(), _loop(), and _finalize() functions are called in one thread.
-
-datastore = None
-
-def _initialize():
-    global datastore
-    datastore = sls.create_datastore_from_url('sqlite:///SlowTaskTest.db', 'test')
-    print("Hello from Random-Walk Device")
-
-
-def _finalize():
-    datastore.close()
-    print("Bye-bye from Random-Walk Device")
-    
-
-def _loop():
+@tasklet.loop(interval=1.0)
+def loop():
     for ch in range(4):
         x = float(device.ch(ch))
         datastore.append(x, tag='ch%02d'%ch)
-        
+
+    # send out the ramping status as tree data
     status = {
-        'columns': [ 'Channel', 'Value', 'Ramping' ],
+        'columns': [ 'Channel', 'Current Value', 'Target Value', 'Ramping' ],
         'table': [
-            [ 'Ch0', ch0.get(), 'Yes' if ch0.ramping().status().get() else 'No' ],
-            [ 'Ch1', ch1.get(), 'Yes' if ch1.ramping().status().get() else 'No' ],
-            [ 'Ch2', ch2.get(), 'Yes' if ch2.ramping().status().get() else 'No' ],
-            [ 'Ch3', ch3.get(), 'Yes' if ch3.ramping().status().get() else 'No' ],
+            [
+                f'Ch{i}',
+                ch.get(),
+                target if (target := ch.ramping().get()) is not None else '-',
+                'Yes' if ch.ramping().status().get() else 'No'
+            ]
+            for i, ch in enumerate([ch0, ch1, ch2, ch3])
         ]
     }
-    ctrl.stream('test.Status', status)
+    ctrl.stream('ramping.status', status)
+
     
-    time.sleep(1)
-
-
-
-### Stand-alone Testing ###
+@tasklet.content('config/html-test.html')
+def html():
+    return '''
+        <form name="test">
+        Ramping: <input type="number" name="ramping" value="1" style="width:5em">/sec
+        <p>
+        V0: <input type="number" name="V0" step="any" value="0"><button name="test.set(ch=0)">Set</button><br>
+        V1: <input type="number" name="V1" step="any" value="0"><button name="test.set(ch=1)">Set</button><br>
+        V2: <input type="number" name="V2" step="any" value="0"><button name="test.set(ch=2)">Set</button><br>
+        V3: <input type="number" name="V3" step="any" value="0"><button name="test.set(ch=3)">Set</button><br>
+        <p>
+        <button name="test.stop()">Stop Ramping</button>
+        </form>
+    '''
+    
     
 if __name__ == '__main__':
-    _initialize()
-    ControlSystem.stop_by_signal()
-    while not ControlSystem.is_stop_requested():
-        _loop()
-    _finalize()
+    tasklet.run()
