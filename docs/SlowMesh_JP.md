@@ -403,7 +403,7 @@ TODO: 現時点で，CAS などの値以外のメタ情報は保存はされま�
 
 TODO: 現時点で，presistent にする Path のリストは `Registry` クラスの `self._persistent_nodes` に以下のものがハードコーディングされています．
 
-- `pubsub.form.inputs.`
+- `pubsub.form.input.`
 
 Note: レジストリの区切り文字に `/` を使用すると，ここでひどい目にあいます．
 ファイル名は適切にエスケープされますが，見苦しいです．
@@ -492,7 +492,7 @@ Subscribe するためには，まず `event/webmesh/attach` に SSE 接続を�
 以下のトピック名中の `*` や `>` はそのまま使ってください．`{channel}` の部分は置き換えてください．
 
 - `data.*.{channel}`
-- `form.inputs.{form_name}`
+- `form.input.{form_name}`
 - `sd.task.life_event.>`
 - `sd.task.heartbeat.>`
 - `sd.task.stdout.>`
@@ -1236,7 +1236,7 @@ SlowDash 標準データフォーマット
 
 
 ## form
-### form.inputs.{form_name}
+### form.input.{form_name}.{element_name}
 
 ##### 主な用途
 - 目的
@@ -1253,11 +1253,12 @@ Body:
 ```json
 {
     "type": "object",
-    "required": [ "sender_id", "form", "values" ],
+    "required": [ "sender_id", "form", "element", "value" ],
     "properties": {
         "sender_id": { "type": "string" },
         "form": { "type": "string" },
-        "values": { "type": "object" }
+        "element": { "type": "string" },
+        "value": {}
     }
 }
 ```
@@ -1268,10 +1269,8 @@ Body:
 {
     "sender_id": "eab2b828-006b-4d87-a01e-4d308ca71226",
     "form": "run_control",
-    "values": {
-        "V0_setpoint": 100,
-        "V1_setpoint": 80
-    }
+    "element": "V0_setpoint",
+    "value": 100
 ​}
 ```
 

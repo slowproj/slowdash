@@ -125,10 +125,10 @@ class HtmlPanel extends Panel {
             }
         }
         for (const formName of this.formNames) {
-            dataRequest.append(`@mesh:form.inputs.${formName}`);
+            dataRequest.append(`@mesh:form.input.${formName}.>`);
         }
         if (! this._initialValuesReceived) {
-            dataRequest.append(`@registry:pubsub.form.inputs.>`);
+            dataRequest.append(`@registry:pubsub.form.input.>`);
         }
     }
 
@@ -251,13 +251,12 @@ class HtmlPanel extends Panel {
                 return;
             }
             
-            const topic = `form.inputs.${formName}`;
+            const topic = `form.input.${formName}.${elementName}`;
             const message = {
                 'sender_id': this.senderId,
                 'form': formName,
-                'values': {
-                    [elementName]: element.val(),
-                }
+                'element': elementName,
+                'value': element.val(),
             };
             this.callbacks.publish(topic, message);
         });
@@ -326,13 +325,18 @@ class HtmlPanel extends Panel {
         
         // input values from the PubSub Cache in Registry (for initial loading)
         if (! this._initialValuesReceived) {
-            const formInputsRegistry = dataPacket[`@registry:pubsub.form.inputs.>`]?.x?.tree;
-            if (formInputsRegistry) {
+            const formInputRegistry = dataPacket[`@registry:pubsub.form.input.>`]?.x?.tree;
+            if (formInputRegistry) {
                 this._initialValuesReceived = true;
-                for (const formName of this.formNames) {
-                    const formInputs = formInputsRegistry[formName];
-                    if (formInputs) {
-                        this._SetFormInputValues(formInputs);
+                for (const [formName, formInputs] of Object.entries(formInputRegistry)) {
+                    let form = this.contentDiv.find(`form[name="${formName}"]`);
+                    for (const formInput of Object.values(formInputs)) {
+                        try {
+                            form.find(`[name=${formInput.element}]`).val(formInput.value);
+                        }
+                        catch(e) {
+                            console.warn(`HTML Panel: unable to set an input value: ${e}: ${formInput}`);
+                        }
                     }
                 }
             }
@@ -340,11 +344,20 @@ class HtmlPanel extends Panel {
         
         // updated input values from streaming
         for (const formName of this.formNames) {
-            const formInputs = dataPacket[`@mesh:form.inputs.${formName}`];
-            if ((! formInputs) || (formInputs.sender_id === this.senderId)) {
+            const formInput = dataPacket[`@mesh:form.input.${formName}.>`];
+            if (! formInput) {
                 continue;
             }
-            this._SetFormInputValues(formInputs);
+            if ((formInput.sender_id == this.sender_id) || (formInput.value == null)) {
+                continue;
+            }
+            let form = this.contentDiv.find(`form[name="${formName}"]`);
+            try {
+                form.find(`[name=${formInput.element}]`).val(formInput.value);
+            }
+            catch(e) {
+                console.warn(`HTML Panel: unable to set an input value: ${e}: ${formInput}`);
+            }
         }
 
         // disable all buttons if the time-range is not "now"
@@ -403,25 +416,6 @@ class HtmlPanel extends Panel {
                 else if (type == 'sd-enabled') {
                     element.enabled(value);
                 }
-            }
-        }
-    }
-
-    
-    _SetFormInputValues(formInputs) {
-        const formName = formInputs.form;
-        let form = this.contentDiv.find(`form[name="${formName}"]`);
-        for (const name in formInputs.values) {
-            let inputs = form.find(`[name=${name}]`);
-            const value = formInputs.values[name];
-            if (value == null) {
-                continue;
-            }
-            try {
-                inputs.val(value);
-            }
-            catch(e) {
-                console.warn(`HTML Panel: unable to set an input value: ${e}: ${formInputs}`);
             }
         }
     }

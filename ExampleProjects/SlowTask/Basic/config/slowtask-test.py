@@ -33,7 +33,7 @@ def stop():
 @tasklet.loop(interval=1.0)
 def loop():
     for ch in range(4):
-        x = float(device.ch(ch))
+        x = float(device.ch(ch).get())
         datastore.append(x, tag='ch%02d'%ch)
 
     # send out the ramping status as tree data

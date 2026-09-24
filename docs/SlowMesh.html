@@ -787,7 +787,7 @@ information, is saved but is not restored when loading.</p>
 <code>self._persistent_nodes</code> of the <code>Registry</code> class
 as follows.</p>
 <ul>
-<li><code>pubsub.form.inputs.</code></li>
+<li><code>pubsub.form.input.</code></li>
 </ul>
 <p>Note: Using <code>/</code> as the Registry separator causes serious
 trouble here. The filename is escaped correctly, but the result is
@@ -892,7 +892,7 @@ literally as shown in the topic names below, and replace the
 <code>{channel}</code> portion as appropriate.</p>
 <ul>
 <li><code>data.*.{channel}</code></li>
-<li><code>form.inputs.{form_name}</code></li>
+<li><code>form.input.{form_name}</code></li>
 <li><code>sd.task.life_event.&gt;</code></li>
 <li><code>sd.task.heartbeat.&gt;</code></li>
 <li><code>sd.task.stdout.&gt;</code></li>
@@ -1845,7 +1845,8 @@ id="data.store.channel_name-data.stream.channel_name">data.store.{channel_name}
 <h5 id="format">Format</h5>
 <p>SlowDash standard data format</p>
 <h2 id="form">form</h2>
-<h3 id="form.inputs.form_name">form.inputs.{form_name}</h3>
+<h3
+id="form.input.form_name.element_name">form.input.{form_name}.{element_name}</h3>
 <h5 id="primary-uses">Primary Uses</h5>
 <ul>
 <li>Purposes
@@ -1867,24 +1868,23 @@ used as initial values when a new page is opened</li>
 <div class="sourceCode" id="cb50"><pre
 class="sourceCode json"><code class="sourceCode json"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
-<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;sender_id&quot;</span><span class="ot">,</span> <span class="st">&quot;form&quot;</span><span class="ot">,</span> <span class="st">&quot;values&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;sender_id&quot;</span><span class="ot">,</span> <span class="st">&quot;form&quot;</span><span class="ot">,</span> <span class="st">&quot;element&quot;</span><span class="ot">,</span> <span class="st">&quot;value&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
 <span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
 <span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;sender_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
 <span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;form&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;values&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span> <span class="fu">}</span></span>
-<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;element&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="fu">{}</span></span>
+<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb50-10"><a href="#cb50-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h5 id="json-example">JSON Example</h5>
 <p>Body:</p>
 <div class="sourceCode" id="cb51"><pre
 class="sourceCode json"><code class="sourceCode json"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;sender_id&quot;</span><span class="fu">:</span> <span class="st">&quot;eab2b828-006b-4d87-a01e-4d308ca71226&quot;</span><span class="fu">,</span></span>
 <span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;form&quot;</span><span class="fu">:</span> <span class="st">&quot;run_control&quot;</span><span class="fu">,</span></span>
-<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;values&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;V0_setpoint&quot;</span><span class="fu">:</span> <span class="dv">100</span><span class="fu">,</span></span>
-<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;V1_setpoint&quot;</span><span class="fu">:</span> <span class="dv">80</span></span>
-<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;element&quot;</span><span class="fu">:</span> <span class="st">&quot;V0_setpoint&quot;</span><span class="fu">,</span></span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="dv">100</span></span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a><span class="er">​</span><span class="fu">}</span></span></code></pre></div>
 <h2 id="sd.task">sd.task</h2>
 <ul>
 <li>Every SlowTask Process must subscribe to

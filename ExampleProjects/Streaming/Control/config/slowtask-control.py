@@ -11,11 +11,16 @@ fx, fy = 3.2, 2.0
 t0 = 0
 
 
-@tasklet.mesh.on('form.inputs.control.>')
-async def control(doc):
-    global fx, fy
-    fx = doc.get('values', {}).get('fx', fx)
-    fy = doc.get('values', {}).get('fy', fy)
+@tasklet.mesh.on('form.input.control.fx')
+async def set_fx(doc):
+    global fx
+    fx = doc.get('value', fx)
+
+
+@tasklet.mesh.on('form.input.control.fy')
+async def set_fy(doc):
+    global fy
+    fy = doc.get('value', fy)
 
 
 @tasklet.loop(interval=0.2)

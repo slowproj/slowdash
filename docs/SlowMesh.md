@@ -403,7 +403,7 @@ TODO: At present, metadata other than the value, such as CAS information, is sav
 
 TODO: At present, the list of Paths made persistent is hard-coded in `self._persistent_nodes` of the `Registry` class as follows.
 
-- `pubsub.form.inputs.`
+- `pubsub.form.input.`
 
 Note: Using `/` as the Registry separator causes serious trouble here.
 The filename is escaped correctly, but the result is ugly.
@@ -492,7 +492,7 @@ At present, SlowMesh PubSub topic filters cannot be used in topic names specifie
 Use `*` and `>` literally as shown in the topic names below, and replace the `{channel}` portion as appropriate.
 
 - `data.*.{channel}`
-- `form.inputs.{form_name}`
+- `form.input.{form_name}`
 - `sd.task.life_event.>`
 - `sd.task.heartbeat.>`
 - `sd.task.stdout.>`
@@ -1236,7 +1236,7 @@ SlowDash standard data format
 
 
 ## form
-### form.inputs.{form_name}
+### form.input.{form_name}.{element_name}
 
 ##### Primary Uses
 - Purposes
@@ -1253,11 +1253,12 @@ Body:
 ```json
 {
     "type": "object",
-    "required": [ "sender_id", "form", "values" ],
+    "required": [ "sender_id", "form", "element", "value" ],
     "properties": {
         "sender_id": { "type": "string" },
         "form": { "type": "string" },
-        "values": { "type": "object" }
+        "element": { "type": "string" },
+        "value": {}
     }
 }
 ```
@@ -1268,11 +1269,9 @@ Body:
 {
     "sender_id": "eab2b828-006b-4d87-a01e-4d308ca71226",
     "form": "run_control",
-    "values": {
-        "V0_setpoint": 100,
-        "V1_setpoint": 80
-    }
-}
+    "element": "V0_setpoint",
+    "value": 100
+​}
 ```
 
 
