@@ -12,4 +12,4 @@ from .control_DataStore import DataStoreNode
 from .scpi_server import ScpiServer, ScpiAdapter
 from .netutils import find_ip
 
-from .dummy_device import RandomWalkDevice, RandomHitDevice, RandomChargeDevice, RandomTimeDevice
+from .dummy_device import RandomWalkDevice, RandomHitDevice, RandomChargeDevice, RandomTimeDevice, SecondOrderPlant

@@ -130,3 +130,84 @@ class RandomTimeDevice:
             return None
 
         return exponential(self.time_constant)
+
+
+
+class SecondOrderPlant:
+    """Second-order system, aka Damped oscillator
+    d2y/dt2 + 2*zeta*omega*dy/dt + omega^2*y = gain*omega^2*u
+    """
+
+    def __init__(self, gain=0.2, omega=0.2, zeta=0.2, initial_value=0.0, initial_velocity=0.0):
+        self.gain = float(gain)
+        self.omega = float(omega)
+        self.zeta = float(zeta)
+
+        self._u = 0.0
+        self._y = float(initial_value)
+        self._v = float(initial_velocity)
+        self._time = time.monotonic()
+
+
+    @property
+    def control_input(self):
+        return self._u
+        
+    @control_input.setter
+    def control_input(self, value):
+        self._u = value
+
+        
+    @property
+    def output(self):
+        return self._y
+        
+    @output.setter
+    def output(self, value):
+        self._y = value
+        
+        
+    def update(self):
+        now = time.monotonic()
+        dt = now - self._time
+        if dt <= 0:
+            return
+
+        omega = self.omega
+        zeta = self.zeta
+
+        # Shift the equilibrium:
+        #   x = y - gain*u
+        # then
+        #   x'' + 2*zeta*omega*x' + omega^2*x = 0
+        x = self._y - self.gain * self._u
+        v = self._v
+
+        if zeta < 1.0: # Underdamped
+            a = zeta * omega
+            wd = omega * math.sqrt(1.0 - zeta*zeta)
+            e = math.exp(-a * dt)
+            c = math.cos(wd * dt)
+            s = math.sin(wd * dt)
+            B = (v + a*x) / wd
+            x_new = e * (x*c + B*s)
+            v_new = e * (v*c + (-a*B - wd*x)*s)
+        elif zeta == 1.0: # Critically damped
+            e = math.exp(-omega * dt)
+            B = v + omega*x
+            x_new = e * (x + B*dt)
+            v_new = e * (v - omega*B*dt)
+        else: # Overdamped
+            q = omega * math.sqrt(zeta*zeta - 1.0)
+            r1 = -zeta*omega + q
+            r2 = -zeta*omega - q
+            c1 = (v - r2*x) / (r1 - r2)
+            c2 = (r1*x - v) / (r1 - r2)
+            e1 = math.exp(r1 * dt)
+            e2 = math.exp(r2 * dt)
+            x_new = c1*e1 + c2*e2
+            v_new = r1*c1*e1 + r2*c2*e2
+
+        self._y = self.gain * self._u + x_new
+        self._v = v_new
+        self._time = now

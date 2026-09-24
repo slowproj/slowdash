@@ -192,3 +192,55 @@ class RandomSingleEventDeviceNode(spc.ControlNode):
             return RandomSingleEventDeviceNode(n=n, rate=rate, occupancy=occupancy, t_mean=t_mean, q_mean=q_mean, q_sigma=q_sigma)
         return random_single_event_device
     
+
+
+class SecondOrderPlantNode(spc.ControlThreadMixin):
+    class ControlNode(spc.ControlVariableNode):
+        def __init__(self, plant_node):
+            self.plant_node = plant_node
+            self._is_thread_safe = True
+            
+        def set(self, value):
+            self.plant_node.plant.control_input = value
+
+        def get(self):
+            return self.plant_node.plant.control_input
+
+            
+    class StateNode(spc.ControlNode):
+        def __init__(self, plant_node):
+            self.plant_node = plant_node
+            self._is_thread_safe = True
+            
+        def set(self, value):
+            self.plant_node.plant.output = value
+            
+        def get(self):
+            return self.plant_node.plant.output
+            
+            
+    def __init__(self, **kwargs):
+        self.plant = spc.SecondOrderPlant(**kwargs)
+
+
+    def run(self):
+        while not spc.ControlSystem.is_stop_requested():
+            spc.ControlSystem.sleep(0.1)
+            self.plant.update()
+
+        
+    def control(self):
+        return self.ControlNode(self)
+
+    
+    def state(self):
+        return self.StateNode(self)
+
+    
+    @classmethod
+    def _node_creator_method(cls):
+        def second_order_plant(self, **kwargs):
+            return SecondOrderPlantNode(**kwargs)
+        return second_order_plant
+    
+

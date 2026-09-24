@@ -1,0 +1,14 @@
+slowdash_project:
+  name: PID Control
+  
+  data_source:
+    url: sqlite:///SlowTaskTest
+    time_series:
+      schema: test [channel] @timestamp(unix) = value
+
+  task:
+    - name: pid
+      auto_load: true
+
+  system:
+    our_security_is_perfect: true

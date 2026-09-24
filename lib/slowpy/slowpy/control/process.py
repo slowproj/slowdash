@@ -60,10 +60,30 @@ class ControlVariableNode(ControlNode):
         return self._node_async_ramping
     
 
+    def pid(self, sensing_node, Kp, Ki, Kd, *, interval=1.0, output_limits=(None, None), set_format=None):
+        """PID-control this node using values read from sensing_node.
+        Usage:
+            control_device.pid(sensor, Kp, Ki, Kd).set(target)
+        set(None) stops control. Positive gains assume that increasing the control output increases the sensed value.
+        """
+        if hasattr(self, '_node_pid'):
+            self._node_pid._configure(
+                sensing_node=sensing_node, Kp=Kp, Ki=Ki, Kd=Kd,
+                interval=interval, output_limits=output_limits,
+                set_format=set_format
+            )
+        else:
+            self._node_pid = PIDThreadNode(
+                self, sensing_node, Kp, Ki, Kd,
+                interval=interval, output_limits=output_limits,
+                set_format=set_format
+            )
+        return self._node_pid
+
+
     def oneshot(self, duration=None, normal=None):
         """child node that sets a value for a given duration and restores the original value
         """
-        
         try:
             self._node_oneshot
         except:
@@ -323,6 +343,219 @@ class RampingStatusNode(ControlNode):
 
 
 
+class PIDThreadNode(ControlThreadMixin, ControlNode):
+    """PID controller node running in a background thread
+    - The parent/control node is the actuator output and sensing_node is the process-variable input.
+    - set(target) starts/updates regulation and set(None) stops it.
+    """
+
+    def __init__(self,
+        control_node, sensing_node,
+        Kp:float, Ki:float, Kd:float,
+        *,
+        interval:float=1.0,
+        output_limits:tuple[float|None,float|None]=(None, None),
+        set_format:str|None=None
+    ):
+        super().__init__()
+        self._control_node = control_node
+        self._target_value = None
+        self._running = False
+        
+        self._configure(
+            sensing_node=sensing_node, Kp=Kp, Ki=Ki, Kd=Kd,
+            interval=interval, output_limits=output_limits,
+            set_format=set_format
+        )
+
+        self._previous_time = None
+        self._previous_measurement = None
+        self._integral = 0.0
+
+        self.start()
+
+
+    def _configure(self, *,
+        sensing_node,
+        Kp:float, Ki:float, Kd:float,
+        interval:float=1.0,
+        output_limits:tuple[float|None,float|None]=(None, None),
+        set_format:str|None=None
+    ):
+        self._sensing_node = sensing_node
+        try:
+            self._Kp = float(Kp)
+            self._Ki = float(Ki)
+            self._Kd = float(Kd)
+            self._interval = float(interval)
+        except:
+            raise ControlException('PID: floating number is expected')
+        if self._interval <= 0:
+            raise ControlException('PID: interval must be positive')
+
+        try:
+            low, high = output_limits
+            low = None if low is None else float(low)
+            high = None if high is None else float(high)
+        except Exception:
+            raise ControlException('PID: output_limits must be (low:float, high:float)')
+        if low is not None and high is not None and low > high:
+            raise ControlException(f'PID: invalid output_limits: low({low}) > high({high})')
+        self._output_limits = (low, high)
+        
+        self._set_format = set_format
+        
+        self._is_thread_safe = (
+            getattr(self._control_node, '_is_thread_safe', False) and
+            getattr(self._sensing_node, '_is_thread_safe', False)
+        )
+
+
+    def run(self):
+        if not self._is_thread_safe:
+            logging.error('PIDNode used with non thread-safe control or sensing node')
+
+        while True:
+            # check if the PID loop is running
+            if self.is_stop_requested() or self._node_thread_stop_event.is_set():
+                break
+            if not self._running or self._target_value is None:
+                time.sleep(0.1)
+                continue
+            cycle_start = time.monotonic()
+
+            # new measurement
+            try:
+                measurement = float(self._sensing_node.get())
+            except Exception as e:
+                logging.warning(f'PID: unable to get sensing value: {e}')
+                self.sleep(self._interval)
+                continue
+
+            # PID update
+            now = time.monotonic()
+            deviation = self._target_value - measurement
+            if self._previous_time is None:
+                dt = 0.0
+                derivative = 0.0
+            else:
+                dt = now - self._previous_time
+                if dt > 0:
+                    derivative = -(measurement - self._previous_measurement) / dt
+                else:
+                    derivative = 0
+            integral = self._integral + deviation * dt
+            self._previous_time = now
+            self._previous_measurement = measurement
+            
+            output = self._Kp * deviation + self._Ki * integral + self._Kd * derivative
+
+            # output limits
+            low, high = self._output_limits
+            saturated_low = low is not None and output < low
+            saturated_high = high is not None and output > high
+            if saturated_low:
+                output = low
+            elif saturated_high:
+                output = high
+
+            # anti-windup update on the integration
+            integral_drive = self._Ki * deviation
+            if not ((saturated_high and integral_drive > 0) or (saturated_low and integral_drive < 0)):
+                self._integral = integral
+
+            # new control output
+            if self._set_format is not None:
+                set_value = self._set_format.format(output)
+            else:
+                set_value = output
+            try:
+                self._control_node.set(set_value)
+            except Exception as e:
+                logging.warning(f'PID: unable to set control value: {e}')
+                self._running = False
+                continue
+
+            # sleep until the next cycle
+            remaining = self._interval - (time.monotonic() - cycle_start)
+            if remaining > 0:
+                self.sleep(remaining)
+
+
+    def do_configure(self, Kp:float, Ki:float, Kd:float):
+        try:
+            self._Kp = float(Kp)
+            self._Ki = float(Ki)
+            self._Kd = float(Kd)
+        except:
+            raise ControlException('PID: floating number is expected')
+        
+        self.do_reset()
+
+    
+    def do_reset(self):
+        self._previous_time = None
+        self._previous_measurement = None
+        self._integral = 0.0
+
+
+    def set(self, target_value:float):
+        if target_value is None:
+            self._target_value = None
+            self._running = False
+            self.do_reset()
+            return
+
+        target_value = float(target_value)
+        if not self._running:
+            self.do_reset()
+        self._target_value = target_value
+        self._running = True
+
+
+    async def aio_set(self, target_value):
+        return self.set(target_value)
+
+
+    def get(self):
+        return self._target_value
+
+
+    async def aio_get(self):
+        return self.get()
+
+
+    def status(self):
+        return PIDStatusNode(self)
+
+
+    
+class PIDStatusNode(ControlNode):
+    def __init__(self, pid_node):
+        super().__init__()
+        self._is_thread_safe = getattr(pid_node, '_is_thread_safe', False)
+        
+        self._pid_node = pid_node
+
+        
+    def set(self, zero_to_stop):
+        if str(zero_to_stop) == '0' or bool(zero_to_stop) == False:
+            self._pid_node.set(None)
+
+            
+    def get(self):
+        return self._pid_node._running
+
+    
+    async def aio_set(self, zero_to_stop):
+        return self.set(zero_to_stop)
+
+    
+    async def aio_get(self):
+        return self.get()
+
+
+    
 class ControlReadOnlyNode(ControlNode):
     def __init__(self, node):
         super().__init__()
