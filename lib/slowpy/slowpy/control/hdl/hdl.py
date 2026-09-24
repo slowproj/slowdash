@@ -5,7 +5,7 @@ import time, threading, inspect
 import slowpy.control as spc
 
 
-class RegisterNode(spc.ControlNode):
+class RegisterNode(spc.ControlVariableNode):
     '''Implements the HDL Register behavior, combined with the Clock class below
     - `set()` to this register will take effect (calling `set()` of the attached node) on the next clock cycle
     - `get()` from this register will return a value latched on the previous clock cycle

@@ -1,9 +1,9 @@
 
-from slowpy.control import control_system as ctrl
 from slowpy.mesh import Tasklet
 tasklet = Tasklet()
 
-import time
+from slowpy.control import control_system as ctrl
+
 import numpy as np
 from slowpy import Graph
 
@@ -11,18 +11,14 @@ fx, fy = 3.2, 2.0
 t0 = 0
 
 
-@tasklet.mesh.on('form.input.control.fx')
-async def set_fx(doc):
-    global fx
-    fx = doc.get('value', fx)
-
-
-@tasklet.mesh.on('form.input.control.fy')
-async def set_fy(doc):
-    global fy
-    fy = doc.get('value', fy)
-
-
+@tasklet.initialize()
+async def initialize():
+    global fx, fy
+    prev_form_values = await tasklet.mesh.registry.aio_get('pubsub.form.input.control.>', {})
+    fx = prev_form_values.get('fx', {}).get('value', fx)
+    fy = prev_form_values.get('fy', {}).get('value', fy)
+    
+    
 @tasklet.loop(interval=0.2)
 async def loop():
     global t0
@@ -44,6 +40,18 @@ async def loop():
     await ctrl.aio_stream('xy.stream', g_xy)
 
         
+@tasklet.mesh.on('form.input.control.fx')
+async def set_fx(form_input):
+    global fx
+    fx = form_input.get('value', fx)
+
+
+@tasklet.mesh.on('form.input.control.fy')
+async def set_fy(form_input):
+    global fy
+    fy = form_input.get('value', fy)
+
+
 @tasklet.content('config/html-control.html')
 def html():
     return '''

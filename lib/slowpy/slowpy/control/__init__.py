@@ -1,6 +1,8 @@
 
-from .node import ControlNode, ControlException, ControlVariableNode, ControlThreadMixin, ControlAsyncTaskMixin
+from .node import ControlNode, ControlException, ControlThreadMixin, ControlAsyncTaskMixin
+from .process import ControlVariableNode
 from .system import ControlSystem, ValueNode, control_system
+
 from .control_Ethernet import EthernetNode, ScpiNode, ScpiCommandNode
 from .control_UDP import UdpSocketNode
 from .control_HTTP import HttpNode
