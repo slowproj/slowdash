@@ -133,15 +133,63 @@ class RandomTimeDevice:
 
 
 
+class FirstOrderPlant:
+    """First-order system:
+        dy/dt = (gain * u - y) / tau
+    """
+
+    def __init__(self, gain=1.0, tau=10, initial_value=0.0, noise=0.01):
+        self.gain = float(gain)
+        self.tau = float(tau)
+        self.noise = noise
+
+        self._u = 0.0
+        self._y = float(initial_value)
+        self._time = time.monotonic()
+
+
+    @property
+    def control_input(self):
+        return self._u
+        
+    @control_input.setter
+    def control_input(self, value):
+        self._u = value
+
+        
+    @property
+    def state(self):
+        return self._y
+        
+    @state.setter
+    def state(self, value):
+        self._y = value
+        
+        
+    def update(self):
+        now = time.monotonic()
+        dt = now - self._time
+        if dt > 0:
+            # Exact solution while u is constant:
+            #   y(t+dt) = gain*u + (y(t) - gain*u) exp(-dt/tau)
+            y_inf = self.gain * self._u
+            self._y = y_inf + (self._y - y_inf) * math.exp(-dt / self.tau)
+            self._time = now
+            
+            self._y += normal(0, self.noise)  # this should be scaled with the time step
+            
+
+
 class SecondOrderPlant:
     """Second-order system, aka Damped oscillator
     d2y/dt2 + 2*zeta*omega*dy/dt + omega^2*y = gain*omega^2*u
     """
 
-    def __init__(self, gain=0.2, omega=0.2, zeta=0.2, initial_value=0.0, initial_velocity=0.0):
+    def __init__(self, gain=1.0, omega=0.2, zeta=0.5, initial_value=0.0, initial_velocity=0.0, noise=0.01):
         self.gain = float(gain)
         self.omega = float(omega)
         self.zeta = float(zeta)
+        self.noise = noise
 
         self._u = 0.0
         self._y = float(initial_value)
@@ -159,11 +207,11 @@ class SecondOrderPlant:
 
         
     @property
-    def output(self):
+    def state(self):
         return self._y
         
-    @output.setter
-    def output(self, value):
+    @state.setter
+    def state(self, value):
         self._y = value
         
         
@@ -211,3 +259,7 @@ class SecondOrderPlant:
         self._y = self.gain * self._u + x_new
         self._v = v_new
         self._time = now
+
+        self._y += normal(0, self.noise)  # this should be scaled with the time step
+
+        

@@ -60,7 +60,7 @@ class ControlVariableNode(ControlNode):
         return self._node_async_ramping
     
 
-    def pid(self, sensing_node, Kp, Ki, Kd, *, interval=1.0, output_limits=(None, None), set_format=None):
+    def pid(self, sensing_node, Kp:float, Ki:float, Kd:float, *, interval:float=1.0, output_limits:tuple[float|None,float|None]=(None, None), set_format:str=None):
         """PID-control this node using values read from sensing_node.
         Usage:
             control_device.pid(sensor, Kp, Ki, Kd).set(target)
@@ -347,6 +347,7 @@ class PIDThreadNode(ControlThreadMixin, ControlNode):
     """PID controller node running in a background thread
     - The parent/control node is the actuator output and sensing_node is the process-variable input.
     - set(target) starts/updates regulation and set(None) stops it.
+    - for the D component, -dy/dt is used instead of de/dt, to prevent steps of setpoint from going into the D term
     """
 
     def __init__(self,
@@ -375,6 +376,19 @@ class PIDThreadNode(ControlThreadMixin, ControlNode):
         self.start()
 
 
+    @property
+    def Kp(self):
+        return self._Kp
+
+    @property
+    def Ki(self):
+        return self._Ki
+
+    @property
+    def Kd(self):
+        return self._Kd
+
+    
     def _configure(self, *,
         sensing_node,
         Kp:float, Ki:float, Kd:float,
@@ -438,9 +452,18 @@ class PIDThreadNode(ControlThreadMixin, ControlNode):
             if self._previous_time is None:
                 dt = 0.0
                 derivative = 0.0
+                if self._Ki != 0:
+                    # bumpless transfer if the system is already near the target (switching from manual to auto etc.)
+                    try:
+                        output = float(self._control_node.get())
+                        self._integral = (output - self._Kp * deviation) / self._Ki
+                    except Exception as e:
+                        self._integral = 0
+                        logging.warning(f'PID: bumpless transfer failed: {e}')
             else:
                 dt = now - self._previous_time
                 if dt > 0:
+                    # not derivative as deviation/dt, to prevent steps of setpoint from going into the D term (derivative kick)
                     derivative = -(measurement - self._previous_measurement) / dt
                 else:
                     derivative = 0
@@ -506,10 +529,10 @@ class PIDThreadNode(ControlThreadMixin, ControlNode):
             self.do_reset()
             return
 
-        target_value = float(target_value)
+        self._target_value = float(target_value)
         if not self._running:
             self.do_reset()
-        self._target_value = target_value
+            
         self._running = True
 
 

@@ -1,9 +1,9 @@
 {
     "control": {
-        "range": { "length": 300, "to": 0 },
+        "range": { "length": 900, "to": 0 },
         "reload": 2,
         "mode": "normal",
-        "grid": { "rows": 1, "columns": 2 }
+        "grid": { "rows": 2, "columns": 3 }
     },
     "style": { },
     "panels": [
@@ -13,7 +13,101 @@
             "plots": [
                 {
                     "type": "timeseries",
+                    "channel": "setpoint",
+                    "color": "#009090",
+                    "label": "",
+                    "format": "%.5g",
+                    "opacity": 1,
+                    "marker_type": "circle",
+                    "marker_size": 4,
+                    "line_width": 2,
+                    "line_type": "last",
+                    "include_prior_point": true,
+                    "fill_opacity": 0.2,
+                    "fill_envelope": true,
+                    "fill_baseline": 1e-100,
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                },
+                {
+                    "type": "timeseries",
                     "channel": "state",
+                    "color": "#dd8000",
+                    "label": "",
+                    "format": "%.5g",
+                    "opacity": 1,
+                    "marker_type": "circle",
+                    "marker_size": 2,
+                    "line_width": 1,
+                    "line_type": "connect",
+                    "include_prior_point": false,
+                    "fill_opacity": 0.2,
+                    "fill_envelope": true,
+                    "fill_baseline": 1e-100,
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 0, "ymax": 2, "ytitle": "", "title": "Sensed" },
+            "legend": { "style": "transparent", "position": "left" }
+        },
+        {
+            "type": "timeseries",
+            "plots": [
+                {
+                    "type": "timeseries",
+                    "channel": "control",
+                    "color": "#009090",
+                    "label": "",
+                    "format": "%.5g",
+                    "opacity": 1,
+                    "marker_type": "circle",
+                    "marker_size": 2,
+                    "line_width": 1,
+                    "line_type": "connect",
+                    "include_prior_point": false,
+                    "fill_opacity": 0.2,
+                    "fill_envelope": true,
+                    "fill_baseline": 1e-100,
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                }
+            ],
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": -20, "ymax": 10, "title": "Control" },
+            "legend": { "style": "transparent", "position": "left" }
+        },
+        {
+            "type": "singles",
+            "item_type": "square",
+            "items": [
+                {
+                    "channel": "setpoint",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    }
+                },
+                {
+                    "channel": "pid_status",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "text_transform": "replace('True','Running')->replace('False','Idle')"
+                }
+            ],
+            "color": { "base": "rgb(0, 0, 0)", "normal": "#06b6d4", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.1 },
+            "grid": { "rows": 2, "columns": 3 },
+            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+            "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false }
+        },
+        {
+            "type": "timeseries",
+            "plots": [
+                {
+                    "type": "timeseries",
+                    "channel": "Kp",
                     "color": "#009090",
                     "label": "",
                     "format": "%.5g",
@@ -30,8 +124,25 @@
                 },
                 {
                     "type": "timeseries",
-                    "channel": "control",
+                    "channel": "Ki",
                     "color": "#dd8000",
+                    "label": "",
+                    "format": "%.5g",
+                    "opacity": 1,
+                    "marker_type": "circle",
+                    "marker_size": 2,
+                    "line_width": 1,
+                    "line_type": "connect",
+                    "include_prior_point": false,
+                    "fill_opacity": 0.2,
+                    "fill_envelope": true,
+                    "fill_baseline": 1e-100,
+                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
+                },
+                {
+                    "type": "timeseries",
+                    "channel": "Kd",
+                    "color": "#4169e1",
                     "label": "",
                     "format": "%.5g",
                     "opacity": 1,
@@ -46,7 +157,7 @@
                     "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
                 }
             ],
-            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 0, "ymax": 2 },
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 0.8, "ymax": 2, "title": "PID Parameters" },
             "legend": { "style": "transparent", "position": "left" }
         }
     ],

@@ -89,9 +89,9 @@ class ControlSystem(spc.ControlNode):
         elif callable(getattr(obj, 'to_json', None)):  # SlowPy Element (histogram etc)
             value = obj.to_json()
             value_is_ts = isinstance(obj, slp.TimeSeries)
-        elif type(obj) in [ bool, int, float, str ]:
+        elif isinstance(obj, ( bool, int, float, str )):
             value = obj
-        elif type(obj) is dict:  # must be a SlowDash value
+        elif isinstance(obj, dict):  # must be a SlowDash value
             if 'tree' in obj or 'table' in obj or 'bins' in obj or 'ybin' in obj or 'y' in obj:
                 value = obj
             else:
