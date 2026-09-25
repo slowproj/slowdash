@@ -138,7 +138,7 @@ class FirstOrderPlant:
         dy/dt = (gain * u - y) / tau
     """
 
-    def __init__(self, gain=1.0, tau=10, initial_value=0.0, noise=0.01):
+    def __init__(self, gain=1.0, tau=10, initial_value=0.0, noise=0):
         self.gain = float(gain)
         self.tau = float(tau)
         self.noise = noise
@@ -185,7 +185,7 @@ class SecondOrderPlant:
     d2y/dt2 + 2*zeta*omega*dy/dt + omega^2*y = gain*omega^2*u
     """
 
-    def __init__(self, gain=1.0, omega=0.2, zeta=0.5, initial_value=0.0, initial_velocity=0.0, noise=0.01):
+    def __init__(self, gain=1.0, omega=0.2, zeta=0.5, initial_value=0.0, initial_velocity=0.0, noise=0):
         self.gain = float(gain)
         self.omega = float(omega)
         self.zeta = float(zeta)

@@ -268,7 +268,7 @@ class HistogramPlot extends Plot {
     update(dataPacket) {
         const ts = dataPacket[this.requestDataIds.channel ?? ' '];
         const [time, value] = Panel._getLastTX(ts, null, dataPacket.__meta.range);
-        if (! value) {
+        if (value == null) {
             if (dataPacket.__meta.isStreaming || Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
                 return false; // keep the current data (no update)
             }
@@ -460,7 +460,7 @@ class Histogram2dPlot extends Plot {
     update(dataPacket) {
         const ts = dataPacket[this.requestDataIds.channel ?? ' '];
         const [time, value] = Panel._getLastTX(ts, null, dataPacket.__meta.range);
-        if (! value) {
+        if (value == null) {
             if (dataPacket.__meta.isStreaming || Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
                 return false; // keep the current data (no update)
             }
@@ -560,7 +560,7 @@ class GraphPlot extends Plot {
     update(dataPacket) {
         const ts = dataPacket[this.requestDataIds.channel ?? ' '];
         const [time, value] = Panel._getLastTX(ts, null, dataPacket.__meta.range);
-        if (! value) {
+        if (value == null) {
             if (dataPacket.__meta.isStreaming || Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
                 return false; // keep the current data (no update)
             }

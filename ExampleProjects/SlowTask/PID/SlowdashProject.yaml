@@ -2,9 +2,11 @@ slowdash_project:
   name: PID Control
   
   data_source:
-    url: sqlite:///SlowTaskTest
+    url: sqlite:///SlowData
     time_series:
-      schema: test [channel] @timestamp(unix) = value
+      schema: numeric_data [channel] @timestamp(unix) = value
+    object_time_series:
+      schema: object_data [channel] @timestamp(unix) = value
 
   task:
     - name: pid

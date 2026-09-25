@@ -363,7 +363,7 @@ export class MapPanel extends Panel {
 
         const ts = dataPacket[this.metric?.channel ?? this.config.channel];
         let [time, data] = Panel._getLastTX(ts, this.metric?.transform, dataPacket.__meta.range);
-        if (! data) {
+        if (data == null) {
             if (dataPacket.__meta.isStreaming || Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
                 // keep the current data (no update); otherwise draw "---"
                 return;

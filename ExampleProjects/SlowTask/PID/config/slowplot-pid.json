@@ -1,28 +1,82 @@
 {
     "control": {
-        "range": { "length": 900, "to": 0 },
+        "range": { "length": 300, "to": 0 },
         "reload": 2,
         "mode": "normal",
         "grid": { "rows": 2, "columns": 3 }
     },
     "style": { },
     "panels": [
-        { "type": "html", "location": "project", "file": "pid", "title": "Controls" },
+        {
+            "type": "singles",
+            "item_type": "square",
+            "items": [
+                {
+                    "channel": "pid_status['running']",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "text_transform": "replace(true,'Auto')->replace(false,'Manual')",
+                    "label": "Operation Mode"
+                },
+                {
+                    "channel": "pid_status['setpoint']",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "label": "Setpoint (SP)"
+                },
+                {
+                    "channel": "state",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "format": "%.3g",
+                    "label": "Measured (PV)"
+                },
+                {
+                    "channel": "control",
+                    "gauge": { "min": 0, "max": 0 },
+                    "ranges": {
+                        "normal": { "min": 0, "max": 0 },
+                        "warn": { "min": 0, "max": 0 },
+                        "error": { "min": 0, "max": 0 }
+                    },
+                    "format": "%.3g",
+                    "label": "Control Output"
+                }
+            ],
+            "color": { "base": "rgb(0, 0, 0)", "normal": "#06b6d4", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.1 },
+            "grid": { "rows": 2, "columns": 3 },
+            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
+            "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false }
+        },
+        { "type": "html", "location": "project", "file": "pid_control", "title": "Opearation", "scaling": 1.5 },
+        { "type": "html", "location": "project", "file": "pid_setup", "title": "Setup", "scaling": 1 },
         {
             "type": "timeseries",
             "plots": [
                 {
                     "type": "timeseries",
-                    "channel": "setpoint",
-                    "color": "#009090",
-                    "label": "",
+                    "channel": "pid_setpoint",
+                    "color": "#dd8000",
+                    "label": "Setpoint (SP)",
                     "format": "%.5g",
                     "opacity": 1,
                     "marker_type": "circle",
-                    "marker_size": 4,
-                    "line_width": 2,
-                    "line_type": "last",
-                    "include_prior_point": true,
+                    "marker_size": 2,
+                    "line_width": 0,
+                    "line_type": "connect",
+                    "include_prior_point": false,
                     "fill_opacity": 0.2,
                     "fill_envelope": true,
                     "fill_baseline": 1e-100,
@@ -31,8 +85,8 @@
                 {
                     "type": "timeseries",
                     "channel": "state",
-                    "color": "#dd8000",
-                    "label": "",
+                    "color": "#009090",
+                    "label": "Measured",
                     "format": "%.5g",
                     "opacity": 1,
                     "marker_type": "circle",
@@ -46,7 +100,7 @@
                     "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
                 }
             ],
-            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 0, "ymax": 2, "ytitle": "", "title": "Sensed" },
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 0, "ymax": 2, "ytitle": "", "title": "Target" },
             "legend": { "style": "transparent", "position": "left" }
         },
         {
@@ -73,93 +127,7 @@
             "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": -20, "ymax": 10, "title": "Control" },
             "legend": { "style": "transparent", "position": "left" }
         },
-        {
-            "type": "singles",
-            "item_type": "square",
-            "items": [
-                {
-                    "channel": "setpoint",
-                    "gauge": { "min": 0, "max": 0 },
-                    "ranges": {
-                        "normal": { "min": 0, "max": 0 },
-                        "warn": { "min": 0, "max": 0 },
-                        "error": { "min": 0, "max": 0 }
-                    }
-                },
-                {
-                    "channel": "pid_status",
-                    "gauge": { "min": 0, "max": 0 },
-                    "ranges": {
-                        "normal": { "min": 0, "max": 0 },
-                        "warn": { "min": 0, "max": 0 },
-                        "error": { "min": 0, "max": 0 }
-                    },
-                    "text_transform": "replace('True','Running')->replace('False','Idle')"
-                }
-            ],
-            "color": { "base": "rgb(0, 0, 0)", "normal": "#06b6d4", "warn": "#f59e0b", "error": "#d81b60", "value_opacity": 1, "gauge_opacity": 0.4, "tile_opacity": 0.1 },
-            "grid": { "rows": 2, "columns": 3 },
-            "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
-            "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false }
-        },
-        {
-            "type": "timeseries",
-            "plots": [
-                {
-                    "type": "timeseries",
-                    "channel": "Kp",
-                    "color": "#009090",
-                    "label": "",
-                    "format": "%.5g",
-                    "opacity": 1,
-                    "marker_type": "circle",
-                    "marker_size": 2,
-                    "line_width": 1,
-                    "line_type": "connect",
-                    "include_prior_point": false,
-                    "fill_opacity": 0.2,
-                    "fill_envelope": true,
-                    "fill_baseline": 1e-100,
-                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
-                },
-                {
-                    "type": "timeseries",
-                    "channel": "Ki",
-                    "color": "#dd8000",
-                    "label": "",
-                    "format": "%.5g",
-                    "opacity": 1,
-                    "marker_type": "circle",
-                    "marker_size": 2,
-                    "line_width": 1,
-                    "line_type": "connect",
-                    "include_prior_point": false,
-                    "fill_opacity": 0.2,
-                    "fill_envelope": true,
-                    "fill_baseline": 1e-100,
-                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
-                },
-                {
-                    "type": "timeseries",
-                    "channel": "Kd",
-                    "color": "#4169e1",
-                    "label": "",
-                    "format": "%.5g",
-                    "opacity": 1,
-                    "marker_type": "circle",
-                    "marker_size": 2,
-                    "line_width": 1,
-                    "line_type": "connect",
-                    "include_prior_point": false,
-                    "fill_opacity": 0.2,
-                    "fill_envelope": true,
-                    "fill_baseline": 1e-100,
-                    "resampling": { "buckets": null, "threshold": null, "reducer": "last", "envelope": false }
-                }
-            ],
-            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "ymin": 0.8, "ymax": 2, "title": "PID Parameters" },
-            "legend": { "style": "transparent", "position": "left" }
-        }
+        { "type": "tree", "channel": "pid_status", "title": "PID Status" }
     ],
     "meta": { "name": "pid", "title": "", "description": "" }
 }

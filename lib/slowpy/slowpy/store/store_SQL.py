@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 3 June 2023 #
 
 
-import os, sys, time, json, logging, traceback
+import os, sys, time, json, numbers, logging, traceback
 from urllib.parse import urlparse
 from .store import DataStore
 
@@ -24,17 +24,10 @@ class TableFormat:
 
         result = False
         try:
-            vtype = type(values[0])
-            if vtype in [ int, float ]:
+            if isinstance(values[0], numbers.Real) and not isinstance(values[0], bool):
                 result = self.create_numeric_table(cur)
-            elif vtype in [ str, bool ]:
-                result = self.create_text_table(cur)
             else:
-                try:
-                    fval = float(values[0])
-                    result = self.create_numeric_table(cur) # Decimal, Fraction, numpy.int64, ...
-                except:
-                    result = self.create_text_table(cur)    # complex goes here, though it is a Number
+                result = self.create_text_table(cur)   # complex goes here
         except Exception as e:
             result = False
 
@@ -70,20 +63,16 @@ class TableFormat:
             sql = f"DELETE FROM {self.table} WHERE channel={self.db.placeholder}"
             logging.debug(f'{sql}: {(channel,)}')
             cur.execute(sql, (channel,))       
-        if type(value) in [int, float]:
+        if isinstance(value, numbers.Real) and not isinstance(value, bool):
             self.insert_numeric_data(cur, timestamp, channel, value)
-        elif type(value) in [str, bool]:
-            self.insert_text_data(cur, timestamp, channel, str(value))
+        elif isinstance(value, str):
+            self.insert_text_data(cur, timestamp, channel, value)
         else:
             try:
-                fval = float(value)
-                self.insert_numeric_data(cur, timestamp, channel, fval) # Decimal, Fraction, numpy.int64, ...
+                jval = json.dumps(value)
+                self.insert_text_data(cur, timestamp, channel, jval)
             except:
-                try:
-                    jval = json.dumps(value)
-                    self.insert_text_data(cur, timestamp, channel, jval)
-                except:
-                    self.insert_text_data(cur, timestamp, channel, str(value))   # complex goes here, though it is a Number
+                self.insert_text_data(cur, timestamp, channel, str(value))
             
     # to be implemented in a subclass
     def insert_numeric_data(self, cur, timestamp, channel, value):
@@ -120,8 +109,6 @@ class LongTableFormat(TableFormat):
 
 
     def insert_numeric_data(self, cur, timestamp, channel, value):
-        if type(value) not in [int, float]:
-            return self.insert_text_data(cur, timestamp, channel, value)
         sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
         sql += f"VALUES(%.3f,%s,{value});" % (timestamp, self.db.placeholder)
         params = (channel,)
@@ -142,8 +129,6 @@ class LongTableFormat_DateTime_PostgreSQL(LongTableFormat):
 
     
     def insert_numeric_data(self, cur, timestamp, channel, value):
-        if type(value) not in [int, float]:
-            return self.insert_text_data(cur, timestamp, channel, value)
         sql = f'INSERT INTO {self.table}("timestamp",channel,value) '
         sql += f"VALUES(TO_TIMESTAMP(%.3f),%s,{value});" % (timestamp, self.db.placeholder)
         params = (channel,)
@@ -166,8 +151,6 @@ class LongTableFormat_DateTime_MySQL(LongTableFormat):
 
     
     def insert_numeric_data(self, cur, timestamp, channel, value):
-        if type(value) not in [int, float]:
-            return self.insert_text_data(cur, timestamp, channel, value)
         sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
         sql += f"VALUES(FROM_UNIXTIME(%.3f),%s,{value});" % (timestamp, self.db.placeholder)
         params = (channel,)

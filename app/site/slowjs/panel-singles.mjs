@@ -58,7 +58,7 @@ class SingleDisplayItem {
     update(dataPacket) {
         const ts = dataPacket[this.metric?.channel ?? this.config.channel];
         const [time, value] = Panel._getLastTX(ts, this.metric?.transform, dataPacket.__meta.range);
-        if (! value) {
+        if (value == null) {
             if (dataPacket.__meta.isStreaming || Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
                 // keep the current data (no update); otherwise draw "---"
                 return;

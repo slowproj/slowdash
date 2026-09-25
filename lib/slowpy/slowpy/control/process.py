@@ -21,7 +21,7 @@ class ControlVariableNode(ControlNode):
         return self._node_setpoint
 
     
-    def ramping(self, change_per_sec:float|None=None, *, set_format:str=None):
+    def ramping(self, change_per_sec:float|None=None, *, set_format:str=''):
         """child node that ramps the set value
         """
         try:
@@ -41,7 +41,7 @@ class ControlVariableNode(ControlNode):
         return self._node_ramping
     
 
-    def async_ramping(self, change_per_sec:float|None=None, *, set_format:str=None):
+    def async_ramping(self, change_per_sec:float|None=None, *, set_format:str=''):
         """child node that ramps the set value
         """
         try:
@@ -60,17 +60,18 @@ class ControlVariableNode(ControlNode):
         return self._node_async_ramping
     
 
-    def pid(self, sensing_node, Kp:float, Ki:float, Kd:float, *, interval:float=1.0, output_limits:tuple[float|None,float|None]=(None, None), set_format:str=None):
+    def pid(self, sensing_node, Kp:float, Ki:float, Kd:float, *, interval:float=1.0, output_limits:tuple[float|None,float|None]=(None, None), set_format:str=''):
         """PID-control this node using values read from sensing_node.
         Usage:
             control_device.pid(sensor, Kp, Ki, Kd).set(target)
         set(None) stops control. Positive gains assume that increasing the control output increases the sensed value.
         """
         if hasattr(self, '_node_pid'):
-            self._node_pid._configure(
-                sensing_node=sensing_node, Kp=Kp, Ki=Ki, Kd=Kd,
+            self._node_pid.do_configure(
+                Kp=Kp, Ki=Ki, Kd=Kd,
                 interval=interval, output_limits=output_limits,
-                set_format=set_format
+                set_format=set_format,
+                sensing_node=sensing_node,
             )
         else:
             self._node_pid = PIDThreadNode(
@@ -158,7 +159,7 @@ class SetpointNode(ControlNode):
     
         
 class RampingBaseNode(ControlNode):
-    def __init__(self, value_node, change_per_sec:float|None, *, set_format=None):
+    def __init__(self, value_node, change_per_sec:float|None, *, set_format:str=''):
         super().__init__()
         self._is_thread_safe = getattr(value_node, '_is_thread_safe', False)
         
@@ -211,7 +212,7 @@ class RampingBaseNode(ControlNode):
 
             
 class RampingThreadNode(ControlThreadMixin, RampingBaseNode):
-    def __init__(self, value_node, change_per_sec:float|None, *, set_format=None):
+    def __init__(self, value_node, change_per_sec:float|None, *, set_format:str=''):
         super().__init__(value_node, change_per_sec, set_format=set_format)
         self.start()
 
@@ -243,7 +244,7 @@ class RampingThreadNode(ControlThreadMixin, RampingBaseNode):
             else:
                 current_value += self._change_per_sec
 
-            if self._set_format is not None:
+            if len(self._set_format) > 0:
                 set_value = self._set_format.format(current_value)
             else:
                 set_value = current_value
@@ -264,7 +265,7 @@ class RampingThreadNode(ControlThreadMixin, RampingBaseNode):
 
             
 class RampingTaskNode(ControlAsyncTaskMixin, RampingBaseNode):
-    def __init__(self, value_node, change_per_sec:float|None, *, set_format=None):
+    def __init__(self, value_node, change_per_sec:float|None, *, set_format:str=''):
         super().__init__(value_node, change_per_sec, set_format=set_format)
         self.start()
 
@@ -293,7 +294,7 @@ class RampingTaskNode(ControlAsyncTaskMixin, RampingBaseNode):
             else:
                 current_value += self._change_per_sec
 
-            if self._set_format is not None:
+            if len(self._set_format) > 0:
                 set_value = self._set_format.format(current_value)
             else:
                 set_value = current_value
@@ -329,9 +330,9 @@ class RampingStatusNode(ControlNode):
 
     
     def get(self):
-        """returns True if ramping is in progress
-        """
-        return self._ramping_node._running
+        return {
+            'running': self._ramping_node._running,
+        }
 
 
     async def aio_set(self, zero_to_stop):
@@ -356,73 +357,30 @@ class PIDThreadNode(ControlThreadMixin, ControlNode):
         *,
         interval:float=1.0,
         output_limits:tuple[float|None,float|None]=(None, None),
-        set_format:str|None=None
+        set_format:str=''
     ):
         super().__init__()
         self._control_node = control_node
         self._target_value = None
         self._running = False
         
-        self._configure(
-            sensing_node=sensing_node, Kp=Kp, Ki=Ki, Kd=Kd,
+        self.do_configure(
+            Kp=Kp, Ki=Ki, Kd=Kd,
             interval=interval, output_limits=output_limits,
-            set_format=set_format
+            set_format=set_format,
+            sensing_node=sensing_node
         )
 
-        self._previous_time = None
-        self._previous_measurement = None
+        self._time = None
+        self._measurement = None
+        self._deviation = 0.0
         self._integral = 0.0
+        self._derivative = 0.0
+        self._output = None
+        self._saturated_low = False
+        self._saturated_high = False
 
         self.start()
-
-
-    @property
-    def Kp(self):
-        return self._Kp
-
-    @property
-    def Ki(self):
-        return self._Ki
-
-    @property
-    def Kd(self):
-        return self._Kd
-
-    
-    def _configure(self, *,
-        sensing_node,
-        Kp:float, Ki:float, Kd:float,
-        interval:float=1.0,
-        output_limits:tuple[float|None,float|None]=(None, None),
-        set_format:str|None=None
-    ):
-        self._sensing_node = sensing_node
-        try:
-            self._Kp = float(Kp)
-            self._Ki = float(Ki)
-            self._Kd = float(Kd)
-            self._interval = float(interval)
-        except:
-            raise ControlException('PID: floating number is expected')
-        if self._interval <= 0:
-            raise ControlException('PID: interval must be positive')
-
-        try:
-            low, high = output_limits
-            low = None if low is None else float(low)
-            high = None if high is None else float(high)
-        except Exception:
-            raise ControlException('PID: output_limits must be (low:float, high:float)')
-        if low is not None and high is not None and low > high:
-            raise ControlException(f'PID: invalid output_limits: low({low}) > high({high})')
-        self._output_limits = (low, high)
-        
-        self._set_format = set_format
-        
-        self._is_thread_safe = (
-            getattr(self._control_node, '_is_thread_safe', False) and
-            getattr(self._sensing_node, '_is_thread_safe', False)
-        )
 
 
     def run(self):
@@ -440,7 +398,7 @@ class PIDThreadNode(ControlThreadMixin, ControlNode):
 
             # new measurement
             try:
-                measurement = float(self._sensing_node.get())
+                new_measurement = float(self._sensing_node.get())
             except Exception as e:
                 logging.warning(f'PID: unable to get sensing value: {e}')
                 self.sleep(self._interval)
@@ -448,50 +406,50 @@ class PIDThreadNode(ControlThreadMixin, ControlNode):
 
             # PID update
             now = time.monotonic()
-            deviation = self._target_value - measurement
-            if self._previous_time is None:
+            self._deviation = self._target_value - new_measurement
+            if self._time is None:
                 dt = 0.0
-                derivative = 0.0
+                self._derivative = 0.0
                 if self._Ki != 0:
                     # bumpless transfer if the system is already near the target (switching from manual to auto etc.)
                     try:
                         output = float(self._control_node.get())
-                        self._integral = (output - self._Kp * deviation) / self._Ki
+                        self._integral = (output - self._Kp * self._deviation) / self._Ki
                     except Exception as e:
                         self._integral = 0
                         logging.warning(f'PID: bumpless transfer failed: {e}')
             else:
-                dt = now - self._previous_time
+                dt = now - self._time
                 if dt > 0:
                     # not derivative as deviation/dt, to prevent steps of setpoint from going into the D term (derivative kick)
-                    derivative = -(measurement - self._previous_measurement) / dt
+                    self._derivative = -(new_measurement - self._measurement) / dt
                 else:
-                    derivative = 0
-            integral = self._integral + deviation * dt
-            self._previous_time = now
-            self._previous_measurement = measurement
+                    self._derivative = 0
+            this_integral = self._integral + self._deviation * dt
+            self._time = now
+            self._measurement = new_measurement
             
-            output = self._Kp * deviation + self._Ki * integral + self._Kd * derivative
+            self._output = self._Kp * self._deviation + self._Ki * this_integral + self._Kd * self._derivative
 
             # output limits
             low, high = self._output_limits
-            saturated_low = low is not None and output < low
-            saturated_high = high is not None and output > high
-            if saturated_low:
-                output = low
-            elif saturated_high:
-                output = high
+            self._saturated_low = low is not None and self._output < low
+            self._saturated_high = high is not None and self._output > high
+            if self._saturated_low:
+                self._output = low
+            elif self._saturated_high:
+                self._output = high
 
             # anti-windup update on the integration
-            integral_drive = self._Ki * deviation
-            if not ((saturated_high and integral_drive > 0) or (saturated_low and integral_drive < 0)):
-                self._integral = integral
+            integral_drive = self._Ki * self._deviation
+            if not ((self._saturated_high and integral_drive > 0) or (self._saturated_low and integral_drive < 0)):
+                self._integral = this_integral
 
             # new control output
-            if self._set_format is not None:
-                set_value = self._set_format.format(output)
+            if len(self._set_format) > 0:
+                set_value = self._set_format.format(self._output)
             else:
-                set_value = output
+                set_value = self._output
             try:
                 self._control_node.set(set_value)
             except Exception as e:
@@ -505,21 +463,53 @@ class PIDThreadNode(ControlThreadMixin, ControlNode):
                 self.sleep(remaining)
 
 
-    def do_configure(self, Kp:float, Ki:float, Kd:float):
+    def do_configure(self, *,
+        Kp:float|None=None, Ki:float|None=None, Kd:float|None=None,
+        interval:float|None=None,
+        output_limits:tuple[float|None,float|None]|None=None,
+        set_format:str|None=None,
+        sensing_node = None,
+    ):
         try:
-            self._Kp = float(Kp)
-            self._Ki = float(Ki)
-            self._Kd = float(Kd)
+            self._Kp = float(Kp) if Kp is not None else self._Kp
+            self._Ki = float(Ki) if Ki is not None else self._Ki
+            self._Kd = float(Kd) if Kd is not None else self._Kd
+            self._interval = float(interval) if interval is not None else self._interval
         except:
             raise ControlException('PID: floating number is expected')
+        if self._interval <= 0:
+            raise ControlException('PID: interval must be positive')
+
+        if output_limits is not None:
+            try:
+                low, high = output_limits
+                low = None if low is None else float(low)
+                high = None if high is None else float(high)
+            except Exception:
+                raise ControlException('PID: output_limits must be (low:float, high:float)')
+            if low is not None and high is not None and low > high:
+                raise ControlException(f'PID: invalid output_limits: low({low}) > high({high})')
+            self._output_limits = (low, high)
+
+        if set_format is not None:
+            self._set_format = set_format
+            
+        if sensing_node is not None:
+            self._sensing_node = sensing_node
+            self._is_thread_safe = (
+                getattr(self._control_node, '_is_thread_safe', False) and
+                getattr(self._sensing_node, '_is_thread_safe', False)
+            )
         
         self.do_reset()
 
     
     def do_reset(self):
-        self._previous_time = None
-        self._previous_measurement = None
+        self._time = None
+        self._measurement = None
         self._integral = 0.0
+        self._saturated_low = False
+        self._saturated_high = False
 
 
     def set(self, target_value:float):
@@ -567,7 +557,21 @@ class PIDStatusNode(ControlNode):
 
             
     def get(self):
-        return self._pid_node._running
+        return {
+            'running': self._pid_node._running,
+            'time': self._pid_node._time,
+            'setpoint': self._pid_node._target_value,
+            'measurement': self._pid_node._measurement,
+            'output': self._pid_node._output,
+            'saturated_low': self._pid_node._saturated_low,
+            'saturated_high': self._pid_node._saturated_high,
+            'Kp': self._pid_node._Kp,
+            'Ki': self._pid_node._Ki,
+            'Kd': self._pid_node._Kd,
+            'interval': self._pid_node._interval,
+            'limit_low': self._pid_node._output_limits[0],
+            'limit_high': self._pid_node._output_limits[1],
+        }
 
     
     async def aio_set(self, zero_to_stop):

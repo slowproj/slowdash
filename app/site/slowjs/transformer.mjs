@@ -274,7 +274,7 @@ class GetFunctor extends Functor {
         let node = $.extend(true, {}, data.tree);
         for (const key of path.split('/')) {
             if ((node[key] === undefined) || (node[key] === null)) {
-                console.log("path not found: " + path);
+                //console.log("path not found: " + path);
                 return null;
             }
             node = node[key];

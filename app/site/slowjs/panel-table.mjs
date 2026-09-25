@@ -157,7 +157,7 @@ class TablePanel extends Panel {
 
     draw_table_object(ts, dataPacket) {
         const [time, value] = Panel._getLastTX(ts, this.metric?.transform, dataPacket.__meta.range);
-        if (! value) {
+        if (value == null) {
             if (dataPacket.__meta.isStreaming || Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
                 ; // keep the current data (no update)
             }
@@ -375,7 +375,7 @@ class TreePanel extends Panel {
     draw(dataPacket, displayTimeRange=null) {
         const ts = dataPacket[this.metric?.channel ?? this.config.channel];
         const [time, value] = Panel._getLastTX(ts, this.metric?.transform, dataPacket.__meta.range);
-        if (! value) {
+        if (value == null) {
             if (dataPacket.__meta.isStreaming || Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
                 ; // keep the current data (no update)
             }
@@ -557,7 +557,7 @@ class BlobPanel extends Panel {
     draw(dataPacket, displayTimeRange=null) {
         const ts = dataPacket[this.metric?.channel ?? this.config.channel];
         const [time, value] = Panel._getLastTX(ts, this.metric?.transform, dataPacket.__meta.range);
-        if (! value) {
+        if (value == null) {
             if (dataPacket.__meta.isStreaming || Panel._dataPacketIncludes(dataPacket, this.currentDataTime)) {
                 ; // keep the current data (no update)
             }

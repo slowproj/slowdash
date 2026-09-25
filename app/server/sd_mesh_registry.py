@@ -53,7 +53,7 @@ class Registry:
             path = self._load_nodes(filename)
             if path is not None:
                 self._persistent_nodes.add(f'{path}{self.sep}')
-                logging.info(f'Registry: persistent values loaded: {path}: {self.get_tree(path)}')
+                logging.debug(f'Registry: persistent values loaded: {path}: {self.get_tree(path)}')
 
         
     def export(self, mesh:Mesh):
