@@ -23,7 +23,7 @@
                     "text_transform": "replace(0,'Idling')->replace(1,'Running')"
                 },
                 {
-                    "channel": "run_setting['offline']->invert()->replace(false,0)->replace(true,1)",
+                    "channel": "run_status['offline']->invert()->replace(false,0)->replace(true,1)",
                     "gauge": { "min": 0, "max": 0 },
                     "ranges": {
                         "normal": { "min": 0, "max": 0.5 },

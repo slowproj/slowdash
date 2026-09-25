@@ -44,7 +44,7 @@ def loop():
                 f'Ch{i}',
                 ch.get(),
                 target if (target := ch.ramping().get()) is not None else '-',
-                'Yes' if ch.ramping().status().get() else 'No'
+                'Yes' if (ch.ramping().status().get() or {}).get('running', False) else 'No'
             ]
             for i, ch in enumerate([ch0, ch1, ch2, ch3])
         ]

@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 9 July 2026 #
 
-import secrets, asyncio, logging
+import time, numbers, secrets, asyncio, logging
 
 import slowlette
 from sd_component import Component
@@ -64,6 +64,10 @@ class DataCache:
             self._channel_table[channel] = { 'name': channel, 'type': datatype, 'streaming': True }
 
         
+    def get(self, channel:str, default):
+        return self._last_data.get(channel, default)
+    
+    
     @property
     def channel_table(self):
         return self._channel_table
@@ -81,8 +85,7 @@ class ChannelMergerResponse(slowlette.Response):
             response.content = []
         elif type(response.content) is not list:
             logging.error(f'WebMesh:ChannelMergerResponse: bad response data type to merge: {type(resonse.content)}')
-            super().merge_response(response)
-            return
+            return super().merge_response(response)
             
         existing_channels = set([ ch.get('name', '__') for ch in response.content ])
         self.content = [
@@ -90,6 +93,48 @@ class ChannelMergerResponse(slowlette.Response):
             if name not in existing_channels
         ]
         super().merge_response(response)
+
+
+class DataMergerResponse(slowlette.Response):
+    def __init__(self, channels, length, to, data_cache):
+        super().__init__(content=None)
+        self._channels = channels
+        self._to = to if to > 0 else to + time.time() + 3
+        self._frm = self._to - length
+        self._data_cache = data_cache
+
+        
+    def merge_response(self, response) -> None:
+        """append the cached data to the response (typiaclly data from storage)
+        - only if the channel does not exist, no matter which is newer.
+        - also time-series data will not be merged
+        """
+            
+        if response.content is None:
+            response.content = {}
+        elif type(response.content) is not dict:
+            logging.error(f'WebMesh:DataMergerResponse: bad response data type to merge: {type(resonse.content)}')
+            return super().merge_response(response)
+
+        for ch in self._channels:
+            if ch in response.content:
+                continue     # data already provided from (an)other data source(s)
+            
+            data = self._data_cache.get(ch, None)
+            if data is None:
+                continue     # data not in the cache
+            
+            t = data.get('t', [])
+            if isinstance(t, list) or not isinstance(t, numbers.Real):
+                continue     # data is not a scalar (time-series or None or error)
+            
+            t = float(t) + float(data.get('start', 0))
+            if t < self._frm or t > self._to:
+                continue     # data not in range
+
+            response.content[ch] = data
+            
+        return super().merge_response(response)
 
 
             
@@ -303,3 +348,10 @@ class WebMeshComponent(Component):
     @slowlette.get('/api/channels')
     async def get_stream_channels(self):
         return ChannelMergerResponse(self._data_cache)
+
+    
+    @slowlette.get('/api/data/{*}')
+    async def api_get_data(self, request:slowlette.Request, length:float=3600, to:float=0):
+        path_channels = request.path_str[len('/api/data/'):]   # channel name might contain "/"
+        channels = path_channels.split(',') if path_channels else []
+        return DataMergerResponse(channels, length, to, self._data_cache)

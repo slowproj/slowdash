@@ -46,7 +46,7 @@ class Registry:
         self._records: dict[str, RegistryRecord] = {}
         
         self._persistent_nodes = set([
-            'pubsub.form.input.'
+            'pubsub.form.inputs.'
         ])
         
         for filename in glob.glob('registry-*.json'):

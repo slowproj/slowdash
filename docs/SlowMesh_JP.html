@@ -844,6 +844,10 @@ Publish / Subscribe を HTTP から行えるようにします． Publish は通
 POST リクエスト，Subscribe は Server-Sent Events (SSE)
 を用いて実装されています． 現時点では，<code>data.*.</code>
 などの一部のトピックのみ subscribe 可能です．</p>
+<p>また，WebMesh
+はメッシュ上に流れるデータパケット（<code>data.*.&gt;</code>
+トピック）のチャンネルごとの最新値をキャッシュし，HTTP
+のデータクエリに対して，他のコンポーネントがデータを返さない場合，キャッシュされたデータを応答します．ただし，時系列データはキャッシュされていても使われません．</p>
 <h3 id="subscribe-2">Subscribe</h3>
 <p>Subscribe するためには，まず <code>event/webmesh/attach</code> に SSE
 接続をして，SSE 経由で配布される <code>register</code>
@@ -1730,6 +1734,10 @@ id="eventsourceeventwebmeshattach">EventSource(<code>event/webmesh/attach</code>
 <h4 id="get-apichannels-1">GET <code>api/channels</code></h4>
 <p><code>data.*</code>
 トピックに流れているデータのチャンネル一覧を返す</p>
+<h4 id="get-apidata">GET <code>api/data/{*}</code></h4>
+<p><code>data.*</code>
+トピックに流れているデータのチャンネルごとの最終値をキャッシュしたもの．
+このクエリに他のコンポーネントがデータを返さず，かつ，キャッシュデータのタイムスタンプがクエリ範囲の場合のみ，キャッシュの最終値が挿入される．</p>
 <h1 id="rpc-サービス">RPC サービス</h1>
 <h2 id="ユーザー自由使用領域">ユーザー自由使用領域</h2>
 <h4 id="export-モジュール名-slowmesh-task-name">Export モジュール名

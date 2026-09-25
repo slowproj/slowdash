@@ -1166,6 +1166,9 @@ Publishes to SlowMesh.
 #### GET `api/channels`
 Returns a list of data channels flowing on `data.*` topics.
 
+#### GET `api/data/{*}`
+Returns cached data, only if other components do not return the requested data.
+
 
 
 # RPC Services

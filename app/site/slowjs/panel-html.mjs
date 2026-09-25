@@ -348,7 +348,7 @@ class HtmlPanel extends Panel {
             if (! formInput) {
                 continue;
             }
-            if ((formInput.sender_id == this.sender_id) || (formInput.value == null)) {
+            if (((formInput.sender_id ?? '') == this.sender_id) || (formInput.value == null)) {
                 continue;
             }
             let form = this.contentDiv.find(`form[name="${formName}"]`);
