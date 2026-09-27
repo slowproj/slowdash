@@ -112,3 +112,55 @@ class DataPacket(MeshPacket):
             timestamp = time.time()
 
         return DataPacket(values, tag=tag, timestamp=timestamp)
+
+
+
+class FormPacket(MeshPacket):
+    def __init__(self, form:str, input:str, value):
+        '''
+        Creates a SlowMesh packet for the "form.input.>" topics.
+        The arguments are the same as slowpy.store.DataStore.append().
+        - Arguments:
+            - form: the name of the form
+            - inputs: the names of the form input elements and those values
+        '''
+
+        self.form = form
+        self.element = input
+        self.value = value
+
+
+    def pack(self, topic:str):
+        '''
+        - return value: tuple of (topic, headers, body)
+        '''
+
+        topic = f'form.input.{self.form}.{self.element}'
+        headers = {}
+        body = {
+            'form': self.form,
+            'element': self.element,
+            'value': self.value,
+        }
+            
+        return (topic, headers, body)
+
+            
+    @classmethod
+    def unpack(cls, headers, body):
+        if not isinstance(body, dict):
+            logging.error('mesh.DataPacket: received non-dict body')
+            return MeshPacket()
+
+        return FormPacket(
+            form = body.get('form', None),
+            input = body.get('element', None),
+            value = body.get('value', None)
+        )
+
+
+    def get(self, name:str, default):
+        if name == self.element:
+            return self.value
+        else:
+            return default

@@ -1663,6 +1663,4 @@ Body:
 - MyMesh: SlowTask を SlowMesh なしで動かした場合に使う．コンソールから接続し，!!! から始まる行を拾う
 - Task RPC Proxy
 - dataclass の export
-- RampingNode の即時リターン
 - MeshStdio/WebMesh で input()
-

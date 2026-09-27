@@ -1,11 +1,10 @@
 
-from slowpy.mesh import Tasklet
-tasklet = Tasklet()
+import slowpy
+tasklet = slowpy.mesh.Tasklet()
 
 from slowpy.control import control_system as ctrl
 
 import numpy as np
-from slowpy import Graph
 
 fx, fy = 3.2, 2.0
 t0 = 0
@@ -13,12 +12,23 @@ t0 = 0
 
 @tasklet.initialize()
 async def initialize():
+    # initial values from cached browser inputs
     global fx, fy
-    prev_form_values = await tasklet.mesh.registry.aio_get('pubsub.form.input.control.>', {})
-    fx = prev_form_values.get('fx', {}).get('value', fx)
-    fy = prev_form_values.get('fy', {}).get('value', fy)
+    form = await ctrl.form('control').aio_get()   # form is a Python dict
+    fx = form.get('fx', fx)
+    fy = form.get('fy', fy)
     
     
+@tasklet.mesh.on('form.input.control.>')
+async def set(form:slowpy.mesh.FormPacket):
+    global fx, fy
+    fx = form.get('fx', fx)
+    fy = form.get('fy', fy)
+
+    await tasklet.mesh.aio_publish('form.input', slowpy.mesh.FormPacket('control', 'fx', 1))
+    
+
+
 @tasklet.loop(interval=0.2)
 async def loop():
     global t0
@@ -28,7 +38,7 @@ async def loop():
     x1 = np.random.normal(np.cos((t+t0)*float(fx)*6.28), 0.0003)
     x2 = np.random.normal(np.sin((t+t0)*float(fy)*6.28), 0.0003)
     
-    g_x, g_y, g_xy = Graph(), Graph(), Graph()
+    g_x, g_y, g_xy = slowpy.Graph(), slowpy.Graph(), slowpy.Graph()
     g_x.add_point(t, x1)
     g_y.add_point(t, x2)
     g_xy.add_point(x1, x2)
@@ -40,18 +50,6 @@ async def loop():
     await ctrl.aio_stream('xy.stream', g_xy)
 
         
-@tasklet.mesh.on('form.input.control.fx')
-async def set_fx(form_input):
-    global fx
-    fx = form_input.get('value', fx)
-
-
-@tasklet.mesh.on('form.input.control.fy')
-async def set_fy(form_input):
-    global fy
-    fy = form_input.get('value', fy)
-
-
 @tasklet.content('config/html-control.html')
 def html():
     return '''

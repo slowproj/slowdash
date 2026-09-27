@@ -14,24 +14,22 @@ pid = None
 
 @tasklet.initialize()
 async def initialize():
+    # Making the browser input values and internal parameter values consistent #
     if True:
-        # initial PID parameters from the last browser inputs
-        prev_form_values = await tasklet.mesh.registry.aio_get('pubsub.form.input.pid_setup.>', {})
-        Kp = prev_form_values.get('Kp', {}).get('value', 1)
-        Ki = prev_form_values.get('Ki', {}).get('value', 1)
-        Kd = prev_form_values.get('Kd', {}).get('value', 0)
-        limits_low = prev_form_values.get('limits_low', {}).get('value', -100)
-        limits_high = prev_form_values.get('limits_high', {}).get('value', 100)
+        # Browsers to internals: initial PID parameters from the last browser inputs
+        form = await ctrl.form('pid_setup').aio_get()   # form is a Python dict
+        Kp = form.get('Kp', 1)
+        Ki = form.get('Ki', 1)
+        Kd = form.get('Kd', 0)
+        limits_low = form.get('limits_low', -100)
+        limits_high = form.get('limits_high', 100)
     else:
-        # fixed initial PID parameters; send them to the browser inputs
+        # Internals to browsers: fixed initial PID parameters; send them to the browser inputs
         Kp, Ki, Kd = 1, 1, 0
         limits_low, limits_high = -100, 100
-        tasklet.mesh.publish('form.input.pid_setup', {
-            'Kp': { 'element': 'Kp', 'value': Kp },
-            'Ki': { 'element': 'Ki', 'value': Ki },
-            'Kd': { 'element': 'Kd', 'value': Kd },
-            'limits_low': { 'element': 'limits_low', 'value': limits_low },
-            'limits_high': { 'element': 'limits_high', 'value': limits_high },
+        await ctrl.form('pid_setup').aio_set({
+            'Kp': Kp, 'Ki': Ki,'Kd': Kd,
+            'limits_low': limits_low, 'limits_high': limits_high
         })
     
     global pid
