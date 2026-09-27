@@ -403,7 +403,7 @@ TODO: 現時点で，CAS などの値以外のメタ情報は保存はされま�
 
 TODO: 現時点で，presistent にする Path のリストは `Registry` クラスの `self._persistent_nodes` に以下のものがハードコーディングされています．
 
-- `pubsub.form.input.`
+- `pubsub.form.`
 
 Note: レジストリの区切り文字に `/` を使用すると，ここでひどい目にあいます．
 ファイル名は適切にエスケープされますが，見苦しいです．
@@ -494,7 +494,7 @@ Subscribe するためには，まず `event/webmesh/attach` に SSE 接続を�
 以下のトピック名中の `*` や `>` はそのまま使ってください．`{channel}` の部分は置き換えてください．
 
 - `data.*.{channel}`
-- `form.input.{form_name}`
+- `form.{form_name}`
 - `sd.task.life_event.>`
 - `sd.task.heartbeat.>`
 - `sd.task.stdout.>`
@@ -991,7 +991,7 @@ async def stop():
 - `randomwalk.set_value()`: randomwalk タスクの `set_value()` 関数の遠隔呼び出しをする．渡される関数の引数は，ここに書かれた引数リスト（この例では空）と他の `<input>` 要素の name-value 対を合わせたものになる．
 - `publish control.start()`: `control.start` トピックに publish する．publish データは引数リスト（この例では空）と他の `<input>` 要素の name-value 対を JSON にしたものになる．
 
-また，`<form>` 要素に `name` を指定することにより，その中の `<input>` の `change` イベントに対して，`form.input.{form_name}` トピックに変更後の値が publish されるようになり，同時に，このトピックを subscribe して，他のブラウザの同じフォームが値を変更したときにそれが即座に反映されるようになっています．
+また，`<form>` 要素に `name` を指定することにより，その中の `<input>` の `change` イベントに対して，`form.{form_name}` トピックに変更後の値が publish されるようになり，同時に，このトピックを subscribe して，他のブラウザの同じフォームが値を変更したときにそれが即座に反映されるようになっています．
 
 #### SlowPlot レイアウト （`slowplot-control.json`）
 以下のものを並べたものです．
@@ -1243,29 +1243,33 @@ SlowDash 標準データフォーマット
 
 
 ## form
-### form.input.{form_name}.{element_name}
+### form.{form_name}.{element_name}
 
 ##### 主な用途
 - 目的
   - ブラウザフォームの入力値の変化をすべてのブラウザに通知する
   - ブラウザフォームの入力値をレジストリに保存して，新たに開いたときの初期値にする
   - ブラウザフォームの操作を即座に制御に反映させる
+  - タスクからブラウザフォームの表示値を変更する
 - Sender(s): sd_task (SlowDash サーバー)
 - Receiver(s): sd_task (SlowDash サーバー)，Registry, task process
 - Timing:
   - ブラウザフォームの INPUT フィールドの change イベント
+  - タスクがフォーム表示値を変更するとき（起動時にセットしたものはレジストリのキャッシュに入る）
   
 ##### JSON Schema
 Body:
 ```json
 {
     "type": "object",
-    "required": [ "sender_id", "form", "element", "value" ],
+    "required": [ "sender_id", "form", "element" ],
     "properties": {
         "sender_id": { "type": "string" },
         "form": { "type": "string" },
         "element": { "type": "string" },
-        "value": {}
+        "value": {},
+        "enabled": { "type": "bool" },
+        "style": { "type": "object" },
     }
 }
 ```
@@ -1278,6 +1282,15 @@ Body:
     "form": "run_control",
     "element": "V0_setpoint",
     "value": 100
+​}
+```
+
+```json
+{
+    "sender_id": "eab2b828-006b-4d87-a01e-4d308ca71226",
+    "form": "run_control",
+    "element": "V0_setpoint",
+    "style": { "font-style": "bold", "font-color": "red" }
 ​}
 ```
 

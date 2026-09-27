@@ -116,17 +116,18 @@ class DataPacket(MeshPacket):
 
 
 class FormPacket(MeshPacket):
-    def __init__(self, form:str, input:str, value):
+    def __init__(self, form:str, element:str, value):
         '''
-        Creates a SlowMesh packet for the "form.input.>" topics.
+        Creates a SlowMesh packet for the "form.>" topics.
         The arguments are the same as slowpy.store.DataStore.append().
         - Arguments:
             - form: the name of the form
-            - inputs: the names of the form input elements and those values
+            - element: the name of the form element
+            - value: the value of the form element
         '''
 
         self.form = form
-        self.element = input
+        self.element = element
         self.value = value
 
 
@@ -135,7 +136,7 @@ class FormPacket(MeshPacket):
         - return value: tuple of (topic, headers, body)
         '''
 
-        topic = f'form.input.{self.form}.{self.element}'
+        topic = f'form.{self.form}.{self.element}'
         headers = {}
         body = {
             'form': self.form,
@@ -154,7 +155,7 @@ class FormPacket(MeshPacket):
 
         return FormPacket(
             form = body.get('form', None),
-            input = body.get('element', None),
+            element = body.get('element', None),
             value = body.get('value', None)
         )
 

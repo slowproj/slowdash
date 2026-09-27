@@ -22,9 +22,10 @@ run_status = RunStatus()
 
 @tasklet.loop(interval=0.1, ticks={'readout':1, 'stream':10})
 async def _loop(ticks):    
+    if run_status.running:
+        run_status.lapse = round(time.time() - run_status.start_time, 3)
+        
     if ticks.stream:
-        if run_status.running:
-            run_status.lapse = round(time.time() - run_status.start_time,3)
         await ctrl.aio_stream('run_status', run_status)
 
     if not run_status.running:
@@ -51,11 +52,12 @@ async def start(run_number:int=None, stop_after:bool=None, run_length:float=None
     if offline is not None:
         run_status.offline = offline
 
-    run_status.start_time = round(time.time(),3)
+    run_status.start_time = round(time.time(), 3)
     run_status.running = True
     
     await ctrl.aio_stream('run_status', run_status)
     print(f"starting a new run {run_status.run_number}")
+    print(f"starting {run_status}")
 
     await do_run_start()
     
@@ -71,11 +73,7 @@ async def stop():
     
     if not run_status.offline:
         run_status.run_number += 1
-        await tasklet.mesh.aio_publish('form.input.run_control.run_number', {
-            'form': 'run_control',
-            'element': 'run_number',
-            'value': run_status.run_number,
-        })        
+        await ctrl.form('run_control').element('run_number').aio_set(run_status.run_number)
         
     await ctrl.aio_stream('run_status', run_status)
     
@@ -87,7 +85,7 @@ def html():
     return '''
       <h3>Run Control</h3>
       <form name="run_control">
-        Run Number: <input name="run_number" type="number" step="1" value="0" style="width:6em">,
+        Run Number: <input name="run_number" type="number" step="1" value="1" style="width:6em">,
         or <input type="checkbox" name="offline"]> Offline Run
         <span style="font-size:80%">(file not saved, run number not incremented)</span>
         <br>

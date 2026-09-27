@@ -403,7 +403,7 @@ TODO: At present, metadata other than the value, such as CAS information, is sav
 
 TODO: At present, the list of Paths made persistent is hard-coded in `self._persistent_nodes` of the `Registry` class as follows.
 
-- `pubsub.form.input.`
+- `pubsub.form.`
 
 Note: Using `/` as the Registry separator causes serious trouble here.
 The filename is escaped correctly, but the result is ugly.
@@ -492,7 +492,7 @@ At present, SlowMesh PubSub topic filters cannot be used in topic names specifie
 Use `*` and `>` literally as shown in the topic names below, and replace the `{channel}` portion as appropriate.
 
 - `data.*.{channel}`
-- `form.input.{form_name}`
+- `form.{form_name}`
 - `sd.task.life_event.>`
 - `sd.task.heartbeat.>`
 - `sd.task.stdout.>`
@@ -989,7 +989,7 @@ The `name` attribute of a button (`<button>` or `<input type="submit">`) describ
 - `randomwalk.set_value()`: Remotely call the `set_value()` function of the randomwalk task. The function arguments are formed by combining the argument list written here (empty in this example) with the name-value pairs of the other `<input>` elements.
 - `publish control.start()`: Publish to the `control.start` topic. The published data is a JSON object combining the argument list (empty in this example) with the name-value pairs of the other `<input>` elements.
 
-In addition, when a `name` is specified on the `<form>` element, a change in an `<input>` field causes the changed value to be published to the `form.input.{form_name}` topic. At the same time, the page subscribes to this topic so that when the same form is changed in another browser, the change is immediately reflected.
+In addition, when a `name` is specified on the `<form>` element, a change in an `<input>` field causes the changed value to be published to the `form.{form_name}` topic. At the same time, the page subscribes to this topic so that when the same form is changed in another browser, the change is immediately reflected.
 
 #### SlowPlot Layout (`slowplot-control.json`)
 This layout arranges the following elements:
@@ -1239,7 +1239,7 @@ SlowDash standard data format
 
 
 ## form
-### form.input.{form_name}.{element_name}
+### form.{form_name}.{element_name}
 
 ##### Primary Uses
 - Purposes
@@ -1256,12 +1256,14 @@ Body:
 ```json
 {
     "type": "object",
-    "required": [ "sender_id", "form", "element", "value" ],
+    "required": [ "form", "element" ],
     "properties": {
         "sender_id": { "type": "string" },
         "form": { "type": "string" },
         "element": { "type": "string" },
-        "value": {}
+        "value": {},
+        "enabled": { "type": "bool" },
+        "style": { "type": "object" }
     }
 }
 ```

@@ -157,25 +157,25 @@ class FormNode(spc.ControlNode):
         if isinstance(value, dict):
             for k, v in value.items():
                 record = { 'form': self._name, 'element': k, 'value': v }
-                await self._tasklet.mesh.aio_publish(f'form.input.{self._name}.{k}', record)
+                await self._tasklet.mesh.aio_publish(f'form.{self._name}.{k}', record)
         else:
             logging.error(f'invalid form value: dict value is expected: {value}')
 
         
     async def aio_get(self):
-        inputs = await self._tasklet.mesh.registry.aio_get(f'pubsub.form.input.{self._name}.>', {})
-        if isinstance(inputs, dict):
-            return { k: v['value'] for k, v in inputs.items() if 'value' in v }
+        elements = await self._tasklet.mesh.registry.aio_get(f'pubsub.form.{self._name}.>', {})
+        if isinstance(elements, dict):
+            return { k: v['value'] for k, v in elements.items() if 'value' in v }
         else:
-            return inputs   # this should not happen...
+            return elements   # this should not happen...
 
         
-    def input(self, name:str):
-        return FormInputNode(self, name)
+    def element(self, name:str):
+        return FormElementNode(self, name)
 
 
         
-class FormInputNode(spc.ControlNode):
+class FormElementNode(spc.ControlNode):
     def __init__(self, form_node, name:str):
         self._form_node = form_node
         self._name = name

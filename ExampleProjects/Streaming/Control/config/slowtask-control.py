@@ -17,16 +17,16 @@ async def initialize():
     form = await ctrl.form('control').aio_get()   # form is a Python dict
     fx = form.get('fx', fx)
     fy = form.get('fy', fy)
+
+    # in case the cache does not exist, send the actual values to the browsers and the cache
+    await ctrl.form('control').aio_set({ 'fx': fx, 'fy': fy })
     
     
-@tasklet.mesh.on('form.input.control.>')
+@tasklet.mesh.on('form.control.>')
 async def set(form:slowpy.mesh.FormPacket):
     global fx, fy
     fx = form.get('fx', fx)
     fy = form.get('fy', fy)
-
-    await tasklet.mesh.aio_publish('form.input', slowpy.mesh.FormPacket('control', 'fx', 1))
-    
 
 
 @tasklet.loop(interval=0.2)

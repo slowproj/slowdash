@@ -125,10 +125,10 @@ class HtmlPanel extends Panel {
             }
         }
         for (const formName of this.formNames) {
-            dataRequest.append(`@mesh:form.input.${formName}.>`);
+            dataRequest.append(`@mesh:form.${formName}.>`);
         }
         if (! this._initialValuesReceived) {
-            dataRequest.append(`@registry:pubsub.form.input.>`);
+            dataRequest.append(`@registry:pubsub.form.>`);
         }
     }
 
@@ -251,7 +251,7 @@ class HtmlPanel extends Panel {
                 return;
             }
             
-            const topic = `form.input.${formName}.${elementName}`;
+            const topic = `form.${formName}.${elementName}`;
             const message = {
                 'sender_id': this.senderId,
                 'form': formName,
@@ -325,7 +325,7 @@ class HtmlPanel extends Panel {
         
         // input values from the PubSub Cache in Registry (for initial loading)
         if (! this._initialValuesReceived) {
-            const formInputRegistry = dataPacket[`@registry:pubsub.form.input.>`]?.x?.tree;
+            const formInputRegistry = dataPacket[`@registry:pubsub.form.>`]?.x?.tree;
             if (formInputRegistry) {
                 this._initialValuesReceived = true;
                 for (const [formName, formInputs] of Object.entries(formInputRegistry)) {
@@ -344,7 +344,7 @@ class HtmlPanel extends Panel {
         
         // updated input values from streaming
         for (const formName of this.formNames) {
-            const formInput = dataPacket[`@mesh:form.input.${formName}.>`];
+            const formInput = dataPacket[`@mesh:form.${formName}.>`];
             if (! formInput) {
                 continue;
             }

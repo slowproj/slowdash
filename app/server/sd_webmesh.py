@@ -201,8 +201,8 @@ class WebMeshComponent(Component):
                 channel = '.'.join(topic.split('.')[2:])
                 self._data_cache.process_data(body)
                 subscribed_topic = f'data.*.{channel}'
-            elif topic.startswith('form.input.'):
-                subscribed_topic = '.'.join(topic.split('.')[:3] + ['>'])
+            elif topic.startswith('form.'):
+                subscribed_topic = '.'.join(topic.split('.')[:2] + ['>'])
             else:
                 for prefix in self._topic_list:
                     if topic.startswith(prefix[:-1]):
@@ -222,7 +222,7 @@ class WebMeshComponent(Component):
                         stop_event.set()
                         
         await self._mesh.aio_subscribe('data.>', handle_message)
-        await self._mesh.aio_subscribe('form.input.>', handle_message)
+        await self._mesh.aio_subscribe('form.>', handle_message)
         for topic in self._topic_list:
             await self._mesh.aio_subscribe(topic, handle_message)
         
@@ -306,7 +306,7 @@ class WebMeshComponent(Component):
         client_id = doc.get('client_id')
         topic = doc.get('topic')
 
-        if not (topic.startswith('data.*.') or topic.startswith('form.input.') or topic in self._topic_list):
+        if not (topic.startswith('data.*.') or topic.startswith('form.') or topic in self._topic_list):
             return { 'status': 'error', 'message': f'invalid topic: {topic}' }
 
         async with self._queue_lock:
