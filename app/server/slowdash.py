@@ -22,7 +22,6 @@ from sd_userhtml import UserHtmlComponent
 from sd_misc_api import MiscApiComponent
 
 
-
 class App(slowlette.App):
     def __init__(self, project_dir=None, project_file=None, port=None, is_command=False, is_async=True, is_cgi=False):
         """
@@ -78,6 +77,7 @@ class App(slowlette.App):
         self.slowlette.include(SlowMQComponent(self, self.project))
 
 
+    
     @slowlette.on_event("shutdown")
     def on_shutdown(self):
         logging.info('Terminating SlowDash gracefully')

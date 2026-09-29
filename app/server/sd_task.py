@@ -6,8 +6,7 @@ from pathlib import Path
 
 import slowlette
 from sd_component import Component
-from slowpy.mesh import Mesh
-
+from slowpy.mesh import Mesh, MeshLogHandler
 
 
 class MeshRequest:
@@ -367,6 +366,9 @@ class TaskComponent(Component):
         self._proc_set_table: dict[str, set[subprocess.Popen]] = {}     # { task_name => [ process ] }
         self._life_event_table: dict[str, str] = {}   # { task_name => last_life_event }
 
+        self._mesh_log_handler = MeshLogHandler()  # sd_task will take care of this
+        logging.getLogger().addHandler(self._mesh_log_handler)
+
 
     def public_config(self):
         return { 'task': {
@@ -390,6 +392,9 @@ class TaskComponent(Component):
             await self._mesh.aio_start()
             await self._request_taskspec()
 
+            if self._mesh_log_handler is not None:
+                await self._mesh_log_handler.aio_start(self._mesh)
+            
         self._load_task_catalog()
         for task in self._task_catalog.values():
             if task.get('auto_start', False):
@@ -399,6 +404,9 @@ class TaskComponent(Component):
     @slowlette.on_event('shutdown')
     async def shutdown(self):        
         if self._mesh is not None:
+            if self._mesh_log_handler is not None:
+                await self._mesh_log_handler.aio_stop()
+                
             await self._mesh.aio_close()
             self._mesh = None
 

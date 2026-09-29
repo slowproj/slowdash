@@ -70,7 +70,10 @@ class MiscApiComponent(Component):
             if value is None:
                 x = {}            
             elif isinstance(value, dict):
-                x = { 'tree': value }
+                if 'tree' in value or 'table' in value:
+                    x = value
+                else:
+                    x = { 'tree': value }
             elif isinstance(value, numbers.Real):
                 x = value
             else:

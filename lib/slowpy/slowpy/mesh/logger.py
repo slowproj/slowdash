@@ -75,7 +75,7 @@ class MeshLogHandler(logging.Handler):
 
             token = self._logging_suspended.set(True)
             try:
-                await self._mesh.aio_publish('log', message)
+                await self._mesh.aio_publish(f'log.{message.get("level_name","UNDEFINED")}', message)
             except Exception as e:
                 sys.stderr.write(f'### ERROR: LOG PUBLISH: {e}\n')
                 self._mesh_ready.clear()

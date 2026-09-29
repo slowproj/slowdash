@@ -1,7 +1,7 @@
 // panel-task.mjs //
 // Created by Sanshiro Enomoto on 4 July 2026
 
-export { TaskPanel };
+export { TaskPanel, LogPanel };
 
 
 import { JG as $, JGDateTime } from './jagaimo/jagaimo.mjs';
@@ -286,5 +286,121 @@ class TaskPanel extends Panel {
 
         this.consoleDiv.text(this._consoleLines.join('\n'));
         this.consoleDiv.get().scrollTop = this.consoleDiv.get().scrollHeight;
+    }
+}
+
+
+
+
+class LogPanel extends Panel {
+    static describe() {
+        return { type: 'log', label: 'Log Messages' };
+    }
+
+    
+    static buildConstructRows(table, on_done=config=>{}) {
+    }
+
+    
+    constructor(div, style={}) {
+        super(div, style);
+        
+        this.frameDiv = $('<div>').appendTo(div);        
+        this.titleDiv = $('<div>').appendTo(this.frameDiv);
+        this.contentDiv = $('<div>').appendTo(this.frameDiv);
+        this.logDiv = $('<div>').appendTo(this.contentDiv);
+        
+        this.logDiv.html('<tr><td></td></tr><tr><td>loading log messages...</td></tr>');
+
+        this.frameDiv.css({
+            width:'calc(100% - 44px)',
+            height:'calc(100% - 44px)',
+            margin: '10px 10px 10px 10px',
+            padding:'10px',
+            overflow:'auto',
+        });
+        this.titleDiv.css({
+            width:'calc(100% - 10px)',
+            'font-family': 'sans-serif',
+            'font-size': '20px',
+            'font-weight': 'normal',
+            'margin': '0',
+            'margin-bottom': '10px',
+            'white-space': 'nowrap',
+            'overflow': 'hidden',
+        });
+        this.contentDiv.css({
+            position: 'relative',
+            width:'100%',
+            height:'calc(100% - 10px - 30px)',
+            margin: 0,
+            padding:0,
+            overflow:'hidden',
+        });
+        this.logDiv.css({
+            position: 'relative',
+            width:'calc(100% - 14px)',
+            height:'calc(100% - 14px)',
+            margin: 0,
+            padding: '5px',
+            overflow:'auto',
+            'white-space': 'pre',
+            'font-family': 'monospace',
+            'font-size': '100%',
+        });
+        
+        this.titleDiv.html('Log Messages');
+    }
+
+    
+    configure(config, options={}, callbacks={}) {
+        super.configure(config, options, callbacks);
+    }
+
+
+    fillDataRequest(dataRequest) {
+        //dataRequest.append('@mesh:log.>');
+    }
+
+    
+    draw(dataPacket, displayTimeRange=null) {
+        if (dataPacket.__meta.isStreaming) {
+            return;
+        }
+
+        this._load();
+    }
+
+    
+    async _load() {
+        let logs = []; // note that there can exist multiple task instances of a task file
+        try {
+            const response = await fetch('api/log');
+            logs = await response.json();
+        }
+        catch (e) {
+            console.log("Error on fetching task status: ", e);
+        }
+        
+        this._render(logs);
+    }
+
+    
+    _render(logs) {
+        let lines = [];
+        for (const [ts, level, source, message] of logs.table) {
+            const time = new JGDateTime(ts).asString();
+            const line = time + '  ' + level.padEnd(10, ' ') + (source + ': ').padEnd(20, ' ') + message;
+            const color = (level.startsWith('ERR') ? 'red' : (level.startsWith('WARN') ? 'blue' : null));
+            if (color != null) {
+                lines.push(`<span style="color:${color}">${line}</span>`);
+            }
+            else {
+                lines.push(line);
+            }
+        }
+
+        this.logDiv.html(lines.join('\n'));
+        this.logDiv.get().scrollTop = this.logDiv.get().scrollHeight;
     }
 }

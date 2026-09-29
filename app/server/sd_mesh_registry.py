@@ -316,6 +316,8 @@ class MeshRegistryComponent(Component):
 
         self.mesh = None
         self.registry = Registry()
+
+        self.logs = []  ## temporarily placed here...
         
 
     @slowlette.on_event('post_startup')
@@ -344,6 +346,9 @@ class MeshRegistryComponent(Component):
             topic = headers.get('topic')
             if topic is not None and not topic.startswith('sd.rpc'):
                 self.registry.set(f'{self._pubsub_cache_prefix}.{topic}', data)
+                if topic.startswith('log.'):
+                    self.logs.append(data)
+                    
         await self.mesh.aio_subscribe('>', handle_message)
 
         
@@ -394,6 +399,37 @@ class MeshRegistryComponent(Component):
             
         return result
             
+
+    @slowlette.get('/api/registry/value/{key}')
+    async def api_get_value(self, key:str='.>', with_meta:bool=False):
+        value = self.registry.get(key, with_meta=with_meta)
+        if value is not None:
+            return value
+        elif with_meta:
+            return {}
+        elif len(key) > 0 and not (key[-1].isalnum() or key[-1] == '_'):
+            return {}
+        else:
+            return None
+
+
+    # temporarily placed here
+    @slowlette.get('/api/log')
+    async def api_get_log(self):
+        table = []
+        for log in self.logs:
+            table.append([
+                log.get('timestamp', 0),
+                log.get('level_name', '-'),
+                log.get("module", '-'),
+                log.get('message', '-'),
+            ])
+            
+        return {
+            'columns': [ 'Time', 'Level', 'Source', 'Message' ],
+            'table': table,
+        }
+
 
 
 if __name__ == '__main__':

@@ -31,9 +31,10 @@
         },
         panels: [
             { type: 'task', short_form: false, title: 'Tasks', style: { 'border': '' } },
-            { type: 'html', content: 'coming soon', title: 'Log Messages' },
+            //{ type: 'table', channel: '@api:log', title: 'Log Messages' },
+            { type: 'log' },
             { type: 'tree', channel: '@registry:.>', title: 'Mesh Registry (incl. PubSub Cache)'},
-            { type: 'tree', channel: '@api:config', title: 'Server Component Parameters and Stats' },
+            { type: 'tree', channel: '@api:config', title: 'Server Component Config and Stats' },
         ]
     };
 
