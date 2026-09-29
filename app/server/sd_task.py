@@ -368,6 +368,19 @@ class TaskComponent(Component):
         self._life_event_table: dict[str, str] = {}   # { task_name => last_life_event }
 
 
+    def public_config(self):
+        return { 'task': {
+            'catalog': self._task_catalog,
+            'process': {
+                name: {
+                    'life_event:': self._life_event_table[name],
+                    'pid': [ proc.pid for proc in proc_set ],
+                }
+                for name, proc_set in self._proc_set_table.items()
+            }
+        }}
+
+
     @slowlette.on_event('post_startup')
     async def startup(self):
         # this needs to be done in "post_startup", as SlowMQ (if used) must be running.

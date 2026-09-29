@@ -91,8 +91,9 @@ class ToolsPanel extends Panel {
             <ul>
               <li>&#x1f4c8; <a href="slowplot.html?grid=2x2">New Plot Layout</a>
               <li>&#x1f4e5; <a href="slowdown.html">Data Download</a>
-              <li>&#x1f4c1; <a href="slowfile.html">Config File Manager</a>
               <li>&#x1f6f3; <a href="slowplan.html">Cruise Planner</a>
+              <li>&#x1f4c1; <a href="slowfile.html">Config File Manager</a>
+              <li>&#x1f46e; <a href="slowinspect.html">System Inspector</a>
             </ul>
             <h3>Resources</h3>
             <ul>

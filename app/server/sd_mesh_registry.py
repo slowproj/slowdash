@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 15 July 2026 #
 
-import time, json, glob, logging
+import time, json, numbers, glob, logging
 from dataclasses import dataclass, field, asdict
 from typing import Any
 
@@ -380,18 +380,15 @@ class MeshRegistryComponent(Component):
             key = ch[len(self._registry_data_prefix):]
             
             value = self.registry.get(key)
-            if value is None:
-                continue
             
-            if isinstance(value, dict):
+            if value is None:
+                x = {}
+            elif isinstance(value, dict):
                 x = { 'tree': value }
-            elif isinstance(value, (int, float, str)):
+            elif isinstance(value, numbers.Real):
                 x = value
             else:
-                try:
-                    x = str(value)
-                except:
-                    x = value
+                x = str(value)
                     
             result[ch] = { 'start': start, 't': now - start, 'x': x }
             

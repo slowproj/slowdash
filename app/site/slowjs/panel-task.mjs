@@ -101,6 +101,12 @@ class TaskPanel extends Panel {
         this._isSecure = options.is_secure;
         
         this._taskCatalog = null;
+
+        if (config.style?.border != null) {
+            this.frameDiv.css({
+                'border': config.style.border,
+            })
+        }
     }
 
 

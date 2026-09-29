@@ -87,12 +87,19 @@ class HtmlPanel extends Panel {
     async configure(config, options={}, callbacks={}) {
         await super.configure(config, options, callbacks);
         this.titleDiv.text(this.config.title ?? '');
+
         this.variables = [];
         this.formNames = [];
 
-        const base = ((this.config.location??'') == 'system' ? './' : './api/config/content/');
-        this.url = base + 'html-' + config.file;
-        this.url += '?content_type=html';
+        if (config.file) {
+            const base = ((this.config.location??'') == 'system' ? './' : './api/config/content/');
+            this.url = base + 'html-' + config.file;
+            this.url += '?content_type=html';
+        }
+        else if (config.content) {
+            this.url = null;
+            this.content = String(config.content);
+        }
 
         this._initialValuesReceived = false;
         await this._loadPage();
@@ -168,18 +175,25 @@ class HtmlPanel extends Panel {
 
     
     async _loadPage() {
-        const response = await fetch(this.url);
-        if (! response.ok) {
-            this.contentDiv.html(`
-                <h3>HTML File Loading Error</h3>
-                Name: ${this.config.file}<br>
-                <p>
-                URL: ${this.url}<br>
-                Error: ${response.status} ${response.statusText}
-            `);
-            return null;
+        let html = null;
+        if (this.url != null) {
+            const response = await fetch(this.url);
+            if (! response.ok) {
+                this.contentDiv.html(`
+                    <h3>HTML File Loading Error</h3>
+                    Name: ${this.config.file}<br>
+                    <p>
+                    URL: ${this.url}<br>
+                    Error: ${response.status} ${response.statusText}
+                `);
+                return null;
+            }
+            html = await response.text();
         }
-        const html = await response.text();
+        else {
+            html = this.content;
+        }
+        
         if (html) {
             this._render(html);  // everything will be rendered; injections, XSS, ..., are accepted by users risk
             this._adjustScaling();

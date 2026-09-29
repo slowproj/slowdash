@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<!-- Created by Sanshiro Enomoto on 29 September 2026 -->
+
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="favicon.png">
+  <link rel="stylesheet" type="text/css" href="slowjs/slowdash.css">
+  <link rel="stylesheet" type="text/css" id="sd-theme-css">
+</head>
+
+
+<body style="margin:0">
+  <div id="sd-header"></div>
+  <div id="sd-layout">Loading Configuration...</div>
+
+  <script type="module">
+    import { JG as $ } from './slowjs/jagaimo/jagaimo.mjs';
+    import { SlowDash } from './slowjs/slowdash.mjs';
+    import { Frame } from './slowjs/frame.mjs';
+
+    const layout_config = {
+        meta: {
+            name: 'SlowInspect',
+            title: 'System Inspector',
+        },
+        control: {
+            grid: { 'rows': 2, 'columns': 2 },
+            inactive: true,
+        },
+        panels: [
+            { type: 'tree', channel: '@registry:.>', title: 'Registry (incl. PubSub Cache)'},
+            { type: 'tree', channel: '@api:config', title: 'Server Component Config Entries' },
+            { type: 'task', short_form: false, title: 'Tasks', style: { 'border': '' } },
+            { type: 'html', content: 'coming soon', title: 'Log Messages' }
+        ]
+    };
+
+
+    async function main() {
+        $('#sd-layout').css({'width':"100%", 'margin':0, 'padding':0});
+        let slowdash = new SlowDash($('#sd-layout'));
+        const config = await slowdash.configure(layout_config);
+        
+        let title = config._project.project?.title || config._project.project?.name || "SlowDash";
+        if (config.meta?.title) {
+            title += " - " + config.meta.title;
+        }
+        document.title = layout_config.meta.name;
+
+
+        let frame = new Frame($('#sd-header'), {
+            title: title,
+            style: config._project.style ?? {},
+            initialStatus: "SlowDash - Version " + config._project.slowdash.version,
+        });
+        slowdash.setCallbacks({
+            setBeatTime: (time) => {
+                frame.setClockTime(time);
+            },
+        });
+        setupCommonButtons(config, slowdash, frame);
+
+        $(window).bind('resize', ()=>{
+            if (window.innerWidth > 0) {
+                $('#sd-layout').css('width', '').css('height', '');
+                slowdash.redraw();
+            }
+        });
+
+        slowdash.start();
+    }
+
+
+    function setupCommonButtons(config, slowdash, frame) {
+        let homeButton = $('<button>').html("&#x1f3e0;").bind('click', e=>{
+            window.location.href = './';
+        });
+        homeButton.attr('title', 'Home');
+        frame.appendButton(homeButton);
+        let docButton = $('<button>').html("&#x2753;").bind('click', e=>{
+            window.open('./slowdocs/index.html');
+        });
+        docButton.attr('title', 'Documents');
+        frame.appendButton(docButton);
+    }
+
+    window.addEventListener('DOMContentLoaded', main);
+  </script>    
+</body>
