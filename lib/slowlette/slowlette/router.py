@@ -269,6 +269,9 @@ class Router:
         self.subapps = []
         self.middlewares = []
 
+        self.request_count = 0
+        self.current_requests = set()
+
         # Binding URL handlers to the PathRule attached by decorators (@get(PATH) etc).
         # Note that __init__() is called after all the decorators.
         for name, method in inspect.getmembers(type(self.app), predicate=inspect.isfunction):
@@ -304,12 +307,19 @@ class Router:
             else:
                 request = Request(request, method='POST', body=body)
 
+        self.request_count += 1
+        self.current_requests.add(request)
+
         # from a nested-tree (sub)apps, create a linear response list before merging them
         response_list = [ Response() ]
         await self._dispatch_branch(request, response_list)
         
-        return self.merge_responses(response_list)
+        response = self.merge_responses(response_list)
 
+        self.current_requests.remove(request)
+
+        return response
+    
         
     async def _dispatch_branch(self, request:Request, response_list) -> None:
         # execute handlers from top to bottom, and store the responses in a list
@@ -456,10 +466,8 @@ class Router:
         return False
 
         
-    def __call__(self, request:Request, body=None) -> Response:
-        """ this returns an asyncio.Task, as self.dispatch() is async
-        """
-        return self.dispatch(request, body)
+    async def __call__(self, request:Request, body=None) -> Response:
+        return await self.dispatch(request, body)
 
     
     def __iter__(self):

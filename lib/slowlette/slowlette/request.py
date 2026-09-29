@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 11 January 2025 #
 
-import copy, logging
+import time, copy, logging
 from urllib.parse import urlparse, parse_qsl, unquote
 
 
@@ -26,6 +26,8 @@ class Request:
         self.path_str = '/' + '/'.join(self.path)
         self.query_str = '&'.join([f'{k}={v}' for k,v in self.query.items()])
 
+        self.time = time.time()
+        
 
     def abort(self):
         self.aborted = True

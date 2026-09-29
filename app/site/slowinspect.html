@@ -30,10 +30,10 @@
             inactive: true,
         },
         panels: [
-            { type: 'tree', channel: '@registry:.>', title: 'Registry (incl. PubSub Cache)'},
-            { type: 'tree', channel: '@api:config', title: 'Server Component Config Entries' },
             { type: 'task', short_form: false, title: 'Tasks', style: { 'border': '' } },
-            { type: 'html', content: 'coming soon', title: 'Log Messages' }
+            { type: 'html', content: 'coming soon', title: 'Log Messages' },
+            { type: 'tree', channel: '@registry:.>', title: 'Mesh Registry (incl. PubSub Cache)'},
+            { type: 'tree', channel: '@api:config', title: 'Server Component Parameters and Stats' },
         ]
     };
 

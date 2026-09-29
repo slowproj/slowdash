@@ -128,6 +128,7 @@ class Tasklet:
         self._content_generators = {}
 
         self._mesh_stdio = None
+        self._mesh_logger = None
 
         self._dash_url = dash_url
         self._dash = Dash()
@@ -394,7 +395,10 @@ class Tasklet:
             await self._mesh_stdio.aio_start()
         
         for mesh in self._mesh_list:
-            await mesh.aio_start()   
+            await mesh.aio_start()
+
+        if self._mesh_logger is not None:
+            await self._mesh_logger.aio_start(self._mesh)
 
         async def handle_control(headers, data):
             if headers.get('topic', '') == 'sd.task.control.introduce':
@@ -471,6 +475,12 @@ class Tasklet:
                     pass
                 await asyncio.sleep(0.1) # have mesh flush the stdio messages
                 
+                if self._mesh_logger is not None:
+                    try:
+                        await self._mesh_logger.aio_stop()
+                    except Exception:
+                        pass
+
             for mesh in self._mesh_list:
                 try:
                     await mesh.aio_close()

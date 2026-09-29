@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 17 March 2026 #
 
-import asyncio, json, logging, traceback
+import time, asyncio, json, logging, traceback
 
 import slowlette
 from sd_component import Component
@@ -19,11 +19,32 @@ class SlowMQComponent(Component):
         self._send_failures = {}  # client_id:int -> consecutive failure count
 
         self._max_send_failures = 5
+
+        self._start_time = time.time()
+        self._receive_count = 0
+        self._send_count = 0
+        self._failure_count = 0
         
 
     def public_config(self):
+        up_time = time.time() - self._start_time + 0.01
+        rate = (self._receive_count + self._send_count) / up_time
+        if rate >= 100:
+            rate = '%.0f' % rate
+        if rate >= 10:
+            rate = '%.1f' % rate
+        else:
+            rate = '%.3f' % rate
+        
         return { 'slowmq': {
             'enabled': self.enabled,
+            'statistics': {
+                'up_time': int(up_time),
+                'received': self._receive_count,
+                'sent': self._send_count,
+                'failed': self._failure_count,
+                'message_rate': float(rate),
+            },
             'attached': { topic:len(clients) for topic,clients in self._subscribers.items() },
         }}
 
@@ -109,6 +130,8 @@ class SlowMQComponent(Component):
             
         
     async def handle_message(self, client_id:int, headers, message):
+        self._receive_count += 1
+        
         topic = headers.get('topic')
         if topic is None or len(topic) == 0:
             return False
@@ -177,6 +200,7 @@ class SlowMQComponent(Component):
                 for client_id in list(subscribers):
                     websocket = self._websockets.get(client_id)
                     if websocket is not None:
+                        self._send_count += 1
                         receivers.append((client_id, websocket))
 
         results = await asyncio.gather(*(ws.send(message) for _, ws in receivers), return_exceptions=True)
@@ -186,6 +210,7 @@ class SlowMQComponent(Component):
             if not isinstance(result, Exception):
                 self._send_failures[client_id] = 0
             else:
+                self._failure_count += 1
                 count = self._send_failures.get(client_id, 0) + 1
                 self._send_failures[client_id] = count
                 client_name = self._clients.get(client_id, {}).get('name')

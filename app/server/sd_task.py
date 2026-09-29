@@ -373,7 +373,7 @@ class TaskComponent(Component):
             'catalog': self._task_catalog,
             'process': {
                 name: {
-                    'life_event:': self._life_event_table[name],
+                    'life_event:': self._life_event_table.get(name, {}),
                     'pid': [ proc.pid for proc in proc_set ],
                 }
                 for name, proc_set in self._proc_set_table.items()

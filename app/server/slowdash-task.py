@@ -3,7 +3,7 @@
 import os, sys, time, re, json, copy, argparse, asyncio, importlib.util, logging, traceback
 
 import slowpy
-from slowpy.mesh import Tasklet, RetainerAutocide, Mesh, MeshStdio
+from slowpy.mesh import Tasklet, RetainerAutocide, Mesh, MeshStdio, MeshLogHandler
 from slowpy.control import ControlSystem
 
 
@@ -31,6 +31,9 @@ def load_task_module(path:str, *, name:str, argv:list[str]|None=None, parameters
 
     Tasklet.set_parameters(parameters or {})
     preset_module_for_matplotlib(module)
+
+    mesh_logger = MeshLogHandler()
+    logging.getLogger().addHandler(mesh_logger)
     
     try:
         spec.loader.exec_module(module)
@@ -51,7 +54,8 @@ def load_task_module(path:str, *, name:str, argv:list[str]|None=None, parameters
         
     module._sd_tasklet = tasklet
     ControlSystem.bind_tasklet(tasklet)
-        
+    tasklet._mesh_logger = mesh_logger
+
     return module, tasklet
 
 
@@ -148,11 +152,11 @@ async def main():
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)
     logging.basicConfig(
-        level=loglevel,
-        format='%(asctime)s %(levelname)s: %(filename)s %(funcName)s():   %(message)s', 
-        datefmt='%y-%m-%d %H:%M:%S'
+        level = loglevel,
+        format = '%(asctime)s %(levelname)s: %(filename)s %(funcName)s():   %(message)s', 
+        datefmt = '%y-%m-%d %H:%M:%S',
     )
-
+    
     path = args.script
     name = args.name
     mesh_url = args.mesh

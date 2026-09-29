@@ -10,6 +10,33 @@ class MiscApiComponent(Component):
     def __init__(self, app, project):
         super().__init__(app, project)
 
+        self._start_time = time.time()
+        
+
+    def public_config(self):
+        now = time.time()
+        up_time = now - self._start_time + 0.01
+        requests = self.app.slowlette.request_count
+        rate = requests / up_time
+        if rate >= 100:
+            rate = '%.0f' % rate
+        if rate >= 10:
+            rate = '%.1f' % rate
+        else:
+            rate = '%.3f' % rate
+        return { 'slowlette': {
+            'statistics': {
+                'up_time': int(up_time),
+                'requests': requests,
+                'request_rate': float(rate),
+            },
+            'current_requests': [
+                f'{(now - req.time):.3f}s, {req}'
+                for req in self.app.slowlette.current_requests
+            ]
+        }}
+
+        
     @slowlette.get('/api/ping')
     def ping(self):
         return 'pong'
