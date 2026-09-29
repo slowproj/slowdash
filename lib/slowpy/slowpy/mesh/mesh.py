@@ -322,9 +322,9 @@ class Mesh:
                 if now > end:
                     if expected_replies is not None and len(replies) < expected_replies:
                         if raise_on_timeout:
-                            raise Exception(f'RPC timeout')
+                            raise Exception(f'Mesh: RPC timeout: {name}(): n-replies: {len(replies)}')
                         else:
-                            logging.warning(f'Mesh: RPC timeout: {name}()')
+                            logging.warning(f'Mesh: RPC timeout: {name}(): n-replies: {len(replies)}')
                     break
 
         except Exception as e:

@@ -88,6 +88,14 @@ class RetainerAutocide:
 
 
 class Tasklet:
+
+    _parameters = {}   # typically from --parameters of the program args (therefore process-wide)
+
+    @classmethod
+    def set_parameters(cls, parameters:dict):
+        cls._parameters = copy.deepcopy(parameters)
+        
+    
     def __init__(self,
         name:str|None=None,
         *,
@@ -108,7 +116,6 @@ class Tasklet:
 
         self._module = None
         self._mesh = Mesh(self._mesh_url, stop_on_error=self._stop_on_error)
-        self._params = {}
 
         self._mesh_list = [ self._mesh ]
         self._initialize_task_coros = []
@@ -138,6 +145,11 @@ class Tasklet:
     def dash(self):
         return self._dash
 
+    
+    @property
+    def parameters(self):
+        return self._parameters
+
         
     def external_mesh(self, mesh_url:str, **kwargs):
         """returns a mesh object to communicate with an external Mesh
@@ -149,8 +161,7 @@ class Tasklet:
         return mesh
 
 
-    def run(self, parameters:dict|None=None, *, name:str|None=None, mesh_url:str|None=None):
-        self._params = copy.deepcopy(parameters or {})
+    def run(self, *, name:str|None=None, mesh_url:str|None=None):
         self._name = name or self._name
         self._mesh_url = mesh_url or self._mesh_url
         
@@ -170,10 +181,9 @@ class Tasklet:
             pass
             
 
-    async def run_module(self, module, name:str, parameters:dict, mesh_url:str):
+    async def run_module(self, module, name:str, mesh_url:str):
         self._module = module
         self._name = name
-        self._params = copy.deepcopy(parameters or {})
         self._mesh_url = mesh_url or self._mesh_url
         
         try:
@@ -596,7 +606,7 @@ class Tasklet:
         async def go_initialize():
             nargs = len(inspect.signature(func).parameters)
             if nargs >= 1:
-                args = [ self._params ]
+                args = [ self._parameters ]
             else:
                 args = []
             try:

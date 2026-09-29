@@ -1,24 +1,26 @@
-
-print(f'hello from {__name__}')
-
-from slowpy.control import control_system as ctrl
-ctrl.import_control_module('Dripline')
-dripline = ctrl.dripline('amqp://dripline:dripline@rabbit-broker')
+import slowpy
+tasklet = slowpy.mesh.Tasklet()
 
 
+@tasklet.mesh.export()
 def set_value(value:float):
     print(f'setting randomwalk value to {value}')
     dripline.endpoint('randomwalk_value').set(value)
 
+    
+@tasklet.mesh.export()
 def set_step(step:float):
     print(f'setting randomwalk step to {step}')
     dripline.endpoint('randomwalk_step').set(step)
 
-def _finalize():
+    
+@tasklet.finalize()
+def finalize():
     dripline.close()
 
     
-def _get_html():
+@tasklet.content('html/html-control-randomwalk.html')
+def html():
     return '''
       <form>
         <table>

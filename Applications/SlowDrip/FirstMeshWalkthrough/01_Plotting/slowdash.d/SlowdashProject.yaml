@@ -3,7 +3,6 @@ slowdash_project:
   title: Dripline First-Mesh Walkthrough
 
   data_source:
-    url: postgresql://postgres:postgres@postgres:5432/sensor_data
-    parameters:
-      time_series:
-        - schema: numeric_data [sensor_name] @timestamp(with timezone) = value_raw(default), value_cal
+    url: ${DB_URL:-postgresql://postgres:postgres@localhost:5432/sensor_data}
+    time_series:
+      - schema: numeric_data [sensor_name] @timestamp(with timezone) = value_raw(default), value_cal

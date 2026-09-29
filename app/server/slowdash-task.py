@@ -7,7 +7,7 @@ from slowpy.mesh import Tasklet, RetainerAutocide, Mesh, MeshStdio
 from slowpy.control import ControlSystem
 
 
-def load_task_module(path:str, *, name:str, argv:list[str]|None=None):
+def load_task_module(path:str, *, name:str, argv:list[str]|None=None, parameters:dict|None=None):
     path = os.path.abspath(path)
     if not os.path.isfile(path):
         raise FileNotFoundError(path)
@@ -29,8 +29,9 @@ def load_task_module(path:str, *, name:str, argv:list[str]|None=None):
     if script_dir not in sys.path:
         sys.path.insert(0, script_dir)
 
+    Tasklet.set_parameters(parameters or {})
     preset_module_for_matplotlib(module)
-
+    
     try:
         spec.loader.exec_module(module)
     except Exception:
@@ -49,7 +50,7 @@ def load_task_module(path:str, *, name:str, argv:list[str]|None=None):
         tasklet = Tasklet(use_oldstyle_callbacks=True)
         
     module._sd_tasklet = tasklet
-    ControlSystem._tasklet = tasklet
+    ControlSystem.bind_tasklet(tasklet)
         
     return module, tasklet
 
@@ -196,7 +197,7 @@ async def main():
                 logging.error(f'slowdask-task: unable to publish task life-event: {mesh_id}: {e}')
     
         try:
-            module, tasklet = load_task_module(path=path, name=name, argv=script_args)
+            module, tasklet = load_task_module(path=path, name=name, argv=script_args, parameters=parameters)
             await notify_life_event(name, mesh.mesh_id, 'script loaded')
         except Exception as e:
             await notify_life_event(name, mesh.mesh_id, 'script loading failed')
@@ -217,7 +218,7 @@ async def main():
             print(e)
             
     try:
-        await tasklet.run_module(module=module, name=name, parameters=parameters, mesh_url=mesh_url)
+        await tasklet.run_module(module=module, name=name, mesh_url=mesh_url)
     except Exception as e:
         logging.error(f'slowdash-task: error on loading: {e}')
             

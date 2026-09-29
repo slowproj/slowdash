@@ -9,6 +9,11 @@ import slowpy.control as spc
 class ControlSystem(spc.ControlNode):
     # this will be injected by slowdash-task.py
     _tasklet = None
+
+    @classmethod
+    def bind_tasklet(cls, tasklet):
+        cls._tasklet = tasklet
+        
     
     _mesh_error_shown = False
     _mesh_unnamed_count = 1

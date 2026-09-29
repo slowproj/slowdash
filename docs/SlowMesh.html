@@ -787,7 +787,7 @@ information, is saved but is not restored when loading.</p>
 <code>self._persistent_nodes</code> of the <code>Registry</code> class
 as follows.</p>
 <ul>
-<li><code>pubsub.form.input.</code></li>
+<li><code>pubsub.form.</code></li>
 </ul>
 <p>Note: Using <code>/</code> as the Registry separator causes serious
 trouble here. The filename is escaped correctly, but the result is
@@ -892,7 +892,7 @@ literally as shown in the topic names below, and replace the
 <code>{channel}</code> portion as appropriate.</p>
 <ul>
 <li><code>data.*.{channel}</code></li>
-<li><code>form.input.{form_name}</code></li>
+<li><code>form.{form_name}</code></li>
 <li><code>sd.task.life_event.&gt;</code></li>
 <li><code>sd.task.heartbeat.&gt;</code></li>
 <li><code>sd.task.stdout.&gt;</code></li>
@@ -1519,9 +1519,9 @@ pairs of the other <code>&lt;input&gt;</code> elements.</li>
 <p>In addition, when a <code>name</code> is specified on the
 <code>&lt;form&gt;</code> element, a change in an
 <code>&lt;input&gt;</code> field causes the changed value to be
-published to the <code>form.input.{form_name}</code> topic. At the same
-time, the page subscribes to this topic so that when the same form is
-changed in another browser, the change is immediately reflected.</p>
+published to the <code>form.{form_name}</code> topic. At the same time,
+the page subscribes to this topic so that when the same form is changed
+in another browser, the change is immediately reflected.</p>
 <h4 id="slowplot-layout-slowplot-control.json">SlowPlot Layout
 (<code>slowplot-control.json</code>)</h4>
 <p>This layout arranges the following elements:</p>
@@ -1849,7 +1849,7 @@ id="data.store.channel_name-data.stream.channel_name">data.store.{channel_name}
 <p>SlowDash standard data format</p>
 <h2 id="form">form</h2>
 <h3
-id="form.input.form_name.element_name">form.input.{form_name}.{element_name}</h3>
+id="form.form_name.element_name">form.{form_name}.{element_name}</h3>
 <h5 id="primary-uses">Primary Uses</h5>
 <ul>
 <li>Purposes
@@ -1871,14 +1871,16 @@ used as initial values when a new page is opened</li>
 <div class="sourceCode" id="cb50"><pre
 class="sourceCode json"><code class="sourceCode json"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span><span class="fu">,</span></span>
-<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;sender_id&quot;</span><span class="ot">,</span> <span class="st">&quot;form&quot;</span><span class="ot">,</span> <span class="st">&quot;element&quot;</span><span class="ot">,</span> <span class="st">&quot;value&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="ot">[</span> <span class="st">&quot;form&quot;</span><span class="ot">,</span> <span class="st">&quot;element&quot;</span> <span class="ot">]</span><span class="fu">,</span></span>
 <span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;properties&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
 <span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;sender_id&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
 <span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;form&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
 <span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;element&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span> <span class="fu">},</span></span>
-<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="fu">{}</span></span>
-<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb50-10"><a href="#cb50-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="fu">{},</span></span>
+<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;enabled&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;bool&quot;</span> <span class="fu">},</span></span>
+<span id="cb50-10"><a href="#cb50-10" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;style&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;object&quot;</span> <span class="fu">}</span></span>
+<span id="cb50-11"><a href="#cb50-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb50-12"><a href="#cb50-12" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
 <h5 id="json-example">JSON Example</h5>
 <p>Body:</p>
 <div class="sourceCode" id="cb51"><pre

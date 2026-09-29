@@ -26,7 +26,7 @@ class ControlVariableNode(ControlNode):
         """
         try:
             self._node_async_ramping.stop()
-            logging.error('Non-async ramping used while async ramping is running')
+            logging.warning('Non-async ramping used while async ramping is running')
             # BUG: the task will not be stopped until next await, which might not happen. Thus the message is an error.
         except:
             pass
@@ -219,7 +219,7 @@ class RampingThreadNode(ControlThreadMixin, RampingBaseNode):
         
     def run(self):
         if not self._is_thread_safe:
-            logging.error('RampingThreadNode used for non thread-safe node')
+            logging.warning('RampingThreadNode used for non thread-safe node')
 
         while True:
             if self.is_stop_requested() or self._node_thread_stop_event.is_set():
@@ -385,7 +385,7 @@ class PIDThreadNode(ControlThreadMixin, ControlNode):
 
     def run(self):
         if not self._is_thread_safe:
-            logging.error('PIDNode used with non thread-safe control or sensing node')
+            logging.warning('PIDNode used with non thread-safe control or sensing node')
 
         while True:
             # check if the PID loop is running

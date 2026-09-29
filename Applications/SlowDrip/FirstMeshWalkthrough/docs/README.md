@@ -51,23 +51,29 @@ value = dripline.endpoint(name).value_raw().get()
 value = await dripline.endpoint(name).value_raw().aio_get()
 ```
 
-#### Setting a value with ramping (or other SlowPy logic)
+#### Using SlowPy logic
+##### Ramping Example
+Setting a value with ramping (or other SlowPy logic, such as PID loop)
 ```python
-dripline.endpoint(name).ramping(changes_per_sec).set(value)
+dripline.endpoint(name).ramping(changes_per_sec).set(target_value)
 ```
 ```python
-await dripline.endpoint(name).ramping(changes_per_sec).aio_set(value)
+await dripline.endpoint(name).async_ramping(changes_per_sec).aio_set(target_value)
 ```
 
-#### Checking or controlling ramping status
+- Setting `None` to the `target_value` will stop the ramping process
+- `.ramping().status().get()` will return the status
+
+##### PID Loop Example
+Setting a value with ramping (or other SlowPy logic, such as PID loop)
 ```python
-status = dripline.endpoint(name).ramping().status().get()
-dripline.endpoint(name).ramping().status().set(0)  # stop ramping
+sensing_endpoint = dripline.endopoint(senor_name).value_cal()
+dripline.endpoint(name).pid(sensing_endpoint, Kp, Ki, Kd).set(setpoint)
 ```
-```python
-status = await dripline.endpoint(name).ramping().status().aio_get()
-await dripline.endpoint(name).ramping().status().aio_set(0)  # stop ramping
-```
+
+- Setting `None` to the `setpoint` will stop the PID process
+- `.pid().status().get()` (or `aio_get()`) will return the status
+- Currently there is no async version; just use the non-async version even in an async method
 
 #### Sending data values (typically stored together with other sensor values)
 ```python
@@ -161,9 +167,8 @@ slowdash_project:
 
   data_source:
     url: postgresql://postgres:postgres@postgres:5432/sensor_data
-    parameters:
-      time_series:
-        schema: numeric_data [sensor_name] @timestamp(with timezone) = value_raw(default), value_cal
+    time_series:
+      schema: numeric_data [sensor_name] @timestamp(with timezone) = value_raw(default), value_cal
 ```
 
 ### How It Works
@@ -185,6 +190,31 @@ CREATE TABLE numeric_data (
 );
 ```
 which is defined in the Dripline PostgreSQL configuration (First-Mesh Walkthrough).
+
+
+### Advanced Topics
+The database URL changes depending on how you run the system, especially, within docker (compose) or outside conainers.
+The `SlowdashProject.yaml` can use environmental variables, and can switch parameter values at run time:
+```yaml
+  data_source:
+    url: ${DB_URL:-postgresql://postgres:postgres@localhost:5432/sensor_data}
+    time_series:
+      - schema: numeric_data [sensor_name] @timestamp(with timezone) = value_raw(default), value_cal
+```
+Here, the `data_source/url` value is taken from the `DB_URL` environmental variable if it is defined, and if it is not defined, the default value after `:-` will be taken.
+
+If the `DB_URL` is defined in the `docker-compose.yaml`, for example, the URL can be switched if SlowDash is executed from the compose (notice that the "hostname" of the DB is `postgres`):
+```yaml
+  slowdash:
+    image: slowproj/slowdash
+    ports:
+      - "18881:18881"
+    volumes:
+      - ./slowdash.d:/project
+    environment:
+      - DB_URL=postgresql://postgres:postgres@postgres:5432/sensor_data
+```
+
 
 ## Example 02: Controlling Endpoints
 ### Objectives
@@ -273,6 +303,87 @@ Key features include:
 - The `task` section defines the SlowTask and loads it automatically.
 - `system.our_security_is_perfect: true` enables the in-browser script editor; remove this if there are any security concerns.
 
+### Advanced Topics
+#### Setup Parameters Propagation
+Similar to the DB url, the RabbitMQ url can change depending on how you run the system.
+This setting can be propagated from, e.g., docker, to SlowDash by an environmental variable:
+```yaml
+  slowdash:
+    image: slowproj/slowdash
+    ports:
+      - "18881:18881"
+    volumes:
+      - ./slowdash.d:/project
+    environment:
+      - DB_URL=postgresql://postgres:postgres@postgres:5432/sensor_data
+      - RMQ_URL=amqp://dripline:dripline@rabbit-broker
+```
+
+Then can be passed to the SlowTask script through the "parameters":
+```yaml
+  task:
+    name: control_peaches
+    auto_load: true
+    parameters:
+      rmq_url: ${RMQ_URL:-amqp://dripline:dripline@localhost}
+```
+
+In the script, the `_initialize(params)` callback will be called with the parameters:
+```python
+dripline, peaches = None, None
+
+def _initialize(params):
+    global dripline, peaches
+    rmq_url = params.get('RMQ_URL', 'amqp://dripline:dripline@localhost')
+    dripline = ctrl.dripline(rmq_url)
+    peaches = dripline.endpoint('peaches')
+```
+
+#### Advanced Callback Declaration
+The callbacks are better controlled through SlowDash's "tasklet" framework:
+
+```python
+import slowpy
+tasklet = slowpy.Tasklet()
+
+from slowpy.control import control_system as ctrl
+ctrl.import_control_module('Dripline')
+
+dripline, peaches = None, None
+
+@tasklet.initialize()
+def initialize(params):
+    global dripline, peaches
+    rmq_url = params.get('RMQ_URL', 'amqp://dripline:dripline@localhost')
+    dripline = ctrl.dripline(rmq_url)
+    peaches = dripline.endpoint('peaches')
+    print('hello from peaches')
+
+@tasklet.mesh.export()
+def set_peaches(value:float):
+    print(f'setting peaches to {value}')
+    peaches.set(value)
+```
+
+At this point, "tasklet" is used only to explicitly mark the callback functions.
+More features are introduced in the examples below.
+
+
+#### Getting the parameters from tasklet
+If "tasklet" is used, the parameters to the SlowTask can be obtained from the tasklet,
+enabling accessing to the parameters before callbacks:
+```python
+import slowpy
+tasklet = slowpy.mesh.Tasklet()
+
+from slowpy.control import control_system as ctrl
+ctrl.import_control_module('Dripline')
+
+rmq_url = tasklet.parameters.get('RMQ_URL', 'amqp://dripline:dripline@localhost')
+dripline = ctrl.dripline(rmq_url)
+peaches = dripline.endpoint('peaches').value_raw()
+```
+
 ## Example 03: Controlling Endpoints with SlowPy Logic
 ### Objectives
 Building on the previous example, this example shows:
@@ -315,7 +426,7 @@ def set_peaches(target: float, ramping_rate: float):
     peaches.ramping(ramping_rate).set(target)
     
 def abort_ramping():
-    peaches.ramping().status().set(0)
+    peaches.ramping().set(None)
     
 ctrl.export(peaches.ramping(), name='ramping_target')
 ctrl.export(peaches.ramping().status(), name='ramping_status')
@@ -324,7 +435,7 @@ ctrl.export(peaches.ramping().status(), name='ramping_status')
 #### Step 2
 Replace the `html-peaches-control.html` file with the following:
 ```html
-<form style="font-size:100%">
+<form name="peaches_control" style="font-size:100%">
   <table>
     <tr>
       <td>Target</td><td>
@@ -356,7 +467,7 @@ In this example, ramping control is added to endpoint value setting. Key feature
 - `peaches.ramping(rate)` attaches a SlowPy ramping logic node to the `peaches` node.
 - `.status()` attaches a status node to the ramping node.
 - Setting a value (`set(value)`) on the ramping node starts a ramping sequence to its attached node (`peaches`).
-- Setting `0` on the status node stops ramping of its attached node (`peaches.ramping()`).
+- Setting `None` to the ramping node stops ramping.
 - SlowPy node values can be exported to external systems (e.g., web browsers) using `ctrl.export()`.
 
 ## Example 04: Writing (Sensor) Data Values / Manual Entry

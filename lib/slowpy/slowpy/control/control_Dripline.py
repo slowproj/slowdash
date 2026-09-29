@@ -85,7 +85,7 @@ class DriplineNode(ControlNode):
 
 
     
-class EndpointNode(ControlNode):
+class EndpointNode(ControlVariableNode):
     def __init__(self, dripline:DriplineNode, name:str, *, specifier:str=None, lockout_key:str=None, timeout=None):
         self.specifier = specifier or ''
         self.lockout_key = lockout_key or '00000000-0000-0000-0000-000000000000'

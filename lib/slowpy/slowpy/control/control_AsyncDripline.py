@@ -80,9 +80,9 @@ class AsyncDriplineNode(ControlNode):
     def status_message_queue(self):
         return StatusMessageQueueNode(self)
 
-    # dripline().service(server):
-    def service(self, server, *, endpoints:list[str]|None=None):
-        return ServiceNode(self, server, endpoints=endpoints)
+    # dripline().service():
+    def service(self):
+        return ServiceNode(self)
 
     
     @classmethod
@@ -102,7 +102,7 @@ class AsyncDriplineNode(ControlNode):
 
 
     
-class EndpointNode(ControlNode):
+class EndpointNode(ControlVariableNode):
     def __init__(self, dripline:AsyncDriplineNode, name:str, *, specifier:str=None, lockout_key:str=None, timeout=None):
         self.specifier = specifier or ''
         self.lockout_key = lockout_key or '00000000-0000-0000-0000-000000000000'
@@ -407,28 +407,44 @@ class StatusMessageQueueNode(ControlNode):
 
 
 class ServiceNode(ControlNode):
-    def __init__(self, dripline:AsyncDriplineNode, server, *, endpoints:list[str]|str|None=None):
+    def __init__(self, dripline:AsyncDriplineNode):
         self.dripline_node = dripline
-        self.server = server
 
-        if type(endpoints) is list:
-            self.endpoints = list(endpoints)
-        else:
-            self.endpoints = [endpoints or '*']
-
-        routing_keys = list(self.endpoints) or '*'
+        self.handlers = {}   # (endpoint:str, specifier:str, operation:int) -> set[func]
         
-        self.request_queue_node = dripline.requests_exchange.queue(
-            name = dripline.name,
-            routing_key = routing_keys,
-            exclusive = True,
-        )
-        
+        self.request_queue_node = None
         self.heartbeat_alert = dripline.heartbeat_alert()
         self.status_message_alert = dripline.status_message_alert()
 
-    
+
+    # decorators for the user handlers
+    def set(self, endpoint:str):
+        def wrapper(func):
+            self.handlers[(endpoint, '', 0)] = handler
+            return func
+        return wrapper
+
+    def get(self, endpoint:str):
+        def wrapper(func):
+            self.handlers[(endpoint, '', 1)] = handler
+            return func
+        return wrapper
+
+    def command(self, endpoint:str, specifier:str):
+        self.handlers[(endpoint, specifier, 9)] = handler
+
+
     async def aio_start(self):
+        if self.request_queue_node is not None:
+            return
+        
+        endpoints = [ handler_key[0] for handler_key in self.handlers().keys() ]
+        self.request_queue_node = dripline.requests_exchange.queue(
+            name = dripline.name,
+            routing_key = endpoints,
+            exclusive = True,
+        )
+        
         await asyncio.gather(
             self._handle_requests(),
             self._send_heartbeats()
@@ -455,30 +471,25 @@ class ServiceNode(ControlNode):
     async def _handle_message(self, message):
         routing_key = message.parameters.get('routing_key')
         operation = message.headers.get('message_operation', -1)  # 0: Set, 1: Get, 9: Command
+        specifier = message.header.get('specifier', '')
         if operation < 0: # reply message
             return
-        
+
         logging.debug(f'REQUEST: key={routing_key}, op={operation}, body={message.body}')
 
-        reply = None
-        if operation == 0:
-            if hasattr(self.server, 'on_set') and callable(getattr(self.server, 'on_set')):
-                reply = self.server.on_set(message)
-        elif operation == 1:
-            if hasattr(self.server, 'on_get') and callable(getattr(self.server, 'on_get')):
-                reply = self.server.on_get(message)
-        elif operation == 9:
-            if hasattr(self.server, 'on_command') and callable(getattr(self.server, 'on_command')):
-                reply = self.server.on_command(message)
-        else:
-            logging.warning(f'Dripline: Unknown operation code: {operation}')
-
-        if inspect.isawaitable(reply):
-            reply = await reply
-
-        if reply is None:
+        replies = []
+        for handler in self.handlers.get((routing_key, specifier, operation), []):
+            reply = handler(message.body)
+            if inspect.isawaitable(reply):
+                reply = await reply
+            replies.append(repliy)
+        
+        if len(replies) == 0:
             reply = {'status': 'ERROR: invalid request'}
             logging.warning(f'Dripline: request not handled: key={routing_key}, op={operation}, body={message.body}')
+        else:
+            reply = reply[-1]   # only the reply from the last handler will be replied
+            
         elif type(reply) is dict:
             pass
         elif type(reply) is tuple and len(reply) >= 2:
