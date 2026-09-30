@@ -8,6 +8,9 @@ from slowpy.control import ControlSystem
 
 
 def load_task_module(path:str, *, name:str, argv:list[str]|None=None, parameters:dict|None=None):
+    mesh_logger = MeshLogHandler(event_loop=asyncio.get_running_loop())
+    logging.getLogger().addHandler(mesh_logger)
+    
     path = os.path.abspath(path)
     if not os.path.isfile(path):
         raise FileNotFoundError(path)
@@ -32,9 +35,6 @@ def load_task_module(path:str, *, name:str, argv:list[str]|None=None, parameters
     Tasklet.set_parameters(parameters or {})
     preset_module_for_matplotlib(module)
 
-    mesh_logger = MeshLogHandler()
-    logging.getLogger().addHandler(mesh_logger)
-    
     try:
         spec.loader.exec_module(module)
     except Exception:
