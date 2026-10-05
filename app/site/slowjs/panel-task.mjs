@@ -11,7 +11,7 @@ import { Panel } from './panel.mjs';
 
 class TaskPanel extends Panel {
     static describe() {
-        return { type: 'task', label: 'Task Manager' };
+        return { type: 'task', label: '' };
     }
 
     
@@ -294,7 +294,7 @@ class TaskPanel extends Panel {
 
 class LogPanel extends Panel {
     static describe() {
-        return { type: 'log', label: 'Log Messages' };
+        return { type: 'log', label: '' };
     }
 
     
@@ -304,14 +304,16 @@ class LogPanel extends Panel {
     
     constructor(div, style={}) {
         super(div, style);
-        
+
         this.frameDiv = $('<div>').appendTo(div);        
         this.titleDiv = $('<div>').appendTo(this.frameDiv);
         this.contentDiv = $('<div>').appendTo(this.frameDiv);
-        this.logDiv = $('<div>').appendTo(this.contentDiv);
-        
+        this.logDiv = $('<div>').appendTo(this.contentDiv);        
         this.logDiv.html('<tr><td></td></tr><tr><td>loading log messages...</td></tr>');
 
+        this._logLines = [];
+        this._initialLogsLoaded = false;
+        
         this.frameDiv.css({
             width:'calc(100% - 44px)',
             height:'calc(100% - 44px)',
@@ -355,6 +357,9 @@ class LogPanel extends Panel {
     
     configure(config, options={}, callbacks={}) {
         super.configure(config, options, callbacks);
+
+        this._logLines = [];
+        this._initialLogsLoaded = false;
     }
 
 
@@ -364,16 +369,19 @@ class LogPanel extends Panel {
 
     
     draw(dataPacket, displayTimeRange=null) {
+        if (! this.initialLogsLoaded) {
+            this._load();
+            this.initialLogsLoaded = true;
+        }
+        
         if (dataPacket.__meta.isStreaming) {
             return;
         }
-
-        this._load();
     }
 
     
     async _load() {
-        let logs = []; // note that there can exist multiple task instances of a task file
+        let logs = [];
         try {
             const response = await fetch('api/log');
             logs = await response.json();
@@ -387,20 +395,23 @@ class LogPanel extends Panel {
 
     
     _render(logs) {
-        let lines = [];
-        for (const [ts, level, source, message] of logs.table) {
-            const time = new JGDateTime(ts).asString();
-            const line = time + '  ' + level.padEnd(10, ' ') + (source + ': ').padEnd(20, ' ') + message;
+        for (const [ts, level, logger, location, message] of logs.table) {
+            const time = new JGDateTime(ts).asString('%a,%H:%M:%S');
+            const source = logger + ' (' + location + ')';
+            const line = time + '  ' + level.padEnd(10, ' ') + (source + ': ').padEnd(25, ' ') + message;
             const color = (level.startsWith('ERR') ? 'red' : (level.startsWith('WARN') ? 'blue' : null));
             if (color != null) {
-                lines.push(`<span style="color:${color}">${line}</span>`);
+                this._logLines.push(`<span style="color:${color}">${line}</span>`);
             }
             else {
-                lines.push(line);
+                this._logLines.push(line);
+            }
+            if (this._logLines.length > 100) {
+                this._logLines.shift();
             }
         }
 
-        this.logDiv.html(lines.join('\n'));
+        this.logDiv.html(this._logLines.join('\n'));
         this.logDiv.get().scrollTop = this.logDiv.get().scrollHeight;
     }
 }

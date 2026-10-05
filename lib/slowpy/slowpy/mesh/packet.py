@@ -119,7 +119,6 @@ class FormPacket(MeshPacket):
     def __init__(self, form:str, element:str, value):
         '''
         Creates a SlowMesh packet for the "form.>" topics.
-        The arguments are the same as slowpy.store.DataStore.append().
         - Arguments:
             - form: the name of the form
             - element: the name of the form element

@@ -449,6 +449,32 @@ MeshStdio handles this according to the following rules:
 Note that these rules apply only to local `input()`. Input from SlowMesh PubSub has an explicit destination and is always routed appropriately.
 The behavior described here concerns the case where multiple MeshStdio instances exist in one process and local input is provided to them.
 
+
+## Log Message Redirection (MeshLogger)
+By setting the `MeshLogHandler` to the Python's standard logging, the log messages will be published to the `log` topic of the Mesh:
+
+```python
+    import logging
+    
+    log_handler = MeshLogHandler(name='myscript')
+    logging.getLogger().addHandler(log_handler)
+    await log_handler.aio_start(mesh)
+
+    logging.info('hello from MeshLogger')   --> # mesh.aio_publish('log.myscript.INFO', {'message':...})
+    #...
+
+    await log_handler.aio_stop()
+```
+
+Messages are queued using the `asyncio.Queue` and async-published in a separate async-task.
+Messages before `logging.aio_start()` can be held in the queue to be published later by passing the event loop at the constructor:
+
+```python
+    log_handler = MeshLogHandler(name=name, event_loop=asyncio.get_running_loop()))
+```
+
+Otherwise, the messages before pubsub start will not be published. Also, in either case, messages after pubsub close will not be published. In particular, messages just before script crash are not published if no special care is taken.
+
 ## HTTP Bridge (WebMesh)
 WebMesh is part of the SlowDash server process and allows Publish / Subscribe operations on SlowMesh to be performed over HTTP.
 Publish is implemented using ordinary POST requests, while Subscribe is implemented using Server-Sent Events (SSE).
@@ -1238,6 +1264,25 @@ Returns cached data, only if other components do not return the requested data.
 SlowDash standard data format
 
 
+## log
+### log.{logger_name}.{level_name}
+
+##### JSON Schema
+Body:
+```json
+{
+    "type": "object",
+    "required": [ "timestamp", "level_name", "logger", "message" ],
+    "properties": {
+        "timestamp": { "type": "float" },
+        "level_name": { "type": "string", "enum": [ "DEBUG", "INFO", "WARNING", "ERROR" ] },
+        "logger": { "type": "string" },
+        "message": { "type": "string" }
+    }
+}
+```
+
+
 ## form
 ### form.{form_name}.{element_name}
 
@@ -1250,7 +1295,11 @@ SlowDash standard data format
 - Receiver(s): sd_task (SlowDash server), Registry, task process
 - Timing:
   - `change` event of an INPUT field in a browser form
-  
+
+##### MeshPacket
+`FormPacket(form:str, element:str, value)`
+
+
 ##### JSON Schema
 Body:
 ```json

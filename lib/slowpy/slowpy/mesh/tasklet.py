@@ -152,6 +152,10 @@ class Tasklet:
         return self._parameters
 
         
+    def set_mesh_logger(self, mesh_logger):
+        self._mesh_logger = mesh_logger
+        
+
     def external_mesh(self, mesh_url:str, **kwargs):
         """returns a mesh object to communicate with an external Mesh
         -  This mesh will be started and stopped together with the main mesh.

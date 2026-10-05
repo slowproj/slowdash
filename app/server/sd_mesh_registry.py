@@ -421,12 +421,13 @@ class MeshRegistryComponent(Component):
             table.append([
                 log.get('timestamp', 0),
                 log.get('level_name', '-'),
+                log.get("logger", '-'),
                 log.get("module", '-'),
                 log.get('message', '-'),
             ])
             
         return {
-            'columns': [ 'Time', 'Level', 'Source', 'Message' ],
+            'columns': [ 'Time', 'Level', 'Source', 'Location', 'Message' ],
             'table': table,
         }
 

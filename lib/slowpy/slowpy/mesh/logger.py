@@ -6,13 +6,15 @@ import logging, asyncio, contextvars, sys
 
 
 class MeshLogHandler(logging.Handler):
-    def __init__(self, *, max_queue_size=1000, event_loop=None):
+    def __init__(self, *, name:str=None, max_queue_size:int=1000, event_loop=None):
         """
         event_loop: typically obtained by asyncio.get_running_loop(), if loop is already running.
                     If the loop is not yet running, leave it None here, and will be set in aio_start().
         """
         super().__init__()
 
+        self._name = name
+        
         self._mesh = None
         self._worker_task = None
         self._event_loop = event_loop
@@ -55,7 +57,7 @@ class MeshLogHandler(logging.Handler):
             "timestamp": record.created,
             "level": record.levelno,
             "level_name": record.levelname,
-            "logger": record.name,
+            "logger": self._name or record.name,
             "message": record.getMessage(),
             "module": record.module,
             "function": record.funcName,
@@ -105,9 +107,10 @@ class MeshLogHandler(logging.Handler):
                     await self.aio_stop()
                     break
 
+            topic = f'log.{message.get("logger", "UNKNOWN")}.{message.get("level_name","UNDEFINED")}'
             token = self._logging_suspended.set(True)
             try:
-                await self._mesh.aio_publish(f'log.{message.get("level_name","UNDEFINED")}', message)
+                await self._mesh.aio_publish(topic, message)
             except Exception as e:
                 sys.stderr.write(f'### ERROR: LOG PUBLISH: {e}\n')
                 self._mesh_ready.clear()

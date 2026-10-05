@@ -408,7 +408,6 @@ TODO: 現時点で，presistent にする Path のリストは `Registry` クラ
 Note: レジストリの区切り文字に `/` を使用すると，ここでひどい目にあいます．
 ファイル名は適切にエスケープされますが，見苦しいです．
 
-
 ## 標準入出力リダイレクト (MeshStdio)
 MeshStdio を使うと，print() の出力などの標準出力が SlowMesh にも publish され，input() などの標準入力が subscribe からも取得されるようになります．
 これにより，SlowTask の標準入出力を PubSub 経由で読み書きできるようになります．
@@ -448,6 +447,34 @@ MeshStdio では，以下のルールで処理されます：
 
 このルールは，ローカルの input() のみに適用され，宛先が明示されている SlowMesh の PubSub からの入力は，全て適切に割り振られることに注意してください．
 ここで記述した振る舞いは，一つのプロセスの中で複数の MeshStdio があって，それらに対してローカルからの入力があった場合の動作です．
+
+
+## ログメッセージリダイレクト (MeshLogger)
+Python の標準 logging に MeshLogHandler をセットすると，logging に出力したメッセージがメッシュの `log` トピックにに publish されます．
+
+```python
+    import logging
+    
+    log_handler = MeshLogHandler(name='myscript')
+    logging.getLogger().addHandler(log_handler)
+    await log_handler.aio_start(mesh)
+
+    logging.info('hello from MeshLogger')   --> # mesh.aio_publish('log.myscript.INFO', {'message':...})
+    ...
+
+    await log_handler.aio_stop()
+```
+
+`MeshLogHandler` の中で `asyncio.Queue` を持っていて，別の async task からメッシュに publish するようになっています．
+コンストラクタにイベントループを渡すことにより，Mesh の PubSub がスタートする前のログもキューに保持して，PubSub が繋がったときに送り出すようにもできます．
+```python
+    log_handler = MeshLogHandler(name=name, event_loop=asyncio.get_running_loop()))
+```
+
+イベントループを渡さない場合は，PubSub が始まる前のメッセージは配信されません．
+また，いずれの場合も，PubSub が閉じた後のメッセージは配信されません．
+特に，クラッシュ時のメッセージは特別な措置をしない限り，配信されないことに注意してください．
+
 
 ## HTTP ブリッジ (WebMesh)
 WebMesh は，SlowDash サーバープロセスの一部で，SlowMesh に対する Publish / Subscribe を HTTP から行えるようにします．
@@ -1242,6 +1269,25 @@ SlowMesh へ publish する．
 SlowDash 標準データフォーマット
 
 
+## log
+### log.{logger_name}.{level_name}
+
+##### JSON Schema
+Body:
+```json
+{
+    "type": "object",
+    "required": [ "timestamp", "level_name", "logger", "message" ],
+    "properties": {
+        "timestamp": { "type": "float" },
+        "level_name": { "type": "string", "enum": [ "DEBUG", "INFO", "WARNING", "ERROR" ] },
+        "logger": { "type": "string" },
+        "message": { "type": "string" }
+    }
+}
+```
+
+
 ## form
 ### form.{form_name}.{element_name}
 
@@ -1257,6 +1303,10 @@ SlowDash 標準データフォーマット
   - ブラウザフォームの INPUT フィールドの change イベント
   - タスクがフォーム表示値を変更するとき（起動時にセットしたものはレジストリのキャッシュに入る）
   
+##### MeshPacket
+`FormPacket(form:str, element:str, value)`
+
+
 ##### JSON Schema
 Body:
 ```json

@@ -8,7 +8,7 @@ from slowpy.control import ControlSystem
 
 
 def load_task_module(path:str, *, name:str, argv:list[str]|None=None, parameters:dict|None=None):
-    mesh_logger = MeshLogHandler(event_loop=asyncio.get_running_loop())
+    mesh_logger = MeshLogHandler(name=name, event_loop=asyncio.get_running_loop())
     logging.getLogger().addHandler(mesh_logger)
     
     path = os.path.abspath(path)
@@ -54,7 +54,7 @@ def load_task_module(path:str, *, name:str, argv:list[str]|None=None, parameters
         
     module._sd_tasklet = tasklet
     ControlSystem.bind_tasklet(tasklet)
-    tasklet._mesh_logger = mesh_logger
+    tasklet.set_mesh_logger(mesh_logger)
 
     return module, tasklet
 

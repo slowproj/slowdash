@@ -366,7 +366,7 @@ class TaskComponent(Component):
         self._proc_set_table: dict[str, set[subprocess.Popen]] = {}     # { task_name => [ process ] }
         self._life_event_table: dict[str, str] = {}   # { task_name => last_life_event }
 
-        self._mesh_log_handler = MeshLogHandler()  # sd_task will take care of this
+        self._mesh_log_handler = MeshLogHandler(name='slowdash')
         logging.getLogger().addHandler(self._mesh_log_handler)
 
 
