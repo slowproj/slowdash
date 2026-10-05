@@ -770,6 +770,7 @@ If the `mesh_stdio` parameter of the Tasklet constructor is set to `True` (the d
 Tasklet also performs other internal processing required for SlowMesh connections.
 
 - Sending Heartbeats
+- Redirecting log messages to the Mesh
 - Responding to specification queries (`sd.task.introduce`)
 - Exporting the `_sd_stop()` function for termination requests
 - Notification to `sd.task.exit` on termination

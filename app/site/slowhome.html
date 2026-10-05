@@ -23,10 +23,27 @@
 
     let layout_config = {
         control: {
-            grid: { 'rows': 2, 'columns': 2 },
+            grid: { 'rows': 2, 'columns': 3 },
             inactive: true,
         },
         panels: [
+            {
+                type: 'channellist',
+                default_filter: '',
+                case_sensitive: false,
+                style: { border: 'thin solid' },
+            },
+            {
+                type: 'catalog',
+                catalog_type: 'slowdash,slowplot,slowcruise,userhtml',
+                style: { border: 'thin solid' },
+            },
+            { type: 'tools' },
+            { type: "task", short_form: true, style:{border: 'thin solid'} },
+            { type: 'log' },
+            { type: 'html', 'title': 'Alarms', content: '<span style="font-size:150%;color:gray">Coming Soom</span>' },
+        ],
+        panels0: [
             {
                 type: 'channellist',
                 default_filter: '',

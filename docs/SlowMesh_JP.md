@@ -773,6 +773,7 @@ Tasklet のコンストラクタの `mesh_stdio` パラメータに `True` を�
 その他，SlowMesh の接続に必要な内部処理も行っています．
 
 - Heartbeat の送り出し
+- ログメッセージのメッシュへの転送
 - 仕様問い合わせ (`sd.task.introduce`) への応答
 - 終了要求 `_sd_stop()` 関数のエクスポート
 - 終了時の `sd.task.exit` への通知
@@ -783,6 +784,7 @@ Tasklet のコンストラクタの `mesh_stdio` パラメータに `True` を�
 
 - SlowDash サーバーからの start/stop/kill コントロール
 - すべての関数の export （他のタスクやブラウザからの呼び出し）
+- ログメッセージのメッシュへの転送
 - 古いスタイルのコールバック：
   - `_initialize(parameters={})`: `@tasklet.initailze()` と同等
   - `_finalize()`: `@tasklet.finalize()` と同等
@@ -1166,6 +1168,14 @@ Registry に保持されているキーの値をデータとして返す（デ�
 
 - channel が `@registry:{key}` となっているものが対象
 - TODO: レジストリメタデータの [updated, now()] とデータクエリ期間が重なるものが対象
+
+
+## Log
+
+Mesh に publish されたログメッセージは（現時点の仮置きとして）`sd_mesh_registry.py` コンポーネントに保持されています．
+
+#### GET `api/log`
+サーバーの起動以降に publish されたすべてのログメッセージを返す
 
 
 ## WebMesh

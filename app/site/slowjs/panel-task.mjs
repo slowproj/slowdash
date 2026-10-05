@@ -40,7 +40,7 @@ class TaskPanel extends Panel {
             height:'calc(100% - 44px)',
             margin: '10px 10px 10px 10px',
             padding:'10px',
-            border: 'thin solid',
+            border: '',
             'border-radius': '5px',
             overflow:'auto',
         });
@@ -214,12 +214,12 @@ class TaskPanel extends Panel {
         let tr = $('<tr>');
         $('<th>').text("Name").appendTo(tr);
         $('<th>').text("Status").appendTo(tr);
-        $('<th>').text("Heartbeat").appendTo(tr);
         $('<th>').text("Control").appendTo(tr);
         if (! this._shortForm) {
+            $('<th>').text("Heartbeat").appendTo(tr);
+            $('<th>').text("Life Event").appendTo(tr);
             $('<th>').text("Proc ID").appendTo(tr);
             $('<th>').text("Mesh ID").appendTo(tr);
-            $('<th>').text("Life Event").appendTo(tr);
             $('<th>').text("Command").appendTo(tr);
         }
         tr.appendTo(this.table);
@@ -253,12 +253,12 @@ class TaskPanel extends Panel {
             let tr = $('<tr>');
             $('<td>').appendTo(tr).text(task.name);
             $('<td>').appendTo(tr).html(status_label);
-            $('<td>').appendTo(tr).text(task.heartbeat ?? '');
             $('<td>').appendTo(tr).append(buttons);
             if (! this._shortForm) {
+                $('<td>').appendTo(tr).text(task.heartbeat ?? '');
+                $('<td>').appendTo(tr).text(task.last_event ?? '');
                 $('<td>').appendTo(tr).text((task.proc_id ?? []).join(','));
                 $('<td>').appendTo(tr).text(task.mesh_id ?? '');
-                $('<td>').appendTo(tr).text(task.last_event ?? '');
                 $('<td>').appendTo(tr).text(task.command ?? '');
             }
             tr.appendTo(this.table);

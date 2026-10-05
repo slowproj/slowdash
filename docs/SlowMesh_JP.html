@@ -133,6 +133,7 @@ Projects</a></li>
 <li><a href="#slowtask-2" id="toc-slowtask-2">SlowTask</a></li>
 <li><a href="#registry-key-value-store-1"
 id="toc-registry-key-value-store-1">Registry (Key-Value Store)</a></li>
+<li><a href="#log" id="toc-log">Log</a></li>
 <li><a href="#webmesh" id="toc-webmesh">WebMesh</a></li>
 </ul></li>
 <li><a href="#rpc-サービス" id="toc-rpc-サービス">RPC サービス</a>
@@ -159,7 +160,7 @@ id="toc-pubsub-last-value-cache-1">PubSub Last-Value Cache</a></li>
 <li><a href="#ユーザー自由使用領域-2"
 id="toc-ユーザー自由使用領域-2">ユーザー自由使用領域</a></li>
 <li><a href="#data" id="toc-data">data</a></li>
-<li><a href="#log" id="toc-log">log</a></li>
+<li><a href="#log-1" id="toc-log-1">log</a></li>
 <li><a href="#form" id="toc-form">form</a></li>
 <li><a href="#sd.task" id="toc-sd.task">sd.task</a></li>
 <li><a href="#sd.rpc" id="toc-sd.rpc">sd.rpc</a></li>
@@ -1252,6 +1253,7 @@ Console へ接続されます．</p>
 <p>その他，SlowMesh の接続に必要な内部処理も行っています．</p>
 <ul>
 <li>Heartbeat の送り出し</li>
+<li>ログメッセージのメッシュへの転送</li>
 <li>仕様問い合わせ (<code>sd.task.introduce</code>) への応答</li>
 <li>終了要求 <code>_sd_stop()</code> 関数のエクスポート</li>
 <li>終了時の <code>sd.task.exit</code> への通知</li>
@@ -1265,6 +1267,7 @@ Tasklet を使用しない場合</h2>
 <ul>
 <li>SlowDash サーバーからの start/stop/kill コントロール</li>
 <li>すべての関数の export （他のタスクやブラウザからの呼び出し）</li>
+<li>ログメッセージのメッシュへの転送</li>
 <li>古いスタイルのコールバック：
 <ul>
 <li><code>_initialize(parameters={})</code>:
@@ -1736,6 +1739,12 @@ object が publish される．</li>
 <li>TODO: レジストリメタデータの [updated, now()]
 とデータクエリ期間が重なるものが対象</li>
 </ul>
+<h2 id="log">Log</h2>
+<p>Mesh に publish
+されたログメッセージは（現時点の仮置きとして）<code>sd_mesh_registry.py</code>
+コンポーネントに保持されています．</p>
+<h4 id="get-apilog">GET <code>api/log</code></h4>
+<p>サーバーの起動以降に publish されたすべてのログメッセージを返す</p>
 <h2 id="webmesh">WebMesh</h2>
 <p>WebMesh は，SlowMesh の PubSub を HTTP
 経由で行えるようにするブリッジです．Slowlette を経由して
@@ -1860,7 +1869,7 @@ id="data.store.channel_name-data.stream.channel_name">data.store.{channel_name}
 </ul>
 <h5 id="フォーマット">フォーマット</h5>
 <p>SlowDash 標準データフォーマット</p>
-<h2 id="log">log</h2>
+<h2 id="log-1">log</h2>
 <h3 id="log.logger_name.level_name">log.{logger_name}.{level_name}</h3>
 <h5 id="json-schema">JSON Schema</h5>
 <p>Body:</p>

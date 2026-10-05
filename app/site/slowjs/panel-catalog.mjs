@@ -82,7 +82,11 @@ export class CatalogPanel extends Panel {
             this.cachePath = null;
         }
 
-        this.frameDiv.css('border', this.config.border);
+        if (config.style?.border != null) {
+            this.frameDiv.css({
+                'border': config.style.border,
+            })
+        }
         
         this.content_types = this.config.catalog_type.split(/[ ,;]+/);
         this._load();
@@ -352,7 +356,11 @@ export class ChannelListPanel extends Panel {
             this.cachePath = null;
         }
 
-        this.frameDiv.css('border', this.config.border);
+        if (config.style?.border != null) {
+            this.frameDiv.css({
+                'border': config.style.border,
+            })
+        }
         
         let filterInput = this.searchDiv.find('input').at(0).val(this.config.default_filter);;
         let caseSensitiveInput = this.searchDiv.find('input').at(1).val(this.config.case_sensitive);
