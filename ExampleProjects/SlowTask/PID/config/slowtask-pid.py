@@ -15,7 +15,8 @@ pid = None
 
 @tasklet.initialize()
 async def initialize():
-    logging.error("hello from PID")
+    logging.error("Dummy Error: hello from PID")
+    
     # Making the browser input values and internal parameter values consistent #
     if True:
         # Browsers to internals: initial PID parameters from the last browser inputs
