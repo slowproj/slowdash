@@ -373,7 +373,7 @@ class LogPanel extends Panel {
 
 
     fillDataRequest(dataRequest) {
-        //dataRequest.append('@mesh:log.>');
+        dataRequest.append('@mesh:log.>');
     }
 
     
@@ -383,8 +383,14 @@ class LogPanel extends Panel {
             this.initialLogsLoaded = true;
         }
         
-        if (dataPacket.__meta.isStreaming) {
+        if (! dataPacket.__meta.isStreaming) {
             return;
+        }
+        if ('@mesh:log.>' in dataPacket) {
+            const log = dataPacket['@mesh:log.>'];
+            this._render([
+                [ log.timestamp, log.level_name, log.logger, log.module, log.message ]
+            ]);
         }
     }
 
@@ -399,12 +405,12 @@ class LogPanel extends Panel {
             console.log("Error on fetching task status: ", e);
         }
         
-        this._render(logs);
+        this._render(logs.table);
     }
 
     
     _render(logs) {
-        for (const [ts, level, logger, location, message] of logs.table) {
+        for (const [ts, level, logger, location, message] of logs) {
             const time = new JGDateTime(ts).asString('%a,%H:%M:%S');
             const source = logger + ' (' + location + ')';
             const line = time + '  ' + level.padEnd(10, ' ') + (source + ': ').padEnd(25, ' ') + message;

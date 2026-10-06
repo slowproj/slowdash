@@ -155,7 +155,8 @@ class WebMeshComponent(Component):
         self._data_cache = DataCache()
 
         self._topic_list = [
-            'sd.task.life_event.>', 'sd.task.heartbeat.>', 'sd.task.stdout.>'
+            'sd.task.life_event.>', 'sd.task.heartbeat.>', 'sd.task.stdout.>',
+            'log.>'
         ]
 
         
