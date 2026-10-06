@@ -249,9 +249,18 @@ class TaskPanel extends Panel {
             stopButton.enabled(task.status == 'running');
             killButton.enabled(task.proc_id != null && task.proc_id.length > 0);
             purgeButton.enabled(task.status == 'ghost');
-                
+
             let tr = $('<tr>');
-            $('<td>').appendTo(tr).text(task.name);
+            if (
+                this._isSecure && task.command && 
+                task.command.startsWith(`slowdash-task config/slowtask-${task.name}.py`)
+            ){
+                name = `<a href="slowedit.html?filename=slowtask-${task.name}.py" target="_blank">${task.name}</a>`;
+                $('<td>').appendTo(tr).html(name);
+            }
+            else {
+                $('<td>').appendTo(tr).text(task.name);
+            }
             $('<td>').appendTo(tr).html(status_label);
             $('<td>').appendTo(tr).append(buttons);
             if (! this._shortForm) {
