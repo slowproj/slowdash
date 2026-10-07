@@ -1121,7 +1121,7 @@ Nginx/
 ### 直接インストール
 SlowDash にコンテナを使っていない場合でも，リバースプロキシだけを Docker で動かすこともできます．この場合の設定は，すべてを Docker Compose で使う場合とほぼ同じになります (`docker-compose.yaml` の slowdash を削除し，`nginx/defaults.conf` の `proxy_pass` をホストマシンにする)．SlowDash のポートが外部から直接アクセスできないようにファイアーウォールを設定してください．
 
-すべてを Docker でない環境で使う場合の設定方法は，使用している環境に合わせた方法を AI が詳しく教えてくれます．SlowDash では ASGI インターフェースが利用可能で，同じポート番号で WebSockets も使っている旨を伝えれば，設定ファイルを一通り書いてくれます．暗号化していないもとのポートを塞いでおくのを忘れないでください．参考までに，上記の例で Nginx を Docker Compose 内でリバースプロキシとして使用する場合の設定ファイルを示します．だいたい似たような感じになると思います．
+すべてを Docker でない環境で使う場合の設定方法は，使用している環境に合わせた方法を AI が詳しく教えてくれます．SlowDash で指定のポート番号で ASGI インターフェースを使っている旨を伝えれば，設定ファイルを一通り書いてくれます．暗号化していないもとのポートを塞いでおくのを忘れないでください．参考までに，上記の例で Nginx を Docker Compose 内でリバースプロキシとして使用する場合の設定ファイルを示します．だいたい似たような感じになると思います．
 
 ```conf
 server {
@@ -1141,20 +1141,11 @@ server {
 
     location /slowdash/ {
         proxy_pass http://slowdash:18881/;
-
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-
-        # SlowDash では Long Polling を使っているので，タイムアウトは長くする
-        proxy_read_timeout 8640000s;  # 1000 days for long polling used in SlowDash
-        proxy_send_timeout 8640000s;  # 1000 days for long polling used in SlowDash
-        proxy_connect_timeout 10s;
     }
 }
 

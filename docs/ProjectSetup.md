@@ -356,32 +356,18 @@ Having an external Web server, such as Nginx or Apache, is often useful for:
 - enabling HTTPS encryption
 - adding basic authentication
 
-When setting up a reverse proxy, be aware that
-
-- SlowDash uses WebSocket at `/ws`, which often needs dedicated routing
-- SlowDash uses "long poll", which needs a longer timeout (typically many days)
-
 For a setup with Docker Compose, examples can be found in the `ExampleProjects/ReverseProxy` directory.
 
 ### Nginx Setting
-This is the reverse proxy part of Nginx configuration, including WebSocket and considering Long Poll.
 ```xorg
 server {
     location /slowdash/ {
         proxy_pass http://SLOWDASH_HOST:18881/;
-
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-
-        proxy_read_timeout 8640000s;  # 1000 days for long polling used in SlowDash
-        proxy_send_timeout 8640000s;  # 1000 days for long polling used in SlowDash
-        proxy_connect_timeout 10s;
     }
 }
 ```
@@ -393,31 +379,14 @@ The following Apache modules need to be enabled:
 ```console
 $ sudo a2enmod proxy
 $ sudo a2enmod proxy_http
-$ sudo a2enmod proxy_wstunnel
 ```
 
-This is the reverse proxy part of the Apache configuration, which includes WebSocket and long polling.
 ```apache
 <VirtualHost *:80>
     ProxyPreserveHost On
     ProxyRequests Off
-
-    # timeout 100 days, for long polling used in SlowDash
-    Timeout 8640000        
-    ProxyTimeout 8640000
-    
     ProxyPass /slowdash/ http://SLOWDASH_HOST:18881/
     ProxyPassReverse /slowdash/ http://SLOWDASH_HOST:18881/
-
-    # for WebSockets
-    ProxyPass /slowdash/ws/ ws://SLOWDASH_HOST:18881/ws/
-    ProxyPassReverse /slowdash/ws/ ws://SLOWDASH_HOST:18881/ws/
-    <Location /slowdash/ws/>
-        ProxyPass ws://SLOWDASH_HOST:18881/ws/
-        ProxyPreserveHost On
-        RequestHeader set Upgrade "websocket"
-        RequestHeader set Connection "upgrade"
-    </Location>
 </VirtualHost>
 ```
 Replace `SLOWDASH_HOST` with your actual SlowDash host name.

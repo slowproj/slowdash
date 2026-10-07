@@ -1542,9 +1542,8 @@ slowdash を削除し，<code>nginx/defaults.conf</code> の
 のポートが外部から直接アクセスできないようにファイアーウォールを設定してください．</p>
 <p>すべてを Docker
 でない環境で使う場合の設定方法は，使用している環境に合わせた方法を AI
-が詳しく教えてくれます．SlowDash では ASGI
-インターフェースが利用可能で，同じポート番号で WebSockets
-も使っている旨を伝えれば，設定ファイルを一通り書いてくれます．暗号化していないもとのポートを塞いでおくのを忘れないでください．参考までに，上記の例で
+が詳しく教えてくれます．SlowDash で指定のポート番号で ASGI
+インターフェースを使っている旨を伝えれば，設定ファイルを一通り書いてくれます．暗号化していないもとのポートを塞いでおくのを忘れないでください．参考までに，上記の例で
 Nginx を Docker Compose
 内でリバースプロキシとして使用する場合の設定ファイルを示します．だいたい似たような感じになると思います．</p>
 <div class="sourceCode" id="cb67"><pre
@@ -1565,29 +1564,20 @@ class="sourceCode conf"><code class="sourceCode toml"><span id="cb67-1"><a href=
 <span id="cb67-15"><a href="#cb67-15" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb67-16"><a href="#cb67-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">location</span> <span class="er">/</span><span class="dt">slowdash</span><span class="er">/</span> <span class="er">{</span></span>
 <span id="cb67-17"><a href="#cb67-17" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_pass</span> <span class="dt">http</span><span class="er">://</span><span class="dt">slowdash</span><span class="er">:</span><span class="dt">18881</span><span class="er">/;</span></span>
-<span id="cb67-18"><a href="#cb67-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb67-19"><a href="#cb67-19" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_http_version</span> <span class="dt">1.1</span><span class="er">;</span></span>
-<span id="cb67-20"><a href="#cb67-20" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_set_header</span> <span class="dt">Upgrade</span> <span class="er">$</span><span class="dt">http_upgrade</span><span class="er">;</span></span>
-<span id="cb67-21"><a href="#cb67-21" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_set_header</span> <span class="dt">Connection</span> <span class="dt">&quot;upgrade&quot;</span><span class="er">;</span></span>
-<span id="cb67-22"><a href="#cb67-22" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb67-23"><a href="#cb67-23" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_set_header</span> <span class="dt">Host</span> <span class="er">$</span><span class="dt">host</span><span class="er">;</span></span>
-<span id="cb67-24"><a href="#cb67-24" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_set_header</span> <span class="dt">X-Real-IP</span> <span class="er">$</span><span class="dt">remote_addr</span><span class="er">;</span></span>
-<span id="cb67-25"><a href="#cb67-25" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_set_header</span> <span class="dt">X-Forwarded-For</span> <span class="er">$</span><span class="dt">proxy_add_x_forwarded_for</span><span class="er">;</span></span>
-<span id="cb67-26"><a href="#cb67-26" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_set_header</span> <span class="dt">X-Forwarded-Proto</span> <span class="er">$</span><span class="dt">scheme</span><span class="er">;</span></span>
-<span id="cb67-27"><a href="#cb67-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb67-28"><a href="#cb67-28" aria-hidden="true" tabindex="-1"></a>        <span class="co"># SlowDash では Long Polling を使っているので，タイムアウトは長くする</span></span>
-<span id="cb67-29"><a href="#cb67-29" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_read_timeout</span> <span class="dt">8640000s</span><span class="er">;</span>  <span class="co"># 1000 days for long polling used in SlowDash</span></span>
-<span id="cb67-30"><a href="#cb67-30" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_send_timeout</span> <span class="dt">8640000s</span><span class="er">;</span>  <span class="co"># 1000 days for long polling used in SlowDash</span></span>
-<span id="cb67-31"><a href="#cb67-31" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_connect_timeout</span> <span class="dt">10s</span><span class="er">;</span></span>
-<span id="cb67-32"><a href="#cb67-32" aria-hidden="true" tabindex="-1"></a>    <span class="er">}</span></span>
-<span id="cb67-33"><a href="#cb67-33" aria-hidden="true" tabindex="-1"></a><span class="er">}</span></span>
-<span id="cb67-34"><a href="#cb67-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb67-35"><a href="#cb67-35" aria-hidden="true" tabindex="-1"></a><span class="co"># HTTP への接続は HTTPS に転送する</span></span>
-<span id="cb67-36"><a href="#cb67-36" aria-hidden="true" tabindex="-1"></a><span class="dt">server</span> <span class="er">{</span></span>
-<span id="cb67-37"><a href="#cb67-37" aria-hidden="true" tabindex="-1"></a>    <span class="dt">listen</span> <span class="dt">80</span><span class="er">;</span></span>
-<span id="cb67-38"><a href="#cb67-38" aria-hidden="true" tabindex="-1"></a>    <span class="dt">server_name</span> <span class="dt">localhost</span><span class="er">;</span></span>
-<span id="cb67-39"><a href="#cb67-39" aria-hidden="true" tabindex="-1"></a>    <span class="dt">return</span> <span class="dt">301</span> <span class="dt">https</span><span class="er">://$</span><span class="dt">host</span><span class="er">$</span><span class="dt">request_uri</span><span class="er">;</span></span>
-<span id="cb67-40"><a href="#cb67-40" aria-hidden="true" tabindex="-1"></a><span class="er">}</span></span></code></pre></div>
+<span id="cb67-18"><a href="#cb67-18" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_http_version</span> <span class="dt">1.1</span><span class="er">;</span></span>
+<span id="cb67-19"><a href="#cb67-19" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_set_header</span> <span class="dt">Host</span> <span class="er">$</span><span class="dt">host</span><span class="er">;</span></span>
+<span id="cb67-20"><a href="#cb67-20" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_set_header</span> <span class="dt">X-Real-IP</span> <span class="er">$</span><span class="dt">remote_addr</span><span class="er">;</span></span>
+<span id="cb67-21"><a href="#cb67-21" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_set_header</span> <span class="dt">X-Forwarded-For</span> <span class="er">$</span><span class="dt">proxy_add_x_forwarded_for</span><span class="er">;</span></span>
+<span id="cb67-22"><a href="#cb67-22" aria-hidden="true" tabindex="-1"></a>        <span class="dt">proxy_set_header</span> <span class="dt">X-Forwarded-Proto</span> <span class="er">$</span><span class="dt">scheme</span><span class="er">;</span></span>
+<span id="cb67-23"><a href="#cb67-23" aria-hidden="true" tabindex="-1"></a>    <span class="er">}</span></span>
+<span id="cb67-24"><a href="#cb67-24" aria-hidden="true" tabindex="-1"></a><span class="er">}</span></span>
+<span id="cb67-25"><a href="#cb67-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-26"><a href="#cb67-26" aria-hidden="true" tabindex="-1"></a><span class="co"># HTTP への接続は HTTPS に転送する</span></span>
+<span id="cb67-27"><a href="#cb67-27" aria-hidden="true" tabindex="-1"></a><span class="dt">server</span> <span class="er">{</span></span>
+<span id="cb67-28"><a href="#cb67-28" aria-hidden="true" tabindex="-1"></a>    <span class="dt">listen</span> <span class="dt">80</span><span class="er">;</span></span>
+<span id="cb67-29"><a href="#cb67-29" aria-hidden="true" tabindex="-1"></a>    <span class="dt">server_name</span> <span class="dt">localhost</span><span class="er">;</span></span>
+<span id="cb67-30"><a href="#cb67-30" aria-hidden="true" tabindex="-1"></a>    <span class="dt">return</span> <span class="dt">301</span> <span class="dt">https</span><span class="er">://$</span><span class="dt">host</span><span class="er">$</span><span class="dt">request_uri</span><span class="er">;</span></span>
+<span id="cb67-31"><a href="#cb67-31" aria-hidden="true" tabindex="-1"></a><span class="er">}</span></span></code></pre></div>
 <div style="margin-bottom:10rem">
 
 </div>
