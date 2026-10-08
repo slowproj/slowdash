@@ -317,7 +317,10 @@ class LogPanel extends Panel {
         this.frameDiv = $('<div>').appendTo(div);        
         this.titleDiv = $('<div>').appendTo(this.frameDiv);
         this.contentDiv = $('<div>').appendTo(this.frameDiv);
-        this.logDiv = $('<div>').appendTo(this.contentDiv);        
+        this.alarmDiv = $('<div>').appendTo(this.contentDiv);        
+        this.logDiv = $('<div>').appendTo(this.contentDiv);
+        
+        this.alarmDiv.html('<span style="filter:opacity(70%)grayscale(100%)">&#x1f6a8; </span><span style="color:gray">No Errors</span>');
         this.logDiv.html('<tr><td></td></tr><tr><td>loading log messages...</td></tr>');
 
         this._logLines = [];
@@ -348,10 +351,18 @@ class LogPanel extends Panel {
             padding:0,
             overflow:'hidden',
         });
+        this.alarmDiv.css({
+            position: 'relative',
+            width:'100%',
+            height:'2em',
+            margin: 0,
+            padding:0,
+            overflow:'hidden',
+        });
         this.logDiv.css({
             position: 'relative',
             width:'calc(100% - 14px)',
-            height:'calc(100% - 14px)',
+            height:'calc(100% - 14px - 2em)',
             margin: 0,
             padding: '5px',
             overflow:'auto',
@@ -413,16 +424,19 @@ class LogPanel extends Panel {
         for (const [ts, level, logger, location, message] of logs) {
             const time = new JGDateTime(ts).asString('%a,%H:%M:%S');
             const source = logger + ' (' + location + ')';
-            const line = time + '  ' + level.padEnd(10, ' ') + (source + ': ').padEnd(25, ' ') + message;
             const color = (level.startsWith('ERR') ? 'red' : (level.startsWith('WARN') ? 'blue' : null));
+            let line = time + '  ' + level.padEnd(10, ' ') + (source + ': ').padEnd(25, ' ') + message;
             if (color != null) {
-                this._logLines.push(`<span style="color:${color}">${line}</span>`);
+                line = `<span style="color:${color}">${line}</span>`;
             }
-            else {
-                this._logLines.push(line);
-            }
+            this._logLines.push(line);
+            
             if (this._logLines.length > 100) {
                 this._logLines.shift();
+            }
+
+            if (level.startsWith('ERR')) {
+                this.alarmDiv.html(`&#x1f6a8; <span style="color:red">${message}</span>`);
             }
         }
 

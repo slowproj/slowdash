@@ -9,3 +9,7 @@ from .slowfetch import SlowFetch
 
 from .mpldata import slowdashify
 from .slowplot import slowplot
+
+from . import mesh
+from . import control
+from . import store

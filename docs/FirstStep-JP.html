@@ -149,7 +149,7 @@ id="toc-リバースプロキシ">リバースプロキシ</a></li>
 を含むシステムコントロールの UI
 を目指して開発をしています．現時点で，Grafana
 で行うようなビジュアライゼーションの部分はほぼ実装済みで，解析およびコントロールの部分が開発中です．</p>
-<p>データベースアクセス以外は外部ライブラリを使っておらず，ソフトウェアの寿命が外のライブラリの変更等に影響されることはないようになっています．特に，流行り廃れが激しい
+<p>デバイスおよびデータベースアクセス以外は外部ライブラリを使っておらず，ソフトウェアの寿命が外のライブラリの変更等に影響されることはないようになっています．特に，流行り廃れが激しい
 JavaScript
 の部分はフレームワークなどは使わず，完全に自己完結です（使っていたけど排除しました）．データベース側および解析モジュールは，全て独立なプラグインとなっており，いつでも切り捨てられます．依存性がないので，インストールがとても楽で，使用後も痕跡を残さずきれいに削除できます．それでもインストールをしたくない人のために，すぐに使える
 Docker コンテナも提供されています．</p>
@@ -198,7 +198,6 @@ Docker コンテナも提供されています．</p>
 <li>データベース以外からのデータのビジュアライズ（ROOT
 ファイルとか，どっかのストリーミングとか）</li>
 <li>ヒストグラムのフィティング等まで含めた埋め込みおよび対話的データ解析</li>
-<li>メッセージングシステムへの直接接続 (AMQP とか Kafka とか)</li>
 </ul>
 <p>Grafana にあって今の SlowDash
 にないもの（将来は実装されるかも）：</p>
@@ -281,9 +280,7 @@ Python のパッケージなどを準備する必要はありません．(venv
 <p>Firefox で開発していて，たまに Chrome と Edge と Safari
 でテストしています．タブレットや携帯などのモバイルデバイス上でもそこそこ動作します（プロットの移動やズームは二本指です）．</p>
 <h3 id="ダウンロード">ダウンロード</h3>
-<p>GitHub からダウンロードできます．
-サブモジュールを使っているので，<code>--recurse-submodules</code>
-オプションをつけてください．</p>
+<p>GitHub からダウンロードできます．</p>
 <div class="sourceCode" id="cb1"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ git clone https://github.com/slowproj/slowdash.git --recurse-submodules</span></span></code></pre></div>
 <p>(<code>git</code> コマンドが利用できない場合，<a
@@ -291,7 +288,7 @@ href="https://github.com/slowproj/slowdash">github のページ</a>
 からパッケージをダウンロードすることもできます．）</p>
 <p>これで，<code>slowdash</code>
 というディレクトリが作成されます．インストールおよび次の Quick Tour
-では，全てのファイルは slowdash
+では，全てのファイルはこの <code>slowdash</code>
 のディレクトリ以下に作られるので，この過程でユーザのシステムが汚されることはありません．また，このディレクトリを削除すれば，全てをなかったことにできます．</p>
 <h3 id="ドキュメント">ドキュメント</h3>
 <p>公式ドキュメントは，展開したディレクトリの <code>docs</code>
@@ -328,7 +325,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <p>ちなみに中身はこんな感じです．</p>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SLOWDASH_DIR</span><span class="op">=</span>/PATH/TO/SLOWDASH</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> slowdash=<span class="st">&quot;</span><span class="va">$SLOWDASH_DIR</span><span class="st">/bin/slowdash&quot;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="va">$SLOWDASH_DIR</span>/bin:<span class="va">$PATH</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> slowdash-activate-venv=<span class="st">&quot;source </span><span class="va">$SLOWDASH_DIR</span><span class="st">/venv/bin/activate&quot;</span></span></code></pre></div>
 <p>設定ファイルの <code>source</code>
 は，新しいターミナルを開くたびに毎回必要です． SlowDash
@@ -402,7 +399,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <p><img src="fig/QuickTour-DummyDataSource.png" style="width:40%"></p>
 <h1 id="quick-tour-をやってみる">Quick Tour をやってみる</h1>
 <p>ここでは，公式ドキュメントの Quick Tour
-の内容の，ダミーデータで時系列プロットを作るところと，簡単なスクリプトでデバイスからデータを読んでみると，ブラウザからコントロールをするのをやってみます．</p>
+の内容の，ダミーデータで時系列プロットを作るところと，簡単なスクリプトでデバイスからデータを読んでみるのと，ブラウザからコントロールをするのをやってみます．</p>
 <p>テスト用のデータストアには，SQLite
 を使います．これは，追加のライブラリをインストールせずに使用でき，また，データがファイルに保存されるため，使用後のクリーンアップが簡単なためです．</p>
 <p>最初に，プロジェクト用のディレクトリを作成してください．ディレクトリを作る場所はどこでもいいです．このプロジェクトで作成されるファイルは全てこのディレクトリ以下に格納されます．プロジェクト終了後はディレクトリをまるごと削除しても大丈夫です．途中でプロジェクトディレクトリを別の場所へ移動することも可能です．</p>
@@ -423,35 +420,22 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 (<code>pip install -r requrements.txt</code>した場合)は，この手順は必要ありません．venv
 から抜ける場合は，端末を閉じるか，<code>deactivate</code>
 コマンドを使ってください．</p>
-<p>SlowPy を使って，一秒ごとに乱数の値を SQLite
+<p>SlowPy を使って，一秒ごとに乱数の値４つを SQLite
 に書き込むスクリプトを作成します．</p>
 <div class="sourceCode" id="cb15"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ControlSystem, RandomWalkDevice</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_SQLite, LongTableFormat</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TestDataFormat(LongTableFormat):</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    schema_numeric <span class="op">=</span> <span class="st">&#39;(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel))&#39;</span></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> insert_numeric_data(<span class="va">self</span>, cur, timestamp, channel, value):</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>        cur.execute(<span class="ss">f&#39;INSERT INTO </span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>table<span class="sc">}</span><span class="ss"> VALUES(CURRENT_TIMESTAMP,%d,?,%f)&#39;</span> <span class="op">%</span> (timestamp, value), (channel,))</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>ctrl <span class="op">=</span> ControlSystem()</span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> RandomWalkDevice(n<span class="op">=</span><span class="dv">4</span>)</span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_SQLite(<span class="st">&#39;sqlite:///QuickTourTestData.db&#39;</span>, table<span class="op">=</span><span class="st">&quot;testdata&quot;</span>, table_format<span class="op">=</span>TestDataFormat())</span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> ch <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">4</span>):</span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>        data <span class="op">=</span> device.read(ch)</span>
-<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>        datastore.append(data, tag<span class="op">=</span><span class="st">&quot;ch</span><span class="sc">%02d</span><span class="st">&quot;</span><span class="op">%</span>ch)</span>
-<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span>
-<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _finalize():</span>
-<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>    datastore.close()</span>
-<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
-<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>    ctrl.stop_by_signal()</span>
-<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="kw">not</span> ctrl.is_stop_requested():</span>
-<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>        _loop()</span>
-<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>    _finalize()</span></code></pre></div>
+class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> slowpy.control.RandomWalkDevice()</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> slowpy.store.DataStore_SQLite(<span class="st">&#39;sqlite:///SlowData.db&#39;</span>, table<span class="op">=</span><span class="st">&quot;data&quot;</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>tasklet <span class="op">=</span> slowpy.mesh.Tasklet()</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="fl">1.0</span>)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> loop():</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> ch <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">4</span>):</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>        data <span class="op">=</span> device.read(ch)</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>        datastore.append(data, tag<span class="op">=</span><span class="st">&quot;ch</span><span class="sc">%02d</span><span class="st">&quot;</span><span class="op">%</span>ch)</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    tasklet.run()</span></code></pre></div>
 <p>このスクリプトの詳細は公式ドキュメントの <a
 href="ControlsScript.html">Controls
 セクション</a>に説明があります．ここでは，上記の内容をコピペして，<code>generate-testdata.py</code>
@@ -461,92 +445,43 @@ href="ControlsScript.html">Controls
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python generate-testdata.py</span></span></code></pre></div>
 <p>（もしコピペに失敗してエラーが出るようであれば，同じ内容のファイルが
 <code>slowdash/ExampleProjects/QuickTour/01_DummyData/config/slowtask-testdata.py</code>
-にあります．）</p>
+にあります．後で見るように，これをブラウザから実行することもできます．）</p>
 <p>10 秒くらい経過したら <code>Ctrl</code>-<code>c</code>
 で止めて，できたファイルを確認してください．</p>
 <div class="sourceCode" id="cb17"><pre
 class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ ls -l</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>-rw-r--r-- 1 sanshiro sanshiro 24576 Apr 11 16:52 QuickTourTestData.db</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>-rwxr-xr-x 1 sanshiro sanshiro  3562 Apr 11 16:51 generate-testdata.py</span></code></pre></div>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>-rw-r--r-- 1 sanshiro sanshiro 12288 Oct  7 07:41 SlowStore.db</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>-rwxr-xr-x 1 sanshiro sanshiro   376 Oct  7 07:38 generate-testdata.py</span></code></pre></div>
 <p>データの中身は <code>sqlite3</code>
 コマンドで確認できます．（このコマンドがインストールされてなければ，この手順は飛ばしていいです．）</p>
 <div class="sourceCode" id="cb18"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sqlite3 QuickTourTestData.db </span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>SQLite version 3.31.1 2020-01-27 19:55:54</span>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sqlite3  SlowStore.db </span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>SQLite version 3.46.1 2024-08-13 09:16:08</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>Enter &quot;.help&quot; for usage hints.</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>sqlite&gt; .table</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>testdata</span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>sqlite&gt; .schema testdata</span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>CREATE TABLE testdata(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel));</span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>sqlite&gt; select * from testdata limit 10;</span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>2023-04-11 23:52:13|1681257133|ch00|0.187859</span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>2023-04-11 23:52:13|1681257133|ch01|-0.418021</span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>2023-04-11 23:52:13|1681257133|ch02|0.482607</span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>2023-04-11 23:52:13|1681257133|ch03|1.733749</span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>sqlite&gt; .tables</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>slowdata</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>sqlite&gt; .schema</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>CREATE TABLE slowdata(timestamp REAL, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp,channel));</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>sqlite&gt; select * from slowdata limit 10;</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>1791384527.045|ch00|0.59</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>1791384527.074|ch01|3.537</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>1791384527.082|ch02|0.447</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>1791384527.093|ch03|-4.424</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>1791384528.038|ch00|0.302</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>1791384528.054|ch01|2.235</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
 <p><code>sqlite3</code> の <code>.schema</code>
-コマンド出力にあるとおり，データは <code>testdata</code>
+コマンド出力にあるとおり，データは <code>slowdata</code>
 というテーブルに保存されていて，その構造は以下のようになっています．</p>
-<pre><code>testdata(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel))</code></pre>
-<p>テスト目的のために，データのタイムスタンプは日付時刻型（SQLite では
-ISO 表記の文字列）のものと，整数の UNIX
-時間の両方が入っていますが，通常はどちらか一方のことが多いと思います．SQLite
-では，タイムゾーンの扱いに罠が多いので，UNIX
-時間の方がいいかもしれません．</p>
-<p>データの中身はこんな感じです:</p>
-<table>
-<colgroup>
-<col style="width: 21%" />
-<col style="width: 26%" />
-<col style="width: 26%" />
-<col style="width: 26%" />
-</colgroup>
-<thead>
-<tr>
-<th>datetime (DATETIME/TEXT)</th>
-<th>timestamp (INTEGER)</th>
-<th>channel (VARCHAR(100))</th>
-<th>value (REAL)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>2023-04-11 23:52:13</td>
-<td>1681257133</td>
-<td>ch00</td>
-<td>0.187859</td>
-</tr>
-<tr>
-<td>2023-04-11 23:52:13</td>
-<td>1681257133</td>
-<td>ch01</td>
-<td>-0.418021</td>
-</tr>
-<tr>
-<td>2023-04-11 23:52:13</td>
-<td>1681257133</td>
-<td>ch02</td>
-<td>0.482607</td>
-</tr>
-<tr>
-<td>2023-04-11 23:52:13</td>
-<td>1681257133</td>
-<td>ch03</td>
-<td>1.733749</td>
-</tr>
-<tr>
-<td>…</td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-</tbody>
-</table>
-<p>ここでは，面倒な例として，日付時刻型のデータにタイムゾーンを明示しないで
-UTC 時刻を使用しています（SQLite
-ではこれがデフォルトの関数が多いです）．通常は，タイムゾーン付きまたは
-UNIX 時間を使用してください．</p>
-<p>時系列データのテーブルは，必ずしもこの形になっている必要はありません．特に，テーブルにカラムを追加するのが簡単なタイプのデータストアを使用している場合は，各チャンネルを各カラムにするのも普通にアリだと思います．同時に読み出したデータのグルーピングが簡単になるというメリットもあります．詳しくは，公式ドキュメントの
+<pre><code>slowdata(timestamp REAL, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp,channel));</code></pre>
+<p>この例では，時刻は実数の UNIX 時間で記録されています． UNIX
+時間の代わりにデータベースが持つ日付時刻型を使うこともできます．この場合は，なるべくタイムゾーン情報をもつ型を使用してください
+(PostgreSQL なら <code>TIMESTAMP WITH TIMEZONE</code>
+など）．タイムゾーンの間違いによる悲劇が報告されています．</p>
+<p>時系列データのテーブルは，必ずしもこの例のようなチャンネルをデータとして保存する形
+(Long Format と呼ばれる）になっている必要はありません．
+特に，テーブルにカラムを追加するのが簡単なタイプのデータストアを使用している場合は，各チャンネルを各カラム割り当てるのも普通にアリだと思います（Wide
+Format）．この場合，同時に読み出したデータのグルーピングが簡単になるというメリットもあります．詳しくは，公式ドキュメントの
 <a href="DataBinding.html">Data Binding</a> の章を参照してください．</p>
 <h3 id="プロジェクト設定">プロジェクト設定</h3>
 <p>SlowDash のプロジェクトでは，通常，専用のディレクトリを作って，そこに
@@ -564,29 +499,70 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb20-1"><a href=
 <span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> SQLite</span></span>
 <span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">file</span><span class="kw">:</span><span class="at"> QuickTourTestData.db</span></span>
 <span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span></span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> testdata[channel]@timestamp(unix)=value</span></span></code></pre></div>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> slowdata[channel]@timestamp(unix)=value</span></span></code></pre></div>
 <p><code>schema</code>
 のところで，データのテーブル名と，どの情報がどのカラムに書かれているかを記述しています．フォーマットは，<code>テーブル名 [チャンネル情報のカラム名] @ 時刻情報のカラム名（時刻の表現形式）= データ値のカラム名</code>
 みたいな感じです．詳しくは，<a href="DataBinding.html">DataBinding</a>
 の章を参照してください．</p>
-<p>この例では，時刻情報に，UNIX
-タイムスタンプの方を使っています．DateTime
-型の方の時刻情報を使う場合は，<code>schema</code>
+<p>この例では，時刻情報が <code>timestamp</code> カラムに UNIX
+時間で格納されていると記述しています． 別の場合で，例えば
+<code>datetime</code>
+カラムに日付時刻型で格納されている場合は，<code>schema</code>
 の記述を以下のようにしてください：</p>
 <div class="sourceCode" id="cb21"><pre
 class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">time_series</span><span class="kw">:</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> testdata[channel]@datetime(unspecified utc)=value</span></span></code></pre></div>
-<p>ここでは，UTC
-時刻がタイムゾーン指定なしで使われている悪い例に対応するために，時刻表現形式を
-<code>unspecified utc</code> (「書いてないけど UTC
-だよ」)と伝えています．保存されているデータがちゃんとタイムゾーン付きの場合は
-<code>with timezone</code> または <code>aware</code>
-を，最悪のケースでタイムゾーンなしでローカルタイムが使われている場合は
-<code>without timezone</code> または <code>naive</code>
-と書いてください．この情報は，SlowDash
-がクエリを構築する際に，データと同じ時刻表現を使用するために使われます．タイムゾーンを明示しないでローカルタイムを使った場合の惨事が多数報告されているので，新しく作るデータで
-<code>without timezone</code>
-を選択する理由はないです．（日本国内だけなら関係ないと思ってすでにそういう形式でデータを取ってる場合は，夏時間の導入に反対しておいた方がいいです．）</p>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> slowdata[channel]@datetime(with timezone)=value</span></span></code></pre></div>
+<p>この情報は，SlowDash
+がクエリを構築する際に，データと同じ時刻表現を使用するために使われます．
+指定できる時刻形式は以下のとおりです：</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>書式</th>
+<th>意味</th>
+<th>データ例</th>
+<th>コメント</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>unix</code></td>
+<td>UNIX時刻</td>
+<td><code>1791384528.054</code></td>
+<td>安全で扱いやすいが視認性が悪い</td>
+</tr>
+<tr>
+<td><code>with timezone</code> / <code>aware</code></td>
+<td>タイムゾーンつき日付時刻</td>
+<td><code>2026-10-07T07:19:25.496-07</code></td>
+<td>安全で読みやすいが扱いにひと手間</td>
+</tr>
+<tr>
+<td><code>without timezone</code> / <code>naive</code></td>
+<td>タイムゾーン指定のない日付時刻</td>
+<td><code>2026-10-07T07:19:25.496</code></td>
+<td>存在する理由なし</td>
+</tr>
+<tr>
+<td><code>unspecified utc</code></td>
+<td>暗黙 UTC 時刻</td>
+<td><code>2026-10-07T14:19:25.496</code></td>
+<td>これを使う人たちもいる</td>
+</tr>
+</tbody>
+</table>
+<p>タイムゾーンのない日付時刻の使用はおすすめしません．
+（日本でしか使わないと思ってすでに without timezone
+形式でデータを保存している場合は，夏時間の導入に反対しておいた方がいいです．）
+<code>unspecified utc</code> は，SQLite
+などの一部のデータベースで必要になることがありますが，この場合でも，代わりにUNIX
+時間を使うなどで避けられるなら避けたほうがいいです．</p>
 <p><code>slowdash config</code>
 コマンドで設定情報の一部が表示されるので，設定ファイルが読めているかのチェックができます．これは，<code>SlowdashProject.yaml</code>
 ファイルを作成したプロジェクトディレクトリで実行してください．</p>
@@ -652,7 +628,7 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 です．それなりに上品に止まります．だめだったら，<code>Ctrl</code>-<code>\</code>
 を使ってください．</p>
 <h3 id="ブラウザでデータを見る">ブラウザでデータを見る</h3>
-<p>ブラウザ上の青い文字のところをクリックすればいろいろとプロットを作成できます．上部の紫色は，東北大学とワシントン大学の共通テーマカラーですが，嫌ならプロジェクト設定ファイルで変更できます．<a
+<p>ブラウザ上の青い文字のところをクリックすればいろいろとプロットを作成できます．上部の紫色は，某大学のテーマカラーですが，プロジェクト設定ファイルで変更できます．<a
 href="ProjectSetup.html#styles">Project Setup
 の章</a>に説明があります．</p>
 <p>右下の Tools にある New Plot Layout

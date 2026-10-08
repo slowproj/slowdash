@@ -15,7 +15,7 @@ title: SlowDash を使ってみる
 
 もともとはスローコントロール用でしたが，現在では物理実験に関わる全てのデータのビジュアライズと，DAQ を含むシステムコントロールの UI を目指して開発をしています．現時点で，Grafana で行うようなビジュアライゼーションの部分はほぼ実装済みで，解析およびコントロールの部分が開発中です．
 
-データベースアクセス以外は外部ライブラリを使っておらず，ソフトウェアの寿命が外のライブラリの変更等に影響されることはないようになっています．特に，流行り廃れが激しい JavaScript の部分はフレームワークなどは使わず，完全に自己完結です（使っていたけど排除しました）．データベース側および解析モジュールは，全て独立なプラグインとなっており，いつでも切り捨てられます．依存性がないので，インストールがとても楽で，使用後も痕跡を残さずきれいに削除できます．それでもインストールをしたくない人のために，すぐに使える Docker コンテナも提供されています．
+デバイスおよびデータベースアクセス以外は外部ライブラリを使っておらず，ソフトウェアの寿命が外のライブラリの変更等に影響されることはないようになっています．特に，流行り廃れが激しい JavaScript の部分はフレームワークなどは使わず，完全に自己完結です（使っていたけど排除しました）．データベース側および解析モジュールは，全て独立なプラグインとなっており，いつでも切り捨てられます．依存性がないので，インストールがとても楽で，使用後も痕跡を残さずきれいに削除できます．それでもインストールをしたくない人のために，すぐに使える Docker コンテナも提供されています．
 
 <img src="fig/Gallery-ATDS-Dashboard.png" style="width:40%;box-shadow:0px 0px 15px -5px rgba(0,0,0,0.7);">
 <img src="fig/Gallery-RGA.png" style="width:40%;box-shadow:0px 0px 15px -5px rgba(0,0,0,0.7);">
@@ -57,7 +57,6 @@ Grafana と違って，物理屋に使いやすいようになっています（
 - サーバー側での継続的データ処理とアラーム
 - データベース以外からのデータのビジュアライズ（ROOT ファイルとか，どっかのストリーミングとか）
 - ヒストグラムのフィティング等まで含めた埋め込みおよび対話的データ解析
-- メッセージングシステムへの直接接続 (AMQP とか Kafka とか)
 
 Grafana にあって今の SlowDash にないもの（将来は実装されるかも）：
 
@@ -124,13 +123,13 @@ Firefox で開発していて，たまに Chrome と Edge と Safari でテス�
 
 
 ### ダウンロード
-GitHub からダウンロードできます． サブモジュールを使っているので，`--recurse-submodules` オプションをつけてください．
+GitHub からダウンロードできます．
 ```console
 $ git clone https://github.com/slowproj/slowdash.git --recurse-submodules
 ```
 (`git` コマンドが利用できない場合，[github のページ](https://github.com/slowproj/slowdash) からパッケージをダウンロードすることもできます．）
 
-これで，`slowdash` というディレクトリが作成されます．インストールおよび次の Quick Tour では，全てのファイルは slowdash のディレクトリ以下に作られるので，この過程でユーザのシステムが汚されることはありません．また，このディレクトリを削除すれば，全てをなかったことにできます．
+これで，`slowdash` というディレクトリが作成されます．インストールおよび次の Quick Tour では，全てのファイルはこの `slowdash` のディレクトリ以下に作られるので，この過程でユーザのシステムが汚されることはありません．また，このディレクトリを削除すれば，全てをなかったことにできます．
 
 ### ドキュメント
 公式ドキュメントは，展開したディレクトリの `docs` 以下にあります．`index.html` をブラウザで開いてください．
@@ -161,7 +160,7 @@ $ source PATH/TO/SLOWDASH/bin/slowdash-bashrc
 ちなみに中身はこんな感じです．
 ```bash
 export SLOWDASH_DIR=/PATH/TO/SLOWDASH
-alias slowdash="$SLOWDASH_DIR/bin/slowdash"
+export PATH=$SLOWDASH_DIR/bin:$PATH
 alias slowdash-activate-venv="source $SLOWDASH_DIR/venv/bin/activate"
 ```
 設定ファイルの `source` は，新しいターミナルを開くたびに毎回必要です．
@@ -233,7 +232,7 @@ $ slowdash --port=18881
 <img src="fig/QuickTour-DummyDataSource.png" style="width:40%">
 
 # Quick Tour をやってみる
-ここでは，公式ドキュメントの Quick Tour の内容の，ダミーデータで時系列プロットを作るところと，簡単なスクリプトでデバイスからデータを読んでみると，ブラウザからコントロールをするのをやってみます．
+ここでは，公式ドキュメントの Quick Tour の内容の，ダミーデータで時系列プロットを作るところと，簡単なスクリプトでデバイスからデータを読んでみるのと，ブラウザからコントロールをするのをやってみます．
 
 テスト用のデータストアには，SQLite を使います．これは，追加のライブラリをインストールせずに使用でき，また，データがファイルに保存されるため，使用後のクリーンアップが簡単なためです．
 
@@ -252,87 +251,68 @@ $ slowdash-activate-venv       (または source PATH/TO/SLOWDASH/venv/bin/activ
 ```
 インストール時に venv を使わなかった場合 (`pip install -r requrements.txt`した場合)は，この手順は必要ありません．venv から抜ける場合は，端末を閉じるか，`deactivate` コマンドを使ってください．
 
-SlowPy を使って，一秒ごとに乱数の値を SQLite に書き込むスクリプトを作成します．
+SlowPy を使って，一秒ごとに乱数の値４つを SQLite に書き込むスクリプトを作成します．
+
 ```python
-from slowpy.control import ControlSystem, RandomWalkDevice
-from slowpy.store import DataStore_SQLite, LongTableFormat
+import slowpy
+device = slowpy.control.RandomWalkDevice()
+datastore = slowpy.store.DataStore_SQLite('sqlite:///SlowData.db', table="data")
+tasklet = slowpy.mesh.Tasklet()
 
-class TestDataFormat(LongTableFormat):
-    schema_numeric = '(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel))'
-    def insert_numeric_data(self, cur, timestamp, channel, value):
-        cur.execute(f'INSERT INTO {self.table} VALUES(CURRENT_TIMESTAMP,%d,?,%f)' % (timestamp, value), (channel,))
-
-ctrl = ControlSystem()
-device = RandomWalkDevice(n=4)
-datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata", table_format=TestDataFormat())
-
-def _loop():
+@tasklet.loop(interval=1.0)
+def loop():
     for ch in range(4):
         data = device.read(ch)
         datastore.append(data, tag="ch%02d"%ch)
-    ctrl.sleep(1)
-    
-def _finalize():
-    datastore.close()
     
 if __name__ == '__main__':
-    ctrl.stop_by_signal()
-    while not ctrl.is_stop_requested():
-        _loop()
-    _finalize()
+    tasklet.run()
 ```
+
 このスクリプトの詳細は公式ドキュメントの [Controls セクション](ControlsScript.html)に説明があります．ここでは，上記の内容をコピペして，`generate-testdata.py`  というファイル名でプロジェクトディレクトリに保存してください．
 
 このスクリプトを走らせると，テスト用のデータファイルが生成されます．
 ```console
 $ python generate-testdata.py
 ```
-（もしコピペに失敗してエラーが出るようであれば，同じ内容のファイルが `slowdash/ExampleProjects/QuickTour/01_DummyData/config/slowtask-testdata.py` にあります．）
+（もしコピペに失敗してエラーが出るようであれば，同じ内容のファイルが `slowdash/ExampleProjects/QuickTour/01_DummyData/config/slowtask-testdata.py` にあります．後で見るように，これをブラウザから実行することもできます．）
 
 10 秒くらい経過したら `Ctrl`-`c` で止めて，できたファイルを確認してください．
 ```console
 $ ls -l
--rw-r--r-- 1 sanshiro sanshiro 24576 Apr 11 16:52 QuickTourTestData.db
--rwxr-xr-x 1 sanshiro sanshiro  3562 Apr 11 16:51 generate-testdata.py
+-rw-r--r-- 1 sanshiro sanshiro 12288 Oct  7 07:41 SlowStore.db
+-rwxr-xr-x 1 sanshiro sanshiro   376 Oct  7 07:38 generate-testdata.py
 ```
 
 データの中身は `sqlite3` コマンドで確認できます．（このコマンドがインストールされてなければ，この手順は飛ばしていいです．）
 ```console
-$ sqlite3 QuickTourTestData.db 
-SQLite version 3.31.1 2020-01-27 19:55:54
+$ sqlite3  SlowStore.db 
+SQLite version 3.46.1 2024-08-13 09:16:08
 Enter ".help" for usage hints.
-sqlite> .table
-testdata
-sqlite> .schema testdata
-CREATE TABLE testdata(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel));
-sqlite> select * from testdata limit 10;
-2023-04-11 23:52:13|1681257133|ch00|0.187859
-2023-04-11 23:52:13|1681257133|ch01|-0.418021
-2023-04-11 23:52:13|1681257133|ch02|0.482607
-2023-04-11 23:52:13|1681257133|ch03|1.733749
+sqlite> .tables
+slowdata
+sqlite> .schema
+CREATE TABLE slowdata(timestamp REAL, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp,channel));
+sqlite> select * from slowdata limit 10;
+1791384527.045|ch00|0.59
+1791384527.074|ch01|3.537
+1791384527.082|ch02|0.447
+1791384527.093|ch03|-4.424
+1791384528.038|ch00|0.302
+1791384528.054|ch01|2.235
 ...
 ```
 
-`sqlite3` の `.schema` コマンド出力にあるとおり，データは `testdata` というテーブルに保存されていて，その構造は以下のようになっています．
+`sqlite3` の `.schema` コマンド出力にあるとおり，データは `slowdata` というテーブルに保存されていて，その構造は以下のようになっています．
 ```
-testdata(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel))
+slowdata(timestamp REAL, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp,channel));
 ```
 
-テスト目的のために，データのタイムスタンプは日付時刻型（SQLite では ISO 表記の文字列）のものと，整数の UNIX 時間の両方が入っていますが，通常はどちらか一方のことが多いと思います．SQLite では，タイムゾーンの扱いに罠が多いので，UNIX 時間の方がいいかもしれません．
+この例では，時刻は実数の UNIX 時間で記録されています．
+UNIX 時間の代わりにデータベースが持つ日付時刻型を使うこともできます．この場合は，なるべくタイムゾーン情報をもつ型を使用してください (PostgreSQL なら `TIMESTAMP WITH TIMEZONE` など）．タイムゾーンの間違いによる悲劇が報告されています．
 
-データの中身はこんな感じです:
-
-|datetime (DATETIME/TEXT)|timestamp (INTEGER)|channel (VARCHAR(100))|value (REAL)|
-|----|-----|-----|-----|
-|2023-04-11 23:52:13|1681257133|ch00|0.187859|
-|2023-04-11 23:52:13|1681257133|ch01|-0.418021|
-|2023-04-11 23:52:13|1681257133|ch02|0.482607|
-|2023-04-11 23:52:13|1681257133|ch03|1.733749|
-|...||||
-
-ここでは，面倒な例として，日付時刻型のデータにタイムゾーンを明示しないで UTC 時刻を使用しています（SQLite ではこれがデフォルトの関数が多いです）．通常は，タイムゾーン付きまたは UNIX 時間を使用してください．
-
-時系列データのテーブルは，必ずしもこの形になっている必要はありません．特に，テーブルにカラムを追加するのが簡単なタイプのデータストアを使用している場合は，各チャンネルを各カラムにするのも普通にアリだと思います．同時に読み出したデータのグルーピングが簡単になるというメリットもあります．詳しくは，公式ドキュメントの [Data Binding](DataBinding.html) の章を参照してください．
+時系列データのテーブルは，必ずしもこの例のようなチャンネルをデータとして保存する形 (Long Format と呼ばれる）になっている必要はありません．
+特に，テーブルにカラムを追加するのが簡単なタイプのデータストアを使用している場合は，各チャンネルを各カラム割り当てるのも普通にアリだと思います（Wide Format）．この場合，同時に読み出したデータのグルーピングが簡単になるというメリットもあります．詳しくは，公式ドキュメントの [Data Binding](DataBinding.html) の章を参照してください．
 
 ### プロジェクト設定
 SlowDash のプロジェクトでは，通常，専用のディレクトリを作って，そこに `SlowdashProject.yaml` という名前のプロジェクト設定ファイルを置きます．（データファイルを直接読む場合などの例外はあります．）どこのデータベースからどのようなデータを読むかなどを，このプロジェクト設定ファイルに記述します．
@@ -347,17 +327,31 @@ slowdash_project:
     type: SQLite
     file: QuickTourTestData.db
     time_series:
-      schema: testdata[channel]@timestamp(unix)=value
+      schema: slowdata[channel]@timestamp(unix)=value
 ```
 
 `schema` のところで，データのテーブル名と，どの情報がどのカラムに書かれているかを記述しています．フォーマットは，`テーブル名 [チャンネル情報のカラム名] @ 時刻情報のカラム名（時刻の表現形式）= データ値のカラム名` みたいな感じです．詳しくは，[DataBinding](DataBinding.html) の章を参照してください．
 
-この例では，時刻情報に，UNIX タイムスタンプの方を使っています．DateTime 型の方の時刻情報を使う場合は，`schema` の記述を以下のようにしてください：
+この例では，時刻情報が `timestamp` カラムに UNIX 時間で格納されていると記述しています．
+別の場合で，例えば `datetime` カラムに日付時刻型で格納されている場合は，`schema` の記述を以下のようにしてください：
 ```yaml
       time_series:
-        schema: testdata[channel]@datetime(unspecified utc)=value
+        schema: slowdata[channel]@datetime(with timezone)=value
 ```
-ここでは，UTC 時刻がタイムゾーン指定なしで使われている悪い例に対応するために，時刻表現形式を `unspecified utc` (「書いてないけど UTC だよ」)と伝えています．保存されているデータがちゃんとタイムゾーン付きの場合は `with timezone` または `aware` を，最悪のケースでタイムゾーンなしでローカルタイムが使われている場合は `without timezone` または `naive` と書いてください．この情報は，SlowDash がクエリを構築する際に，データと同じ時刻表現を使用するために使われます．タイムゾーンを明示しないでローカルタイムを使った場合の惨事が多数報告されているので，新しく作るデータで `without timezone` を選択する理由はないです．（日本国内だけなら関係ないと思ってすでにそういう形式でデータを取ってる場合は，夏時間の導入に反対しておいた方がいいです．）
+
+この情報は，SlowDash がクエリを構築する際に，データと同じ時刻表現を使用するために使われます．
+指定できる時刻形式は以下のとおりです：
+
+| 書式 | 意味 | データ例 | コメント |
+|---|---|---|---|
+| `unix` | UNIX時刻 | `1791384528.054` | 安全で扱いやすいが視認性が悪い |
+| `with timezone` /  `aware` | タイムゾーンつき日付時刻 | `2026-10-07T07:19:25.496-07` | 安全で読みやすいが扱いにひと手間 |
+| `without timezone` / `naive` | タイムゾーン指定のない日付時刻 | `2026-10-07T07:19:25.496` | 存在する理由なし |
+| `unspecified utc` | 暗黙 UTC 時刻 | `2026-10-07T14:19:25.496` | これを使う人たちもいる |
+
+タイムゾーンのない日付時刻の使用はおすすめしません．
+（日本でしか使わないと思ってすでに without timezone 形式でデータを保存している場合は，夏時間の導入に反対しておいた方がいいです．）
+`unspecified utc` は，SQLite などの一部のデータベースで必要になることがありますが，この場合でも，代わりにUNIX 時間を使うなどで避けられるなら避けたほうがいいです．
 
 `slowdash config` コマンドで設定情報の一部が表示されるので，設定ファイルが読めているかのチェックができます．これは，`SlowdashProject.yaml` ファイルを作成したプロジェクトディレクトリで実行してください．
 ```console
@@ -424,7 +418,7 @@ $ python ./generate-testdata.py
 
 
 ### ブラウザでデータを見る
-ブラウザ上の青い文字のところをクリックすればいろいろとプロットを作成できます．上部の紫色は，東北大学とワシントン大学の共通テーマカラーですが，嫌ならプロジェクト設定ファイルで変更できます．[Project Setup の章](ProjectSetup.html#styles)に説明があります．
+ブラウザ上の青い文字のところをクリックすればいろいろとプロットを作成できます．上部の紫色は，某大学のテーマカラーですが，プロジェクト設定ファイルで変更できます．[Project Setup の章](ProjectSetup.html#styles)に説明があります．
 
 右下の Tools にある New Plot Layout で新しい空のページを作ります．その中で，`Add a New Panel` を選んで，`Time-Axis Plot` を選んで，プロットを作成していきます．たぶん自明です．
 
