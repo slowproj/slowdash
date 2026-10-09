@@ -256,14 +256,14 @@ SlowPy を使って，一秒ごとに乱数の値４つを SQLite に書き込�
 ```python
 import slowpy
 device = slowpy.control.RandomWalkDevice()
-datastore = slowpy.store.DataStore_SQLite('sqlite:///SlowData.db', table="data")
+datastore = slowpy.store.DataStore_SQLite('sqlite:///SlowStore.db', table='slowdata')
 tasklet = slowpy.mesh.Tasklet()
 
 @tasklet.loop(interval=1.0)
 def loop():
     for ch in range(4):
         data = device.read(ch)
-        datastore.append(data, tag="ch%02d"%ch)
+        datastore.append(data, tag=f'ch{ch:02d}')
     
 if __name__ == '__main__':
     tasklet.run()
@@ -324,10 +324,9 @@ slowdash_project:
   title: SlowDash Quick Tour  （なんでも良いが，改行や極悪な文字は含まない方がいいと思う）
   
   data_source:
-    type: SQLite
-    file: QuickTourTestData.db
+    url: sqlite:///SlowStore.db
     time_series:
-      schema: slowdata[channel]@timestamp(unix)=value
+      schema: slowdata [channel] @timestamp(unix) = value
 ```
 
 `schema` のところで，データのテーブル名と，どの情報がどのカラムに書かれているかを記述しています．フォーマットは，`テーブル名 [チャンネル情報のカラム名] @ 時刻情報のカラム名（時刻の表現形式）= データ値のカラム名` みたいな感じです．詳しくは，[DataBinding](DataBinding.html) の章を参照してください．
@@ -355,19 +354,33 @@ slowdash_project:
 
 `slowdash config` コマンドで設定情報の一部が表示されるので，設定ファイルが読めているかのチェックができます．これは，`SlowdashProject.yaml` ファイルを作成したプロジェクトディレクトリで実行してください．
 ```console
-$ slowdash config
+$ slowdash config --indent=2
+Running in venv at /PATH/TO/SLOWDASH/venv
 {
-    "project": {
-        "name": "QuickTour",
-        "title": "SlowDash Quick Tour",
-        "error_message": ""
-    },
-    "data_source_module": [
-        "datasource_SQLite.py"
-    ],
-    "user_module": [],
-    "style": null
-}
+  "slowdash": {
+    "version": "261008 \"Mamquam\""
+  },
+  "project": {
+    "name": "QuickTour",
+    "title": "SlowDash Quick Tour",
+    "server_url": "http://slowpc:18881",
+    "is_secure": false,
+    "is_cgi": false,
+    "is_command": true,
+    "is_async": true
+  },
+  "data_source": {
+    "SQLite": {
+      "schemata": {
+        "time_series": [
+          "slowdata[channel]@timestamp(unix)=value"
+        ],
+        "object": [],
+        "object_time_series": []
+      }
+    }
+  },
+  ...
 ```
 
 データベースに正しくアクセスできる場合，`slowdash channels` コマンドでチャンネルの一覧を表示できます．

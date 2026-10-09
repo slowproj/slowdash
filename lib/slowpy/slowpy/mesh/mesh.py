@@ -171,7 +171,7 @@ class Mesh:
         """
         
         if self._mesh_id is None:
-            logging.error('Mesh not connected')
+            logging.info('Mesh: Local loopback mesh is used')
             return
                 
         await self.aio_stop()
@@ -267,7 +267,10 @@ class Mesh:
         """
         
         if self._mesh_id is None:
-            raise Exception(f'Mesh: RPC error: Mesh not connected')
+            if raise_on_timeout:
+                raise Exception(f'Mesh: RPC error: Mesh not connected')
+            else:
+                return []
         
         if len(name) == 0:
             if raise_on_timeout:
@@ -597,7 +600,7 @@ class Registry:
         try:
             return await self._mesh.aio_call(f'{self._module_name}.set', key, value, cas_revision=cas_revision)
         except Exception as e:
-            raise Exception(f'Registry.aio_set(): {e}')
+            raise Exception(f'Registry.aio_set({key}): {e}')
 
     
     async def aio_get(self, key:str, default:Any=None, *, with_meta:bool=False) -> Any:
@@ -612,7 +615,7 @@ class Registry:
         try:
             return await self._mesh.aio_call(f'{self._module_name}.get', key, default, with_meta=with_meta)
         except Exception as e:
-            raise Exception(f'Registry.aio_get(): {e}')
+            raise Exception(f'Registry.aio_get({key}): {e}')
         
 
     async def aio_keys(self, prefix:str='', limit:int|None=1000)->list[str]:
@@ -625,7 +628,7 @@ class Registry:
         try:
             return await self._mesh.aio_call(f'{self._module_name}.keys', prefix, limit=limit)
         except Exception as e:
-            raise Exception(f'Registry.aio_keys(): {e}')
+            raise Exception(f'Registry.aio_keys({prefix}): {e}')
 
     
     async def aio_delete(self, key:str, *, cas_revision:int|None=None) -> bool:
@@ -638,7 +641,7 @@ class Registry:
         try:
             return await self._mesh.aio_call(f'{self._module_name}.delete', key, cas_revision=cas_revision)
         except Exception as e:
-            raise Exception(f'Registry.aio_delete(): {e}')
+            raise Exception(f'Registry.aio_delete({key}): {e}')
 
 
 

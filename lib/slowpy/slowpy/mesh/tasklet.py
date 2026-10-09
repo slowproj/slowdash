@@ -382,8 +382,7 @@ class Tasklet:
 
     async def _start(self):        
         if self._mesh_url is None:
-            logging.error(f'Tasklet: Mesh URL is not provided')
-            #return  # use null mesh
+            logging.info(f'Tasklet: Mesh URL is not provided: using local loopback')
         else:
             self._mesh.connect(self._mesh_url, self._name)
         if self._name is None:

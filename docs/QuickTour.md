@@ -25,35 +25,22 @@ If you're using Docker, the directory you just created will be mounted as a volu
 # Test Data Generation
 We'll use the SlowPy Python library, included with the SlowDash package, to generate test data. Create a file named `generate-testdata.py` in your project directory with the following code:
 ```python
-from slowpy.control import ControlSystem, RandomWalkDevice
-from slowpy.store import DataStore_SQLite, LongTableFormat
+import slowpy
+device = slowpy.control.RandomWalkDevice()
+datastore = slowpy.store.DataStore_SQLite('sqlite:///SlowStore.db', table='slowdata')
+tasklet = slowpy.mesh.Tasklet()
 
-class TestDataFormat(LongTableFormat):
-    schema_numeric = '(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel))'
-    def insert_numeric_data(self, cur, timestamp, channel, value):
-        cur.execute(f'INSERT INTO {self.table} VALUES(CURRENT_TIMESTAMP,%d,?,%f)' % (timestamp, value), (channel,))
-
-ctrl = ControlSystem()
-device = RandomWalkDevice(n=4)
-datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata", table_format=TestDataFormat())
-
-def _loop():
+@tasklet.loop(interval=1.0)
+def loop():
     for ch in range(4):
         data = device.read(ch)
-        datastore.append(data, tag="ch%02d"%ch)
-    ctrl.sleep(1)
-    
-def _finalize():
-    datastore.close()
+        datastore.append(data, tag=f'ch{ch:02d}')
     
 if __name__ == '__main__':
-    ctrl.stop_by_signal()
-    while not ctrl.is_stop_requested():
-        _loop()
-    _finalize()
+    tasklet.run()
 ```
 
-Details of the script are described in the [Controls](ControlsScript.html) section. For now, just copy and paste the script and use it to generate some test data.
+Details of the script are described in the [Controls](ControlsScript.html) section. For now, just copy and paste the script and use it to generate some test data. (If copy-and-paste fails, the identical source can be found at `ExampleProjects/QuickTour/01_DummyData/config/slowtask-testdata.py`. As we will see later, this script can be started from web browsers.)
 
 If you installed SlowPy in a virtual environment (the standard installation method), activate it using either:
 ```console
@@ -66,52 +53,41 @@ $ source PATH/TO/SLOWDASH/venv/bin/activate
 
 Running this script will create a SQLite database file and populate it with simulated time-series data every second:
 ```console
-$ python3 generate-testdata.py
+$ python generate-testdata.py
 ```
 
 After letting it run for about a minute, stop the script using `Ctrl`-`c` and examine the created files:
 ```console
 $ ls -l
--rw-r--r-- 1 sanshiro sanshiro 24576 Apr 11 16:52 QuickTourTestData.db
--rwxr-xr-x 1 sanshiro sanshiro  3562 Apr 11 16:51 generate-testdata.py
+-rw-r--r-- 1 sanshiro sanshiro 12288 Oct  7 07:41 SlowStore.db
+-rwxr-xr-x 1 sanshiro sanshiro   376 Oct  7 07:38 generate-testdata.py
 ```
 
 You can inspect the database contents using the SQLite command-line program, `sqlite3`. If this program isn't available on your system, you can skip this step and view the data through SlowDash in the next section.
 ```console
-$ sqlite3 QuickTourTestData.db 
-SQLite version 3.31.1 2020-01-27 19:55:54
+$ sqlite3  SlowStore.db 
+SQLite version 3.46.1 2024-08-13 09:16:08
 Enter ".help" for usage hints.
-sqlite> .table
-testdata
-sqlite> .schema testdata
-CREATE TABLE testdata(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel));
-sqlite> select * from testdata limit 10;
-2023-04-11 23:52:13|1681257133|ch00|0.187859
-2023-04-11 23:52:13|1681257133|ch01|-0.418021
-2023-04-11 23:52:13|1681257133|ch02|0.482607
-2023-04-11 23:52:13|1681257133|ch03|1.733749
+sqlite> .tables
+slowdata
+sqlite> .schema
+CREATE TABLE slowdata(timestamp REAL, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp,channel));
+sqlite> select * from slowdata limit 10;
+1791384527.045|ch00|0.59
+1791384527.074|ch01|3.537
+1791384527.082|ch02|0.447
+1791384527.093|ch03|-4.424
+1791384528.038|ch00|0.302
+1791384528.054|ch01|2.235
 ...
 ```
 
 As shown above, the schema of the data table is:
 ```
-testdata(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel))
+slowdata(timestamp REAL, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp,channel));
 ```
 
-and the table contents are:
-
-|datetime (DATETIME/TEXT)|timestamp (INTEGER)|channel (VARCHAR(100))|value (REAL)|
-|----|-----|-----|-----|
-|2023-04-11 23:52:13|1681257133|ch00|0.187859|
-|2023-04-11 23:52:13|1681257133|ch01|-0.418021|
-|2023-04-11 23:52:13|1681257133|ch02|0.482607|
-|2023-04-11 23:52:13|1681257133|ch03|1.733749|
-|...||||
-
-(Note: In SQLite, DATETIME is stored as TEXT. Times are in UTC, though not explicitly specified.)
-
-For demonstration purposes, this table includes two timestamp columns: one for (emulated) hardware data time in UNIX timestamp format, and another for database writing time in datetime format. In a real system, you might use just one of these formats.
-
+In this example, the UNIX timestamps are used for data time. Other formats, such as DB native date time types, can be used.
 For information about other supported data table formats, please refer to the [Data Binding section](DataBinding.html).
 
 # Basic Usage
@@ -128,20 +104,25 @@ slowdash_project:
   title: SlowDash Quick Tour
 
   data_source:
-    url: sqlite:///QuickTourTestData.db
+    url: sqlite:///SlowStore.db
     time_series:
-      schema: testdata [channel] @timestamp(unix) = value
+      schema: slowdata [channel] @timestamp(unix) = value
 ```
 
-To use the `datetime` column for timestamps instead, modify the schema section as follows:
-```yaml
-      time_series:
-          schema: testdata[channel]@datetime(unspecified utc)=value
+The `schema` entry under `time_series` describes the format of the time-series data stored in the `data_store`.
+It specifies the columns and format in the following syntax:
 ```
+TABLE [ TAG_COLUMN ] @ TIME_COLUMN (TIMESTAMP_TYPE) = VALUE_COLUMN
+```
+
 The timestamp type is specified after the time column name. Common timestamp types include:
-- `aware` (or `with time zone`): for time data with explicit time zones
-- `naive` (or `without time zone` or `local`): for implied "local" time zone (generally not recommended)
-- `unspecified utc`: for time data without explicit time zones but known to be in UTC
+
+|name | description |
+|---|---|
+|`unix` | UNIX timestamp (integer or real number) |
+| `aware` / `with time zone` | date-time type with explicit time zones |
+| `naive` / `without time zone` / `local` | date-time type with implied "local" time zone (generally not recommended) |
+| `unspecified utc` | date-time type without explicit time zones but known to be in UTC |
 
 ### Verifying the Configuration
 
@@ -149,28 +130,33 @@ The timestamp type is specified after the time column name. Common timestamp typ
 
 Test your configuration using the `slowdash config` command in the project directory:
 ```console
-$ slowdash config
+$ slowdash config --indent=2
+Running in venv at /PATH/TO/SLOWDASH/venv
 {
-    "project": {
-        "name": "QuickTour",
-        "title": "SlowDash Quick Tour",
-        "error_message": ""
-    },
-    "data_source": {
-        "type": "SQLite",
-        "parameters": {
-            "file": "QuickTourTestData.db",
-            "time_series": {
-                "schema": "testdata[channel]@timestamp(unix)=value"
-            }
-        }
-    },
-    "style": null,
-    "contents": {
-        "slowdash": [],
-        "slowplot": []
+  "slowdash": {
+    "version": "261008 \"Mamquam\""
+  },
+  "project": {
+    "name": "QuickTour",
+    "title": "SlowDash Quick Tour",
+    "server_url": "http://slowpc:18881",
+    "is_secure": false,
+    "is_cgi": false,
+    "is_command": true,
+    "is_async": true
+  },
+  "data_source": {
+    "SQLite": {
+      "schemata": {
+        "time_series": [
+          "slowdata[channel]@timestamp(unix)=value"
+        ],
+        "object": [],
+        "object_time_series": []
+      }
     }
-}
+  },
+  ...
 ```
 
 The channels in the data-store can be listed with the `slowdash channels` command:
