@@ -425,7 +425,7 @@ $ cd PATH/TO/MySlowDashProject
 $ slowdash-activate-venv
 $ python ./generate-testdata.py
 ```
-データサイズは一時間で 5MB 程度なので，しばらくは走らせ続けて大丈夫です．データファイル（`QuickTourTestData.db`）は，SlowDash が走ってなければ，いつ消しても構いません．またデータが欲しくなったら，再度 `generate-testdata.py` を走らせてください．（データファルを削除せずに走らせても問題ありません．複数同時に走らせたら変なことになると思います．）
+データサイズは一時間で 5MB 程度なので，しばらくは走らせ続けて大丈夫です．データファイル（`SlowStore.db`）は，SlowDash が走ってなければ，いつ消しても構いません．またデータが欲しくなったら，再度 `generate-testdata.py` を走らせてください．（データファルを削除せずに走らせても問題ありません．複数同時に走らせたら変なことになると思います．）
 
 プログラムの終了は，全て `Ctrl`-`c` です．それなりに上品に止まります．だめだったら，`Ctrl`-`\` を使ってください．
 
@@ -553,7 +553,7 @@ from slowpy.control import control_system as ctrl
 device = ctrl.ethernet('172.26.0.1', 5025).scpi()
 
 from slowpy.store import DataStore_SQLite
-datastore = DataStore_SQLite('sqlite:///TestData.db', table="slowdata")
+datastore = DataStore_SQLite('sqlite:///SlowStore.db', table="slowdata")
 
 device.command('*RST').set()
 
@@ -572,14 +572,13 @@ while True:
 任意の Python スクリプト(SlowPyを使う必要もない)を SlowDash プロジェクトディレクトリの下の `config` ディレクトリ（すでに自動作成されているはず）に `slowtask-XXX.py` という名前で保存すると，SlowDash ホーム画面の左下の "SlowTask" セクションに作成したスクリプトが表示され，コントロールできるようになります．
 `SlowdashProject.yaml` の設定で，スクリプトを自動開始するようにしたり，ブラウザからこの Python ファイルを直接編集できるようにすることもできます．具体的な手順は，公式ドキュメントを参照してください．
 
-ただし，上記のスクリプトは，（上品に）停止させるためのコードがありません．アプリ側から停止や再実行をできるようにするためには，アプリからのコントロールを受けられるようにする必要があります．そのために，以下のように SlowDash で規定されているコールバックを実装します．
-
+ただし，上記のスクリプトは，（上品に）停止させるためのコードがありません．アプリ側から停止や再実行をできるようにするためには，アプリからのコントロールを受けられるようにする必要があります．そのために，以下のように読み出しループを SlowDash で規定されているコールバックに置き換えます：
 ```python
 from slowpy.control import control_system as ctrl
 device = ctrl.ethernet('172.26.0.1', 5025).scpi()
 
 from slowpy.store import DataStore_SQLite
-datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata")
+datastore = DataStore_SQLite('sqlite:///SlowStore.db', table="slowdata")
 
 device.command('*RST').set()
 
@@ -756,7 +755,7 @@ from slowpy.control import control_system as ctrl
 device = ctrl.ethernet('192.168.1.34', 5025).scpi()
 
 from slowpy.store import DataStore_SQLite
-datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata")
+datastore = DataStore_SQLite('sqlite:///SlowStore.db', table="slowdata")
 
 
 def _loop():
@@ -799,9 +798,9 @@ slowdash_project:
   title: SlowDash Quick Tour
   
   data_source:
-    url: sqlite:///QuickTourTestData.db
+    url: sqlite:///SlowStore.db
     time_series:
-      schema: testdata [channel] @timestamp(unix) = value
+      schema: slowdata [channel] @timestamp(unix) = value
 
   task:
     name: testdaq

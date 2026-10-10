@@ -14,7 +14,7 @@ from slowpy.control import control_system as ctrl
 device = ctrl.ethernet('192.168.1.34', 5025).scpi()
 
 from slowpy.store import DataStore_SQLite
-datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata")
+datastore = DataStore_SQLite('sqlite:///SlowStore.db', table="slowdata")
 
 from slowpy import Histogram
 histogram = Histogram(nbins=20, range_min=-10, range_max=10)

@@ -2,7 +2,7 @@ from slowpy.control import control_system as ctrl
 device = ctrl.ethernet('172.26.0.1', 5025).scpi()
 
 from slowpy.store import DataStore_SQLite
-datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata")
+datastore = DataStore_SQLite('sqlite:///SlowStore.db', table="slowdata")
 
 
 device.command('*RST').set()

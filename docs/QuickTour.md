@@ -233,7 +233,7 @@ In order to continuously fill the data while plotting, run the test-data generat
 ```console
 $ python3 generate-testdata.py
 ```
-The data file size is roughly 5 MB per hour. The test data file, `QuickTourTestData.db`, can be deleted safely when SlowDash is not running.
+The data file size is roughly 5 MB per hour. The test data file, `SlowStore.db`, can be deleted safely when SlowDash is not running.
 Once the file is deleted, run `generate-testdata.py` again before starting SlowDash next time.
 
 
@@ -381,7 +381,7 @@ from slowpy.control import control_system as ctrl
 device = ctrl.ethernet('172.26.0.1', 5025).scpi()
 
 from slowpy.store import DataStore_SQLite
-datastore = DataStore_SQLite('sqlite:///TestData.db', table="slowdata")
+datastore = DataStore_SQLite('sqlite:///SlowStore.db', table="slowdata")
 
 device.command('*RST').set()
 
@@ -406,7 +406,7 @@ from slowpy.control import control_system as ctrl
 device = ctrl.ethernet('172.26.0.1', 5025).scpi()
 
 from slowpy.store import DataStore_SQLite
-datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata")
+datastore = DataStore_SQLite('sqlite:///SlowStore.db', table="slowdata")
 
 device.command('*RST').set()
 
@@ -583,7 +583,7 @@ from slowpy.control import control_system as ctrl
 device = ctrl.ethernet('192.168.1.34', 5025).scpi()
 
 from slowpy.store import DataStore_SQLite
-datastore = DataStore_SQLite('sqlite:///QuickTourTestData.db', table="testdata")
+datastore = DataStore_SQLite('sqlite:///SlowStore.db', table="slowdata")
 
 
 def _loop():
@@ -634,9 +634,9 @@ slowdash_project:
   title: SlowDash Quick Tour
   
   data_source:
-    url: sqlite:///QuickTourTestData.db
+    url: sqlite:///SlowStore.db
     time_series:
-      schema: testdata [channel] @timestamp(unix) = value
+      schema: slowdata [channel] @timestamp(unix) = value
 
   task:
     name: testdaq
