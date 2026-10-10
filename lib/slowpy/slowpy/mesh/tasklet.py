@@ -432,6 +432,9 @@ class Tasklet:
                 pass
             raise e
 
+        # publish the spec again as initialize() might have added exports
+        await self._publish_spec()
+        
         main_tasks = set()
         try:
             for coro in self._main_task_coros:

@@ -1,7 +1,7 @@
 {
     "control": {
         "range": { "length": 60, "to": 0 },
-        "reload": 60,
+        "reload": 2,
         "mode": "normal",
         "grid": { "rows": "2", "columns": "2" }
     },
@@ -12,7 +12,7 @@
             "item_type": "square",
             "items": [
                 {
-                    "channel": "run_status['running']->replace(false,0)->replace(true,1)",
+                    "channel": "run_control.status['running']->replace(false,0)->replace(true,1)",
                     "gauge": { "min": 0, "max": 0 },
                     "ranges": {
                         "normal": { "min": 0, "max": 0.5 },
@@ -23,7 +23,7 @@
                     "text_transform": "replace(0,'Idling')->replace(1,'Running')"
                 },
                 {
-                    "channel": "run_status['offline']->invert()->replace(false,0)->replace(true,1)",
+                    "channel": "run_control.status['offline']->invert()->replace(false,0)->replace(true,1)",
                     "gauge": { "min": 0, "max": 0 },
                     "ranges": {
                         "normal": { "min": 0, "max": 0.5 },
@@ -34,7 +34,7 @@
                     "text_transform": "replace(0,'Recording Off')->replace(1,'Recording On')"
                 },
                 {
-                    "channel": "run_status['lapse']",
+                    "channel": "run_control.status['lapse']",
                     "gauge": { "min": 0, "max": 300 },
                     "ranges": {
                         "normal": { "min": 0, "max": 1000 },

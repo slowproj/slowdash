@@ -75,6 +75,7 @@ class ControlSystem(spc.ControlNode):
         loop.create_task(cls.aio_publish(value, name=name))
 
     
+    # keep this for backwards compatibility...
     @classmethod
     async def aio_publish(cls, obj, name:str|None=None):
         if cls._tasklet is None:
@@ -91,7 +92,7 @@ class ControlSystem(spc.ControlNode):
         value, value_is_ts = None, False
         if isinstance(obj, type):
             pass
-        elif callable(getattr(obj, 'to_json', None)):  # SlowPy Element (histogram etc)
+        elif isinstance(obj, (slp.DataElement, slp.TimeSeries)):
             value = obj.to_json()
             value_is_ts = isinstance(obj, slp.TimeSeries)
         elif isinstance(obj, ( bool, int, float, str )):
@@ -122,24 +123,44 @@ class ControlSystem(spc.ControlNode):
 
 
     @classmethod
-    async def aio_export(cls, obj, name:str|None=None):
-        return cls.export(obj, name)
+    async def aio_expose(cls, name:str, obj):
+        return cls.expose(name, obj)
 
     
     @classmethod
-    def export(cls, obj, name:str|None=None):
+    def expose(cls, name:str, obj):
         if cls._tasklet is None:
             if not cls._mesh_error_shown:
                 logging.error('ControlSysten: Tasklet not attached (export)')
+                logging.info('  hint: call export() within initialize(), or call bind_tasklet() explicitly')
                 cls._mesh_error_shown = True
             return
+        if isinstance(obj, type):
+            logging.error(f'exporting a type is not allowed')
+            return
 
-        if not isinstance(obj, spc.ControlNode):
+        node = None
+        if isinstance(obj, spc.ControlNode):
+            node = obj
+        elif isinstance(obj, slp.DataElement):  # not including slp.TimeSeries, as it cannot be a "value"
+            node = _SlowpyElementExportAdapterNode(obj)
+        elif type(obj) is dict:
+            node = _DictExportAdapterNode(obj)
+        elif dataclasses.is_dataclass(obj):
+            node = _DataclassInstanceExportAdapterNode(obj)
+        else:
+            try:
+                vars(obj)
+                node = _ClassInstanceExportAdapterNode(obj)
+            except:
+                logging.error(f'exporting a bad type object: {type(obj)}')
+        
+        if node is None:
             logging.error(f'Bad data type to export: {name} ({type(obj)})')
             return
-            
-        mesh_name = cls._get_name(obj, name)
-        cls._tasklet.mesh.export(mesh_name, obj)
+
+        mesh_name = cls._get_name(node, name)
+        cls._tasklet.mesh.export(mesh_name, node)
         
 
     # child nodes
@@ -231,4 +252,126 @@ class ValueNode(spc.ControlVariableNode):
         return self._value
 
     
+
+class _SlowpyElementExportAdapterNode(spc.ControlVariableNode):
+    def __init__(self, value:slp.DataElement):
+        self._value = value
+
+        
+    def set(self, value):
+        logging.error('SlowPy elements are read-only')
+        return None
+
+
+    def get(self):
+        return self._value.to_json()
+
+
+
+class _DataclassInstanceExportAdapterNode(spc.ControlVariableNode):
+    def __init__(self, value):
+        if not dataclasses.is_dataclass(value) or isinstance(value, type):
+            logging.error('dataclass instance expected')
+            self._value = None
+        else:
+            self._value = value
+            
+
+    def set(self, value):
+        if not type(value) is dict:
+            logging.error('dict value expected')
+            return
+        tree = value.get('tree', value)
+
+        ann = type(self._value).__annotations__
+        for k, v in tree.items():
+            if k not in ann:
+                logging.error(f'undefined field "{k}" for dataclass "{type(self._value)}"')
+                continue
+            try:
+                vv = ann[k](v)
+            except:
+                logging.error(f'unable to convert value "{v}" to field "{k}" of dataclass "{type(self._value)}" (type {ann[k]})')
+            try:
+                setattr(self._value, k, vv)
+            except:
+                logging.error(f'unable to assign value "{v}" to field "{k}" of dataclass "{type(self._value)}"')
+        
+            
+    def get(self):
+        if self._value is not None:
+            return { 'tree': dataclasses.asdict(self._value) }
+        else:
+            return { 'tree': {} }
+
+
+        
+class _DictExportAdapterNode(spc.ControlVariableNode):
+    def __init__(self, value):
+        if not type(value) is dict:
+            logging.error('dict value expected')
+            self._value = None
+        else:
+            self._value = value
+            
+        
+    def set(self, value):
+        if not type(value) is dict:
+            logging.error('dict value expected')
+            return
+        tree = value.get('tree',value)
+        
+        for k, v in tree.items():
+            if k in self._value and self._value[k] is not None:
+                try:
+                    self._value[k] = type(self._value)(v)
+                except:
+                    self._value[k] = v
+            else:
+                self._value[k] = v
+
+            
+    def get(self):
+        if self._value is not None:
+            return { 'tree': self._value }
+        else:
+            return { 'tree': {} }
+
+        
+
+class _ClassInstanceExportAdapterNode(spc.ControlVariableNode):
+    def __init__(self, value=None):
+        try:
+            vars(value)
+            self._value = value
+        except:
+            logging.error('class instance expected')
+            self._value = None
+
+            
+    def set(self, value):
+        if not type(value) is dict:
+            logging.error('dict value expected')
+            return
+        tree = value.get('tree', value)
+        
+        for k, v in tree.items():
+            if hasattr(self._value, k) and getattr(self._value, k) is not None:
+                try:
+                    ValueType = type(getattr(self._value, k))
+                    setattr(self._value, k, ValueType(v))
+                except:
+                    setattr(self._value, k, v)
+            else:
+                setattr(self._value, k, v)
+
+            
+    def get(self):
+        if self._value is not None:
+            return { 'tree': { k:v for k,v in vars(self._value).items() if not k.endswith('__slowdash_export_name') } }
+        else:
+            return { 'tree': {} }
+
+
+
 control_system = ControlSystem()

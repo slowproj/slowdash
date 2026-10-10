@@ -20,14 +20,16 @@ class RunStatus:
 run_status = RunStatus()
 
 
+@tasklet.initialize()
+async def initialize():
+    ctrl.expose('status', run_status)
+
+
 @tasklet.loop(interval=0.1, ticks={'readout':1, 'stream':10})
-async def _loop(ticks):    
+async def loop(ticks):
     if run_status.running:
         run_status.lapse = round(time.time() - run_status.start_time, 3)
         
-    if ticks.stream:
-        await ctrl.aio_stream('run_status', run_status)
-
     if not run_status.running:
         return
     
@@ -55,7 +57,6 @@ async def start(run_number:int=None, stop_after:bool=None, run_length:float=None
     run_status.start_time = round(time.time(), 3)
     run_status.running = True
     
-    await ctrl.aio_stream('run_status', run_status)
     print(f"starting a new run {run_status.run_number}")
     print(f"starting {run_status}")
 
@@ -75,8 +76,6 @@ async def stop():
         run_status.run_number += 1
         await ctrl.form('run_control').element('run_number').aio_set(run_status.run_number)
         
-    await ctrl.aio_stream('run_status', run_status)
-    
     return True
 
 
@@ -94,8 +93,8 @@ def html():
         <input type="checkbox" name="repeat"]> Then Repeat<br>
         <p>
         <div style="font-size:150%">
-          <input type="submit" name="run_control.start()" value="Start" sd-enabled="run_status['running']->invert()" sd-confirm="Are you ready to start?">
-          <input type="submit" name="run_control.stop()" value="Stop" sd-enabled="run_status['running']">
+          <input type="submit" name="run_control.start()" value="Start" sd-enabled="run_control.status['running']->invert()" sd-confirm="Are you ready to start?">
+          <input type="submit" name="run_control.stop()" value="Stop" sd-enabled="run_control.status['running']">
         </div>
       </form>
     '''    
