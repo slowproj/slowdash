@@ -473,7 +473,7 @@ Messages before `logging.aio_start()` can be held in the queue to be published l
     log_handler = MeshLogHandler(name=name, event_loop=asyncio.get_running_loop()))
 ```
 
-Otherwise, the messages before pubsub start will not be published. Also, in either case, messages after pubsub close will not be published. In particular, messages just before script crash are not published if no special care is taken.
+Otherwise, the messages before pubsub start will not be published. Also, in either case, messages after pubsub close will not be published. In particular, messages just before script crash might not be published unless special care is taken.
 
 ## HTTP Bridge (WebMesh)
 WebMesh is part of the SlowDash server process and allows Publish / Subscribe operations on SlowMesh to be performed over HTTP.

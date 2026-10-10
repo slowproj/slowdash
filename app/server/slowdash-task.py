@@ -8,9 +8,6 @@ from slowpy.control import ControlSystem
 
 
 def load_task_module(path:str, *, name:str, argv:list[str]|None=None, parameters:dict|None=None):
-    mesh_logger = MeshLogHandler(name=name, event_loop=asyncio.get_running_loop())
-    logging.getLogger().addHandler(mesh_logger)
-    
     path = os.path.abspath(path)
     if not os.path.isfile(path):
         raise FileNotFoundError(path)
@@ -54,7 +51,6 @@ def load_task_module(path:str, *, name:str, argv:list[str]|None=None, parameters
         
     module._sd_tasklet = tasklet
     ControlSystem.bind_tasklet(tasklet)
-    tasklet.set_mesh_logger(mesh_logger)
 
     return module, tasklet
 
@@ -180,6 +176,9 @@ async def main():
     autocider = RetainerAutocide(name)
     autocider.start()
 
+    mesh_logger = MeshLogHandler(name=name, event_loop=asyncio.get_running_loop())
+    logging.getLogger().addHandler(mesh_logger)
+    
     # use a dedicated MeshStdio to capture error messages during script loading (including loader.exec_module())
     mesh, mesh_stdio = None, None
     try:
@@ -205,11 +204,16 @@ async def main():
             await notify_life_event(name, mesh.mesh_id, 'script loaded')
         except Exception as e:
             await notify_life_event(name, mesh.mesh_id, 'script loading failed')
+            logging.error(f'script loading failed: {name}: {e}')
             tb = traceback.format_exc()
             if tb is not None and len(tb.strip()) > 0:
-                logging.error(tb)
-                print(tb)
-            return
+                logging.info(tb)
+            try:
+                await mesh_logger.aio_start(mesh)
+                await asyncio.sleep(1) # send out the queued logs (if possible)
+                await mesh_logger.aio_stop()
+            except Exception as e:
+                print(e)
     finally:
         await asyncio.sleep(0.1) # have stdio flush
         try:
@@ -221,6 +225,7 @@ async def main():
         except Exception as e:
             print(e)
             
+    tasklet.set_mesh_logger(mesh_logger)
     try:
         await tasklet.run_module(module=module, name=name, mesh_url=mesh_url)
     except Exception as e:

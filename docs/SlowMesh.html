@@ -879,8 +879,8 @@ published later by passing the event loop at the constructor:</p>
 class="sourceCode python"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>    log_handler <span class="op">=</span> MeshLogHandler(name<span class="op">=</span>name, event_loop<span class="op">=</span>asyncio.get_running_loop()))</span></code></pre></div>
 <p>Otherwise, the messages before pubsub start will not be published.
 Also, in either case, messages after pubsub close will not be published.
-In particular, messages just before script crash are not published if no
-special care is taken.</p>
+In particular, messages just before script crash might not be published
+unless special care is taken.</p>
 <h2 id="http-bridge-webmesh">HTTP Bridge (WebMesh)</h2>
 <p>WebMesh is part of the SlowDash server process and allows Publish /
 Subscribe operations on SlowMesh to be performed over HTTP. Publish is

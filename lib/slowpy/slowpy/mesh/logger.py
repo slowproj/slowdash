@@ -102,7 +102,7 @@ class MeshLogHandler(logging.Handler):
             if self._is_first:
                 self._is_first = False
                 try:
-                    await asyncio.sleep(3)  # give receivers a time to be ready
+                    await asyncio.sleep(0.5)  # give receivers a time to be ready
                 except asyncio.CancelledError:
                     await self.aio_stop()
                     break

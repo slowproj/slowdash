@@ -49,6 +49,11 @@ class SlowMQComponent(Component):
         }}
 
     
+    @slowlette.on_event('shutdown')
+    async def stop(self):
+        pass
+    
+    
     @slowlette.websocket('/ws/slowmq')
     async def connect(self, websocket:slowlette.WebSocket, name:str=None):
         try:
