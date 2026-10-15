@@ -1361,7 +1361,7 @@ async
 <code>_initialize()</code> は，以下のように宣言されます．</p>
 <div class="sourceCode" id="cb53"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Tasklet</span>
-<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>tasklet <span class="op">=</span> tasklet()</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>tasklet <span class="op">=</span> Tasklet()</span>
 <span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.initialize</span>()</span>
 <span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> my_init():</span>
@@ -1370,7 +1370,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb53-1"><a h
 <code>my_init()</code>）は何でも構いません．以前のままの
 <code>_initialize()</code> でもいいです． さらに，async
 でなくても構いません． 複数の <code>@tasklet.initialize()</code>
-を作成することもでき，その場合は作成順に呼ばれます．</p>
+を作成することもできます．</p>
 <p>SlowDash 設定ファイル（<code>SlowdashProject.yaml</code>
 ）からパラメータを受け取ることもできます．</p>
 <div class="sourceCode" id="cb54"><pre
@@ -1660,10 +1660,6 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb66-1"><a h
 <span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a>    topic <span class="op">=</span> <span class="st">&#39;data.store&#39;</span></span>
 <span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a>    tasklet.mesh.publish(topic, DataPacket({<span class="st">&#39;volt&#39;</span>: volt}))</span></code></pre></div>
-<p><code>publish()</code>
-関数は，内部でスレッドを使用します．スレッドプールによりほとんどの場合は無視できる程度のオーバーヘッドですが，最高の性能を引き出したい場合は，async
-を使用してください．（そもそも SlowDash 全般で async
-を使用した方が性能がいいです．）</p>
 <p>メッシュの <code>data.</code>
 から始まるトピック（<code>data.store</code>
 を含む）からデータを受信するためには，以下のようにします．</p>
@@ -1751,14 +1747,14 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb69-1"><a h
 <span id="cb69-8"><a href="#cb69-8" aria-hidden="true" tabindex="-1"></a>    datastore.append(data.values)</span></code></pre></div>
 <h5 id="slowtask-histogram.py"><code>slowtask-histogram.py</code></h5>
 <p>メッシュの <code>data.store</code>
-トピックからデータを受け取って，<code>ch0</code>
+トピックからデータを受け取って，<code>volt</code>
 のデータに対してヒストグラムを作成します．
 作成したヒストグラムは一秒ごとに <code>data.stream</code> トピックに
 publish されます． 以前使っていた <code>ctrl.stream(name, value)</code>
 は，内部で
 <code>aio_publish('data.stream', DataPacket({name:value}))</code>
-を呼び出しているだけなので，このように直接 publish
-しても動作は同じです．</p>
+を使用して <code>data.stream</code> にデータパケットを publish
+しています．</p>
 <div class="sourceCode" id="cb70"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy</span>
 <span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a></span>

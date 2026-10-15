@@ -11,8 +11,7 @@ run_status = RunStatus()
 
 
 from slowpy.control import control_system as ctrl
-#device = ctrl.ethernet('192.168.1.34', 5025).scpi()
-device = ctrl.ethernet('localhost', 5025).scpi()
+device = ctrl.ethernet('192.168.1.34', 5025).scpi()
 
 import slowpy
 tasklet = slowpy.mesh.Tasklet()

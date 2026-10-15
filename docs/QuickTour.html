@@ -142,6 +142,16 @@ Status Information from the Script to the Browser</a></li>
 id="toc-run-analysis-in-the-script-and-send-results-to-browsers">Run
 Analysis in the Script and Send Results to Browsers</a></li>
 </ul></li>
+<li><a href="#mesh-and-tasklet" id="toc-mesh-and-tasklet">Mesh and
+Tasklet</a>
+<ul>
+<li><a href="#converting-a-slowtask-script-to-use-tasklet"
+id="toc-converting-a-slowtask-script-to-use-tasklet">Converting a
+SlowTask Script to Use Tasklet</a></li>
+<li><a href="#separating-and-coordinating-tasks-with-mesh"
+id="toc-separating-and-coordinating-tasks-with-mesh">Separating and
+Coordinating Tasks with Mesh</a></li>
+</ul></li>
 </ul>
 </nav>
 </div>
@@ -1084,6 +1094,451 @@ SlowTask panel, and <code>hist01</code> will appear in Data Channels as
 <code>current histogram</code> data. You can add it to the layout via
 Add a New Panel -&gt; XY Plot -&gt; Histogram Object -&gt;
 <code>hist01</code>.</p>
+<h1 id="mesh-and-tasklet">Mesh and Tasklet</h1>
+<p>Multiple SlowTasks can communicate with each other and can also be
+distributed across multiple computers. SlowMesh provides the
+communication infrastructure, while Tasklet provides the interface for
+connecting to SlowMesh and managing task lifecycles, including startup
+and shutdown. A SlowTask script equipped with a Tasklet can therefore
+cooperate with other tasks through SlowMesh. In this section, we will
+split the SlowTask script from the previous section into separate
+readout, analysis, and storage components, run them as multiple
+processes, and coordinate them through SlowMesh.</p>
+<h2 id="converting-a-slowtask-script-to-use-tasklet">Converting a
+SlowTask Script to Use Tasklet</h2>
+<h3 id="lifecycle-callbacks">Lifecycle Callbacks</h3>
+<p>In the previous section, callbacks such as <code>_initialize()</code>
+and <code>start()</code> were used implicitly. Tasklet uses Python
+decorators to declare callbacks explicitly and provides additional
+controls.</p>
+<p>Callbacks can be either regular Python functions or async functions.
+Using async callbacks allows asynchronous operations with
+<code>await</code> inside the function. This is more efficient in many
+situations, so the examples below use async functions. Even if you are
+unfamiliar with async functions, you can write their bodies just like
+regular functions until you need asynchronous operations. (However, do
+not use <code>time.sleep()</code>, as explained below.)</p>
+<p>With Tasklet, the <code>_initialize()</code> callback that was
+invoked implicitly in the previous examples is declared as follows:</p>
+<div class="sourceCode" id="cb49"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Tasklet</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>tasklet <span class="op">=</span> Tasklet()</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.initialize</span>()</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> my_init():</span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
+<p>The function can have any name; <code>my_init()</code> is just an
+example. You can also keep the previous name,
+<code>_initialize()</code>. The function does not have to be async. You
+can define multiple <code>@tasklet.initialize()</code> callbacks.</p>
+<p>You can also receive parameters from the SlowDash configuration file
+(<code>SlowdashProject.yaml</code>).</p>
+<div class="sourceCode" id="cb50"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.initialize</span>()</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> my_init(parameters:<span class="bu">dict</span>):</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>    db_url <span class="op">=</span> parameters.get(<span class="st">&#39;DB_URL&#39;</span>)</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
+<p>The repeatedly invoked <code>_loop()</code> callback becomes:</p>
+<div class="sourceCode" id="cb51"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> my_loop():</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
+<p>The <code>interval</code> argument of the <code>loop()</code>
+decorator specifies how often the function is called. There is therefore
+no need to sleep inside the function. You can add the <code>ticks</code>
+argument to perform some operations less frequently within the loop.</p>
+<div class="sourceCode" id="cb52"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>, ticks<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> my_loop(ticks):</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Called every second.</span></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># For example, read data and fill a histogram.</span></span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> ticks:</span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Executed every 10 seconds (every 10 loop calls).</span></span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a>        <span class="co"># For example, save the histogram.</span></span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a>        ...</span></code></pre></div>
+<p>You can also specify multiple tick counters.</p>
+<div class="sourceCode" id="cb53"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="fl">0.1</span>, ticks<span class="op">=</span>{<span class="st">&#39;monitor&#39;</span>:<span class="dv">10</span>, <span class="st">&#39;store&#39;</span>:<span class="dv">100</span>})</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> my_loop(ticks):</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Called every 0.1 seconds.</span></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> ticks.monitor:</span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Executed every second (every 10 loop calls).</span></span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>        ...</span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> ticks.store:</span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Executed every 10 seconds (every 100 loop calls).</span></span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>        ...</span></code></pre></div>
+<p>Using intervals and ticks should eliminate most needs for explicit
+sleeps. SlowTask is primarily a single-threaded asynchronous system, so
+a blocking operation such as <code>time.sleep()</code> in a user script
+stops the entire system. If you do need to sleep, use the asynchronous
+<code>await asyncio.sleep()</code> instead.</p>
+<p>Use <code>@tasklet.once(delay=0)</code> in place of
+<code>_run()</code>:</p>
+<div class="sourceCode" id="cb54"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.once</span>()</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> my_run():</span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
+<p>Other decorators include
+<code>@tasklet.schedule("08:00,16:00")</code> and
+<code>@tasklet.finalize()</code>.</p>
+<p>Once a script uses Tasklet, implicit callbacks such as
+<code>_initialize()</code> are no longer called. See the Mesh
+documentation for details.</p>
+<h3 id="exporting-functions">Exporting Functions</h3>
+<p>To make a Python function in a SlowTask script callable from the
+browser or other clients, export it to Mesh.</p>
+<div class="sourceCode" id="cb55"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.export</span>()</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> start(auto_stop:<span class="bu">bool</span>, run_length:<span class="bu">float</span>):</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
+<p>The function does not have to be async. Without Tasklet, all
+functions were exported implicitly. With Tasklet, functions must be
+exported explicitly.</p>
+<h3 id="content-generation-functions">Content Generation Functions</h3>
+<p>The <code>@tasklet.content("config/XXX")</code> decorator allows a
+script to dynamically generate content for the project’s
+<code>config</code> directory. The following example generates the
+contents of the <code>config/html-testdaq.html</code> file from the
+previous section within the task script.</p>
+<div class="sourceCode" id="cb56"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;config/html-testdaq.html&#39;</span>)</span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> html():</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&#39;&#39;&#39;</span></span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;form&gt;</span></span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a><span class="st">        &lt;input type=&quot;checkbox&quot; name=&quot;auto_stop&quot;&gt;Stop After:</span></span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a><span class="st">        &lt;input type=&quot;number&quot; name=&quot;run_length&quot; value=&quot;10&quot;&gt;</span></span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a><span class="st">        ...</span></span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;/form&gt;</span></span>
+<span id="cb56-9"><a href="#cb56-9" aria-hidden="true" tabindex="-1"></a><span class="st">    &#39;&#39;&#39;</span></span></code></pre></div>
+<p>This makes it easier to keep the task script and its HTML
+consistent.</p>
+<p>In an HTML panel, selecting <code>On Update: Reload HTML</code> calls
+this function on every page update. You can use this to generate dynamic
+HTML containing data. For example, the following function monitors disk
+usage and generates an HTML table.</p>
+<div class="sourceCode" id="cb57"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shutil, datetime</span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;config/html-disk_usage.html&#39;</span>)</span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> html_disk_usage():</span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>    total, used, free <span class="op">=</span> <span class="bu">tuple</span>((<span class="bu">int</span>(x<span class="op">*</span><span class="fl">1e-8</span>)<span class="op">/</span><span class="fl">10.0</span>) <span class="cf">for</span> x <span class="kw">in</span> shutil.disk_usage(<span class="st">&#39;.&#39;</span>))</span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a>    used_percent <span class="op">=</span> <span class="bu">int</span>(<span class="dv">100</span> <span class="op">*</span> used<span class="op">/</span>total) <span class="cf">if</span> total <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="dv">100</span></span>
+<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ss">f&#39;&#39;&#39;</span></span>
+<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a><span class="ss">        &lt;span style=&quot;font-size:300%&quot;&gt;</span><span class="sc">{</span>used_percent<span class="sc">}</span><span class="ss">&lt;/span&gt;</span></span>
+<span id="cb57-9"><a href="#cb57-9" aria-hidden="true" tabindex="-1"></a><span class="ss">        &lt;span style=&quot;font-size:250%&quot;&gt;% used&lt;/span&gt;</span></span>
+<span id="cb57-10"><a href="#cb57-10" aria-hidden="true" tabindex="-1"></a><span class="ss">        &lt;p&gt;</span></span>
+<span id="cb57-11"><a href="#cb57-11" aria-hidden="true" tabindex="-1"></a><span class="ss">        &lt;table&gt;</span></span>
+<span id="cb57-12"><a href="#cb57-12" aria-hidden="true" tabindex="-1"></a><span class="ss">          &lt;tr&gt;&lt;td&gt;Total&lt;/td&gt;&lt;td&gt;</span><span class="sc">{</span>total<span class="sc">}</span><span class="ss"> GB&lt;/td&gt;&lt;/tr&gt;</span></span>
+<span id="cb57-13"><a href="#cb57-13" aria-hidden="true" tabindex="-1"></a><span class="ss">          &lt;tr&gt;&lt;td&gt;Used&lt;/td&gt;&lt;td&gt;</span><span class="sc">{</span>used<span class="sc">}</span><span class="ss"> GB&lt;/td&gt;&lt;/tr&gt;</span></span>
+<span id="cb57-14"><a href="#cb57-14" aria-hidden="true" tabindex="-1"></a><span class="ss">          &lt;tr&gt;&lt;td&gt;Free&lt;/td&gt;&lt;td&gt;</span><span class="sc">{</span>free<span class="sc">}</span><span class="ss"> GB&lt;/td&gt;&lt;/tr&gt;</span></span>
+<span id="cb57-15"><a href="#cb57-15" aria-hidden="true" tabindex="-1"></a><span class="ss">        &lt;/table&gt;</span></span>
+<span id="cb57-16"><a href="#cb57-16" aria-hidden="true" tabindex="-1"></a><span class="ss">        &lt;p&gt;</span></span>
+<span id="cb57-17"><a href="#cb57-17" aria-hidden="true" tabindex="-1"></a><span class="ss">        As of </span><span class="sc">{</span><span class="bu">str</span>(datetime.datetime.now())<span class="sc">}</span></span>
+<span id="cb57-18"><a href="#cb57-18" aria-hidden="true" tabindex="-1"></a><span class="ss">    &#39;&#39;&#39;</span></span></code></pre></div>
+<p>SlowDash simply calls this function periodically. Its body is
+ordinary Python code, so you can also use a template engine such as
+Jinja.</p>
+<h3 id="form-synchronization">Form Synchronization</h3>
+<p>Giving a <code>&lt;form&gt;</code> element a name in an HTML panel
+causes its input values to be sent to the server whenever they change
+(on a <code>change</code> event). The displayed values are then
+immediately synchronized across browsers viewing the same page. When the
+server shuts down, the values are saved to a file in the project
+directory (<code>registry-pubsub-form.json</code>) and used as the
+initial form values at the next startup.</p>
+<div class="sourceCode" id="cb58"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;testdaq&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;checkbox&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;auto_stop&quot;</span><span class="dt">&gt;</span>Stop After:</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;run_length&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;10&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>  ...</span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>For reference, <code>registry-pubsub-form.json</code> contains
+entries like this:</p>
+<div class="sourceCode" id="cb59"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;testdaq.run_length&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;sender_id&quot;</span><span class="fu">:</span> <span class="st">&quot;a21586ac-fa5e1120-5c99e150-9d906172&quot;</span><span class="fu">,</span></span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;form&quot;</span><span class="fu">:</span> <span class="st">&quot;testdaq&quot;</span><span class="fu">,</span></span>
+<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;element&quot;</span><span class="fu">:</span> <span class="st">&quot;run_length&quot;</span><span class="fu">,</span></span>
+<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;value&quot;</span><span class="fu">:</span> <span class="dv">10</span></span>
+<span id="cb59-8"><a href="#cb59-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">},</span></span>
+<span id="cb59-9"><a href="#cb59-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;revision&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb59-10"><a href="#cb59-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;updated&quot;</span><span class="fu">:</span> <span class="fl">1791993688.100811</span></span>
+<span id="cb59-11"><a href="#cb59-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb59-12"><a href="#cb59-12" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="example">Example</h3>
+<p>An example that rewrites the SlowTask script from
+<code>QuickTour/03_RealDeviceControl/04_Analysis</code> using Tasklet is
+available in <code>QuickTour/04_Mesh/01_Tasklet</code>. Its behavior is
+unchanged.</p>
+<p>The changes are:</p>
+<ul>
+<li>Import <code>Tasklet</code> and create a <code>tasklet</code>
+instance.</li>
+<li>Explicitly declare the loop callback with
+<code>@tasklet.loop(interval=1.0)</code> and remove the
+<code>time.sleep(1.0)</code> call inside it.</li>
+<li>Explicitly export the browser-callable <code>start()</code> and
+<code>stop()</code> functions with
+<code>@tasklet.mesh.export()</code>.</li>
+<li>Remove <code>config/html-testdaq.html</code> and generate its
+contents with a function decorated with
+<code>@tasklet.content("config/html-testdaq.html")</code>.</li>
+<li>Give the HTML form a name to enable synchronization across browsers
+and persistence of input values.</li>
+</ul>
+<p>Here is the complete updated SlowTask script
+(<code>config/slowtask-testdaq.py</code>).</p>
+<div class="sourceCode" id="cb60"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="co">### The first part is unchanged.</span></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> time</span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dataclasses <span class="im">import</span> dataclass</span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb60-7"><a href="#cb60-7" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RunStatus:</span>
+<span id="cb60-8"><a href="#cb60-8" aria-hidden="true" tabindex="-1"></a>    auto_stop: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb60-9"><a href="#cb60-9" aria-hidden="true" tabindex="-1"></a>    run_length: <span class="bu">float</span> <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb60-10"><a href="#cb60-10" aria-hidden="true" tabindex="-1"></a>    start_time: <span class="bu">float</span> <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb60-11"><a href="#cb60-11" aria-hidden="true" tabindex="-1"></a>    running: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb60-12"><a href="#cb60-12" aria-hidden="true" tabindex="-1"></a>run_status <span class="op">=</span> RunStatus()</span>
+<span id="cb60-13"><a href="#cb60-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-14"><a href="#cb60-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-15"><a href="#cb60-15" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb60-16"><a href="#cb60-16" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;192.168.1.34&#39;</span>, <span class="dv">5025</span>).scpi()</span>
+<span id="cb60-17"><a href="#cb60-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-18"><a href="#cb60-18" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_SQLite</span>
+<span id="cb60-19"><a href="#cb60-19" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_SQLite(<span class="st">&#39;sqlite:///SlowStore.db&#39;</span>, table<span class="op">=</span><span class="st">&quot;slowdata&quot;</span>)</span>
+<span id="cb60-20"><a href="#cb60-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-21"><a href="#cb60-21" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy <span class="im">import</span> Histogram</span>
+<span id="cb60-22"><a href="#cb60-22" aria-hidden="true" tabindex="-1"></a>histogram <span class="op">=</span> Histogram(nbins<span class="op">=</span><span class="dv">20</span>, range_min<span class="op">=-</span><span class="dv">10</span>, range_max<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb60-23"><a href="#cb60-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-24"><a href="#cb60-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-25"><a href="#cb60-25" aria-hidden="true" tabindex="-1"></a><span class="co">### The code below has been converted to use Tasklet.</span></span>
+<span id="cb60-26"><a href="#cb60-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-27"><a href="#cb60-27" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Tasklet</span>
+<span id="cb60-28"><a href="#cb60-28" aria-hidden="true" tabindex="-1"></a>tasklet <span class="op">=</span> Tasklet()</span>
+<span id="cb60-29"><a href="#cb60-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-30"><a href="#cb60-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-31"><a href="#cb60-31" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb60-32"><a href="#cb60-32" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> loop():</span>
+<span id="cb60-33"><a href="#cb60-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> run_status.running:</span>
+<span id="cb60-34"><a href="#cb60-34" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
+<span id="cb60-35"><a href="#cb60-35" aria-hidden="true" tabindex="-1"></a>            volt <span class="op">=</span> <span class="bu">float</span>(device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get() <span class="kw">or</span> <span class="st">&#39;nan&#39;</span>)</span>
+<span id="cb60-36"><a href="#cb60-36" aria-hidden="true" tabindex="-1"></a>            datastore.append({<span class="st">&#39;volt&#39;</span>: volt})</span>
+<span id="cb60-37"><a href="#cb60-37" aria-hidden="true" tabindex="-1"></a>            histogram.fill(volt)</span>
+<span id="cb60-38"><a href="#cb60-38" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
+<span id="cb60-39"><a href="#cb60-39" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f&#39;ERROR: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb60-40"><a href="#cb60-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-41"><a href="#cb60-41" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> run_status.auto_stop:</span>
+<span id="cb60-42"><a href="#cb60-42" aria-hidden="true" tabindex="-1"></a>            now <span class="op">=</span> time.time()</span>
+<span id="cb60-43"><a href="#cb60-43" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> now <span class="op">-</span> run_status.start_time <span class="op">&gt;=</span> run_status.run_length:</span>
+<span id="cb60-44"><a href="#cb60-44" aria-hidden="true" tabindex="-1"></a>                run_status.running <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb60-45"><a href="#cb60-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-46"><a href="#cb60-46" aria-hidden="true" tabindex="-1"></a>    ctrl.stream(<span class="st">&#39;run_status&#39;</span>, run_status)</span>
+<span id="cb60-47"><a href="#cb60-47" aria-hidden="true" tabindex="-1"></a>    ctrl.stream(<span class="st">&#39;hist01&#39;</span>, histogram)</span>
+<span id="cb60-48"><a href="#cb60-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-49"><a href="#cb60-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-50"><a href="#cb60-50" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.export</span>()</span>
+<span id="cb60-51"><a href="#cb60-51" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> start(auto_stop:<span class="bu">bool</span>, run_length:<span class="bu">float</span>):</span>
+<span id="cb60-52"><a href="#cb60-52" aria-hidden="true" tabindex="-1"></a>    run_status.auto_stop <span class="op">=</span> auto_stop</span>
+<span id="cb60-53"><a href="#cb60-53" aria-hidden="true" tabindex="-1"></a>    run_status.run_length <span class="op">=</span> run_length</span>
+<span id="cb60-54"><a href="#cb60-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-55"><a href="#cb60-55" aria-hidden="true" tabindex="-1"></a>    run_status.start_time <span class="op">=</span> time.time()</span>
+<span id="cb60-56"><a href="#cb60-56" aria-hidden="true" tabindex="-1"></a>    run_status.running <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb60-57"><a href="#cb60-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-58"><a href="#cb60-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-59"><a href="#cb60-59" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.export</span>()</span>
+<span id="cb60-60"><a href="#cb60-60" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> stop():</span>
+<span id="cb60-61"><a href="#cb60-61" aria-hidden="true" tabindex="-1"></a>    run_status.running <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb60-62"><a href="#cb60-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-63"><a href="#cb60-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-64"><a href="#cb60-64" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;config/html-testdaq.html&#39;</span>)</span>
+<span id="cb60-65"><a href="#cb60-65" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> html():</span>
+<span id="cb60-66"><a href="#cb60-66" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&#39;&#39;&#39;</span></span>
+<span id="cb60-67"><a href="#cb60-67" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;form name=&quot;testdaq&quot;&gt;</span></span>
+<span id="cb60-68"><a href="#cb60-68" aria-hidden="true" tabindex="-1"></a><span class="st">        &lt;input type=&quot;checkbox&quot; name=&quot;auto_stop&quot;&gt;Stop After:</span></span>
+<span id="cb60-69"><a href="#cb60-69" aria-hidden="true" tabindex="-1"></a><span class="st">        &lt;input type=&quot;number&quot; name=&quot;run_length&quot; value=&quot;10&quot;&gt;</span></span>
+<span id="cb60-70"><a href="#cb60-70" aria-hidden="true" tabindex="-1"></a><span class="st">        &lt;br&gt;</span></span>
+<span id="cb60-71"><a href="#cb60-71" aria-hidden="true" tabindex="-1"></a><span class="st">        &lt;input type=&quot;submit&quot; name=&quot;testdaq.start()&quot; value=&quot;Start&quot; sd-enabled=&quot;run_status[&#39;running&#39;]-&gt;invert()&quot;&gt;</span></span>
+<span id="cb60-72"><a href="#cb60-72" aria-hidden="true" tabindex="-1"></a><span class="st">        &lt;input type=&quot;submit&quot; name=&quot;testdaq.stop()&quot; value=&quot;Stop&quot; sd-enabled=&quot;run_status[&#39;running&#39;]&quot;&gt;</span></span>
+<span id="cb60-73"><a href="#cb60-73" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;/form&gt;</span></span>
+<span id="cb60-74"><a href="#cb60-74" aria-hidden="true" tabindex="-1"></a><span class="st">    &#39;&#39;&#39;</span></span></code></pre></div>
+<h2 id="separating-and-coordinating-tasks-with-mesh">Separating and
+Coordinating Tasks with Mesh</h2>
+<h3 id="pubsub-network-communication">PubSub Network Communication</h3>
+<p>Mesh provides the communication infrastructure for coordinating
+SlowTasks, with the following features:</p>
+<ul>
+<li>Message exchange through Publish/Subscribe (PubSub)</li>
+<li>Remote Procedure Calls (RPC) to exported functions</li>
+<li>Sharing named values across tasks through a key-value store
+(registry), with persistence across sessions</li>
+</ul>
+<p>With PubSub, a sender publishes what it has without knowing who will
+receive it. Receivers subscribe to the topics they need without knowing
+who sent the messages. This differs significantly from RPC, which
+requires knowledge of the other component’s behavior and interface, and
+greatly reduces dependencies between components.</p>
+<p>SlowDash makes extensive use of PubSub for distributed processing.
+Tasks publish acquired data to the mesh for other components to process,
+publish requests for other components to act on, subscribe to relevant
+topics, perform their own responsibilities on received data, and publish
+any results back to the mesh.</p>
+<p>Messages have topic names such as data, command, or alarm, and
+receivers specify which topics to subscribe to. In this communication
+model, the shared agreements are the topic names and the contents and
+structure (schema) of the messages exchanged on each topic.</p>
+<p>Topics can have a dot-separated hierarchy, such as
+<code>data.store.HV.ch01.setpoint</code>. Receivers can use patterns
+within this hierarchy, such as <code>data.store.&gt;</code> (everything
+under <code>data.store</code>) or <code>data.*.HV.&gt;</code>.</p>
+<p><img src="fig/SlowMeshConcept.png" width="40%"></p>
+<p>To publish data to the mesh:</p>
+<div class="sourceCode" id="cb61"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> DataPacket</span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span>...)</span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> read_data():</span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>    volt <span class="op">=</span> <span class="bu">float</span>(device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get() <span class="kw">or</span> <span class="st">&#39;nan&#39;</span>)</span>
+<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-7"><a href="#cb61-7" aria-hidden="true" tabindex="-1"></a>    topic <span class="op">=</span> <span class="st">&#39;data.store&#39;</span></span>
+<span id="cb61-8"><a href="#cb61-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(topic, DataPacket({<span class="st">&#39;volt&#39;</span>: volt}))</span></code></pre></div>
+<p>This publishes a data message on the <code>data.store</code> topic.
+<code>DataPacket</code> converts the data to the message schema defined
+for that topic. Its constructor takes the same parameters as
+<code>DataStore.append()</code>, so code that writes directly to a
+DataStore can be reused with very few changes.</p>
+<p>The <code>aio_publish()</code> function is async and must be called
+with <code>await</code>. The function containing that call
+(<code>read_data()</code> in this example) must therefore also be async.
+For a regular function, use <code>publish()</code> instead of
+<code>aio_publish()</code>.</p>
+<div class="sourceCode" id="cb62"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> DataPacket</span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span>...)</span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> read_data():</span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>    volt <span class="op">=</span> <span class="bu">float</span>(device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get() <span class="kw">or</span> <span class="st">&#39;nan&#39;</span>)</span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>    topic <span class="op">=</span> <span class="st">&#39;data.store&#39;</span></span>
+<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a>    tasklet.mesh.publish(topic, DataPacket({<span class="st">&#39;volt&#39;</span>: volt}))</span></code></pre></div>
+<p>To receive data from topics beginning with <code>data.</code>,
+including <code>data.store</code>:</p>
+<div class="sourceCode" id="cb63"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.on</span>(<span class="st">&#39;data.&gt;&#39;</span>)</span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> handle_data(data: DataPacket):</span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>    t <span class="op">=</span> data.timestamp</span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> ch, value <span class="kw">in</span> data.values.items():</span>
+<span id="cb63-5"><a href="#cb63-5" aria-hidden="true" tabindex="-1"></a>        ...</span></code></pre></div>
+<p>Here, <code>DataPacket</code> is used again to decode the received
+message.</p>
+<h3 id="example-1">Example</h3>
+<p>We will now split the previous example into three task processes that
+communicate through the mesh.</p>
+<ul>
+<li><code>slowtask-read.py</code>: Reads data from the SCPI device and
+publishes it to the mesh.</li>
+<li><code>slowtask-store.py</code>: Receives data from the mesh and
+saves it to the database.</li>
+<li><code>slowtask-histogram.py</code>: Receives data from the mesh,
+fills a histogram, and publishes the histogram back to the mesh.</li>
+</ul>
+<p>The files for this example are in
+<code>ExampleProjects/QuickTour/04_Mesh/02_Mesh</code>. As before, run
+<code>slowdash --port=18881</code> in the project directory. The
+behavior is unchanged.</p>
+<p>Stopping the server with <code>Ctrl-C</code> also automatically stops
+all task processes. Task processes launched by the server also terminate
+automatically if the server crashes unexpectedly or is forcibly
+terminated with <code>kill -KILL</code>. (This may not work on Windows
+without WSL.)</p>
+<h4 id="slowtask-read.py"><code>slowtask-read.py</code></h4>
+<p>The readout task is mostly unchanged from the previous
+<code>slowtask-testdaq.py</code>. It publishes data to the mesh instead
+of writing to the datastore, and no longer fills the histogram
+itself.</p>
+<div class="sourceCode" id="cb64"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> loop():</span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> run_status.running:</span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
+<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>            volt <span class="op">=</span> <span class="bu">float</span>(device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get() <span class="kw">or</span> <span class="st">&#39;nan&#39;</span>)</span>
+<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.store&#39;</span>, slowpy.mesh.DataPacket({<span class="st">&#39;volt&#39;</span>: volt}))   <span class="co"># Publish the data.</span></span>
+<span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
+<span id="cb64-8"><a href="#cb64-8" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f&#39;ERROR: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&#39;</span>)</span>
+<span id="cb64-9"><a href="#cb64-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-10"><a href="#cb64-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> run_status.auto_stop:</span>
+<span id="cb64-11"><a href="#cb64-11" aria-hidden="true" tabindex="-1"></a>            now <span class="op">=</span> time.time()</span>
+<span id="cb64-12"><a href="#cb64-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> now <span class="op">-</span> run_status.start_time <span class="op">&gt;=</span> run_status.run_length:</span>
+<span id="cb64-13"><a href="#cb64-13" aria-hidden="true" tabindex="-1"></a>                run_status.running <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb64-14"><a href="#cb64-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-15"><a href="#cb64-15" aria-hidden="true" tabindex="-1"></a>    ctrl.stream(<span class="st">&#39;run_status&#39;</span>, run_status)</span>
+<span id="cb64-16"><a href="#cb64-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-17"><a href="#cb64-17" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.export</span>()</span>
+<span id="cb64-18"><a href="#cb64-18" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> start(auto_stop:<span class="bu">bool</span>, run_length:<span class="bu">float</span>):</span>
+<span id="cb64-19"><a href="#cb64-19" aria-hidden="true" tabindex="-1"></a>    run_status.auto_stop <span class="op">=</span> auto_stop</span>
+<span id="cb64-20"><a href="#cb64-20" aria-hidden="true" tabindex="-1"></a>    run_status.run_length <span class="op">=</span> run_length</span>
+<span id="cb64-21"><a href="#cb64-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-22"><a href="#cb64-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;mydaq.control.start&#39;</span>, {})   <span class="co"># Announce the start of a run.</span></span>
+<span id="cb64-23"><a href="#cb64-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-24"><a href="#cb64-24" aria-hidden="true" tabindex="-1"></a>    run_status.start_time <span class="op">=</span> time.time()</span>
+<span id="cb64-25"><a href="#cb64-25" aria-hidden="true" tabindex="-1"></a>    run_status.running <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb64-26"><a href="#cb64-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-27"><a href="#cb64-27" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.export</span>()</span>
+<span id="cb64-28"><a href="#cb64-28" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> stop():</span>
+<span id="cb64-29"><a href="#cb64-29" aria-hidden="true" tabindex="-1"></a>    run_status.running <span class="op">=</span> <span class="va">False</span></span></code></pre></div>
+<p>Inside <code>start()</code>, a message is sent on the
+<code>mydaq.control.start</code> topic to notify other tasks that a run
+is starting. This is used below to clear the histogram, for example.</p>
+<p>Mesh topic names are reserved across SlowDash, but names beginning
+with <code>my</code> or an uppercase letter (such as
+<code>KamLAND.ctrl</code>) are available for users to define freely.</p>
+<h4 id="slowtask-store.py"><code>slowtask-store.py</code></h4>
+<p>This task is dedicated to database storage. It receives data from the
+mesh’s <code>data.store</code> topic and writes it to the database.</p>
+<div class="sourceCode" id="cb65"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy</span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>tasklet <span class="op">=</span> slowpy.mesh.Tasklet()</span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> slowpy.store.DataStore_SQLite(<span class="st">&#39;sqlite:///SlowStore.db&#39;</span>, table<span class="op">=</span><span class="st">&quot;slowdata&quot;</span>)</span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.on</span>(<span class="st">&#39;data.store.&gt;&#39;</span>)</span>
+<span id="cb65-7"><a href="#cb65-7" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> store(data: slowpy.mesh.DataPacket):</span>
+<span id="cb65-8"><a href="#cb65-8" aria-hidden="true" tabindex="-1"></a>    datastore.append(data.values)</span></code></pre></div>
+<h4 id="slowtask-histogram.py"><code>slowtask-histogram.py</code></h4>
+<p>This task receives data from the mesh’s <code>data.store</code> topic
+and fills a histogram with values from the <code>volt</code> channel.
+The histogram is published to the <code>data.stream</code> topic once
+per second.</p>
+<p>The <code>ctrl.stream(name, value)</code> method used earlier
+internally uses
+<code>aio_publish('data.stream', DataPacket({name:value}))</code> to
+publish the data to the <code>data.stream</code> topic.</p>
+<div class="sourceCode" id="cb66"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy</span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>tasklet <span class="op">=</span> slowpy.mesh.Tasklet()</span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a>histogram <span class="op">=</span> slowpy.Histogram(nbins<span class="op">=</span><span class="dv">20</span>, range_min<span class="op">=-</span><span class="dv">10</span>, range_max<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.on</span>(<span class="st">&#39;data.store.&gt;&#39;</span>)</span>
+<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> process_data(data: slowpy.mesh.DataPacket):</span>
+<span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> ch, value <span class="kw">in</span> data.values.items():</span>
+<span id="cb66-9"><a href="#cb66-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> ch <span class="op">==</span> <span class="st">&#39;volt&#39;</span>:</span>
+<span id="cb66-10"><a href="#cb66-10" aria-hidden="true" tabindex="-1"></a>            histogram.fill(value)</span>
+<span id="cb66-11"><a href="#cb66-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-12"><a href="#cb66-12" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb66-13"><a href="#cb66-13" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> stream_result():</span>
+<span id="cb66-14"><a href="#cb66-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.stream&#39;</span>, slowpy.mesh.DataPacket(histogram, tag<span class="op">=</span><span class="st">&#39;hist01&#39;</span>))</span>
+<span id="cb66-15"><a href="#cb66-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-16"><a href="#cb66-16" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.on</span>(<span class="st">&#39;mydaq.control.start&#39;</span>)   <span class="co"># The readout task announces the start of a run.</span></span>
+<span id="cb66-17"><a href="#cb66-17" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> clear():</span>
+<span id="cb66-18"><a href="#cb66-18" aria-hidden="true" tabindex="-1"></a>    histogram.clear()</span></code></pre></div>
+<p>The histogram is cleared when the <code>mydaq.control.start</code>
+message is published by <code>slowtask-read.py</code> at the start of a
+run. Publishing the histogram from a loop callback keeps its publication
+rate independent of the incoming data rate.</p>
 
 
 </body>

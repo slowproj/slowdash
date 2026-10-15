@@ -976,7 +976,7 @@ Tasklet を使った場合，前章の例で暗黙に呼ばれていた `_initia
 
 ```python
 from slowpy.mesh import Tasklet
-tasklet = tasklet()
+tasklet = Tasklet()
 
 @tasklet.initialize()
 async def my_init():
@@ -985,7 +985,7 @@ async def my_init():
 
 関数の名前（ここでは `my_init()`）は何でも構いません．以前のままの `_initialize()` でもいいです．
 さらに，async でなくても構いません．
-複数の `@tasklet.initialize()` を作成することもでき，その場合は作成順に呼ばれます．
+複数の `@tasklet.initialize()` を作成することもできます．
 
 SlowDash 設定ファイル（`SlowdashProject.yaml` ）からパラメータを受け取ることもできます．
 ```python
@@ -1268,8 +1268,6 @@ def read_data():
     tasklet.mesh.publish(topic, DataPacket({'volt': volt}))
 ```
 
-`publish()` 関数は，内部でスレッドを使用します．スレッドプールによりほとんどの場合は無視できる程度のオーバーヘッドですが，最高の性能を引き出したい場合は，async を使用してください．（そもそも SlowDash 全般で async を使用した方が性能がいいです．）
-
 メッシュの `data.` から始まるトピック（`data.store` を含む）からデータを受信するためには，以下のようにします．
 ```python
 @tasklet.mesh.on('data.>')
@@ -1348,9 +1346,9 @@ async def store(data: slowpy.mesh.DataPacket):
 ```
 
 ##### `slowtask-histogram.py`
-メッシュの `data.store` トピックからデータを受け取って，`ch0` のデータに対してヒストグラムを作成します．
+メッシュの `data.store` トピックからデータを受け取って，`volt` のデータに対してヒストグラムを作成します．
 作成したヒストグラムは一秒ごとに `data.stream` トピックに publish されます．
-以前使っていた `ctrl.stream(name, value)` は，内部で `aio_publish('data.stream', DataPacket({name:value}))` を呼び出しているだけなので，このように直接 publish しても動作は同じです．
+以前使っていた `ctrl.stream(name, value)` は，内部で `aio_publish('data.stream', DataPacket({name:value}))` を使用して `data.stream` にデータパケットを publish しています．
 
 ```python
 import slowpy
