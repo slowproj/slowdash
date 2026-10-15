@@ -91,7 +91,7 @@ class SlowMQComponent(Component):
                 logging.warning(traceback.format_exc())
             except:
                 pass
-        except asyncio.CancelledError, RuntimeError:
+        except (asyncio.CancelledError, RuntimeError):
             pass
         finally:
             await self.remove_client(client_id)

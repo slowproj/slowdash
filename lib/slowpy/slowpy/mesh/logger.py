@@ -102,7 +102,7 @@ class MeshLogHandler(logging.Handler):
                 if self._is_first:
                     self._is_first = False
                     await asyncio.sleep(0.5)  # give receivers a time to be ready
-            except asyncio.CancelledError, GeneratorExit, RuntimeError:
+            except (asyncio.CancelledError, GeneratorExit, RuntimeError):
                 break
 
             topic = f'log.{message.get("logger", "UNKNOWN")}.{message.get("level_name","UNDEFINED")}'
