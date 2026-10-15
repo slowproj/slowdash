@@ -225,6 +225,8 @@ communication functions</li>
 Python script as an independent task (SlowTask) on SlowMesh</li>
 <li>MeshStdio (<code>slowpy.mesh.stdio.py</code>): Bridge that redirects
 the standard input/output of a Python script to Mesh PubSub</li>
+<li>MeshLogger (<code>slowpy.mesh.logger.py</code>): Bridge that
+redirects the Python’s logging messages to Mesh PubSub</li>
 <li>MeshPakcet (<code>slowpy.mesh.packet.py</code>): Serialization and
 deserialization of messages exchanged through SlowMesh</li>
 </ul>
@@ -1839,10 +1841,12 @@ Script</li>
 <ul>
 <li>All names beginning with an uppercase letter (such as
 <code>P8.&gt;</code> or <code>KamLAND.&gt;</code>)</li>
+<li>All names beginning with <code>my</code> (such as
+<code>my.&gt;</code> or <code>mydaq.&gt;</code>)</li>
+<li>All names beginning with <code>test</code> (such as
+<code>test.&gt;</code> or <code>testdaq.&gt;</code>)</li>
 <li><code>setup.&gt;</code></li>
 <li><code>user.&gt;</code></li>
-<li><code>my.&gt;</code></li>
-<li><code>test.&gt;</code></li>
 </ul>
 <h2 id="slowdash-server-information">SlowDash Server Information</h2>
 <ul>
@@ -1857,10 +1861,12 @@ Script</li>
 <ul>
 <li>All names beginning with an uppercase letter (such as
 <code>P8.&gt;</code> or <code>KamLAND.&gt;</code>)</li>
+<li>All names beginning with <code>my</code> (such as
+<code>my.&gt;</code> or <code>mydaq.&gt;</code>)</li>
+<li>All names beginning with <code>test</code> (such as
+<code>test.&gt;</code> or <code>testdaq.&gt;</code>)</li>
 <li><code>setup.&gt;</code></li>
 <li><code>user.&gt;</code></li>
-<li><code>my.&gt;</code></li>
-<li><code>test.&gt;</code></li>
 </ul>
 <h2 id="data">data</h2>
 <h3

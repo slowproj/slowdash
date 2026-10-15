@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 3 June 2023 #
 
 
-import os, sys, time, json, numbers, logging, traceback
+import os, sys, time, json, math, numbers, logging, traceback
 from urllib.parse import urlparse
 from .store import DataStore
 
@@ -63,8 +63,13 @@ class TableFormat:
             sql = f"DELETE FROM {self.table} WHERE channel={self.db.placeholder}"
             logging.debug(f'{sql}: {(channel,)}')
             cur.execute(sql, (channel,))       
-        if isinstance(value, numbers.Real) and not isinstance(value, bool):
-            self.insert_numeric_data(cur, timestamp, channel, value)
+        elif isinstance(value, numbers.Real) and not isinstance(value, bool):
+            if not math.isfinite(value):
+                # inf/nan -> None
+                # MySQL and SQLite cannot handle NaN, MySQL cannot handle inf
+                self.insert_numeric_data(cur, timestamp, channel, None)  
+            else:
+                self.insert_numeric_data(cur, timestamp, channel, value)
         elif isinstance(value, str):
             self.insert_text_data(cur, timestamp, channel, value)
         else:
@@ -110,8 +115,8 @@ class LongTableFormat(TableFormat):
 
     def insert_numeric_data(self, cur, timestamp, channel, value):
         sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
-        sql += f"VALUES(%.3f,%s,{value});" % (timestamp, self.db.placeholder)
-        params = (channel,)
+        sql += f"VALUES(%.3f,%s,%s);" % (timestamp, self.db.placeholder, self.db.placeholder)
+        params = (channel, value)
         cur.execute(sql, params)
 
         

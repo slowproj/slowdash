@@ -31,7 +31,7 @@ class SlowMQComponent(Component):
         rate = (self._receive_count + self._send_count) / up_time
         if rate >= 100:
             rate = '%.0f' % rate
-        if rate >= 10:
+        elif rate >= 10:
             rate = '%.1f' % rate
         else:
             rate = '%.3f' % rate
@@ -76,13 +76,23 @@ class SlowMQComponent(Component):
                         logging.warning(f'Bad SlowMQ Message: {name}: {repr(message)}: {e}')
                         continue
                     else:
-                        logging.debug(f'SlowMQ Message Received: {name}: {repr(message)}')
+                        # this will create a new message through MeshLogger
+                        #logging.debug(f'SlowMQ Message Received: {name}: {repr(message)}')
+                        pass
                     await self.handle_message(client_id, headers, message)
         except slowlette.WebSocketConnectionClosed:
-            logging.debug(f'SlowMQ WebSocket Closed: {name}')
+            try:
+                logging.debug(f'SlowMQ WebSocket Closed: {name}')
+            except:
+                pass
         except Exception as e:
-            logging.warning(f'SlowMQ WebSocket Closed by error: {e}')
-            logging.warning(traceback.format_exc())
+            try:
+                logging.warning(f'SlowMQ WebSocket Closed by error: {e}')
+                logging.warning(traceback.format_exc())
+            except:
+                pass
+        except asyncio.CancelledError, RuntimeError:
+            pass
         finally:
             await self.remove_client(client_id)
 

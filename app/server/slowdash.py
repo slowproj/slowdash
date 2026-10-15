@@ -236,6 +236,10 @@ if __name__ == '__main__':
         format='%(asctime)s %(levelname)s: %(filename)s:%(lineno)d %(funcName)s():   %(message)s', 
         datefmt='%y-%m-%d %H:%M:%S'
     )
+    if loglevel < logging.WARNING:
+        for other_module in [ 'websockets', 'websockets.client' ]:
+            logging.getLogger(other_module).setLevel(logging.WARNING)
+        
     
     app = App(
         project_dir = args.project_dir,

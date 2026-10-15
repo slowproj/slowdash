@@ -43,6 +43,7 @@ This library is used from SlowTask scripts.
 - Mesh (`slowpy.mesh.mesh.py`): Interface to SlowMesh communication functions
 - Tasklet (`slowpy.mesh.tasklet.py`): Adapter for running a Python script as an independent task (SlowTask) on SlowMesh
 - MeshStdio (`slowpy.mesh.stdio.py`): Bridge that redirects the standard input/output of a Python script to Mesh PubSub
+- MeshLogger (`slowpy.mesh.logger.py`): Bridge that redirects the Python's logging messages to Mesh PubSub
 - MeshPakcet (`slowpy.mesh.packet.py`): Serialization and deserialization of messages exchanged through SlowMesh
 
 
@@ -1229,10 +1230,10 @@ Returns cached data, only if other components do not return the requested data.
 # Registry Services
 ## User-Defined Namespace
 - All names beginning with an uppercase letter (such as `P8.>` or `KamLAND.>`)
+- All names beginning with `my` (such as `my.>` or `mydaq.>`)
+- All names beginning with `test` (such as `test.>` or `testdaq.>`)
 - `setup.>`
 - `user.>`
-- `my.>`
-- `test.>`
 
 ## SlowDash Server Information
 - `server.url`
@@ -1244,10 +1245,10 @@ Returns cached data, only if other components do not return the requested data.
 # PubSub Topic Structure
 ## User-Defined Namespace
 - All names beginning with an uppercase letter (such as `P8.>` or `KamLAND.>`)
+- All names beginning with `my` (such as `my.>` or `mydaq.>`)
+- All names beginning with `test` (such as `test.>` or `testdaq.>`)
 - `setup.>`
 - `user.>`
-- `my.>`
-- `test.>`
 
 
 ## data

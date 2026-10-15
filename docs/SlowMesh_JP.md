@@ -43,6 +43,7 @@ SlowTask スクリプトから使用されるライブラリです．
 - Mesh (`slowpy.mesh.mesh.py`): SlowMesh 通信機能へのインターフェース
 - Tasklet (`slowpy.mesh.tasklet.py`): Python スクリプトを SlowMesh 上の独立タスク (SlowTask) として実行するためのアダプタ
 - MeshStdio (`slowpy.mesh.stdio.py`): Python スクリプトの標準入出力を Mesh の PubSub にリダイレクトするブリッジ
+- MeshLogger (`slowpy.mesh.logger.py`): Python の logging メッセージを Mesh の PubSub にリダイレクトするブリッジ
 - MeshPakcet (`slowpy.mesh.packet.py`): SlowMesh で交換するメッセージのシリアライズ・デシリアライズ
 
 
@@ -1243,10 +1244,10 @@ SlowMesh へ publish する．
 # Registry サービス
 ## ユーザー自由使用領域
 - 大文字から始まるすべての名前 （`P8.>` や `KamLAND.>` など）
+- `my` から始まるすべての名前 （`my.>` や `mydaq.>` など）
+- `test` から始まるすべての名前 （`test.>` や `testdaq.>` など）
 - `setup.>`
 - `user.>`
-- `my.>`
-- `test.>`
 
 ## SlowDash サーバー情報
 - `server.url`
@@ -1258,10 +1259,10 @@ SlowMesh へ publish する．
 # PubSub トピック構成
 ## ユーザー自由使用領域
 - 大文字から始まるすべての名前 （`P8.>` や `KamLAND.>` など）
+- `my` から始まるすべての名前 （`my.>` や `mydaq.>` など）
+- `test` から始まるすべての名前 （`test.>` や `testdaq.>` など）
 - `setup.>`
 - `user.>`
-- `my.>`
-- `test.>`
 
 
 ## data

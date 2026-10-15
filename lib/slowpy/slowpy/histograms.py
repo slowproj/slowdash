@@ -1,6 +1,7 @@
 # Created by Sanshiro Enomoto on 17 July 2024 #
 
 
+import math
 import numpy as np
 from .basetypes import DataElement
 
@@ -18,6 +19,8 @@ class HistogramScale:
             
     def get_bin_of(self, value):
         if self.nbins <= 0 or value < self.min or value >= self.max:
+            return None
+        if not math.isfinite(value):
             return None
         return int((value - self.min) / self.bin_width)
 

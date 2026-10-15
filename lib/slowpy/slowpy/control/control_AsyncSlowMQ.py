@@ -1,13 +1,9 @@
 # Created by Sanshiro Enomoto on 19 March 2026 #
 
-import asyncio, json, uuid, time, inspect
+import asyncio, json, uuid, time, inspect, logging
 from urllib.parse import urlencode
 
 from slowpy.control import ControlNode, ControlException
-
-import logging
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 class AsyncSlowMQNode(ControlNode):
@@ -37,7 +33,7 @@ class AsyncSlowMQNode(ControlNode):
             netloc = self.url[len('slowmqs://'):]
             ws_prot = 'wss'
         else:
-            logger.warning(f'AsyncSlowMQ Error: {self.url}: bad SlowMQ URL: must start with slowmq:// or slowmqs://')
+            logging.warning(f'AsyncSlowMQ Error: {self.url}: bad SlowMQ URL: must start with slowmq:// or slowmqs://')
             return None
             
         if netloc.endswith('/'):
@@ -50,10 +46,10 @@ class AsyncSlowMQNode(ControlNode):
             import websockets
             ws = await websockets.connect(wsurl)
         except Exception as e:
-            logger.warning(f'AsyncSlowMQ Error: {self.url}: {e}')
+            logging.warning(f'AsyncSlowMQ Error: {self.url}: {e}')
             ws = None
         else:
-            logger.debug(f'AsyncSlowMQ: connected: {self.url}')
+            logging.debug(f'AsyncSlowMQ: connected: {self.url}')
 
         if ws is not None:
             self.connections.add(ws)
@@ -172,13 +168,14 @@ class PublisherNode(ControlNode):
                 'data': body
             })
         except Exception as e:
-            logger.warning(f'AsyncSlowMQ.publisher(): unable to convert to JSON: {e}')
+            logging.warning(f'AsyncSlowMQ.publisher(): unable to convert to JSON: {e}')
             return
         
         try:
             await self.slowmq_node.publisher_ws.send(doc)
         except Exception as e:
-            logger.warning(f'AsyncSlowMQ.publisher(): {e}')
+            if type(e).__name__ != 'ConnectionClosedError':
+                logging.warning(f'AsyncSlowMQ.publisher(): {e}')
             self.slowmq_node.publisher_ws_connected = False
 
         
@@ -228,7 +225,7 @@ class SubscriberNode(ControlNode):
             },
             'data': None
         })
-        
+
         try:
             await self.ws.send(doc)
             reply = await asyncio.wait_for(self.ws.recv(), timeout=3)
@@ -236,19 +233,19 @@ class SubscriberNode(ControlNode):
             self.connected = False
             return False
         except Exception as e:
-            logger.warning(f'AsyncSlowMQ.subscriber(): {e}')
+            logging.warning(f'AsyncSlowMQ.subscriber(): {e}')
             self.connected = False
             return False
 
         try:
             message = json.loads(reply)
         except Exception as e:
-            logger.warning(f'AsyncSlowMQ.subscriber(): Invalid reply JSON: {e}: {reply}')
+            logging.warning(f'AsyncSlowMQ.subscriber(): Invalid reply JSON: {e}: {reply}')
             return None
         
         if message.get('headers', {}).get('action') == 'error':
             msg = message.get('data', {}).get('message', '')
-            logger.warning(f'AsyncSlowMQ.subscriber(): error reply: {msg}')
+            logging.warning(f'AsyncSlowMQ.subscriber(): error reply: {msg}')
             self.connected = False
             return False
             
@@ -265,7 +262,8 @@ class SubscriberNode(ControlNode):
         except asyncio.TimeoutError:
             message = None
         except Exception as e:
-            logger.warning(f'AsyncSlowMQ.subscriber().aio_get(): {e}')
+            if type(e).__name__ != 'ConnectionClosedError':
+                logging.warning(f'AsyncSlowMQ.subscriber().aio_get(): {e} {type(e)}')
             self.connected = False
             message = None
             await asyncio.sleep(1)
@@ -275,7 +273,7 @@ class SubscriberNode(ControlNode):
         try:
             doc = json.loads(message)
         except Exception as e:
-            logger.warning(f'AsyncSlowMQ.subscriber().aio_get(): Invalid reply JSON: {e}: {message}')
+            logging.warning(f'AsyncSlowMQ.subscriber().aio_get(): Invalid reply JSON: {e}: {message}')
             return None
 
         return doc

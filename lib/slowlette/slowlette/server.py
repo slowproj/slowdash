@@ -46,7 +46,13 @@ async def dispatch_asgi(app, scope, receive, send):
     if scope['type'] == 'websocket':
         logging.debug(f'WEBSOCKET: {url}')
         websocket = WebSocket(receive, send)
-        handled = await app.slowlette.websocket(Request(url, method='WEBSOCKET', headers=headers), websocket)
+        try:
+            handled = await app.slowlette.websocket(Request(url, method='WEBSOCKET', headers=headers), websocket)
+        except asyncio.CancelledError:
+            try:
+                await websocket.close()
+            except:
+                pass
         if not handled:
             await websocket.close()
         return

@@ -424,11 +424,22 @@ class LogPanel extends Panel {
         for (const [ts, level, logger, location, message] of logs) {
             const time = new JGDateTime(ts).asString('%a,%H:%M:%S');
             const source = logger + ' (' + location + ')';
-            const color = (level.startsWith('ERR') ? 'red' : (level.startsWith('WARN') ? 'blue' : null));
             let line = time + '  ' + level.padEnd(10, ' ') + (source + ': ').padEnd(25, ' ') + message;
+            
+            let color = null;
+            if (level.startsWith('ERR')) {
+                color = 'red';
+            }
+            else if (level.startsWith('WARN')) {
+                color = 'blue';
+            }
+            else if (level.startsWith('DEB')) {
+                color = 'grey';
+            }
             if (color != null) {
                 line = `<span style="color:${color}">${line}</span>`;
             }
+            
             this._logLines.push(line);
             
             if (this._logLines.length > 100) {

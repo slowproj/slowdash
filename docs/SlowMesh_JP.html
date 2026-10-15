@@ -224,6 +224,8 @@ SlowDash サーバーとは別の PC 上に走らせることもできます．<
 SlowMesh 上の独立タスク (SlowTask) として実行するためのアダプタ</li>
 <li>MeshStdio (<code>slowpy.mesh.stdio.py</code>): Python
 スクリプトの標準入出力を Mesh の PubSub にリダイレクトするブリッジ</li>
+<li>MeshLogger (<code>slowpy.mesh.logger.py</code>): Python の logging
+メッセージを Mesh の PubSub にリダイレクトするブリッジ</li>
 <li>MeshPakcet (<code>slowpy.mesh.packet.py</code>): SlowMesh
 で交換するメッセージのシリアライズ・デシリアライズ</li>
 </ul>
@@ -1830,10 +1832,12 @@ No-Tasklet Task の予約済みコールバック（後方互換）</li>
 <ul>
 <li>大文字から始まるすべての名前 （<code>P8.&gt;</code> や
 <code>KamLAND.&gt;</code> など）</li>
+<li><code>my</code> から始まるすべての名前 （<code>my.&gt;</code> や
+<code>mydaq.&gt;</code> など）</li>
+<li><code>test</code> から始まるすべての名前 （<code>test.&gt;</code> や
+<code>testdaq.&gt;</code> など）</li>
 <li><code>setup.&gt;</code></li>
 <li><code>user.&gt;</code></li>
-<li><code>my.&gt;</code></li>
-<li><code>test.&gt;</code></li>
 </ul>
 <h2 id="slowdash-サーバー情報">SlowDash サーバー情報</h2>
 <ul>
@@ -1848,10 +1852,12 @@ No-Tasklet Task の予約済みコールバック（後方互換）</li>
 <ul>
 <li>大文字から始まるすべての名前 （<code>P8.&gt;</code> や
 <code>KamLAND.&gt;</code> など）</li>
+<li><code>my</code> から始まるすべての名前 （<code>my.&gt;</code> や
+<code>mydaq.&gt;</code> など）</li>
+<li><code>test</code> から始まるすべての名前 （<code>test.&gt;</code> や
+<code>testdaq.&gt;</code> など）</li>
 <li><code>setup.&gt;</code></li>
 <li><code>user.&gt;</code></li>
-<li><code>my.&gt;</code></li>
-<li><code>test.&gt;</code></li>
 </ul>
 <h2 id="data">data</h2>
 <h3

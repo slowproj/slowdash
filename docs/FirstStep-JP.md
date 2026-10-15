@@ -956,6 +956,425 @@ SlowDash を走らせなおすか，SlowTask のパネルからこのスクリ�
 レイアウトにも， Add a New Panel -> XY Plot -> Histogram Object -> `hist01` により，これをレイアウトに追加できます．
 
 
+## Mesh と Tasklet
+複数の SlowTask はお互いに通信することができ，また，複数のPC上に展開させることができます．
+このための通信基盤が SlowMesh で，SlowMesh への接続やタスクの開始・停止などのライフサイクルをコントロールするためのインターフェースが Tasklet です．
+つまり，Tasklet を備えた SlowTask スクリプトは，SlowMesh 上で通信をしながら協調動作をすることができます．
+ここでは，前章で作成した SlowTask スクリプトを読み出し・解析・記録などの各機能に分解し，それらを複数プロセスとして展開して SlowMesh で連携させてみます．
+
+### SlowTask スクリプトのTasklet 化
+#### ライフサイクルコールバック
+前章では，`_initialize()` や `start()` などのコールバックが暗黙に使用されていました．
+Tasklet では，Python のデコレータを使用して関数のコールバックを明示的に宣言し，また，追加のコントロールを実装します．
+また，コールバック関数は Python の通常関数と async 関数のどちらでも構いません．
+コールバック関数を async とすることにより，関数の中で `await` を使った非同期処理を使えるようになり，
+多くの場面で効率的に動作するため，以下の例では async を使用します．
+async 関数に馴染みがなくても，必要になるまでは中身を通常の関数と同様に書いても問題ありません．
+（ただし，以下で説明するように，`time.sleep()` は使用しないでください．）
+
+Tasklet を使った場合，前章の例で暗黙に呼ばれていた `_initialize()` は，以下のように宣言されます．
+
+```python
+from slowpy.mesh import Tasklet
+tasklet = tasklet()
+
+@tasklet.initialize()
+async def my_init():
+    ...
+```
+
+関数の名前（ここでは `my_init()`）は何でも構いません．以前のままの `_initialize()` でもいいです．
+さらに，async でなくても構いません．
+複数の `@tasklet.initialize()` を作成することもでき，その場合は作成順に呼ばれます．
+
+SlowDash 設定ファイル（`SlowdashProject.yaml` ）からパラメータを受け取ることもできます．
+```python
+@tasklet.initialize()
+async def my_init(parameters:dict):
+    db_url = parameters.get('DB_URL')
+    ...
+```
+
+繰り返し呼び出しの `_loop()` は以下のようになります．
+```python
+@tasklet.loop(interval=1)
+async def my_loop():
+  ...
+```
+
+`loop()` デコレータの引数に `interval` 引数を渡すことにより，この関数は指定間隔で呼ばれるようになります．
+つまり，ユーザの関数の中で sleep をする必要がありません．
+`ticks` 引数を追加することにより，ループの中でさらに間引きができます．
+
+```python
+@tasklet.loop(interval=1, ticks=10)
+async def my_loop(ticks):
+  # ここは１秒ごとに呼ばれる．
+  # データ読み出しとヒストグラムフィルとか
+  if ticks:
+    # ここは10秒ごと(loop の 10 回呼び出しごと)に呼ばれる．
+    # ヒストグラムの保存とか
+```
+
+複数の ticks を指定することもできます．
+
+```python
+@tasklet.loop(interval=0.1, ticks={'monitor':10, 'store':100})
+async def my_loop(ticks):
+  # ここは 0.1 秒ごとに呼ばれる．
+  if ticks.monitor:
+    # ここは1秒ごと(loop の 10 回呼び出しごと)に呼ばれる．
+  if ticks.store:
+    # ここは10秒ごと(loop の 100 回呼び出しごと)に呼ばれる．
+```
+
+interval や ticks を活用することで，sleep をする必要がほとんどなくなるはずです．
+SlowTask は基本的にシングルスレッドの非同期 (async) システムなので，ユーザースクリプトの中で `time.sleep()` などのブロッキングをすると全体が停止してしまいます．どうしてもスリープが必要な場合は，非同期スリープである `await asyncio.sleep()` を使用してください．
+
+`_run()` の代わりには `@tasklet.once(delay=0)` を使用します：
+```python
+@tasklet.once()
+async def my_run():
+  ...
+```
+
+その他，`@tasklet.schedule("08:00,16:00")` や `@tasklet.finalize()` などもあります．
+
+スクリプトで Tasklet を使用した場合，`_initialize()` などの暗黙のコールバックは呼ばれなくなります．
+詳しくは，Mesh のドキュメントを参照してください．
+
+
+#### 関数エクスポート
+SlowTask スクリプト中の Python 関数をブラウザなどから呼び出せるようにするためには，Mesh に関数をエクスポートします．
+
+```python
+@tasklet.mesh.export()
+async def start(auto_stop:bool, run_length:float):
+  ...
+```
+
+関数は async でなくても構いません．
+以前の Tasklet を使用しない場合は全ての関数が暗黙にエクスポートされていました．Tasklet を使用した場合は明示的なエクスポートが必要です．
+
+#### コンテンツ生成関数
+
+`@tasklet.content("config/XXX")` デコレータにより，プロジェクトの `config` ディレクトリの内容を動的に生成できます．
+以下は，前章の `config/html-testdaq.html` ファイルをタスクスクリプトから生成するようにしたものです．
+
+```python
+@tasklet.content('config/html-testdaq.html')
+async def html():
+    return '''
+      <form>
+        <input type="checkbox" name="auto_stop">Stop After:
+        <input type="number" name="run_length" value="10">
+        ...
+      </form>
+    '''
+```
+
+これにより，タスクスクリプトと HTML の整合を取りやすくなります．
+
+さらに，HTML パネルにおいて，`On Update: Reload HTML` をチェックすることにより，ページのアップデートのたびにこの関数呼び出しを行うようにすることができ，これを使ってデータなどを含む動的な HTML ページを作成できます．例えば，以下は，ディスクの使用量をモニタして，テーブルに整形した HTML を生成する例です．
+
+```python
+import shutil, datetime
+
+@tasklet.content('config/html-disk_usage.html')
+async def html_disk_usage():
+    total, used, free = tuple((int(x*1e-8)/10.0) for x in shutil.disk_usage('.'))
+    used_percent = int(100 * used/total) if total > 0 else 100
+    return f'''
+        <span style="font-size:300%">{used_percent}</span>
+        <span style="font-size:250%">% used</span>
+        <p>
+        <table>
+          <tr><td>Total</td><td>{total} GB</td></tr>
+          <tr><td>Used</td><td>{used} GB</td></tr>
+          <tr><td>Free</td><td>{free} GB</td></tr>
+        </table>
+        <p>
+        As of {str(datetime.datetime.now())}
+    '''
+```
+
+この関数は SlowDash によって定期的に呼び出されるだけで，中身は普通の Python 関数なので，Jinja などのテンプレートエンジンも使用できます．
+
+
+#### フォーム同期
+
+HTML パネルにおいて，フォームエレメントに名前をつけることにより，フォームの入力内容が変更ごと (change イベント)にサーバーに送られ，同じページを表示している複数のブラウザ間で表示値が即座に同期されるようになります．また，サーバー終了時の値がプロジェクトディレクトリのファイル（`registry-pubsub-form.json`）に保存され，次回起動時にその値がフォーム初期値として使用されるようになります．
+
+```html
+<form name="testdaq">
+  <input type="checkbox" name="auto_stop">Stop After:
+  <input type="number" name="run_length" value="10">
+  ...
+</form>    
+```
+
+ちなみに，`registry-pubsub-form.json` の内容な以下のような感じです．
+```json
+{
+  "testdaq.run_length": {
+    "value": {
+      "sender_id": "a21586ac-fa5e1120-5c99e150-9d906172",
+      "form": "testdaq",
+      "element": "run_length",
+      "value": 10
+    },
+    "revision": 1,
+    "updated": 1791993688.100811
+  }
+  ...
+}
+```
+
+#### 例
+前章の `QuickTour/03_RealDeviceControl/04_Analysis` の SlowTask のスクリプトを Tasklet を使って書き換えた例が `QuickTour/04_Mesh/01_Tasklet` にあります．動作は全く変わりません．
+
+変更点は以下のとおりです：
+
+- `Tasklet` を import してインスタンス `tasklet` を作成
+- `_loop()` コールバックを `@tasklet.loop(interval=1.0)` で明示的に指定．`_loop()` の中の `time.sleep(1.0)` を削除
+- ブラウザから呼ばれる関数 `start()` および `stop()` を，`@tasklet.mesh.export()` で明示的に指定
+- `config/html-testdaq.html` ファイルを削除し，変わりにスクリプト中の `tasklet.content("config/html-testdaq.html")` の関数で生成
+- HTML フォームに名前をつけて，入力値のブラウザ間同期と永続性を有効化
+
+以下は，変更後の完全な SlowTask スクリプト(`config/slowtask-testdaq.py`)です．
+
+
+```python
+### 先頭部分は以前と同じ
+
+import time
+from dataclasses import dataclass
+
+@dataclass
+class RunStatus:
+    auto_stop: bool = False
+    run_length: float = 0
+    start_time: float = 0
+    running: bool = False
+run_status = RunStatus()
+
+
+from slowpy.control import control_system as ctrl
+device = ctrl.ethernet('192.168.1.34', 5025).scpi()
+
+from slowpy.store import DataStore_SQLite
+datastore = DataStore_SQLite('sqlite:///SlowStore.db', table="slowdata")
+
+from slowpy import Histogram
+histogram = Histogram(nbins=20, range_min=-10, range_max=10)
+
+
+### ここ以降を Tasklet 化した
+
+from slowpy.mesh import Tasklet
+tasklet = Tasklet()
+
+
+@tasklet.loop(interval=1)
+async def loop():
+    if run_status.running:
+        try:
+            volt = float(device.command('MEAS:VOLT:DC?').get() or 'nan')
+            datastore.append({'volt': volt})
+            histogram.fill(volt)
+        except Exception as e:
+            print(f'ERROR: {e}')
+            
+        if run_status.auto_stop:
+            now = time.time()
+            if now - run_status.start_time >= run_status.run_length:
+                run_status.running = False
+
+    ctrl.stream('run_status', run_status)
+    ctrl.stream('hist01', histogram)
+
+
+@tasklet.mesh.export()
+async def start(auto_stop:bool, run_length:float):
+    run_status.auto_stop = auto_stop
+    run_status.run_length = run_length
+
+    run_status.start_time = time.time()
+    run_status.running = True
+    
+
+@tasklet.mesh.export()
+async def stop():
+    run_status.running = False
+
+
+@tasklet.content('config/html-testdaq.html')
+async def html():
+    return '''
+      <form name="testdaq">
+        <input type="checkbox" name="auto_stop">Stop After:
+        <input type="number" name="run_length" value="10">
+        <br>
+        <input type="submit" name="testdaq.start()" value="Start" sd-enabled="run_status['running']->invert()">
+        <input type="submit" name="testdaq.stop()" value="Stop" sd-enabled="run_status['running']">
+      </form>
+    '''
+```
+
+
+### Mesh による機能分離と協調動作
+#### PubSub ネットワーク通信
+Mesh は SlowTask が協調動作するための通信基盤で，以下の機能を提供しています．
+
+- Publish / Subscribe (PubSub) によるメッセージ交換
+- Export した関数を呼び出す遠隔関数呼び出し (Remote Procedure Call; RPC)
+- 名前付きの値のタスク間共有 (Key-Value Store / Registry) とセッション間保存(永続化)
+
+PubSub では，受信相手を知らずに持っているものを Publish し，受信側は送信元を知らずに必要なトピックを Subscribe して受信します．
+これは，相手の動作・インターフェースを知った上で通信する遠隔関数呼び出しと大きく異なり，要素間の相互依存を大幅に減少させます．
+
+SlowDash では，PubSub を積極的に活用し，「データを読んだら（知らない誰かが処理すると思って）メッシュに投げる」「操作をメッシュに投げて，知らない誰かにやってもらう」「関連あるトピックは自分で受信する」「受信データに対して自分の責任を果たす」「処理結果を生成したらメッシュに投げる」というモデルで分散処理を行います．
+
+メッセージには data や command，alarm などのトピック名が付き，受信側はトピックを指定して受信します．
+この通信モデルでは，トピック名とそのトピックで交換されるメッセージの内容と構造（スキーマ）が共通の了解事項となります．
+トピックは `data.store.HV.ch01.setpoint` のようにピリオド区切りで階層構造にでき，受信側も `data.store.>` （`data.store` 以下全て）や `data.*.HV.>` のように階層に対するパターン指定ができます．
+
+<img src="fig/SlowMeshConcept.png" width="40%">
+
+メッシュにデータを Publish するには，以下のようにします．
+```python
+from slowpy.mesh import DataPacket
+
+@tasklet.loop(interval=...)
+async def read_data():
+    volt = float(device.command('MEAS:VOLT:DC?').get() or 'nan')
+    
+    topic = 'data.store'
+    await tasklet.mesh.aio_publish(topic, DataPacket({'volt': volt}))
+```
+
+ここでは，`data.store` というトピックにデータメッセージを Publish しています．`DataPacket` は，そのトピックで規定されるメッセージのスキーマに変換するためのものです．`DataPacket` のコンストラクタパラメータは `DataStore.append()` と同じなので，DataStore に直接書き出すコードをほぼそのまま使用できます．
+
+メッシュにメッセージを送る関数 `aio_publish()` は async な関数なので，呼び出しには `await` が必要で，内部で await を使用する関数（この例では `read_data()`）も async でなければなりません．async でない関数を使用している場合は，`aio_publish()` の代わりに `publish()` 関数を使用してください．
+
+```python
+from slowpy.mesh import DataPacket
+
+@tasklet.loop(interval=...)
+def read_data():
+    volt = float(device.command('MEAS:VOLT:DC?').get() or 'nan')
+    
+    topic = 'data.store'
+    tasklet.mesh.publish(topic, DataPacket({'volt': volt}))
+```
+
+`publish()` 関数は，内部でスレッドを使用します．スレッドプールによりほとんどの場合は無視できる程度のオーバーヘッドですが，最高の性能を引き出したい場合は，async を使用してください．（そもそも SlowDash 全般で async を使用した方が性能がいいです．）
+
+メッシュの `data.` から始まるトピック（`data.store` を含む）からデータを受信するためには，以下のようにします．
+```python
+@tasklet.mesh.on('data.>')
+async def handle_data(data: DataPacket):
+    t = data.timestamp
+    for ch, value in data.values.items():
+      ...
+```
+受信メッセージを解読するために，`DataPacket` が再び使われています．
+
+
+#### 例
+ここでは，前章の例を，メッシュで通信する３つのタスクプロセスに分離してみます．
+
+- `slowtask-read.py`: SCPI デバイスからデータを読み出してメッシュに publish
+- `slowtask-store.py`: メッシュからデータを受信してデーターベースに保存
+- `slowtask-histogram.py`: メッシュからデータを受信してヒストグラムを作成，それをまたメッシュに publish
+
+この例のファイルは，`ExampleProjects/QuickTour/04_Mesh/02_Mesh` にあります．今まで同様，プロジェクトディレクトリで `slowdash --port=18881` で起動でき，動作は同じです．`Ctrl`-`c` でサーバーを終了させれば，全てのタスクプロセスも自動で終了します．予期しないサーバークラッシュ時も，あるいは `kill -KILL` でサーバーが即時強制終了させられたときでも，そこから起動されたタスクプロセスは全て自動終了します（WSL でない Windows ではしないかもしれません）．
+
+
+##### `slowtask-read.py`
+読み出しタスクは，以前の `slowtask-testdaq.py` と大きくは変わりません．
+データストアに保存する代わりに，メッシュに publish しています．
+また，ヒストグラムの作成もここでは行っていません．
+
+```python
+@tasklet.loop(interval=1)
+async def loop():
+    if run_status.running:
+        try:
+            volt = float(device.command('MEAS:VOLT:DC?').get() or 'nan')
+            await tasklet.mesh.aio_publish('data.store', slowpy.mesh.DataPacket({'volt': volt}))   # データを送り出す
+        except Exception as e:
+            print(f'ERROR: {e}')
+            
+        if run_status.auto_stop:
+            now = time.time()
+            if now - run_status.start_time >= run_status.run_length:
+                run_status.running = False
+
+    ctrl.stream('run_status', run_status)
+
+@tasklet.mesh.export()
+async def start(auto_stop:bool, run_length:float):
+    run_status.auto_stop = auto_stop
+    run_status.run_length = run_length
+
+    await tasklet.mesh.aio_publish('mydaq.control.start', {})   # 開始を知らせる
+    
+    run_status.start_time = time.time()
+    run_status.running = True
+    
+@tasklet.mesh.export()
+async def stop():
+    run_status.running = False
+```
+
+`start()` の中で，他のタスクに開始を
+知らせるために，`mydaq.control.start` トピックにメッセージを送っています．
+これは，例えば後でヒストグラムの初期化などに使われます．
+メッシュで使用するトピック名は SlowDash 全体で予約されていますが，`my` から始まるものと大文字から始まるもの (`KamLAND.ctrl` など）はユーザーが自由に使用できます．
+
+##### `slowtask-store.py`
+データベース記録専用タスクで，メッシュの `data.store` トピックからデータを受け取ってデータベースへ書き込みます．
+
+```python
+import slowpy
+tasklet = slowpy.mesh.Tasklet()
+
+datastore = slowpy.store.DataStore_SQLite('sqlite:///SlowStore.db', table="slowdata")
+
+@tasklet.mesh.on('data.store.>')
+async def store(data: slowpy.mesh.DataPacket):
+    datastore.append(data.values)
+```
+
+##### `slowtask-histogram.py`
+メッシュの `data.store` トピックからデータを受け取って，`ch0` のデータに対してヒストグラムを作成します．
+作成したヒストグラムは一秒ごとに `data.stream` トピックに publish されます．
+以前使っていた `ctrl.stream(name, value)` は，内部で `aio_publish('data.stream', DataPacket({name:value}))` を呼び出しているだけなので，このように直接 publish しても動作は同じです．
+
+```python
+import slowpy
+
+tasklet = slowpy.mesh.Tasklet()
+histogram = slowpy.Histogram(nbins=20, range_min=-10, range_max=10)
+    
+@tasklet.mesh.on('data.store.>')
+async def process_data(data: slowpy.mesh.DataPacket):
+    for ch, value in data.values.items():
+        if ch == 'volt':
+            histogram.fill(value)
+
+@tasklet.loop(interval=1)
+async def stream_result():
+    await tasklet.mesh.aio_publish('data.stream', slowpy.mesh.DataPacket(histogram, tag='hist01'))
+
+@tasklet.mesh.on('mydaq.control.start')   # read タスクが知らせてくれるランの開始
+async def clear():
+    histogram.clear()
+```
+`slowtask-read.py` タスクがランの開始時に publish する `mydaq.control.start` メッセージを使ってヒストグラムをクリアしています．
+また，`loop()` の中で publish することにより，ヒストグラムの publish がデータレートによらないようになっています．
+
 # Docker コンテナで使う
 ### 基本
 DockerHub と GitHub に SlowDash のコンテナイメージがあります．どちらも同じです．

@@ -374,7 +374,7 @@ class Tasklet:
                 return None
             content = func()
             if asyncio.iscoroutine(content):
-                await content
+                content = await content
             return content
 
         self._mesh.export('_sd_get_content', handle_get_content)
@@ -628,7 +628,7 @@ class Tasklet:
             try:
                 result = func(*args)
                 if asyncio.iscoroutine(result):
-                    await result
+                    result = await result
             except Exception as e:
                 self._handle_error(f'Initialize-callback: {func.__name__}(): {e}')
 
@@ -645,7 +645,7 @@ class Tasklet:
             try:
                 result = func()
                 if asyncio.iscoroutine(result):
-                    await result
+                    result = await result
             except Exception as e:
                 self._handle_error(f'Finalize-callback: {func.__name__}(): {e}')
 
@@ -671,7 +671,7 @@ class Tasklet:
                     
                     result = func()
                     if asyncio.iscoroutine(result):
-                        await result
+                        result = await result
                     else:
                         await asyncio.sleep(0.01)
                     break
@@ -727,7 +727,7 @@ class Tasklet:
                         result = func(make_tick_flags(tick_count))
                         
                     if asyncio.iscoroutine(result):
-                        await result
+                        result = await result
                     else:
                         await asyncio.sleep(0.01)
 
@@ -806,7 +806,7 @@ class Tasklet:
                 
                     result = func()
                     if asyncio.iscoroutine(result):
-                        await result
+                        result = await result
 
                     if len(time_list) == 1: # once a day -> same HH:MM time
                         await self.aio_sleep(100) # make sure the next check is on a different HH:MM
@@ -823,7 +823,7 @@ class Tasklet:
         try:
             tb = traceback.format_exc()
             if tb is not None and len(tb.strip()) > 0:
-                logging.error(tb)
+                logging.info(tb)
         except:
             pass
         

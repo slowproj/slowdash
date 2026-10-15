@@ -96,16 +96,14 @@ class MeshLogHandler(logging.Handler):
         
     async def _handle_log(self):
         while True:
-            message = await self._queue.get()
-            await self._mesh_ready.wait()
-
-            if self._is_first:
-                self._is_first = False
-                try:
+            try:
+                message = await self._queue.get()
+                await self._mesh_ready.wait()
+                if self._is_first:
+                    self._is_first = False
                     await asyncio.sleep(0.5)  # give receivers a time to be ready
-                except asyncio.CancelledError:
-                    await self.aio_stop()
-                    break
+            except asyncio.CancelledError, GeneratorExit, RuntimeError:
+                break
 
             topic = f'log.{message.get("logger", "UNKNOWN")}.{message.get("level_name","UNDEFINED")}'
             token = self._logging_suspended.set(True)
@@ -114,6 +112,8 @@ class MeshLogHandler(logging.Handler):
             except Exception as e:
                 sys.stderr.write(f'### ERROR: LOG PUBLISH: {e}\n')
                 self._mesh_ready.clear()
+            except asyncio.CancelledError:
+                break
             finally:
                 self._logging_suspended.reset(token)
                 self._queue.task_done()

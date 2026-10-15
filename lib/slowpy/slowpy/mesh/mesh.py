@@ -433,8 +433,7 @@ class Mesh:
             logging.error(f'Mesh: error in subscription callback: {func.__name__}(): {e}')
             tb = traceback.format_exc()
             if tb is not None and len(tb.strip()) > 0:
-                logging.error(tb)
-                print(tb)
+                logging.info(tb)
             if self._stop_on_error:
                 self._had_error = True
                 ctrl.stop()
@@ -507,8 +506,7 @@ class Mesh:
             logging.error(f'Mesh: error in RPC callback: {func.__name__}(): {e}')
             tb = traceback.format_exc()
             if tb is not None and len(tb.strip()) > 0:
-                logging.error(tb)
-                print(tb)
+                logging.info(tb)
             if self._stop_on_error:
                 self._had_error = True
                 ctrl.stop()

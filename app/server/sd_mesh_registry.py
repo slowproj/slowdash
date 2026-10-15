@@ -2,6 +2,7 @@
 
 import time, json, numbers, glob, logging
 from dataclasses import dataclass, field, asdict
+from collections import deque
 from typing import Any
 
 import slowlette
@@ -104,7 +105,8 @@ class Registry:
                 return None
             record.update(value)
 
-        logging.debug(f'MeshRegistry.set(): "{key}"={repr(value)} -> {record}')
+        if not key.startswith('pubsub'):  # otherwise this will create a new log packet
+            logging.debug(f'MeshRegistry.set(): "{key}"={repr(value)} -> {record}')
 
         for path in self._persistent_nodes:
             if key.startswith(path):
@@ -135,7 +137,8 @@ class Registry:
         if record is None:
             return default
 
-        logging.debug(f'MeshRegistry.get(): "{key}" --> {record}')
+        if not key.startswith('pubsub'):  # otherwise this will create a new log packet
+            logging.debug(f'MeshRegistry.get(): "{key}" --> {record}')
         
         return record.to_dict() if with_meta else record.value
 
@@ -210,7 +213,8 @@ class Registry:
         elif len(tree) == 0:
             tree = default
 
-        logging.debug(f'MeshRegistry.get_tree(): {prefix} --> {tree}')
+        if not key.startswith('pubsub'):  # otherwise this will create a new log packet
+            logging.debug(f'MeshRegistry.get_tree(): {prefix} --> {tree}')
 
         return tree
         
@@ -317,7 +321,9 @@ class MeshRegistryComponent(Component):
         self.mesh = None
         self.registry = Registry()
 
-        self.logs = []  ## temporarily placed here...
+        ## temporarily placed here...        
+        self._max_logs = 1000
+        self._logs = deque()
         
 
     @slowlette.on_event('post_startup')
@@ -347,7 +353,9 @@ class MeshRegistryComponent(Component):
             if topic is not None and not topic.startswith('sd.rpc'):
                 self.registry.set(f'{self._pubsub_cache_prefix}.{topic}', data)
                 if topic.startswith('log.'):
-                    self.logs.append(data)
+                    if len(self._logs) > self._max_logs:
+                        self._logs.popleft()
+                    self._logs.append(data)
                     
         await self.mesh.aio_subscribe('>', handle_message)
 
@@ -417,7 +425,7 @@ class MeshRegistryComponent(Component):
     @slowlette.get('/api/log')
     async def api_get_log(self):
         table = []
-        for log in self.logs:
+        for log in self._logs:
             table.append([
                 log.get('timestamp', 0),
                 log.get('level_name', '-'),
