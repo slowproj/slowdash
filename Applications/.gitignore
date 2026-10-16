@@ -3,3 +3,5 @@
 *.csv
 notebooks/
 slowplot-*.json
+registry-*.json
+
