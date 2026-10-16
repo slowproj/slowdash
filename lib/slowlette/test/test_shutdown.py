@@ -69,6 +69,9 @@ class App(slowlette.App):
                 await websocket.receive()
         except slowlette.WebSocketConnectionClosed:
             events.append('disconnected')
+    @slowlette.on_event('shutdown_requested')
+    async def shutdown_requested(self):
+        events.append('shutdown_requested')
     @slowlette.on_event('shutdown')
     async def shutdown(self):
         events.append('shutdown')
@@ -76,7 +79,7 @@ class App(slowlette.App):
     @slowlette.on_event('post_shutdown')
     async def post_shutdown(self):
         events.append('post_shutdown')
-        assert events == ['connected', 'disconnected', 'shutdown', 'post_shutdown'], events
+        assert events == ['connected', 'shutdown_requested', 'disconnected', 'shutdown', 'post_shutdown'], events
         print('HOOKS_OK', flush=True)
 
 async def client():
@@ -92,7 +95,7 @@ async def client():
         await ws.wait_closed()
 
 serve_asgi_uvicorn(App(), port, fd=sock.fileno(), ws='websockets-sansio')
-assert events == ['connected', 'disconnected', 'shutdown', 'post_shutdown'], events
+assert events == ['connected', 'shutdown_requested', 'disconnected', 'shutdown', 'post_shutdown'], events
 print('SHUTDOWN_OK', flush=True)
 '''
         for sig in (signal.SIGINT, signal.SIGTERM):

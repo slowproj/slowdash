@@ -185,9 +185,18 @@ def serve_asgi_uvicorn(app, port, **kwargs):
         logging.warn('Falling back to WSGI; async requests will be serialized. WebSockets will not be available.')
         return serve_wsgi_ref(WSGI(app), port, **kwargs)
 
+    class Server(uvicorn.Server):
+        async def shutdown(self, sockets=None):
+            # Lifespan shutdown is too late to stop infinite HTTP streams:
+            # Uvicorn waits for those requests before sending that event.
+            try:
+                await app.slowlette.dispatch_event('shutdown_requested')
+            finally:
+                await super().shutdown(sockets=sockets)
+
     async def main():
         config = uvicorn.Config(app, port=port, workers=1, lifespan="on", **kwargs)
-        server = uvicorn.Server(config)
+        server = Server(config)
         # Let Uvicorn stop accepting connections and await its ASGI tasks before
         # shutting down the application lifespan and the event loop.
         await server.serve()
