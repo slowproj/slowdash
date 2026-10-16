@@ -1,6 +1,6 @@
 # Created by Sanshiro Enomoto on 17 March 2026 #
 
-import time, asyncio, json, logging, traceback
+import time, asyncio, json, logging
 
 import slowlette
 from sd_component import Component
@@ -85,14 +85,13 @@ class SlowMQComponent(Component):
                 logging.debug(f'SlowMQ WebSocket Closed: {name}')
             except:
                 pass
+        except (asyncio.CancelledError, RuntimeError):
+            pass
         except Exception as e:
             try:
                 logging.warning(f'SlowMQ WebSocket Closed by error: {e}')
-                logging.warning(traceback.format_exc())
             except:
                 pass
-        except (asyncio.CancelledError, RuntimeError):
-            pass
         finally:
             await self.remove_client(client_id)
 

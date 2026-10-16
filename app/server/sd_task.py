@@ -60,7 +60,9 @@ class MeshRequest:
             if not topic_name[0].isalpha() or not topic_name.replace('_','a').replace('.','a').replace('/','a').isalnum():
                 self.error = f'bad topic name: {name}'
                 return
-        elif len(module_name) == 0 or not module_name[0].isalpha() or not module_name.replace('_', 'a').isalnum():
+        elif len(module_name) == 0:
+            return   # not for this component
+        elif not module_name[0].isalpha() or not module_name.replace('_', 'a').isalnum():
             self.error = f'bad module name: {name}'
             return
         elif len(function_name) == 0 or not function_name[0].isalpha() or not function_name.replace('_', 'a').isalnum():
@@ -405,6 +407,7 @@ class TaskComponent(Component):
     async def shutdown(self):        
         if self._mesh is not None:
             if self._mesh_log_handler is not None:
+                logging.getLogger().removeHandler(self._mesh_log_handler)
                 await self._mesh_log_handler.aio_stop()
                 
             await self._mesh.aio_close()
@@ -433,12 +436,13 @@ class TaskComponent(Component):
                 logging.error(f'bad task configuration: name is required: {node}')
                 continue
 
-            name = re.sub(r'[^a-zA-Z0-9]', '_', node['name'])
-            file_path = node.get('file_path', f'config/slowtask-{name}.py')
+            file_name = re.sub(r'[^a-zA-Z0-9-]', '_', node['name'])
+            file_path = node.get('file_path', f'config/slowtask-{file_name}.py')
             if not os.path.isfile(file_path):
-                logging.error(f'unable to find task script: {node}')
+                logging.error(f'unable to find task script: {file_path}')
                 continue
-            
+
+            name = file_name.replace('-', '_')
             command = node.get('command', f'slowdash-task {file_path} --name={name}')
             if self.project.mesh_url is not None:
                 command += f' --mesh={self.project.mesh_url}'

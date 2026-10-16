@@ -1,3 +1,5 @@
+from slowpy.mesh import Tasklet
+tasklet = Tasklet()
 
 from slowpy.control import control_system as ctrl
 ctrl.import_control_module('AsyncRabbitMQ')
@@ -7,20 +9,23 @@ from slowpy.store import DataStore_SQLite
 datastore = DataStore_SQLite('sqlite:///SlowTestData', 'ts_data')
 
 
-async def _initialize(params):
+@tasklet.initialize()
+async def initialize(params):
     global rabbitmq, data_queue_node, command_publish_node
     rabbitmq = ctrl.async_rabbitmq('amqp://slowdash:slowdash@localhost')
     exchange = rabbitmq.topic_exchange('slowdash')
     
-    command_publish_node = exchange.publish(routing_key='command.randomwalk')
+    command_publish_node = exchange.publisher(routing_key='command.randomwalk')
     data_queue_node = exchange.queue(name='control', routing_key='data.*', exclusive=True)
 
 
-async def _finalize():
+@tasklet.finalize()
+async def finalize():
     await rabbitmq.aio_close()
 
     
-async def _run():
+@tasklet.once()
+async def run():
     await command_publish_node.aio_set({'x':100, 'step':10})
     
     while not ctrl.is_stop_requested():
@@ -33,7 +38,6 @@ async def _run():
         datastore.append(data)
         
 
-    
+        
 if __name__ == '__main__':
-    from slowpy.dash import Tasklet
-    Tasklet().run()
+    tasklet.run()

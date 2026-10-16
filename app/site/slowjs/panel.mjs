@@ -247,7 +247,13 @@ export class Panel {
         let time=null, value=null;
         const [t, x] = [ timeseries?.t, timeseries?.x ];
         if (t == null) {
-            return [to, value];
+            if (Array.isArray(x)) {
+                value = x[x.length-1];
+            }
+            else {
+                value = x;
+            }
+            return [ to, value ];
         }
 
         const time_margin = 3.0;

@@ -1,3 +1,7 @@
+import asyncio
+
+from slowpy.mesh import Tasklet
+tasklet = Tasklet()
 
 from slowpy.control import control_system as ctrl
 ctrl.import_control_module('AsyncRabbitMQ')
@@ -6,21 +10,23 @@ rabbitmq, command_queue_node, data_publish_node = None, None, None
 x, step = 0, 1
 
 
-async def _initialize(params):
+@tasklet.initialize()
+async def initialize(params):
     global rabbitmq, command_queue_node, data_publish_node
     rabbitmq = ctrl.async_rabbitmq('amqp://slowdash:slowdash@localhost')
     exchange = rabbitmq.topic_exchange('slowdash')
     
     command_queue_node = exchange.queue(name='command.randomwalk', exclusive=True)
-    data_publish_node = exchange.publish(routing_key='data.randomwalk')
+    data_publish_node = exchange.publisher(routing_key='data.randomwalk')
 
 
-async def _finalize():
+@tasklet.finalize()
+async def finalize():
     await rabbitmq.aio_close()
 
     
-async def _run():
-    import asyncio
+@tasklet.once()
+async def run():
     await asyncio.gather(handle_commands(), start())
 
     
@@ -40,6 +46,7 @@ async def handle_commands():
             x = command['x']
 
 
+@tasklet.mesh.export()
 async def start():
     global x, step
     
@@ -54,5 +61,4 @@ async def start():
 
     
 if __name__ == '__main__':
-    from slowpy.dash import Tasklet
-    Tasklet().run()
+    tasklet.run()

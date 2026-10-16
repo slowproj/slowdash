@@ -326,7 +326,8 @@ class Tasklet:
             if not inspect.iscoroutinefunction(func_run):
                 # non-async function will stop all the other async tasks
                 logging.warning(f'Tasklet: _run() callback must be async; otherwise other functions will not be called')
-            self._add_once_callback(func_run)
+            delay = 0
+            self._add_once_callback(func_run, delay)
                 
         func_loop = _get_func('_loop')
         if func_loop:

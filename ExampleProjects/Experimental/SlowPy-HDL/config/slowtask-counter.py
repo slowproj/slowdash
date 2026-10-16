@@ -1,7 +1,6 @@
 
-import slowpy.control as spc
+from slowpy.control import control_system as ctrl
 
-ctrl = spc.ControlSystem()    
 start_btn = ctrl.value(False).oneshot()
 stop_btn = ctrl.value(False).oneshot()
 clear_btn = ctrl.value(False).oneshot()
@@ -76,16 +75,13 @@ def _halt():
     clock.stop()
 
     
-def _export():
-    return [
-#        ('start', start_btn.writeonly()),
-#        ('stop', stop_btn.writeonly()),
-#        ('clear', clear_btn.writeonly()),
-        ('display', display.readonly())
-    ]
+#ctrl.expose('start', start_btn.writeonly())
+#ctrl.expose('stop', stop_btn.writeonly())
+#ctrl.expose('clear', clear_btn.writeonly())
+ctrl.expose('display', display.readonly())
 
 
-    
+
 if __name__ == '__main__':
     import time
     clock.start()
