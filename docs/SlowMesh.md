@@ -1174,7 +1174,7 @@ Returns values of keys held in the Registry as data (in the same format as data 
 Mesh log messages are held in memory by `sd_mesh_registry.py`.
 
 #### GET `api/log`
-Returns recent retained logs as `columns` and `table`. The configured retention limit is 1000 entries; older entries are discarded (the current eviction order permits up to 1001 entries). Logs do not survive a server restart.
+Returns recent retained logs as `columns` and `table`. The configured retention limit is 1000 entries; older entries are discarded. Logs do not survive a server restart.
 
 
 ## WebMesh

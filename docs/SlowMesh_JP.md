@@ -1178,7 +1178,7 @@ Registry に保持されているキーの値をデータとして返す（デ�
 Mesh に publish されたログメッセージは（現時点の仮置きとして）`sd_mesh_registry.py` コンポーネントに保持されています．
 
 #### GET `api/log`
-メモリに保持している最近のログを `columns` と `table` の形式で返す．保持上限の設定値は1000件で，古いログは破棄される（現在の削除判定順では最大1001件）．サーバー再起動後には保持されない．
+メモリに保持している最近のログを `columns` と `table` の形式で返す．保持上限の設定値は1000件で，古いログは破棄される．サーバー再起動後には保持されない．
 
 
 ## WebMesh
@@ -1230,11 +1230,11 @@ SlowMesh へ publish する．
 - エクスポート関数：
   - 書き込み： `set(key, value, cas_revision=None)`
   - 読み出し： `get(key='', default=None, *, with_meta=False)`
-  - キー一覧： `keys(prefix='')`
+  - キー一覧： `keys(prefix='', limit=1000)`
   - 削除： `delete(key, cas_revision=None)`
 
 
-クライアントの `registry.aio_*()` は，これらの公開名を呼び出すラッパーです．現在の RPC `keys` は `limit` を受け取りませんが，クライアントの `aio_keys()` は `limit` を送るため，両者には引数の不整合があります．
+クライアントの `registry.aio_*()` は，これらの公開名を呼び出すラッパーです．
 
 ## Task RPC
 - モジュール名： `{task_name}` (デフォルトで，スクリプトファイル名が `slowtask-{task_name}.py`)

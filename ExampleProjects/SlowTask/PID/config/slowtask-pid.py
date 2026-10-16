@@ -6,7 +6,7 @@ plant = ctrl.import_control_module('DummyDevice').first_order_plant(gain=0.1, no
 plant.start()
 
 import slowpy.store
-datastore = slowpy.store.create_datastore_from_url('sqlite:///SlowData.db', 'numeric_data')
+datastore = slowpy.store.create_datastore_from_url('sqlite:///SlowStore.db', 'numeric_data')
 datastore_obj = datastore.another('object_data')
 
 import logging
@@ -45,7 +45,6 @@ def loop():
 
     datastore.append({'control': control, 'state': state})
     datastore_obj.append({'pid_status': {'tree': status}})
-    datastore_obj.append({'true': True})
     if status.get('running', False):
         datastore.append({ f'pid_{k}':v for k,v in status.items() if isinstance(v, float)})
         

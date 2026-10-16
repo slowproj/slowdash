@@ -1752,7 +1752,7 @@ object が publish される．</li>
 <h4 id="get-apilog">GET <code>api/log</code></h4>
 <p>メモリに保持している最近のログを <code>columns</code> と
 <code>table</code>
-の形式で返す．保持上限の設定値は1000件で，古いログは破棄される（現在の削除判定順では最大1001件）．サーバー再起動後には保持されない．</p>
+の形式で返す．保持上限の設定値は1000件で，古いログは破棄される．サーバー再起動後には保持されない．</p>
 <h2 id="webmesh">WebMesh</h2>
 <p>WebMesh は，SlowMesh の PubSub を HTTP
 経由で行えるようにするブリッジです．Slowlette を経由して
@@ -1815,15 +1815,12 @@ No-Tasklet Task の予約済みコールバック（後方互換）</li>
 <li>書き込み： <code>set(key, value, cas_revision=None)</code></li>
 <li>読み出し：
 <code>get(key='', default=None, *, with_meta=False)</code></li>
-<li>キー一覧： <code>keys(prefix='')</code></li>
+<li>キー一覧： <code>keys(prefix='', limit=1000)</code></li>
 <li>削除： <code>delete(key, cas_revision=None)</code></li>
 </ul></li>
 </ul>
 <p>クライアントの <code>registry.aio_*()</code>
-は，これらの公開名を呼び出すラッパーです．現在の RPC <code>keys</code>
-は <code>limit</code> を受け取りませんが，クライアントの
-<code>aio_keys()</code> は <code>limit</code>
-を送るため，両者には引数の不整合があります．</p>
+は，これらの公開名を呼び出すラッパーです．</p>
 <h2 id="task-rpc">Task RPC</h2>
 <ul>
 <li>モジュール名： <code>{task_name}</code>

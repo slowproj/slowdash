@@ -1764,8 +1764,7 @@ overlaps the data query period</li>
 <h4 id="get-apilog">GET <code>api/log</code></h4>
 <p>Returns recent retained logs as <code>columns</code> and
 <code>table</code>. The configured retention limit is 1000 entries;
-older entries are discarded (the current eviction order permits up to
-1001 entries). Logs do not survive a server restart.</p>
+older entries are discarded. Logs do not survive a server restart.</p>
 <h2 id="webmesh">WebMesh</h2>
 <p>WebMesh is a bridge that makes SlowMesh PubSub available over HTTP.
 It is implemented by the <code>sd_webmesh.py</code> component through
