@@ -519,7 +519,7 @@ At present, SlowMesh PubSub topic filters cannot be used in topic names specifie
 Use `*` and `>` literally as shown in the topic names below, and replace the `{channel}` portion as appropriate.
 
 - `data.*.{channel}`
-- `form.{form_name}`
+- `form.{form_name}.>`
 - `sd.task.life_event.>`
 - `sd.task.heartbeat.>`
 - `sd.task.stdout.>`
@@ -643,9 +643,10 @@ In particular, using multiple small `@tasklet.loop(interval)` callbacks makes it
 The `@tasklet.schedule(time)` decorator repeatedly calls a user function at specified times.
 
 ```python
-@tasklet.schedule("08:00"):
+@tasklet.schedule("08:00")
 def do_this_every_morning():
    # Run every morning at 08:00
+   pass
 ```
 
 The `time` argument is specified in `HH:MM` format. Wildcard `*` may be used for `HH` and `MM`, and multiple time settings can be listed separated by `,`. To prevent the interval from changing when daylight saving time changes, set `use_utc` to `True` and specify the time in UTC.
@@ -665,43 +666,44 @@ Unless `use_utc` is specified, the time is local time. Note, however, that when 
 The `@tasklet.loop(interval)` decorator repeatedly calls a user function at the specified interval.
 
 ```python
-@tasklet.loop(interval=1):
+@tasklet.loop(interval=1)
 async def my_work():   # This function is called every 1 second (the value of interval)
     #... do my work
+    pass
 ```
 
 In addition, if `ticks` is specified for `@tasklet.loop` and a `tick` argument is added to the user function, the value of `tick` becomes True once every number of calls specified by `ticks`.
 ```python
-@tasklet.loop(interval=1, ticks=10):
+@tasklet.loop(interval=1, ticks=10)
 async def my_work(tick):
     # Read data every second and send all data to the stream
     data = await HV.ch(0).aio_get()
     packet = DataPacket(data, tag='HV.ch00')
     
-    await tasklet.mesh.aio_publish('data.stream.HV.ch00', packet)
+    await tasklet.mesh.aio_publish('data.stream', packet)
     
     # Record in the database once every 10 calls
     if tick:
-        await tasklet.mesh.aio_publish('data.store.HV.ch00', packet)
+        await tasklet.mesh.aio_publish('data.store', packet)
 ```
 
 Multiple tick intervals can also be specified.
 ```python
-@tasklet.loop(interval=1, ticks={"transient_store":10, "store":60}):
+@tasklet.loop(interval=1, ticks={"transient_store":10, "store":60})
 async def my_work(tick):
     # Read data every second and send all data to the stream
     data = await HV.ch(0).aio_get()
     packet = DataPacket(data, tag='HV.ch00')
     
-    await tasklet.mesh.aio_publish('data.stream.HV.ch00', packet)
+    await tasklet.mesh.aio_publish('data.stream', packet)
     
     # Record in the temporary database (short-term, high-density) once every 10 calls
     if tick.transient_store:
-        await tasklet.mesh.aio_publish('data.transient_store.HV.ch00', packet)
+        await tasklet.mesh.aio_publish('data.transient_store', packet)
         
     # Record in the persistent database once every 60 calls
     if tick.store:
-        await tasklet.mesh.aio_publish('data.store.HV.ch00', packet)
+        await tasklet.mesh.aio_publish('data.store', packet)
 ```
 
 Again, do not use `time.sleep()` inside user functions. (`await control_system.aio_sleep()` is allowed.)
@@ -1017,7 +1019,7 @@ The `name` attribute of a button (`<button>` or `<input type="submit">`) describ
 - `randomwalk.set_value()`: Remotely call the `set_value()` function of the randomwalk task. The function arguments are formed by combining the argument list written here (empty in this example) with the name-value pairs of the other `<input>` elements.
 - `publish control.start()`: Publish to the `control.start` topic. The published data is a JSON object combining the argument list (empty in this example) with the name-value pairs of the other `<input>` elements.
 
-In addition, when a `name` is specified on the `<form>` element, a change in an `<input>` field causes the changed value to be published to the `form.{form_name}` topic. At the same time, the page subscribes to this topic so that when the same form is changed in another browser, the change is immediately reflected.
+In addition, when a `name` is specified on the `<form>` element, a change in an `<input>` field causes the changed value to be published to the `form.{form_name}.{element_name}` topic. At the same time, the page subscribes to `form.{form_name}.>` so that when the same form is changed in another browser, the change is immediately reflected.
 
 #### SlowPlot Layout (`slowplot-control.json`)
 This layout arranges the following elements:
@@ -1155,7 +1157,7 @@ The HTTP API for Registry is implemented by the `sd_mesh_registry.py` component 
 #### GET `api/registry/value/{key}`
 Returns the value held in the Registry (`with_meta=true` returns a JSON document including metadata).
 
-#### GET `api/registry/keys?prefix={prefix}&limit={limit}`
+#### GET `api/registry/keys/{path}?limit={limit}`
 Returns a list of keys held in the Registry.
 
 ### General Data Interface
@@ -1167,6 +1169,14 @@ Returns values of keys held in the Registry as data (in the same format as data 
 - TODO: Apply when the Registry metadata interval [updated, now()] overlaps the data query period
 
 
+## Log
+
+Mesh log messages are held in memory by `sd_mesh_registry.py`.
+
+#### GET `api/log`
+Returns recent retained logs as `columns` and `table`. The configured retention limit is 1000 entries; older entries are discarded (the current eviction order permits up to 1001 entries). Logs do not survive a server restart.
+
+
 ## WebMesh
 WebMesh is a bridge that makes SlowMesh PubSub available over HTTP. It is implemented by the `sd_webmesh.py` component through Slowlette.
 
@@ -1176,15 +1186,14 @@ WebMesh is a bridge that makes SlowMesh PubSub available over HTTP. It is implem
 Creates an SSE connection channel.
 
   - `register` event: the server distributes a ClientID
-  - `data` event: messages on the `data.*.>` topic
-  - `stdout` event: messages on the `sd.task.stdout.>` topic
+  - `message` event: subscribed messages, including data and standard output. The JSON body contains `subscribed_topic`, `headers`, and `body`.
 
-#### POST `api/webmesh/subscribe/data?client_id={client_id}`
-Specifies a channel to Subscribe to for data streaming. It may be called multiple times.
-Specify `channel` as JSON in the POST body.
+#### POST `api/webmesh/subscribe`
+Specifies a topic to subscribe to. It may be called multiple times.
+Specify `client_id` and `topic` in the JSON POST body, for example `{"client_id":"...","topic":"data.*.temperature"}`. For forms, subscribe to `form.{form_name}.>`.
 
-#### POST `api/webmesh/unsubscribe`
-Cancels all subscriptions.
+#### POST `api/webmesh/unsubscribe?client_id={client_id}`
+Cancels all subscriptions for the specified `client_id`.
 
 #### POST `api/webmesh/publish/{topic}`
 Publishes to SlowMesh.
@@ -1213,11 +1222,13 @@ Returns cached data, only if other components do not return the requested data.
 ## Registry (Key-Value Store)
 - Module name: `sd_mesh_registry`
 - Exported functions:
-  - Write: `async def aio_set(self, key, value, *, cas_revision:int|None=None) -> int|None`
-  - Read: `async def aio_get(self, key:str, default:Any=None, *, with_meta:bool=False) -> Any`
-  - List keys: `async def aio_keys(self, prefix:str='', limit:int|None=1000)->list[str]`
-  - Delete: `async def aio_delete(self, key:str, *, cas_revision:int|None=None) -> bool`
+  - Write: `set(key, value, cas_revision=None)`
+  - Read: `get(key='', default=None, *, with_meta=False)`
+  - List keys: `keys(prefix='')`
+  - Delete: `delete(key, cas_revision=None)`
 
+
+The client `registry.aio_*()` methods wrap these exported names.
 
 ## Task RPC
 - Module name: `{task_name}` (by default, the script filename is `slowtask-{task_name}.py`)
@@ -1341,7 +1352,7 @@ Task liveness signal. The Body records expire (= time-of-heartbeat + heartbeat-i
 - Sender(s): task process
 - Receiver(s): sd_task (SlowDash server), monitoring service
 - Timing:
-  - At the specified interval (`Tasklet._heartbeat_interval`, 10 seconds)
+  - At the specified interval (`Tasklet._heartbeat_interval`, 5 seconds by default)
   - Sent from Tasklet's main loop (not from a coroutine or thread; it always stops together with the main loop. It also stops if the user calls `time.sleep()`.)
 
 ##### Secondary Use

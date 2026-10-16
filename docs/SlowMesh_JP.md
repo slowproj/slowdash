@@ -522,7 +522,7 @@ Subscribe するためには，まず `event/webmesh/attach` に SSE 接続を�
 以下のトピック名中の `*` や `>` はそのまま使ってください．`{channel}` の部分は置き換えてください．
 
 - `data.*.{channel}`
-- `form.{form_name}`
+- `form.{form_name}.>`
 - `sd.task.life_event.>`
 - `sd.task.heartbeat.>`
 - `sd.task.stdout.>`
@@ -646,9 +646,10 @@ tasklet が提供するデコレータにより，特定のタイミングや一
 `@tasklet.schedule(time)` デコレータにより，ユーザー関数を指定時刻に繰り返し呼び出すようにできます．
 
 ```python
-@tasklet.schedule("08:00"):
+@tasklet.schedule("08:00")
 def do_this_every_morning():
    # 毎朝８時に実行
+   pass
 ```
 
 引数の `time` は `HH:MM` 形式で指定します．`HH` および `MM` には，ワイルドカード `*` を指定でき，また，複数の時刻設定を `,` 区切りで並べることができます．夏時間への切替時に周期が変わらないようにするためには，`use_utc` を `True` にして，時刻を UTC で指定してください．
@@ -668,43 +669,44 @@ def do_this_every_morning():
 `@tasklet.loop(interval)` デコレータにより，ユーザー関数を指定周期で繰り返し呼び出すようにできます．
 
 ```python
-@tasklet.loop(interval=1):
+@tasklet.loop(interval=1)
 async def my_work():   # この関数は１秒（interval の値）ごとに呼ばれる
     #... do my work
+    pass
 ```
 
 さらに，`@tasklet.loop` に `ticks` を指定し，ユーザー関数に `tick` 引数を追加すると，`ticks` に指定した回数ごとに `tick` の値が True になります．
 ```python
-@tasklet.loop(interval=1, ticks=10):
+@tasklet.loop(interval=1, ticks=10)
 async def my_work(tick):
     # １秒毎にデータを読み，全てのデータをストリームに流す
     data = await HV.ch(0).aio_get()
     packet = DataPacket(data, tag='HV.ch00')
     
-    await tasklet.mesh.aio_publish('data.stream.HV.ch00', packet)
+    await tasklet.mesh.aio_publish('data.stream', packet)
     
     # データベースへの記録は１０回に１回
     if tick:
-        await tasklet.mesh.aio_publish('data.store.HV.ch00', packet)
+        await tasklet.mesh.aio_publish('data.store', packet)
 ```
 
 複数の tick 周期を指定することもできます．
 ```python
-@tasklet.loop(interval=1, ticks={"transient_store":10, "store":60}):
+@tasklet.loop(interval=1, ticks={"transient_store":10, "store":60})
 async def my_work(tick):
     # １秒毎にデータを読み，全てのデータをストリームに流す
     data = await HV.ch(0).aio_get()
     packet = DataPacket(data, tag='HV.ch00')
     
-    await tasklet.mesh.aio_publish('data.stream.HV.ch00', packet)
+    await tasklet.mesh.aio_publish('data.stream', packet)
     
     # 一時データベース（短期間高密度）への記録は１０回に１回
     if tick.transient_store:
-        await tasklet.mesh.aio_publish('data.transient_store.HV.ch00', packet)
+        await tasklet.mesh.aio_publish('data.transient_store', packet)
         
     # 永続データベースへの記録は６０回に１回
     if tick.store:
-        await tasklet.mesh.aio_publish('data.store.HV.ch00', packet)
+        await tasklet.mesh.aio_publish('data.store', packet)
 ```
 
 繰り返しますが，ユーザー関数の中で `time.sleep()` は使わないでください．(`await control_system.aio_sleep()` は可）．
@@ -1021,7 +1023,7 @@ async def stop():
 - `randomwalk.set_value()`: randomwalk タスクの `set_value()` 関数の遠隔呼び出しをする．渡される関数の引数は，ここに書かれた引数リスト（この例では空）と他の `<input>` 要素の name-value 対を合わせたものになる．
 - `publish control.start()`: `control.start` トピックに publish する．publish データは引数リスト（この例では空）と他の `<input>` 要素の name-value 対を JSON にしたものになる．
 
-また，`<form>` 要素に `name` を指定することにより，その中の `<input>` の `change` イベントに対して，`form.{form_name}` トピックに変更後の値が publish されるようになり，同時に，このトピックを subscribe して，他のブラウザの同じフォームが値を変更したときにそれが即座に反映されるようになっています．
+また，`<form>` 要素に `name` を指定することにより，その中の `<input>` の `change` イベントに対して，`form.{form_name}.{element_name}` トピックに変更後の値が publish されるようになり，同時に，`form.{form_name}.>` を subscribe して，他のブラウザの同じフォームが値を変更したときにそれが即座に反映されるようになっています．
 
 #### SlowPlot レイアウト （`slowplot-control.json`）
 以下のものを並べたものです．
@@ -1159,7 +1161,7 @@ Registry への HTTP API は Slowlette を経由して `sd_mesh_registry.py` コ
 #### GET `api/registry/value/{key}`
 Registry に保持されている値を返す（`with_meta=true` でメタデータを含む JSON ドキュメント）
 
-#### GET `api/registry/keys?prefix={prefix}&limit={limit}`
+#### GET `api/registry/keys/{path}?limit={limit}`
 Registry に保持されているキーのリストを返す
 
 ### 一般データインターフェース
@@ -1176,7 +1178,7 @@ Registry に保持されているキーの値をデータとして返す（デ�
 Mesh に publish されたログメッセージは（現時点の仮置きとして）`sd_mesh_registry.py` コンポーネントに保持されています．
 
 #### GET `api/log`
-サーバーの起動以降に publish されたすべてのログメッセージを返す
+メモリに保持している最近のログを `columns` と `table` の形式で返す．保持上限の設定値は1000件で，古いログは破棄される（現在の削除判定順では最大1001件）．サーバー再起動後には保持されない．
 
 
 ## WebMesh
@@ -1188,15 +1190,14 @@ WebMesh は，SlowMesh の PubSub を HTTP 経由で行えるようにするブ�
 SSE 接続チャンネルを作成する．
 
   - `register` イベント： サーバーが ClientID を配布
-  - `data` イベント： `data.*.>` トピックのメッセージ
-  - `stdout` イベント： `sd.task.stdout.>` トピックのメッセージ
+  - `message` イベント： データ・標準出力などの購読メッセージ．JSON 本文に `subscribed_topic`，`headers`，`body` を含む．
 
-#### POST `api/webmesh/subscribe/data?client_id={client_id}`
-データストリーミングのために Subscribe するチャンネルを指定する．複数回呼び出しが可能．
-POST する body に JSON で `channel` を指定．
+#### POST `api/webmesh/subscribe`
+購読するトピックを指定する．複数回呼び出しが可能．
+POST の JSON 本文に `client_id` と `topic` を指定する（例：`{"client_id":"...","topic":"data.*.temperature"}`）．フォームの購読は `form.{form_name}.>` を指定する．
 
-#### POST `api/webmesh/unsubscribe`
-すべての subscribe を取り消す
+#### POST `api/webmesh/unsubscribe?client_id={client_id}`
+指定した `client_id` のすべての subscribe を取り消す
 
 #### POST `api/webmesh/publish/{topic}`
 SlowMesh へ publish する．
@@ -1227,11 +1228,13 @@ SlowMesh へ publish する．
 ## Registry (Key-Value Store)
 - モジュール名： `sd_mesh_registry`
 - エクスポート関数：
-  - 書き込み： `async def aio_set(self, key, value, *, cas_revision:int|None=None) -> int|None`
-  - 読み出し： `async def aio_get(self, key:str, default:Any=None, *, with_meta:bool=False) -> Any`
-  - キー一覧： `async def aio_keys(self, prefix:str='', limit:int|None=1000)->list[str]`
-  - 削除： `async def aio_delete(self, key:str, *, cas_revision:int|None=None) -> bool`
+  - 書き込み： `set(key, value, cas_revision=None)`
+  - 読み出し： `get(key='', default=None, *, with_meta=False)`
+  - キー一覧： `keys(prefix='')`
+  - 削除： `delete(key, cas_revision=None)`
 
+
+クライアントの `registry.aio_*()` は，これらの公開名を呼び出すラッパーです．現在の RPC `keys` は `limit` を受け取りませんが，クライアントの `aio_keys()` は `limit` を送るため，両者には引数の不整合があります．
 
 ## Task RPC
 - モジュール名： `{task_name}` (デフォルトで，スクリプトファイル名が `slowtask-{task_name}.py`)
@@ -1366,7 +1369,7 @@ Task の生存信号．Body に記録されるのは expire (= time-of-heartbeat
 - Sender(s): task process
 - Receiver(s): sd_task (SlowDash サーバー)，モニタサービス
 - Timing:
-  - 指定時間間隔（`Tasklet._heartbeat_interval`，１０秒）
+  - 指定時間間隔（`Tasklet._heartbeat_interval`，既定値は５秒）
   - Tasklet のメインループから送出（コルーチンやスレッドではない；必ずメインと一緒に停止する．ユーザーが `time.sleep()` しても止まる．）
 
 ##### 第２用途
