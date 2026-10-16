@@ -35,6 +35,7 @@ async def dispatch_asgi(app, scope, receive, send):
                 await app.slowlette.dispatch_event("shutdown")
                 await send({'type': 'lifespan.shutdown.complete'})
                 await app.slowlette.dispatch_event("post_shutdown")
+                return
 
     method = scope.get('method', '').upper()
     url = scope.get('raw_path', b'').decode()
@@ -51,8 +52,9 @@ async def dispatch_asgi(app, scope, receive, send):
         except asyncio.CancelledError:
             try:
                 await websocket.close()
-            except:
+            except Exception:
                 pass
+            raise
         if not handled:
             await websocket.close()
         return
@@ -186,29 +188,21 @@ def serve_asgi_uvicorn(app, port, **kwargs):
     async def main():
         config = uvicorn.Config(app, port=port, workers=1, lifespan="on", **kwargs)
         server = uvicorn.Server(config)
-        #server.install_signal_handlers=False  # this causes the server not working...
-        
-        server_task = asyncio.create_task(server.serve())
-        
-        # overwrite the signal handlers set by uvicorn.Server()        
-        await asyncio.sleep(0.1)
-        def signal_handler(signum, frame):
-            server_task.cancel()
-        signal.signal(signal.SIGINT, signal_handler)
-        signal.signal(signal.SIGTERM, signal_handler)
+        # Let Uvicorn stop accepting connections and await its ASGI tasks before
+        # shutting down the application lifespan and the event loop.
+        await server.serve()
 
-        try:
-            await server_task
-        except asyncio.CancelledError:
-            pass
-        
     if ('ssl_keyfile' in kwargs) and ('ssl_certfile' in kwargs):
         is_https = True
     else:
         is_https = False
 
     sys.stderr.write(f'Listening at port {port} (ASGI {"HTTPS" if is_https else "HTTP"})\n')
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        # Uvicorn may re-raise SIGINT after completing graceful shutdown.
+        pass
     sys.stderr.write('Terminated\n')    
 
 
