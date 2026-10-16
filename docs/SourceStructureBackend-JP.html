@@ -10,8 +10,9 @@
       div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
   <style type="text/css">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -130,14 +131,16 @@ id="toc-datasourcecomponent-と-datasource"><code>DataSourceComponent</code>
 id="toc-exportcomponent"><code>ExportComponent</code></a></li>
 <li><a href="#usermodulecomponent"
 id="toc-usermodulecomponent"><code>UserModuleComponent</code></a></li>
-<li><a href="#taskmodulecomponent"
-id="toc-taskmodulecomponent"><code>TaskModuleComponent</code></a></li>
+<li><a href="#taskcomponent"
+id="toc-taskcomponent"><code>TaskComponent</code></a></li>
 <li><a href="#userhtmlcomponent"
 id="toc-userhtmlcomponent"><code>UserHtmlComponent</code></a></li>
-<li><a href="#meshcomponent"
-id="toc-meshcomponent"><code>MeshComponent</code></a></li>
+<li><a href="#webmeshcomponent"
+id="toc-webmeshcomponent"><code>WebMeshComponent</code></a></li>
 <li><a href="#slowmqcomponent"
 id="toc-slowmqcomponent"><code>SlowMQComponent</code></a></li>
+<li><a href="#meshregistrycomponent"
+id="toc-meshregistrycomponent"><code>MeshRegistryComponent</code></a></li>
 <li><a href="#その他のコンポーネント"
 id="toc-その他のコンポーネント">その他のコンポーネント</a></li>
 </ul></li>
@@ -145,12 +148,14 @@ id="toc-その他のコンポーネント">その他のコンポーネント</a>
 id="toc-プラグインアーキテクチャ">プラグインアーキテクチャ</a></li>
 <li><a href="#データ取得の通信フロー"
 id="toc-データ取得の通信フロー">データ取得の通信フロー</a></li>
-<li><a href="#書き込み配信現在値データのフロー"
-id="toc-書き込み配信現在値データのフロー">書き込み・配信・現在値データのフロー</a></li>
+<li><a href="#配信現在値データのフロー"
+id="toc-配信現在値データのフロー">配信・現在値データのフロー</a></li>
 <li><a href="#制御フロー" id="toc-制御フロー">制御フロー</a></li>
 <li><a href="#slowpy-ライブラリの役割"
 id="toc-slowpy-ライブラリの役割">SlowPy ライブラリの役割</a>
 <ul>
+<li><a href="#mesh-通信と-tasklet" id="toc-mesh-通信と-tasklet">Mesh
+通信と Tasklet</a></li>
 <li><a href="#データオブジェクトモデル"
 id="toc-データオブジェクトモデル">データオブジェクトモデル</a></li>
 <li><a href="#制御ノード" id="toc-制御ノード">制御ノード</a></li>
@@ -183,20 +188,25 @@ Slowlette
 SlowDash サーバーコンポーネント
     - プロジェクト/設定の処理
     - データソース API
-    - ユーザー/タスクモジュール API
+    - ユーザーモジュール API と Mesh タスクのプロキシ
     - エクスポート API
     - ユーザー HTML/コンテンツ API
-    - リアルタイム/現在値データの補助機能
+    - SlowMQ，WebMesh（SSE），Mesh レジストリ
     |
     v
 プラグインとライブラリ
     - app/plugin のデータソースとエクスポータ
-    - slowpy のデータオブジェクト，制御ノード，ストア，クライアントヘルパー</code></pre>
+    - slowpy のデータオブジェクト，制御ノード，ストア，クライアントヘルパー
+    - slowpy.mesh の pub/sub，RPC，Tasklet ランタイム</code></pre>
 <p>中心となるサーバーオブジェクトは，<code>app/server/slowdash.py</code>
 の <code>App</code> です．<code>App</code> は <code>slowlette.App</code>
 を継承し，<code>Project</code>
 を生成して実行環境を整えたうえで，SlowDash の各コンポーネントを
 Slowlette のルーターに組み込みます．</p>
+<p>タスクは <code>slowdash-task</code>
+などの別プロセスで動作し，<code>slowpy.mesh</code>
+を通じてサーバーと通信します．<code>UserModuleComponent</code>
+によるプロセス内ユーザーモジュールの仕組みは引き続き存在します．</p>
 <h1 id="主要ディレクトリ">主要ディレクトリ</h1>
 <h3 id="appserver"><code>app/server</code></h3>
 <p>このディレクトリには，SlowDash のウェブアプリケーションと組み込みの
@@ -225,15 +235,21 @@ API，一時コンテンツのサポート．</li>
 エクスポートプラグインのコンポーネント．</li>
 <li><code>sd_usermodule.py</code>:
 プロセス内で動作するユーザーモジュールの拡張機構．</li>
-<li><code>sd_taskmodule.py</code>:
-現行のプロセス内タスクモジュールシステム．</li>
+<li><code>sd_task.py</code>: タスクカタログ，プロセス制御，Mesh
+上のタスク探索，RPC・変数・コンテンツのプロキシ．</li>
+<li><code>slowdash-task.py</code>:
+タスクスクリプトを読み込み，別プロセスで <code>Tasklet</code> を実行する
+CLI．</li>
 <li><code>sd_userhtml.py</code>: ユーザー提供の
 HTML/コンテンツの配信．</li>
-<li><code>sd_console.py</code>: コンソール/標準出力のキャプチャ．</li>
+<li><code>sd_console.py</code>: 従来のコンソールキャプチャ実装（現在の
+<code>App</code> には組み込まれない）．</li>
 <li><code>sd_misc_api.py</code>: その他の組み込み API
 エンドポイント．</li>
-<li><code>sd_mesh.py</code>:
-現在値データのキャッシュと，選択したトピックへの websocket 接続．</li>
+<li><code>sd_webmesh.py</code>: Mesh トピックとブラウザの SSE
+接続の橋渡し，配信データのキャッシュ．</li>
+<li><code>sd_mesh_registry.py</code>: Mesh の共有レジストリ，pub/sub
+の最新値キャッシュ，ログの収集．</li>
 <li><code>sd_slowmq.py</code>: 組み込みの websocket ベースの pub/sub
 コンポーネント．</li>
 <li><code>sd_version.py</code>: バージョン文字列．</li>
@@ -283,11 +299,14 @@ DataSource_SQLite</code></pre>
 <li><code>model.py</code>: JSON リクエストボディのラッパー．</li>
 <li><code>websocket.py</code>: websocket
 のラッパーと，接続のクローズ処理．</li>
+<li><code>eventstream.py</code>: WebMesh が使う Server-Sent
+Events（SSE）のラッパーと切断処理．</li>
 <li><code>middleware.py</code>: ミドルウェアのサポート．</li>
 </ul>
 <h3 id="libslowpy"><code>lib/slowpy</code></h3>
 <p>SlowPy
-は，データ型，制御の抽象化，ストレージへの書き込み機能，クライアントヘルパー，作図ヘルパーを提供します．</p>
+は，データ型，制御の抽象化，ストレージへの書き込み機能，クライアントヘルパー，作図ヘルパー，Mesh
+通信とタスク実行を提供します．</p>
 <p>主な領域:</p>
 <ul>
 <li>トップレベルのデータオブジェクト:
@@ -324,6 +343,25 @@ DataSource_SQLite</code></pre>
 <p>公開されているトップレベルの <code>slowpy</code>
 パッケージは，<code>Histogram</code>，<code>Graph</code>，<code>Trend</code>，<code>Tree</code>，<code>Table</code>，<code>TimeSeries</code>，<code>SlowFetch</code>，<code>slowdashify</code>，<code>slowplot</code>
 など，よく使われるデータオブジェクトやヘルパーをエクスポートします．</p>
+<h3 id="libslowpyslowpymesh"><code>lib/slowpy/slowpy/mesh</code></h3>
+<p>サーバーと独立したタスクの両方が利用する通信・実行ライブラリです．</p>
+<ul>
+<li><code>__init__.py</code>:
+<code>Mesh</code>，<code>Tasklet</code>，<code>RetainerAutocide</code>，<code>MeshStdio</code>，<code>MeshLogHandler</code>，<code>DataPacket</code>，<code>FormPacket</code>
+を公開する．</li>
+<li><code>mesh.py</code>: pub/sub
+トランスポートの選択，トピック変換，RPC，関数・制御ノードのエクスポート，リモートノードとレジストリのクライアント．</li>
+<li><code>tasklet.py</code>:
+コールバック実行，タスク仕様の通知，ハートビート，終了処理，親プロセス消失時の終了補助．</li>
+<li><code>packet.py</code>:
+データおよびフォーム更新のトピック・ヘッダ・ボディへの変換．</li>
+<li><code>stdio.py</code>: 標準入出力を Mesh
+に接続する，スレッドを考慮したルーターとキュー．</li>
+<li><code>logger.py</code>: Python のログレコードを Mesh
+に配信するハンドラ．</li>
+<li><code>dash.py</code>: <code>Tasklet.dash</code> が利用する非同期
+HTTP クライアント（設定，チャンネル，データの取得）．</li>
+</ul>
 <h1 id="アプリケーションの起動フロー">アプリケーションの起動フロー</h1>
 <h2
 id="コマンドラインまたはサーバーの起動">コマンドラインまたはサーバーの起動</h2>
@@ -332,7 +370,7 @@ id="コマンドラインまたはサーバーの起動">コマンドライン�
 <p>通常の起動シーケンスは次のとおりです．</p>
 <ol type="1">
 <li>コマンドラインオプションを解析する．</li>
-<li><code>App(project_dir, project_file, is_cgi, is_command, is_async)</code>
+<li><code>App(project_dir=..., project_file=..., port=..., is_cgi=..., is_command=..., is_async=...)</code>
 を生成する．</li>
 <li><code>App</code> が <code>Project</code> を生成する．</li>
 <li><code>Project</code> が SlowDash
@@ -352,29 +390,36 @@ Slowlette ルーターに組み込む．</li>
 <h2 id="コンポーネントの組み込み順序">コンポーネントの組み込み順序</h2>
 <p><code>slowdash.py</code>
 は，コンポーネントを次の順序で組み込みます．</p>
-<pre class="text"><code>ConsoleComponent
-MeshComponent
+<pre class="text"><code>SlowMQComponent
+MeshRegistryComponent
 UserModuleComponent
-TaskModuleComponent
-ConfigComponent
+WebMeshComponent
 DataSourceComponent
 UserHtmlComponent
 ExportComponent
+ConfigComponent
 MiscApiComponent
-SlowMQComponent</code></pre>
-<p>この順序は重要です．Slowlette
-は，一致した複数のハンドラからレスポンスを集めてマージします．そのため，先に組み込まれたコンポーネントがマージ用のラッパーを担い，後続のコンポーネントがマージ対象のコンテンツを提供できます．</p>
-<p>コード中で示されている順序の意図は次のとおりです．</p>
+TaskComponent</code></pre>
+<p>Slowlette
+は複数のハンドラの応答を後ろから前へマージするため，この順序には意味があります．</p>
 <ul>
+<li><code>WebMeshComponent</code> は <code>DataSourceComponent</code>
+より前にあり，他の応答に含まれないチャンネルをキャッシュから補います．</li>
+<li><code>UserModuleComponent</code>
+はデータソースより前ですが，<code>TaskComponent</code>
+は最後です．従来のプロセス内タスクを前提にした順序ではありません．</li>
 <li><code>ConsoleComponent</code>
-は，標準出力を早い段階でキャプチャするため，最初に組み込まれる．</li>
-<li><code>MeshComponent</code>
-は，そのキャッシュがデータソースの応答を補えるよう，データソースより前に組み込まれる．</li>
-<li><code>UserModuleComponent</code> と <code>TaskModuleComponent</code>
-は，ユーザー/タスクモジュールが API
-に関与したりデータソースを生成したりできるよう，<code>DataSourceComponent</code>
-より前に組み込まれる．</li>
+は組み込まれません．タスクの標準入出力とログには <code>MeshStdio</code>
+と <code>MeshLogHandler</code> を使います．</li>
 </ul>
+<p><code>MeshRegistryComponent</code>，<code>WebMeshComponent</code>，<code>TaskComponent</code>
+は <code>post_startup</code> で Mesh に接続します．ASGI の
+<code>post_startup</code> は <code>lifespan.startup.complete</code>
+の送信後に呼ばれるため，内蔵 SlowMQ の WebSocket
+を受け付けられる段階で接続できます．Mesh を利用する構成では，有効な
+<code>project.mesh_url</code>
+と稼働中のトランスポートが必要です．WebMesh の起動は
+<code>app.is_async</code> によって制御されます．</p>
 <h1 id="slowlette-のルーティングとレスポンスモデル">Slowlette
 のルーティングとレスポンスモデル</h1>
 <h2 id="リクエストの流れ">リクエストの流れ</h2>
@@ -388,7 +433,8 @@ slowlette.server.dispatch_asgi()
     |
     +-- websocket -&gt; router.websocket()
     |
-    +-- http -&gt; read body -&gt; Request -&gt; router.dispatch()</code></pre>
+    +-- http -&gt; read body -&gt; Request -&gt; router.dispatch()
+                (eventstream routes send SSE through EventStream)</code></pre>
 <p>WSGI の場合:</p>
 <pre class="text"><code>WSGI server
     |
@@ -413,7 +459,8 @@ id="デコレータと引数のバインディング">デコレータと引数�
 class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="at">@slowlette.get</span>(<span class="st">&#39;/api/channels&#39;</span>)</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">@slowlette.post</span>(<span class="st">&#39;/api/control&#39;</span>)</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="at">@slowlette.websocket</span>(<span class="st">&#39;/ws/slowmq&#39;</span>)</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="at">@slowlette.on_event</span>(<span class="st">&#39;startup&#39;</span>)</span></code></pre></div>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="at">@slowlette.eventstream</span>(<span class="st">&#39;/event/webmesh/attach&#39;</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="at">@slowlette.on_event</span>(<span class="st">&#39;startup&#39;</span>)</span></code></pre></div>
 <p><code>router.py</code> の <code>PathRule</code>
 は，デコレートされた関数のシグネチャを調べ，次のものをバインドします．</p>
 <ul>
@@ -422,7 +469,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a hr
 <li><code>bytes</code> のリクエストボディ．</li>
 <li>JSON ボディのラッパー．</li>
 <li>リクエスト全体を表す <code>Request</code>．</li>
-<li><code>WebSocket</code>．</li>
+<li><code>WebSocket</code> と <code>EventStream</code>．</li>
 <li>パスのリスト，またはクエリの辞書．</li>
 </ul>
 <p>ルーターはサブアプリを組み込めます．各コンポーネント自体が
@@ -486,6 +533,12 @@ $$</code></pre>
 <p><code>ConfigComponent</code> は，公開用のプロジェクトメタデータを
 <code>/api/config</code>
 から提供します．ただし，生のプロジェクト設定は秘密情報を含む可能性があるため，そのまま公開しません．</p>
+<p><code>project.mesh_url</code> は
+<code>slowdash_project.mesh.url</code>
+から取得します．未指定でサーバーポートがある場合は，<code>slowmq://{hostname}:{port}</code>
+を使います．<code>Mesh.connect()</code> は SlowMQ に加えて
+NATS，MQTT，Redis，RabbitMQ のトランスポートを選択できます．URL
+を与えない <code>Mesh</code> はローカルの pub/sub を使います．</p>
 <h1
 id="組み込みサーバーコンポーネント">組み込みサーバーコンポーネント</h1>
 <h2 id="component-と-plugincomponent"><code>Component</code> と
@@ -582,58 +635,196 @@ _finalize()</code></pre>
 <p>ユーザーモジュールのスレッドは，通常は自身のイベントループを使います．<code>_run()</code>
 と <code>_loop()</code>
 が非同期に対応している場合に限り，設定によってメインのイベントループを使えます．</p>
-<h2 id="taskmodulecomponent"><code>TaskModuleComponent</code></h2>
-<p><code>sd_taskmodule.py</code>
-は，現行のプロセス内タスクモジュールシステムです．</p>
-<p>ユーザーモジュールの機構を拡張し，タスクコマンドの解析，コマンドの実行，<code>ControlSystem</code>
-との統合を追加します．</p>
-<p>主なルートは次のとおりです．</p>
-<pre class="text"><code>GET  /api/control/task
+<h2 id="taskcomponent"><code>TaskComponent</code></h2>
+<p><code>sd_task.py</code> は，Mesh 上のタスクを HTTP API
+に公開するプロキシと，ローカルタスクのプロセスマネージャです．削除された
+<code>sd_taskmodule.py</code>
+のプロセス内スレッド実行を引き継ぐ実装ではありません．</p>
+<p>主なルート:</p>
+<pre class="text"><code>GET  /api/task/catalog
+GET  /api/task/status
+POST /api/task/control/{taskname}
 POST /api/control
-POST /api/control/task/{taskname}
 GET  /api/channels
-GET  /api/data/{channels}
-POST /api/consume/current_data</code></pre>
-<p>タスクコマンドの流れは次のとおりです．</p>
+GET  /api/data/{*}
+GET  /api/config/contentlist
+GET  /api/config/content/{filename}
+GET  /api/config/file/{filename}</code></pre>
+<ul>
+<li><code>task</code> / <code>tasks</code> 設定と
+<code>config/slowtask-*.py</code>
+からカタログを作る．設定の既定コマンドは
+<code>slowdash-task &lt;file_path&gt; --name=&lt;name&gt;</code>
+で，Mesh URL と JSON
+パラメータも渡される．<code>auto_start</code>（互換名
+<code>auto_load</code>）に従って <code>subprocess.Popen</code>
+で起動する．</li>
+<li><code>sd.task.spec.&gt;</code>，<code>sd.task.exit.&gt;</code>，<code>sd.task.heartbeat.&gt;</code>，<code>sd.task.life_event.&gt;</code>
+を購読し，<code>mesh_id</code> ごとの <code>TaskProxy</code>
+を管理する．<code>sd.task.control.introduce</code>
+でタスク仕様の再通知を要求するため，別途起動されたタスクも登録できる．</li>
+<li><code>TaskFunctionProxy</code> は通知された引数仕様に基づき RPC
+引数を整える．<code>TaskVariableProxy</code> は
+<code>mesh.remote_node('&lt;task&gt;.&lt;variable&gt;')</code>
+を使って値を読む．</li>
+<li>タスク制御の <code>action</code> は
+<code>start</code>，<code>stop</code>，<code>kill</code>，<code>purge</code>．<code>stop</code>
+は <code>&lt;task&gt;._sd_stop</code> RPC，<code>kill</code>
+はこのサーバーが保持する子プロセス，<code>purge</code>
+は終了通知による登録解除を扱う．</li>
+<li>エクスポートされた制御ノードはチャンネルとなり，現在時刻を含むデータ要求でリモートから読まれる．タスクのコンテンツは
+<code>&lt;task&gt;._sd_get_content</code> RPC を通じて設定/コンテンツ
+API に公開される．</li>
+</ul>
+<p><code>slowdash-task.py</code> はスクリプト内の <code>Tasklet</code>
+を探して実行します．見つからなければ
+<code>Tasklet(use_oldstyle_callbacks=True)</code>
+を作り，従来のコールバックを読み込みます．スクリプト読み込み時から標準入出力とログを
+Mesh に接続し，<code>RetainerAutocide</code>
+により親プロセス消失時の終了も扱います．</p>
+<h3 id="タスクの識別とライフサイクル">タスクの識別とライフサイクル</h3>
+<p>タスク名（例: <code>sensor</code>）は RPC
+の名前空間で，<code>mesh_id</code> は接続する Mesh
+インスタンスの識別子です．<code>Mesh.connect()</code>
+は名前，ホスト名，PID，プロセス内の連番から <code>mesh_id</code>
+を作ります．タスク表は <code>mesh_id</code> で管理されますが，RPC
+要求の配送先は <code>sd.rpc.&lt;taskname&gt;</code>
+なので，同じ名前の複数タスクが要求を受け取ることがあります．通常のタスク制御では一意の名前を使います．</p>
+<p>カタログは「起動可能なスクリプト」，タスク表は「仕様を通知したタスク」，プロセス表は「このサーバーが起動した子プロセス」を表します．外部で起動したタスクは
+Mesh に登録できますが，その PID
+をサーバーが所有するわけではありません．<code>kill</code>
+は追跡中の子プロセスだけが対象で，<code>purge</code>
+は登録を外す操作です．再起動操作は現在の API では stop/start
+の組み合わせになります．</p>
+<pre class="text"><code>TaskComponent.post_startup
+  -&gt; subscribe to task notifications
+  -&gt; start Mesh and request introductions
+  -&gt; load catalog and launch auto_start processes
+
+slowdash-task process
+  -&gt; load script and bind Tasklet to ControlSystem
+  -&gt; connect Mesh / standard I/O / logging
+  -&gt; publish task specification
+  -&gt; run initialize callbacks
+  -&gt; publish updated specification
+  -&gt; run scheduled callbacks and heartbeat loop
+  -&gt; on stop: publish exit, cancel callbacks, run finalizers, close connections</code></pre>
+<p>ハートビートは <code>Tasklet</code> のメインループから既定で約 5
+秒ごとに送られます．サーバーはチャンネル取得やタスク操作などで
+<code>_check_task_heartbeats()</code> を呼び，通知された期限に約 5
+秒の猶予を加えて生存状態を判断します．独立した常時監視スレッドによる判定ではありません．ハートビート欠落はプロセス終了の確定情報ではなく，タスクのイベントループがブロックしている場合にも起こります．</p>
+<h3 id="タスク構成の最小例">タスク構成の最小例</h3>
+<p>次の例では，SlowDash がポート 18881 で動作し，内蔵 SlowMQ
+が使えることを前提とします．設定中の Mesh URL
+は稼働中のブローカーを指します．</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> MeshExample</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">mesh</span><span class="kw">:</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> slowmq://localhost:18881</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">task</span><span class="kw">:</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> sensor</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">file_path</span><span class="kw">:</span><span class="at"> config/slowtask-sensor.py</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">auto_start</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div>
+<p><code>config/slowtask-sensor.py</code> の内容:</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Tasklet, DataPacket</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>task <span class="op">=</span> Tasklet()</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>temperature <span class="op">=</span> <span class="fl">12.3</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="at">@task.mesh.export</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> set_temperature(value: <span class="bu">float</span>):</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">global</span> temperature</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    temperature <span class="op">=</span> value</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> temperature</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="at">@task.loop</span>(interval<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> publish_temperature():</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> task.mesh.aio_publish(</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;data.stream&#39;</span>, DataPacket(temperature, tag<span class="op">=</span><span class="st">&#39;temperature&#39;</span>)</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>    task.run(name<span class="op">=</span><span class="st">&#39;sensor&#39;</span>, mesh_url<span class="op">=</span><span class="st">&#39;slowmq://localhost:18881&#39;</span>)</span></code></pre></div>
+<p><code>slowdash-task</code> が読み込むときは，既存の <code>task</code>
+を検出して <code>run_module()</code> を呼びます．直接 Python
+で実行するときは <code>__main__</code> の <code>task.run()</code>
+が使われます．この例は <code>temperature</code>
+チャンネルを配信し，<code>sensor.set_temperature</code> を RPC
+として公開します．制御ノードのエクスポートとは別に，関数を公開している点に注意してください．</p>
 <pre class="text"><code>POST /api/control
-    |
-    v
-TaskModuleComponent.execute_command()
-    |
-    v
-each TaskModule.process_command()
-    |
-    v
-parse command name, arguments, await/reentrant flags
-    |
-    v
-match namespace prefix/suffix
-    |
-    v
-call task function immediately or in TaskFunctionThread</code></pre>
-<p>エクスポートされた制御ノードは現在値チャンネルとして公開され，<code>/api/data/{channels}</code>
-から読み取れます．受信した現在値データのメッセージは，<code>/api/consume/current_data</code>
-を通じてエクスポート済み変数の設定にも使えます．</p>
+Content-Type: application/json
+
+{&quot;sensor.set_temperature()&quot;: null, &quot;value&quot;: 20.0}</code></pre>
+<p>コマンド名は JSON
+のキーで指定し，残りのフィールドを引数にします．タスク仕様への掲載には，引数を
+<code>int</code>，<code>float</code>，<code>str</code>，<code>bool</code>
+で注釈するか，これらの型を推定できる既定値を使います．実装は仕様の作成とサーバー側の型変換にこれらの情報を利用します．</p>
 <h2 id="userhtmlcomponent"><code>UserHtmlComponent</code></h2>
 <p><code>sd_userhtml.py</code> は，ユーザー提供の HTML
 と関連コンテンツを配信します．また，ユーザー URL を内部の設定/コンテンツ
 API へリダイレクトまたはマッピングします．</p>
 <p>これにより，プロジェクト固有の UI
 ページを，コアサーバーを変更することなく，プロジェクトの設定/コンテンツ領域に置けます．</p>
-<h2 id="meshcomponent"><code>MeshComponent</code></h2>
-<p><code>sd_mesh.py</code> は，<code>/api/consume/current_data</code>
-を通じて受け取った現在値データのキャッシュを保持します．</p>
-<p>主な役割は次のとおりです．</p>
-<ul>
-<li>選択したトピックへの websocket 接続．</li>
-<li><code>/api/emit/{topic}</code> の再配信と，websocket への転送．</li>
-<li>現在値データのキャッシュ．</li>
-<li>キャッシュに基づく現在値チャンネルによる <code>/api/channels</code>
-の補完．</li>
-<li>最新のキャッシュ値による <code>/api/data/{channels}</code>
-の補完．</li>
-</ul>
-<p>このコンポーネントはデータソースより前に組み込まれます．そのため独自のレスポンスが，後続のデータソースの応答とキャッシュデータをマージできます．</p>
+<h2 id="webmeshcomponent"><code>WebMeshComponent</code></h2>
+<p><code>sd_webmesh.py</code> は Mesh
+とブラウザの橋渡しを行います．削除された <code>sd_mesh.py</code>
+の現在値キャッシュに相当する処理は，このファイルの
+<code>DataCache</code>
+とマージ用レスポンスに移っています．ブラウザへの配信には SSE
+を使います．</p>
+<pre class="text"><code>SSE  /event/webmesh/attach
+POST /api/webmesh/subscribe
+POST /api/webmesh/unsubscribe
+POST /api/webmesh/publish/{topic}
+GET  /api/channels
+GET  /api/data/{*}</code></pre>
+<p><code>data.&gt;</code>，<code>form.&gt;</code>，タスクの
+life-event/heartbeat/stdout，<code>log.&gt;</code>
+を購読します．データをキャッシュし，ブラウザの購読に一致するメッセージをクライアントごとのキューへ送ります．SSE
+の <code>register</code> イベントは <code>client_id</code>
+を返し，<code>message</code> イベントは
+<code>subscribed_topic</code>，<code>headers</code>，<code>body</code>
+を含みます．キューの上限は 10
+件で，満杯になったクライアントは切断されます．</p>
+<p>ブラウザは
+<code>data.*.&lt;channel&gt;</code>，<code>form.&lt;form&gt;.&gt;</code>
+のようなフォーム用トピック，およびコード内の固定トピックリストを使って購読します．現在の振り分けは完全な汎用ワイルドカードマッチングではなく，<code>_subscribe_mesh()</code>
+のトピック正規化に基づきます．<code>unsubscribe</code>
+は指定クライアントの全購読を解除します．</p>
+<p><code>ChannelMergerResponse</code> は，配信されたチャンネルを
+<code>streaming: True</code>
+として不足分だけ追加します．<code>DataMergerResponse</code>
+は，他の応答にチャンネルが存在せず，キャッシュの <code>t</code>
+が単一の数値で要求時間範囲に入る場合だけデータを補います．既存チャンネルの値は上書きせず，時系列配列も結合しません．</p>
+<h3 id="ブラウザ接続の手順">ブラウザ接続の手順</h3>
+<ol type="1">
+<li><code>EventSource</code> で <code>/event/webmesh/attach</code>
+を開く．</li>
+<li><code>register</code> イベントの JSON から <code>client_id</code>
+を取得する．</li>
+<li><code>/api/webmesh/subscribe</code> に
+<code>{"client_id":"...","topic":"data.*.temperature"}</code> を JSON
+として POST する．<code>client_id</code>
+はこのルートではボディに含める．</li>
+<li><code>message</code> イベントの JSON を読み，<code>body</code>
+のチャンネルデータを表示する．<code>headers.topic</code>
+は元のトピック，<code>subscribed_topic</code>
+はブラウザの購読用に正規化されたトピックである．</li>
+<li>全購読を解除する場合は
+<code>/api/webmesh/unsubscribe?client_id=...</code> に POST する．SSE
+が切断された場合も，その接続のキューと購読は削除される．</li>
+</ol>
+<p><code>app/site/slowjs/control.mjs</code>
+のクライアントは，通常のチャンネルを <code>data.*.&lt;channel&gt;</code>
+に変換し，<code>@mesh:</code>
+で始まる指定はプレフィックスを除いたトピックとして扱います．エラー時には接続を作り直し，新しい
+<code>client_id</code> の登録後に購読を再送します．</p>
+<p>SSE 接続や subscribe
+自体はキャッシュ済みの値を再送しません．初期表示には
+<code>/api/data</code> やレジストリの取得を併用します．また WebMesh
+の受信キューはライブ配信用であり，切断中のメッセージを永続保存して再生するものではありません．</p>
 <h2 id="slowmqcomponent"><code>SlowMQComponent</code></h2>
 <p><code>sd_slowmq.py</code> は，組み込みの websocket pub/sub
 サービスを提供します．</p>
@@ -655,11 +846,140 @@ API へリダイレクトまたはマッピングします．</p>
 <li><code>&gt;</code>: 末尾の 0
 個以上のトークンに一致する．ただし最後のトークンとしてのみ使用できる．</li>
 </ul>
+<p>SlowMQ は Mesh のトランスポートとして使う WebSocket
+ブローカーであり，ブラウザ向け SSE の WebMesh
+とは役割が異なります．<code>AsyncSlowMQ</code>
+制御ノードがこのサービスに接続します．subscribe 要求には
+<code>message_id</code> に対応した <code>reply_to</code>
+の確認応答を返します．切断時には購読を削除し，送信が 5
+回連続で失敗したクライアントも除去します．統計と購読数は
+<code>/api/config</code> の <code>slowmq</code> に公開されます．</p>
+<h3 id="メッセージ形式と配送">メッセージ形式と配送</h3>
+<p>SlowMQ の WebSocket では JSON の <code>headers</code> と
+<code>data</code> を使います．Mesh の購読コールバックはこれを
+<code>(headers, body)</code> として受け取り，WebMesh の SSE は
+<code>body</code>
+というフィールド名でブラウザに渡します．同じメッセージでも境界ごとにボディの名前が異なります．スカラー値を配信した例は次のとおりです（時刻は例示）．</p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;headers&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;topic&quot;</span><span class="fu">:</span> <span class="st">&quot;data.stream.temperature&quot;</span><span class="fu">},</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;data&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;temperature&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;t&quot;</span><span class="fu">:</span> <span class="fl">1780000000.0</span><span class="fu">,</span> <span class="dt">&quot;x&quot;</span><span class="fu">:</span> <span class="fl">12.3</span><span class="fu">}}</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p><code>action</code> を省略すると publish
+と解釈されます．<code>DataPacket</code> の
+<code>tag='temperature'</code>
+はトピックの末尾とボディのチャンネル名に使われます．<code>t</code> は
+<code>start</code> を省略した場合は UNIX 時刻で，<code>start</code>
+があればその時刻からの相対秒です．時系列では <code>t</code>
+が配列となり，WebMesh の HTTP キャッシュ補完の対象外になります．</p>
+<p><code>AsyncSlowMQNode</code> は送信用の WebSocket
+を共有し，購読はトピックフィルタごとに WebSocket を持ちます．SlowMQ
+ブローカーは現在接続中の購読者へメッセージを転送します．ブローカー自身には履歴の永続化や
+publish
+完了に対するアプリケーションの処理済み確認はありません．subscribe
+の確認応答と RPC の返信は別の仕組みです．</p>
+<h2 id="meshregistrycomponent"><code>MeshRegistryComponent</code></h2>
+<p><code>sd_mesh_registry.py</code> の <code>Registry</code>
+は，ドット区切りのキーに値，revision，更新時刻を保存します．<code>MeshRegistryComponent</code>
+はこれを Mesh 名 <code>sd_mesh_registry</code> の
+<code>set</code>，<code>get</code>，<code>keys</code>，<code>delete</code>
+RPC として公開します．クライアントは
+<code>mesh.registry.aio_set()</code> / <code>aio_get()</code> /
+<code>aio_keys()</code> / <code>aio_delete()</code> を使います．</p>
+<pre class="text"><code>GET /api/registry/keys/{path}
+GET /api/registry/value/{key}
+GET /api/data/{*}                 # @registry:&lt;key&gt; channels
+GET /api/log</code></pre>
+<ul>
+<li>末尾が <code>&gt;</code>
+のキーはサブツリーを指定する．<code>with_meta</code>
+でメタデータを取得でき，単一キーの更新・削除には
+<code>cas_revision</code> を使える．サブツリーの設定には CAS
+は実装されていない．</li>
+<li><code>server.url</code> に SlowDash の URL
+を登録する．<code>Tasklet</code> はこれを HTTP
+ヘルパーの接続先探索に利用する．</li>
+<li><code>&gt;</code> を購読し，<code>sd.rpc</code>
+で始まるトピックを除く最新のメッセージボディを
+<code>pubsub.&lt;topic&gt;</code> に保存する．これは WebMesh
+のチャンネル用キャッシュとは別のレジストリである．</li>
+<li><code>pubsub.form.</code> と，作業ディレクトリ内の
+<code>registry-*.json</code>
+から読み込んだ領域を永続化対象とし，値の設定時に保存する．すべてのキーを永続化する仕組みではない．</li>
+<li><code>log.&gt;</code> のログをメモリに保持し，<code>/api/log</code>
+で表形式として返す．<code>@registry:</code>
+で始まるデータチャンネルは，レジストリ値を <code>/api/data</code>
+の形式で読むための経路となる．</li>
+</ul>
+<h3 id="状態の保存先の使い分け">状態の保存先の使い分け</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>保存先</th>
+<th>内容</th>
+<th>読み取り経路</th>
+<th>寿命</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WebMesh <code>DataCache</code></td>
+<td>配信チャンネルの最新レコードと型</td>
+<td><code>/api/channels</code>，<code>/api/data</code> の補完</td>
+<td>サーバープロセス内</td>
+</tr>
+<tr>
+<td>Mesh <code>Registry</code></td>
+<td>共有キーと最新の pub/sub ボディ</td>
+<td>レジストリ
+RPC，<code>/api/registry/*</code>，<code>@registry:</code></td>
+<td>主にメモリ，指定領域のみ JSON 保存</td>
+</tr>
+<tr>
+<td>Task のエクスポート済みノード</td>
+<td>タスクが管理する現在値</td>
+<td>ノード RPC，<code>TaskComponent</code> のデータ API</td>
+<td>タスク/デバイス側に依存</td>
+</tr>
+<tr>
+<td><code>slowpy.store</code> / データソース</td>
+<td>保存済み時系列やオブジェクト</td>
+<td>データソースの <code>/api/data</code></td>
+<td>使用するストレージに依存</td>
+</tr>
+</tbody>
+</table>
+<p>配信したデータを履歴として保存したい場合は，タスクや購読側で明示的に
+<code>DataStore.append()</code> などを呼びます．Mesh
+に配信するだけでデータベースへ保存されるわけではありません．</p>
+<p>レジストリの読み方の例:</p>
+<ul>
+<li><code>mesh.registry.aio_get('pubsub.form.settings.&gt;')</code>:
+settings フォームの最新メッセージをサブツリーとして取得する．</li>
+<li><code>mesh.registry.aio_get('state.run', with_meta=True)</code>:
+<code>key</code>，<code>value</code>，<code>revision</code>，<code>updated</code>
+を取得する．</li>
+<li><code>mesh.registry.aio_set('state.run', 'running', cas_revision=revision)</code>:
+読み取った revision がまだ一致する場合だけ更新し，不一致なら
+<code>None</code> を返す．</li>
+</ul>
+<p>いずれも非同期呼び出しなので <code>await</code> を使います．revision
+は現在のレジストリ内での競合検出用であり，JSON
+保存からの復元時にはメタデータが引き継がれません．また現行の
+<code>delete()</code>
+はメモリ上の削除で，永続ファイルの書き直しを行いません．</p>
 <h2 id="その他のコンポーネント">その他のコンポーネント</h2>
 <p>その他のサーバーコンポーネントは次のとおりです．</p>
 <ul>
-<li><code>ConsoleComponent</code>: 表示や API
-での利用のためにコンソール出力をキャプチャする．</li>
+<li><code>ConsoleComponent</code>:
+従来のコンソールキャプチャ実装で，現在の <code>App</code>
+には組み込まれない．</li>
 <li><code>MiscApiComponent</code>: その他のユーティリティ API．</li>
 <li><code>BlobStorage_File</code>: データソースが使う，ファイルベースの
 blob ストレージ．</li>
@@ -668,20 +988,20 @@ blob ストレージ．</li>
 <p>プラグインは，<code>app/plugin</code> 以下にある通常の Python
 モジュールです．ファイル名とクラス名によって動的に読み込まれます．</p>
 <p>データソースの例:</p>
-<div class="sourceCode" id="cb15"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> SQLite</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">parameters</span><span class="kw">:</span></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="at">      ...</span></span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> SQLite</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">parameters</span><span class="kw">:</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="at">      ...</span></span></code></pre></div>
 <p>これは次のように解決されます．</p>
 <pre class="text"><code>datasource_SQLite.py
 DataSource_SQLite</code></pre>
 <p>エクスポートの例:</p>
-<div class="sourceCode" id="cb17"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">export</span><span class="kw">:</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> CSV</span></span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">export</span><span class="kw">:</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> CSV</span></span></code></pre></div>
 <p>これは次のように解決されます．</p>
 <pre class="text"><code>export_CSV.py
 Export_CSV</code></pre>
@@ -689,7 +1009,6 @@ Export_CSV</code></pre>
 <code>parameters</code>
 辞書をルートのパラメータ辞書にマージします．これにより，プラグインのコンストラクタは平坦化されたパラメータを参照できます．</p>
 <h1 id="データ取得の通信フロー">データ取得の通信フロー</h1>
-<p>最も一般的な読み取り経路は次のとおりです．</p>
 <pre class="text"><code>Browser or client
     |
     v
@@ -697,73 +1016,223 @@ GET /api/channels
 GET /api/data/{channels}?length=...&amp;to=...
     |
     v
-Slowlette ASGI/WSGI dispatch
+Slowlette dispatch -&gt; component tree
+    |
+    +-- MeshRegistryComponent: @registry:&lt;key&gt; values
+    +-- UserModuleComponent: user hooks
+    +-- WebMeshComponent: streamed-data cache merge response
+    +-- DataSourceComponent: stored data
+    +-- TaskComponent: remote exported control nodes
     |
     v
-SlowDash component tree
-    |
-    +-- MeshComponent cache merge response
-    +-- UserModuleComponent hooks
-    +-- TaskModuleComponent current exports
-    +-- DataSourceComponent plugins
-    |
+Slowlette response merge -&gt; JSON response</code></pre>
+<p><code>/api/data</code>
+の結果には，保存済みデータ，タスクのリモートノードの現在値，WebMesh
+の配信キャッシュ，レジストリ値が参加できます．<code>TaskComponent</code>
+と <code>WebMeshComponent</code> は，チャンネル名に <code>/</code>
+を含められるよう <code>/api/data/{*}</code> を使います．</p>
+<p>WebMesh
+のキャッシュ補完は，欠けているチャンネルの単一時刻データだけを対象にします．一方，<code>TaskComponent.DataMergerResponse</code>
+には，より新しい現在値を単一値や時系列の末尾へ追加する処理があります．この
+2
+つのマージ処理は同じではなく，最終的な応答はコンポーネントの組み込み順序にも依存します．</p>
+<h1 id="配信現在値データのフロー">配信・現在値データのフロー</h1>
+<pre class="text"><code>Tasklet / Mesh producer
+    |  Mesh.aio_publish(&#39;data.stream&#39;, DataPacket(..., tag=&#39;channel&#39;))
     v
-Slowlette response merge
+Mesh transport / broker: data.stream.channel
     |
-    v
-JSON response</code></pre>
-<p><code>/api/data/{channels}</code> では，<code>DataSource</code>
-プラグインが SlowDash
-のデータモデル形式でデータを返します．キャッシュコンポーネントは，次の条件を満たす場合に現在値を追加できます．</p>
-<ul>
-<li>要求されたチャンネルがキャッシュ対象である．</li>
-<li>キャッシュのタイムスタンプが，要求された時間範囲に入っている．</li>
-<li>既存のレスポンスが存在しないか，キャッシュ値より古い．</li>
-</ul>
-<h1
-id="書き込み配信現在値データのフロー">書き込み・配信・現在値データのフロー</h1>
-<p>現在値データの更新は，次の経路で SlowDash に入ります．</p>
-<pre class="text"><code>POST /api/emit/{topic}
-POST /api/consume/current_data
-internal app.request_emit(topic, message, sender=...)</code></pre>
-<p>典型的な流れは次のとおりです．</p>
-<pre class="text"><code>producer
+    +-- WebMeshComponent -&gt; DataCache
+    |                    -&gt; attached browser clients (SSE)
     |
-    v
-/api/emit/current_data
-    |
-    v
-app.request(&#39;/consume/current_data&#39;, data)
-    |
-    +-- MeshComponent.cache_current_data()
-    +-- TaskModuleComponent.set_variable()
-    |
-    v
-websocket forwarding to attached clients</code></pre>
-<p><code>sender</code>
-パラメータは，タスク自身が配信した値が同じタスク変数のパスに反射して戻ってくるのを防ぐために使われます．</p>
+    +-- MeshRegistryComponent -&gt; pubsub.data.stream.channel</code></pre>
+<p>HTTP クライアントは <code>POST /api/webmesh/publish/{topic}</code>
+から JSON ボディを Mesh に配信できます．<code>POST /api/control</code>
+の <code>publish &lt;topic&gt;(...)</code> 形式も pub/sub
+に変換されます．フォーム更新には <code>FormPacket</code> と
+<code>form.&lt;form&gt;.&lt;element&gt;</code> を使い，レジストリの
+<code>pubsub.form</code> に最新値が保持されます．</p>
+<p><code>ControlSystem.aio_publish()</code> と <code>stream()</code>
+も，バインドされた <code>Tasklet</code> の Mesh を使って
+<code>data.stream.&lt;name&gt;</code> を送ります．配信データと，RPC
+で読み書きするエクスポート済み制御ノードは別の経路です．</p>
 <h1 id="制御フロー">制御フロー</h1>
-<p>制御コマンドは <code>/api/control</code> を使います．</p>
-<p>現行のプロセス内タスクの流れは次のとおりです．</p>
 <pre class="text"><code>POST /api/control
     |
     v
-TaskModuleComponent.execute_command()
+TaskComponent.execute_command() -&gt; MeshRequest
     |
-    v
-TaskModule.process_task_command()
+    +-- publish &lt;topic&gt;(...) -&gt; Mesh.aio_publish()
     |
-    +-- parse &quot;await&quot;, &quot;reentrant&quot;, &quot;async&quot;, &quot;parallel&quot; prefixes
-    +-- parse function arguments
-    +-- match task namespace
-    +-- bind parameters using Python function signature
-    |
-    v
-execute function synchronously, await it, or run it in a command thread</code></pre>
-<p>ユーザーモジュールも，定義したフックに応じてコマンド処理に参加できます．</p>
+    +-- &lt;task&gt;.&lt;function&gt;(...) -&gt; TaskProxy.process_command()
+                                  -&gt; TaskFunctionProxy.match_kwargs()
+                                  -&gt; Mesh.aio_call_many()
+                                  -&gt; sd.rpc.&lt;task&gt;
+                                  -&gt; exported function in task process
+                                  -&gt; sd.rpc_reply.&lt;caller_mesh_id&gt;
+                                  -&gt; HTTP reply</code></pre>
+<p><code>MeshRequest</code> はコマンド名とパラメータを解析します．旧
+<code>await</code>，<code>reentrant</code>，<code>async</code>，<code>parallel</code>
+接頭辞は，互換性のため警告を出して取り除かれるだけで，実行モードを選択しません．RPC
+の受信側ではエクスポート済み関数を呼び，戻り値がコルーチンなら await
+します．返信は
+<code>status</code>，<code>message</code>，<code>return_value</code>
+を持ち，相関 ID で呼び出しに対応づけられます．</p>
+<p>制御ノードの読み書きには
+<code>mesh.remote_node('&lt;task&gt;.&lt;variable&gt;').aio_get()</code>
+/ <code>aio_set()</code> を使います．内部的には
+<code>&lt;task&gt;._sd_node_call</code> RPC
+を通じて，エクスポートされたノードの <code>aio_get()</code> /
+<code>aio_set()</code>
+を呼びます．ユーザーモジュールは引き続き自身の制御フックで参加できます．</p>
+<h3 id="rpc-の返信と実行モデル">RPC の返信と実行モデル</h3>
+<p>要求には
+<code>module</code>，<code>function</code>，<code>sender_id</code>，<code>reply_to</code>，<code>correlation_id</code>，<code>message_id</code>
+のヘッダと，<code>args</code> / <code>kwargs</code>
+のボディが含まれます．<code>Mesh</code> は相関 ID
+ごとの返信キューを保持し，<code>aio_call_many()</code>
+で必要な返信数またはタイムアウトまで待ちます．<code>TaskProxy</code>
+の関数呼び出しは 1 件の返信，5
+秒のタイムアウトを指定します．<code>aio_call()</code> は返信の
+<code>status</code> を確認して <code>return_value</code>
+を返しますが，<code>aio_call_many()</code>
+は返信レコードのリストを返すため，呼び出し側が結果を確認します．</p>
+<p>同一 Mesh インスタンスの RPC
+受信ループは，関数の完了を待ってから次の要求を処理します．<code>async def</code>
+にしても，同じ受信ループが複数 RPC
+を並列実行するわけではありません．また同期関数はそのイベントループ上で直接呼ばれ，自動的にワーカースレッドへ移されません．長い処理は
+Tasklet のループへ分離するなど，RPC が短時間で返るように設計します．</p>
+<p>呼び出し側のタイムアウトは，遠隔側で関数が実行されなかったことや，実行が取り消されたことを意味しません．更新操作を再試行する場合は，処理の重複を考慮する必要があります．</p>
 <h1 id="slowpy-ライブラリの役割">SlowPy ライブラリの役割</h1>
 <p>SlowPy
 は，サーバー側のコンポーネントとユーザーコードの両方から使われます．</p>
+<h2 id="mesh-通信と-tasklet">Mesh 通信と Tasklet</h2>
+<p><code>Mesh</code> は，<code>control/</code> の非同期 pub/sub
+ノードに，トピック変換，コールバック購読，RPC
+を重ねたものです．アプリケーションは通常
+<code>.</code>，<code>*</code>，<code>&gt;</code>
+のトピック表現を使い，各トランスポートに合わせて区切りとワイルドカードが変換されます．外部ブローカーを使う場合は，対応する制御モジュールの依存パッケージも必要です．</p>
+<p>主な API:</p>
+<ul>
+<li><code>aio_start()</code> / <code>aio_close()</code>:
+接続とバックグラウンド処理の開始・終了．</li>
+<li><code>publisher()</code> / <code>subscriber()</code>:
+制御ノードとして pub/sub にアクセスする．</li>
+<li><code>aio_publish()</code>，<code>aio_subscribe()</code>，<code>@mesh.on(...)</code>:
+メッセージの送受信．<code>publish()</code>
+は実行中のイベントループへ配信処理を登録するため，イベントループが必要．</li>
+<li><code>@mesh.export</code> または
+<code>mesh.export(name, function_or_node)</code>:
+関数・制御ノードを公開する．</li>
+<li><code>aio_call()</code> は単一の RPC
+戻り値，<code>aio_call_many()</code> は返信レコードのリストを返す．RPC
+要求は <code>sd.rpc.&lt;module&gt;</code>，返信は
+<code>sd.rpc_reply.&lt;mesh_id&gt;</code> を使う．</li>
+<li><code>remote_node()</code> と <code>registry</code>:
+リモートの制御ノードと共有レジストリへのアクセス．</li>
+</ul>
+<p><code>DataPacket</code>
+はスカラー，データ要素，フィールド辞書，<code>TimeSeries</code> を Mesh
+のボディへ変換し，<code>tag</code>
+がある場合はトピックにも追加します．<code>FormPacket</code> は
+<code>form.&lt;form&gt;.&lt;element&gt;</code>
+と，<code>form</code>，<code>element</code>，<code>value</code>
+を含むボディを生成します．</p>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> asyncio</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Mesh, DataPacket</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> main():</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    mesh <span class="op">=</span> Mesh(<span class="st">&#39;slowmq://localhost:18881&#39;</span>, name<span class="op">=</span><span class="st">&#39;producer&#39;</span>)</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> mesh.aio_start()</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span>:</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> mesh.aio_publish(<span class="st">&#39;data.stream&#39;</span>, DataPacket(<span class="fl">12.3</span>, tag<span class="op">=</span><span class="st">&#39;temperature&#39;</span>))</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">finally</span>:</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> mesh.aio_close()</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>asyncio.run(main())</span></code></pre></div>
+<p><code>Tasklet</code> は Mesh
+を所有するタスクランタイムです．<code>initialize()</code>，<code>finalize()</code>，<code>once()</code>，<code>loop()</code>，<code>schedule()</code>，<code>content()</code>
+のデコレータで処理を登録し，<code>run()</code> または CLI からの
+<code>run_module()</code>
+で実行します．タスク仕様には関数，引数型，制御ノード，コンテンツ，標準入出力の情報が含まれます．仕様・ハートビート・終了を
+<code>sd.task.*</code> に通知し，<code>sd.task.control.introduce</code>
+に応答します．</p>
+<p>互換モードは
+<code>_initialize</code>，<code>_finalize</code>，<code>_run</code>，<code>_loop</code>，HTML/レイアウトのコールバックと公開関数を読み込みます．長い処理やループには非同期関数と非同期
+I/O を使い，Mesh の受信やハートビートを止めないようにします．</p>
+<p><code>MeshStdio</code> は，タスクでは
+<code>sd.task.stdin.&lt;mesh_id&gt;</code> と
+<code>sd.task.stdout.&lt;mesh_id&gt;</code>
+に標準入出力を接続します（既定では stderr も stdout
+と同じトピック）．<code>MeshLogHandler</code> は Python ログを
+<code>log.&gt;</code> のトピックに配信します．<code>Tasklet.dash</code>
+は Mesh RPC とは別に SlowDash の HTTP API
+を読み取るためのヘルパーです．</p>
+<h3 id="tasklet-コールバックと実行単位">Tasklet
+コールバックと実行単位</h3>
+<p>ユーザー向けの概念と詳しい使用例は <a href="SlowMesh_JP.md">SlowMesh
+と SlowTask</a> を参照してください．SlowMesh は PubSub・RPC・Registry
+を提供する通信基盤，SlowTask
+は独立に実行されるスクリプト，<code>Tasklet</code>
+はスクリプトにライフサイクルと Mesh
+接続を提供するアダプタです．<code>Mesh</code>
+単体でも通信でき，その場合にタスク管理への登録やタスク仕様・ハートビートの送信が自動的に行われるわけではありません．</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>デコレータ</th>
+<th>ランタイムの動作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@tasklet.initialize()</code></td>
+<td>初期化時に実行する．引数を受け取る関数にはタスクパラメータの辞書が渡る．</td>
+</tr>
+<tr>
+<td><code>@tasklet.finalize()</code></td>
+<td>通常の終了処理で，実行中のタスクコールバックをキャンセルした後に実行する．</td>
+</tr>
+<tr>
+<td><code>@tasklet.once(delay=0)</code></td>
+<td>初期化完了後，指定秒数の遅延を経て一度実行する．</td>
+</tr>
+<tr>
+<td><code>@tasklet.loop(interval=1, ticks=None)</code></td>
+<td>周期的に実行する．整数の <code>ticks</code>
+は周期的な真偽値を引数として渡し，辞書なら <code>tick.store</code>
+などの名前付きフラグを渡す．</td>
+</tr>
+<tr>
+<td><code>@tasklet.schedule("08:00", use_utc=False)</code></td>
+<td>指定時刻に実行する．カンマ区切りの <code>HH:MM</code> と
+<code>*</code> に対応し，UTC 指定がなければローカル時刻を使う．</td>
+</tr>
+<tr>
+<td><code>@tasklet.content("config/html-status")</code></td>
+<td><code>_sd_get_content</code> RPC
+から要求時に呼ばれるコンテンツ生成関数を登録する．周期実行のコールバックではない．</td>
+</tr>
+</tbody>
+</table>
+<p>同じデコレータで複数の関数を登録できます．メイン処理のコールバックはそれぞれ
+asyncio タスクとして動きますが，Mesh
+通信やハートビートとイベントループを共有します．一つのループコールバックは処理完了を待ってから次回を実行し，周期を超過しても同じコールバックを重複起動しません．ブロッキング
+I/O や <code>time.sleep()</code>
+はイベントループ全体を止めるので，非同期 I/O を使い，待機が必要なら
+<code>await asyncio.sleep()</code> を使います．強制終了やクラッシュでは
+finalize の実行は保証されません．</p>
+<p>プロジェクト設定のタスクの <code>parameters</code> と CLI の
+<code>--parameters</code> JSON
+オプションは初期化パラメータを供給します．この辞書は，後から
+<code>/api/control</code> で渡す RPC
+引数とは別です．コンテンツ生成関数と公開した制御ノードも別の仕組みで，前者は要求時にドキュメントを生成し，後者はリモートの
+get/set 操作で現在値を扱います．</p>
 <h2 id="データオブジェクトモデル">データオブジェクトモデル</h2>
 <p>SlowPy は，SlowDash 互換のデータに変換できる Python
 オブジェクトを提供します．</p>
@@ -783,26 +1252,26 @@ API で使われます．</p>
 id="データオブジェクトの生成とデータ追加">データオブジェクトの生成とデータ追加</h3>
 <p>データオブジェクトは，トップレベルの <code>slowpy</code>
 パッケージから生成し，通常はタスクのループ内で逐次データを追加していきます．</p>
-<div class="sourceCode" id="cb23"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy <span class="im">as</span> slp</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>hist <span class="op">=</span> slp.Histogram(<span class="dv">100</span>, <span class="dv">0</span>, <span class="dv">10</span>)         <span class="co"># [0, 10] を 100 ビンに分割</span></span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>graph <span class="op">=</span> slp.Graph([<span class="st">&#39;channel&#39;</span>, <span class="st">&#39;value&#39;</span>])</span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="kw">not</span> ControlSystem.is_stop_requested():</span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    value <span class="op">=</span> device.read(...)</span>
-<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    hist.fill(value)</span>
-<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    graph.fill(channel, value)</span></code></pre></div>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy <span class="im">as</span> slp</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>hist <span class="op">=</span> slp.Histogram(<span class="dv">100</span>, <span class="dv">0</span>, <span class="dv">10</span>)         <span class="co"># [0, 10] を 100 ビンに分割</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>graph <span class="op">=</span> slp.Graph([<span class="st">&#39;channel&#39;</span>, <span class="st">&#39;value&#39;</span>])</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="kw">not</span> ControlSystem.is_stop_requested():</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>    value <span class="op">=</span> device.read(...)</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>    hist.fill(value)</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>    graph.fill(channel, value)</span></code></pre></div>
 <p>各オブジェクトは <code>to_json()</code>
 を実装しており，これにより同じオブジェクトを現在値データとして配信したり（<code>ControlSystem.stream()</code>
 / <code>aio_publish()</code>
 を通じて），データストアに書き込んだりできます．<code>slp.RateTrend</code>
 のようなトレンド用のヘルパーは，移動窓に値を蓄積し，保存に適した
 <code>TimeSeries</code> を生成します．</p>
-<div class="sourceCode" id="cb24"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>rate_trend <span class="op">=</span> slp.RateTrend(length<span class="op">=</span><span class="dv">300</span>, tick<span class="op">=</span><span class="dv">10</span>)</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>rate_trend.fill(time.time())</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>datastore.append(rate_trend.time_series(<span class="st">&#39;rate&#39;</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>rate_trend <span class="op">=</span> slp.RateTrend(length<span class="op">=</span><span class="dv">300</span>, tick<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>rate_trend.fill(time.time())</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>datastore.append(rate_trend.time_series(<span class="st">&#39;rate&#39;</span>))</span></code></pre></div>
 <h2 id="制御ノード">制御ノード</h2>
 <p><code>slowpy/control/node.py</code> の <code>ControlNode</code>
 は，読み書き可能な制御エンドポイントの基底となる抽象です．</p>
@@ -831,14 +1300,14 @@ get()/set() の利用</h3>
 <p>起点となるのは，通常は <code>ControlSystem</code>
 のインスタンス（または共有インスタンスの
 <code>control_system</code>）です．</p>
-<div class="sourceCode" id="cb26"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ControlSystem</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>ctrl <span class="op">=</span> ControlSystem()</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ノードチェーンを構築する: Ethernet 接続 -&gt; SCPI -&gt; 特定のコマンド</span></span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(host<span class="op">=</span><span class="st">&#39;192.168.1.43&#39;</span>, port<span class="op">=</span><span class="dv">5025</span>)</span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>Vout <span class="op">=</span> device.scpi(append_opc<span class="op">=</span><span class="va">True</span>).command(<span class="st">&#39;VOLT&#39;</span>)</span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>V    <span class="op">=</span> device.scpi().command(<span class="st">&#39;MEAS:VOLT:DC&#39;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ControlSystem</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>ctrl <span class="op">=</span> ControlSystem()</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ノードチェーンを構築する: Ethernet 接続 -&gt; SCPI -&gt; 特定のコマンド</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(host<span class="op">=</span><span class="st">&#39;192.168.1.43&#39;</span>, port<span class="op">=</span><span class="dv">5025</span>)</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>Vout <span class="op">=</span> device.scpi(append_opc<span class="op">=</span><span class="va">True</span>).command(<span class="st">&#39;VOLT&#39;</span>)</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>V    <span class="op">=</span> device.scpi().command(<span class="st">&#39;MEAS:VOLT:DC&#39;</span>)</span></code></pre></div>
 <p>チェーン中の各呼び出しが，1 つの枝を追加します．</p>
 <ul>
 <li><code>ctrl.ethernet(...)</code> は TCP
@@ -849,9 +1318,9 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb26-1"><a h
 </ul>
 <p>末端のノードを構築したら，<code>set()</code>
 で書き込み，<code>get()</code> で読み取ります．</p>
-<div class="sourceCode" id="cb27"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>Vout.<span class="bu">set</span>(<span class="dv">10</span>)        <span class="co"># SCPI &quot;VOLT 10;*OPC?&quot; を送る</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>value <span class="op">=</span> V.get()     <span class="co"># SCPI &quot;MEAS:VOLT:DC?&quot; を送り，応答を返す</span></span></code></pre></div>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>Vout.<span class="bu">set</span>(<span class="dv">10</span>)        <span class="co"># SCPI &quot;VOLT 10;*OPC?&quot; を送る</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>value <span class="op">=</span> V.get()     <span class="co"># SCPI &quot;MEAS:VOLT:DC?&quot; を送り，応答を返す</span></span></code></pre></div>
 <p><code>ControlNode</code>
 には，次のショートカットも定義されています．</p>
 <ul>
@@ -970,23 +1439,23 @@ close()</code></pre>
 <p>ストアは，クラスから直接生成するか，<code>store/factory.py</code> の
 <code>create_datastore_from_url()</code> を使って URL
 から生成します．</p>
-<div class="sourceCode" id="cb33"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_PostgreSQL</span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_PostgreSQL(</span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;postgresql://postgres:postgres@localhost:5432/SlowTestData&#39;</span>,</span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    table<span class="op">=</span><span class="st">&#39;SlowData&#39;</span></span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
-<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>    datastore.append(value, tag<span class="op">=</span><span class="st">&#39;voltmeter&#39;</span>)      <span class="co"># チャンネルタグを付けた単一の値</span></span>
-<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>    datastore.append({<span class="st">&#39;ch00&#39;</span>: v0, <span class="st">&#39;ch01&#39;</span>: v1})    <span class="co"># チャンネル/値のペアの辞書</span></span></code></pre></div>
+<div class="sourceCode" id="cb39"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_PostgreSQL</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_PostgreSQL(</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;postgresql://postgres:postgres@localhost:5432/SlowTestData&#39;</span>,</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>    table<span class="op">=</span><span class="st">&#39;SlowData&#39;</span></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>    datastore.append(value, tag<span class="op">=</span><span class="st">&#39;voltmeter&#39;</span>)      <span class="co"># チャンネルタグを付けた単一の値</span></span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>    datastore.append({<span class="st">&#39;ch00&#39;</span>: v0, <span class="st">&#39;ch01&#39;</span>: v1})    <span class="co"># チャンネル/値のペアの辞書</span></span></code></pre></div>
 <p><code>append()</code>
 は新しい時系列レコードを追加し，<code>update()</code>
 は直前の値を上書きして最新の値だけを残します．この違いは，ヒストグラムのようなデータ要素オブジェクトを扱う際に意味を持ちます．</p>
-<div class="sourceCode" id="cb34"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>datastore.append(hist, tag<span class="op">=</span><span class="st">&#39;spectrum&#39;</span>)   <span class="co"># ヒストグラムの時系列（時刻ごとに 1 つ）</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>datastore.update(hist, tag<span class="op">=</span><span class="st">&#39;spectrum&#39;</span>)   <span class="co"># 最新のヒストグラムだけを残す</span></span></code></pre></div>
+<div class="sourceCode" id="cb40"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>datastore.append(hist, tag<span class="op">=</span><span class="st">&#39;spectrum&#39;</span>)   <span class="co"># ヒストグラムの時系列（時刻ごとに 1 つ）</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>datastore.update(hist, tag<span class="op">=</span><span class="st">&#39;spectrum&#39;</span>)   <span class="co"># 最新のヒストグラムだけを残す</span></span></code></pre></div>
 <p>SQL 系のストアでは，デフォルトで UNIX
 タイムスタンプを用いた「ロングフォーマット」が使われます．異なるテーブル構成が必要な場合は，ユーザー定義の
 <code>TableFormat</code> でスキーマや INSERT 文を上書きできます．</p>
@@ -1010,11 +1479,10 @@ id="コンポーネントの順序には意味がある">コンポーネント�
 における組み込み順序は実行時の挙動の一部です．</p>
 <h3 id="内部-api-呼び出しも同じルーターを使う">内部 API
 呼び出しも同じルーターを使う</h3>
-<p><code>App.request()</code>，<code>request_config()</code>，<code>request_channels()</code>，<code>request_data()</code>，<code>request_emit()</code>
-は <code>self.slowlette(...)</code>
-を直接呼び出します．このため，サーバー側のプロデューサ/コンシューマも，外部の
-HTTP
-クライアントと同じルーティングおよびレスポンスマージのモデルを使います．</p>
+<p><code>App.request()</code>，<code>request_config()</code>，<code>request_channels()</code>，<code>request_data()</code>
+は <code>self.slowlette(...)</code> を直接呼び出し，HTTP
+リクエストと同じルーティングとレスポンスマージを使います．Mesh の
+pub/sub と RPC は，これとは別の通信経路です．</p>
 <h1 id="主要フローのまとめ">主要フローのまとめ</h1>
 <h3 id="起動">起動</h3>
 <pre class="text"><code>slowdash.py
@@ -1022,7 +1490,8 @@ HTTP
   -&gt; Project
   -&gt; sys.path / cwd setup
   -&gt; include components
-  -&gt; ASGI/WSGI/CGI/CLI dispatch</code></pre>
+  -&gt; ASGI/WSGI/CGI/CLI dispatch
+  -&gt; post_startup: Mesh connections, task discovery / auto-start</code></pre>
 <h3 id="api-リクエスト">API リクエスト</h3>
 <pre class="text"><code>HTTP request
   -&gt; Slowlette server adapter
@@ -1035,17 +1504,17 @@ HTTP
 <h3 id="データ読み取り">データ読み取り</h3>
 <pre class="text"><code>/api/data/{channels}
   -&gt; data source plugins
-  -&gt; optional user/task/current-data additions
+  -&gt; user hooks / remote task nodes / WebMesh cache / registry values
   -&gt; merged JSON data</code></pre>
 <h3 id="設定の読み取り">設定の読み取り</h3>
 <pre class="text"><code>/api/config
   -&gt; each component public_config()
   -&gt; deep-merged JSON config</code></pre>
 <h3 id="現在値データ">現在値データ</h3>
-<pre class="text"><code>/api/emit/current_data
-  -&gt; /api/consume/current_data
-  -&gt; cache update and variable update hooks
-  -&gt; websocket forwarding where applicable</code></pre>
+<pre class="text"><code>Mesh.aio_publish() / POST /api/webmesh/publish/{topic}
+  -&gt; Mesh transport / broker
+  -&gt; WebMesh cache and browser SSE
+  -&gt; registry pubsub cache</code></pre>
 <h3 id="プラグインの読み込み">プラグインの読み込み</h3>
 <pre class="text"><code>project config
   -&gt; PluginComponent
@@ -1055,25 +1524,31 @@ HTTP
   -&gt; Slowlette include</code></pre>
 <h1 id="開発上の実務的な注意">開発上の実務的な注意</h1>
 <ul>
-<li>新しい API コンポーネントを追加する場合は，<code>Component</code>
-をサブクラス化し，<code>slowdash.py</code> から組み込む．</li>
-<li>新しいデータソースを追加する場合は，新しい
+<li><p>新しい API コンポーネントを追加する場合は，<code>Component</code>
+をサブクラス化し，<code>slowdash.py</code> から組み込む．</p></li>
+<li><p>新しいデータソースを追加する場合は，新しい
 <code>app/plugin/datasource_*.py</code> ファイルで
-<code>DataSource</code> をサブクラス化する．</li>
-<li>新しいエクスポータを追加する場合は，<code>export_*.py</code>
-プラグインを追加する．</li>
-<li>他のコンポーネントと集約させたいエンドポイントでは，辞書やリストのコンテンツを返してレスポンスのマージを利用する．</li>
-<li>後続のコンポーネントの出力を加工したいエンドポイントでは，独自の
+<code>DataSource</code> をサブクラス化する．</p></li>
+<li><p>新しいエクスポータを追加する場合は，<code>export_*.py</code>
+プラグインを追加する．</p></li>
+<li><p>他のコンポーネントと集約させたいエンドポイントでは，辞書やリストのコンテンツを返してレスポンスのマージを利用する．</p></li>
+<li><p>後続のコンポーネントの出力を加工したいエンドポイントでは，独自の
 <code>slowlette.Response</code>
 サブクラスを返し，<code>merge_response()</code>
-をオーバーライドする．</li>
-<li><code>public_config()</code>
+をオーバーライドする．</p></li>
+<li><p><code>public_config()</code>
 には秘密情報を入れない．<code>/api/config</code>
-はクライアントに公開される．</li>
-<li>コンポーネントの組み込み順序の変更には注意する．マージの挙動が変わる可能性がある．</li>
-<li>サーバー側のコードを外部 API
+はクライアントに公開される．</p></li>
+<li><p>コンポーネントの組み込み順序の変更には注意する．マージの挙動が変わる可能性がある．</p></li>
+<li><p>サーバー側のコードを外部 API
 クライアントと同じルートロジックで動かしたい場合は，内部の
-<code>App.request*()</code> ヘルパーを使う．</li>
+<code>App.request*()</code> ヘルパーを使う．</p></li>
+<li><p>Mesh タスクを追加する場合は，<code>Tasklet</code> と
+<code>mesh.export()</code> を使い，<code>slowdash-task</code>
+または独立プロセスから実行する．</p></li>
+<li><p>ブラウザ配信は WebMesh の SSE，Mesh トランスポートは SlowMQ
+などのブローカー，共有状態は Mesh
+レジストリという役割分担を保つ．</p></li>
 </ul>
 
 

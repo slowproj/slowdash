@@ -134,6 +134,7 @@ Projects</a></li>
 <li><a href="#slowtask-2" id="toc-slowtask-2">SlowTask</a></li>
 <li><a href="#registry-key-value-store-1"
 id="toc-registry-key-value-store-1">Registry (Key-Value Store)</a></li>
+<li><a href="#log" id="toc-log">Log</a></li>
 <li><a href="#webmesh" id="toc-webmesh">WebMesh</a></li>
 </ul></li>
 <li><a href="#rpc-services" id="toc-rpc-services">RPC Services</a>
@@ -161,7 +162,7 @@ id="toc-pubsub-topic-structure">PubSub Topic Structure</a>
 <li><a href="#user-defined-namespace-2"
 id="toc-user-defined-namespace-2">User-Defined Namespace</a></li>
 <li><a href="#data" id="toc-data">data</a></li>
-<li><a href="#log" id="toc-log">log</a></li>
+<li><a href="#log-1" id="toc-log-1">log</a></li>
 <li><a href="#form" id="toc-form">form</a></li>
 <li><a href="#sd.task" id="toc-sd.task">sd.task</a></li>
 <li><a href="#sd.rpc" id="toc-sd.rpc">sd.rpc</a></li>
@@ -924,7 +925,7 @@ literally as shown in the topic names below, and replace the
 <code>{channel}</code> portion as appropriate.</p>
 <ul>
 <li><code>data.*.{channel}</code></li>
-<li><code>form.{form_name}</code></li>
+<li><code>form.{form_name}.&gt;</code></li>
 <li><code>sd.task.life_event.&gt;</code></li>
 <li><code>sd.task.heartbeat.&gt;</code></li>
 <li><code>sd.task.stdout.&gt;</code></li>
@@ -1085,9 +1086,10 @@ repeatedly at the specified interval in seconds</li>
 <p>The <code>@tasklet.schedule(time)</code> decorator repeatedly calls a
 user function at specified times.</p>
 <div class="sourceCode" id="cb33"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.schedule</span>(<span class="st">&quot;08:00&quot;</span>):</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.schedule</span>(<span class="st">&quot;08:00&quot;</span>)</span>
 <span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> do_this_every_morning():</span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>   <span class="co"># Run every morning at 08:00</span></span></code></pre></div>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>   <span class="co"># Run every morning at 08:00</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>   <span class="cf">pass</span></span></code></pre></div>
 <p>The <code>time</code> argument is specified in <code>HH:MM</code>
 format. Wildcard <code>*</code> may be used for <code>HH</code> and
 <code>MM</code>, and multiple time settings can be listed separated by
@@ -1114,42 +1116,43 @@ local time is often UTC.</p>
 <p>The <code>@tasklet.loop(interval)</code> decorator repeatedly calls a
 user function at the specified interval.</p>
 <div class="sourceCode" id="cb34"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>):</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> my_work():   <span class="co"># This function is called every 1 second (the value of interval)</span></span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">#... do my work</span></span></code></pre></div>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">#... do my work</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">pass</span></span></code></pre></div>
 <p>In addition, if <code>ticks</code> is specified for
 <code>@tasklet.loop</code> and a <code>tick</code> argument is added to
 the user function, the value of <code>tick</code> becomes True once
 every number of calls specified by <code>ticks</code>.</p>
 <div class="sourceCode" id="cb35"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>, ticks<span class="op">=</span><span class="dv">10</span>):</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>, ticks<span class="op">=</span><span class="dv">10</span>)</span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> my_work(tick):</span>
 <span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Read data every second and send all data to the stream</span></span>
 <span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> <span class="cf">await</span> HV.ch(<span class="dv">0</span>).aio_get()</span>
 <span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>    packet <span class="op">=</span> DataPacket(data, tag<span class="op">=</span><span class="st">&#39;HV.ch00&#39;</span>)</span>
 <span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.stream.HV.ch00&#39;</span>, packet)</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.stream&#39;</span>, packet)</span>
 <span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Record in the database once every 10 calls</span></span>
 <span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tick:</span>
-<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.store.HV.ch00&#39;</span>, packet)</span></code></pre></div>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.store&#39;</span>, packet)</span></code></pre></div>
 <p>Multiple tick intervals can also be specified.</p>
 <div class="sourceCode" id="cb36"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>, ticks<span class="op">=</span>{<span class="st">&quot;transient_store&quot;</span>:<span class="dv">10</span>, <span class="st">&quot;store&quot;</span>:<span class="dv">60</span>}):</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>, ticks<span class="op">=</span>{<span class="st">&quot;transient_store&quot;</span>:<span class="dv">10</span>, <span class="st">&quot;store&quot;</span>:<span class="dv">60</span>})</span>
 <span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> my_work(tick):</span>
 <span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Read data every second and send all data to the stream</span></span>
 <span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> <span class="cf">await</span> HV.ch(<span class="dv">0</span>).aio_get()</span>
 <span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>    packet <span class="op">=</span> DataPacket(data, tag<span class="op">=</span><span class="st">&#39;HV.ch00&#39;</span>)</span>
 <span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.stream.HV.ch00&#39;</span>, packet)</span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.stream&#39;</span>, packet)</span>
 <span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Record in the temporary database (short-term, high-density) once every 10 calls</span></span>
 <span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tick.transient_store:</span>
-<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.transient_store.HV.ch00&#39;</span>, packet)</span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.transient_store&#39;</span>, packet)</span>
 <span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>        </span>
 <span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Record in the persistent database once every 60 calls</span></span>
 <span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tick.store:</span>
-<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.store.HV.ch00&#39;</span>, packet)</span></code></pre></div>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.store&#39;</span>, packet)</span></code></pre></div>
 <p>Again, do not use <code>time.sleep()</code> inside user functions.
 (<code>await control_system.aio_sleep()</code> is allowed.) Using
 <code>@tasklet.loop()</code> should eliminate the need for most
@@ -1552,9 +1555,10 @@ pairs of the other <code>&lt;input&gt;</code> elements.</li>
 <p>In addition, when a <code>name</code> is specified on the
 <code>&lt;form&gt;</code> element, a change in an
 <code>&lt;input&gt;</code> field causes the changed value to be
-published to the <code>form.{form_name}</code> topic. At the same time,
-the page subscribes to this topic so that when the same form is changed
-in another browser, the change is immediately reflected.</p>
+published to the <code>form.{form_name}.{element_name}</code> topic. At
+the same time, the page subscribes to <code>form.{form_name}.&gt;</code>
+so that when the same form is changed in another browser, the change is
+immediately reflected.</p>
 <h4 id="slowplot-layout-slowplot-control.json">SlowPlot Layout
 (<code>slowplot-control.json</code>)</h4>
 <p>This layout arranges the following elements:</p>
@@ -1741,8 +1745,8 @@ files under the SlowDash Project <code>config</code> directory.</p>
 <code>api/registry/value/{key}</code></h4>
 <p>Returns the value held in the Registry (<code>with_meta=true</code>
 returns a JSON document including metadata).</p>
-<h4 id="get-apiregistrykeysprefixprefixlimitlimit">GET
-<code>api/registry/keys?prefix={prefix}&amp;limit={limit}</code></h4>
+<h4 id="get-apiregistrykeyspathlimitlimit">GET
+<code>api/registry/keys/{path}?limit={limit}</code></h4>
 <p>Returns a list of keys held in the Registry.</p>
 <h3 id="general-data-interface-1">General Data Interface</h3>
 <h4 id="get-apidatachannelslengthlengthtoto-1">GET
@@ -1754,6 +1758,14 @@ format as data from the database).</p>
 <li>TODO: Apply when the Registry metadata interval [updated, now()]
 overlaps the data query period</li>
 </ul>
+<h2 id="log">Log</h2>
+<p>Mesh log messages are held in memory by
+<code>sd_mesh_registry.py</code>.</p>
+<h4 id="get-apilog">GET <code>api/log</code></h4>
+<p>Returns recent retained logs as <code>columns</code> and
+<code>table</code>. The configured retention limit is 1000 entries;
+older entries are discarded (the current eviction order permits up to
+1001 entries). Logs do not survive a server restart.</p>
 <h2 id="webmesh">WebMesh</h2>
 <p>WebMesh is a bridge that makes SlowMesh PubSub available over HTTP.
 It is implemented by the <code>sd_webmesh.py</code> component through
@@ -1764,19 +1776,21 @@ id="eventsourceeventwebmeshattach">EventSource(<code>event/webmesh/attach</code>
 <p>Creates an SSE connection channel.</p>
 <ul>
 <li><code>register</code> event: the server distributes a ClientID</li>
-<li><code>data</code> event: messages on the <code>data.*.&gt;</code>
-topic</li>
-<li><code>stdout</code> event: messages on the
-<code>sd.task.stdout.&gt;</code> topic</li>
+<li><code>message</code> event: subscribed messages, including data and
+standard output. The JSON body contains <code>subscribed_topic</code>,
+<code>headers</code>, and <code>body</code>.</li>
 </ul>
-<h4 id="post-apiwebmeshsubscribedataclient_idclient_id">POST
-<code>api/webmesh/subscribe/data?client_id={client_id}</code></h4>
-<p>Specifies a channel to Subscribe to for data streaming. It may be
-called multiple times. Specify <code>channel</code> as JSON in the POST
-body.</p>
-<h4 id="post-apiwebmeshunsubscribe">POST
-<code>api/webmesh/unsubscribe</code></h4>
-<p>Cancels all subscriptions.</p>
+<h4 id="post-apiwebmeshsubscribe">POST
+<code>api/webmesh/subscribe</code></h4>
+<p>Specifies a topic to subscribe to. It may be called multiple times.
+Specify <code>client_id</code> and <code>topic</code> in the JSON POST
+body, for example
+<code>{"client_id":"...","topic":"data.*.temperature"}</code>. For
+forms, subscribe to <code>form.{form_name}.&gt;</code>.</p>
+<h4 id="post-apiwebmeshunsubscribeclient_idclient_id">POST
+<code>api/webmesh/unsubscribe?client_id={client_id}</code></h4>
+<p>Cancels all subscriptions for the specified
+<code>client_id</code>.</p>
 <h4 id="post-apiwebmeshpublishtopic">POST
 <code>api/webmesh/publish/{topic}</code></h4>
 <p>Publishes to SlowMesh.</p>
@@ -1814,16 +1828,15 @@ compatibility)</li>
 <li>Module name: <code>sd_mesh_registry</code></li>
 <li>Exported functions:
 <ul>
-<li>Write:
-<code>async def aio_set(self, key, value, *, cas_revision:int|None=None) -&gt; int|None</code></li>
+<li>Write: <code>set(key, value, cas_revision=None)</code></li>
 <li>Read:
-<code>async def aio_get(self, key:str, default:Any=None, *, with_meta:bool=False) -&gt; Any</code></li>
-<li>List keys:
-<code>async def aio_keys(self, prefix:str='', limit:int|None=1000)-&gt;list[str]</code></li>
-<li>Delete:
-<code>async def aio_delete(self, key:str, *, cas_revision:int|None=None) -&gt; bool</code></li>
+<code>get(key='', default=None, *, with_meta=False)</code></li>
+<li>List keys: <code>keys(prefix='')</code></li>
+<li>Delete: <code>delete(key, cas_revision=None)</code></li>
 </ul></li>
 </ul>
+<p>The client <code>registry.aio_*()</code> methods wrap these exported
+names.</p>
 <h2 id="task-rpc">Task RPC</h2>
 <ul>
 <li>Module name: <code>{task_name}</code> (by default, the script
@@ -1884,7 +1897,7 @@ id="data.store.channel_name-data.stream.channel_name">data.store.{channel_name}
 </ul>
 <h5 id="format">Format</h5>
 <p>SlowDash standard data format</p>
-<h2 id="log">log</h2>
+<h2 id="log-1">log</h2>
 <h3 id="log.logger_name.level_name">log.{logger_name}.{level_name}</h3>
 <h5 id="json-schema">JSON Schema</h5>
 <p>Body:</p>
@@ -1961,7 +1974,7 @@ Heartbeat is considered absent.</p>
 <li>Timing:
 <ul>
 <li>At the specified interval (<code>Tasklet._heartbeat_interval</code>,
-10 seconds)</li>
+5 seconds by default)</li>
 <li>Sent from Tasklet’s main loop (not from a coroutine or thread; it
 always stops together with the main loop. It also stops if the user
 calls <code>time.sleep()</code>.)</li>

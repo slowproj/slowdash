@@ -920,7 +920,7 @@ class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb27
 の部分は置き換えてください．</p>
 <ul>
 <li><code>data.*.{channel}</code></li>
-<li><code>form.{form_name}</code></li>
+<li><code>form.{form_name}.&gt;</code></li>
 <li><code>sd.task.life_event.&gt;</code></li>
 <li><code>sd.task.heartbeat.&gt;</code></li>
 <li><code>sd.task.stdout.&gt;</code></li>
@@ -1089,9 +1089,10 @@ SlowTask 中の関数を呼び出すことができます．
 <p><code>@tasklet.schedule(time)</code>
 デコレータにより，ユーザー関数を指定時刻に繰り返し呼び出すようにできます．</p>
 <div class="sourceCode" id="cb33"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.schedule</span>(<span class="st">&quot;08:00&quot;</span>):</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.schedule</span>(<span class="st">&quot;08:00&quot;</span>)</span>
 <span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> do_this_every_morning():</span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>   <span class="co"># 毎朝８時に実行</span></span></code></pre></div>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>   <span class="co"># 毎朝８時に実行</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>   <span class="cf">pass</span></span></code></pre></div>
 <p>引数の <code>time</code> は <code>HH:MM</code>
 形式で指定します．<code>HH</code> および <code>MM</code>
 には，ワイルドカード <code>*</code> を指定でき，また，複数の時刻設定を
@@ -1116,42 +1117,43 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb33-1"><a h
 <p><code>@tasklet.loop(interval)</code>
 デコレータにより，ユーザー関数を指定周期で繰り返し呼び出すようにできます．</p>
 <div class="sourceCode" id="cb34"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>):</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> my_work():   <span class="co"># この関数は１秒（interval の値）ごとに呼ばれる</span></span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">#... do my work</span></span></code></pre></div>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">#... do my work</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">pass</span></span></code></pre></div>
 <p>さらに，<code>@tasklet.loop</code> に <code>ticks</code>
 を指定し，ユーザー関数に <code>tick</code>
 引数を追加すると，<code>ticks</code> に指定した回数ごとに
 <code>tick</code> の値が True になります．</p>
 <div class="sourceCode" id="cb35"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>, ticks<span class="op">=</span><span class="dv">10</span>):</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>, ticks<span class="op">=</span><span class="dv">10</span>)</span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> my_work(tick):</span>
 <span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># １秒毎にデータを読み，全てのデータをストリームに流す</span></span>
 <span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> <span class="cf">await</span> HV.ch(<span class="dv">0</span>).aio_get()</span>
 <span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>    packet <span class="op">=</span> DataPacket(data, tag<span class="op">=</span><span class="st">&#39;HV.ch00&#39;</span>)</span>
 <span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.stream.HV.ch00&#39;</span>, packet)</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.stream&#39;</span>, packet)</span>
 <span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># データベースへの記録は１０回に１回</span></span>
 <span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tick:</span>
-<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.store.HV.ch00&#39;</span>, packet)</span></code></pre></div>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.store&#39;</span>, packet)</span></code></pre></div>
 <p>複数の tick 周期を指定することもできます．</p>
 <div class="sourceCode" id="cb36"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>, ticks<span class="op">=</span>{<span class="st">&quot;transient_store&quot;</span>:<span class="dv">10</span>, <span class="st">&quot;store&quot;</span>:<span class="dv">60</span>}):</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>, ticks<span class="op">=</span>{<span class="st">&quot;transient_store&quot;</span>:<span class="dv">10</span>, <span class="st">&quot;store&quot;</span>:<span class="dv">60</span>})</span>
 <span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> my_work(tick):</span>
 <span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># １秒毎にデータを読み，全てのデータをストリームに流す</span></span>
 <span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> <span class="cf">await</span> HV.ch(<span class="dv">0</span>).aio_get()</span>
 <span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>    packet <span class="op">=</span> DataPacket(data, tag<span class="op">=</span><span class="st">&#39;HV.ch00&#39;</span>)</span>
 <span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.stream.HV.ch00&#39;</span>, packet)</span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.stream&#39;</span>, packet)</span>
 <span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 一時データベース（短期間高密度）への記録は１０回に１回</span></span>
 <span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tick.transient_store:</span>
-<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.transient_store.HV.ch00&#39;</span>, packet)</span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.transient_store&#39;</span>, packet)</span>
 <span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>        </span>
 <span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 永続データベースへの記録は６０回に１回</span></span>
 <span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tick.store:</span>
-<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.store.HV.ch00&#39;</span>, packet)</span></code></pre></div>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.store&#39;</span>, packet)</span></code></pre></div>
 <p>繰り返しますが，ユーザー関数の中で <code>time.sleep()</code>
 は使わないでください．(<code>await control_system.aio_sleep()</code>
 は可）． <code>@tasklet.loop()</code> を使うことにより，ほとんどの sleep
@@ -1541,8 +1543,10 @@ class="sourceCode html"><code class="sourceCode html"><span id="cb49-1"><a href=
 </ul>
 <p>また，<code>&lt;form&gt;</code> 要素に <code>name</code>
 を指定することにより，その中の <code>&lt;input&gt;</code> の
-<code>change</code> イベントに対して，<code>form.{form_name}</code>
-トピックに変更後の値が publish されるようになり，同時に，このトピックを
+<code>change</code>
+イベントに対して，<code>form.{form_name}.{element_name}</code>
+トピックに変更後の値が publish
+されるようになり，同時に，<code>form.{form_name}.&gt;</code> を
 subscribe
 して，他のブラウザの同じフォームが値を変更したときにそれが即座に反映されるようになっています．</p>
 <h4 id="slowplot-レイアウト-slowplot-control.json">SlowPlot レイアウト
@@ -1728,8 +1732,8 @@ object が publish される．</li>
 <code>api/registry/value/{key}</code></h4>
 <p>Registry に保持されている値を返す（<code>with_meta=true</code>
 でメタデータを含む JSON ドキュメント）</p>
-<h4 id="get-apiregistrykeysprefixprefixlimitlimit">GET
-<code>api/registry/keys?prefix={prefix}&amp;limit={limit}</code></h4>
+<h4 id="get-apiregistrykeyspathlimitlimit">GET
+<code>api/registry/keys/{path}?limit={limit}</code></h4>
 <p>Registry に保持されているキーのリストを返す</p>
 <h3 id="一般データインターフェース-1">一般データインターフェース</h3>
 <h4 id="get-apidatachannelslengthlengthtoto-1">GET
@@ -1746,7 +1750,9 @@ object が publish される．</li>
 されたログメッセージは（現時点の仮置きとして）<code>sd_mesh_registry.py</code>
 コンポーネントに保持されています．</p>
 <h4 id="get-apilog">GET <code>api/log</code></h4>
-<p>サーバーの起動以降に publish されたすべてのログメッセージを返す</p>
+<p>メモリに保持している最近のログを <code>columns</code> と
+<code>table</code>
+の形式で返す．保持上限の設定値は1000件で，古いログは破棄される（現在の削除判定順では最大1001件）．サーバー再起動後には保持されない．</p>
 <h2 id="webmesh">WebMesh</h2>
 <p>WebMesh は，SlowMesh の PubSub を HTTP
 経由で行えるようにするブリッジです．Slowlette を経由して
@@ -1757,19 +1763,20 @@ id="eventsourceeventwebmeshattach">EventSource(<code>event/webmesh/attach</code>
 <p>SSE 接続チャンネルを作成する．</p>
 <ul>
 <li><code>register</code> イベント： サーバーが ClientID を配布</li>
-<li><code>data</code> イベント： <code>data.*.&gt;</code>
-トピックのメッセージ</li>
-<li><code>stdout</code> イベント： <code>sd.task.stdout.&gt;</code>
-トピックのメッセージ</li>
+<li><code>message</code> イベント：
+データ・標準出力などの購読メッセージ．JSON 本文に
+<code>subscribed_topic</code>，<code>headers</code>，<code>body</code>
+を含む．</li>
 </ul>
-<h4 id="post-apiwebmeshsubscribedataclient_idclient_id">POST
-<code>api/webmesh/subscribe/data?client_id={client_id}</code></h4>
-<p>データストリーミングのために Subscribe
-するチャンネルを指定する．複数回呼び出しが可能． POST する body に JSON
-で <code>channel</code> を指定．</p>
-<h4 id="post-apiwebmeshunsubscribe">POST
-<code>api/webmesh/unsubscribe</code></h4>
-<p>すべての subscribe を取り消す</p>
+<h4 id="post-apiwebmeshsubscribe">POST
+<code>api/webmesh/subscribe</code></h4>
+<p>購読するトピックを指定する．複数回呼び出しが可能． POST の JSON
+本文に <code>client_id</code> と <code>topic</code>
+を指定する（例：<code>{"client_id":"...","topic":"data.*.temperature"}</code>）．フォームの購読は
+<code>form.{form_name}.&gt;</code> を指定する．</p>
+<h4 id="post-apiwebmeshunsubscribeclient_idclient_id">POST
+<code>api/webmesh/unsubscribe?client_id={client_id}</code></h4>
+<p>指定した <code>client_id</code> のすべての subscribe を取り消す</p>
 <h4 id="post-apiwebmeshpublishtopic">POST
 <code>api/webmesh/publish/{topic}</code></h4>
 <p>SlowMesh へ publish する．</p>
@@ -1805,16 +1812,18 @@ No-Tasklet Task の予約済みコールバック（後方互換）</li>
 <li>モジュール名： <code>sd_mesh_registry</code></li>
 <li>エクスポート関数：
 <ul>
-<li>書き込み：
-<code>async def aio_set(self, key, value, *, cas_revision:int|None=None) -&gt; int|None</code></li>
+<li>書き込み： <code>set(key, value, cas_revision=None)</code></li>
 <li>読み出し：
-<code>async def aio_get(self, key:str, default:Any=None, *, with_meta:bool=False) -&gt; Any</code></li>
-<li>キー一覧：
-<code>async def aio_keys(self, prefix:str='', limit:int|None=1000)-&gt;list[str]</code></li>
-<li>削除：
-<code>async def aio_delete(self, key:str, *, cas_revision:int|None=None) -&gt; bool</code></li>
+<code>get(key='', default=None, *, with_meta=False)</code></li>
+<li>キー一覧： <code>keys(prefix='')</code></li>
+<li>削除： <code>delete(key, cas_revision=None)</code></li>
 </ul></li>
 </ul>
+<p>クライアントの <code>registry.aio_*()</code>
+は，これらの公開名を呼び出すラッパーです．現在の RPC <code>keys</code>
+は <code>limit</code> を受け取りませんが，クライアントの
+<code>aio_keys()</code> は <code>limit</code>
+を送るため，両者には引数の不整合があります．</p>
 <h2 id="task-rpc">Task RPC</h2>
 <ul>
 <li>モジュール名： <code>{task_name}</code>
@@ -1960,7 +1969,7 @@ heartbeat-interval)．Expire が現在時刻よりも古ければ，Heartbeat
 <li>Receiver(s): sd_task (SlowDash サーバー)，モニタサービス</li>
 <li>Timing:
 <ul>
-<li>指定時間間隔（<code>Tasklet._heartbeat_interval</code>，１０秒）</li>
+<li>指定時間間隔（<code>Tasklet._heartbeat_interval</code>，既定値は５秒）</li>
 <li>Tasklet
 のメインループから送出（コルーチンやスレッドではない；必ずメインと一緒に停止する．ユーザーが
 <code>time.sleep()</code> しても止まる．）</li>
