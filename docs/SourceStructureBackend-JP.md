@@ -20,18 +20,21 @@ Slowlette
 SlowDash サーバーコンポーネント
     - プロジェクト/設定の処理
     - データソース API
-    - ユーザー/タスクモジュール API
+    - ユーザーモジュール API と Mesh タスクのプロキシ
     - エクスポート API
     - ユーザー HTML/コンテンツ API
-    - リアルタイム/現在値データの補助機能
+    - SlowMQ，WebMesh（SSE），Mesh レジストリ
     |
     v
 プラグインとライブラリ
     - app/plugin のデータソースとエクスポータ
     - slowpy のデータオブジェクト，制御ノード，ストア，クライアントヘルパー
+    - slowpy.mesh の pub/sub，RPC，Tasklet ランタイム
 ```
 
 中心となるサーバーオブジェクトは，`app/server/slowdash.py` の `App` です．`App` は `slowlette.App` を継承し，`Project` を生成して実行環境を整えたうえで，SlowDash の各コンポーネントを Slowlette のルーターに組み込みます．
+
+タスクは `slowdash-task` などの別プロセスで動作し，`slowpy.mesh` を通じてサーバーと通信します．`UserModuleComponent` によるプロセス内ユーザーモジュールの仕組みは引き続き存在します．
 
 # 主要ディレクトリ
 
@@ -51,11 +54,13 @@ SlowDash サーバーコンポーネント
 - `sd_blobstorage.py`: blob ストレージのヘルパー．
 - `sd_export.py`: エクスポートプラグインのコンポーネント．
 - `sd_usermodule.py`: プロセス内で動作するユーザーモジュールの拡張機構．
-- `sd_taskmodule.py`: 現行のプロセス内タスクモジュールシステム．
+- `sd_task.py`: タスクカタログ，プロセス制御，Mesh 上のタスク探索，RPC・変数・コンテンツのプロキシ．
+- `slowdash-task.py`: タスクスクリプトを読み込み，別プロセスで `Tasklet` を実行する CLI．
 - `sd_userhtml.py`: ユーザー提供の HTML/コンテンツの配信．
-- `sd_console.py`: コンソール/標準出力のキャプチャ．
+- `sd_console.py`: 従来のコンソールキャプチャ実装（現在の `App` には組み込まれない）．
 - `sd_misc_api.py`: その他の組み込み API エンドポイント．
-- `sd_mesh.py`: 現在値データのキャッシュと，選択したトピックへの websocket 接続．
+- `sd_webmesh.py`: Mesh トピックとブラウザの SSE 接続の橋渡し，配信データのキャッシュ．
+- `sd_mesh_registry.py`: Mesh の共有レジストリ，pub/sub の最新値キャッシュ，ログの収集．
 - `sd_slowmq.py`: 組み込みの websocket ベースの pub/sub コンポーネント．
 - `sd_version.py`: バージョン文字列．
 
@@ -104,11 +109,12 @@ Slowlette は，SlowDash が使用する小さなウェブフレームワーク�
 - `response.py`: レスポンスオブジェクト，コンテンツのマージ，ファイルレスポンス．
 - `model.py`: JSON リクエストボディのラッパー．
 - `websocket.py`: websocket のラッパーと，接続のクローズ処理．
+- `eventstream.py`: WebMesh が使う Server-Sent Events（SSE）のラッパーと切断処理．
 - `middleware.py`: ミドルウェアのサポート．
 
 ### `lib/slowpy`
 
-SlowPy は，データ型，制御の抽象化，ストレージへの書き込み機能，クライアントヘルパー，作図ヘルパーを提供します．
+SlowPy は，データ型，制御の抽象化，ストレージへの書き込み機能，クライアントヘルパー，作図ヘルパー，Mesh 通信とタスク実行を提供します．
 
 主な領域:
 
@@ -137,6 +143,18 @@ SlowPy は，データ型，制御の抽象化，ストレージへの書き込�
 
 公開されているトップレベルの `slowpy` パッケージは，`Histogram`，`Graph`，`Trend`，`Tree`，`Table`，`TimeSeries`，`SlowFetch`，`slowdashify`，`slowplot` など，よく使われるデータオブジェクトやヘルパーをエクスポートします．
 
+### `lib/slowpy/slowpy/mesh`
+
+サーバーと独立したタスクの両方が利用する通信・実行ライブラリです．
+
+- `__init__.py`: `Mesh`，`Tasklet`，`RetainerAutocide`，`MeshStdio`，`MeshLogHandler`，`DataPacket`，`FormPacket` を公開する．
+- `mesh.py`: pub/sub トランスポートの選択，トピック変換，RPC，関数・制御ノードのエクスポート，リモートノードとレジストリのクライアント．
+- `tasklet.py`: コールバック実行，タスク仕様の通知，ハートビート，終了処理，親プロセス消失時の終了補助．
+- `packet.py`: データおよびフォーム更新のトピック・ヘッダ・ボディへの変換．
+- `stdio.py`: 標準入出力を Mesh に接続する，スレッドを考慮したルーターとキュー．
+- `logger.py`: Python のログレコードを Mesh に配信するハンドラ．
+- `dash.py`: `Tasklet.dash` が利用する非同期 HTTP クライアント（設定，チャンネル，データの取得）．
+
 # アプリケーションの起動フロー
 
 ## コマンドラインまたはサーバーの起動
@@ -146,7 +164,7 @@ SlowPy は，データ型，制御の抽象化，ストレージへの書き込�
 通常の起動シーケンスは次のとおりです．
 
 1. コマンドラインオプションを解析する．
-2. `App(project_dir, project_file, is_cgi, is_command, is_async)` を生成する．
+2. `App(project_dir=..., project_file=..., port=..., is_cgi=..., is_command=..., is_async=...)` を生成する．
 3. `App` が `Project` を生成する．
 4. `Project` が SlowDash のシステムディレクトリとプロジェクトディレクトリを探す．
 5. `Project` が `SlowdashProject.yaml` を読み込む．設定によっては，環境変数から初期設定を生成する．
@@ -160,25 +178,25 @@ SlowPy は，データ型，制御の抽象化，ストレージへの書き込�
 `slowdash.py` は，コンポーネントを次の順序で組み込みます．
 
 ```text
-ConsoleComponent
-MeshComponent
+SlowMQComponent
+MeshRegistryComponent
 UserModuleComponent
-TaskModuleComponent
-ConfigComponent
+WebMeshComponent
 DataSourceComponent
 UserHtmlComponent
 ExportComponent
+ConfigComponent
 MiscApiComponent
-SlowMQComponent
+TaskComponent
 ```
 
-この順序は重要です．Slowlette は，一致した複数のハンドラからレスポンスを集めてマージします．そのため，先に組み込まれたコンポーネントがマージ用のラッパーを担い，後続のコンポーネントがマージ対象のコンテンツを提供できます．
+Slowlette は複数のハンドラの応答を後ろから前へマージするため，この順序には意味があります．
 
-コード中で示されている順序の意図は次のとおりです．
+- `WebMeshComponent` は `DataSourceComponent` より前にあり，他の応答に含まれないチャンネルをキャッシュから補います．
+- `UserModuleComponent` はデータソースより前ですが，`TaskComponent` は最後です．従来のプロセス内タスクを前提にした順序ではありません．
+- `ConsoleComponent` は組み込まれません．タスクの標準入出力とログには `MeshStdio` と `MeshLogHandler` を使います．
 
-- `ConsoleComponent` は，標準出力を早い段階でキャプチャするため，最初に組み込まれる．
-- `MeshComponent` は，そのキャッシュがデータソースの応答を補えるよう，データソースより前に組み込まれる．
-- `UserModuleComponent` と `TaskModuleComponent` は，ユーザー/タスクモジュールが API に関与したりデータソースを生成したりできるよう，`DataSourceComponent` より前に組み込まれる．
+`MeshRegistryComponent`，`WebMeshComponent`，`TaskComponent` は `post_startup` で Mesh に接続します．ASGI の `post_startup` は `lifespan.startup.complete` の送信後に呼ばれるため，内蔵 SlowMQ の WebSocket を受け付けられる段階で接続できます．Mesh を利用する構成では，有効な `project.mesh_url` と稼働中のトランスポートが必要です．WebMesh の起動は `app.is_async` によって制御されます．
 
 # Slowlette のルーティングとレスポンスモデル
 
@@ -197,6 +215,7 @@ slowlette.server.dispatch_asgi()
     +-- websocket -> router.websocket()
     |
     +-- http -> read body -> Request -> router.dispatch()
+                (eventstream routes send SSE through EventStream)
 ```
 
 WSGI の場合:
@@ -226,6 +245,7 @@ Slowlette は，受信した URL を `Request` に変換します．
 @slowlette.get('/api/channels')
 @slowlette.post('/api/control')
 @slowlette.websocket('/ws/slowmq')
+@slowlette.eventstream('/event/webmesh/attach')
 @slowlette.on_event('startup')
 ```
 
@@ -236,7 +256,7 @@ Slowlette は，受信した URL を `Request` に変換します．
 - `bytes` のリクエストボディ．
 - JSON ボディのラッパー．
 - リクエスト全体を表す `Request`．
-- `WebSocket`．
+- `WebSocket` と `EventStream`．
 - パスのリスト，またはクエリの辞書．
 
 ルーターはサブアプリを組み込めます．各コンポーネント自体が `slowlette.App` であるため，コンポーネントごとに独自のルートを追加できます．
@@ -290,6 +310,8 @@ $$
 - `system.our_security_is_perfect` が `project.is_secure` を制御する．
 
 `ConfigComponent` は，公開用のプロジェクトメタデータを `/api/config` から提供します．ただし，生のプロジェクト設定は秘密情報を含む可能性があるため，そのまま公開しません．
+
+`project.mesh_url` は `slowdash_project.mesh.url` から取得します．未指定でサーバーポートがある場合は，`slowmq://{hostname}:{port}` を使います．`Mesh.connect()` は SlowMQ に加えて NATS，MQTT，Redis，RabbitMQ のトランスポートを選択できます．URL を与えない `Mesh` はローカルの pub/sub を使います．
 
 # 組み込みサーバーコンポーネント
 
@@ -395,45 +417,105 @@ _finalize()
 
 ユーザーモジュールのスレッドは，通常は自身のイベントループを使います．`_run()` と `_loop()` が非同期に対応している場合に限り，設定によってメインのイベントループを使えます．
 
-## `TaskModuleComponent`
+## `TaskComponent`
 
-`sd_taskmodule.py` は，現行のプロセス内タスクモジュールシステムです．
+`sd_task.py` は，Mesh 上のタスクを HTTP API に公開するプロキシと，ローカルタスクのプロセスマネージャです．削除された `sd_taskmodule.py` のプロセス内スレッド実行を引き継ぐ実装ではありません．
 
-ユーザーモジュールの機構を拡張し，タスクコマンドの解析，コマンドの実行，`ControlSystem` との統合を追加します．
-
-主なルートは次のとおりです．
+主なルート:
 
 ```text
-GET  /api/control/task
+GET  /api/task/catalog
+GET  /api/task/status
+POST /api/task/control/{taskname}
 POST /api/control
-POST /api/control/task/{taskname}
 GET  /api/channels
-GET  /api/data/{channels}
-POST /api/consume/current_data
+GET  /api/data/{*}
+GET  /api/config/contentlist
+GET  /api/config/content/{filename}
+GET  /api/config/file/{filename}
 ```
 
-タスクコマンドの流れは次のとおりです．
+- `task` / `tasks` 設定と `config/slowtask-*.py` からカタログを作る．設定の既定コマンドは `slowdash-task <file_path> --name=<name>` で，Mesh URL と JSON パラメータも渡される．`auto_start`（互換名 `auto_load`）に従って `subprocess.Popen` で起動する．
+- `sd.task.spec.>`，`sd.task.exit.>`，`sd.task.heartbeat.>`，`sd.task.life_event.>` を購読し，`mesh_id` ごとの `TaskProxy` を管理する．`sd.task.control.introduce` でタスク仕様の再通知を要求するため，別途起動されたタスクも登録できる．
+- `TaskFunctionProxy` は通知された引数仕様に基づき RPC 引数を整える．`TaskVariableProxy` は `mesh.remote_node('<task>.<variable>')` を使って値を読む．
+- タスク制御の `action` は `start`，`stop`，`kill`，`purge`．`stop` は `<task>._sd_stop` RPC，`kill` はこのサーバーが保持する子プロセス，`purge` は終了通知による登録解除を扱う．
+- エクスポートされた制御ノードはチャンネルとなり，現在時刻を含むデータ要求でリモートから読まれる．タスクのコンテンツは `<task>._sd_get_content` RPC を通じて設定/コンテンツ API に公開される．
+
+`slowdash-task.py` はスクリプト内の `Tasklet` を探して実行します．見つからなければ `Tasklet(use_oldstyle_callbacks=True)` を作り，従来のコールバックを読み込みます．スクリプト読み込み時から標準入出力とログを Mesh に接続し，`RetainerAutocide` により親プロセス消失時の終了も扱います．
+
+### タスクの識別とライフサイクル
+
+タスク名（例: `sensor`）は RPC の名前空間で，`mesh_id` は接続する Mesh インスタンスの識別子です．`Mesh.connect()` は名前，ホスト名，PID，プロセス内の連番から `mesh_id` を作ります．タスク表は `mesh_id` で管理されますが，RPC 要求の配送先は `sd.rpc.<taskname>` なので，同じ名前の複数タスクが要求を受け取ることがあります．通常のタスク制御では一意の名前を使います．
+
+カタログは「起動可能なスクリプト」，タスク表は「仕様を通知したタスク」，プロセス表は「このサーバーが起動した子プロセス」を表します．外部で起動したタスクは Mesh に登録できますが，その PID をサーバーが所有するわけではありません．`kill` は追跡中の子プロセスだけが対象で，`purge` は登録を外す操作です．再起動操作は現在の API では stop/start の組み合わせになります．
+
+```text
+TaskComponent.post_startup
+  -> subscribe to task notifications
+  -> start Mesh and request introductions
+  -> load catalog and launch auto_start processes
+
+slowdash-task process
+  -> load script and bind Tasklet to ControlSystem
+  -> connect Mesh / standard I/O / logging
+  -> publish task specification
+  -> run initialize callbacks
+  -> publish updated specification
+  -> run scheduled callbacks and heartbeat loop
+  -> on stop: publish exit, cancel callbacks, run finalizers, close connections
+```
+
+ハートビートは `Tasklet` のメインループから既定で約 5 秒ごとに送られます．サーバーはチャンネル取得やタスク操作などで `_check_task_heartbeats()` を呼び，通知された期限に約 5 秒の猶予を加えて生存状態を判断します．独立した常時監視スレッドによる判定ではありません．ハートビート欠落はプロセス終了の確定情報ではなく，タスクのイベントループがブロックしている場合にも起こります．
+
+### タスク構成の最小例
+
+次の例では，SlowDash がポート 18881 で動作し，内蔵 SlowMQ が使えることを前提とします．設定中の Mesh URL は稼働中のブローカーを指します．
+
+```yaml
+slowdash_project:
+  name: MeshExample
+  mesh:
+    url: slowmq://localhost:18881
+  task:
+    - name: sensor
+      file_path: config/slowtask-sensor.py
+      auto_start: true
+```
+
+`config/slowtask-sensor.py` の内容:
+
+```python
+from slowpy.mesh import Tasklet, DataPacket
+
+task = Tasklet()
+temperature = 12.3
+
+@task.mesh.export
+async def set_temperature(value: float):
+    global temperature
+    temperature = value
+    return temperature
+
+@task.loop(interval=1)
+async def publish_temperature():
+    await task.mesh.aio_publish(
+        'data.stream', DataPacket(temperature, tag='temperature')
+    )
+
+if __name__ == '__main__':
+    task.run(name='sensor', mesh_url='slowmq://localhost:18881')
+```
+
+`slowdash-task` が読み込むときは，既存の `task` を検出して `run_module()` を呼びます．直接 Python で実行するときは `__main__` の `task.run()` が使われます．この例は `temperature` チャンネルを配信し，`sensor.set_temperature` を RPC として公開します．制御ノードのエクスポートとは別に，関数を公開している点に注意してください．
 
 ```text
 POST /api/control
-    |
-    v
-TaskModuleComponent.execute_command()
-    |
-    v
-each TaskModule.process_command()
-    |
-    v
-parse command name, arguments, await/reentrant flags
-    |
-    v
-match namespace prefix/suffix
-    |
-    v
-call task function immediately or in TaskFunctionThread
+Content-Type: application/json
+
+{"sensor.set_temperature()": null, "value": 20.0}
 ```
 
-エクスポートされた制御ノードは現在値チャンネルとして公開され，`/api/data/{channels}` から読み取れます．受信した現在値データのメッセージは，`/api/consume/current_data` を通じてエクスポート済み変数の設定にも使えます．
+コマンド名は JSON のキーで指定し，残りのフィールドを引数にします．タスク仕様への掲載には，引数を `int`，`float`，`str`，`bool` で注釈するか，これらの型を推定できる既定値を使います．実装は仕様の作成とサーバー側の型変換にこれらの情報を利用します．
 
 ## `UserHtmlComponent`
 
@@ -441,19 +523,36 @@ call task function immediately or in TaskFunctionThread
 
 これにより，プロジェクト固有の UI ページを，コアサーバーを変更することなく，プロジェクトの設定/コンテンツ領域に置けます．
 
-## `MeshComponent`
+## `WebMeshComponent`
 
-`sd_mesh.py` は，`/api/consume/current_data` を通じて受け取った現在値データのキャッシュを保持します．
+`sd_webmesh.py` は Mesh とブラウザの橋渡しを行います．削除された `sd_mesh.py` の現在値キャッシュに相当する処理は，このファイルの `DataCache` とマージ用レスポンスに移っています．ブラウザへの配信には SSE を使います．
 
-主な役割は次のとおりです．
+```text
+SSE  /event/webmesh/attach
+POST /api/webmesh/subscribe
+POST /api/webmesh/unsubscribe
+POST /api/webmesh/publish/{topic}
+GET  /api/channels
+GET  /api/data/{*}
+```
 
-- 選択したトピックへの websocket 接続．
-- `/api/emit/{topic}` の再配信と，websocket への転送．
-- 現在値データのキャッシュ．
-- キャッシュに基づく現在値チャンネルによる `/api/channels` の補完．
-- 最新のキャッシュ値による `/api/data/{channels}` の補完．
+`data.>`，`form.>`，タスクの life-event/heartbeat/stdout，`log.>` を購読します．データをキャッシュし，ブラウザの購読に一致するメッセージをクライアントごとのキューへ送ります．SSE の `register` イベントは `client_id` を返し，`message` イベントは `subscribed_topic`，`headers`，`body` を含みます．キューの上限は 10 件で，満杯になったクライアントは切断されます．
 
-このコンポーネントはデータソースより前に組み込まれます．そのため独自のレスポンスが，後続のデータソースの応答とキャッシュデータをマージできます．
+ブラウザは `data.*.<channel>`，`form.<form>.>` のようなフォーム用トピック，およびコード内の固定トピックリストを使って購読します．現在の振り分けは完全な汎用ワイルドカードマッチングではなく，`_subscribe_mesh()` のトピック正規化に基づきます．`unsubscribe` は指定クライアントの全購読を解除します．
+
+`ChannelMergerResponse` は，配信されたチャンネルを `streaming: True` として不足分だけ追加します．`DataMergerResponse` は，他の応答にチャンネルが存在せず，キャッシュの `t` が単一の数値で要求時間範囲に入る場合だけデータを補います．既存チャンネルの値は上書きせず，時系列配列も結合しません．
+
+### ブラウザ接続の手順
+
+1. `EventSource` で `/event/webmesh/attach` を開く．
+2. `register` イベントの JSON から `client_id` を取得する．
+3. `/api/webmesh/subscribe` に `{"client_id":"...","topic":"data.*.temperature"}` を JSON として POST する．`client_id` はこのルートではボディに含める．
+4. `message` イベントの JSON を読み，`body` のチャンネルデータを表示する．`headers.topic` は元のトピック，`subscribed_topic` はブラウザの購読用に正規化されたトピックである．
+5. 全購読を解除する場合は `/api/webmesh/unsubscribe?client_id=...` に POST する．SSE が切断された場合も，その接続のキューと購読は削除される．
+
+`app/site/slowjs/control.mjs` のクライアントは，通常のチャンネルを `data.*.<channel>` に変換し，`@mesh:` で始まる指定はプレフィックスを除いたトピックとして扱います．エラー時には接続を作り直し，新しい `client_id` の登録後に購読を再送します．
+
+SSE 接続や subscribe 自体はキャッシュ済みの値を再送しません．初期表示には `/api/data` やレジストリの取得を併用します．また WebMesh の受信キューはライブ配信用であり，切断中のメッセージを永続保存して再生するものではありません．
 
 ## `SlowMQComponent`
 
@@ -479,11 +578,64 @@ WEBSOCKET /ws/slowmq
 - `*`: ちょうど 1 トークンに一致する．
 - `>`: 末尾の 0 個以上のトークンに一致する．ただし最後のトークンとしてのみ使用できる．
 
+SlowMQ は Mesh のトランスポートとして使う WebSocket ブローカーであり，ブラウザ向け SSE の WebMesh とは役割が異なります．`AsyncSlowMQ` 制御ノードがこのサービスに接続します．subscribe 要求には `message_id` に対応した `reply_to` の確認応答を返します．切断時には購読を削除し，送信が 5 回連続で失敗したクライアントも除去します．統計と購読数は `/api/config` の `slowmq` に公開されます．
+
+### メッセージ形式と配送
+
+SlowMQ の WebSocket では JSON の `headers` と `data` を使います．Mesh の購読コールバックはこれを `(headers, body)` として受け取り，WebMesh の SSE は `body` というフィールド名でブラウザに渡します．同じメッセージでも境界ごとにボディの名前が異なります．スカラー値を配信した例は次のとおりです（時刻は例示）．
+
+```json
+{
+  "headers": {"topic": "data.stream.temperature"},
+  "data": {"temperature": {"t": 1780000000.0, "x": 12.3}}
+}
+```
+
+`action` を省略すると publish と解釈されます．`DataPacket` の `tag='temperature'` はトピックの末尾とボディのチャンネル名に使われます．`t` は `start` を省略した場合は UNIX 時刻で，`start` があればその時刻からの相対秒です．時系列では `t` が配列となり，WebMesh の HTTP キャッシュ補完の対象外になります．
+
+`AsyncSlowMQNode` は送信用の WebSocket を共有し，購読はトピックフィルタごとに WebSocket を持ちます．SlowMQ ブローカーは現在接続中の購読者へメッセージを転送します．ブローカー自身には履歴の永続化や publish 完了に対するアプリケーションの処理済み確認はありません．subscribe の確認応答と RPC の返信は別の仕組みです．
+
+## `MeshRegistryComponent`
+
+`sd_mesh_registry.py` の `Registry` は，ドット区切りのキーに値，revision，更新時刻を保存します．`MeshRegistryComponent` はこれを Mesh 名 `sd_mesh_registry` の `set`，`get`，`keys`，`delete` RPC として公開します．クライアントは `mesh.registry.aio_set()` / `aio_get()` / `aio_keys()` / `aio_delete()` を使います．
+
+```text
+GET /api/registry/keys/{path}
+GET /api/registry/value/{key}
+GET /api/data/{*}                 # @registry:<key> channels
+GET /api/log
+```
+
+- 末尾が `>` のキーはサブツリーを指定する．`with_meta` でメタデータを取得でき，単一キーの更新・削除には `cas_revision` を使える．サブツリーの設定には CAS は実装されていない．
+- `server.url` に SlowDash の URL を登録する．`Tasklet` はこれを HTTP ヘルパーの接続先探索に利用する．
+- `>` を購読し，`sd.rpc` で始まるトピックを除く最新のメッセージボディを `pubsub.<topic>` に保存する．これは WebMesh のチャンネル用キャッシュとは別のレジストリである．
+- `pubsub.form.` と，作業ディレクトリ内の `registry-*.json` から読み込んだ領域を永続化対象とし，値の設定時に保存する．すべてのキーを永続化する仕組みではない．
+- `log.>` のログをメモリに保持し，`/api/log` で表形式として返す．`@registry:` で始まるデータチャンネルは，レジストリ値を `/api/data` の形式で読むための経路となる．
+
+### 状態の保存先の使い分け
+
+| 保存先 | 内容 | 読み取り経路 | 寿命 |
+|---|---|---|---|
+| WebMesh `DataCache` | 配信チャンネルの最新レコードと型 | `/api/channels`，`/api/data` の補完 | サーバープロセス内 |
+| Mesh `Registry` | 共有キーと最新の pub/sub ボディ | レジストリ RPC，`/api/registry/*`，`@registry:` | 主にメモリ，指定領域のみ JSON 保存 |
+| Task のエクスポート済みノード | タスクが管理する現在値 | ノード RPC，`TaskComponent` のデータ API | タスク/デバイス側に依存 |
+| `slowpy.store` / データソース | 保存済み時系列やオブジェクト | データソースの `/api/data` | 使用するストレージに依存 |
+
+配信したデータを履歴として保存したい場合は，タスクや購読側で明示的に `DataStore.append()` などを呼びます．Mesh に配信するだけでデータベースへ保存されるわけではありません．
+
+レジストリの読み方の例:
+
+- `mesh.registry.aio_get('pubsub.form.settings.>')`: settings フォームの最新メッセージをサブツリーとして取得する．
+- `mesh.registry.aio_get('state.run', with_meta=True)`: `key`，`value`，`revision`，`updated` を取得する．
+- `mesh.registry.aio_set('state.run', 'running', cas_revision=revision)`: 読み取った revision がまだ一致する場合だけ更新し，不一致なら `None` を返す．
+
+いずれも非同期呼び出しなので `await` を使います．revision は現在のレジストリ内での競合検出用であり，JSON 保存からの復元時にはメタデータが引き継がれません．また現行の `delete()` はメモリ上の削除で，永続ファイルの書き直しを行いません．
+
 ## その他のコンポーネント
 
 その他のサーバーコンポーネントは次のとおりです．
 
-- `ConsoleComponent`: 表示や API での利用のためにコンソール出力をキャプチャする．
+- `ConsoleComponent`: 従来のコンソールキャプチャ実装で，現在の `App` には組み込まれない．
 - `MiscApiComponent`: その他のユーティリティ API．
 - `BlobStorage_File`: データソースが使う，ファイルベースの blob ストレージ．
 
@@ -527,8 +679,6 @@ Export_CSV
 
 # データ取得の通信フロー
 
-最も一般的な読み取り経路は次のとおりです．
-
 ```text
 Browser or client
     |
@@ -537,88 +687,127 @@ GET /api/channels
 GET /api/data/{channels}?length=...&to=...
     |
     v
-Slowlette ASGI/WSGI dispatch
+Slowlette dispatch -> component tree
+    |
+    +-- MeshRegistryComponent: @registry:<key> values
+    +-- UserModuleComponent: user hooks
+    +-- WebMeshComponent: streamed-data cache merge response
+    +-- DataSourceComponent: stored data
+    +-- TaskComponent: remote exported control nodes
     |
     v
-SlowDash component tree
-    |
-    +-- MeshComponent cache merge response
-    +-- UserModuleComponent hooks
-    +-- TaskModuleComponent current exports
-    +-- DataSourceComponent plugins
-    |
-    v
-Slowlette response merge
-    |
-    v
-JSON response
+Slowlette response merge -> JSON response
 ```
 
-`/api/data/{channels}` では，`DataSource` プラグインが SlowDash のデータモデル形式でデータを返します．キャッシュコンポーネントは，次の条件を満たす場合に現在値を追加できます．
+`/api/data` の結果には，保存済みデータ，タスクのリモートノードの現在値，WebMesh の配信キャッシュ，レジストリ値が参加できます．`TaskComponent` と `WebMeshComponent` は，チャンネル名に `/` を含められるよう `/api/data/{*}` を使います．
 
-- 要求されたチャンネルがキャッシュ対象である．
-- キャッシュのタイムスタンプが，要求された時間範囲に入っている．
-- 既存のレスポンスが存在しないか，キャッシュ値より古い．
+WebMesh のキャッシュ補完は，欠けているチャンネルの単一時刻データだけを対象にします．一方，`TaskComponent.DataMergerResponse` には，より新しい現在値を単一値や時系列の末尾へ追加する処理があります．この 2 つのマージ処理は同じではなく，最終的な応答はコンポーネントの組み込み順序にも依存します．
 
-# 書き込み・配信・現在値データのフロー
-
-現在値データの更新は，次の経路で SlowDash に入ります．
+# 配信・現在値データのフロー
 
 ```text
-POST /api/emit/{topic}
-POST /api/consume/current_data
-internal app.request_emit(topic, message, sender=...)
+Tasklet / Mesh producer
+    |  Mesh.aio_publish('data.stream', DataPacket(..., tag='channel'))
+    v
+Mesh transport / broker: data.stream.channel
+    |
+    +-- WebMeshComponent -> DataCache
+    |                    -> attached browser clients (SSE)
+    |
+    +-- MeshRegistryComponent -> pubsub.data.stream.channel
 ```
 
-典型的な流れは次のとおりです．
+HTTP クライアントは `POST /api/webmesh/publish/{topic}` から JSON ボディを Mesh に配信できます．`POST /api/control` の `publish <topic>(...)` 形式も pub/sub に変換されます．フォーム更新には `FormPacket` と `form.<form>.<element>` を使い，レジストリの `pubsub.form` に最新値が保持されます．
 
-```text
-producer
-    |
-    v
-/api/emit/current_data
-    |
-    v
-app.request('/consume/current_data', data)
-    |
-    +-- MeshComponent.cache_current_data()
-    +-- TaskModuleComponent.set_variable()
-    |
-    v
-websocket forwarding to attached clients
-```
-
-`sender` パラメータは，タスク自身が配信した値が同じタスク変数のパスに反射して戻ってくるのを防ぐために使われます．
+`ControlSystem.aio_publish()` と `stream()` も，バインドされた `Tasklet` の Mesh を使って `data.stream.<name>` を送ります．配信データと，RPC で読み書きするエクスポート済み制御ノードは別の経路です．
 
 # 制御フロー
-
-制御コマンドは `/api/control` を使います．
-
-現行のプロセス内タスクの流れは次のとおりです．
 
 ```text
 POST /api/control
     |
     v
-TaskModuleComponent.execute_command()
+TaskComponent.execute_command() -> MeshRequest
     |
-    v
-TaskModule.process_task_command()
+    +-- publish <topic>(...) -> Mesh.aio_publish()
     |
-    +-- parse "await", "reentrant", "async", "parallel" prefixes
-    +-- parse function arguments
-    +-- match task namespace
-    +-- bind parameters using Python function signature
-    |
-    v
-execute function synchronously, await it, or run it in a command thread
+    +-- <task>.<function>(...) -> TaskProxy.process_command()
+                                  -> TaskFunctionProxy.match_kwargs()
+                                  -> Mesh.aio_call_many()
+                                  -> sd.rpc.<task>
+                                  -> exported function in task process
+                                  -> sd.rpc_reply.<caller_mesh_id>
+                                  -> HTTP reply
 ```
 
-ユーザーモジュールも，定義したフックに応じてコマンド処理に参加できます．
+`MeshRequest` はコマンド名とパラメータを解析します．旧 `await`，`reentrant`，`async`，`parallel` 接頭辞は，互換性のため警告を出して取り除かれるだけで，実行モードを選択しません．RPC の受信側ではエクスポート済み関数を呼び，戻り値がコルーチンなら await します．返信は `status`，`message`，`return_value` を持ち，相関 ID で呼び出しに対応づけられます．
+
+制御ノードの読み書きには `mesh.remote_node('<task>.<variable>').aio_get()` / `aio_set()` を使います．内部的には `<task>._sd_node_call` RPC を通じて，エクスポートされたノードの `aio_get()` / `aio_set()` を呼びます．ユーザーモジュールは引き続き自身の制御フックで参加できます．
+
+### RPC の返信と実行モデル
+
+要求には `module`，`function`，`sender_id`，`reply_to`，`correlation_id`，`message_id` のヘッダと，`args` / `kwargs` のボディが含まれます．`Mesh` は相関 ID ごとの返信キューを保持し，`aio_call_many()` で必要な返信数またはタイムアウトまで待ちます．`TaskProxy` の関数呼び出しは 1 件の返信，5 秒のタイムアウトを指定します．`aio_call()` は返信の `status` を確認して `return_value` を返しますが，`aio_call_many()` は返信レコードのリストを返すため，呼び出し側が結果を確認します．
+
+同一 Mesh インスタンスの RPC 受信ループは，関数の完了を待ってから次の要求を処理します．`async def` にしても，同じ受信ループが複数 RPC を並列実行するわけではありません．また同期関数はそのイベントループ上で直接呼ばれ，自動的にワーカースレッドへ移されません．長い処理は Tasklet のループへ分離するなど，RPC が短時間で返るように設計します．
+
+呼び出し側のタイムアウトは，遠隔側で関数が実行されなかったことや，実行が取り消されたことを意味しません．更新操作を再試行する場合は，処理の重複を考慮する必要があります．
 
 # SlowPy ライブラリの役割
 
 SlowPy は，サーバー側のコンポーネントとユーザーコードの両方から使われます．
+
+## Mesh 通信と Tasklet
+
+`Mesh` は，`control/` の非同期 pub/sub ノードに，トピック変換，コールバック購読，RPC を重ねたものです．アプリケーションは通常 `.`，`*`，`>` のトピック表現を使い，各トランスポートに合わせて区切りとワイルドカードが変換されます．外部ブローカーを使う場合は，対応する制御モジュールの依存パッケージも必要です．
+
+主な API:
+
+- `aio_start()` / `aio_close()`: 接続とバックグラウンド処理の開始・終了．
+- `publisher()` / `subscriber()`: 制御ノードとして pub/sub にアクセスする．
+- `aio_publish()`，`aio_subscribe()`，`@mesh.on(...)`: メッセージの送受信．`publish()` は実行中のイベントループへ配信処理を登録するため，イベントループが必要．
+- `@mesh.export` または `mesh.export(name, function_or_node)`: 関数・制御ノードを公開する．
+- `aio_call()` は単一の RPC 戻り値，`aio_call_many()` は返信レコードのリストを返す．RPC 要求は `sd.rpc.<module>`，返信は `sd.rpc_reply.<mesh_id>` を使う．
+- `remote_node()` と `registry`: リモートの制御ノードと共有レジストリへのアクセス．
+
+`DataPacket` はスカラー，データ要素，フィールド辞書，`TimeSeries` を Mesh のボディへ変換し，`tag` がある場合はトピックにも追加します．`FormPacket` は `form.<form>.<element>` と，`form`，`element`，`value` を含むボディを生成します．
+
+```python
+import asyncio
+from slowpy.mesh import Mesh, DataPacket
+
+async def main():
+    mesh = Mesh('slowmq://localhost:18881', name='producer')
+    await mesh.aio_start()
+    try:
+        await mesh.aio_publish('data.stream', DataPacket(12.3, tag='temperature'))
+    finally:
+        await mesh.aio_close()
+
+asyncio.run(main())
+```
+
+`Tasklet` は Mesh を所有するタスクランタイムです．`initialize()`，`finalize()`，`once()`，`loop()`，`schedule()`，`content()` のデコレータで処理を登録し，`run()` または CLI からの `run_module()` で実行します．タスク仕様には関数，引数型，制御ノード，コンテンツ，標準入出力の情報が含まれます．仕様・ハートビート・終了を `sd.task.*` に通知し，`sd.task.control.introduce` に応答します．
+
+互換モードは `_initialize`，`_finalize`，`_run`，`_loop`，HTML/レイアウトのコールバックと公開関数を読み込みます．長い処理やループには非同期関数と非同期 I/O を使い，Mesh の受信やハートビートを止めないようにします．
+
+`MeshStdio` は，タスクでは `sd.task.stdin.<mesh_id>` と `sd.task.stdout.<mesh_id>` に標準入出力を接続します（既定では stderr も stdout と同じトピック）．`MeshLogHandler` は Python ログを `log.>` のトピックに配信します．`Tasklet.dash` は Mesh RPC とは別に SlowDash の HTTP API を読み取るためのヘルパーです．
+
+### Tasklet コールバックと実行単位
+
+ユーザー向けの概念と詳しい使用例は [SlowMesh と SlowTask](SlowMesh_JP.md) を参照してください．SlowMesh は PubSub・RPC・Registry を提供する通信基盤，SlowTask は独立に実行されるスクリプト，`Tasklet` はスクリプトにライフサイクルと Mesh 接続を提供するアダプタです．`Mesh` 単体でも通信でき，その場合にタスク管理への登録やタスク仕様・ハートビートの送信が自動的に行われるわけではありません．
+
+| デコレータ | ランタイムの動作 |
+|---|---|
+| `@tasklet.initialize()` | 初期化時に実行する．引数を受け取る関数にはタスクパラメータの辞書が渡る． |
+| `@tasklet.finalize()` | 通常の終了処理で，実行中のタスクコールバックをキャンセルした後に実行する． |
+| `@tasklet.once(delay=0)` | 初期化完了後，指定秒数の遅延を経て一度実行する． |
+| `@tasklet.loop(interval=1, ticks=None)` | 周期的に実行する．整数の `ticks` は周期的な真偽値を引数として渡し，辞書なら `tick.store` などの名前付きフラグを渡す． |
+| `@tasklet.schedule("08:00", use_utc=False)` | 指定時刻に実行する．カンマ区切りの `HH:MM` と `*` に対応し，UTC 指定がなければローカル時刻を使う． |
+| `@tasklet.content("config/html-status")` | `_sd_get_content` RPC から要求時に呼ばれるコンテンツ生成関数を登録する．周期実行のコールバックではない． |
+
+同じデコレータで複数の関数を登録できます．メイン処理のコールバックはそれぞれ asyncio タスクとして動きますが，Mesh 通信やハートビートとイベントループを共有します．一つのループコールバックは処理完了を待ってから次回を実行し，周期を超過しても同じコールバックを重複起動しません．ブロッキング I/O や `time.sleep()` はイベントループ全体を止めるので，非同期 I/O を使い，待機が必要なら `await asyncio.sleep()` を使います．強制終了やクラッシュでは finalize の実行は保証されません．
+
+プロジェクト設定のタスクの `parameters` と CLI の `--parameters` JSON オプションは初期化パラメータを供給します．この辞書は，後から `/api/control` で渡す RPC 引数とは別です．コンテンツ生成関数と公開した制御ノードも別の仕組みで，前者は要求時にドキュメントを生成し，後者はリモートの get/set 操作で現在値を扱います．
 
 ## データオブジェクトモデル
 
@@ -845,7 +1034,7 @@ Slowlette は，アプリツリー内の一致するすべてのハンドラを�
 
 ### 内部 API 呼び出しも同じルーターを使う
 
-`App.request()`，`request_config()`，`request_channels()`，`request_data()`，`request_emit()` は `self.slowlette(...)` を直接呼び出します．このため，サーバー側のプロデューサ/コンシューマも，外部の HTTP クライアントと同じルーティングおよびレスポンスマージのモデルを使います．
+`App.request()`，`request_config()`，`request_channels()`，`request_data()` は `self.slowlette(...)` を直接呼び出し，HTTP リクエストと同じルーティングとレスポンスマージを使います．Mesh の pub/sub と RPC は，これとは別の通信経路です．
 
 # 主要フローのまとめ
 
@@ -858,6 +1047,7 @@ slowdash.py
   -> sys.path / cwd setup
   -> include components
   -> ASGI/WSGI/CGI/CLI dispatch
+  -> post_startup: Mesh connections, task discovery / auto-start
 ```
 
 ### API リクエスト
@@ -878,7 +1068,7 @@ HTTP request
 ```text
 /api/data/{channels}
   -> data source plugins
-  -> optional user/task/current-data additions
+  -> user hooks / remote task nodes / WebMesh cache / registry values
   -> merged JSON data
 ```
 
@@ -893,10 +1083,10 @@ HTTP request
 ### 現在値データ
 
 ```text
-/api/emit/current_data
-  -> /api/consume/current_data
-  -> cache update and variable update hooks
-  -> websocket forwarding where applicable
+Mesh.aio_publish() / POST /api/webmesh/publish/{topic}
+  -> Mesh transport / broker
+  -> WebMesh cache and browser SSE
+  -> registry pubsub cache
 ```
 
 ### プラグインの読み込み
@@ -920,3 +1110,6 @@ project config
 - `public_config()` には秘密情報を入れない．`/api/config` はクライアントに公開される．
 - コンポーネントの組み込み順序の変更には注意する．マージの挙動が変わる可能性がある．
 - サーバー側のコードを外部 API クライアントと同じルートロジックで動かしたい場合は，内部の `App.request*()` ヘルパーを使う．
+
+- Mesh タスクを追加する場合は，`Tasklet` と `mesh.export()` を使い，`slowdash-task` または独立プロセスから実行する．
+- ブラウザ配信は WebMesh の SSE，Mesh トランスポートは SlowMQ などのブローカー，共有状態は Mesh レジストリという役割分担を保つ．
