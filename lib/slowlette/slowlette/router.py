@@ -292,7 +292,7 @@ class Router:
                 if inspect.isawaitable(result):
                     await result
 
-        if name == 'shutdown':
+        if name in ('pre_shutdown', 'shutdown'):
             subapps = reversed(self.subapps)
         else:
             subapps = self.subapps

@@ -152,6 +152,7 @@ class WebMeshComponent(Component):
         self._client_queue_table: dict[str, asyncio.Queue] = {}   # client_id -> input message queue
         self._client_stop_table: dict[str, asyncio.Event] = {}   # client_id -> stop event (on quque full)
 
+        self._is_stopping = False
         self._data_cache = DataCache()
 
         self._topic_list = [
@@ -172,6 +173,7 @@ class WebMeshComponent(Component):
 
     @slowlette.on_event('post_startup')
     async def startup(self):
+        self._is_stopping = False
         if not self.enabled:
             return
         
@@ -185,6 +187,16 @@ class WebMeshComponent(Component):
                 await self._subscribe_mesh()
             
         
+    @slowlette.on_event('pre_shutdown')
+    async def pre_shutdown(self):
+        # End SSE responses before Uvicorn waits for active HTTP requests.
+        for stop_event in self._client_stop_table.values():
+            stop_event.set()
+        self._is_stopping = True
+        if self._mesh is not None:
+            await self._mesh.aio_stop()
+
+
     @slowlette.on_event('shutdown')
     async def shutdown(self):        
         if self._mesh is not None:
@@ -230,6 +242,9 @@ class WebMeshComponent(Component):
         
     @slowlette.eventstream('/event/webmesh/attach')
     async def attach(self, eventstream:slowlette.EventStream):
+        if self._is_stopping:
+            await eventstream.close()
+            return
         client_id = secrets.token_urlsafe(32)
         try:
             await eventstream.accept()
@@ -244,6 +259,8 @@ class WebMeshComponent(Component):
         async with self._queue_lock:
             self._client_queue_table[client_id] = queue
             self._client_stop_table[client_id] = stop_event
+            if self._is_stopping:
+                stop_event.set()
             
         queue_task = None
         disconnect_task = asyncio.create_task(eventstream.wait_disconnected())

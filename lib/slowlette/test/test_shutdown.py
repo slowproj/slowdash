@@ -1,6 +1,7 @@
 """Run with PYTHONPATH=lib/slowlette python -m unittest discover -s lib/slowlette/test -p test_shutdown.py."""
 import asyncio
 import os
+import itertools
 from pathlib import Path
 import signal
 import subprocess
@@ -9,6 +10,7 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
+import slowlette
 from slowlette.server import dispatch_asgi
 
 
@@ -23,9 +25,31 @@ class LifespanTests(unittest.IsolatedAsyncioTestCase):
         receive = AsyncMock(side_effect=messages.get)
         send = AsyncMock()
         await asyncio.wait_for(dispatch_asgi(app, {'type': 'lifespan'}, receive, send), 1)
-        self.assertEqual(events, ['pre_shutdown', 'shutdown', 'post_shutdown'])
+        self.assertEqual(events, ['shutdown', 'post_shutdown'])
         receive.assert_awaited_once()
         send.assert_awaited_once_with({'type': 'lifespan.shutdown.complete'})
+
+    async def test_cancelled_lifespan_does_not_emit_pre_shutdown(self):
+        dispatch = AsyncMock()
+        app = SimpleNamespace(slowlette=SimpleNamespace(dispatch_event=dispatch))
+        await dispatch_asgi(app, {'type': 'lifespan'},
+                            AsyncMock(side_effect=asyncio.CancelledError), AsyncMock())
+        dispatch.assert_awaited_once_with('shutdown')
+
+    async def test_pre_shutdown_stops_subapps_in_reverse_order(self):
+        events = []
+        class Component(slowlette.App):
+            def __init__(self, name):
+                super().__init__()
+                self.name = name
+            @slowlette.on_event('pre_shutdown')
+            async def stop(self):
+                events.append(self.name)
+        app = slowlette.App()
+        app.slowlette.include(Component('broker'))
+        app.slowlette.include(Component('consumer'))
+        await app.slowlette.dispatch_event('pre_shutdown')
+        self.assertEqual(events, ['consumer', 'broker'])
 
     async def test_websocket_cancellation_propagates_even_if_close_fails(self):
         for close_error in (None, RuntimeError('connection already closed')):
@@ -42,14 +66,14 @@ class LifespanTests(unittest.IsolatedAsyncioTestCase):
 @unittest.skipUnless(os.name == 'posix', 'requires POSIX signals')
 class SignalShutdownTests(unittest.TestCase):
     def test_live_websocket_is_closed_before_lifespan_shutdown(self):
-        # The child uses the real Uvicorn signal handlers and a connected client.
+        # The child uses real server signal handlers and a connected client.
         # A pre-bound socket keeps the test independent of fixed port allocation.
         code = r'''
 import asyncio, os, signal, socket
 import slowlette
 import uvicorn
 import websockets
-from slowlette.server import serve_asgi_uvicorn
+from slowlette.server import serve_asgi_uvicorn, serve_asgi_hypercorn
 
 sock = socket.socket()
 sock.bind(('127.0.0.1', 0))
@@ -63,12 +87,17 @@ class App(slowlette.App):
     @slowlette.websocket('/ws')
     async def ws(self, websocket: slowlette.WebSocket):
         await websocket.accept()
+        self.connection = websocket
         events.append('connected')
         try:
             while True:
                 await websocket.receive()
         except slowlette.WebSocketConnectionClosed:
             events.append('disconnected')
+    @slowlette.on_event('pre_shutdown')
+    async def pre_shutdown(self):
+        events.append('pre_shutdown')
+        await self.connection.close(code=1001)
     @slowlette.on_event('shutdown')
     async def shutdown(self):
         events.append('shutdown')
@@ -76,7 +105,7 @@ class App(slowlette.App):
     @slowlette.on_event('post_shutdown')
     async def post_shutdown(self):
         events.append('post_shutdown')
-        assert events == ['connected', 'disconnected', 'shutdown', 'post_shutdown'], events
+        assert events == ['connected', 'pre_shutdown', 'disconnected', 'shutdown', 'post_shutdown'], events
         print('HOOKS_OK', flush=True)
 
 async def client():
@@ -91,21 +120,25 @@ async def client():
         os.kill(os.getpid(), SIGNAL)
         await ws.wait_closed()
 
-serve_asgi_uvicorn(App(), port, fd=sock.fileno(), ws='websockets-sansio')
-assert events == ['connected', 'disconnected', 'shutdown', 'post_shutdown'], events
+runner = serve_asgi_uvicorn if SERVER == 'uvicorn' else serve_asgi_hypercorn
+previous_handlers = {sig: signal.getsignal(sig) for sig in (signal.SIGINT, signal.SIGTERM)}
+runner(App(), port, fd=sock.fileno(), ws='websockets-sansio')
+assert all(signal.getsignal(sig) == handler for sig, handler in previous_handlers.items())
+assert events == ['connected', 'pre_shutdown', 'disconnected', 'shutdown', 'post_shutdown'], events
 print('SHUTDOWN_OK', flush=True)
 '''
-        for sig in (signal.SIGINT, signal.SIGTERM):
-            with self.subTest(signal=sig.name):
+        for server, sig in itertools.product(('uvicorn', 'hypercorn'), (signal.SIGINT, signal.SIGTERM)):
+            with self.subTest(server=server, signal=sig.name):
                 env = dict(os.environ)
                 package_root = str(Path(__file__).resolve().parents[1])
                 env['PYTHONPATH'] = package_root + os.pathsep + env.get('PYTHONPATH', '')
-                proc = subprocess.run([sys.executable, '-c', f'SIGNAL = {int(sig)}\n' + code],
+                proc = subprocess.run([sys.executable, '-c', f'SIGNAL = {int(sig)}\nSERVER = {server!r}\n' + code],
                                       env=env, capture_output=True, text=True, timeout=15)
                 output = proc.stdout + proc.stderr
                 # Recent Uvicorn re-raises SIGTERM after cleanup.
                 self.assertIn(proc.returncode, (0, -int(sig)), output)
-                self.assertIn('Application shutdown complete', output)
+                if server == 'uvicorn':
+                    self.assertIn('Application shutdown complete', output)
                 self.assertIn('HOOKS_OK', output)
                 if proc.returncode == 0:
                     self.assertIn('SHUTDOWN_OK', output)

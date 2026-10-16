@@ -21,7 +21,6 @@ async def dispatch_asgi(app, scope, receive, send):
             try:
                 message = await receive()
             except asyncio.CancelledError:
-                await app.slowlette.dispatch_event("pre_shutdown")
                 await app.slowlette.dispatch_event("shutdown")
                 return
             if message['type'] == 'lifespan.startup':
@@ -31,7 +30,6 @@ async def dispatch_asgi(app, scope, receive, send):
                 await asyncio.sleep(0.1)
                 await app.slowlette.dispatch_event("post_startup")
             elif message['type'] == 'lifespan.shutdown':
-                await app.slowlette.dispatch_event("pre_shutdown")
                 await app.slowlette.dispatch_event("shutdown")
                 await send({'type': 'lifespan.shutdown.complete'})
                 await app.slowlette.dispatch_event("post_shutdown")
@@ -185,9 +183,21 @@ def serve_asgi_uvicorn(app, port, **kwargs):
         logging.warn('Falling back to WSGI; async requests will be serialized. WebSockets will not be available.')
         return serve_wsgi_ref(WSGI(app), port, **kwargs)
 
+    class Server(uvicorn.Server):
+        async def shutdown(self, sockets=None):
+            # Lifespan shutdown is too late to stop infinite HTTP streams:
+            # Uvicorn waits for those requests before sending that event.
+            try:
+                await app.slowlette.dispatch_event('pre_shutdown')
+            finally:
+                # Let connection_lost callbacks retire transports closed by
+                # pre_shutdown before Uvicorn tries to close them again.
+                await asyncio.sleep(0)
+                await super().shutdown(sockets=sockets)
+
     async def main():
         config = uvicorn.Config(app, port=port, workers=1, lifespan="on", **kwargs)
-        server = uvicorn.Server(config)
+        server = Server(config)
         # Let Uvicorn stop accepting connections and await its ASGI tasks before
         # shutting down the application lifespan and the event loop.
         await server.serve()
@@ -218,7 +228,7 @@ def serve_asgi_hypercorn(app, port, **kwargs):
 
     async def main():
         config = Config()
-        config.bind = f'0.0.0.0:{port}'
+        config.bind = [f'fd://{kwargs["fd"]}'] if 'fd' in kwargs else [f'0.0.0.0:{port}']
         config.alpn_protocols = ['h2', 'h2c', 'http/1.1']
         config.workers = 1
         config.threads = 1
@@ -227,7 +237,27 @@ def serve_asgi_hypercorn(app, port, **kwargs):
         if 'ssl_certfile' in kwargs:
             config.certfile = kwargs['ssl_certfile']
             
-        await serve(app, config)
+        loop = asyncio.get_running_loop()
+        stop_event = asyncio.Event()
+
+        async def shutdown_trigger():
+            await stop_event.wait()
+            # Hypercorn drains connections only after this trigger returns.
+            await app.slowlette.dispatch_event('pre_shutdown')
+
+        def signal_handler(signum, frame):
+            loop.call_soon_threadsafe(stop_event.set)
+
+        previous_handlers = {}
+        try:
+            for name in ('SIGINT', 'SIGTERM', 'SIGBREAK'):
+                signum = getattr(signal, name, None)
+                if signum is not None:
+                    previous_handlers[signum] = signal.signal(signum, signal_handler)
+            await serve(app, config, shutdown_trigger=shutdown_trigger)
+        finally:
+            for signum, handler in previous_handlers.items():
+                signal.signal(signum, handler)
         
     sys.stderr.write(f'Listening at port {port} (ASGI by Hypercorn)\n')
     asyncio.run(main())
@@ -278,7 +308,6 @@ def serve_wsgi_gunicorn(app, port, **kwargs):
     asyncio.run(app.slowlette.dispatch_event('startup'))
     asyncio.run(app.slowlette.dispatch_event('post_startup'))
     GunicornApp(app, **kwargs).run()
-    asyncio.run(app.slowlette.dispatch_event('pre_shutdown'))
     asyncio.run(app.slowlette.dispatch_event('shutdown'))
     asyncio.run(app.slowlette.dispatch_event('post_shutdown'))
     sys.stderr.write('Terminated\n')

@@ -257,6 +257,7 @@ app = App()
 - As an extention, `pre_startup`, `post_startup`, `pre_shutdown`, `post_shutdown` are added:
   - `post_startup` will be called after completing the startup process; therefore in parallel to accepting requests.
   - `post_shutdown` will be called after completing the shutdown process.
+- With the built-in Uvicorn and Hypercorn servers, `pre_shutdown` runs before connections are closed and active requests are drained. Handlers run through sub-applications in reverse inclusion order, like `shutdown`. Use it to end long-lived streams, close WebSockets, and stop background reconnect loops; release resources in the usual `shutdown` hook. It is emitted once by the server runner, not by ASGI lifespan shutdown; external ASGI servers do not emit this extension event.
 - HTTP request handling starts after `await`-ing the startup coroutine. If you want to start a task here, use `asyncio.create_task()` or similar not to block this.
 
 
