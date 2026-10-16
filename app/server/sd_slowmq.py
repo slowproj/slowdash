@@ -11,6 +11,7 @@ class SlowMQComponent(Component):
         super().__init__(app, project)
         
         self.enabled = app.is_async
+        self._is_stopping = False
         
         self._next_client_id = 0
         self._websockets = {}     # client_id:int -> websocket
@@ -49,6 +50,17 @@ class SlowMQComponent(Component):
         }}
 
     
+    @slowlette.on_event('pre_shutdown')
+    async def pre_shutdown(self):
+        # Consumers stop first (reverse component order), then the broker
+        # closes its connections before the ASGI server starts draining.
+        self._is_stopping = True
+        await asyncio.gather(
+            *(ws.close(code=1001) for ws in list(self._websockets.values())),
+            return_exceptions=True,
+        )
+
+
     @slowlette.on_event('shutdown')
     async def stop(self):
         pass
@@ -62,6 +74,9 @@ class SlowMQComponent(Component):
             logging.warning(f'Unable to accept slowmq websocket: {e}')
             return None
 
+        if self._is_stopping:
+            await websocket.close(code=1001)
+            return
         client_id = await self.add_client(name, websocket)
         name = self._clients[client_id].get('name')
         

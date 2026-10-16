@@ -1,5 +1,6 @@
 """Regression test: python -m unittest discover -s app/test -p test_shutdown.py."""
 import os
+import itertools
 from pathlib import Path
 import signal
 import subprocess
@@ -15,6 +16,7 @@ import asyncio, logging, os, signal, socket, tempfile
 from pathlib import Path
 import slowlette
 from slowdash import App
+from slowlette.server import serve_asgi_uvicorn, serve_asgi_hypercorn
 from sd_slowmq import SlowMQComponent
 from sd_webmesh import WebMeshComponent
 
@@ -68,15 +70,16 @@ with tempfile.TemporaryDirectory() as project:
         f'slowdash_project:\n  name: ShutdownTest\n  mesh:\n    url: slowmq://127.0.0.1:{port}\n')
     app = App(project_dir=project, port=port)
     app.slowlette.include(Check())
-    app.run(port=port, fd=sock.fileno(), ws='websockets-sansio')
+    runner = serve_asgi_uvicorn if SERVER == 'uvicorn' else serve_asgi_hypercorn
+    runner(app, port=port, fd=sock.fileno(), ws='websockets-sansio')
 '''
         root = Path(__file__).resolve().parents[2]
         env = dict(os.environ)
         env['PYTHONPATH'] = os.pathsep.join(str(root / path) for path in (
             'lib/slowlette', 'lib/slowpy', 'app/server'))
-        for sig in (signal.SIGINT, signal.SIGTERM):
-            with self.subTest(signal=sig.name):
-                proc = subprocess.run([sys.executable, '-c', f'SIGNAL = {int(sig)}\n' + code],
+        for server, sig in itertools.product(('uvicorn', 'hypercorn'), (signal.SIGINT, signal.SIGTERM)):
+            with self.subTest(server=server, signal=sig.name):
+                proc = subprocess.run([sys.executable, '-c', f'SIGNAL = {int(sig)}\nSERVER = {server!r}\n' + code],
                                       env=env, capture_output=True, text=True, timeout=10)
                 output = proc.stdout + proc.stderr
                 self.assertIn(proc.returncode, (0, -int(sig)), output)

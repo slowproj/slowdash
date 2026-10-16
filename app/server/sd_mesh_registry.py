@@ -341,8 +341,8 @@ class MeshRegistryComponent(Component):
             await self.mesh.aio_start()
 
         
-    @slowlette.on_event('shutdown_requested')
-    async def shutdown_requested(self):
+    @slowlette.on_event('pre_shutdown')
+    async def pre_shutdown(self):
         if self.mesh is not None:
             await self.mesh.aio_stop()
 

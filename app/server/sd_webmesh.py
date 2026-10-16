@@ -187,8 +187,8 @@ class WebMeshComponent(Component):
                 await self._subscribe_mesh()
             
         
-    @slowlette.on_event('shutdown_requested')
-    async def shutdown_requested(self):
+    @slowlette.on_event('pre_shutdown')
+    async def pre_shutdown(self):
         # End SSE responses before Uvicorn waits for active HTTP requests.
         for stop_event in self._client_stop_table.values():
             stop_event.set()

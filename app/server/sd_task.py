@@ -403,8 +403,8 @@ class TaskComponent(Component):
                 await self._start_task(task['name'])
 
         
-    @slowlette.on_event('shutdown_requested')
-    async def shutdown_requested(self):
+    @slowlette.on_event('pre_shutdown')
+    async def pre_shutdown(self):
         # Stop publishing/reconnecting while the embedded broker is draining.
         if self._mesh_log_handler is not None:
             logging.getLogger().removeHandler(self._mesh_log_handler)
