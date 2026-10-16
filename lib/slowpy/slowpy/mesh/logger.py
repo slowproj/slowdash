@@ -46,6 +46,8 @@ class MeshLogHandler(logging.Handler):
 
         
     def _put_message(self, message):
+        if self._is_stopping:
+            return
         try:
             self._queue.put_nowait(message)
         except asyncio.QueueFull:
@@ -83,37 +85,37 @@ class MeshLogHandler(logging.Handler):
     async def aio_stop(self):
         self._is_stopping = True
         
-        if self._worker_task is not None:
-            try:
+        try:
+            if self._worker_task is not None:
                 self._worker_task.cancel()
-                await self._worker_task
-            except:
-                pass
-            
-        self._mesh_ready.clear()
-        self._mesh = None
+                # Collect the worker's cancellation without swallowing a
+                # cancellation of the caller performing shutdown.
+                result, = await asyncio.gather(self._worker_task, return_exceptions=True)
+                if isinstance(result, BaseException) and not isinstance(result, asyncio.CancelledError):
+                    raise result
+        finally:
+            self._worker_task = None
+            self._mesh_ready.clear()
+            self._mesh = None
 
-        
+
     async def _handle_log(self):
         while True:
+            message = await self._queue.get()
             try:
-                message = await self._queue.get()
                 await self._mesh_ready.wait()
                 if self._is_first:
                     self._is_first = False
                     await asyncio.sleep(0.5)  # give receivers a time to be ready
-            except (asyncio.CancelledError, GeneratorExit, RuntimeError):
-                break
 
-            topic = f'log.{message.get("logger", "UNKNOWN")}.{message.get("level_name","UNDEFINED")}'
-            token = self._logging_suspended.set(True)
-            try:
-                await self._mesh.aio_publish(topic, message)
-            except Exception as e:
-                sys.stderr.write(f'### ERROR: LOG PUBLISH: {e}\n')
-                self._mesh_ready.clear()
-            except asyncio.CancelledError:
-                break
+                topic = f'log.{message.get("logger", "UNKNOWN")}.{message.get("level_name","UNDEFINED")}'
+                token = self._logging_suspended.set(True)
+                try:
+                    await self._mesh.aio_publish(topic, message)
+                except Exception as e:
+                    sys.stderr.write(f'### ERROR: LOG PUBLISH: {e}\n')
+                    self._mesh_ready.clear()
+                finally:
+                    self._logging_suspended.reset(token)
             finally:
-                self._logging_suspended.reset(token)
                 self._queue.task_done()
