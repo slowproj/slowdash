@@ -149,19 +149,6 @@ class App(slowlette.App):
         
         return (await self.slowlette(url)).content
 
-
-    async def request_emit(self, topic:str, message, sender:str=None):
-        """shortcut for "/api/emit"
-        Parameters:
-          - topic: subscription topic
-          - message: bytes, or data to JSONize.
-        """
-        if sender is None:
-            return (await self.slowlette(f'/api/emit/{topic}', message)).content
-        else:
-            opts = {'sender': sender}
-            return (await self.slowlette(f'/api/emit/{topic}?{urlencode(opts)}', message)).content
-
         
         
 if __name__ == '__main__':

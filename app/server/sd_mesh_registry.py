@@ -66,8 +66,8 @@ class Registry:
             return self.get(key, default, with_meta=with_meta)
         mesh.export('get', rpc_get)
         
-        def rpc_keys(prefix:str=''):
-            return self.keys(prefix)
+        def rpc_keys(prefix:str='', limit:int|None=1000):
+            return self.keys(prefix, limit)
         mesh.export('keys', rpc_keys)
         
         def rpc_delete(key:str, cas_revision=None):
