@@ -60,7 +60,7 @@
             "margin": { "top": 0, "right": 0, "bottom": 0, "left": 0 },
             "ranges": { "apply_to_value": false, "apply_to_gauge": true, "apply_to_tile": false }
         },
-        { "type": "html", "location": "project", "file": "pid_control", "title": "Opearation", "scaling": 1.5 },
+        { "type": "html", "location": "project", "file": "pid_control", "title": "Opearation", "scaling": 1.3 },
         { "type": "html", "location": "project", "file": "pid_setup", "title": "Setup", "scaling": 1 },
         {
             "type": "timeseries",

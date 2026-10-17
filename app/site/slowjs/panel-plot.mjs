@@ -362,13 +362,13 @@ class TimeseriesHistogramPlot extends HistogramPlot {
     update(dataPacket) {
         let ts = dataPacket[this.requestDataIds.channel ?? ' '];
         if (! ts) {
-            return true;
+            return false;
         }
         if ((ts?.x === undefined) || (Array.isArray(ts.x) && (ts.x.length <= 0))) {
-            return true;
+            return false;
         }
-        if (! (Array.isArray(ts.x))) {
-            ts.x = [ ts.x ];
+        if (! Array.isArray(ts.x)) {
+            return false;
         }
         
         this.setStat('');
@@ -902,21 +902,18 @@ class TimeseriesScatterPlot extends GraphPlot {
 
     
     update(dataPacket) {
-        if (dataPacket.__meta.isStreaming) {
-            //return false;
-        }
-
         let ts0 = dataPacket[this.requestDataIds.channelX ?? ' '];
         let ts1 = dataPacket[this.requestDataIds.channelY ?? ' '];
-        if (! ts0 || ! ts1) {
-            return true;
+        let [x0, x1] = [ts0?.x, ts1?.x];
+
+        if (! Array.isArray(x0) || ! Array.isArray(x1)) {
+            return false;
         }
-        if (
-            ((ts0?.x === undefined) || (ts0.x.length <= 0)) ||
-            ((ts1?.x === undefined) || (ts1.x.length <= 0))
-        ){
-            return true;
+        if (x0.length != x1.length) {
+            console.error('TimeSeriesScatterPlot: inconsistent data lengths');
+            return false;
         }
+        const n = x0.length;
 
         this.setStat('');
         this.graph.x = [];
@@ -924,14 +921,12 @@ class TimeseriesScatterPlot extends GraphPlot {
         this.lastpoint_graph.x = [];
         this.lastpoint_graph.y = [];
         
-        const n = Math.min(ts0.x.length, ts1.x.length);
-        
         let [xmin, xmax, ymin, ymax] = [null, null, null, null];
         for (let k = 0; k < n; k++) {
-            if ((ts0.x[k] === null) || (ts1.x[k] === null)) {
+            if ((x0[k] === null) || (x1[k] === null)) {
                 continue;
             }
-            const [xk, yk] = [ts0.x[k], ts1.x[k]];
+            const [xk, yk] = [x0[k], x1[k]];
             this.graph.x.push(xk);
             this.graph.y.push(yk);
             [ xmin, xmax ] = [ Math.min(xmin??xk, xk), Math.max(xmax??xk, xk) ];
@@ -968,16 +963,17 @@ class TimeseriesPlot extends LineMarkerPlot {
     }
     
     update(dataPacket) {
-        if (dataPacket.__meta.isStreaming) {
-            //return false;
-        }
-
         let ts = dataPacket[this.requestDataIds.channel ?? ' '];
         if (! ts) {
-            return true;
+            return false;
+        }
+
+        if (! Array.isArray(ts.t) || ! Array.isArray(ts.x)) {
+            return false;
         }
         if (ts.t?.length != ts.x.length) {
-            return true;
+            console.error('TimeSeriesPlot: inconsistent t and x lengths');
+            return false;
         }
 
         this.setStat('');

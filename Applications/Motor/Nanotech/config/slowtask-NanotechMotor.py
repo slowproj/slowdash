@@ -1,12 +1,16 @@
 
 import time, re, asyncio
-import slowpy.control
+import slowpy
+
+tasklet = slowpy.mesh.Tasklet()
 
 ctrl = slowpy.control.control_system
 c5e = None
+
 datastore = None
 
-async def _initialize(params):
+@tasklet.initialize()
+async def initialize(params):
     global c5e, datastore
 
     await ctrl.aio_stream('connection', 'Looking for the device (can take a minute)')
@@ -48,7 +52,8 @@ async def _initialize(params):
         c5e.last_log_time = time.monotonic()
     
 
-async def _loop():
+@tasklet.loop(interval=1.0)
+async def loop():
     if c5e is not None:
         position = await c5e.position().aio_get()
         velocity = await c5e.velocity().aio_get()
@@ -71,10 +76,9 @@ async def _loop():
                     'velocity': velocity,
                 })
                 
-    await asyncio.sleep(1)
-    
-    
-async def sd_move(mode:str, steps_deg:float=0, duration_sec:float=0, velocity_rpm:float=None):
+
+@tasklet.mesh.export()
+async def move(mode:str, steps_deg:float=0, duration_sec:float=0, velocity_rpm:float=None):
     if c5e is None:
         return False
     
@@ -96,7 +100,8 @@ async def sd_move(mode:str, steps_deg:float=0, duration_sec:float=0, velocity_rp
     await ctrl.aio_stream('status', c5e.status())
 
         
-async def sd_halt():
+@tasklet.mesh.export()
+async def halt():
     if c5e is None:
         return False
     
@@ -104,7 +109,8 @@ async def sd_halt():
     await ctrl.aio_stream('status', c5e.status())
 
     
-async def sd_switch_off():
+@tasklet.mesh.export()
+async def switch_off():
     if c5e is None:
         return False
     
@@ -112,7 +118,8 @@ async def sd_switch_off():
     await ctrl.aio_stream('status', c5e.status())
 
 
-async def sd_initialize():
+@tasklet.mesh.export()
+async def initialize_motor():
     if c5e is None:
         return False
     
@@ -120,7 +127,8 @@ async def sd_initialize():
     await ctrl.aio_stream('status', c5e.status())
 
 
-async def sd_get_object(address:str, subaddress:str='0'):
+@tasklet.mesh.export()
+async def get_object(address:str, subaddress:str='0'):
     if address.startswith('0x'):
         addr = int(address, 16)
     else:
@@ -136,9 +144,10 @@ async def sd_get_object(address:str, subaddress:str='0'):
     
     
 
-async def _get_html():
+@tasklet.content('config/html-NanotechMotor.html')
+async def html():
     html = f'''
-    | <form>
+    | <form name="nanotech_motor">
     |   <table>
     |     <tr><td>Connection</td><td colspan="2" ><span sd-value="connection">not connected</span></td></tr>
     |     <tr><td>Status</td><td colspan="2" ><span sd-value="status">unknown</span></td></tr>
@@ -151,11 +160,11 @@ async def _get_html():
     |     <tr><td>Velocity (rpm)</td><td><input name="velocity_rpm" value="60"></td></tr>
     |   </table>
     |   <div style="font-size:130%;margin:1em">
-    |     <input type="submit" name="parallel NanotechMotor.sd_move()" value="Move">
-    |     <input type="submit" name="parallel NanotechMotor.sd_halt()" value="Stop">
-    |     <input type="submit" name="parallel NanotechMotor.sd_switch_off()" value="Switch Off">
+    |     <input type="submit" name="parallel NanotechMotor.move()" value="Move">
+    |     <input type="submit" name="parallel NanotechMotor.halt()" value="Stop">
+    |     <input type="submit" name="parallel NanotechMotor.switch_off()" value="Switch Off">
     |     /
-    |     <input type="submit" name="parallel NanotechMotor.sd_initialize()" value="Reset">
+    |     <input type="submit" name="parallel NanotechMotor.initialize_motor()" value="Reset">
     |   </div>
     | </form>
     '''
@@ -164,5 +173,5 @@ async def _get_html():
 
     
 if __name__ == '__main__':
-    from slowpy.dash import Tasklet
+    from slowpy.mesh import Tasklet
     Tasklet().run()
