@@ -1355,8 +1355,8 @@ SlowMesh で連携させてみます．</p>
 多くの場面で効率的に動作するため，以下の例では async を使用します．
 async
 関数に馴染みがなくても，必要になるまでは中身を通常の関数と同様に書いても問題ありません．
-（ただし，以下で説明するように，<code>time.sleep()</code>
-は使用しないでください．）</p>
+（ただし，以下で説明するように，<code>time.sleep()</code> および
+<code>ctrl.sleep()</code>は使用しないでください．）</p>
 <p>Tasklet を使った場合，前章の例で暗黙に呼ばれていた
 <code>_initialize()</code> は，以下のように宣言されます．</p>
 <div class="sourceCode" id="cb53"><pre
@@ -1408,9 +1408,10 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb57-1"><a h
 <p>interval や ticks を活用することで，sleep
 をする必要がほとんどなくなるはずです． SlowTask
 は基本的にシングルスレッドの非同期 (async)
-システムなので，ユーザースクリプトの中で <code>time.sleep()</code>
-などのブロッキングをすると全体が停止してしまいます．どうしてもスリープが必要な場合は，非同期スリープである
-<code>await asyncio.sleep()</code> を使用してください．</p>
+システムなので，ユーザースクリプトの中で <code>time.sleep()</code> /
+<code>ctrl.sleep()</code>などのブロッキングをすると全体が停止してしまいます．どうしてもスリープが必要な場合は，非同期スリープである
+<code>await ctrl.aio_sleep()</code> （または
+<code>await asyncio.sleep()</code>） を使用してください．</p>
 <p><code>_run()</code> の代わりには <code>@tasklet.once(delay=0)</code>
 を使用します：</p>
 <div class="sourceCode" id="cb58"><pre

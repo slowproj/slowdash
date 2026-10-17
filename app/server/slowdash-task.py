@@ -12,9 +12,9 @@ def load_task_module(path:str, *, name:str, argv:list[str]|None=None, parameters
     if not os.path.isfile(path):
         raise FileNotFoundError(path)
 
-    module_name = name
+    module_name = f'_slowtask_{name}'
     if module_name in sys.modules:
-        module_name = f'_slowtask_{module_name}_{abs(hash(path))}'
+        module_name = f'{module_name}_{abs(hash(path))}'
     
     spec = importlib.util.spec_from_file_location(module_name, path)
     if spec is None or spec.loader is None:

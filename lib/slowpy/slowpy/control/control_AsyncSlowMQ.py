@@ -48,6 +48,7 @@ class AsyncSlowMQNode(ControlNode):
         except Exception as e:
             logging.warning(f'AsyncSlowMQ Error: {self.url}: {e}')
             ws = None
+            await asyncio.sleep(0.5)
         else:
             logging.debug(f'AsyncSlowMQ: connected: {self.url}')
 

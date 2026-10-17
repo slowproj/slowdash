@@ -1117,7 +1117,8 @@ Using async callbacks allows asynchronous operations with
 situations, so the examples below use async functions. Even if you are
 unfamiliar with async functions, you can write their bodies just like
 regular functions until you need asynchronous operations. (However, do
-not use <code>time.sleep()</code>, as explained below.)</p>
+not use <code>time.sleep()</code> / <code>ctrl.sleep()</code>, as
+explained below.)</p>
 <p>With Tasklet, the <code>_initialize()</code> callback that was
 invoked implicitly in the previous examples is declared as follows:</p>
 <div class="sourceCode" id="cb49"><pre
@@ -1169,9 +1170,11 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb53-1"><a h
 <span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>        ...</span></code></pre></div>
 <p>Using intervals and ticks should eliminate most needs for explicit
 sleeps. SlowTask is primarily a single-threaded asynchronous system, so
-a blocking operation such as <code>time.sleep()</code> in a user script
-stops the entire system. If you do need to sleep, use the asynchronous
-<code>await asyncio.sleep()</code> instead.</p>
+a blocking operation such as <code>time.sleep()</code> and
+<code>ctrl.sleep()</code> in a user script stops the entire system. If
+you do need to sleep, use the asynchronous
+<code>await ctrl.aio_sleep()</code> (or
+<code>await asyncio.sleep()</code>) instead.</p>
 <p>Use <code>@tasklet.once(delay=0)</code> in place of
 <code>_run()</code>:</p>
 <div class="sourceCode" id="cb54"><pre

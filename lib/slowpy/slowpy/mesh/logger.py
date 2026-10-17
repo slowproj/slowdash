@@ -97,6 +97,7 @@ class MeshLogHandler(logging.Handler):
             self._worker_task = None
             self._mesh_ready.clear()
             self._mesh = None
+            self._event_loop = None
 
 
     async def _handle_log(self):

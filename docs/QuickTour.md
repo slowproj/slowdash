@@ -816,7 +816,7 @@ Callbacks can be either regular Python functions or async functions.
 Using async callbacks allows asynchronous operations with `await` inside the function.
 This is more efficient in many situations, so the examples below use async functions.
 Even if you are unfamiliar with async functions, you can write their bodies just like regular functions until you need asynchronous operations.
-(However, do not use `time.sleep()`, as explained below.)
+(However, do not use `time.sleep()` / `ctrl.sleep()`, as explained below.)
 
 With Tasklet, the `_initialize()` callback that was invoked implicitly in the previous examples is declared as follows:
 
@@ -881,8 +881,8 @@ async def my_loop(ticks):
 ```
 
 Using intervals and ticks should eliminate most needs for explicit sleeps.
-SlowTask is primarily a single-threaded asynchronous system, so a blocking operation such as `time.sleep()` in a user script stops the entire system.
-If you do need to sleep, use the asynchronous `await asyncio.sleep()` instead.
+SlowTask is primarily a single-threaded asynchronous system, so a blocking operation such as `time.sleep()` and `ctrl.sleep()` in a user script stops the entire system.
+If you do need to sleep, use the asynchronous `await ctrl.aio_sleep()` (or `await asyncio.sleep()`) instead.
 
 Use `@tasklet.once(delay=0)` in place of `_run()`:
 
