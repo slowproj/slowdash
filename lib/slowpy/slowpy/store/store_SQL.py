@@ -1,7 +1,7 @@
 # Created by Sanshiro Enomoto on 3 June 2023 #
 
 
-import os, sys, time, json, math, numbers, logging, traceback
+import os, sys, time, json, math, numbers, logging
 from urllib.parse import urlparse
 from .store import DataStore
 
@@ -62,8 +62,9 @@ class TableFormat:
             # but there is no reliable standard way for UPSERT usable in all RDBMS...
             sql = f"DELETE FROM {self.table} WHERE channel={self.db.placeholder}"
             logging.debug(f'{sql}: {(channel,)}')
-            cur.execute(sql, (channel,))       
-        elif isinstance(value, numbers.Real) and not isinstance(value, bool):
+            cur.execute(sql, (channel,))
+            
+        if isinstance(value, numbers.Real) and not isinstance(value, bool):
             if not math.isfinite(value):
                 # inf/nan -> None
                 # MySQL and SQLite cannot handle NaN, MySQL cannot handle inf
@@ -359,7 +360,6 @@ class DataStore_PostgreSQL(DataStore_SQL):
         else:
             self.conn = None
             logging.error('Unable to connect to PostgreSQL')
-            logging.error(traceback.format_exc())
             return
 
         logging.info(f'DB "{self.db_url}" is connected for table "{self.table}"')
@@ -445,7 +445,6 @@ class DataStore_MySQL(DataStore_SQL):
         else:
             self.conn = None
             logging.error('Unable to connect to MySQL: %s' % db_url)
-            logging.error(traceback.format_exc())
             return
 
         logging.info(f'DB "{self.db_url}" is connected for table "{self.table}"')

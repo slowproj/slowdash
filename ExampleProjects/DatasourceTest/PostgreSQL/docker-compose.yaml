@@ -7,7 +7,7 @@ services:
     environment:
       - POSTGRES_USER=slowdash
       - POSTGRES_PASSWORD=slowdash
-      - POSTGRES_DB=SlowTestData
+      - POSTGRES_DB=SlowStore
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -26,7 +26,7 @@ services:
     ports:
       - "18881:18881"
     environment:
-      - DB_URL=postgresql://slowdash:slowdash@pgsql_db:5432/SlowTestData
+      - DB_URL=postgresql://slowdash:slowdash@pgsql_db:5432/SlowStore
     depends_on:
       pgsql_db:
         condition: service_healthy
@@ -34,7 +34,7 @@ services:
 
   testdata:
     image: slowproj/slowdash
-    command: python /slowdash/utils/generate-testdata.py --db-url=postgresql://slowdash:slowdash@pgsql_db:5432/SlowTestData
+    command: python /slowdash/utils/generate-testdata.py --db-url=postgresql://slowdash:slowdash@pgsql_db:5432/SlowStore
     depends_on:
       pgsql_db:
         condition: service_healthy

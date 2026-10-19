@@ -138,7 +138,7 @@ class DataSource_PostgreSQL(DataSource_SQL):
         try:
             pool = await asyncpg.create_pool(self.url)
         except Exception as e:
-            logging.error(f'AsyncPostgreSQL: {self.url}: {e}')
+            logging.warning(f'AsyncPostgreSQL: {self.url}: {e}')
             pool = None
             
         if pool is None:

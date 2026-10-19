@@ -1,10 +1,10 @@
 slowdash_project:
   name: CSV_Test
   data_source:
-    url: csv:///SlowTestData.d
+    url: csv:///SlowStore.d
     time_series:
-      schema: ts_data [channel] @timestamp(unix) = value
+      schema: slowdata [channel] @timestamp(unix) = value
     object:
-      schema: obj_data [channel] = value
+      schema: slowdata_obj [channel] = value
     object_time_series:
-      schema: objts_data [channel] @timestamp(unix) = value
+      schema: slowdata_objts [channel] @timestamp(unix) = value

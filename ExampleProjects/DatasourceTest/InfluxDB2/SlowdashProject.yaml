@@ -1,10 +1,10 @@
 slowdash_project:
   name: InfluxDB2_Test
   data_source:
-    url: ${DB_URL:-influxdb2://sloworg:slowtoken@localhost:8086/SlowTestData}
+    url: ${DB_URL:-influxdb2://sloworg:slowtoken@localhost:8086/SlowStore}
     time_series:
-      schema: ts_data
+      schema: slowdata
       tags:
         scan_length: 1y
     object_time_series:
-      schema: objts_data
+      schema: slowdata_objts

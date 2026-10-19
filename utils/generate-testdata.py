@@ -17,7 +17,7 @@ signal.signal(signal.SIGTERM, signal_handler)
 
 
     
-def start(db_url, ts_name='ts_data', obj_name='obj_data', objts_name='objts_data', *, interval=1.0):
+def start(db_url, ts_name='slowdata', obj_name='slowdata_obj', objts_name='slowdata_objts', *, interval=1.0):
     datastore_ts = slowpy.store.create_datastore_from_url(db_url, ts_name)
     datastore_obj = slowpy.store.create_datastore_from_url(db_url, obj_name)
     datastore_objts = slowpy.store.create_datastore_from_url(db_url, objts_name)

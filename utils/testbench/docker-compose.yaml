@@ -8,7 +8,7 @@ services:
     environment:
       - POSTGRES_USER=slowdash
       - POSTGRES_PASSWORD=slowdash
-      - POSTGRES_DB=SlowTestData
+      - POSTGRES_DB=SlowStore
 
 
   mysql:
@@ -18,7 +18,7 @@ services:
       - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=slowdash
-      - MYSQL_DATABASE=SlowTestData
+      - MYSQL_DATABASE=SlowStore
       - MYSQL_USER=slowdash
       - MYSQL_PASSWORD=slowdash
 
@@ -34,7 +34,7 @@ services:
       - DOCKER_INFLUXDB_INIT_PASSWORD=slowdash
       - DOCKER_INFLUXDB_INIT_ORG=sloworg
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=slowtoken
-      - DOCKER_INFLUXDB_INIT_BUCKET=SlowTestData
+      - DOCKER_INFLUXDB_INIT_BUCKET=SlowStore
 
 
   redis:

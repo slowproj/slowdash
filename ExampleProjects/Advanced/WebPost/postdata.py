@@ -15,8 +15,8 @@ datastore = None
 
 def _initialize(params):
     global datastore
-    db_url = params.get('db_url', 'sqlite:///TestData.db')
-    db_table = params.get('db_table', 'ts_data')
+    db_url = params.get('db_url', 'sqlite:///TesStore.db')
+    db_table = params.get('db_table', 'slowdata')
     datastore = slowpy.store.create_datastore_from_url(db_url, db_table)
 
 

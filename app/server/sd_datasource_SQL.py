@@ -195,7 +195,7 @@ class DataSource_SQL(DataSource_TableStore):
 
             result[ch] = {
                 'start': start, 'length': length,
-                't': to,
+                't': to - start,
                 'x': table
             }
         

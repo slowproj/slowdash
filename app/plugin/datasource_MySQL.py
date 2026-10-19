@@ -126,7 +126,7 @@ class DataSource_MySQL(DataSource_SQL):
                 autocommit=True
             )
         except Exception as e:
-            logging.error(f'AsyncMySQL: {self.url}: {e}')
+            logging.warning(f'AsyncMySQL: {self.url}: {e}')
             pool = None
         
         if pool is None:

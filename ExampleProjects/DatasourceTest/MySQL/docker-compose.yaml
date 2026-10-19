@@ -19,9 +19,9 @@ services:
     ports:
       - "18881:18881"
     environment:
-      - DB_URL=mysql://slowdash:slowdash@mysql_db:3306/SlowTestData
+      - DB_URL=mysql://slowdash:slowdash@mysql_db:3306/SlowStore
 
 
   testdata:
     image: slowproj/slowdash
-    command: python /slowdash/utils/generate-testdata.py --db-url=mysql://slowdash:slowdash@mysql_db:3306/SlowTestData
+    command: python /slowdash/utils/generate-testdata.py --db-url=mysql://slowdash:slowdash@mysql_db:3306/SlowStore

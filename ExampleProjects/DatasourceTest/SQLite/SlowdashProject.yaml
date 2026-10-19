@@ -1,20 +1,20 @@
 slowdash_project:
   name: SQLite_Test
   data_source:
-    url: sqlite:///SlowTestData
+    url: sqlite:///SlowStore
     time_series:
-      schema: ts_data [channel] @timestamp(unix) = value
+      schema: slowdata [channel] @timestamp(unix) = value
     object:
-      schema: obj_data [channel] = value
+      schema: slowdata_obj [channel] = value
     object_time_series:
-      schema: objts_data [channel] @timestamp(unix) = value
+      schema: slowdata_objts [channel] @timestamp(unix) = value
 
     view:
       - name: ts_raw
-        sql: select * from ts_data order by timestamp desc limit 20
+        sql: select * from slowdata order by timestamp desc limit 20
       - name: obj_raw
-        sql: select * from obj_data
+        sql: select * from slowdata_obj
       - name: objts_raw
-        sql: select * from objts_data order by timestamp desc limit 20
+        sql: select * from slowdata_objts order by timestamp desc limit 20
       - name: hist_raw
-        sql: select * from obj_data where channel="test_histogram"
+        sql: select * from slowdata_obj where channel="test_histogram"

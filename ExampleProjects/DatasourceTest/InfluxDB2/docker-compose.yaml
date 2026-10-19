@@ -11,7 +11,7 @@ services:
       - DOCKER_INFLUXDB_INIT_PASSWORD=slowdash
       - DOCKER_INFLUXDB_INIT_ORG=sloworg
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=slowtoken
-      - DOCKER_INFLUXDB_INIT_BUCKET=SlowTestData
+      - DOCKER_INFLUXDB_INIT_BUCKET=SlowStore
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8086/health" ]
       interval: 10s
@@ -30,7 +30,7 @@ services:
     ports:
       - "18881:18881"
     environment:
-      - "DB_URL=influxdb2://sloworg:slowtoken@influxdb:8086/SlowTestData"
+      - "DB_URL=influxdb2://sloworg:slowtoken@influxdb:8086/SlowStore"
     depends_on:
       influxdb:
         condition: service_healthy
@@ -38,7 +38,7 @@ services:
 
   testdata:
     image: slowproj/slowdash
-    command: python /slowdash/utils/generate-testdata.py --db-url=influxdb2://sloworg:slowtoken@influxdb:8086/SlowTestData
+    command: python /slowdash/utils/generate-testdata.py --db-url=influxdb2://sloworg:slowtoken@influxdb:8086/SlowStore
     depends_on:
       influxdb:
         condition: service_healthy

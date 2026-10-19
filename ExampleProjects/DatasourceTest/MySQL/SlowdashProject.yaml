@@ -6,11 +6,11 @@ slowdash_project:
     #type: MySQL_NoAsync      # No-Async default: enable this to enforce this No-Async version (mysql-connector)
     #type: MySQL_mysqlclient  # No-Async alternative, uses mysqlclient
 
-    url: ${DB_URL:-mysql://slowdash:slowdash@127.0.0.1:3306/SlowTestData}
+    url: ${DB_URL:-mysql://slowdash:slowdash@127.0.0.1:3306/SlowStore}
     
     time_series:
-      schema: ts_data [channel] @timestamp(unix) = value
+      schema: slowdata [channel] @timestamp(unix) = value
     object:
-      schema: obj_data [channel] = value
+      schema: slowdata_obj [channel] = value
     object_time_series:
-      schema: objts_data [channel] @timestamp(unix) = value
+      schema: slowdata_objts [channel] @timestamp(unix) = value

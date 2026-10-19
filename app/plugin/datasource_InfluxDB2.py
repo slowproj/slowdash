@@ -93,7 +93,7 @@ class DataSource_InfluxDB2(DataSource):
             self.api = self.client.query_api()
             self.api.query(test_query, org=self.org)
         except Exception as e:
-            logging.error(f'InfluxDB2: Unable to connect to server: {e}')
+            logging.warning(f'InfluxDB2: Unable to connect to server: {e}')
             self.client = None
             self.api = None
             return False

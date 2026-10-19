@@ -45,7 +45,7 @@ class DataSource_SQLite(DataSource_SQL):
             conn = sqlite3.connect(db_file)
         except Exception as e:
             if not self._is_retry:
-                logging.error(f'DB "{db_file}" cannot be connected: {str(e)}')
+                logging.warning(f'DB "{db_file}" cannot be connected: {str(e)}')
                 self._is_retry = True
             conn = None
             
