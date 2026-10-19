@@ -31,7 +31,7 @@ export class SlowDash {
 
         this.serverConnected = true;
 
-        this.serverStatusDiv = $('<div>').appendTo(div.closest('body'));
+        this.serverStatusDiv = $('<div>').appendTo($(div).closest('body'));
         this.serverStatusDiv.css({
             'display':'none',  // to show, 'display': 'flex'
             'position': 'fixed',

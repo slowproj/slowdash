@@ -57,6 +57,10 @@ class Plot {
             'display': 'inline-block',
             'margin-left': '1em',
         });
+
+        // for standalone use; be ready to receive data packets
+        let dataRequest = new DataRequest(-10, 0);
+        this.fillDataRequest(dataRequest);
     }
 
     setStyle(style) {

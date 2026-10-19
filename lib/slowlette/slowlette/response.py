@@ -19,7 +19,8 @@ def deep_update(target, update):
 
 class Response:
     status = {
-        200: 'OK', 201: 'Created', 202: 'Accepted', 
+        200: 'OK', 201: 'Created', 202: 'Accepted',
+        301: 'Moved Permanently', 302: 'Found', 303: 'See Other', 307: 'Temporary Redirect', 308: 'Permanent Redirect',
         400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found',
         500: 'Internal Server Error', 503: 'Service Unavailable', 507: 'Insufficient Storage'
     }
@@ -33,11 +34,11 @@ class Response:
             return int(obj) if float(obj).is_integer() else float(obj)
 
         
-    def __init__(self, status_code=0, *, content_type=None, content=None):
+    def __init__(self, status_code=0, *, content_type=None, content=None, headers=None):
         self.status_code = status_code
         self.content_type = content_type
         self.content = None
-        self.headers = {}
+        self.headers = headers or {}
 
         if content is not None:
             if status_code == 0:

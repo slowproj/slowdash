@@ -31,12 +31,35 @@ class UserHtmlComponent(Component):
     # make api accessble at /userhtml/api
     @slowlette.get('/userhtml/api/{*}')
     async def api_redirect(self, path:list, opts:dict):
-        url = '/'.join(path[1:])
+        #url = '/'.join(path[1:])
+        #if len(opts):
+        #    url += '?' + urlencode(opts)
+        #return await self.app.request(url)
+
+        url = '/'.join(['..'] + path[1:])
         if len(opts):
             url += '?' + urlencode(opts)
-        return await self.app.request(url)
+        response = slowlette.Response(302, headers={
+            'Location': url,
+            'Content-Length': '0',
+        })
+
+        return response
 
 
+    @slowlette.eventstream('/userhtml/event/{*}')
+    async def event_redirect(self, path:list, opts:dict, eventstream:slowlette.EventStream):
+        url = '/'.join(['..'] + path[1:])
+        if len(opts):
+            url += '?' + urlencode(opts)
+        response = slowlette.Response(302, headers={
+            'Location': url,
+            'Content-Length': '0',
+        })
+
+        return response
+
+    
     @slowlette.get('/api/config/contentlist')
     async def get_content_meta(self):
         if self.app.project_dir is None:

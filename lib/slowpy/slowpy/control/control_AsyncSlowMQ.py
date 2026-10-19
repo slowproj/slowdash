@@ -175,7 +175,7 @@ class PublisherNode(ControlNode):
         try:
             await self.slowmq_node.publisher_ws.send(doc)
         except Exception as e:
-            if type(e).__name__ != 'ConnectionClosedError':
+            if type(e).__name__ not in ['ConnectionClosedError', 'ConnectionClosedOK' ]:
                 logging.warning(f'AsyncSlowMQ.publisher(): {e}')
             self.slowmq_node.publisher_ws_connected = False
 
@@ -263,7 +263,7 @@ class SubscriberNode(ControlNode):
         except asyncio.TimeoutError:
             message = None
         except Exception as e:
-            if type(e).__name__ != 'ConnectionClosedError':
+            if type(e).__name__ not in ['ConnectionClosedError', 'ConnectionClosedOK' ]:
                 logging.warning(f'AsyncSlowMQ.subscriber().aio_get(): {e} {type(e)}')
             self.connected = False
             message = None
