@@ -399,7 +399,7 @@ export class StreamingReceiver extends DataReceiver {
             }
         });
 
-        this.#sse.onerror = () => {
+        this.#sse.onerror = (e) => {
             if (this.#clientId != null) {
                 console.error('SSE Error: Data streaming is closed on error.');
             }

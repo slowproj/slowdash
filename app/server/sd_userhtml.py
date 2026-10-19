@@ -29,7 +29,7 @@ class UserHtmlComponent(Component):
         
         
     # make api accessble at /userhtml/api
-    @slowlette.get('/userhtml/api/{*}')
+    @slowlette.route('/userhtml/api/{*}')
     async def api_redirect(self, path:list, opts:dict):
         #url = '/'.join(path[1:])
         #if len(opts):
@@ -39,7 +39,7 @@ class UserHtmlComponent(Component):
         url = '/' + '/'.join(path[1:])
         if len(opts):
             url += '?' + urlencode(opts)
-        response = slowlette.Response(302, headers={
+        response = slowlette.Response(307, headers={
             'Location': url,
             'Content-Length': '0',
         })
@@ -47,17 +47,17 @@ class UserHtmlComponent(Component):
         return response
 
 
+    # make SSE accessble at /userhtml/event
     @slowlette.eventstream('/userhtml/event/{*}')
     async def event_redirect(self, path:list, opts:dict, eventstream:slowlette.EventStream):
         url = '/' + '/'.join(path[1:])
         if len(opts):
             url += '?' + urlencode(opts)
-        response = slowlette.Response(302, headers={
-            'Location': url,
-            'Content-Length': '0',
-        })
 
-        return response
+        # SSE cannot be redirected by 302
+            
+        request = slowlette.Request(url, method='EVENTSTREAM')
+        await self.app.slowlette.eventstream(request, eventstream)
 
     
     @slowlette.get('/api/config/contentlist')
