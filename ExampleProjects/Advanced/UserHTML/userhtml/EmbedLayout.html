@@ -67,7 +67,7 @@
             layout.draw(await response.json());
         }
 
-        const responseSrc = await fetch('userpage.html');
+        const responseSrc = await fetch('EmbedLayout.html');
         if (responseSrc.ok) {
             document.querySelector('#src').textContent = await responseSrc.text();
         }
