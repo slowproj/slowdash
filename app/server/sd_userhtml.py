@@ -36,7 +36,7 @@ class UserHtmlComponent(Component):
         #    url += '?' + urlencode(opts)
         #return await self.app.request(url)
 
-        url = '/'.join(['..'] + path[1:])
+        url = '/' + '/'.join(path[1:])
         if len(opts):
             url += '?' + urlencode(opts)
         response = slowlette.Response(302, headers={
@@ -49,7 +49,7 @@ class UserHtmlComponent(Component):
 
     @slowlette.eventstream('/userhtml/event/{*}')
     async def event_redirect(self, path:list, opts:dict, eventstream:slowlette.EventStream):
-        url = '/'.join(['..'] + path[1:])
+        url = '/' + '/'.join(path[1:])
         if len(opts):
             url += '?' + urlencode(opts)
         response = slowlette.Response(302, headers={
