@@ -3,7 +3,7 @@
 import os, time, re, uuid, socket, threading, asyncio, inspect, logging, traceback
 from collections.abc import Callable
 from urllib.parse import urlsplit
-from typing import Any
+from typing import Any, overload
 
 from slowpy.control import ControlNode, control_system as ctrl
 
@@ -213,22 +213,29 @@ class Mesh:
         '''
         return self._pubsub.subscriber(self._convert_topic(topic), **self._subargs).json()
 
-
-    async def aio_publish(self, topic:str, value, *, headers:dict|None=None):
+    @overload
+    async def aio_publish(self, topic:str, /, value=None, *, headers:dict|None=None) -> None: ...
+    @overload 
+    async def aio_publish(self, packet:MeshPacket, /) -> None: ...
+    async def aio_publish(self, target, value=None, *, headers:dict|None=None):
         '''direct publish
         '''
-        if isinstance(value, MeshPacket):
-            t, h, b = value.pack(topic)
+        if isinstance(target, MeshPacket):
+            t, h, b = target.pack()
             return await self.publisher(t).headers(h).aio_set(b)
     
-        return await self.publisher(topic).headers(headers or {}).aio_set(value)
+        return await self.publisher(target).headers(headers or {}).aio_set(value)
 
     
-    def publish(self, topic:str, value, *, headers:dict|None=None):
+    @overload
+    def publish(self, topic:str, /, value=None, *, headers:dict|None=None) -> None: ...
+    @overload 
+    def publish(self, packet:MeshPacket, /) -> None: ...
+    def publish(self, target, value=None, *, headers:dict|None=None):
         '''no-async direct publish; this needs an eventloop somewhere
         '''
         loop = asyncio.get_running_loop()
-        loop.create_task(self.aio_publish(topic, value, headers=headers))
+        loop.create_task(self.aio_publish(target, value, headers=headers))
 
     
     async def aio_subscribe(self, topic:str, func):
@@ -645,13 +652,19 @@ class Registry:
 
 class MeshPacket:
     def __init__(self):
-        pass
+        self.topic_prefix = None
+        
 
-    def pack(self, topic):
+    def to(self, topic_prefix:str):
+        self.topic_prefix = topic_prefix
+        return self
+    
+        
+    def pack(self):
         """
         - return value: tuple of (topic, headers, body)
         """
-        return (topic, None, None)
+        return (None, None, None)
 
 
     @classmethod

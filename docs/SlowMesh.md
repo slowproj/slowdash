@@ -139,6 +139,7 @@ The following MeshPackets are currently available.
 | Topic | MeshPacket Constructor |
 |---|----|
 |`data.*.>` | `DataPacket(values, *, tag:str|None=None, timestamp:float|None=None)` |
+|`form.>` | `FormPacket(form:str, element:str, value)` |
 |`control.>` | `ControlPacket()` TODO: not implemented |
 
 #### Example for Data Topics
@@ -158,9 +159,8 @@ The following example uses `mesh.DataPacket`, the MeshPacket for `data.>` topics
 ```python
 from slowpy.mesh import DataPacket
 
-topic = 'data.store'
 temp0 = thermometer.ch(0).get()
-await tasklet.mesh.aio_publish(topic, DataPacket(temp0, tag='temp0'))  # Published under topic name data.store.temp0
+await tasklet.mesh.aio_publish(DataPacket(temp0, tag='temp0').to('data.store'))
 ```
 Here, the constructor parameters of `DataPacket` are the same as those of `DataStore.append()`.
 In other words, writing directly to the data store and publishing through SlowMesh use almost the same syntax.
@@ -680,11 +680,11 @@ async def my_work(tick):
     data = await HV.ch(0).aio_get()
     packet = DataPacket(data, tag='HV.ch00')
     
-    await tasklet.mesh.aio_publish('data.stream', packet)
+    await tasklet.mesh.aio_publish(packet.to('data.stream'))
     
     # Record in the database once every 10 calls
     if tick:
-        await tasklet.mesh.aio_publish('data.store', packet)
+        await tasklet.mesh.aio_publish(packet.to('data.store'))
 ```
 
 Multiple tick intervals can also be specified.
@@ -695,15 +695,15 @@ async def my_work(tick):
     data = await HV.ch(0).aio_get()
     packet = DataPacket(data, tag='HV.ch00')
     
-    await tasklet.mesh.aio_publish('data.stream', packet)
+    await tasklet.mesh.aio_publish(packet.to('data.stream'))
     
     # Record in the temporary database (short-term, high-density) once every 10 calls
     if tick.transient_store:
-        await tasklet.mesh.aio_publish('data.transient_store', packet)
+        await tasklet.mesh.aio_publish(packet.to('data.transient_store'))
         
     # Record in the persistent database once every 60 calls
     if tick.store:
-        await tasklet.mesh.aio_publish('data.store', packet)
+        await tasklet.mesh.aio_publish(packet.to('data.store'))
 ```
 
 Again, do not use `time.sleep()` inside user functions. (`await control_system.aio_sleep()` is allowed.)
@@ -717,7 +717,9 @@ A SlowTask internally holds a connected SlowMesh instance and can use SlowMesh c
 At present, values passed in data and headers are limited to JSON-serializable values.
 <br>(TODO: support binary data)
 
-- Publish data: `await tasklet.mesh.aio_publish(name:str, packet:XXXPacket)` (async method)
+- Publish data:
+  - `await tasklet.mesh.aio_publish(name:str, value)` (async method)
+  - `await tasklet.mesh.aio_publish(packet:XXXPacket)` (async method)
 - Subscribe to data: `@tasklet.mesh.on(topic:str)` (decorator; the decorated function receives `packet:XXXPacket`)
 
 #### Accessing the Registry (Key-Value Store)
@@ -867,7 +869,7 @@ def loop():
     if not device.is_running:
         return
     data = device.ch(0).get()
-    tasklet.mesh.publish('data.store', DataPacket(data, tag='HV.ch0.V'))
+    tasklet.mesh.publish(DataPacket(data, tag='HV.ch0.V').to('data.store'))
 ```
 
 Readout start and stop are controlled by the PubSub topics `control.start` and `control.stop`.
@@ -973,7 +975,7 @@ def stream_hist():
         return
     
     for channel, hist in histograms.items():
-        tasklet.mesh.publish('data.stream', DataPacket(hist, tag=f'histogram.{channel}'))
+        tasklet.mesh.publish(DataPacket(hist, tag=f'histogram.{channel}').to('data.stream'))
 ```
 Arrival-data analysis and histogram publishing are separate callbacks so that histograms are published at a fixed interval regardless of the incoming data rate.
 Because the data-storage task subscribes only to `data.store.>`, data published to `data.stream` is not stored and appears only on the online display.

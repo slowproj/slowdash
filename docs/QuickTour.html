@@ -1405,9 +1405,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb61-1"><a h
 <span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span>...)</span>
 <span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> read_data():</span>
 <span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>    volt <span class="op">=</span> <span class="bu">float</span>(device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get() <span class="kw">or</span> <span class="st">&#39;nan&#39;</span>)</span>
-<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb61-7"><a href="#cb61-7" aria-hidden="true" tabindex="-1"></a>    topic <span class="op">=</span> <span class="st">&#39;data.store&#39;</span></span>
-<span id="cb61-8"><a href="#cb61-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(topic, DataPacket({<span class="st">&#39;volt&#39;</span>: volt}))</span></code></pre></div>
+<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(DataPacket({<span class="st">&#39;volt&#39;</span>: volt}).to(<span class="st">&#39;data.store&#39;</span>))</span></code></pre></div>
 <p>This publishes a data message on the <code>data.store</code> topic.
 <code>DataPacket</code> converts the data to the message schema defined
 for that topic. Its constructor takes the same parameters as
@@ -1424,9 +1422,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb62-1"><a h
 <span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span>...)</span>
 <span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> read_data():</span>
 <span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>    volt <span class="op">=</span> <span class="bu">float</span>(device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get() <span class="kw">or</span> <span class="st">&#39;nan&#39;</span>)</span>
-<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>    topic <span class="op">=</span> <span class="st">&#39;data.store&#39;</span></span>
-<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a>    tasklet.mesh.publish(topic, DataPacket({<span class="st">&#39;volt&#39;</span>: volt}))</span></code></pre></div>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>    tasklet.mesh.publish(DataPacket({<span class="st">&#39;volt&#39;</span>: volt}).to(<span class="st">&#39;data.store&#39;</span>))</span></code></pre></div>
 <p>To receive data from topics beginning with <code>data.</code>,
 including <code>data.store</code>:</p>
 <div class="sourceCode" id="cb63"><pre
@@ -1468,7 +1464,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb64-1"><a h
 <span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> run_status.running:</span>
 <span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>:</span>
 <span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>            volt <span class="op">=</span> <span class="bu">float</span>(device.command(<span class="st">&#39;MEAS:VOLT:DC?&#39;</span>).get() <span class="kw">or</span> <span class="st">&#39;nan&#39;</span>)</span>
-<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.store&#39;</span>, slowpy.mesh.DataPacket({<span class="st">&#39;volt&#39;</span>: volt}))   <span class="co"># Publish the data.</span></span>
+<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">await</span> tasklet.mesh.aio_publish(slowpy.mesh.DataPacket({<span class="st">&#39;volt&#39;</span>: volt}).to(<span class="st">&#39;data.store&#39;</span>))   <span class="co"># Publish the data.</span></span>
 <span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
 <span id="cb64-8"><a href="#cb64-8" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f&#39;ERROR: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">&#39;</span>)</span>
 <span id="cb64-9"><a href="#cb64-9" aria-hidden="true" tabindex="-1"></a></span>
@@ -1517,7 +1513,7 @@ The histogram is published to the <code>data.stream</code> topic once
 per second.</p>
 <p>The <code>ctrl.stream(name, value)</code> method used earlier
 internally uses
-<code>aio_publish('data.stream', DataPacket({name:value}))</code> to
+<code>aio_publish(DataPacket({name:value}).to('data.stream'))</code> to
 publish the data to the <code>data.stream</code> topic.</p>
 <div class="sourceCode" id="cb66"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy</span>
@@ -1533,7 +1529,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb66-1"><a h
 <span id="cb66-11"><a href="#cb66-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb66-12"><a href="#cb66-12" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb66-13"><a href="#cb66-13" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> stream_result():</span>
-<span id="cb66-14"><a href="#cb66-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.stream&#39;</span>, slowpy.mesh.DataPacket(histogram, tag<span class="op">=</span><span class="st">&#39;hist01&#39;</span>))</span>
+<span id="cb66-14"><a href="#cb66-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(slowpy.mesh.DataPacket(histogram, tag<span class="op">=</span><span class="st">&#39;hist01&#39;</span>).to(<span class="st">&#39;data.stream&#39;</span>))</span>
 <span id="cb66-15"><a href="#cb66-15" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb66-16"><a href="#cb66-16" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.on</span>(<span class="st">&#39;mydaq.control.start&#39;</span>)   <span class="co"># The readout task announces the start of a run.</span></span>
 <span id="cb66-17"><a href="#cb66-17" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> clear():</span>

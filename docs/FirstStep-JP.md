@@ -1248,9 +1248,7 @@ from slowpy.mesh import DataPacket
 @tasklet.loop(interval=...)
 async def read_data():
     volt = float(device.command('MEAS:VOLT:DC?').get() or 'nan')
-    
-    topic = 'data.store'
-    await tasklet.mesh.aio_publish(topic, DataPacket({'volt': volt}))
+    await tasklet.mesh.aio_publish(DataPacket({'volt': volt}).to('data.store'))
 ```
 
 ここでは，`data.store` というトピックにデータメッセージを Publish しています．`DataPacket` は，そのトピックで規定されるメッセージのスキーマに変換するためのものです．`DataPacket` のコンストラクタパラメータは `DataStore.append()` と同じなので，DataStore に直接書き出すコードをほぼそのまま使用できます．
@@ -1263,9 +1261,7 @@ from slowpy.mesh import DataPacket
 @tasklet.loop(interval=...)
 def read_data():
     volt = float(device.command('MEAS:VOLT:DC?').get() or 'nan')
-    
-    topic = 'data.store'
-    tasklet.mesh.publish(topic, DataPacket({'volt': volt}))
+    tasklet.mesh.publish(DataPacket({'volt': volt}).to('data.store'))
 ```
 
 メッシュの `data.` から始まるトピック（`data.store` を含む）からデータを受信するためには，以下のようにします．
@@ -1300,7 +1296,7 @@ async def loop():
     if run_status.running:
         try:
             volt = float(device.command('MEAS:VOLT:DC?').get() or 'nan')
-            await tasklet.mesh.aio_publish('data.store', slowpy.mesh.DataPacket({'volt': volt}))   # データを送り出す
+            await tasklet.mesh.aio_publish(slowpy.mesh.DataPacket({'volt': volt}).to('data.store'))   # データを送り出す
         except Exception as e:
             print(f'ERROR: {e}')
             
@@ -1348,7 +1344,7 @@ async def store(data: slowpy.mesh.DataPacket):
 ##### `slowtask-histogram.py`
 メッシュの `data.store` トピックからデータを受け取って，`volt` のデータに対してヒストグラムを作成します．
 作成したヒストグラムは一秒ごとに `data.stream` トピックに publish されます．
-以前使っていた `ctrl.stream(name, value)` は，内部で `aio_publish('data.stream', DataPacket({name:value}))` を使用して `data.stream` にデータパケットを publish しています．
+以前使っていた `ctrl.stream(name, value)` は，内部で `aio_publish(DataPacket({name:value}).to('data.stream'))` を使用して `data.stream` にデータパケットを publish しています．
 
 ```python
 import slowpy
@@ -1364,7 +1360,7 @@ async def process_data(data: slowpy.mesh.DataPacket):
 
 @tasklet.loop(interval=1)
 async def stream_result():
-    await tasklet.mesh.aio_publish('data.stream', slowpy.mesh.DataPacket(histogram, tag='hist01'))
+    await tasklet.mesh.aio_publish(slowpy.mesh.DataPacket(histogram, tag='hist01').to('data.stream'))
 
 @tasklet.mesh.on('mydaq.control.start')   # read タスクが知らせてくれるランの開始
 async def clear():

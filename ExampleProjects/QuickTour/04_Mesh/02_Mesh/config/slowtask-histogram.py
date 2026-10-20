@@ -13,7 +13,7 @@ async def process_data(data: slowpy.mesh.DataPacket):
 
 @tasklet.loop(interval=1)
 async def stream_result():
-    await tasklet.mesh.aio_publish('data.stream', slowpy.mesh.DataPacket(histogram, tag='hist01'))
+    await tasklet.mesh.aio_publish(slowpy.mesh.DataPacket(histogram, tag='hist01').to('data.stream'))
 
 
 @tasklet.mesh.on('mydaq.control.start')

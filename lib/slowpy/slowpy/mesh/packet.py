@@ -27,18 +27,28 @@ class DataPacket(MeshPacket):
         self.tag = tag
         self.timestamp = timestamp
 
+        self.topic_prefix = 'data.store'
 
-    def pack(self, topic:str):
+
+    def to_stream(self):
+        self.to('data.stream')
+        return self
+    
+        
+    def to_store(self):
+        self.to('data.store')
+        return self
+
+    
+    def pack(self):
         '''
         - return value: tuple of (topic, headers, body)
         '''
             
-        headers, body = {}, {}
-        
         if isinstance(self.values, TimeSeries):
             if self.tag is None:
                 logging.error(f'mesh.DataPacket: tag is required for time-series data type')
-                return (topic, None, None)
+                return (None, None, None)
 
             fields = self.values.fields
             values = self.values.values
@@ -51,9 +61,8 @@ class DataPacket(MeshPacket):
             if isinstance(self.values, DataElement):
                 if self.tag is None:
                     logging.error(f'mesh.DataPacket: tag is required for DataElement data')
-                    body = {}
-                else:
-                    body = { self.tag: { 't':t ,'x': self.values.to_json() } }
+                    return (None, None, None)
+                body = { self.tag: { 't':t ,'x': self.values.to_json() } }
             elif type(self.values) is dict:
                 prefix = f'{self.tag}:' if self.tag is not None else ''
                 body = { prefix+field: { 't':t ,'x': x } for field, x in self.values.items() }
@@ -61,12 +70,14 @@ class DataPacket(MeshPacket):
                 body = { self.tag: { 't':t ,'x': self.values } }
             else:
                 logging.error(f'mesh.DataPacket: unknown data type: {type(self.values)}')
-                body = {}
-                
+                return (None, None, None)
+
         if self.tag is not None:
-            topic = '.'.join([topic, self.tag])
+            topic = '.'.join([self.topic_prefix, self.tag])
+        else:
+            topic = '.'.join([self.topic_prefix, '_'])  # 'data.*._' for multiple channels
             
-        return (topic, headers, body)
+        return (topic, {}, body)
 
             
     @classmethod
@@ -128,14 +139,16 @@ class FormPacket(MeshPacket):
         self.form = form
         self.element = element
         self.value = value
+        
+        self.topic_prefix = 'form'
 
 
-    def pack(self, topic:str):
+    def pack(self):
         '''
         - return value: tuple of (topic, headers, body)
         '''
 
-        topic = f'form.{self.form}.{self.element}'
+        topic = f'{self.topic_prefix}.{self.form}.{self.element}'
         headers = {}
         body = {
             'form': self.form,

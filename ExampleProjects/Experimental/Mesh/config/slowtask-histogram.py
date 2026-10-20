@@ -25,7 +25,7 @@ async def stream_hist():
         return
     
     for channel, hist in histograms.items():
-        await tasklet.mesh.aio_publish('data.stream', DataPacket(hist, tag=f'histogram.{channel}'))
+        await tasklet.mesh.aio_publish(DataPacket(hist, tag=f'histogram.{channel}').to('data.stream'))
 
 
 @tasklet.initialize()

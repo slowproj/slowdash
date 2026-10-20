@@ -139,6 +139,7 @@ MeshPacket は，`slowpy/mesh/packet` に定義されています．
 |トピック|MeshPacket コンストラクタ|
 |---|----|
 |`data.*.>` | `DataPacket(values, *, tag:str|None=None, timestamp:float|None=None)` |
+|`form.*.>` | `FormPacket(form:str, element:str, value)` |
 |`control.>` | `ControlPacket()` TODO:未実装 |
 
 #### データトピックの例
@@ -158,13 +159,17 @@ MeshPacket は，`slowpy/mesh/packet` に定義されています．
 ```python
 from slowpy.mesh import DataPacket
 
-topic = 'data.store'
 temp0 = thermometer.ch(0).get()
-await tasklet.mesh.aio_publish(topic, DataPacket(temp0, tag='temp0'))  # トピック名 data.store.temp0 で publish される
+await tasklet.mesh.aio_publish(DataPacket(temp0, tag='temp0').to('data.store'))
 ```
 ここで，`DataPacket` のコンストラクタパラーメータは，`DataStore.append()` と同じです．
 つまり，データストアに直接記録するのと，SlowMesh に publish するのは，ほぼ同じ書き方になります．
 
+Publish するトピックはデフォルトで `data.store.{channel}` で，`data.store.` の部分は `to(topic_prefix:str)` で変更できます．
+
+複数チャンネル含む DataPacket を作成した場合，トピックの channel 部分は `_` となります．
+この場合でも`data.store.>` で subscribe でき，受信データは channel と data の dict なので，データの判別ができます．
+トピックに channel を含むのは受信効率のためです．
 
 ##### Subscribe
 ```python
@@ -683,11 +688,11 @@ async def my_work(tick):
     data = await HV.ch(0).aio_get()
     packet = DataPacket(data, tag='HV.ch00')
     
-    await tasklet.mesh.aio_publish('data.stream', packet)
+    await tasklet.mesh.aio_publish(packet.to('data.stream'))
     
     # データベースへの記録は１０回に１回
     if tick:
-        await tasklet.mesh.aio_publish('data.store', packet)
+        await tasklet.mesh.aio_publish(packet.to('data.store'))
 ```
 
 複数の tick 周期を指定することもできます．
@@ -698,15 +703,15 @@ async def my_work(tick):
     data = await HV.ch(0).aio_get()
     packet = DataPacket(data, tag='HV.ch00')
     
-    await tasklet.mesh.aio_publish('data.stream', packet)
+    await tasklet.mesh.aio_publish(packet.to('data.stream'))
     
     # 一時データベース（短期間高密度）への記録は１０回に１回
     if tick.transient_store:
-        await tasklet.mesh.aio_publish('data.transient_store', packet)
+        await tasklet.mesh.aio_publish(packet.to('data.transient_store'))
         
     # 永続データベースへの記録は６０回に１回
     if tick.store:
-        await tasklet.mesh.aio_publish('data.store', packet)
+        await tasklet.mesh.aio_publish(packet.to('data.store'))
 ```
 
 繰り返しますが，ユーザー関数の中で `time.sleep()` は使わないでください．(`await control_system.aio_sleep()` は可）．
@@ -720,7 +725,9 @@ SlowTask は，内部に接続済 SlowMesh を保持していて，これを介�
 現時点では，データおよびヘッダに渡せる値は，JSON にシリアライズできるものに限られます．
 <br>（TODO: バイナリをサポート）
 
-- データを publish: `await tasklet.mesh.aio_publish(name:str, packet:XXXPacket)` (async メソッド)
+- データを publish:
+  - `await tasklet.mesh.aio_publish(name:str, value)` (async メソッド)
+  - `await tasklet.mesh.aio_publish(packet:XXXPacket)` (async メソッド)
 - データに subscribe: `@tasklet.mesh.on(topic:str)` （デコレータ；本体関数で `packet:XXXPacket` を受け取る）
 
 #### Registry (Key-Value Store) へのアクセス
@@ -871,7 +878,7 @@ def loop():
     if not device.is_running:
         return
     data = device.ch(0).get()
-    tasklet.mesh.publish('data.store', DataPacket(data, tag='HV.ch0.V'))
+    tasklet.mesh.publish(DataPacket(data, tag='HV.ch0.V').to('data.store'))
 ```
 
 読み出しのスタート・ストップは PubSub の `control.start` および `control.stop` によりコントロールされます．
@@ -977,7 +984,7 @@ def stream_hist():
         return
     
     for channel, hist in histograms.items():
-        tasklet.mesh.publish('data.stream', DataPacket(hist, tag=f'histogram.{channel}'))
+        tasklet.mesh.publish(DataPacket(hist, tag=f'histogram.{channel}').to('data.stream'))
 ```
 データ頻度に関係なく一定周期でヒストグラムを publish するために，到着データ解析とヒストグラムの publish は別のコールバックになっています．
 データ保存タスクは `data.store.>` にしか subscribe していないので，`data.stream` に publish したこのデータは保存されず，オンラインディスプレイのみに表示されます．

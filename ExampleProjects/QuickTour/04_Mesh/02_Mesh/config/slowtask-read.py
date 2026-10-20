@@ -22,7 +22,7 @@ async def loop():
     if run_status.running:
         try:
             volt = float(device.command('MEAS:VOLT:DC?').get() or 'nan')
-            await tasklet.mesh.aio_publish('data.store', slowpy.mesh.DataPacket({'volt': volt}))
+            await tasklet.mesh.aio_publish(slowpy.mesh.DataPacket({'volt': volt}).to('data.store'))
         except Exception as e:
             print(f'ERROR: {e}')
             

@@ -469,6 +469,10 @@ MeshPacket が利用できます． MeshPacket
 <td><code>DataPacket(values, *, tag:str|None=None, timestamp:float|None=None)</code></td>
 </tr>
 <tr>
+<td><code>form.*.&gt;</code></td>
+<td><code>FormPacket(form:str, element:str, value)</code></td>
+</tr>
+<tr>
 <td><code>control.&gt;</code></td>
 <td><code>ControlPacket()</code> TODO:未実装</td>
 </tr>
@@ -492,13 +496,20 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a hr
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> DataPacket</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>topic <span class="op">=</span> <span class="st">&#39;data.store&#39;</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>temp0 <span class="op">=</span> thermometer.ch(<span class="dv">0</span>).get()</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> tasklet.mesh.aio_publish(topic, DataPacket(temp0, tag<span class="op">=</span><span class="st">&#39;temp0&#39;</span>))  <span class="co"># トピック名 data.store.temp0 で publish される</span></span></code></pre></div>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>temp0 <span class="op">=</span> thermometer.ch(<span class="dv">0</span>).get()</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> tasklet.mesh.aio_publish(DataPacket(temp0, tag<span class="op">=</span><span class="st">&#39;temp0&#39;</span>).to(<span class="st">&#39;data.store&#39;</span>))</span></code></pre></div>
 <p>ここで，<code>DataPacket</code>
 のコンストラクタパラーメータは，<code>DataStore.append()</code>
 と同じです． つまり，データストアに直接記録するのと，SlowMesh に publish
 するのは，ほぼ同じ書き方になります．</p>
+<p>Publish するトピックはデフォルトで <code>data.store.{channel}</code>
+で，<code>data.store.</code> の部分は <code>to(topic_prefix:str)</code>
+で変更できます．</p>
+<p>複数チャンネル含む DataPacket を作成した場合，トピックの channel
+部分は <code>_</code> となります．
+この場合でも<code>data.store.&gt;</code> で subscribe でき，受信データは
+channel と data の dict なので，データの判別ができます． トピックに
+channel を含むのは受信効率のためです．</p>
 <h5 id="subscribe-1">Subscribe</h5>
 <div class="sourceCode" id="cb5"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> DataPacket</span>
@@ -1132,11 +1143,11 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb35-1"><a h
 <span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> <span class="cf">await</span> HV.ch(<span class="dv">0</span>).aio_get()</span>
 <span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>    packet <span class="op">=</span> DataPacket(data, tag<span class="op">=</span><span class="st">&#39;HV.ch00&#39;</span>)</span>
 <span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.stream&#39;</span>, packet)</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(packet.to(<span class="st">&#39;data.stream&#39;</span>))</span>
 <span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># データベースへの記録は１０回に１回</span></span>
 <span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tick:</span>
-<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.store&#39;</span>, packet)</span></code></pre></div>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(packet.to(<span class="st">&#39;data.store&#39;</span>))</span></code></pre></div>
 <p>複数の tick 周期を指定することもできます．</p>
 <div class="sourceCode" id="cb36"><pre
 class="sourceCode python"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>, ticks<span class="op">=</span>{<span class="st">&quot;transient_store&quot;</span>:<span class="dv">10</span>, <span class="st">&quot;store&quot;</span>:<span class="dv">60</span>})</span>
@@ -1145,15 +1156,15 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb36-1"><a h
 <span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> <span class="cf">await</span> HV.ch(<span class="dv">0</span>).aio_get()</span>
 <span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>    packet <span class="op">=</span> DataPacket(data, tag<span class="op">=</span><span class="st">&#39;HV.ch00&#39;</span>)</span>
 <span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.stream&#39;</span>, packet)</span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(packet.to(<span class="st">&#39;data.stream&#39;</span>))</span>
 <span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 一時データベース（短期間高密度）への記録は１０回に１回</span></span>
 <span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tick.transient_store:</span>
-<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.transient_store&#39;</span>, packet)</span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(packet.to(<span class="st">&#39;data.transient_store&#39;</span>))</span>
 <span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>        </span>
 <span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 永続データベースへの記録は６０回に１回</span></span>
 <span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tick.store:</span>
-<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;data.store&#39;</span>, packet)</span></code></pre></div>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(packet.to(<span class="st">&#39;data.store&#39;</span>))</span></code></pre></div>
 <p>繰り返しますが，ユーザー関数の中で <code>time.sleep()</code>
 は使わないでください．(<code>await control_system.aio_sleep()</code>
 は可）． <code>@tasklet.loop()</code> を使うことにより，ほとんどの sleep
@@ -1167,8 +1178,12 @@ SlowMesh の通信機能を使用できます．</p>
 バイナリをサポート）</p>
 <ul>
 <li>データを publish:
-<code>await tasklet.mesh.aio_publish(name:str, packet:XXXPacket)</code>
-(async メソッド)</li>
+<ul>
+<li><code>await tasklet.mesh.aio_publish(name:str, value)</code> (async
+メソッド)</li>
+<li><code>await tasklet.mesh.aio_publish(packet:XXXPacket)</code> (async
+メソッド)</li>
+</ul></li>
 <li>データに subscribe: <code>@tasklet.mesh.on(topic:str)</code>
 （デコレータ；本体関数で <code>packet:XXXPacket</code> を受け取る）</li>
 </ul>
@@ -1375,7 +1390,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb41-1"><a h
 <span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> device.is_running:</span>
 <span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span></span>
 <span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> device.ch(<span class="dv">0</span>).get()</span>
-<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>    tasklet.mesh.publish(<span class="st">&#39;data.store&#39;</span>, DataPacket(data, tag<span class="op">=</span><span class="st">&#39;HV.ch0.V&#39;</span>))</span></code></pre></div>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>    tasklet.mesh.publish(DataPacket(data, tag<span class="op">=</span><span class="st">&#39;HV.ch0.V&#39;</span>).to(<span class="st">&#39;data.store&#39;</span>))</span></code></pre></div>
 <p>読み出しのスタート・ストップは PubSub の <code>control.start</code>
 および <code>control.stop</code> によりコントロールされます．
 また，スタート・ストップの際には，動作状態をレジストリに記録しています．</p>
@@ -1484,7 +1499,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb47-1"><a h
 <span id="cb47-16"><a href="#cb47-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span></span>
 <span id="cb47-17"><a href="#cb47-17" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb47-18"><a href="#cb47-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> channel, hist <span class="kw">in</span> histograms.items():</span>
-<span id="cb47-19"><a href="#cb47-19" aria-hidden="true" tabindex="-1"></a>        tasklet.mesh.publish(<span class="st">&#39;data.stream&#39;</span>, DataPacket(hist, tag<span class="op">=</span><span class="ss">f&#39;histogram.</span><span class="sc">{</span>channel<span class="sc">}</span><span class="ss">&#39;</span>))</span></code></pre></div>
+<span id="cb47-19"><a href="#cb47-19" aria-hidden="true" tabindex="-1"></a>        tasklet.mesh.publish(DataPacket(hist, tag<span class="op">=</span><span class="ss">f&#39;histogram.</span><span class="sc">{</span>channel<span class="sc">}</span><span class="ss">&#39;</span>).to(<span class="st">&#39;data.stream&#39;</span>))</span></code></pre></div>
 <p>データ頻度に関係なく一定周期でヒストグラムを publish
 するために，到着データ解析とヒストグラムの publish
 は別のコールバックになっています． データ保存タスクは
