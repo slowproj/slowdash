@@ -8,6 +8,29 @@ from typing import Any, overload
 from slowpy.control import ControlNode, control_system as ctrl
 
 
+class MeshPacket:
+    def __init__(self):
+        self.topic_prefix = None
+        
+
+    def to(self, topic_prefix:str):
+        self.topic_prefix = topic_prefix
+        return self
+    
+        
+    def pack(self):
+        """
+        - return value: tuple of (topic, headers, body)
+        """
+        return (None, None, None)
+
+
+    @classmethod
+    def unpack(cls, headers, body):
+        return MeshPacket()
+
+
+    
 class Mesh:
     _mesh_sequence_id = 0
     
@@ -647,27 +670,3 @@ class Registry:
             return await self._mesh.aio_call(f'{self._module_name}.delete', key, cas_revision=cas_revision)
         except Exception as e:
             raise Exception(f'Registry.aio_delete({key}): {e}')
-
-
-
-class MeshPacket:
-    def __init__(self):
-        self.topic_prefix = None
-        
-
-    def to(self, topic_prefix:str):
-        self.topic_prefix = topic_prefix
-        return self
-    
-        
-    def pack(self):
-        """
-        - return value: tuple of (topic, headers, body)
-        """
-        return (None, None, None)
-
-
-    @classmethod
-    def unpack(cls, headers, body):
-        return MeshPacket()
-    
