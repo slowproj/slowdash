@@ -34,9 +34,10 @@ async def initialize(params):
 
     logging.info(f'Redis connected: {redis_url}')
 
+    db = redis_client.connection_pool.connection_kwargs['db']
     redis_client.config_set('notify-keyspace-events', 'E$')
     redis_pubsub = redis_client.pubsub()
-    redis_pubsub.subscribe('__keyevent@12__:set')
+    redis_pubsub.subscribe(f'__keyevent@{db}__:set')
 
 
 @tasklet.loop(interval=0.1)
