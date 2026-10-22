@@ -63,11 +63,10 @@ class DataPacket(MeshPacket):
                     logging.error(f'mesh.DataPacket: tag is required for DataElement data')
                     return (None, None, None)
                 body = { self.tag: { 't':t ,'x': self.values.to_json() } }
-            elif type(self.values) is dict:
-                prefix = f'{self.tag}:' if self.tag is not None else ''
-                body = { prefix+field: { 't':t ,'x': x } for field, x in self.values.items() }
             elif self.tag is not None:
                 body = { self.tag: { 't':t ,'x': self.values } }
+            elif type(self.values) is dict:
+                body = { ch: { 't':t ,'x': x } for ch, x in self.values.items() }
             else:
                 logging.error(f'mesh.DataPacket: unknown data type: {type(self.values)}')
                 return (None, None, None)

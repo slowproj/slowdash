@@ -312,7 +312,15 @@ class WebMeshComponent(Component):
                         empty_topics.append(topic)
                 for topic in empty_topics:
                     self._topic_client_table.pop(topic, None)
-            
+
+            try:
+                await self._mesh.aio_publish(f'sd.web.data.subscription.{client_id}', {
+                    'action': 'unsubscribe',
+                    'client': client_id,
+                })
+            except:
+                pass
+        
             try:
                 await eventstream.close()
             except Exception:
@@ -333,6 +341,12 @@ class WebMeshComponent(Component):
 
             self._topic_client_table.setdefault(topic, set()).add(client_id)
 
+        if self._mesh is not None and topic.startswith('data.*.'):
+            await self._mesh.aio_publish(f'sd.web.data.subscription.{client_id}', {
+                'action': 'subscribe',
+                'client': client_id,
+            })
+                                             
         return { 'status': 'ok' }
             
 
@@ -346,9 +360,14 @@ class WebMeshComponent(Component):
                     empty_topics.append(topic)
             for topic in empty_topics:
                 self._topic_client_table.pop(topic, None)
+
+        await self._mesh.aio_publish(f'sd.web.data.subscription.{client_id}', {
+            'action': 'unsubscribe',
+            'client': client_id,
+        })
         
         return { 'status': 'ok' }
-            
+
 
     @slowlette.post('/api/webmesh/publish/{topic}')
     async def publish(self, topic:str, doc:slowlette.DictJSON):

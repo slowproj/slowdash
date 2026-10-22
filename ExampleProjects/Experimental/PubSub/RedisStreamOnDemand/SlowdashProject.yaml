@@ -1,0 +1,14 @@
+slowdash_project:
+  title: Redis Streaming-on-Demand
+
+  environment:
+    - REDIS_URL=redis://localhost:6379/12
+
+  task:
+    - name: notify_subscription
+      auto_load: true
+      parameters:
+        redis_url: ${REDIS_URL}
+
+  data_source:
+    url: ${REDIS_URL}

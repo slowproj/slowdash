@@ -109,7 +109,7 @@ class MeshLogHandler(logging.Handler):
                     self._is_first = False
                     await asyncio.sleep(0.5)  # give receivers a time to be ready
 
-                topic = f'log.{message.get("logger", "UNKNOWN")}.{message.get("level_name","UNDEFINED")}'
+                topic = f'log.{message.get("level_name","UNDEFINED")}.{message.get("logger", "UNKNOWN")}'
                 token = self._logging_suspended.set(True)
                 try:
                     await self._mesh.aio_publish(topic, message)

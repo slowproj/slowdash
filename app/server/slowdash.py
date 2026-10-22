@@ -224,7 +224,7 @@ if __name__ == '__main__':
         datefmt='%y-%m-%d %H:%M:%S'
     )
     if loglevel < logging.WARNING:
-        for other_module in [ 'websockets', 'websockets.client' ]:
+        for other_module in [ 'websockets', 'websockets.client', 'httpx' ]:
             logging.getLogger(other_module).setLevel(logging.WARNING)
         
     

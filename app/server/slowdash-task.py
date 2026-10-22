@@ -152,6 +152,9 @@ async def main():
         format = '%(asctime)s %(levelname)s: %(filename)s %(funcName)s():   %(message)s', 
         datefmt = '%y-%m-%d %H:%M:%S',
     )
+    if loglevel < logging.WARNING:
+        for other_module in [ 'websockets', 'websockets.client', 'httpx' ]:
+            logging.getLogger(other_module).setLevel(logging.WARNING)
     
     path = args.script
     name = args.name

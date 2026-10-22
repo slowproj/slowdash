@@ -1291,7 +1291,7 @@ SlowDash 標準データフォーマット
 
 
 ## log
-### log.{logger_name}.{level_name}
+### log.{level_name}.{logger_name}
 
 ##### JSON Schema
 Body:
