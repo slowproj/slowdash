@@ -70,12 +70,12 @@ class App(slowlette.App):
         
         self.slowlette.include(UserModuleComponent(self, self.project))  # user module might want to capture API
         self.slowlette.include(WebMeshComponent(self, self.project))     # stream data channels will be inserted
+        self.slowlette.include(TaskComponent(self, self.project))        # get_data() might override data from DB
         self.slowlette.include(DataSourceComponent(self, self.project))  # user/task modules might create DB
         self.slowlette.include(UserHtmlComponent(self, self.project))
         self.slowlette.include(ExportComponent(self, self.project))
         self.slowlette.include(ConfigComponent(self, self.project))
         self.slowlette.include(MiscApiComponent(self, self.project))
-        self.slowlette.include(TaskComponent(self, self.project))
 
 
     

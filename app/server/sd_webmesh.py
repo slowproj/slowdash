@@ -106,7 +106,7 @@ class DataMergerResponse(slowlette.Response):
         
     def merge_response(self, response) -> None:
         """append the cached data to the response (typiaclly data from storage)
-        - only if the channel does not exist, no matter which is newer.
+        - only if the channel does not exist, no matter which is newer. 
         - also time-series data will not be merged
         """
             

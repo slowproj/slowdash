@@ -740,61 +740,11 @@ class TaskComponent(Component):
         return channels
 
     
-    class DataMergerResponse(slowlette.Response):
-        def __init__(self, record):
-            super().__init__(content=None)
-            self.record = record
-
-            
-        def merge_response(self, response) -> None:
-            """append the "current" data from this task to the response (typiaclly data from storage)
-               - only if the channel does not exist, or
-               - the last data point is older than the "current" data (it always should be, though).
-               - multiple time-series records are not combined, as resampling cannot be consistent
-            """
-            if response.content is None:
-                response.content = {}
-            elif type(response.content) is not dict:
-                self.content = self.record
-                super().merge_response(response)
-                return
-
-            for ch in self.record:
-                if ch not in response.content:
-                    response.content[ch] = self.record[ch]
-                    continue
-
-                data, my_data = response.content[ch], self.record[ch]
-                t0, my_t0 = data.get('start', 0), my_data['start']
-                t, my_t = data.get('t', None), my_data['t']
-                if type(t) is list:
-                    if type(my_t) is list:
-                        # do not combine multiple time-series records
-                        pass
-                    elif len(t) == 0 or t0 + t[-1] < my_t0 + my_t:
-                        data['t'].append(my_t + my_t0 - t0)
-                        data['x'].append(my_data['x'])
-                elif t is not None:
-                    if type(my_t) is list:
-                        # do not combine multiple time-series records
-                        pass
-                    elif t0 + t < my_t0 + my_t:
-                        data['t'] = [ t, my_t + my_t0 - t0 ]
-                        data['x'] = [ data.get('x', None), my_data['x'] ]
-                else:
-                    data['start'] = my_t0
-                    data['t'] = my_t
-                    data['x'] = my_data['x']
-
-            self.content = None
-            if len(response.content) > 0:
-                response.status_code = 200
-                
-            super().merge_response(response)
-
-            
     @slowlette.get('/api/data/{*}')
     async def api_get_data(self, request:slowlette.Request, length:float=3600, to:float=0):
+        # Unlike the "(cached) push" data from the pubsub cache in sd_webmesh,
+        # the "pull" data here will not be merged to other data sources.
+        
         channels = request.path_str[len('/api/data/'):]   # channel name might contain "/"
         
         now = time.time()
@@ -822,7 +772,7 @@ class TaskComponent(Component):
                     'x': reply.get('return_value')
                 }
 
-        return self.DataMergerResponse(record)
+        return record
     
 
     @slowlette.get('/api/config/contentlist')

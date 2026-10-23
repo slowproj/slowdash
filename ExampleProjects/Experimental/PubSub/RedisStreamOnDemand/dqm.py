@@ -23,11 +23,12 @@ pubsub.run_in_thread(sleep_time=0.1, daemon=True)
 
 import slowpy
 
-channels = [ f'hist{ch:02}' for ch in range(128) ]
+channels = [ f'hist{ch:03d}' for ch in range(128) ]
 histograms = { ch: slowpy.Histogram(20, 0, 20) for ch in channels }
 
 # initial filling of all the channals so that SlowDash recognize the channels
 for ch, hist in histograms.items():
+    hist.add_stat(slowpy.HistogramBasicStat(['Entries', 'Underflow', 'Overflow', 'Mean', 'RMS'], ndigits=3))
     redis_client.set(ch, str(hist))
 
     
@@ -35,7 +36,7 @@ import time
 import numpy as np
 
 while True:
-    do_clear = int(time.time()) % 100 == 0
+    do_clear = int(time.time()) % 100 == 0   # not accurate; just not to make the histograms too big
     
     for ch, hist in histograms.items():
         if do_clear:
