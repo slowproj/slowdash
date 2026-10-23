@@ -30,9 +30,8 @@ export class SlowDash {
         this.resetDelay = 0;
 
         this.serverConnected = true;
-
-        this.serverStatusDiv = $('<div>').appendTo($(div).closest('body'));
-        this.serverStatusDiv.css({
+        this.serverResponded = true;
+        const serverStatusCss = {
             'display':'none',  // to show, 'display': 'flex'
             'position': 'fixed',
             'z-index': 1000,
@@ -48,10 +47,18 @@ export class SlowDash {
             'text-align': 'center',
             'line-height': 1.0,
             'transform': 'rotate(-10deg)',
-        });
-        this.serverStatusDiv.html('No Server<br>Connection');
+        };
+        this.serverDisconnectedDiv = $('<div>').appendTo($(div).closest('body'));
+        this.serverNoResponseDiv = $('<div>').appendTo($(div).closest('body'));
+        this.serverDisconnectedDiv.css(serverStatusCss);
+        this.serverNoResponseDiv.css(serverStatusCss);
+        this.serverDisconnectedDiv.html('No Server<br>Connection');
+        this.serverNoResponseDiv.html('No Server<br>Response');
+        
+        setInterval(()=>{this._watchServer()}, 5000);
     }
 
+    
     setCallbacks(callbacks) {
         $.extend(this.callbacks, callbacks);
     }
@@ -151,11 +158,13 @@ export class SlowDash {
             },
             onServerConnect: () => {
                 this.serverConnected = true;
-                this.serverStatusDiv.css('display', 'none');
+                this.serverDisconnectedDiv.css('display', 'none');
             },
             onServerDisconnect: () => {
                 this.serverConnected = false;
-                this.serverStatusDiv.css('display', 'flex');
+                this.serverNoResponseDiv.css('display', 'none');
+                this.serverDisconnectedDiv.css('display', 'flex');
+                this.serverResponded = true;  // not displayed
             },
         });
             
@@ -376,6 +385,30 @@ export class SlowDash {
             }
             message += status.text + " ]";
             return message;
+        }
+    }
+
+
+    async _watchServer() {
+        try {
+            const response = await fetch('api/ping', {
+                signal: AbortSignal.timeout(5000),
+            });
+            if (! response.ok) {
+                throw new Error(`HTTP Error: ${response.status}`)
+            }
+            if (! this.serverResponded) {
+                this.serverNoResponseDiv.css('display', 'none');
+                this.serverResponded = true;
+            }
+        }
+        catch (error) {
+            if (this.serverConnected) {
+                if (this.serverResponded) {
+                    this.serverNoResponseDiv.css('display', 'flex');
+                    this.serverResponded = false;
+                }
+            }
         }
     }
 }
