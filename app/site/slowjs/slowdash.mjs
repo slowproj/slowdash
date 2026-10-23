@@ -162,9 +162,8 @@ export class SlowDash {
             },
             onServerDisconnect: () => {
                 this.serverConnected = false;
-                this.serverNoResponseDiv.css('display', 'none');
                 this.serverDisconnectedDiv.css('display', 'flex');
-                this.serverResponded = true;  // not displayed
+                this.serverNoResponseDiv.css('display', 'none');
             },
         });
             
@@ -398,16 +397,16 @@ export class SlowDash {
                 throw new Error(`HTTP Error: ${response.status}`)
             }
             if (! this.serverResponded) {
-                this.serverNoResponseDiv.css('display', 'none');
-                this.serverResponded = true;
+                // new connection; reload the page as the form values etc. might have been changed
+                window.location.reload();
             }
+            this.serverResponded = true;
+            this.serverNoResponseDiv.css('display', 'none');
         }
         catch (error) {
+            this.serverResponded = false;
             if (this.serverConnected) {
-                if (this.serverResponded) {
-                    this.serverNoResponseDiv.css('display', 'flex');
-                    this.serverResponded = false;
-                }
+                this.serverNoResponseDiv.css('display', 'flex');
             }
         }
     }
