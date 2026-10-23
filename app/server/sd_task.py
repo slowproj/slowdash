@@ -389,7 +389,7 @@ class TaskComponent(Component):
     async def startup(self):
         # this needs to be done in "post_startup", as SlowMQ (if used) must be running.
         if self._mesh is None and self.project.mesh_url is not None:
-            self._mesh = Mesh(self.project.mesh_url, name='sd_task')        
+            self._mesh = Mesh(self.project.mesh_url, name='sd_task', stop_on_error=False)
             await self._subscribe_task_topics()
             await self._mesh.aio_start()
             await self._request_taskspec()
@@ -536,9 +536,11 @@ class TaskComponent(Component):
                 logging.error(f'unable to kill a Task process: {task_name}: {e}')
             finally:
                 try:
-                    proc.wait(timeout=5)
+                    await asyncio.get_event_loop().run_in_executor(None, proc.wait, 5)
                 except subprocess.TimeoutExpired:
                     logging.error(f'timeout on wait() after kill(): {task_name}: {e}')
+                except Exception as e:
+                    logging.error(f'error on killing a Task process: {task_name}: {e}')
 
         await self._check_task_proc()
         await self._purge_task(task_name)

@@ -40,7 +40,7 @@ class Mesh:
         name: str|None = None,
         rpc_timeout: float = 5,
         loop_timeout: float = 0.1,
-        stop_on_error = True,
+        stop_on_error = False,
         sep: str|None = '.',
         single_wc: str|None = '*',
         tail_wc: str|None = '>'
@@ -337,7 +337,8 @@ class Mesh:
 
         reply_queue = asyncio.Queue()
         self._reply_queues[correlation_id] = reply_queue
-
+        timeout_error = None
+        
         try:
             await self.aio_publish(topic, body, headers=headers)
 
@@ -354,10 +355,7 @@ class Mesh:
                 now = time.monotonic()
                 if now > end:
                     if expected_replies is not None and len(replies) < expected_replies:
-                        if raise_on_timeout:
-                            raise Exception(f'Mesh: RPC timeout: {name}(): n-replies: {len(replies)}')
-                        else:
-                            logging.warning(f'Mesh: RPC timeout: {name}(): n-replies: {len(replies)}')
+                        timeout_error = f'Mesh: RPC timeout: {name}(): n-replies: {len(replies)}'
                     break
 
         except Exception as e:
@@ -370,6 +368,11 @@ class Mesh:
             async with self._reply_lock:
                 del self._reply_queues[correlation_id]
 
+        if timeout_error is not None:
+            logging.warning(timeout_error)
+            if raise_on_timeout:
+                raise Exception(timeout_error)
+                
         return replies
 
 
@@ -438,8 +441,8 @@ class Mesh:
             return None
 
         subscriber = self.subscriber(topic)
-        try:
-            while not ctrl.is_stop_requested():
+        while not ctrl.is_stop_requested():
+            try:
                 headers, data = await subscriber.aio_get()
                 if data is None:
                     continue
@@ -459,14 +462,14 @@ class Mesh:
                 if asyncio.iscoroutine(result):
                     await result
                     
-        except Exception as e:
-            logging.error(f'Mesh: error in subscription callback: {func.__name__}(): {e}')
-            tb = traceback.format_exc()
-            if tb is not None and len(tb.strip()) > 0:
-                logging.info(tb)
-            if self._stop_on_error:
-                self._had_error = True
-                ctrl.stop()
+            except Exception as e:
+                logging.error(f'Mesh: error in subscription callback: {func.__name__}(): {e}')
+                tb = traceback.format_exc()
+                if tb is not None and len(tb.strip()) > 0:
+                    logging.info(tb)
+                if self._stop_on_error:
+                    self._had_error = True
+                    ctrl.stop()
 
                         
     async def _start_rpc_call_handler(self):
