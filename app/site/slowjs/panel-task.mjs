@@ -282,7 +282,7 @@ class TaskPanel extends Panel {
 
 
     _handleStdout(data) {
-        const now = new Date().toLocaleTimeString();
+        const now = new JGDateTime().asString('%a,%H:%M:%S');
         if (this._consoleLines.length > 100) {
             this._consoleLines.shift();
         }
