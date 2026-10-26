@@ -256,7 +256,7 @@ class WebMeshComponent(Component):
         except Exception as e:
             logging.warning(f'EventStream Accept Failed: {e}')
             return
-        logging.debug(f'Browser EventStream Connected: {client_id}')
+        logging.info(f'Browser EventStream Connected: {client_id}')
 
         queue = asyncio.Queue(maxsize=self._max_queue_size)
         stop_event = asyncio.Event()
