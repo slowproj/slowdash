@@ -1,6 +1,12 @@
 #! /bin/bash
 
-SLOWDASH_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+_SOURCE="${BASH_SOURCE[0]}"
+while [ -L "$_SOURCE" ]; do
+    _DIR="$(cd -P "$(dirname "$_SOURCE")" && pwd)"
+    _SOURCE="$(readlink "$_SOURCE")"
+    [[ "$_SOURCE" != /* ]] && _SOURCE="$_DIR/$_SOURCE"
+done
+SLOWDASH_DIR="$(cd -P "$(dirname "$_SOURCE")/.." && pwd)"
 
 if [ -d "$SLOWDASH_DIR/venv" ]; then
    echo Running in venv at "$SLOWDASH_DIR/venv" >&2
@@ -26,4 +32,3 @@ if [[ $use_slowdog = 1 ]];  then
 else
     exec python3 "$SLOWDASH_DIR/app/server/slowdash.py" "${args[@]}"
 fi
-
