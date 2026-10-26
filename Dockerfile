@@ -12,6 +12,7 @@ RUN groupadd -g $GID $GROUPNAME && useradd -u $UID -g $GID -d /home/$USERNAME -m
 
 COPY app /slowdash/app
 COPY lib /slowdash/lib
+COPY bin /slowdash/bin
 COPY docs /slowdash/docs
 COPY utils /slowdash/utils
 COPY Makefile /slowdash
