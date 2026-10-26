@@ -142,7 +142,7 @@ class WebMeshComponent(Component):
     def __init__(self, app, project):
         super().__init__(app, project)
 
-        self._max_queue_size = 10
+        self._max_queue_size = 10    # some "disconnect" can be detected only by queue-full
         
         self.enabled = app.is_async
         self._mesh = None
@@ -233,6 +233,11 @@ class WebMeshComponent(Component):
                     except asyncio.QueueFull:
                         logging.warning(f'WebMesh client queue full; detaching {client_id}')
                         stop_event.set()
+                        # Queue full can be caused by browser "suspend" (PC suspend on which the browser was running);
+                        # No "http.disconnect" will be sent out in this case (no TCP FIN packet).
+                        # Such cases can be detected only by Queue-Full
+                        for clients in self._topic_client_table.values():
+                            clients.discard(cilent_id)
                         
         await self._mesh.aio_subscribe('data.>', handle_message)
         await self._mesh.aio_subscribe('form.>', handle_message)
@@ -278,7 +283,9 @@ class WebMeshComponent(Component):
                 )
                 if disconnect_task in done:
                     queue_task.cancel()
-                    await disconnect_task   # cause ConnectionClosed
+                    await asyncio.gather(queue_task, return_exceptions=True)  # wait for the cancel() to complete
+                    await disconnect_task   # may cause a ConnectionClosed exception, or returns normally
+                    break
                 if stop_task in done:
                     queue_task.cancel()
                     break
