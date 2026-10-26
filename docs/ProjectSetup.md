@@ -455,8 +455,6 @@ To enable SlowDog, add `--slowdog` option:
 $ slowdash --port=18881 --slowdog
 ```
 
-SlowDog is enabled in the SlowDash Docker container.
-
 
 # Security Considerations
 As already mentioned, <b>SlowDash is designed for internal use only</b> within a secured network, and therefore, no security protection is implemented. It is strongly recommended that you do not expose the system to the public internet. External access is assumed to be done <b>through VPN or ssh tunnel</b>.
