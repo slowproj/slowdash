@@ -237,7 +237,7 @@ class WebMeshComponent(Component):
                         # No "http.disconnect" will be sent out in this case (no TCP FIN packet).
                         # Such cases can be detected only by Queue-Full
                         for clients in self._topic_client_table.values():
-                            clients.discard(cilent_id)
+                            clients.discard(client_id)
                         
         await self._mesh.aio_subscribe('data.>', handle_message)
         await self._mesh.aio_subscribe('form.>', handle_message)
