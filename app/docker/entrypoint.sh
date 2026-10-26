@@ -1,5 +1,8 @@
 #! /bin/bash
 
+source /slowdash/bin/slowdash-bashrc
+
+
 # Setting the user/group id's of the slowuser
 # If the id's are not given through the environmental variables,
 # extract them from the /project directory.
@@ -21,5 +24,6 @@ fi
 if [ $GROUP_ID != 0 ]; then
    groupmod -g $GROUP_ID slowuser
 fi
+
 
 exec gosu slowuser "$@"

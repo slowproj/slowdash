@@ -16,7 +16,7 @@ COPY bin /slowdash/bin
 COPY docs /slowdash/docs
 COPY utils /slowdash/utils
 COPY Makefile /slowdash
-RUN cd /slowdash && make slowdash && ln -s /slowdash/bin/slowdash /bin
+RUN cd /slowdash && make slowdash 
 RUN cd /slowdash && pip install -r requirements.txt
 
 VOLUME /project
@@ -24,4 +24,4 @@ EXPOSE 18881
 
 WORKDIR /project
 ENTRYPOINT ["/slowdash/app/docker/entrypoint.sh"]
-CMD ["/bin/slowdash", "--port=18881"]
+CMD ["slowdash", "--port=18881"]
