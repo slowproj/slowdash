@@ -253,10 +253,10 @@ class WebMeshComponent(Component):
         client_id = secrets.token_urlsafe(32)
         try:
             await eventstream.accept()
-            logging.debug(f'EventStream Connected: {client_id}')
         except Exception as e:
             logging.warning(f'EventStream Accept Failed: {e}')
             return
+        logging.debug(f'Browser EventStream Connected: {client_id}')
 
         queue = asyncio.Queue(maxsize=self._max_queue_size)
         stop_event = asyncio.Event()
@@ -299,7 +299,7 @@ class WebMeshComponent(Component):
                 await eventstream.send(message, event='message')
                 
         except slowlette.EventStreamConnectionClosed:
-            logging.debug(f'EventStream Closed by client: {client_id}')
+            logging.debug(f'Browser EventStream Closed by Error: {client_id}')
             
         finally:
             tasks = [ task for task in (queue_task, disconnect_task, stop_task) if task is not None ]
@@ -330,6 +330,7 @@ class WebMeshComponent(Component):
         
             try:
                 await eventstream.close()
+                logging.info(f'Browser EventStream Closed: {client_id}')
             except Exception:
                 pass
 
