@@ -22,7 +22,7 @@ for arg in "$@"; do
 done
 
 if [[ $use_slowdog = 1 ]];  then
-    exec python3 $SLOWDASH_DIR/utils/slowdog.py $SLOWDASH_DIR/app/server/slowdash.py "${args[@]}"
+    exec python3 "$SLOWDASH_DIR/utils/slowdog.py" "$SLOWDASH_DIR/app/server/slowdash.py" "${args[@]}"
 else
     exec python3 "$SLOWDASH_DIR/app/server/slowdash.py" "${args[@]}"
 fi
