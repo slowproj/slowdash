@@ -302,14 +302,19 @@ class WebMeshComponent(Component):
             logging.debug(f'Browser EventStream Closed by Error: {client_id}')
             
         finally:
-            tasks = [ task for task in (queue_task, disconnect_task, stop_task) if task is not None ]
+            tasks = [ task for task in (queue_task, stop_task) if task is not None ]  # not including disconnect_task
             for task in tasks:
                 if not task.done():
                     task.cancel()
             try:
-                await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True), timeout=3.0)
+                await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True), timeout=2.0)
             except asyncio.TimeoutError:
                 pass
+
+            if disconnect_task is not None and not disconnect_task.done():
+                disconnect_task.cancel()
+                # cancel might not be delivered due to the shutdown process of the ASGI receive function,
+                # so we do not "await" it here
                     
             async with self._queue_lock:
                 self._client_queue_table.pop(client_id, None)
