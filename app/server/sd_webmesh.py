@@ -306,7 +306,10 @@ class WebMeshComponent(Component):
             for task in tasks:
                 if not task.done():
                     task.cancel()
-            await asyncio.gather(*tasks, return_exceptions=True)
+            try:
+                await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True), timeout=3.0)
+            except asyncio.TimeoutError:
+                pass
                     
             async with self._queue_lock:
                 self._client_queue_table.pop(client_id, None)
@@ -329,8 +332,8 @@ class WebMeshComponent(Component):
                 pass
         
             try:
-                await eventstream.close()
-            except Exception:
+                await asyncio.wait_for(eventstream.close(), timeout=2.0)
+            except asyncio.TimeoutError, Exception:
                 pass
 
             logging.info(f'Browser EventStream Closed: {client_id}')
