@@ -329,10 +329,13 @@ class WebMeshComponent(Component):
                     self._topic_client_table.pop(topic, None)
 
             try:
-                await self._mesh.aio_publish(f'sd.web.data.subscription.{client_id}', {
-                    'action': 'unsubscribe',
-                    'client': client_id,
-                })
+                await asyncio.wait_for(
+                    self._mesh.aio_publish(f'sd.web.data.subscription.{client_id}', {
+                        'action': 'unsubscribe',
+                        'client': client_id,
+                    }),
+                    timeout=2.0
+                )
             except:
                 pass
         

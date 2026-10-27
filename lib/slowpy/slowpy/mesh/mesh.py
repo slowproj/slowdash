@@ -219,7 +219,7 @@ class Mesh:
         self._callback_tasks.clear()
 
         try:
-            await asyncio.wait_for(asyncio.gather(*list(self._callback_tasks), return_exceptions=True), timeout=3.0)
+            await asyncio.wait_for(asyncio.gather(*list(self._callback_tasks), return_exceptions=True), timeout=5.0)
         except asyncio.TimeoutError:
             pass
         except Exception as e:
@@ -495,10 +495,10 @@ class Mesh:
                         'message_id': str(uuid.uuid4()),
                     })
                     await self.aio_publish(reply_to, result, headers=reply_headers)
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             logging.error(f'Mesh: rpc_call_handler: {e}')
-        except:
-            pass
     
 
     async def _start_rpc_reply_handler(self):
@@ -518,10 +518,10 @@ class Mesh:
                     else:
                         rpc_name = f"{headers.get('module')}.{headers.get('function')}()"
                         logging.warning(f'RPC reply not processed: received multiple replies or the reply is too late: {rpc_name}')
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             logging.error(f'Mesh: rpc_reply_handler: {e}')
-        except:
-            pass
 
         
     async def _execute_rpc_function(self, function_name:str, *args, **kwargs):
