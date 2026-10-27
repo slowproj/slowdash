@@ -333,7 +333,7 @@ class WebMeshComponent(Component):
         
             try:
                 await asyncio.wait_for(eventstream.close(), timeout=2.0)
-            except asyncio.TimeoutError, Exception:
+            except (asyncio.TimeoutError, Exception):
                 pass
 
             logging.info(f'Browser EventStream Closed: {client_id}')
