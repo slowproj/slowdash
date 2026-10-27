@@ -1,5 +1,7 @@
 # Created by Sanshiro Enomoto on 27 January 2025 #
 
+import asyncio
+
 
 class WebSocket:
     def __init__(self, receive_func, send_func):
@@ -22,13 +24,13 @@ class WebSocket:
         self.is_closed = True
 
         try:
-            await asyncio.wait_for(self._send_end(), timeout=timeout)
+            await asyncio.wait_for(self._send_end(code), timeout=timeout)
         except (asyncio.TimeoutError, ConnectionError, OSError):
             # peer not reading (e.g., suspended PC); give up, transport is left to the server
             pass
 
         
-    async def _send_end(seld):
+    async def _send_end(self, code):
         await self.send_func({'type': 'websocket.close', 'code': code})
 
         
