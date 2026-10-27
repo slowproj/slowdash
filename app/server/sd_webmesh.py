@@ -330,10 +330,11 @@ class WebMeshComponent(Component):
         
             try:
                 await eventstream.close()
-                logging.info(f'Browser EventStream Closed: {client_id}')
             except Exception:
                 pass
 
+            logging.info(f'Browser EventStream Closed: {client_id}')
+            
             
     @slowlette.post('/api/webmesh/subscribe')
     async def subscribe(self, client_id:str, doc:slowlette.DictJSON):
