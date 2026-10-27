@@ -16,11 +16,20 @@ class WebSocket:
         self.is_accepted = True
 
 
-    async def close(self, code=1000):
+    async def close(self, code=1000, timeout=3.0):
         if self.is_closed:
             return
-        await self.send_func({'type': 'websocket.close', 'code': code})
         self.is_closed = True
+
+        try:
+            await asyncio.wait_for(self._send_end(), timeout=timeout)
+        except (asyncio.TimeoutError, ConnectionError, OSError):
+            # peer not reading (e.g., suspended PC); give up, transport is left to the server
+            pass
+
+        
+    async def _send_end(seld):
+        await self.send_func({'type': 'websocket.close', 'code': code})
 
         
     async def receive(self):

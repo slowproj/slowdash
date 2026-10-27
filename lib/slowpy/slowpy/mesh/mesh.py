@@ -214,16 +214,18 @@ class Mesh:
         
     async def aio_stop(self):
         self._is_running = False
-        for task in list(self._callback_tasks):
-            task.cancel()
+        tasks = list(self._callback_tasks)
         self._callback_tasks.clear()
+        for task in tasks:
+            task.cancel()
 
-        try:
-            await asyncio.wait_for(asyncio.gather(*list(self._callback_tasks), return_exceptions=True), timeout=5.0)
-        except asyncio.TimeoutError:
-            pass
-        except Exception as e:
-            logging.error(f'Mesh: error during clean up: {e}')
+        if tasks:
+            try:
+                await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True), timeout=5.0)
+            except asyncio.TimeoutError:
+                logging.error(f'Mesh: some tasks did not stop within timeout')
+            except Exception as e:
+                logging.error(f'Mesh: error during clean up: {e}')
 
 
     def publisher(self, topic:str):

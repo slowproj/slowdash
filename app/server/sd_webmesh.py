@@ -143,6 +143,7 @@ class WebMeshComponent(Component):
         super().__init__(app, project)
 
         self._max_queue_size = 10    # some "disconnect" can be detected only by queue-full
+        self._send_timeout = 10
         
         self.enabled = app.is_async
         self._mesh = None
@@ -268,65 +269,77 @@ class WebMeshComponent(Component):
                 stop_event.set()
             
         queue_task = None
-        disconnect_task = asyncio.create_task(eventstream.wait_disconnected())
+        send_task = None
         stop_task = asyncio.create_task(stop_event.wait())
+        disconnect_task = asyncio.create_task(eventstream.wait_disconnected())
+        disconnect_task.add_done_callback(lambda task: None if task.cancelled() else task.exception())
         
         try:
             await eventstream.send({'client_id': client_id}, event='register')
             
             while True:
                 queue_task = asyncio.create_task(queue.get())
-                
                 done, _ = await asyncio.wait(
                     [ queue_task, disconnect_task, stop_task ],
                     return_when=asyncio.FIRST_COMPLETED,
                 )
-                if disconnect_task in done:
-                    queue_task.cancel()
-                    await asyncio.gather(queue_task, return_exceptions=True)  # wait for the cancel() to complete
-                    await disconnect_task   # may cause a ConnectionClosed exception, or returns normally
+                if disconnect_task in done or stop_task in done:
                     break
-                if stop_task in done:
-                    queue_task.cancel()
-                    break
-                
+
                 subscribed_topic, headers, body = queue_task.result()
                 message = {
                     'subscribed_topic': subscribed_topic,
                     'headers':headers,
                     'body':body
                 }
-                await eventstream.send(message, event='message')
-                
+
+                # send can block indefinitely if the peer stops reading (e.g, PC suspend)
+                send_task = asyncio.create_task(eventstream.send(message, event='message'))
+                done, _ = await asyncio.wait(
+                    [ send_task, disconnect_task, stop_task ],
+                    timeout = self._send_timeout,
+                    return_when = asyncio.FIRST_COMPLETED,
+                )
+                if send_task not in done:
+                    send_task.cancel()
+                    if not done:
+                        logging.debug(f'WebMesh EventStream timeout: detaching client: {client_id}')
+                    break
+                send_task.result()    # propagate EventStreamConnectionClosed, if any
+                send_task = None
+
         except slowlette.EventStreamConnectionClosed:
             logging.debug(f'Browser EventStream Closed by Error: {client_id}')
             
         finally:
-            tasks = [ task for task in (queue_task, stop_task) if task is not None ]  # not including disconnect_task
+            tasks = [ task for task in (queue_task, send_task, stop_task) if task is not None ]
             for task in tasks:
                 if not task.done():
                     task.cancel()
-            try:
-                await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True), timeout=2.0)
-            except asyncio.TimeoutError:
-                pass
-
+            if tasks:
+                try:
+                    await asyncio.wait(tasks, timeout=2.0)
+                except asyncio.CancelledError:
+                    pass
             if disconnect_task is not None and not disconnect_task.done():
                 disconnect_task.cancel()
                 # cancel might not be delivered due to the shutdown process of the ASGI receive function,
-                # so we do not "await" it here
-                    
-            async with self._queue_lock:
-                self._client_queue_table.pop(client_id, None)
-                self._client_stop_table.pop(client_id, None)
+                # so we do not "(a)wait" it here
 
-                empty_topics = []
-                for topic, clients in self._topic_client_table.items():
-                    clients.discard(client_id)
-                    if not clients:
-                        empty_topics.append(topic)
-                for topic in empty_topics:
-                    self._topic_client_table.pop(topic, None)
+            try:
+                async with self._queue_lock:
+                    self._client_queue_table.pop(client_id, None)
+                    self._client_stop_table.pop(client_id, None)
+                    
+                    empty_topics = []
+                    for topic, clients in self._topic_client_table.items():
+                        clients.discard(client_id)
+                        if not clients:
+                            empty_topics.append(topic)
+                    for topic in empty_topics:
+                        self._topic_client_table.pop(topic, None)
+            except BaseException:  
+                pass  # including interruption of lock acquisition by an CancelledError
 
             try:
                 await asyncio.wait_for(
@@ -336,14 +349,10 @@ class WebMeshComponent(Component):
                     }),
                     timeout=2.0
                 )
-            except:
-                pass
-        
-            try:
-                await asyncio.wait_for(eventstream.close(), timeout=2.0)
-            except (asyncio.TimeoutError, Exception):
+            except BaseException:
                 pass
 
+            await eventstream.close()
             logging.info(f'Browser EventStream Closed: {client_id}')
             
             

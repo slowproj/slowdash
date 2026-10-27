@@ -196,6 +196,7 @@ def serve_asgi_uvicorn(app, port, **kwargs):
                 await super().shutdown(sockets=sockets)
 
     async def main():
+        kwargs.setdefault('timeout_graceful_shutdown', 5)
         config = uvicorn.Config(app, port=port, workers=1, lifespan="on", **kwargs)
         server = Server(config)
         # Let Uvicorn stop accepting connections and await its ASGI tasks before

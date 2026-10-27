@@ -20,7 +20,7 @@ class MiscApiComponent(Component):
         rate = requests / up_time
         if rate >= 100:
             rate = '%.0f' % rate
-        if rate >= 10:
+        elif rate >= 10:
             rate = '%.1f' % rate
         else:
             rate = '%.3f' % rate
