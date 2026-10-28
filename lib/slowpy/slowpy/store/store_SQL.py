@@ -137,8 +137,8 @@ class LongTableFormat_DateTime_PostgreSQL(LongTableFormat):
     
     def insert_numeric_data(self, cur, timestamp, channel, value):
         sql = f'INSERT INTO {self.table}("timestamp",channel,value) '
-        sql += f"VALUES(TO_TIMESTAMP(%.3f),%s,{value});" % (timestamp, self.db.placeholder)
-        params = (channel,)
+        sql += f"VALUES(TO_TIMESTAMP(%.3f),%s,%s);" % (timestamp, self.db.placeholder, self.db.placeholder)
+        params = (channel, value)
         cur.execute(sql, params)
 
         
@@ -153,15 +153,15 @@ class LongTableFormat_DateTime_PostgreSQL(LongTableFormat):
 class LongTableFormat_DateTime_MySQL(LongTableFormat):
     # Timestamps in MySQL are stored in UTC. As of Mar 2025, pymysql and aiomysql cannot handle this properly
     # (treated as "naive"), so if this format is used, use "unspecified utc" time type in SlowDash.
-    # Also, the timestamp values cannot go beyond year 2023...
-    schema_numeric = '(timestamp TIMESTAMP(3) , channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp,channel))'
-    schema_text = '(timestamp TIMESTAMP(3), channel VARCHAR(100), value TEXT, PRIMARY KEY(timestamp,channel))'
+    # Also, the timestamp values cannot go beyond year 2038...
+    schema_numeric = '(timestamp TIMESTAMP(3) , channel VARCHAR(100), value REAL, PRIMARY KEY(channel,timestamp))'
+    schema_text = '(timestamp TIMESTAMP(3), channel VARCHAR(100), value TEXT, PRIMARY KEY(channel,timestamp))'
 
     
     def insert_numeric_data(self, cur, timestamp, channel, value):
         sql = f"INSERT INTO {self.table}(timestamp,channel,value) "
-        sql += f"VALUES(FROM_UNIXTIME(%.3f),%s,{value});" % (timestamp, self.db.placeholder)
-        params = (channel,)
+        sql += f"VALUES(FROM_UNIXTIME(%.3f),%s,%s);" % (timestamp, self.db.placeholder, self.db.placeholder)
+        params = (channel, value)
         cur.execute(sql, params)
 
         
@@ -171,7 +171,6 @@ class LongTableFormat_DateTime_MySQL(LongTableFormat):
         params = (channel, str(value))
         cur.execute(sql, params)
         
-
 
         
 class DataStore_SQL(DataStore):
