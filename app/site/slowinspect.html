@@ -31,7 +31,7 @@
         },
         panels: [
             { type: 'task', short_form: false, title: 'Tasks', style: { 'border': '' } },
-            { type: 'log' },
+            { type: 'log',  max_lines: 1000 },
             { type: 'tree', channel: '@registry:.>', title: 'Mesh Registry (incl. PubSub Cache)'},
             { type: 'tree', channel: '@api:config', title: 'Server Component Config and Stats' },
         ]

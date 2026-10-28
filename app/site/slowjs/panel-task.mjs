@@ -378,6 +378,8 @@ class LogPanel extends Panel {
     configure(config, options={}, callbacks={}) {
         super.configure(config, options, callbacks);
 
+        this.config.max_lines = this.config.max_lines ?? 100;
+        
         this._logLines = [];
         this._initialLogsLoaded = false;
     }
@@ -442,7 +444,7 @@ class LogPanel extends Panel {
             
             this._logLines.push(line);
             
-            if (this._logLines.length > 100) {
+            if (this._logLines.length > this.config.max_lines) {
                 this._logLines.shift();
             }
 
