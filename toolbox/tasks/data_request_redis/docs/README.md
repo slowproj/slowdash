@@ -27,6 +27,17 @@ Regular Slow Task scripts on Slow Mesh do not need to use this task for this pur
 
 ## Usage
 
+### Setup
+This task assumes that Redis is used for the communication between SlowDash and the analysis programs.
+If no Redis server is running, install Redis.
+
+If you need a temporary Redis server to run the example, the Docker Compose setup in `utils/testbench` of SlowDash is convenient:
+```
+cd PATH/TO/SLOWDASH/utils/testbench
+docker compose up -d redis
+```
+When you are done, `docker compose down` removes everything and leaves a clean state.
+
 ### Project file example
 ```yaml
 slowdash_project:
@@ -94,16 +105,16 @@ If this conflicts with your setup, change it in `dqm.py` and `SlowdashProject.ya
 To run the example, first make sure the Redis server is running, then run the `dqm.py` script.
 Since `dqm.py` uses the SlowPy library to create histograms, activate the SlowPy venv before running it:
 
-```console
-$ cd examples
-$ slowdash-activate-venv
-$ python dqm.py
+```
+cd examples
+slowdash-activate-venv
+python dqm.py
 ```
 
 Then start the SlowDash server and connect a browser to it:
 
 ```console
-$ slowdash --port=18881
+slowdash --port=18881
 ```
 
 When you select a channel from the Channel List in the browser, a new panel opens to display its data. This starts the chain of notifications that ends at the `dqm.py` analysis script.
