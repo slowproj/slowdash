@@ -1,22 +1,26 @@
-# Task: Data Requests on Redis
+# Task: On-Demand Data Requests via Redis
 
-## Specifications
+Requests only the channels shown in SlowDash browsers from external analysis programs via Redis, and streams the returned data back to the browsers in real time.
 
 | Item | Value |
 |---|---|
 | Name | `data_request_redis` |
 | Input Topics | `sd.web.data.subscription.>` |
 | Output Topics | `data.stream.{channel}` |
-| Export Functions | none |
-| Config Contents | none |
+| Export Functions | - |
+| Config Contents | - |
+| External Dependencies | Redis server |
+
+Maintainer: Sanshiro Enomoto
 
 
 ## Description
-This task uses Redis PubSub to notify user analysis programs running outside the SlowDash mesh of the channels currently displayed in SlowDash browsers. It also monitors the Redis Key-Value Store (KVS) for data written by the analysis programs. When new data is written, the task streams the values to `data.stream.{channel}` so that the browsers can display them immediately.
+This task is useful for an online monitor with a large number of channels, which would be too many to stream in real time. Instead of receiving everything, user analysis programs running outside the SlowDash mesh are told which channels are currently displayed in the SlowDash browsers, and write only those channels' data. For example, the analysis program in the example creates 128 histograms internally, but writes only the few histograms being shown in the browsers to the Redis Key-Value Store (KVS).
 
-This is useful for an online monitor with a large number of channels, which would be too many to stream in real time. For example, the analysis program in the example creates 128 histograms internally, but writes only the few histograms being shown in the browsers to the Redis KVS.
+The task works in two directions:
 
-When the task detects a change in the browser configurations (through the WebMesh notification on the `sd.web.data.subscription.>` topic), it fetches the list of connected data channels from the SlowDash server (the "public configuration" `webmesh.attached`). It then publishes the list to the Redis PubSub topic `slowdash:request:data`, to which the analysis scripts subscribe.
+- **Request**: When the task detects a change in the browser configurations (through the WebMesh notification on the `sd.web.data.subscription.>` topic), it fetches the list of connected data channels from the SlowDash server (the "public configuration" `webmesh.attached`). It then publishes the list to the Redis PubSub topic `slowdash:request:data`, to which the analysis programs subscribe.
+- **Data**: The task monitors the Redis KVS for data written by the analysis programs. When new data is written, it streams the values to `data.stream.{channel}` so that the browsers can display them immediately.
 
 
 ## Usage
@@ -47,6 +51,7 @@ slowdash_project:
 
 
 ## Example
+### Overview
 The `dqm.py` script in the `examples` directory is a dummy user analysis program.
 It generates dummy data from Poisson random numbers and creates 128 histograms internally, named like `hist034`.
 
@@ -73,8 +78,14 @@ redis_client = redis.from_url(redis_url, decode_responses=True)
 pubsub = redis_client.pubsub()
 pubsub.subscribe(**{data_request_topic:receive_data_request})
 pubsub.run_in_thread(sleep_time=0.1, daemon=True)
+
+
+# ...
+# user analysis loop, writing the data to Redis 
+# only for the channels in the "requested_channels" list
 ```
 
+### Running the Example
 This example uses Redis DB number `12`.
 If this conflicts with your setup, change it in `dqm.py` and `SlowdashProject.yaml`.
 
