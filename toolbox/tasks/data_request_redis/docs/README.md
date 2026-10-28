@@ -15,7 +15,7 @@ Maintainer: Sanshiro Enomoto
 
 
 ## Description
-This task is useful for an online monitor with so many channels that streaming all of them in real time is impractical. Instead of receiving everything, user analysis programs running outside the SlowDash mesh are told which channels are currently displayed in the SlowDash browsers, and write only those channels' data. For example, the example analysis program creates 128 histograms internally, but writes only the few histograms being shown in the browsers to the Redis Key-Value Store (KVS).
+This task is useful for an online monitor with so many channels that streaming all of them in real time is impractical. Rather than streaming all channels, this task tells user analysis programs running outside the SlowDash mesh which channels are currently displayed in the SlowDash browsers, so that they write only those channels' data. For example, the example analysis program creates 128 histograms internally, but writes only the few histograms being shown in the browsers to the Redis Key-Value Store (KVS).
 
 The task works in two directions:
 
@@ -45,9 +45,9 @@ slowdash_project:
 
 ### Parameters
 
-| Name | Default | Description |
-|---|---|---|
-| `redis_url` | - | URL for the Redis system, including the DB number |
+| Name | Default | Description | Example |
+|---|---|---|---|
+| `redis_url` | - | URL for the Redis system, including the DB number | `redis://localhost:6379/12` |
 
 
 ## Example
@@ -65,12 +65,10 @@ data_request_topic = 'slowdash:request:data'
 
 requested_channels = []
 
-
 def receive_data_request(message):
     global requested_channels
     requested_channels = message.get('data', '').split(',')
     print(f'Requested Channels: {requested_channels}')
-
 
 import redis
 redis_client = redis.from_url(redis_url, decode_responses=True)
@@ -78,7 +76,6 @@ redis_client = redis.from_url(redis_url, decode_responses=True)
 pubsub = redis_client.pubsub()
 pubsub.subscribe(**{data_request_topic: receive_data_request})
 pubsub.run_in_thread(sleep_time=0.1, daemon=True)
-
 
 # ... user analysis loop ...
 # Write data to Redis only for the channels in `requested_channels`.
