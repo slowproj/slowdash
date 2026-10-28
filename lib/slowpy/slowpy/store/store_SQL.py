@@ -70,7 +70,7 @@ class TableFormat:
                 # MySQL and SQLite cannot handle NaN, MySQL cannot handle inf
                 self.insert_numeric_data(cur, timestamp, channel, None)  
             else:
-                self.insert_numeric_data(cur, timestamp, channel, value)
+                self.insert_numeric_data(cur, timestamp, channel, float(value))
         elif isinstance(value, str):
             self.insert_text_data(cur, timestamp, channel, value)
         else:
