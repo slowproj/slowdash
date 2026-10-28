@@ -22,6 +22,8 @@ The task works in two directions:
 - **Request**: When the task detects a change in the browser configurations (through the WebMesh notification on the `sd.web.data.subscription.>` topic), it fetches the list of data channels attached to the browsers from the SlowDash server (the "public configuration" `webmesh.attached`). It then publishes the list to the Redis PubSub topic `slowdash:request:data`, to which the analysis programs subscribe. The message is a comma-separated string of channel names (e.g., `hist034,hist051`), and is an empty string when no channel is requested. Each message contains the complete list of currently requested channels, not a difference from the previous one, because the list can also shrink, for example when a browser is closed. The analysis programs should therefore replace their previous list with the new one, and stop writing the channels that are no longer in the list.
 - **Data**: The task monitors the Redis KVS for data written by the analysis programs. When new data is written, it streams the values to `data.stream.{channel}` so that the browsers can display them immediately. Since the data written to the KVS are streamed, the browsers receive the same data both through streaming and through the data store. The contents are identical, so this does not affect the display.
 
+Regular Slow Task scripts on Slow Mesh do not need to use this task for this purpose. They can do what this task does (fetching `webmesh.attached` from the server's public configuration when a `sd.web.data.subscription.>` message arrives) directly in the script.
+
 
 ## Usage
 
@@ -85,7 +87,7 @@ For demonstration purposes, the histograms are cleared periodically, so that the
 
 To keep the demonstration simple, this example reads the data, fills the histograms, and writes the histogram data to Redis all in the same loop. In a real application, however, the histograms should be written to Redis at a constant time interval, independent of the data rate.
 
-### Running the Example
+### Running the example
 This example uses Redis DB number `12`.
 If this conflicts with your setup, change it in `dqm.py` and `SlowdashProject.yaml`.
 
