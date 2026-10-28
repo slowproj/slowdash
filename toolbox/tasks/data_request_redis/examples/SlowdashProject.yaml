@@ -1,5 +1,5 @@
 slowdash_project:
-  title: Redis Streaming-on-Demand
+  title: Redis Data Request
 
   environment:
     - REDIS_URL=redis://localhost:6379/12

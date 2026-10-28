@@ -19,7 +19,7 @@ slowdash_project:
     - REDIS_URL=redis://localhost:6379/12
 
   task:
-    - name: @toolbox/data_request_redis
+    - name: "@toolbox/data_request_redis"
       auto_load: true
       parameters:
         redis_url: ${REDIS_URL}
