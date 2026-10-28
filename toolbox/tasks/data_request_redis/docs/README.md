@@ -1,21 +1,22 @@
-# Redis Data Request
+# Task: Data Requests on Redis
 
 ## Specifications
 
+| Item | Value |
 |---|---|
-| Name | 'data_request_redis' |
-| Input Topic | `sd.web.data.subscription.>` |
-| Output Topic | `data.stream.{channel}` |
+| Name | `data_request_redis` |
+| Input Topics | `sd.web.data.subscription.>` |
+| Output Topics | `data.stream.{channel}` |
 | Export Functions | none |
 | Config Contents | none |
 
 
 ## Description
-This task notifies user analysis programs running outside the SlowDash mesh with the channels being displayed by the SlowDash browsers though Redis PubSub. This also monitors the Redis Key-Value Store (KVS) for data being written to it by the analysis programs, and when new data is written, it streams the data values to `data.stream.{channel}` for immediate display on the browsers.
+This task uses Redis PubSub to notify user analysis programs running outside the SlowDash mesh of the channels currently displayed in SlowDash browsers. It also monitors the Redis Key-Value Store (KVS) for data written by the analysis programs. When new data is written, the task streams the values to `data.stream.{channel}` so that the browsers can display them immediately.
 
-This is useful for an online monitor with a large number of channels, too many channels to stream in real-time. The analysis program in the example creates 128 histograms internally, but only a few histograms that are being shown in the browsers are sent to the Redis KVS.
+This is useful for an online monitor with a large number of channels, which would be too many to stream in real time. For example, the analysis program in the example creates 128 histograms internally, but writes only the few histograms being shown in the browsers to the Redis KVS.
 
-When the task detects changes on browser configurations (through WebMesh's notification on the `sd.web.data.subscription.>` topic), it fetches the list of connected data channels from the SlowDash server ("public configuration" of `webmesh.attached`), and publishes the list to the Redis Pubsub with a topic of `slowdash:request:data`.
+When the task detects a change in the browser configurations (through the WebMesh notification on the `sd.web.data.subscription.>` topic), it fetches the list of connected data channels from the SlowDash server (the "public configuration" `webmesh.attached`). It then publishes the list to the Redis PubSub topic `slowdash:request:data`, to which the analysis scripts subscribe.
 
 
 ## Usage
@@ -46,10 +47,12 @@ slowdash_project:
 
 
 ## Example
-The `dqm.py` script in the `examples` directory is the dummy user analysis program.
-It uses Poisson random numbers for dummy data, and creates 128 histograms internally, named like `hist034`.
+The `dqm.py` script in the `examples` directory is a dummy user analysis program.
+It generates dummy data from Poisson random numbers and creates 128 histograms internally, named like `hist034`.
 
-The analysis scripts receives data request notifications from the SlowDash task through Redis PubSub and updates its internal `requested_channel` list:
+Only the histograms of the requested channels are written to the Redis KVS during operation. At startup, however, the script writes all the (empty) histograms to the KVS, so that SlowDash can build the full list of available channels from the KVS entries.
+
+The analysis script receives data request notifications from the SlowDash task through Redis PubSub and updates its internal `requested_channels` list:
 
 ```python
 redis_url = 'redis://localhost/12'
@@ -73,10 +76,10 @@ pubsub.run_in_thread(sleep_time=0.1, daemon=True)
 ```
 
 This example uses Redis DB number `12`.
-If this causes a problem, change it by editing the `dqm.py` and `SlowdashProject.yaml` files.
+If this conflicts with your setup, change it in `dqm.py` and `SlowdashProject.yaml`.
 
-To run the example, first make the Resis server ready, then run the `dqm.py` script.
-Since the example `dqm.py` script uses the SlowPy library to create histograms, activate the SlowPy venv before running it.
+To run the example, first make sure the Redis server is running, then run the `dqm.py` script.
+Since `dqm.py` uses the SlowPy library to create histograms, activate the SlowPy venv before running it:
 
 ```console
 $ cd examples
@@ -84,10 +87,10 @@ $ slowdash-activate-venv
 $ python dqm.py
 ```
 
-Then start SlowDash server and connect the browser to it:
+Then start the SlowDash server and connect a browser to it:
 
 ```console
 $ slowdash --port=18881
 ```
 
-From the Channel List, if you choose a channel, a new panel to display the channel data will open, which will then start the chain of notifications to the `dqp.py` analysis script.
+When you select a channel from the Channel List in the browser, a new panel opens to display its data. This starts the chain of notifications that ends at the `dqm.py` analysis script.
