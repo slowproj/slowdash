@@ -94,8 +94,8 @@ class TableFormat:
 class LongTableFormat(TableFormat):
     # these can be overriden. Set None to disable table creation
     # Note: REAL is 64 bit in MySQL and SQLite. For PostgreSQL, timestamp will be DateTime with TimeZone.
-    schema_numeric = '(timestamp REAL, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp,channel))'
-    schema_text = '(timestamp REAL, channel VARCHAR(100), value TEXT, PRIMARY KEY(timestamp,channel))'
+    schema_numeric = '(timestamp REAL, channel VARCHAR(100), value REAL, PRIMARY KEY(channel,timestamp))'
+    schema_text = '(timestamp REAL, channel VARCHAR(100), value TEXT, PRIMARY KEY(channel,timestamp))'
 
     
     def create_numeric_table(self, cur):
@@ -130,8 +130,9 @@ class LongTableFormat(TableFormat):
             
 
 class LongTableFormat_DateTime_PostgreSQL(LongTableFormat):
-    schema_numeric = '("timestamp" TIMESTAMP WITH TIME ZONE , channel VARCHAR(100), value REAL, PRIMARY KEY("timestamp",channel))'
-    schema_text = '("timestamp" TIMESTAMP WITH TIME ZONE, channel VARCHAR(100), value TEXT, PRIMARY KEY("timestamp",channel))'
+    # REAL in PostgreSQL is 32-bit, whereas it is 64-bit in MySQL and SQLite. We use DOUBLE (64-bit) for the default
+    schema_numeric = '("timestamp" TIMESTAMP WITH TIME ZONE , channel VARCHAR(100), value DOUBLE PRECISION, PRIMARY KEY(channel,"timestamp"))'
+    schema_text = '("timestamp" TIMESTAMP WITH TIME ZONE, channel VARCHAR(100), value TEXT, PRIMARY KEY(channel,"timestamp"))'
 
     
     def insert_numeric_data(self, cur, timestamp, channel, value):
@@ -150,10 +151,11 @@ class LongTableFormat_DateTime_PostgreSQL(LongTableFormat):
 
 
 class LongTableFormat_DateTime_MySQL(LongTableFormat):
-    # timestamp in MySQL is stored in UTC. As of Mar 2025, pymysql and aiomysql cannot handle this properly
+    # Timestamps in MySQL are stored in UTC. As of Mar 2025, pymysql and aiomysql cannot handle this properly
     # (treated as "naive"), so if this format is used, use "unspecified utc" time type in SlowDash.
-    schema_numeric = '(timestamp TIMESTAMP , channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp,channel))'
-    schema_text = '(timestamp TIMESTAMP, channel VARCHAR(100), value TEXT, PRIMARY KEY(timestamp,channel))'
+    # Also, the timestamp values cannot go beyond year 2023...
+    schema_numeric = '(timestamp TIMESTAMP(3) , channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp,channel))'
+    schema_text = '(timestamp TIMESTAMP(3), channel VARCHAR(100), value TEXT, PRIMARY KEY(timestamp,channel))'
 
     
     def insert_numeric_data(self, cur, timestamp, channel, value):
@@ -405,9 +407,8 @@ class DataStore_MySQL(DataStore_SQL):
         
     def __init__(self, db_url, table, table_format=None):
         if table_format is None:
-            # MySQL TIMESTAMP uses UTC, but pymysql cannot handle timezone (treat the time as "native")
+            #table_format = LongTableFormat_DateTime_MySQL()   # this is faulty... see the comment in the class
             table_format = LongTableFormat()
-            #table_format = LongTableFormat_DateTime_MySQL()
         super().__init__(db_url, table, table_format)
 
         

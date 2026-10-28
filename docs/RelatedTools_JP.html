@@ -10,8 +10,9 @@
       div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
   <style type="text/css">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -255,20 +256,20 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th></th>
 <th>管理するもの</th>
 <th>使う場面</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>pyenv</td>
 <td>Python 本体（インタプリタ）のバージョン</td>
 <td>OS 標準の Python
 が古い（EOL）、または特定のバージョンが必要なとき</td>
 </tr>
-<tr class="even">
+<tr>
 <td>venv</td>
 <td>パッケージ（<code>pip install</code> するもの）の置き場所</td>
 <td>プロジェクトごとに依存パッケージを分離したいとき（SlowDash
@@ -361,63 +362,63 @@ VPN、SSH
 <col style="width: 50%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>コマンド</th>
 <th>用途</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>ip -br addr</code></td>
 <td>自分の IP アドレスの一覧</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>ip route</code></td>
 <td>ルーティングテーブル（<code>default via ...</code>
 がデフォルトゲートウェイ）</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>ip route get ADDRESS</code></td>
 <td>指定した宛先へ、どのインターフェース・ゲートウェイを通って出ていくか</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>ping -c 5 HOST</code></td>
 <td>到達できるかと、往復の遅延時間（RTT）</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>tracepath HOST</code>、<code>traceroute HOST</code></td>
 <td>経路上のルーターと、各区間までの遅延</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>mtr HOST</code></td>
 <td>経路の各区間の遅延とパケットロスを継続的に表示</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>getent hosts NAME</code>、<code>dig NAME</code></td>
 <td>名前解決の確認（<code>getent</code> は <code>/etc/hosts</code>
 も含めた、実際にプログラムが使う結果）</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>sudo ss -tlnp</code></td>
 <td>待ち受けている TCP ポートと、そのプロセス</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>ss -tn</code></td>
 <td>確立している TCP 接続</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>nc -zv HOST PORT</code></td>
 <td>指定したポートに TCP で接続できるか</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>curl -v http://HOST:18881/</code></td>
 <td>HTTP での接続を詳細表示</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>iperf3 -s</code>（相手側）、<code>iperf3 -c HOST</code></td>
 <td>2 台の間の帯域の測定</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>sudo tcpdump -i any port 18881</code></td>
 <td>実際に流れているパケットの観察</td>
 </tr>
@@ -564,7 +565,7 @@ id="バックグラウンド実行と自動起動">バックグラウンド実�
 <col style="width: 16%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>方法</th>
 <th>ログアウト後も動く</th>
 <th>起動時に自動で起動</th>
@@ -574,7 +575,7 @@ id="バックグラウンド実行と自動起動">バックグラウンド実�
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>tmux / screen</td>
 <td>○</td>
 <td>×</td>
@@ -582,7 +583,7 @@ id="バックグラウンド実行と自動起動">バックグラウンド実�
 <td>画面で見る</td>
 <td>開発・試験、一時的な運用</td>
 </tr>
-<tr class="even">
+<tr>
 <td>nohup</td>
 <td>○</td>
 <td>×</td>
@@ -590,7 +591,7 @@ id="バックグラウンド実行と自動起動">バックグラウンド実�
 <td>ファイル</td>
 <td>一時的な運用</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>cron <code>@reboot</code></td>
 <td>○</td>
 <td>○</td>
@@ -598,7 +599,7 @@ id="バックグラウンド実行と自動起動">バックグラウンド実�
 <td>ファイル</td>
 <td>手軽な自動起動</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>/etc/rc.local</code></td>
 <td>○</td>
 <td>○</td>
@@ -606,7 +607,7 @@ id="バックグラウンド実行と自動起動">バックグラウンド実�
 <td>ファイル</td>
 <td>古い方法（現在は systemd を推奨）</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>systemd</td>
 <td>○</td>
 <td>○</td>
@@ -614,7 +615,7 @@ id="バックグラウンド実行と自動起動">バックグラウンド実�
 <td><code>journalctl</code></td>
 <td>ネイティブ環境での本番運用</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Docker</td>
 <td>○</td>
 <td>○</td>
@@ -637,39 +638,39 @@ SlowDash の venv を有効にするので、venv
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>操作</th>
 <th>tmux</th>
 <th>screen</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>名前を付けて開始</td>
 <td><code>tmux new -s slowdash</code></td>
 <td><code>screen -S slowdash</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>切り離す（プロセスは動き続ける）</td>
 <td><code>Ctrl-b</code> → <code>d</code></td>
 <td><code>Ctrl-a</code> → <code>d</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>一覧</td>
 <td><code>tmux ls</code></td>
 <td><code>screen -ls</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>再接続</td>
 <td><code>tmux attach -t slowdash</code></td>
 <td><code>screen -r slowdash</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>開始と同時に切り離す</td>
 <td><code>tmux new -d -s slowdash 'COMMAND'</code></td>
 <td><code>screen -dmS slowdash COMMAND</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>終了</td>
 <td><code>tmux kill-session -t slowdash</code></td>
 <td><code>screen -S slowdash -X quit</code></td>
@@ -754,25 +755,25 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <col style="width: 50%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>再起動ポリシー</th>
 <th>動作</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>no</code>（既定）</td>
 <td>自動で起動しない</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>on-failure</code></td>
 <td>異常終了したときだけ再起動</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>always</code></td>
 <td>常に再起動（手動で停止しても、マシンの起動時には起動する）</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>unless-stopped</code></td>
 <td>常に再起動（ただし手動で停止したものは、マシンの起動時にも起動しない）</td>
 </tr>
@@ -793,7 +794,7 @@ id="リレーショナルデータベースpostgresql-mysql-sqlite">リレーシ
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th></th>
 <th>PostgreSQL</th>
 <th>MySQL</th>
@@ -801,13 +802,13 @@ id="リレーショナルデータベースpostgresql-mysql-sqlite">リレーシ
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>形態</td>
 <td>サーバー</td>
 <td>サーバー</td>
 <td>1 つのファイル（サーバー不要）</td>
 </tr>
-<tr class="even">
+<tr>
 <td>同時アクセス</td>
 <td>多数の読み書きに対応</td>
 <td>多数の読み書きに対応</td>
@@ -815,7 +816,7 @@ id="リレーショナルデータベースpostgresql-mysql-sqlite">リレーシ
 つ（下記参照）．既定の設定では書き込み中の読み出しが待たされる（WAL
 モードで改善）</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>向いている用途</td>
 <td>本番運用</td>
 <td>本番運用（既存のシステムで使われていることが多い）</td>
@@ -857,7 +858,7 @@ PostgreSQL や MySQL を使います．</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>操作</th>
 <th>PostgreSQL（<code>psql</code>）</th>
 <th>MySQL（<code>mysql</code>）</th>
@@ -865,37 +866,37 @@ PostgreSQL や MySQL を使います．</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>接続</td>
 <td><code>psql -h HOST -U USER DB</code></td>
 <td><code>mysql -h HOST -u USER -p DB</code></td>
 <td><code>sqlite3 FILE.db</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>テーブル一覧</td>
 <td><code>\dt</code></td>
 <td><code>SHOW TABLES;</code></td>
 <td><code>.tables</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>テーブルの定義</td>
 <td><code>\d TABLE</code></td>
 <td><code>SHOW CREATE TABLE TABLE;</code></td>
 <td><code>.schema TABLE</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>インデックス一覧</td>
 <td><code>\di</code></td>
 <td><code>SHOW INDEX FROM TABLE;</code></td>
 <td><code>.indexes TABLE</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>実行時間の表示</td>
 <td><code>\timing on</code></td>
 <td>常に表示される</td>
 <td><code>.timer on</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>終了</td>
 <td><code>\q</code></td>
 <td><code>exit</code></td>
@@ -915,7 +916,7 @@ PostgreSQL や MySQL を使います．</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th></th>
 <th>PostgreSQL</th>
 <th>MySQL</th>
@@ -923,43 +924,43 @@ PostgreSQL や MySQL を使います．</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>64 bit 浮動小数点</td>
 <td><code>DOUBLE PRECISION</code></td>
 <td><code>DOUBLE</code>（<code>REAL</code> も同じ）</td>
 <td><code>REAL</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>32 bit 浮動小数点</td>
 <td><code>REAL</code></td>
 <td><code>FLOAT</code></td>
 <td>なし（すべて 64 bit）</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>整数</td>
 <td><code>INTEGER</code>（32 bit）、<code>BIGINT</code>（64 bit）</td>
 <td><code>INT</code>（32 bit）、<code>BIGINT</code>（64 bit）</td>
 <td><code>INTEGER</code>（最大 64 bit）</td>
 </tr>
-<tr class="even">
+<tr>
 <td>文字列</td>
 <td><code>TEXT</code>、<code>VARCHAR(n)</code></td>
 <td><code>VARCHAR(n)</code>、<code>TEXT</code></td>
 <td><code>TEXT</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>JSON</td>
 <td><code>JSONB</code>、<code>JSON</code></td>
 <td><code>JSON</code></td>
 <td><code>TEXT</code>（JSON 関数あり）</td>
 </tr>
-<tr class="even">
+<tr>
 <td>NaN、Inf</td>
 <td>格納できる</td>
 <td>格納できない</td>
 <td>NaN は NULL になる</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>型の扱い</td>
 <td>厳密</td>
 <td>厳密（strict モード、既定で有効）</td>
@@ -988,7 +989,7 @@ PostgreSQL や MySQL を使います．</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th></th>
 <th>PostgreSQL</th>
 <th>MySQL</th>
@@ -996,43 +997,43 @@ PostgreSQL や MySQL を使います．</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>タイムゾーン付き</td>
 <td><code>TIMESTAMP WITH TIME ZONE</code>（<code>TIMESTAMPTZ</code>）</td>
 <td><code>TIMESTAMP</code></td>
 <td>なし</td>
 </tr>
-<tr class="even">
+<tr>
 <td>タイムゾーンなし</td>
 <td><code>TIMESTAMP</code></td>
 <td><code>DATETIME</code></td>
 <td>日時の文字列を <code>TEXT</code> に入れる</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>UNIX 時刻（数値）</td>
 <td><code>DOUBLE PRECISION</code>、<code>BIGINT</code></td>
 <td><code>DOUBLE</code>、<code>BIGINT</code></td>
 <td><code>REAL</code>、<code>INTEGER</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>秒未満の精度</td>
 <td>マイクロ秒</td>
 <td>既定では秒まで．<code>TIMESTAMP(6)</code> などで指定</td>
 <td>格納の仕方による</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>接続のタイムゾーンの確認</td>
 <td><code>SHOW timezone;</code></td>
 <td><code>SELECT @@session.time_zone;</code></td>
 <td>なし</td>
 </tr>
-<tr class="even">
+<tr>
 <td>UNIX 時刻 → 日時</td>
 <td><code>to_timestamp(x)</code></td>
 <td><code>FROM_UNIXTIME(x)</code></td>
 <td><code>datetime(x, 'unixepoch')</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>日時 → UNIX 時刻</td>
 <td><code>extract(epoch FROM t)</code></td>
 <td><code>UNIX_TIMESTAMP(t)</code></td>
@@ -1150,7 +1151,7 @@ Binding</a> を参照）．</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th></th>
 <th>コマンド</th>
 <th>全件を読んでいる（遅い）</th>
@@ -1158,19 +1159,19 @@ Binding</a> を参照）．</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>PostgreSQL</td>
 <td><code>EXPLAIN ANALYZE SELECT ...;</code></td>
 <td><code>Seq Scan</code></td>
 <td><code>Index Scan</code>、<code>Index Only Scan</code>、<code>Bitmap Index Scan</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>MySQL</td>
 <td><code>EXPLAIN ANALYZE SELECT ...;</code></td>
 <td><code>Table scan</code></td>
 <td><code>Index range scan</code>、<code>Index lookup</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>SQLite</td>
 <td><code>EXPLAIN QUERY PLAN SELECT ...;</code></td>
 <td><code>SCAN data</code></td>
@@ -1314,23 +1315,23 @@ id="バックアップとして守れるもの">「バックアップ」とし�
 <col style="width: 50%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>データの失われ方</th>
 <th>レプリケーションで守れるか</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>ディスクの故障、サーバーの損失、火災・災害</td>
 <td>守れる（別の場所にコピーがある）</td>
 </tr>
-<tr class="even">
+<tr>
 <td>誤った <code>DELETE</code> や
 <code>DROP</code>、プログラムの誤りによる書き換え</td>
 <td>通常は守れない（ミラーにも反映される）．ただし、PostgreSQL
 の論理レプリケーションで追記（<code>INSERT</code>）だけを複製すれば、削除はミラーに反映されない</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>過去のある時点の状態に戻す</td>
 <td>できない．必要なら、定期的なダンプ（<code>pg_dump</code>、<code>mysqldump</code>）やファイルシステムのスナップショットを併用する</td>
 </tr>
@@ -1346,7 +1347,7 @@ id="バックアップとして守れるもの">「バックアップ」とし�
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th></th>
 <th>PostgreSQL 論理レプリケーション</th>
 <th>PostgreSQL ストリーミングレプリケーション</th>
@@ -1354,31 +1355,31 @@ id="バックアップとして守れるもの">「バックアップ」とし�
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>複製の単位</td>
 <td>指定したテーブル</td>
 <td>サーバー全体（全データベース、ユーザー情報を含む）</td>
 <td>サーバー全体（ミラー側で絞り込める）</td>
 </tr>
-<tr class="even">
+<tr>
 <td>複製する操作</td>
 <td>選べる（追記だけ、など）</td>
 <td>すべて</td>
 <td>すべて</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>ミラー側</td>
 <td>通常のデータベース（独自のテーブルやインデックスも置ける）</td>
 <td>読み出し専用</td>
 <td>通常のデータベース（読み出し専用に設定するのが普通）</td>
 </tr>
-<tr class="even">
+<tr>
 <td>記録側とミラーのバージョン</td>
 <td>異なってもよい</td>
 <td>同じメジャーバージョンが必要</td>
 <td>ミラーは同じか新しいバージョン</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>向いている用途</td>
 <td>遠隔ミラー、外部公開用</td>
 <td>同じサイト内の予備</td>
@@ -1481,27 +1482,27 @@ Python 環境を用意せずに SlowDash やデータベースを動かせます
 <col style="width: 50%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>用語</th>
 <th>意味</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>イメージ</td>
 <td>実行環境（OS
 のファイル、ライブラリ、プログラム）をまとめたもの．<code>slowproj/slowdash</code>、<code>postgres:16</code>
 など．<code>:</code> 以降はタグ（バージョン）</td>
 </tr>
-<tr class="even">
+<tr>
 <td>コンテナ</td>
 <td>イメージから起動された実行中のインスタンス</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>ボリューム / バインドマウント</td>
 <td>コンテナの外にデータを置く仕組み．コンテナを削除しても残る</td>
 </tr>
-<tr class="even">
+<tr>
 <td>ポートの公開</td>
 <td>ホストのポートをコンテナのポートに転送する</td>
 </tr>
@@ -1516,42 +1517,42 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <col style="width: 50%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>オプション</th>
 <th>意味</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>-p HOST:CONTAINER</code></td>
 <td>ホストのポートをコンテナのポートに転送</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>-v HOST_PATH:CONTAINER_PATH</code></td>
 <td>ホストのディレクトリをコンテナ内にマウント（ホスト側は絶対パス）</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>-v NAME:CONTAINER_PATH</code></td>
 <td>名前付きボリュームをマウント（Docker
 が管理する領域にデータを保存）</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>-e NAME=VALUE</code></td>
 <td>環境変数を設定</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>--rm</code></td>
 <td>停止したらコンテナを自動削除</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>-d</code></td>
 <td>バックグラウンドで実行</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>--name NAME</code></td>
 <td>コンテナに名前を付ける</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>-it</code></td>
 <td>対話的に実行（シェルを使うとき）</td>
 </tr>

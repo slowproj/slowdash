@@ -10,8 +10,9 @@
       div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
   <style type="text/css">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -266,20 +267,20 @@ venv</h1>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th></th>
 <th>Manages</th>
 <th>When to use</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>pyenv</td>
 <td>Versions of Python itself (the interpreter)</td>
 <td>When the OS Python is too old (EOL), or a specific version is
 needed</td>
 </tr>
-<tr class="even">
+<tr>
 <td>venv</td>
 <td>Where packages (things you <code>pip install</code>) are
 installed</td>
@@ -369,64 +370,64 @@ tunnel, or a reverse proxy.</p>
 <col style="width: 50%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Command</th>
 <th>Purpose</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>ip -br addr</code></td>
 <td>List of your IP addresses</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>ip route</code></td>
 <td>Routing table (<code>default via ...</code> is the default
 gateway)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>ip route get ADDRESS</code></td>
 <td>Which interface and gateway are used to reach the destination</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>ping -c 5 HOST</code></td>
 <td>Reachability and round-trip time (RTT)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>tracepath HOST</code>, <code>traceroute HOST</code></td>
 <td>Routers on the path and the latency to each hop</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>mtr HOST</code></td>
 <td>Continuous display of latency and packet loss for each hop</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>getent hosts NAME</code>, <code>dig NAME</code></td>
 <td>Name resolution (<code>getent</code> shows what programs actually
 get, including <code>/etc/hosts</code>)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>sudo ss -tlnp</code></td>
 <td>Listening TCP ports and their processes</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>ss -tn</code></td>
 <td>Established TCP connections</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>nc -zv HOST PORT</code></td>
 <td>Whether a TCP connection to the port can be made</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>curl -v http://HOST:18881/</code></td>
 <td>Verbose view of an HTTP connection</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>iperf3 -s</code> (on the other side),
 <code>iperf3 -c HOST</code></td>
 <td>Bandwidth measurement between two machines</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>sudo tcpdump -i any port 18881</code></td>
 <td>Observing the actual packets</td>
 </tr>
@@ -583,7 +584,7 @@ they should start automatically when the machine boots.</p>
 <col style="width: 16%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Method</th>
 <th>Survives logout</th>
 <th>Starts at boot</th>
@@ -593,7 +594,7 @@ they should start automatically when the machine boots.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>tmux / screen</td>
 <td>yes</td>
 <td>no</td>
@@ -601,7 +602,7 @@ they should start automatically when the machine boots.</p>
 <td>on screen</td>
 <td>development, testing, temporary operation</td>
 </tr>
-<tr class="even">
+<tr>
 <td>nohup</td>
 <td>yes</td>
 <td>no</td>
@@ -609,7 +610,7 @@ they should start automatically when the machine boots.</p>
 <td>file</td>
 <td>temporary operation</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>cron <code>@reboot</code></td>
 <td>yes</td>
 <td>yes</td>
@@ -617,7 +618,7 @@ they should start automatically when the machine boots.</p>
 <td>file</td>
 <td>simple auto-start</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>/etc/rc.local</code></td>
 <td>yes</td>
 <td>yes</td>
@@ -625,7 +626,7 @@ they should start automatically when the machine boots.</p>
 <td>file</td>
 <td>legacy method (systemd is now recommended)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>systemd</td>
 <td>yes</td>
 <td>yes</td>
@@ -633,7 +634,7 @@ they should start automatically when the machine boots.</p>
 <td><code>journalctl</code></td>
 <td>production in native environments</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Docker</td>
 <td>yes</td>
 <td>yes</td>
@@ -657,39 +658,39 @@ during development and testing.</p>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Operation</th>
 <th>tmux</th>
 <th>screen</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Start with a name</td>
 <td><code>tmux new -s slowdash</code></td>
 <td><code>screen -S slowdash</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Detach (the process keeps running)</td>
 <td><code>Ctrl-b</code> → <code>d</code></td>
 <td><code>Ctrl-a</code> → <code>d</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>List</td>
 <td><code>tmux ls</code></td>
 <td><code>screen -ls</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Reattach</td>
 <td><code>tmux attach -t slowdash</code></td>
 <td><code>screen -r slowdash</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Start detached</td>
 <td><code>tmux new -d -s slowdash 'COMMAND'</code></td>
 <td><code>screen -dmS slowdash COMMAND</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Terminate</td>
 <td><code>tmux kill-session -t slowdash</code></td>
 <td><code>screen -S slowdash -X quit</code></td>
@@ -778,25 +779,25 @@ each service, and start with <code>docker compose up -d</code>.</p>
 <col style="width: 50%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Restart policy</th>
 <th>Behavior</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>no</code> (default)</td>
 <td>Not started automatically</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>on-failure</code></td>
 <td>Restarted only when it exits with an error</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>always</code></td>
 <td>Always restarted (even if stopped manually, it starts at boot)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>unless-stopped</code></td>
 <td>Always restarted (but a manually stopped container is not started at
 boot either)</td>
@@ -819,7 +820,7 @@ time-series data.</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th></th>
 <th>PostgreSQL</th>
 <th>MySQL</th>
@@ -827,20 +828,20 @@ time-series data.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Form</td>
 <td>Server</td>
 <td>Server</td>
 <td>A single file (no server needed)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Concurrent access</td>
 <td>Many readers and writers</td>
 <td>Many readers and writers</td>
 <td>One writer at a time (see below). With the default settings, reads
 wait during writes (improved with WAL mode)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Suitable for</td>
 <td>Production</td>
 <td>Production (often already used in existing systems)</td>
@@ -888,7 +889,7 @@ Tables</h2>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Operation</th>
 <th>PostgreSQL (<code>psql</code>)</th>
 <th>MySQL (<code>mysql</code>)</th>
@@ -896,37 +897,37 @@ Tables</h2>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Connect</td>
 <td><code>psql -h HOST -U USER DB</code></td>
 <td><code>mysql -h HOST -u USER -p DB</code></td>
 <td><code>sqlite3 FILE.db</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>List tables</td>
 <td><code>\dt</code></td>
 <td><code>SHOW TABLES;</code></td>
 <td><code>.tables</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Table definition</td>
 <td><code>\d TABLE</code></td>
 <td><code>SHOW CREATE TABLE TABLE;</code></td>
 <td><code>.schema TABLE</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>List indexes</td>
 <td><code>\di</code></td>
 <td><code>SHOW INDEX FROM TABLE;</code></td>
 <td><code>.indexes TABLE</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Show execution time</td>
 <td><code>\timing on</code></td>
 <td>always shown</td>
 <td><code>.timer on</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Quit</td>
 <td><code>\q</code></td>
 <td><code>exit</code></td>
@@ -948,7 +949,7 @@ client might need to be installed separately
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th></th>
 <th>PostgreSQL</th>
 <th>MySQL</th>
@@ -956,43 +957,43 @@ client might need to be installed separately
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>64-bit floating point</td>
 <td><code>DOUBLE PRECISION</code></td>
 <td><code>DOUBLE</code> (<code>REAL</code> is the same)</td>
 <td><code>REAL</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>32-bit floating point</td>
 <td><code>REAL</code></td>
 <td><code>FLOAT</code></td>
 <td>none (all 64-bit)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Integer</td>
 <td><code>INTEGER</code> (32-bit), <code>BIGINT</code> (64-bit)</td>
 <td><code>INT</code> (32-bit), <code>BIGINT</code> (64-bit)</td>
 <td><code>INTEGER</code> (up to 64-bit)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>String</td>
 <td><code>TEXT</code>, <code>VARCHAR(n)</code></td>
 <td><code>VARCHAR(n)</code>, <code>TEXT</code></td>
 <td><code>TEXT</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>JSON</td>
 <td><code>JSONB</code>, <code>JSON</code></td>
 <td><code>JSON</code></td>
 <td><code>TEXT</code> (with JSON functions)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>NaN, Inf</td>
 <td>can be stored</td>
 <td>cannot be stored</td>
 <td>NaN becomes NULL</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Type handling</td>
 <td>strict</td>
 <td>strict (strict mode, enabled by default)</td>
@@ -1022,7 +1023,7 @@ columns used in searches, such as channel names.</li>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th></th>
 <th>PostgreSQL</th>
 <th>MySQL</th>
@@ -1030,44 +1031,44 @@ columns used in searches, such as channel names.</li>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>With time zone</td>
 <td><code>TIMESTAMP WITH TIME ZONE</code>
 (<code>TIMESTAMPTZ</code>)</td>
 <td><code>TIMESTAMP</code></td>
 <td>none</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Without time zone</td>
 <td><code>TIMESTAMP</code></td>
 <td><code>DATETIME</code></td>
 <td>date-time string in <code>TEXT</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>UNIX time (numeric)</td>
 <td><code>DOUBLE PRECISION</code>, <code>BIGINT</code></td>
 <td><code>DOUBLE</code>, <code>BIGINT</code></td>
 <td><code>REAL</code>, <code>INTEGER</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Sub-second precision</td>
 <td>microseconds</td>
 <td>seconds by default; specify like <code>TIMESTAMP(6)</code></td>
 <td>depends on how it is stored</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Check the connection time zone</td>
 <td><code>SHOW timezone;</code></td>
 <td><code>SELECT @@session.time_zone;</code></td>
 <td>none</td>
 </tr>
-<tr class="even">
+<tr>
 <td>UNIX time → date-time</td>
 <td><code>to_timestamp(x)</code></td>
 <td><code>FROM_UNIXTIME(x)</code></td>
 <td><code>datetime(x, 'unixepoch')</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Date-time → UNIX time</td>
 <td><code>extract(epoch FROM t)</code></td>
 <td><code>UNIX_TIMESTAMP(t)</code></td>
@@ -1201,7 +1202,7 @@ used.</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th></th>
 <th>Command</th>
 <th>Reading all rows (slow)</th>
@@ -1209,20 +1210,20 @@ used.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>PostgreSQL</td>
 <td><code>EXPLAIN ANALYZE SELECT ...;</code></td>
 <td><code>Seq Scan</code></td>
 <td><code>Index Scan</code>, <code>Index Only Scan</code>,
 <code>Bitmap Index Scan</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>MySQL</td>
 <td><code>EXPLAIN ANALYZE SELECT ...;</code></td>
 <td><code>Table scan</code></td>
 <td><code>Index range scan</code>, <code>Index lookup</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>SQLite</td>
 <td><code>EXPLAIN QUERY PLAN SELECT ...;</code></td>
 <td><code>SCAN data</code></td>
@@ -1379,24 +1380,24 @@ necessary data tables to the mirror.</li>
 <col style="width: 50%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>How data is lost</th>
 <th>Protected by replication?</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Disk failure, loss of the server, fire, disaster</td>
 <td>Yes (a copy exists at another location)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Mistaken <code>DELETE</code> or <code>DROP</code>, overwrites by
 program bugs</td>
 <td>Usually not (reflected on the mirror too). However, if only appends
 (<code>INSERT</code>) are replicated with PostgreSQL logical
 replication, deletions are not reflected on the mirror</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Restoring the state at a past point in time</td>
 <td>Not possible. If needed, combine with periodic dumps
 (<code>pg_dump</code>, <code>mysqldump</code>) or file-system
@@ -1416,7 +1417,7 @@ data loss.</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th></th>
 <th>PostgreSQL logical replication</th>
 <th>PostgreSQL streaming replication</th>
@@ -1424,31 +1425,31 @@ data loss.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Unit of replication</td>
 <td>Specified tables</td>
 <td>Whole server (all databases, including user information)</td>
 <td>Whole server (can be filtered on the mirror side)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Replicated operations</td>
 <td>Selectable (e.g., appends only)</td>
 <td>All</td>
 <td>All</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Mirror side</td>
 <td>Ordinary database (can have its own tables and indexes)</td>
 <td>Read-only</td>
 <td>Ordinary database (usually set to read-only)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Versions of recording side and mirror</td>
 <td>Can differ</td>
 <td>Same major version required</td>
 <td>Mirror must be the same or newer version</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Suitable for</td>
 <td>Remote mirror, external exposure</td>
 <td>Standby within the same site</td>
@@ -1574,28 +1575,28 @@ host.</p>
 <col style="width: 50%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Term</th>
 <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Image</td>
 <td>A bundle of the runtime environment (OS files, libraries, programs).
 E.g., <code>slowproj/slowdash</code>, <code>postgres:16</code>. The part
 after <code>:</code> is the tag (version)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Container</td>
 <td>A running instance started from an image</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Volume / bind mount</td>
 <td>A mechanism to keep data outside the container. It remains after the
 container is removed</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Port publishing</td>
 <td>Forwarding a host port to a container port</td>
 </tr>
@@ -1610,42 +1611,42 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <col style="width: 50%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Option</th>
 <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>-p HOST:CONTAINER</code></td>
 <td>Forward a host port to a container port</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>-v HOST_PATH:CONTAINER_PATH</code></td>
 <td>Mount a host directory into the container (absolute path on the host
 side)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>-v NAME:CONTAINER_PATH</code></td>
 <td>Mount a named volume (data stored in an area managed by Docker)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>-e NAME=VALUE</code></td>
 <td>Set an environment variable</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>--rm</code></td>
 <td>Remove the container automatically when stopped</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>-d</code></td>
 <td>Run in the background</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>--name NAME</code></td>
 <td>Name the container</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>-it</code></td>
 <td>Run interactively (when using a shell)</td>
 </tr>
