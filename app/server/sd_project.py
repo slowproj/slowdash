@@ -10,7 +10,9 @@ class Project:
         self.sys_dir = Project.find_sys_dir()
         self.project_dir = project_dir if project_dir is not None else Project.find_project_dir()
         self.port = port
+        
         self.config_file = project_file if project_file is not None else 'SlowdashProject.yaml'
+        self.toolbox_dir = os.path.join(self.sys_dir, 'toolbox')
         
         self.mesh_url = None
         self.is_secure = False

@@ -1,11 +1,10 @@
 import logging, json
+import redis
 
 import slowpy
 tasklet = slowpy.mesh.Tasklet()
 
-import redis
 redis_client, redis_pubsub = None, None
-
 subscription_channels = []
 
 
@@ -13,7 +12,11 @@ subscription_channels = []
 async def initialize(params):
     global redis_client, redis_pubsub
 
-    redis_url = params.get('redis_url', 'redis://localhost/2')
+    redis_url = params.get('redis_url', None)
+    if redis_url is None:
+        logging.error('Redis URL is not specified')
+        return
+        
     try:
         redis_client = redis.from_url(
             redis_url,
@@ -65,7 +68,6 @@ async def finalize():
         redis_client.close()
         redis_client = None
         
-
         
 # This function is called when a browser creates a new plot.
 @tasklet.mesh.on('sd.web.data.subscription.>')
@@ -76,6 +78,10 @@ async def on_subscription(headers, body):
     # Get the list of the streaming-data subscribers from the SlowDash server config.
     # The list is in the WebMesh public config at "webmesh/attached".
     config = await tasklet.dash.aio_get_config()
+    if config is None:
+        logging.warning('unable to get SlowDash server config')
+        return
+        
     for topic, client in config.get('webmesh', {}).get('attached', {}).items():
         if topic.startswith('data.*.'):
             ch = topic[len('data.*.'):]
