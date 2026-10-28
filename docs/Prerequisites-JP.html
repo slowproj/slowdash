@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>事前知識</title>
+  <title>周辺ツールのチートシート</title>
   <style type="text/css">
       code{white-space: pre-wrap;}
       span.smallcaps{font-variant: small-caps;}
@@ -75,344 +75,1643 @@ code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
   <link rel="stylesheet" href="style.css" />
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({startOnLoad: true});
+</script>
+
 </head>
 
 <body>
 
 <header>
-<div class="title">事前知識</div><p>
+<div class="title">周辺ツールのチートシート</div><p>
 <div class="toc">
 <span class="toc-title">Contents</span>
 <nav id="TOC">
 <ul>
-<li><a href="#はじめる前に" id="toc-はじめる前に">はじめる前に</a></li>
-<li><a href="#ターミナルの基本"
-id="toc-ターミナルの基本">ターミナルの基本</a></li>
-<li><a href="#python-と仮想環境" id="toc-python-と仮想環境">Python
-と仮想環境</a>
+<li><a href="#このページについて"
+id="toc-このページについて">このページについて</a></li>
+<li><a href="#yaml" id="toc-yaml">YAML</a>
 <ul>
-<li><a href="#システム-python-が古すぎる場合"
-id="toc-システム-python-が古すぎる場合">システム Python
-が古すぎる場合</a></li>
+<li><a href="#書き方" id="toc-書き方">書き方</a></li>
+<li><a href="#引っかかりやすい点"
+id="toc-引っかかりやすい点">引っかかりやすい点</a></li>
+<li><a href="#確認方法" id="toc-確認方法">確認方法</a></li>
 </ul></li>
-<li><a href="#yaml" id="toc-yaml">YAML</a></li>
-<li><a href="#データの時刻の表現形式"
-id="toc-データの時刻の表現形式">データの時刻の表現形式</a></li>
-<li><a href="#rdbms-と-sql-の基礎" id="toc-rdbms-と-sql-の基礎">RDBMS と
-SQL の基礎</a></li>
-<li><a href="#データ記録テーブルの構造記述"
-id="toc-データ記録テーブルの構造記述">データ記録テーブルの構造記述</a></li>
-<li><a href="#ネットワークとポートの基本"
-id="toc-ネットワークとポートの基本">ネットワークとポートの基本</a></li>
-<li><a href="#docker-docker-compose-の基礎"
-id="toc-docker-docker-compose-の基礎">Docker / Docker Compose
-の基礎</a></li>
+<li><a href="#python-の環境pyenv-と-venv"
+id="toc-python-の環境pyenv-と-venv">Python の環境：pyenv と venv</a>
+<ul>
+<li><a href="#venv" id="toc-venv">venv</a></li>
+<li><a href="#pyenv" id="toc-pyenv">pyenv</a></li>
+<li><a href="#組み合わせpyenv-の-python-で-venv-を作る"
+id="toc-組み合わせpyenv-の-python-で-venv-を作る">組み合わせ：pyenv の
+Python で venv を作る</a></li>
+</ul></li>
+<li><a href="#ネットワーク" id="toc-ネットワーク">ネットワーク</a>
+<ul>
+<li><a href="#調査に使うコマンド"
+id="toc-調査に使うコマンド">調査に使うコマンド</a></li>
+<li><a href="#ssh-トンネル" id="toc-ssh-トンネル">SSH トンネル</a></li>
+<li><a href="#ファイアウォールufw"
+id="toc-ファイアウォールufw">ファイアウォール（ufw）</a></li>
+<li><a href="#リバースプロキシと-https"
+id="toc-リバースプロキシと-https">リバースプロキシと HTTPS</a></li>
+</ul></li>
+<li><a href="#バックグラウンド実行と自動起動"
+id="toc-バックグラウンド実行と自動起動">バックグラウンド実行と自動起動</a>
+<ul>
+<li><a href="#tmux-screen" id="toc-tmux-screen">tmux / screen</a></li>
+<li><a href="#nohup" id="toc-nohup">nohup</a></li>
+<li><a href="#cron-の-reboot" id="toc-cron-の-reboot">cron の <span
+class="citation" data-cites="reboot">@reboot</span></a></li>
+<li><a href="#etcrc.local" id="toc-etcrc.local">/etc/rc.local</a></li>
+<li><a href="#systemd" id="toc-systemd">systemd</a></li>
+<li><a href="#docker" id="toc-docker">Docker</a></li>
+</ul></li>
+<li><a href="#リレーショナルデータベースpostgresql-mysql-sqlite"
+id="toc-リレーショナルデータベースpostgresql-mysql-sqlite">リレーショナルデータベース：PostgreSQL
+/ MySQL / SQLite</a>
+<ul>
+<li><a href="#接続とテーブルの確認"
+id="toc-接続とテーブルの確認">接続とテーブルの確認</a></li>
+<li><a href="#データ型" id="toc-データ型">データ型</a></li>
+<li><a href="#時刻とタイムゾーン"
+id="toc-時刻とタイムゾーン">時刻とタイムゾーン</a></li>
+<li><a href="#インデックス" id="toc-インデックス">インデックス</a></li>
+<li><a href="#クエリのパフォーマンス測定"
+id="toc-クエリのパフォーマンス測定">クエリのパフォーマンス測定</a></li>
+<li><a href="#大規模データパーティショニングpostgresql-mysql"
+id="toc-大規模データパーティショニングpostgresql-mysql">大規模データ：パーティショニング（PostgreSQL
+/ MySQL）</a></li>
+<li><a href="#データの複製レプリケーションpostgresql-mysql"
+id="toc-データの複製レプリケーションpostgresql-mysql">データの複製：レプリケーション（PostgreSQL
+/ MySQL）</a></li>
+</ul></li>
+<li><a href="#docker-1" id="toc-docker-1">Docker</a>
+<ul>
+<li><a href="#docker-run" id="toc-docker-run">docker run</a></li>
+<li><a href="#よく使うコマンド"
+id="toc-よく使うコマンド">よく使うコマンド</a></li>
+<li><a href="#引っかかりやすい点-1"
+id="toc-引っかかりやすい点-1">引っかかりやすい点</a></li>
+<li><a href="#イメージの更新と古いイメージの削除"
+id="toc-イメージの更新と古いイメージの削除">イメージの更新と古いイメージの削除</a></li>
+</ul></li>
+<li><a href="#docker-compose" id="toc-docker-compose">Docker Compose</a>
+<ul>
+<li><a href="#docker-compose.yaml"
+id="toc-docker-compose.yaml">docker-compose.yaml</a></li>
+<li><a href="#よく使うコマンド-1"
+id="toc-よく使うコマンド-1">よく使うコマンド</a></li>
+</ul></li>
+<li><a href="#docker-swarm" id="toc-docker-swarm">Docker Swarm</a>
+<ul>
+<li><a href="#クラスタの構成"
+id="toc-クラスタの構成">クラスタの構成</a></li>
+<li><a href="#スタックの配置"
+id="toc-スタックの配置">スタックの配置</a></li>
+<li><a href="#compose-との違い" id="toc-compose-との違い">Compose
+との違い</a></li>
+</ul></li>
+<li><a href="#参考リンク" id="toc-参考リンク">参考リンク</a></li>
 </ul>
 </nav>
 </div>
 </header>
 
-<h1 id="はじめる前に">はじめる前に</h1>
-<p>このページは、SlowDash のドキュメント（特に <a
-href="Installation.html">Installation</a>、<a
-href="QuickTour.html">Quick Tour</a>、<a
-href="ProjectSetup.html">Project Setup</a>、<a
-href="DataBinding.html">Data
-Binding</a>）を読む前に必要な最小限の知識をまとめたものです．この文書は
-Claude によって自動で作成されました．</p>
-<p>SlowDash
-のドキュメントでは，読み手は次のことができることを前提にしています．</p>
-<ul>
-<li>ターミナルでコマンドを実行できる</li>
-<li>テキストファイル（YAML, Python, HTML）を編集できる</li>
-<li>Python スクリプトの実行ができる</li>
-<li>データベースのテーブルの基本概念を理解している</li>
-</ul>
-<p>不安がある場合でも、以下の要点だけ押さえれば開始できます．</p>
-<h1 id="ターミナルの基本">ターミナルの基本</h1>
-<p>以下のコマンド操作に慣れているとスムーズです．</p>
-<div class="sourceCode" id="cb1"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pwd                 # 現在のディレクトリを表示</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ ls -la              # ファイル一覧を表示</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/DIR      # ディレクトリを移動</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ mkdir MyProject     # ディレクトリを作成</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python script.py    # Python スクリプトを実行</span></span></code></pre></div>
-<p>SlowDash のチュートリアルでは，ターミナルを2つ使います．</p>
-<ul>
-<li>1つ目：SlowDash 本体を起動</li>
-<li>2つ目：テストデータ生成やユーザースクリプトを実行</li>
-</ul>
-<h1 id="python-と仮想環境">Python と仮想環境</h1>
-<p>ネイティブ環境では、SlowDash は <code>make</code>
-の中で準備されるプロジェクト内 <code>venv</code> を使う構成です．</p>
-<p>代表的な流れ：</p>
-<div class="sourceCode" id="cb2"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source PATH/TO/SLOWDASH/bin/slowdash-bashrc</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python your-script.py</span></span></code></pre></div>
-<p><code>venv</code> の役割：</p>
-<ul>
-<li>依存関係を分離できる</li>
-<li>システムの Python を汚しにくい</li>
-<li>スクリプトから <code>slowpy</code> を利用しやすい</li>
-</ul>
-<p>SlowDash 利用者として押さえるポイント：</p>
-<ul>
-<li><code>venv</code> が隔離された Python
-実行環境であることを理解する</li>
-<li>新しいターミナルを開いたら <code>slowdash-activate-venv</code>
-を実行する</li>
-</ul>
-<p>有効化後の確認に便利なコマンド：</p>
-<div class="sourceCode" id="cb3"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ echo &quot;$VIRTUAL_ENV&quot;</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ which python</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ which pip</span></span></code></pre></div>
-<p><code>$VIRTUAL_ENV</code>
-にパス（例：<code>.../venv</code>）が入っていて，<code>python</code> と
-<code>pip</code> がその環境を指していれば有効化できています．</p>
-<p><code>venv</code> 有効化中のポイント：</p>
-<ul>
-<li>シェルプロンプトに <code>(.venv)</code>
-が表示されることが多い（シェル設定によります）</li>
-<li><code>python</code> と <code>pip</code> は
-<code>.venv/bin/...</code> を指す</li>
-<li><code>pip install</code> したパッケージはその環境内に閉じる</li>
-</ul>
-<h2 id="システム-python-が古すぎる場合">システム Python
-が古すぎる場合</h2>
-<p>OS に標準で入っている Python が
-EOL（End-of-Life）に達している場合は、そのまま使わないことを推奨します．
-<code>pyenv</code> でサポート中の Python を先に選び、その後に通常どおり
-<code>make</code> を実行して SlowDash に <code>venv</code>
-を準備させる運用が安全です．</p>
-<p>例：</p>
-<div class="sourceCode" id="cb4"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv install 3.12.9</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv local 3.12.9</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source PATH/TO/SLOWDASH/bin/slowdash-bashrc</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span></code></pre></div>
-<p>新しいターミナルで <code>pyenv</code> を自動有効化する設定
-(<code>.bashrc</code>)：</p>
-<div class="sourceCode" id="cb5"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PYENV_ROOT</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$HOME</span><span class="st">/.pyenv&quot;</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PYENV_ROOT</span><span class="st">/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="bu">eval</span> <span class="st">&quot;</span><span class="va">$(</span><span class="ex">pyenv</span> init <span class="at">-</span> bash<span class="va">)</span><span class="st">&quot;</span></span></code></pre></div>
-<p><code>.bashrc</code>
-を編集したら、現在のシェルで再読み込みします：</p>
-<div class="sourceCode" id="cb6"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source ~/.bashrc</span></span></code></pre></div>
-<p>確認コマンド：</p>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv version</span></span></code></pre></div>
-<p>使い分けの考え方：</p>
-<ul>
-<li><code>pyenv</code>：Python 本体のバージョン管理</li>
-<li><code>venv</code>：プロジェクト依存パッケージの隔離</li>
-<li>併用すると、再現性とセキュリティ更新の両方を確保しやすい</li>
-</ul>
+<h1 id="このページについて">このページについて</h1>
+<p>SlowDash を使う際によく必要になる周辺ツール（YAML、pyenv /
+venv、ネットワーク、バックグラウンド実行と自動起動、リレーショナルデータベース、Docker
+/ Docker Compose / Docker
+Swarm）について、要点とよく使うコマンドをまとめたものです．各ツールの入門ではなく、「一度は使ったことがあるが、細かいところを忘れた」ときに参照することを想定しています．詳しくは各ツールの公式ドキュメントを参照してください．この文書は
+Claude によって作成されました．</p>
 <h1 id="yaml">YAML</h1>
-<p>プロジェクト設定は YAML で記述します．</p>
-<p>最小例：</p>
+<p>SlowDash
+のプロジェクト設定ファイル（<code>SlowdashProject.yaml</code>）と
+<code>docker-compose.yaml</code> は YAML で記述します．</p>
+<h2 id="書き方">書き方</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># コメント（行頭、または空白の後の # 以降）</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> QuickTour</span><span class="co">              # key: value（コロンの後に空白が必要）</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">title</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;SlowDash: Test&quot;</span><span class="co">      # 「: 」や「 #」を含む値は引用符で囲む</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">data_source</span><span class="kw">:</span><span class="co">                 # 入れ子はインデント（スペースのみ、タブは不可）</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">url</span><span class="kw">:</span><span class="at"> sqlite:///SlowStore.db</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ports</span><span class="kw">:</span><span class="co">                       # リスト</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881:18881&quot;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;5432:5432&quot;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">channels</span><span class="kw">:</span><span class="co">                    # マップのリスト</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> ch00</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">unit</span><span class="kw">:</span><span class="at"> K</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> ch01</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">unit</span><span class="kw">:</span><span class="at"> mbar</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">tags</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">a</span><span class="kw">,</span><span class="at"> b</span><span class="kw">,</span><span class="at"> c</span><span class="kw">]</span><span class="co">              # インライン形式のリスト</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="fu">opts</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="fu">width</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span><span class="kw">,</span><span class="at"> </span><span class="fu">height</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span><span class="kw">}</span><span class="co"> # インライン形式のマップ</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="fu">script</span><span class="kw">: </span><span class="ch">|</span><span class="co">                    # 複数行文字列（改行を保持）</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  line 1</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  line 2</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="fu">command</span><span class="kw">: </span><span class="ch">&gt;</span><span class="co">                   # 複数行文字列（改行を空白に置換）</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  bash -c &quot;echo hello&quot;</span></code></pre></div>
+<h2 id="引っかかりやすい点">引っかかりやすい点</h2>
+<ul>
+<li>インデントの幅は揃っていれば何文字でもよいが、同じ階層では揃える．タブ文字はエラーになる．</li>
+<li>値は自動的に型が推測される．文字列として扱いたいものは引用符で囲む：
+<ul>
+<li><code>yes</code>, <code>no</code>, <code>on</code>,
+<code>off</code>, <code>true</code>, <code>false</code>
+は真偽値になる（Python の PyYAML の場合）</li>
+<li><code>0644</code> のように 0 で始まる数字は 8
+進数として解釈されることがある</li>
+<li><code>22:22</code> のようなコロン区切りの数字は 60
+進数の数値として解釈されることがある（ポート指定は常に
+<code>"22:22"</code> のように引用符で囲むのが安全）</li>
+<li>値が空の場合（<code>key:</code> だけ）は <code>null</code>
+になる</li>
+</ul></li>
+<li>同じキーを2回書いてもエラーにならず、後の値で上書きされることが多い．</li>
+</ul>
+<h2 id="確認方法">確認方法</h2>
+<p>意図どおりに読み込まれているかは、JSON
+に変換して表示すると確認できます（<code>pyyaml</code> が必要．SlowDash
+の venv には入っています）．</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python -c &#39;import sys,yaml,json; print(json.dumps(yaml.safe_load(open(sys.argv[1])), indent=2))&#39; SlowdashProject.yaml</span></span></code></pre></div>
+<p><code>docker-compose.yaml</code> の場合は
+<code>docker compose config</code>
+で、変数展開後の最終的な設定を表示できます．</p>
+<h1 id="python-の環境pyenv-と-venv">Python の環境：pyenv と venv</h1>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>管理するもの</th>
+<th>使う場面</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>pyenv</td>
+<td>Python 本体（インタプリタ）のバージョン</td>
+<td>OS 標準の Python
+が古い（EOL）、または特定のバージョンが必要なとき</td>
+</tr>
+<tr class="even">
+<td>venv</td>
+<td>パッケージ（<code>pip install</code> するもの）の置き場所</td>
+<td>プロジェクトごとに依存パッケージを分離したいとき（SlowDash
+では標準）</td>
+</tr>
+</tbody>
+</table>
+<p>両者は独立していて、併用できます．pyenv で選んだ Python を使って venv
+を作る、というのが典型的な組み合わせです．</p>
+<h2 id="venv">venv</h2>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 -m venv venv              # カレントディレクトリに venv/ を作成</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source venv/bin/activate          # 有効化（シェルごと、ターミナルを開くたびに必要）</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>(venv) $ pip install numpy          <span class="co"># この venv の中にだけインストールされる</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>(venv) $ pip list                   <span class="co"># インストール済みパッケージの一覧</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>(venv) $ pip install -r requirements.txt</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>(venv) $ deactivate                 <span class="co"># 無効化</span></span></code></pre></div>
+<p>有効になっているかの確認：</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ echo $VIRTUAL_ENV                 # venv のパスが表示されれば有効</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ which python                      # .../venv/bin/python を指していれば有効</span></span></code></pre></div>
+<p>要点：</p>
+<ul>
+<li>削除はディレクトリごと消すだけ（<code>rm -rf venv</code>）．</li>
+<li>有効化しなくても、<code>venv/bin/python script.py</code>
+のように直接指定すればその venv で実行される（cron や systemd
+から実行するときに便利）．</li>
+<li>venv は作成時の Python 本体へのリンクを持っている．元の Python
+を削除・更新したり、venv
+のディレクトリを移動したりすると壊れるので、その場合は作り直す．</li>
+<li>Debian / Ubuntu では <code>python3-venv</code>
+パッケージが別になっていることがある（<code>sudo apt install python3-venv</code>）．</li>
+</ul>
+<p>SlowDash との関係：ネイティブインストールの <code>make</code>
+は、SlowDash のディレクトリに <code>venv/</code>
+を作ります．<code>slowdash-activate-venv</code> は
+<code>source $SLOWDASH_DIR/venv/bin/activate</code> の別名です．</p>
+<h2 id="pyenv">pyenv</h2>
+<p>インストール（Linux / WSL）：</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ curl -fsSL https://pyenv.run | bash</span></span></code></pre></div>
+<p>（macOS では <code>brew install pyenv</code>．）</p>
+<p>続けて <code>~/.bashrc</code>
+に以下を追加し、<code>source ~/.bashrc</code>
+するか、新しいターミナルを開きます．</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PYENV_ROOT</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$HOME</span><span class="st">/.pyenv&quot;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[[</span> <span class="ot">-d</span> <span class="va">$PYENV_ROOT</span>/bin <span class="kw">]]</span> <span class="kw">&amp;&amp;</span> <span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PYENV_ROOT</span><span class="st">/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="bu">eval</span> <span class="st">&quot;</span><span class="va">$(</span><span class="ex">pyenv</span> init <span class="at">-</span> bash<span class="va">)</span><span class="st">&quot;</span></span></code></pre></div>
+<p>pyenv は Python
+をソースからビルドするので、事前にビルドに必要なライブラリを入れておきます（Ubuntu
+の場合．他の OS は <a
+href="https://github.com/pyenv/pyenv/wiki#suggested-build-environment">pyenv
+Wiki</a> を参照）．</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo apt install build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev \</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    libsqlite3-dev libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev</span></code></pre></div>
+<p>これが不足していると、ビルドは成功しても <code>ssl</code> や
+<code>sqlite3</code> モジュールが使えない Python
+ができることがあります（警告はビルド時に表示されます）．</p>
+<p>よく使うコマンド：</p>
 <div class="sourceCode" id="cb8"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> QuickTour</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">title</span><span class="kw">:</span><span class="at"> SlowDash Quick Tour</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> sqlite:///QuickTourTestData.db</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> testdata[channel]@timestamp(unix)=value</span></span></code></pre></div>
-<p>YAML の重要ポイント：</p>
-<ul>
-<li>インデントに意味がある（タブではなくスペースを使用）</li>
-<li><code>key: value</code> で項目を定義</li>
-<li>深いインデントで入れ子を表現</li>
-</ul>
-<h1 id="データの時刻の表現形式">データの時刻の表現形式</h1>
-<p>データを記録するときは、各データに時刻情報が付きます．
-この節では、その時刻情報そのものの表現形式を説明します．</p>
-<ul>
-<li><code>unix</code>：<code>1970-01-01 00:00:00 UTC</code>（UNIX
-epoch）からの経過秒で，タイムゾーンに依存しない</li>
-<li><code>with time zone</code>（または <code>aware</code>）</li>
-<li><code>without time zone</code> /
-<code>naive</code>（通常は非推奨）</li>
-<li><code>unspecified utc</code>（タイムゾーン文字列なしだが UTC
-と分かっている）</li>
-</ul>
-<p>実務上の違い：</p>
-<ul>
-<li><code>unix</code> は「経過時間」を表す数値表現</li>
-<li>それ以外は、年月日時分秒で記述する日時文字列表現</li>
-</ul>
-<p>迷ったら、まず <code>unix</code> を使うのが安全です．</p>
-<h1 id="rdbms-と-sql-の基礎">RDBMS と SQL の基礎</h1>
-<p>SlowDash では、PostgreSQL、MySQL、SQLite などの SQL
-データベース（RDBMS）をデータソースとして使うことが多いです．
-最初のイメージとしては、RDBMS は Excel
-のような表形式データを複数のテーブルに格納する仕組みだと考えると分かりやすいです．
-（厳密には、RDBMS
-にはテーブル間のリレーションを定義する仕組みがありますが、この導入ではまず表形式データのイメージを優先します．）</p>
-<p>最小限の概念:</p>
-<ul>
-<li><strong>table</strong>: 行と列で構成されるデータの集合</li>
-<li><strong>row</strong>: 1件のレコード（例: 1時刻の測定値）</li>
-<li><strong>column</strong>: 属性（<code>timestamp</code>,
-<code>channel</code>, <code>value</code> など）</li>
-<li><code>PRIMARY KEY</code>: 行を一意に識別するキー（時系列では
-timestamp + channel の組がよく使われます）</li>
-</ul>
-<p>最低限読めるとよい SQL:</p>
-<ul>
-<li><code>SELECT ... FROM table</code>：データの読み出し</li>
-<li><code>WHERE ...</code>：行の絞り込み</li>
-<li><code>ORDER BY ...</code>：並び替え</li>
-<li><code>LIMIT N</code>：取得件数の上限指定</li>
-</ul>
-<p>例:</p>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv install --list | grep &#39;^ *3\.&#39;   # インストール可能なバージョン一覧</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv install 3.12.9                   # インストール</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv versions                         # インストール済みの一覧</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv version                          # 現在有効なバージョンと、その設定元</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv global 3.12.9                    # ユーザーのデフォルトを設定</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv local 3.12.9                     # このディレクトリ以下だけ設定（.python-version ファイルが作られる）</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv uninstall 3.12.9</span></span></code></pre></div>
+<h2 id="組み合わせpyenv-の-python-で-venv-を作る">組み合わせ：pyenv の
+Python で venv を作る</h2>
 <div class="sourceCode" id="cb9"><pre
-class="sourceCode sql"><code class="sourceCode sql"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="dt">timestamp</span>, channel, <span class="fu">value</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> testdata</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> channel <span class="op">=</span> <span class="st">&#39;ch00&#39;</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dt">timestamp</span> <span class="kw">DESC</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div>
-<p>Quick Tour を進めるだけなら高度な SQL は不要ですが、この基礎があると
-Data Binding の確認やトラブルシュートがしやすくなります．</p>
-<h1 id="データ記録テーブルの構造記述">データ記録テーブルの構造記述</h1>
-<p>次に必要なのは、データ記録テーブルの構造をどう表すかです．
-つまり「どの列が時刻で、どの列がチャンネルで、どの列が値か」を記述します．
-SlowDash ではこの構造記述を「スキーマ記述子」と呼びます．</p>
-<p>よく使う形：</p>
-<pre><code>table[tag]@time_column(type)=value_column</code></pre>
-<p>例：</p>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv local 3.12.9          # このディレクトリでは python3 が 3.12.9 になる</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ rm -rf venv                 # 古い Python で作った venv があれば削除</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make                        # venv が 3.12.9 で作られる</span></span></code></pre></div>
+<p>一度 venv を作れば、その後は pyenv の設定に関係なく venv の Python
+が使われます．ただし、venv の元になった pyenv のバージョンを
+<code>pyenv uninstall</code> すると venv は壊れます．</p>
+<h1 id="ネットワーク">ネットワーク</h1>
+<p>SlowDash はブラウザから HTTP で接続して使います（標準のポートは
+18881）．SlowDash
+自体にはセキュリティ機能がほとんどないので、ファイアウォールの内側で使い、外部からは
+VPN、SSH
+トンネル、またはリバースプロキシを経由して接続するのが前提です．</p>
+<h2 id="調査に使うコマンド">調査に使うコマンド</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>コマンド</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>ip -br addr</code></td>
+<td>自分の IP アドレスの一覧</td>
+</tr>
+<tr class="even">
+<td><code>ip route</code></td>
+<td>ルーティングテーブル（<code>default via ...</code>
+がデフォルトゲートウェイ）</td>
+</tr>
+<tr class="odd">
+<td><code>ip route get ADDRESS</code></td>
+<td>指定した宛先へ、どのインターフェース・ゲートウェイを通って出ていくか</td>
+</tr>
+<tr class="even">
+<td><code>ping -c 5 HOST</code></td>
+<td>到達できるかと、往復の遅延時間（RTT）</td>
+</tr>
+<tr class="odd">
+<td><code>tracepath HOST</code>、<code>traceroute HOST</code></td>
+<td>経路上のルーターと、各区間までの遅延</td>
+</tr>
+<tr class="even">
+<td><code>mtr HOST</code></td>
+<td>経路の各区間の遅延とパケットロスを継続的に表示</td>
+</tr>
+<tr class="odd">
+<td><code>getent hosts NAME</code>、<code>dig NAME</code></td>
+<td>名前解決の確認（<code>getent</code> は <code>/etc/hosts</code>
+も含めた、実際にプログラムが使う結果）</td>
+</tr>
+<tr class="even">
+<td><code>sudo ss -tlnp</code></td>
+<td>待ち受けている TCP ポートと、そのプロセス</td>
+</tr>
+<tr class="odd">
+<td><code>ss -tn</code></td>
+<td>確立している TCP 接続</td>
+</tr>
+<tr class="even">
+<td><code>nc -zv HOST PORT</code></td>
+<td>指定したポートに TCP で接続できるか</td>
+</tr>
+<tr class="odd">
+<td><code>curl -v http://HOST:18881/</code></td>
+<td>HTTP での接続を詳細表示</td>
+</tr>
+<tr class="even">
+<td><code>iperf3 -s</code>（相手側）、<code>iperf3 -c HOST</code></td>
+<td>2 台の間の帯域の測定</td>
+</tr>
+<tr class="odd">
+<td><code>sudo tcpdump -i any port 18881</code></td>
+<td>実際に流れているパケットの観察</td>
+</tr>
+</tbody>
+</table>
+<p>足りないコマンドは、<code>sudo apt install iputils-ping iputils-tracepath traceroute mtr-tiny dnsutils netcat-openbsd iperf3 tcpdump</code>
+でインストールできます．</p>
+<p>HTTP の応答時間の内訳（接続、最初の 1
+バイトが返るまで、全体）は、<code>curl</code> で測れます：</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ curl -o /dev/null -s -w &#39;connect: %{time_connect}  first byte: %{time_starttransfer}  total: %{time_total}\n&#39; http://HOST:18881/</span></span></code></pre></div>
+<p>要点：</p>
 <ul>
-<li><code>testdata[channel]@timestamp(unix)=value</code></li>
-<li><code>numeric_data[endpoint]@timestamp(with timezone)=value_raw</code></li>
+<li><code>ping</code> に応答がなくても、到達できないとは限らない（ICMP
+がファイアウォールで止められていることが多い）．特定のポートに接続できるかは
+<code>nc -zv</code> で確認する．</li>
+<li>待ち受けアドレスが <code>0.0.0.0</code>（または
+<code>*</code>）なら全てのネットワークから、<code>127.0.0.1</code>
+なら同じマシンからだけ接続できる．<code>sudo ss -tlnp</code>
+で確認できる．</li>
+<li>遠隔地からの表示が遅い場合、帯域よりも往復の遅延（RTT）が効いていることが多い．<code>ping</code>
+の RTT が数十 ms を超えるなら、リバースプロキシで HTTP/2
+にする、あるいはデータベースのミラーと SlowDash を遠隔地側に置く（<a
+href="#データの複製レプリケーションpostgresql-mysql">レプリケーション</a>）と改善することがある．</li>
 </ul>
-<p>意味：</p>
-<ul>
-<li><code>table</code>：読み出し元テーブル（または measurement）</li>
-<li><code>[tag]</code>：チャンネル名として使う列</li>
-<li><code>@time_column(type)</code>：時刻列とその型</li>
-<li><code>=value_column</code>：値の列</li>
-</ul>
-<h1 id="ネットワークとポートの基本">ネットワークとポートの基本</h1>
-<p>SlowDash の例ではポート <code>18881</code> をよく使います．</p>
-<ul>
-<li>ブラウザで <code>http://localhost:18881</code> を開く</li>
-<li>Docker 利用時は <code>-p 18881:18881</code> を設定</li>
-<li>そのポートが他プロセスで使用中でないことを確認</li>
-</ul>
-<h1 id="docker-docker-compose-の基礎">Docker / Docker Compose
-の基礎</h1>
-<p>SlowDash において、コンテナは必須ではなくオプションです．
-コンテナに慣れていない場合は、最初から Docker
-を使う必要はありません．まずはネイティブ構成で始めて問題ありません．</p>
-<p>最初にコンテナを使わなくてよいケース：</p>
-<ul>
-<li>SlowDash の基本操作を学ぶ段階</li>
-<li>単一マシンでシンプルに運用する段階</li>
-<li>トラブルシュート時に構成要素を減らしたい場合</li>
-</ul>
-<p>コンテナに慣れていない場合は、まず次のイメージを持つと分かりやすいです．</p>
-<ul>
-<li><strong>コンテナイメージ</strong>：コマンドとその実行環境（依存ライブラリや設定）をまとめた実行用パッケージ</li>
-<li><strong>コンテナ</strong>：イメージから起動される実行中のインスタンス</li>
-<li>Docker：1つのコンテナをコマンドで起動・停止する仕組み</li>
-<li>Docker Compose：複数の関連コンテナをまとめて管理する仕組み</li>
-</ul>
-<p>SlowDash での意味合いは次の通りです．</p>
-<ul>
-<li>Docker さえ使える環境なら、既存の SlowDash
-コンテナイメージを取得して、ホスト側に SlowDash
-本体をインストールせずに使い始められる</li>
-<li>ホスト環境に SlowDash の Python 依存を直接入れなくてもよい</li>
-<li>プロジェクトファイルはホスト側に置いたまま使える</li>
-<li>SlowDash
-プロセス本体はコンテナ内で動作し、マウントされたプロジェクトを読み書きする</li>
-</ul>
-<p>コンテナ導入で得られる主なメリット：</p>
-<ul>
-<li>再現性：実行環境をマシン間で揃えやすい</li>
-<li>ホスト環境の清潔性：グローバルな Python
-パッケージ汚染を減らせる</li>
-<li>チーム共有のしやすさ：同じイメージと compose 設定で実行できる</li>
-<li>更新・ロールバックの容易さ：イメージタグ切り替えで管理しやすい</li>
-<li>複数サービス連携：DB／リバースプロキシ／ノートブック等との併用がしやすい</li>
-</ul>
-<p>例でよく出るオプションの意味：</p>
-<ul>
-<li><code>-v $(pwd):/project</code>
-<ul>
-<li>左側 <code>$(pwd)</code>：ホスト側の現在ディレクトリ</li>
-<li>右側 <code>/project</code>：コンテナ内のパス</li>
-<li>効果：ホストで編集したファイルがコンテナからすぐ見える</li>
-</ul></li>
-<li><code>-p 18881:18881</code>
-<ul>
-<li>左側：ホスト側ポート</li>
-<li>右側：コンテナ側ポート</li>
-<li>効果：<code>http://localhost:18881</code> へのアクセスがコンテナ内
-SlowDash に届く</li>
-</ul></li>
-<li><code>--rm</code>
-<ul>
-<li>停止後にコンテナを自動削除する</li>
-<li>試行用の一時実行に向いている</li>
-</ul></li>
-</ul>
-<p>最小の単体コンテナ例:</p>
+<h2 id="ssh-トンネル">SSH トンネル</h2>
+<p>ファイアウォールの内側の SlowDash に、SSH 経由で接続します．</p>
 <div class="sourceCode" id="cb11"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd YOUR_PROJECT_DIR</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash</span></span></code></pre></div>
-<p>このコマンドで起きること：</p>
-<ol type="1">
-<li>必要なら Docker がイメージを取得する</li>
-<li>コンテナが起動し、内部で SlowDash が動く</li>
-<li>ブラウザで <code>http://localhost:18881</code> を開いて利用する</li>
-<li>停止するとコンテナは削除される（<code>--rm</code>）が、ホスト側のプロジェクトファイルは残る</li>
-</ol>
-<p>最小の Docker Compose 例:</p>
-<p>実運用では、データベースもホストに直接インストールせず、コンテナで使いたい場合がよくあります．
-この場合、SlowDash
-コンテナとデータベースコンテナを同時に動かす必要があり、少なくとも2つのコンテナを管理することになります．
-Docker Compose
-は、この複数コンテナの起動・停止を1つの設定ファイルから自動化する仕組みです．</p>
-<div class="sourceCode" id="cb12"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">postgres</span><span class="kw">:</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> postgres:16</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> POSTGRES_USER=slowdash</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> POSTGRES_PASSWORD=slowdash</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> POSTGRES_DB=slowdash</span></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> postgres-data:/var/lib/postgresql/data</span></span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowdash</span></span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span></span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> postgres</span></span>
-<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
-<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> .:/project</span></span>
-<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
-<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881:18881&quot;</span></span>
-<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="fu">volumes</span><span class="kw">:</span></span>
-<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">postgres-data</span><span class="kw">:</span></span></code></pre></div>
-<p>Docker Compose を使う利点：</p>
-<ul>
-<li>複数コンテナを手で順番に起動する作業が不要になる</li>
-<li><code>docker compose up</code> 1回で SlowDash + DB
-を同時起動できる</li>
-<li><code>docker compose down</code> 1回で同時停止できる</li>
-<li>サービス定義がファイルに残るため、チーム内で共有しやすい</li>
-</ul>
-<p>起動と停止：</p>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ ssh -N -L 18881:localhost:18881 USER@SERVER                 # 手元の localhost:18881 → SERVER の localhost:18881</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ ssh -N -J USER@GATEWAY -L 18881:localhost:18881 USER@SERVER  # ゲートウェイ（踏み台）を経由する場合</span></span></code></pre></div>
+<p>ブラウザで <code>http://localhost:18881</code>
+を開きます．<code>-N</code>
+はコマンドを実行せずにトンネルだけを張るオプションです．逆向きに、内側のマシンから外側のマシンにポートを公開するには
+<code>-R</code> を使います（<a
+href="#データの複製レプリケーションpostgresql-mysql">レプリケーション</a>
+の例を参照）．</p>
+<p>よく使う設定は、<code>~/.ssh/config</code> に書いておくと
+<code>ssh slowdash</code> だけで接続できます．</p>
+<pre><code>Host slowdash
+    HostName SERVER
+    User USER
+    ProxyJump USER@GATEWAY
+    LocalForward 18881 localhost:18881</code></pre>
+<h2 id="ファイアウォールufw">ファイアウォール（ufw）</h2>
+<p>Ubuntu では、ファイアウォールの設定に <code>ufw</code>
+を使います（RHEL 系では <code>firewall-cmd</code>）．</p>
 <div class="sourceCode" id="cb13"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down</span></span></code></pre></div>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw status verbose                    # 現在の状態と規則</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw default deny incoming             # 外からの接続は既定で拒否</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw default allow outgoing            # 外への接続は既定で許可</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw allow OpenSSH                     # SSH を許可（有効化する前に必ず！）</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw enable                            # 有効化</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw allow from 192.168.1.0/24 to any port 18881 proto tcp   # 特定のネットワークからだけ許可</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw allow from 203.0.113.5 to any port 5432 proto tcp       # 特定のホスト（例：DB のミラー）からだけ許可</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw allow 443/tcp                     # HTTPS を全体に許可（リバースプロキシ）</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw status numbered                   # 番号付きで規則を表示</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw delete 3                          # 番号で規則を削除</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw insert 1 deny from 198.51.100.7   # 先頭に規則を挿入</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw reload</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw disable</span></span></code></pre></div>
+<p>要点：</p>
+<ul>
+<li>リモートから SSH で作業している場合、SSH を許可する前に
+<code>ufw enable</code> すると、そのまま締め出される．</li>
+<li>規則は上から順に評価され、最初に一致したものが適用される．</li>
+<li>SlowDash
+のポート（18881）は、研究室のネットワークなど必要な範囲だけに許可する．リバースプロキシを使う場合は、18881
+は外部に開けず、443（と、HTTPS へ転送するための
+80）だけを開ける．データベースのポート（PostgreSQL 5432、MySQL
+3306）も、接続が必要なホストだけに許可する．</li>
+<li>拒否された接続のログは <code>/var/log/ufw.log</code>
+に記録される（<code>sudo ufw logging on</code>）．</li>
+<li>設定後は、別のマシンから <code>nc -zv HOST PORT</code>
+で、開いているべきポートだけが開いていることを確認する．</li>
+</ul>
+<h3 id="docker-と-ufw">Docker と ufw</h3>
+<p>Docker で公開したポート（<code>docker run -p</code> や Compose の
+<code>ports:</code>）は、ufw
+の規則を迂回して外部から接続できてしまいます．Docker が ufw
+より先に評価されるファイアウォール規則を直接追加するためです．</p>
+<ul>
+<li>同じマシンからだけ接続できればよい場合は、<code>127.0.0.1</code>
+を付けて公開する：<code>-p 127.0.0.1:18881:18881</code>（Compose では
+<code>"127.0.0.1:18881:18881"</code>）．</li>
+<li>リバースプロキシも同じ Compose の中で動かす場合は、SlowDash に
+<code>ports:</code>
+を書く必要はない（サービス名で接続できる）．公開するのはリバースプロキシのポートだけにする．</li>
+</ul>
+<h2 id="リバースプロキシと-https">リバースプロキシと HTTPS</h2>
+<p>SlowDash は暗号化されていない HTTP/1.1
+で通信します．外部から接続させる場合は、前段に Nginx や Apache などの
+Web サーバーを置き、そこで HTTPS
+に乗せ換えます（リバースプロキシ）．</p>
+<pre><code>ブラウザ ── HTTPS (443) ──▶ リバースプロキシ ── HTTP (18881) ──▶ SlowDash
+                            （Nginx / Apache）                   （外部からは直接接続させない）</code></pre>
+<p>これにより、次のことができます．</p>
+<ul>
+<li>通信の暗号化（HTTPS）</li>
+<li>HTTP/2 による高速化（遠隔地からの表示で特に効果がある）</li>
+<li>ポート番号のない URL（<code>https://HOST/slowdash/</code>）</li>
+<li>Basic 認証の追加（パスワードを守るために HTTPS が必須）</li>
+</ul>
+<p>HTTPS には、サーバーの証明書が必要です．所属機関の証明書、Let’s
+Encrypt（<code>certbot</code>、外部から接続できるホスト名が必要）、あるいは試験用の自己署名証明書（ブラウザに警告が出る）を使います．</p>
+<p>設定方法は <a
+href="ProjectSetup.html#using-a-reverse-proxy-server">Project Setup
+の「Using a Reverse Proxy Server」</a> と <a
+href="FirstStep-JP.html#リバースプロキシ">SlowDash
+を使ってみるの「リバースプロキシ」</a> を、Docker Compose での動作例は
+<code>ExampleProjects/ReverseProxy</code> を参照してください．</p>
+<h1
+id="バックグラウンド実行と自動起動">バックグラウンド実行と自動起動</h1>
+<p><code>slowdash</code>
+のようなサーバープロセスは、ターミナルを閉じたりログアウトしたりしても動き続ける必要があり、本番運用ではマシンの起動時に自動で起動するようにします．</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>方法</th>
+<th>ログアウト後も動く</th>
+<th>起動時に自動で起動</th>
+<th>異常終了時の再起動</th>
+<th>ログ</th>
+<th>向いている用途</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>tmux / screen</td>
+<td>○</td>
+<td>×</td>
+<td>×</td>
+<td>画面で見る</td>
+<td>開発・試験、一時的な運用</td>
+</tr>
+<tr class="even">
+<td>nohup</td>
+<td>○</td>
+<td>×</td>
+<td>×</td>
+<td>ファイル</td>
+<td>一時的な運用</td>
+</tr>
+<tr class="odd">
+<td>cron <code>@reboot</code></td>
+<td>○</td>
+<td>○</td>
+<td>×</td>
+<td>ファイル</td>
+<td>手軽な自動起動</td>
+</tr>
+<tr class="even">
+<td><code>/etc/rc.local</code></td>
+<td>○</td>
+<td>○</td>
+<td>×</td>
+<td>ファイル</td>
+<td>古い方法（現在は systemd を推奨）</td>
+</tr>
+<tr class="odd">
+<td>systemd</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td><code>journalctl</code></td>
+<td>ネイティブ環境での本番運用</td>
+</tr>
+<tr class="even">
+<td>Docker</td>
+<td>○</td>
+<td>○</td>
+<td>○</td>
+<td><code>docker logs</code></td>
+<td>Docker 環境での本番運用</td>
+</tr>
+</tbody>
+</table>
+<p>以下の例では、<code>slowdash</code>
+コマンドを絶対パスで指定しています．<code>bin/slowdash</code> は自分で
+SlowDash の venv を有効にするので、venv
+を事前に有効化する必要はありません．</p>
+<h2 id="tmux-screen">tmux / screen</h2>
+<p>ターミナルの画面ごとバックグラウンドに残しておき、後から再接続できます．画面の出力をそのまま見られるので、開発中や試験運用に便利です．</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>操作</th>
+<th>tmux</th>
+<th>screen</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>名前を付けて開始</td>
+<td><code>tmux new -s slowdash</code></td>
+<td><code>screen -S slowdash</code></td>
+</tr>
+<tr class="even">
+<td>切り離す（プロセスは動き続ける）</td>
+<td><code>Ctrl-b</code> → <code>d</code></td>
+<td><code>Ctrl-a</code> → <code>d</code></td>
+</tr>
+<tr class="odd">
+<td>一覧</td>
+<td><code>tmux ls</code></td>
+<td><code>screen -ls</code></td>
+</tr>
+<tr class="even">
+<td>再接続</td>
+<td><code>tmux attach -t slowdash</code></td>
+<td><code>screen -r slowdash</code></td>
+</tr>
+<tr class="odd">
+<td>開始と同時に切り離す</td>
+<td><code>tmux new -d -s slowdash 'COMMAND'</code></td>
+<td><code>screen -dmS slowdash COMMAND</code></td>
+</tr>
+<tr class="even">
+<td>終了</td>
+<td><code>tmux kill-session -t slowdash</code></td>
+<td><code>screen -S slowdash -X quit</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="nohup">nohup</h2>
+<p>ログアウトしても終了しないようにして、バックグラウンドで実行します．</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ nohup /PATH/TO/SLOWDASH/bin/slowdash --port=18881 --project-dir=/PATH/TO/PROJECT &gt; slowdash.log 2&gt;&amp;1 &amp;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pgrep -af slowdash      # 動いているか確認（プロセス番号が表示される）</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ kill PID                # 停止</span></span></code></pre></div>
+<h2 id="cron-の-reboot">cron の <span class="citation"
+data-cites="reboot">@reboot</span></h2>
+<p><code>crontab -e</code> で、自分のユーザーの crontab に次の 1
+行を追加すると、マシンの起動時に実行されます．root 権限は不要です．</p>
+<pre><code>@reboot /PATH/TO/SLOWDASH/bin/slowdash --port=18881 --project-dir=/PATH/TO/PROJECT &gt;&gt; /PATH/TO/slowdash.log 2&gt;&amp;1</code></pre>
+<p>cron の環境では <code>PATH</code>
+などがログイン時と異なるので、コマンドやファイルは絶対パスで指定します．</p>
+<h2 id="etcrc.local">/etc/rc.local</h2>
+<p>起動時に root 権限で実行されるスクリプトです．古い方法で、Ubuntu
+では標準では存在しませんが、作成すれば systemd 経由で実行されます．</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/sh</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">su</span> <span class="at">-</span> USER <span class="at">-c</span> <span class="st">&#39;/PATH/TO/SLOWDASH/bin/slowdash --port=18881 --project-dir=/PATH/TO/PROJECT &gt;&gt; /PATH/TO/slowdash.log 2&gt;&amp;1 &amp;&#39;</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="bu">exit</span> 0</span></code></pre></div>
+<ul>
+<li>実行権限が必要（<code>sudo chmod +x /etc/rc.local</code>）．</li>
+<li>root で実行されるので、<code>su - USER -c</code>
+で一般ユーザーとして実行する．終了しないプロセスは、最後に
+<code>&amp;</code> を付けてバックグラウンドにする．</li>
+</ul>
+<h2 id="systemd">systemd</h2>
+<p>現在の Linux の標準的な方法です．異常終了時の自動再起動やログの管理も
+systemd が行います．次の内容のファイルを
+<code>/etc/systemd/system/slowdash.service</code> として作成します．</p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode ini"><code class="sourceCode ini"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">SlowDash</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="dt">After</span><span class="ot">=</span><span class="st">network-online.target</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="dt">Wants</span><span class="ot">=</span><span class="st">network-online.target</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 同じマシンのデータベースを使う場合は、その後に起動する：</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="co"># After=network-online.target postgresql.service</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="dt">Type</span><span class="ot">=</span><span class="st">simple</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="dt">User</span><span class="ot">=</span><span class="st">USER</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="dt">WorkingDirectory</span><span class="ot">=</span><span class="st">/PATH/TO/PROJECT</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/PATH/TO/SLOWDASH/bin/slowdash --port=18881</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="dt">Restart</span><span class="ot">=</span><span class="st">on-failure</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="dt">RestartSec</span><span class="ot">=</span><span class="dv">5</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">multi-user.target</span></span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo systemctl daemon-reload              # サービスファイルを作成・変更したら実行</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo systemctl enable --now slowdash      # 自動起動を有効にして、すぐに起動</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ systemctl status slowdash                 # 状態と最新のログ</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ journalctl -u slowdash -f                 # ログを表示（-f で追跡）</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo systemctl restart slowdash           # 再起動（設定を変更したときなど）</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo systemctl stop slowdash              # 停止</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo systemctl disable slowdash           # 自動起動を無効にする</span></span></code></pre></div>
+<p>root
+権限がない場合は、ユーザーのサービスとして登録することもできます．ファイルを
+<code>~/.config/systemd/user/slowdash.service</code>
+に置き（<code>User=</code>
+の行は削除し、<code>WantedBy=default.target</code>
+にする）、<code>systemctl --user enable --now slowdash</code>
+とします．ログアウト中やマシンの起動時にも動かすには、<code>loginctl enable-linger USER</code>
+が必要です（管理者に依頼）．</p>
+<h2 id="docker">Docker</h2>
+<p>Docker
+のコンテナは、もともとバックグラウンドで実行できます．再起動ポリシーを指定すると、異常終了時やマシンの起動時に自動で起動します．</p>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker run -d --restart unless-stopped -p 18881:18881 -v $(pwd):/project slowproj/slowdash</span></span></code></pre></div>
+<p>Docker Compose では、各サービスに
+<code>restart: unless-stopped</code>
+を書き、<code>docker compose up -d</code> で起動します．</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>再起動ポリシー</th>
+<th>動作</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>no</code>（既定）</td>
+<td>自動で起動しない</td>
+</tr>
+<tr class="even">
+<td><code>on-failure</code></td>
+<td>異常終了したときだけ再起動</td>
+</tr>
+<tr class="odd">
+<td><code>always</code></td>
+<td>常に再起動（手動で停止しても、マシンの起動時には起動する）</td>
+</tr>
+<tr class="even">
+<td><code>unless-stopped</code></td>
+<td>常に再起動（ただし手動で停止したものは、マシンの起動時にも起動しない）</td>
+</tr>
+</tbody>
+</table>
+<p>マシンの起動時に Docker
+自体が起動するようになっている必要があります（<code>sudo systemctl enable docker</code>．通常はインストール時に有効になっています）．</p>
+<h1
+id="リレーショナルデータベースpostgresql-mysql-sqlite">リレーショナルデータベース：PostgreSQL
+/ MySQL / SQLite</h1>
+<p>SQL の文法ではなく、時系列データを記録・表示するときに 3
+つのデータベースで違いが出る点をまとめます．</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>PostgreSQL</th>
+<th>MySQL</th>
+<th>SQLite</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>形態</td>
+<td>サーバー</td>
+<td>サーバー</td>
+<td>1 つのファイル（サーバー不要）</td>
+</tr>
+<tr class="even">
+<td>同時アクセス</td>
+<td>多数の読み書きに対応</td>
+<td>多数の読み書きに対応</td>
+<td>書き込みは同時に 1
+つ．既定の設定では書き込み中の読み出しが待たされる（WAL
+モードで改善）</td>
+</tr>
+<tr class="odd">
+<td>向いている用途</td>
+<td>本番運用</td>
+<td>本番運用（既存のシステムで使われていることが多い）</td>
+<td>試験、小規模、1 台で完結する用途</td>
+</tr>
+</tbody>
+</table>
+<h2 id="接続とテーブルの確認">接続とテーブルの確認</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>操作</th>
+<th>PostgreSQL（<code>psql</code>）</th>
+<th>MySQL（<code>mysql</code>）</th>
+<th>SQLite（<code>sqlite3</code>）</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>接続</td>
+<td><code>psql -h HOST -U USER DB</code></td>
+<td><code>mysql -h HOST -u USER -p DB</code></td>
+<td><code>sqlite3 FILE.db</code></td>
+</tr>
+<tr class="even">
+<td>テーブル一覧</td>
+<td><code>\dt</code></td>
+<td><code>SHOW TABLES;</code></td>
+<td><code>.tables</code></td>
+</tr>
+<tr class="odd">
+<td>テーブルの定義</td>
+<td><code>\d TABLE</code></td>
+<td><code>SHOW CREATE TABLE TABLE;</code></td>
+<td><code>.schema TABLE</code></td>
+</tr>
+<tr class="even">
+<td>インデックス一覧</td>
+<td><code>\di</code></td>
+<td><code>SHOW INDEX FROM TABLE;</code></td>
+<td><code>.indexes TABLE</code></td>
+</tr>
+<tr class="odd">
+<td>実行時間の表示</td>
+<td><code>\timing on</code></td>
+<td>常に表示される</td>
+<td><code>.timer on</code></td>
+</tr>
+<tr class="even">
+<td>終了</td>
+<td><code>\q</code></td>
+<td><code>exit</code></td>
+<td><code>.quit</code></td>
+</tr>
+</tbody>
+</table>
+<p>データベースを Docker Compose
+で動かしている場合は、コンテナ内のクライアントを使えます（例：<code>docker compose exec postgres psql -U USER DB</code>）．SQLite
+のクライアントは別にインストールが必要なことがあります（<code>sudo apt install sqlite3</code>）．</p>
+<h2 id="データ型">データ型</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>PostgreSQL</th>
+<th>MySQL</th>
+<th>SQLite</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>64 bit 浮動小数点</td>
+<td><code>DOUBLE PRECISION</code></td>
+<td><code>DOUBLE</code>（<code>REAL</code> も同じ）</td>
+<td><code>REAL</code></td>
+</tr>
+<tr class="even">
+<td>32 bit 浮動小数点</td>
+<td><code>REAL</code></td>
+<td><code>FLOAT</code></td>
+<td>なし（すべて 64 bit）</td>
+</tr>
+<tr class="odd">
+<td>整数</td>
+<td><code>INTEGER</code>（32 bit）、<code>BIGINT</code>（64 bit）</td>
+<td><code>INT</code>（32 bit）、<code>BIGINT</code>（64 bit）</td>
+<td><code>INTEGER</code>（最大 64 bit）</td>
+</tr>
+<tr class="even">
+<td>文字列</td>
+<td><code>TEXT</code>、<code>VARCHAR(n)</code></td>
+<td><code>VARCHAR(n)</code>、<code>TEXT</code></td>
+<td><code>TEXT</code></td>
+</tr>
+<tr class="odd">
+<td>JSON</td>
+<td><code>JSONB</code>、<code>JSON</code></td>
+<td><code>JSON</code></td>
+<td><code>TEXT</code>（JSON 関数あり）</td>
+</tr>
+<tr class="even">
+<td>NaN、Inf</td>
+<td>格納できる</td>
+<td>格納できない</td>
+<td>NaN は NULL になる</td>
+</tr>
+<tr class="odd">
+<td>型の扱い</td>
+<td>厳密</td>
+<td>厳密（strict モード、既定で有効）</td>
+<td>緩い（宣言と違う型の値も格納できる）</td>
+</tr>
+</tbody>
+</table>
+<p>注意点：</p>
+<ul>
+<li><code>REAL</code> の意味がデータベースによって違う．PostgreSQL の
+<code>REAL</code> は 32 bit で、有効数字は約 7 桁しかない．UNIX 時刻（約
+1.7×10⁹）を 32 bit 浮動小数点に入れると、分解能が 128
+秒になってしまう．時刻を数値で入れる列は、64 bit 浮動小数点（PostgreSQL
+では <code>DOUBLE PRECISION</code>、MySQL では <code>DOUBLE</code>）か
+<code>BIGINT</code> にする．</li>
+<li>MySQL の <code>TEXT</code>
+型の列は、そのままではインデックスに使えない（先頭の文字数の指定が必要）．チャンネル名など、検索に使う列は
+<code>VARCHAR(n)</code> にする．</li>
+</ul>
+<h2 id="時刻とタイムゾーン">時刻とタイムゾーン</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>PostgreSQL</th>
+<th>MySQL</th>
+<th>SQLite</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>タイムゾーン付き</td>
+<td><code>TIMESTAMP WITH TIME ZONE</code>（<code>TIMESTAMPTZ</code>）</td>
+<td><code>TIMESTAMP</code></td>
+<td>なし</td>
+</tr>
+<tr class="even">
+<td>タイムゾーンなし</td>
+<td><code>TIMESTAMP</code></td>
+<td><code>DATETIME</code></td>
+<td>日時の文字列を <code>TEXT</code> に入れる</td>
+</tr>
+<tr class="odd">
+<td>UNIX 時刻（数値）</td>
+<td><code>DOUBLE PRECISION</code>、<code>BIGINT</code></td>
+<td><code>DOUBLE</code>、<code>BIGINT</code></td>
+<td><code>REAL</code>、<code>INTEGER</code></td>
+</tr>
+<tr class="even">
+<td>秒未満の精度</td>
+<td>マイクロ秒</td>
+<td>既定では秒まで．<code>TIMESTAMP(6)</code> などで指定</td>
+<td>格納の仕方による</td>
+</tr>
+<tr class="odd">
+<td>接続のタイムゾーンの確認</td>
+<td><code>SHOW timezone;</code></td>
+<td><code>SELECT @@session.time_zone;</code></td>
+<td>なし</td>
+</tr>
+<tr class="even">
+<td>UNIX 時刻 → 日時</td>
+<td><code>to_timestamp(x)</code></td>
+<td><code>FROM_UNIXTIME(x)</code></td>
+<td><code>datetime(x, 'unixepoch')</code></td>
+</tr>
+<tr class="odd">
+<td>日時 → UNIX 時刻</td>
+<td><code>extract(epoch FROM t)</code></td>
+<td><code>UNIX_TIMESTAMP(t)</code></td>
+<td><code>strftime('%s', t)</code></td>
+</tr>
+</tbody>
+</table>
+<p>要点：</p>
+<ul>
+<li>「タイムゾーン付き」の型も、タイムゾーン自体は保存しない．書き込むときに接続のタイムゾーン設定で
+UTC
+に変換して保存し、読み出すときに接続のタイムゾーンに変換して返す．そのため、同じデータでも接続の設定によって表示される時刻が変わる（指している時点は同じ）．</li>
+<li>「タイムゾーンなし」の型は、書かれた日時をそのまま保存し、どのタイムゾーンの時刻かは記録しない．書き込む側と読み出す側で解釈を合わせる必要がある．夏時間の切り替わりでは、時刻の重複や欠落が起きる．</li>
+<li>MySQL の <code>TIMESTAMP</code> は 2038-01-19 03:14:07 UTC
+までしか扱えない（2038 年問題）．<code>DATETIME</code>
+にはこの制限はないが、タイムゾーンなしの型．</li>
+<li>MySQL の <code>TIMESTAMP</code> / <code>DATETIME</code>
+は、精度を指定しないと秒未満が丸められる．</li>
+<li>MySQL でタイムゾーン名（<code>'Asia/Tokyo'</code>
+など）を使うには、サーバーにタイムゾーン表が読み込まれている必要がある．<code>'+09:00'</code>
+のようなオフセットでの指定は常に使える．</li>
+<li>SQLite の <code>CURRENT_TIMESTAMP</code> や
+<code>datetime('now')</code> は UTC の日時文字列を返す．</li>
+<li>UNIX 時刻（64 bit 浮動小数点）で記録すれば、タイムゾーンも 2038
+年問題もなく、3 つのデータベースで同じように扱える．</li>
+</ul>
+<p>SlowDash でそれぞれの型を指定する方法は、<a
+href="DataBinding.html">Data Binding</a> を参照してください．</p>
+<h2 id="インデックス">インデックス</h2>
+<p>時系列データの典型的な読み出しは次の形です（SlowDash
+がプロットのために発行するクエリもこの形）．</p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="dt">timestamp</span>, channel, <span class="fu">value</span> <span class="kw">FROM</span> <span class="kw">data</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> channel <span class="kw">IN</span> (<span class="st">&#39;ch00&#39;</span>, <span class="st">&#39;ch01&#39;</span>) <span class="kw">AND</span> <span class="dt">timestamp</span> <span class="op">&gt;=</span> 開始時刻 <span class="kw">AND</span> <span class="dt">timestamp</span> <span class="op">&lt;</span> 終了時刻</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dt">timestamp</span>;</span></code></pre></div>
+<p>これには <code>(channel, timestamp)</code>
+の複合インデックスが有効です．複合インデックスでは、等号で絞り込む列を先に、範囲で絞り込む列を後に並べます．<code>(timestamp, channel)</code>
+の順だと、指定した時間範囲の全チャンネルのデータを読んでからチャンネルで絞り込むことになり、チャンネル数が多いと遅くなります．</p>
+<h3 id="postgresql">PostgreSQL</h3>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY data_channel_timestamp <span class="kw">ON</span> <span class="kw">data</span> (channel, <span class="dt">timestamp</span>);</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ANALYZE</span> <span class="kw">data</span>;</span></code></pre></div>
+<ul>
+<li><code>CONCURRENTLY</code>
+を付けると、書き込みを止めずにインデックスを作成できる（その分時間がかかる．トランザクション内では使えない）．</li>
+<li><code>... ON data (channel, timestamp) INCLUDE (value)</code>
+とすると、インデックスだけで結果を返せる（Index Only
+Scan）ので、さらに速くなることがある．</li>
+<li>時刻順に追記されるだけの非常に大きなテーブルでは、BRIN
+インデックスも有効（B-tree
+よりはるかに小さい）：<code>CREATE INDEX data_timestamp_brin ON data USING brin (timestamp);</code></li>
+</ul>
+<h3 id="mysqlinnodb">MySQL（InnoDB）</h3>
+<p>InnoDB
+のテーブルは、主キーの順に格納されます．このため、主キーの選び方が性能に大きく影響します．</p>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> data_channel_timestamp <span class="kw">ON</span> <span class="kw">data</span> (channel, <span class="dt">timestamp</span>);</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- または、主キーそのものを (channel, timestamp) にする（テーブル全体が再構築される）</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> <span class="kw">data</span> <span class="kw">DROP</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>, <span class="kw">ADD</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (channel, <span class="dt">timestamp</span>);</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="kw">ANALYZE</span> <span class="kw">TABLE</span> <span class="kw">data</span>;</span></code></pre></div>
+<ul>
+<li>主キーを <code>(channel, timestamp)</code>
+にすると、チャンネルごとのデータが連続して格納されるので、読み出しが速い．</li>
+<li>主キー以外のインデックスを使う場合、<code>value</code>
+を読むためにテーブル本体を引き直す必要がある．インデックスを
+<code>(channel, timestamp, value)</code>
+にすれば、これが不要になる．</li>
+</ul>
+<h3 id="sqlite">SQLite</h3>
+<p>SQLite でも、インデックスは他のデータベースと同じように効きます．</p>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> data_channel_timestamp <span class="kw">ON</span> <span class="kw">data</span> (channel, <span class="dt">timestamp</span>);</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ANALYZE</span>;</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>PRAGMA journal_mode<span class="op">=</span>WAL;</span></code></pre></div>
+<ul>
+<li><code>PRAGMA journal_mode=WAL</code>
+にすると、書き込み中でも読み出しが待たされなくなる．設定はファイルに保存されるので、一度実行すればよい．ネットワークファイルシステム（NFS
+など）上のファイルでは使えない．</li>
+</ul>
+<h3 id="チャンネル一覧の取得">チャンネル一覧の取得</h3>
+<p><code>SELECT DISTINCT channel FROM data</code>
+は、そのままでは全行を読むので、大きなテーブルでは遅くなります．</p>
+<ul>
+<li>MySQL と SQLite は、<code>channel</code>
+で始まるインデックスがあれば、インデックスを飛ばし読みして高速に処理する．</li>
+<li>PostgreSQL
+は飛ばし読みをしないので、再帰クエリで同じことをする：</li>
+</ul>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">WITH</span> RECURSIVE t(channel) <span class="kw">AS</span> (</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span> <span class="fu">MIN</span>(channel) <span class="kw">FROM</span> <span class="kw">data</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNION</span> <span class="kw">ALL</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span> (<span class="kw">SELECT</span> <span class="fu">MIN</span>(channel) <span class="kw">FROM</span> <span class="kw">data</span> <span class="kw">WHERE</span> channel <span class="op">&gt;</span> t.channel) <span class="kw">FROM</span> t <span class="kw">WHERE</span> t.channel <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> channel <span class="kw">FROM</span> t <span class="kw">WHERE</span> channel <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</span></code></pre></div>
+<p>SlowDash では、このようなクエリを <code>time_series</code> の
+<code>tags: sql:</code> に指定できます（<a href="DataBinding.html">Data
+Binding</a> を参照）．</p>
+<h2 id="クエリのパフォーマンス測定">クエリのパフォーマンス測定</h2>
+<h3 id="実行計画の確認">実行計画の確認</h3>
+<p>クエリの前に <code>EXPLAIN</code>
+を付けると、インデックスが使われているかを確認できます．</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>コマンド</th>
+<th>全件を読んでいる（遅い）</th>
+<th>インデックスを使っている</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>PostgreSQL</td>
+<td><code>EXPLAIN ANALYZE SELECT ...;</code></td>
+<td><code>Seq Scan</code></td>
+<td><code>Index Scan</code>、<code>Index Only Scan</code>、<code>Bitmap Index Scan</code></td>
+</tr>
+<tr class="even">
+<td>MySQL</td>
+<td><code>EXPLAIN ANALYZE SELECT ...;</code></td>
+<td><code>Table scan</code></td>
+<td><code>Index range scan</code>、<code>Index lookup</code></td>
+</tr>
+<tr class="odd">
+<td>SQLite</td>
+<td><code>EXPLAIN QUERY PLAN SELECT ...;</code></td>
+<td><code>SCAN data</code></td>
+<td><code>SEARCH data USING INDEX ...</code></td>
+</tr>
+</tbody>
+</table>
+<p>例：SQLite で 20 チャンネル × 20,000 点のテーブルに
+<code>(channel, timestamp)</code>
+のインデックスを追加すると、次のように変わります．</p>
+<pre><code>インデックスなし：SCAN data, USE TEMP B-TREE FOR DISTINCT            （DISTINCT：20 ms）
+インデックスあり：SCAN data USING COVERING INDEX data_channel_timestamp （DISTINCT：0.1 ms 未満）</code></pre>
+<ul>
+<li><code>EXPLAIN ANALYZE</code>
+はクエリを実際に実行して時間を測る（<code>INSERT</code> や
+<code>DELETE</code> なら実際に変更される）．<code>EXPLAIN</code>
+だけなら実行しない．MySQL の <code>EXPLAIN ANALYZE</code> はバージョン
+8.0.18 以降．</li>
+<li>2
+回目以降はデータがメモリにキャッシュされて速くなるので、何回か実行して比べる．PostgreSQL
+では <code>EXPLAIN (ANALYZE, BUFFERS)</code>
+とすると、ディスクからの読み出し量も表示される．</li>
+<li>統計情報が古いと、インデックスがあっても使われないことがある．大量のデータを追加したときやインデックスを作成したときは
+<code>ANALYZE</code>（MySQL では
+<code>ANALYZE TABLE</code>）を実行する．</li>
+</ul>
+<h3 id="slowdash-が発行している-sql-を調べる">SlowDash が発行している
+SQL を調べる</h3>
+<p>SlowDash を <code>--logging=debug</code> 付きで起動すると、実行した
+SQL がログに出力されます．これに <code>EXPLAIN ANALYZE</code>
+を付けて実行すると、どこが遅いかを調べられます．</p>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash --port=18881 --logging=debug</span></span></code></pre></div>
+<h3 id="遅いクエリの記録">遅いクエリの記録</h3>
+<p>指定した時間より長くかかったクエリを、サーバーのログに記録できます．</p>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- PostgreSQL：1 秒以上かかったクエリを記録</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">SYSTEM</span> <span class="kw">SET</span> log_min_duration_statement <span class="op">=</span> <span class="st">&#39;1s&#39;</span>;</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> pg_reload_conf();</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- MySQL：1 秒以上かかったクエリを記録（ログファイルの場所は SELECT @@slow_query_log_file; で確認）</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span> <span class="kw">GLOBAL</span> slow_query_log <span class="op">=</span> <span class="kw">ON</span>;</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span> <span class="kw">GLOBAL</span> long_query_time <span class="op">=</span> <span class="dv">1</span>;</span></code></pre></div>
+<h3 id="テーブルの大きさ">テーブルの大きさ</h3>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- PostgreSQL（psql では \dt+ や \di+ でも表示できる）</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> pg_size_pretty(pg_total_relation_size(<span class="st">&#39;data&#39;</span>));</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- MySQL</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> table_name, data_length, index_length <span class="kw">FROM</span> information_schema.<span class="kw">tables</span> <span class="kw">WHERE</span> table_schema <span class="op">=</span> <span class="kw">DATABASE</span>();</span></code></pre></div>
+<p>SQLite
+はファイルの大きさがそのままデータベースの大きさです．どのデータベースも、データを削除しただけではファイルは小さくなりません．領域を解放するには、PostgreSQL
+では <code>VACUUM FULL</code>、MySQL では
+<code>OPTIMIZE TABLE</code>、SQLite では <code>VACUUM</code>
+を実行します（いずれも実行中はテーブルがロックされます）．</p>
+<h2
+id="大規模データパーティショニングpostgresql-mysql">大規模データ：パーティショニング（PostgreSQL
+/ MySQL）</h2>
+<p>連続測定のテーブルは増え続けるだけなので、何年分も溜まるとインデックスが大きくなり、古いデータの削除（<code>DELETE</code>）にも非常に時間がかかるようになります．パーティショニングでは、1
+つのテーブルを時間範囲（例えば 1
+か月）ごとの小さなテーブル（パーティション）に分けて格納します．読み書きは、これまでどおり
+1 つのテーブルとして行えます．</p>
+<ul>
+<li>時刻で範囲を指定したクエリは、該当するパーティションだけを読む（partition
+pruning．<code>EXPLAIN</code> で確認できる）．</li>
+<li>古いデータの削除は、パーティションごと削除するだけで済み、一瞬で終わる．削除せずに切り離して、別に保存することもできる．</li>
+<li>目安としては、テーブルが数十
+GB、数億行を超える、あるいは古いデータを定期的に削除したい場合に検討する．パーティションの数が多すぎる（数千以上）と、逆にクエリの準備に時間がかかる．</li>
+<li>主キーやユニークキーには、パーティションの分割に使う列（時刻の列）を含める必要がある．<code>(channel, timestamp)</code>
+ならそのまま使える．</li>
+</ul>
+<h3 id="postgresql-1">PostgreSQL</h3>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="kw">data</span> (</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">timestamp</span> TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    channel <span class="dt">VARCHAR</span>(<span class="dv">100</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">value</span> <span class="dt">DOUBLE</span> <span class="dt">PRECISION</span>,</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (channel, <span class="dt">timestamp</span>)</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>) <span class="kw">PARTITION</span> <span class="kw">BY</span> <span class="kw">RANGE</span> (<span class="dt">timestamp</span>);</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="co">-- パーティションの作成（親テーブルの主キー・インデックスは自動的に作られる）</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> data_2026_11 <span class="kw">PARTITION</span> <span class="kw">OF</span> <span class="kw">data</span> <span class="cf">FOR</span> <span class="kw">VALUES</span> <span class="kw">FROM</span> (<span class="st">&#39;2026-11-01 00:00+00&#39;</span>) <span class="kw">TO</span> (<span class="st">&#39;2026-12-01 00:00+00&#39;</span>);</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="co">-- 古いパーティションを削除、または切り離して通常のテーブルとして残す</span></span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a><span class="kw">DROP</span> <span class="kw">TABLE</span> data_2024_01;</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> <span class="kw">data</span> DETACH <span class="kw">PARTITION</span> data_2024_01;</span></code></pre></div>
+<ul>
+<li>該当するパーティションがないデータの <code>INSERT</code>
+はエラーになる．測定を止めないために、パーティションは前もって作っておく（cron
+などで定期的に作る）．</li>
+<li>パーティションの作成・削除を自動化する拡張として pg_partman
+がある．時系列データ向けの拡張 TimescaleDB
+を使うと、パーティショニング（chunk）、圧縮、古いデータの削除が自動で行われ、テーブルは通常の
+SQL で読み書きできる．</li>
+<li>親テーブルには <code>CREATE INDEX CONCURRENTLY</code>
+が使えない．</li>
+</ul>
+<h3 id="mysql">MySQL</h3>
+<div class="sourceCode" id="cb31"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="kw">data</span> (</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">timestamp</span> DATETIME(<span class="dv">6</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,   <span class="co">-- UTC で書き込む前提</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    channel <span class="dt">VARCHAR</span>(<span class="dv">100</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">value</span> <span class="dt">DOUBLE</span>,</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (channel, <span class="dt">timestamp</span>)</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="kw">PARTITION</span> <span class="kw">BY</span> <span class="kw">RANGE</span> <span class="kw">COLUMNS</span> (<span class="dt">timestamp</span>) (</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PARTITION</span> p2026_11 <span class="kw">VALUES</span> <span class="kw">LESS</span> <span class="kw">THAN</span> (<span class="st">&#39;2026-12-01&#39;</span>),</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PARTITION</span> pmax <span class="kw">VALUES</span> <span class="kw">LESS</span> <span class="kw">THAN</span> (<span class="kw">MAXVALUE</span>)</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a><span class="co">-- 新しいパーティションの追加（pmax を分割する）</span></span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> <span class="kw">data</span> REORGANIZE <span class="kw">PARTITION</span> pmax <span class="kw">INTO</span> (</span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PARTITION</span> p2026_12 <span class="kw">VALUES</span> <span class="kw">LESS</span> <span class="kw">THAN</span> (<span class="st">&#39;2027-01-01&#39;</span>),</span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PARTITION</span> pmax <span class="kw">VALUES</span> <span class="kw">LESS</span> <span class="kw">THAN</span> (<span class="kw">MAXVALUE</span>)</span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a><span class="co">-- 古いパーティションの削除</span></span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> <span class="kw">data</span> <span class="kw">DROP</span> <span class="kw">PARTITION</span> p2026_11;</span></code></pre></div>
+<ul>
+<li>分割に使える列の型に制限がある．<code>DATETIME</code>
+と整数型は使えるが、<code>DOUBLE</code> は使えない（UNIX
+時刻で記録する場合は <code>BIGINT</code>
+にする）．<code>TIMESTAMP</code> の場合は
+<code>PARTITION BY RANGE (UNIX_TIMESTAMP(timestamp))</code>
+とする．</li>
+<li><code>MAXVALUE</code>
+のパーティションを作っておけば、パーティションの追加が遅れても
+<code>INSERT</code> はエラーにならない．</li>
+</ul>
+<h2
+id="データの複製レプリケーションpostgresql-mysql">データの複製：レプリケーション（PostgreSQL
+/ MySQL）</h2>
+<p>レプリケーションは、データベースへの書き込みを別のサーバー（ミラー）にほぼリアルタイムでコピーし続ける仕組みです．一般のデータベースシステムでは、サーバー故障時に処理を引き継ぐ（可用性）ことが主な目的とされますが、SlowDash
+の典型的な用途ではこれはあまり重要ではありません（データベースサーバーが止まるときは、たいてい他にもっと大きな問題が起きています）．むしろ、次の目的で使います．</p>
+<ul>
+<li><strong>データ消失への備え</strong>：記録したデータを、常に別のサーバーにも保持しておく．</li>
+<li><strong>遠隔地からのアクセス</strong>：研究室など別の場所にミラーを置き、遠隔のユーザー（とその
+SlowDash）はミラーに接続する．実験サイトとの回線を毎回経由しないので速い．</li>
+<li><strong>セキュリティ</strong>：外部からのアクセスをミラーに限定し、記録を行うサーバーは外部に公開しない．ミラーには必要なデータテーブルだけを複製する．</li>
+</ul>
+<h3
+id="バックアップとして守れるもの">「バックアップ」として守れるもの</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>データの失われ方</th>
+<th>レプリケーションで守れるか</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ディスクの故障、サーバーの損失、火災・災害</td>
+<td>守れる（別の場所にコピーがある）</td>
+</tr>
+<tr class="even">
+<td>誤った <code>DELETE</code> や
+<code>DROP</code>、プログラムの誤りによる書き換え</td>
+<td>通常は守れない（ミラーにも反映される）．ただし、PostgreSQL
+の論理レプリケーションで追記（<code>INSERT</code>）だけを複製すれば、削除はミラーに反映されない</td>
+</tr>
+<tr class="odd">
+<td>過去のある時点の状態に戻す</td>
+<td>できない．必要なら、定期的なダンプ（<code>pg_dump</code>、<code>mysqldump</code>）やファイルシステムのスナップショットを併用する</td>
+</tr>
+</tbody>
+</table>
+<p>連続測定のデータは追記されるだけのことが多いので、「追記だけを複製する遠隔ミラー」は、データ消失に対する実用的なバックアップになります．</p>
+<h3 id="方式">方式</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>PostgreSQL 論理レプリケーション</th>
+<th>PostgreSQL ストリーミングレプリケーション</th>
+<th>MySQL レプリケーション</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>複製の単位</td>
+<td>指定したテーブル</td>
+<td>サーバー全体（全データベース、ユーザー情報を含む）</td>
+<td>サーバー全体（ミラー側で絞り込める）</td>
+</tr>
+<tr class="even">
+<td>複製する操作</td>
+<td>選べる（追記だけ、など）</td>
+<td>すべて</td>
+<td>すべて</td>
+</tr>
+<tr class="odd">
+<td>ミラー側</td>
+<td>通常のデータベース（独自のテーブルやインデックスも置ける）</td>
+<td>読み出し専用</td>
+<td>通常のデータベース（読み出し専用に設定するのが普通）</td>
+</tr>
+<tr class="even">
+<td>記録側とミラーのバージョン</td>
+<td>異なってもよい</td>
+<td>同じメジャーバージョンが必要</td>
+<td>ミラーは同じか新しいバージョン</td>
+</tr>
+<tr class="odd">
+<td>向いている用途</td>
+<td>遠隔ミラー、外部公開用</td>
+<td>同じサイト内の予備</td>
+<td>両方</td>
+</tr>
+</tbody>
+</table>
+<h3 id="共通の注意点">共通の注意点</h3>
+<ul>
+<li>非同期レプリケーション（既定）で十分．ミラーは数秒程度遅れて追従する．同期レプリケーションにすると、ミラーや回線が止まったときに記録側の書き込みも止まってしまう．</li>
+<li>どの方式も、ミラー側から記録側のサーバーに接続する．記録側を外部に公開したくない場合は、記録側から
+SSH
+トンネルを張る（<code>ssh -N -R 15432:localhost:5432 MIRROR_HOST</code>
+とすると、ミラー側の <code>localhost:15432</code> が記録側の PostgreSQL
+につながる）か、VPN
+を使う．複製用のユーザーの権限は最小限にし、ファイアウォールではミラーの
+IP アドレスだけを許可する．</li>
+<li>ミラーや回線が止まっている間、記録側には未送信の更新ログが溜まり、ディスクを消費する．再開すれば自動的に追いつくが、長期間止めたままにしない．</li>
+<li>テーブル定義の変更（<code>ALTER TABLE</code>
+など）は、論理レプリケーションでは複製されない．ミラー側でも同じ変更を行う．</li>
+</ul>
+<h3
+id="postgresql論理レプリケーション遠隔ミラー">PostgreSQL：論理レプリケーション（遠隔ミラー）</h3>
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- 記録側（postgresql.conf で wal_level = logical を設定し、再起動しておく）</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">ROLE</span> mirror <span class="kw">WITH</span> REPLICATION LOGIN <span class="kw">PASSWORD</span> <span class="st">&#39;...&#39;</span>;</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="kw">GRANT</span> <span class="kw">SELECT</span> <span class="kw">ON</span> <span class="kw">data</span> <span class="kw">TO</span> mirror;</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> PUBLICATION data_pub <span class="cf">FOR</span> <span class="kw">TABLE</span> <span class="kw">data</span> <span class="kw">WITH</span> (publish <span class="op">=</span> <span class="st">&#39;insert&#39;</span>);   <span class="co">-- 追記だけを複製</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- ミラー側（同じ定義のテーブルを先に作っておく）</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> SUBSCRIPTION data_sub</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>    CONNECTION <span class="st">&#39;host=RECORDING_HOST port=5432 dbname=DB user=mirror password=...&#39;</span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>    PUBLICATION data_pub;</span></code></pre></div>
+<ul>
+<li>最初に既存のデータがすべてコピーされ、その後は追記が随時反映される．</li>
+<li>記録側の <code>pg_hba.conf</code> では、ミラーの IP
+アドレスから、そのデータベースへの通常の接続を許可する（論理レプリケーションの接続には
+<code>replication</code> の指定は使われない）．</li>
+<li>状態の確認：ミラー側で
+<code>SELECT * FROM pg_stat_subscription;</code>、記録側で
+<code>SELECT slot_name, active FROM pg_replication_slots;</code></li>
+<li>記録側では、ミラー用のレプリケーションスロットが作られ、ミラーが受け取るまで更新ログが保持される．ディスクを使い切らないように、<code>max_slot_wal_keep_size</code>
+で上限を設定しておく．</li>
+<li>記録側のテーブルがパーティショニングされている場合は、<code>WITH (publish = 'insert', publish_via_partition_root = true)</code>
+とすると、ミラー側は 1
+つの通常のテーブルで受けられる．記録側で古いパーティションを削除しても、ミラーには残る（記録側は直近のデータだけ、ミラーは全期間、という運用ができる）．</li>
+</ul>
+<h3
+id="postgresqlストリーミングレプリケーション同じサイト内の予備">PostgreSQL：ストリーミングレプリケーション（同じサイト内の予備）</h3>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ミラー側で実行：記録側のデータ全体をコピーし、ミラーとして設定する（-R）</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pg_basebackup -h RECORDING_HOST -U replicator -D /var/lib/postgresql/data -R -P</span></span></code></pre></div>
+<ul>
+<li>事前に、記録側でレプリケーション用のユーザーを作り（<code>CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD '...';</code>）、<code>pg_hba.conf</code>
+にミラーからの <code>replication</code>
+接続を許可する設定を書いておく．</li>
+<li>状態の確認：記録側で
+<code>SELECT client_addr, state, replay_lag FROM pg_stat_replication;</code>、ミラー側で
+<code>SELECT pg_is_in_recovery();</code>（ミラーなら
+<code>true</code>）．</li>
+</ul>
+<h3 id="mysql-1">MySQL</h3>
+<div class="sourceCode" id="cb34"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- 記録側で実行：レプリケーション用のユーザーを作成</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="fu">USER</span> <span class="st">&#39;replicator&#39;</span>@<span class="st">&#39;%&#39;</span> <span class="kw">IDENTIFIED</span> <span class="kw">BY</span> <span class="st">&#39;...&#39;</span>;</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="kw">GRANT</span> REPLICATION SLAVE <span class="kw">ON</span> <span class="op">*</span>.<span class="op">*</span> <span class="kw">TO</span> <span class="st">&#39;replicator&#39;</span>@<span class="st">&#39;%&#39;</span>;</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- ミラー側で実行（記録側とミラーの両方で gtid_mode=ON, enforce_gtid_consistency=ON を設定しておく）</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="kw">CHANGE</span> REPLICATION <span class="kw">FILTER</span> REPLICATE_DO_TABLE <span class="op">=</span> (DB.<span class="kw">data</span>);   <span class="co">-- data テーブルだけを反映する場合</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a><span class="kw">CHANGE</span> REPLICATION <span class="kw">SOURCE</span> <span class="kw">TO</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>    SOURCE_HOST<span class="op">=</span><span class="st">&#39;RECORDING_HOST&#39;</span>, SOURCE_USER<span class="op">=</span><span class="st">&#39;replicator&#39;</span>, SOURCE_PASSWORD<span class="op">=</span><span class="st">&#39;...&#39;</span>,</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>    SOURCE_AUTO_POSITION<span class="op">=</span><span class="dv">1</span>, GET_SOURCE_PUBLIC_KEY<span class="op">=</span><span class="dv">1</span>;</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a><span class="kw">START</span> REPLICA;</span></code></pre></div>
+<ul>
+<li><code>CHANGE REPLICATION SOURCE TO</code> と
+<code>START REPLICA</code> はバージョン 8.0.23 以降の書き方（それ以前は
+<code>CHANGE MASTER TO</code> と
+<code>START SLAVE</code>）．<code>GET_SOURCE_PUBLIC_KEY=1</code> は、SSL
+を使わずに MySQL 8 の標準の認証方式で接続するために必要．</li>
+<li>記録側とミラーで、それぞれ異なる <code>server_id</code>
+を設定する．既存のデータは、事前に <code>mysqldump</code> や clone
+プラグインでミラーにコピーしておく．</li>
+<li>テーブルの絞り込み（<code>REPLICATE_DO_TABLE</code>）はミラー側で行われる．記録側からは全テーブルの更新ログが送られてくるので、外部に出るデータそのものを限定したい場合には向かない．また、削除も含めてすべての操作が反映される．</li>
+<li>状態の確認：ミラー側で
+<code>SHOW REPLICA STATUS\G</code>．<code>Replica_IO_Running</code> と
+<code>Replica_SQL_Running</code> が <code>Yes</code>
+で、<code>Seconds_Behind_Source</code> が遅れの秒数．</li>
+<li>ミラーには <code>super_read_only=ON</code>
+を設定して、誤って書き込まないようにしておく．</li>
+<li>記録側の更新ログ（binlog）の保持期間は
+<code>binlog_expire_logs_seconds</code>（既定は 30
+日）．ミラーがこれより長く止まると、最初からコピーし直しになる．</li>
+</ul>
+<h1 id="docker-1">Docker</h1>
+<p>SlowDash は Docker なしでも使えます．Docker を使う場合は、ホストに
+Python 環境を用意せずに SlowDash やデータベースを動かせます．</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>用語</th>
+<th>意味</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>イメージ</td>
+<td>実行環境（OS
+のファイル、ライブラリ、プログラム）をまとめたもの．<code>slowproj/slowdash</code>、<code>postgres:16</code>
+など．<code>:</code> 以降はタグ（バージョン）</td>
+</tr>
+<tr class="even">
+<td>コンテナ</td>
+<td>イメージから起動された実行中のインスタンス</td>
+</tr>
+<tr class="odd">
+<td>ボリューム / バインドマウント</td>
+<td>コンテナの外にデータを置く仕組み．コンテナを削除しても残る</td>
+</tr>
+<tr class="even">
+<td>ポートの公開</td>
+<td>ホストのポートをコンテナのポートに転送する</td>
+</tr>
+</tbody>
+</table>
+<h2 id="docker-run">docker run</h2>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash</span></span></code></pre></div>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>オプション</th>
+<th>意味</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>-p HOST:CONTAINER</code></td>
+<td>ホストのポートをコンテナのポートに転送</td>
+</tr>
+<tr class="even">
+<td><code>-v HOST_PATH:CONTAINER_PATH</code></td>
+<td>ホストのディレクトリをコンテナ内にマウント（ホスト側は絶対パス）</td>
+</tr>
+<tr class="odd">
+<td><code>-v NAME:CONTAINER_PATH</code></td>
+<td>名前付きボリュームをマウント（Docker
+が管理する領域にデータを保存）</td>
+</tr>
+<tr class="even">
+<td><code>-e NAME=VALUE</code></td>
+<td>環境変数を設定</td>
+</tr>
+<tr class="odd">
+<td><code>--rm</code></td>
+<td>停止したらコンテナを自動削除</td>
+</tr>
+<tr class="even">
+<td><code>-d</code></td>
+<td>バックグラウンドで実行</td>
+</tr>
+<tr class="odd">
+<td><code>--name NAME</code></td>
+<td>コンテナに名前を付ける</td>
+</tr>
+<tr class="even">
+<td><code>-it</code></td>
+<td>対話的に実行（シェルを使うとき）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="よく使うコマンド">よく使うコマンド</h2>
+<div class="sourceCode" id="cb36"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker ps                       # 実行中のコンテナ一覧（-a で停止中も）</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker logs -f CONTAINER        # ログを表示（-f で追跡）</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker exec -it CONTAINER bash  # 実行中のコンテナ内でシェルを起動</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stop CONTAINER</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker rm CONTAINER</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker images                   # ローカルにあるイメージ一覧</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker pull IMAGE:TAG           # イメージを取得・更新</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker rmi IMAGE                # イメージを削除</span></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker system prune             # 停止中のコンテナや未使用のイメージ等をまとめて削除</span></span></code></pre></div>
+<h2 id="引っかかりやすい点-1">引っかかりやすい点</h2>
+<ul>
+<li>Linux では、<code>docker</code> コマンドに root 権限が必要．毎回
+<code>sudo</code> を付けるか、ユーザーを <code>docker</code>
+グループに追加する（<code>sudo usermod -aG docker $USER</code>
+の後、ログインし直す）．<code>docker</code> グループのユーザーは実質的に
+root 権限を持つことに注意．</li>
+<li>コンテナ内の <code>localhost</code>
+はコンテナ自身を指す．ホストで動いているデータベース等に接続するには
+<code>host.docker.internal</code> を使う（Linux では
+<code>--add-host=host.docker.internal:host-gateway</code>
+が必要）．</li>
+<li><code>-p</code> で公開したポートは、ufw
+のファイアウォール規則を迂回して外部から接続できてしまう（<a
+href="#docker-と-ufw">Docker と ufw</a> を参照）．</li>
+<li>コンテナ内のプロセスが root
+で動いていると、バインドマウントしたディレクトリに作られたファイルはホスト上で
+root
+の所有になる（データベースのデータディレクトリをバインドマウントした場合など）．
+<ul>
+<li>SlowDash のコンテナでは、起動時にマウントされた
+<code>/project</code> ディレクトリの所有者（UID / GID）を調べ、同じ ID
+のユーザーで SlowDash を実行するようになっている．このため、SlowDash
+が作るファイルはプロジェクトディレクトリの所有者のものになる．ID
+を明示したい場合は、環境変数 <code>USER_ID</code> と
+<code>GROUP_ID</code> で指定できる．</li>
+<li>ただし <code>docker exec</code> で入ったシェルは root
+で動くので、そこで作ったファイルは root の所有になる．SlowDash
+と同じユーザーで実行するには
+<code>docker exec -it -u slowuser CONTAINER bash</code> とする．</li>
+</ul></li>
+</ul>
+<h2
+id="イメージの更新と古いイメージの削除">イメージの更新と古いイメージの削除</h2>
+<p><code>:latest</code>
+などのタグは自動では更新されません．新しいバージョンを使うには、<code>docker pull</code>（Compose
+では
+<code>docker compose pull</code>）でイメージを取得してから、コンテナを起動し直します．</p>
+<p><code>docker pull</code>
+は古いイメージを削除しません．新しいイメージがタグを引き継ぎ、古いイメージはタグなし（<code>&lt;none&gt;</code>）として残るので、更新を繰り返すとディスクを圧迫します．</p>
+<div class="sourceCode" id="cb37"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker images                   # イメージ一覧．タグが &lt;none&gt; のものが古いイメージ</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker system df                # イメージ、コンテナ、ボリュームのディスク使用量</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker image prune              # タグなしのイメージをすべて削除</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker image prune -a           # コンテナから使われていないイメージをすべて削除（次回使うときは再取得になる）</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker rmi IMAGE_ID             # 個別に削除（IMAGE_ID は docker images で表示される）</span></span></code></pre></div>
+<p>停止中のコンテナが使っているイメージは削除できません．<code>docker ps -a</code>
+で確認し、不要なコンテナを <code>docker rm</code>
+してから削除します．</p>
+<h1 id="docker-compose">Docker Compose</h1>
+<p>複数のコンテナ（例：SlowDash とデータベース）の構成を
+<code>docker-compose.yaml</code>
+に書いておき、まとめて起動・停止する仕組みです．</p>
+<h2 id="docker-compose.yaml">docker-compose.yaml</h2>
+<div class="sourceCode" id="cb38"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">postgres</span><span class="kw">:</span><span class="co">                              # サービス名（他のコンテナからはこの名前でアクセスできる）</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> postgres:16</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> POSTGRES_USER=slowdash</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> POSTGRES_PASSWORD=slowdash</span></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> postgres-data:/var/lib/postgresql/data</span><span class="co">   # 名前付きボリューム</span></span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">healthcheck</span><span class="kw">:</span><span class="co">                         # 起動完了の判定方法</span></span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">test</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;CMD-SHELL&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;pg_isready -U slowdash&quot;</span><span class="kw">]</span></span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 10s</span></span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> unless-stopped</span><span class="co">              # 異常終了やホスト再起動時に自動で再起動</span></span>
+<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-15"><a href="#cb38-15" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
+<span id="cb38-16"><a href="#cb38-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowdash</span></span>
+<span id="cb38-17"><a href="#cb38-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb38-18"><a href="#cb38-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881:18881&quot;</span></span>
+<span id="cb38-19"><a href="#cb38-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb38-20"><a href="#cb38-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> ./slowdash.d:/project</span><span class="co">            # バインドマウント（相対パスは docker-compose.yaml の場所から）</span></span>
+<span id="cb38-21"><a href="#cb38-21" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb38-22"><a href="#cb38-22" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> DB_URL=postgresql://slowdash:${DB_PASSWORD:-slowdash}@postgres:5432/slowdash</span></span>
+<span id="cb38-23"><a href="#cb38-23" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span></span>
+<span id="cb38-24"><a href="#cb38-24" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">postgres</span><span class="kw">:</span></span>
+<span id="cb38-25"><a href="#cb38-25" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> service_healthy</span><span class="co">       # postgres の healthcheck が通ってから起動</span></span>
+<span id="cb38-26"><a href="#cb38-26" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> unless-stopped</span></span>
+<span id="cb38-27"><a href="#cb38-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-28"><a href="#cb38-28" aria-hidden="true" tabindex="-1"></a><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb38-29"><a href="#cb38-29" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">postgres-data</span><span class="kw">:</span></span></code></pre></div>
+<p>要点：</p>
+<ul>
+<li>同じ <code>docker-compose.yaml</code>
+のサービス同士は、サービス名をホスト名として通信できる（上の例では
+<code>postgres:5432</code>）．<code>ports</code>
+はホストから接続する場合にだけ必要．</li>
+<li><code>${VAR}</code> や <code>${VAR:-DEFAULT}</code>
+は、シェルの環境変数か、同じディレクトリの <code>.env</code>
+ファイルから展開される．パスワード等は <code>.env</code>
+に書いて、<code>.env</code> は git に入れないのが一般的．</li>
+<li><code>depends_on</code>
+は起動の順序だけを制御する．相手の準備が完了するまで待つには
+<code>condition: service_healthy</code> と <code>healthcheck</code>
+を組み合わせる．</li>
+</ul>
+<h2 id="よく使うコマンド-1">よく使うコマンド</h2>
+<p><code>docker-compose.yaml</code> のあるディレクトリで実行します．</p>
+<div class="sourceCode" id="cb39"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up               # 起動（Ctrl-C で停止）</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up -d            # バックグラウンドで起動</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose ps               # 状態を表示</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose logs -f SERVICE  # ログを表示</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose exec SERVICE bash</span></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose restart SERVICE</span></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down             # 停止してコンテナを削除（名前付きボリュームは残る）</span></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down -v          # 名前付きボリュームも削除（データベースのデータが消える）</span></span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose pull             # イメージを更新（その後 up で反映．古いイメージは docker image prune で削除）</span></span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up --build       # build: で指定したイメージを作り直して起動</span></span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose config           # 変数展開後の設定を表示（設定の確認に便利）</span></span></code></pre></div>
+<p><code>docker-compose</code>（ハイフンあり）は旧バージョンのコマンドで、すでにサポートが終了しています．現在は
+<code>docker compose</code>（スペース）を使います．</p>
+<h1 id="docker-swarm">Docker Swarm</h1>
+<p>複数のホストにまたがってコンテナを配置・管理する仕組みです．Docker
+に標準で含まれていて、<code>docker-compose.yaml</code>
+とほぼ同じ形式のファイルを使います．1台のホストで動かすだけなら Docker
+Compose で十分です．Swarm
+が役に立つのは、たとえば次のような場合です．</p>
+<ul>
+<li>SlowDash、データベース、各機器のリーダーなどを複数のホストに分けて配置し、1つの設定ファイルで管理したい</li>
+<li>どのホストからでも同じポートでサービスにアクセスしたい</li>
+<li>パスワード等を secret として管理したい</li>
+</ul>
+<h2 id="クラスタの構成">クラスタの構成</h2>
+<div class="sourceCode" id="cb40"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>manager$ docker swarm init --advertise-addr MANAGER_IP   <span class="co"># manager ノードでクラスタを作成</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>manager$ docker swarm join-token worker                  <span class="co"># worker 追加用のコマンドを表示</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>worker$  docker swarm join --token TOKEN MANAGER_IP:2377 <span class="co"># worker ノードで実行</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>manager$ docker node ls                                  <span class="co"># ノード一覧</span></span></code></pre></div>
+<p>ノード間で TCP 2377、TCP/UDP 7946、UDP 4789
+が通信できる必要があります．</p>
+<h2 id="スタックの配置">スタックの配置</h2>
+<p>Swarm では、<code>docker-compose.yaml</code>
+で定義したサービス群を「スタック」として配置します．コマンドは manager
+ノードで実行します．</p>
+<div class="sourceCode" id="cb41"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stack deploy -c docker-compose.yaml STACK      # 配置（変更後の再適用も同じコマンド）</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stack ls</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stack services STACK                           # サービス一覧とレプリカ数</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stack ps STACK                                 # 各コンテナがどのノードで動いているか</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker service logs -f STACK_SERVICE                  # サービス名は「スタック名_サービス名」</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker service update --force STACK_SERVICE           # サービスを再起動</span></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stack rm STACK                                 # スタックを削除</span></span></code></pre></div>
+<h2 id="compose-との違い">Compose との違い</h2>
+<div class="sourceCode" id="cb42"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowdash</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881:18881&quot;</span></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> /srv/slowdash/project:/project</span></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">deploy</span><span class="kw">:</span><span class="co">                              # Swarm でのみ有効</span></span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">replicas</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span></span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">placement</span><span class="kw">:</span></span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">constraints</span><span class="kw">:</span></span>
+<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> node.hostname == daq-server</span><span class="co">  # このノードで動かす</span></span></code></pre></div>
+<ul>
+<li><code>deploy:</code>
+セクションが有効になる（レプリカ数、配置するノード、再起動ポリシー等）．</li>
+<li><code>build:</code>
+は無視される．イメージはレジストリから取得できるか、各ノードにあらかじめ存在する必要がある．</li>
+<li><code>depends_on</code>
+は無視される．起動順序は保証されないので、各サービスは接続先が準備できるまで再試行する必要がある（Swarm
+はデフォルトで、終了したコンテナを自動的に再起動する）．</li>
+<li>バインドマウントのホスト側パスは、そのコンテナが実際に動くノード上に存在する必要がある．データやプロジェクトディレクトリを使うサービスは
+<code>placement</code> でノードを固定するのが簡単．</li>
+<li><code>ports</code> で公開したポートは、クラスタ内のどのノードの IP
+からでもアクセスできる（routing mesh）．</li>
+<li><code>.env</code>
+ファイルは自動では読み込まれない．変数展開が必要な場合は、事前にシェルで読み込む（<code>set -a; source .env; set +a</code>）．</li>
+<li>データベースや SlowDash のように状態を持つサービスは、通常
+<code>replicas: 1</code> にする．</li>
+</ul>
+<h1 id="参考リンク">参考リンク</h1>
+<ul>
+<li>YAML: <a href="https://yaml.org/">yaml.org</a></li>
+<li>venv: <a
+href="https://docs.python.org/ja/3/library/venv.html">Python
+ドキュメント</a></li>
+<li>pyenv: <a href="https://github.com/pyenv/pyenv">GitHub</a></li>
+<li>PostgreSQL: <a
+href="https://www.postgresql.org/docs/">ドキュメント</a></li>
+<li>MySQL: <a
+href="https://dev.mysql.com/doc/refman/8.4/en/">リファレンスマニュアル</a></li>
+<li>SQLite: <a
+href="https://www.sqlite.org/docs.html">ドキュメント</a></li>
+<li>Docker / Docker Compose / Docker Swarm: <a
+href="https://docs.docker.com/">Docker Docs</a></li>
+</ul>
 
 
 </body>

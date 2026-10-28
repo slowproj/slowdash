@@ -8,7 +8,7 @@ source /slowdash/bin/slowdash-bashrc
 # extract them from the /project directory.
 
 # Do this only when the user in the container is "root" (e.g., in Docker)
-if [ $(whoami) != 'root' ]; then
+if [ "$(id -u)" != 0 ]; then
     exec "$@"
 fi
 
