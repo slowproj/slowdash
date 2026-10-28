@@ -113,6 +113,8 @@ Python で venv を作る</a></li>
 <ul>
 <li><a href="#調査に使うコマンド"
 id="toc-調査に使うコマンド">調査に使うコマンド</a></li>
+<li><a href="#lan-上の機器を探す" id="toc-lan-上の機器を探す">LAN
+上の機器を探す</a></li>
 <li><a href="#ssh-トンネル" id="toc-ssh-トンネル">SSH トンネル</a></li>
 <li><a href="#ファイアウォールufw"
 id="toc-ファイアウォールufw">ファイアウォール（ufw）</a></li>
@@ -441,11 +443,31 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 にする、あるいはデータベースのミラーと SlowDash を遠隔地側に置く（<a
 href="#データの複製レプリケーションpostgresql-mysql">レプリケーション</a>）と改善することがある．</li>
 </ul>
+<h2 id="lan-上の機器を探す">LAN 上の機器を探す</h2>
+<p>DHCP で IP アドレスが割り当てられる機器（測定器、Raspberry Pi
+など）を接続したときに、その IP アドレスを調べる方法です．</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo arp-scan -l                          # 接続している LAN 全体を調べ、IP アドレス、MAC アドレス、製造元を表示</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo arp-scan -I eth0 192.168.1.0/24      # インターフェースと範囲を指定</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo nmap -sn 192.168.1.0/24              # 応答する機器の一覧（root で実行すると MAC アドレスと製造元も表示）</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ ip neigh                                  # このマシンが最近通信した相手の IP アドレスと MAC アドレス（ARP キャッシュ）</span></span></code></pre></div>
+<p>（<code>sudo apt install arp-scan nmap</code>
+でインストールできます．）</p>
+<ul>
+<li>製造元は MAC アドレスの先頭から判定される．機器の箱や本体に書かれた
+MAC
+アドレスと照らし合わせるか、機器の電源を入れる前後で一覧を比べると見つけやすい．</li>
+<li>ARP
+はルーターを越えないので、調べられるのは自分と同じネットワーク（サブネット）の機器だけ．WSL2（標準の
+NAT モード）や Docker コンテナの中からは、外部の LAN は見えない（WSL2
+の場合は、Windows 側で <code>arp -a</code> を使う）．</li>
+<li>所属機関のネットワークでは、無断でのスキャンが禁止されていることがある．自分で管理している実験用のネットワーク以外では、管理者に確認する．</li>
+</ul>
 <h2 id="ssh-トンネル">SSH トンネル</h2>
 <p>ファイアウォールの内側の SlowDash に、SSH 経由で接続します．</p>
-<div class="sourceCode" id="cb11"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ ssh -N -L 18881:localhost:18881 USER@SERVER                 # 手元の localhost:18881 → SERVER の localhost:18881</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ ssh -N -J USER@GATEWAY -L 18881:localhost:18881 USER@SERVER  # ゲートウェイ（踏み台）を経由する場合</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ ssh -N -L 18881:localhost:18881 USER@SERVER                 # 手元の localhost:18881 → SERVER の localhost:18881</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ ssh -N -J USER@GATEWAY -L 18881:localhost:18881 USER@SERVER  # ゲートウェイ（踏み台）を経由する場合</span></span></code></pre></div>
 <p>ブラウザで <code>http://localhost:18881</code>
 を開きます．<code>-N</code>
 はコマンドを実行せずにトンネルだけを張るオプションです．逆向きに、内側のマシンから外側のマシンにポートを公開するには
@@ -462,22 +484,22 @@ href="#データの複製レプリケーションpostgresql-mysql">レプリケ�
 <h2 id="ファイアウォールufw">ファイアウォール（ufw）</h2>
 <p>Ubuntu では、ファイアウォールの設定に <code>ufw</code>
 を使います（RHEL 系では <code>firewall-cmd</code>）．</p>
-<div class="sourceCode" id="cb13"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw status verbose                    # 現在の状態と規則</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw default deny incoming             # 外からの接続は既定で拒否</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw default allow outgoing            # 外への接続は既定で許可</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw allow OpenSSH                     # SSH を許可（有効化する前に必ず！）</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw enable                            # 有効化</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw allow from 192.168.1.0/24 to any port 18881 proto tcp   # 特定のネットワークからだけ許可</span></span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw allow from 203.0.113.5 to any port 5432 proto tcp       # 特定のホスト（例：DB のミラー）からだけ許可</span></span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw allow 443/tcp                     # HTTPS を全体に許可（リバースプロキシ）</span></span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw status numbered                   # 番号付きで規則を表示</span></span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw delete 3                          # 番号で規則を削除</span></span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw insert 1 deny from 198.51.100.7   # 先頭に規則を挿入</span></span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw reload</span></span>
-<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw disable</span></span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw status verbose                    # 現在の状態と規則</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw default deny incoming             # 外からの接続は既定で拒否</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw default allow outgoing            # 外への接続は既定で許可</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw allow OpenSSH                     # SSH を許可（有効化する前に必ず！）</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw enable                            # 有効化</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw allow from 192.168.1.0/24 to any port 18881 proto tcp   # 特定のネットワークからだけ許可</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw allow from 203.0.113.5 to any port 5432 proto tcp       # 特定のホスト（例：DB のミラー）からだけ許可</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw allow 443/tcp                     # HTTPS を全体に許可（リバースプロキシ）</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw status numbered                   # 番号付きで規則を表示</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw delete 3                          # 番号で規則を削除</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw insert 1 deny from 198.51.100.7   # 先頭に規則を挿入</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw reload</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw disable</span></span></code></pre></div>
 <p>要点：</p>
 <ul>
 <li>リモートから SSH で作業している場合、SSH を許可する前に
@@ -656,10 +678,10 @@ SlowDash の venv を有効にするので、venv
 </table>
 <h2 id="nohup">nohup</h2>
 <p>ログアウトしても終了しないようにして、バックグラウンドで実行します．</p>
-<div class="sourceCode" id="cb15"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ nohup /PATH/TO/SLOWDASH/bin/slowdash --port=18881 --project-dir=/PATH/TO/PROJECT &gt; slowdash.log 2&gt;&amp;1 &amp;</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pgrep -af slowdash      # 動いているか確認（プロセス番号が表示される）</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ kill PID                # 停止</span></span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ nohup /PATH/TO/SLOWDASH/bin/slowdash --port=18881 --project-dir=/PATH/TO/PROJECT &gt; slowdash.log 2&gt;&amp;1 &amp;</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pgrep -af slowdash      # 動いているか確認（プロセス番号が表示される）</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ kill PID                # 停止</span></span></code></pre></div>
 <h2 id="cron-の-reboot">cron の <span class="citation"
 data-cites="reboot">@reboot</span></h2>
 <p><code>crontab -e</code> で、自分のユーザーの crontab に次の 1
@@ -670,10 +692,10 @@ data-cites="reboot">@reboot</span></h2>
 <h2 id="etcrc.local">/etc/rc.local</h2>
 <p>起動時に root 権限で実行されるスクリプトです．古い方法で、Ubuntu
 では標準では存在しませんが、作成すれば systemd 経由で実行されます．</p>
-<div class="sourceCode" id="cb17"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/sh</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">su</span> <span class="at">-</span> USER <span class="at">-c</span> <span class="st">&#39;/PATH/TO/SLOWDASH/bin/slowdash --port=18881 --project-dir=/PATH/TO/PROJECT &gt;&gt; /PATH/TO/slowdash.log 2&gt;&amp;1 &amp;&#39;</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="bu">exit</span> 0</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/sh</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">su</span> <span class="at">-</span> USER <span class="at">-c</span> <span class="st">&#39;/PATH/TO/SLOWDASH/bin/slowdash --port=18881 --project-dir=/PATH/TO/PROJECT &gt;&gt; /PATH/TO/slowdash.log 2&gt;&amp;1 &amp;&#39;</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="bu">exit</span> 0</span></code></pre></div>
 <ul>
 <li>実行権限が必要（<code>sudo chmod +x /etc/rc.local</code>）．</li>
 <li>root で実行されるので、<code>su - USER -c</code>
@@ -684,32 +706,32 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href=
 <p>現在の Linux の標準的な方法です．異常終了時の自動再起動やログの管理も
 systemd が行います．次の内容のファイルを
 <code>/etc/systemd/system/slowdash.service</code> として作成します．</p>
-<div class="sourceCode" id="cb18"><pre
-class="sourceCode ini"><code class="sourceCode ini"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">SlowDash</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="dt">After</span><span class="ot">=</span><span class="st">network-online.target</span></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="dt">Wants</span><span class="ot">=</span><span class="st">network-online.target</span></span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 同じマシンのデータベースを使う場合は、その後に起動する：</span></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="co"># After=network-online.target postgresql.service</span></span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="dt">Type</span><span class="ot">=</span><span class="st">simple</span></span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="dt">User</span><span class="ot">=</span><span class="st">USER</span></span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="dt">WorkingDirectory</span><span class="ot">=</span><span class="st">/PATH/TO/PROJECT</span></span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/PATH/TO/SLOWDASH/bin/slowdash --port=18881</span></span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="dt">Restart</span><span class="ot">=</span><span class="st">on-failure</span></span>
-<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="dt">RestartSec</span><span class="ot">=</span><span class="dv">5</span></span>
-<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
-<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">multi-user.target</span></span></code></pre></div>
 <div class="sourceCode" id="cb19"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo systemctl daemon-reload              # サービスファイルを作成・変更したら実行</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo systemctl enable --now slowdash      # 自動起動を有効にして、すぐに起動</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ systemctl status slowdash                 # 状態と最新のログ</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ journalctl -u slowdash -f                 # ログを表示（-f で追跡）</span></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo systemctl restart slowdash           # 再起動（設定を変更したときなど）</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo systemctl stop slowdash              # 停止</span></span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo systemctl disable slowdash           # 自動起動を無効にする</span></span></code></pre></div>
+class="sourceCode ini"><code class="sourceCode ini"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">SlowDash</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="dt">After</span><span class="ot">=</span><span class="st">network-online.target</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="dt">Wants</span><span class="ot">=</span><span class="st">network-online.target</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 同じマシンのデータベースを使う場合は、その後に起動する：</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co"># After=network-online.target postgresql.service</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="dt">Type</span><span class="ot">=</span><span class="st">simple</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="dt">User</span><span class="ot">=</span><span class="st">USER</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="dt">WorkingDirectory</span><span class="ot">=</span><span class="st">/PATH/TO/PROJECT</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/PATH/TO/SLOWDASH/bin/slowdash --port=18881</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="dt">Restart</span><span class="ot">=</span><span class="st">on-failure</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="dt">RestartSec</span><span class="ot">=</span><span class="dv">5</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">multi-user.target</span></span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo systemctl daemon-reload              # サービスファイルを作成・変更したら実行</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo systemctl enable --now slowdash      # 自動起動を有効にして、すぐに起動</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ systemctl status slowdash                 # 状態と最新のログ</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ journalctl -u slowdash -f                 # ログを表示（-f で追跡）</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo systemctl restart slowdash           # 再起動（設定を変更したときなど）</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo systemctl stop slowdash              # 停止</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo systemctl disable slowdash           # 自動起動を無効にする</span></span></code></pre></div>
 <p>root
 権限がない場合は、ユーザーのサービスとして登録することもできます．ファイルを
 <code>~/.config/systemd/user/slowdash.service</code>
@@ -721,8 +743,8 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <h2 id="docker">Docker</h2>
 <p>Docker
 のコンテナは、もともとバックグラウンドで実行できます．再起動ポリシーを指定すると、異常終了時やマシンの起動時に自動で起動します．</p>
-<div class="sourceCode" id="cb20"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker run -d --restart unless-stopped -p 18881:18881 -v $(pwd):/project slowproj/slowdash</span></span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker run -d --restart unless-stopped -p 18881:18881 -v $(pwd):/project slowproj/slowdash</span></span></code></pre></div>
 <p>Docker Compose では、各サービスに
 <code>restart: unless-stopped</code>
 を書き、<code>docker compose up -d</code> で起動します．</p>
@@ -790,17 +812,42 @@ id="リレーショナルデータベースpostgresql-mysql-sqlite">リレーシ
 <td>多数の読み書きに対応</td>
 <td>多数の読み書きに対応</td>
 <td>書き込みは同時に 1
-つ．既定の設定では書き込み中の読み出しが待たされる（WAL
+つ（下記参照）．既定の設定では書き込み中の読み出しが待たされる（WAL
 モードで改善）</td>
 </tr>
 <tr class="odd">
 <td>向いている用途</td>
 <td>本番運用</td>
 <td>本番運用（既存のシステムで使われていることが多い）</td>
-<td>試験、小規模、1 台で完結する用途</td>
+<td>試験、小規模（1
+台のマシンで完結する）システム．短期間の測定データのアーカイブと移動</td>
 </tr>
 </tbody>
 </table>
+<p>SQLite は、基本的に書き込み元が 1
+つであることを前提にしています．ただし SlowDash
+では、各機器を読み出すタスクがデータを SlowMesh
+経由で送り、記録用のタスク 1
+つがまとめてデータベースに書き込む構成にできるので、これは本質的な問題にはなりません．一方で、SQLite
+にはパーティショニングやレプリケーションの仕組みがないので、大量のデータを長期間記録するシステムには
+PostgreSQL や MySQL を使います．</p>
+<p>SQLite のデータベースは 1
+つのファイルなので、短期間の測定（試験運転、較正、測定ランごとなど）のデータを、そのままアーカイブとして保存したり、別のマシンに移したりするのに向いています．</p>
+<ul>
+<li>データベースサーバーに依存しない．ファイルさえあれば、何年後でも、どのマシンでも読める（Python
+なら標準ライブラリの <code>sqlite3</code>
+だけで読める）．保存を目的とする場合、これは重要な性質．</li>
+<li>ファイル形式は公開されていて安定しており、OS や CPU
+の種類によらず同じファイルを使える．長期保存用の形式として、米国議会図書館でも推奨されている．</li>
+<li>コピーや移動は通常のファイル操作（<code>cp</code>、<code>rsync</code>、<code>scp</code>
+など）でよい．SlowDash からも <code>sqlite:///FILE.db</code>
+を指定するだけで表示できる．</li>
+<li>書き込み中のファイルをコピーすると、壊れたコピーになることがある．書き込みが続いている場合は、<code>sqlite3 SOURCE.db ".backup COPY.db"</code>
+または <code>sqlite3 SOURCE.db "VACUUM INTO 'COPY.db'"</code>
+で一貫したコピーを作る．WAL モードでは、<code>-wal</code> と
+<code>-shm</code>
+の付いたファイルにもデータが残っていることがあるので、ファイルだけをコピーする場合は書き込みを止めてから行う．</li>
+</ul>
 <h2 id="接続とテーブルの確認">接続とテーブルの確認</h2>
 <table>
 <colgroup>
@@ -1017,49 +1064,56 @@ href="DataBinding.html">Data Binding</a> を参照してください．</p>
 <h2 id="インデックス">インデックス</h2>
 <p>時系列データの典型的な読み出しは次の形です（SlowDash
 がプロットのために発行するクエリもこの形）．</p>
-<div class="sourceCode" id="cb21"><pre
-class="sourceCode sql"><code class="sourceCode sql"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="dt">timestamp</span>, channel, <span class="fu">value</span> <span class="kw">FROM</span> <span class="kw">data</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> channel <span class="kw">IN</span> (<span class="st">&#39;ch00&#39;</span>, <span class="st">&#39;ch01&#39;</span>) <span class="kw">AND</span> <span class="dt">timestamp</span> <span class="op">&gt;=</span> 開始時刻 <span class="kw">AND</span> <span class="dt">timestamp</span> <span class="op">&lt;</span> 終了時刻</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dt">timestamp</span>;</span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="dt">timestamp</span>, channel, <span class="fu">value</span> <span class="kw">FROM</span> <span class="kw">data</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> channel <span class="kw">IN</span> (<span class="st">&#39;ch00&#39;</span>, <span class="st">&#39;ch01&#39;</span>) <span class="kw">AND</span> <span class="dt">timestamp</span> <span class="op">&gt;=</span> 開始時刻 <span class="kw">AND</span> <span class="dt">timestamp</span> <span class="op">&lt;</span> 終了時刻</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dt">timestamp</span>;</span></code></pre></div>
 <p>これには <code>(channel, timestamp)</code>
 の複合インデックスが有効です．複合インデックスでは、等号で絞り込む列を先に、範囲で絞り込む列を後に並べます．<code>(timestamp, channel)</code>
 の順だと、指定した時間範囲の全チャンネルのデータを読んでからチャンネルで絞り込むことになり、チャンネル数が多いと遅くなります．</p>
 <h3 id="postgresql">PostgreSQL</h3>
-<div class="sourceCode" id="cb22"><pre
-class="sourceCode sql"><code class="sourceCode sql"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY data_channel_timestamp <span class="kw">ON</span> <span class="kw">data</span> (channel, <span class="dt">timestamp</span>);</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ANALYZE</span> <span class="kw">data</span>;</span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY data_channel_timestamp <span class="kw">ON</span> <span class="kw">data</span> (channel, <span class="dt">timestamp</span>);</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ANALYZE</span> <span class="kw">data</span>;</span></code></pre></div>
 <ul>
 <li><code>CONCURRENTLY</code>
 を付けると、書き込みを止めずにインデックスを作成できる（その分時間がかかる．トランザクション内では使えない）．</li>
 <li><code>... ON data (channel, timestamp) INCLUDE (value)</code>
 とすると、インデックスだけで結果を返せる（Index Only
-Scan）ので、さらに速くなることがある．</li>
+Scan）ので、さらに速くなることがある．ただし、このような単純なテーブルでは、インデックスがテーブル全体の複製になり、容量と書き込みの負荷がほぼ倍になる．</li>
 <li>時刻順に追記されるだけの非常に大きなテーブルでは、BRIN
 インデックスも有効（B-tree
 よりはるかに小さい）：<code>CREATE INDEX data_timestamp_brin ON data USING brin (timestamp);</code></li>
 </ul>
 <h3 id="mysqlinnodb">MySQL（InnoDB）</h3>
 <p>InnoDB
-のテーブルは、主キーの順に格納されます．このため、主キーの選び方が性能に大きく影響します．</p>
-<div class="sourceCode" id="cb23"><pre
-class="sourceCode sql"><code class="sourceCode sql"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> data_channel_timestamp <span class="kw">ON</span> <span class="kw">data</span> (channel, <span class="dt">timestamp</span>);</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- または、主キーそのものを (channel, timestamp) にする（テーブル全体が再構築される）</span></span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> <span class="kw">data</span> <span class="kw">DROP</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>, <span class="kw">ADD</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (channel, <span class="dt">timestamp</span>);</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="kw">ANALYZE</span> <span class="kw">TABLE</span> <span class="kw">data</span>;</span></code></pre></div>
-<ul>
-<li>主キーを <code>(channel, timestamp)</code>
-にすると、チャンネルごとのデータが連続して格納されるので、読み出しが速い．</li>
-<li>主キー以外のインデックスを使う場合、<code>value</code>
-を読むためにテーブル本体を引き直す必要がある．インデックスを
-<code>(channel, timestamp, value)</code>
-にすれば、これが不要になる．</li>
-</ul>
+のテーブルは、主キーの順に格納されます（主キーがそのままテーブル本体のインデックスになる）．このため、主キーを
+<code>(channel, timestamp)</code>
+にするのが最も効果的です．チャンネルごとのデータが時刻順に連続して格納されるので、別のインデックスを作らなくても読み出しが速くなります．</p>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- テーブルの作成時に指定する</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="kw">data</span> (</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">timestamp</span> <span class="dt">DOUBLE</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    channel <span class="dt">VARCHAR</span>(<span class="dv">100</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">value</span> <span class="dt">DOUBLE</span>,</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (channel, <span class="dt">timestamp</span>)</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="co">-- 既存のテーブルの主キーを変更する（テーブル全体が再構築されるので、大きなテーブルでは時間がかかる）</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> <span class="kw">data</span> <span class="kw">DROP</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>, <span class="kw">ADD</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (channel, <span class="dt">timestamp</span>);</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a><span class="kw">ANALYZE</span> <span class="kw">TABLE</span> <span class="kw">data</span>;</span></code></pre></div>
+<p>既存のシステムで主キーを変更できない場合は、別のインデックスを追加します．</p>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> data_channel_timestamp <span class="kw">ON</span> <span class="kw">data</span> (channel, <span class="dt">timestamp</span>);</span></code></pre></div>
+<p>この場合、インデックスで行を絞り込んだ後、<code>value</code>
+を読むために 1
+行ごとにテーブル本体を引き直すことになるので、主キーを変更する場合ほどは速くなりません．</p>
 <h3 id="sqlite">SQLite</h3>
 <p>SQLite でも、インデックスは他のデータベースと同じように効きます．</p>
-<div class="sourceCode" id="cb24"><pre
-class="sourceCode sql"><code class="sourceCode sql"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> data_channel_timestamp <span class="kw">ON</span> <span class="kw">data</span> (channel, <span class="dt">timestamp</span>);</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ANALYZE</span>;</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>PRAGMA journal_mode<span class="op">=</span>WAL;</span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> data_channel_timestamp <span class="kw">ON</span> <span class="kw">data</span> (channel, <span class="dt">timestamp</span>);</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ANALYZE</span>;</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>PRAGMA journal_mode<span class="op">=</span>WAL;</span></code></pre></div>
 <ul>
 <li><code>PRAGMA journal_mode=WAL</code>
 にすると、書き込み中でも読み出しが待たされなくなる．設定はファイルに保存されるので、一度実行すればよい．ネットワークファイルシステム（NFS
@@ -1074,13 +1128,13 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb24-1"><a href="#
 <li>PostgreSQL
 は飛ばし読みをしないので、再帰クエリで同じことをする：</li>
 </ul>
-<div class="sourceCode" id="cb25"><pre
-class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">WITH</span> RECURSIVE t(channel) <span class="kw">AS</span> (</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span> <span class="fu">MIN</span>(channel) <span class="kw">FROM</span> <span class="kw">data</span></span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNION</span> <span class="kw">ALL</span></span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span> (<span class="kw">SELECT</span> <span class="fu">MIN</span>(channel) <span class="kw">FROM</span> <span class="kw">data</span> <span class="kw">WHERE</span> channel <span class="op">&gt;</span> t.channel) <span class="kw">FROM</span> t <span class="kw">WHERE</span> t.channel <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span></span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> channel <span class="kw">FROM</span> t <span class="kw">WHERE</span> channel <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</span></code></pre></div>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">WITH</span> RECURSIVE t(channel) <span class="kw">AS</span> (</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span> <span class="fu">MIN</span>(channel) <span class="kw">FROM</span> <span class="kw">data</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNION</span> <span class="kw">ALL</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span> (<span class="kw">SELECT</span> <span class="fu">MIN</span>(channel) <span class="kw">FROM</span> <span class="kw">data</span> <span class="kw">WHERE</span> channel <span class="op">&gt;</span> t.channel) <span class="kw">FROM</span> t <span class="kw">WHERE</span> t.channel <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> channel <span class="kw">FROM</span> t <span class="kw">WHERE</span> channel <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</span></code></pre></div>
 <p>SlowDash では、このようなクエリを <code>time_series</code> の
 <code>tags: sql:</code> に指定できます（<a href="DataBinding.html">Data
 Binding</a> を参照）．</p>
@@ -1148,25 +1202,25 @@ SQL を調べる</h3>
 <p>SlowDash を <code>--logging=debug</code> 付きで起動すると、実行した
 SQL がログに出力されます．これに <code>EXPLAIN ANALYZE</code>
 を付けて実行すると、どこが遅いかを調べられます．</p>
-<div class="sourceCode" id="cb27"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash --port=18881 --logging=debug</span></span></code></pre></div>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash --port=18881 --logging=debug</span></span></code></pre></div>
 <h3 id="遅いクエリの記録">遅いクエリの記録</h3>
 <p>指定した時間より長くかかったクエリを、サーバーのログに記録できます．</p>
-<div class="sourceCode" id="cb28"><pre
-class="sourceCode sql"><code class="sourceCode sql"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- PostgreSQL：1 秒以上かかったクエリを記録</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">SYSTEM</span> <span class="kw">SET</span> log_min_duration_statement <span class="op">=</span> <span class="st">&#39;1s&#39;</span>;</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> pg_reload_conf();</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- MySQL：1 秒以上かかったクエリを記録（ログファイルの場所は SELECT @@slow_query_log_file; で確認）</span></span>
-<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span> <span class="kw">GLOBAL</span> slow_query_log <span class="op">=</span> <span class="kw">ON</span>;</span>
-<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span> <span class="kw">GLOBAL</span> long_query_time <span class="op">=</span> <span class="dv">1</span>;</span></code></pre></div>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- PostgreSQL：1 秒以上かかったクエリを記録</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">SYSTEM</span> <span class="kw">SET</span> log_min_duration_statement <span class="op">=</span> <span class="st">&#39;1s&#39;</span>;</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> pg_reload_conf();</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- MySQL：1 秒以上かかったクエリを記録（ログファイルの場所は SELECT @@slow_query_log_file; で確認）</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span> <span class="kw">GLOBAL</span> slow_query_log <span class="op">=</span> <span class="kw">ON</span>;</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span> <span class="kw">GLOBAL</span> long_query_time <span class="op">=</span> <span class="dv">1</span>;</span></code></pre></div>
 <h3 id="テーブルの大きさ">テーブルの大きさ</h3>
-<div class="sourceCode" id="cb29"><pre
-class="sourceCode sql"><code class="sourceCode sql"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- PostgreSQL（psql では \dt+ や \di+ でも表示できる）</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> pg_size_pretty(pg_total_relation_size(<span class="st">&#39;data&#39;</span>));</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- MySQL</span></span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> table_name, data_length, index_length <span class="kw">FROM</span> information_schema.<span class="kw">tables</span> <span class="kw">WHERE</span> table_schema <span class="op">=</span> <span class="kw">DATABASE</span>();</span></code></pre></div>
+<div class="sourceCode" id="cb31"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- PostgreSQL（psql では \dt+ や \di+ でも表示できる）</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> pg_size_pretty(pg_total_relation_size(<span class="st">&#39;data&#39;</span>));</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- MySQL</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> table_name, data_length, index_length <span class="kw">FROM</span> information_schema.<span class="kw">tables</span> <span class="kw">WHERE</span> table_schema <span class="op">=</span> <span class="kw">DATABASE</span>();</span></code></pre></div>
 <p>SQLite
 はファイルの大きさがそのままデータベースの大きさです．どのデータベースも、データを削除しただけではファイルは小さくなりません．領域を解放するには、PostgreSQL
 では <code>VACUUM FULL</code>、MySQL では
@@ -1175,66 +1229,61 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb29-1"><a href="#
 <h2
 id="大規模データパーティショニングpostgresql-mysql">大規模データ：パーティショニング（PostgreSQL
 / MySQL）</h2>
-<p>連続測定のテーブルは増え続けるだけなので、何年分も溜まるとインデックスが大きくなり、古いデータの削除（<code>DELETE</code>）にも非常に時間がかかるようになります．パーティショニングでは、1
+<p>連続測定のテーブルは増え続けるだけなので、何年分も溜まるとインデックスが大きくなり、読み出しも書き込みも遅くなっていきます．パーティショニングでは、1
 つのテーブルを時間範囲（例えば 1
 か月）ごとの小さなテーブル（パーティション）に分けて格納します．読み書きは、これまでどおり
 1 つのテーブルとして行えます．</p>
 <ul>
 <li>時刻で範囲を指定したクエリは、該当するパーティションだけを読む（partition
 pruning．<code>EXPLAIN</code> で確認できる）．</li>
-<li>古いデータの削除は、パーティションごと削除するだけで済み、一瞬で終わる．削除せずに切り離して、別に保存することもできる．</li>
+<li>インデックスもパーティションごとに分かれる．書き込みが行われる最新のパーティションのインデックスは小さいままなので、データが増えても記録の速度が落ちにくい．</li>
+<li>過去のパーティションは変更されないので、バックアップは一度取ればよい．PostgreSQL
+では、過去のパーティションを大容量の低速なディスクに移すこともできる（<code>ALTER TABLE data_2024_01 SET TABLESPACE archive;</code>）．</li>
 <li>目安としては、テーブルが数十
-GB、数億行を超える、あるいは古いデータを定期的に削除したい場合に検討する．パーティションの数が多すぎる（数千以上）と、逆にクエリの準備に時間がかかる．</li>
+GB、数億行を超える場合に検討する．パーティションの数が多すぎる（数千以上）と、逆にクエリの準備に時間がかかる．</li>
 <li>主キーやユニークキーには、パーティションの分割に使う列（時刻の列）を含める必要がある．<code>(channel, timestamp)</code>
 ならそのまま使える．</li>
 </ul>
 <h3 id="postgresql-1">PostgreSQL</h3>
-<div class="sourceCode" id="cb30"><pre
-class="sourceCode sql"><code class="sourceCode sql"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="kw">data</span> (</span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">timestamp</span> TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    channel <span class="dt">VARCHAR</span>(<span class="dv">100</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">value</span> <span class="dt">DOUBLE</span> <span class="dt">PRECISION</span>,</span>
-<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (channel, <span class="dt">timestamp</span>)</span>
-<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>) <span class="kw">PARTITION</span> <span class="kw">BY</span> <span class="kw">RANGE</span> (<span class="dt">timestamp</span>);</span>
-<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="co">-- パーティションの作成（親テーブルの主キー・インデックスは自動的に作られる）</span></span>
-<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> data_2026_11 <span class="kw">PARTITION</span> <span class="kw">OF</span> <span class="kw">data</span> <span class="cf">FOR</span> <span class="kw">VALUES</span> <span class="kw">FROM</span> (<span class="st">&#39;2026-11-01 00:00+00&#39;</span>) <span class="kw">TO</span> (<span class="st">&#39;2026-12-01 00:00+00&#39;</span>);</span>
-<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="co">-- 古いパーティションを削除、または切り離して通常のテーブルとして残す</span></span>
-<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a><span class="kw">DROP</span> <span class="kw">TABLE</span> data_2024_01;</span>
-<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> <span class="kw">data</span> DETACH <span class="kw">PARTITION</span> data_2024_01;</span></code></pre></div>
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="kw">data</span> (</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">timestamp</span> TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    channel <span class="dt">VARCHAR</span>(<span class="dv">100</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">value</span> <span class="dt">DOUBLE</span> <span class="dt">PRECISION</span>,</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (channel, <span class="dt">timestamp</span>)</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>) <span class="kw">PARTITION</span> <span class="kw">BY</span> <span class="kw">RANGE</span> (<span class="dt">timestamp</span>);</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a><span class="co">-- パーティションの作成（親テーブルの主キー・インデックスは自動的に作られる）</span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> data_2026_11 <span class="kw">PARTITION</span> <span class="kw">OF</span> <span class="kw">data</span> <span class="cf">FOR</span> <span class="kw">VALUES</span> <span class="kw">FROM</span> (<span class="st">&#39;2026-11-01 00:00+00&#39;</span>) <span class="kw">TO</span> (<span class="st">&#39;2026-12-01 00:00+00&#39;</span>);</span></code></pre></div>
 <ul>
 <li>該当するパーティションがないデータの <code>INSERT</code>
 はエラーになる．測定を止めないために、パーティションは前もって作っておく（cron
 などで定期的に作る）．</li>
-<li>パーティションの作成・削除を自動化する拡張として pg_partman
+<li>パーティションの作成を自動化する拡張として pg_partman
 がある．時系列データ向けの拡張 TimescaleDB
-を使うと、パーティショニング（chunk）、圧縮、古いデータの削除が自動で行われ、テーブルは通常の
+を使うと、パーティショニング（chunk）と圧縮が自動で行われ、テーブルは通常の
 SQL で読み書きできる．</li>
 <li>親テーブルには <code>CREATE INDEX CONCURRENTLY</code>
 が使えない．</li>
 </ul>
 <h3 id="mysql">MySQL</h3>
-<div class="sourceCode" id="cb31"><pre
-class="sourceCode sql"><code class="sourceCode sql"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="kw">data</span> (</span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">timestamp</span> DATETIME(<span class="dv">6</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,   <span class="co">-- UTC で書き込む前提</span></span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    channel <span class="dt">VARCHAR</span>(<span class="dv">100</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">value</span> <span class="dt">DOUBLE</span>,</span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (channel, <span class="dt">timestamp</span>)</span>
-<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="kw">PARTITION</span> <span class="kw">BY</span> <span class="kw">RANGE</span> <span class="kw">COLUMNS</span> (<span class="dt">timestamp</span>) (</span>
-<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PARTITION</span> p2026_11 <span class="kw">VALUES</span> <span class="kw">LESS</span> <span class="kw">THAN</span> (<span class="st">&#39;2026-12-01&#39;</span>),</span>
-<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PARTITION</span> pmax <span class="kw">VALUES</span> <span class="kw">LESS</span> <span class="kw">THAN</span> (<span class="kw">MAXVALUE</span>)</span>
-<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>);</span>
-<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a><span class="co">-- 新しいパーティションの追加（pmax を分割する）</span></span>
-<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> <span class="kw">data</span> REORGANIZE <span class="kw">PARTITION</span> pmax <span class="kw">INTO</span> (</span>
-<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PARTITION</span> p2026_12 <span class="kw">VALUES</span> <span class="kw">LESS</span> <span class="kw">THAN</span> (<span class="st">&#39;2027-01-01&#39;</span>),</span>
-<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PARTITION</span> pmax <span class="kw">VALUES</span> <span class="kw">LESS</span> <span class="kw">THAN</span> (<span class="kw">MAXVALUE</span>)</span>
-<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>);</span>
-<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a><span class="co">-- 古いパーティションの削除</span></span>
-<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> <span class="kw">data</span> <span class="kw">DROP</span> <span class="kw">PARTITION</span> p2026_11;</span></code></pre></div>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="kw">data</span> (</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">timestamp</span> DATETIME(<span class="dv">6</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,   <span class="co">-- UTC で書き込む前提</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    channel <span class="dt">VARCHAR</span>(<span class="dv">100</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">value</span> <span class="dt">DOUBLE</span>,</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (channel, <span class="dt">timestamp</span>)</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="kw">PARTITION</span> <span class="kw">BY</span> <span class="kw">RANGE</span> <span class="kw">COLUMNS</span> (<span class="dt">timestamp</span>) (</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PARTITION</span> p2026_11 <span class="kw">VALUES</span> <span class="kw">LESS</span> <span class="kw">THAN</span> (<span class="st">&#39;2026-12-01&#39;</span>),</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PARTITION</span> pmax <span class="kw">VALUES</span> <span class="kw">LESS</span> <span class="kw">THAN</span> (<span class="kw">MAXVALUE</span>)</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a><span class="co">-- 新しいパーティションの追加（pmax を分割する）</span></span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> <span class="kw">data</span> REORGANIZE <span class="kw">PARTITION</span> pmax <span class="kw">INTO</span> (</span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PARTITION</span> p2026_12 <span class="kw">VALUES</span> <span class="kw">LESS</span> <span class="kw">THAN</span> (<span class="st">&#39;2027-01-01&#39;</span>),</span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PARTITION</span> pmax <span class="kw">VALUES</span> <span class="kw">LESS</span> <span class="kw">THAN</span> (<span class="kw">MAXVALUE</span>)</span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
 <ul>
 <li>分割に使える列の型に制限がある．<code>DATETIME</code>
 と整数型は使えるが、<code>DOUBLE</code> は使えない（UNIX
@@ -1353,16 +1402,16 @@ IP アドレスだけを許可する．</li>
 </ul>
 <h3
 id="postgresql論理レプリケーション遠隔ミラー">PostgreSQL：論理レプリケーション（遠隔ミラー）</h3>
-<div class="sourceCode" id="cb32"><pre
-class="sourceCode sql"><code class="sourceCode sql"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- 記録側（postgresql.conf で wal_level = logical を設定し、再起動しておく）</span></span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">ROLE</span> mirror <span class="kw">WITH</span> REPLICATION LOGIN <span class="kw">PASSWORD</span> <span class="st">&#39;...&#39;</span>;</span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="kw">GRANT</span> <span class="kw">SELECT</span> <span class="kw">ON</span> <span class="kw">data</span> <span class="kw">TO</span> mirror;</span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> PUBLICATION data_pub <span class="cf">FOR</span> <span class="kw">TABLE</span> <span class="kw">data</span> <span class="kw">WITH</span> (publish <span class="op">=</span> <span class="st">&#39;insert&#39;</span>);   <span class="co">-- 追記だけを複製</span></span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- ミラー側（同じ定義のテーブルを先に作っておく）</span></span>
-<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> SUBSCRIPTION data_sub</span>
-<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>    CONNECTION <span class="st">&#39;host=RECORDING_HOST port=5432 dbname=DB user=mirror password=...&#39;</span></span>
-<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>    PUBLICATION data_pub;</span></code></pre></div>
+<div class="sourceCode" id="cb34"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- 記録側（postgresql.conf で wal_level = logical を設定し、再起動しておく）</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">ROLE</span> mirror <span class="kw">WITH</span> REPLICATION LOGIN <span class="kw">PASSWORD</span> <span class="st">&#39;...&#39;</span>;</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="kw">GRANT</span> <span class="kw">SELECT</span> <span class="kw">ON</span> <span class="kw">data</span> <span class="kw">TO</span> mirror;</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> PUBLICATION data_pub <span class="cf">FOR</span> <span class="kw">TABLE</span> <span class="kw">data</span> <span class="kw">WITH</span> (publish <span class="op">=</span> <span class="st">&#39;insert&#39;</span>);   <span class="co">-- 追記だけを複製</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- ミラー側（同じ定義のテーブルを先に作っておく）</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> SUBSCRIPTION data_sub</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>    CONNECTION <span class="st">&#39;host=RECORDING_HOST port=5432 dbname=DB user=mirror password=...&#39;</span></span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>    PUBLICATION data_pub;</span></code></pre></div>
 <ul>
 <li>最初に既存のデータがすべてコピーされ、その後は追記が随時反映される．</li>
 <li>記録側の <code>pg_hba.conf</code> では、ミラーの IP
@@ -1375,13 +1424,13 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb32-1"><a href="#
 で上限を設定しておく．</li>
 <li>記録側のテーブルがパーティショニングされている場合は、<code>WITH (publish = 'insert', publish_via_partition_root = true)</code>
 とすると、ミラー側は 1
-つの通常のテーブルで受けられる．記録側で古いパーティションを削除しても、ミラーには残る（記録側は直近のデータだけ、ミラーは全期間、という運用ができる）．</li>
+つの通常のテーブルで受けられる（ミラー側でパーティショニングするかどうかは、記録側とは独立に決められる）．</li>
 </ul>
 <h3
 id="postgresqlストリーミングレプリケーション同じサイト内の予備">PostgreSQL：ストリーミングレプリケーション（同じサイト内の予備）</h3>
-<div class="sourceCode" id="cb33"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ミラー側で実行：記録側のデータ全体をコピーし、ミラーとして設定する（-R）</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pg_basebackup -h RECORDING_HOST -U replicator -D /var/lib/postgresql/data -R -P</span></span></code></pre></div>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ミラー側で実行：記録側のデータ全体をコピーし、ミラーとして設定する（-R）</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pg_basebackup -h RECORDING_HOST -U replicator -D /var/lib/postgresql/data -R -P</span></span></code></pre></div>
 <ul>
 <li>事前に、記録側でレプリケーション用のユーザーを作り（<code>CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD '...';</code>）、<code>pg_hba.conf</code>
 にミラーからの <code>replication</code>
@@ -1392,17 +1441,17 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <code>true</code>）．</li>
 </ul>
 <h3 id="mysql-1">MySQL</h3>
-<div class="sourceCode" id="cb34"><pre
-class="sourceCode sql"><code class="sourceCode sql"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- 記録側で実行：レプリケーション用のユーザーを作成</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="fu">USER</span> <span class="st">&#39;replicator&#39;</span>@<span class="st">&#39;%&#39;</span> <span class="kw">IDENTIFIED</span> <span class="kw">BY</span> <span class="st">&#39;...&#39;</span>;</span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="kw">GRANT</span> REPLICATION SLAVE <span class="kw">ON</span> <span class="op">*</span>.<span class="op">*</span> <span class="kw">TO</span> <span class="st">&#39;replicator&#39;</span>@<span class="st">&#39;%&#39;</span>;</span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- ミラー側で実行（記録側とミラーの両方で gtid_mode=ON, enforce_gtid_consistency=ON を設定しておく）</span></span>
-<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="kw">CHANGE</span> REPLICATION <span class="kw">FILTER</span> REPLICATE_DO_TABLE <span class="op">=</span> (DB.<span class="kw">data</span>);   <span class="co">-- data テーブルだけを反映する場合</span></span>
-<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a><span class="kw">CHANGE</span> REPLICATION <span class="kw">SOURCE</span> <span class="kw">TO</span></span>
-<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>    SOURCE_HOST<span class="op">=</span><span class="st">&#39;RECORDING_HOST&#39;</span>, SOURCE_USER<span class="op">=</span><span class="st">&#39;replicator&#39;</span>, SOURCE_PASSWORD<span class="op">=</span><span class="st">&#39;...&#39;</span>,</span>
-<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>    SOURCE_AUTO_POSITION<span class="op">=</span><span class="dv">1</span>, GET_SOURCE_PUBLIC_KEY<span class="op">=</span><span class="dv">1</span>;</span>
-<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a><span class="kw">START</span> REPLICA;</span></code></pre></div>
+<div class="sourceCode" id="cb36"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- 記録側で実行：レプリケーション用のユーザーを作成</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="fu">USER</span> <span class="st">&#39;replicator&#39;</span>@<span class="st">&#39;%&#39;</span> <span class="kw">IDENTIFIED</span> <span class="kw">BY</span> <span class="st">&#39;...&#39;</span>;</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="kw">GRANT</span> REPLICATION SLAVE <span class="kw">ON</span> <span class="op">*</span>.<span class="op">*</span> <span class="kw">TO</span> <span class="st">&#39;replicator&#39;</span>@<span class="st">&#39;%&#39;</span>;</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- ミラー側で実行（記録側とミラーの両方で gtid_mode=ON, enforce_gtid_consistency=ON を設定しておく）</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a><span class="kw">CHANGE</span> REPLICATION <span class="kw">FILTER</span> REPLICATE_DO_TABLE <span class="op">=</span> (DB.<span class="kw">data</span>);   <span class="co">-- data テーブルだけを反映する場合</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a><span class="kw">CHANGE</span> REPLICATION <span class="kw">SOURCE</span> <span class="kw">TO</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>    SOURCE_HOST<span class="op">=</span><span class="st">&#39;RECORDING_HOST&#39;</span>, SOURCE_USER<span class="op">=</span><span class="st">&#39;replicator&#39;</span>, SOURCE_PASSWORD<span class="op">=</span><span class="st">&#39;...&#39;</span>,</span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>    SOURCE_AUTO_POSITION<span class="op">=</span><span class="dv">1</span>, GET_SOURCE_PUBLIC_KEY<span class="op">=</span><span class="dv">1</span>;</span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a><span class="kw">START</span> REPLICA;</span></code></pre></div>
 <ul>
 <li><code>CHANGE REPLICATION SOURCE TO</code> と
 <code>START REPLICA</code> はバージョン 8.0.23 以降の書き方（それ以前は
@@ -1459,8 +1508,8 @@ Python 環境を用意せずに SlowDash やデータベースを動かせます
 </tbody>
 </table>
 <h2 id="docker-run">docker run</h2>
-<div class="sourceCode" id="cb35"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash</span></span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash</span></span></code></pre></div>
 <table>
 <colgroup>
 <col style="width: 50%" />
@@ -1509,16 +1558,16 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 </tbody>
 </table>
 <h2 id="よく使うコマンド">よく使うコマンド</h2>
-<div class="sourceCode" id="cb36"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker ps                       # 実行中のコンテナ一覧（-a で停止中も）</span></span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker logs -f CONTAINER        # ログを表示（-f で追跡）</span></span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker exec -it CONTAINER bash  # 実行中のコンテナ内でシェルを起動</span></span>
-<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stop CONTAINER</span></span>
-<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker rm CONTAINER</span></span>
-<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker images                   # ローカルにあるイメージ一覧</span></span>
-<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker pull IMAGE:TAG           # イメージを取得・更新</span></span>
-<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker rmi IMAGE                # イメージを削除</span></span>
-<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker system prune             # 停止中のコンテナや未使用のイメージ等をまとめて削除</span></span></code></pre></div>
+<div class="sourceCode" id="cb38"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker ps                       # 実行中のコンテナ一覧（-a で停止中も）</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker logs -f CONTAINER        # ログを表示（-f で追跡）</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker exec -it CONTAINER bash  # 実行中のコンテナ内でシェルを起動</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stop CONTAINER</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker rm CONTAINER</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker images                   # ローカルにあるイメージ一覧</span></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker pull IMAGE:TAG           # イメージを取得・更新</span></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker rmi IMAGE                # イメージを削除</span></span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker system prune             # 停止中のコンテナや未使用のイメージ等をまとめて削除</span></span></code></pre></div>
 <h2 id="引っかかりやすい点-1">引っかかりやすい点</h2>
 <ul>
 <li>Linux では、<code>docker</code> コマンドに root 権限が必要．毎回
@@ -1559,12 +1608,12 @@ id="イメージの更新と古いイメージの削除">イメージの更新�
 <code>docker compose pull</code>）でイメージを取得してから、コンテナを起動し直します．</p>
 <p><code>docker pull</code>
 は古いイメージを削除しません．新しいイメージがタグを引き継ぎ、古いイメージはタグなし（<code>&lt;none&gt;</code>）として残るので、更新を繰り返すとディスクを圧迫します．</p>
-<div class="sourceCode" id="cb37"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker images                   # イメージ一覧．タグが &lt;none&gt; のものが古いイメージ</span></span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker system df                # イメージ、コンテナ、ボリュームのディスク使用量</span></span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker image prune              # タグなしのイメージをすべて削除</span></span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker image prune -a           # コンテナから使われていないイメージをすべて削除（次回使うときは再取得になる）</span></span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker rmi IMAGE_ID             # 個別に削除（IMAGE_ID は docker images で表示される）</span></span></code></pre></div>
+<div class="sourceCode" id="cb39"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker images                   # イメージ一覧．タグが &lt;none&gt; のものが古いイメージ</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker system df                # イメージ、コンテナ、ボリュームのディスク使用量</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker image prune              # タグなしのイメージをすべて削除</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker image prune -a           # コンテナから使われていないイメージをすべて削除（次回使うときは再取得になる）</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker rmi IMAGE_ID             # 個別に削除（IMAGE_ID は docker images で表示される）</span></span></code></pre></div>
 <p>停止中のコンテナが使っているイメージは削除できません．<code>docker ps -a</code>
 で確認し、不要なコンテナを <code>docker rm</code>
 してから削除します．</p>
@@ -1573,36 +1622,36 @@ class="sourceCode console"><code class="sourceCode highlightconsole"><span id="c
 <code>docker-compose.yaml</code>
 に書いておき、まとめて起動・停止する仕組みです．</p>
 <h2 id="docker-compose.yaml">docker-compose.yaml</h2>
-<div class="sourceCode" id="cb38"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">postgres</span><span class="kw">:</span><span class="co">                              # サービス名（他のコンテナからはこの名前でアクセスできる）</span></span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> postgres:16</span></span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
-<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> POSTGRES_USER=slowdash</span></span>
-<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> POSTGRES_PASSWORD=slowdash</span></span>
-<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
-<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> postgres-data:/var/lib/postgresql/data</span><span class="co">   # 名前付きボリューム</span></span>
-<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">healthcheck</span><span class="kw">:</span><span class="co">                         # 起動完了の判定方法</span></span>
-<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">test</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;CMD-SHELL&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;pg_isready -U slowdash&quot;</span><span class="kw">]</span></span>
-<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 10s</span></span>
-<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
-<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> unless-stopped</span><span class="co">              # 異常終了やホスト再起動時に自動で再起動</span></span>
-<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb38-15"><a href="#cb38-15" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
-<span id="cb38-16"><a href="#cb38-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowdash</span></span>
-<span id="cb38-17"><a href="#cb38-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
-<span id="cb38-18"><a href="#cb38-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881:18881&quot;</span></span>
-<span id="cb38-19"><a href="#cb38-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
-<span id="cb38-20"><a href="#cb38-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> ./slowdash.d:/project</span><span class="co">            # バインドマウント（相対パスは docker-compose.yaml の場所から）</span></span>
-<span id="cb38-21"><a href="#cb38-21" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
-<span id="cb38-22"><a href="#cb38-22" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> DB_URL=postgresql://slowdash:${DB_PASSWORD:-slowdash}@postgres:5432/slowdash</span></span>
-<span id="cb38-23"><a href="#cb38-23" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span></span>
-<span id="cb38-24"><a href="#cb38-24" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">postgres</span><span class="kw">:</span></span>
-<span id="cb38-25"><a href="#cb38-25" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> service_healthy</span><span class="co">       # postgres の healthcheck が通ってから起動</span></span>
-<span id="cb38-26"><a href="#cb38-26" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> unless-stopped</span></span>
-<span id="cb38-27"><a href="#cb38-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb38-28"><a href="#cb38-28" aria-hidden="true" tabindex="-1"></a><span class="fu">volumes</span><span class="kw">:</span></span>
-<span id="cb38-29"><a href="#cb38-29" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">postgres-data</span><span class="kw">:</span></span></code></pre></div>
+<div class="sourceCode" id="cb40"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">postgres</span><span class="kw">:</span><span class="co">                              # サービス名（他のコンテナからはこの名前でアクセスできる）</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> postgres:16</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> POSTGRES_USER=slowdash</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> POSTGRES_PASSWORD=slowdash</span></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> postgres-data:/var/lib/postgresql/data</span><span class="co">   # 名前付きボリューム</span></span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">healthcheck</span><span class="kw">:</span><span class="co">                         # 起動完了の判定方法</span></span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">test</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;CMD-SHELL&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;pg_isready -U slowdash&quot;</span><span class="kw">]</span></span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 10s</span></span>
+<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> unless-stopped</span><span class="co">              # 異常終了やホスト再起動時に自動で再起動</span></span>
+<span id="cb40-14"><a href="#cb40-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-15"><a href="#cb40-15" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
+<span id="cb40-16"><a href="#cb40-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowdash</span></span>
+<span id="cb40-17"><a href="#cb40-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb40-18"><a href="#cb40-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881:18881&quot;</span></span>
+<span id="cb40-19"><a href="#cb40-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb40-20"><a href="#cb40-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> ./slowdash.d:/project</span><span class="co">            # バインドマウント（相対パスは docker-compose.yaml の場所から）</span></span>
+<span id="cb40-21"><a href="#cb40-21" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb40-22"><a href="#cb40-22" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> DB_URL=postgresql://slowdash:${DB_PASSWORD:-slowdash}@postgres:5432/slowdash</span></span>
+<span id="cb40-23"><a href="#cb40-23" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span></span>
+<span id="cb40-24"><a href="#cb40-24" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">postgres</span><span class="kw">:</span></span>
+<span id="cb40-25"><a href="#cb40-25" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> service_healthy</span><span class="co">       # postgres の healthcheck が通ってから起動</span></span>
+<span id="cb40-26"><a href="#cb40-26" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> unless-stopped</span></span>
+<span id="cb40-27"><a href="#cb40-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-28"><a href="#cb40-28" aria-hidden="true" tabindex="-1"></a><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb40-29"><a href="#cb40-29" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">postgres-data</span><span class="kw">:</span></span></code></pre></div>
 <p>要点：</p>
 <ul>
 <li>同じ <code>docker-compose.yaml</code>
@@ -1620,18 +1669,18 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb38-1"><a href=
 </ul>
 <h2 id="よく使うコマンド-1">よく使うコマンド</h2>
 <p><code>docker-compose.yaml</code> のあるディレクトリで実行します．</p>
-<div class="sourceCode" id="cb39"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up               # 起動（Ctrl-C で停止）</span></span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up -d            # バックグラウンドで起動</span></span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose ps               # 状態を表示</span></span>
-<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose logs -f SERVICE  # ログを表示</span></span>
-<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose exec SERVICE bash</span></span>
-<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose restart SERVICE</span></span>
-<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down             # 停止してコンテナを削除（名前付きボリュームは残る）</span></span>
-<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down -v          # 名前付きボリュームも削除（データベースのデータが消える）</span></span>
-<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose pull             # イメージを更新（その後 up で反映．古いイメージは docker image prune で削除）</span></span>
-<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up --build       # build: で指定したイメージを作り直して起動</span></span>
-<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose config           # 変数展開後の設定を表示（設定の確認に便利）</span></span></code></pre></div>
+<div class="sourceCode" id="cb41"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up               # 起動（Ctrl-C で停止）</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up -d            # バックグラウンドで起動</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose ps               # 状態を表示</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose logs -f SERVICE  # ログを表示</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose exec SERVICE bash</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose restart SERVICE</span></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down             # 停止してコンテナを削除（名前付きボリュームは残る）</span></span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down -v          # 名前付きボリュームも削除（データベースのデータが消える）</span></span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose pull             # イメージを更新（その後 up で反映．古いイメージは docker image prune で削除）</span></span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up --build       # build: で指定したイメージを作り直して起動</span></span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose config           # 変数展開後の設定を表示（設定の確認に便利）</span></span></code></pre></div>
 <p><code>docker-compose</code>（ハイフンあり）は旧バージョンのコマンドで、すでにサポートが終了しています．現在は
 <code>docker compose</code>（スペース）を使います．</p>
 <h1 id="docker-swarm">Docker Swarm</h1>
@@ -1646,39 +1695,39 @@ Compose で十分です．Swarm
 <li>パスワード等を secret として管理したい</li>
 </ul>
 <h2 id="クラスタの構成">クラスタの構成</h2>
-<div class="sourceCode" id="cb40"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>manager$ docker swarm init --advertise-addr MANAGER_IP   <span class="co"># manager ノードでクラスタを作成</span></span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>manager$ docker swarm join-token worker                  <span class="co"># worker 追加用のコマンドを表示</span></span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>worker$  docker swarm join --token TOKEN MANAGER_IP:2377 <span class="co"># worker ノードで実行</span></span>
-<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>manager$ docker node ls                                  <span class="co"># ノード一覧</span></span></code></pre></div>
+<div class="sourceCode" id="cb42"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>manager$ docker swarm init --advertise-addr MANAGER_IP   <span class="co"># manager ノードでクラスタを作成</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>manager$ docker swarm join-token worker                  <span class="co"># worker 追加用のコマンドを表示</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>worker$  docker swarm join --token TOKEN MANAGER_IP:2377 <span class="co"># worker ノードで実行</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>manager$ docker node ls                                  <span class="co"># ノード一覧</span></span></code></pre></div>
 <p>ノード間で TCP 2377、TCP/UDP 7946、UDP 4789
 が通信できる必要があります．</p>
 <h2 id="スタックの配置">スタックの配置</h2>
 <p>Swarm では、<code>docker-compose.yaml</code>
 で定義したサービス群を「スタック」として配置します．コマンドは manager
 ノードで実行します．</p>
-<div class="sourceCode" id="cb41"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stack deploy -c docker-compose.yaml STACK      # 配置（変更後の再適用も同じコマンド）</span></span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stack ls</span></span>
-<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stack services STACK                           # サービス一覧とレプリカ数</span></span>
-<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stack ps STACK                                 # 各コンテナがどのノードで動いているか</span></span>
-<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker service logs -f STACK_SERVICE                  # サービス名は「スタック名_サービス名」</span></span>
-<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker service update --force STACK_SERVICE           # サービスを再起動</span></span>
-<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stack rm STACK                                 # スタックを削除</span></span></code></pre></div>
+<div class="sourceCode" id="cb43"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stack deploy -c docker-compose.yaml STACK      # 配置（変更後の再適用も同じコマンド）</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stack ls</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stack services STACK                           # サービス一覧とレプリカ数</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stack ps STACK                                 # 各コンテナがどのノードで動いているか</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker service logs -f STACK_SERVICE                  # サービス名は「スタック名_サービス名」</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker service update --force STACK_SERVICE           # サービスを再起動</span></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stack rm STACK                                 # スタックを削除</span></span></code></pre></div>
 <h2 id="compose-との違い">Compose との違い</h2>
-<div class="sourceCode" id="cb42"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
-<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowdash</span></span>
-<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
-<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881:18881&quot;</span></span>
-<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
-<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> /srv/slowdash/project:/project</span></span>
-<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">deploy</span><span class="kw">:</span><span class="co">                              # Swarm でのみ有効</span></span>
-<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">replicas</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span></span>
-<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">placement</span><span class="kw">:</span></span>
-<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">constraints</span><span class="kw">:</span></span>
-<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> node.hostname == daq-server</span><span class="co">  # このノードで動かす</span></span></code></pre></div>
+<div class="sourceCode" id="cb44"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowdash</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881:18881&quot;</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> /srv/slowdash/project:/project</span></span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">deploy</span><span class="kw">:</span><span class="co">                              # Swarm でのみ有効</span></span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">replicas</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span></span>
+<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">placement</span><span class="kw">:</span></span>
+<span id="cb44-11"><a href="#cb44-11" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">constraints</span><span class="kw">:</span></span>
+<span id="cb44-12"><a href="#cb44-12" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> node.hostname == daq-server</span><span class="co">  # このノードで動かす</span></span></code></pre></div>
 <ul>
 <li><code>deploy:</code>
 セクションが有効になる（レプリカ数、配置するノード、再起動ポリシー等）．</li>

@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Prerequisites</title>
+  <title>Related Tools Cheat Sheet</title>
   <style type="text/css">
       code{white-space: pre-wrap;}
       span.smallcaps{font-variant: small-caps;}
@@ -75,360 +75,1790 @@ code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
   <link rel="stylesheet" href="style.css" />
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({startOnLoad: true});
+</script>
+
 </head>
 
 <body>
 
 <header>
-<div class="title">Prerequisites</div><p>
+<div class="title">Related Tools Cheat Sheet</div><p>
 <div class="toc">
 <span class="toc-title">Contents</span>
 <nav id="TOC">
 <ul>
-<li><a href="#before-you-start" id="toc-before-you-start">Before You
-Start</a></li>
-<li><a href="#terminal-basics" id="toc-terminal-basics">Terminal
-Basics</a></li>
-<li><a href="#python-and-virtual-environments"
-id="toc-python-and-virtual-environments">Python and Virtual
-Environments</a>
+<li><a href="#about-this-page" id="toc-about-this-page">About This
+Page</a></li>
+<li><a href="#yaml" id="toc-yaml">YAML</a>
 <ul>
-<li><a href="#if-your-system-python-is-too-old"
-id="toc-if-your-system-python-is-too-old">If your system Python is too
-old</a></li>
+<li><a href="#syntax" id="toc-syntax">Syntax</a></li>
+<li><a href="#common-pitfalls" id="toc-common-pitfalls">Common
+Pitfalls</a></li>
+<li><a href="#checking" id="toc-checking">Checking</a></li>
 </ul></li>
-<li><a href="#yaml" id="toc-yaml">YAML</a></li>
-<li><a href="#rdbms-and-sql-basics" id="toc-rdbms-and-sql-basics">RDBMS
-and SQL Basics</a></li>
-<li><a href="#data-time-representation"
-id="toc-data-time-representation">Data Time Representation</a></li>
-<li><a href="#table-structure-description"
-id="toc-table-structure-description">Table Structure
-Description</a></li>
-<li><a href="#basic-network-and-port-awareness"
-id="toc-basic-network-and-port-awareness">Basic Network and Port
-Awareness</a></li>
-<li><a href="#docker-and-docker-compose-basics"
-id="toc-docker-and-docker-compose-basics">Docker and Docker Compose
-Basics</a></li>
+<li><a href="#python-environment-pyenv-and-venv"
+id="toc-python-environment-pyenv-and-venv">Python Environment: pyenv and
+venv</a>
+<ul>
+<li><a href="#venv" id="toc-venv">venv</a></li>
+<li><a href="#pyenv" id="toc-pyenv">pyenv</a></li>
+<li><a href="#combination-creating-a-venv-with-a-pyenv-python"
+id="toc-combination-creating-a-venv-with-a-pyenv-python">Combination:
+Creating a venv with a pyenv Python</a></li>
+</ul></li>
+<li><a href="#network" id="toc-network">Network</a>
+<ul>
+<li><a href="#commands-for-investigation"
+id="toc-commands-for-investigation">Commands for Investigation</a></li>
+<li><a href="#finding-devices-on-the-lan"
+id="toc-finding-devices-on-the-lan">Finding Devices on the LAN</a></li>
+<li><a href="#ssh-tunnel" id="toc-ssh-tunnel">SSH Tunnel</a></li>
+<li><a href="#firewall-ufw" id="toc-firewall-ufw">Firewall
+(ufw)</a></li>
+<li><a href="#reverse-proxy-and-https"
+id="toc-reverse-proxy-and-https">Reverse Proxy and HTTPS</a></li>
+</ul></li>
+<li><a href="#background-execution-and-auto-start"
+id="toc-background-execution-and-auto-start">Background Execution and
+Auto-Start</a>
+<ul>
+<li><a href="#tmux-screen" id="toc-tmux-screen">tmux / screen</a></li>
+<li><a href="#nohup" id="toc-nohup">nohup</a></li>
+<li><a href="#cron-reboot" id="toc-cron-reboot">cron <span
+class="citation" data-cites="reboot">@reboot</span></a></li>
+<li><a href="#etcrc.local" id="toc-etcrc.local">/etc/rc.local</a></li>
+<li><a href="#systemd" id="toc-systemd">systemd</a></li>
+<li><a href="#docker" id="toc-docker">Docker</a></li>
+</ul></li>
+<li><a href="#relational-databases-postgresql-mysql-sqlite"
+id="toc-relational-databases-postgresql-mysql-sqlite">Relational
+Databases: PostgreSQL / MySQL / SQLite</a>
+<ul>
+<li><a href="#connecting-and-inspecting-tables"
+id="toc-connecting-and-inspecting-tables">Connecting and Inspecting
+Tables</a></li>
+<li><a href="#data-types" id="toc-data-types">Data Types</a></li>
+<li><a href="#time-and-time-zones" id="toc-time-and-time-zones">Time and
+Time Zones</a></li>
+<li><a href="#indexes" id="toc-indexes">Indexes</a></li>
+<li><a href="#measuring-query-performance"
+id="toc-measuring-query-performance">Measuring Query
+Performance</a></li>
+<li><a href="#large-data-partitioning-postgresql-mysql"
+id="toc-large-data-partitioning-postgresql-mysql">Large Data:
+Partitioning (PostgreSQL / MySQL)</a></li>
+<li><a href="#data-replication-postgresql-mysql"
+id="toc-data-replication-postgresql-mysql">Data Replication (PostgreSQL
+/ MySQL)</a></li>
+</ul></li>
+<li><a href="#docker-1" id="toc-docker-1">Docker</a>
+<ul>
+<li><a href="#docker-run" id="toc-docker-run">docker run</a></li>
+<li><a href="#frequently-used-commands"
+id="toc-frequently-used-commands">Frequently Used Commands</a></li>
+<li><a href="#common-pitfalls-1" id="toc-common-pitfalls-1">Common
+Pitfalls</a></li>
+<li><a href="#updating-images-and-removing-old-ones"
+id="toc-updating-images-and-removing-old-ones">Updating Images and
+Removing Old Ones</a></li>
+</ul></li>
+<li><a href="#docker-compose" id="toc-docker-compose">Docker Compose</a>
+<ul>
+<li><a href="#docker-compose.yaml"
+id="toc-docker-compose.yaml">docker-compose.yaml</a></li>
+<li><a href="#frequently-used-commands-1"
+id="toc-frequently-used-commands-1">Frequently Used Commands</a></li>
+</ul></li>
+<li><a href="#docker-swarm" id="toc-docker-swarm">Docker Swarm</a>
+<ul>
+<li><a href="#setting-up-a-cluster"
+id="toc-setting-up-a-cluster">Setting Up a Cluster</a></li>
+<li><a href="#deploying-a-stack" id="toc-deploying-a-stack">Deploying a
+Stack</a></li>
+<li><a href="#differences-from-compose"
+id="toc-differences-from-compose">Differences from Compose</a></li>
+</ul></li>
+<li><a href="#references" id="toc-references">References</a></li>
 </ul>
 </nav>
 </div>
 </header>
 
-<h1 id="before-you-start">Before You Start</h1>
-<p>This page, written by Claude, summarizes the minimum background
-knowledge needed before following the SlowDash documentation, especially
-<a href="Installation.html">Installation</a>, <a
-href="QuickTour.html">Quick Tour</a>, <a
-href="ProjectSetup.html">Project Setup</a>, and <a
-href="DataBinding.html">Data Binding</a>.</p>
-<p>This documentation assumes you can:</p>
-<ul>
-<li>run commands in a terminal</li>
-<li>edit text files (YAML, Python, HTML)</li>
-<li>understand basic Python script execution</li>
-<li>understand basic database table concepts</li>
-</ul>
-<p>If you are new to some of these topics, the quick notes below are
-enough to get started.</p>
-<h1 id="terminal-basics">Terminal Basics</h1>
-<p>You should be comfortable with:</p>
-<div class="sourceCode" id="cb1"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pwd                 # show current directory</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ ls -la              # list files</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/DIR      # move to a directory</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ mkdir MyProject     # create a directory</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python script.py    # run a Python script</span></span></code></pre></div>
-<p>In the SlowDash tutorial, You will often need multiple terminals:</p>
-<ul>
-<li>one terminal for the SlowDash server</li>
-<li>one terminal for data generator / user task scripts</li>
-</ul>
-<h1 id="python-and-virtual-environments">Python and Virtual
-Environments</h1>
-<p>In native installation, SlowDash uses a project-local Python virtual
-environment (<code>venv</code>) prepared by <code>make</code>.</p>
-<p>Typical flow:</p>
-<div class="sourceCode" id="cb2"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source PATH/TO/SLOWDASH/bin/slowdash-bashrc</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python your-script.py</span></span></code></pre></div>
-<p>What <code>venv</code> does:</p>
-<ul>
-<li>keeps dependencies isolated</li>
-<li>avoids breaking system Python</li>
-<li>ensures <code>slowpy</code> is available from your scripts</li>
-</ul>
-<p>For SlowDash users, the key point is:</p>
-<ul>
-<li>know what <code>venv</code> is (an isolated Python environment)</li>
-<li>run <code>slowdash-activate-venv</code> before running scripts in a
-new terminal</li>
-</ul>
-<p>Useful checks after activation:</p>
-<div class="sourceCode" id="cb3"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ echo &quot;$VIRTUAL_ENV&quot;</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ which python</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ which pip</span></span></code></pre></div>
-<p><code>$VIRTUAL_ENV</code> should be a non-empty path (for example,
-<code>.../venv</code>), and both <code>python</code> and
-<code>pip</code> should point to that environment.</p>
-<p>When <code>venv</code> is active:</p>
-<ul>
-<li>shell prompt often shows <code>(.venv)</code> (depends on
-shell)</li>
-<li><code>python</code> and <code>pip</code> point to
-<code>.venv/bin/...</code></li>
-<li>packages installed by <code>pip</code> stay inside that
-environment</li>
-</ul>
-<h2 id="if-your-system-python-is-too-old">If your system Python is too
-old</h2>
-<p>If your OS-provided Python is already End-of-Life (EOL), avoid
-building your workflow on it. Use <code>pyenv</code> to install and
-select a supported Python version first, then run the normal SlowDash
-installation (<code>make</code>) so SlowDash sets up its
-<code>venv</code> with that Python.</p>
-<p>Example flow:</p>
-<div class="sourceCode" id="cb4"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv install 3.12.9</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv local 3.12.9</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source PATH/TO/SLOWDASH/bin/slowdash-bashrc</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span></code></pre></div>
-<p>Enable <code>pyenv</code> automatically in new terminals
-(<code>.bashrc</code>):</p>
-<div class="sourceCode" id="cb5"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PYENV_ROOT</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$HOME</span><span class="st">/.pyenv&quot;</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PYENV_ROOT</span><span class="st">/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="bu">eval</span> <span class="st">&quot;</span><span class="va">$(</span><span class="ex">pyenv</span> init <span class="at">-</span> bash<span class="va">)</span><span class="st">&quot;</span></span></code></pre></div>
-<p>After editing <code>.bashrc</code>, reload it:</p>
-<div class="sourceCode" id="cb6"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source ~/.bashrc</span></span></code></pre></div>
-<p>Then verify:</p>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv version</span></span></code></pre></div>
-<p>Recommended approach:</p>
-<ul>
-<li><code>pyenv</code>: selects and manages Python runtime versions</li>
-<li><code>venv</code>: isolates project dependencies</li>
-<li>use both together for long-term reproducibility and security
-updates</li>
-</ul>
+<h1 id="about-this-page">About This Page</h1>
+<p>This page summarizes the key points and frequently used commands of
+tools that are often needed alongside SlowDash: YAML, pyenv / venv,
+networking, background execution and auto-start, relational databases,
+and Docker / Docker Compose / Docker Swarm. It is not an introduction to
+each tool; it is meant as a reference for when you have used a tool
+before but forgot the details. See the official documentation of each
+tool for more. This document was written by Claude.</p>
 <h1 id="yaml">YAML</h1>
-<p>SlowDash project configuration is written in YAML.</p>
-<p>Minimal example:</p>
+<p>The SlowDash project configuration file
+(<code>SlowdashProject.yaml</code>) and <code>docker-compose.yaml</code>
+are written in YAML.</p>
+<h2 id="syntax">Syntax</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Comment (from the beginning of a line, or after a space)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> QuickTour</span><span class="co">              # key: value (a space is required after the colon)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">title</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;SlowDash: Test&quot;</span><span class="co">      # quote values containing &quot;: &quot; or &quot; #&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">data_source</span><span class="kw">:</span><span class="co">                 # nesting by indentation (spaces only, no tabs)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">url</span><span class="kw">:</span><span class="at"> sqlite:///SlowStore.db</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ports</span><span class="kw">:</span><span class="co">                       # list</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881:18881&quot;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;5432:5432&quot;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">channels</span><span class="kw">:</span><span class="co">                    # list of maps</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> ch00</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">unit</span><span class="kw">:</span><span class="at"> K</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> ch01</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">unit</span><span class="kw">:</span><span class="at"> mbar</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">tags</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">a</span><span class="kw">,</span><span class="at"> b</span><span class="kw">,</span><span class="at"> c</span><span class="kw">]</span><span class="co">              # inline list</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="fu">opts</span><span class="kw">:</span><span class="at"> </span><span class="kw">{</span><span class="fu">width</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span><span class="kw">,</span><span class="at"> </span><span class="fu">height</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span><span class="kw">}</span><span class="co"> # inline map</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="fu">script</span><span class="kw">: </span><span class="ch">|</span><span class="co">                    # multi-line string (newlines kept)</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  line 1</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  line 2</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="fu">command</span><span class="kw">: </span><span class="ch">&gt;</span><span class="co">                   # multi-line string (newlines replaced with spaces)</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  bash -c &quot;echo hello&quot;</span></code></pre></div>
+<h2 id="common-pitfalls">Common Pitfalls</h2>
+<ul>
+<li>The indentation width can be anything, but it must be consistent
+within the same level. Tab characters cause an error.</li>
+<li>Value types are inferred automatically. Quote values that should be
+treated as strings:
+<ul>
+<li><code>yes</code>, <code>no</code>, <code>on</code>,
+<code>off</code>, <code>true</code>, <code>false</code> become booleans
+(with Python’s PyYAML)</li>
+<li>numbers starting with 0, such as <code>0644</code>, might be
+interpreted as octal</li>
+<li>colon-separated numbers such as <code>22:22</code> might be
+interpreted as base-60 numbers (always quoting port mappings, like
+<code>"22:22"</code>, is safe)</li>
+<li>an empty value (just <code>key:</code>) becomes
+<code>null</code></li>
+</ul></li>
+<li>Writing the same key twice is not an error; usually the later value
+silently overwrites the earlier one.</li>
+</ul>
+<h2 id="checking">Checking</h2>
+<p>To see whether the file is read as intended, convert it to JSON and
+print it (requires <code>pyyaml</code>, which is included in the
+SlowDash venv):</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python -c &#39;import sys,yaml,json; print(json.dumps(yaml.safe_load(open(sys.argv[1])), indent=2))&#39; SlowdashProject.yaml</span></span></code></pre></div>
+<p>For <code>docker-compose.yaml</code>,
+<code>docker compose config</code> shows the final configuration after
+variable expansion.</p>
+<h1 id="python-environment-pyenv-and-venv">Python Environment: pyenv and
+venv</h1>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Manages</th>
+<th>When to use</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>pyenv</td>
+<td>Versions of Python itself (the interpreter)</td>
+<td>When the OS Python is too old (EOL), or a specific version is
+needed</td>
+</tr>
+<tr class="even">
+<td>venv</td>
+<td>Where packages (things you <code>pip install</code>) are
+installed</td>
+<td>To isolate dependencies per project (standard in SlowDash)</td>
+</tr>
+</tbody>
+</table>
+<p>The two are independent and can be combined. A typical combination is
+to create a venv with a Python selected by pyenv.</p>
+<h2 id="venv">venv</h2>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python3 -m venv venv              # create venv/ in the current directory</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ source venv/bin/activate          # activate (per shell; needed every time you open a terminal)</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>(venv) $ pip install numpy          <span class="co"># installed only into this venv</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>(venv) $ pip list                   <span class="co"># list installed packages</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>(venv) $ pip install -r requirements.txt</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>(venv) $ deactivate                 <span class="co"># deactivate</span></span></code></pre></div>
+<p>To check whether a venv is active:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ echo $VIRTUAL_ENV                 # active if the venv path is printed</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ which python                      # active if it points to .../venv/bin/python</span></span></code></pre></div>
+<p>Key points:</p>
+<ul>
+<li>To remove a venv, just delete the directory
+(<code>rm -rf venv</code>).</li>
+<li>Without activation, running <code>venv/bin/python script.py</code>
+directly uses that venv (useful when running from cron or systemd).</li>
+<li>A venv keeps links to the Python it was created with. It breaks if
+that Python is removed or updated, or if the venv directory is moved; in
+that case, recreate it.</li>
+<li>On Debian / Ubuntu, <code>python3-venv</code> might be a separate
+package (<code>sudo apt install python3-venv</code>).</li>
+</ul>
+<p>Relation to SlowDash: <code>make</code> in the native installation
+creates <code>venv/</code> in the SlowDash directory.
+<code>slowdash-activate-venv</code> is an alias for
+<code>source $SLOWDASH_DIR/venv/bin/activate</code>.</p>
+<h2 id="pyenv">pyenv</h2>
+<p>Installation (Linux / WSL):</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ curl -fsSL https://pyenv.run | bash</span></span></code></pre></div>
+<p>(On macOS, <code>brew install pyenv</code>.)</p>
+<p>Then add the following to <code>~/.bashrc</code>, and either
+<code>source ~/.bashrc</code> or open a new terminal.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PYENV_ROOT</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$HOME</span><span class="st">/.pyenv&quot;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[[</span> <span class="ot">-d</span> <span class="va">$PYENV_ROOT</span>/bin <span class="kw">]]</span> <span class="kw">&amp;&amp;</span> <span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PYENV_ROOT</span><span class="st">/bin:</span><span class="va">$PATH</span><span class="st">&quot;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="bu">eval</span> <span class="st">&quot;</span><span class="va">$(</span><span class="ex">pyenv</span> init <span class="at">-</span> bash<span class="va">)</span><span class="st">&quot;</span></span></code></pre></div>
+<p>pyenv builds Python from source, so install the libraries required
+for the build beforehand (for Ubuntu; for other OSes, see the <a
+href="https://github.com/pyenv/pyenv/wiki#suggested-build-environment">pyenv
+Wiki</a>).</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo apt install build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev \</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    libsqlite3-dev libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev</span></code></pre></div>
+<p>If some are missing, the build might still succeed but produce a
+Python without the <code>ssl</code> or <code>sqlite3</code> modules
+(warnings are shown during the build).</p>
+<p>Frequently used commands:</p>
 <div class="sourceCode" id="cb8"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> QuickTour</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">title</span><span class="kw">:</span><span class="at"> SlowDash Quick Tour</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_source</span><span class="kw">:</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> sqlite:///QuickTourTestData.db</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">time_series</span><span class="kw">:</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">schema</span><span class="kw">:</span><span class="at"> testdata[channel]@timestamp(unix)=value</span></span></code></pre></div>
-<p>Important YAML rules:</p>
-<ul>
-<li>indentation is semantic (use spaces, not tabs)</li>
-<li><code>key: value</code> pairs define mappings</li>
-<li>nested blocks are created by deeper indentation</li>
-</ul>
-<h1 id="rdbms-and-sql-basics">RDBMS and SQL Basics</h1>
-<p>SlowDash commonly reads data from SQL databases (RDBMS), such as
-PostgreSQL, MySQL, and SQLite. As a first image, think of RDBMS as
-storing data in multiple table-like sheets, similar to Excel. (Strictly
-speaking, RDBMS also defines formal relations between tables, which is
-beyond this introductory image.)</p>
-<p>Minimum concepts:</p>
-<ul>
-<li>a <strong>table</strong> stores data in rows and columns</li>
-<li>a <strong>row</strong> is one record (one timestamped measurement,
-for example)</li>
-<li>a <strong>column</strong> is one attribute (<code>timestamp</code>,
-<code>channel</code>, <code>value</code>, etc.)</li>
-<li><code>PRIMARY KEY</code> uniquely identifies a row (often timestamp
-+ channel in time-series tables)</li>
-</ul>
-<p>Minimum SQL you should recognize:</p>
-<ul>
-<li><code>SELECT ... FROM table</code> to read data</li>
-<li><code>WHERE ...</code> to filter rows</li>
-<li><code>ORDER BY ...</code> to sort rows</li>
-<li><code>LIMIT N</code> to fetch only part of the result</li>
-</ul>
-<p>Example:</p>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv install --list | grep &#39;^ *3\.&#39;   # list installable versions</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv install 3.12.9                   # install</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv versions                         # list installed versions</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv version                          # currently active version and where it is set</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv global 3.12.9                    # set the user default</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv local 3.12.9                     # set only for this directory and below (creates a .python-version file)</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv uninstall 3.12.9</span></span></code></pre></div>
+<h2 id="combination-creating-a-venv-with-a-pyenv-python">Combination:
+Creating a venv with a pyenv Python</h2>
 <div class="sourceCode" id="cb9"><pre
-class="sourceCode sql"><code class="sourceCode sql"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="dt">timestamp</span>, channel, <span class="fu">value</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> testdata</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> channel <span class="op">=</span> <span class="st">&#39;ch00&#39;</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dt">timestamp</span> <span class="kw">DESC</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div>
-<p>You do not need advanced SQL to start Quick Tour, but these basics
-help when checking and troubleshooting data bindings.</p>
-<h1 id="data-time-representation">Data Time Representation</h1>
-<p>When data is recorded, each value has a timestamp. This section
-explains how that timestamp itself is represented:</p>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/SLOWDASH</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pyenv local 3.12.9          # python3 becomes 3.12.9 in this directory</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ rm -rf venv                 # remove the venv made with an old Python, if any</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ make                        # the venv is created with 3.12.9</span></span></code></pre></div>
+<p>Once the venv is created, its Python is used regardless of the pyenv
+settings. However, the venv breaks if the pyenv version it was created
+from is removed with <code>pyenv uninstall</code>.</p>
+<h1 id="network">Network</h1>
+<p>SlowDash is used from a web browser over HTTP (the standard port is
+18881). SlowDash itself has almost no security features, so it is meant
+to be used inside a firewall, with external access through VPN, an SSH
+tunnel, or a reverse proxy.</p>
+<h2 id="commands-for-investigation">Commands for Investigation</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>ip -br addr</code></td>
+<td>List of your IP addresses</td>
+</tr>
+<tr class="even">
+<td><code>ip route</code></td>
+<td>Routing table (<code>default via ...</code> is the default
+gateway)</td>
+</tr>
+<tr class="odd">
+<td><code>ip route get ADDRESS</code></td>
+<td>Which interface and gateway are used to reach the destination</td>
+</tr>
+<tr class="even">
+<td><code>ping -c 5 HOST</code></td>
+<td>Reachability and round-trip time (RTT)</td>
+</tr>
+<tr class="odd">
+<td><code>tracepath HOST</code>, <code>traceroute HOST</code></td>
+<td>Routers on the path and the latency to each hop</td>
+</tr>
+<tr class="even">
+<td><code>mtr HOST</code></td>
+<td>Continuous display of latency and packet loss for each hop</td>
+</tr>
+<tr class="odd">
+<td><code>getent hosts NAME</code>, <code>dig NAME</code></td>
+<td>Name resolution (<code>getent</code> shows what programs actually
+get, including <code>/etc/hosts</code>)</td>
+</tr>
+<tr class="even">
+<td><code>sudo ss -tlnp</code></td>
+<td>Listening TCP ports and their processes</td>
+</tr>
+<tr class="odd">
+<td><code>ss -tn</code></td>
+<td>Established TCP connections</td>
+</tr>
+<tr class="even">
+<td><code>nc -zv HOST PORT</code></td>
+<td>Whether a TCP connection to the port can be made</td>
+</tr>
+<tr class="odd">
+<td><code>curl -v http://HOST:18881/</code></td>
+<td>Verbose view of an HTTP connection</td>
+</tr>
+<tr class="even">
+<td><code>iperf3 -s</code> (on the other side),
+<code>iperf3 -c HOST</code></td>
+<td>Bandwidth measurement between two machines</td>
+</tr>
+<tr class="odd">
+<td><code>sudo tcpdump -i any port 18881</code></td>
+<td>Observing the actual packets</td>
+</tr>
+</tbody>
+</table>
+<p>Missing commands can be installed with
+<code>sudo apt install iputils-ping iputils-tracepath traceroute mtr-tiny dnsutils netcat-openbsd iperf3 tcpdump</code>.</p>
+<p>The breakdown of HTTP response time (connection, first byte, total)
+can be measured with <code>curl</code>:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ curl -o /dev/null -s -w &#39;connect: %{time_connect}  first byte: %{time_starttransfer}  total: %{time_total}\n&#39; http://HOST:18881/</span></span></code></pre></div>
+<p>Key points:</p>
 <ul>
-<li><code>unix</code>: elapsed seconds from
-<code>1970-01-01 00:00:00 UTC</code> (UNIX epoch),
-timezone-independent</li>
-<li><code>with time zone</code> (or <code>aware</code>)</li>
-<li><code>without time zone</code> / <code>naive</code> (generally
-discouraged)</li>
-<li><code>unspecified utc</code> (time string without zone, but known to
-be UTC)</li>
+<li>No response to <code>ping</code> does not necessarily mean the host
+is unreachable (ICMP is often blocked by firewalls). Use
+<code>nc -zv</code> to check whether a specific port can be
+reached.</li>
+<li>If the listening address is <code>0.0.0.0</code> (or
+<code>*</code>), connections are accepted from all networks; if it is
+<code>127.0.0.1</code>, only from the same machine. Check with
+<code>sudo ss -tlnp</code>.</li>
+<li>When the display from a remote site is slow, round-trip latency
+(RTT) is often more important than bandwidth. If the <code>ping</code>
+RTT exceeds several tens of ms, switching to HTTP/2 with a reverse
+proxy, or placing a database mirror and SlowDash at the remote site (<a
+href="#data-replication-postgresql-mysql">Replication</a>), might
+help.</li>
 </ul>
-<p>Practical difference:</p>
-<ul>
-<li><code>unix</code> is a numeric elapsed-time representation</li>
-<li>other types are date-time representations written as
-year/month/day/hour/minute/second strings</li>
-</ul>
-<p>Use <code>unix</code> when possible for least ambiguity.</p>
-<h1 id="table-structure-description">Table Structure Description</h1>
-<p>Next, you need a way to describe the structure of your data table:
-which column is time, which is channel tag, and which is value. In
-SlowDash, this structure description is called a schema descriptor.</p>
-<p>A common pattern is:</p>
-<pre><code>table[tag]@time_column(type)=value_column</code></pre>
-<p>Examples:</p>
-<ul>
-<li><code>testdata[channel]@timestamp(unix)=value</code></li>
-<li><code>numeric_data[endpoint]@timestamp(with timezone)=value_raw</code></li>
-</ul>
-<p>Meaning:</p>
-<ul>
-<li><code>table</code>: source table or measurement</li>
-<li><code>[tag]</code>: column used as channel name</li>
-<li><code>@time_column(type)</code>: timestamp source and type</li>
-<li><code>=value_column</code>: value field</li>
-</ul>
-<h1 id="basic-network-and-port-awareness">Basic Network and Port
-Awareness</h1>
-<p>SlowDash server examples often use port <code>18881</code>.</p>
-<ul>
-<li>open browser to <code>http://localhost:18881</code></li>
-<li>if using Docker, map <code>-p 18881:18881</code></li>
-<li>ensure the port is not already occupied</li>
-</ul>
-<h1 id="docker-and-docker-compose-basics">Docker and Docker Compose
-Basics</h1>
-<p>Containers are optional in SlowDash. If you are not familiar with
-containers, you do not need to use Docker to get started; native
-installation is a valid and recommended first path.</p>
-<p>When to skip containers (at first):</p>
-<ul>
-<li>you are learning SlowDash basics</li>
-<li>you use a single machine and simple setup</li>
-<li>you prefer fewer moving parts while troubleshooting</li>
-</ul>
-<p>If you are new to containers, start with this mental model:</p>
-<ul>
-<li>a <strong>container image</strong> is a packaged runtime environment
-(application command + dependencies + runtime settings)</li>
-<li>a <strong>container</strong> is a running instance created from that
-image</li>
-<li>Docker runs one container with one command</li>
-<li>Docker Compose is a tool to run and coordinate multiple related
-containers</li>
-</ul>
-<p>For SlowDash, this means:</p>
-<ul>
-<li>if Docker is already installed, you can pull an existing SlowDash
-image and start using SlowDash without installing SlowDash itself on
-your host</li>
-<li>you do not need to install SlowDash Python dependencies directly on
-your host</li>
-<li>your project files stay on your host machine</li>
-<li>the SlowDash process runs inside the container and reads your
-mounted project directory</li>
-</ul>
-<p>Why introduce containers later:</p>
-<ul>
-<li>reproducibility: same runtime environment across machines</li>
-<li>cleaner host system: fewer Python packages installed globally</li>
-<li>easier team sharing: colleagues can run with the same image and
-compose file</li>
-<li>safer upgrades/rollbacks: switch image tags with less host-side
-impact</li>
-<li>better multi-service workflows: easy to combine SlowDash with
-DB/reverse-proxy/notebook services</li>
-</ul>
-<p>Important options in examples:</p>
-<ul>
-<li><code>-v $(pwd):/project</code>
-<ul>
-<li>left side (<code>$(pwd)</code>): your current host directory</li>
-<li>right side (<code>/project</code>): path inside the container</li>
-<li>effect: files edited on host are immediately visible in the
-container</li>
-</ul></li>
-<li><code>-p 18881:18881</code>
-<ul>
-<li>left side: host port</li>
-<li>right side: container port</li>
-<li>effect: browser access to <code>http://localhost:18881</code>
-reaches SlowDash in the container</li>
-</ul></li>
-<li><code>--rm</code>
-<ul>
-<li>remove the container automatically when it stops</li>
-<li>useful for temporary test runs</li>
-</ul></li>
-</ul>
-<p>Minimal single-container example:</p>
+<h2 id="finding-devices-on-the-lan">Finding Devices on the LAN</h2>
+<p>How to find the IP address of a device that gets its address by DHCP
+(instruments, Raspberry Pi, etc.):</p>
 <div class="sourceCode" id="cb11"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd YOUR_PROJECT_DIR</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash</span></span></code></pre></div>
-<p>What happens:</p>
-<ol type="1">
-<li>Docker downloads the image if needed.</li>
-<li>A container starts and runs SlowDash.</li>
-<li>You open <code>http://localhost:18881</code> in your browser.</li>
-<li>When you stop it, that container is removed (<code>--rm</code>), but
-your project files remain on host.</li>
-</ol>
-<p>Minimal Docker Compose example:</p>
-<p>In many practical setups, you also want a database without installing
-it directly on your host. In that case, both SlowDash and the database
-run as containers, so you need to run at least two containers together.
-Docker Compose automates this multi-container startup/shutdown from one
-configuration file.</p>
-<div class="sourceCode" id="cb12"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">postgres</span><span class="kw">:</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> postgres:16</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> POSTGRES_USER=slowdash</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> POSTGRES_PASSWORD=slowdash</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> POSTGRES_DB=slowdash</span></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> postgres-data:/var/lib/postgresql/data</span></span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowdash</span></span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span></span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> postgres</span></span>
-<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
-<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> .:/project</span></span>
-<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
-<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881:18881&quot;</span></span>
-<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="fu">volumes</span><span class="kw">:</span></span>
-<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">postgres-data</span><span class="kw">:</span></span></code></pre></div>
-<p>Why Compose is useful:</p>
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo arp-scan -l                          # scan the whole connected LAN; shows IP address, MAC address, and vendor</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo arp-scan -I eth0 192.168.1.0/24      # specify the interface and range</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo nmap -sn 192.168.1.0/24              # list responding devices (with root, MAC addresses and vendors are also shown)</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ ip neigh                                  # IP and MAC addresses of hosts this machine recently talked to (ARP cache)</span></span></code></pre></div>
+<p>(Install with <code>sudo apt install arp-scan nmap</code>.)</p>
 <ul>
-<li>no manual step-by-step startup of multiple containers</li>
-<li>one <code>docker compose up</code> can start SlowDash + database
-together</li>
-<li>one <code>docker compose down</code> can stop them together</li>
-<li>service definitions stay in a file and are easy to share with
-teammates</li>
+<li>The vendor is determined from the first part of the MAC address.
+Matching it with the MAC address printed on the device or its box, or
+comparing the list before and after powering on the device, makes it
+easy to find.</li>
+<li>ARP does not cross routers, so only devices on the same network
+(subnet) can be found. From inside WSL2 (in the default NAT mode) or a
+Docker container, the external LAN is not visible (for WSL2, use
+<code>arp -a</code> on the Windows side).</li>
+<li>On institutional networks, scanning without permission might be
+prohibited. Except for experiment networks you manage yourself, check
+with the network administrator.</li>
 </ul>
-<p>Start and stop:</p>
-<div class="sourceCode" id="cb13"><pre
-class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down</span></span></code></pre></div>
+<h2 id="ssh-tunnel">SSH Tunnel</h2>
+<p>Connect to SlowDash inside a firewall through SSH:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ ssh -N -L 18881:localhost:18881 USER@SERVER                 # local localhost:18881 -&gt; localhost:18881 on SERVER</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ ssh -N -J USER@GATEWAY -L 18881:localhost:18881 USER@SERVER  # through a gateway (jump host)</span></span></code></pre></div>
+<p>Then open <code>http://localhost:18881</code> in the browser.
+<code>-N</code> makes a tunnel only, without running a command. To
+expose a port in the opposite direction, from an inside machine to an
+outside machine, use <code>-R</code> (see the example in <a
+href="#data-replication-postgresql-mysql">Replication</a>).</p>
+<p>Frequently used settings can be written in
+<code>~/.ssh/config</code>, so that just <code>ssh slowdash</code>
+connects:</p>
+<pre><code>Host slowdash
+    HostName SERVER
+    User USER
+    ProxyJump USER@GATEWAY
+    LocalForward 18881 localhost:18881</code></pre>
+<h2 id="firewall-ufw">Firewall (ufw)</h2>
+<p>On Ubuntu, <code>ufw</code> is used to configure the firewall (on
+RHEL-based systems, <code>firewall-cmd</code>).</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw status verbose                    # current status and rules</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw default deny incoming             # deny incoming connections by default</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw default allow outgoing            # allow outgoing connections by default</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw allow OpenSSH                     # allow SSH (always do this before enabling!)</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw enable                            # enable</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw allow from 192.168.1.0/24 to any port 18881 proto tcp   # allow only from a specific network</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw allow from 203.0.113.5 to any port 5432 proto tcp       # allow only from a specific host (e.g., a DB mirror)</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw allow 443/tcp                     # allow HTTPS from anywhere (reverse proxy)</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw status numbered                   # show rules with numbers</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw delete 3                          # delete a rule by number</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw insert 1 deny from 198.51.100.7   # insert a rule at the top</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw reload</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo ufw disable</span></span></code></pre></div>
+<p>Key points:</p>
+<ul>
+<li>If you are working remotely over SSH, running
+<code>ufw enable</code> before allowing SSH locks you out.</li>
+<li>Rules are evaluated from the top, and the first match is
+applied.</li>
+<li>Allow the SlowDash port (18881) only to the necessary range, such as
+the lab network. With a reverse proxy, do not open 18881 to the outside;
+open only 443 (and 80 for redirecting to HTTPS). Allow database ports
+(PostgreSQL 5432, MySQL 3306) only to the hosts that need to
+connect.</li>
+<li>Denied connections are logged in <code>/var/log/ufw.log</code>
+(<code>sudo ufw logging on</code>).</li>
+<li>After configuration, check from another machine with
+<code>nc -zv HOST PORT</code> that only the intended ports are
+open.</li>
+</ul>
+<h3 id="docker-and-ufw">Docker and ufw</h3>
+<p>Ports published by Docker (<code>docker run -p</code> or
+<code>ports:</code> in Compose) bypass the ufw rules and are reachable
+from outside. This is because Docker directly adds firewall rules that
+are evaluated before ufw.</p>
+<ul>
+<li>If access only from the same machine is needed, publish with
+<code>127.0.0.1</code>: <code>-p 127.0.0.1:18881:18881</code> (in
+Compose, <code>"127.0.0.1:18881:18881"</code>).</li>
+<li>If the reverse proxy runs in the same Compose setup, SlowDash does
+not need <code>ports:</code> (it can be reached by the service name).
+Publish only the reverse proxy ports.</li>
+</ul>
+<h2 id="reverse-proxy-and-https">Reverse Proxy and HTTPS</h2>
+<p>SlowDash communicates over unencrypted HTTP/1.1. To allow external
+access, put a web server such as Nginx or Apache in front of it and
+switch to HTTPS there (reverse proxy).</p>
+<pre><code>Browser ── HTTPS (443) ──▶ Reverse proxy ── HTTP (18881) ──▶ SlowDash
+                           (Nginx / Apache)                  (no direct access from outside)</code></pre>
+<p>This provides:</p>
+<ul>
+<li>Encrypted communication (HTTPS)</li>
+<li>Faster communication with HTTP/2 (especially effective for remote
+access)</li>
+<li>URLs without a port number
+(<code>https://HOST/slowdash/</code>)</li>
+<li>Basic authentication (HTTPS is required to protect the
+password)</li>
+</ul>
+<p>HTTPS requires a server certificate. Use a certificate from your
+institution, Let’s Encrypt (<code>certbot</code>; requires a host name
+reachable from outside), or a self-signed certificate for testing (the
+browser shows a warning).</p>
+<p>For configuration, see <a
+href="ProjectSetup.html#using-a-reverse-proxy-server">“Using a Reverse
+Proxy Server” in Project Setup</a>; for working examples with Docker
+Compose, see <code>ExampleProjects/ReverseProxy</code>.</p>
+<h1 id="background-execution-and-auto-start">Background Execution and
+Auto-Start</h1>
+<p>Server processes such as <code>slowdash</code> must keep running
+after the terminal is closed or the user logs out, and in production
+they should start automatically when the machine boots.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Survives logout</th>
+<th>Starts at boot</th>
+<th>Restart on failure</th>
+<th>Logs</th>
+<th>Suitable for</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>tmux / screen</td>
+<td>yes</td>
+<td>no</td>
+<td>no</td>
+<td>on screen</td>
+<td>development, testing, temporary operation</td>
+</tr>
+<tr class="even">
+<td>nohup</td>
+<td>yes</td>
+<td>no</td>
+<td>no</td>
+<td>file</td>
+<td>temporary operation</td>
+</tr>
+<tr class="odd">
+<td>cron <code>@reboot</code></td>
+<td>yes</td>
+<td>yes</td>
+<td>no</td>
+<td>file</td>
+<td>simple auto-start</td>
+</tr>
+<tr class="even">
+<td><code>/etc/rc.local</code></td>
+<td>yes</td>
+<td>yes</td>
+<td>no</td>
+<td>file</td>
+<td>legacy method (systemd is now recommended)</td>
+</tr>
+<tr class="odd">
+<td>systemd</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td><code>journalctl</code></td>
+<td>production in native environments</td>
+</tr>
+<tr class="even">
+<td>Docker</td>
+<td>yes</td>
+<td>yes</td>
+<td>yes</td>
+<td><code>docker logs</code></td>
+<td>production in Docker environments</td>
+</tr>
+</tbody>
+</table>
+<p>In the examples below, the <code>slowdash</code> command is given by
+its absolute path. <code>bin/slowdash</code> activates the SlowDash venv
+by itself, so the venv does not need to be activated beforehand.</p>
+<h2 id="tmux-screen">tmux / screen</h2>
+<p>The whole terminal screen is kept in the background and can be
+reattached later. The output can be seen as is, which is convenient
+during development and testing.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Operation</th>
+<th>tmux</th>
+<th>screen</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Start with a name</td>
+<td><code>tmux new -s slowdash</code></td>
+<td><code>screen -S slowdash</code></td>
+</tr>
+<tr class="even">
+<td>Detach (the process keeps running)</td>
+<td><code>Ctrl-b</code> → <code>d</code></td>
+<td><code>Ctrl-a</code> → <code>d</code></td>
+</tr>
+<tr class="odd">
+<td>List</td>
+<td><code>tmux ls</code></td>
+<td><code>screen -ls</code></td>
+</tr>
+<tr class="even">
+<td>Reattach</td>
+<td><code>tmux attach -t slowdash</code></td>
+<td><code>screen -r slowdash</code></td>
+</tr>
+<tr class="odd">
+<td>Start detached</td>
+<td><code>tmux new -d -s slowdash 'COMMAND'</code></td>
+<td><code>screen -dmS slowdash COMMAND</code></td>
+</tr>
+<tr class="even">
+<td>Terminate</td>
+<td><code>tmux kill-session -t slowdash</code></td>
+<td><code>screen -S slowdash -X quit</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="nohup">nohup</h2>
+<p>Runs a process in the background so that it does not terminate on
+logout:</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ nohup /PATH/TO/SLOWDASH/bin/slowdash --port=18881 --project-dir=/PATH/TO/PROJECT &gt; slowdash.log 2&gt;&amp;1 &amp;</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pgrep -af slowdash      # check whether it is running (the process ID is shown)</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ kill PID                # stop</span></span></code></pre></div>
+<h2 id="cron-reboot">cron <span class="citation"
+data-cites="reboot">@reboot</span></h2>
+<p>Adding the following line to your crontab with
+<code>crontab -e</code> runs it when the machine boots. No root
+privilege is required.</p>
+<pre><code>@reboot /PATH/TO/SLOWDASH/bin/slowdash --port=18881 --project-dir=/PATH/TO/PROJECT &gt;&gt; /PATH/TO/slowdash.log 2&gt;&amp;1</code></pre>
+<p>In the cron environment, <code>PATH</code> and others differ from a
+login shell, so specify commands and files with absolute paths.</p>
+<h2 id="etcrc.local">/etc/rc.local</h2>
+<p>A script executed with root privilege at boot. This is a legacy
+method; the file does not exist on Ubuntu by default, but if created, it
+is executed through systemd.</p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/sh</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">su</span> <span class="at">-</span> USER <span class="at">-c</span> <span class="st">&#39;/PATH/TO/SLOWDASH/bin/slowdash --port=18881 --project-dir=/PATH/TO/PROJECT &gt;&gt; /PATH/TO/slowdash.log 2&gt;&amp;1 &amp;&#39;</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="bu">exit</span> 0</span></code></pre></div>
+<ul>
+<li>The file must be executable
+(<code>sudo chmod +x /etc/rc.local</code>).</li>
+<li>Since it runs as root, use <code>su - USER -c</code> to run as a
+normal user. Put <code>&amp;</code> at the end of processes that do not
+terminate, to run them in the background.</li>
+</ul>
+<h2 id="systemd">systemd</h2>
+<p>The current standard method on Linux. systemd also takes care of
+restarting on failure and of logging. Create a file
+<code>/etc/systemd/system/slowdash.service</code> with the following
+contents:</p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode ini"><code class="sourceCode ini"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">SlowDash</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="dt">After</span><span class="ot">=</span><span class="st">network-online.target</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="dt">Wants</span><span class="ot">=</span><span class="st">network-online.target</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="co"># If a database on the same machine is used, start after it:</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co"># After=network-online.target postgresql.service</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="dt">Type</span><span class="ot">=</span><span class="st">simple</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="dt">User</span><span class="ot">=</span><span class="st">USER</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="dt">WorkingDirectory</span><span class="ot">=</span><span class="st">/PATH/TO/PROJECT</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/PATH/TO/SLOWDASH/bin/slowdash --port=18881</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="dt">Restart</span><span class="ot">=</span><span class="st">on-failure</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="dt">RestartSec</span><span class="ot">=</span><span class="dv">5</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">multi-user.target</span></span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo systemctl daemon-reload              # run after creating or modifying a service file</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo systemctl enable --now slowdash      # enable auto-start and start now</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ systemctl status slowdash                 # status and recent logs</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ journalctl -u slowdash -f                 # show logs (-f to follow)</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo systemctl restart slowdash           # restart (e.g., after changing the configuration)</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo systemctl stop slowdash              # stop</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="kw">$ sudo systemctl disable slowdash           # disable auto-start</span></span></code></pre></div>
+<p>Without root privilege, it can be registered as a user service: put
+the file at <code>~/.config/systemd/user/slowdash.service</code> (remove
+the <code>User=</code> line and use
+<code>WantedBy=default.target</code>), then run
+<code>systemctl --user enable --now slowdash</code>. To keep it running
+while logged out and to start it at boot,
+<code>loginctl enable-linger USER</code> is required (ask the
+administrator).</p>
+<h2 id="docker">Docker</h2>
+<p>Docker containers can run in the background by design. With a restart
+policy, they are started automatically on failure and at boot.</p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker run -d --restart unless-stopped -p 18881:18881 -v $(pwd):/project slowproj/slowdash</span></span></code></pre></div>
+<p>In Docker Compose, write <code>restart: unless-stopped</code> for
+each service, and start with <code>docker compose up -d</code>.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Restart policy</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>no</code> (default)</td>
+<td>Not started automatically</td>
+</tr>
+<tr class="even">
+<td><code>on-failure</code></td>
+<td>Restarted only when it exits with an error</td>
+</tr>
+<tr class="odd">
+<td><code>always</code></td>
+<td>Always restarted (even if stopped manually, it starts at boot)</td>
+</tr>
+<tr class="even">
+<td><code>unless-stopped</code></td>
+<td>Always restarted (but a manually stopped container is not started at
+boot either)</td>
+</tr>
+</tbody>
+</table>
+<p>Docker itself must be configured to start at boot
+(<code>sudo systemctl enable docker</code>; this is usually enabled at
+installation).</p>
+<h1 id="relational-databases-postgresql-mysql-sqlite">Relational
+Databases: PostgreSQL / MySQL / SQLite</h1>
+<p>This section is not about SQL syntax; it summarizes the differences
+among the three databases that matter when recording and displaying
+time-series data.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>PostgreSQL</th>
+<th>MySQL</th>
+<th>SQLite</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Form</td>
+<td>Server</td>
+<td>Server</td>
+<td>A single file (no server needed)</td>
+</tr>
+<tr class="even">
+<td>Concurrent access</td>
+<td>Many readers and writers</td>
+<td>Many readers and writers</td>
+<td>One writer at a time (see below). With the default settings, reads
+wait during writes (improved with WAL mode)</td>
+</tr>
+<tr class="odd">
+<td>Suitable for</td>
+<td>Production</td>
+<td>Production (often already used in existing systems)</td>
+<td>Testing, small systems (contained in a single machine). Archiving
+and moving data of short-term measurements</td>
+</tr>
+</tbody>
+</table>
+<p>SQLite basically assumes a single writer. In SlowDash, however, this
+is not an essential problem: the tasks reading out the devices can send
+data through SlowMesh, and a single recording task writes all of it to
+the database. On the other hand, SQLite has no mechanism for
+partitioning or replication, so PostgreSQL or MySQL should be used for
+systems that record large amounts of data over long periods.</p>
+<p>Since an SQLite database is a single file, it is well suited for
+storing the data of short-term measurements (test runs, calibrations,
+each measurement run, etc.) as an archive as is, or for moving it to
+another machine.</p>
+<ul>
+<li>It does not depend on a database server. As long as the file exists,
+it can be read years later on any machine (in Python, only the standard
+library <code>sqlite3</code> is needed). This is an important property
+for preservation.</li>
+<li>The file format is public and stable, and the same file can be used
+regardless of the OS or CPU type. It is also recommended by the US
+Library of Congress as a format for long-term preservation.</li>
+<li>Copying and moving are done with ordinary file operations
+(<code>cp</code>, <code>rsync</code>, <code>scp</code>, etc.). SlowDash
+can display it just by specifying <code>sqlite:///FILE.db</code>.</li>
+<li>Copying a file while it is being written might produce a corrupted
+copy. If writing is ongoing, make a consistent copy with
+<code>sqlite3 SOURCE.db ".backup COPY.db"</code> or
+<code>sqlite3 SOURCE.db "VACUUM INTO 'COPY.db'"</code>. In WAL mode,
+data might remain in the files with <code>-wal</code> and
+<code>-shm</code> suffixes, so when copying the file itself, stop
+writing first.</li>
+</ul>
+<h2 id="connecting-and-inspecting-tables">Connecting and Inspecting
+Tables</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Operation</th>
+<th>PostgreSQL (<code>psql</code>)</th>
+<th>MySQL (<code>mysql</code>)</th>
+<th>SQLite (<code>sqlite3</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Connect</td>
+<td><code>psql -h HOST -U USER DB</code></td>
+<td><code>mysql -h HOST -u USER -p DB</code></td>
+<td><code>sqlite3 FILE.db</code></td>
+</tr>
+<tr class="even">
+<td>List tables</td>
+<td><code>\dt</code></td>
+<td><code>SHOW TABLES;</code></td>
+<td><code>.tables</code></td>
+</tr>
+<tr class="odd">
+<td>Table definition</td>
+<td><code>\d TABLE</code></td>
+<td><code>SHOW CREATE TABLE TABLE;</code></td>
+<td><code>.schema TABLE</code></td>
+</tr>
+<tr class="even">
+<td>List indexes</td>
+<td><code>\di</code></td>
+<td><code>SHOW INDEX FROM TABLE;</code></td>
+<td><code>.indexes TABLE</code></td>
+</tr>
+<tr class="odd">
+<td>Show execution time</td>
+<td><code>\timing on</code></td>
+<td>always shown</td>
+<td><code>.timer on</code></td>
+</tr>
+<tr class="even">
+<td>Quit</td>
+<td><code>\q</code></td>
+<td><code>exit</code></td>
+<td><code>.quit</code></td>
+</tr>
+</tbody>
+</table>
+<p>If the database runs in Docker Compose, the client inside the
+container can be used (e.g.,
+<code>docker compose exec postgres psql -U USER DB</code>). The SQLite
+client might need to be installed separately
+(<code>sudo apt install sqlite3</code>).</p>
+<h2 id="data-types">Data Types</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>PostgreSQL</th>
+<th>MySQL</th>
+<th>SQLite</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>64-bit floating point</td>
+<td><code>DOUBLE PRECISION</code></td>
+<td><code>DOUBLE</code> (<code>REAL</code> is the same)</td>
+<td><code>REAL</code></td>
+</tr>
+<tr class="even">
+<td>32-bit floating point</td>
+<td><code>REAL</code></td>
+<td><code>FLOAT</code></td>
+<td>none (all 64-bit)</td>
+</tr>
+<tr class="odd">
+<td>Integer</td>
+<td><code>INTEGER</code> (32-bit), <code>BIGINT</code> (64-bit)</td>
+<td><code>INT</code> (32-bit), <code>BIGINT</code> (64-bit)</td>
+<td><code>INTEGER</code> (up to 64-bit)</td>
+</tr>
+<tr class="even">
+<td>String</td>
+<td><code>TEXT</code>, <code>VARCHAR(n)</code></td>
+<td><code>VARCHAR(n)</code>, <code>TEXT</code></td>
+<td><code>TEXT</code></td>
+</tr>
+<tr class="odd">
+<td>JSON</td>
+<td><code>JSONB</code>, <code>JSON</code></td>
+<td><code>JSON</code></td>
+<td><code>TEXT</code> (with JSON functions)</td>
+</tr>
+<tr class="even">
+<td>NaN, Inf</td>
+<td>can be stored</td>
+<td>cannot be stored</td>
+<td>NaN becomes NULL</td>
+</tr>
+<tr class="odd">
+<td>Type handling</td>
+<td>strict</td>
+<td>strict (strict mode, enabled by default)</td>
+<td>loose (values of types different from the declaration can be
+stored)</td>
+</tr>
+</tbody>
+</table>
+<p>Notes:</p>
+<ul>
+<li>The meaning of <code>REAL</code> differs among databases. In
+PostgreSQL, <code>REAL</code> is 32-bit, with only about 7 significant
+digits. A UNIX time (about 1.7×10⁹) stored in a 32-bit float has a
+resolution of 128 seconds. For columns storing time as a number, use a
+64-bit float (<code>DOUBLE PRECISION</code> in PostgreSQL,
+<code>DOUBLE</code> in MySQL) or <code>BIGINT</code>.</li>
+<li>In MySQL, a <code>TEXT</code> column cannot be used in an index as
+is (a prefix length is required). Use <code>VARCHAR(n)</code> for
+columns used in searches, such as channel names.</li>
+</ul>
+<h2 id="time-and-time-zones">Time and Time Zones</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>PostgreSQL</th>
+<th>MySQL</th>
+<th>SQLite</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>With time zone</td>
+<td><code>TIMESTAMP WITH TIME ZONE</code>
+(<code>TIMESTAMPTZ</code>)</td>
+<td><code>TIMESTAMP</code></td>
+<td>none</td>
+</tr>
+<tr class="even">
+<td>Without time zone</td>
+<td><code>TIMESTAMP</code></td>
+<td><code>DATETIME</code></td>
+<td>date-time string in <code>TEXT</code></td>
+</tr>
+<tr class="odd">
+<td>UNIX time (numeric)</td>
+<td><code>DOUBLE PRECISION</code>, <code>BIGINT</code></td>
+<td><code>DOUBLE</code>, <code>BIGINT</code></td>
+<td><code>REAL</code>, <code>INTEGER</code></td>
+</tr>
+<tr class="even">
+<td>Sub-second precision</td>
+<td>microseconds</td>
+<td>seconds by default; specify like <code>TIMESTAMP(6)</code></td>
+<td>depends on how it is stored</td>
+</tr>
+<tr class="odd">
+<td>Check the connection time zone</td>
+<td><code>SHOW timezone;</code></td>
+<td><code>SELECT @@session.time_zone;</code></td>
+<td>none</td>
+</tr>
+<tr class="even">
+<td>UNIX time → date-time</td>
+<td><code>to_timestamp(x)</code></td>
+<td><code>FROM_UNIXTIME(x)</code></td>
+<td><code>datetime(x, 'unixepoch')</code></td>
+</tr>
+<tr class="odd">
+<td>Date-time → UNIX time</td>
+<td><code>extract(epoch FROM t)</code></td>
+<td><code>UNIX_TIMESTAMP(t)</code></td>
+<td><code>strftime('%s', t)</code></td>
+</tr>
+</tbody>
+</table>
+<p>Key points:</p>
+<ul>
+<li>Even the “with time zone” types do not store the time zone itself.
+On writing, the value is converted to UTC using the time zone setting of
+the connection; on reading, it is converted to the connection’s time
+zone. Therefore, the same data can be displayed with different times
+depending on the connection settings (pointing to the same
+instant).</li>
+<li>The “without time zone” types store the given date-time as is,
+without recording which time zone it is in. The writer and the reader
+must agree on the interpretation. Around daylight-saving-time
+transitions, times can be duplicated or missing.</li>
+<li>MySQL <code>TIMESTAMP</code> can only handle times up to 2038-01-19
+03:14:07 UTC (the year 2038 problem). <code>DATETIME</code> does not
+have this limit, but it is a type without time zone.</li>
+<li>MySQL <code>TIMESTAMP</code> / <code>DATETIME</code> round off
+sub-seconds unless a precision is specified.</li>
+<li>To use time zone names (such as <code>'Asia/Tokyo'</code>) in MySQL,
+the time zone tables must be loaded into the server. Offsets such as
+<code>'+09:00'</code> can always be used.</li>
+<li>SQLite <code>CURRENT_TIMESTAMP</code> and
+<code>datetime('now')</code> return UTC date-time strings.</li>
+<li>Recording in UNIX time (64-bit float) avoids time zone issues and
+the year 2038 problem, and works the same way in all three
+databases.</li>
+</ul>
+<p>For how to specify each type in SlowDash, see <a
+href="DataBinding.html">Data Binding</a>.</p>
+<h2 id="indexes">Indexes</h2>
+<p>A typical read of time-series data looks like this (the queries
+SlowDash issues for plots have this form):</p>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="dt">timestamp</span>, channel, <span class="fu">value</span> <span class="kw">FROM</span> <span class="kw">data</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> channel <span class="kw">IN</span> (<span class="st">&#39;ch00&#39;</span>, <span class="st">&#39;ch01&#39;</span>) <span class="kw">AND</span> <span class="dt">timestamp</span> <span class="op">&gt;=</span> START_TIME <span class="kw">AND</span> <span class="dt">timestamp</span> <span class="op">&lt;</span> END_TIME</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dt">timestamp</span>;</span></code></pre></div>
+<p>A composite index on <code>(channel, timestamp)</code> is effective
+for this. In a composite index, put columns filtered by equality first
+and columns filtered by range last. With the
+<code>(timestamp, channel)</code> order, the data of all channels in the
+time range is read first and then filtered by channel, which is slow
+when there are many channels.</p>
+<h3 id="postgresql">PostgreSQL</h3>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY data_channel_timestamp <span class="kw">ON</span> <span class="kw">data</span> (channel, <span class="dt">timestamp</span>);</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ANALYZE</span> <span class="kw">data</span>;</span></code></pre></div>
+<ul>
+<li>With <code>CONCURRENTLY</code>, the index is created without
+stopping writes (it takes longer; cannot be used inside a
+transaction).</li>
+<li>With <code>... ON data (channel, timestamp) INCLUDE (value)</code>,
+results can be returned from the index alone (Index Only Scan), which
+might be even faster. However, for a simple table like this, the index
+becomes a copy of the whole table, almost doubling the storage and the
+write load.</li>
+<li>For a very large table that is only appended in time order, a BRIN
+index is also effective (much smaller than a B-tree):
+<code>CREATE INDEX data_timestamp_brin ON data USING brin (timestamp);</code></li>
+</ul>
+<h3 id="mysql-innodb">MySQL (InnoDB)</h3>
+<p>InnoDB tables are stored in the order of the primary key (the primary
+key is the index of the table body itself). Therefore, making the
+primary key <code>(channel, timestamp)</code> is the most effective. The
+data of each channel is stored contiguously in time order, so reads
+become fast without creating another index.</p>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- specify at table creation</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="kw">data</span> (</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">timestamp</span> <span class="dt">DOUBLE</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    channel <span class="dt">VARCHAR</span>(<span class="dv">100</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">value</span> <span class="dt">DOUBLE</span>,</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (channel, <span class="dt">timestamp</span>)</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="co">-- change the primary key of an existing table (the whole table is rebuilt, which takes time for large tables)</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> <span class="kw">data</span> <span class="kw">DROP</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>, <span class="kw">ADD</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (channel, <span class="dt">timestamp</span>);</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a><span class="kw">ANALYZE</span> <span class="kw">TABLE</span> <span class="kw">data</span>;</span></code></pre></div>
+<p>If the primary key cannot be changed in an existing system, add a
+separate index:</p>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> data_channel_timestamp <span class="kw">ON</span> <span class="kw">data</span> (channel, <span class="dt">timestamp</span>);</span></code></pre></div>
+<p>In this case, after the rows are selected by the index, the table
+body is looked up row by row to read <code>value</code>, so it is not as
+fast as changing the primary key.</p>
+<h3 id="sqlite">SQLite</h3>
+<p>Indexes work in SQLite the same way as in the other databases.</p>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> data_channel_timestamp <span class="kw">ON</span> <span class="kw">data</span> (channel, <span class="dt">timestamp</span>);</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ANALYZE</span>;</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>PRAGMA journal_mode<span class="op">=</span>WAL;</span></code></pre></div>
+<ul>
+<li>With <code>PRAGMA journal_mode=WAL</code>, reads no longer wait
+during writes. The setting is stored in the file, so running it once is
+enough. It cannot be used for files on network file systems (NFS,
+etc.).</li>
+</ul>
+<h3 id="getting-the-channel-list">Getting the Channel List</h3>
+<p><code>SELECT DISTINCT channel FROM data</code> reads all rows as is,
+and becomes slow for large tables.</p>
+<ul>
+<li>MySQL and SQLite skip through an index starting with
+<code>channel</code>, if one exists, and process it quickly.</li>
+<li>PostgreSQL does not skip, so do the same with a recursive
+query:</li>
+</ul>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">WITH</span> RECURSIVE t(channel) <span class="kw">AS</span> (</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span> <span class="fu">MIN</span>(channel) <span class="kw">FROM</span> <span class="kw">data</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNION</span> <span class="kw">ALL</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span> (<span class="kw">SELECT</span> <span class="fu">MIN</span>(channel) <span class="kw">FROM</span> <span class="kw">data</span> <span class="kw">WHERE</span> channel <span class="op">&gt;</span> t.channel) <span class="kw">FROM</span> t <span class="kw">WHERE</span> t.channel <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> channel <span class="kw">FROM</span> t <span class="kw">WHERE</span> channel <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</span></code></pre></div>
+<p>In SlowDash, such a query can be given in <code>tags: sql:</code> of
+<code>time_series</code> (see <a href="DataBinding.html">Data
+Binding</a>).</p>
+<h2 id="measuring-query-performance">Measuring Query Performance</h2>
+<h3 id="checking-the-execution-plan">Checking the Execution Plan</h3>
+<p>Adding <code>EXPLAIN</code> before a query shows whether indexes are
+used.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Command</th>
+<th>Reading all rows (slow)</th>
+<th>Using an index</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>PostgreSQL</td>
+<td><code>EXPLAIN ANALYZE SELECT ...;</code></td>
+<td><code>Seq Scan</code></td>
+<td><code>Index Scan</code>, <code>Index Only Scan</code>,
+<code>Bitmap Index Scan</code></td>
+</tr>
+<tr class="even">
+<td>MySQL</td>
+<td><code>EXPLAIN ANALYZE SELECT ...;</code></td>
+<td><code>Table scan</code></td>
+<td><code>Index range scan</code>, <code>Index lookup</code></td>
+</tr>
+<tr class="odd">
+<td>SQLite</td>
+<td><code>EXPLAIN QUERY PLAN SELECT ...;</code></td>
+<td><code>SCAN data</code></td>
+<td><code>SEARCH data USING INDEX ...</code></td>
+</tr>
+</tbody>
+</table>
+<p>Example: adding an index on <code>(channel, timestamp)</code> to an
+SQLite table of 20 channels × 20,000 points changes the plan as
+follows:</p>
+<pre><code>Without index: SCAN data, USE TEMP B-TREE FOR DISTINCT             (DISTINCT: 20 ms)
+With index:    SCAN data USING COVERING INDEX data_channel_timestamp (DISTINCT: less than 0.1 ms)</code></pre>
+<ul>
+<li><code>EXPLAIN ANALYZE</code> actually executes the query to measure
+the time (an <code>INSERT</code> or <code>DELETE</code> actually
+modifies the data). <code>EXPLAIN</code> alone does not execute it.
+MySQL <code>EXPLAIN ANALYZE</code> requires version 8.0.18 or
+later.</li>
+<li>From the second run on, the data is cached in memory and the query
+becomes faster, so run it several times to compare. In PostgreSQL,
+<code>EXPLAIN (ANALYZE, BUFFERS)</code> also shows the amount of data
+read from disk.</li>
+<li>If the statistics are outdated, an index might not be used even if
+it exists. Run <code>ANALYZE</code> (<code>ANALYZE TABLE</code> in
+MySQL) after adding a large amount of data or creating an index.</li>
+</ul>
+<h3 id="finding-the-sql-issued-by-slowdash">Finding the SQL Issued by
+SlowDash</h3>
+<p>Starting SlowDash with <code>--logging=debug</code> prints the
+executed SQL to the log. Running it with <code>EXPLAIN ANALYZE</code>
+shows where it is slow.</p>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash --port=18881 --logging=debug</span></span></code></pre></div>
+<h3 id="logging-slow-queries">Logging Slow Queries</h3>
+<p>Queries that take longer than a specified time can be recorded in the
+server log:</p>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- PostgreSQL: log queries taking 1 second or longer</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">SYSTEM</span> <span class="kw">SET</span> log_min_duration_statement <span class="op">=</span> <span class="st">&#39;1s&#39;</span>;</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> pg_reload_conf();</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- MySQL: log queries taking 1 second or longer (check the log file location with SELECT @@slow_query_log_file;)</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span> <span class="kw">GLOBAL</span> slow_query_log <span class="op">=</span> <span class="kw">ON</span>;</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span> <span class="kw">GLOBAL</span> long_query_time <span class="op">=</span> <span class="dv">1</span>;</span></code></pre></div>
+<h3 id="table-size">Table Size</h3>
+<div class="sourceCode" id="cb31"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- PostgreSQL (in psql, \dt+ and \di+ also show sizes)</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> pg_size_pretty(pg_total_relation_size(<span class="st">&#39;data&#39;</span>));</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- MySQL</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> table_name, data_length, index_length <span class="kw">FROM</span> information_schema.<span class="kw">tables</span> <span class="kw">WHERE</span> table_schema <span class="op">=</span> <span class="kw">DATABASE</span>();</span></code></pre></div>
+<p>For SQLite, the file size is the database size. In all databases,
+deleting data alone does not make the files smaller. To release the
+space, run <code>VACUUM FULL</code> in PostgreSQL,
+<code>OPTIMIZE TABLE</code> in MySQL, or <code>VACUUM</code> in SQLite
+(the table is locked while running).</p>
+<h2 id="large-data-partitioning-postgresql-mysql">Large Data:
+Partitioning (PostgreSQL / MySQL)</h2>
+<p>Tables of continuous measurements only grow, and after years of
+accumulation the indexes become large, making both reads and writes
+slower. Partitioning stores a table split into smaller tables
+(partitions) by time range (e.g., one month). Reads and writes are done
+on a single table as before.</p>
+<ul>
+<li>Queries with a time range read only the relevant partitions
+(partition pruning; can be checked with <code>EXPLAIN</code>).</li>
+<li>Indexes are also split by partition. The index of the latest
+partition, where writes take place, stays small, so the recording speed
+hardly degrades as the data grows.</li>
+<li>Past partitions do not change, so they need to be backed up only
+once. In PostgreSQL, past partitions can also be moved to a large,
+slower disk
+(<code>ALTER TABLE data_2024_01 SET TABLESPACE archive;</code>).</li>
+<li>As a rule of thumb, consider partitioning when a table exceeds tens
+of GB or hundreds of millions of rows. Too many partitions (thousands or
+more) make query planning slow instead.</li>
+<li>Primary keys and unique keys must include the partitioning column
+(the time column). <code>(channel, timestamp)</code> can be used as
+is.</li>
+</ul>
+<h3 id="postgresql-1">PostgreSQL</h3>
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="kw">data</span> (</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">timestamp</span> TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    channel <span class="dt">VARCHAR</span>(<span class="dv">100</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">value</span> <span class="dt">DOUBLE</span> <span class="dt">PRECISION</span>,</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (channel, <span class="dt">timestamp</span>)</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>) <span class="kw">PARTITION</span> <span class="kw">BY</span> <span class="kw">RANGE</span> (<span class="dt">timestamp</span>);</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a><span class="co">-- create a partition (the primary key and indexes of the parent table are created automatically)</span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> data_2026_11 <span class="kw">PARTITION</span> <span class="kw">OF</span> <span class="kw">data</span> <span class="cf">FOR</span> <span class="kw">VALUES</span> <span class="kw">FROM</span> (<span class="st">&#39;2026-11-01 00:00+00&#39;</span>) <span class="kw">TO</span> (<span class="st">&#39;2026-12-01 00:00+00&#39;</span>);</span></code></pre></div>
+<ul>
+<li>An <code>INSERT</code> of data with no matching partition results in
+an error. To avoid stopping the measurement, create partitions in
+advance (e.g., periodically with cron).</li>
+<li>pg_partman is an extension that automates partition creation. With
+TimescaleDB, an extension for time-series data, partitioning (chunks)
+and compression are done automatically, and the tables are read and
+written with ordinary SQL.</li>
+<li><code>CREATE INDEX CONCURRENTLY</code> cannot be used on the parent
+table.</li>
+</ul>
+<h3 id="mysql">MySQL</h3>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="kw">data</span> (</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">timestamp</span> DATETIME(<span class="dv">6</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,   <span class="co">-- assuming writes in UTC</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    channel <span class="dt">VARCHAR</span>(<span class="dv">100</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">value</span> <span class="dt">DOUBLE</span>,</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (channel, <span class="dt">timestamp</span>)</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="kw">PARTITION</span> <span class="kw">BY</span> <span class="kw">RANGE</span> <span class="kw">COLUMNS</span> (<span class="dt">timestamp</span>) (</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PARTITION</span> p2026_11 <span class="kw">VALUES</span> <span class="kw">LESS</span> <span class="kw">THAN</span> (<span class="st">&#39;2026-12-01&#39;</span>),</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PARTITION</span> pmax <span class="kw">VALUES</span> <span class="kw">LESS</span> <span class="kw">THAN</span> (<span class="kw">MAXVALUE</span>)</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a><span class="co">-- add a new partition (split pmax)</span></span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> <span class="kw">data</span> REORGANIZE <span class="kw">PARTITION</span> pmax <span class="kw">INTO</span> (</span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PARTITION</span> p2026_12 <span class="kw">VALUES</span> <span class="kw">LESS</span> <span class="kw">THAN</span> (<span class="st">&#39;2027-01-01&#39;</span>),</span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PARTITION</span> pmax <span class="kw">VALUES</span> <span class="kw">LESS</span> <span class="kw">THAN</span> (<span class="kw">MAXVALUE</span>)</span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<ul>
+<li>The column types usable for partitioning are restricted.
+<code>DATETIME</code> and integer types can be used, but
+<code>DOUBLE</code> cannot (use <code>BIGINT</code> when recording in
+UNIX time). For <code>TIMESTAMP</code>, use
+<code>PARTITION BY RANGE (UNIX_TIMESTAMP(timestamp))</code>.</li>
+<li>With a <code>MAXVALUE</code> partition, an <code>INSERT</code> does
+not fail even if adding new partitions is delayed.</li>
+</ul>
+<h2 id="data-replication-postgresql-mysql">Data Replication (PostgreSQL
+/ MySQL)</h2>
+<p>Replication continuously copies writes to a database to another
+server (a mirror) in almost real time. In general database systems, the
+main purpose is to take over on server failure (availability), but this
+is not very important in typical SlowDash use (when the database server
+goes down, usually a bigger problem is happening anyway). Instead, it is
+used for the following purposes:</p>
+<ul>
+<li><strong>Protection against data loss</strong>: always keep the
+recorded data on another server as well.</li>
+<li><strong>Access from remote sites</strong>: place a mirror at another
+location, such as the home lab, and let remote users (and their
+SlowDash) connect to the mirror. This is faster, as the network link to
+the experiment site is not used for every access.</li>
+<li><strong>Security</strong>: limit external access to the mirror, and
+do not expose the recording server to the outside. Replicate only the
+necessary data tables to the mirror.</li>
+</ul>
+<h3 id="what-is-protected-as-a-backup">What Is Protected as a
+“Backup”</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>How data is lost</th>
+<th>Protected by replication?</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Disk failure, loss of the server, fire, disaster</td>
+<td>Yes (a copy exists at another location)</td>
+</tr>
+<tr class="even">
+<td>Mistaken <code>DELETE</code> or <code>DROP</code>, overwrites by
+program bugs</td>
+<td>Usually not (reflected on the mirror too). However, if only appends
+(<code>INSERT</code>) are replicated with PostgreSQL logical
+replication, deletions are not reflected on the mirror</td>
+</tr>
+<tr class="odd">
+<td>Restoring the state at a past point in time</td>
+<td>Not possible. If needed, combine with periodic dumps
+(<code>pg_dump</code>, <code>mysqldump</code>) or file-system
+snapshots</td>
+</tr>
+</tbody>
+</table>
+<p>Data of continuous measurements is usually only appended, so a
+“remote mirror replicating only appends” is a practical backup against
+data loss.</p>
+<h3 id="methods">Methods</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>PostgreSQL logical replication</th>
+<th>PostgreSQL streaming replication</th>
+<th>MySQL replication</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Unit of replication</td>
+<td>Specified tables</td>
+<td>Whole server (all databases, including user information)</td>
+<td>Whole server (can be filtered on the mirror side)</td>
+</tr>
+<tr class="even">
+<td>Replicated operations</td>
+<td>Selectable (e.g., appends only)</td>
+<td>All</td>
+<td>All</td>
+</tr>
+<tr class="odd">
+<td>Mirror side</td>
+<td>Ordinary database (can have its own tables and indexes)</td>
+<td>Read-only</td>
+<td>Ordinary database (usually set to read-only)</td>
+</tr>
+<tr class="even">
+<td>Versions of recording side and mirror</td>
+<td>Can differ</td>
+<td>Same major version required</td>
+<td>Mirror must be the same or newer version</td>
+</tr>
+<tr class="odd">
+<td>Suitable for</td>
+<td>Remote mirror, external exposure</td>
+<td>Standby within the same site</td>
+<td>Both</td>
+</tr>
+</tbody>
+</table>
+<h3 id="common-notes">Common Notes</h3>
+<ul>
+<li>Asynchronous replication (the default) is sufficient. The mirror
+follows with a delay of a few seconds. With synchronous replication,
+writes on the recording side also stop when the mirror or the network
+link goes down.</li>
+<li>In all methods, the mirror connects to the recording server. If you
+do not want to expose the recording side, open an SSH tunnel from the
+recording side (<code>ssh -N -R 15432:localhost:5432 MIRROR_HOST</code>
+makes <code>localhost:15432</code> on the mirror connect to PostgreSQL
+on the recording side), or use a VPN. Keep the privileges of the
+replication user minimal, and allow only the mirror’s IP address in the
+firewall.</li>
+<li>While the mirror or the network link is down, unsent update logs
+accumulate on the recording side, consuming disk space. The mirror
+catches up automatically when resumed, but do not leave it stopped for a
+long time.</li>
+<li>Changes to table definitions (<code>ALTER TABLE</code>, etc.) are
+not replicated by logical replication. Apply the same changes on the
+mirror side.</li>
+</ul>
+<h3 id="postgresql-logical-replication-remote-mirror">PostgreSQL:
+Logical Replication (Remote Mirror)</h3>
+<div class="sourceCode" id="cb34"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- recording side (set wal_level = logical in postgresql.conf and restart)</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">ROLE</span> mirror <span class="kw">WITH</span> REPLICATION LOGIN <span class="kw">PASSWORD</span> <span class="st">&#39;...&#39;</span>;</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="kw">GRANT</span> <span class="kw">SELECT</span> <span class="kw">ON</span> <span class="kw">data</span> <span class="kw">TO</span> mirror;</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> PUBLICATION data_pub <span class="cf">FOR</span> <span class="kw">TABLE</span> <span class="kw">data</span> <span class="kw">WITH</span> (publish <span class="op">=</span> <span class="st">&#39;insert&#39;</span>);   <span class="co">-- replicate appends only</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- mirror side (create a table with the same definition first)</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> SUBSCRIPTION data_sub</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>    CONNECTION <span class="st">&#39;host=RECORDING_HOST port=5432 dbname=DB user=mirror password=...&#39;</span></span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>    PUBLICATION data_pub;</span></code></pre></div>
+<ul>
+<li>First, all existing data is copied; after that, appends are
+reflected continuously.</li>
+<li>In <code>pg_hba.conf</code> on the recording side, allow ordinary
+connections to the database from the mirror’s IP address
+(<code>replication</code> is not used for logical replication
+connections).</li>
+<li>Checking the status:
+<code>SELECT * FROM pg_stat_subscription;</code> on the mirror side, and
+<code>SELECT slot_name, active FROM pg_replication_slots;</code> on the
+recording side.</li>
+<li>On the recording side, a replication slot for the mirror is created,
+and update logs are kept until the mirror receives them. To avoid
+running out of disk space, set an upper limit with
+<code>max_slot_wal_keep_size</code>.</li>
+<li>If the table on the recording side is partitioned,
+<code>WITH (publish = 'insert', publish_via_partition_root = true)</code>
+allows the mirror side to receive the data in a single ordinary table
+(whether to partition on the mirror side can be decided independently of
+the recording side).</li>
+</ul>
+<h3
+id="postgresql-streaming-replication-standby-within-the-same-site">PostgreSQL:
+Streaming Replication (Standby within the Same Site)</h3>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># run on the mirror side: copy all data of the recording side and configure as a mirror (-R)</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pg_basebackup -h RECORDING_HOST -U replicator -D /var/lib/postgresql/data -R -P</span></span></code></pre></div>
+<ul>
+<li>Beforehand, create a replication user on the recording side
+(<code>CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD '...';</code>),
+and allow <code>replication</code> connections from the mirror in
+<code>pg_hba.conf</code>.</li>
+<li>Checking the status:
+<code>SELECT client_addr, state, replay_lag FROM pg_stat_replication;</code>
+on the recording side, and <code>SELECT pg_is_in_recovery();</code> on
+the mirror side (<code>true</code> for a mirror).</li>
+</ul>
+<h3 id="mysql-1">MySQL</h3>
+<div class="sourceCode" id="cb36"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- run on the recording side: create a replication user</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="fu">USER</span> <span class="st">&#39;replicator&#39;</span>@<span class="st">&#39;%&#39;</span> <span class="kw">IDENTIFIED</span> <span class="kw">BY</span> <span class="st">&#39;...&#39;</span>;</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="kw">GRANT</span> REPLICATION SLAVE <span class="kw">ON</span> <span class="op">*</span>.<span class="op">*</span> <span class="kw">TO</span> <span class="st">&#39;replicator&#39;</span>@<span class="st">&#39;%&#39;</span>;</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- run on the mirror side (set gtid_mode=ON and enforce_gtid_consistency=ON on both the recording side and the mirror)</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a><span class="kw">CHANGE</span> REPLICATION <span class="kw">FILTER</span> REPLICATE_DO_TABLE <span class="op">=</span> (DB.<span class="kw">data</span>);   <span class="co">-- to apply only the data table</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a><span class="kw">CHANGE</span> REPLICATION <span class="kw">SOURCE</span> <span class="kw">TO</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>    SOURCE_HOST<span class="op">=</span><span class="st">&#39;RECORDING_HOST&#39;</span>, SOURCE_USER<span class="op">=</span><span class="st">&#39;replicator&#39;</span>, SOURCE_PASSWORD<span class="op">=</span><span class="st">&#39;...&#39;</span>,</span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>    SOURCE_AUTO_POSITION<span class="op">=</span><span class="dv">1</span>, GET_SOURCE_PUBLIC_KEY<span class="op">=</span><span class="dv">1</span>;</span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a><span class="kw">START</span> REPLICA;</span></code></pre></div>
+<ul>
+<li><code>CHANGE REPLICATION SOURCE TO</code> and
+<code>START REPLICA</code> are the syntax for version 8.0.23 and later
+(before that, <code>CHANGE MASTER TO</code> and
+<code>START SLAVE</code>). <code>GET_SOURCE_PUBLIC_KEY=1</code> is
+required to connect with the default authentication method of MySQL 8
+without SSL.</li>
+<li>Set a different <code>server_id</code> on the recording side and on
+the mirror. Copy the existing data to the mirror beforehand with
+<code>mysqldump</code> or the clone plugin.</li>
+<li>Table filtering (<code>REPLICATE_DO_TABLE</code>) is done on the
+mirror side. The update logs of all tables are sent from the recording
+side, so this is not suitable when you want to limit the data leaving
+the site itself. Also, all operations, including deletions, are
+applied.</li>
+<li>Checking the status: <code>SHOW REPLICA STATUS\G</code> on the
+mirror side. <code>Replica_IO_Running</code> and
+<code>Replica_SQL_Running</code> should be <code>Yes</code>, and
+<code>Seconds_Behind_Source</code> shows the delay in seconds.</li>
+<li>Set <code>super_read_only=ON</code> on the mirror to prevent
+accidental writes.</li>
+<li>The retention period of the update logs (binlog) on the recording
+side is <code>binlog_expire_logs_seconds</code> (30 days by default). If
+the mirror is stopped longer than this, it has to be copied again from
+scratch.</li>
+</ul>
+<h1 id="docker-1">Docker</h1>
+<p>SlowDash can be used without Docker. With Docker, SlowDash and
+databases can run without preparing a Python environment on the
+host.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Image</td>
+<td>A bundle of the runtime environment (OS files, libraries, programs).
+E.g., <code>slowproj/slowdash</code>, <code>postgres:16</code>. The part
+after <code>:</code> is the tag (version)</td>
+</tr>
+<tr class="even">
+<td>Container</td>
+<td>A running instance started from an image</td>
+</tr>
+<tr class="odd">
+<td>Volume / bind mount</td>
+<td>A mechanism to keep data outside the container. It remains after the
+container is removed</td>
+</tr>
+<tr class="even">
+<td>Port publishing</td>
+<td>Forwarding a host port to a container port</td>
+</tr>
+</tbody>
+</table>
+<h2 id="docker-run">docker run</h2>
+<div class="sourceCode" id="cb37"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker run --rm -p 18881:18881 -v $(pwd):/project slowproj/slowdash</span></span></code></pre></div>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Option</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>-p HOST:CONTAINER</code></td>
+<td>Forward a host port to a container port</td>
+</tr>
+<tr class="even">
+<td><code>-v HOST_PATH:CONTAINER_PATH</code></td>
+<td>Mount a host directory into the container (absolute path on the host
+side)</td>
+</tr>
+<tr class="odd">
+<td><code>-v NAME:CONTAINER_PATH</code></td>
+<td>Mount a named volume (data stored in an area managed by Docker)</td>
+</tr>
+<tr class="even">
+<td><code>-e NAME=VALUE</code></td>
+<td>Set an environment variable</td>
+</tr>
+<tr class="odd">
+<td><code>--rm</code></td>
+<td>Remove the container automatically when stopped</td>
+</tr>
+<tr class="even">
+<td><code>-d</code></td>
+<td>Run in the background</td>
+</tr>
+<tr class="odd">
+<td><code>--name NAME</code></td>
+<td>Name the container</td>
+</tr>
+<tr class="even">
+<td><code>-it</code></td>
+<td>Run interactively (when using a shell)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="frequently-used-commands">Frequently Used Commands</h2>
+<div class="sourceCode" id="cb38"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker ps                       # list running containers (-a to include stopped ones)</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker logs -f CONTAINER        # show logs (-f to follow)</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker exec -it CONTAINER bash  # start a shell in a running container</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stop CONTAINER</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker rm CONTAINER</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker images                   # list local images</span></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker pull IMAGE:TAG           # get or update an image</span></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker rmi IMAGE                # remove an image</span></span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker system prune             # remove stopped containers, unused images, etc. at once</span></span></code></pre></div>
+<h2 id="common-pitfalls-1">Common Pitfalls</h2>
+<ul>
+<li>On Linux, the <code>docker</code> command requires root privilege.
+Either add <code>sudo</code> every time or add the user to the
+<code>docker</code> group (<code>sudo usermod -aG docker $USER</code>,
+then log in again). Note that users in the <code>docker</code> group
+effectively have root privilege.</li>
+<li><code>localhost</code> inside a container refers to the container
+itself. To connect to a database or other services running on the host,
+use <code>host.docker.internal</code> (on Linux,
+<code>--add-host=host.docker.internal:host-gateway</code> is
+required).</li>
+<li>Ports published with <code>-p</code> bypass the ufw firewall rules
+and are reachable from outside (see <a href="#docker-and-ufw">Docker and
+ufw</a>).</li>
+<li>If the process in a container runs as root, files created in a
+bind-mounted directory are owned by root on the host (e.g., when a
+database data directory is bind-mounted).
+<ul>
+<li>The SlowDash container checks the owner (UID / GID) of the mounted
+<code>/project</code> directory at startup, and runs SlowDash as a user
+with the same IDs. Therefore, files created by SlowDash are owned by the
+owner of the project directory. The IDs can also be given explicitly
+with the environment variables <code>USER_ID</code> and
+<code>GROUP_ID</code>.</li>
+<li>However, a shell entered with <code>docker exec</code> runs as root,
+so files created there are owned by root. To run as the same user as
+SlowDash, use
+<code>docker exec -it -u slowuser CONTAINER bash</code>.</li>
+</ul></li>
+</ul>
+<h2 id="updating-images-and-removing-old-ones">Updating Images and
+Removing Old Ones</h2>
+<p>Tags such as <code>:latest</code> are not updated automatically. To
+use a new version, pull the image with <code>docker pull</code>
+(<code>docker compose pull</code> in Compose), and then restart the
+container.</p>
+<p><code>docker pull</code> does not remove old images. The new image
+takes over the tag, and the old image remains untagged
+(<code>&lt;none&gt;</code>), so repeated updates fill up the disk.</p>
+<div class="sourceCode" id="cb39"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker images                   # list images; those tagged &lt;none&gt; are old images</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker system df                # disk usage of images, containers, and volumes</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker image prune              # remove all untagged images</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker image prune -a           # remove all images not used by containers (they will be pulled again when needed)</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker rmi IMAGE_ID             # remove individually (IMAGE_ID is shown by docker images)</span></span></code></pre></div>
+<p>Images used by stopped containers cannot be removed. Check with
+<code>docker ps -a</code>, remove unnecessary containers with
+<code>docker rm</code>, and then remove the images.</p>
+<h1 id="docker-compose">Docker Compose</h1>
+<p>A mechanism to describe a configuration of multiple containers (e.g.,
+SlowDash and a database) in <code>docker-compose.yaml</code>, and to
+start and stop them together.</p>
+<h2 id="docker-compose.yaml">docker-compose.yaml</h2>
+<div class="sourceCode" id="cb40"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">postgres</span><span class="kw">:</span><span class="co">                              # service name (other containers can access it by this name)</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> postgres:16</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> POSTGRES_USER=slowdash</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> POSTGRES_PASSWORD=slowdash</span></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> postgres-data:/var/lib/postgresql/data</span><span class="co">   # named volume</span></span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">healthcheck</span><span class="kw">:</span><span class="co">                         # how to determine that startup is complete</span></span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">test</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;CMD-SHELL&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;pg_isready -U slowdash&quot;</span><span class="kw">]</span></span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 10s</span></span>
+<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> unless-stopped</span><span class="co">              # restart automatically on failure or host reboot</span></span>
+<span id="cb40-14"><a href="#cb40-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-15"><a href="#cb40-15" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
+<span id="cb40-16"><a href="#cb40-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowdash</span></span>
+<span id="cb40-17"><a href="#cb40-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb40-18"><a href="#cb40-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881:18881&quot;</span></span>
+<span id="cb40-19"><a href="#cb40-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb40-20"><a href="#cb40-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> ./slowdash.d:/project</span><span class="co">            # bind mount (relative paths are from the location of docker-compose.yaml)</span></span>
+<span id="cb40-21"><a href="#cb40-21" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb40-22"><a href="#cb40-22" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> DB_URL=postgresql://slowdash:${DB_PASSWORD:-slowdash}@postgres:5432/slowdash</span></span>
+<span id="cb40-23"><a href="#cb40-23" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">depends_on</span><span class="kw">:</span></span>
+<span id="cb40-24"><a href="#cb40-24" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">postgres</span><span class="kw">:</span></span>
+<span id="cb40-25"><a href="#cb40-25" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> service_healthy</span><span class="co">       # start after the postgres healthcheck passes</span></span>
+<span id="cb40-26"><a href="#cb40-26" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">restart</span><span class="kw">:</span><span class="at"> unless-stopped</span></span>
+<span id="cb40-27"><a href="#cb40-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-28"><a href="#cb40-28" aria-hidden="true" tabindex="-1"></a><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb40-29"><a href="#cb40-29" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">postgres-data</span><span class="kw">:</span></span></code></pre></div>
+<p>Key points:</p>
+<ul>
+<li>Services in the same <code>docker-compose.yaml</code> can
+communicate using service names as host names
+(<code>postgres:5432</code> in the example above). <code>ports</code> is
+needed only for connections from the host.</li>
+<li><code>${VAR}</code> and <code>${VAR:-DEFAULT}</code> are expanded
+from shell environment variables or from the <code>.env</code> file in
+the same directory. It is common to write passwords etc. in
+<code>.env</code> and not to put <code>.env</code> in git.</li>
+<li><code>depends_on</code> controls only the startup order. To wait
+until the other service is ready, combine
+<code>condition: service_healthy</code> with
+<code>healthcheck</code>.</li>
+</ul>
+<h2 id="frequently-used-commands-1">Frequently Used Commands</h2>
+<p>Run in the directory containing <code>docker-compose.yaml</code>:</p>
+<div class="sourceCode" id="cb41"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up               # start (Ctrl-C to stop)</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up -d            # start in the background</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose ps               # show status</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose logs -f SERVICE  # show logs</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose exec SERVICE bash</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose restart SERVICE</span></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down             # stop and remove containers (named volumes remain)</span></span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose down -v          # also remove named volumes (database data is lost)</span></span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose pull             # update images (apply with up; remove old images with docker image prune)</span></span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose up --build       # rebuild images specified by build: and start</span></span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker compose config           # show the configuration after variable expansion (useful for checking)</span></span></code></pre></div>
+<p><code>docker-compose</code> (with a hyphen) is the old command, which
+is no longer supported. Use <code>docker compose</code> (with a space)
+now.</p>
+<h1 id="docker-swarm">Docker Swarm</h1>
+<p>A mechanism to deploy and manage containers across multiple hosts. It
+is included in Docker and uses files of almost the same format as
+<code>docker-compose.yaml</code>. For running on a single host, Docker
+Compose is sufficient. Swarm is useful, for example, when you want
+to:</p>
+<ul>
+<li>deploy SlowDash, databases, device readers, etc. on multiple hosts
+and manage them with a single configuration file</li>
+<li>access services with the same port from any host</li>
+<li>manage passwords etc. as secrets</li>
+</ul>
+<h2 id="setting-up-a-cluster">Setting Up a Cluster</h2>
+<div class="sourceCode" id="cb42"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>manager$ docker swarm init --advertise-addr MANAGER_IP   <span class="co"># create a cluster on the manager node</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>manager$ docker swarm join-token worker                  <span class="co"># show the command for adding workers</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>worker$  docker swarm join --token TOKEN MANAGER_IP:2377 <span class="co"># run on worker nodes</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>manager$ docker node ls                                  <span class="co"># list nodes</span></span></code></pre></div>
+<p>TCP 2377, TCP/UDP 7946, and UDP 4789 must be open between the
+nodes.</p>
+<h2 id="deploying-a-stack">Deploying a Stack</h2>
+<p>In Swarm, a set of services defined in
+<code>docker-compose.yaml</code> is deployed as a “stack”. Run the
+commands on a manager node.</p>
+<div class="sourceCode" id="cb43"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stack deploy -c docker-compose.yaml STACK      # deploy (the same command re-applies changes)</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stack ls</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stack services STACK                           # services and their replica counts</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stack ps STACK                                 # which node each container runs on</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker service logs -f STACK_SERVICE                  # service names are STACK-NAME_SERVICE-NAME</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker service update --force STACK_SERVICE           # restart a service</span></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a><span class="kw">$ docker stack rm STACK                                 # remove the stack</span></span></code></pre></div>
+<h2 id="differences-from-compose">Differences from Compose</h2>
+<div class="sourceCode" id="cb44"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">slowdash</span><span class="kw">:</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> slowproj/slowdash</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;18881:18881&quot;</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> /srv/slowdash/project:/project</span></span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">deploy</span><span class="kw">:</span><span class="co">                              # effective only in Swarm</span></span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">replicas</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span></span>
+<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">placement</span><span class="kw">:</span></span>
+<span id="cb44-11"><a href="#cb44-11" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">constraints</span><span class="kw">:</span></span>
+<span id="cb44-12"><a href="#cb44-12" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> node.hostname == daq-server</span><span class="co">  # run on this node</span></span></code></pre></div>
+<ul>
+<li>The <code>deploy:</code> section becomes effective (number of
+replicas, placement nodes, restart policy, etc.).</li>
+<li><code>build:</code> is ignored. Images must be available from a
+registry or exist on each node beforehand.</li>
+<li><code>depends_on</code> is ignored. The startup order is not
+guaranteed, so each service must retry until the services it connects to
+are ready (by default, Swarm restarts exited containers
+automatically).</li>
+<li>The host-side path of a bind mount must exist on the node where the
+container actually runs. For services using data or project directories,
+pinning the node with <code>placement</code> is the simplest.</li>
+<li>Ports published with <code>ports</code> are accessible via the IP of
+any node in the cluster (routing mesh).</li>
+<li>The <code>.env</code> file is not read automatically. If variable
+expansion is needed, load it in the shell beforehand
+(<code>set -a; source .env; set +a</code>).</li>
+<li>Stateful services such as databases and SlowDash are usually set to
+<code>replicas: 1</code>.</li>
+</ul>
+<h1 id="references">References</h1>
+<ul>
+<li>YAML: <a href="https://yaml.org/">yaml.org</a></li>
+<li>venv: <a href="https://docs.python.org/3/library/venv.html">Python
+documentation</a></li>
+<li>pyenv: <a href="https://github.com/pyenv/pyenv">GitHub</a></li>
+<li>PostgreSQL: <a
+href="https://www.postgresql.org/docs/">Documentation</a></li>
+<li>MySQL: <a href="https://dev.mysql.com/doc/refman/8.4/en/">Reference
+Manual</a></li>
+<li>SQLite: <a
+href="https://www.sqlite.org/docs.html">Documentation</a></li>
+<li>Docker / Docker Compose / Docker Swarm: <a
+href="https://docs.docker.com/">Docker Docs</a></li>
+</ul>
 
 
 </body>
