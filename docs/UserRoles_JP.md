@@ -6,20 +6,29 @@
 - Role による権限管理(Authorization)は意図しない誤操作を防ぐためのもの．
 - 禁止されなければ許可．
 
-## 認証
+## 認証 (Authentication)
 - まずは Slowlette 組み込みの基本認証（＋プロキシによる HTTPS）で user を取得
 - 本番ではリバースプロキシから取得できるように
   - Nginx 経由で外部認証に接続できる（OAuth2, SSO, etc.）
   - 特定端末向けクライアント証明書もできる (mTLS)
   - ユーザー名は X-Remote-User ヘッダで取得（クライアントの偽装に注意）
+
 - 認証を有効にしていない場合の user は `nobody`
 
-## 権限
+- さらにその外側を VPN で囲んでも良い
+
+- SlowMesh:
+  - SlowMQ を使う場合，
+    - 外部からは Slowlette (リバースプロキシ)を通らないと SlowMesh には到達できない
+    - さらに WebSocket だけを遮断すれば，SlowMQ だけが切られる（データストリーミングは SSE）
+  - NATS などの外部バックボーンを使う場合は，外部アクセスを閉じるか，そのシステムが認証をする
+
+## 権限 (Authorization)
 - user_name への user_role の割当は Slowdash 設定ファイル
   - user_name / user_role に特殊文字は受け入れない
   - user_name にも user_role にも階層構造はなし
   - user_role は先頭に `#` をつけて user_name と合わせ，user にする．
-    - 例： operator と admin の role を持った sanshiro は user: [ 'sanshiro', '#operator', '#admin' ]
+    - 例： operator と admin の role を持った sanshiro は `user = [ 'sanshiro', '#operator', '#admin' ]`
   - 将来拡張: role に包含構造をもたせられる．user 構築時点で展開しておく
     - 例： `"roles": [ { 'name': 'expert', 'includes': [ 'operator', 'analyzer' ] ]`
   - 許可は `allowed is None or set(user) & set(allowed)` 演算．
@@ -30,7 +39,7 @@
 
 ## 利用
 ### サーバー側
-- ユーザーレイアウト（slowdash/slowplot）では，それぞれの見せる・見せないを role で選択（表示のみ・直接取得は可能）
+- ユーザーレイアウト（slowdash/slowplot）一覧では，それぞれの見せる・見せないを role で選択（表示のみ・直接取得は可能）
 - スタートページも２種類用意？
 - コマンド実行では，role を確認（強制）
 - タスクコントロールは SlowdashProject.yaml で個別に実行権限を指定（強制）
@@ -51,8 +60,6 @@
 - HTML パネルは何もしない（HTMLを含むレイアウト自体を表示するかどうかでコントロール）
 
 ### Task 側
-- SlowMQ を使う場合，外部からは Slowlette (リバースプロキシ)を通らないと SlowMesh にはアクセスできない
-- NATS などの外部バックボーンを使う場合は，外部アクセスを閉じるか，そのシステムが認証をする
 - SlowMesh のヘッダに user 情報を付加（偽装可，一部は自己申告）
 - Task 内一律なら SlowdashProject.yaml から許可設定
 - ハンドラごとなら `@mesh.on('control.HV.>', allowed='#operator')`, `@mesh.export(allowed='...')`
