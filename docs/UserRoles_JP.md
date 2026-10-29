@@ -1,12 +1,14 @@
-# 認証権限管理
+# 認証と権限管理
 
-## Scope
-Role による権限管理(Authorization)は意図しない誤操作を防ぐためのもの．
-認証(Authentication)を通った場合には全ての操作ができると想定する．
+## 方針
+- 認証(Authentication)を通った場合には全ての操作ができると想定する．
+- セキュリティ機能（認証）は自作しない．
+- Role による権限管理(Authorization)は意図しない誤操作を防ぐためのもの．
+- 禁止されなければ許可．
 
 ## 認証
 - まずは Slowlette 組み込みの基本認証（＋プロキシによる HTTPS）で user を取得
-- 本番ではプロキシから取得できるように（セキュリティ周りを自作しない方針）
+- 本番ではリバースプロキシから取得できるように
   - Nginx 経由で外部認証に接続できる（OAuth2, SSO, etc.）
   - 特定端末向けクライアント証明書もできる (mTLS)
   - ユーザー名は X-Remote-User ヘッダで取得（クライアントの偽装に注意）
@@ -15,16 +17,16 @@ Role による権限管理(Authorization)は意図しない誤操作を防ぐた
 ## 権限
 - user_name への user_role の割当は Slowdash 設定ファイル
   - user_name / user_role に特殊文字は受け入れない
-  - user_name にも  role にも階層構造はなし
-  - user_role は先頭に `@` をつけて user_name と合わせ，user にする．
-    - 例： operator と admin の role を持った sanshiro は user: [ 'sanshiro', '@operator', '@admin' ]
+  - user_name にも user_role にも階層構造はなし
+  - user_role は先頭に `#` をつけて user_name と合わせ，user にする．
+    - 例： operator と admin の role を持った sanshiro は user: [ 'sanshiro', '#operator', '#admin' ]
   - 将来拡張: role に包含構造をもたせられる．user 構築時点で展開しておく
-    - 例： `"roles": [ { 'name': 'operator', 'includes': [ 'analyzer' ] ]`
-  - 許可は `allowed is None or set(user) & set(allowed)` 演算．「安全のための禁止を追加する」方針
+    - 例： `"roles": [ { 'name': 'expert', 'includes': [ 'operator', 'analyzer' ] ]`
+  - 許可は `allowed is None or set(user) & set(allowed)` 演算．
 - Slowlette ミドルウェアで slowlette.Request に user を追加
   - 全てのウェブリクエストで user 情報が使える
-- api/config のリプライにユーザー情報を含めてブラウザにも通知
-  - ブラウザ側も user_name / user_role がわかる（偽装可）
+- Web API `api/config` のリプライにユーザー情報を含めてブラウザにも通知
+  - ブラウザ側も user がわかる（偽装可）
 
 ## 利用
 ### サーバー側
@@ -38,8 +40,8 @@ Role による権限管理(Authorization)は意図しない誤操作を防ぐた
     - まずは一律の「作成許可」ロール（一律禁止，一律許可は利用者次第）
     - 将来的には:
       - Mesh への publish を許さない（LocalMesh に接続）にすれば，間違えてコマンドを送ることはない
-        - [ 'data.>' および  'alarm.>' ] への publish だけを許可とかもできるかも
-      - 解析サンドボックスを作成することも検討
+        - [ `data.>` および  `alarm.>` ] への publish だけを許可とかもできるかも
+      - 解析サンドボックスを作成することも検討（Jupyter コンテナとか．不用意なスクリプト実行からの保護．セキュリティ目的ではない）
 - ユーザー名は操作ログにも入る
 
 ### ブラウザ側
@@ -49,8 +51,10 @@ Role による権限管理(Authorization)は意図しない誤操作を防ぐた
 - HTML パネルは何もしない（HTMLを含むレイアウト自体を表示するかどうかでコントロール）
 
 ### Task 側
-- SlowMesh のヘッダに user 情報を付加（認証を通った後なら偽装可，一部は自己申告）
+- SlowMQ を使う場合，外部からは Slowlette (リバースプロキシ)を通らないと SlowMesh にはアクセスできない
+- NATS などの外部バックボーンを使う場合は，外部アクセスを閉じるか，そのシステムが認証をする
+- SlowMesh のヘッダに user 情報を付加（偽装可，一部は自己申告）
 - Task 内一律なら SlowdashProject.yaml から許可設定
-- ハンドラごとなら `@mesh.on('control.HV.>', allowed='@operator')`
+- ハンドラごとなら `@mesh.on('control.HV.>', allowed='#operator')`, `@mesh.export(allowed='...')`
 - 拒否に例外を投げれば SlowMesh がエラーレスポンスを返す
   
