@@ -32,12 +32,13 @@
   - user_name / user_role に特殊文字は受け入れない
   - user_name にも user_role にも階層構造はなし
   - user_role は先頭に `#` をつけて user_name と合わせ，user にする．
-    - 例： operator と admin の role を持った sanshiro は `user = [ 'sanshiro', '#operator', '#admin' ]`
+    - 例： operator と admin の role を持った sanshiro は `user = [ "sanshiro", "#operator", "#admin" ]`
   - 将来拡張: role に包含構造をもたせられる．user 構築時点で展開しておく
-    - 例： `"roles": [ { 'name': 'expert', 'includes': [ 'operator', 'analyzer' ] ]`
+    - 例： `"roles": [ { "name": "expert", "includes": [ "operator", "analyzer" ] ]`
   - 許可は `allowed is None or set(user) & set(allowed)` 演算．
 - Slowlette ミドルウェアで slowlette.Request に user を追加
   - 全てのウェブリクエストで user 情報が使える
+  - ウェブ操作により直接引き起こされる SlowMesh メッセージ（PubSub & RPC）にも user がつく
 - Web API `api/config` のリプライにユーザー情報を含めてブラウザにも通知
   - ブラウザ側も user がわかる（偽装可）
 
@@ -64,7 +65,10 @@
 - HTML パネルは何もしない（HTMLを含むレイアウト自体を表示するかどうかでコントロール）
 
 ### Task 側
-- SlowMesh のヘッダに user 情報を付加（偽装可，Task スクリプトからは自己申告）
+- SlowMesh のヘッダに user 情報を付加
+  - ウェブ操作から直接引き起こされるメッセージには自動付加
+  - SlowTask スクリプトからの publish は自己申告（偽装可）
+    - デフォルトで `user=[task_name, "@slowtask"]`
 - Task 内一律なら SlowdashProject.yaml から許可設定
 - ハンドラごとなら `@mesh.on('control.HV.>', allowed='#operator')`, `@mesh.export(allowed='...')`
 - 拒否に例外を投げれば SlowMesh がエラーレスポンスを返す
@@ -83,6 +87,7 @@
     - データベースも（必要なデータだけ）別にコピーしておく
     - 外部から操作が必要なら自分で ssh トンネルを掘る
 
+---
 ---
 
 ### 現時点の構成
