@@ -14,6 +14,11 @@ export class Layout {
         this.layoutDiv = $(div);
         this.PanelClassList = null;
         this.panels = [];
+        // grid-fit state: kept across reconfigure() / window resize until the page is reloaded
+        this.gridFit = {
+            reverted: false,      // true: show the configured grid as-is, no clamping
+            bannerClosed: false,  // true: the banner was dismissed with its "x"
+        };
     }
 
 
@@ -177,24 +182,13 @@ export class Layout {
         const maxFitCols = Math.max(1, Math.floor(layoutInnerWidth  / minPanelWidth));
         const maxFitRows = Math.max(1, Math.floor(layoutInnerHeight / minPanelHeight));
 
-        // resize to what fits.  When the window is large enough, effectiveCols /
-        // effectiveRows equal the configured values and nothing changes.
-        const effectiveCols = Math.min(configuredCols, maxFitCols);
-        const effectiveRows = Math.min(configuredRows, maxFitRows);
+        // resize to what fits, unless the user reverted to the configured grid from
+        // the banner.  When the window is large enough, effectiveCols / effectiveRows
+        // equal the configured values and nothing changes.
+        const effectiveCols = this.gridFit.reverted ? configuredCols : Math.min(configuredCols, maxFitCols);
+        const effectiveRows = this.gridFit.reverted ? configuredRows : Math.min(configuredRows, maxFitRows);
 
-        // ── Grid-too-small warning ────────────────────────────────────────────
-        // Remove any warning left from a previous _setupDimensions() call (the
-        // layout div may not have been emptied between resize events).
-        this.layoutDiv.find('.sd-grid-warning').remove();
-
-        if (effectiveCols < configuredCols || effectiveRows < configuredRows) {
-            // The warning is position: absolute so it overlays the top of the
-            // panel area without participating in the flex layout.  It therefore
-            // does not shift or resize any panel.
-            const msg = `Window too small for ${configuredCols}\u00d7${configuredRows} grid`
-                      + ` \u2014 showing ${effectiveCols}\u00d7${effectiveRows}`;
-            $('<div>').addClass('sd-grid-warning').text(msg).appendTo(this.layoutDiv);
-        }
+        this._buildGridBanner(configuredCols, configuredRows, effectiveCols, effectiveRows);
 
         // Panel dimensions are based on the effective (clamped) column / row count,
         // guaranteeing each panel is at least minPanelWidth × minPanelHeight.
@@ -218,6 +212,40 @@ export class Layout {
         // overflow — e.g. because more panels exist than effectiveCols × effectiveRows.
         this.layoutDiv.css({
             'height':   this.dimension.layoutHeight + 'px',
+        });
+    }
+
+
+    // Banner overlaid on the top of the panel area: amber while the grid is
+    // clamped to fit the window, green after the user reverted to the configured
+    // grid.  It is position: absolute so it does not shift or resize any panel.
+    _buildGridBanner(configuredCols, configuredRows, effectiveCols, effectiveRows) {
+        // the layout div is not emptied between resize events
+        this.layoutDiv.find('.sd-grid-banner').remove();
+
+        const isClamped = (effectiveCols < configuredCols) || (effectiveRows < configuredRows);
+        if (this.gridFit.bannerClosed || ! (isClamped || this.gridFit.reverted)) {
+            return;
+        }
+
+        const banner = $('<div>').addClass('sd-grid-banner').appendTo(this.layoutDiv);
+        if (this.gridFit.reverted) {
+            banner.addClass('sd-grid-banner-reverted');
+            $('<span>').text('reverted back to original display!').appendTo(banner);
+        }
+        else {
+            banner.addClass('sd-grid-banner-warning');
+            const msg = `Window too small for ${configuredCols}\u00d7${configuredRows} grid`
+                      + ` \u2014 showing ${effectiveCols}\u00d7${effectiveRows}`;
+            $('<span>').text(msg).appendTo(banner);
+            $('<button>').addClass('sd-grid-banner-btn').text('Revert').appendTo(banner).click(() => {
+                this.gridFit.reverted = true;
+                this.callbacks.reconfigure();
+            });
+        }
+        $('<button>').addClass('sd-grid-banner-close').attr('aria-label', 'Close').text('\u00d7').appendTo(banner).click(() => {
+            this.gridFit.bannerClosed = true;
+            banner.remove();
         });
     }
 

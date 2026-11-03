@@ -1,0 +1,14 @@
+{
+    "control": {
+        "range": { "length": 900, "to": 0 },
+        "reload": 300,
+        "mode": "normal",
+        "grid": { "rows": 1, "columns": 2 }
+    },
+    "style": { },
+    "panels": [
+        { "type": "html", "location": "project", "file": "objects", "title": "Controller Settings", "reload": true },
+        { "type": "html", "location": "project", "file": "console", "title": "" }
+    ],
+    "meta": { "name": "Settings", "title": "", "description": "" }
+}
