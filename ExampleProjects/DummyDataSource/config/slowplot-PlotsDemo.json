@@ -166,9 +166,9 @@
         {
             "type": "plot",
             "plots": [
-                { "type": "histogram2d", "channel": "multivariate_normal", "label": "", "format": "%.5g" }
+                { "type": "histogram2d", "channel": "multivariate_normal", "label": "", "format": "%.5g", "color": "#009090", "opacity": 1, "rendering": "heatmap", "skip_zeros": true }
             ],
-            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "colorscale": "Parula", "xmin": 0, "xmax": 100, "ymin": 0, "ymax": 100, "title": "2D Histogram", "zlog": false },
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "colorscale": "Parula", "xmin": 0, "xmax": 100, "ymin": 0, "ymax": 100, "title": "2D Histogram", "zlog": false, "colorscale_reversed": false, "zmin": 0, "zmax": 50 },
             "legend": { "style": "none", "position": "right" }
         },
         {

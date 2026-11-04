@@ -1089,7 +1089,7 @@ class PlotPanel extends Panel {
               <option value="graph">Graph Object</option>
               <option value="bar">Bar-Chart of Graph Object</option>
               <option value="ts-histogram">Histogram of Time-Series Values</option>
-              <option value="ts-scatter">Scatter Plot of Time-Series Value Pairs</option>
+              <option value="ts-scatter">Scatter Plot of Time-Series Pairs</option>
             </select></td>
        `).appendTo(table);
 
@@ -1337,6 +1337,9 @@ class PlotPanel extends Panel {
                     if (this.config.axes.colorscale === undefined) {
                         this.config.axes.colorscale = 'Parula';
                     }
+                    if (this.config.axes.colorscale_reversed === undefined) {
+                        this.config.axes.colorscale_reversed = false;
+                    }
                 }
                 if (plotconf.color === undefined) {
                     plotconf.color = getPaletteColor(this.plots.length);
@@ -1352,6 +1355,7 @@ class PlotPanel extends Panel {
             marginTop: marginTop,
             marginBottom: marginBottom,
             colorScale: this.config.axes.colorscale,
+            colorScaleReversed: this.config.axes.colorscale_reversed,
             cursorDigits: 6,
             logX: this.config.axes.xlog,
             logY: this.config.axes.ylog,
@@ -1457,20 +1461,24 @@ class PlotPanel extends Panel {
               <tr><td></td><td><label><input type="checkbox">log</label></td></tr>
 
               <tr><th>Z Axis</th><td></td></tr>
-              <tr><td>Color Coding</td><td><select>
-                  <option value="">(None)</option>
-                  <hr/>
-                  <option value="Parula">Parula</option>
-                  <option value="Viridis">Viridis</option>
-                  <option value="Magma">Magma</option>
-                  <option value="Rainbow">Rainbow</option>
-                  <option value="Gray">Gray</option>
-                  <hr/>
-                  <option value="UWGold">UWGold</option>
-                  <option value="UW">UW</option>
-                  <option value="MIT">MIT</option>
-                  <option value="KIT">KIT</option>
-              </select></td></tr>
+              <tr>
+                <td>Color Coding</td><td><select>
+                    <option value="">(None)</option>
+                    <hr/>
+                    <option value="Parula">Parula</option>
+                    <option value="Viridis">Viridis</option>
+                    <option value="Magma">Magma</option>
+                    <option value="Rainbow">Rainbow</option>
+                    <option value="Gray">Gray</option>
+                    <option value="NoColorBar">(Scale Only)</option>
+                    <hr/>
+                    <option value="UWGold">UWGold</option>
+                    <option value="UW">UW</option>
+                    <option value="MIT">MIT</option>
+                    <option value="KIT">KIT</option>
+                </select>
+                <label><input type="checkbox">Reversed</label>
+                </td></tr>
               <tr><td>Title</td><td><input placeholder="empty"></td></tr>
               <tr><td>Range</td><td><label>
                   <label><input type="radio" name="zrange">Auto</label>
@@ -1504,6 +1512,8 @@ class PlotPanel extends Panel {
         
         let k = 0, ks = 0;
         bindInput(axes, 'title', inputsDiv.find('input').at(k++).css('width', '20em'));
+        bindInput(legend, 'style', inputsDiv.find('select').at(ks++));
+        bindInput(legend, 'position', inputsDiv.find('select').at(ks++));
         bindInput(axes, 'xtitle', inputsDiv.find('input').at(k++).css('width', '20em'));
         bindInput(axes, 'xfixed', inputsDiv.find('input').at(k++), false);
         bindInput(axes, 'xfixed', inputsDiv.find('input').at(k++), true);
@@ -1516,15 +1526,14 @@ class PlotPanel extends Panel {
         bindInput(axes, 'ymin', inputsDiv.find('input').at(k++).css('width', '5em'));
         bindInput(axes, 'ymax', inputsDiv.find('input').at(k++).css('width', '5em'));
         bindInput(axes, 'ylog', inputsDiv.find('input').at(k++), true);
+        bindInput(axes, 'colorscale', inputsDiv.find('select').at(ks++));
+        bindInput(axes, 'colorscale_reversed', inputsDiv.find('input').at(k++));
         bindInput(axes, 'ztitle', inputsDiv.find('input').at(k++).css('width', '20em'));
         bindInput(axes, 'zfixed', inputsDiv.find('input').at(k++), false);
         bindInput(axes, 'zfixed', inputsDiv.find('input').at(k++), true);
         bindInput(axes, 'zmin', inputsDiv.find('input').at(k++).css('width', '5em'));
         bindInput(axes, 'zmax', inputsDiv.find('input').at(k++).css('width', '5em'));
         bindInput(axes, 'zlog', inputsDiv.find('input').at(k++), true);
-        bindInput(legend, 'style', inputsDiv.find('select').at(ks++));
-        bindInput(legend, 'position', inputsDiv.find('select').at(ks++));
-        bindInput(axes, 'colorscale', inputsDiv.find('select').at(ks++));
 
         let drawingsDiv = $('<div>').appendTo(div).css(boxStyle);
         drawingsDiv.html(`
