@@ -41,9 +41,11 @@ class ModbusNode(ControlNode):
             else:
                 logging.error(f'Modbus Intialization Error at {self.host}:{self.port}: connect() failed')
                 self.client = None
+                time.sleep(1)
         except Exception as e:
             logging.error(f'Modbus Intialization Error at {self.host}:{self.port}: {e}')
             self.client = None
+            time.sleep(1)
 
         return self.client is not None
     

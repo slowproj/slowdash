@@ -484,10 +484,11 @@ class NanotechC5E_ErrorNode(spc.ControlVariableNode):
         self.c5e = c5e
 
     async def aio_get(self):
-        error_code = await self.c5e.rreg.read_error()
+        error_code = await self.c5e.rreg.read_error() or 0
         if error_code == 0:
             return 'No errors'
-        
+
+        error = 'Unknown'
         if error_code == 0x1000: error = 'General error'
         if error_code == 0x2300: error = 'Current at the controller output too large'
         if error_code == 0x3100: error = 'Overvoltage/undervoltage at controller input'

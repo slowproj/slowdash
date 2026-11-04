@@ -1,4 +1,5 @@
-ip = '192.168.50.174'
+ip = '10.0.0.3'
+firmware_version = 1
 
 
 async def main():

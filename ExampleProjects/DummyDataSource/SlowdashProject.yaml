@@ -45,7 +45,12 @@ slowdash_project:
 
       histogram2d:
         - name: multivariate_normal
-          pdf: np.random.multivariate_normal([7, 60], [[50, 120], [120, 1000]]).tolist()
+          pdf: np.random.multivariate_normal([7, 60], [[20, 80], [80, 200]]).tolist()
+          entries: 10000
+          xbins: { n: 30, min: 0, max: 10 }
+          ybins: { n: 30, min: 0, max: 100 }
+        - name: multivariate_normal2
+          pdf: np.random.multivariate_normal([4, 70], [[1, -50], [-50, 200]]).tolist()
           entries: 10000
           xbins: { n: 30, min: 0, max: 10 }
           ybins: { n: 30, min: 0, max: 100 }
