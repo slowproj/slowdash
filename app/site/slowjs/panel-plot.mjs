@@ -1140,7 +1140,7 @@ class PlotPanel extends Panel {
               <option value="graph">Graph Object</option>
               <option value="bar">Bar-Chart of Graph Object</option>
               <option value="ts-histogram">Histogram of Time-Series Values</option>
-              <option value="ts-scatter">Scatter Plot of Time-Series Value Pairs</option>
+              <option value="ts-scatter">Scatter Plot of Time-Series Pairs</option>
             </select></td>
        `).appendTo(table);
 

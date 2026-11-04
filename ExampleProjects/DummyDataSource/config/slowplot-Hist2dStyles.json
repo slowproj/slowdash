@@ -20,7 +20,7 @@
             "plots": [
                 { "type": "histogram2d", "channel": "multivariate_normal", "label": "", "format": "%.5g", "color": "#009090", "opacity": 1, "rendering": "heatmap", "skip_zeros": true }
             ],
-            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "colorscale": "UW", "xmin": 0, "xmax": 10, "ymin": 0, "ymax": 100, "zmin": 0, "zmax": 20, "title": "Heatmap, Zeros Skipped", "colorscale_reversed": true },
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "colorscale": "UW", "xmin": 0, "xmax": 10, "ymin": 0, "ymax": 100, "zmin": 0, "zmax": 20, "title": "Heatmap (reversed), zeros skipped", "colorscale_reversed": true },
             "legend": { "style": "none", "position": "right" }
         },
         {
