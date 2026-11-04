@@ -28,7 +28,7 @@
             "plots": [
                 { "type": "histogram2d", "channel": "multivariate_normal", "label": "", "format": "%.5g", "color": "#009090", "opacity": 1, "rendering": "box", "skip_zeros": false }
             ],
-            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "colorscale": "", "xmin": 0, "xmax": 10, "ymin": 0, "ymax": 100, "zmin": 0, "zmax": 20 },
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "colorscale": "NoColorBar", "xmin": 0, "xmax": 10, "ymin": 0, "ymax": 100, "zmin": 0, "zmax": 20 },
             "legend": { "style": "none", "position": "right" }
         },
         {
@@ -37,9 +37,9 @@
                 { "type": "histogram2d", "channel": "multivariate_normal", "label": "", "format": "%.5g", "color": "#009090", "opacity": 0.6, "rendering": "box", "skip_zeros": false },
                 { "type": "histogram2d", "channel": "multivariate_normal2", "label": "", "format": "%.5g", "color": "#f59e0b", "opacity": 0.6, "rendering": "box", "skip_zeros": false }
             ],
-            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "colorscale": "", "xmin": 0, "xmax": 10, "ymin": 0, "ymax": 100, "zmin": 0, "zmax": 60 },
+            "axes": { "xfixed": false, "yfixed": false, "xlog": false, "ylog": false, "zlog": false, "colorscale": "NoColorBar", "xmin": 0, "xmax": 10, "ymin": 0, "ymax": 100, "zmin": 0, "zmax": 60 },
             "legend": { "style": "none", "position": "right" }
         }
     ],
-    "meta": { "name": "hist2d_box", "title": "", "description": "" }
+    "meta": { "name": "Hist2dStyles", "title": "", "description": "" }
 }
