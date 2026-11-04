@@ -438,8 +438,15 @@ class TimeseriesHistogramPlot extends HistogramPlot {
 class Histogram2dPlot extends Plot {
     configure(config, axes, legend, panel) {
         super.configure(config, axes, legend, panel);
-        this.config.color = undefined;
-        this.config.opacity = undefined;
+        //this.config.color = undefined;
+        //this.config.opacity = undefined;
+
+        if (this.config.rendering == null) {
+            this.config.rendering = 'heatmap';
+        }
+        if (this.config.skip_zeros == null) {
+            this.config.skip_zeros = false;
+        }
         
         this.isForTimeSeries = false;
         this.currentDataTime = -1;
@@ -448,17 +455,52 @@ class Histogram2dPlot extends Plot {
             xbins: { min: 0, max: 1 },
             ybins: { min: 0, max: 1 }, 
             counts: [],
-            style: {},
+            style: {
+                rendering: this.config.rendering,
+                skip_zeros: this.config.skip_zeros,
+                color: this.config.color,
+                opacity: this.config.opacity,
+            },
         };
         this.axes.addHistogram2d(this.histogram2d);
     }
 
     openPlotSettings(div, divName) {
         super.openPlotSettings(div, divName);
+        let table = div.find('table');
+        let k = table.find('input').size(), ks = table.find('select').size();
+        
+        $('<tr>').appendTo(table).html(`
+            <td>Rendering</td><td>
+              <select>
+                <option value="heatmap">heatmap</option>
+                <option value="box">box</option>
+              </select>
+              <label><input type="checkbox">skip zeros</label>
+            </td>
+        `)
+
+        bindInput(this.config, 'rendering', div.find('select').at(ks++));
+        bindInput(this.config, 'skip_zeros', div.find('input').at(k++));
     }
     
     setStyle(style) {
         super.setStyle(style);
+        if (style?.color) {
+            let color = parseInt(style.color);
+            color = isNaN(color) ? style.color : getPaletteColor(color);
+            this.histogram.style.lineColor = color;
+            this.histogram.style.fillColor = color;
+        }
+        if (style?.opacity) {
+            this.histogram2d.style.fillOpacity = style.opacity;
+        }
+        if (style?.rendering) {
+            this.histogram2d.style.rendering = style.rendering;
+        }
+        if (style?.skip_zeros) {
+            this.histogram2d.style.skip_zeros = style.skip_zeros;
+        }
     }
 
     update(dataPacket) {
@@ -490,30 +532,29 @@ class Histogram2dPlot extends Plot {
             }
         }
         
+        if (! data.xbins || ! data.ybins) {
+            return true;
+        }
+        if (
+            (data.xbins.min === undefined || data.xbins.max === undefined) || 
+            (data.ybins.min === undefined || data.ybins.max === undefined) || 
+            ! data.counts
+        ){
+            return true;
+        }
+
         if (data._attr) {
             this.setStyle(data._attr);
         }
         if (data._stat) {
             this.setStat(data._stat);
         }
-        if (! data.xbins || ! data.ybins) {
-            return true;
-        }
-        const histogram = data;
         
-        if (
-            (histogram.xbins.min === undefined || histogram.xbins.max === undefined) || 
-            (histogram.ybins.min === undefined || histogram.ybins.max === undefined) || 
-            ! histogram.counts
-        ){
-            return true;
-        }
-
-        this.histogram2d.xbins.min = histogram.xbins.min;
-        this.histogram2d.xbins.max = histogram.xbins.max;
-        this.histogram2d.ybins.min = histogram.ybins.min;
-        this.histogram2d.ybins.max = histogram.ybins.max;
-        this.histogram2d.counts = histogram.counts;
+        this.histogram2d.xbins.min = data.xbins.min;
+        this.histogram2d.xbins.max = data.xbins.max;
+        this.histogram2d.ybins.min = data.ybins.min;
+        this.histogram2d.ybins.max = data.ybins.max;
+        this.histogram2d.counts = data.counts;
 
         return true;
     }
@@ -1297,7 +1338,7 @@ class PlotPanel extends Panel {
                         this.config.axes.colorscale = 'Parula';
                     }
                 }
-                else if (plotconf.color === undefined) {
+                if (plotconf.color === undefined) {
                     plotconf.color = getPaletteColor(this.plots.length);
                 }
             }
