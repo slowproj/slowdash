@@ -1516,6 +1516,7 @@ class PlotPanel extends Panel {
                   <option value="Magma">Magma</option>
                   <option value="Rainbow">Rainbow</option>
                   <option value="Gray">Gray</option>
+                  <option value="NoColorBar">(Scale Only)</option>
                   <hr/>
                   <option value="UWGold">UWGold</option>
                   <option value="UW">UW</option>
