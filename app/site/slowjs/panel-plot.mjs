@@ -1190,6 +1190,9 @@ class PlotPanel extends Panel {
         if (this.config.axes.yfixed === undefined) {
             this.config.axes.yfixed = false;
         }
+        if (this.config.axes.yminw === undefined) {
+            this.config.axes.yminw = 0;
+        }
         if (this.config.axes.xlog === undefined) {
             this.config.axes.xlog = false;
         }
@@ -1706,6 +1709,7 @@ class PlotPanel extends Panel {
             upperMargin: (this.isQuadMeshPlot??false) ? 0 : 0.05,
             lowerMargin: (this.isQuadMeshPlot??false) ? 0 : 0.05,
             isLog: this.config.axes.xlog,
+            minWidth: this.config.axes.xminw ?? 0,
             stickyZero: false,
         });
         
@@ -1741,6 +1745,7 @@ class PlotPanel extends Panel {
             upperMargin: (this.isQuadMeshPlot??false) ? 0 : 0.1,
             lowerMargin: (this.isQuadMeshPlot??false) ? 0 : 0.1,
             isLog: this.config.axes.ylog,
+            minWidth: this.config.axes.yminw ?? 0,
             stickyZero: true,
         });
         
@@ -1772,10 +1777,13 @@ class PlotPanel extends Panel {
         if ((min === null) || (max === null)) {
             return [ null, null ];
         }        
-        [min, max] = JGPlotAxisScale.findRangeFromValues(
-            min, max,
-            { upperMargin: 0, lowerMargin: 0, isLog: this.config.axes.zlog }
-        );
+        [min, max] = JGPlotAxisScale.findRangeFromValues(min, max, {
+            upperMargin: 0,
+            lowerMargin: 0,
+            isLog: this.config.axes.zlog,
+            minWidth: this.config.axes.zminw ?? 0,
+            stickyZero: true,
+        });
         
         if (this.config.axes.zfixed) {
             this.config.axes.zmin = min;
@@ -1899,8 +1907,8 @@ class TimeAxisPlotPanel extends PlotPanel {
               <tr><th>Title</th><td><input placeholder="auto"></td></tr>
               <tr><th>Y Axis</th><td></td></tr>
               <tr><td>Title</td><td><input placeholder="empty"></td></tr>
-              <tr><td>Range</td><td><label><input type="radio" name="yrange">Fixed</label>: <input type="number" step="any">-<input type="number" step="any"></td></tr>
-              <tr><td></td><td><label><input type="radio" name="yrange">Auto</label></td></tr>
+              <tr><td>Range</td><td><label><input type="radio" name="yrange">Fixed: <input type="number" step="any">-<input type="number" step="any"></label></td></tr>
+              <tr><td></td><td><label><input type="radio" name="yrange">Auto (min width: <input type="number" step="any">)</label></td></tr>
               <tr><td></td><td><label><input type="checkbox">log</label></td></tr>
               <tr><th>Legend</th><td></td></tr>
               <tr><td>Style</td><td>
@@ -1936,6 +1944,7 @@ class TimeAxisPlotPanel extends PlotPanel {
         bindInput(axes, 'ymin', inputsDiv.find('input').at(k++).css('width', '5em'));
         bindInput(axes, 'ymax', inputsDiv.find('input').at(k++).css('width', '5em'));
         bindInput(axes, 'yfixed', inputsDiv.find('input').at(k++), false);
+        bindInput(axes, 'yminw', inputsDiv.find('input').at(k++).css('width', '5em'));
         bindInput(axes, 'ylog', inputsDiv.find('input').at(k++), true);
         bindInput(legend, 'style', inputsDiv.find('select').at(ks++));
         bindInput(legend, 'position', inputsDiv.find('select').at(ks++));

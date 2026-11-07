@@ -27,6 +27,13 @@ Edit the `cfg.txt` file.
 60EB:03=1         ; motor revolutions for the encoder resolution value above
 ```
 
+#### Using limit switches (upper & lower, normally-closed)
+```
+340:01=3     ; Use digital input 1 and 2 for limit switches
+3240:02=3    ; polarity setting; bit 1 for nomally-closed
+3701:00=6    ; action, 6:quick stop and keep energized
+```
+
 After editing the `CFG.txt` file, power-cycle the device.
 
 ### Running Auto Setup
