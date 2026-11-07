@@ -35,6 +35,8 @@ class DataCache:
                 datatype = 'graph'
             elif 'bins' in value:
                 datatype = 'histogram'
+            elif 'xbins' in value:
+                datatype = 'histogram2d'
             elif 'table' in value:
                 datatype = 'table'
             elif 'tree' in value:

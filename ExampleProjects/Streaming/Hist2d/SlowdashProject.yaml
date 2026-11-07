@@ -1,0 +1,8 @@
+slowdash_project:
+
+  task:
+    name: hist2d
+    auto_load: true
+
+  system:
+    our_security_is_perfect: true
