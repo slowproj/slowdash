@@ -1626,7 +1626,7 @@ class PlotPanel extends Panel {
     }
     
     
-    draw(data, displayTimeRange=null) {
+    async draw(data, displayTimeRange=null) {
         if (! data) {
             return;
         }
@@ -1642,11 +1642,16 @@ class PlotPanel extends Panel {
             return;
         }
         
+        this.axes.enterFrameBuffer();
+        
         this.initialDisplayTimeRange = this._findDataTimeRange(data, displayTimeRange);
         const [xmin, xmax] = this.adjustXRange(false);
         const [ymin, ymax] = this.adjustYRange(false);
         const [zmin, zmax] = this.adjustZRange(false);
-        this.axes.setRange(xmin, xmax, ymin, ymax, zmin, zmax);
+        this.axes.setRange(xmin, xmax, ymin, ymax, zmin, zmax, { update: false });
+        await this.axes.updateAsync();
+        
+        this.axes.exitFrameBuffer();
     }
 
     
@@ -1745,7 +1750,9 @@ class PlotPanel extends Panel {
     adjustXRange(updateAxes=true) {
         if (this.config.axes.xfixed) {
             if (this.config.axes.xmin < this.config.axes.xmax) {
-                this.axes.setRange(this.config.axes.xmin, this.config.axes.xmax);
+                if (updateAxes) {
+                    this.axes.setRange(this.config.axes.xmin, this.config.axes.xmax);
+                }
                 return [ this.config.axes.xmin, this.config.axes.xmax ];
             }
         }
@@ -1781,7 +1788,9 @@ class PlotPanel extends Panel {
     adjustYRange(updateAxes=true) {
         if (this.config.axes.yfixed) {
             if (this.config.axes.ymin < this.config.axes.ymax) {
-                this.axes.setRange(null, null, this.config.axes.ymin, this.config.axes.ymax);
+                if (updateAxes) {
+                    this.axes.setRange(null, null, this.config.axes.ymin, this.config.axes.ymax);
+                }
                 return [ this.config.axes.ymin, this.config.axes.ymax ];
             }
         }
@@ -1817,7 +1826,9 @@ class PlotPanel extends Panel {
     adjustZRange(updateAxes=true) {
         if (this.config.axes.zfixed) {
             if (this.config.axes.zmin < this.config.axes.zmax) {
-                this.axes.setRange(null, null, null, null, this.config.axes.zmin, this.config.axes.zmax);
+                if (updateAxes) {
+                    this.axes.setRange(null, null, null, null, this.config.axes.zmin, this.config.axes.zmax);
+                }
                 return [ this.config.axes.zmin, this.config.axes.zmax ];
             }
         }
@@ -1887,12 +1898,12 @@ class PlotPanel extends Panel {
         const [xmin, xmax] = this.adjustXRange(false);
         const [ymin, ymax] = this.adjustYRange(false);
         const [zmin, zmax] = this.adjustZRange(false);
-        this.axes.setRange(xmin, xmax, ymin, ymax, zmin, zmax);
+        this.axes.setRange(xmin, xmax, ymin, ymax, zmin, zmax);        
         this.callbacks.suspendUpdate(0);
     }
     
     rangeSelect(x0, x1, y0, y1) {
-        this.axes.setRange(x0, x1, y0, y1, {xlog: this.config.axes.xlog, ylog: this.config.axes.ylog});
+        this.axes.setRange(x0, x1, y0, y1, {xlog: this.config.axes.xlog, ylog: this.config.axes.ylog});        
         this.callbacks.suspendUpdate();
     }
 };
@@ -2048,7 +2059,7 @@ class TimeAxisPlotPanel extends PlotPanel {
         if (! hasUpdates) {
             return;
         }
-        
+
         this.initialDisplayTimeRange = this._findDataTimeRange(data, displayTimeRange);
         this.currentDisplayTimeRange = this.initialDisplayTimeRange;
         const [xmin, xmax] = this.adjustXRange(false);
@@ -2106,9 +2117,10 @@ class TimeAxisPlotPanel extends PlotPanel {
     
     resetRange() {
         this.currentDisplayTimeRange = this.initialDisplayTimeRange;
+        
         const [xmin, xmax] = this.adjustXRange(false);
         const [ymin, ymax] = this.adjustYRange(false);
-        this.axes.setRange(xmin, xmax, ymin, ymax);
+        this.axes.setRange(xmin, xmax, ymin, ymax);        
         this.callbacks.changeDisplayTimeRange(null);
         this.callbacks.suspendUpdate(0);
     }
