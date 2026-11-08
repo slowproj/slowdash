@@ -1,0 +1,2453 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Scripting</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="style.css" />
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({startOnLoad: true});
+</script>
+
+</head>
+
+<body>
+
+<header>
+<div class="title">Scripting</div><p>
+<div class="toc">
+<span class="toc-title">Contents</span>
+<nav id="TOC">
+<ul>
+<li><a href="#overview" id="toc-overview">Overview</a></li>
+<li><a href="#slowpy-library" id="toc-slowpy-library">SlowPy Library</a>
+<ul>
+<li><a href="#structure" id="toc-structure">Structure</a></li>
+<li><a href="#simple-examples" id="toc-simple-examples">Simple
+Examples</a></li>
+<li><a href="#controls" id="toc-controls">Controls</a></li>
+<li><a href="#database-interface" id="toc-database-interface">Database
+Interface</a></li>
+<li><a href="#analysis-components" id="toc-analysis-components">Analysis
+Components</a></li>
+<li><a href="#making-a-device-scpi-capable"
+id="toc-making-a-device-scpi-capable">Making a Device
+SCPI-Capable</a></li>
+</ul></li>
+<li><a href="#slowtask-binding-the-gui-and-scripts"
+id="toc-slowtask-binding-the-gui-and-scripts">SlowTask: Binding the GUI
+and Scripts</a>
+<ul>
+<li><a href="#starting-and-stopping-slowtasks"
+id="toc-starting-and-stopping-slowtasks">Starting and Stopping
+SlowTasks</a></li>
+<li><a href="#exporting-functions"
+id="toc-exporting-functions">Exporting Functions</a></li>
+<li><a href="#calling-functions-from-the-web-gui"
+id="toc-calling-functions-from-the-web-gui">Calling Functions from the
+Web GUI</a></li>
+<li><a href="#lifespan-callbacks" id="toc-lifespan-callbacks">Lifespan
+Callbacks</a></li>
+<li><a href="#sending-data-to-the-browser"
+id="toc-sending-data-to-the-browser">Sending Data to the
+Browser</a></li>
+<li><a href="#matplotlib-integration"
+id="toc-matplotlib-integration">Matplotlib Integration</a></li>
+</ul></li>
+<li><a href="#slowmesh" id="toc-slowmesh">SlowMesh</a>
+<ul>
+<li><a href="#basic-usage" id="toc-basic-usage">Basic Usage</a></li>
+<li><a href="#connecting-to-slowmesh"
+id="toc-connecting-to-slowmesh">Connecting to SlowMesh</a></li>
+<li><a href="#pubsub" id="toc-pubsub">PubSub</a></li>
+<li><a href="#remote-procedure-call-rpc"
+id="toc-remote-procedure-call-rpc">Remote Procedure Call (RPC)</a></li>
+<li><a href="#registry-key-value-store"
+id="toc-registry-key-value-store">Registry (Key-Value Store)</a></li>
+<li><a href="#forwarding-standard-io-and-logs"
+id="toc-forwarding-standard-io-and-logs">Forwarding Standard I/O and
+Logs</a></li>
+<li><a href="#examples" id="toc-examples">Examples</a></li>
+</ul></li>
+</ul>
+</nav>
+</div>
+</header>
+
+<h1 id="overview">Overview</h1>
+<p>SlowDash is a hybrid system of a Web GUI and Python scripting. A
+system is built by attaching Python code, which describes the behavior,
+behind the display elements of the Web GUI.</p>
+<p>The Python scripts written by users here are plain standard Python,
+and can use existing systems and any external libraries. Functions in a
+script are bound to the Web GUI, but the binding is specified on the GUI
+side (the GUI specifies the name of the function in the user script to
+be called on an action), so the user script itself does not need to use
+the SlowDash framework or libraries at all.</p>
+<p>On the other hand, the features of SlowDash can also be used more
+actively. In many cases, just by adding a one-line decorator to a user
+function, more advanced bindings, including concurrent / parallel
+execution control, become available, and periodic execution, execution
+at start-up, etc. can be done easily.</p>
+<p>SlowDash provides SlowPy, a library that implements functions
+frequently used in user scripts, such as device access. Using SlowPy is
+optional, but it makes many things easier. SlowPy itself can be used
+without the SlowDash server, and user scripts using SlowPy can also run
+standalone without the SlowDash server, as long as they do not use
+SlowMesh communication.</p>
+<p>A user script running as a part of a SlowDash system is called a
+SlowTask. A SlowTask usually runs as an independent process. A SlowTask
+can be started automatically together with the SlowDash server, or can
+be started and stopped independently of the server, for example with
+Docker Compose.</p>
+<p>By running user scripts within the SlowDash framework using SlowPy,
+multiple SlowTasks can work cooperatively through message passing,
+remote function calls, parameter sharing, etc. (SlowMesh). In a system
+of some size, it is common for multiple SlowTasks to run in parallel,
+and SlowTasks can even be distributed over a network without changing
+the scripts. SlowTask processes work exactly the same way when they are
+managed by another system such as Docker Swarm or Kubernetes, instead of
+the SlowDash distributed processing features. Some SlowTask scripts,
+such as database recording, are included in the SlowDash distribution
+package as general-purpose components (SlowTools), and a system can be
+built by combining them.</p>
+<p>An example of running multiple SlowTasks on SlowMesh is in the <a
+href="QuickTour.html">Quick Tour</a>, which can be tried out in a
+disposable environment that can be cleanly thrown away after use. This
+chapter describes the details of building a system by writing SlowTask
+scripts with SlowPy.</p>
+<h1 id="slowpy-library">SlowPy Library</h1>
+<h2 id="structure">Structure</h2>
+<p>The SlowPy library is located at <code>slowdash/lib/slowpy</code> in
+SlowDash, separated from the SlowDash server and the Web GUI (under
+<code>slowdash/app</code>). The SlowPy package consists of the following
+sub-packages. Everything can be imported at once with
+<code>import slowpy</code>, but sub-package names must be used when
+referring to them, as in <code>slowpy.control.XXX</code>. Alternatively,
+<code>import slowpy.control</code> or
+<code>from slowpy.control import XXX</code> can also be used.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Role</th>
+<th>External Dependency</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>control</td>
+<td>Controlling devices and external control systems</td>
+<td>Vendor-provided libraries (if any)</td>
+</tr>
+<tr class="even">
+<td>(top level)</td>
+<td>Data analysis components such as histograms</td>
+<td>-</td>
+</tr>
+<tr class="odd">
+<td>store</td>
+<td>Data recording</td>
+<td>The database system used</td>
+</tr>
+<tr class="even">
+<td>mesh</td>
+<td>SlowMesh communication</td>
+<td>SlowDash server</td>
+</tr>
+</tbody>
+</table>
+<p>Analysis components such as histograms are at the top level of
+<code>slowpy</code>, and are used like
+<code>slowpy.Histogram</code>.</p>
+<p>The SlowDash server is required to run a user script only if the
+script actually communicates using <code>slowpy.mesh</code>. Otherwise,
+the script can run standalone, independently of SlowDash. This is
+convenient for script development. In the standard SlowDash
+installation, the SlowPy library is installed in a venv, so activate the
+venv before using it standalone. This is not necessary when running as a
+SlowTask from the SlowDash server.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv    # (or, source PATH/TO/SLOWDASH/venv/bin/activate)</span></span></code></pre></div>
+<p>SlowPy corresponding to a SlowDash release can also be installed with
+pip. This might be useful when using SlowPy on a PC that only does
+analysis. Note that SlowPy on pip is updated only when SlowDash is
+tagged for a release, so it might be outdated.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pip install slowpy</span></span></code></pre></div>
+<h2 id="simple-examples">Simple Examples</h2>
+<h4
+id="reading-a-measured-value-from-an-ethernet-connected-voltmeter-with-an-scpi-command">Reading
+a measured value from an Ethernet-connected voltmeter with an SCPI
+command</h4>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a control node for SCPI command &quot;MEAS:VOLT:DC&quot; on a device at 192.168.1.43</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>V <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;192.168.1.43&#39;</span>, <span class="dv">5025</span>).scpi().command(<span class="st">&#39;MEAS:VOLT:DC&#39;</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Read a value from the control node using SCPI command &quot;MEAS:VOLT:DC?&quot;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  value <span class="op">=</span> V.get()</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  ...</span></code></pre></div>
+<h4 id="recording-data-into-a-postgresql-database">Recording data into a
+PostgreSQL database</h4>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_PostgreSQL</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_PostgreSQL(<span class="st">&#39;postgresql://postgres:postgres@localhost:5432/SlowTestData&#39;</span>, table<span class="op">=</span><span class="st">&quot;SlowData&quot;</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    value <span class="op">=</span> ...</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    datastore.append(value, tag<span class="op">=</span><span class="st">&quot;voltmeter&quot;</span>)</span></code></pre></div>
+<h4 id="calling-a-function-from-the-slowdash-web-gui">Calling a function
+from the SlowDash Web GUI</h4>
+<p>Output voltage setting function <code>set_Vout()</code> in script
+<code>config/slowtask-test.py</code>:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>Vout <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;192.168.1.43&#39;</span>, <span class="dv">5025</span>).scpi(append_opc<span class="op">=</span><span class="va">True</span>).command(<span class="st">&#39;VOLT&#39;</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_Vout(value:<span class="bu">float</span>):</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    Vout.<span class="bu">set</span>(value)</span></code></pre></div>
+<p>User-created HTML for the Web GUI
+(<code>config/html-test.html</code>):</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  Voltage output: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;value&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_Vout()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>When the <code>Set</code> button is clicked on the browser, the value
+in the <code>&lt;input name="value"&gt;</code> field is converted to
+float, and <code>set_Vout(value)</code> is called with it as the
+argument.</p>
+<h5 id="a-small-improvement-part-1">A small improvement, part 1</h5>
+<p>Both normal functions and async functions can be used. Making the
+function async lets it run concurrently with other processing, improving
+the overall responsiveness.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> set_Vout(value:<span class="bu">float</span>):</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> Vout.aio_set(value)</span></code></pre></div>
+<h5 id="a-small-improvement-part-2">A small improvement, part 2</h5>
+<p>With <code>Tasklet</code>, which controls a SlowTask in SlowPy, the
+functions to be called from the browser can be explicitly specified.</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Tasklet</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>tasklet <span class="op">=</span> Tasklet()</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.export</span>()</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> set_Vout(value:<span class="bu">float</span>):</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> Vout.aio_set(value)</span></code></pre></div>
+<h4
+id="reading-data-every-second-and-streaming-it-to-the-browser">Reading
+data every second and streaming it to the browser</h4>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Tasklet</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>tasklet <span class="op">=</span> Tasklet()</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;192.168.1.43&#39;</span>, <span class="dv">5025</span>).scpi()</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>V <span class="op">=</span> device.command(<span class="st">&#39;MEAS:VOLT:DC&#39;</span>)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>A <span class="op">=</span> device.command(<span class="st">&#39;MEAS:CURR:DC&#39;</span>)</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="fl">1.0</span>)</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> loop():</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    ctrl.stream(<span class="st">&#39;voltage&#39;</span>, V.get())</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    ctrl.stream(<span class="st">&#39;current&#39;</span>, A.get())</span></code></pre></div>
+<h5 id="a-small-improvement">A small improvement</h5>
+<p>As above, using async improves the performance.</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="fl">1.0</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> loop():</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_stream(<span class="st">&#39;voltage&#39;</span>, <span class="cf">await</span> V.aio_get())</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_stream(<span class="st">&#39;current&#39;</span>, <span class="cf">await</span> A.aio_get())</span></code></pre></div>
+<h2 id="controls">Controls</h2>
+<h3 id="node-tree-structure">Node Tree Structure</h3>
+<p>SlowPy provides a unified interface to connect to external software
+systems and hardware devices. Everything is mapped into a single
+“control tree”, and each node of the tree has <code>set()</code> and
+<code>get()</code> methods. The tree represents the logical structure of
+the system. For example, the SCPI command <code>VOLT</code> to a power
+supply connected via Ethernet is specified as
+<code>ControlSystem.ethernet(host, port).scpi().command('VOLT')</code>,
+and calling <code>set(value)</code> on this node sends the SCPI command
+<code>VOLT value</code> to the device. The <code>get()</code> method
+performs a read operation and returns the value.</p>
+<p>Branches can be dynamically added to the control tree by plugin
+modules. For example, the Redis plugin adds a <code>redis()</code> node
+and several sub-branches corresponding to the features provided by
+Redis, such as hashes, JSON, and time-series. Plugins are not
+necessarily loaded to the root ControlSystem; they are loaded to any
+node. For example, a plugin that uses Ethernet is loaded to the Ethernet
+node and creates branches under it, and the plugin can use the functions
+provided by the Ethernet node, such as <code>set()</code> (send) and
+<code>get()</code> (receive).</p>
+<h4 id="example">Example</h4>
+<p>Here is an example of using SlowPy Controls. In this example, a power
+supply that accepts SCPI commands over Ethernet is used.</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a control node for SCPI command &quot;VOLT&quot; (output) and &quot;MEAS:VOLT:DC&quot; (readback) on a device at 192.168.1.43</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;192.168.1.43&#39;</span>, <span class="dv">5025</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>Vout <span class="op">=</span> device.scpi(append_opc<span class="op">=</span><span class="va">True</span>).command(<span class="st">&#39;VOLT&#39;</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>V <span class="op">=</span> device.scpi().command(<span class="st">&#39;MEAS:VOLT:DC&#39;</span>)</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Write a value to the control node: this will issue SCPI command &quot;VOLT 10;*OPC?&quot;</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>Vout.<span class="bu">set</span>(<span class="dv">10</span>)</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Read a value from the control node using SCPI command &quot;MEAS:VOLT:DC?&quot;</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  value <span class="op">=</span> V.get()</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  ...</span></code></pre></div>
+<p>Usually, as in this example, start by directly importing the instance
+<code>control_system</code> from <code>slowpy.control</code>. (It is
+also fine to import the <code>ControlSystem</code> class and create an
+instance yourself.)</p>
+<p><code>ControlSystem</code> already includes the <code>Ethernet</code>
+plugin, but if it did not, the code to load the plugin would be:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>ctrl.import_control_module(<span class="st">&#39;Ethernet&#39;</span>)</span></code></pre></div>
+<p>This searches the search directories (the current directory and the
+SlowPy directory) for a file named <code>control_Ethernet.py</code> and
+loads it, adding the <code>ethernet()</code> method to the class of the
+node to which the plugin is loaded (ControlSystem in this case). As
+<code>import_control_module()</code> returns the node itself, it can be
+chained like
+<code>ctrl.import_control_module('DummyDevice').randomwalk_device()</code>.
+The Ethernet plugin already includes the SCPI and Telnet branches. To
+use other specific protocols, load a plugin for it to the Ethernet
+node.</p>
+<p>The constructor of each node takes parameters. In this example, the
+Ethernet node, which sends and receives data over Ethernet, takes the
+host name (IP address) and the port number as parameters. The SCPI
+command node, which is bound to a specific SCPI command, takes the SCPI
+command as a parameter, and optionally <code>set_format</code> to change
+the command on writing. (For <code>.scpi().command(CMD)</code>, the
+command sent on writing is <code>CMD value</code> by default, and
+<code>CMD?</code> on reading.)</p>
+<p>SlowPy assumes that every SCPI command has a response. In many cases,
+write operations also need to wait for the command to complete. One way
+to achieve this regardless of the actual command behavior of the device
+is to append <code>*OPC?</code> to the command, as in the example. With
+<code>scpi(append_opc=True)</code>, <code>*OPC?</code> is appended to
+every <code>set()</code> under that node. (It is not appended to
+<code>get()</code>, which already has a response.) To switch it per
+command, <code>*OPC?</code> can be appended to the command manually,
+like <code>command('OUTP ON;*OPC?')</code>.</p>
+<p>Once a control node object is obtained, a value can be written with
+<code>node.set(value)</code> and read with
+<code>value = node.get()</code>.</p>
+<p>Whether a new connection is made or the same one is reused when a
+connection node (such as <code>ethernet()</code>) is called multiple
+times depends on the node type and parameters. Usually, as in the
+example, it is convenient to create a device-level node once and store
+it in a variable.</p>
+<h3 id="async-interface">Async Interface</h3>
+<p>When SlowDash runs a user script as a SlowTask, unless explicitly
+specified, it runs as a single-threaded async system, where everything
+is processed concurrently using async. Therefore, if a user function
+takes a long time to execute, the whole system freezes. It is
+recommended to implement user script functions as async, and to call the
+async versions of SlowPy node methods with <code>await</code> for
+time-consuming operations in them.</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> set_Vout(value:<span class="bu">float</span>):</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> Vout.aio_set(value)</span></code></pre></div>
+<p>For this purpose, async versions are provided for almost all methods
+of SlowPy nodes. Their names have the prefix <code>aio_</code> added to
+the names of the normal functions (<code>set()</code>/<code>get()</code>
+etc.), as in <code>aio_set()</code>/<code>aio_get()</code>.</p>
+<p>Many SlowPy devices implement both
+<code>set()</code>/<code>get()</code> and
+<code>aio_set()</code>/<code>aio_get()</code>, but which ones are
+actually available depends on the device. If only <code>set()</code> is
+implemented and there is no <code>aio_set()</code>, a call to
+<code>await aio_set()</code> either goes through
+<code>asyncio.to_thread()</code> (if thread safety is explicitly
+declared), or falls back directly to <code>set()</code> (with a
+possibility of starvation). Whether a node is thread-safe is stored in
+the <code>_is_thread_safe</code> member variable of the
+<code>ControlNode</code> base class.</p>
+<p>Blocking functions such as <code>sleep()</code> and
+<code>wait()</code> also have async versions such as
+<code>aio_sleep()</code> and <code>aio_wait()</code>. In a SlowTask, use
+<code>await ctrl.aio_sleep()</code> instead of <code>time.sleep()</code>
+or <code>ctrl.sleep()</code>.</p>
+<h3 id="threads-and-async-tasks-of-control-nodes">Threads and Async
+Tasks of Control Nodes</h3>
+<p>Some control nodes run in the background, independently of
+<code>set()</code> and <code>get()</code> calls. For example:</p>
+<ul>
+<li>Nodes that run a task independently of
+<code>set()</code>/<code>get()</code> queries, such as PID loops and
+ramping</li>
+<li>Nodes that periodically pre-fetch data and store it in a cache, when
+data acquisition takes time</li>
+</ul>
+<p>Such nodes are implemented by inheriting
+<code>ControlThreadMixin</code> or
+<code>ControlAsyncTaskMixin</code>.</p>
+<ul>
+<li><code>ControlThreadMixin</code>: If the node has a
+<code>run()</code> method, calling <code>start()</code> creates a
+dedicated thread, in which <code>run()</code> is executed.</li>
+<li><code>ControlAsyncTaskMixin</code>: If the node has an
+<code>async def aio_run()</code> method, calling <code>start()</code>
+creates an asyncio task, which executes <code>aio_run()</code>.</li>
+</ul>
+<p>The threads and tasks are stopped by calling the node’s
+<code>stop()</code> method, or by a global stop request
+(<code>ControlSystem.stop()</code>, signals, etc.). The
+<code>run()</code> function must monitor stop requests (with
+<code>is_stop_requested()</code>) and terminate by itself when a stop is
+requested. In the case of <code>aio_run()</code>, the task is cancelled
+by <code>stop()</code> and stops at the next <code>await</code>.</p>
+<p>For example, <code>first_order_plant</code> of the dummy device is a
+node that runs a simulation in a thread, and is used like this:</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>plant <span class="op">=</span> ctrl.import_control_module(<span class="st">&#39;DummyDevice&#39;</span>).first_order_plant(gain<span class="op">=</span><span class="fl">0.1</span>, noise<span class="op">=</span><span class="fl">0.1</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>plant.start()</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    state <span class="op">=</span> plant.get()   <span class="co"># time-evolved internal state</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
+<h3 id="commonly-used-nodes">Commonly Used Nodes</h3>
+<p>Naming convention: <code>set()</code>, <code>get()</code>, and
+<code>do_XXX()</code> are normal methods that perform actions. Methods
+with noun names return child nodes.</p>
+<h4 id="ethernet-scpi-telnet">Ethernet, SCPI, Telnet</h4>
+<h5 id="loading-built-in">Loading (built-in)</h5>
+<p><code>ctrl.import_control_module('Ethernet')</code></p>
+<h5 id="nodes">Nodes</h5>
+<ul>
+<li><strong>ethernet(host, port)</strong>: sends and receives text
+messages over a TCP socket connection
+<ul>
+<li>set(value): sends the value as encoded text</li>
+<li>get(): receives a chunk of text</li>
+<li>do_get_chunk(timeout=None): receives a chunk of text</li>
+<li>do_get_line(timeout=None): receives chunks and returns one line
+(reassembled if necessary)</li>
+<li>do_flush_input(): empties the receive buffer</li>
+<li><strong>scpi(timeout=10, line_terminator=‘0d’,
+append_opc=False)</strong>: bridges the parent Ethernet connection to
+SCPI, and holds the SCPI settings
+<ul>
+<li><strong>command(cmd, set_format=None)</strong>: issues an SCPI
+command over the parent Ethernet connection
+<ul>
+<li>set(value=None): sends <code>cmd value</code> and waits for the
+response</li>
+<li>get(): sends <code>cmd?</code>, waits for the response, and returns
+it</li>
+</ul></li>
+</ul></li>
+<li><strong>telnet(prompt, line_terminator)</strong>: bridges the parent
+Ethernet connection to Telnet, and holds the Telnet settings
+<ul>
+<li><strong>command(cmd)</strong>: issues a Telnet command over the
+parent Ethernet connection
+<ul>
+<li>set(value=None): sends <code>cmd value NEWLINE</code>, and discards
+the echo</li>
+<li>get(): sends <code>cmd NEWLINE</code>, discards the echo, and
+returns the response up to the next prompt</li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul>
+<h4 id="serial-port">Serial Port</h4>
+<h5 id="loading">Loading</h5>
+<p><code>ctrl.import_control_module('Serial')</code> (requires the
+<code>pyserial</code> package)</p>
+<h5 id="nodes-1">Nodes</h5>
+<ul>
+<li><strong>serial(port=‘/dev/ttyUSB0’, baudrate=115200)</strong>: sends
+and receives text messages over a serial port
+<ul>
+<li>set(value): sends the value as encoded text</li>
+<li>get(): receives a chunk of text</li>
+<li>do_get_chunk(timeout=None): receives a chunk of text</li>
+<li>do_get_line(timeout=None): receives chunks and returns one line
+(reassembled if necessary)</li>
+<li>do_flush_input(): empties the receive buffer</li>
+<li><strong>scpi()</strong>: same as <code>scpi()</code> of the Ethernet
+node</li>
+</ul></li>
+</ul>
+<h4 id="visa">VISA</h4>
+<p>Devices connected via USB, GPIB, HiSLIP, etc. can be used through
+VISA. ##### Loading <code>ctrl.import_control_module('VISA')</code>
+(requires the <code>pyvisa</code> package)</p>
+<h5 id="nodes-2">Nodes</h5>
+<ul>
+<li><strong>visa(resource_name)</strong>: device specified by a VISA
+resource name (e.g.,
+<code>USB0::0x2A8D::0x0201::MY54700218::0::INSTR</code>)
+<ul>
+<li><strong>scpi()</strong>: same as <code>scpi()</code> of the Ethernet
+node</li>
+</ul></li>
+</ul>
+<h4 id="http-web-api">HTTP (Web API)</h4>
+<h5 id="loading-built-in-1">Loading (built-in)</h5>
+<p><code>ctrl.import_control_module('HTTP')</code></p>
+<h5 id="nodes-3">Nodes</h5>
+<ul>
+<li><strong>http(base_url)</strong>:
+<ul>
+<li><strong>path(path)</strong>: path string appended to
+<code>base_url</code>
+<ul>
+<li>set(value): sends a POST request with <code>value</code> as the
+content to <code>base_url</code> + <code>path</code></li>
+<li>get(): sends a GET request to <code>base_url</code> +
+<code>path</code>, and returns the response content</li>
+<li><strong>json()</strong>:
+<ul>
+<li>set(value): <code>value</code> is a Python object to be converted to
+JSON</li>
+<li>get(): receives a JSON document and returns it as a Python
+object</li>
+</ul></li>
+<li><strong>value()</strong>: returns a ControlVariableNode, to be used
+with ramping() etc.</li>
+</ul></li>
+</ul></li>
+</ul>
+<p>An async version, <code>async_http(base_url)</code>, is also built
+in.</p>
+<h4 id="shell-command">Shell Command</h4>
+<h5 id="loading-built-in-2">Loading (built-in)</h5>
+<p><code>ctrl.import_control_module('Shell')</code></p>
+<h5 id="nodes-4">Nodes</h5>
+<ul>
+<li><strong>shell(cmd)</strong>: executes a shell command
+<ul>
+<li>set(value): launches <code>cmd value</code></li>
+<li>get(): launches <code>cmd</code> and returns its output</li>
+<li><strong>value()</strong>: returns a ControlVariableNode, to be used
+with ramping() etc.</li>
+<li><strong>arg(*args)</strong>: adds program arguments to the parent
+“shell” node <br> Example:
+<code>adc0 = ctrl.shell('read_adc').arg('--ch=0')</code>
+<ul>
+<li><strong>value()</strong>: returns a ControlVariableNode, to be used
+with ramping() etc.</li>
+</ul></li>
+</ul></li>
+</ul>
+<h4 id="accessing-the-slowdash-server">Accessing the SlowDash
+Server</h4>
+<h5 id="loading-1">Loading</h5>
+<p>Load to an HTTP node:
+<code>ctrl.http(url).import_control_module('Slowdash')</code></p>
+<h5 id="nodes-5">Nodes</h5>
+<ul>
+<li><strong>http(url).slowdash()</strong>
+<ul>
+<li><strong>ping()</strong>: returns <code>pong</code></li>
+<li><strong>channels()</strong>: gets the JSON object of the channel
+list</li>
+<li><strong>data(channels, length=3600)</strong>: gets the JSON object
+of the data of the specified channels</li>
+<li><strong>config()</strong>: gets the JSON object of the project
+configuration</li>
+<li><strong>config_file(name)</strong>: gets or sends a configuration
+file</li>
+</ul></li>
+</ul>
+<p>As an async version, there is also the <code>AsyncSlowdash</code>
+plugin (<code>async_slowdash()</code>), which is loaded to
+<code>async_http(url)</code>.</p>
+<h4 id="other-nodes-excerpt">Other Nodes (excerpt)</h4>
+<ul>
+<li>Redis (uses the <code>redis</code> package)</li>
+<li>RabbitMQ (uses <code>pika</code> and <code>aio-pika</code>)</li>
+<li>MQTT (uses <code>paho-mqtt</code> and <code>aio-mqtt</code>)</li>
+<li>NATS (uses <code>nats-py</code>)</li>
+<li>Modbus (uses <code>pymodbus</code>)</li>
+<li>LabJack (uses <code>LabJackPython</code>; currently only U3/U6/U12
+are supported)</li>
+<li>UDP</li>
+<li>DataStore (<code>set()</code> to
+<code>data_store(url).tag(name)</code> records the value into the
+database)</li>
+<li>DummyDevice (dummy devices for testing, such as random walks, event
+generators, and first/second-order lag plants)</li>
+</ul>
+<p>SlowPy control plugins are placed under
+<code>slowdash/lib/slowpy/slowpy/control</code> with names like
+<code>control_XXX.py</code>. For usage examples, see the test scripts
+under <code>slowdash/lib/slowpy/test</code>.</p>
+<h3 id="common-node-functions">Common Node Functions</h3>
+<p>All control nodes (classes derived from
+<code>slowpy.control.ControlNode</code>) have the following methods.</p>
+<ul>
+<li>[ControlNode]
+<ul>
+<li><strong>has_data()</strong>: returns True if there is a value that
+can be obtained with <code>get()</code></li>
+<li><strong>wait(condition_lambda=None, poll_interval=0.1,
+timeout=0)</strong>: If <code>condition_lambda</code> is not None,
+blocks until <code>condition_lambda</code> returns <code>True</code>. If
+<code>condition_lambda</code> is None, waits until
+<code>has_data()</code> returns True. Returns <code>None</code> on
+timeout, <code>False</code> if a stop is requested, and
+<code>True</code> otherwise.</li>
+<li><strong>sleep(duration_sec)</strong>: blocks for the specified
+duration. Returns True unless a stop request is received.</li>
+<li><strong>is_stop_requested()</strong>: returns True if a stop request
+has been received</li>
+<li><strong>snapshot()</strong>: returns a node that holds the value
+obtained by <code>get()</code> and returns the same value to
+<code>get()</code> of its child nodes (used, for example, to extract
+each field of data obtained by a single read through child nodes)</li>
+</ul></li>
+</ul>
+<p><code>wait()</code> and <code>sleep()</code> also have async
+versions, <code>aio_wait()</code> and <code>aio_sleep()</code>.</p>
+<p>Nodes derived from <code>ControlVariableNode</code> have the
+following methods.</p>
+<ul>
+<li>[ControlVariableNode] -&gt; [ControlNode]
+<ul>
+<li><strong>setpoint(limits=(None,None))</strong>: holds a setpoint
+<ul>
+<li>set(value): holds the value as the setpoint and calls
+<code>set(value)</code> of the parent node. Raises an exception if the
+value is outside the limits.</li>
+<li>get(): returns the held setpoint value</li>
+</ul></li>
+<li><strong>ramping(change_per_sec)</strong> /
+<strong>async_ramping(change_per_sec)</strong>: sets the value while
+ramping it (thread version / async task version)
+<ul>
+<li>set(value): starts ramping the parent node’s value toward the target
+value. Raises an exception if the value is not numeric.</li>
+<li>get(): returns <code>get()</code> of the parent node</li>
+<li><strong>status()</strong>
+<ul>
+<li>set(value): <code>set(0)</code> stops the ongoing ramping</li>
+<li>get(): returns <code>True</code> if ramping is in progress,
+<code>False</code> otherwise</li>
+</ul></li>
+</ul></li>
+<li><strong>pid(sensing_node, Kp, Ki, Kd, *, interval=1.0,
+output_limits=(None,None))</strong>: PID-controls this node using the
+value read from <code>sensing_node</code>
+<ul>
+<li>set(value): starts a PID loop so that the value of the sensing node
+becomes the target value. <code>set(None)</code> stops the control.</li>
+<li>get(): returns the target value</li>
+<li><strong>status()</strong>
+<ul>
+<li>set(value): <code>set(0)</code> stops the PID loop</li>
+<li>get(): returns a dict containing various control parameters
+(<code>running</code>, <code>setpoint</code>, <code>measurement</code>,
+<code>output</code>, <code>Kp</code>, <code>Ki</code>, <code>Kd</code>,
+etc.)</li>
+</ul></li>
+</ul></li>
+<li><strong>oneshot(duration=None, normal=None)</strong>: holds the
+value set with <code>set()</code> for the specified duration, and then
+reverts it to the <code>normal</code> value</li>
+<li><strong>readonly()</strong>: makes the node read-only. Returns a
+node that only has <code>get()</code>, which calls <code>get()</code> of
+the parent node. (Useful when exposing a node externally.)</li>
+<li><strong>writeonly()</strong>: makes the node write-only. Returns a
+node that only has <code>set()</code>, which calls <code>set()</code> of
+the parent node.</li>
+</ul></li>
+</ul>
+<p>Nodes that inherit <code>ControlThreadMixin</code> or
+<code>ControlAsyncTaskMixin</code> have the following methods.</p>
+<ul>
+<li>[ControlThreadMixin / ControlAsyncTaskMixin]
+<ul>
+<li><strong>start()</strong>: creates and starts <code>run()</code>
+(thread) or <code>aio_run()</code> (async task)</li>
+<li><strong>stop()</strong>: stops the thread or task</li>
+</ul></li>
+</ul>
+<h2 id="database-interface">Database Interface</h2>
+<p>With the SlowPy DataStore, data can be recorded into a database in a
+format that SlowDash can read. Here is a simple example of writing
+single values into a long-format table.</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_PostgreSQL</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.import_control_module(<span class="st">&#39;DummyDevice&#39;</span>).randomwalk_device()</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_PostgreSQL(<span class="st">&#39;postgresql://postgres:postgres@localhost:5432/SlowTestData&#39;</span>, table<span class="op">=</span><span class="st">&quot;Test&quot;</span>)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> ch <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">4</span>):</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>        value <span class="op">=</span> device.ch(ch).get()</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>        datastore.append(value, tag<span class="op">=</span><span class="st">&#39;</span><span class="sc">%02d</span><span class="st">&#39;</span><span class="op">%</span>ch)</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span></code></pre></div>
+<p>The following DataStore classes are available.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Class</th>
+<th>URL Format</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>DataStore_SQLite</code></td>
+<td><code>sqlite:///FILE_NAME</code></td>
+<td>The second argument is the table name</td>
+</tr>
+<tr class="even">
+<td><code>DataStore_PostgreSQL</code></td>
+<td><code>postgresql://USER:PASS@HOST:PORT/DB</code></td>
+<td>The second argument is the table name</td>
+</tr>
+<tr class="odd">
+<td><code>DataStore_MySQL</code></td>
+<td><code>mysql://USER:PASS@HOST:PORT/DB</code></td>
+<td>The second argument is the table name</td>
+</tr>
+<tr class="even">
+<td><code>DataStore_InfluxDB2</code></td>
+<td><code>influxdb2://ORGANIZATION:TOKEN@HOST:PORT/BUCKET</code></td>
+<td>The second argument is the measurement name</td>
+</tr>
+<tr class="odd">
+<td><code>DataStore_Redis</code></td>
+<td><code>redis://HOST:PORT/DB</code></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><code>DataStore_HDF5</code></td>
+<td>(file name)</td>
+<td>The second argument is the dataset name. For per-run file recording,
+etc.</td>
+</tr>
+<tr class="odd">
+<td><code>DataStore_CSV</code></td>
+<td><code>csv:///FILE_NAME</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>There is also a function,
+<code>create_datastore_from_url(url, table)</code>, which creates an
+appropriate DataStore from a URL. This is useful when the database URL
+is given from a configuration file, etc.</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> create_datastore_from_url</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> create_datastore_from_url(<span class="st">&#39;sqlite:///SlowStore.db&#39;</span>, <span class="st">&#39;slowdata&#39;</span>)</span></code></pre></div>
+<p>The main methods of DataStore are:</p>
+<ul>
+<li><strong>append(values, tag=None, timestamp=None)</strong>: adds the
+values as time-series data</li>
+<li><strong>update(values, tag=None, timestamp=None)</strong>: updates
+the values (only the latest values are kept)</li>
+<li><strong>another(table)</strong>: returns a DataStore that writes
+into another table of the same database (SQL only)</li>
+<li><strong>close()</strong>: closes the connection to the database</li>
+</ul>
+<p>In addition to numbers and strings, analysis objects such as
+histograms (described later) can be passed as <code>values</code>.
+<code>timestamp</code> is in UNIX time; if omitted, the current time is
+used.</p>
+<p>For SQL databases, the “long format” with UNIX timestamps
+(<code>(timestamp REAL, channel VARCHAR(100), value REAL)</code>) is
+used by default. To use other table schemas, specify a user-defined
+<code>TableFormat</code>.</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_SQLite, LongTableFormat</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyDataFormat(LongTableFormat):</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    schema_numeric <span class="op">=</span> <span class="st">&#39;(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel))&#39;</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    schema_text <span class="op">=</span> <span class="st">&#39;(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value TEXT, PRIMARY KEY(timestamp, channel))&#39;</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> insert_numeric_data(<span class="va">self</span>, cur, timestamp, channel, value):</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>        ph <span class="op">=</span> <span class="va">self</span>.db.placeholder</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>        cur.execute(<span class="ss">f&#39;INSERT INTO </span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>table<span class="sc">}</span><span class="ss"> VALUES(CURRENT_TIMESTAMP,</span><span class="sc">{</span>ph<span class="sc">}</span><span class="ss">,</span><span class="sc">{</span>ph<span class="sc">}</span><span class="ss">,</span><span class="sc">{</span>ph<span class="sc">}</span><span class="ss">)&#39;</span>, (<span class="bu">int</span>(timestamp), channel, value))</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> insert_text_data(<span class="va">self</span>, cur, timestamp, channel, value):</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>        ph <span class="op">=</span> <span class="va">self</span>.db.placeholder</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>        cur.execute(<span class="ss">f&#39;INSERT INTO </span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>table<span class="sc">}</span><span class="ss"> VALUES(CURRENT_TIMESTAMP,</span><span class="sc">{</span>ph<span class="sc">}</span><span class="ss">,</span><span class="sc">{</span>ph<span class="sc">}</span><span class="ss">,</span><span class="sc">{</span>ph<span class="sc">}</span><span class="ss">)&#39;</span>, (<span class="bu">int</span>(timestamp), channel, <span class="bu">str</span>(value)))</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_SQLite(<span class="st">&#39;sqlite:///MySlowStore.db&#39;</span>, table<span class="op">=</span><span class="st">&quot;slowdata&quot;</span>, table_format<span class="op">=</span>MyDataFormat())</span></code></pre></div>
+<p>When recording data from multiple SlowTasks, instead of having each
+task write directly into the database, it is convenient to publish the
+data to SlowMesh and have a single SlowTask dedicated to recording write
+it all into the database (see the SlowMesh section below). This avoids
+conflicts even with databases that have limitations on concurrent
+writes, such as SQLite, and also keeps the table schema description in
+one place.</p>
+<h2 id="analysis-components">Analysis Components</h2>
+<p>SlowPy provides commonly used data objects such as histograms and
+graphs. These objects can be written directly into a database using the
+SlowPy database interface described above. They can also be sent
+directly to the browser without going through a database, using the
+streaming feature described later.</p>
+<h3 id="histogram">Histogram</h3>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>hist <span class="op">=</span> slowpy.Histogram(nbins<span class="op">=</span><span class="dv">100</span>, range_min<span class="op">=</span><span class="dv">0</span>, range_max<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ...</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> ...</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  value <span class="op">=</span> device.read(...</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  hist.fill(value)</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> time_to_store:</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    datastore.append(hist, tag<span class="op">=</span><span class="st">&quot;test_hist&quot;</span>)</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>  ...</span></code></pre></div>
+<p><code>datastore.append(hist, tag=name)</code> creates a time series
+of histograms (one histogram per time point). To keep only the latest
+histogram, use <code>datastore.update(hist, tag=name)</code>
+instead.</p>
+<p>The contents of a histogram can be cleared with <code>clear()</code>.
+Also, with <code>add_stat()</code>, statistics such as the number of
+entries and the mean can be attached to the histogram for display.</p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>hist.add_stat(slowpy.HistogramBasicStat([<span class="st">&#39;Entries&#39;</span>, <span class="st">&#39;Underflow&#39;</span>, <span class="st">&#39;Overflow&#39;</span>, <span class="st">&#39;Mean&#39;</span>, <span class="st">&#39;RMS&#39;</span>], ndigits<span class="op">=</span><span class="dv">3</span>))</span></code></pre></div>
+<p>There is also a 2D histogram,
+<code>Histogram2d(xnbins, xrange_min, xrange_max, ynbins, yrange_min, yrange_max)</code>.</p>
+<h3 id="graph">Graph</h3>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>graph <span class="op">=</span> slowpy.Graph([<span class="st">&#39;channel&#39;</span>, <span class="st">&#39;value&#39;</span>])</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> ch <span class="kw">in</span> <span class="bu">range</span>(n_ch):</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    value <span class="op">=</span> device.read(ch, ...</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    graph.fill(ch, value)</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> time_to_store:</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    datastore.append(graph, tag<span class="op">=</span><span class="st">&quot;test_graph&quot;</span>)</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  ...</span></code></pre></div>
+<p><code>datastore.append(graph, tag=name)</code> creates a time series
+of graphs (one graph per time point). To keep only the latest graph, use
+<code>datastore.update(graph, tag=name)</code> instead. Like histograms,
+graphs also have <code>add_stat()</code>.</p>
+<h3 id="trend">Trend</h3>
+<p>A Trend is a special graph that divides data into time bins and
+calculates the mean, etc. for each bin. There is the normal Trend, which
+holds the mean, etc. of data values, and the RateTrend, which is
+specialized for holding the number of data entries (rate).</p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>rate_trend <span class="op">=</span> slowpy.RateTrend(length<span class="op">=</span><span class="dv">300</span>, tick<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  value <span class="op">=</span> device.read(...</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  rate_trend.fill(time.time())</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> time_to_store:</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    datastore.append(rate_trend.timeseries())</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    rate_trend.flush()</span></code></pre></div>
+<p>Unlike Histogram and Graph, a Trend is not recorded as a single
+object into a database; instead, it is expanded into time-series data.
+The <code>timeseries()</code> method is used for this. (It is possible
+to store the Trend object itself, but this is usually not done.) Also,
+<code>flush()</code> is called after recording, to delete the part of
+the data already recorded in the database.
+(<code>timeseries(flush=True)</code> does the same.)</p>
+<p>When streaming to the browser, all of the held past data should be
+displayed, so do not <code>flush()</code>, and send the entire result of
+<code>timeseries()</code> every time.</p>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> ctrl.aio_stream(<span class="st">&#39;rate_trend&#39;</span>, rate_trend.timeseries())</span></code></pre></div>
+<h2 id="making-a-device-scpi-capable">Making a Device SCPI-Capable</h2>
+<p>If a device has some programming capability, such as the GPIO of a
+Raspberry Pi, a simple way to integrate it into a SlowDash system is to
+implement an SCPI interface on the device. This approach is also useful
+for integrating non-Ethernet devices (such as USB) connected to a remote
+computer, via a Raspberry Pi or similar.</p>
+<p>Here is an example of wrapping a device with Ethernet SCPI.</p>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ScpiServer</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>scpi <span class="op">=</span> ScpiServer()</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyMemoryDevice:</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.value <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> MyMemoryDevice()</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="at">@scpi.on</span>(<span class="st">&#39;*IDN?&#39;</span>)</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_idn():</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&#39;MyMemoryDevice&#39;</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a><span class="at">@scpi.on</span>(<span class="st">&#39;Volt&#39;</span>)</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V(value:<span class="bu">float</span>):</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>    device.value <span class="op">=</span> value</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a><span class="at">@scpi.on</span>(<span class="st">&#39;MEASure:Volt?&#39;</span>)</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_V():</span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> device.value</span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a>scpi.start(port<span class="op">=</span><span class="dv">5025</span>)</span></code></pre></div>
+<p>This implements the following SCPI commands (commands are
+case-insensitive):</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Command</th>
+<th>Action</th>
+<th>Command Example</th>
+<th>Return Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>*IDN?</code></td>
+<td>Returns the device ID</td>
+<td><code>*IDN?</code></td>
+<td><code>MyMemoryDevice</code></td>
+</tr>
+<tr class="even">
+<td><code>Volt &lt;Value&gt;</code></td>
+<td>Sets the value</td>
+<td><code>V 10</code></td>
+<td>(none)</td>
+</tr>
+<tr class="odd">
+<td><code>MEASure:Volt?</code></td>
+<td>Gets the value</td>
+<td><code>MEAS:V?</code></td>
+<td><code>10</code></td>
+</tr>
+<tr class="even">
+<td><code>*OPC?</code></td>
+<td>Waits for command completion and returns the status</td>
+<td><code>*OPC?</code></td>
+<td><code>1</code></td>
+</tr>
+<tr class="odd">
+<td><code>SYSTem:ERRor?</code></td>
+<td>Returns the error message</td>
+<td><code>SYST:ERR?</code></td>
+<td><code>invalid command: IDN?</code> <br>(after sending
+<code>IDN?</code> instead of <code>*IDN?</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>The SlowPy SCPI server binds SCPI commands to handlers using
+decorators. As with <code>set_V(value:float)</code> in this example, if
+the arguments of a handler function have type annotations, type checking
+and type conversion are performed on calls. SCPI command concatenation,
+etc. is processed before the handlers are called. Default handler
+implementations are provided for some standard commands, such as
+<code>*OPC?</code> and <code>SYSTem:ERRor?</code>.</p>
+<p>Once the code is tested, make it start automatically on PC boot with
+your preferred method (systemd, <code>/etc/rc.local</code>, Docker,
+etc.). Some methods are described in <a href="RelatedTools.html">Related
+Tools</a>.</p>
+<p>If a SlowPy control node for the device already exists, the node can
+be mapped directly to an SCPI interface.</p>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ControlSystem, ScpiServer, ScpiAdapter</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>ControlSystem.import_control_module(<span class="st">&#39;DummyDevice&#39;</span>)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ControlSystem().randomwalk_device()</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>adapter <span class="op">=</span> ScpiAdapter(idn<span class="op">=</span><span class="st">&#39;RandomWalk&#39;</span>)</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>adapter.bind_nodes([</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Randomwalk Configuration</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;CONFIGure:WALK&#39;</span>, device.walk().setpoint(limits<span class="op">=</span>(<span class="dv">0</span>,<span class="va">None</span>))),</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;CONFIGure:DECAY&#39;</span>, device.decay().setpoint(limits<span class="op">=</span>(<span class="dv">0</span>,<span class="dv">1</span>))),</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Common SCPI commands for power supplies and voltmeters</span></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;VOLTage&#39;</span>, device.ch(<span class="dv">0</span>).setpoint()),</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;MEASure:VOLTage:DC&#39;</span>, device.ch(<span class="dv">0</span>).readonly()),</span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>server <span class="op">=</span> ScpiServer(adapter, port<span class="op">=</span><span class="dv">5025</span>)</span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>server.start()</span></code></pre></div>
+<h1 id="slowtask-binding-the-gui-and-scripts">SlowTask: Binding the GUI
+and Scripts</h1>
+<p>A SlowTask is a user Python script placed under the
+<code>config</code> directory of a SlowDash project, with a name like
+<code>slowtask-XXX.py</code>. From the SlowDash GUI, the script can be
+started and stopped, functions defined in the script can be called,
+variables in the script can be displayed, etc. The SlowPy library is
+designed to be used in SlowTask scripts, but using it is not
+mandatory.</p>
+<p>There are two ways to write a SlowTask script:</p>
+<ul>
+<li><strong>With Tasklet</strong>: create an instance of
+<code>slowpy.mesh.Tasklet</code> in the script, and use decorators to
+explicitly specify functions exposed externally and functions called at
+start-up, at fixed time intervals, etc. All features of SlowMesh are
+available.</li>
+<li><strong>Without Tasklet</strong>: use a plain Python script as is.
+All functions whose names do not start with an underscore become
+callable externally, and functions with predefined names such as
+<code>_initialize()</code> and <code>_loop()</code> are called at
+specific timings. Available features are limited.</li>
+</ul>
+<p>The method without Tasklet is for cases where an existing script is
+to be used with the SlowDash Web GUI as is, or where you do not want to
+write SlowPy code in the script. When writing a new script, using
+Tasklet is easier to manage and more capable.</p>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Tasklet</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>tasklet <span class="op">=</span> Tasklet()</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>... (body) ...</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Block to run the script standalone (optional)</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    tasklet.run(mesh_url<span class="op">=</span><span class="st">&#39;slowmq://localhost:18881&#39;</span>)</span></code></pre></div>
+<h2 id="starting-and-stopping-slowtasks">Starting and Stopping
+SlowTasks</h2>
+<h3 id="starting-from-the-slowdash-server">Starting from the SlowDash
+Server</h3>
+<p>When a SlowTask script file (e.g., <code>slowtask-test.py</code>) is
+placed under the <code>config</code> directory of the project, it is
+recognized by the SlowDash server and shown in the task management panel
+(the “SlowTask” section) of the SlowDash home page. By default, tasks
+are only “listed” and are not executed until the <code>start</code>
+button is clicked.</p>
+<p>By creating an entry in the SlowDash configuration file
+(<code>SlowdashProject.yaml</code>), a task can be configured to start
+automatically when the server starts.</p>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="at">  ...</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">task</span><span class="kw">:</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> test</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">auto_start</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">parameters</span><span class="kw">:</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">default_ramping_speed</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.1</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">system</span><span class="kw">:</span></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">our_security_is_perfect</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span></code></pre></div>
+<p>The <code>task</code> entry can be a dict of one task, or a list of
+multiple tasks (<code>tasks</code> can be written instead of
+<code>task</code>).</p>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">tasks</span><span class="kw">:</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> read</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">auto_start</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> store</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">auto_start</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">parameters</span><span class="kw">:</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">db_url</span><span class="kw">:</span><span class="at"> sqlite:///SlowStore.db</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">table</span><span class="kw">:</span><span class="at"> slowdata</span></span></code></pre></div>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>name</code></td>
+<td>Task name</td>
+<td>(required)</td>
+</tr>
+<tr class="even">
+<td><code>auto_start</code></td>
+<td>Whether to start the task automatically when the server starts (the
+old name <code>auto_load</code> can also be used)</td>
+<td><code>false</code></td>
+</tr>
+<tr class="odd">
+<td><code>parameters</code></td>
+<td>Parameters passed to the script</td>
+<td>none</td>
+</tr>
+<tr class="even">
+<td><code>file_path</code></td>
+<td>Path of the script file</td>
+<td><code>config/slowtask-{name}.py</code></td>
+</tr>
+<tr class="odd">
+<td><code>command</code></td>
+<td>Command to start the task</td>
+<td><code>slowdash-task {file_path} --name={name}</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>parameters</code> is optional; if specified, it is passed to
+the initialize callback of the SlowTask script (described later). It is
+also held in the <code>parameters</code> property of the Tasklet, so it
+can be used before <code>initialize</code>, such as in decorators.</p>
+<p>By changing <code>command</code>, a task can be run on another PC
+using <code>ssh</code>, for example. By writing the same script in
+multiple entries with different names, the same script can be run
+multiple times simultaneously.</p>
+<p>To use a general-purpose SlowTask included in the SlowDash
+distribution package, prefix <code>name</code> with
+<code>@toolbox/</code>. For details, see the <a
+href="Toolbox_JP.html">Toolbox chapter</a> (in Japanese).</p>
+<p>Setting <code>our_security_is_perfect</code> in <code>system</code>
+to <code>true</code> allows Python scripts to be edited on the SlowDash
+web page. This is convenient, but think carefully about what it means. A
+Python script can do anything, such as <code>system("rm -rf *")</code>.
+Use this feature only if access is strictly controlled.</p>
+<h3 id="operating-tasks-from-the-slowdash-server">Operating Tasks from
+the SlowDash Server</h3>
+<p>The following SlowTask operations can be performed from the SlowDash
+task management panel:</p>
+<ul>
+<li><strong>Start</strong>: starts the SlowTask as a child process. The
+start command can be specified with <code>command</code> in the
+<code>SlowdashProject.yaml</code> file; the default is local execution
+with the <code>slowdash-task</code> command.</li>
+<li><strong>Stop</strong>: requests the task to stop via SlowMesh. The
+Tasklet stop procedure is performed, and the finalize callbacks are
+called.</li>
+<li><strong>Kill</strong>: if the task was started by the server as a
+child process, sends a KILL signal to the child process.</li>
+<li><strong>Purge</strong>: removes a task that no longer responds from
+SlowMesh.</li>
+</ul>
+<p>SlowTask processes started from the SlowDash server terminate
+automatically when the SlowDash server terminates. (SlowTask processes
+terminate automatically even if the server crashes or is forcibly
+killed.)</p>
+<p>When the script is modified, stopping the task and starting it again
+loads the new script.</p>
+<h3 id="running-independently-of-the-server">Running Independently of
+the Server</h3>
+<p>To run a SlowTask as a process independent of the SlowDash server,
+usually the <code>slowdash-task</code> command is used. The
+<code>--mesh</code> option specifies the SlowMesh endpoint (usually the
+address of the SlowDash server). Task parameters can also be passed by
+giving a JSON string to the <code>--parameters</code> option. In this
+case, enclose the entire JSON string in single quotes so that it is not
+misinterpreted by the shell.</p>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/PROJECT</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-task config/slowtask-mytask.py --mesh=slowmq://localhost:18881 --parameters=&#39;{&quot;p1&quot;:10,&quot;p2&quot;:20}&#39;</span></span></code></pre></div>
+<p>If the script has
+<code>if __name__ == '__main__': tasklet.run(...)</code>, it can also be
+run as a normal Python script. In this case, however, task parameters
+cannot be passed.</p>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python config/slowtask-mytask.py</span></span></code></pre></div>
+<p>SlowTask processes started independently can also be stopped (Stop)
+from the SlowDash server. However, they cannot be forcibly terminated
+(Kill) from the server. SlowTask processes started independently keep
+running even if the SlowDash server stops, and automatically reconnect
+the next time the SlowDash server starts. As long as the task can access
+SlowMesh, the task process may run on another PC or in another
+container.</p>
+<h3 id="task-name">Task Name</h3>
+<p>Each SlowTask has a name (task name), which is used for function
+calls from the browser, etc., and for data channel names, etc. The task
+name is specified by one of the following:</p>
+<ul>
+<li>The file name of the task script, with the leading
+<code>slowtask-</code> removed (default)</li>
+<li>The <code>name</code> parameter of the <code>task</code> entry in
+<code>SlowdashProject.yaml</code></li>
+<li>The <code>--name</code> parameter of the <code>slowdash-task</code>
+command</li>
+<li>The <code>name</code> argument of <code>Tasklet.run()</code></li>
+</ul>
+<p>Task names cannot contain characters other than alphanumerics and
+<code>_</code>. If such characters are included, they are replaced with
+<code>_</code>. For example, the task name of
+<code>slowtask-my-device.py</code> will be <code>my_device</code>.</p>
+<h2 id="exporting-functions">Exporting Functions</h2>
+<p>User functions in a SlowTask script can be called externally,
+including from the Web GUI.</p>
+<h3 id="with-tasklet">With Tasklet</h3>
+<p>If a SlowTask script uses Tasklet, functions called from the Web GUI,
+etc. must be explicitly specified with the
+<code>@tasklet.mesh.export()</code> decorator. This makes it clear which
+functions are called externally, even when the script becomes long.</p>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Tasklet</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>tasklet <span class="op">=</span> Tasklet()</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.export</span>()</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> set_V(ch:<span class="bu">int</span>, V0:<span class="bu">float</span>, ramping:<span class="bu">float</span>):</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
+<p>The function can be either a normal function or an async function. To
+export a function under a different name, specify <code>name</code> as a
+keyword argument, as in
+<code>@tasklet.mesh.export(name='set_voltage')</code>.</p>
+<h3 id="without-tasklet">Without Tasklet</h3>
+<p>If a script does not use Tasklet, all functions whose names do not
+start with an underscore (<code>_</code>) are implicitly exported. (Only
+the functions defined in the script are exported; imported functions are
+not.)</p>
+<div class="sourceCode" id="cb31"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V(ch:<span class="bu">int</span>, V0:<span class="bu">float</span>, ramping:<span class="bu">float</span>):</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
+<h3 id="execution-time-of-exported-functions">Execution Time of Exported
+Functions</h3>
+<p>As a SlowTask runs entirely concurrently in single-threaded
+asynchronous processing, using <code>time.sleep()</code> in the script
+freezes everything. The intended way is to write loops using
+<code>@tasklet.loop(interval)</code> etc. (described later), so that
+there is no explicit sleep in the script. If you really need to sleep,
+use <code>await asyncio.sleep()</code> or
+<code>await ctrl.aio_sleep()</code>.</p>
+<p>Also, <strong>make exported functions finish immediately; as a
+guideline, return within 1 second at most</strong>. The caller times out
+in 5 seconds by default. For time-consuming processing, consider the
+following methods:</p>
+<ul>
+<li>Set the processing request in a variable or put it into an
+<code>asyncio.Queue</code>, and have a <code>@tasklet.loop()</code>
+callback check it and start the processing</li>
+<li>Run it as a separate task with
+<code>asyncio.create_task()</code></li>
+<li>Use SlowPy nodes that have threads or async tasks, such as ramping
+and PID</li>
+</ul>
+<p>The status and results of the processing are expected to be sent to
+the browser by streaming, etc., or written to logs.</p>
+<h2 id="calling-functions-from-the-web-gui">Calling Functions from the
+Web GUI</h2>
+<p>Exported functions can be called from the SlowDash GUI in several
+ways. In the following, the script file name is assumed to be
+<code>slowtask-test.py</code> (task name <code>test</code>).</p>
+<h3 id="html-form-panel">HTML Form Panel</h3>
+<p>In a SlowPlot HTML form panel, clicking a <code>&lt;button&gt;</code>
+(or <code>&lt;input type="submit"&gt;</code>) whose <code>name</code>
+attribute has a task name and a function name calls that function:</p>
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.destroy_apparatus()&quot;</span><span class="dt">&gt;</span>Finish<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>Here, the parentheses at the end of the button name indicate that
+this button is bound to a SlowTask function.</p>
+<p>The first part (<code>test.</code> in this example) is the task name,
+which by default is the script file name with the leading
+<code>slowtask-</code> removed. (If the task name contains
+<code>-</code>, it is replaced with <code>_</code>.)</p>
+<p>HTML files are placed in the <code>config</code> directory of the
+project, with names like <code>html-XXX.html</code>. As described later,
+HTML contents can also be generated in a SlowTask script.</p>
+<h4 id="passing-parameters">Passing Parameters</h4>
+<p>SlowTask functions can take arguments:</p>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V0(voltage:<span class="bu">float</span>, ramping:<span class="bu">float</span>):</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">#... do your work here</span></span></code></pre></div>
+<p>The argument values are taken from the values of the
+<code>&lt;input&gt;</code> elements of the form:</p>
+<div class="sourceCode" id="cb34"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  Voltage: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;voltage&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;ramping&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;1&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V0()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>The <code>name</code> attribute of an <code>&lt;input&gt;</code>
+corresponds to the argument name of the function. Of the
+<code>&lt;input&gt;</code> elements in the form, only those for the
+arguments the function takes are passed.</p>
+<p>If the SlowTask function has type annotations as in the example
+above, the argument values are converted to the specified types. If a
+value cannot be converted to the specified type, an error is returned to
+the browser, and the SlowTask function is not called. The value of a
+checkbox (<code>&lt;input type="checkbox"&gt;</code>) can be passed to a
+<code>bool</code> argument.</p>
+<p>Multiple buttons can be placed in a single form:</p>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;ramping&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;1&quot;</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;width:5em&quot;</span><span class="dt">&gt;</span>/sec</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  V0: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V0&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V0()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  V1: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V1&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V1()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  V2: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V2&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V2()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>  V3: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V3&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V3()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_all()&quot;</span><span class="dt">&gt;</span>Set All<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.stop()&quot;</span><span class="dt">&gt;</span>Stop Ramping<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb36"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V0(V0:<span class="bu">float</span>, ramping:<span class="bu">float</span>):</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V1(V1:<span class="bu">float</span>, ramping:<span class="bu">float</span>):</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
+<p>Web form input values are bound to the function arguments by name
+(<code>&lt;input name="V0"&gt;</code> is bound to the argument
+<code>V0</code>).</p>
+<p>Instead of passing function arguments from
+<code>&lt;input&gt;</code>, they can also be written directly in the
+<code>&lt;button&gt;</code> name.</p>
+<div class="sourceCode" id="cb37"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;ramping&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;1&quot;</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;width:5em&quot;</span><span class="dt">&gt;</span>/sec</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  V0: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V0&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V(ch=0)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  V1: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V1&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V(ch=1)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>  V2: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V2&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V(ch=2)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>  V3: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V3&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V(ch=3)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_all()&quot;</span><span class="dt">&gt;</span>Set All<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.stop()&quot;</span><span class="dt">&gt;</span>Stop Ramping<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb38"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V(ch:<span class="bu">int</span>, V0:<span class="bu">float</span>, ramping:<span class="bu">float</span>):</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
+<p>(Execution controls used in previous versions, such as
+<code>reentrant</code> and <code>async</code>, have been moved to the
+Python script side (TODO). The button-name modifiers are no longer
+needed; if specified, a warning is shown and they are ignored.)</p>
+<h4 id="publishing-to-pubsub">Publishing to PubSub</h4>
+<p>If the button name is <code>publish TOPIC_NAME()</code>, instead of
+calling a function, the form input values are published to the specified
+SlowMesh topic. This is used to notify all tasks that need it of an
+event such as “start”, rather than calling a function of a specific task
+(see the SlowMesh section).</p>
+<div class="sourceCode" id="cb39"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;publish mydaq.control.start()&quot;</span><span class="dt">&gt;</span>Start<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;publish mydaq.control.stop()&quot;</span><span class="dt">&gt;</span>Stop<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>The published data is a dict combining the arguments in the
+parentheses and the name-value pairs of the form’s
+<code>&lt;input&gt;</code> elements.</p>
+<h4 id="form-synchronization">Form Synchronization</h4>
+<p>If a <code>&lt;form&gt;</code> is given a name, its values are sent
+to the server on every change of an <code>&lt;input&gt;</code>, and the
+form input values are synchronized across multiple browsers (even before
+a button is pressed). Also, the form values are saved to a file in the
+project directory (<code>registry-pubsub-form.json</code>), and the
+previous form values are automatically restored when the server is
+stopped and restarted.</p>
+<div class="sourceCode" id="cb40"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;voltage_control&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;ramping&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;1&quot;</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;width:5em&quot;</span><span class="dt">&gt;</span>/sec</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>The values of named forms can also be read and written from SlowTask
+scripts (see “Reading and Writing Form Values” below).</p>
+<h4 id="enabling-disabling-buttons-by-data">Enabling / Disabling Buttons
+by Data</h4>
+<p>By specifying the <code>sd-enabled</code> attribute on an
+<code>&lt;input&gt;</code>, buttons, etc. can be enabled or disabled
+according to data values. Using values streamed or exported from a
+SlowTask (described later), it is possible, for example, to disable the
+Start button while running, according to the task status.</p>
+<div class="sourceCode" id="cb41"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;run_control&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.start()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Start&quot;</span> <span class="er">sd-enabled</span><span class="ot">=</span><span class="st">&quot;run_status[&#39;running&#39;]-&gt;invert()&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.stop()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Stop&quot;</span> <span class="er">sd-enabled</span><span class="ot">=</span><span class="st">&quot;run_status[&#39;running&#39;]&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>The value specified in <code>sd-enabled</code> must be a boolean. For
+value conversion, see the <a href="DataTransform.html">Data Transform
+chapter</a>.</p>
+<h3 id="canvas-panel">Canvas Panel</h3>
+<p>In a canvas panel, a button to call a task can be placed as
+follows:</p>
+<div class="sourceCode" id="cb42"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>    <span class="er">...</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;button&quot;</span><span class="fu">,</span></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;attr&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;x&quot;</span><span class="fu">:</span><span class="dv">400</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="dv">630</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">130</span><span class="fu">,</span> <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;Finish Experiment&quot;</span> <span class="fu">},</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;submit&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;test.destroy_apparatus()&quot;</span> <span class="fu">}</span> <span class="fu">}</span></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>        <span class="er">...</span></span></code></pre></div>
+<p>For functions that take arguments, a form can be used:</p>
+<div class="sourceCode" id="cb43"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    <span class="er">...</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;valve&quot;</span><span class="fu">,</span> </span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;attr&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="er">...</span> <span class="fu">},</span></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;metric&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;channel&quot;</span><span class="fu">:</span> <span class="st">&quot;sccm.GasInlet&quot;</span><span class="fu">,</span> <span class="er">...</span> <span class="fu">},</span></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;form&quot;</span><span class="fu">:</span> <span class="st">&quot;FlowControl&quot;</span> <span class="fu">}</span></span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>        <span class="er">...</span></span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;forms&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;FlowControl&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;Injection Flow&quot;</span><span class="fu">,</span></span>
+<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;inputs&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a>                <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;flow&quot;</span><span class="fu">,</span> <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;Set-point (sccm)&quot;</span><span class="fu">,</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;number&quot;</span><span class="fu">,</span> <span class="dt">&quot;initial&quot;</span><span class="fu">:</span> <span class="dv">15</span><span class="fu">,</span> <span class="dt">&quot;step&quot;</span><span class="fu">:</span> <span class="fl">0.1</span> <span class="fu">}</span></span>
+<span id="cb43-17"><a href="#cb43-17" aria-hidden="true" tabindex="-1"></a>            <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb43-18"><a href="#cb43-18" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;buttons&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb43-19"><a href="#cb43-19" aria-hidden="true" tabindex="-1"></a>                <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;ATDS.set_flow()&quot;</span><span class="fu">,</span> <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;Apply Set-point&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb43-20"><a href="#cb43-20" aria-hidden="true" tabindex="-1"></a>                <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;ATDS.stop_flow()&quot;</span><span class="fu">,</span> <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;Close Valve&quot;</span> <span class="fu">}</span></span>
+<span id="cb43-21"><a href="#cb43-21" aria-hidden="true" tabindex="-1"></a>            <span class="ot">]</span></span>
+<span id="cb43-22"><a href="#cb43-22" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span></span>
+<span id="cb43-23"><a href="#cb43-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb43-24"><a href="#cb43-24" aria-hidden="true" tabindex="-1"></a>    <span class="er">...</span></span></code></pre></div>
+<p>For details, see the <a href="Panels.html">UI Panels chapter</a>.</p>
+<h3 id="calling-from-other-slowtasks-and-programs">Calling from Other
+SlowTasks and Programs</h3>
+<p>Exported functions can also be called from other SlowTasks via
+SlowMesh remote procedure calls (RPC).</p>
+<div class="sourceCode" id="cb44"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>return_value <span class="op">=</span> <span class="cf">await</span> tasklet.mesh.aio_call(<span class="st">&#39;test.set_V&#39;</span>, ch<span class="op">=</span><span class="dv">0</span>, V0<span class="op">=</span><span class="dv">10</span>, ramping<span class="op">=</span><span class="dv">1</span>)</span></code></pre></div>
+<p>They can also be called from programs other than browsers, using the
+HTTP API (POST to <code>api/control</code>).</p>
+<h2 id="lifespan-callbacks">Lifespan Callbacks</h2>
+<h3 id="with-tasklet-1">With Tasklet</h3>
+<p>With the decorators provided by tasklet, functions in a SlowTask can
+be called at specific timings or at fixed time intervals. The called
+functions can be either normal functions or async functions. (However,
+do not use <code>time.sleep()</code> in the functions.)</p>
+<p>The same decorator can be used multiple times. In particular, by
+making multiple small <code>@tasklet.loop(interval)</code> functions,
+one for each processing, there is no need to write loops yourself in the
+script, avoiding the complexity of sleeping, termination handling,
+etc.</p>
+<ul>
+<li><code>@tasklet.initialize()</code>: called when the script
+starts</li>
+<li><code>@tasklet.finalize()</code>: called when the script ends</li>
+<li><code>@tasklet.once(delay:float=0)</code>: called once, the
+specified number of seconds after initialize</li>
+<li><code>@tasklet.schedule(time:str, use_utc:bool=False)</code>: called
+repeatedly at the specified time</li>
+<li><code>@tasklet.loop(interval:float, ticks=None)</code>: called
+repeatedly at the specified interval in seconds</li>
+</ul>
+<h4 id="initialization-and-finalization">Initialization and
+Finalization</h4>
+<p>If an <code>@tasklet.initialize()</code> function takes one argument,
+the task parameters specified with <code>parameters</code> in
+<code>SlowdashProject.yaml</code> (or <code>--parameters</code> of the
+<code>slowdash-task</code> command) are passed as a dict.</p>
+<div class="sourceCode" id="cb45"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.initialize</span>()</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> initialize(parameters:<span class="bu">dict</span>):</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>    db_url <span class="op">=</span> parameters.get(<span class="st">&#39;db_url&#39;</span>, <span class="st">&#39;sqlite:///SlowStore.db&#39;</span>)</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.finalize</span>()</span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> finalize():</span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>    datastore.close()</span></code></pre></div>
+<p>Task parameters can also be obtained from
+<code>tasklet.parameters</code>.</p>
+<p>Other callbacks, such as loop and once, start after all the
+initialize callbacks have finished. Finalize callbacks are called after
+a task stop request (Stop from the browser, Ctrl-c, etc.), once the
+other callbacks have stopped.</p>
+<h4 id="scheduled-execution">Scheduled Execution</h4>
+<p>With the <code>@tasklet.schedule(time)</code> decorator, a user
+function can be called repeatedly at specified times.</p>
+<div class="sourceCode" id="cb46"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.schedule</span>(<span class="st">&quot;08:00&quot;</span>)</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> do_this_every_morning():</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>   <span class="co"># executed every morning at 8:00</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>   <span class="cf">pass</span></span></code></pre></div>
+<p>The <code>time</code> argument is specified in the <code>HH:MM</code>
+format. The wildcard <code>*</code> can be used for <code>HH</code> and
+<code>MM</code>, and multiple time settings can be listed separated by
+<code>,</code>. To keep the period from changing at daylight saving time
+transitions, set <code>use_utc</code> to <code>True</code> and specify
+the time in UTC.</p>
+<p>Examples:</p>
+<ul>
+<li><code>@tasklet.schedule("08:00")</code>: every morning at 8:00</li>
+<li><code>@tasklet.schedule("00:00,08:00,16:00")</code>: three times a
+day</li>
+<li><code>@tasklet.schedule("*:00")</code>: every hour on the hour</li>
+<li><code>@tasklet.schedule("*:*")</code>: every minute</li>
+<li><code>@tasklet.schedule("*:00,*:20,*:40")</code>: three times an
+hour</li>
+<li><code>@tasklet.schedule("08:00", use_utc=True)</code>: every day at
+8:00 UTC</li>
+</ul>
+<p>Unless <code>use_utc</code> is specified, times are in local time,
+but note that when running inside a container such as Docker, the local
+time is often UTC.</p>
+<h4 id="user-loop">User Loop</h4>
+<p>With the <code>@tasklet.loop(interval)</code> decorator, a user
+function can be called repeatedly at a specified period.</p>
+<div class="sourceCode" id="cb47"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> my_work():   <span class="co"># this function is called every 1 second (the value of interval)</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">#... do my work</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">pass</span></span></code></pre></div>
+<p>Furthermore, if <code>ticks</code> is specified in
+<code>@tasklet.loop</code> and a <code>tick</code> argument is added to
+the user function, the value of <code>tick</code> becomes True every
+<code>ticks</code> times (the argument name of the user function is
+arbitrary).</p>
+<div class="sourceCode" id="cb48"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>, ticks<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> my_work(tick):</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># read data every second, and send all the data to the stream</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> <span class="cf">await</span> HV.ch(<span class="dv">0</span>).aio_get()</span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>    packet <span class="op">=</span> DataPacket(data, tag<span class="op">=</span><span class="st">&#39;HV.ch00&#39;</span>)</span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(packet.to(<span class="st">&#39;data.stream&#39;</span>))</span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb48-9"><a href="#cb48-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># record into the database once every 10 times</span></span>
+<span id="cb48-10"><a href="#cb48-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tick:</span>
+<span id="cb48-11"><a href="#cb48-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(packet.to(<span class="st">&#39;data.store&#39;</span>))</span></code></pre></div>
+<p>Multiple tick periods can also be specified.</p>
+<div class="sourceCode" id="cb49"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>, ticks<span class="op">=</span>{<span class="st">&quot;transient_store&quot;</span>:<span class="dv">10</span>, <span class="st">&quot;store&quot;</span>:<span class="dv">60</span>})</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> my_work(tick):</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># read data every second, and send all the data to the stream</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> <span class="cf">await</span> HV.ch(<span class="dv">0</span>).aio_get()</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>    packet <span class="op">=</span> DataPacket(data, tag<span class="op">=</span><span class="st">&#39;HV.ch00&#39;</span>)</span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(packet.to(<span class="st">&#39;data.stream&#39;</span>))</span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># record into the transient database (short-term, high-density) once every 10 times</span></span>
+<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tick.transient_store:</span>
+<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(packet.to(<span class="st">&#39;data.transient_store&#39;</span>))</span>
+<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># record into the persistent database once every 60 times</span></span>
+<span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tick.store:</span>
+<span id="cb49-15"><a href="#cb49-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(packet.to(<span class="st">&#39;data.store&#39;</span>))</span></code></pre></div>
+<p>(For <code>DataPacket</code> and <code>aio_publish()</code>, see the
+SlowMesh section below.)</p>
+<p>Again, do not use <code>time.sleep()</code> in user functions
+(<code>await ctrl.aio_sleep()</code> is OK). By using
+<code>@tasklet.loop()</code>, most sleeps should be eliminated.</p>
+<h3 id="without-tasklet-1">Without Tasklet</h3>
+<p>If a script does not use Tasklet, the following functions, if
+defined, are called at specific timings.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Function</th>
+<th>Description</th>
+<th>Tasklet Equivalent</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>_initialize(params)</code></td>
+<td>Called once when the script is loaded. The value of
+<code>params</code> is given by the SlowDash configuration.</td>
+<td><code>@tasklet.initialize()</code></td>
+</tr>
+<tr class="even">
+<td><code>_run()</code></td>
+<td>Called once after <code>_initialize()</code>.</td>
+<td><code>@tasklet.once()</code></td>
+</tr>
+<tr class="odd">
+<td><code>_loop()</code></td>
+<td>Called repeatedly after <code>_initialize()</code>, until the user
+stops the system.</td>
+<td><code>@tasklet.loop(interval=0)</code></td>
+</tr>
+<tr class="even">
+<td><code>_finalize()</code></td>
+<td>Called once after <code>_run()</code> or <code>_loop()</code>.</td>
+<td><code>@tasklet.finalize()</code></td>
+</tr>
+<tr class="odd">
+<td><code>_get_html()</code></td>
+<td>Returns HTML content (described later).</td>
+<td><code>@tasklet.content('config/html-{TASK_NAME}.html')</code></td>
+</tr>
+<tr class="even">
+<td><code>_get_layout()</code></td>
+<td>Returns a SlowPlot layout (described later).</td>
+<td><code>@tasklet.content('config/slowplot-{TASK_NAME}.json')</code></td>
+</tr>
+</tbody>
+</table>
+<p>Note that, unlike when using Tasklet, the <code>_loop()</code>
+function is called repeatedly and immediately, without sleeping.
+Therefore, <code>_loop()</code> needs to sleep to adjust the period. The
+called functions can be either normal functions or async functions, but
+<code>_loop()</code> needs to be async, so that
+<code>await ctrl.aio_sleep()</code> etc. can be used instead of
+<code>time.sleep()</code>.</p>
+<div class="sourceCode" id="cb50"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> _loop():</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_sleep(<span class="dv">1</span>)</span></code></pre></div>
+<p>If <code>_loop()</code> is a normal function, a small delay (0.1
+seconds) is inserted between <code>_loop()</code> calls to avoid
+starvation, and a warning is shown.</p>
+<p><code>_run()</code> also needs to be async in the same way. If
+<code>_run()</code> runs for a long time, monitor
+<code>ctrl.is_stop_requested()</code> and terminate when a stop is
+requested. (<code>_halt()</code>, which was used in previous versions,
+is no longer called.)</p>
+<div class="sourceCode" id="cb51"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> _run():</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="kw">not</span> ctrl.is_stop_requested():</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>        ...</span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> ctrl.aio_sleep(<span class="dv">1</span>)</span></code></pre></div>
+<p>A normal-function <code>_loop()</code> like the following, which was
+common in scripts of previous versions, also works (with a warning).
+Note, however, that the entire task stops during
+<code>ctrl.sleep()</code>, delaying responses to function calls from the
+browser, etc.</p>
+<div class="sourceCode" id="cb52"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span></code></pre></div>
+<h2 id="sending-data-to-the-browser">Sending Data to the Browser</h2>
+<p>In addition to recording data into a database and reading it from the
+browser, there are the following ways to send data from a SlowTask to
+the browser:</p>
+<ul>
+<li><strong>Streaming</strong>: sends values out from the SlowTask and
+displays them in real time on the browser (push)</li>
+<li><strong>Exporting variables</strong>: exposes variables in the
+SlowTask, and returns the current values on requests from the browser
+(pull)</li>
+<li><strong>Dynamic content generation</strong>: generates HTML and
+layout contents in the SlowTask</li>
+</ul>
+<p>In all cases, only the “current” values are available. If history is
+needed, record the data into a database.</p>
+<h3 id="streaming">Streaming</h3>
+<p>Using the <code>aio_stream(name:str, value)</code> method (or
+<code>stream(name:str, value)</code>) of ControlSystem, values can be
+sent from a SlowTask script to the browser for live updates.</p>
+<div class="sourceCode" id="cb53"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Tasklet</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>tasklet <span class="op">=</span> Tasklet()</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>V0 <span class="op">=</span> ctrl.ethernet(host, port).scpi().command(<span class="st">&quot;V&quot;</span>)</span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="fl">1.0</span>)</span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> loop():</span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_stream(<span class="st">&#39;V0&#39;</span>, <span class="cf">await</span> V0.aio_get())   <span class="co"># pushing to consumers</span></span></code></pre></div>
+<p>The types of values that can be streamed include numbers, strings,
+dicts, Python dataclasses, SlowPy control nodes, and SlowPy analysis
+objects (histograms, etc.). Numbers and strings are handled as scalar
+data, and dataclasses and dicts as Tree-type data. The sent values are
+shown in the Data Channels of the browser as data of the
+<code>current</code> type, and can be added to panels just like normal
+data.</p>
+<p><code>stream()</code> can also be used from non-async functions, but
+it must be running as a SlowTask (the Tasklet event loop must be
+running). Internally, the values are published to the SlowMesh topic
+<code>data.stream.{name}</code>.</p>
+<h3 id="exporting-variables">Exporting Variables</h3>
+<p>With the <code>expose(name:str, obj)</code> method of ControlSystem,
+variables in a SlowTask can be exposed. Exposed variables can be
+accessed from the browser as data channels named
+<code>{TASK_NAME}.{name}</code>, just like data in a database (it looks
+as if a single data point with the timestamp of “now” is stored). While
+streaming is a push from the SlowTask, exporting is a pull interface
+that returns values on requests from the browser. It is suitable for
+“getting the latest value when needed”.</p>
+<div class="sourceCode" id="cb54"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dataclasses <span class="im">import</span> dataclass</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RunStatus:</span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>    run_number: <span class="bu">int</span> <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>    running: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>run_status <span class="op">=</span> RunStatus()</span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.initialize</span>()</span>
+<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> initialize():</span>
+<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a>    ctrl.expose(<span class="st">&#39;status&#39;</span>, run_status)    <span class="co"># if the task name is run_control, the channel name is run_control.status</span></span></code></pre></div>
+<p>Things that can be exported include control nodes, SlowPy analysis
+objects, dicts, dataclasses, etc. Call <code>expose()</code> after the
+Tasklet has started (e.g., in an initialize callback).</p>
+<p>Control nodes can also be exported directly with
+<code>tasklet.mesh.export(name, node)</code>. Here is an example of
+creating and exporting a node that returns disk usage.</p>
+<div class="sourceCode" id="cb55"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shutil</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ControlNode</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DiskUsageNode(ControlNode):</span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">async</span> <span class="kw">def</span> aio_get(<span class="va">self</span>):</span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>        total, used, free <span class="op">=</span> <span class="bu">tuple</span>((<span class="bu">int</span>(x<span class="op">*</span><span class="fl">1e-8</span>)<span class="op">/</span><span class="fl">10.0</span>) <span class="cf">for</span> x <span class="kw">in</span> shutil.disk_usage(<span class="st">&#39;.&#39;</span>))</span>
+<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> { <span class="st">&#39;tree&#39;</span>: { <span class="st">&#39;total_GB&#39;</span>: total, <span class="st">&#39;used_GB&#39;</span>: used, <span class="st">&#39;free_GB&#39;</span>: free } }</span>
+<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a>tasklet.mesh.export(<span class="st">&#39;disk_usage&#39;</span>, DiskUsageNode())</span></code></pre></div>
+<p>Restrict operations on nodes exposed externally with
+<code>readonly()</code> etc. as necessary.</p>
+<h3 id="reading-and-writing-form-values">Reading and Writing Form
+Values</h3>
+<p>Input values of named HTML forms can be read and written from a
+SlowTask, using the <code>form(name)</code> node of ControlSystem. For
+example, the values last entered on the browser can be used as initial
+values when the task starts, or values determined by the task can be
+shown in the browser form.</p>
+<div class="sourceCode" id="cb56"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.initialize</span>()</span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> initialize():</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># get the current input values of the browser form &quot;pid_setup&quot; as a dict</span></span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>    form <span class="op">=</span> <span class="cf">await</span> ctrl.form(<span class="st">&#39;pid_setup&#39;</span>).aio_get()</span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>    Kp <span class="op">=</span> form.get(<span class="st">&#39;Kp&#39;</span>, <span class="dv">1</span>)</span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.export</span>()</span>
+<span id="cb56-9"><a href="#cb56-9" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> stop():</span>
+<span id="cb56-10"><a href="#cb56-10" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb56-11"><a href="#cb56-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># change the displayed value of the &quot;run_number&quot; input of the form &quot;run_control&quot;</span></span>
+<span id="cb56-12"><a href="#cb56-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.form(<span class="st">&#39;run_control&#39;</span>).element(<span class="st">&#39;run_number&#39;</span>).aio_set(run_status.run_number)</span></code></pre></div>
+<p>Multiple input values can also be set at once with
+<code>ctrl.form(name).aio_set(dict)</code>.</p>
+<h3 id="dynamic-content-generation">Dynamic Content Generation</h3>
+<p>With the <code>@tasklet.content(name)</code> decorator, the contents
+of files that are normally placed under <code>config</code> of a
+SlowDash project can be generated dynamically. This makes it possible to
+put a task script and the HTML form to control it into a single file,
+making it easier to keep them consistent.</p>
+<div class="sourceCode" id="cb57"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;config/html-test.html&#39;</span>)</span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> html():</span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&#39;&#39;&#39;</span></span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;form name=&quot;test&quot;&gt;</span></span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a><span class="st">        Voltage: &lt;input type=&quot;number&quot; name=&quot;voltage&quot; value=&quot;0&quot;&gt;</span></span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a><span class="st">        &lt;button name=&quot;test.set_V0()&quot;&gt;Set&lt;/button&gt;</span></span>
+<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;/form&gt;</span></span>
+<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a><span class="st">    &#39;&#39;&#39;</span></span></code></pre></div>
+<p>From the browser, it looks as if the HTML file
+<code>html-test.html</code> exists in <code>config</code>.</p>
+<p>If <code>On Update: Reload HTML</code> is checked in the HTML panel,
+this function is called on every data update, so HTML pages containing
+data can be generated dynamically. Here is an example of displaying disk
+usage formatted in a table.</p>
+<div class="sourceCode" id="cb58"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shutil</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;config/html-disk_usage.html&#39;</span>)</span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> html_disk_usage():</span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>    total, used, free <span class="op">=</span> <span class="bu">tuple</span>((<span class="bu">int</span>(x<span class="op">*</span><span class="fl">1e-8</span>)<span class="op">/</span><span class="fl">10.0</span>) <span class="cf">for</span> x <span class="kw">in</span> shutil.disk_usage(<span class="st">&#39;.&#39;</span>))</span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ss">f&#39;&#39;&#39;</span></span>
+<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a><span class="ss">    &lt;table&gt;</span></span>
+<span id="cb58-8"><a href="#cb58-8" aria-hidden="true" tabindex="-1"></a><span class="ss">      &lt;tr&gt;&lt;td&gt;Total&lt;/td&gt;&lt;td&gt;</span><span class="sc">{</span>total<span class="sc">}</span><span class="ss"> GB&lt;/td&gt;&lt;/tr&gt;</span></span>
+<span id="cb58-9"><a href="#cb58-9" aria-hidden="true" tabindex="-1"></a><span class="ss">      &lt;tr&gt;&lt;td&gt;Used&lt;/td&gt;&lt;td&gt;</span><span class="sc">{</span>used<span class="sc">}</span><span class="ss"> GB&lt;/td&gt;&lt;/tr&gt;</span></span>
+<span id="cb58-10"><a href="#cb58-10" aria-hidden="true" tabindex="-1"></a><span class="ss">      &lt;tr&gt;&lt;td&gt;Free&lt;/td&gt;&lt;td&gt;</span><span class="sc">{</span>free<span class="sc">}</span><span class="ss"> GB&lt;/td&gt;&lt;/tr&gt;</span></span>
+<span id="cb58-11"><a href="#cb58-11" aria-hidden="true" tabindex="-1"></a><span class="ss">    &lt;/table&gt;    </span></span>
+<span id="cb58-12"><a href="#cb58-12" aria-hidden="true" tabindex="-1"></a><span class="ss">    &#39;&#39;&#39;</span></span></code></pre></div>
+<p><code>config/slowplot-XXX.json</code> can be generated in the same
+way, so together with an HTML form, a SlowTask can provide a complete
+layout to use it. As content generation functions are ordinary Python
+functions, template engines such as Jinja can also be used with
+them.</p>
+<h2 id="matplotlib-integration">Matplotlib Integration</h2>
+<p>Matplotlib Figures can be streamed directly to a SlowDash layout
+without changing the script.</p>
+<div class="sourceCode" id="cb59"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> _loop():</span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>    fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">2</span>)</span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">#... draw plots in the usual way</span></span>
+<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a>    fig.show()   <span class="co"># this is overriden by SlowDash</span></span>
+<span id="cb59-8"><a href="#cb59-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb59-9"><a href="#cb59-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> asyncio.sleep(<span class="dv">1</span>)</span></code></pre></div>
+<p>SlowDash overrides <code>Figure.show()</code> to extract the layout,
+and reads the values of histograms and graphs from the drawn figures. It
+then dynamically generates a <code>slowplot-XXX.json</code> with the
+same layout, and sends the data out to SlowDash streaming. Instead of
+<code>Figure.show()</code> as in the example, using
+<code>pyplot.show()</code> or <code>Figure.savefig(name)</code> also
+streams to SlowDash. (With <code>savefig()</code>, the normal file
+saving is also performed.) The name of the generated layout is the task
+name for <code>Figure.show()</code> and <code>Figure.savefig()</code>,
+and <code>{TASK_NAME}.fig{NUMBER}</code> for
+<code>pyplot.show()</code>.</p>
+<p>When running as a SlowTask, the Matplotlib GUI is disabled (the
+<code>Agg</code> backend is used).</p>
+<p>Other examples are in
+<code>ExampleProjects/Streaming/Matplotlib</code>.</p>
+<h1 id="slowmesh">SlowMesh</h1>
+<p>Multiple SlowTask scripts can be deployed over a network and work
+cooperatively, communicating over SlowMesh. SlowMesh is the
+communication infrastructure for message exchange between the SlowDash
+server and SlowTasks, and provides the following communication
+features:</p>
+<ul>
+<li><strong>PubSub</strong>: exchange of messages with topic names
+(Publish / Subscribe)</li>
+<li><strong>Remote Procedure Call (RPC)</strong>: calling functions
+exported by other tasks</li>
+<li><strong>Registry (Key-Value Store)</strong>: a store of named values
+shared among tasks</li>
+</ul>
+<p><img src="fig/SlowMeshConcept.png" width="40%"></p>
+<p>In PubSub, the sender publishes messages without knowing the
+receivers, and receivers subscribe to the topics they need without
+knowing the senders. This is very different from remote procedure calls,
+where communication is done with knowledge of the counterpart’s behavior
+and interface, and greatly reduces the interdependency between
+components. SlowDash actively uses PubSub, and performs distributed
+processing with the model of “when you read data, throw it to the mesh
+(assuming someone you don’t know will process it)”, “receive related
+topics by yourself”, “fulfill your own responsibility for the received
+data”, and “when you generate processing results, throw them to the
+mesh”. For example, dividing functions into “a task that publishes data
+to SlowMesh when it reads it”, “a task that receives data and records it
+into a database”, and “a task that receives data, analyzes it, and
+publishes the results” makes it possible to develop, test, and restart
+each task independently.</p>
+<h2 id="basic-usage">Basic Usage</h2>
+<p>A SlowTask holds a connected SlowMesh through the Tasklet, and each
+feature can be used from <code>tasklet.mesh</code>.</p>
+<div class="sourceCode" id="cb60"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Tasklet, DataPacket</span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>tasklet <span class="op">=</span> Tasklet()</span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a><span class="co"># publish data to the data.store topic (the arguments of DataPacket are the same as DataStore.append())</span></span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> read_data():</span>
+<span id="cb60-7"><a href="#cb60-7" aria-hidden="true" tabindex="-1"></a>    volt <span class="op">=</span> <span class="bu">float</span>(<span class="cf">await</span> device.command(<span class="st">&#39;MEAS:VOLT:DC&#39;</span>).aio_get())</span>
+<span id="cb60-8"><a href="#cb60-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(DataPacket(volt, tag<span class="op">=</span><span class="st">&#39;volt&#39;</span>).to(<span class="st">&#39;data.store&#39;</span>))</span>
+<span id="cb60-9"><a href="#cb60-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-10"><a href="#cb60-10" aria-hidden="true" tabindex="-1"></a><span class="co"># subscribe to topics under data.store, and record into the database</span></span>
+<span id="cb60-11"><a href="#cb60-11" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.on</span>(<span class="st">&#39;data.store.&gt;&#39;</span>)</span>
+<span id="cb60-12"><a href="#cb60-12" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> store(data:DataPacket):</span>
+<span id="cb60-13"><a href="#cb60-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> channel, value <span class="kw">in</span> data.values.items():</span>
+<span id="cb60-14"><a href="#cb60-14" aria-hidden="true" tabindex="-1"></a>        datastore.append(value, tag<span class="op">=</span>channel, timestamp<span class="op">=</span>data.timestamp)</span>
+<span id="cb60-15"><a href="#cb60-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-16"><a href="#cb60-16" aria-hidden="true" tabindex="-1"></a><span class="co"># call a function of another task</span></span>
+<span id="cb60-17"><a href="#cb60-17" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.export</span>()</span>
+<span id="cb60-18"><a href="#cb60-18" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> start():</span>
+<span id="cb60-19"><a href="#cb60-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_call(<span class="st">&#39;histogram.clear&#39;</span>)</span>
+<span id="cb60-20"><a href="#cb60-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-21"><a href="#cb60-21" aria-hidden="true" tabindex="-1"></a><span class="co"># store and get values in the registry</span></span>
+<span id="cb60-22"><a href="#cb60-22" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.initialize</span>()</span>
+<span id="cb60-23"><a href="#cb60-23" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> initialize():</span>
+<span id="cb60-24"><a href="#cb60-24" aria-hidden="true" tabindex="-1"></a>    run_number <span class="op">=</span> <span class="cf">await</span> tasklet.mesh.registry.aio_get(<span class="st">&#39;setup.run.number&#39;</span>, <span class="dv">0</span>)</span>
+<span id="cb60-25"><a href="#cb60-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.registry.aio_set(<span class="st">&#39;setup.run.number&#39;</span>, run_number <span class="op">+</span> <span class="dv">1</span>)</span></code></pre></div>
+<p>Currently, values that can be sent and received over SlowMesh
+(published data, RPC arguments and return values, registry values) are
+limited to those that can be serialized to JSON.</p>
+<h2 id="connecting-to-slowmesh">Connecting to SlowMesh</h2>
+<h3 id="endpoint">Endpoint</h3>
+<p>The connection to SlowMesh is made automatically by the Tasklet. The
+endpoint URL is determined as follows:</p>
+<ul>
+<li>When started from the SlowDash server: specified by the server with
+the <code>--mesh</code> option of the <code>slowdash-task</code>
+command</li>
+<li>When started independently with the <code>slowdash-task</code>
+command: specified with the <code>--mesh</code> option</li>
+<li>When the script is run directly: specified with
+<code>tasklet.run(mesh_url=...)</code></li>
+</ul>
+<p>If no endpoint URL is given, a local PubSub closed within the process
+is used. In this case, messages published by the task itself can be
+subscribed to by itself, but communication with other tasks and use of
+the registry are not possible. This can be used for checking the
+behavior of a script standalone, etc.</p>
+<h3 id="messaging-backbone">Messaging Backbone</h3>
+<p>SlowMesh uses a messaging backbone as the underlying communication
+layer. By default, SlowMQ, which is built into the SlowDash server, is
+used, so it can be used as is without any configuration. SlowMQ is
+implemented with WebSockets over HTTP(S), and can be accessed directly
+at the URL (port) of the SlowDash server.</p>
+<p>Instead of SlowMQ, widely used external messaging systems such as
+NATS, MQTT, Redis, and RabbitMQ can also be used. In this case, specify
+the endpoint with the <code>mesh</code> entry in
+<code>SlowdashProject.yaml</code>. The same URL is also passed to the
+tasks started from the server.</p>
+<div class="sourceCode" id="cb61"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a><span class="at">  ...</span></span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">mesh</span><span class="kw">:</span></span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> nats://localhost</span></span></code></pre></div>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Backbone</th>
+<th>URL Format</th>
+<th>Broker</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>SlowMQ</td>
+<td><code>slowmq://HOST:PORT</code> (HTTP) or
+<code>slowmqs://HOST:PORT</code> (HTTPS)</td>
+<td>Not needed (built into SlowDash)</td>
+<td>Default. Accessible across firewalls</td>
+</tr>
+<tr class="even">
+<td>NATS</td>
+<td><code>nats://HOST</code></td>
+<td>Separate NATS server required</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>MQTT</td>
+<td><code>mqtt://HOST</code></td>
+<td>Separate MQTT broker (eclipse-mosquitto, etc.) required</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>RabbitMQ</td>
+<td><code>rabbitmq://USER:PASS@HOST/EXCHANGE</code></td>
+<td>Separate RabbitMQ server required</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Redis-PubSub</td>
+<td><code>redis://HOST/DB</code></td>
+<td>Separate Redis server required</td>
+<td>Limitations on topic filters</td>
+</tr>
+</tbody>
+</table>
+<p>If credentials are required, insert <code>USER:PASS@</code> right
+before <code>HOST</code>.</p>
+<p>For QoS settings (at-most-once / at-least-once / exactly-once) etc.,
+the backbone defaults are basically used. The intended operation is to
+switch the backbone as the system evolves (start with SlowMQ, and
+migrate to NATS when performance or features become insufficient, etc.).
+Switching the backbone does not require changing user scripts.</p>
+<p>To connect to an external messaging system separately from the main
+SlowMesh, an additional Mesh object can be created with
+<code>tasklet.external_mesh(url)</code>. It is started and stopped
+together with the main Mesh, and can be used with the same interface,
+such as <code>on()</code> and <code>aio_publish()</code>.</p>
+<h2 id="pubsub">PubSub</h2>
+<h3 id="publish">Publish</h3>
+<div class="sourceCode" id="cb62"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="co"># publish with a topic name and a value</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;mydaq.control.start&#39;</span>, {<span class="st">&#39;run_number&#39;</span>: <span class="dv">10</span>})</span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a><span class="co"># publish a MeshPacket (the topic name is determined by the MeshPacket)</span></span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> tasklet.mesh.aio_publish(DataPacket(volt, tag<span class="op">=</span><span class="st">&#39;volt&#39;</span>).to(<span class="st">&#39;data.store&#39;</span>))</span></code></pre></div>
+<p><code>aio_publish()</code> is an async function. From non-async
+functions, use <code>publish()</code> instead (the arguments are the
+same). Even when using <code>publish()</code>, it must be running as a
+SlowTask (the Tasklet event loop must be running).</p>
+<p>Headers can be attached to a message by passing a dict to the
+<code>headers</code> argument.</p>
+<h3 id="subscribe">Subscribe</h3>
+<p>The <code>@tasklet.mesh.on(topic)</code> decorator specifies a
+function to be called when a message of the specified topic is received.
+The function can be either a normal function or an async function.</p>
+<div class="sourceCode" id="cb63"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.on</span>(<span class="st">&#39;mydaq.control.start&#39;</span>)</span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> handle_start(data):</span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>    run_number <span class="op">=</span> data.get(<span class="st">&#39;run_number&#39;</span>)</span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
+<p>What is passed depends on the number of arguments and the type
+annotations of the function.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Function Form</th>
+<th>What Is Passed</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>def handler()</code></td>
+<td>Nothing (when you only want to know that a message was
+received)</td>
+</tr>
+<tr class="even">
+<td><code>def handler(data)</code></td>
+<td>Message body</td>
+</tr>
+<tr class="odd">
+<td><code>def handler(packet:DataPacket)</code></td>
+<td>Message converted to a MeshPacket (described later)</td>
+</tr>
+<tr class="even">
+<td><code>def handler(headers, data)</code></td>
+<td>Headers and message body. The received topic name is
+<code>headers['topic']</code></td>
+</tr>
+</tbody>
+</table>
+<p>When receiving multiple topics with a topic filter, use the last form
+if you need to know the actual topic name.</p>
+<p>To add a subscription dynamically during execution, use
+<code>await tasklet.mesh.aio_subscribe(topic, handler)</code>.</p>
+<h3 id="topic-names-and-topic-filters">Topic Names and Topic
+Filters</h3>
+<p>Topic names can have a hierarchical structure separated by
+<code>.</code>, as in <code>data.store.HV.ch01</code>. The following
+topic filters can be used in subscriptions (same as NATS):</p>
+<ul>
+<li><code>*</code> matches any single level</li>
+<li><code>&gt;</code> matches any number of trailing levels (can only be
+used as the last character)</li>
+</ul>
+<p>For example, <code>data.store.&gt;</code> matches all topics under
+<code>data.store</code>, and <code>data.*.HV.ch01</code> matches both
+<code>data.store.HV.ch01</code> and
+<code>data.stream.HV.ch01</code>.</p>
+<p>When a backbone other than SlowMQ or NATS is used, these characters
+are replaced with the corresponding characters of that backbone
+(<code>/</code>, <code>+</code>, <code>#</code>, etc. for MQTT).
+Therefore, including characters such as <code>/</code>, <code>#</code>,
+<code>+</code>, and <code>:</code> in topic names causes problems with
+some backbones. Avoid using these characters. Also, as Redis does not
+have a strict hierarchical structure, the filter behavior may be
+approximate.</p>
+<h3 id="topic-name-allocation">Topic Name Allocation</h3>
+<p>Topic names are reserved throughout SlowDash, but the following can
+be used freely by users:</p>
+<ul>
+<li>Names starting with an uppercase letter
+(<code>KamLAND.control.start</code>, etc.)</li>
+<li>Names starting with <code>my</code> (<code>my.&gt;</code>,
+<code>mydaq.&gt;</code>, etc.)</li>
+<li>Names starting with <code>test</code> (<code>test.&gt;</code>,
+<code>testdaq.&gt;</code>, etc.)</li>
+<li><code>setup.&gt;</code></li>
+<li><code>user.&gt;</code></li>
+</ul>
+<p>The main topics used by SlowDash are:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Topic</th>
+<th>Content</th>
+<th>MeshPacket</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>data.store.{channel}</code></td>
+<td>Data to be recorded (usually saved into a database by a recording
+task)</td>
+<td><code>DataPacket</code></td>
+</tr>
+<tr class="even">
+<td><code>data.stream.{channel}</code></td>
+<td>Data for display (not recorded)</td>
+<td><code>DataPacket</code></td>
+</tr>
+<tr class="odd">
+<td><code>form.{form_name}.{element_name}</code></td>
+<td>Input values of named HTML forms</td>
+<td><code>FormPacket</code></td>
+</tr>
+<tr class="even">
+<td><code>log.{level}.{logger}</code></td>
+<td>Log messages</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><code>sd.&gt;</code></td>
+<td>Internal use by SlowDash (task management, RPC, etc.)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>For data flowing on topics starting with <code>data.</code>, the
+SlowDash server keeps the latest value of each channel, which can be
+displayed on the browser as <code>current</code> data. The
+<code>ctrl.stream()</code> described above publishes data to the
+<code>data.stream.{name}</code> topic.</p>
+<h3 id="meshpacket">MeshPacket</h3>
+<p>Some topics used by SlowDash have a defined message schema (data
+structure). Using MeshPackets, user scripts do not depend on the details
+of the schema, and the effort of constructing and decoding messages is
+saved.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>MeshPacket</th>
+<th>Target Topics</th>
+<th>Constructor</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>DataPacket</code></td>
+<td><code>data.*.&gt;</code></td>
+<td><code>DataPacket(values, *, tag=None, timestamp=None)</code></td>
+</tr>
+<tr class="even">
+<td><code>FormPacket</code></td>
+<td><code>form.*.&gt;</code></td>
+<td><code>FormPacket(form, element, value)</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="datapacket">DataPacket</h4>
+<p>The constructor arguments of <code>DataPacket</code> are the same as
+<code>DataStore.append()</code>. That is, recording directly into a data
+store and publishing to SlowMesh are written almost the same way.</p>
+<div class="sourceCode" id="cb64"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> DataPacket</span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>temp0 <span class="op">=</span> thermometer.ch(<span class="dv">0</span>).get()</span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> tasklet.mesh.aio_publish(DataPacket(temp0, tag<span class="op">=</span><span class="st">&#39;temp0&#39;</span>).to(<span class="st">&#39;data.store&#39;</span>))</span></code></pre></div>
+<p>The topic to publish to is <code>data.store.{channel}</code> by
+default, and the <code>data.store</code> part can be changed with
+<code>to(topic_prefix)</code> (<code>to('data.stream')</code>, etc.). In
+addition to numbers, SlowPy analysis objects such as histograms, and
+time-series data such as <code>timeseries()</code> of a Trend, can also
+be sent.</p>
+<p>On the receiving side, if the argument of the handler function has a
+<code>DataPacket</code> type annotation, the received message is
+converted to a DataPacket and passed.</p>
+<div class="sourceCode" id="cb65"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.on</span>(<span class="st">&#39;data.&gt;&#39;</span>)</span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> handle_data(data:DataPacket):</span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>    t <span class="op">=</span> data.timestamp</span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> channel, value <span class="kw">in</span> data.values.items():</span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a>        ...</span></code></pre></div>
+<p>The <code>values</code> of a received DataPacket is a dict with
+channel names as keys and values as values.</p>
+<h4 id="formpacket">FormPacket</h4>
+<p>When an input value of a named HTML form is changed, a message is
+published to the <code>form.{form_name}.{element_name}</code> topic. By
+subscribing to it, changes of input values can be responded to
+immediately, even before a button is pressed.</p>
+<div class="sourceCode" id="cb66"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> FormPacket</span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.on</span>(<span class="st">&#39;form.pid_setup.&gt;&#39;</span>)</span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> handle_form(packet:FormPacket):</span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(packet.form, packet.element, packet.value)</span></code></pre></div>
+<p>Conversely, publishing a <code>FormPacket</code> changes the form
+values displayed on the browser. Usually, using the
+<code>ctrl.form(name)</code> node described above is easier.</p>
+<h3 id="pubsub-last-value-cache">PubSub Last-Value Cache</h3>
+<p>The SlowDash server subscribes to all PubSub topics, and keeps the
+latest message of each topic in the registry at
+<code>pubsub.{TOPIC_NAME}</code>. This allows tasks started later to
+obtain status information, etc. published before.</p>
+<div class="sourceCode" id="cb67"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.initialize</span>()</span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> initialize():</span>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># the last published mydaq.status message</span></span>
+<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a>    status <span class="op">=</span> <span class="cf">await</span> tasklet.mesh.registry.aio_get(<span class="st">&#39;pubsub.mydaq.status&#39;</span>)</span></code></pre></div>
+<h2 id="remote-procedure-call-rpc">Remote Procedure Call (RPC)</h2>
+<p>RPC is a mechanism for calling functions exported by a SlowTask by
+name from other SlowTasks. Function calls from the browser also use RPC
+internally.</p>
+<h3 id="callee-side">Callee Side</h3>
+<p>For exporting functions, see the “Exporting Functions” section
+above.</p>
+<div class="sourceCode" id="cb68"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.export</span>()</span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> chat(line, <span class="op">*</span>, sender<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f&#39;You (&quot;</span><span class="sc">{</span>sender<span class="sc">}</span><span class="ss">&quot;) sent me &quot;</span><span class="sc">{</span>line<span class="sc">}</span><span class="ss">&quot;.&#39;</span>)</span>
+<span id="cb68-4"><a href="#cb68-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">str</span>(datetime.datetime.now())</span></code></pre></div>
+<p>The return value must be a value that can be serialized to JSON.
+Also, as described above, exported functions should return within about
+1 second as a guideline.</p>
+<h3 id="caller-side">Caller Side</h3>
+<div class="sourceCode" id="cb69"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>return_value <span class="op">=</span> <span class="cf">await</span> tasklet.mesh.aio_call(<span class="st">&#39;chat_task.chat&#39;</span>, line, sender<span class="op">=</span><span class="st">&#39;me&#39;</span>)</span></code></pre></div>
+<ul>
+<li>The first argument is <code>TASK_NAME.FUNCTION_NAME</code>, and the
+subsequent arguments are passed as is to the remote function.</li>
+<li>Only values that can be serialized to JSON can be passed as
+arguments.</li>
+<li>If an exception occurs in the callee, or if there is no response
+before the timeout (e.g., the callee task is not running), an exception
+is raised.</li>
+<li>The default timeout is 5 seconds.</li>
+</ul>
+<p>To specify a timeout per call, use <code>aio_call_many()</code>.</p>
+<div class="sourceCode" id="cb70"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>replies <span class="op">=</span> <span class="cf">await</span> tasklet.mesh.aio_call_many(<span class="st">&#39;chat_task.chat&#39;</span>, [line], {<span class="st">&#39;sender&#39;</span>: <span class="st">&#39;me&#39;</span>}, expected_replies<span class="op">=</span><span class="dv">1</span>, timeout<span class="op">=</span><span class="dv">10</span>, raise_on_timeout<span class="op">=</span><span class="va">True</span>)</span></code></pre></div>
+<p><code>aio_call_many()</code> returns a list of replies. Each reply is
+a dict with fields like the following:</p>
+<div class="sourceCode" id="cb71"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>{ <span class="st">&#39;status&#39;</span>: <span class="st">&#39;ok&#39;</span>, <span class="st">&#39;message&#39;</span>: <span class="st">&#39;ok&#39;</span>, <span class="st">&#39;return_value&#39;</span>: result }</span></code></pre></div>
+<p>In addition to <code>ok</code>, <code>status</code> can be
+<code>error</code> or <code>cancelled</code>; in case of an error,
+<code>message</code> contains the error message.</p>
+<h3 id="remote-access-to-control-nodes">Remote Access to Control
+Nodes</h3>
+<p>Control nodes exported with
+<code>tasklet.mesh.export(name, node)</code> can be accessed from other
+tasks using <code>remote_node()</code>, in the same way as local
+nodes.</p>
+<p>Callee side (task name <code>device</code>):</p>
+<div class="sourceCode" id="cb72"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>V0 <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;192.168.1.43&#39;</span>, <span class="dv">5025</span>).scpi(append_opc<span class="op">=</span><span class="va">True</span>).command(<span class="st">&#39;VOLT&#39;</span>)</span>
+<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a>tasklet.mesh.export(<span class="st">&#39;V0&#39;</span>, V0.setpoint(limits<span class="op">=</span>(<span class="dv">0</span>, <span class="dv">100</span>)))</span></code></pre></div>
+<p>Caller side:</p>
+<div class="sourceCode" id="cb73"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a>V0 <span class="op">=</span> tasklet.mesh.remote_node(<span class="st">&#39;device.V0&#39;</span>)</span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> V0.aio_set(<span class="dv">10</span>)</span>
+<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="cf">await</span> V0.aio_get())</span></code></pre></div>
+<p>Remote nodes only have the async versions, <code>aio_set()</code> and
+<code>aio_get()</code>.</p>
+<h2 id="registry-key-value-store">Registry (Key-Value Store)</h2>
+<p>The Registry is a store of named values shared by multiple SlowTasks.
+It is intended for sharing states, settings, processing requests, etc.
+among tasks. As the registry service runs inside the SlowDash server, a
+connection to the SlowDash server is required to use it.</p>
+<h3 id="basic-operations">Basic Operations</h3>
+<p>The registry is accessed via <code>tasklet.mesh.registry</code>.</p>
+<div class="sourceCode" id="cb74"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>registry <span class="op">=</span> tasklet.mesh.registry</span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a><span class="co"># set a value</span></span>
+<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> registry.aio_set(<span class="st">&#39;setup.run.number&#39;</span>, run_number)</span>
+<span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb74-6"><a href="#cb74-6" aria-hidden="true" tabindex="-1"></a><span class="co"># get a value (the default value is returned if the key does not exist)</span></span>
+<span id="cb74-7"><a href="#cb74-7" aria-hidden="true" tabindex="-1"></a>run_number <span class="op">=</span> <span class="cf">await</span> registry.aio_get(<span class="st">&#39;setup.run.number&#39;</span>, <span class="dv">0</span>)</span></code></pre></div>
+<p>The Registry has the following methods:</p>
+<ul>
+<li>Write (set):
+<code>aio_set(key, value, *, cas_revision:int|None=None) -&gt; int|None</code></li>
+<li>Read (get):
+<code>aio_get(key:str, default=None, *, with_meta:bool=False)</code></li>
+<li>List keys (keys):
+<code>aio_keys(prefix:str='', limit:int|None=1000) -&gt; list[str]</code></li>
+<li>Delete (delete):
+<code>aio_delete(key:str, *, cas_revision:int|None=None) -&gt; bool</code></li>
+</ul>
+<h3 id="keys-and-values">Keys and Values</h3>
+<p><strong>Keys</strong>: Keys have a hierarchical structure separated
+by <code>.</code>. For the name of each level, use names like
+identifiers (variable names, etc.) in programming languages such as
+Python. Specifically, names must consist only of alphanumerics or
+underscores, and must not start with a digit.</p>
+<p><strong>Values</strong>: Currently, only values that can be
+serialized to JSON can be used.</p>
+<p><strong>Allocation</strong>: Key names are also reserved throughout
+SlowDash, but as with topic names, the following can be used freely by
+users:</p>
+<ul>
+<li>Names starting with an uppercase letter (<code>KamLAND.&gt;</code>,
+etc.)</li>
+<li>Names starting with <code>my</code> (<code>mydaq.&gt;</code>,
+etc.)</li>
+<li>Names starting with <code>test</code> (<code>testdaq.&gt;</code>,
+etc.)</li>
+<li><code>setup.&gt;</code></li>
+<li><code>user.&gt;</code></li>
+</ul>
+<h3 id="grouping-hierarchies">Grouping Hierarchies</h3>
+<p>By appending <code>&gt;</code> to the end of a key, the entries under
+that level can be handled together as a single dict.</p>
+<div class="sourceCode" id="cb75"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> registry.aio_set(<span class="st">&#39;user&#39;</span>, <span class="st">&#39;slowuser&#39;</span>)</span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> registry.aio_set(<span class="st">&#39;state.run.mode&#39;</span>, <span class="st">&#39;physics&#39;</span>)</span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> registry.aio_set(<span class="st">&#39;state.run.number&#39;</span>, <span class="dv">123</span>)</span>
+<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-5"><a href="#cb75-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="cf">await</span> registry.aio_keys(<span class="st">&#39;state.run&#39;</span>))       <span class="co"># --&gt;  [&#39;state.run.mode&#39;, &#39;state.run.number&#39;]</span></span>
+<span id="cb75-6"><a href="#cb75-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="cf">await</span> registry.aio_get(<span class="st">&#39;state.run.mode&#39;</span>))   <span class="co"># --&gt;  physics</span></span>
+<span id="cb75-7"><a href="#cb75-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="cf">await</span> registry.aio_get(<span class="st">&#39;state.run.&gt;&#39;</span>))      <span class="co"># --&gt;  {&#39;mode&#39;: &#39;physics&#39;, &#39;number&#39;: 123}</span></span>
+<span id="cb75-8"><a href="#cb75-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="cf">await</span> registry.aio_get(<span class="st">&#39;.&gt;&#39;</span>))               <span class="co"># --&gt;  {&#39;user&#39;: &#39;slowuser&#39;, &#39;state&#39;: {&#39;run&#39;: {&#39;mode&#39;: &#39;physics&#39;, &#39;number&#39;: 123</span><span class="re">}}}</span></span></code></pre></div>
+<p>With <code>aio_set()</code> as well, appending <code>&gt;</code> to
+the end of the key and passing a dict as the value creates entries under
+that level with the dict expanded. That is, the following two behave the
+same:</p>
+<div class="sourceCode" id="cb76"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>doc <span class="op">=</span> {<span class="st">&#39;run&#39;</span>: {<span class="st">&#39;mode&#39;</span>: <span class="st">&#39;physics&#39;</span>, <span class="st">&#39;number&#39;</span>: <span class="dv">123</span> }, <span class="st">&#39;running&#39;</span>: <span class="va">True</span> }</span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> registry.aio_set(<span class="st">&#39;state.&gt;&#39;</span>, doc)</span></code></pre></div>
+<div class="sourceCode" id="cb77"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> registry.aio_set(<span class="st">&#39;state.run.mode&#39;</span>, <span class="st">&#39;physics&#39;</span>)</span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> registry.aio_set(<span class="st">&#39;state.run.number&#39;</span>, <span class="dv">123</span>)</span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> registry.aio_set(<span class="st">&#39;state.running&#39;</span>, <span class="va">True</span>)</span></code></pre></div>
+<p>Note that this is different from passing a dict as a value without
+<code>&gt;</code>. The following stores the whole thing as a single dict
+value in one entry:</p>
+<div class="sourceCode" id="cb78"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> registry.aio_set(<span class="st">&#39;state&#39;</span>, doc)</span></code></pre></div>
+<p>In both cases, <code>aio_get('state.&gt;')</code> returns the same
+result, but in the latter case, the entry <code>state.run.number</code>
+does not exist, so <code>aio_get('state.run.number')</code> returns the
+default value. Usually, expanding and storing with <code>&gt;</code>
+causes fewer problems, but for recording dicts containing arrays etc.,
+storing without expansion is necessary.</p>
+<p>If a value is recorded at a level, and values are also recorded at
+levels below it, the value of that level is put in a field named
+<code>$value</code> when retrieved as a group. (This is because a node
+having both a value and child nodes cannot be represented in a dict or
+JSON.)</p>
+<div class="sourceCode" id="cb79"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> registry.aio_set(<span class="st">&#39;state.run&#39;</span>, <span class="st">&#39;running&#39;</span>)</span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="cf">await</span> registry.aio_get(<span class="st">&#39;state.run.&gt;&#39;</span>))      <span class="co"># --&gt;  {&#39;mode&#39;: &#39;physics&#39;, &#39;number&#39;: 123, &#39;$value&#39;: &#39;running&#39;}</span></span></code></pre></div>
+<p>To avoid confusion, do not record values at levels that have child
+nodes. In this example, the problem can be avoided by recording at
+<code>state.run.status</code> etc. instead of
+<code>state.run</code>.</p>
+<h3 id="compare-and-set-cas">Compare-And-Set (CAS)</h3>
+<p>The Registry has a Compare-And-Set (CAS) option to prevent
+unintentionally overwriting what other tasks have written.</p>
+<ul>
+<li>Each entry is assigned a CAS revision, which counts the number of
+writes</li>
+<li><code>aio_set()</code> increments the CAS revision and returns the
+new CAS revision</li>
+<li>If the <code>cas_revision</code> option of <code>aio_set()</code> is
+not None, the write fails unless its value matches the stored CAS
+revision</li>
+<li>Similarly, <code>aio_delete()</code> fails to delete unless the CAS
+revision matches</li>
+</ul>
+<p>This avoids unknowingly overwriting a value that someone else has
+changed after you set it.</p>
+<p>If the <code>with_meta</code> option of <code>aio_get()</code> is set
+to <code>True</code>, metadata including the CAS revision and the write
+time is returned instead of the value:</p>
+<div class="sourceCode" id="cb80"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;key&quot;</span>: KEY,</span>
+<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;value&quot;</span>: VALUE,</span>
+<span id="cb80-4"><a href="#cb80-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;revision&quot;</span>: CAS_REVISION,</span>
+<span id="cb80-5"><a href="#cb80-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;updated&quot;</span>: LAST_WRITE_TIME</span>
+<span id="cb80-6"><a href="#cb80-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="persistence">Persistence</h3>
+<p>Registry values are normally kept only in the memory of the SlowDash
+server, and are lost when the server is restarted. Some entries are
+saved to a file in the project directory
+(<code>registry-{PATH}.json</code>) on every write, and are
+automatically loaded the next time the server starts. Currently, only
+the input values of named HTML forms (<code>pubsub.form.&gt;</code>) are
+persisted.</p>
+<h3 id="access-from-the-browser">Access from the Browser</h3>
+<p>Values recorded in the registry can be displayed on the browser, just
+like data in a database. Specify <code>@registry:{KEY}</code> as the
+data channel name (for example, <code>@registry:setup.run.number</code>,
+or <code>@registry:setup.run.&gt;</code> to display the whole hierarchy
+as a Tree).</p>
+<p>They can also be accessed through the Web API.</p>
+<div class="sourceCode" id="cb81"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ curl http://localhost:18881/api/registry/value/setup.run.number</span></span></code></pre></div>
+<h2 id="forwarding-standard-io-and-logs">Forwarding Standard I/O and
+Logs</h2>
+<p>Messages written to the standard output / standard error in a
+SlowTask, by <code>print()</code> etc., are published to SlowMesh and
+shown in the console of the SlowDash home page. (They are also written
+to the local standard output.) If this forwarding is not needed, use
+<code>Tasklet(use_mesh_stdio=False)</code>.</p>
+<p>Messages written to Python’s standard <code>logging</code> are also
+forwarded to the SlowMesh topic
+<code>log.{LEVEL}.{LOGGER_NAME}</code>.</p>
+<h2 id="examples">Examples</h2>
+<p>An example of separating SlowTasks by function (reading, recording,
+and analysis) using SlowMesh is in the <a href="QuickTour.html">Quick
+Tour</a>.</p>
+
+
+</body>
+</html>
