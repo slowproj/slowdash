@@ -75,6 +75,12 @@ code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
   <link rel="stylesheet" href="style.css" />
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({startOnLoad: true});
+</script>
+
 </head>
 
 <body>
@@ -98,6 +104,8 @@ id="toc-user-canvas-configuration-file">User Canvas Configuration
 File</a></li>
 <li><a href="#items" id="toc-items">Items</a></li>
 </ul></li>
+<li><a href="#single-values" id="toc-single-values">Single
+Values</a></li>
 <li><a href="#map" id="toc-map">Map</a>
 <ul>
 <li><a href="#user-map-file" id="toc-user-map-file">User Map
@@ -123,8 +131,107 @@ User Page with SlowDash data and controls</a></li>
 </header>
 
 <h1 id="time-axis-plot-time-series">Time-Axis Plot (Time-Series)</h1>
+<ul>
+<li>Plots numeric time-series data against time.</li>
+<li>When the display time range is long, data are automatically
+resampled on the server side. The threshold and the resampling method
+can be customized (see below).</li>
+<li>Zooming in by range selection (mouse drag) only stretches the
+already-loaded data, so resampled points remain coarse. To reload the
+data for the zoomed range at a finer resolution, select “Current Display
+Range” from the time-range pulldown menu.</li>
+<li>If resampling produces per-bucket minimum and maximum values (the
+“min/max envelope” option), the value range is drawn as a filled band
+(“Fill: envelope”).</li>
+<li>With the “include prior point” option, the last data point before
+the display range is also fetched. This is useful with the
+<code>last</code> line type, where each value is drawn as a horizontal
+line until the next data point, so the line starts from the left edge of
+the plot.</li>
+</ul>
+<h5 id="plot-settings-per-channel">Plot Settings (per channel)</h5>
+<ul>
+<li><strong>Line type</strong>:
+<ul>
+<li><code>connect</code> (default): connects data points with straight
+lines</li>
+<li><code>last</code>: holds each value horizontally until the next data
+point (step plot)</li>
+</ul></li>
+<li><strong>include prior point</strong>: also fetches one data point
+before the display range (default: off)</li>
+<li><strong>Fill</strong>:
+<ul>
+<li><code>envelope</code> (default): fills between the min and max
+values (requires “min/max envelope” in Resampling)</li>
+<li><code>baseline</code>: fills between the data line and the given
+baseline value</li>
+<li><code>opacity</code>: fill opacity (default: 0.2; 0 to disable
+fill)</li>
+</ul></li>
+</ul>
+<h3 id="resampling">Resampling</h3>
+<p>Resampling is controlled by the following parameters: -
+<strong>threshold</strong> (seconds, default: 7200): resampling is
+applied when the display time range exceeds this value - <code>0</code>:
+always resample - <code>-1</code>: never resample -
+<strong>n-buckets</strong> (default: 600): number of buckets (i.e., data
+points drawn) when resampling is applied. The bucket width is (display
+time range) / (n-buckets). - <strong>reducer</strong>: how the value of
+each bucket is calculated from the raw data points in the bucket: -
+<code>last</code> (default): the last data point in each bucket. This
+shows the latest value and preserves the data fluctuation. -
+<code>mean</code>, <code>median</code> - <code>sum</code>,
+<code>count</code> - <code>stdev</code> - <code>min</code>,
+<code>max</code> - <strong>min/max envelope</strong>: in addition to the
+reducer value, adds the minimum and maximum of the raw data values to
+each bucket. Works best with a small n-buckets.</p>
 <h1 id="xy-plot-histograms-graphs">XY Plot (Histograms &amp;
 Graphs)</h1>
+<ul>
+<li>Ordinary (non-time-axis) plots, such as histograms and graphs.</li>
+<li>If there are multiple data entries within the display time range
+(e.g., a time series of histograms), the latest one in the range is
+drawn.</li>
+<li>The following can be drawn:
+<ul>
+<li><strong>Histogram Object</strong>: data stored as a histogram
+object</li>
+<li><strong>2D Histogram Object</strong>: data stored as a 2D histogram
+object</li>
+<li><strong>Graph Object</strong>: data stored as a graph object</li>
+<li><strong>Bar-Chart of Graph Object</strong>: a graph object drawn as
+a bar chart</li>
+<li><strong>Histogram of Time-Series Values</strong>: a histogram
+created on the browser from the values of a numeric time series</li>
+<li><strong>Scatter Plot of Time-Series Pairs</strong>: a scatter plot
+created on the browser from a pair of numeric time series (Channel X and
+Channel Y)</li>
+</ul></li>
+</ul>
+<h3 id="notes-on-plots-created-from-time-series">Notes on plots created
+from time series</h3>
+<ul>
+<li>Resampling of numeric time series is performed on the server side,
+so the last two plots above (Histogram of Time-Series Values and Scatter
+Plot of Time-Series Pairs) are affected by resampling: they are made
+from the resampled values, not from the raw data.
+<ul>
+<li>To avoid this, create the histogram or graph in a server-side user
+script and send it to the panel as a Histogram Object or Graph Object,
+as described in <a href="Scripting.html">Scripting</a> (see also the
+examples in <a href="QuickTour.html">QuickTour</a>).</li>
+</ul></li>
+<li>Scatter Plot of Time-Series Pairs requires the data points of the
+two time series to be aligned in time.
+<ul>
+<li>If they are not aligned, set the resampling threshold to
+<code>0</code> (always resample; this is the default for this plot type)
+so that both series are resampled onto common time buckets.</li>
+<li>In this case, the number of data points drawn is the number given by
+<code>n-buckets</code>.</li>
+</ul></li>
+</ul>
 <h1 id="canvas">Canvas</h1>
 <p><img src="fig/Panel-Canvas-Simple.png" style="width:40%;margin-left:2em;border:thin solid gray"></p>
 <ul>
@@ -486,9 +593,63 @@ class="sourceCode json"><code class="sourceCode json"><span id="cb18-1"><a href=
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;marker-opacity&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;fill-opacity&quot;</span><span class="fu">:</span> <span class="fl">0.3</span><span class="fu">,</span></span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;ticksX&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;ticksY&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> </span>
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;marginTop&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;marginBotton&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;marginLeft&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">&quot;marginRight&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;&quot;</span></span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;timerange-margin-percent&quot;</span><span class="er">:</span> <span class="dv">0</span><span class="fu">,</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;&quot;</span><span class="fu">,</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>     <span class="dt">&quot;timerange-margin-percent&quot;</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span></span>
 <span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h1 id="single-values">Single Values</h1>
+<ul>
+<li>Displays a single value in large text, together with its channel
+label and timestamp. The latest value within the display time range is
+shown.</li>
+<li>One panel can be divided into multiple tiles to display multiple
+values.</li>
+<li>A horizontal bar gauge can be added to each tile.</li>
+<li>The colors of the value text, gauge, and tile can change depending
+on which range the value falls in.</li>
+<li>The displayed text can be transformed and formatted using <a
+href="DataTransform.html">Data Transform</a>.</li>
+</ul>
+<h5 id="panel-settings-tiles">Panel Settings (“Tiles”)</h5>
+<ul>
+<li><strong>Title</strong>: panel title</li>
+<li><strong>Margin</strong>: top, right, bottom, left margins</li>
+<li><strong>Grid</strong>: number of rows and columns of tiles. If not
+specified (0), it is determined automatically from the number of
+items.</li>
+<li><strong>Time Format</strong>: format of the timestamp text</li>
+<li><strong>Color</strong>:
+<ul>
+<li><strong>Base</strong>: default color</li>
+<li><strong>Ranges</strong>: colors for range 1, 2, and 3 (default:
+cyan, orange, and magenta). These defaults differ from the commonly used
+green, yellow, and red; they were chosen so that the ranges stay
+distinguishable for people with color vision deficiencies.</li>
+<li><strong>Value</strong>, <strong>Gauge</strong>,
+<strong>Tile</strong>: opacity of each part, and whether to apply the
+range colors to it (default: gauge only)</li>
+</ul></li>
+</ul>
+<h5 id="item-settings-per-tile">Item Settings (per tile)</h5>
+<ul>
+<li><strong>Channel</strong>: data channel</li>
+<li><strong>Label</strong>: label text (default: channel name)</li>
+<li><strong>Text Transform</strong>: <a href="DataTransform.html">Data
+Transform</a> expression to make the value text, e.g.,
+<code>gt(0.5)-&gt;replace(true,'ON')-&gt;replace(false,'OFF')</code></li>
+<li><strong>Text Format</strong>: printf-style format of the value text,
+e.g., <code>%.3f</code>. If set, this takes precedence over Text
+Transform.</li>
+<li><strong>Gauge</strong>: min and max of the bar gauge. The gauge is
+shown only if min &lt; max.</li>
+<li><strong>Ranges</strong>: min and max of ranges 1, 2, and 3
+<ul>
+<li>A value matches a range if min ≤ value &lt; max.</li>
+<li>Ranges are evaluated from 1 to 3, and the first match is used.
+Overlapping ranges are allowed.</li>
+<li>If no range matches, the base color is used.</li>
+<li>The ranges are also indicated as colored lines under the gauge.</li>
+</ul></li>
+</ul>
 <h1 id="map">Map</h1>
 <ul>
 <li>Map is a schematic representation of a graph of
@@ -571,10 +732,14 @@ also created, which is convenient to test the map file.</li>
 <li>Displays an HTML page described in a user HTML file stored under the
 user configuration directory.</li>
 <li>The user configuration file can contain a <code>&lt;form&gt;</code>
-to send commands to the server-side user script.</li>
-<li>When the form is submitted, a function in the user script
-(dispatcher) is called with the form data as a JSON object (see the <a
-href="UserModule.html">User Module section</a>).
+to send commands to the server-side user script (SlowTask).</li>
+<li>When a <code>&lt;button&gt;</code> in the form is clicked, the
+SlowTask function bound to the button is called with the form input
+values as arguments (see “Action/Variable Binding” below).</li>
+<li>If the display time range does not include “now”, buttons
+(<code>&lt;button&gt;</code> with a <code>name</code>) are disabled.
+This prevents users from making wrong operations based on past data
+without noticing that it is not current.
 <p></li>
 <li>[TODO] If the <code>Current</code> property is set, the panel
 contents are displayed only when the display time range includes
@@ -595,21 +760,30 @@ and JavaScript, consider using the External Page panel.</li>
 class="sourceCode html"><code class="sourceCode html"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">h3</span><span class="dt">&gt;</span>Crate Power Control<span class="dt">&lt;/</span><span class="kw">h3</span><span class="dt">&gt;</span></span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>Temperature: <span class="dt">&lt;</span><span class="kw">span</span> <span class="er">sd-value</span><span class="ot">=</span><span class="st">&quot;ch1-&gt;last()-&gt;format(&#39;%.1f degC&#39;)&quot;</span><span class="dt">&gt;</span>---<span class="dt">&lt;/</span><span class="kw">span</span><span class="dt">&gt;</span></span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span>  </span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;hidden&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;form&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;power_control&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">div</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;margin:10px;border:thin solid;padding:10px;width:30em&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">label</span><span class="dt">&gt;&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;checkbox&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;crate1&quot;</span><span class="dt">&gt;</span>Crate 1<span class="dt">&lt;/</span><span class="kw">label</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">label</span><span class="dt">&gt;&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;checkbox&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;crate2&quot;</span><span class="dt">&gt;</span>Crate 2<span class="dt">&lt;/</span><span class="kw">label</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">label</span><span class="dt">&gt;&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;checkbox&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;crate3&quot;</span><span class="dt">&gt;</span>Crate 3<span class="dt">&lt;/</span><span class="kw">label</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
-<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;/</span><span class="kw">div</span><span class="dt">&gt;</span></span>
-<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
-<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">select</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;action&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">option</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;turn_on&quot;</span><span class="dt">&gt;</span>Turn On<span class="dt">&lt;/</span><span class="kw">option</span><span class="dt">&gt;</span></span>
-<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">option</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;turn_off&quot;</span><span class="dt">&gt;</span>Turn Off<span class="dt">&lt;/</span><span class="kw">option</span><span class="dt">&gt;</span></span>
-<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;/</span><span class="kw">select</span><span class="dt">&gt;</span></span>
-<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
-<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Apply&quot;</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;font-size:x-large&quot;</span><span class="dt">&gt;</span></span>
-<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;power_control&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">div</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;margin:10px;border:thin solid;padding:10px;width:30em&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">label</span><span class="dt">&gt;&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;checkbox&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;crate1&quot;</span><span class="dt">&gt;</span>Crate 1<span class="dt">&lt;/</span><span class="kw">label</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">label</span><span class="dt">&gt;&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;checkbox&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;crate2&quot;</span><span class="dt">&gt;</span>Crate 2<span class="dt">&lt;/</span><span class="kw">label</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">label</span><span class="dt">&gt;&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;checkbox&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;crate3&quot;</span><span class="dt">&gt;</span>Crate 3<span class="dt">&lt;/</span><span class="kw">label</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;/</span><span class="kw">div</span><span class="dt">&gt;</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;power.turn_on()&quot;</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;font-size:x-large&quot;</span><span class="dt">&gt;</span>Turn On<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;power.turn_off()&quot;</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;font-size:x-large&quot;</span><span class="dt">&gt;</span>Turn Off<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>The buttons call the functions in the SlowTask script
+<code>config/slowtask-power.py</code> (task name <code>power</code>).
+The checkbox values are passed as arguments, matched by name:</p>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Tasklet</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>tasklet <span class="op">=</span> Tasklet()</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.export</span>()</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> turn_on(crate1:<span class="bu">bool</span>, crate2:<span class="bu">bool</span>, crate3:<span class="bu">bool</span>):</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.export</span>()</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> turn_off(crate1:<span class="bu">bool</span>, crate2:<span class="bu">bool</span>, crate3:<span class="bu">bool</span>):</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
 <ul>
 <li>Either full or partial HTML can be used. CSS in
 <code>&lt;head&gt;</code> works.</li>
@@ -625,20 +799,31 @@ binding to data: use the <code>sd-value=METRIC</code> attribute.
 <code>&lt;span sd-value="pressure-&gt;format('%.3e mbar')"&gt;--&lt;/span&gt;</code>
 <p></li>
 </ul></li>
-<li><code>&lt;input&gt;</code> also can have a binding to data, but the
-values are updated at the initial loading and after every user
-operation.
+<li><code>&lt;input&gt;</code> elements usually have a <code>name</code>
+and work as user controls, independent of data values.
 <ul>
-<li>Example:
-<code>&lt;input type="number" name="threshold" sd-value="threshold"&gt;</code>
+<li><code>sd-value</code> can also be used for
+<code>&lt;input&gt;</code>, but the input content is then overwritten at
+every data update, which is annoying while the user is editing it.</li>
+</ul></li>
+<li>If the <code>&lt;form&gt;</code> has a <code>name</code> attribute,
+the value of each named input element (<code>&lt;input&gt;</code>,
+<code>&lt;select&gt;</code>, …) in it is sent to the server on every
+change. The values are:
+<ul>
+<li>synchronized among all the browsers displaying the same form,
+and</li>
+<li>preserved across server restarts.</li>
+<li>Example: <code>&lt;form name="power_control"&gt;</code>
 <p></li>
 </ul></li>
-<li><code>&lt;input&gt;</code> can be enabled/disabled based on data
-values: use the <code>sd-enabled=METRIC</code> attribute.
+<li><code>&lt;button&gt;</code> and <code>&lt;input&gt;</code> can be
+enabled/disabled based on data values: use the
+<code>sd-enabled=METRIC</code> attribute.
 <ul>
 <li>Here the value of the METRIC must be a boolean.</li>
 <li>Example:
-<code>&lt;input type="submit" name="start" value="Start" sd-enabled="RnuInfo['Status']-&gt;match('Idle')"&gt;</code>
+<code>&lt;button name="test.start()" sd-enabled="RunInfo['Status']-&gt;match('Idle')"&gt;Start&lt;/button&gt;</code>
 <p></li>
 </ul></li>
 <li>For the expressions that can be used in <code>sd-value</code> and
@@ -646,8 +831,101 @@ values: use the <code>sd-enabled=METRIC</code> attribute.
 Transform section</a>.</li>
 </ul>
 <h4 id="actionvariable-binding">Action/Variable Binding</h4>
+<p>HTML forms are typically bound to a SlowTask script
+(<code>config/slowtask-NAME.py</code>, task name <code>NAME</code>).</p>
+<ul>
+<li><strong>Function call</strong>: clicking a
+<code>&lt;button&gt;</code> named <code>TASK.FUNCTION()</code> calls a
+function exported from the SlowTask.
+<ul>
+<li>Values of <code>&lt;input&gt;</code> elements are passed as function
+arguments, matched by name. Type annotations of the arguments are used
+for conversion.</li>
+<li>Arguments can also be written in the button name, e.g.,
+<code>test.set_V(ch=0)</code>.</li>
+<li>With the name <code>publish TOPIC()</code>, the form values are
+published to the SlowMesh topic instead of calling a function.</li>
+</ul></li>
+<li><strong>Variable binding</strong>: values streamed
+(<code>ctrl.aio_stream()</code>) or exposed (<code>ctrl.expose()</code>)
+from a SlowTask appear as data channels, and can be used in
+<code>sd-value</code> and <code>sd-enabled</code>. Exposed variables are
+named <code>TASK.NAME</code>.</li>
+<li><strong>Form values</strong>: values of a named form can be read and
+written from a SlowTask with <code>ctrl.form(FORM_NAME)</code>.</li>
+<li><strong>Dynamic content</strong>: the HTML file itself can be
+generated by a SlowTask with
+<code>@tasklet.content('config/html-NAME.html')</code>.</li>
+</ul>
+<h5 id="example-slowtask-configslowtask-test.py">Example: SlowTask
+(<code>config/slowtask-test.py</code>)</h5>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dataclasses <span class="im">import</span> dataclass</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Tasklet</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>tasklet <span class="op">=</span> Tasklet()</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RunStatus:</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    running: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>run_status <span class="op">=</span> RunStatus()</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.initialize</span>()</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> initialize():</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>    ctrl.expose(<span class="st">&#39;status&#39;</span>, run_status)    <span class="co"># =&gt; data channel &quot;test.status&quot;</span></span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.export</span>()</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> set_V(ch:<span class="bu">int</span>, V0:<span class="bu">float</span>, ramping:<span class="bu">float</span>):   <span class="co"># called by a button &quot;test.set_V(...)&quot;</span></span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
+<h5 id="example-html-form">Example: HTML form</h5>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;hv_control&quot;</span><span class="dt">&gt;</span>  <span class="co">&lt;!-- named form: values are synchronized and preserved --&gt;</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;ramping&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;1&quot;</span><span class="dt">&gt;</span> V/sec<span class="dt">&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  V0: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V0&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V(ch=0)&quot;</span> <span class="er">sd-enabled</span><span class="ot">=</span><span class="st">&quot;test.status[&#39;running&#39;]-&gt;invert()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  Running: <span class="dt">&lt;</span><span class="kw">span</span> <span class="er">sd-value</span><span class="ot">=</span><span class="st">&quot;test.status[&#39;running&#39;]&quot;</span><span class="dt">&gt;</span>---<span class="dt">&lt;/</span><span class="kw">span</span><span class="dt">&gt;</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>For details, see the <a href="Scripting.html">SlowTask section of the
+Scripting chapter</a>.</p>
 <h1 id="table">Table</h1>
+<ul>
+<li>Draws one of the following as a table:
+<ul>
+<li><strong>Table Object</strong>: data stored as a table object. The
+latest one within the display time range is drawn.</li>
+<li><strong>Value Table</strong>: time-series data listed as rows of
+(timestamp, value). Dict values are shown as JSON text.</li>
+</ul></li>
+</ul>
+<h5 id="settings">Settings</h5>
+<ul>
+<li><strong>Channel</strong>: data channel</li>
+<li><strong>Title</strong>: panel title</li>
+<li><strong>Reversed</strong>: draw rows in reverse order (default: off
+for Table Object; on for Value Table, so that the newest entry is at the
+top)</li>
+<li><strong>Max Lines</strong>: maximum number of rows for Value Table
+(default: 20). The number of remaining rows is shown in the last
+line.</li>
+</ul>
 <h1 id="tree">Tree</h1>
+<ul>
+<li>Draws data stored as a tree object (e.g., JSON/YAML-like nested
+key-value pairs). The latest one within the display time range is
+drawn.</li>
+<li>The display style is chosen by the nesting depth:
+<ul>
+<li>Depth 1 (flat key-value pairs): a simple key-value table</li>
+<li>Depth 2 for all values (key-value pairs grouped into sections): a
+key-value table with section headers</li>
+<li>Otherwise: a tree view with expandable and collapsible nodes</li>
+</ul></li>
+</ul>
+<h5 id="settings-1">Settings</h5>
+<ul>
+<li><strong>Channel</strong>: data channel</li>
+<li><strong>Title</strong>: panel title</li>
+</ul>
 <h1 id="blob">Blob</h1>
 <ul>
 <li>Primarily intended for image data, but can be used for many
@@ -683,7 +961,75 @@ same-origin security policy, including:
 </ul>
 <h2 id="external-user-page-with-slowdash-data-and-controls">External
 User Page with SlowDash data and controls</h2>
-<p>[ WRITE THIS ]</p>
+<ul>
+<li>Files placed under the project’s <code>userhtml</code> directory are
+served at <code>/userhtml/FILENAME</code>. To show one in this panel,
+use the URL <code>./userhtml/FILENAME.html</code>.
+<ul>
+<li>Unlike the HTML / Form panel, user pages can use the full features
+of HTML, including JavaScript and external JavaScript libraries.</li>
+<li>HTML files directly under <code>userhtml</code> are also listed in
+the SlowDash catalog.</li>
+</ul></li>
+<li>From a user page, the following relative URLs are available
+(relative to <code>/userhtml/</code>):</li>
+</ul>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>URL</th>
+<th>Handled as</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>./FILENAME</code></td>
+<td>file in the <code>userhtml</code> directory</td>
+</tr>
+<tr class="even">
+<td><code>./slowjs/SCRIPT</code></td>
+<td>SlowJS (the SlowDash JavaScript library)</td>
+</tr>
+<tr class="odd">
+<td><code>./api/ENDPOINT</code></td>
+<td>SlowDash Web API (redirected to <code>/api/ENDPOINT</code>; POST
+works too)</td>
+</tr>
+<tr class="even">
+<td><code>./event/ENDPOINT</code></td>
+<td>Server-Sent Events (proxied to <code>/event/ENDPOINT</code>)</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Data can be read with the Web API, e.g.,
+<code>fetch('./api/data/ch0,ch1?length=60')</code>.</li>
+<li>SlowTask functions can be called by POST to
+<code>./api/control</code>, with the same content as an HTML form
+button:
+<code>{"test.set_V()": true, "V0": 10, "ramping": 1}</code>.</li>
+<li>SlowDash panels and layouts can be embedded using SlowJS:</li>
+</ul>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">link</span> <span class="er">rel</span><span class="ot">=</span><span class="st">&quot;stylesheet&quot;</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;text/css&quot;</span> <span class="er">href</span><span class="ot">=</span><span class="st">&quot;slowjs/slowdash.css&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">div</span> <span class="er">id</span><span class="ot">=</span><span class="st">&quot;layout&quot;</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;width:50vw;height:30vw&quot;</span><span class="dt">&gt;&lt;/</span><span class="kw">div</span><span class="dt">&gt;</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">script</span><span class="ot"> type=</span><span class="st">&quot;module&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="im">import</span> { SlowDash } <span class="im">from</span> <span class="st">&#39;./slowjs/slowdash.mjs&#39;</span><span class="op">;</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> slowdash <span class="op">=</span> <span class="kw">new</span> <span class="fu">SlowDash</span>(<span class="st">&#39;#layout&#39;</span><span class="op">,</span> <span class="st">&#39;my-layout.json&#39;</span>)<span class="op">;</span>   <span class="co">// layout file in the project directory</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  slowdash<span class="op">.</span><span class="fu">start</span>()<span class="op">;</span>   <span class="co">// loads the layout and updates the data automatically</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span></code></pre></div>
+<ul>
+<li>For lower-level use, the <code>Layout</code> module
+(<code>./slowjs/layout.mjs</code>) draws a layout from a configuration
+object and data fetched by the user script.</li>
+</ul>
+<p>For details and more examples, see the <a href="UserHtml.html">User
+HTML chapter</a> and <code>ExampleProjects/Advanced/UserHTML</code>.</p>
 
 
 </body>

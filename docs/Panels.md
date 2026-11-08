@@ -3,8 +3,54 @@ title: UI Panels
 ---
 
 # Time-Axis Plot (Time-Series)
+- Plots numeric time-series data against time.
+- When the display time range is long, data are automatically resampled on the server side. The threshold and the resampling method can be customized (see below).
+- Zooming in by range selection (mouse drag) only stretches the already-loaded data, so resampled points remain coarse. To reload the data for the zoomed range at a finer resolution, select "Current Display Range" from the time-range pulldown menu.
+- If resampling produces per-bucket minimum and maximum values (the "min/max envelope" option), the value range is drawn as a filled band ("Fill: envelope").
+- With the "include prior point" option, the last data point before the display range is also fetched. This is useful with the `last` line type, where each value is drawn as a horizontal line until the next data point, so the line starts from the left edge of the plot.
+
+##### Plot Settings (per channel)
+- **Line type**:
+  - `connect` (default): connects data points with straight lines
+  - `last`: holds each value horizontally until the next data point (step plot)
+- **include prior point**: also fetches one data point before the display range (default: off)
+- **Fill**:
+  - `envelope` (default): fills between the min and max values (requires "min/max envelope" in Resampling)
+  - `baseline`: fills between the data line and the given baseline value
+  - `opacity`: fill opacity (default: 0.2; 0 to disable fill)
+
+### Resampling
+Resampling is controlled by the following parameters:
+- **threshold** (seconds, default: 7200): resampling is applied when the display time range exceeds this value
+  - `0`: always resample
+  - `-1`: never resample
+- **n-buckets** (default: 600): number of buckets (i.e., data points drawn) when resampling is applied. The bucket width is (display time range) / (n-buckets).
+- **reducer**: how the value of each bucket is calculated from the raw data points in the bucket:
+  - `last` (default): the last data point in each bucket. This shows the latest value and preserves the data fluctuation.
+  - `mean`, `median`
+  - `sum`, `count`
+  - `stdev`
+  - `min`, `max`
+- **min/max envelope**: in addition to the reducer value, adds the minimum and maximum of the raw data values to each bucket. Works best with a small n-buckets.
 
 # XY Plot (Histograms & Graphs)
+- Ordinary (non-time-axis) plots, such as histograms and graphs.
+- If there are multiple data entries within the display time range (e.g., a time series of histograms), the latest one in the range is drawn.
+- The following can be drawn:
+  - **Histogram Object**: data stored as a histogram object
+  - **2D Histogram Object**: data stored as a 2D histogram object
+  - **Graph Object**: data stored as a graph object
+  - **Bar-Chart of Graph Object**: a graph object drawn as a bar chart
+  - **Histogram of Time-Series Values**: a histogram created on the browser from the values of a numeric time series
+  - **Scatter Plot of Time-Series Pairs**: a scatter plot created on the browser from a pair of numeric time series (Channel X and Channel Y)
+
+### Notes on plots created from time series
+- Resampling of numeric time series is performed on the server side, so the last two plots above (Histogram of Time-Series Values and Scatter Plot of Time-Series Pairs) are affected by resampling: they are made from the resampled values, not from the raw data.
+  - To avoid this, create the histogram or graph in a server-side user script and send it to the panel as a Histogram Object or Graph Object, as described in [Scripting](Scripting.html) (see also the examples in [QuickTour](QuickTour.html)).
+- Scatter Plot of Time-Series Pairs requires the data points of the two time series to be aligned in time.
+  - If they are not aligned, set the resampling threshold to `0` (always resample; this is the default for this plot type) so that both series are resampled onto common time buckets.
+  - In this case, the number of data points drawn is the number given by `n-buckets`.
+
 
 # Canvas
 <img src="fig/Panel-Canvas-Simple.png" style="width:40%;margin-left:2em;border:thin solid gray">
@@ -326,6 +372,34 @@ Mandatory attributes and default values for a `plot` are:
 }
 ```
 
+# Single Values
+- Displays a single value in large text, together with its channel label and timestamp. The latest value within the display time range is shown.
+- One panel can be divided into multiple tiles to display multiple values.
+- A horizontal bar gauge can be added to each tile.
+- The colors of the value text, gauge, and tile can change depending on which range the value falls in.
+- The displayed text can be transformed and formatted using [Data Transform](DataTransform.html).
+
+##### Panel Settings ("Tiles")
+- **Title**: panel title
+- **Margin**: top, right, bottom, left margins
+- **Grid**: number of rows and columns of tiles. If not specified (0), it is determined automatically from the number of items.
+- **Time Format**: format of the timestamp text
+- **Color**:
+  - **Base**: default color
+  - **Ranges**: colors for range 1, 2, and 3 (default: cyan, orange, and magenta). These defaults differ from the commonly used green, yellow, and red; they were chosen so that the ranges stay distinguishable for people with color vision deficiencies.
+  - **Value**, **Gauge**, **Tile**: opacity of each part, and whether to apply the range colors to it (default: gauge only)
+
+##### Item Settings (per tile)
+- **Channel**: data channel
+- **Label**: label text (default: channel name)
+- **Text Transform**: [Data Transform](DataTransform.html) expression to make the value text, e.g., `gt(0.5)->replace(true,'ON')->replace(false,'OFF')`
+- **Text Format**: printf-style format of the value text, e.g., `%.3f`. If set, this takes precedence over Text Transform.
+- **Gauge**: min and max of the bar gauge. The gauge is shown only if min < max.
+- **Ranges**: min and max of ranges 1, 2, and 3
+  - A value matches a range if min ≤ value < max.
+  - Ranges are evaluated from 1 to 3, and the first match is used. Overlapping ranges are allowed.
+  - If no range matches, the base color is used.
+  - The ranges are also indicated as colored lines under the gauge.
 
 # Map
 - Map is a schematic representation of a graph of `(x,y)`.
@@ -401,8 +475,9 @@ $ PATH/TO/SLOWDASH/xy2map.py NAME.csv > map-NAME.json
 
 # HTML / Form
 - Displays an HTML page described in a user HTML file stored under the user configuration directory.
-- The user configuration file can contain a `<form>` to send commands to the server-side user script.
-- When the form is submitted, a function in the user script (dispatcher) is called with the form data as a JSON object (see the [User Module section](UserModule.html)).
+- The user configuration file can contain a `<form>` to send commands to the server-side user script (SlowTask).
+- When a `<button>` in the form is clicked, the SlowTask function bound to the button is called with the form input values as arguments (see "Action/Variable Binding" below).
+- If the display time range does not include "now", buttons (`<button>` with a `name`) are disabled. This prevents users from making wrong operations based on past data without noticing that it is not current.
 <p>
 - [TODO] If the `Current` property is set, the panel contents are displayed only when the display time range includes "now".
 
@@ -418,21 +493,30 @@ $ PATH/TO/SLOWDASH/xy2map.py NAME.csv > map-NAME.json
 <h3>Crate Power Control</h3>
 Temperature: <span sd-value="ch1->last()->format('%.1f degC')">---</span>
 <p>  
-<form>
-  <input type="hidden" name="form" value="power_control">
+<form name="power_control">
   <div style="margin:10px;border:thin solid;padding:10px;width:30em">
     <label><input type="checkbox" name="crate1">Crate 1</label><br>
     <label><input type="checkbox" name="crate2">Crate 2</label><br>
     <label><input type="checkbox" name="crate3">Crate 3</label><br>
   </div>
   <p>
-  <select name="action">
-    <option value="turn_on">Turn On</option>
-    <option value="turn_off">Turn Off</option>
-  </select>
-  <p>
-  <input type="submit" value="Apply" style="font-size:x-large">
+  <button name="power.turn_on()" style="font-size:x-large">Turn On</button>
+  <button name="power.turn_off()" style="font-size:x-large">Turn Off</button>
 </form>
+```
+
+The buttons call the functions in the SlowTask script `config/slowtask-power.py` (task name `power`). The checkbox values are passed as arguments, matched by name:
+```python
+from slowpy.mesh import Tasklet
+tasklet = Tasklet()
+
+@tasklet.mesh.export()
+async def turn_on(crate1:bool, crate2:bool, crate3:bool):
+    ...
+
+@tasklet.mesh.export()
+async def turn_off(crate1:bool, crate2:bool, crate3:bool):
+    ...
 ```
 
 - Either full or partial HTML can be used. CSS in `<head>` works.
@@ -442,22 +526,84 @@ Temperature: <span sd-value="ch1->last()->format('%.1f degC')">---</span>
 - `<span>` and `<div>` can have a binding to data: use the `sd-value=METRIC` attribute.
   - Example: `<span sd-value="pressure->format('%.3e mbar')">--</span>`
 <p>
-- `<input>` also can have a binding to data, but the values are updated at the initial loading and after every user operation.
-  - Example: `<input type="number" name="threshold" sd-value="threshold">`
+- `<input>` elements usually have a `name` and work as user controls, independent of data values.
+  - `sd-value` can also be used for `<input>`, but the input content is then overwritten at every data update, which is annoying while the user is editing it.
+- If the `<form>` has a `name` attribute, the value of each named input element (`<input>`, `<select>`, ...) in it is sent to the server on every change. The values are:
+  - synchronized among all the browsers displaying the same form, and
+  - preserved across server restarts.
+  - Example: `<form name="power_control">`
 <p>
-- `<input>` can be enabled/disabled based on data values: use the `sd-enabled=METRIC` attribute.
+- `<button>` and `<input>` can be enabled/disabled based on data values: use the `sd-enabled=METRIC` attribute.
   - Here the value of the METRIC must be a boolean.
-  - Example: `<input type="submit" name="start" value="Start" sd-enabled="RnuInfo['Status']->match('Idle')">`
+  - Example: `<button name="test.start()" sd-enabled="RunInfo['Status']->match('Idle')">Start</button>`
 <p>
 - For the expressions that can be used in `sd-value` and `sd-enabled`, see the [Data Transform section](DataTransform.html).
 
 #### Action/Variable Binding
+HTML forms are typically bound to a SlowTask script (`config/slowtask-NAME.py`, task name `NAME`).
 
+- **Function call**: clicking a `<button>` named `TASK.FUNCTION()` calls a function exported from the SlowTask.
+  - Values of `<input>` elements are passed as function arguments, matched by name. Type annotations of the arguments are used for conversion.
+  - Arguments can also be written in the button name, e.g., `test.set_V(ch=0)`.
+  - With the name `publish TOPIC()`, the form values are published to the SlowMesh topic instead of calling a function.
+- **Variable binding**: values streamed (`ctrl.aio_stream()`) or exposed (`ctrl.expose()`) from a SlowTask appear as data channels, and can be used in `sd-value` and `sd-enabled`. Exposed variables are named `TASK.NAME`.
+- **Form values**: values of a named form can be read and written from a SlowTask with `ctrl.form(FORM_NAME)`.
+- **Dynamic content**: the HTML file itself can be generated by a SlowTask with `@tasklet.content('config/html-NAME.html')`.
 
+##### Example: SlowTask (`config/slowtask-test.py`)
+```python
+from dataclasses import dataclass
+from slowpy.mesh import Tasklet
+from slowpy.control import control_system as ctrl
+tasklet = Tasklet()
+
+@dataclass
+class RunStatus:
+    running: bool = False
+run_status = RunStatus()
+
+@tasklet.initialize()
+async def initialize():
+    ctrl.expose('status', run_status)    # => data channel "test.status"
+
+@tasklet.mesh.export()
+async def set_V(ch:int, V0:float, ramping:float):   # called by a button "test.set_V(...)"
+    ...
+```
+
+##### Example: HTML form
+```html
+<form name="hv_control">  <!-- named form: values are synchronized and preserved -->
+  Ramping: <input type="number" name="ramping" value="1"> V/sec<br>
+  V0: <input type="number" name="V0" value="0">
+  <button name="test.set_V(ch=0)" sd-enabled="test.status['running']->invert()">Set</button><br>
+  Running: <span sd-value="test.status['running']">---</span>
+</form>
+```
+
+For details, see the [SlowTask section of the Scripting chapter](Scripting.html).
 
 # Table
+- Draws one of the following as a table:
+  - **Table Object**: data stored as a table object. The latest one within the display time range is drawn.
+  - **Value Table**: time-series data listed as rows of (timestamp, value). Dict values are shown as JSON text.
+
+##### Settings
+- **Channel**: data channel
+- **Title**: panel title
+- **Reversed**: draw rows in reverse order (default: off for Table Object; on for Value Table, so that the newest entry is at the top)
+- **Max Lines**: maximum number of rows for Value Table (default: 20). The number of remaining rows is shown in the last line.
 
 # Tree
+- Draws data stored as a tree object (e.g., JSON/YAML-like nested key-value pairs). The latest one within the display time range is drawn.
+- The display style is chosen by the nesting depth:
+  - Depth 1 (flat key-value pairs): a simple key-value table
+  - Depth 2 for all values (key-value pairs grouped into sections): a key-value table with section headers
+  - Otherwise: a tree view with expandable and collapsible nodes
+
+##### Settings
+- **Channel**: data channel
+- **Title**: panel title
 
 # Blob
 - Primarily intended for image data, but can be used for many others.
@@ -483,4 +629,32 @@ Temperature: <span sd-value="ch1->last()->format('%.1f degC')">---</span>
   - mouse click detection (for Autocruise etc.)
 
 ## External User Page with SlowDash data and controls
-[ WRITE THIS ]
+- Files placed under the project's `userhtml` directory are served at `/userhtml/FILENAME`. To show one in this panel, use the URL `./userhtml/FILENAME.html`.
+  - Unlike the HTML / Form panel, user pages can use the full features of HTML, including JavaScript and external JavaScript libraries.
+  - HTML files directly under `userhtml` are also listed in the SlowDash catalog.
+- From a user page, the following relative URLs are available (relative to `/userhtml/`):
+
+| URL | Handled as |
+|---|---|
+| `./FILENAME` | file in the `userhtml` directory |
+| `./slowjs/SCRIPT` | SlowJS (the SlowDash JavaScript library) |
+| `./api/ENDPOINT` | SlowDash Web API (redirected to `/api/ENDPOINT`; POST works too) |
+| `./event/ENDPOINT` | Server-Sent Events (proxied to `/event/ENDPOINT`) |
+
+- Data can be read with the Web API, e.g., `fetch('./api/data/ch0,ch1?length=60')`.
+- SlowTask functions can be called by POST to `./api/control`, with the same content as an HTML form button: `{"test.set_V()": true, "V0": 10, "ramping": 1}`.
+- SlowDash panels and layouts can be embedded using SlowJS:
+
+```html
+<link rel="stylesheet" type="text/css" href="slowjs/slowdash.css">
+<div id="layout" style="width:50vw;height:30vw"></div>
+
+<script type="module">
+  import { SlowDash } from './slowjs/slowdash.mjs';
+  const slowdash = new SlowDash('#layout', 'my-layout.json');   // layout file in the project directory
+  slowdash.start();   // loads the layout and updates the data automatically
+</script>
+```
+- For lower-level use, the `Layout` module (`./slowjs/layout.mjs`) draws a layout from a configuration object and data fetched by the user script.
+
+For details and more examples, see the [User HTML chapter](UserHtml.html) and `ExampleProjects/Advanced/UserHTML`.
