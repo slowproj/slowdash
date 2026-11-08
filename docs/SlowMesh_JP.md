@@ -738,7 +738,7 @@ SlowTask は，内部に接続済 SlowMesh を保持していて，これを介�
 
 #### 関数および変数のエクスポート
 - 関数のエクスポート： `@tasklet.mesh.export`  (デコレータ)
-- 関数を指定した名前でエクスポート： `@tasklet.mesh.export(name:str)`  (デコレータ)
+- 関数を指定した名前でエクスポート： `@tasklet.mesh.export(*, name:str)`  (デコレータ)
 - SlowPy Control Node のエクスポート： `tasklet.mesh.export(name:str, node:slowpy.control.ControlNode)` （メソッド）
 
 **エクスポートした関数の実行は，即座に終了するようにして，最大 1 秒を目安に return するようにしてください**．
@@ -773,7 +773,7 @@ def html_disk_usage():
 
 
 ### 標準入出力の SlowMesh PubSub へのリダイレクト
-Tasklet のコンストラクタの `mesh_stdio` パラメータに `True` を渡す（デフォルト）と，ユーザースクリプト中の `print()` や `input()` などの標準入出力が PubSub にリダイレクトされます．TODO: これは，SlowDash サーバーを介して，Web Console へ接続されます．
+Tasklet のコンストラクタの `use_mesh_stdio` パラメータに `True` を渡す（デフォルト）と，ユーザースクリプト中の `print()` や `input()` などの標準入出力が PubSub にリダイレクトされます．TODO: これは，SlowDash サーバーを介して，Web Console へ接続されます．
 
 - `print()` および `stdout`/`stderr` への `write()`: コンソール出力および `sd.task.stdout.{task_name}{mesh_id}` へ publish
 - `input()`: コンソール入力または `sd.task.stdin.{mesh_id}` からのメッセージから読み込み

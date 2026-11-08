@@ -1196,7 +1196,7 @@ Variables</h4>
 <li>Export a function: <code>@tasklet.mesh.export</code>
 (decorator)</li>
 <li>Export a function under a specified name:
-<code>@tasklet.mesh.export(name:str)</code> (decorator)</li>
+<code>@tasklet.mesh.export(*, name:str)</code> (decorator)</li>
 <li>Export a SlowPy Control Node:
 <code>tasklet.mesh.export(name:str, node:slowpy.control.ControlNode)</code>
 (method)</li>
@@ -1249,11 +1249,11 @@ it is also possible to combine a template engine such as Jinja within
 the script to generate dynamic SlowDash layouts or HTML pages.</p>
 <h3 id="redirecting-standard-inputoutput-to-slowmesh-pubsub">Redirecting
 Standard Input/Output to SlowMesh PubSub</h3>
-<p>If the <code>mesh_stdio</code> parameter of the Tasklet constructor
-is set to <code>True</code> (the default), standard input/output such as
-<code>print()</code> and <code>input()</code> in the user script is
-redirected to PubSub. TODO: This is connected to the Web Console through
-the SlowDash server.</p>
+<p>If the <code>use_mesh_stdio</code> parameter of the Tasklet
+constructor is set to <code>True</code> (the default), standard
+input/output such as <code>print()</code> and <code>input()</code> in
+the user script is redirected to PubSub. TODO: This is connected to the
+Web Console through the SlowDash server.</p>
 <ul>
 <li><code>print()</code> and <code>write()</code> to
 <code>stdout</code>/<code>stderr</code>: output to the console and

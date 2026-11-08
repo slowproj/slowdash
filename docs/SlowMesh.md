@@ -730,7 +730,7 @@ At present, values passed in data and headers are limited to JSON-serializable v
 
 #### Exporting Functions and Variables
 - Export a function: `@tasklet.mesh.export` (decorator)
-- Export a function under a specified name: `@tasklet.mesh.export(name:str)` (decorator)
+- Export a function under a specified name: `@tasklet.mesh.export(*, name:str)` (decorator)
 - Export a SlowPy Control Node: `tasklet.mesh.export(name:str, node:slowpy.control.ControlNode)` (method)
 
 **Exported functions should complete immediately, with a return time of at most about 1 second.**
@@ -765,7 +765,7 @@ def html_disk_usage():
 
 
 ### Redirecting Standard Input/Output to SlowMesh PubSub
-If the `mesh_stdio` parameter of the Tasklet constructor is set to `True` (the default), standard input/output such as `print()` and `input()` in the user script is redirected to PubSub. TODO: This is connected to the Web Console through the SlowDash server.
+If the `use_mesh_stdio` parameter of the Tasklet constructor is set to `True` (the default), standard input/output such as `print()` and `input()` in the user script is redirected to PubSub. TODO: This is connected to the Web Console through the SlowDash server.
 
 - `print()` and `write()` to `stdout`/`stderr`: output to the console and publish to `sd.task.stdout.{task_name}{mesh_id}`
 - `input()`: read from console input or from messages on `sd.task.stdin.{mesh_id}`

@@ -1204,7 +1204,7 @@ Store) へのアクセス</h4>
 <li>関数のエクスポート： <code>@tasklet.mesh.export</code>
 (デコレータ)</li>
 <li>関数を指定した名前でエクスポート：
-<code>@tasklet.mesh.export(name:str)</code> (デコレータ)</li>
+<code>@tasklet.mesh.export(*, name:str)</code> (デコレータ)</li>
 <li>SlowPy Control Node のエクスポート：
 <code>tasklet.mesh.export(name:str, node:slowpy.control.ControlNode)</code>
 （メソッド）</li>
@@ -1255,7 +1255,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb37-1"><a h
 HTML ページを作成することもできます．</p>
 <h3 id="標準入出力の-slowmesh-pubsub-へのリダイレクト">標準入出力の
 SlowMesh PubSub へのリダイレクト</h3>
-<p>Tasklet のコンストラクタの <code>mesh_stdio</code> パラメータに
+<p>Tasklet のコンストラクタの <code>use_mesh_stdio</code> パラメータに
 <code>True</code> を渡す（デフォルト）と，ユーザースクリプト中の
 <code>print()</code> や <code>input()</code> などの標準入出力が PubSub
 にリダイレクトされます．TODO: これは，SlowDash サーバーを介して，Web
