@@ -1,0 +1,2433 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Scripting</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="style.css" />
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({startOnLoad: true});
+</script>
+
+</head>
+
+<body>
+
+<header>
+<div class="title">Scripting</div><p>
+<div class="toc">
+<span class="toc-title">Contents</span>
+<nav id="TOC">
+<ul>
+<li><a href="#概要" id="toc-概要">概要</a></li>
+<li><a href="#slowpy-ライブラリ" id="toc-slowpy-ライブラリ">SlowPy
+ライブラリ</a>
+<ul>
+<li><a href="#構成" id="toc-構成">構成</a></li>
+<li><a href="#簡単な例" id="toc-簡単な例">簡単な例</a></li>
+<li><a href="#コントロール" id="toc-コントロール">コントロール</a></li>
+<li><a href="#データベースインターフェース"
+id="toc-データベースインターフェース">データベースインターフェース</a></li>
+<li><a href="#解析部品" id="toc-解析部品">解析部品</a></li>
+<li><a href="#デバイスの-scpi-化" id="toc-デバイスの-scpi-化">デバイスの
+SCPI 化</a></li>
+</ul></li>
+<li><a href="#slowtask-gui-とスクリプトの結合"
+id="toc-slowtask-gui-とスクリプトの結合">SlowTask: GUI
+とスクリプトの結合</a>
+<ul>
+<li><a href="#slowtask-の開始と停止"
+id="toc-slowtask-の開始と停止">SlowTask の開始と停止</a></li>
+<li><a href="#関数のエクスポート"
+id="toc-関数のエクスポート">関数のエクスポート</a></li>
+<li><a href="#web-gui-からの関数呼び出し"
+id="toc-web-gui-からの関数呼び出し">Web GUI からの関数呼び出し</a></li>
+<li><a href="#ライフスパンコールバック"
+id="toc-ライフスパンコールバック">ライフスパンコールバック</a></li>
+<li><a href="#ブラウザへのデータ送信"
+id="toc-ブラウザへのデータ送信">ブラウザへのデータ送信</a></li>
+<li><a href="#matplotlib-連携" id="toc-matplotlib-連携">Matplotlib
+連携</a></li>
+</ul></li>
+<li><a href="#slowmesh" id="toc-slowmesh">SlowMesh</a>
+<ul>
+<li><a href="#基本的な使い方"
+id="toc-基本的な使い方">基本的な使い方</a></li>
+<li><a href="#slowmesh-への接続" id="toc-slowmesh-への接続">SlowMesh
+への接続</a></li>
+<li><a href="#pubsub" id="toc-pubsub">PubSub</a></li>
+<li><a href="#遠隔関数呼び出し-rpc"
+id="toc-遠隔関数呼び出し-rpc">遠隔関数呼び出し (RPC)</a></li>
+<li><a href="#registry-key-value-store"
+id="toc-registry-key-value-store">Registry (Key-Value Store)</a></li>
+<li><a href="#標準入出力とログの転送"
+id="toc-標準入出力とログの転送">標準入出力とログの転送</a></li>
+<li><a href="#使用例" id="toc-使用例">使用例</a></li>
+</ul></li>
+</ul>
+</nav>
+</div>
+</header>
+
+<h1 id="概要">概要</h1>
+<p>SlowDash は，Web GUI と Python Scripting のハイブリッドシステムです．
+Web GUI の表示部品の裏側に，その動作を記述する Python
+のコードを付加してシステムを構築します．</p>
+<p>ここでユーザーが作成する Python スクリプトはごく標準の Python
+で，既存のシステムや任意の外部ライブラリを使用することができます．
+スクリプト中の関数は Web GUI にバインドされますが，バインドは GUI
+の側で指定する（アクションの際に呼び出すユーザースクリプト中の関数名を指定する）ので，ユーザースクリプトの側では
+SlowDash のフレームワークやライブラリを全く使わないこともできます．</p>
+<p>一方で，SlowDash の機能をより積極的に使うこともできます．
+多くの場合，ユーザー関数に一行のデコレーターを付加するだけで，並行・並列実行制御などを含むより高度なバインディングを使用でき，また繰り返し実行や開始時実行などを簡単に行うことができます．</p>
+<p>SlowDash
+は，デバイスアクセスなど，ユーザースクリプト中で頻繁に使用する機能を実装したライブラリ
+SlowPy を提供しています． SlowPy
+の使用は任意ですが，使用すると多くのことが簡単にできるようになります．
+また，SlowPy 自体は，SlowDash サーバーなしで使用することができ，SlowPy
+を使ったユーザースクリプトも，SlowMesh の通信を使わない限り，SlowDash
+サーバーなしで単体で実行できます．</p>
+<p>SlowDash システムの一部として動作するユーザースクリプトを SlowTask
+と呼びます．SlowTask は通常，独立したプロセスとして実行されます．
+SlowTask は，SlowDash サーバーの開始と一緒に自動起動することも，Docker
+Compose などでサーバーとは独立に開始・停止することもできます．</p>
+<p>SlowPy を使用して SlowDash
+のフレームワークの中でユーザースクリプトを動作させれば，複数の SlowTask
+の間でのメッセージ通信や遠隔関数呼び出し，パラメータ共有などを通して，協調動作をさせることができます
+(SlowMesh)． ある程度以上の規模のシステムでは，複数の SlowTask
+が並列に動作するのが普通で，さらに SlowTask
+を，スクリプトの変更なしに，ネットワーク上に分散配置することもできます．
+SlowDash の分散処理機能を使わず，Docker Swarm や Kubernetes
+などの別のシステムで SlowTask
+プロセスを管理しても，全く同じように動作します．
+データベース記録など，一部の SlowTask スクリプトは汎用部品として
+SlowDash の配布パッケージに含まれており
+(SlowTools)，それらを組み合わせてシステム構築を行うこともできます．</p>
+<p>SlowMesh 上で複数の SlowTask を走らせる例が <a
+href="QuickTour.html">Quick Tour</a>
+にあり，使用後にきれいに捨てられる環境で試してみることができます．
+この章では，SlowPy を使って SlowTask
+スクリプトを作成しシステムを構築する方法の詳細を説明します．</p>
+<h1 id="slowpy-ライブラリ">SlowPy ライブラリ</h1>
+<h2 id="構成">構成</h2>
+<p>SlowPy ライブラリは SlowDash の <code>slowdash/lib/slowpy</code>
+にあり，SlowDash サーバーおよび Web GUI (<code>slowdash/app</code>
+以下)とは分離されています． SlowPy
+パッケージは以下の複数のサブパッケージから構成されています．
+<code>import slowpy</code> で一括 import できますが，使用する際は
+<code>slowpy.control.XXX</code>
+のように，サブパッケージ名を付けて書く必要があります．
+あるいは，<code>import slowpy.control</code> や
+<code>from slowpy.control import XXX</code>
+のようにしても構いません．</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>名前</th>
+<th>役割</th>
+<th>外部依存</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>control</td>
+<td>デバイスや外部制御システムのコントロール</td>
+<td>ベンダ提供ライブラリ（もしあれば）</td>
+</tr>
+<tr class="even">
+<td>(トップレベル)</td>
+<td>ヒストグラムなどのデータ解析部品</td>
+<td>-</td>
+</tr>
+<tr class="odd">
+<td>store</td>
+<td>データ記録</td>
+<td>使用するデータベースシステム</td>
+</tr>
+<tr class="even">
+<td>mesh</td>
+<td>SlowMesh 通信</td>
+<td>SlowDash サーバー</td>
+</tr>
+</tbody>
+</table>
+<p>ヒストグラムなどの解析部品は <code>slowpy</code>
+のトップレベルにあり，<code>slowpy.Histogram</code>
+のように使用します．</p>
+<p>ユーザースクリプト中で <code>slowpy.mesh</code>
+を使用して実際に通信している場合のみ，実行に SlowDash
+サーバーが必要です． それ以外の場合，作成したスクリプトは SlowDash
+とは独立に単体実行ができます． これは，スクリプトの開発に便利です．
+SlowPy ライブラリは，SlowDash の標準インストールでは，venv
+の中にインストールされるので，単体実行の場合は，使用する前に venv
+をアクティベートしてください． これは SlowDash サーバーから SlowTask
+として実行する場合には必要ありません．</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv    # （または，source PATH/TO/SLOWDASH/venv/bin/activate）</span></span></code></pre></div>
+<p>SlowDash のリリースに対応した SlowPy は pip
+でインストールすることもできます． 解析だけをする PC で SlowPy
+を使用する場合に便利かもしれません． SlowDash
+にリリースタグをつけたときだけ更新されるので，pip 上の SlowPy
+は古くなっている場合がある点に注意してください．</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ pip install slowpy</span></span></code></pre></div>
+<h2 id="簡単な例">簡単な例</h2>
+<h4
+id="イーサネット接続の電圧計から-scpi-コマンドで測定値を読む">イーサネット接続の電圧計から
+SCPI コマンドで測定値を読む</h4>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a control node for SCPI command &quot;MEAS:VOLT:DC&quot; on a device at 192.168.1.43</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>V <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;192.168.1.43&#39;</span>, <span class="dv">5025</span>).scpi().command(<span class="st">&#39;MEAS:VOLT:DC&#39;</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Read a value from the control node using SCPI command &quot;MEAS:VOLT:DC?&quot;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  value <span class="op">=</span> V.get()</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  ...</span></code></pre></div>
+<h4 id="データを-postgresql-データベースに記録する">データを PostgreSQL
+データベースに記録する</h4>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_PostgreSQL</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_PostgreSQL(<span class="st">&#39;postgresql://postgres:postgres@localhost:5432/SlowTestData&#39;</span>, table<span class="op">=</span><span class="st">&quot;SlowData&quot;</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    value <span class="op">=</span> ...</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    datastore.append(value, tag<span class="op">=</span><span class="st">&quot;voltmeter&quot;</span>)</span></code></pre></div>
+<h4 id="slowdash-の-web-gui-から関数を呼び出す">SlowDash の Web GUI
+から関数を呼び出す</h4>
+<p>スクリプト <code>config/slowtask-test.py</code> 中の出力電圧設定関数
+<code>set_Vout()</code>:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>Vout <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;192.168.1.43&#39;</span>, <span class="dv">5025</span>).scpi(append_opc<span class="op">=</span><span class="va">True</span>).command(<span class="st">&#39;VOLT&#39;</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_Vout(value:<span class="bu">float</span>):</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    Vout.<span class="bu">set</span>(value)</span></code></pre></div>
+<p>Web GUI のユーザー作成 HTML (<code>config/html-test.html</code>):</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  Voltage output: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;value&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_Vout()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>ブラウザ上で <code>Set</code>
+ボタンをクリックすると，<code>&lt;input name="value"&gt;</code>
+フィールドに設定された値が float に変換されて，それを引数に
+<code>set_Vout(value)</code> が呼ばれます．</p>
+<h5 id="少しだけ改良-その１">少しだけ改良 その１</h5>
+<p>関数は通常の関数と async 関数のどちらも使用できます．async
+にすると他の処理と並行に実行され，全体の応答性が良くなります．</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> set_Vout(value:<span class="bu">float</span>):</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> Vout.aio_set(value)</span></code></pre></div>
+<h5 id="少しだけ改良-その２">少しだけ改良 その２</h5>
+<p>SlowPy において SlowTask をコントロールする <code>Tasklet</code>
+を使用すると，ブラウザから呼び出す関数を明示的に指定することができます．</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Tasklet</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>tasklet <span class="op">=</span> Tasklet()</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.export</span>()</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> set_Vout(value:<span class="bu">float</span>):</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> Vout.aio_set(value)</span></code></pre></div>
+<h4
+id="秒ごとにデータを読み出しブラウザにストリーミングする">１秒ごとにデータを読み出し，ブラウザにストリーミングする</h4>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Tasklet</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>tasklet <span class="op">=</span> Tasklet()</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;192.168.1.43&#39;</span>, <span class="dv">5025</span>).scpi()</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>V <span class="op">=</span> device.command(<span class="st">&#39;MEAS:VOLT:DC&#39;</span>)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>A <span class="op">=</span> device.command(<span class="st">&#39;MEAS:CURR:DC&#39;</span>)</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="fl">1.0</span>)</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> loop():</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    ctrl.stream(<span class="st">&#39;voltage&#39;</span>, V.get())</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    ctrl.stream(<span class="st">&#39;current&#39;</span>, A.get())</span></code></pre></div>
+<h5 id="少しだけ改良">少しだけ改良</h5>
+<p>上記同様，async を使用すると性能が良くなります．</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="fl">1.0</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> loop():</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_stream(<span class="st">&#39;voltage&#39;</span>, <span class="cf">await</span> V.aio_get())</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_stream(<span class="st">&#39;current&#39;</span>, <span class="cf">await</span> A.aio_get())</span></code></pre></div>
+<h2 id="コントロール">コントロール</h2>
+<h3 id="ノードツリー構造">ノードツリー構造</h3>
+<p>SlowPy
+は，外部のソフトウェアシステムやハードウェアデバイスに接続するための統一インターフェースを提供します．
+全てのものは一つの「コントロールツリー」にマップされ，ツリーの各ノードは
+<code>set()</code> と <code>get()</code> のメソッドを持ちます．
+ツリーはシステムの論理構造を表しています．
+例えば，イーサネット経由で接続された電源装置に対する SCPI コマンド
+<code>VOLT</code>
+は，<code>ControlSystem.ethernet(host, port).scpi().command('VOLT')</code>
+のように指定され，このノードに対して <code>set(value)</code>
+を呼ぶと，デバイスに SCPI コマンド <code>VOLT value</code>
+が送られます． <code>get()</code>
+メソッドは読み出し操作を行い，値を返します．</p>
+<p>プラグインモジュールにより，コントロールツリーに動的に枝を追加することができます．
+例えば，Redis プラグインは <code>redis()</code> ノードと，ハッシュや
+JSON，時系列などの Redis
+が提供する機能に対応するいくつかの下位の枝を追加します．
+プラグインは，必ずしもルートの ControlSystem
+ではなく，任意のノードにロードされます．
+例えば，イーサネットを使用するプラグインはイーサネットノードにロードされてその下に枝を作成し，プラグインはイーサネットノードが提供する
+<code>set()</code>（送信）や
+<code>get()</code>（受信）などの機能を利用することができます．</p>
+<h4 id="例">例</h4>
+<p>以下は SlowPy Controls の使用例です．この例では，イーサネット経由で
+SCPI コマンドを受け付ける電源装置を使用しています．</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a control node for SCPI command &quot;VOLT&quot; (output) and &quot;MEAS:VOLT:DC&quot; (readback) on a device at 192.168.1.43</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;192.168.1.43&#39;</span>, <span class="dv">5025</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>Vout <span class="op">=</span> device.scpi(append_opc<span class="op">=</span><span class="va">True</span>).command(<span class="st">&#39;VOLT&#39;</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>V <span class="op">=</span> device.scpi().command(<span class="st">&#39;MEAS:VOLT:DC&#39;</span>)</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Write a value to the control node: this will issue SCPI command &quot;VOLT 10;*OPC?&quot;</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>Vout.<span class="bu">set</span>(<span class="dv">10</span>)</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Read a value from the control node using SCPI command &quot;MEAS:VOLT:DC?&quot;</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  value <span class="op">=</span> V.get()</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  ...</span></code></pre></div>
+<p>通常は，この例のように <code>slowpy.control</code> からインスタンス
+<code>control_system</code> を直接 import するところから始めます．
+（<code>ControlSystem</code> クラスを import
+して，自分でインスタンスを作成しても構いません．）</p>
+<p><code>ControlSystem</code> にはすでに <code>Ethernet</code>
+プラグインが含まれていますが，もし含まれていなかった場合，プラグインをロードするコードは以下のようになります．</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>ctrl.import_control_module(<span class="st">&#39;Ethernet&#39;</span>)</span></code></pre></div>
+<p>これにより，検索ディレクトリ（カレントディレクトリと SlowPy
+のディレクトリ）から <code>control_Ethernet.py</code>
+という名前のファイルが探されてロードされ，プラグインをロードしたノードのクラス（この場合は
+ControlSystem）に <code>ethernet()</code> メソッドが追加されます．
+<code>import_control_module()</code>
+はノード自身を返すので，<code>ctrl.import_control_module('DummyDevice').randomwalk_device()</code>
+のように続けて書くこともできます． Ethernet プラグインにはすでに SCPI と
+Telnet
+の枝が含まれています．それ以外の特定のプロトコルを使う場合は，そのためのプラグインをイーサネットノードにロードします．</p>
+<p>各ノードのコンストラクタはパラメータを取ります．
+この例では，イーサネットとの間でデータの送受信をするイーサネットノードは，ホスト名（IP
+アドレス）とポート番号をパラメータに取ります． 特定の SCPI
+コマンドに結びつけられた SCPI コマンドノードは，SCPI
+コマンドをパラメータに取り，オプションで書き込み時のコマンドを変更する
+<code>set_format</code> を指定できます．
+（<code>.scpi().command(CMD)</code>
+に対して，デフォルトで書き込み時に送られるコマンドは
+<code>CMD value</code>，読み出し時は <code>CMD?</code> です．）</p>
+<p>SlowPy は，全ての SCPI コマンドに応答があることを想定しています．
+多くの場合，書き込み操作ではコマンドの完了を待つ必要もあります．
+デバイスの実際のコマンドの振る舞いによらずにこれを実現する方法として，例のように，コマンドに
+<code>*OPC?</code> を付加するという手があります．
+<code>scpi(append_opc=True)</code> とすると，そのノード以下の全ての
+<code>set()</code> に <code>*OPC?</code>
+が付加されます．（もともと応答のある <code>get()</code>
+には付加されません．）
+コマンドごとに切り替えたい場合は，<code>command('OUTP ON;*OPC?')</code>
+のように，自分でコマンドに <code>*OPC?</code>
+を付加しても構いません．</p>
+<p>コントロールノードのオブジェクトを取得したら，<code>node.set(value)</code>
+で値を書き込み，<code>value = node.get()</code>
+で値を読み出すことができます．</p>
+<p>コネクションノード（<code>ethernet()</code>
+など）を複数回呼んだときに，新しいコネクションが作られるか同じものが再利用されるかは，ノードの種類やパラメータによります．
+通常は，例のように，デバイスレベルのノードを一度作成して変数に保存しておくと便利です．</p>
+<h3 id="非同期-async-インターフェース">非同期 (Async)
+インターフェース</h3>
+<p>SlowDash がユーザースクリプトを SlowTask
+として実行する場合，明示的に指定しない限りはシングルスレッドの async
+システムとして動作し，全体が async を使用して並行処理をしています．
+このため，ユーザー関数の実行に時間がかかると全体が固まってしまいます．
+ユーザースクリプトの関数も async
+として実装し，その中で時間のかかる処理には，SlowPy ノードの async
+版のメソッドを <code>await</code> 付きで呼ぶことが推奨されています．</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> set_Vout(value:<span class="bu">float</span>):</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> Vout.aio_set(value)</span></code></pre></div>
+<p>この目的のため，SlowPy のノードでは，ほとんどすべてのメソッドに async
+版が用意されています．
+これらは，通常関数(<code>set()</code>/<code>get()</code>
+など)の名前にプレフィックス <code>aio_</code>
+を付けた名前になります(<code>aio_set()</code>/<code>aio_get()</code>
+など)．</p>
+<p>多くの SlowPy デバイスで <code>set()</code>/<code>get()</code> と
+<code>aio_set()</code>/<code>aio_get()</code>
+の両方が実装されていますが，実際にどちらが使用できるかはデバイスによります．
+<code>set()</code> だけが実装されていて <code>aio_set()</code>
+がない場合，<code>await aio_set()</code> 呼び出しは
+<code>asyncio.to_thread()</code>
+を経由するか（スレッドセーフが明示的に宣言されている場合），そのまま
+<code>set()</code>
+にフォールバックします（スタベーションの可能性あり）．
+ノードがスレッドセーフであるかどうかは，<code>ControlNode</code>
+ベースクラスの <code>_is_thread_safe</code>
+メンバ変数に格納されています．</p>
+<p><code>sleep()</code> や <code>wait()</code>
+などのブロッキングする関数にも <code>aio_sleep()</code> や
+<code>aio_wait()</code> などの async 版があります． SlowTask
+の中では，<code>time.sleep()</code> や <code>ctrl.sleep()</code>
+の代わりに <code>await ctrl.aio_sleep()</code> を使用してください．</p>
+<h3
+id="コントロールノードのスレッドと非同期タスク">コントロールノードのスレッドと非同期タスク</h3>
+<p>コントロールノードの中には，<code>set()</code> や <code>get()</code>
+の呼び出しとは独立に，バックグラウンドで動作するものがあります．例えば：</p>
+<ul>
+<li>PID ループやランピングなど，<code>set()</code>/<code>get()</code>
+の問い合わせとは独立にタスクを実行するノード</li>
+<li>データ取得に時間がかかる場合に，定期的にデータを先読みしてキャッシュに保存しておくノード</li>
+</ul>
+<p>このようなノードは，<code>ControlThreadMixin</code> または
+<code>ControlAsyncTaskMixin</code> を継承して実装されます．</p>
+<ul>
+<li><code>ControlThreadMixin</code>: ノードに <code>run()</code>
+メソッドがあれば，<code>start()</code>
+を呼ぶと専用のスレッドが作成され，その中で <code>run()</code>
+が実行されます．</li>
+<li><code>ControlAsyncTaskMixin</code>: ノードに
+<code>async def aio_run()</code> メソッドがあれば，<code>start()</code>
+を呼ぶと asyncio のタスクが作成され，<code>aio_run()</code>
+が実行されます．</li>
+</ul>
+<p>スレッドやタスクは，ノードの <code>stop()</code>
+メソッドを呼ぶか，全体の停止要求（<code>ControlSystem.stop()</code>
+やシグナルなど）により停止されます． <code>run()</code>
+関数は停止要求を（<code>is_stop_requested()</code>
+により）監視し，停止要求があったら自分で終了しなければなりません．
+<code>aio_run()</code> の場合は，<code>stop()</code>
+によりタスクがキャンセルされ，次の <code>await</code>
+の時点で停止します．</p>
+<p>例えば，ダミーデバイスの <code>first_order_plant</code>
+はスレッドでシミュレーションを走らせるノードで，以下のように使います．</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>plant <span class="op">=</span> ctrl.import_control_module(<span class="st">&#39;DummyDevice&#39;</span>).first_order_plant(gain<span class="op">=</span><span class="fl">0.1</span>, noise<span class="op">=</span><span class="fl">0.1</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>plant.start()</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    state <span class="op">=</span> plant.get()   <span class="co"># 時間発展した内部状態</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
+<h3 id="よく使われるノード">よく使われるノード</h3>
+<p>命名規則：<code>set()</code>，<code>get()</code>，および
+<code>do_XXX()</code>
+は動作を行う通常のメソッドです．名詞の名前を持つメソッドは子ノードを返します．</p>
+<h4 id="ethernetscpitelnet">Ethernet，SCPI，Telnet</h4>
+<h5 id="ロード組み込み済">ロード（組み込み済）</h5>
+<p><code>ctrl.import_control_module('Ethernet')</code></p>
+<h5 id="ノード">ノード</h5>
+<ul>
+<li><strong>ethernet(host, port)</strong>: TCP
+ソケット接続によりテキストメッセージを送受信する
+<ul>
+<li>set(value): 値をエンコードしたテキストとして送信する</li>
+<li>get(): テキストのチャンクを受信する</li>
+<li>do_get_chunk(timeout=None): テキストのチャンクを受信する</li>
+<li>do_get_line(timeout=None):
+チャンクを受信し，（必要なら再構成して）一行を返す</li>
+<li>do_flush_input(): 受信バッファを空にする</li>
+<li><strong>scpi(timeout=10, line_terminator=‘0d’,
+append_opc=False)</strong>: 親のイーサネット接続を SCPI に橋渡しし，SCPI
+の設定を保持する
+<ul>
+<li><strong>command(cmd, set_format=None)</strong>:
+親のイーサネット接続を介して SCPI コマンドを発行する
+<ul>
+<li>set(value=None): <code>cmd value</code> を送信して応答を待つ</li>
+<li>get(): <code>cmd?</code> を送信して応答を待ち，その応答を返す</li>
+</ul></li>
+</ul></li>
+<li><strong>telnet(prompt, line_terminator)</strong>:
+親のイーサネット接続を Telnet に橋渡しし，Telnet の設定を保持する
+<ul>
+<li><strong>command(cmd)</strong>: 親のイーサネット接続を介して Telnet
+コマンドを発行する
+<ul>
+<li>set(value=None): <code>cmd value 改行</code>
+を送信し，エコーを読み捨てる</li>
+<li>get(): <code>cmd 改行</code>
+を送信し，エコーを読み捨て，次のプロンプトまでの応答を返す</li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul>
+<h4 id="シリアルポート">シリアルポート</h4>
+<h5 id="ロード">ロード</h5>
+<p><code>ctrl.import_control_module('Serial')</code>
+（<code>pyserial</code> パッケージが必要）</p>
+<h5 id="ノード-1">ノード</h5>
+<ul>
+<li><strong>serial(port=‘/dev/ttyUSB0’, baudrate=115200)</strong>:
+シリアルポート経由でテキストメッセージを送受信する
+<ul>
+<li>set(value): 値をエンコードしたテキストとして送信する</li>
+<li>get(): テキストのチャンクを受信する</li>
+<li>do_get_chunk(timeout=None): テキストのチャンクを受信する</li>
+<li>do_get_line(timeout=None):
+チャンクを受信し，（必要なら再構成して）一行を返す</li>
+<li>do_flush_input(): 受信バッファを空にする</li>
+<li><strong>scpi()</strong>: イーサネットノードの <code>scpi()</code>
+と同じもの</li>
+</ul></li>
+</ul>
+<h4 id="visa">VISA</h4>
+<p>USB 接続や GPIB 接続，HiSLIP などを使用するデバイスは，VISA
+経由で使用できます． ##### ロード
+<code>ctrl.import_control_module('VISA')</code> （<code>pyvisa</code>
+パッケージが必要）</p>
+<h5 id="ノード-2">ノード</h5>
+<ul>
+<li><strong>visa(resource_name)</strong>: VISA
+リソース名（例：<code>USB0::0x2A8D::0x0201::MY54700218::0::INSTR</code>）で指定されるデバイス
+<ul>
+<li><strong>scpi()</strong>: イーサネットノードの <code>scpi()</code>
+と同じもの</li>
+</ul></li>
+</ul>
+<h4 id="http-web-api">HTTP (Web API)</h4>
+<h5 id="ロード組み込み済-1">ロード（組み込み済）</h5>
+<p><code>ctrl.import_control_module('HTTP')</code></p>
+<h5 id="ノード-3">ノード</h5>
+<ul>
+<li><strong>http(base_url)</strong>:
+<ul>
+<li><strong>path(path)</strong>: <code>base_url</code>
+に付加されるパス文字列
+<ul>
+<li>set(value): <code>base_url</code> + <code>path</code>
+に，<code>value</code> を内容とする POST リクエストを送る</li>
+<li>get(): <code>base_url</code> + <code>path</code> に GET
+リクエストを送り，応答の内容を返す</li>
+<li><strong>json()</strong>:
+<ul>
+<li>set(value): <code>value</code> は JSON に変換される Python
+オブジェクト</li>
+<li>get(): JSON ドキュメントを受信し，Python オブジェクトとして返す</li>
+</ul></li>
+<li><strong>value()</strong>: ramping() などで使用するための
+ControlVariableNode を返す</li>
+</ul></li>
+</ul></li>
+</ul>
+<p>async 版の <code>async_http(base_url)</code>
+も組み込まれています．</p>
+<h4 id="シェルコマンド">シェルコマンド</h4>
+<h5 id="ロード組み込み済-2">ロード（組み込み済）</h5>
+<p><code>ctrl.import_control_module('Shell')</code></p>
+<h5 id="ノード-4">ノード</h5>
+<ul>
+<li><strong>shell(cmd)</strong>: シェルコマンドを実行する
+<ul>
+<li>set(value): <code>cmd value</code> を起動する</li>
+<li>get(): <code>cmd</code> を起動し，その出力を返す</li>
+<li><strong>value()</strong>: ramping() などで使用するための
+ControlVariableNode を返す</li>
+<li><strong>arg(*args)</strong>: 親の “shell”
+ノードにプログラム引数を追加する <br>
+例：<code>adc0 = ctrl.shell('read_adc').arg('--ch=0')</code>
+<ul>
+<li><strong>value()</strong>: ramping() などで使用するための
+ControlVariableNode を返す</li>
+</ul></li>
+</ul></li>
+</ul>
+<h4 id="slowdash-サーバーへのアクセス">SlowDash
+サーバーへのアクセス</h4>
+<h5 id="ロード-1">ロード</h5>
+<p>HTTP
+ノードにロードします：<code>ctrl.http(url).import_control_module('Slowdash')</code></p>
+<h5 id="ノード-5">ノード</h5>
+<ul>
+<li><strong>http(url).slowdash()</strong>
+<ul>
+<li><strong>ping()</strong>: <code>pong</code> を返す</li>
+<li><strong>channels()</strong>: チャンネルリストの JSON
+オブジェクトを取得する</li>
+<li><strong>data(channels, length=3600)</strong>:
+指定したチャンネルのデータの JSON オブジェクトを取得する</li>
+<li><strong>config()</strong>: プロジェクト設定の JSON
+オブジェクトを取得する</li>
+<li><strong>config_file(name)</strong>:
+設定ファイルを取得または送信する</li>
+</ul></li>
+</ul>
+<p>async 版として，<code>async_http(url)</code> にロードする
+<code>AsyncSlowdash</code> プラグイン (<code>async_slowdash()</code>)
+もあります．</p>
+<h4 id="その他のノード抜粋">その他のノード（抜粋）</h4>
+<ul>
+<li>Redis（<code>redis</code> パッケージを使用）</li>
+<li>RabbitMQ（<code>pika</code> および <code>aio-pika</code>
+を使用）</li>
+<li>MQTT（<code>paho-mqtt</code> および <code>aio-mqtt</code>
+を使用）</li>
+<li>NATS（<code>nats-py</code> を使用）</li>
+<li>Modbus（<code>pymodbus</code> を使用）</li>
+<li>LabJack（<code>LabJackPython</code> を使用，現時点では U3/U6/U12
+のみサポート）</li>
+<li>UDP</li>
+<li>DataStore（<code>data_store(url).tag(name)</code> に
+<code>set()</code> するとデータベースに記録される）</li>
+<li>DummyDevice（ランダムウォークやイベントジェネレータ，一次・二次遅れ系のプラントなど，テスト用のダミーデバイス）</li>
+</ul>
+<p>SlowPy のコントロールプラグインは
+<code>slowdash/lib/slowpy/slowpy/control</code> 以下に
+<code>control_XXX.py</code> という名前で置かれています． 使い方の例は
+<code>slowdash/lib/slowpy/test</code>
+以下のテストスクリプトを参照してください．</p>
+<h3 id="ノードの共通関数">ノードの共通関数</h3>
+<p>全てのコントロールノード（<code>slowpy.control.ControlNode</code>
+の派生クラス）は以下のメソッドを持ちます．</p>
+<ul>
+<li>[ControlNode]
+<ul>
+<li><strong>has_data()</strong>: <code>get()</code>
+で取得できる値があれば True を返す</li>
+<li><strong>wait(condition_lambda=None, poll_interval=0.1,
+timeout=0)</strong>: <code>condition_lambda</code> が None
+でない場合は，<code>condition_lambda</code> が <code>True</code>
+を返すまでブロックする．<code>condition_lambda</code> が None
+の場合は，<code>has_data()</code> が True
+を返すまで待つ．タイムアウトの場合は <code>None</code>
+を返し，停止要求があった場合は <code>False</code>
+を返す．それ以外の場合は <code>True</code> を返す．</li>
+<li><strong>sleep(duration_sec)</strong>:
+指定時間ブロックする．停止要求を受け取らなければ True を返す．</li>
+<li><strong>is_stop_requested()</strong>: 停止要求を受け取っていれば
+True を返す</li>
+<li><strong>snapshot()</strong>: <code>get()</code>
+で得た値を保持し，子ノードの <code>get()</code>
+に同じ値を返すノードを返す（一回の読み出しで得たデータの各フィールドを，子ノードを通して取り出す場合などに使用）</li>
+</ul></li>
+</ul>
+<p><code>wait()</code> と <code>sleep()</code> には，async 版の
+<code>aio_wait()</code> と <code>aio_sleep()</code> もあります．</p>
+<p><code>ControlVariableNode</code>
+から派生したノードは，以下のメソッドを持ちます．</p>
+<ul>
+<li>[ControlVariableNode] -&gt; [ControlNode]
+<ul>
+<li><strong>setpoint(limits=(None,None))</strong>:
+セットポイントを保持する
+<ul>
+<li>set(value): 値をセットポイントとして保持し，親ノードの
+<code>set(value)</code> を呼ぶ．値が limits
+の範囲外の場合は例外を発生する．</li>
+<li>get(): 保持しているセットポイントの値を返す</li>
+</ul></li>
+<li><strong>ramping(change_per_sec)</strong> /
+<strong>async_ramping(change_per_sec)</strong>:
+値をランプさせながら設定する（スレッド版 / async タスク版）
+<ul>
+<li>set(value):
+親ノードの値を目標値に向けてランピングを開始する．値が数値でない場合は例外を発生する．</li>
+<li>get(): 親ノードの <code>get()</code> を返す</li>
+<li><strong>status()</strong>
+<ul>
+<li>set(value): <code>set(0)</code> で実行中のランピングを停止する</li>
+<li>get(): ランピング中であれば <code>True</code> を，そうでなければ
+<code>False</code> を返す</li>
+</ul></li>
+</ul></li>
+<li><strong>pid(sensing_node, Kp, Ki, Kd, *, interval=1.0,
+output_limits=(None,None))</strong>: <code>sensing_node</code>
+から読んだ値を使って，このノードを PID 制御する
+<ul>
+<li>set(value): センサーノードの値が目標値となるように PID
+ループを開始する．<code>set(None)</code> で制御を停止する．</li>
+<li>get(): 目標値を返す</li>
+<li><strong>status()</strong>
+<ul>
+<li>set(value): <code>set(0)</code> で PID ループを停止する</li>
+<li>get(): 各種の制御パラメータ（<code>running</code>,
+<code>setpoint</code>, <code>measurement</code>, <code>output</code>,
+<code>Kp</code>, <code>Ki</code>, <code>Kd</code> など）を含んだ dict
+を返す</li>
+</ul></li>
+</ul></li>
+<li><strong>oneshot(duration=None, normal=None)</strong>:
+<code>set()</code> した値を指定時間だけ保持し，その後
+<code>normal</code> の値に戻す</li>
+<li><strong>readonly()</strong>: ノードを読み出し専用にする．親ノードの
+<code>get()</code> を呼ぶ <code>get()</code>
+だけを持つノードを返す．（ノードを外部に公開する場合に便利）</li>
+<li><strong>writeonly()</strong>: ノードを書き込み専用にする．親ノードの
+<code>set()</code> を呼ぶ <code>set()</code>
+だけを持つノードを返す．</li>
+</ul></li>
+</ul>
+<p><code>ControlThreadMixin</code> または
+<code>ControlAsyncTaskMixin</code>
+を継承したノードは，以下のメソッドを持ちます．</p>
+<ul>
+<li>[ControlThreadMixin / ControlAsyncTaskMixin]
+<ul>
+<li><strong>start()</strong>: <code>run()</code>（スレッド）または
+<code>aio_run()</code>（async タスク）を作成して開始する</li>
+<li><strong>stop()</strong>: スレッドまたはタスクを停止する</li>
+</ul></li>
+</ul>
+<h2 id="データベースインターフェース">データベースインターフェース</h2>
+<p>SlowPy の DataStore を使うと，SlowDash
+で読める形式でデータベースにデータを記録できます．
+以下は，ロングフォーマットのテーブルに単一の値を書き込む簡単な例です．</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_PostgreSQL</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ctrl.import_control_module(<span class="st">&#39;DummyDevice&#39;</span>).randomwalk_device()</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_PostgreSQL(<span class="st">&#39;postgresql://postgres:postgres@localhost:5432/SlowTestData&#39;</span>, table<span class="op">=</span><span class="st">&quot;Test&quot;</span>)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> ch <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">4</span>):</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>        value <span class="op">=</span> device.ch(ch).get()</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>        datastore.append(value, tag<span class="op">=</span><span class="st">&#39;</span><span class="sc">%02d</span><span class="st">&#39;</span><span class="op">%</span>ch)</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span></code></pre></div>
+<p>以下の DataStore クラスがあります．</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>クラス</th>
+<th>URL 形式</th>
+<th>備考</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>DataStore_SQLite</code></td>
+<td><code>sqlite:///FILE_NAME</code></td>
+<td>第２引数はテーブル名</td>
+</tr>
+<tr class="even">
+<td><code>DataStore_PostgreSQL</code></td>
+<td><code>postgresql://USER:PASS@HOST:PORT/DB</code></td>
+<td>第２引数はテーブル名</td>
+</tr>
+<tr class="odd">
+<td><code>DataStore_MySQL</code></td>
+<td><code>mysql://USER:PASS@HOST:PORT/DB</code></td>
+<td>第２引数はテーブル名</td>
+</tr>
+<tr class="even">
+<td><code>DataStore_InfluxDB2</code></td>
+<td><code>influxdb2://ORGANIZATION:TOKEN@HOST:PORT/BUCKET</code></td>
+<td>第２引数は measurement 名</td>
+</tr>
+<tr class="odd">
+<td><code>DataStore_Redis</code></td>
+<td><code>redis://HOST:PORT/DB</code></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><code>DataStore_HDF5</code></td>
+<td>（ファイル名）</td>
+<td>第２引数はデータセット名．ランごとのファイル記録など</td>
+</tr>
+<tr class="odd">
+<td><code>DataStore_CSV</code></td>
+<td><code>csv:///FILE_NAME</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>URL から適切な DataStore を作成する
+<code>create_datastore_from_url(url, table)</code>
+関数もあります．設定ファイルなどからデータベースの URL
+を受け取る場合に便利です．</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> create_datastore_from_url</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> create_datastore_from_url(<span class="st">&#39;sqlite:///SlowStore.db&#39;</span>, <span class="st">&#39;slowdata&#39;</span>)</span></code></pre></div>
+<p>DataStore の主なメソッドは以下のとおりです．</p>
+<ul>
+<li><strong>append(values, tag=None, timestamp=None)</strong>:
+値を時系列データとして追加する</li>
+<li><strong>update(values, tag=None, timestamp=None)</strong>:
+値を更新する（最新値のみを保持する）</li>
+<li><strong>another(table)</strong>:
+同じデータベースの別のテーブルに書き込む DataStore を返す（SQL
+系のみ）</li>
+<li><strong>close()</strong>: データベースとの接続を閉じる</li>
+</ul>
+<p><code>values</code>
+には，数値や文字列の他，ヒストグラムなどの解析オブジェクト（後述）を渡すことができます．
+<code>timestamp</code> は UNIX
+時刻で，省略した場合は現在時刻が使われます．</p>
+<p>SQL データベースでは，デフォルトで UNIX
+タイムスタンプを使用した「ロングフォーマット」(<code>(timestamp REAL, channel VARCHAR(100), value REAL)</code>)
+が使われます． 他のテーブルスキーマを使用するには，ユーザー定義の
+<code>TableFormat</code> を指定します．</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.store <span class="im">import</span> DataStore_SQLite, LongTableFormat</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyDataFormat(LongTableFormat):</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    schema_numeric <span class="op">=</span> <span class="st">&#39;(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value REAL, PRIMARY KEY(timestamp, channel))&#39;</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    schema_text <span class="op">=</span> <span class="st">&#39;(datetime DATETIME, timestamp INTEGER, channel VARCHAR(100), value TEXT, PRIMARY KEY(timestamp, channel))&#39;</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> insert_numeric_data(<span class="va">self</span>, cur, timestamp, channel, value):</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>        ph <span class="op">=</span> <span class="va">self</span>.db.placeholder</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>        cur.execute(<span class="ss">f&#39;INSERT INTO </span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>table<span class="sc">}</span><span class="ss"> VALUES(CURRENT_TIMESTAMP,</span><span class="sc">{</span>ph<span class="sc">}</span><span class="ss">,</span><span class="sc">{</span>ph<span class="sc">}</span><span class="ss">,</span><span class="sc">{</span>ph<span class="sc">}</span><span class="ss">)&#39;</span>, (<span class="bu">int</span>(timestamp), channel, value))</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> insert_text_data(<span class="va">self</span>, cur, timestamp, channel, value):</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>        ph <span class="op">=</span> <span class="va">self</span>.db.placeholder</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>        cur.execute(<span class="ss">f&#39;INSERT INTO </span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>table<span class="sc">}</span><span class="ss"> VALUES(CURRENT_TIMESTAMP,</span><span class="sc">{</span>ph<span class="sc">}</span><span class="ss">,</span><span class="sc">{</span>ph<span class="sc">}</span><span class="ss">,</span><span class="sc">{</span>ph<span class="sc">}</span><span class="ss">)&#39;</span>, (<span class="bu">int</span>(timestamp), channel, <span class="bu">str</span>(value)))</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> DataStore_SQLite(<span class="st">&#39;sqlite:///MySlowStore.db&#39;</span>, table<span class="op">=</span><span class="st">&quot;slowdata&quot;</span>, table_format<span class="op">=</span>MyDataFormat())</span></code></pre></div>
+<p>複数の SlowTask
+からデータを記録する場合は，各タスクが直接データベースに書き込む代わりに，データを
+SlowMesh に publish し，記録専用の一つの SlowTask
+でまとめてデータベースに書き込むようにするのが便利です（後述の SlowMesh
+の節を参照）． これにより，SQLite
+のような同時書き込みに制限があるデータベースでも競合を避けることができ，また，テーブルスキーマの記述も一箇所にまとめられます．</p>
+<h2 id="解析部品">解析部品</h2>
+<p>SlowPy
+は，ヒストグラムやグラフなどのよく使われるデータオブジェクトを提供しています．
+これらのオブジェクトは，上記の SlowPy
+データベースインターフェースを使って，そのままデータベースに書き込むことができます．
+また，後述のストリーミング機能を使って，データベースを経由せずにブラウザに直接送ることもできます．</p>
+<h3 id="ヒストグラム">ヒストグラム</h3>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>hist <span class="op">=</span> slowpy.Histogram(nbins<span class="op">=</span><span class="dv">100</span>, range_min<span class="op">=</span><span class="dv">0</span>, range_max<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ...</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>datastore <span class="op">=</span> ...</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  value <span class="op">=</span> device.read(...</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  hist.fill(value)</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> time_to_store:</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    datastore.append(hist, tag<span class="op">=</span><span class="st">&quot;test_hist&quot;</span>)</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>  ...</span></code></pre></div>
+<p><code>datastore.append(hist, tag=name)</code>
+は，ヒストグラムの時系列（時刻ごとに一つのヒストグラム）を作成します．
+最新のヒストグラムだけを保持するには，代わりに
+<code>datastore.update(hist, tag=name)</code> を使ってください．</p>
+<p><code>clear()</code> でヒストグラムの内容をクリアできます．
+また，<code>add_stat()</code>
+により，エントリ数や平均値などの統計量をヒストグラムに付加して表示させることができます．</p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>hist.add_stat(slowpy.HistogramBasicStat([<span class="st">&#39;Entries&#39;</span>, <span class="st">&#39;Underflow&#39;</span>, <span class="st">&#39;Overflow&#39;</span>, <span class="st">&#39;Mean&#39;</span>, <span class="st">&#39;RMS&#39;</span>], ndigits<span class="op">=</span><span class="dv">3</span>))</span></code></pre></div>
+<p>２次元ヒストグラム
+<code>Histogram2d(xnbins, xrange_min, xrange_max, ynbins, yrange_min, yrange_max)</code>
+もあります．</p>
+<h3 id="グラフ">グラフ</h3>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>graph <span class="op">=</span> slowpy.Graph([<span class="st">&#39;channel&#39;</span>, <span class="st">&#39;value&#39;</span>])</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> ch <span class="kw">in</span> <span class="bu">range</span>(n_ch):</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    value <span class="op">=</span> device.read(ch, ...</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    graph.fill(ch, value)</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> time_to_store:</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    datastore.append(graph, tag<span class="op">=</span><span class="st">&quot;test_graph&quot;</span>)</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  ...</span></code></pre></div>
+<p><code>datastore.append(graph, tag=name)</code>
+は，グラフの時系列（時刻ごとに一つのグラフ）を作成します．
+最新のグラフだけを保持するには，代わりに
+<code>datastore.update(graph, tag=name)</code> を使ってください．
+ヒストグラム同様，グラフにも <code>add_stat()</code> があります．</p>
+<h3 id="トレンド">トレンド</h3>
+<p>Trend
+とは，データを時間ビンごとに区切り，それぞれのビンについて平均などを計算する特殊なグラフです．
+データ値の平均値などを保持する通常の Trend
+と，データの数（レート）を保持することに特化した RateTrend
+があります．</p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> slowpy</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>rate_trend <span class="op">=</span> slowpy.RateTrend(length<span class="op">=</span><span class="dv">300</span>, tick<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  value <span class="op">=</span> device.read(...</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  rate_trend.fill(time.time())</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> time_to_store:</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    datastore.append(rate_trend.timeseries())</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    rate_trend.flush()</span></code></pre></div>
+<p>Histogram や Graph とは異なり，Trend
+はデータベースに記録する際，一つのオブジェクトとして記録するのではなく，時系列データに展開して記録します．
+このために，<code>timeseries()</code> メソッドが使われています．
+（トレンドオブジェクト自体を保存することもできますが，通常は行いません．）
+また，データベースに記録した部分のデータを削除するため，記録後に
+<code>flush()</code>
+を呼んでいます．（<code>timeseries(flush=True)</code>
+としても同じです．）</p>
+<p>ブラウザにストリーミングする場合は，保持している過去のデータはすべて表示したいので，<code>flush()</code>
+をせずに，<code>timeseries()</code> の結果を毎回全て送ります．</p>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> ctrl.aio_stream(<span class="st">&#39;rate_trend&#39;</span>, rate_trend.timeseries())</span></code></pre></div>
+<h2 id="デバイスの-scpi-化">デバイスの SCPI 化</h2>
+<p>Raspberry Pi の GPIO
+のように，デバイスに何らかのプログラミング機能がある場合，それを
+SlowDash システムに統合する簡単な方法は，そのデバイス上に SCPI
+インターフェースを実装することです．
+この方法は，リモートコンピュータに接続された（USB
+などの）イーサネット以外のデバイスを Raspberry-Pi
+などを介して統合する場合にも便利です．</p>
+<p>以下は，デバイスをイーサネット SCPI でラップする例です．</p>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ScpiServer</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>scpi <span class="op">=</span> ScpiServer()</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyMemoryDevice:</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.value <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> MyMemoryDevice()</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="at">@scpi.on</span>(<span class="st">&#39;*IDN?&#39;</span>)</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_idn():</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&#39;MyMemoryDevice&#39;</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a><span class="at">@scpi.on</span>(<span class="st">&#39;Volt&#39;</span>)</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V(value:<span class="bu">float</span>):</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>    device.value <span class="op">=</span> value</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a><span class="at">@scpi.on</span>(<span class="st">&#39;MEASure:Volt?&#39;</span>)</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_V():</span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> device.value</span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a>scpi.start(port<span class="op">=</span><span class="dv">5025</span>)</span></code></pre></div>
+<p>これにより以下の SCPI
+コマンドが実装されます（コマンドは大文字小文字を区別しません）：</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>コマンド</th>
+<th>動作</th>
+<th>コマンド例</th>
+<th>戻り値例</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>*IDN?</code></td>
+<td>デバイスIDを返す</td>
+<td><code>*IDN?</code></td>
+<td><code>MyMemoryDevice</code></td>
+</tr>
+<tr class="even">
+<td><code>Volt &lt;Value&gt;</code></td>
+<td>値を設定する</td>
+<td><code>V 10</code></td>
+<td>(なし)</td>
+</tr>
+<tr class="odd">
+<td><code>MEASure:Volt?</code></td>
+<td>値を取得する</td>
+<td><code>MEAS:V?</code></td>
+<td><code>10</code></td>
+</tr>
+<tr class="even">
+<td><code>*OPC?</code></td>
+<td>コマンドの完了を待ち，ステータスを返す</td>
+<td><code>*OPC?</code></td>
+<td><code>1</code></td>
+</tr>
+<tr class="odd">
+<td><code>SYSTem:ERRor?</code></td>
+<td>エラーメッセージを返す</td>
+<td><code>SYST:ERR?</code></td>
+<td><code>invalid command: IDN?</code> <br>(前に <code>*IDN?</code> を
+<code>IDN?</code> とした)</td>
+</tr>
+</tbody>
+</table>
+<p>SlowPy の SCPI サーバーでは，デコレーターを使って SCPI
+コマンドとハンドラを結びつけています． この例の
+<code>set_V(value:float)</code>
+のように，ハンドラ関数の引数に型アノテーションをつけると，呼び出し時に型チェックと型変換を行います．
+SCPI のコマンド連結などはハンドラが呼び出される前に処理されます．
+<code>*OPC?</code> や <code>SYSTem:ERRor?</code>
+などの一部の標準コマンドに対してはデフォルトのハンドラ実装があります．</p>
+<p>コードのテストができたら，好みの方法（systemd，<code>/etc/rc.local</code>，Docker
+など）で，PC 起動時に自動で開始するようにしてください． <a
+href="RelatedTools_JP.html">関連ツール</a>に，いくつかの方法が説明してあります．</p>
+<p>そのデバイスに対する SlowPy
+のコントロールノードがすでにある場合は，ノードを直接 SCPI
+インターフェースにマップできます．</p>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ControlSystem, ScpiServer, ScpiAdapter</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>ControlSystem.import_control_module(<span class="st">&#39;DummyDevice&#39;</span>)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> ControlSystem().randomwalk_device()</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>adapter <span class="op">=</span> ScpiAdapter(idn<span class="op">=</span><span class="st">&#39;RandomWalk&#39;</span>)</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>adapter.bind_nodes([</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Randomwalk Configuration</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;CONFIGure:WALK&#39;</span>, device.walk().setpoint(limits<span class="op">=</span>(<span class="dv">0</span>,<span class="va">None</span>))),</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;CONFIGure:DECAY&#39;</span>, device.decay().setpoint(limits<span class="op">=</span>(<span class="dv">0</span>,<span class="dv">1</span>))),</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Common SCPI commands for power supplies and voltmeters</span></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;VOLTage&#39;</span>, device.ch(<span class="dv">0</span>).setpoint()),</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>    (<span class="st">&#39;MEASure:VOLTage:DC&#39;</span>, device.ch(<span class="dv">0</span>).readonly()),</span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>server <span class="op">=</span> ScpiServer(adapter, port<span class="op">=</span><span class="dv">5025</span>)</span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>server.start()</span></code></pre></div>
+<h1 id="slowtask-gui-とスクリプトの結合">SlowTask: GUI
+とスクリプトの結合</h1>
+<p>SlowTask は，SlowDash プロジェクトの <code>config</code>
+ディレクトリの下に <code>slowtask-XXX.py</code>
+のような名前で置かれたユーザーの Python スクリプトです． SlowDash の GUI
+から，スクリプトの開始・停止，スクリプト中で定義された関数の呼び出し，スクリプト中の変数の表示などを行えます．
+SlowPy ライブラリは SlowTask
+スクリプトで使用することを想定して設計されていますが，使用は必須ではありません．</p>
+<p>SlowTask スクリプトには，以下の２つの書き方があります．</p>
+<ul>
+<li><strong>Tasklet を使用する</strong>：スクリプト中で
+<code>slowpy.mesh.Tasklet</code>
+のインスタンスを作成し，デコレーターを使って，外部に公開する関数や，開始時・一定時間間隔などで呼び出される関数を明示的に指定する．SlowMesh
+の全ての機能を使用できる．</li>
+<li><strong>Tasklet を使用しない</strong>：普通の Python
+スクリプトをそのまま使う．アンダースコアで始まらない全ての関数が外部から呼べるようになり，<code>_initialize()</code>
+や <code>_loop()</code>
+などの決められた名前の関数が，特定のタイミングで呼ばれる．使える機能は限られる．</li>
+</ul>
+<p>Tasklet を使用しない方法は，既存のスクリプトをそのまま SlowDash Web
+GUI で使いたい場合や，スクリプトの中に SlowPy
+コードを書きたくない場合のためのものです．
+新しくスクリプトを作成する場合は，Tasklet
+を使用した方が管理しやすく高機能です．</p>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Tasklet</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>tasklet <span class="op">=</span> Tasklet()</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>... (本文) ...</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="co"># スクリプトを単体で実行するためのブロック（オプション）</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="va">__name__</span> <span class="op">==</span> <span class="st">&#39;__main__&#39;</span>:</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    tasklet.run(mesh_url<span class="op">=</span><span class="st">&#39;slowmq://localhost:18881&#39;</span>)</span></code></pre></div>
+<h2 id="slowtask-の開始と停止">SlowTask の開始と停止</h2>
+<h3 id="slowdash-サーバーからの開始">SlowDash サーバーからの開始</h3>
+<p>SlowTask のスクリプトファイル（例えば
+<code>slowtask-test.py</code>）をプロジェクトの <code>config</code>
+ディレクトリの下に置くと，SlowDash サーバーに認識され，SlowDash
+のホーム画面のタスク管理パネル（“SlowTask” セクション）に表示されます．
+デフォルトでは，タスクは「リスト」されるだけで，<code>start</code>
+ボタンがクリックされるまで実行されません．</p>
+<p>SlowDash の設定ファイル (<code>SlowdashProject.yaml</code>)
+にエントリを作ると，サーバーの開始時に自動でタスクを開始するように設定できます．</p>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="at">  ...</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">task</span><span class="kw">:</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> test</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">auto_start</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">parameters</span><span class="kw">:</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">default_ramping_speed</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.1</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">system</span><span class="kw">:</span></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">our_security_is_perfect</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span></code></pre></div>
+<p><code>task</code> エントリには一つのタスクの dict
+か，複数のタスクのリストを指定できます（<code>task</code> の代わりに
+<code>tasks</code> と書いても構いません）．</p>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">tasks</span><span class="kw">:</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> read</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">auto_start</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> store</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">auto_start</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">parameters</span><span class="kw">:</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">db_url</span><span class="kw">:</span><span class="at"> sqlite:///SlowStore.db</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">table</span><span class="kw">:</span><span class="at"> slowdata</span></span></code></pre></div>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>パラメータ</th>
+<th>内容</th>
+<th>デフォルト</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>name</code></td>
+<td>タスク名</td>
+<td>（必須）</td>
+</tr>
+<tr class="even">
+<td><code>auto_start</code></td>
+<td>サーバー開始時にタスクを自動で開始するか（旧名
+<code>auto_load</code> も使用可）</td>
+<td><code>false</code></td>
+</tr>
+<tr class="odd">
+<td><code>parameters</code></td>
+<td>スクリプトに渡すパラメータ</td>
+<td>なし</td>
+</tr>
+<tr class="even">
+<td><code>file_path</code></td>
+<td>スクリプトファイルのパス</td>
+<td><code>config/slowtask-{name}.py</code></td>
+</tr>
+<tr class="odd">
+<td><code>command</code></td>
+<td>タスクの開始コマンド</td>
+<td><code>slowdash-task {file_path} --name={name}</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>parameters</code> は省略可能で，指定した場合は SlowTask
+スクリプトの initialize コールバック（後述）に渡されます．また，Tasklet
+の <code>parameters</code> プロパティにも保持され，デコレーターなど
+<code>initialize</code> 前でも使用できます．</p>
+<p><code>command</code> を変更すると，例えば <code>ssh</code>
+を使って別の PC 上でタスクを実行することもできます．
+同じスクリプトを異なる名前で複数のエントリに書けば，同じスクリプトを複数同時に走らせることもできます．</p>
+<p>SlowDash の配布パッケージに含まれている汎用 SlowTask
+を使用する場合は，<code>name</code> に <code>@toolbox/</code>
+を付加します． 詳しくは <a href="Toolbox_JP.html">Toolbox の章</a>
+を参照してください．</p>
+<p><code>system</code> の <code>our_security_is_perfect</code> を
+<code>true</code> にすると，SlowDash のウェブページ上で Python
+スクリプトを編集できるようになります．
+これは便利ですが，その意味をよく考えてください． Python スクリプトは
+<code>system("rm -rf *")</code> など何でもできます．
+アクセスが厳格に管理されている場合にのみ，この機能を使用してください．</p>
+<h3 id="slowdash-サーバーからのタスク操作">SlowDash
+サーバーからのタスク操作</h3>
+<p>SlowDash のタスク管理パネルからは，以下のような SlowTask
+の操作を行えます：</p>
+<ul>
+<li><strong>Start</strong>: SlowTask
+を子プロセスとして開始する．開始コマンドは
+<code>SlowdashProject.yaml</code> ファイルの <code>command</code>
+で指定でき，デフォルトは <code>slowdash-task</code>
+コマンドによるローカル実行．</li>
+<li><strong>Stop</strong>: SlowMesh
+経由でタスクに停止を要求する．Tasklet の停止処理が行われ，finalize
+コールバックが呼ばれる．</li>
+<li><strong>Kill</strong>:
+タスクをサーバーから子プロセスとして実行した場合，子プロセスに KILL
+シグナルを送る．</li>
+<li><strong>Purge</strong>: 応答がなくなったタスクを SlowMesh
+から抹消する．</li>
+</ul>
+<p>SlowDash サーバーから起動された SlowTask プロセスは，SlowDash
+サーバーが終了したときに自動で終了します．
+（サーバーのクラッシュや強制終了の場合でも，SlowTask
+プロセスは自動で終了します．）</p>
+<p>スクリプトを書き換えた場合は，タスクを Stop してから Start
+し直すと，新しいスクリプトが読み込まれます．</p>
+<h3 id="サーバーとは独立に実行">サーバーとは独立に実行</h3>
+<p>SlowTask を SlowDash
+サーバーから独立したプロセスとして実行するには，通常は
+<code>slowdash-task</code> コマンドを使います． <code>--mesh</code>
+オプションで SlowMesh の接続先（通常は SlowDash
+サーバーのアドレス）を指定します． <code>--parameters</code>
+オプションに JSON
+文字列を渡すことにより，タスクパラメータも渡すことができます．
+この場合は，JSON
+文字列がシェルによって誤って処理されないようにするために，全体をシングルクオートで囲ってください．</p>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ cd PATH/TO/PROJECT</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-task config/slowtask-mytask.py --mesh=slowmq://localhost:18881 --parameters=&#39;{&quot;p1&quot;:10,&quot;p2&quot;:20}&#39;</span></span></code></pre></div>
+<p>もしスクリプト中で
+<code>if __name__ == '__main__': tasklet.run(...)</code>
+をしているなら，通常の Python スクリプトとしての実行もできます．
+ただし，この場合は，タスクパラメータを渡すことはできません．</p>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ slowdash-activate-venv</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="kw">$ python config/slowtask-mytask.py</span></span></code></pre></div>
+<p>独立に開始した SlowTask プロセスでも，SlowDash サーバーから停止操作
+(Stop) を行えます． ただし，サーバーからの強制終了 (Kill) はできません．
+独立に開始した SlowTask プロセスは，SlowDash
+サーバーが止まっても走り続け，次に SlowDash
+サーバーが開始したときに，自動的に再接続されます． タスクが SlowMesh
+にアクセスできる限り，タスクプロセスを別の PC
+や別のコンテナ上で実行しても構いません．</p>
+<h3 id="タスク名">タスク名</h3>
+<p>各 SlowTask
+には名前（タスク名）がつけられ，ブラウザなどからの関数呼び出しや，データチャンネル名などに使われます．
+タスク名は，以下のいずれかで指定されます．</p>
+<ul>
+<li>タスクスクリプトのファイル名から，先頭の <code>slowtask-</code>
+を除いたもの（デフォルト）</li>
+<li><code>SlowdashProject.yaml</code> の <code>task</code> エントリの
+<code>name</code> パラメータ</li>
+<li><code>slowdash-task</code> コマンドの <code>--name</code>
+パラメータ</li>
+<li><code>Tasklet.run()</code> の <code>name</code> 引数</li>
+</ul>
+<p>タスク名には，英数字および <code>_</code>
+以外の文字は使用できません．
+これらの文字が含まれる場合は，<code>_</code> に置き換えられます．
+例えば，<code>slowtask-my-device.py</code> のタスク名は
+<code>my_device</code> になります．</p>
+<h2 id="関数のエクスポート">関数のエクスポート</h2>
+<p>SlowTask スクリプト中のユーザー関数は，Web GUI
+をはじめとする外部から呼び出すことができます．</p>
+<h3 id="tasklet-を使用する場合">Tasklet を使用する場合</h3>
+<p>SlowTask スクリプトの中で Tasklet を使用している場合，Web GUI
+などから呼び出される関数は <code>@tasklet.mesh.export()</code>
+デコレーターを使って明示的に指定しなければなりません．
+これにより，スクリプトが長くなったときでも，どの関数が外部から呼ばれるのかが明確になります．</p>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Tasklet</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>tasklet <span class="op">=</span> Tasklet()</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.export</span>()</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> set_V(ch:<span class="bu">int</span>, V0:<span class="bu">float</span>, ramping:<span class="bu">float</span>):</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
+<p>関数は通常の関数と async 関数のどちらでも構いません．
+関数を別の名前でエクスポートする場合は，<code>@tasklet.mesh.export(name='set_voltage')</code>
+のように，<code>name</code> をキーワード引数で指定します．</p>
+<h3 id="tasklet-を使用しない場合">Tasklet を使用しない場合</h3>
+<p>スクリプトの中で Tasklet を使用していない場合，名前がアンダースコア
+(<code>_</code>) で始まらない全ての関数が暗黙にエクスポートされます．
+（そのスクリプトで定義された関数のみが対象で，import
+した関数はエクスポートされません．）</p>
+<div class="sourceCode" id="cb31"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V(ch:<span class="bu">int</span>, V0:<span class="bu">float</span>, ramping:<span class="bu">float</span>):</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
+<h3
+id="エクスポートした関数の実行時間について">エクスポートした関数の実行時間について</h3>
+<p>SlowTask
+は全体がシングルスレッドの非同期処理で並行に動いているので，スクリプトの中で
+<code>time.sleep()</code> を使うと全体が固まってしまいます． 後述の
+<code>@tasklet.loop(interval)</code>
+などを使ってループを書くことにより，スクリプトの中で明示的な sleep
+をしないのが想定です． どうしても sleep
+をする場合は，<code>await asyncio.sleep()</code> または
+<code>await ctrl.aio_sleep()</code> を使ってください．</p>
+<p>また，<strong>エクスポートした関数の実行は即座に終了するようにして，最大
+1 秒を目安に return するようにしてください</strong>．
+呼び出し側はデフォルトで 5 秒でタイムアウトします．
+時間がかかる処理は，以下の方法を検討してください：</p>
+<ul>
+<li>処理要求を変数にセットするか <code>asyncio.Queue</code>
+に入れて，<code>@tasklet.loop()</code>
+のコールバックでそれを見て処理を開始する</li>
+<li><code>asyncio.create_task()</code> で別のタスクとして実行する</li>
+<li>ランピングや PID などのように，スレッドや async タスクを持つ SlowPy
+のノードを使う</li>
+</ul>
+<p>処理の状況や結果は，ストリーミングなどでブラウザに送ったり，ログに書いたりするのが想定です．</p>
+<h2 id="web-gui-からの関数呼び出し">Web GUI からの関数呼び出し</h2>
+<p>エクスポートした関数は，SlowDash の GUI
+からいくつかの方法で呼び出すことができます．
+以下では，スクリプトファイル名が <code>slowtask-test.py</code>（タスク名
+<code>test</code>）であるとします．</p>
+<h3 id="html-フォームパネル">HTML フォームパネル</h3>
+<p>SlowPlot の HTML フォームパネルで，タスク名と関数名を
+<code>name</code> 属性に持つ <code>&lt;button&gt;</code>（または
+<code>&lt;input type="submit"&gt;</code>）をクリックすると，その関数が呼ばれます：</p>
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.destroy_apparatus()&quot;</span><span class="dt">&gt;</span>Finish<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>ここで，ボタン名の最後の括弧は，このボタンが SlowTask
+の関数に結び付けられていることを示しています．</p>
+<p>先頭の部分（この例では
+<code>test.</code>）はタスク名で，デフォルトでは，スクリプトのファイル名から先頭の
+<code>slowtask-</code> を除いたものになります． （タスク名に
+<code>-</code> が含まれる場合は <code>_</code>
+に置き換えられます．）</p>
+<p>HTML ファイルは，プロジェクトの <code>config</code> ディレクトリに
+<code>html-XXX.html</code> という名前で置きます． 後述のように，SlowTask
+スクリプトの中で HTML の内容を生成することもできます．</p>
+<h4 id="パラメータの受け渡し">パラメータの受け渡し</h4>
+<p>SlowTask の関数は引数を取ることができます：</p>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V0(voltage:<span class="bu">float</span>, ramping:<span class="bu">float</span>):</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">#... do your work here</span></span></code></pre></div>
+<p>引数の値は，フォームの <code>&lt;input&gt;</code>
+の値から取られます：</p>
+<div class="sourceCode" id="cb34"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  Voltage: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;voltage&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;ramping&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;1&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V0()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+<p><code>&lt;input&gt;</code> の <code>name</code>
+属性が，関数の引数名に対応します． フォーム中の
+<code>&lt;input&gt;</code>
+のうち，関数が受け取る引数のものだけが渡されます．</p>
+<p>上の例のように SlowTask
+関数に型アノテーションをつけると，引数の値は指定された型に変換されます．
+値が指定された型に変換できない場合は，ブラウザにエラーが返され，SlowTask
+関数は呼ばれません． チェックボックス
+(<code>&lt;input type="checkbox"&gt;</code>) の値は，<code>bool</code>
+型の引数に渡すことができます．</p>
+<p>一つのフォームに複数のボタンを配置することもできます：</p>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;ramping&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;1&quot;</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;width:5em&quot;</span><span class="dt">&gt;</span>/sec</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  V0: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V0&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V0()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  V1: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V1&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V1()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  V2: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V2&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V2()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>  V3: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V3&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V3()&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_all()&quot;</span><span class="dt">&gt;</span>Set All<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.stop()&quot;</span><span class="dt">&gt;</span>Stop Ramping<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb36"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V0(V0:<span class="bu">float</span>, ramping:<span class="bu">float</span>):</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V1(V1:<span class="bu">float</span>, ramping:<span class="bu">float</span>):</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
+<p>Web
+フォームの入力値は，名前に基づいて関数の引数に結び付けられます（<code>&lt;input name="V0"&gt;</code>
+は引数 <code>V0</code> に結び付けられます）．</p>
+<p>関数の引数を <code>&lt;input&gt;</code>
+から渡す代わりに，<code>&lt;button&gt;</code>
+の名前の中に直接書くこともできます．</p>
+<div class="sourceCode" id="cb37"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;ramping&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;1&quot;</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;width:5em&quot;</span><span class="dt">&gt;</span>/sec</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  V0: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V0&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V(ch=0)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  V1: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V1&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V(ch=1)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>  V2: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V2&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V(ch=2)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>  V3: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;V3&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_V(ch=3)&quot;</span><span class="dt">&gt;</span>Set<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.set_all()&quot;</span><span class="dt">&gt;</span>Set All<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.stop()&quot;</span><span class="dt">&gt;</span>Stop Ramping<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;&lt;</span><span class="kw">br</span><span class="dt">&gt;</span></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb38"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> set_V(ch:<span class="bu">int</span>, V0:<span class="bu">float</span>, ramping:<span class="bu">float</span>):</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
+<p>（以前のバージョンで使われていた <code>reentrant</code> や
+<code>async</code> などの実行コントロールは，Python
+スクリプト側に移されました(TODO)．ボタン名の修飾子は，現在は不要で，指定しても警告が出て無視されます．）</p>
+<h4 id="pubsub-への-publish">PubSub への Publish</h4>
+<p>ボタン名を <code>publish トピック名()</code>
+とすると，関数を呼ぶ代わりに，フォームの入力値を SlowMesh
+の指定トピックに publish します．
+特定のタスクの関数を呼ぶのではなく，「スタート」などのイベントを，それを必要とする全てのタスクに知らせる場合に使います（SlowMesh
+の節を参照）．</p>
+<div class="sourceCode" id="cb39"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;publish mydaq.control.start()&quot;</span><span class="dt">&gt;</span>Start<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;publish mydaq.control.stop()&quot;</span><span class="dt">&gt;</span>Stop<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>publish されるデータは，括弧内の引数とフォームの
+<code>&lt;input&gt;</code> の name-value 対を合わせた dict です．</p>
+<h4 id="フォームの同期">フォームの同期</h4>
+<p><code>&lt;form&gt;</code>
+に名前を付けると，<code>&lt;input&gt;</code> の change
+のたびに値がサーバーへ送られ，複数ブラウザ上でフォームの入力値が（ボタンを押す前でも）同期されます．
+また，フォームの値はプロジェクトディレクトリのファイル
+(<code>registry-pubsub-form.json</code>)
+に保存され，サーバーの終了・再スタート時に，以前のフォームの値が自動で設定されるようになります．</p>
+<div class="sourceCode" id="cb40"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;voltage_control&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  Ramping: <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;number&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;ramping&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;1&quot;</span> <span class="er">style</span><span class="ot">=</span><span class="st">&quot;width:5em&quot;</span><span class="dt">&gt;</span>/sec</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>名前を付けたフォームの値は，SlowTask
+スクリプトから読み書きすることもできます（後述の「フォーム値の読み書き」を参照）．</p>
+<h4
+id="データによるボタンの有効無効の切り替え">データによるボタンの有効・無効の切り替え</h4>
+<p><code>&lt;input&gt;</code> に <code>sd-enabled</code>
+属性を指定すると，データの値に応じてボタンなどの有効・無効を切り替えられます．
+SlowTask
+からストリーミングまたはエクスポートした値（後述）を使えば，タスクの状態に応じて，例えば実行中は
+Start ボタンを無効にする，といったことができます．</p>
+<div class="sourceCode" id="cb41"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">form</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;run_control&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.start()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Start&quot;</span> <span class="er">sd-enabled</span><span class="ot">=</span><span class="st">&quot;run_status[&#39;running&#39;]-&gt;invert()&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span> <span class="er">type</span><span class="ot">=</span><span class="st">&quot;submit&quot;</span> <span class="er">name</span><span class="ot">=</span><span class="st">&quot;test.stop()&quot;</span> <span class="er">value</span><span class="ot">=</span><span class="st">&quot;Stop&quot;</span> <span class="er">sd-enabled</span><span class="ot">=</span><span class="st">&quot;run_status[&#39;running&#39;]&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span></code></pre></div>
+<p><code>sd-enabled</code>
+に指定する値は真偽値である必要があります．値の変換については <a
+href="DataTransform.html">Data Transform の章</a>
+を参照してください．</p>
+<h3 id="キャンバスパネル">キャンバスパネル</h3>
+<p>キャンバスパネルでは，タスクを呼び出すボタンは以下のように配置できます：</p>
+<div class="sourceCode" id="cb42"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>    <span class="er">...</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;button&quot;</span><span class="fu">,</span></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;attr&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;x&quot;</span><span class="fu">:</span><span class="dv">400</span><span class="fu">,</span> <span class="dt">&quot;y&quot;</span><span class="fu">:</span> <span class="dv">630</span><span class="fu">,</span> <span class="dt">&quot;width&quot;</span><span class="fu">:</span> <span class="dv">130</span><span class="fu">,</span> <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;Finish Experiment&quot;</span> <span class="fu">},</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;submit&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;test.destroy_apparatus()&quot;</span> <span class="fu">}</span> <span class="fu">}</span></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>        <span class="er">...</span></span></code></pre></div>
+<p>引数を取る関数に対しては，フォームを使用できます：</p>
+<div class="sourceCode" id="cb43"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    <span class="er">...</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;valve&quot;</span><span class="fu">,</span> </span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;attr&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="er">...</span> <span class="fu">},</span></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;metric&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;channel&quot;</span><span class="fu">:</span> <span class="st">&quot;sccm.GasInlet&quot;</span><span class="fu">,</span> <span class="er">...</span> <span class="fu">},</span></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;form&quot;</span><span class="fu">:</span> <span class="st">&quot;FlowControl&quot;</span> <span class="fu">}</span></span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>        <span class="er">...</span></span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>    <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;forms&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;FlowControl&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;Injection Flow&quot;</span><span class="fu">,</span></span>
+<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;inputs&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a>                <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;flow&quot;</span><span class="fu">,</span> <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;Set-point (sccm)&quot;</span><span class="fu">,</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;number&quot;</span><span class="fu">,</span> <span class="dt">&quot;initial&quot;</span><span class="fu">:</span> <span class="dv">15</span><span class="fu">,</span> <span class="dt">&quot;step&quot;</span><span class="fu">:</span> <span class="fl">0.1</span> <span class="fu">}</span></span>
+<span id="cb43-17"><a href="#cb43-17" aria-hidden="true" tabindex="-1"></a>            <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb43-18"><a href="#cb43-18" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&quot;buttons&quot;</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb43-19"><a href="#cb43-19" aria-hidden="true" tabindex="-1"></a>                <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;ATDS.set_flow()&quot;</span><span class="fu">,</span> <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;Apply Set-point&quot;</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb43-20"><a href="#cb43-20" aria-hidden="true" tabindex="-1"></a>                <span class="fu">{</span> <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;ATDS.stop_flow()&quot;</span><span class="fu">,</span> <span class="dt">&quot;label&quot;</span><span class="fu">:</span> <span class="st">&quot;Close Valve&quot;</span> <span class="fu">}</span></span>
+<span id="cb43-21"><a href="#cb43-21" aria-hidden="true" tabindex="-1"></a>            <span class="ot">]</span></span>
+<span id="cb43-22"><a href="#cb43-22" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span></span>
+<span id="cb43-23"><a href="#cb43-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb43-24"><a href="#cb43-24" aria-hidden="true" tabindex="-1"></a>    <span class="er">...</span></span></code></pre></div>
+<p>詳しくは，<a href="Panels.html">UI パネルの章</a>
+を参照してください．</p>
+<h3 id="他の-slowtask-やプログラムからの呼び出し">他の SlowTask
+やプログラムからの呼び出し</h3>
+<p>エクスポートした関数は，SlowMesh の遠隔関数呼び出し (RPC)
+により，他の SlowTask から呼び出すこともできます．</p>
+<div class="sourceCode" id="cb44"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>return_value <span class="op">=</span> <span class="cf">await</span> tasklet.mesh.aio_call(<span class="st">&#39;test.set_V&#39;</span>, ch<span class="op">=</span><span class="dv">0</span>, V0<span class="op">=</span><span class="dv">10</span>, ramping<span class="op">=</span><span class="dv">1</span>)</span></code></pre></div>
+<p>また，HTTP API（<code>api/control</code> への
+POST）を使えば，ブラウザ以外のプログラムから呼び出すこともできます．</p>
+<h2 id="ライフスパンコールバック">ライフスパンコールバック</h2>
+<h3 id="tasklet-を使用する場合-1">Tasklet を使用する場合</h3>
+<p>tasklet
+が提供するデコレーターにより，特定のタイミングや一定時間間隔に SlowTask
+中の関数を呼び出すことができます． 呼び出される関数は通常の関数と async
+関数のどちらでも構いません．（ただし，関数の中で
+<code>time.sleep()</code> は使用しないでください．）</p>
+<p>同じデコレーターを複数回使用することもできます．
+特に，処理ごとに小さな <code>@tasklet.loop(interval)</code>
+関数を複数作れば，スクリプト中に自分でループを書く必要がなくなり，スリープや終了処理などの煩雑さを避けられます．</p>
+<ul>
+<li><code>@tasklet.initialize()</code>: スクリプト開始時に呼ばれる</li>
+<li><code>@tasklet.finalize()</code>: スクリプト終了時に呼ばれる</li>
+<li><code>@tasklet.once(delay:float=0)</code>: initialize
+から指定秒数後に一度だけ呼ばれる</li>
+<li><code>@tasklet.schedule(time:str, use_utc:bool=False)</code>:
+指定時刻に繰り返し呼ばれる</li>
+<li><code>@tasklet.loop(interval:float, ticks=None)</code>:
+指定秒数間隔で繰り返し呼ばれる</li>
+</ul>
+<h4 id="初期化と終了処理">初期化と終了処理</h4>
+<p><code>@tasklet.initialize()</code>
+の関数が引数を一つ持つ場合，<code>SlowdashProject.yaml</code> の
+<code>parameters</code>（または <code>slowdash-task</code> コマンドの
+<code>--parameters</code>）で指定したタスクパラメータが dict
+として渡されます．</p>
+<div class="sourceCode" id="cb45"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.initialize</span>()</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> initialize(parameters:<span class="bu">dict</span>):</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>    db_url <span class="op">=</span> parameters.get(<span class="st">&#39;db_url&#39;</span>, <span class="st">&#39;sqlite:///SlowStore.db&#39;</span>)</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.finalize</span>()</span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> finalize():</span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>    datastore.close()</span></code></pre></div>
+<p>タスクパラメータは <code>tasklet.parameters</code>
+からも取得できます．</p>
+<p>全ての initialize コールバックが終了してから，loop や once
+などの他のコールバックが開始されます． finalize
+コールバックは，タスクの停止要求（ブラウザからの Stop や Ctrl-c
+など）の後，他のコールバックが停止してから呼ばれます．</p>
+<h4 id="定時実行">定時実行</h4>
+<p><code>@tasklet.schedule(time)</code>
+デコレーターにより，ユーザー関数を指定時刻に繰り返し呼び出すようにできます．</p>
+<div class="sourceCode" id="cb46"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.schedule</span>(<span class="st">&quot;08:00&quot;</span>)</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> do_this_every_morning():</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>   <span class="co"># 毎朝８時に実行</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>   <span class="cf">pass</span></span></code></pre></div>
+<p>引数の <code>time</code> は <code>HH:MM</code>
+形式で指定します．<code>HH</code> および <code>MM</code>
+には，ワイルドカード <code>*</code> を指定でき，また，複数の時刻設定を
+<code>,</code>
+区切りで並べることができます．夏時間への切替時に周期が変わらないようにするためには，<code>use_utc</code>
+を <code>True</code> にして，時刻を UTC で指定してください．</p>
+<p>例）</p>
+<ul>
+<li><code>@tasklet.schedule("08:00")</code>: 毎朝８時</li>
+<li><code>@tasklet.schedule("00:00,08:00,16:00")</code>: 一日３回</li>
+<li><code>@tasklet.schedule("*:00")</code>: 毎時０分</li>
+<li><code>@tasklet.schedule("*:*")</code>: 毎分</li>
+<li><code>@tasklet.schedule("*:00,*:20,*:40")</code>: 毎時３回</li>
+<li><code>@tasklet.schedule("08:00", use_utc=True)</code>: 毎日 UTC
+８時</li>
+</ul>
+<p><code>use_utc</code>
+が指定されない限り，時刻はローカル時刻ですが，Docker
+などのコンテナの中などで実行される場合は，ローカル時刻が UTC
+となっていることが多いことに注意してください．</p>
+<h4 id="ユーザーループ">ユーザーループ</h4>
+<p><code>@tasklet.loop(interval)</code>
+デコレーターにより，ユーザー関数を指定周期で繰り返し呼び出すようにできます．</p>
+<div class="sourceCode" id="cb47"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> my_work():   <span class="co"># この関数は１秒（interval の値）ごとに呼ばれる</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">#... do my work</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">pass</span></span></code></pre></div>
+<p>さらに，<code>@tasklet.loop</code> に <code>ticks</code>
+を指定し，ユーザー関数に <code>tick</code>
+引数を追加すると，<code>ticks</code> に指定した回数ごとに
+<code>tick</code> の値が True
+になります（ユーザー関数の引数名は任意です）．</p>
+<div class="sourceCode" id="cb48"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>, ticks<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> my_work(tick):</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># １秒毎にデータを読み，全てのデータをストリームに流す</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> <span class="cf">await</span> HV.ch(<span class="dv">0</span>).aio_get()</span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>    packet <span class="op">=</span> DataPacket(data, tag<span class="op">=</span><span class="st">&#39;HV.ch00&#39;</span>)</span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(packet.to(<span class="st">&#39;data.stream&#39;</span>))</span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb48-9"><a href="#cb48-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># データベースへの記録は１０回に１回</span></span>
+<span id="cb48-10"><a href="#cb48-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tick:</span>
+<span id="cb48-11"><a href="#cb48-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(packet.to(<span class="st">&#39;data.store&#39;</span>))</span></code></pre></div>
+<p>複数の tick 周期を指定することもできます．</p>
+<div class="sourceCode" id="cb49"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>, ticks<span class="op">=</span>{<span class="st">&quot;transient_store&quot;</span>:<span class="dv">10</span>, <span class="st">&quot;store&quot;</span>:<span class="dv">60</span>})</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> my_work(tick):</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># １秒毎にデータを読み，全てのデータをストリームに流す</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> <span class="cf">await</span> HV.ch(<span class="dv">0</span>).aio_get()</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>    packet <span class="op">=</span> DataPacket(data, tag<span class="op">=</span><span class="st">&#39;HV.ch00&#39;</span>)</span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(packet.to(<span class="st">&#39;data.stream&#39;</span>))</span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 一時データベース（短期間高密度）への記録は１０回に１回</span></span>
+<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tick.transient_store:</span>
+<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(packet.to(<span class="st">&#39;data.transient_store&#39;</span>))</span>
+<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 永続データベースへの記録は６０回に１回</span></span>
+<span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tick.store:</span>
+<span id="cb49-15"><a href="#cb49-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> tasklet.mesh.aio_publish(packet.to(<span class="st">&#39;data.store&#39;</span>))</span></code></pre></div>
+<p>（<code>DataPacket</code> と <code>aio_publish()</code>
+については，後述の SlowMesh の節を参照してください．）</p>
+<p>繰り返しますが，ユーザー関数の中で <code>time.sleep()</code>
+は使わないでください．(<code>await ctrl.aio_sleep()</code> は可）．
+<code>@tasklet.loop()</code> を使うことにより，ほとんどの sleep
+をなくすことができるはずです．</p>
+<h3 id="tasklet-を使用しない場合-1">Tasklet を使用しない場合</h3>
+<p>もしスクリプトの中で Tasklet
+を使用していない場合，以下の関数が定義されていれば，それぞれ特定のタイミングで呼び出されます．</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>関数</th>
+<th>説明</th>
+<th>Tasklet での相当</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>_initialize(params)</code></td>
+<td>スクリプトのロード時に一度呼ばれる．<code>params</code> の値は
+SlowDash の設定で与えられる．</td>
+<td><code>@tasklet.initialize()</code></td>
+</tr>
+<tr class="even">
+<td><code>_run()</code></td>
+<td><code>_initialize()</code> の後に一度呼ばれる．</td>
+<td><code>@tasklet.once()</code></td>
+</tr>
+<tr class="odd">
+<td><code>_loop()</code></td>
+<td><code>_initialize()</code>
+の後，ユーザーがシステムを停止するまで繰り返し呼ばれる．</td>
+<td><code>@tasklet.loop(interval=0)</code></td>
+</tr>
+<tr class="even">
+<td><code>_finalize()</code></td>
+<td><code>_run()</code> または <code>_loop()</code>
+の後に一度呼ばれる．</td>
+<td><code>@tasklet.finalize()</code></td>
+</tr>
+<tr class="odd">
+<td><code>_get_html()</code></td>
+<td>HTML コンテンツを返す（後述）．</td>
+<td><code>@tasklet.content('config/html-{タスク名}.html')</code></td>
+</tr>
+<tr class="even">
+<td><code>_get_layout()</code></td>
+<td>SlowPlot レイアウトを返す（後述）．</td>
+<td><code>@tasklet.content('config/slowplot-{タスク名}.json')</code></td>
+</tr>
+</tbody>
+</table>
+<p>Tasklet を使用した場合と異なり，<code>_loop()</code>
+関数はスリープせずに即座に繰り返し呼ばれることに注意してください．
+このため，<code>_loop()</code>
+の中で，周期を調整するためのスリープを行う必要があります．
+呼び出される関数は通常の関数と async
+関数のどちらでも構いませんが，<code>_loop()</code>
+に関しては，<code>time.sleep()</code> の使用を避けて代わりに
+<code>await ctrl.aio_sleep()</code> などを使用するために，async
+である必要があります．</p>
+<div class="sourceCode" id="cb50"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> _loop():</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_sleep(<span class="dv">1</span>)</span></code></pre></div>
+<p><code>_loop()</code>
+が通常関数だった場合，スタベーションを避けるため，<code>_loop()</code>
+呼び出しの間にわずかなディレイ（0.1
+秒）が挿入され，また，警告が表示されます．</p>
+<p><code>_run()</code> も同様に async である必要があります．
+<code>_run()</code>
+が長時間実行される場合は，<code>ctrl.is_stop_requested()</code>
+を監視して，停止要求があったら終了するようにしてください．
+（以前のバージョンで使われていた <code>_halt()</code>
+は呼ばれなくなりました．）</p>
+<div class="sourceCode" id="cb51"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> _run():</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="kw">not</span> ctrl.is_stop_requested():</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>        ...</span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">await</span> ctrl.aio_sleep(<span class="dv">1</span>)</span></code></pre></div>
+<p>以前のバージョンのスクリプトでよく使われていた，以下のような通常関数の
+<code>_loop()</code> も（警告は出ますが）動作します．
+ただし，<code>ctrl.sleep()</code>
+の間はタスク全体が止まり，ブラウザからの関数呼び出しなどの応答が遅れることに注意してください．</p>
+<div class="sourceCode" id="cb52"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _loop():</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    ctrl.sleep(<span class="dv">1</span>)</span></code></pre></div>
+<h2 id="ブラウザへのデータ送信">ブラウザへのデータ送信</h2>
+<p>SlowTask
+からブラウザにデータを送る方法としては，データベースに記録してブラウザから読む方法の他に，以下のものがあります．</p>
+<ul>
+<li><strong>ストリーミング</strong>: SlowTask
+から値を送り出し，ブラウザでリアルタイムに表示する（push）</li>
+<li><strong>変数のエクスポート</strong>: SlowTask
+中の変数を公開し，ブラウザからの要求に応じて現在の値を返す（pull）</li>
+<li><strong>コンテンツの動的生成</strong>: HTML やレイアウトの内容を
+SlowTask で生成する</li>
+</ul>
+<p>いずれの場合も，得られるのは「現在」の値のみです．履歴が必要な場合は，データベースに記録してください．</p>
+<h3 id="ストリーミング">ストリーミング</h3>
+<p>ControlSystem の <code>aio_stream(name:str, value)</code>
+メソッド（または
+<code>stream(name:str, value)</code>）を使って，SlowTask
+スクリプトから値をブラウザに送り，ライブ更新することができます．</p>
+<div class="sourceCode" id="cb53"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Tasklet</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>tasklet <span class="op">=</span> Tasklet()</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>V0 <span class="op">=</span> ctrl.ethernet(host, port).scpi().command(<span class="st">&quot;V&quot;</span>)</span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="fl">1.0</span>)</span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> loop():</span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.aio_stream(<span class="st">&#39;V0&#39;</span>, <span class="cf">await</span> V0.aio_get())   <span class="co"># pushing to consumers</span></span></code></pre></div>
+<p>ストリーミングできる値の型には，数値，文字列，dict，Python の
+dataclass，SlowPy のコントロールノード，SlowPy
+の解析オブジェクト（ヒストグラムなど）があります．
+数値や文字列はスカラデータとして，dataclass や dict は Tree
+型データとして扱われます． 送られた値は，ブラウザの Data Channels に
+<code>current</code>
+型のデータとして表示され，通常のデータと同様にパネルに追加できます．</p>
+<p><code>stream()</code> は async でない関数からも使えますが，SlowTask
+として実行されている（Tasklet
+のイベントループが走っている）必要があります． 内部では，値は SlowMesh
+の <code>data.stream.{name}</code> トピックに publish されています．</p>
+<h3 id="変数のエクスポート">変数のエクスポート</h3>
+<p>ControlSystem の <code>expose(name:str, obj)</code>
+メソッドを使うと，SlowTask 中の変数を公開できます．
+公開した変数は，<code>{タスク名}.{name}</code>
+という名前のデータチャンネルとして，データベース中のデータと同様にブラウザからアクセスできます（タイムスタンプが「現時刻」のデータが一点だけ保存されているように見えます）．
+ストリーミングが SlowTask からの push
+なのに対して，エクスポートは，ブラウザからの要求に応じて値を返す pull
+のインターフェースです．「必要なときに最新値を得る」用途に向いています．</p>
+<div class="sourceCode" id="cb54"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dataclasses <span class="im">import</span> dataclass</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RunStatus:</span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>    run_number: <span class="bu">int</span> <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>    running: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>run_status <span class="op">=</span> RunStatus()</span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.initialize</span>()</span>
+<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> initialize():</span>
+<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a>    ctrl.expose(<span class="st">&#39;status&#39;</span>, run_status)    <span class="co"># タスク名が run_control なら，チャンネル名は run_control.status</span></span></code></pre></div>
+<p>エクスポートできるものには，コントロールノード，SlowPy
+の解析オブジェクト，dict，dataclass などがあります．
+<code>expose()</code> は，Tasklet が開始した後（initialize
+コールバックの中など）に呼んでください．</p>
+<p>コントロールノードは，<code>tasklet.mesh.export(name, node)</code>
+で直接エクスポートすることもできます．
+以下は，ディスク使用量を返すノードを作成してエクスポートする例です．</p>
+<div class="sourceCode" id="cb55"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shutil</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> ControlNode</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DiskUsageNode(ControlNode):</span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">async</span> <span class="kw">def</span> aio_get(<span class="va">self</span>):</span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>        total, used, free <span class="op">=</span> <span class="bu">tuple</span>((<span class="bu">int</span>(x<span class="op">*</span><span class="fl">1e-8</span>)<span class="op">/</span><span class="fl">10.0</span>) <span class="cf">for</span> x <span class="kw">in</span> shutil.disk_usage(<span class="st">&#39;.&#39;</span>))</span>
+<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> { <span class="st">&#39;tree&#39;</span>: { <span class="st">&#39;total_GB&#39;</span>: total, <span class="st">&#39;used_GB&#39;</span>: used, <span class="st">&#39;free_GB&#39;</span>: free } }</span>
+<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a>tasklet.mesh.export(<span class="st">&#39;disk_usage&#39;</span>, DiskUsageNode())</span></code></pre></div>
+<p>外部に公開するノードは，必要に応じて <code>readonly()</code>
+などで操作を制限してください．</p>
+<h3 id="フォーム値の読み書き">フォーム値の読み書き</h3>
+<p>名前を付けた HTML フォームの入力値は，ControlSystem の
+<code>form(name)</code> ノードを使って SlowTask から読み書きできます．
+例えば，ブラウザで最後に入力された値を，タスク開始時の初期値として使ったり，タスク側で決めた値をブラウザのフォームに表示させたりできます．</p>
+<div class="sourceCode" id="cb56"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.initialize</span>()</span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> initialize():</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ブラウザのフォーム &quot;pid_setup&quot; の現在の入力値を dict として取得</span></span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>    form <span class="op">=</span> <span class="cf">await</span> ctrl.form(<span class="st">&#39;pid_setup&#39;</span>).aio_get()</span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>    Kp <span class="op">=</span> form.get(<span class="st">&#39;Kp&#39;</span>, <span class="dv">1</span>)</span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.export</span>()</span>
+<span id="cb56-9"><a href="#cb56-9" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> stop():</span>
+<span id="cb56-10"><a href="#cb56-10" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb56-11"><a href="#cb56-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># フォーム &quot;run_control&quot; の &quot;run_number&quot; 入力の表示値を変更</span></span>
+<span id="cb56-12"><a href="#cb56-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> ctrl.form(<span class="st">&#39;run_control&#39;</span>).element(<span class="st">&#39;run_number&#39;</span>).aio_set(run_status.run_number)</span></code></pre></div>
+<p><code>ctrl.form(name).aio_set(dict)</code>
+で，複数の入力値をまとめて設定することもできます．</p>
+<h3 id="コンテンツの動的生成">コンテンツの動的生成</h3>
+<p><code>@tasklet.content(name)</code> デコレーターにより，通常は
+SlowDash プロジェクトの <code>config</code>
+以下に置かれるファイルの内容を動的に生成することができます．
+これにより，タスクスクリプトと，それをコントロールするための HTML
+フォームを一つのファイルにまとめて，整合をとりやすくできます．</p>
+<div class="sourceCode" id="cb57"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;config/html-test.html&#39;</span>)</span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> html():</span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&#39;&#39;&#39;</span></span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;form name=&quot;test&quot;&gt;</span></span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a><span class="st">        Voltage: &lt;input type=&quot;number&quot; name=&quot;voltage&quot; value=&quot;0&quot;&gt;</span></span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a><span class="st">        &lt;button name=&quot;test.set_V0()&quot;&gt;Set&lt;/button&gt;</span></span>
+<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a><span class="st">      &lt;/form&gt;</span></span>
+<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a><span class="st">    &#39;&#39;&#39;</span></span></code></pre></div>
+<p>ブラウザからは，HTML ファイル <code>html-test.html</code> が
+<code>config</code> に存在するかのように見えます．</p>
+<p>HTML パネルで <code>On Update: Reload HTML</code>
+をチェックすると，データ更新のたびにこの関数が呼ばれるので，データを含んだ
+HTML ページを動的に生成することもできます．
+以下は，ディスクの使用量をテーブルに整形して表示する例です．</p>
+<div class="sourceCode" id="cb58"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shutil</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.content</span>(<span class="st">&#39;config/html-disk_usage.html&#39;</span>)</span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> html_disk_usage():</span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>    total, used, free <span class="op">=</span> <span class="bu">tuple</span>((<span class="bu">int</span>(x<span class="op">*</span><span class="fl">1e-8</span>)<span class="op">/</span><span class="fl">10.0</span>) <span class="cf">for</span> x <span class="kw">in</span> shutil.disk_usage(<span class="st">&#39;.&#39;</span>))</span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ss">f&#39;&#39;&#39;</span></span>
+<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a><span class="ss">    &lt;table&gt;</span></span>
+<span id="cb58-8"><a href="#cb58-8" aria-hidden="true" tabindex="-1"></a><span class="ss">      &lt;tr&gt;&lt;td&gt;Total&lt;/td&gt;&lt;td&gt;</span><span class="sc">{</span>total<span class="sc">}</span><span class="ss"> GB&lt;/td&gt;&lt;/tr&gt;</span></span>
+<span id="cb58-9"><a href="#cb58-9" aria-hidden="true" tabindex="-1"></a><span class="ss">      &lt;tr&gt;&lt;td&gt;Used&lt;/td&gt;&lt;td&gt;</span><span class="sc">{</span>used<span class="sc">}</span><span class="ss"> GB&lt;/td&gt;&lt;/tr&gt;</span></span>
+<span id="cb58-10"><a href="#cb58-10" aria-hidden="true" tabindex="-1"></a><span class="ss">      &lt;tr&gt;&lt;td&gt;Free&lt;/td&gt;&lt;td&gt;</span><span class="sc">{</span>free<span class="sc">}</span><span class="ss"> GB&lt;/td&gt;&lt;/tr&gt;</span></span>
+<span id="cb58-11"><a href="#cb58-11" aria-hidden="true" tabindex="-1"></a><span class="ss">    &lt;/table&gt;    </span></span>
+<span id="cb58-12"><a href="#cb58-12" aria-hidden="true" tabindex="-1"></a><span class="ss">    &#39;&#39;&#39;</span></span></code></pre></div>
+<p><code>config/slowplot-XXX.json</code>
+も同じように生成できるので，HTML フォームと合わせて，SlowTask
+から，それを使うための完全なレイアウトを提供することができます．
+コンテンツ生成関数は普通の Python 関数なので，Jinja
+などのテンプレートエンジンを組み合わせて使うこともできます．</p>
+<h2 id="matplotlib-連携">Matplotlib 連携</h2>
+<p>Matplotlib の Figure は，スクリプトを変更することなく，そのまま
+SlowDash のレイアウトにストリーミングできます．</p>
+<div class="sourceCode" id="cb59"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> _loop():</span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>    fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">2</span>)</span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">#... draw plots in the usual way</span></span>
+<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a>    fig.show()   <span class="co"># this is overriden by SlowDash</span></span>
+<span id="cb59-8"><a href="#cb59-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb59-9"><a href="#cb59-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> asyncio.sleep(<span class="dv">1</span>)</span></code></pre></div>
+<p>SlowDash は <code>Figure.show()</code>
+をオーバーライドして，レイアウトを抽出し，描画図形からヒストグラムやグラフの値を読み取ります．
+そして，同じレイアウトの <code>slowplot-XXX.json</code>
+を動的に生成し，データを SlowDash のストリーミングに送り出します．
+例のように <code>Figure.show()</code>
+を使う代わりに，<code>pyplot.show()</code> や
+<code>Figure.savefig(name)</code> を使っても，SlowDash
+へのストリーミングが行われます． （<code>savefig()</code>
+の場合は，通常のファイル保存も行われます．）
+生成されるレイアウトの名前は，<code>Figure.show()</code> と
+<code>Figure.savefig()</code> ではタスク名，<code>pyplot.show()</code>
+では <code>{タスク名}.fig{番号}</code> になります．</p>
+<p>SlowTask として実行される場合，Matplotlib の GUI
+は無効化されます（<code>Agg</code> バックエンドが使われます）．</p>
+<p>その他の例は <code>ExampleProjects/Streaming/Matplotlib</code>
+にあります．</p>
+<h1 id="slowmesh">SlowMesh</h1>
+<p>複数の SlowTask スクリプトはネットワーク上に展開でき，SlowMesh
+の上で通信をしながら，協調して動作することできます． SlowMesh
+は，SlowDash サーバーと各 SlowTask
+の間のメッセージ交換の通信基盤で，以下の通信機能を提供します．</p>
+<ul>
+<li><strong>PubSub</strong>: トピック名をつけたメッセージの交換（Publish
+/ Subscribe）</li>
+<li><strong>遠隔関数呼び出し (RPC)</strong>:
+他のタスクがエクスポートした関数の呼び出し</li>
+<li><strong>Registry (Key-Value Store)</strong>:
+タスク間で共有される名前付きの値置き場</li>
+</ul>
+<p><img src="fig/SlowMeshConcept.png" width="40%"></p>
+<p>PubSub では，送信側は受信相手を知らずにメッセージを Publish
+し，受信側は送信元を知らずに必要なトピックを Subscribe して受信します．
+これは，相手の動作・インターフェースを知った上で通信する遠隔関数呼び出しと大きく異なり，要素間の相互依存を大幅に減少させます．
+SlowDash では，PubSub
+を積極的に活用し，「データを読んだら（知らない誰かが処理すると思って）メッシュに投げる」「関連のあるトピックは自分で受信する」「受信データに対して自分の責任を果たす」「処理結果を生成したらメッシュに投げる」というモデルで分散処理を行います．
+例えば，「データを読んだら SlowMesh に publish
+するタスク」「データを受信してデータベースに記録するタスク」「データを受信して解析し，結果を
+publish
+するタスク」のように機能を分けると，それぞれのタスクを独立に開発・テスト・再起動できるようになります．</p>
+<h2 id="基本的な使い方">基本的な使い方</h2>
+<p>SlowTask は，Tasklet を介して接続済みの SlowMesh
+を保持していて，<code>tasklet.mesh</code> から各機能を使用できます．</p>
+<div class="sourceCode" id="cb60"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> Tasklet, DataPacket</span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>tasklet <span class="op">=</span> Tasklet()</span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a><span class="co"># データを data.store トピックに publish（DataPacket の引数は DataStore.append() と同じ）</span></span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.loop</span>(interval<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> read_data():</span>
+<span id="cb60-7"><a href="#cb60-7" aria-hidden="true" tabindex="-1"></a>    volt <span class="op">=</span> <span class="bu">float</span>(<span class="cf">await</span> device.command(<span class="st">&#39;MEAS:VOLT:DC&#39;</span>).aio_get())</span>
+<span id="cb60-8"><a href="#cb60-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_publish(DataPacket(volt, tag<span class="op">=</span><span class="st">&#39;volt&#39;</span>).to(<span class="st">&#39;data.store&#39;</span>))</span>
+<span id="cb60-9"><a href="#cb60-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-10"><a href="#cb60-10" aria-hidden="true" tabindex="-1"></a><span class="co"># data.store 以下のトピックを subscribe して，データベースに記録</span></span>
+<span id="cb60-11"><a href="#cb60-11" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.on</span>(<span class="st">&#39;data.store.&gt;&#39;</span>)</span>
+<span id="cb60-12"><a href="#cb60-12" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> store(data:DataPacket):</span>
+<span id="cb60-13"><a href="#cb60-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> channel, value <span class="kw">in</span> data.values.items():</span>
+<span id="cb60-14"><a href="#cb60-14" aria-hidden="true" tabindex="-1"></a>        datastore.append(value, tag<span class="op">=</span>channel, timestamp<span class="op">=</span>data.timestamp)</span>
+<span id="cb60-15"><a href="#cb60-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-16"><a href="#cb60-16" aria-hidden="true" tabindex="-1"></a><span class="co"># 他のタスクの関数を呼び出す</span></span>
+<span id="cb60-17"><a href="#cb60-17" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.export</span>()</span>
+<span id="cb60-18"><a href="#cb60-18" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> start():</span>
+<span id="cb60-19"><a href="#cb60-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.aio_call(<span class="st">&#39;histogram.clear&#39;</span>)</span>
+<span id="cb60-20"><a href="#cb60-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-21"><a href="#cb60-21" aria-hidden="true" tabindex="-1"></a><span class="co"># レジストリに値を記録・取得</span></span>
+<span id="cb60-22"><a href="#cb60-22" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.initialize</span>()</span>
+<span id="cb60-23"><a href="#cb60-23" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> initialize():</span>
+<span id="cb60-24"><a href="#cb60-24" aria-hidden="true" tabindex="-1"></a>    run_number <span class="op">=</span> <span class="cf">await</span> tasklet.mesh.registry.aio_get(<span class="st">&#39;setup.run.number&#39;</span>, <span class="dv">0</span>)</span>
+<span id="cb60-25"><a href="#cb60-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> tasklet.mesh.registry.aio_set(<span class="st">&#39;setup.run.number&#39;</span>, run_number <span class="op">+</span> <span class="dv">1</span>)</span></code></pre></div>
+<p>現時点では，SlowMesh で送受信できる値（publish するデータ，RPC
+の引数と戻り値，レジストリの値）は，JSON
+にシリアライズできるものに限られます．</p>
+<h2 id="slowmesh-への接続">SlowMesh への接続</h2>
+<h3 id="接続先">接続先</h3>
+<p>SlowMesh への接続は Tasklet が自動で行います．接続先の URL
+は以下のように決まります．</p>
+<ul>
+<li>SlowDash サーバーから起動された場合：サーバーが
+<code>slowdash-task</code> コマンドの <code>--mesh</code>
+オプションで指定する</li>
+<li><code>slowdash-task</code>
+コマンドで独立に起動した場合：<code>--mesh</code>
+オプションで指定する</li>
+<li>スクリプトを直接実行した場合：<code>tasklet.run(mesh_url=...)</code>
+で指定する</li>
+</ul>
+<p>接続先 URL が与えられない場合は，プロセス内だけで閉じたローカルの
+PubSub が使われます． この場合，自分自身が publish
+したメッセージを自分で subscribe
+することはできますが，他のタスクとの通信やレジストリの使用はできません．
+スクリプト単体の動作確認などに使えます．</p>
+<h3 id="メッセージングバックボーン">メッセージングバックボーン</h3>
+<p>SlowMesh
+は，下位の通信層としてメッセージングバックボーンを使用します．
+デフォルトでは，SlowDash サーバーに組み込まれた SlowMQ
+が使われるので，何も設定せずにそのまま使用できます． SlowMQ は HTTP(S)
+上の WebSockets で実装されていて，SlowDash サーバーの
+URL（ポート）でそのままアクセスできます．</p>
+<p>SlowMQ の代わりに，NATS や MQTT，Redis，RabbitMQ
+などの広く使われている外部のメッセージングシステムを使うこともできます．
+この場合は，<code>SlowdashProject.yaml</code> の <code>mesh</code>
+エントリで接続先を指定します．サーバーから起動されるタスクにも同じ URL
+が渡されます．</p>
+<div class="sourceCode" id="cb61"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="fu">slowdash_project</span><span class="kw">:</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a><span class="at">  ...</span></span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">mesh</span><span class="kw">:</span></span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">url</span><span class="kw">:</span><span class="at"> nats://localhost</span></span></code></pre></div>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>バックボーン</th>
+<th>URL 形式</th>
+<th>ブローカー</th>
+<th>備考</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>SlowMQ</td>
+<td><code>slowmq://HOST:PORT</code> (HTTP) または
+<code>slowmqs://HOST:PORT</code> (HTTPS)</td>
+<td>不要 (SlowDash 組み込み)</td>
+<td>デフォルト．ファイアウォールを超えてアクセス可能</td>
+</tr>
+<tr class="even">
+<td>NATS</td>
+<td><code>nats://HOST</code></td>
+<td>別に NATS サーバーが必要</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>MQTT</td>
+<td><code>mqtt://HOST</code></td>
+<td>別に MQTT ブローカー（eclipse-mosquitto など）が必要</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>RabbitMQ</td>
+<td><code>rabbitmq://USER:PASS@HOST/EXCHANGE</code></td>
+<td>別に RabbitMQ サーバーが必要</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Redis-PubSub</td>
+<td><code>redis://HOST/DB</code></td>
+<td>別に Redis サーバーが必要</td>
+<td>トピックフィルタに制限あり</td>
+</tr>
+</tbody>
+</table>
+<p>認証情報が必要なら，<code>HOST</code> の直前に
+<code>USER:PASS@</code> を挿入してください．</p>
+<p>QoS 設定（at-most-once / at-least-once /
+exactly-once）などは，基本的にはバックボーンのデフォルトが使用されます．
+システムの発展に応じてバックボーンを切り替えていくような運用を想定しています（SlowMQ
+から始めて，性能または機能が足りなくなったら NATS に移行する，など）．
+バックボーンを切り替えても，ユーザースクリプトを変更する必要はありません．</p>
+<p>メインの SlowMesh
+とは別に，外部のメッセージングシステムに接続したい場合は，<code>tasklet.external_mesh(url)</code>
+で追加の Mesh オブジェクトを作成できます． これはメインの Mesh
+と一緒に開始・終了され，同じ <code>on()</code> や
+<code>aio_publish()</code> などのインターフェースで使用できます．</p>
+<h2 id="pubsub">PubSub</h2>
+<h3 id="publish">Publish</h3>
+<div class="sourceCode" id="cb62"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="co"># トピック名と値を指定して publish</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> tasklet.mesh.aio_publish(<span class="st">&#39;mydaq.control.start&#39;</span>, {<span class="st">&#39;run_number&#39;</span>: <span class="dv">10</span>})</span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a><span class="co"># MeshPacket を publish（トピック名は MeshPacket が決める）</span></span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> tasklet.mesh.aio_publish(DataPacket(volt, tag<span class="op">=</span><span class="st">&#39;volt&#39;</span>).to(<span class="st">&#39;data.store&#39;</span>))</span></code></pre></div>
+<p><code>aio_publish()</code> は async 関数です．async
+でない関数からは，代わりに <code>publish()</code>
+を使用してください（引数は同じです）． <code>publish()</code>
+を使う場合も，SlowTask として実行されている（Tasklet
+のイベントループが走っている）必要があります．</p>
+<p><code>headers</code> 引数に dict
+を渡すと，メッセージにヘッダを付加できます．</p>
+<h3 id="subscribe">Subscribe</h3>
+<p><code>@tasklet.mesh.on(topic)</code>
+デコレーターで，指定したトピックのメッセージを受信したときに呼ばれる関数を指定します．
+関数は通常の関数と async 関数のどちらでも構いません．</p>
+<div class="sourceCode" id="cb63"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.on</span>(<span class="st">&#39;mydaq.control.start&#39;</span>)</span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> handle_start(data):</span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>    run_number <span class="op">=</span> data.get(<span class="st">&#39;run_number&#39;</span>)</span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>    ...</span></code></pre></div>
+<p>関数の引数の数と型アノテーションにより，渡されるものが変わります．</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>関数の形</th>
+<th>渡されるもの</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>def handler()</code></td>
+<td>なし（受信したことだけを知りたい場合）</td>
+</tr>
+<tr class="even">
+<td><code>def handler(data)</code></td>
+<td>メッセージ本体</td>
+</tr>
+<tr class="odd">
+<td><code>def handler(packet:DataPacket)</code></td>
+<td>MeshPacket に変換したメッセージ（後述）</td>
+</tr>
+<tr class="even">
+<td><code>def handler(headers, data)</code></td>
+<td>ヘッダとメッセージ本体．受信したトピック名は
+<code>headers['topic']</code></td>
+</tr>
+</tbody>
+</table>
+<p>トピックフィルタを使って複数のトピックを受信する場合に，実際のトピック名を知りたいときは，最後の形を使ってください．</p>
+<p>実行中に動的に subscribe
+を追加する場合は，<code>await tasklet.mesh.aio_subscribe(topic, handler)</code>
+を使います．</p>
+<h3 id="トピック名とトピックフィルタ">トピック名とトピックフィルタ</h3>
+<p>トピック名は，<code>data.store.HV.ch01</code> のように <code>.</code>
+で区切った階層構造にできます． Subscribe
+では，以下のトピックフィルタを使用できます（NATS と同じです）．</p>
+<ul>
+<li><code>*</code> は任意の一階層にマッチ</li>
+<li><code>&gt;</code>
+は任意数の末尾の階層にマッチ（最後の文字としてのみ使用可能）</li>
+</ul>
+<p>例えば，<code>data.store.&gt;</code> は <code>data.store</code>
+以下の全てのトピックに，<code>data.*.HV.ch01</code> は
+<code>data.store.HV.ch01</code> と <code>data.stream.HV.ch01</code>
+の両方にマッチします．</p>
+<p>SlowMQ と NATS
+以外のバックボーンを使用した場合，これらの文字はそのバックボーンの文字に置き換えられて渡されます（MQTT
+では <code>/</code>，<code>+</code>，<code>#</code> など）．
+このため，トピック名に
+<code>/</code>，<code>#</code>，<code>+</code>，<code>:</code>
+などの文字を含めると，バックボーンによっては問題を引き起こします．これらの文字の使用は避けてください．
+また，Redis
+は厳密な階層構造を持たないので，フィルタの動作が近似的になる場合があります．</p>
+<h3 id="トピック名の使用区分">トピック名の使用区分</h3>
+<p>トピック名は SlowDash
+全体で予約されていますが，以下のものはユーザーが自由に使用できます．</p>
+<ul>
+<li>大文字から始まるもの（<code>KamLAND.control.start</code> など）</li>
+<li><code>my</code> から始まるもの（<code>my.&gt;</code> や
+<code>mydaq.&gt;</code> など）</li>
+<li><code>test</code> から始まるもの（<code>test.&gt;</code> や
+<code>testdaq.&gt;</code> など）</li>
+<li><code>setup.&gt;</code></li>
+<li><code>user.&gt;</code></li>
+</ul>
+<p>SlowDash が使用している主なトピックは以下のとおりです．</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>トピック</th>
+<th>内容</th>
+<th>MeshPacket</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>data.store.{channel}</code></td>
+<td>記録するデータ（通常，記録用のタスクがデータベースに保存する）</td>
+<td><code>DataPacket</code></td>
+</tr>
+<tr class="even">
+<td><code>data.stream.{channel}</code></td>
+<td>表示用のデータ（記録されない）</td>
+<td><code>DataPacket</code></td>
+</tr>
+<tr class="odd">
+<td><code>form.{form_name}.{element_name}</code></td>
+<td>名前を付けた HTML フォームの入力値</td>
+<td><code>FormPacket</code></td>
+</tr>
+<tr class="even">
+<td><code>log.{level}.{logger}</code></td>
+<td>ログメッセージ</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><code>sd.&gt;</code></td>
+<td>SlowDash の内部使用（タスク管理，RPC など）</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><code>data.</code> で始まるトピックに流れるデータは，SlowDash
+サーバーがチャンネルごとの最新値を保持していて，ブラウザから
+<code>current</code> データとして表示できます． 前述の
+<code>ctrl.stream()</code> は，<code>data.stream.{name}</code>
+トピックにデータを publish しています．</p>
+<h3 id="meshpacket">MeshPacket</h3>
+<p>SlowDash
+が使用するトピックには，メッセージのスキーマ（データ構造）が決められているものがあります．
+MeshPacket
+を使うと，ユーザーのスクリプトがスキーマの詳細に依存せず，メッセージの構築や解読の手間も省けます．</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>MeshPacket</th>
+<th>対象トピック</th>
+<th>コンストラクタ</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>DataPacket</code></td>
+<td><code>data.*.&gt;</code></td>
+<td><code>DataPacket(values, *, tag=None, timestamp=None)</code></td>
+</tr>
+<tr class="even">
+<td><code>FormPacket</code></td>
+<td><code>form.*.&gt;</code></td>
+<td><code>FormPacket(form, element, value)</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="datapacket">DataPacket</h4>
+<p><code>DataPacket</code> のコンストラクタの引数は
+<code>DataStore.append()</code> と同じです．
+つまり，データストアに直接記録するのと，SlowMesh に publish
+するのは，ほぼ同じ書き方になります．</p>
+<div class="sourceCode" id="cb64"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> DataPacket</span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>temp0 <span class="op">=</span> thermometer.ch(<span class="dv">0</span>).get()</span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> tasklet.mesh.aio_publish(DataPacket(temp0, tag<span class="op">=</span><span class="st">&#39;temp0&#39;</span>).to(<span class="st">&#39;data.store&#39;</span>))</span></code></pre></div>
+<p>publish するトピックはデフォルトで <code>data.store.{channel}</code>
+で，<code>data.store</code> の部分は <code>to(topic_prefix)</code>
+で変更できます（<code>to('data.stream')</code> など）．
+数値の他，ヒストグラムなどの SlowPy の解析オブジェクトや，Trend の
+<code>timeseries()</code> などの時系列データも送ることができます．</p>
+<p>受信側では，ハンドラ関数の引数に <code>DataPacket</code>
+の型アノテーションをつけると，受信したメッセージが DataPacket
+に変換されて渡されます．</p>
+<div class="sourceCode" id="cb65"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.on</span>(<span class="st">&#39;data.&gt;&#39;</span>)</span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> handle_data(data:DataPacket):</span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>    t <span class="op">=</span> data.timestamp</span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> channel, value <span class="kw">in</span> data.values.items():</span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a>        ...</span></code></pre></div>
+<p>受信した DataPacket の <code>values</code>
+は，チャンネル名をキー，値を値とする dict です．</p>
+<h4 id="formpacket">FormPacket</h4>
+<p>名前を付けた HTML
+フォームの入力値が変更されると，<code>form.{form_name}.{element_name}</code>
+トピックにメッセージが publish されます． これを subscribe
+すれば，ボタンを押す前でも，入力値の変更に即座に反応することができます．</p>
+<div class="sourceCode" id="cb66"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.mesh <span class="im">import</span> FormPacket</span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.on</span>(<span class="st">&#39;form.pid_setup.&gt;&#39;</span>)</span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> handle_form(packet:FormPacket):</span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(packet.form, packet.element, packet.value)</span></code></pre></div>
+<p>逆に，<code>FormPacket</code> を publish
+すると，ブラウザに表示されているフォームの値を変更できます．
+通常は，前述の <code>ctrl.form(name)</code>
+ノードを使う方が簡単です．</p>
+<h3 id="pubsub-last-value-cache">PubSub Last-Value Cache</h3>
+<p>SlowDash サーバーは，PubSub の全トピックを subscribe
+して，トピックごとの最新のメッセージをレジストリの
+<code>pubsub.{トピック名}</code> に保持しています．
+これにより，遅れて開始したタスクが，それまでに publish
+されたステータス情報などを取得できます．</p>
+<div class="sourceCode" id="cb67"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.initialize</span>()</span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> initialize():</span>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 最後に publish された mydaq.status のメッセージ</span></span>
+<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a>    status <span class="op">=</span> <span class="cf">await</span> tasklet.mesh.registry.aio_get(<span class="st">&#39;pubsub.mydaq.status&#39;</span>)</span></code></pre></div>
+<h2 id="遠隔関数呼び出し-rpc">遠隔関数呼び出し (RPC)</h2>
+<p>RPC は，ある SlowTask がエクスポートした関数を，他の SlowTask
+から名前で呼び出すための仕組みです．
+ブラウザからの関数呼び出しも，内部では RPC を使っています．</p>
+<h3 id="呼び出される側">呼び出される側</h3>
+<p>関数のエクスポートについては，前述の「関数のエクスポート」の節を参照してください．</p>
+<div class="sourceCode" id="cb68"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="at">@tasklet.mesh.export</span>()</span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> chat(line, <span class="op">*</span>, sender<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f&#39;You (&quot;</span><span class="sc">{</span>sender<span class="sc">}</span><span class="ss">&quot;) sent me &quot;</span><span class="sc">{</span>line<span class="sc">}</span><span class="ss">&quot;.&#39;</span>)</span>
+<span id="cb68-4"><a href="#cb68-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">str</span>(datetime.datetime.now())</span></code></pre></div>
+<p>戻り値は，JSON にシリアライズできる値である必要があります．
+また，前述のとおり，エクスポートした関数は 1 秒程度を目安に return
+するようにしてください．</p>
+<h3 id="呼び出す側">呼び出す側</h3>
+<div class="sourceCode" id="cb69"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>return_value <span class="op">=</span> <span class="cf">await</span> tasklet.mesh.aio_call(<span class="st">&#39;chat_task.chat&#39;</span>, line, sender<span class="op">=</span><span class="st">&#39;me&#39;</span>)</span></code></pre></div>
+<ul>
+<li>最初の引数が <code>タスク名.関数名</code>
+で，それ以降の引数が遠隔関数の引数にそのまま渡されます．</li>
+<li>引数に渡せるのは，JSON にシリアライズできる値のみです．</li>
+<li>呼び出し先で例外が発生した場合や，タイムアウトまでに応答がない場合（呼び出し先のタスクが走っていない場合など）は，例外が投げられます．</li>
+<li>デフォルトのタイムアウト時間は 5 秒です．</li>
+</ul>
+<p>呼び出しごとにタイムアウト時間を指定する場合は，<code>aio_call_many()</code>
+を使用します．</p>
+<div class="sourceCode" id="cb70"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>replies <span class="op">=</span> <span class="cf">await</span> tasklet.mesh.aio_call_many(<span class="st">&#39;chat_task.chat&#39;</span>, [line], {<span class="st">&#39;sender&#39;</span>: <span class="st">&#39;me&#39;</span>}, expected_replies<span class="op">=</span><span class="dv">1</span>, timeout<span class="op">=</span><span class="dv">10</span>, raise_on_timeout<span class="op">=</span><span class="va">True</span>)</span></code></pre></div>
+<p><code>aio_call_many()</code> は，応答の list
+を返します．各応答は，以下のようなフィールドを持つ dict です：</p>
+<div class="sourceCode" id="cb71"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>{ <span class="st">&#39;status&#39;</span>: <span class="st">&#39;ok&#39;</span>, <span class="st">&#39;message&#39;</span>: <span class="st">&#39;ok&#39;</span>, <span class="st">&#39;return_value&#39;</span>: result }</span></code></pre></div>
+<p><code>status</code> には <code>ok</code> の他に <code>error</code> と
+<code>cancelled</code> があり，エラーの場合は <code>message</code>
+にエラーメッセージが入ります．</p>
+<h3
+id="コントロールノードのリモートアクセス">コントロールノードのリモートアクセス</h3>
+<p><code>tasklet.mesh.export(name, node)</code>
+でエクスポートしたコントロールノードは，他のタスクから
+<code>remote_node()</code>
+を使って，ローカルのノードと同じようにアクセスできます．</p>
+<p>呼び出される側（タスク名 <code>device</code>）：</p>
+<div class="sourceCode" id="cb72"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> slowpy.control <span class="im">import</span> control_system <span class="im">as</span> ctrl</span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>V0 <span class="op">=</span> ctrl.ethernet(<span class="st">&#39;192.168.1.43&#39;</span>, <span class="dv">5025</span>).scpi(append_opc<span class="op">=</span><span class="va">True</span>).command(<span class="st">&#39;VOLT&#39;</span>)</span>
+<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a>tasklet.mesh.export(<span class="st">&#39;V0&#39;</span>, V0.setpoint(limits<span class="op">=</span>(<span class="dv">0</span>, <span class="dv">100</span>)))</span></code></pre></div>
+<p>呼び出す側：</p>
+<div class="sourceCode" id="cb73"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a>V0 <span class="op">=</span> tasklet.mesh.remote_node(<span class="st">&#39;device.V0&#39;</span>)</span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> V0.aio_set(<span class="dv">10</span>)</span>
+<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="cf">await</span> V0.aio_get())</span></code></pre></div>
+<p>リモートノードには async 版の <code>aio_set()</code> と
+<code>aio_get()</code> のみがあります．</p>
+<h2 id="registry-key-value-store">Registry (Key-Value Store)</h2>
+<p>Registry は，複数の SlowTask が共有する名前付きの値置き場です．
+状態，設定値，処理要求などをタスク間で共有する用途を想定しています．
+レジストリのサービスは SlowDash
+サーバーの中で動いているので，使用するには SlowDash
+サーバーへの接続が必要です．</p>
+<h3 id="基本操作">基本操作</h3>
+<p>レジストリには，<code>tasklet.mesh.registry</code>
+を経由してアクセスします．</p>
+<div class="sourceCode" id="cb74"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>registry <span class="op">=</span> tasklet.mesh.registry</span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 値のセット</span></span>
+<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> registry.aio_set(<span class="st">&#39;setup.run.number&#39;</span>, run_number)</span>
+<span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb74-6"><a href="#cb74-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 値の取得（キーが存在しない場合はデフォルト値が返される）</span></span>
+<span id="cb74-7"><a href="#cb74-7" aria-hidden="true" tabindex="-1"></a>run_number <span class="op">=</span> <span class="cf">await</span> registry.aio_get(<span class="st">&#39;setup.run.number&#39;</span>, <span class="dv">0</span>)</span></code></pre></div>
+<p>Registry には，以下のメソッドがあります：</p>
+<ul>
+<li>書き込み (set)：
+<code>aio_set(key, value, *, cas_revision:int|None=None) -&gt; int|None</code></li>
+<li>読み出し (get)：
+<code>aio_get(key:str, default=None, *, with_meta:bool=False)</code></li>
+<li>キー一覧 (keys)：
+<code>aio_keys(prefix:str='', limit:int|None=1000) -&gt; list[str]</code></li>
+<li>削除 (delete)：
+<code>aio_delete(key:str, *, cas_revision:int|None=None) -&gt; bool</code></li>
+</ul>
+<h3 id="キーと値">キーと値</h3>
+<p><strong>キー</strong>: キーは <code>.</code>
+で区切られる階層構造を持ちます． 各階層の名前には，Python
+などのプログラミング言語における識別子（変数名など）と同じような名前を使用してください．具体的には，英数字またはアンダースコアだけで構成され，かつ，最初の文字に数字は使用できません．</p>
+<p><strong>値</strong>: 値には，現時点では JSON
+にシリアライズできる値だけが使用できます．</p>
+<p><strong>使用区分</strong>: キーの名前も SlowDash
+全体で予約されていますが，トピック名と同様に，以下のものはユーザーが自由に使用できます．</p>
+<ul>
+<li>大文字から始まるもの（<code>KamLAND.&gt;</code> など）</li>
+<li><code>my</code> から始まるもの（<code>mydaq.&gt;</code> など）</li>
+<li><code>test</code> から始まるもの（<code>testdaq.&gt;</code>
+など）</li>
+<li><code>setup.&gt;</code></li>
+<li><code>user.&gt;</code></li>
+</ul>
+<h3 id="階層のグループ化">階層のグループ化</h3>
+<p>キーの最後に <code>&gt;</code>
+を付けると，その階層以下のエントリをまとめて一つの dict
+として扱うことができます．</p>
+<div class="sourceCode" id="cb75"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> registry.aio_set(<span class="st">&#39;user&#39;</span>, <span class="st">&#39;slowuser&#39;</span>)</span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> registry.aio_set(<span class="st">&#39;state.run.mode&#39;</span>, <span class="st">&#39;physics&#39;</span>)</span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> registry.aio_set(<span class="st">&#39;state.run.number&#39;</span>, <span class="dv">123</span>)</span>
+<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-5"><a href="#cb75-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="cf">await</span> registry.aio_keys(<span class="st">&#39;state.run&#39;</span>))       <span class="co"># --&gt;  [&#39;state.run.mode&#39;, &#39;state.run.number&#39;]</span></span>
+<span id="cb75-6"><a href="#cb75-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="cf">await</span> registry.aio_get(<span class="st">&#39;state.run.mode&#39;</span>))   <span class="co"># --&gt;  physics</span></span>
+<span id="cb75-7"><a href="#cb75-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="cf">await</span> registry.aio_get(<span class="st">&#39;state.run.&gt;&#39;</span>))      <span class="co"># --&gt;  {&#39;mode&#39;: &#39;physics&#39;, &#39;number&#39;: 123}</span></span>
+<span id="cb75-8"><a href="#cb75-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="cf">await</span> registry.aio_get(<span class="st">&#39;.&gt;&#39;</span>))               <span class="co"># --&gt;  {&#39;user&#39;: &#39;slowuser&#39;, &#39;state&#39;: {&#39;run&#39;: {&#39;mode&#39;: &#39;physics&#39;, &#39;number&#39;: 123</span><span class="re">}}}</span></span></code></pre></div>
+<p><code>aio_set()</code> でも，キーの最後に <code>&gt;</code>
+をつけて値に dict を渡すと，その階層以下に dict
+を展開したエントリを作成します．
+つまり，以下の２つは同じ動作をします．</p>
+<div class="sourceCode" id="cb76"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>doc <span class="op">=</span> {<span class="st">&#39;run&#39;</span>: {<span class="st">&#39;mode&#39;</span>: <span class="st">&#39;physics&#39;</span>, <span class="st">&#39;number&#39;</span>: <span class="dv">123</span> }, <span class="st">&#39;running&#39;</span>: <span class="va">True</span> }</span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> registry.aio_set(<span class="st">&#39;state.&gt;&#39;</span>, doc)</span></code></pre></div>
+<div class="sourceCode" id="cb77"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> registry.aio_set(<span class="st">&#39;state.run.mode&#39;</span>, <span class="st">&#39;physics&#39;</span>)</span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> registry.aio_set(<span class="st">&#39;state.run.number&#39;</span>, <span class="dv">123</span>)</span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> registry.aio_set(<span class="st">&#39;state.running&#39;</span>, <span class="va">True</span>)</span></code></pre></div>
+<p>これは，<code>&gt;</code> をつけずに dict
+を値として渡すのとは異なることに注意してください．
+以下では，一つのエントリの中に，全体を一つの dict
+値として格納しています．</p>
+<div class="sourceCode" id="cb78"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> registry.aio_set(<span class="st">&#39;state&#39;</span>, doc)</span></code></pre></div>
+<p>どちらの場合でも，<code>aio_get('state.&gt;')</code>
+は同じ結果を返しますが，後者の場合は <code>state.run.number</code>
+というエントリは存在しないので，<code>aio_get('state.run.number')</code>
+はデフォルト値を返します． 普段は <code>&gt;</code>
+をつけて展開して保存する方がトラブルが少ないですが，配列を含んだ dict
+などを記録する場合には，展開しない保存が必要になります．</p>
+<p>ある階層に値を記録し，さらにその下の階層にも値を記録すると，グループ化して取得したときに，その階層の値は
+<code>$value</code> というフィールドに入ります．
+（一つのノードが値と子ノードの両方をもつことは，dict や JSON
+では表現できないためです．）</p>
+<div class="sourceCode" id="cb79"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="cf">await</span> registry.aio_set(<span class="st">&#39;state.run&#39;</span>, <span class="st">&#39;running&#39;</span>)</span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="cf">await</span> registry.aio_get(<span class="st">&#39;state.run.&gt;&#39;</span>))      <span class="co"># --&gt;  {&#39;mode&#39;: &#39;physics&#39;, &#39;number&#39;: 123, &#39;$value&#39;: &#39;running&#39;}</span></span></code></pre></div>
+<p>混乱を避けるため，子ノードがある階層には値を記録しないようにしてください．この例では，<code>state.run</code>
+の代わりに <code>state.run.status</code>
+などに記録すれば問題を回避できます．</p>
+<h3 id="compare-and-set-cas">Compare-And-Set (CAS)</h3>
+<p>Registry
+では，他のタスクが書いたものを意図せず上書きすることを防ぐため，Compare-And-Set
+(CAS) オプションを備えています．</p>
+<ul>
+<li>各エントリには，書き込み回数を数える CAS
+リビジョンが割り当てられる</li>
+<li><code>aio_set()</code> は CAS リビジョンをインクリメントし，新しい
+CAS リビジョンを返す</li>
+<li><code>aio_set()</code> の <code>cas_revision</code> オプションが
+None でない場合，その値が保持されている CAS
+リビジョンと一致しないと，書き込みに失敗する</li>
+<li><code>aio_delete()</code> も同様に，CAS
+リビジョンが一致しなければ削除に失敗する</li>
+</ul>
+<p>これにより，自分が設定した値を他の誰かが書き換えた場合に，それを知らずに上書きすることを避けられます．</p>
+<p><code>aio_get()</code> の <code>with_meta</code> オプションを
+<code>True</code> にすると，値の代わりに，CAS
+リビジョンや書き込み時刻を含んだメタデータが返されます：</p>
+<div class="sourceCode" id="cb80"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;key&quot;</span>: キー,</span>
+<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;value&quot;</span>: 値,</span>
+<span id="cb80-4"><a href="#cb80-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;revision&quot;</span>: CAS リビジョン,</span>
+<span id="cb80-5"><a href="#cb80-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;updated&quot;</span>: 最終書き込み時刻</span>
+<span id="cb80-6"><a href="#cb80-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="永続化">永続化</h3>
+<p>レジストリの値は，通常は SlowDash
+サーバーのメモリ上にのみ保持され，サーバーを再起動すると失われます．
+一部のエントリは，書き込みのたびにプロジェクトディレクトリのファイル（<code>registry-{パス}.json</code>）に保存され，次にサーバーが開始したときに自動で読み込まれます．
+現時点では，名前を付けた HTML
+フォームの入力値（<code>pubsub.form.&gt;</code>）のみが永続化の対象です．</p>
+<h3 id="ブラウザからのアクセス">ブラウザからのアクセス</h3>
+<p>レジストリに記録された値は，データベース中のデータと同じようにブラウザから表示できます．
+データチャンネル名に <code>@registry:{キー}</code>
+を指定してください（例えば
+<code>@registry:setup.run.number</code>，階層全体を Tree
+として表示するには <code>@registry:setup.run.&gt;</code>）．</p>
+<p>また，Web API からもアクセスできます．</p>
+<div class="sourceCode" id="cb81"><pre
+class="sourceCode console"><code class="sourceCode highlightconsole"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="kw">$ curl http://localhost:18881/api/registry/value/setup.run.number</span></span></code></pre></div>
+<h2 id="標準入出力とログの転送">標準入出力とログの転送</h2>
+<p>SlowTask の中で <code>print()</code>
+などにより標準出力・標準エラー出力に書いたメッセージは，SlowMesh に
+publish され，SlowDash のホーム画面のコンソールに表示されます．
+（ローカルの標準出力にも書き出されます．）
+この転送が不要な場合は，<code>Tasklet(use_mesh_stdio=False)</code>
+としてください．</p>
+<p>Python の標準の <code>logging</code> に書いたメッセージも，SlowMesh
+の <code>log.{レベル}.{ロガー名}</code> トピックに転送されます．</p>
+<h2 id="使用例">使用例</h2>
+<p>SlowMesh を使って SlowTask
+を読み出し・記録・解析の機能ごとに分離する例が，<a
+href="QuickTour.html">Quick Tour</a> にあります．</p>
+
+
+</body>
+</html>
