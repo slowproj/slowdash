@@ -1717,12 +1717,3 @@ Body:
     "return_value": result
 }
 ```
-
-
-
-
-# TODO
-- Make it possible to run the Registry as a SlowTask as well
-- MyMesh: used when running a SlowTask without SlowMesh. Connect from the console and capture lines beginning with `!!!`
-- Task RPC Proxy
-- Export of dataclass

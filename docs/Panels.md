@@ -52,6 +52,107 @@ Resampling is controlled by the following parameters:
   - In this case, the number of data points drawn is the number given by `n-buckets`.
 
 
+# Single Values
+- Displays a single value in large text, together with its channel label and timestamp. The latest value within the display time range is shown.
+- One panel can be divided into multiple tiles to display multiple values.
+- A horizontal bar gauge can be added to each tile.
+- The colors of the value text, gauge, and tile can change depending on which range the value falls in.
+- The displayed text can be transformed and formatted using [Data Transform](DataTransform.html).
+
+##### Panel Settings ("Tiles")
+- **Title**: panel title
+- **Margin**: top, right, bottom, left margins
+- **Grid**: number of rows and columns of tiles. If not specified (0), it is determined automatically from the number of items.
+- **Time Format**: format of the timestamp text
+- **Color**:
+  - **Base**: default color
+  - **Ranges**: colors for range 1, 2, and 3 (default: cyan, orange, and magenta). These defaults differ from the commonly used green, yellow, and red; they were chosen so that the ranges stay distinguishable for people with color vision deficiencies.
+  - **Value**, **Gauge**, **Tile**: opacity of each part, and whether to apply the range colors to it (default: gauge only)
+
+##### Item Settings (per tile)
+- **Channel**: data channel
+- **Label**: label text (default: channel name)
+- **Text Transform**: [Data Transform](DataTransform.html) expression to make the value text, e.g., `gt(0.5)->replace(true,'ON')->replace(false,'OFF')`
+- **Text Format**: printf-style format of the value text, e.g., `%.3f`. If set, this takes precedence over Text Transform.
+- **Gauge**: min and max of the bar gauge. The gauge is shown only if min < max.
+- **Ranges**: min and max of ranges 1, 2, and 3
+  - A value matches a range if min ≤ value < max.
+  - Ranges are evaluated from 1 to 3, and the first match is used. Overlapping ranges are allowed.
+  - If no range matches, the base color is used.
+  - The ranges are also indicated as colored lines under the gauge.
+
+# Map
+- Map is a schematic representation of a graph of `(x,y)`.
+- The graph value of `x` is used for the index of elements, and `y` is used for color.
+- Element shapes are described in a user configuration file.
+
+<img src="fig/Panel-Map-KL.png" style="width:30%;margin-left:2em;border:thin solid gray">
+<img src="fig/Panel-Map-FPD.png" style="width:30%;margin-left:2em;border:thin solid gray">
+
+## User Map File
+### File Format
+- JSON file, containing a list of shape elements. Shapes are SVG drawable elements.
+- The `index` fields define binding to the `x` values of the data object (graph or histogram).
+
+Example 1:
+```json
+{
+  "width": 1.0,
+  "height": 1.0,
+  "items": [
+    {"index":1200,"shape":"circle","attr":{"cx":0.370000,"cy":0.822000,"r":0.015}},
+    {"index":1201,"shape":"circle","attr":{"cx":0.403000,"cy":0.814000,"r":0.015}},
+    {"index":1202,"shape":"circle","attr":{"cx":0.367000,"cy":0.780000,"r":0.015}},
+    {"index":1203,"shape":"circle","attr":{"cx":0.400000,"cy":0.783000,"r":0.015}},
+    ...
+  ]
+}
+```
+
+Example 2:
+```json
+{
+    "width": 1.000, 
+    "height": 1.000,
+    "items": [
+        {
+            "index": 0, 
+            "shape": "path", 
+            "attr": {
+                "d": "M0.500,0.500 L0.580,0.500 A0.080,0.080 0 0,0 0.500,0.420 z"
+            }
+        }, 
+        {
+            "index": 1, 
+            "shape": "path", 
+            "attr": {
+                "d": "M0.500,0.500 L0.500,0.420 A0.080,0.080 0 0,0 0.420,0.500 z"
+            }
+        }, 
+    ...
+  ]
+}
+```
+
+### Creator Tool
+- For simple cases where shapes are only circles, `utils/xy2map.py` can be used to create a JSON map file from a CSV of `index, x, y`.
+```csv
+index,x,y
+24,0.485,0.915
+25,0.461,0.915
+26,0.449,0.915
+...
+```
+
+```console
+$ PATH/TO/SLOWDASH/xy2map.py NAME.csv > map-NAME.json
+```
+- [TODO] This utility will be further improved. Currently hard-coded values are:
+  - `width` and `height` are both 1.0.
+  - `radius` is 0.01.
+- [TODO] with the `--svg` option a SVG image file will be also created, which is convenient to test the map file.
+  
+
 # Canvas
 <img src="fig/Panel-Canvas-Simple.png" style="width:40%;margin-left:2em;border:thin solid gray">
 
@@ -372,114 +473,11 @@ Mandatory attributes and default values for a `plot` are:
 }
 ```
 
-# Single Values
-- Displays a single value in large text, together with its channel label and timestamp. The latest value within the display time range is shown.
-- One panel can be divided into multiple tiles to display multiple values.
-- A horizontal bar gauge can be added to each tile.
-- The colors of the value text, gauge, and tile can change depending on which range the value falls in.
-- The displayed text can be transformed and formatted using [Data Transform](DataTransform.html).
-
-##### Panel Settings ("Tiles")
-- **Title**: panel title
-- **Margin**: top, right, bottom, left margins
-- **Grid**: number of rows and columns of tiles. If not specified (0), it is determined automatically from the number of items.
-- **Time Format**: format of the timestamp text
-- **Color**:
-  - **Base**: default color
-  - **Ranges**: colors for range 1, 2, and 3 (default: cyan, orange, and magenta). These defaults differ from the commonly used green, yellow, and red; they were chosen so that the ranges stay distinguishable for people with color vision deficiencies.
-  - **Value**, **Gauge**, **Tile**: opacity of each part, and whether to apply the range colors to it (default: gauge only)
-
-##### Item Settings (per tile)
-- **Channel**: data channel
-- **Label**: label text (default: channel name)
-- **Text Transform**: [Data Transform](DataTransform.html) expression to make the value text, e.g., `gt(0.5)->replace(true,'ON')->replace(false,'OFF')`
-- **Text Format**: printf-style format of the value text, e.g., `%.3f`. If set, this takes precedence over Text Transform.
-- **Gauge**: min and max of the bar gauge. The gauge is shown only if min < max.
-- **Ranges**: min and max of ranges 1, 2, and 3
-  - A value matches a range if min ≤ value < max.
-  - Ranges are evaluated from 1 to 3, and the first match is used. Overlapping ranges are allowed.
-  - If no range matches, the base color is used.
-  - The ranges are also indicated as colored lines under the gauge.
-
-# Map
-- Map is a schematic representation of a graph of `(x,y)`.
-- The graph value of `x` is used for the index of elements, and `y` is used for color.
-- Element shapes are described in a user configuration file.
-
-<img src="fig/Panel-Map-KL.png" style="width:30%;margin-left:2em;border:thin solid gray">
-<img src="fig/Panel-Map-FPD.png" style="width:30%;margin-left:2em;border:thin solid gray">
-
-## User Map File
-### File Format
-- JSON file, containing a list of shape elements. Shapes are SVG drawable elements.
-- The `index` fields define binding to the `x` values of the data object (graph or histogram).
-
-Example 1:
-```json
-{
-  "width": 1.0,
-  "height": 1.0,
-  "items": [
-    {"index":1200,"shape":"circle","attr":{"cx":0.370000,"cy":0.822000,"r":0.015}},
-    {"index":1201,"shape":"circle","attr":{"cx":0.403000,"cy":0.814000,"r":0.015}},
-    {"index":1202,"shape":"circle","attr":{"cx":0.367000,"cy":0.780000,"r":0.015}},
-    {"index":1203,"shape":"circle","attr":{"cx":0.400000,"cy":0.783000,"r":0.015}},
-    ...
-  ]
-}
-```
-
-Example 2:
-```json
-{
-    "width": 1.000, 
-    "height": 1.000,
-    "items": [
-        {
-            "index": 0, 
-            "shape": "path", 
-            "attr": {
-                "d": "M0.500,0.500 L0.580,0.500 A0.080,0.080 0 0,0 0.500,0.420 z"
-            }
-        }, 
-        {
-            "index": 1, 
-            "shape": "path", 
-            "attr": {
-                "d": "M0.500,0.500 L0.500,0.420 A0.080,0.080 0 0,0 0.420,0.500 z"
-            }
-        }, 
-    ...
-  ]
-}
-```
-
-### Creator Tool
-- For simple cases where shapes are only circles, `utils/xy2map.py` can be used to create a JSON map file from a CSV of `index, x, y`.
-```csv
-index,x,y
-24,0.485,0.915
-25,0.461,0.915
-26,0.449,0.915
-...
-```
-
-```console
-$ PATH/TO/SLOWDASH/xy2map.py NAME.csv > map-NAME.json
-```
-- [TODO] This utility will be further improved. Currently hard-coded values are:
-  - `width` and `height` are both 1.0.
-  - `radius` is 0.01.
-- [TODO] with the `--svg` option a SVG image file will be also created, which is convenient to test the map file.
-  
-
 # HTML / Form
 - Displays an HTML page described in a user HTML file stored under the user configuration directory.
 - The user configuration file can contain a `<form>` to send commands to the server-side user script (SlowTask).
 - When a `<button>` in the form is clicked, the SlowTask function bound to the button is called with the form input values as arguments (see "Action/Variable Binding" below).
 - If the display time range does not include "now", buttons (`<button>` with a `name`) are disabled. This prevents users from making wrong operations based on past data without noticing that it is not current.
-<p>
-- [TODO] If the `Current` property is set, the panel contents are displayed only when the display time range includes "now".
 
 ##### Implementation
 - `div.innerHTML = ...` with parameter substitutions.
@@ -616,8 +614,6 @@ For details, see the [SlowTask section of the Scripting chapter](Scripting.html)
 
 # External Page
 - Maybe useful for Web-Cam etc.
-- [TODO] If the `Current` property is set, the page is displayed only when the display time range includes "now".
-- [TODO] Parameter substitution in URL
   
 ##### Implementation
 - `<iframe src="...">`
