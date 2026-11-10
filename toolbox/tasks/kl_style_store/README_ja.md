@@ -16,9 +16,9 @@ slowtaskを使わずに, 他のアプリケーションから直接 `insert_reco
 ### 設計方針
 
  - 入り口は一つ. 書き込みは全て `insert_records()` を通ります. tableへの直接のINSERTは許可しません. 入力の検査, channelの自動作成, partitionの作成, 最新値の更新は全てこの関数の中で行われます.
- - 単純なSQLで取り出せる. データは `records` などのViewに対する普通の `SELECT` や `COPY` で取り出せます. 内部に複雑な仕組みを持ち込まず, Slowdashからも自然なDatasourceに見えます.
+ - 単純なSQLで取り出せる. データは `records` などのViewに対する普通の `SELECT` や `COPY` で取り出せます. 内部に複雑な仕組みを持ち込まず, Slowdashからも自然なData sourceに見えます.
  - 受け取ったデータは消さない. 拒否した入力も `rejections` テーブルに全て保存します.
- - Slowdashのmeshとの連結に留意しています.
+ - Slowdashのmeshとの連携が検証されています.
 
 
 ## Quick start
@@ -696,11 +696,17 @@ slowtaskが動いていないと, `kl_channels` は選択肢に出ません.
 
 ページでできることは以下です.
 
- - **channelの一覧:** cid, name, type, 最新値, その `ts` と `inserted_at`, unit, descriptionを表示します. 最新値の時刻で, 更新の止まったchannelが分かります.
- - **plot:** 数値のchannelは `Plot` で, 最近1日のplotを別のtabで開きます. 1時間以上更新の止まったchannelは, 最新値までの1日を表示します.
- - **絞り込み:** nameに含まれる文字列と, 「unitかdescriptionが未記入のもの」か「全て」かで絞り込みます. defaultは未記入のものなので, 自動作成されたchannelに書き足していく作業の一覧になります. 表示は最大50行です. 絞り込みの条件はslowtaskが1つだけ持つので, 同時に開いている全員に共通です (HTML panelはJavaScriptを使えないため).
- - **unit, descriptionの書き換え:** `Set` で, その行の入力欄の値をそのまま書き込みます (`describe_channel()` をcidで呼びます). 空欄は `''` (unitなら単位の無い量) です. 未記入 (`NULL`) の欄には, 灰色で `unfilled` と表示されます.
- - **channelの作成:** `create_channel()` を呼びます.
+ - channelの作成: `create_channel()` を呼びます. 入力欄の値をそのまま書き込み, 空欄は `''` です. 既にあるnameを指定すると, 何も変えずにエラーを表示します (変える時は `Set` を使います).
+ - channelの一覧: cid, name, `valid_from`, type, unit, description, 最新値 (doubleは有効数字6桁で表示), その `ts` と `inserted_at` を表示します. 最新値の時刻で, 更新の止まったchannelが分かります.
+ - unit, descriptionの書き換え: `Set` で, その行の入力欄の値をそのまま書き込みます (`describe_channel()` をcidで呼びます). 空欄は `''` (unitなら単位の無い量) です. 未記入 (`NULL`) の欄には, 灰色で `unfilled` と表示されます.
+
+HTML panelはJavaScriptを使えず, 状態を持てないので, 絞り込み, 並べ替え, ページの条件はslowtaskが1つだけ持ちます. 同時に開いている全員に共通です.
+`reload HTML` がoffだと, ボタンを押してもページが読み直されず, 何も変わらないように見えます.
+ページの実装は `kl_channel_page.py` にあり, slowtaskはこれを読み込むだけです.
+
+なお, formの値はslowdashによって一度jsonになるので, 紛らわしいことをすると面倒なことになります.
+descriptionに `1.50` と入れると `1.5`に, unitに`null` と入れると`None` になる, 既知の問題があります.
+将来的に, Slowdashがサポートする仕組みの中でシンプルに解決できることを期待しています.
 
 関数はslowtaskの中で `kl_writer` の接続で実行されるので, Slowdashの画面を開ける人は誰でもchannelを書き換え, 作成できます.
 
@@ -757,3 +763,7 @@ spoolの1行は `insert_records()` の入力そのもの (recordのJSON配列) �
 
  - プロット用の関数, 便利Trigger, Stored procedure
   過度に複雑になると, かえってユーザーが自由に環境に応じていじくり回すのを妨げると考え, 入れていません. (triggerはlog用途にだけ採用)
+
+ - 古い週のデータへの自動的なCLUSTER
+  単一channel, 長いtime rangeの際に得をして, 短いtimerange, 複数channelで損をするはずです.
+  後からどうとでもできるので, 採用を見送っています.
