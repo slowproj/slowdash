@@ -204,8 +204,8 @@ async def chat(line, *, sender=None):
 ```
 
 - 現時点で，return value に返せるのは JSON にシリアライズできる値のみです．
-- RPC は 1 秒程度を上限に return してください．呼び出し側はデフォルトで 5 秒でタイムアウトします．
-- 時間がかかる処理は，キューに入れるか，非同期タスクまたはスレッドなどで実行するようにしてください．
+- RPC は 1 秒程度を上限に return してください．呼び出し側はデフォルトで 5 秒でタイムアウトします．実行に時間がかかる場合は，以下のバックグランド実行を参照してください．
+
 
 ##### 使用側
 ```python
@@ -216,6 +216,7 @@ async def chat(line, *, sender=None):
 - 現時点で，引数に渡せるのは JSON にシリアライズできる値のみです．
 - エラーが発生した場合は Exception が投げられます．
 - デフォルトのタイムアウト時間は，Mesh のコンストラクタパラメータで指定できます．また，`aio_call_many()` 関数を使えば，呼び出しごとに個別のタイムアウトを設定することもできます．
+
 
 ##### Advanced 使用例
 同じ名前の Task が複数存在する場合，一つの RPC 呼び出しに複数の応答があります．
@@ -233,6 +234,25 @@ reply は，以下のようなフィールドを持つ dict です：
 （TOOD: reply に mesh_id や correlation_id を入れる）
 
 `aio_call()` は，`expected_replies` を `1`，`raise_on_timeout` を `True` にして `aio_call_many()` を呼んでいるだけです．
+
+##### バックグランド実行
+処理に時間がかかる場合は，`export` に concurrency オプションを指定することにより関数をバックグランド実行できます．
+```python
+@tasklet.mesh.export(concurrency='parallel')
+async def work(line, *, sender=None):
+    ....
+```
+
+`concurrency` には，以下の値を使用できます．
+
+| 値 | 動作 |
+|--|---|
+| `sync` (default) | 関数を実行し，終了を待つ|
+| `single` | 関数をバックグランド実行し，終了を待たずに `{"status": "accepted"}` を返す．<br>関数実行中に同じ関数が呼ばれた場合は，実行は行わず，`{"status": "notice", "message": "already running"}` を返す |
+| `parallel` | 関数をバックグランド実行し，終了を待たずに `{"status": "accepted"}` を返す．<br>関数実行中に同じ関数が呼ばれた場合は，並列または並行実行する．（上限100まで） |
+
+関数が async でない場合，バックグランド実行のためにスレッドが作成されます．
+
 
 ### ControlNode のエクスポート
 RPC を使って ControlNode のリモートアクセスも実装されています．
