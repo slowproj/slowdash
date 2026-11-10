@@ -206,7 +206,6 @@ async def chat(line, *, sender=None):
 - 現時点で，return value に返せるのは JSON にシリアライズできる値のみです．
 - RPC は 1 秒程度を上限に return してください．呼び出し側はデフォルトで 5 秒でタイムアウトします．実行に時間がかかる場合は，以下のバックグランド実行を参照してください．
 
-
 ##### 使用側
 ```python
     return_value = await tasklet.mesh.aio_call('test-mesh-rpc.chat', line, sender='me')
@@ -230,7 +229,7 @@ reply は，以下のようなフィールドを持つ dict です：
 ```python
  { 'status': 'ok', 'message': 'ok', 'return_value': result }
 ```
-`status` には `ok` の他に `error` と `cancelled` があり，エラーの場合は `message` にエラーメッセージが入ります．
+`status` には `ok` の他に `error`, `cancelled`, `accepted`, `notice` があり，エラーの場合は `message` にエラーメッセージが入ります．
 （TOOD: reply に mesh_id や correlation_id を入れる）
 
 `aio_call()` は，`expected_replies` を `1`，`raise_on_timeout` を `True` にして `aio_call_many()` を呼んでいるだけです．
@@ -247,12 +246,42 @@ async def work(line, *, sender=None):
 
 | 値 | 動作 |
 |--|---|
-| `sync` (default) | 関数を実行し，終了を待つ|
-| `single` | 関数をバックグランド実行し，終了を待たずに `{"status": "accepted"}` を返す．<br>関数実行中に同じ関数が呼ばれた場合は，実行は行わず，`{"status": "notice", "message": "already running"}` を返す |
-| `parallel` | 関数をバックグランド実行し，終了を待たずに `{"status": "accepted"}` を返す．<br>関数実行中に同じ関数が呼ばれた場合は，並列または並行実行する．（上限100まで） |
+| `sync` (default) | 関数を実行し，終了を待ち，正常終了なら `{ "status": "ok","return_value": result }` を返す　|
+| `single` | 関数をバックグランド実行し，終了を待たずに `{ "status": "accepted" }` を返す．<br>関数実行中に同じ関数が呼ばれた場合は，実行は行わず，`{ "status": "notice", "message": "already running" }` を返す |
+| `parallel` | 関数をバックグランド実行し，終了を待たずに `{ "status": "accepted" }` を返す．<br>関数実行中に同じ関数が呼ばれた場合は，並列または並行実行する．（上限100まで） |
 
-関数が async でない場合，バックグランド実行のためにスレッドが作成されます．
+TODO: `queue` / `override`
 
+非同期 (async) でない通常の関数に対してバックグランド実行（`single` または `parallel`）を指定すると，関数実行のために専用のスレッドが作成されます．
+関数の中がスレッドセーフでなければ問題を引き起こします．
+バックグランド実行にはなるべく async 関数を使用してください．
+（そしてその中でのスリープは `ctrl.aio_sleep()` または `asyncio.sleep()` を使用してください．）
+
+##### 参考：バックグランドを使わない長時間実行
+コントロールに長時間の継続動作が必要な場合でも，以下の例のようにステートマシンを作って，RPC コマンドは状態遷移を引き起こすだけのような設計にすれば，多くの場合でバックグランドタスクを使用せずに，かつ単純に記述することができます．
+
+```python
+ramp_target = None
+
+@tasklet.loop(interval=1.0)
+async def loop_ramping():
+    if ramp_target is not None:
+        ... step_ramping()
+
+@tasklet.mesh.export
+async def start_ramping(target:float):
+    global ramp_target
+    ramp_target = target
+
+@tasklet.mesh.export
+async def stop_ramping():
+    global ramp_target
+    ramp_target = None
+```
+
+`@tasklet.loop()` は繰り返し呼び出しをするためのもので，一つのスクリプトの中に複数個を作成でき，async 関数であればそのまま並行動作します．
+上記の例では，ランピング動作中に別の target が指定されても，そのまま新しい目標値に対して動作を続けることに着目してください．
+このような動作は，バックグランド実行を組み合わせで実装すると，とても複雑になります．
 
 ### ControlNode のエクスポート
 RPC を使って ControlNode のリモートアクセスも実装されています．
@@ -1148,6 +1177,8 @@ Mesh メッシュリクエスト
   - 成功： 200, `{ "status": "ok", "return_value": return_value }`
   - RPC エラー (呼び出し先例外)： 200, `{ "status": "error", "message": error_message }`
   - RPC キャンセル (呼び出し先 Async-Task Cancelled)： 200, `{ "status": "cancelled" }`
+  - バックグランド実行の受付 (`concurrency` が `single` または `parallel`)： 200, `{ "status": "accepted" }`
+  - 実行中のためバックグランド実行せず (`concurrency` が `single`)： 200, `{ "status": "notice", "message": message }`
   - その他エラー: 400 番台のエラーレスポンス
 
 ##### Publish Request
@@ -1731,7 +1762,7 @@ Body:
     "type": "object",
     "required": [ "status", "message", "return_value" ],
     "properties": {
-        "status": { "type": "string", "enum": [ "ok", "error", "cancelled" ] },
+        "status": { "type": "string", "enum": [ "ok", "error", "cancelled", "accepted", "notice" ] },
         "message": { "type": "string" },
         "return_value": {}
     }

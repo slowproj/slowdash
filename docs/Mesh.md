@@ -200,7 +200,7 @@ async def chat(line, *, sender=None):
 
 - At present, only JSON-serializable values can be returned as return values.
 - RPC functions should return within about 1 second at most. The caller times out after 5 seconds by default.
-- Long-running operations should be placed in a queue or executed as an asynchronous task, thread, etc.
+If execution takes longer, see Background Execution below.
 
 ##### Calling Side
 ```python
@@ -224,10 +224,60 @@ Each reply is a dict containing fields such as:
 ```python
  { 'status': 'ok', 'message': 'ok', 'return_value': result }
 ```
-In addition to `ok`, `status` can be `error` or `cancelled`; in an error case, `message` contains the error message.
+In addition to `ok`, `status` can be `error`, `cancelled`, `accepted`, or `notice`; in an error case, `message` contains the error message.
 (TODO: include mesh_id and correlation_id in the reply)
 
 `aio_call()` simply calls `aio_call_many()` with `expected_replies` set to `1` and `raise_on_timeout` set to `True`.
+
+##### Background Execution
+If processing takes a long time, the function can be executed in the background by specifying the `concurrency` option to `export`.
+```python
+@tasklet.mesh.export(concurrency='parallel')
+async def work(line, *, sender=None):
+    ....
+```
+
+The following values can be used for `concurrency`:
+
+| Value | Behavior |
+|--|---|
+| `sync` (default) | Executes the function, waits for it to finish, and returns `{ "status": "ok", "return_value": result }` if it completes successfully. |
+| `single` | Executes the function in the background and returns `{ "status": "accepted" }` without waiting for it to finish.<br>If the same function is called while it is still running, it is not executed again, and `{ "status": "notice", "message": "already running" }` is returned. |
+| `parallel` | Executes the function in the background and returns `{ "status": "accepted" }` without waiting for it to finish.<br>If the same function is called while it is still running, the calls are executed in parallel or concurrently (up to 100). |
+
+TODO: `queue` / `override`
+
+If background execution (`single` or `parallel`) is specified for a regular (non-async) function, a dedicated thread is created to execute the function.
+This will cause problems if the function body is not thread-safe.
+Use async functions for background execution whenever possible
+(and inside them, use `ctrl.aio_sleep()` or `asyncio.sleep()` for sleeping).
+
+##### Note: Long-Running Operations without Background Execution
+Even when a control requires long-running continuous operation, in many cases it can be written simply, without using background tasks, by building a state machine as in the example below and designing the RPC commands so that they only trigger state transitions.
+
+```python
+ramp_target = None
+
+@tasklet.loop(interval=1.0)
+async def loop_ramping():
+    if ramp_target is not None:
+        ... step_ramping()
+
+@tasklet.mesh.export
+async def start_ramping(target:float):
+    global ramp_target
+    ramp_target = target
+
+@tasklet.mesh.export
+async def stop_ramping():
+    global ramp_target
+    ramp_target = None
+```
+
+`@tasklet.loop()` is for repeated invocation; multiple loops can be created in a single script, and if they are async functions, they run concurrently as they are.
+Note that in the example above, if another target is specified during ramping, the operation simply continues toward the new target value.
+Implementing this kind of behavior with a combination of background executions would be very complicated.
+
 
 ### Exporting a ControlNode
 Remote access to a ControlNode is also implemented using RPC.
@@ -1119,6 +1169,8 @@ Mesh request.
   - Success: 200, `{ "status": "ok", "return_value": return_value }`
   - RPC error (exception at the called destination): 200, `{ "status": "error", "message": error_message }`
   - RPC cancellation (Async-Task Cancelled at the called destination): 200, `{ "status": "cancelled" }`
+  - Background execution accepted (`concurrency` is `single` or `parallel`): 200, `{ "status": "accepted" }`
+  - Background execution not started because already running (`concurrency` is `single`): 200, `{ "status": "notice", "message": message }`
   - Other errors: a 4xx error response
 
 ##### Publish Request
@@ -1690,7 +1742,7 @@ Body:
     "type": "object",
     "required": [ "status", "message", "return_value" ],
     "properties": {
-        "status": { "type": "string", "enum": [ "ok", "error", "cancelled" ] },
+        "status": { "type": "string", "enum": [ "ok", "error", "cancelled", "accepted", "notice" ] },
         "message": { "type": "string" },
         "return_value": {}
     }
