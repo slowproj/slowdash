@@ -1,0 +1,26 @@
+# The parts to add to SlowdashProject.yaml of your project. See "Quick start" in README_ja.md.
+slowdash_project:
+  # name, title, etc. of your project
+
+  # The defaults are for the DB of docker/
+  environment:
+    - WRITER_DB=${KL_WRITER_DB:-postgresql://kl_writer:writer@localhost:15432/kldb}
+    - MONITOR_DB=${KL_MONITOR_DB:-postgresql://kl_monitor:monitor@localhost:15432/kldb}
+
+  data_source:
+    url: ${MONITOR_DB}
+    time_series:
+      schema: records[name]@ts(with timezone)=value
+      tags:
+        sql: SELECT DISTINCT name FROM channels WHERE type IN ('double', 'integer', 'boolean')
+    object_time_series:
+      schema: records[name]@ts(with timezone)=value_jsonb
+      tags:
+        sql: SELECT DISTINCT name FROM channels WHERE type = 'json'
+
+  task:
+    - name: "@toolbox/kl_style_store"
+      auto_start: true
+      parameters:
+        dsn: ${WRITER_DB}
+        spool: ./kl_style_store-spool.jsonl
