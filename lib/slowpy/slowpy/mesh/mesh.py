@@ -31,6 +31,19 @@ class MeshPacket:
 
 
     
+class CallbackFunction:
+    def __init__(self, func, name:str, opts:dict|None=None):
+        self.func = func
+        self.name = name
+        self.opts = dict(opts or {})
+
+        self.running_tasks = set()
+
+        concurrency = self.opts.get('concurrency', 'sync')
+        if concurrency not in [ 'sync', 'single', 'parallel' ]:
+            raise ValueError(f'bad concurrency option: {name}(): {concurrency}')
+        
+    
 class Mesh:
     _mesh_sequence_id = 0
     
@@ -68,11 +81,12 @@ class Mesh:
         self._rpc_count = 0
         self._reply_queues = {}  # CorrelationID(str) -> asyncio.Queue
         self._reply_lock = asyncio.Lock()
-
+        self._max_rpc_parallel_tasks = 100
+        
         self._callback_tasks = set()
         self._subscription_callbacks = [] # tuple(topic:str, func:Callable)
-        self._function_table = {  # FunctionName:str -> function
-            '_sd_node_call': self._handle_node_call
+        self._function_table = {  # FunctionName:str -> func:CallbackFunction
+            '_sd_node_call': CallbackFunction(self._handle_node_call, '_sd_node_call')
         }
         self._exported_nodes = {}
 
@@ -384,7 +398,7 @@ class Mesh:
         
         
     def on(self, topic:str):
-        """decorator to make a subscriptoin message handler
+        """decorator to make a subscription message handler
         Args:
         - topic: path pattern to match
         """
@@ -406,11 +420,11 @@ class Mesh:
             node = args[1]
             self._exported_nodes[name] = node
 
-        # def export(self, name:str, func:callable)
+        # def export(self, name:str, func:callable, /, **kwargs)
         elif len(args) == 2 and isinstance(args[0], str) and callable(args[1]):
             name = args[0]
             func = args[1]
-            self._function_table[name] = func
+            self._function_table[name] = CallbackFunction(func, name, kwargs)
             try:
                 func._slowpy_task = True
             except: # func might not have a dict
@@ -419,7 +433,8 @@ class Mesh:
         # decorator without (): e.g., @mesh.export
         elif len(args) == 1 and callable(args[0]):
             func = args[0]
-            self._function_table[func.__name__] = func
+            name = func.__name__
+            self._function_table[name] = CallbackFunction(func, name)
             try:
                 func._slowpy_task = True   
             except: # func might not have a dict
@@ -428,10 +443,14 @@ class Mesh:
             
         # decorator with (): e.g., @mesh.export(**kwargs)
         else:
-            name = kwargs.get('name')
             def wrapper(func):
-                self._function_table[name or func.__name__] = func        
-                func._slowpy_task = True
+                name = kwargs.get('name', func.__name__)
+                opts = { k:v for k,v in kwargs.items() if k != 'name' }
+                self._function_table[name] =  CallbackFunction(func, name, opts)
+                try:
+                    func._slowpy_task = True
+                except: # func might not have a dict
+                    pass
                 return func
             return wrapper
         
@@ -485,7 +504,7 @@ class Mesh:
                     continue
                 if headers.get('sender_id') == self._mesh_id:
                     continue
-                result = await self._execute_rpc_function(
+                result = await self._start_rpc_function(
                     headers.get('function'), *data.get('args',[]), **data.get('kwargs',{})
                 )
                 reply_to = headers.get('reply_to')
@@ -526,20 +545,63 @@ class Mesh:
             logging.error(f'Mesh: rpc_reply_handler: {e}')
 
         
-    async def _execute_rpc_function(self, function_name:str, *args, **kwargs):
+    async def _start_rpc_function(self, function_name:str, *args, **kwargs):
         logging.debug(f'Mesh: RPC Call: {function_name}({args}, {kwargs})')
         
         func = self._function_table.get(function_name)
         if func is None:
             return { 'status': 'error', 'message': f'no such function: {function_name}', 'return_value': None }
+        concurrency = func.opts.get('concurrency', 'sync')
+            
+        if concurrency == 'sync':
+            return await self._execute_rpc_function(func, args, kwargs)
         
+        elif concurrency in ['single', 'parallel']:
+            if concurrency == 'single' and len(func.running_tasks) > 0:
+                return { 'status': 'notice', 'message': f'already running: {function_name}', 'return_value': None }
+                
+            if len(func.running_tasks) >= self._max_rpc_parallel_tasks:
+                return { 'status': 'error', 'message': f'too many parallel tasks: {function_name}', 'return_value': None }
+                
+            def on_done(task):
+                func.running_tasks.discard(task)
+                if task.cancelled():
+                    logging.info(f'background function cancelled: {function_name}')
+                else:                        
+                    result = task.result()
+                    if result.get('status') == 'ok':
+                        logging.info(f'background function completed: {function_name}')
+                    else:
+                        logging.warning(f'background function error: {function_name}: {result.get("message","")}')
+                        
+            task = asyncio.create_task(self._execute_rpc_function(func, args, kwargs))
+            func.running_tasks.add(task)
+            task.add_done_callback(on_done)
+            return { 'status': 'accepted', 'message': f'task scheduled: {function_name}', 'return_value': None }
+            
+        else:
+            return { 'status': 'error', 'message': f'bad concurrency option: {concurrency}', 'return_value': None }
+
+        
+    async def _execute_rpc_function(self, func, args, kwargs):
         try:
-            result = func(*args, **kwargs)
-            if asyncio.iscoroutine(result):
+            if inspect.iscoroutinefunction(func.func):
+                result = func.func(*args, **kwargs)
+            else:
+                result = asyncio.to_thread(func.func, *args, **kwargs)
+                if asyncio.iscoroutine(result):
+                    result = await result
+            if asyncio.iscoroutine(result):  # extra "await", in case func is an object with async def __call__
                 result = await result
             return { 'status': 'ok', 'message': 'ok', 'return_value': result }
-        except Exception as e:
-            logging.error(f'Mesh: error in RPC callback: {func.__name__}(): {e}')
+        
+        except asyncio.CancelledError:
+            raise
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        
+        except BaseException as e:
+            logging.error(f'Mesh: error in RPC callback: {func.name}(): {e}')
             tb = traceback.format_exc()
             if tb is not None and len(tb.strip()) > 0:
                 logging.info(tb)
@@ -547,15 +609,8 @@ class Mesh:
                 self._had_error = True
                 ctrl.stop()
             return { 'status': 'error', 'message': str(e), 'return_value': None }
-        except asyncio.CancelledError:
-            return { 'status': 'cancelled', 'message': 'cancelled', 'return_value': None }
-        except:
-            if self._stop_on_error:
-                self._had_error = True
-                ctrl.stop()
-            return { 'status': 'error', 'message': 'other errors', 'return_value': None }
-
-
+        
+        
     async def _handle_node_call(self, *args, **kwargs):
         node_name = kwargs.get('node_name')
         method = kwargs.get('method')

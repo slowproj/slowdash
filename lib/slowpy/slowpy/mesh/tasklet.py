@@ -506,7 +506,7 @@ class Tasklet:
             if len(func_name) == 0 or not func_name[0].isalpha():
                 continue
             
-            signature = inspect.signature(func)
+            signature = inspect.signature(func.func)
             kwargs, arbitrary_keywords, has_non_pod = {}, False, False
             for arg_name, attr in signature.parameters.items():
                 if attr.kind == inspect.Parameter.VAR_KEYWORD:
